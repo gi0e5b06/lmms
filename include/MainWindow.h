@@ -251,11 +251,4 @@ signals:
 
 } ;
 
-class AutoSaveThread : public QThread
-{
-	Q_OBJECT
-public:
-	void run();
-} ;
-
 #endif
