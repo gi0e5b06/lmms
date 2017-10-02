@@ -273,14 +273,7 @@ void InstrumentTrack::processInEvent( const MidiEvent& event, const MidiTime& ti
 				// be deleted later automatically)
 				Engine::mixer()->requestChangeInModel();
 				m_notes[event.key()]->noteOff( offset );
-
-				if (!(isSustainPedalPressed()) ||
-					!(m_notes[event.key()]->origin() ==
-					m_notes[event.key()]->OriginMidiInput))
-				{
-					m_notes[event.key()] = NULL;
-				}
-
+				m_notes[event.key()] = NULL;
 				Engine::mixer()->doneChangeInModel();
 			}
 			eventHandled = true;
@@ -309,24 +302,8 @@ void InstrumentTrack::processInEvent( const MidiEvent& event, const MidiTime& ti
 				{
 					m_sustainPedalPressed = true;
 				}
-				else if (isSustainPedalPressed())
+				else
 				{
-					for (NotePlayHandle*& nph : m_notes)
-					{
-						if (nph && nph->isReleased())
-						{
-							if( nph->origin() ==
-								nph->OriginMidiInput)
-							{
-								nph->setLength(
-									MidiTime( static_cast<f_cnt_t>(
-									nph->totalFramesPlayed() /
-									Engine::framesPerTick() ) ) );
-								midiNoteOff( *nph );
-							}
-							nph = NULL;
-						}
-					}
 					m_sustainPedalPressed = false;
 				}
 			}
@@ -1587,6 +1564,7 @@ void InstrumentTrackWindow::modelChanged()
 	m_arpeggioView->setModel( &m_track->m_arpeggio );
 	m_midiView->setModel( &m_track->m_midiPort );
 	m_effectView->setModel( m_track->m_audioPort.effects() );
+	m_miscView->pitchGroupBox()->setModel(&m_track->m_useMasterPitchModel);
 	updateName();
 }
 

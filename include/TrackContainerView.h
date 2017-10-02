@@ -85,11 +85,7 @@ public:
 
 	inline QVector<selectableObject *> selectedObjects()
 	{
-		if( allowRubberband() == true )
-		{
-			return( m_rubberBand->selectedObjects() );
-		}
-		return( QVector<selectableObject *>() );
+		return( m_rubberBand->selectedObjects() );
 	}
 
 
@@ -127,6 +123,8 @@ public:
 
 	inline QVector<QPointer<HyperBarView> >& hyperBarViews() { return m_hyperBarViews; }
 	inline QVector<QPointer<BarView> >& barViews() { return m_barViews; }
+
+	RubberBand *rubberBand() const;
 
 public slots:
 	void realignTracks();

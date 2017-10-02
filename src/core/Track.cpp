@@ -688,99 +688,87 @@ void TrackContentObjectView::paintTextLabel(QString const & text, QPainter & pai
 void TrackContentObjectView::mousePressEvent( QMouseEvent * me )
 {
 	setInitialMousePos( me->pos() );
-	if( m_trackView->trackContainerView()->allowRubberband() == true &&
-	    me->button() == Qt::LeftButton )
+	if( me->button() == Qt::LeftButton )
 	{
-		if( m_trackView->trackContainerView()->rubberBandActive() == true )
+		if( me->modifiers() & Qt::ControlModifier )
 		{
-			// Propagate to trackView for rubberbanding
-			selectableObject::mousePressEvent( me );
-		}
-		else if ( me->modifiers() & Qt::ControlModifier )
-		{
-			if( isSelected() == true )
+			if( isSelected() )
 			{
 				m_action = CopySelection;
 			}
 			else
 			{
-				m_action = ToggleSelected;
+				gui->songEditor()->m_editor->selectAllTcos( false );
+				QVector<TrackContentObjectView *> tcoViews;
+				tcoViews.push_back( this );
+				DataFile dataFile = createTCODataFiles( tcoViews );
+				QPixmap thumbnail = QPixmap::grabWidget( this ).scaled(
+							128, 128,
+							Qt::KeepAspectRatio,
+							Qt::SmoothTransformation );
+				new StringPairDrag( QString( "tco_%1" ).arg(
+										m_tco->getTrack()->type() ),
+									dataFile.toString(), thumbnail, this );
 			}
 		}
-		else if( !me->modifiers() )
+		else
 		{
-			if( isSelected() == true )
+			if( isSelected() )
 			{
 				m_action = MoveSelection;
 			}
-		}
-	}
-	else if( me->button() == Qt::LeftButton && 
-			 me->modifiers() & Qt::ControlModifier )
-	{
-		// start drag-action
-		QVector<TrackContentObjectView *> tcoViews;
-		tcoViews.push_back( this );
-		DataFile dataFile = createTCODataFiles( tcoViews );
-		QPixmap thumbnail = QPixmap::grabWidget( this ).scaled(
-						128, 128,
-						Qt::KeepAspectRatio,
-						Qt::SmoothTransformation );
-		new StringPairDrag( QString( "tco_%1" ).arg(
-						m_tco->getTrack()->type() ),
-					dataFile.toString(), thumbnail, this );
-	}
-	else if( me->button() == Qt::LeftButton &&
-		/*	engine::mainWindow()->isShiftPressed() == false &&*/
-							fixedTCOs() == false )
-	{
-		m_tco->addJournalCheckPoint();
+			else
+			{
+				gui->songEditor()->m_editor->selectAllTcos( false );
+				m_tco->addJournalCheckPoint();
 
-		// move or resize
-		m_tco->setJournalling( false );
+				// move or resize
+				m_tco->setJournalling( false );
 
-		setInitialMousePos( me->pos() );
+				setInitialMousePos( me->pos() );
 
-		if( me->x() < width() - RESIZE_GRIP_WIDTH )
-		{
-			m_action = Move;
-			m_oldTime = m_tco->startPosition();
-			QCursor c( Qt::SizeAllCursor );
-			QApplication::setOverrideCursor( c );
-			s_textFloat->setTitle( tr( "Current position" ) );
-			delete m_hint;
-			m_hint = TextFloat::displayMessage( tr( "Hint" ),
-					tr( "Press <%1> and drag to make "
-							"a copy." ).arg(
-								#ifdef LMMS_BUILD_APPLE
-								"⌘"),
-								#else
-								"Ctrl"),
-								#endif
-					embed::getIconPixmap( "hint" ), 0 );
+				if( me->x() < width() - RESIZE_GRIP_WIDTH )
+				{
+					m_action = Move;
+					m_oldTime = m_tco->startPosition();
+					QCursor c( Qt::SizeAllCursor );
+					QApplication::setOverrideCursor( c );
+					s_textFloat->setTitle( tr( "Current position" ) );
+					delete m_hint;
+					m_hint = TextFloat::displayMessage( tr( "Hint" ),
+														tr( "Press <%1> and drag to make "
+															"a copy." ).arg(
+										#ifdef LMMS_BUILD_APPLE
+															"⌘"),
+									#else
+															"Ctrl"),
+									#endif
+														embed::getIconPixmap( "hint" ), 0 );
+				}
+				else if( !m_tco->getAutoResize() )
+				{
+					m_action = Resize;
+					m_oldTime = m_tco->length();
+					QCursor c( Qt::SizeHorCursor );
+					QApplication::setOverrideCursor( c );
+					s_textFloat->setTitle( tr( "Current length" ) );
+					delete m_hint;
+					m_hint = TextFloat::displayMessage( tr( "Hint" ),
+														tr( "Press <%1> for free "
+															"resizing." ).arg(
+										#ifdef LMMS_BUILD_APPLE
+															"⌘"),
+									#else
+															"Ctrl"),
+									#endif
+														embed::getIconPixmap( "hint" ), 0 );
+				}
+				//		s_textFloat->reparent( this );
+				// setup text-float as if TCO was already moved/resized
+				mouseMoveEvent( me );
+				s_textFloat->show();
+			}
 		}
-		else if( !m_tco->getAutoResize() )
-		{
-			m_action = Resize;
-			m_oldTime = m_tco->length();
-			QCursor c( Qt::SizeHorCursor );
-			QApplication::setOverrideCursor( c );
-			s_textFloat->setTitle( tr( "Current length" ) );
-			delete m_hint;
-			m_hint = TextFloat::displayMessage( tr( "Hint" ),
-					tr( "Press <%1> for free "
-							"resizing." ).arg(
-								#ifdef LMMS_BUILD_APPLE
-								"⌘"),
-								#else
-								"Ctrl"),
-								#endif
-					embed::getIconPixmap( "hint" ), 0 );
-		}
-//		s_textFloat->reparent( this );
-		// setup text-float as if TCO was already moved/resized
-		mouseMoveEvent( me );
-		s_textFloat->show();
 	}
 	else if( me->button() == Qt::RightButton )
 	{
@@ -826,10 +814,7 @@ void TrackContentObjectView::mouseMoveEvent( QMouseEvent * me )
 {
 	if( m_action == CopySelection )
 	{
-		if( mouseMovedDistance( me, 2 ) == true &&
-		    m_trackView->trackContainerView()->allowRubberband() == true &&
-		    m_trackView->trackContainerView()->rubberBandActive() == false &&
-		    ( me->modifiers() & Qt::ControlModifier ) )
+		if( mouseMovedDistance( me, 2 ) == true )
 		{
 			// Clear the action here because mouseReleaseEvent will not get
 			// triggered once we go into drag.
@@ -923,7 +908,7 @@ void TrackContentObjectView::mouseMoveEvent( QMouseEvent * me )
 			t = ( *it )->startPosition() +
 				static_cast<int>( dx *MidiTime::ticksPerTact() /
 					 ppt )-smallest_pos;
-			if( ! ( me->modifiers() & Qt::AltModifier )
+			if( ! ( me->modifiers() & Qt::ControlModifier )
 					   && me->button() == Qt::NoButton )
 			{
 				t = t.toNearestTact();
@@ -1467,11 +1452,9 @@ bool TrackContentWidget::pasteSelection( MidiTime tcoPos, QDropEvent * de )
 	const TrackContainer::TrackList tracks = getTrack()->trackContainer()->tracks();
 	const int currentTrackIndex = tracks.indexOf( getTrack() );
 
-	bool allowRubberband = m_trackView->trackContainerView()->allowRubberband();
+	bool wasSelection = m_trackView->trackContainerView()->rubberBand()->selectedObjects().count();
 
 	// Unselect the old group
-	if( allowRubberband == true )
-	{
 		const QVector<selectableObject *> so =
 			m_trackView->trackContainerView()->selectedObjects();
 		for( QVector<selectableObject *>::const_iterator it = so.begin();
@@ -1479,7 +1462,7 @@ bool TrackContentWidget::pasteSelection( MidiTime tcoPos, QDropEvent * de )
 		{
 			( *it )->setSelected( false );
 		}
-	}
+
 
 	// TODO -- Need to draw the hovericon either way, or ghost the TCOs
 	// onto their final position.
@@ -1504,10 +1487,11 @@ bool TrackContentWidget::pasteSelection( MidiTime tcoPos, QDropEvent * de )
 		TrackContentObject * tco = t->createTCO( pos );
 		tco->restoreState( tcoElement );
 		tco->movePosition( pos );
-		if( allowRubberband == true )
+		if( wasSelection )
 		{
 			tco->selectViewOnCreate( true );
 		}
+
 		//check tco name, if the same as source track name dont copy
 		if( tco->name() == tracks[trackIndex]->name() )
 		{
@@ -1554,6 +1538,11 @@ void TrackContentWidget::mousePressEvent( QMouseEvent * me )
 	else if( me->button() == Qt::LeftButton &&
 			!m_trackView->trackContainerView()->fixedTCOs() )
 	{
+		QVector<selectableObject*> so =  m_trackView->trackContainerView()->rubberBand()->selectedObjects();
+		for( int i = 0; i < so.count(); ++i )
+		{
+			so.at( i )->setSelected( false);
+		}
 		getTrack()->addJournalCheckPoint();
 		const MidiTime pos = getPosition( me->x() ).getTact() *
 						MidiTime::ticksPerTact();
@@ -2192,7 +2181,7 @@ void Track::saveSettings( QDomDocument & doc, QDomElement & element )
 	element.setAttribute( "solo", isSolo() );
 	if( m_height >= MINIMAL_TRACK_HEIGHT )
 	{
-		element.setAttribute( "height", m_height );
+		element.setAttribute( "trackheight", m_height );
 	}
 
 	QDomElement tsDe = doc.createElement( nodeName() );
@@ -2288,7 +2277,7 @@ void Track::loadSettings( const QDomElement & element )
 		node = node.nextSibling();
 	}
 
-	int storedHeight = element.attribute( "height" ).toInt();
+	int storedHeight = element.attribute( "trackheight" ).toInt();
 	if( storedHeight >= MINIMAL_TRACK_HEIGHT )
 	{
 		m_height = storedHeight;
