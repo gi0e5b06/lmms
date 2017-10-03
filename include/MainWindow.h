@@ -29,6 +29,7 @@
 #include <QtCore/QTimer>
 #include <QtCore/QList>
 #include <QMainWindow>
+#include <QThread>
 
 #include "ConfigManager.h"
 #include "SubWindow.h"
@@ -248,6 +249,13 @@ signals:
 	void periodicUpdate();
 	void initProgress(const QString &msg);
 
+} ;
+
+class AutoSaveThread : public QThread
+{
+	Q_OBJECT
+public:
+	void run();
 } ;
 
 #endif
