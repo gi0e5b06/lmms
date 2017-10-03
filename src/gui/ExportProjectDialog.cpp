@@ -186,6 +186,7 @@ void ExportProjectDialog::startExport()
 
 	Engine::getSong()->setExportLoop( exportLoopCB->isChecked() );
 	Engine::getSong()->setRenderBetweenMarkers( renderMarkersCB->isChecked() );
+	Engine::getSong()->setPeakNormalizeFlag( peakNormalizeCB->isChecked() );
 
 	connect( m_renderManager.get(), SIGNAL( progressChanged( int ) ),
 			progressBar, SLOT( setValue( int ) ) );

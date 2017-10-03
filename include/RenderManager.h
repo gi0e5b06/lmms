@@ -56,6 +56,9 @@ signals:
 	void progressChanged( int );
 	void finished();
 
+ protected:
+	void postProcess(QString& file,bool aborted);
+
 private slots:
 	void renderNextTrack();
 	void updateConsoleProgress();

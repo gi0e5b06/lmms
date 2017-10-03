@@ -47,7 +47,6 @@ public:
 
 	OutputSettings const & getOutputSettings() const { return m_outputSettings; }
 
-
 protected:
 	int writeData( const void* data, int len );
 

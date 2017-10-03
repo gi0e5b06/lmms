@@ -24,6 +24,7 @@
 
 
 #include <QFile>
+#include <QProcess>
 
 #include "ProjectRenderer.h"
 #include "Song.h"
@@ -211,15 +212,36 @@ void ProjectRenderer::run()
 	Engine::mixer()->stopProcessing();
 
 	Engine::getSong()->stopExport();
-
-	// if the user aborted export-process, the file has to be deleted
-	const QString f = m_fileDev->outputFile();
-	if( m_abort )
-	{
-		QFile( f ).remove();
-	}
 }
 
+/*
+void ProjectRenderer::postProcess()
+{
+	qWarning("ProjectRenderer::postProcess %s",qPrintable(m_fileDev->outputFile()));
+
+	QFile f(m_fileDev->outputFile());
+	if(f.exists())
+	{
+		// if the user aborted export-process, the file has to be deleted
+		if( m_abort )
+		{
+			f.remove();
+		}
+		else
+	        {
+			QFile p("/usr/bin/normalize-audio");
+			if(Engine::getSong()->peakNormalizeFlag()&&
+			   p.exists())
+			{
+				qWarning("excuting normalization: size=%ld",(long)f.size());
+				QProcess::execute("/bin/ls",QStringList() << "-l" << f.fileName());
+				int pnr=QProcess::execute(p.fileName(),QStringList() << "--peak" << f.fileName());
+				qWarning("%s %s %d",qPrintable(p.fileName()),qPrintable(f.fileName()),pnr);
+			}
+		}
+	}
+}
+*/
 
 
 

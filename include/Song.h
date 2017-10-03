@@ -185,6 +185,16 @@ public:
 		m_renderBetweenMarkers = renderBetweenMarkers;
 	}
 
+	inline bool peakNormalizeFlag() const
+	{
+		return m_peakNormalizeFlag;
+	}
+
+	inline void setPeakNormalizeFlag( bool peakNormalizeFlag )
+	{
+		m_peakNormalizeFlag = peakNormalizeFlag;
+	}
+
 	inline PlayModes playMode() const
 	{
 		return m_playMode;
@@ -372,6 +382,7 @@ private:
 	volatile bool m_exporting;
 	volatile bool m_exportLoop;
 	volatile bool m_renderBetweenMarkers;
+	volatile bool m_peakNormalizeFlag;
 	volatile bool m_playing;
 	volatile bool m_paused;
 

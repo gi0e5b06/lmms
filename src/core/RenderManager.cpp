@@ -24,6 +24,8 @@
 
 #include <QDebug>
 #include <QDir>
+#include <QFile>
+#include <QProcess>
 
 #include "RenderManager.h"
 #include "Song.h"
@@ -57,11 +59,53 @@ void RenderManager::abortProcessing()
 	restoreMutedState();
 }
 
+void RenderManager::postProcess(QString& file,bool aborted)
+{
+	qWarning("RenderManager::postProcess %s %d",qPrintable(file),aborted);
+
+	QFile f(file);
+	if(f.exists())
+	{
+		// if the user aborted export-process, the file has to be deleted
+		if( aborted )
+		{
+			f.remove();
+		}
+		else
+	        {
+			QFile p("/usr/bin/normalize-audio");
+			if(Engine::getSong()->peakNormalizeFlag()&&
+			   p.exists())
+			{
+				//qWarning("excuting normalization: size=%ld",(long)f.size());
+				//QProcess::execute("/bin/ls",QStringList() << "-l" << f.fileName());
+				/*int pnr=*/
+				QProcess::execute(p.fileName(),QStringList() << "--peak" << f.fileName());
+				//qWarning("%s %s %d",qPrintable(p.fileName()),qPrintable(f.fileName()),pnr);
+			}
+		}
+	}
+}
+
 // Called to render each new track when rendering tracks individually.
 void RenderManager::renderNextTrack()
 {
-	delete m_activeRenderer;
-	m_activeRenderer = NULL;
+	//qWarning("RenderManager::renderNextTrack");
+
+	// post-process current track
+	if(m_activeRenderer != NULL)
+	{
+		QString f=m_activeRenderer->outputFile();
+		bool    a=m_activeRenderer->aborted();
+
+		delete m_activeRenderer;
+		m_activeRenderer = NULL;
+
+		postProcess(f,a);
+	} else {
+		delete m_activeRenderer;
+		m_activeRenderer = NULL;
+	}
 
 	if( m_tracksToRender.isEmpty() )
 	{

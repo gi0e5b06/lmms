@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>715</width>
-    <height>491</height>
+    <height>615</height>
    </rect>
   </property>
   <property name="minimumSize">
@@ -403,6 +403,13 @@
          <widget class="QCheckBox" name="renderMarkersCB">
           <property name="text">
            <string>Export between loop markers</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QCheckBox" name="peakNormalizeCB">
+          <property name="text">
+           <string>Peak normalize</string>
           </property>
          </widget>
         </item>

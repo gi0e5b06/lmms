@@ -66,6 +66,9 @@ public:
 		return m_fileDev != NULL;
 	}
 
+	inline QString outputFile() { return m_fileDev->outputFile(); }
+	inline bool aborted() { return m_abort; }
+
 	static ExportFileFormats getFileFormatFromExtension(
 							const QString & _ext );
 
