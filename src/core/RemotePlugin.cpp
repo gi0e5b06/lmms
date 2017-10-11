@@ -260,7 +260,7 @@ bool RemotePlugin::init( const QString &pluginExecutable,
 
 
 bool RemotePlugin::process( const sampleFrame * _in_buf,
-						sampleFrame * _out_buf )
+			    sampleFrame * _out_buf )
 {
 	const fpp_t frames = Engine::mixer()->framesPerPeriod();
 
@@ -268,7 +268,7 @@ bool RemotePlugin::process( const sampleFrame * _in_buf,
 	{
 		if( _out_buf != NULL )
 		{
-			BufferManager::clear( _out_buf, frames );
+			BufferManager::clear( _out_buf );
 		}
 		return false;
 	}
@@ -287,7 +287,7 @@ bool RemotePlugin::process( const sampleFrame * _in_buf,
 		}
 		if( _out_buf != NULL )
 		{
-			BufferManager::clear( _out_buf, frames );
+			BufferManager::clear( _out_buf );//, frames );
 		}
 		return false;
 	}
@@ -361,7 +361,7 @@ bool RemotePlugin::process( const sampleFrame * _in_buf,
 		sampleFrame * o = (sampleFrame *) ( m_shm +
 							m_inputCount*frames );
 		// clear buffer, if plugin didn't fill up both channels
-		BufferManager::clear( _out_buf, frames );
+		BufferManager::clear( _out_buf );//, frames );
 
 		for( ch_cnt_t ch = 0; ch <
 				qMin<int>( DEFAULT_CHANNELS, outputs ); ++ch )

@@ -63,7 +63,7 @@ FxChannel::FxChannel( int idx, Model * _parent ) :
 	m_stillRunning( false ),
 	m_peakLeft( 0.0f ),
 	m_peakRight( 0.0f ),
-	m_buffer( new sampleFrame[Engine::mixer()->framesPerPeriod()] ),
+	m_buffer( BufferManager::acquire() ),//new sampleFrame[Engine::mixer()->framesPerPeriod()] ),
 	m_muteModel( false, _parent ),
 	m_soloModel( false, _parent ),
 	m_volumeModel( 1.0, 0.0, 2.0, 0.001, _parent ),
@@ -73,7 +73,7 @@ FxChannel::FxChannel( int idx, Model * _parent ) :
 	m_queued( false ),
 	m_dependenciesMet( 0 )
 {
-	BufferManager::clear( m_buffer, Engine::mixer()->framesPerPeriod() );
+	BufferManager::clear( m_buffer );
 }
 
 
@@ -81,7 +81,8 @@ FxChannel::FxChannel( int idx, Model * _parent ) :
 
 FxChannel::~FxChannel()
 {
-	delete[] m_buffer;
+	//delete[] m_buffer;
+	BufferManager::release(m_buffer);
 }
 
 
@@ -562,8 +563,7 @@ void FxMixer::mixToChannel( const sampleFrame * _buf, fx_ch_t _ch )
 
 void FxMixer::prepareMasterMix()
 {
-	BufferManager::clear( m_fxChannels[0]->m_buffer,
-					Engine::mixer()->framesPerPeriod() );
+	BufferManager::clear( m_fxChannels[0]->m_buffer );
 }
 
 
@@ -635,8 +635,7 @@ void FxMixer::masterMix( sampleFrame * _buf )
 	// reset channel process state
 	for( int i = 0; i < numChannels(); ++i)
 	{
-		BufferManager::clear( m_fxChannels[i]->m_buffer,
-				Engine::mixer()->framesPerPeriod() );
+		BufferManager::clear( m_fxChannels[i]->m_buffer );
 		m_fxChannels[i]->reset();
 		m_fxChannels[i]->m_queued = false;
 		// also reset hasInput

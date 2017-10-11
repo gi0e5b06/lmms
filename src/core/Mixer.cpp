@@ -58,6 +58,7 @@
 #include "MidiApple.h"
 #include "MidiDummy.h"
 
+#include "MemoryHelper.h"
 #include "BufferManager.h"
 
 typedef LocklessList<PlayHandle *>::Element LocklessListElement;
@@ -96,8 +97,9 @@ Mixer::Mixer( bool renderOnly ) :
 	{
 		m_inputBufferFrames[i] = 0;
 		m_inputBufferSize[i] = DEFAULT_BUFFER_SIZE * 100;
-		m_inputBuffer[i] = new sampleFrame[ DEFAULT_BUFFER_SIZE * 100 ];
-		BufferManager::clear( m_inputBuffer[i], m_inputBufferSize[i] );
+		m_inputBuffer[i] = new sampleFrame[ m_inputBufferSize[i] ];
+		memset(m_inputBuffer[i],0,sizeof(sampleFrame) * m_inputBufferSize[i]);
+		//BufferManager::clear( m_inputBuffer[i], m_inputBufferSize[i] );
 	}
 
 	// determine FIFO size and number of frames per period
@@ -139,9 +141,7 @@ Mixer::Mixer( bool renderOnly ) :
 	{
 		m_readBuf = (surroundSampleFrame*)
 			MemoryHelper::alignedMalloc( m_framesPerPeriod *
-						sizeof( surroundSampleFrame ) );
-
-		BufferManager::clear( m_readBuf, m_framesPerPeriod );
+						     sizeof( surroundSampleFrame ) );
 		m_bufferPool.push_back( m_readBuf );
 	}
 
@@ -320,6 +320,7 @@ void Mixer::pushInputFrames( sampleFrame * _ab, const f_cnt_t _frames )
 	{
 		size = qMax( size * 2, frames + _frames );
 		sampleFrame * ab = new sampleFrame[ size ];
+		memset( ab , 0 , sizeof(sampleFrame) * size );
 		memcpy( ab, buf, frames * sizeof( sampleFrame ) );
 		delete [] buf;
 
@@ -416,7 +417,8 @@ const surroundSampleFrame * Mixer::renderNextBuffer()
 	m_readBuf = m_bufferPool[m_readBuffer];
 
 	// clear last audio-buffer
-	BufferManager::clear( m_writeBuf, m_framesPerPeriod );
+	memset(m_writeBuf,0,m_framesPerPeriod * sizeof(surroundSampleFrame));
+
 
 	// prepare master mix (clear internal buffers etc.)
 	FxMixer * fxMixer = Engine::fxMixer();

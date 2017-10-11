@@ -27,6 +27,7 @@
 
 #include "MemoryManager.h"
 
+/*
 sampleFrame ** BufferManager::s_available;
 AtomicInt BufferManager::s_availableIndex = 0;
 sampleFrame ** BufferManager::s_released;
@@ -107,7 +108,7 @@ void BufferManager::refresh() // non-threadsafe, hence it's called periodically 
 	s_availableIndex = j;
 	s_releasedIndex = 0;
 }
-
+*/
 
 /* // non-extensible for now
 void BufferManager::extend( int c )
@@ -126,3 +127,65 @@ void BufferManager::extend( int c )
 		b += Engine::mixer()->framesPerPeriod();
 	}
 }*/
+
+
+fpp_t BufferManager::s_framesPerPeriod = 0;
+
+void BufferManager::init( fpp_t framesPerPeriod )
+{
+	s_framesPerPeriod=framesPerPeriod;
+}
+
+
+sampleFrame * BufferManager::acquire()
+{
+	if(s_framesPerPeriod<=0)
+		qFatal("invalid framesPerPeriod %s:%d",__FILE__,__LINE__);
+
+	sampleFrame * r=MM_ALLOC(sampleFrame,s_framesPerPeriod);
+	clear(r);
+	return r;
+}
+
+
+void BufferManager::clear( sampleFrame * ab )
+{
+	memset( ab, 0, sizeof(sampleFrame) * s_framesPerPeriod );
+}
+
+
+void BufferManager::clear( sampleFrame * ab, const f_cnt_t frames,
+			   const f_cnt_t offset )
+{
+	if((offset<0)||(frames<=0)||
+	   (offset+frames*sizeof(sampleFrame)>s_framesPerPeriod*sizeof(sampleFrame)))
+		qFatal("strange clear ffp=%d nbf=%d offset=%d %s:%d",
+		       s_framesPerPeriod,frames,offset,__FILE__,__LINE__);
+
+	memset( ab + offset, 0, sizeof(sampleFrame) * frames );
+}
+
+
+#ifndef LMMS_DISABLE_SURROUND
+void BufferManager::clear( surroundSampleFrame * ab, const f_cnt_t frames,
+			   const f_cnt_t offset )
+{
+	qFatal("BufferManager::clear no surround");
+	/*
+	if(offset+frames*sizeof(surroundSampleFrame)>s_framesPerPeriod*sizeof(surroundSampleFrame))
+		qFatal("strange clear ffp=%d nbf=%d offset=%d %s:%d",
+	memset( ab + offset, 0, sizeof(surroundSampleFrame) * frames );
+	*/
+}
+#endif
+
+
+void BufferManager::release( sampleFrame * buf )
+{
+	MM_FREE(buf);
+}
+
+
+void BufferManager::refresh() // non-threadsafe, hence it's called periodically from mixer at a time when no other threads can interfere
+{
+}

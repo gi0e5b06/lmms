@@ -607,6 +607,8 @@ void NotePlayHandleManager::release( NotePlayHandle * nph )
 
 void NotePlayHandleManager::extend( int c )
 {
+	if(c<=0) return;
+
 	s_size += c;
 	NotePlayHandle ** tmp = MM_ALLOC( NotePlayHandle*, s_size );
 	MM_FREE( s_available );

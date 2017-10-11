@@ -40,7 +40,11 @@ PlayHandle::PlayHandle( const Type type, f_cnt_t offset ) :
 
 PlayHandle::~PlayHandle()
 {
-	BufferManager::release(m_playHandleBuffer);
+	if(m_playHandleBuffer)
+	{
+		BufferManager::release(m_playHandleBuffer);
+		m_playHandleBuffer = NULL;
+	}
 }
 
 
@@ -49,6 +53,7 @@ void PlayHandle::doProcessing()
 	if( m_usesBuffer )
 	{
 		if( ! m_playHandleBuffer ) m_playHandleBuffer = BufferManager::acquire();
+		BufferManager::clear( m_playHandleBuffer );
 		play( m_playHandleBuffer );
 	}
 	else
@@ -60,6 +65,9 @@ void PlayHandle::doProcessing()
 
 void PlayHandle::releaseBuffer()
 {
-	BufferManager::release( m_playHandleBuffer );
-	m_playHandleBuffer = NULL;
+	if(m_playHandleBuffer)
+	{
+		BufferManager::release( m_playHandleBuffer );
+		m_playHandleBuffer = NULL;
+	}
 }

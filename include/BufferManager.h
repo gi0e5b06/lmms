@@ -39,17 +39,19 @@ public:
 	static void init( fpp_t framesPerPeriod );
 	static sampleFrame * acquire();
 	// audio-buffer-mgm
+	static void clear( sampleFrame * ab );
 	static void clear( sampleFrame * ab, const f_cnt_t frames,
-						const f_cnt_t offset = 0 );
+			   const f_cnt_t offset );
 #ifndef LMMS_DISABLE_SURROUND
 	static void clear( surroundSampleFrame * ab, const f_cnt_t frames,
-						const f_cnt_t offset = 0 );
+			   const f_cnt_t offset );
 #endif
 	static void release( sampleFrame * buf );
 	static void refresh();
 //	static void extend( int c );
 
 private:
+	/*
 	static sampleFrame ** s_available;
 	static AtomicInt s_availableIndex;
 
@@ -57,6 +59,8 @@ private:
 	static AtomicInt s_releasedIndex;
 //	static QReadWriteLock s_mutex;
 	static int s_size;
+	*/
+	static fpp_t s_framesPerPeriod;
 };
 
 #endif

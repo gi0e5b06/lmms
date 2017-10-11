@@ -257,15 +257,21 @@ void InstrumentFunctionNoteStacking::processNote( NotePlayHandle * _n )
 				{
 					break;
 				}
-				// create copy of base-note
-				Note note_copy( _n->length(), 0, sub_note_key, _n->getVolume(), _n->getPanning(), _n->detuning() );
 
-				// create sub-note-play-handle, only note is
-				// different
-				Engine::mixer()->addPlayHandle( 
-						NotePlayHandleManager::acquire( _n->instrumentTrack(), _n->offset(), _n->frames(), note_copy,
-									_n, -1, NotePlayHandle::OriginNoteStacking )
-						);
+				//if(MM_SAFE(NotePlayHandle,1))
+				{
+
+					// create copy of base-note
+					Note note_copy( _n->length(), 0, sub_note_key, _n->getVolume(), _n->getPanning(), _n->detuning() );
+
+					// create sub-note-play-handle, only note is
+					// different
+					Engine::mixer()->addPlayHandle(
+								       NotePlayHandleManager::acquire( _n->instrumentTrack(), _n->offset(),
+												       _n->frames(), note_copy,
+												       _n, -1, NotePlayHandle::OriginNoteStacking )
+								       );
+				}
 			}
 		}
 	}
@@ -510,16 +516,19 @@ void InstrumentFunctionArpeggio::processNote( NotePlayHandle * _n )
 
 		// create new arp-note
 
-		// create sub-note-play-handle, only ptr to note is different
-		// and is_arp_note=true
-		Engine::mixer()->addPlayHandle(
-				NotePlayHandleManager::acquire( _n->instrumentTrack(),
-							frames_processed,
-							gated_frames,
-							Note( MidiTime( 0 ), MidiTime( 0 ), sub_note_key, (volume_t) qRound( _n->getVolume() * vol_level ),
-									_n->getPanning(), _n->detuning() ),
-							_n, -1, NotePlayHandle::OriginArpeggio )
-				);
+		//if(MM_SAFE(NotePlayHandle,1))
+		{
+			// create sub-note-play-handle, only ptr to note is different
+			// and is_arp_note=true
+			Engine::mixer()->addPlayHandle(
+						       NotePlayHandleManager::acquire( _n->instrumentTrack(),
+										       frames_processed,
+										       gated_frames,
+										       Note( MidiTime( 0 ), MidiTime( 0 ), sub_note_key, (volume_t) qRound( _n->getVolume() * vol_level ),
+											     _n->getPanning(), _n->detuning() ),
+										       _n, -1, NotePlayHandle::OriginArpeggio )
+						       );
+		}
 
 		// update counters
 		frames_processed += arp_frames;

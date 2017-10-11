@@ -346,7 +346,7 @@ public:
 	static void release( NotePlayHandle * nph );
 	static void extend( int i );
 
-private:
+ private:
 	static NotePlayHandle ** s_available;
 	static QReadWriteLock s_mutex;
 	static AtomicInt s_availableIndex;

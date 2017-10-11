@@ -1,9 +1,7 @@
 /*
- * MemoryManager.cpp - nothing
+ * MemoryManagerStandard.h - malloc/calloc/free
  *
  * Copyright (c) 2017
- *
- * This file is part of LMMS - https://lmms.io
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public
@@ -22,5 +20,21 @@
  *
  */
 
+#ifndef MEMORY_MANAGER_STANDARD_H
+#define MEMORY_MANAGER_STANDARD_H
 
-#include "MemoryManager.h"
+#include <stdlib.h>
+#include "export.h"
+
+class EXPORT MemoryManagerStandard
+{
+ public:
+	static bool  safe(size_t size , const char* file , long line);
+	static void* alloc(size_t size , const char* file , long line);
+	static void  free(void* ptr , const char* file , long line);
+	static bool  init();
+	static void  cleanup();
+	//static int extend( int chunks ); // returns index of created pool (for use by alloc)
+};
+
+#endif

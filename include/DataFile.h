@@ -52,6 +52,8 @@ public:
 	} ;
 	typedef Types Type;
 
+	static int seed_count;
+
 	DataFile( const QString& fileName );
 	DataFile( const QByteArray& data );
 	DataFile( Type type );

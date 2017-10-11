@@ -33,6 +33,9 @@ set(LMMS_SRCS
 	core/LocklessAllocator.cpp
 	core/MemoryHelper.cpp
 	core/MemoryManager.cpp
+	core/MemoryManagerArray.cpp
+	core/MemoryManagerLegacy.cpp
+	core/MemoryManagerStandard.cpp
 	core/MetaData.cpp
 	core/MeterModel.cpp
 	core/Mixer.cpp

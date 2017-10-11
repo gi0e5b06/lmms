@@ -292,8 +292,25 @@ static int sid_fillbuffer(unsigned char* sidreg, cSID *sid, int tdelta, short *p
     samples -= result;
     tdelta -= SIDWRITEDELAY;
   }
+
   result = sid->clock(tdelta, ptr, samples);
   total += result;
+  ptr += result;
+  samples -= result;
+
+  if(samples>0)
+  {
+	  memset(ptr,0,sizeof(short)*samples);
+	  /*
+	  qWarning("sid_instrument: %d samples missing (tdelta=%d)",samples,tdelta);
+	  result = sid->clock(tdelta, ptr, samples);
+	  total += result;
+	  ptr += result;
+	  samples -= result;
+	  tdelta = 0;
+	  qWarning("              : %d samples missing (tdelta=%d)",samples,tdelta);
+	  */
+  }
 
   return total;
 }
@@ -415,7 +432,7 @@ void sidInstrument::playNote( NotePlayHandle * _n,
 	data8 += m_voice3OffModel.value()?128:0;
 
 	switch( m_filterModeModel.value() )
-	{	
+	{
 		default: break;
 		case LowPass:	data8 += 16; break;
 		case BandPass:	data8 += 32; break;
@@ -423,10 +440,9 @@ void sidInstrument::playNote( NotePlayHandle * _n,
 	}
 
 	sidreg[24] = data8&0x00FF;
-		
-	int num = sid_fillbuffer(sidreg, sid,delta_t,buf, frames);
-	if(num!=frames)
-		printf("!!!Not enough samples\n");
+
+	int num = sid_fillbuffer(sidreg,sid,delta_t,buf,frames);
+	if(num!=frames) qWarning("sidInstrument: not enough samples: %d/%d",num,frames);
 
 	for( fpp_t frame = 0; frame < frames; ++frame )
 	{

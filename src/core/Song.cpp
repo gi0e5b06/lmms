@@ -59,6 +59,7 @@
 #include "TimeLineWidget.h"
 #include "PeakController.h"
 #include "VersionedSaveDialog.h"
+#include "MemoryManagerArray.h"
 
 
 tick_t MidiTime::s_ticksPerTact = DefaultTicksPerTact;
@@ -121,6 +122,7 @@ Song::Song() :
 Song::~Song()
 {
 	m_playing = false;
+	MemoryManagerArray::active=false;
 	delete m_globalAutomationTrack;
 }
 
@@ -492,6 +494,7 @@ void Song::playSong()
 	m_playMode = Mode_PlaySong;
 	m_playing = true;
 	m_paused = false;
+	MemoryManagerArray::active=true;
 
 	m_vstSyncController.setPlaybackState( true );
 
@@ -531,6 +534,7 @@ void Song::playBB()
 	m_playMode = Mode_PlayBB;
 	m_playing = true;
 	m_paused = false;
+	MemoryManagerArray::active=true;
 
 	m_vstSyncController.setPlaybackState( true );
 
@@ -557,6 +561,7 @@ void Song::playPattern( const Pattern* patternToPlay, bool loop )
 		m_playMode = Mode_PlayPattern;
 		m_playing = true;
 		m_paused = false;
+		MemoryManagerArray::active=true;
 	}
 
 	savePos();
@@ -619,11 +624,13 @@ void Song::togglePause()
 	{
 		m_playing = true;
 		m_paused = false;
+		MemoryManagerArray::active=true;
 	}
 	else
 	{
 		m_playing = false;
 		m_paused = true;
+		MemoryManagerArray::active=false;
 	}
 
 	m_vstSyncController.setPlaybackState( m_playing );
@@ -687,6 +694,7 @@ void Song::stop()
 		m_elapsedMilliSeconds = 0;
 	}
 	m_playing = false;
+	MemoryManagerArray::active=false;
 
 	m_playPos[m_playMode].setCurrentFrame( 0 );
 

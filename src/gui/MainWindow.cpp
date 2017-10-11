@@ -851,7 +851,7 @@ void MainWindow::createNewProjectFromTemplate( QAction * _idx )
 				ConfigManager::inst()->userTemplateDir();
 
 		Engine::getSong()->createNewProjectFromTemplate(
-			dirBase + _idx->text() + ".mpt" );
+			dirBase + _idx->text().replace("&&", "&") + ".mpt" );
 	}
 }
 
@@ -901,7 +901,8 @@ void MainWindow::updateRecentlyOpenedProjectsMenu()
 				continue;
 			}
 
-			m_recentlyOpenedProjectsMenu->addAction( embed::getIconPixmap( "project_file" ), *it );
+			m_recentlyOpenedProjectsMenu->addAction(embed::getIconPixmap("project_file"),
+								it->replace("&", "&&"));
 #ifdef LMMS_BUILD_APPLE
 			m_recentlyOpenedProjectsMenu->actions().last()->setIconVisibleInMenu(false); // QTBUG-44565 workaround
 			m_recentlyOpenedProjectsMenu->actions().last()->setIconVisibleInMenu(true);
@@ -927,7 +928,9 @@ void MainWindow::openRecentlyOpenedProject( QAction * _action )
 		QFileInfo recentFile(f);
 		if(!recentFile.exists()&&(f.indexOf('&')>=0))
 		{
+			f=f.replace("&&","£lukas-w closed my PR£");
 			f=f.replace("&","");
+			f=f.replace("£lukas-w closed my PR£","&");
 		}
 		//end
 		setCursor( Qt::WaitCursor );

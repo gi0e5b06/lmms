@@ -26,133 +26,70 @@
 #ifndef MEMORY_MANAGER_H
 #define MEMORY_MANAGER_H
 
-#include <QtCore/QVector>
-#include <QtCore/QMutex>
-#include <QtCore/QHash>
-#include "MemoryHelper.h"
+//#include <QtCore/QVector>
+//#include <QtCore/QMutex>
+//#include <QtCore/QHash>
+//#include "MemoryHelper.h"
+#include <string.h>
 #include "export.h"
 
-class QReadWriteLock;
+#define MEMORY_MANAGER_CLASS MemoryManagerArray
+#include "MemoryManagerArray.h"
 
-const int MM_CHUNK_SIZE = 64; // granularity of managed memory
-const int MM_INITIAL_CHUNKS = 1024 * 1024; // how many chunks to allocate at startup - TODO: make configurable
-const int MM_INCREMENT_CHUNKS = 16 * 1024; // min. amount of chunks to increment at a time
+#define MM_INIT MEMORY_MANAGER_CLASS::init();
+#define MM_CLEANUP MEMORY_MANAGER_CLASS::cleanup();
 
-struct MemoryPool
-{
-	void * m_pool;
-	char * m_free;
-	int m_chunks;
-	QMutex m_mutex;
-
-	MemoryPool() :
-		m_pool( NULL ),
-		m_free( NULL ),
-		m_chunks( 0 )
-	{}
-
-	MemoryPool( int chunks ) :
-		m_chunks( chunks )
-	{
-		m_free = (char*) MemoryHelper::alignedMalloc( chunks );
-		memset( m_free, 1, chunks );
-	}
-
-	MemoryPool( const MemoryPool & mp ) :
-		m_pool( mp.m_pool ),
-		m_free( mp.m_free ),
-		m_chunks( mp.m_chunks ),
-		m_mutex()
-	{}
-
-	MemoryPool & operator = ( const MemoryPool & mp )
-	{
-		m_pool = mp.m_pool;
-		m_free = mp.m_free;
-		m_chunks = mp.m_chunks;
-		return *this;
-	}
-
-	void * getChunks( int chunksNeeded );
-	void releaseChunks( void * ptr, int chunks );
-};
-
-struct PtrInfo
-{
-	int chunks;
-	MemoryPool * memPool;
-};
-
-typedef QVector<MemoryPool> MemoryPoolVector;
-typedef QHash<void*, PtrInfo> PointerInfoMap;
-
-class EXPORT MemoryManager
-{
-public:
-	static bool init();
-	static void * alloc( size_t size );
-	static void free( void * ptr );
-	static int extend( int chunks ); // returns index of created pool (for use by alloc)
-	static void cleanup();
-
-private:
-	static MemoryPoolVector s_memoryPools;
-	static QReadWriteLock s_poolMutex;
-
-	static PointerInfoMap s_pointerInfo;
-	static QMutex s_pointerMutex;
-};
-
-
-#define MM_OPERATORS								\
-public: 											\
-static void * operator new ( size_t size )		\
-{													\
-	return MemoryManager::alloc( size );			\
-}													\
-static void * operator new[] ( size_t size )		\
-{													\
-	return MemoryManager::alloc( size );			\
-}													\
-static void operator delete ( void * ptr )		\
-{													\
-	MemoryManager::free( ptr );					\
-}													\
-static void operator delete[] ( void * ptr )	\
-{													\
-	MemoryManager::free( ptr );					\
+#define MM_OPERATORS \
+public: 	 \
+static void * operator new ( size_t size ) \
+{			 \
+	return MEMORY_MANAGER_CLASS::alloc( size , __FILE__ , __LINE__ );	\
+}			 \
+static void * operator new[] ( size_t size ) \
+{			 \
+	return MEMORY_MANAGER_CLASS::alloc( size , __FILE__ , __LINE__ ); \
+}			 \
+static void operator delete ( void * ptr ) \
+{			 \
+	MEMORY_MANAGER_CLASS::free( ptr , __FILE__ , __LINE__ ); \
+}			 \
+static void operator delete[] ( void * ptr ) \
+{			 \
+	MEMORY_MANAGER_CLASS::free( ptr , __FILE__ , __LINE__ ); \
 }
 
 // for use in cases where overriding new/delete isn't a possibility
-#define MM_ALLOC( type, count ) (type*) MemoryManager::alloc( sizeof( type ) * count )
+#define MM_ALLOC( type, count ) (type*) MEMORY_MANAGER_CLASS::alloc( sizeof( type ) * count , __FILE__ , __LINE__ )
 // and just for symmetry...
-#define MM_FREE( ptr ) MemoryManager::free( ptr )
+#define MM_FREE( ptr ) MEMORY_MANAGER_CLASS::free( ptr , __FILE__ , __LINE__ )
+// checking for room
+#define MM_SAFE( type, count ) MEMORY_MANAGER_CLASS::safe( sizeof( type ) * count , __FILE__ , __LINE__ )
 
 
 
 // for debugging purposes
 
-#define MM_OPERATORS_DEBUG												\
-public: 																\
-static void * operator new ( size_t size )							\
-{																		\
-	qDebug( "MM_OPERATORS_DEBUG: new called for %d bytes", size );		\
-	return MemoryManager::alloc( size );								\
-}																		\
-static void * operator new[] ( size_t size )							\
-{																		\
-	qDebug( "MM_OPERATORS_DEBUG: new[] called for %d bytes", size );	\
-	return MemoryManager::alloc( size );								\
-}																		\
-static void operator delete ( void * ptr )							\
-{																		\
-	qDebug( "MM_OPERATORS_DEBUG: delete called for %p", ptr );			\
-	MemoryManager::free( ptr );										\
-}																		\
-static void operator delete[] ( void * ptr )						\
-{																		\
-	qDebug( "MM_OPERATORS_DEBUG: delete[] called for %p", ptr );		\
-	MemoryManager::free( ptr );										\
+#define MM_OPERATORS_DEBUG		 \
+public: 						 \
+static void * operator new ( size_t size ) \
+{								 \
+	qDebug( "MM_OPERATORS_DEBUG: new called for %d bytes", size ); \
+	return MEMORY_MANAGER_CLASS::alloc( size , __FILE__ , __LINE__ ); \
+}								 \
+static void * operator new[] ( size_t size ) \
+{								 \
+	qDebug( "MM_OPERATORS_DEBUG: new[] called for %d bytes", size ); \
+	return MEMORY_MANAGER_CLASS::alloc( size , __FILE__ , __LINE__ ); \
+}								 \
+static void operator delete ( void * ptr ) \
+{								 \
+	qDebug( "MM_OPERATORS_DEBUG: delete called for %p", ptr ); \
+	MEMORY_MANAGER_CLASS::free( ptr , __FILE__ , __LINE__ ); \
+}								 \
+static void operator delete[] ( void * ptr ) \
+{								 \
+	qDebug( "MM_OPERATORS_DEBUG: delete[] called for %p", ptr ); \
+	MEMORY_MANAGER_CLASS::free( ptr , __FILE__ , __LINE__ ); \
 }
 
 

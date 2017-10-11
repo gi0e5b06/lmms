@@ -49,11 +49,11 @@ VisualizationWidget::VisualizationWidget( const QPixmap & _bg, QWidget * _p,
 	setAttribute( Qt::WA_OpaquePaintEvent, true );
 	setActive( ConfigManager::inst()->value( "ui", "displaywaveform").toInt() );
 
-	const fpp_t frames = Engine::mixer()->framesPerPeriod();
-	m_buffer = new sampleFrame[frames];
+	//const fpp_t frames = Engine::mixer()->framesPerPeriod();
+	//m_buffer = new sampleFrame[frames];
+	//BufferManager::clear( m_buffer, frames );
 
-	BufferManager::clear( m_buffer, frames );
-
+	m_buffer = BufferManager::acquire();
 
 	ToolTip::add( this, tr( "click to enable/disable visualization of "
 							"master-output" ) );
@@ -64,7 +64,8 @@ VisualizationWidget::VisualizationWidget( const QPixmap & _bg, QWidget * _p,
 
 VisualizationWidget::~VisualizationWidget()
 {
-	delete[] m_buffer;
+	BufferManager::release(m_buffer);
+	//delete[] m_buffer;
 	delete[] m_points;
 }
 
@@ -75,8 +76,15 @@ void VisualizationWidget::updateAudioBuffer( const surroundSampleFrame * buffer 
 {
 	if( !Engine::getSong()->isExporting() )
 	{
+		//qWarning("VisualizationWidget::updateAudioBuffer");
 		const fpp_t fpp = Engine::mixer()->framesPerPeriod();
-		memcpy( m_buffer, buffer, sizeof( surroundSampleFrame ) * fpp );
+		//memcpy( m_buffer, buffer, sizeof( surroundSampleFrame ) * fpp );
+		for( ch_cnt_t ch = 0; ch < DEFAULT_CHANNELS; ++ch )
+			for(fpp_t i=0;i<fpp;i++)
+			 {
+				m_buffer[i][ch]=buffer[i][ch];
+				//if(buffer[i][ch] != 0.) qWarning("%f",buffer[i][ch]);
+			 }
 	}
 }
 
@@ -123,8 +131,9 @@ void VisualizationWidget::paintEvent( QPaintEvent * )
 		Mixer const * mixer = Engine::mixer();
 
 		float master_output = mixer->masterGain();
+		//qWarning("VisualizationWidget::masterGain %f",master_output);
 		int w = width()-4;
-		const float half_h = -( height() - 6 ) / 3.0 * master_output - 1;
+		const float half_h = -( height() - 6 ) / 2.0 * master_output - 1; //3.0
 		int x_base = 2;
 		const float y_base = height()/2 - 0.5f;
 
@@ -163,9 +172,7 @@ void VisualizationWidget::paintEvent( QPaintEvent * )
 			{
 				m_points[frame] = QPointF(
 					x_base + (float) frame * xd,
-					y_base + ( Mixer::clip(
-						m_buffer[frame][ch] ) *
-								half_h ) );
+					y_base + Mixer::clip( m_buffer[frame][ch] ) * half_h );
 			}
 			p.drawPolyline( m_points, frames );
 		}

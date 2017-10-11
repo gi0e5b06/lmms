@@ -59,7 +59,7 @@ void Oscillator::update( sampleFrame * _ab, const fpp_t _frames,
 {
 	if( m_freq >= Engine::mixer()->processingSampleRate() / 2 )
 	{
-		BufferManager::clear( _ab, _frames );
+		memset( _ab , 0, sizeof(sampleFrame) * _frames );//BufferManager::clear( _ab, _frames );
 		return;
 	}
 	if( m_subOsc != NULL )

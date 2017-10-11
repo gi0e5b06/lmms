@@ -609,6 +609,7 @@ bool InstrumentTrack::play( const MidiTime & _start, const fpp_t _frames,
 
 	bool played_a_note = false;	// will be return variable
 
+	if(!isMuted() ) // test with isMuted GDX
 	for( tcoVector::Iterator it = tcos.begin(); it != tcos.end(); ++it )
 	{
 		Pattern* p = dynamic_cast<Pattern*>( *it );
@@ -643,7 +644,7 @@ bool InstrumentTrack::play( const MidiTime & _start, const fpp_t _frames,
 
 		Note * cur_note;
 		while( nit != notes.end() &&
-					( cur_note = *nit )->pos() == cur_start )
+		       ( cur_note = *nit )->pos() == cur_start )
 		{
 			const f_cnt_t note_frames =
 				cur_note->length().frames( frames_per_tick );

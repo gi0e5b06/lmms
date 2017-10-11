@@ -442,7 +442,8 @@ void TimeLineWidget::mousePressEvent( QMouseEvent* event )
 	{
 		return;
 	}
-	if( event->button() == Qt::LeftButton  && !(event->modifiers() & Qt::ShiftModifier) )
+	if(  (event->button() == Qt::LeftButton) &&
+	    !(event->modifiers() & Qt::ShiftModifier) )
 	{
 		m_action = MovePositionMarker;
 		if( event->x() - m_xOffset < s_posMarkerPixmap->width() )
@@ -513,12 +514,14 @@ void TimeLineWidget::mousePressEvent( QMouseEvent* event )
 
 void TimeLineWidget::mouseMoveEvent( QMouseEvent* event )
 {
-	const MidiTime t = m_begin + static_cast<int>( qMax( event->x() - m_xOffset - m_moveXOff, 0 ) * MidiTime::ticksPerTact() / m_ppt );
+	MidiTime t = m_begin + static_cast<int>( qMax( event->x() - m_xOffset - m_moveXOff, 0 ) * MidiTime::ticksPerTact() / m_ppt );
 	const int n=m_currentLoop;
 
 	switch( m_action )
 	{
 		case MovePositionMarker:
+			if( !(event->modifiers() & Qt::ControlModifier ))
+				t.setTicks(t.toNearestTact().getTicks());
 			m_pos.setTicks( t.getTicks() );
 			Engine::getSong()->setToTime(t);
 			m_pos.setCurrentFrame( 0 );

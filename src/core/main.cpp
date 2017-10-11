@@ -242,7 +242,7 @@ int main( int argc, char * * argv )
 #endif
 
 	// initialize memory managers
-	MemoryManager::init();
+	MM_INIT //MemoryManager::init();
 	NotePlayHandleManager::init();
 
 	// intialize RNG
@@ -974,7 +974,7 @@ int main( int argc, char * * argv )
 	}
 
 	// cleanup memory managers
-	MemoryManager::cleanup();
+	MM_CLEANUP //MemoryManager::cleanup();
 
 	// ProjectRenderer::updateConsoleProgress() doesn't return line after render
 	if( coreOnly )
