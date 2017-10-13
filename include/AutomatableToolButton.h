@@ -1,7 +1,7 @@
 /*
- * NStateButton.h - declaration of class nStateButton
+ * AutomatableToolButton.h - 
  *
- * Copyright (c) 2005 Tobias Doerffel <tobydox/at/users.sourceforge.net>
+ * Copyright (c) 2017
  *
  * This file is part of LMMS - https://lmms.io
  *
@@ -23,54 +23,39 @@
  */
 
 
-#ifndef NSTATE_BUTTON_H
-#define NSTATE_BUTTON_H
+#ifndef AUTOMATABLE_TOOL_BUTTON_H
+#define AUTOMATABLE_TOOL_BUTTON_H
 
-#include <QPixmap>
-#include <QtCore/QVector>
-#include <QtCore/QPair>
+#include <QToolButton>
 
-#include "ToolButton.h"
+#include "AutomatableModelView.h"
 
 
-class NStateButton : public ToolButton
+
+
+class EXPORT AutomatableToolButton : public QToolButton, public BoolModelView
 {
 	Q_OBJECT
 public:
-	NStateButton( QWidget * _parent );
-	virtual ~NStateButton();
-	void addState( const QPixmap & _pixmap, const QString & _tooltip = "" );
+	AutomatableToolButton( QWidget * _parent, const QString & _name
+			= QString::null );
+	virtual ~AutomatableToolButton();
 
-	inline void setGeneralToolTip( const QString & _tooltip )
-	{
-		m_generalToolTip = _tooltip;
-	}
-
-	inline int state() const
-	{
-		return( m_curState );
-	}
-
+	virtual bool isChecked();
+	virtual void setCheckable( bool _on );
 
 public slots:
-	void changeState( int _n );
-	void moveToNextState();
+	virtual void modelChanged();
+	virtual void update();
+	virtual void setChecked( bool _on );
+	//virtual void toggle();
 
-
-signals:
-	void changedState( int _n );
 
 
 protected:
+	virtual void contextMenuEvent( QContextMenuEvent * _me );
 	virtual void mousePressEvent( QMouseEvent * _me );
-
-
-private:
-	QVector<QPair<QPixmap, QString> > m_states;
-	QString m_generalToolTip;
-
-	int m_curState;
-
+	//virtual void mouseReleaseEvent( QMouseEvent * _me );
 } ;
 
 #endif

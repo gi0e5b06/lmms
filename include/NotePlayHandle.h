@@ -41,7 +41,7 @@ typedef QList<NotePlayHandle *> NotePlayHandleList;
 typedef QList<const NotePlayHandle *> ConstNotePlayHandleList;
 
 
-class EXPORT NotePlayHandle : public PlayHandle, public Note
+class EXPORT NotePlayHandle final : public PlayHandle, public Note
 {
 	MM_OPERATORS
 public:
@@ -264,6 +264,7 @@ public:
 	}
 
 private:
+	/*
 	class BaseDetuning
 	{
 		MM_OPERATORS
@@ -285,6 +286,7 @@ private:
 		float m_value;
 
 	} ;
+	*/
 
 	void updateFrequency();
 
@@ -318,7 +320,8 @@ private:
 	float m_frequency;
 	float m_unpitchedFrequency;
 
-	BaseDetuning* m_baseDetuning;
+	//BaseDetuning* m_baseDetuning;
+	float m_baseDetune;
 	MidiTime m_songGlobalParentOffset;
 
 	int m_midiChannel;

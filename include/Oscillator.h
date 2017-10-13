@@ -39,7 +39,7 @@
 class IntModel;
 
 
-class EXPORT Oscillator
+class EXPORT Oscillator final
 {
 	MM_OPERATORS
 public:

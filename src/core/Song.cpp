@@ -253,16 +253,34 @@ void Song::processNextBuffer()
 	bool checkLoop =
 		tl != NULL && m_exporting == false && tl->loopPointsEnabled();
 
+	//int n =tl->currentLoop();
+	int nn   =tl->nextLoop();
+
+	if(nn>=0)
+	{
+		MidiTime& pos =m_playPos[m_playMode];
+		// if looping-mode is enabled and we are outside of the looping
+		// range, go to the beginning of the range
+		if( pos >= tl->loopBegin(nn) &&
+		    pos <  tl->loopEnd(nn) )
+		{
+			//qWarning("TLW: loop 1: pos=%d nlb=%d nle=%d",pos.getTicks(),
+			//	 tl->loopBegin(nn).getTicks(),tl->loopEnd(nn).getTicks());
+			tl->setNextLoop(-1);
+			tl->setCurrentLoop(nn);
+			tl->toggleLoopPoints(1);// LoopPointStates::LoopPointsEnabled );
+		}
+	}
+
 	if( checkLoop )
 	{
 		// if looping-mode is enabled and we are outside of the looping
 		// range, go to the beginning of the range
 		if( m_playPos[m_playMode] < tl->loopBegin() ||
-					m_playPos[m_playMode] >= tl->loopEnd() )
+		    m_playPos[m_playMode] >= tl->loopEnd() )
 		{
 			setToTime(tl->loopBegin());
-			m_playPos[m_playMode].setTicks(
-						tl->loopBegin().getTicks() );
+			m_playPos[m_playMode].setTicks(tl->loopBegin().getTicks());
 			emit updateSampleTracks();
 		}
 	}
@@ -334,8 +352,20 @@ void Song::processNextBuffer()
 				// beginning of the range
 				if( m_playPos[m_playMode] >= tl->loopEnd() )
 				{
-					m_playPos[m_playMode].setTicks( tl->loopBegin().getTicks() );
-					setToTime(tl->loopBegin());
+					//int n =tl->currentLoop();
+					int nn   =tl->nextLoop();
+
+					if(nn>=0)
+					{
+						tl->setNextLoop(-1);
+						tl->setCurrentLoop(nn);
+						tl->toggleLoopPoints(1);// LoopPointStates::LoopPointsEnabled );
+					}
+					else
+					{
+						m_playPos[m_playMode].setTicks( tl->loopBegin().getTicks() );
+						setToTime(tl->loopBegin());
+					}
 				}
 				else if( m_playPos[m_playMode] == tl->loopEnd() - 1 )
 				{

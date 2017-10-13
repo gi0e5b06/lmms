@@ -3,12 +3,15 @@
 #define MEMORY_MANAGER_ARRAY_H
 
 #include <stdlib.h>
+#include <string.h>
 #include <QtCore/QMutex>
+
+#include "Bitset.h"
 
 class MemoryManagerArray
 {
 public:
-	MemoryManagerArray(int nbe,size_t size);
+	MemoryManagerArray(const int nbe,const size_t size,const char* ref="");
 	~MemoryManagerArray();
 
 	bool full();
@@ -27,14 +30,28 @@ public:
 
 private:
 	QMutex  m_mutex;
-	int     m_nbe;
-	size_t  m_size;
+	const int     m_nbe;
+	const size_t  m_size;
 	char*   m_data;
-	bool*   m_available;
 
 	int     m_lastfree;
 	int     m_count;
+
+	//info
 	int     m_max;
+	unsigned long long int m_wasted;
+	const char*   m_ref;
+
+	//unsigned int available[1024]; // nbe<1024*32
+	//bool*   m_available;
+	Bitset  m_available;
+	/*
+	bool bit(const unsigned int i) const;
+	void set(const unsigned int i);
+	void unset(const unsigned int i);
+	int  nextSet(const unsigned int i) const;
+	int  nextUnset(const unsigned int i) const;
+	*/
 };
 
 #endif

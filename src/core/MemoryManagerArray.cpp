@@ -3,22 +3,22 @@
 
 bool MemoryManagerArray::active=false;
 
-MemoryManagerArray MemoryManagerArray::S4   (  512,4);
-MemoryManagerArray MemoryManagerArray::S8   (   64,8);
-MemoryManagerArray MemoryManagerArray::S16  (  256,16);
-MemoryManagerArray MemoryManagerArray::S32  (  256,32);
-MemoryManagerArray MemoryManagerArray::S80  (  512,80);
-MemoryManagerArray MemoryManagerArray::S112 (  128,112);
-MemoryManagerArray MemoryManagerArray::S128 (   64,128);
-MemoryManagerArray MemoryManagerArray::S192 (  256,192);
-MemoryManagerArray MemoryManagerArray::S224 (  128,224);
-MemoryManagerArray MemoryManagerArray::S256 (   64,256);
-MemoryManagerArray MemoryManagerArray::S480 (  256,480);
-MemoryManagerArray MemoryManagerArray::S496 (   64,496);
-MemoryManagerArray MemoryManagerArray::S512 (   64,512);
-MemoryManagerArray MemoryManagerArray::S552 (  256,552);
+MemoryManagerArray MemoryManagerArray::S4   (  512,   4);
+MemoryManagerArray MemoryManagerArray::S8   (   64,   8);
+MemoryManagerArray MemoryManagerArray::S16  (  256,  16);
+MemoryManagerArray MemoryManagerArray::S32  (  256,  32);
+MemoryManagerArray MemoryManagerArray::S80  ( 2048,  80,"NotePlayHandle");
+MemoryManagerArray MemoryManagerArray::S112 (  128, 112);
+MemoryManagerArray MemoryManagerArray::S128 (   64, 128);
+MemoryManagerArray MemoryManagerArray::S192 (  256, 192);
+MemoryManagerArray MemoryManagerArray::S224 (  128, 224);
+MemoryManagerArray MemoryManagerArray::S256 (   64, 256);
+MemoryManagerArray MemoryManagerArray::S480 (  256, 480);
+MemoryManagerArray MemoryManagerArray::S496 (   64, 496);
+MemoryManagerArray MemoryManagerArray::S512 (   64, 512);
+MemoryManagerArray MemoryManagerArray::S552 (  256, 552);
 MemoryManagerArray MemoryManagerArray::S1024(   64,1024);
-MemoryManagerArray MemoryManagerArray::S2048(  512,2048);
+MemoryManagerArray MemoryManagerArray::S2048(  512,2048,"Buffer");
 MemoryManagerArray MemoryManagerArray::S2464(   64,2464);
 MemoryManagerArray MemoryManagerArray::S4128(   64,4128);
 
@@ -125,31 +125,114 @@ void MemoryManagerArray::free( void * ptr , const char* file , long line)
 		}
 }
 
-MemoryManagerArray::MemoryManagerArray(int nbe, size_t size ) :
+MemoryManagerArray::MemoryManagerArray(const int nbe, const size_t size , const char* ref) :
 	m_mutex(),
         m_nbe(nbe),
 	m_size(size),
+	m_data(NULL),
 	m_lastfree(0),
 	m_count(0),
-	m_max(0)
+	m_max(0),
+	m_wasted(0),
+	m_ref(ref),
+	m_available(nbe,true)
 {
+	if(nbe>32*1024)           qFatal("MemoryManagerArray: too big %d (32768 elements max)",nbe);
+	if(nbe*size>32*1024*8192) qFatal("MemoryManagerArray: too big %ld (268435456 bytes max)",nbe*size);
+
 	m_data     =(char*)::calloc(nbe,size);
-	m_available=(bool*)::calloc(nbe,sizeof(bool));
-	for(int i=0;i<nbe;i++) m_available[i]=true;
+	//memset(available,0xFF,sizeof(unsigned int)*1024);
 }
 
 MemoryManagerArray::~MemoryManagerArray()
 {
-	qWarning("~MemoryManagerArray %6ld : cnt=%6d : max=%6d %s",
-		 m_size,m_count,m_max,(m_nbe==m_max ? "!!!" : "   "));
+	qWarning("~MemoryManagerArray %6ld : cnt=%6d : max=%6d %s wasted=%llu %s",
+		 m_size,m_count,m_max,(m_nbe==m_max ? "!!!" : "   "),m_wasted,m_ref);
 	::free(m_data);
-	::free(m_available);
+	//::free(m_available);
 }
 
 bool MemoryManagerArray::full()
 {
 	return m_count>=m_nbe;
 }
+
+/*
+bool MemoryManagerArray::bit(const unsigned int i) const
+{
+	return available[i>>5]&(1<<(i&0x1F));
+}
+
+void MemoryManagerArray::set(const unsigned int i)
+{
+	available[i>>5]|=(1<<(i&0x1F));
+}
+
+void MemoryManagerArray::unset(const unsigned int i)
+{
+	available[i>>5]&=~(1<<(i&0x1F));
+}
+
+int MemoryManagerArray::nextSet(const unsigned int i0) const
+{
+	unsigned int i=i0+1;
+	unsigned int j=i>>5;
+
+	if(available[j]!=0)
+	{
+		for(unsigned int k=i&0x1F;k<32;k++)
+		{
+			unsigned int l=j<<5|k;
+			if(l<i) continue;
+			if(bit(l)) return l;
+		}
+		j++; i+=32; i&=~0x1F;
+	}
+
+	while(j<1024)
+	{
+		if(available[j]==0) { j++; i+=32; continue; }
+		for(unsigned int k=0;k<32;k++)
+		{
+			unsigned int l=j<<5|k;
+			//if(l<i) continue;
+			if(bit(l)) return l;
+		}
+		j++; i+=32;
+	}
+	return -1;
+}
+
+int MemoryManagerArray::nextUnset(const unsigned int i0) const
+{
+	unsigned int i=i0+1;
+	unsigned int j=i>>5;
+
+	if(available[j]!=0xFFFFFFFF)
+	{
+		for(unsigned int k=i&0x1F;k<32;k++)
+		{
+			unsigned int l=j<<5|k;
+			if(l<i) continue;
+			if(!bit(l)) return l;
+		}
+		j++; i+=32; i&=~0x1F;
+	}
+
+	while(j<1024)
+	{
+		if(available[j]==0xFFFFFFFF) { j++; i+=32; continue; }
+		for(unsigned int k=0;k<32;k++)
+		{
+			unsigned int l=j<<5|k;
+			//if(l<i) continue;
+			if(!bit(l)) return l;
+		}
+		j++; i+=32;
+	}
+	return -1;
+}
+*/
 
 void * MemoryManagerArray::allocate( size_t size , const char* file , long line)
 {
@@ -160,38 +243,60 @@ void * MemoryManagerArray::allocate( size_t size , const char* file , long line)
 		return r;
 	}
 
+	int i;
+	m_mutex.lock();
+
 	if(m_count>=m_nbe)
 	{
+		m_mutex.unlock();
 		void* r=MMA_STD_ALLOC(size);
 		qWarning("block %ld full %d (asking %ld bytes): %s#%ld",m_size,m_count,size,file,line);
 		return r;
 	}
 
-	//if(size<m_size) qWarning("MemoryManagerArray::sup-allocate %ld %ld",size,m_size);
+	// development phase
+	if(size<m_size)
+	{
+		m_wasted+=(m_size-size);
+		//qWarning("MemoryManagerArray::sup-allocate %ld %ld",size,m_size);
+	}
 
-	int i;
-	m_mutex.lock();
-	if((m_lastfree>=0)&&m_available[m_lastfree])
+	// development phase
+	if((m_count>=(m_nbe*90l)/100)&&(m_nbe>=100)&&((m_count%(m_nbe/100))==0))
+		qWarning("block %ld saturating %d (asking %ld bytes): %s#%ld",m_size,m_count,size,file,line);
+
+	if((m_lastfree>=0)&&(m_lastfree<m_nbe)&&m_available.bit(m_lastfree))//m_available[m_lastfree])
 	{
 		i=m_lastfree;
-		m_available[i]=false;
+		m_available.unset(i);//m_available[i]=false;
 		m_count++;
 		if(m_max<m_count) m_max++;
 		m_lastfree=-1;
 	}
 	else
 	{
-		for(i=0;i<m_nbe;i++)
-			if(m_available[i])
-			{
+		i=m_available.nextSet(0); //from start
+		if((i<0)||(i>=m_nbe))
+			i=m_nbe;
+		else
+		{
+			m_available.unset(i);
+			m_count++;
+			if(m_max<m_count) m_max++;
+		}
+			/*
+			  for(i=0;i<m_nbe;i++)
+			  if(m_available[i])
+			  {
 			   m_available[i]=false;
 			   m_count++;
 			   if(m_max<m_count) m_max++;
 			   break;
-			}
+			   }
+			*/
 	}
 
-	if((i+1<m_nbe)&&m_available[i+1])
+	if((i+1<m_nbe)&&m_available.bit(i+1))//m_available[i+1])
 		m_lastfree=i+1;
 
 	m_mutex.unlock();
@@ -219,13 +324,13 @@ bool MemoryManagerArray::deallocate( void * ptr , const char* file , long line)
 	if((s%m_size)!=0)
 		qFatal("error: MemoryManagerArray::free: invalid ptr %s#%ld",file,line);
 
-	int i=s/m_size;
+	const int i=s/m_size;
 	m_mutex.lock();
 	if((i<0)||(i>=m_nbe))
 		qFatal("error: i out of range: %d in %ld: %s#%ld",i,m_size,file,line);
-	if(m_available[i])
+	if(m_available.bit(i))//m_available[i])
 		qFatal("error: should be taken n°%d in %ld: %s#%ld",i,m_size,file,line);
-	m_available[i]=true;
+	m_available.set(i);//m_available[i]=true;
 	m_lastfree=i;
 	m_count--;
 	if(m_count<0)

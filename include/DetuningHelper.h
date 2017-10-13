@@ -45,7 +45,7 @@ public:
 
 	virtual float defaultValue() const
 	{
-		return 0;
+		return 0.f;
 	}
 
 	virtual QString displayName() const

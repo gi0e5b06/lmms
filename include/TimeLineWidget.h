@@ -154,6 +154,14 @@ public:
 	}
 
 	void setCurrentLoop(int n);
+
+	inline int nextLoop()
+	{
+		return m_nextLoop;
+	}
+
+	void setNextLoop(int n);
+
 	int  findLoop(const MidiTime & t);
 
 	bool loopPointsEnabled(int n=-1) const
@@ -223,11 +231,10 @@ signals:
 
 
 public slots:
-	void updatePosition( const MidiTime & );
-	void updatePosition()
-	{
-		updatePosition( MidiTime() );
-	}
+	void updatePosition(const MidiTime & t);
+	void updatePosition();
+	void updateLoopButtons();
+	
 	void toggleAutoScroll( int _n );
 	void toggleLoopPoints( int _n );
 	void toggleBehaviourAtStop( int _n );
@@ -283,7 +290,8 @@ private:
 	MidiTime m_savedPos;
 
 	int m_currentLoop;
-	QToolButton * m_loopButton;
+	int m_nextLoop;
+	QToolButton* m_loopButtons[NB_LOOPS];
 
 	TextFloat * m_hint;
 	int m_initalXSelect;

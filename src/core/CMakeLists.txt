@@ -5,6 +5,7 @@ set(LMMS_SRCS
 	core/BandLimitedWave.cpp
 	core/base64.cpp
 	core/BBTrackContainer.cpp
+	core/Bitset.cpp
 	core/BufferManager.cpp
 	core/Clipboard.cpp
 	core/ComboBoxModel.cpp

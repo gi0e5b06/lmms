@@ -296,9 +296,14 @@ QString TripleOscillator::nodeName() const
 
 
 void TripleOscillator::playNote( NotePlayHandle * _n,
-						sampleFrame * _working_buffer )
+				 sampleFrame * _working_buffer )
 {
-	if( _n->totalFramesPlayed() == 0 || _n->m_pluginData == NULL )
+	if( (_n->m_pluginData == NULL)&&(_n->totalFramesPlayed() != 0))
+		qWarning("TripleOscillator::playNote data==null and playedFrames!=0");
+	if( (_n->m_pluginData != NULL)&&(_n->totalFramesPlayed() == 0))
+		qWarning("TripleOscillator::playNote data!=null and playedFrames==0");
+
+	if( _n->m_pluginData == NULL )
 	{
 		Oscillator * oscs_l[NUM_OF_OSCILLATORS];
 		Oscillator * oscs_r[NUM_OF_OSCILLATORS];
@@ -379,6 +384,7 @@ void TripleOscillator::deleteNotePluginData( NotePlayHandle * _n )
 	delete static_cast<Oscillator *>( static_cast<oscPtr *>(
 						_n->m_pluginData )->oscRight );
 	delete static_cast<oscPtr *>( _n->m_pluginData );
+	_n->m_pluginData = NULL; //TMP ???
 }
 
 

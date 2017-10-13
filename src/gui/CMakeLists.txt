@@ -44,8 +44,10 @@ SET(LMMS_SRCS
 	gui/editors/PianoRoll.cpp
 	gui/editors/SongEditor.cpp
 
+	gui/widgets/AutomatableActionGroup.cpp
 	gui/widgets/AutomatableButton.cpp
 	gui/widgets/AutomatableSlider.cpp
+	gui/widgets/AutomatableToolButton.cpp
 	gui/widgets/CaptionMenu.cpp
 	gui/widgets/ComboBox.cpp
 	gui/widgets/ControllerRackView.cpp

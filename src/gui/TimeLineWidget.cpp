@@ -33,14 +33,14 @@
 #include <QToolBar>
 #include <QToolButton>
 
-
 #include "TimeLineWidget.h"
 #include "embed.h"
 #include "NStateButton.h"
 #include "GuiApplication.h"
 #include "TextFloat.h"
 #include "SongEditor.h"
-
+#include "AutomatableActionGroup.h"
+#include "AutomatableToolButton.h"
 
 #if QT_VERSION < 0x040800
 #define MiddleButton MidButton
@@ -79,7 +79,8 @@ TimeLineWidget::TimeLineWidget( const int xoff, const int yoff, const float ppt,
 	m_begin( begin ),
 	m_savedPos( -1 ),
 	m_currentLoop( 0 ),
-	m_loopButton( NULL ),
+	m_nextLoop( -1 ),
+	//m_loopButtons( NULL ),
 	m_hint( NULL ),
 	m_action( NoAction ),
 	m_moveXOff( 0 )
@@ -137,6 +138,7 @@ void TimeLineWidget::addToolButtons( QToolBar * _tool_bar )
 					SLOT( toggleAutoScroll( int ) ) );
 
 	NStateButton * loopPoints = new NStateButton( _tool_bar );
+	loopPoints->setShortcut('X');
 	loopPoints->setGeneralToolTip( tr( "Enable/disable loop-points" ) );
 	loopPoints->addState( embed::getIconPixmap( "loop_points_off" ) );
 	loopPoints->addState( embed::getIconPixmap( "loop_points_on" ) );
@@ -144,6 +146,8 @@ void TimeLineWidget::addToolButtons( QToolBar * _tool_bar )
 					SLOT( toggleLoopPoints( int ) ) );
 	connect( this, SIGNAL( loopPointStateLoaded( int ) ), loopPoints,
 					SLOT( changeState( int ) ) );
+	connect( loopPoints, SIGNAL( pressed() ),
+		 loopPoints, SLOT( moveToNextState() ) );
 
 	NStateButton * behaviourAtStop = new NStateButton( _tool_bar );
 	behaviourAtStop->addState( embed::getIconPixmap( "back_to_zero" ),
@@ -162,6 +166,7 @@ void TimeLineWidget::addToolButtons( QToolBar * _tool_bar )
 	_tool_bar->addWidget( loopPoints );
 	_tool_bar->addWidget( behaviourAtStop );
 
+	/*
 	if(m_loopButton == NULL)
 	{
 		int const n=currentLoop();
@@ -169,21 +174,51 @@ void TimeLineWidget::addToolButtons( QToolBar * _tool_bar )
 		QToolButton * b=m_loopButton;
 		b->setPopupMode(QToolButton::InstantPopup);
 		QMenu * m=new QMenu(QString("Loops"),b);
-		QActionGroup * g=new QActionGroup(m);
+		AutomatableActionGroup* g=new AutomatableActionGroup(m);
 		for(int i=0;i<NB_LOOPS;i++)
 		{
 			QAction* a=m->addAction(QString((char)(65+i)).append(QString(" loop")));
 			a->setData( QVariant(i) );
 			a->setCheckable(true);
-			a->setShortcut((char)(65+i));
+			//a->setShortcut((char)(65+i));
 			a->setActionGroup(g);
 			if(i==n) a->setChecked(true);
 		}
+		m->addSeparator();
+		g->addDefaultActions(m);
+
 		b->setMenu(m);
 		b->setText(QString("&").append(QString((char)(65+n))));
 		//b->setMinimumSize(autoScroll->sizeHint());
-		connect(g, SIGNAL(triggered(QAction*)), this, SLOT(selectLoop(QAction*)));
+		connect(m, SIGNAL(triggered(QAction*)), g, SLOT(updateModel(QAction*)));
+		connect(m, SIGNAL(triggered(QAction*)), this, SLOT(selectLoop(QAction*)));
 		_tool_bar->addWidget(b);
+	}
+	*/
+
+	{
+		_tool_bar->addSeparator();
+		const int n =currentLoop();
+		const int nn=nextLoop();
+
+		for(int i=0;i<NB_LOOPS;i++)
+		{
+			AutomatableToolButton* b=new AutomatableToolButton(_tool_bar);
+			QAction* a=new QAction(QString((char)(65+i)),b);//.append(QString(" loop")));
+			b->setDefaultAction(a);
+			a->setData( QVariant(i) );
+			a->setCheckable(true);
+			a->setShortcut((char)(65+i));
+			if((i==n)||(i==nn)) a->setChecked(true);
+			//g->addAction(a);
+			m_loopButtons[i]=b;
+			_tool_bar->addWidget(b);
+			//connect(b, SIGNAL(triggered(QAction*)), b, SLOT(update()));
+			//connect(g, SIGNAL(triggered(QAction*)), b, SLOT(update()));
+			connect(b, SIGNAL(triggered(QAction*)), this, SLOT(selectLoop(QAction*)));
+			//connect(b, SIGNAL(toggled(bool)), this, SLOT(updateLoopButtons()));
+			//connect(b->model(), SIGNAL(dataChanged()), this, SLOT(updateLoopButtons()));
+		}
 	}
 }
 
@@ -193,15 +228,28 @@ void TimeLineWidget::addToolButtons( QToolBar * _tool_bar )
 void TimeLineWidget::setCurrentLoop(const int n)
 {
 	if((n<0) || (n>=NB_LOOPS)) return;
+	const int o=m_currentLoop;
 	m_currentLoop=n;
 	updatePosition(loopBegin());
 	update();
+	if(o!=n) updateLoopButtons();
+
+	/*
 	if(m_loopButton != NULL)
 	{
 		m_loopButton->setText(QString("&").append(QString((char)(65+n))));
 		m_loopButton->update();
 		m_loopButton->menu()->actions().at(n)->setChecked(true);
 	}
+	*/
+}
+
+void TimeLineWidget::setNextLoop(const int n)
+{
+	const int o=m_nextLoop;
+	if((n<0) || (n>=NB_LOOPS)) m_nextLoop=-1;
+	else m_nextLoop=n;
+	if(o!=n) updateLoopButtons();
 }
 
 int TimeLineWidget::findLoop(const MidiTime& t)
@@ -221,8 +269,45 @@ int TimeLineWidget::findLoop(const MidiTime& t)
 void TimeLineWidget::selectLoop(QAction * _a)
 {
 	int const n=_a->data().toInt();
+	qWarning("TimeLineWidget::selectLoop(QAction*) n=%d checked=%d",n,_a->isChecked());
 	if((n<0) || (n>=NB_LOOPS)) return;
-	setCurrentLoop(n);
+
+	/*
+	if(!_a->isChecked())
+	{
+		if(n==currentLoop()) setCurrentLoop(-1);
+		if(n==nextLoop()) setNextLoop(-1);
+		return;
+	}
+	*/
+
+	if(!Engine::getSong()->isPlaying())
+	{
+		setNextLoop(-1);
+		setCurrentLoop(n);
+
+		const MidiTime& t=loopBegin();
+		m_pos.setTicks( t.getTicks() );
+		Engine::getSong()->setToTime(t);
+		m_pos.setCurrentFrame( 0 );
+		updatePosition();
+		positionMarkerMoved();
+	}
+	else
+	if(n!=currentLoop())
+	{
+		setNextLoop(n);
+		if(findLoop(m_pos)>=0)
+			toggleLoopPoints( LoopPointStates::LoopPointsEnabled );
+		else
+			toggleLoopPoints( LoopPointStates::LoopPointsDisabled );
+	}
+	else
+	{
+		toggleLoopPoints( LoopPointStates::LoopPointsEnabled );
+	}
+
+	updateLoopButtons();
 }
 
 void TimeLineWidget::selectLoop(const MidiTime& t)
@@ -230,6 +315,27 @@ void TimeLineWidget::selectLoop(const MidiTime& t)
 	int n=findLoop(t);
 	if((n<0) || (n>=NB_LOOPS)) return;
 	if(n!=currentLoop()) setCurrentLoop(n);
+}
+
+
+
+
+void TimeLineWidget::updateLoopButtons()
+{
+	//qWarning("TimeLineWidget::updateLoopButtons()");
+
+	const int n =currentLoop();
+	const int nn=nextLoop();
+
+	QString s="";
+	for(int i=0;i<NB_LOOPS;i++)
+	{
+		bool b=(i==n)||(i==nn);
+		if(m_loopButtons[i]->isChecked()!=b)
+			{ m_loopButtons[i]->setChecked(b); } //m_loopButtons[i]->update(); }
+		//printf("B%d: %d | ",i,b);
+	}
+	//printf("\n");
 }
 
 
@@ -287,7 +393,16 @@ void TimeLineWidget::loadSettings( const QDomElement & _this )
 
 
 
-void TimeLineWidget::updatePosition( const MidiTime & )
+void TimeLineWidget::updatePosition(const MidiTime & t)
+{
+	//m_pos.setTicks( t.getTicks() );
+	//Engine::getSong()->setToTime(t);
+	//m_pos.setCurrentFrame( 0 );
+	updatePosition();
+}
+
+
+void TimeLineWidget::updatePosition()
 {
 	const int new_x = markerX( m_pos );
 
@@ -313,8 +428,13 @@ void TimeLineWidget::toggleAutoScroll( int _n )
 
 void TimeLineWidget::toggleLoopPoints( int _n )
 {
-	m_loopPoints = static_cast<LoopPointStates>( _n );
-	update();
+	LoopPointStates lps = static_cast<LoopPointStates>( _n );
+	if(m_loopPoints!=lps)
+	{
+		m_loopPoints =lps;
+		update();
+		emit loopPointStateLoaded( m_loopPoints );
+	}
 }
 
 
@@ -333,6 +453,7 @@ void TimeLineWidget::paintEvent( QPaintEvent * )
 	QPainter p( this );
 
 	const int n  = m_currentLoop;
+	const int nn = m_nextLoop;
 	const int x0 = m_xOffset + s_posMarkerPixmap->width() / 2;
 	const int h0 = height();
 	const int w0 = width();
@@ -355,7 +476,8 @@ void TimeLineWidget::paintEvent( QPaintEvent * )
 	int const barBaseY = height()-2-fontHeight+fontAscent;
 	int const loopBaseY= 2+fontAscent;
 
-	for(int i=0;i<NB_LOOPS;i++) if(i!=n) paintLoop(i,p,loopBaseY);
+	for(int i=0;i<NB_LOOPS;i++) if((i!=n)&&(i!=nn)) paintLoop(i,p,loopBaseY);
+	if((nn>=0)&&(nn!=n)) paintLoop(nn,p,loopBaseY);
 	paintLoop(n,p,loopBaseY);
 
 	// Draw the bar lines and numbers
@@ -405,12 +527,21 @@ void TimeLineWidget::paintLoop(int const n, QPainter& p, int const cy)
 
 	bool const loopPointsActive = loopPointsEnabled();
 	bool const loopSelected = (n == m_currentLoop);
+	bool const nextLoop     = (n == m_nextLoop);
 
 	// Draw the main rectangle (inner fill only)
 	QRect outerRectangle( loopStart, loopRectMargin, loopRectWidth - 1, loopRectHeight - 1 );
-	p.fillRect( outerRectangle, loopPointsActive
-		    ? (loopSelected ? getSelectedLoopBrush() : getActiveLoopBrush())
-		    : getInactiveLoopBrush());
+	if(!nextLoop||loopSelected)
+	{
+		p.fillRect( outerRectangle, loopPointsActive
+			    ? (loopSelected ? getSelectedLoopBrush() : getActiveLoopBrush())
+			    : getInactiveLoopBrush());
+	}
+	else
+	{
+		p.fillRect( outerRectangle, QBrush(Qt::blue) );
+	}
+
 	// Draw the main rectangle (outer border)
 	p.setPen( loopPointsActive
 		  ? (loopSelected ? getSelectedLoopColor() : getActiveLoopColor())
@@ -520,14 +651,19 @@ void TimeLineWidget::mouseMoveEvent( QMouseEvent* event )
 	switch( m_action )
 	{
 		case MovePositionMarker:
-			if( !(event->modifiers() & Qt::ControlModifier ))
-				t.setTicks(t.toNearestTact().getTicks());
-			m_pos.setTicks( t.getTicks() );
-			Engine::getSong()->setToTime(t);
-			m_pos.setCurrentFrame( 0 );
-			updatePosition();
-			positionMarkerMoved();
-			selectLoop(t);
+			if(!Engine::getSong()->isPlaying())
+		        {
+				if( !(event->modifiers() & Qt::ControlModifier ))
+					t.setTicks(t.toNearestTact().getTicks());
+				m_pos.setTicks( t.getTicks() );
+				Engine::getSong()->setToTime(t);
+				m_pos.setCurrentFrame( 0 );
+				updatePosition();
+				positionMarkerMoved();
+			}
+			else
+			if(findLoop(t)) selectLoop(t);
+			else toggleLoopPoints( LoopPointStates::LoopPointsDisabled );
 			break;
 
 		case MoveLoopBegin:

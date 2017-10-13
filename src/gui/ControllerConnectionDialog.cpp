@@ -66,7 +66,7 @@ public:
 
 	virtual void processInEvent( const MidiEvent& event, const MidiTime& time, f_cnt_t offset = 0 )
 	{
-		if( event.type() == MidiControlChange &&
+		if( /*event.type() == MidiControlChange &&*/
 			( m_midiPort.inputChannel() == 0 || m_midiPort.inputChannel() == event.channel() + 1 ) )
 		{
 			m_detectedMidiChannel = event.channel() + 1;
@@ -110,7 +110,7 @@ public:
 		for( MidiPort::Map::ConstIterator it = map.begin(); it != map.end(); ++it )
 		{
 			m_midiPort.subscribeReadablePort( it.key(),
-									m_detectedMidiPort.isEmpty() || ( it.key() == m_detectedMidiPort ) );
+							  m_detectedMidiPort.isEmpty() || ( it.key() == m_detectedMidiPort ) );
 		}
 	}
 
