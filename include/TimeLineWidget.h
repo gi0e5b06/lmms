@@ -133,9 +133,9 @@ public:
 	inline QColor const & getSelectedLoopTextColor() const { return m_selectedLoopTextColor; }
 	inline void setSelectedLoopTextColor(QColor const & selectedLoopTextColor) { m_selectedLoopTextColor = selectedLoopTextColor; }
 
-	inline Song::PlayPos & pos()
+	inline Song::PlayPos & pos() const
 	{
-		return( m_pos );
+		return m_pos;
 	}
 
 	AutoScrollStates autoScroll() const
@@ -148,14 +148,14 @@ public:
 		return m_behaviourAtStop;
 	}
 
-	inline int currentLoop()
+	inline int currentLoop() const
 	{
 		return m_currentLoop;
 	}
 
 	void setCurrentLoop(int n);
 
-	inline int nextLoop()
+	inline int nextLoop() const
 	{
 		return m_nextLoop;
 	}
@@ -173,7 +173,7 @@ public:
 			(m_loopPoints == LoopPointsEnabled);
 	}
 
-	inline const MidiTime & loopBegin(int n=-1) const
+	const MidiTime & loopBegin(int n=-1) const
 	{
 		if(n==-1) n=m_currentLoop;
 		Q_ASSERT ((n>=0)&&(n<NB_LOOPS));
@@ -183,7 +183,7 @@ public:
 			: m_loopPos[2*n+1];
 	}
 
-	inline const MidiTime & loopEnd(int n=-1) const
+	const MidiTime & loopEnd(int n=-1) const
 	{
 		if(n==-1) n=m_currentLoop;
 		Q_ASSERT ((n>=0)&&(n<NB_LOOPS));
@@ -197,6 +197,7 @@ public:
 	{
 		m_savedPos = _pos;
 	}
+
 	inline const MidiTime & savedPos() const
 	{
 		return m_savedPos;
@@ -213,6 +214,7 @@ public:
 
 	virtual void saveSettings( QDomDocument & _doc, QDomElement & _parent );
 	virtual void loadSettings( const QDomElement & _this );
+
 	inline virtual QString nodeName() const
 	{
 		return "timeline";
