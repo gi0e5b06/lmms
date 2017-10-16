@@ -87,7 +87,7 @@ void NStateButton::changeState( int _n )
 
 void NStateButton::mousePressEvent( QMouseEvent * _me )
 {
-	qWarning("NStateButton::mousePressEvent()");
+	//qWarning("NStateButton::mousePressEvent()");
 
 	if( _me->button() == Qt::LeftButton ) moveToNextState();
 
@@ -104,7 +104,7 @@ void NStateButton::mousePressEvent( QMouseEvent * _me )
 
 void NStateButton::moveToNextState()
 {
-	qWarning("NStateButton::moveToNextState() %d",m_states.size());
+	//qWarning("NStateButton::moveToNextState() %d",m_states.size());
 
 	if( m_states.size() )
 	{

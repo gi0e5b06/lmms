@@ -51,6 +51,9 @@ void MixerWorkerThread::JobQueue::addJob( ThreadableJob * _job )
 {
 	if( _job->requiresProcessing() )
 	{
+		if( (int) m_queueSize >= JOB_QUEUE_SIZE-16 )
+			qFatal("MixerWorkerThread::JobQueue full (%d)",JOB_QUEUE_SIZE);
+
 		// update job state
 		_job->queue();
 		// actually queue the job via atomic operations

@@ -198,8 +198,8 @@ void TimeLineWidget::addToolButtons( QToolBar * _tool_bar )
 
 	{
 		_tool_bar->addSeparator();
-		const int n =currentLoop();
-		const int nn=nextLoop();
+		const int n =m_currentLoop;
+		const int nn=m_nextLoop;
 
 		for(int i=0;i<NB_LOOPS;i++)
 		{
@@ -294,7 +294,7 @@ void TimeLineWidget::selectLoop(QAction * _a)
 		positionMarkerMoved();
 	}
 	else
-	if(n!=currentLoop())
+	if(n!=m_currentLoop)
 	{
 		setNextLoop(n);
 		if(findLoop(m_pos)>=0)
@@ -314,7 +314,7 @@ void TimeLineWidget::selectLoop(const MidiTime& t)
 {
 	int n=findLoop(t);
 	if((n<0) || (n>=NB_LOOPS)) return;
-	if(n!=currentLoop()) setCurrentLoop(n);
+	if(n!=m_currentLoop) setCurrentLoop(n);
 }
 
 
@@ -324,8 +324,8 @@ void TimeLineWidget::updateLoopButtons()
 {
 	//qWarning("TimeLineWidget::updateLoopButtons()");
 
-	const int n =currentLoop();
-	const int nn=nextLoop();
+	const int n =m_currentLoop;
+	const int nn=m_nextLoop;
 
 	QString s="";
 	for(int i=0;i<NB_LOOPS;i++)

@@ -702,13 +702,13 @@ void TrackContentObjectView::mousePressEvent( QMouseEvent * me )
 				QVector<TrackContentObjectView *> tcoViews;
 				tcoViews.push_back( this );
 				DataFile dataFile = createTCODataFiles( tcoViews );
-				QPixmap thumbnail = QPixmap::grabWidget( this ).scaled(
-							128, 128,
-							Qt::KeepAspectRatio,
-							Qt::SmoothTransformation );
-				new StringPairDrag( QString( "tco_%1" ).arg(
-										m_tco->getTrack()->type() ),
-									dataFile.toString(), thumbnail, this );
+				QPixmap thumbnail = grab();
+				if((thumbnail.width()>128)||(thumbnail.height()>128))
+					thumbnail=thumbnail.scaled( 128, 128,
+								    Qt::KeepAspectRatio,
+								    Qt::SmoothTransformation );
+				new StringPairDrag( QString( "tco_%1" ).arg( m_tco->getTrack()->type() ),
+						    dataFile.toString(), thumbnail, this );
 			}
 		}
 		else
@@ -839,10 +839,11 @@ void TrackContentObjectView::mouseMoveEvent( QMouseEvent * me )
 			DataFile dataFile = createTCODataFiles( tcoViews );
 
 			// TODO -- thumbnail for all selected
-			QPixmap thumbnail = QPixmap::grabWidget( this ).scaled(
-				128, 128,
-				Qt::KeepAspectRatio,
-				Qt::SmoothTransformation );
+			QPixmap thumbnail = grab();
+			if((thumbnail.width()>128)||(thumbnail.height()>128))
+				thumbnail=thumbnail.scaled( 128, 128,
+							    Qt::KeepAspectRatio,
+							    Qt::SmoothTransformation );
 			new StringPairDrag( QString( "tco_%1" ).arg(
 								m_tco->getTrack()->type() ),
 								dataFile.toString(), thumbnail, this );
@@ -1842,9 +1843,9 @@ void TrackOperationsWidget::mousePressEvent( QMouseEvent * me )
 		m_trackView->getTrack()->saveState( dataFile, dataFile.content() );
 		new StringPairDrag( QString( "track_%1" ).arg(
 					m_trackView->getTrack()->type() ),
-			dataFile.toString(), QPixmap::grabWidget(
-				m_trackView->getTrackSettingsWidget() ),
-									this );
+				    dataFile.toString(),
+				    m_trackView->getTrackSettingsWidget()->grab(),
+				    this );
 	}
 	else if( me->button() == Qt::LeftButton )
 	{

@@ -40,10 +40,9 @@ StringPairDrag::StringPairDrag( const QString & _key, const QString & _value,
 {
 	if( _icon.isNull() && _w )
 	{
-		setPixmap( QPixmap::grabWidget( _w ).scaled(
-						64, 64,
-						Qt::KeepAspectRatio,
-						Qt::SmoothTransformation ) );
+		setPixmap( grabWidget( _w ).scaled(64, 64,
+						   Qt::KeepAspectRatio,
+						   Qt::SmoothTransformation ) );
 	}
 	else
 	{

@@ -148,14 +148,14 @@ public:
 		return m_behaviourAtStop;
 	}
 
-	inline int currentLoop() const
+	/*inline*/ int currentLoop() const
 	{
 		return m_currentLoop;
 	}
 
 	void setCurrentLoop(int n);
 
-	inline int nextLoop() const
+	/*inline*/ int nextLoop() const
 	{
 		return m_nextLoop;
 	}

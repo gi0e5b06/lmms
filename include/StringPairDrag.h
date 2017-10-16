@@ -30,6 +30,8 @@
 #include <QDragEnterEvent>
 #include <QDropEvent>
 #include <QMimeData>
+#include <QPixmap>
+#include <QWidget>
 
 #include "export.h"
 
@@ -42,6 +44,15 @@ public:
 	StringPairDrag( const QString & _key, const QString & _value,
 					const QPixmap & _icon, QWidget * _w );
 	~StringPairDrag();
+
+	inline QPixmap grabWidget(QWidget* widget,const QRect &rectangle = QRect( QPoint( 0, 0 ), QSize( -1, -1 ) ))
+	{
+#if (QT_VERSION >= 0x500000)
+		return widget->grab(rectangle);
+#else
+		return QPixmap::grabWidget(this,rectangle);
+#endif
+	}
 
 	static bool processDragEnterEvent( QDragEnterEvent * _dee,
 						const QString & _allowed_keys );

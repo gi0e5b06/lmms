@@ -40,11 +40,7 @@ PlayHandle::PlayHandle( const Type type, f_cnt_t offset ) :
 
 PlayHandle::~PlayHandle()
 {
-	if(m_playHandleBuffer)
-	{
-		BufferManager::release(m_playHandleBuffer);
-		m_playHandleBuffer = NULL;
-	}
+	releaseBuffer();
 }
 
 

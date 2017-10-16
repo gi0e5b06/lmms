@@ -84,7 +84,7 @@ public:
 		{
 			m_isBackwards = _backwards;
 		}
-		
+
 		int interpolationMode() const
 		{
 			return m_interpolationMode;

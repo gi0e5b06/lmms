@@ -32,8 +32,8 @@
 
 
 Note::Note( const MidiTime & length, const MidiTime & pos,
-		int key, volume_t volume, panning_t panning,
-						DetuningHelper * detuning ) :
+	    int key, volume_t volume, panning_t panning,
+	    DetuningHelper * detuning ) :
 	m_selected( false ),
 	m_oldKey( qBound( 0, key, NumKeys ) ),
 	m_oldPos( pos ),
@@ -210,7 +210,7 @@ void Note::createDetuning()
 {
 	if( m_detuning == NULL )
 	{
-		m_detuning = new DetuningHelper;
+		m_detuning = sharedObject::ref(new DetuningHelper);
 		(void) m_detuning->automationPattern();
 		m_detuning->setRange( -MaxDetuning, MaxDetuning, 0.5f );
 		m_detuning->automationPattern()->setProgressionType( AutomationPattern::LinearProgression );
