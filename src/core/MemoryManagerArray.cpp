@@ -18,9 +18,12 @@ MemoryManagerArray MemoryManagerArray::S496 (   64, 496);
 MemoryManagerArray MemoryManagerArray::S512 (   64, 512);
 MemoryManagerArray MemoryManagerArray::S552 (  512, 552);
 MemoryManagerArray MemoryManagerArray::S1024(   64,1024);
+//1056
 MemoryManagerArray MemoryManagerArray::S2048(  512,2048,"Buffer");
 MemoryManagerArray MemoryManagerArray::S2464(   64,2464);
-MemoryManagerArray MemoryManagerArray::S4128(   64,4128);
+//2760
+//4096
+MemoryManagerArray MemoryManagerArray::S4128( 256,4128);
 
 #define MMA_STD_ALLOC(size) ::calloc(1,size)
 #define MMA_STD_FREE(ptr) ::free(ptr)
@@ -150,6 +153,13 @@ MemoryManagerArray::~MemoryManagerArray()
 		 m_size,m_count,m_max,(m_nbe==m_max ? "!!!" : "   "),m_wasted,m_ref);
 	::free(m_data);
 	//::free(m_available);
+
+	QHashIterator<size_t,long> i(m_stats);
+	while (i.hasNext())
+	{
+		i.next();
+		qWarning("                    %6ld : bytes=%6ld cnt=%6ld",m_size,i.key(),i.value());
+	}
 }
 
 bool MemoryManagerArray::full()
@@ -258,6 +268,7 @@ void * MemoryManagerArray::allocate( size_t size , const char* file , long line)
 	if(size<m_size)
 	{
 		m_wasted+=(m_size-size);
+		m_stats[size]+=1;
 		//qWarning("MemoryManagerArray::sup-allocate %ld %ld",size,m_size);
 	}
 

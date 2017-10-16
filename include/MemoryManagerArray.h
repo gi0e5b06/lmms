@@ -4,7 +4,8 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include <QtCore/QMutex>
+#include <QHash>
+#include <QMutex>
 
 #include "Bitset.h"
 
@@ -45,6 +46,9 @@ private:
 	//unsigned int available[1024]; // nbe<1024*32
 	//bool*   m_available;
 	Bitset  m_available;
+
+	QHash<size_t,long> m_stats;
+
 	/*
 	bool bit(const unsigned int i) const;
 	void set(const unsigned int i);
