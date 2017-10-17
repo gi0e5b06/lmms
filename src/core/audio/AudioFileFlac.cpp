@@ -1,7 +1,8 @@
 /*
- * AudioFileFlac.cpp - Audio device which encodes a wave stream into a FLAC file (Implementation).
+ * AudioFileFlac.cpp - Audio device which encodes a wave stream into
+ *                     a FLAC file (Implementation).
  *
- * Copyright (c) 2017 to present Levin Oehlmann <irrenhaus3/at/gmail[dot]com> et al.
+ * Copyright (c) 2017 Levin Oehlmann <irrenhaus3/at/gmail[dot]com> et al.
  *
  * This file is part of LMMS - https://lmms.io
  *
@@ -28,11 +29,33 @@
 #include "endian_handling.h"
 #include "Mixer.h"
 
-AudioFileFlac::AudioFileFlac(OutputSettings const& outputSettings, ch_cnt_t const channels, bool& successful, QString const& file, Mixer* mixer):
-	AudioFileDevice(outputSettings,channels,file,mixer),
-	m_sf(nullptr)
+AudioFileDevice * AudioFileFlac::getInst( const QString & outputFilename,
+					  const OutputSettings & outputSettings,
+					  const ch_cnt_t channels,
+					  Mixer * mixer,
+					  bool & successful )
 {
-	successful = outputFileOpened() && startEncoding();
+	AudioFileFlac * r=new AudioFileFlac( outputSettings, channels,
+					     successful, outputFilename,
+					     mixer );
+	r->initOutputFile();
+	r->openOutputFile();
+
+	successful = r->outputFileOpened() && r->startEncoding();
+
+	return r;
+}
+
+
+
+
+AudioFileFlac::AudioFileFlac( const OutputSettings & outputSettings,
+			      const ch_cnt_t channels, bool & successful,
+			      const QString & file,
+			      Mixer * mixer):
+	AudioFileDevice(outputSettings,channels,file,mixer),
+	m_sf( nullptr )
+{
 }
 
 AudioFileFlac::~AudioFileFlac()

@@ -35,39 +35,41 @@
 class AudioFileDevice : public AudioDevice
 {
 public:
-	AudioFileDevice(OutputSettings const & outputSettings,
-			const ch_cnt_t _channels, const QString & _file,
-			Mixer* mixer );
 	virtual ~AudioFileDevice();
 
 	QString outputFile() const
 	{
-		return m_outputFile.fileName();
+		return m_outputFile ? m_outputFile->fileName() : "-";
 	}
 
 	OutputSettings const & getOutputSettings() const { return m_outputSettings; }
 
 protected:
+	AudioFileDevice(OutputSettings const & outputSettings,
+			const ch_cnt_t _channels, const QString & _file,
+			Mixer* mixer );
+	virtual bool   hasStreamSupport() const;
+	virtual void   initOutputFile();
+	virtual void   openOutputFile();
+	virtual bool   outputFileOpened() const;
+	virtual void   closeOutputFile();
+
 	int writeData( const void* data, int len );
 
-	inline bool outputFileOpened() const
-	{
-		return m_outputFile.isOpen();
-	}
-
-
-private:
-	QFile m_outputFile;
+	const QString& m_outputFileName;
+	QFile*   m_outputFile;
+	bool     m_useTmpFile;
+	bool     m_useStdout;
 	OutputSettings m_outputSettings;
 } ;
 
 
 typedef AudioFileDevice * ( * AudioFileDeviceInstantiaton )
-					( const QString & outputFilename,
-					  OutputSettings const & outputSettings,
-					  const ch_cnt_t channels,
-					  Mixer* mixer,
-					  bool & successful );
+	( const QString & outputFilename,
+	  OutputSettings const & outputSettings,
+	  const ch_cnt_t channels,
+	  Mixer* mixer,
+	  bool & successful );
 
 
 #endif

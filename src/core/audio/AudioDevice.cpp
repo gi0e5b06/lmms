@@ -43,7 +43,7 @@ AudioDevice::AudioDevice( const ch_cnt_t _channels, Mixer*  _mixer ) :
 		mixer()->currentQualitySettings().libsrcInterpolation(),
 				SURROUND_CHANNELS, &error ) ) == NULL )
 	{
-		printf( "Error: src_new() failed in audio_device.cpp!\n" );
+		qCritical( "Error: src_new() failed in audio_device.cpp!" );
 	}
 }
 
@@ -156,7 +156,7 @@ void AudioDevice::applyQualitySettings()
 		mixer()->currentQualitySettings().libsrcInterpolation(),
 				SURROUND_CHANNELS, &error ) ) == NULL )
 	{
-		printf( "Error: src_new() failed in audio_device.cpp!\n" );
+		qCritical( "Error: src_new() failed in audio_device.cpp!" );
 	}
 }
 
@@ -203,8 +203,8 @@ void AudioDevice::resample( const surroundSampleFrame * _src,
 	int error;
 	if( ( error = src_process( m_srcState, &m_srcData ) ) )
 	{
-		printf( "AudioDevice::resample(): error while resampling: %s\n",
-							src_strerror( error ) );
+		qWarning( "AudioDevice::resample(): error while resampling: %s",
+			   src_strerror( error ) );
 	}
 }
 
@@ -224,7 +224,7 @@ int AudioDevice::convertToS16( const surroundSampleFrame * _ab,
 			for( ch_cnt_t chnl = 0; chnl < channels(); ++chnl )
 			{
 				temp = static_cast<int_sample_t>( Mixer::clip( _ab[frame][chnl] * _master_gain ) * OUTPUT_SAMPLE_MULTIPLIER );
-				
+
 				( _output_buffer + frame * channels() )[chnl] =
 						( temp & 0x00ff ) << 8 |
 						( temp & 0xff00 ) >> 8;
@@ -267,5 +267,3 @@ bool AudioDevice::hqAudio() const
 {
 	return ConfigManager::inst()->value( "mixer", "hqaudio" ).toInt();
 }
-
-

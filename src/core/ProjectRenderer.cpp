@@ -33,6 +33,7 @@
 #include "AudioFileOgg.h"
 #include "AudioFileMP3.h"
 #include "AudioFileFlac.h"
+#include "AudioFileAU.h"
 
 #ifdef LMMS_HAVE_SCHED_H
 #include "sched.h"
@@ -66,6 +67,11 @@ const ProjectRenderer::FileEncodeDevice ProjectRenderer::fileEncodeDevices[] =
 #else
 					NULL
 #endif
+									},
+	{ ProjectRenderer::AUFile,
+		QT_TRANSLATE_NOOP( "ProjectRenderer", "Sun/Next AU-File (*.au)" ),
+					".au",
+					&AudioFileAU::getInst
 									},
 	// ... insert your own file-encoder-infos here... may be one day the
 	// user can add own encoders inside the program...
@@ -214,34 +220,6 @@ void ProjectRenderer::run()
 	Engine::getSong()->stopExport();
 }
 
-/*
-void ProjectRenderer::postProcess()
-{
-	qWarning("ProjectRenderer::postProcess %s",qPrintable(m_fileDev->outputFile()));
-
-	QFile f(m_fileDev->outputFile());
-	if(f.exists())
-	{
-		// if the user aborted export-process, the file has to be deleted
-		if( m_abort )
-		{
-			f.remove();
-		}
-		else
-	        {
-			QFile p("/usr/bin/normalize-audio");
-			if(Engine::getSong()->peakNormalizeFlag()&&
-			   p.exists())
-			{
-				qWarning("excuting normalization: size=%ld",(long)f.size());
-				QProcess::execute("/bin/ls",QStringList() << "-l" << f.fileName());
-				int pnr=QProcess::execute(p.fileName(),QStringList() << "--peak" << f.fileName());
-				qWarning("%s %s %d",qPrintable(p.fileName()),qPrintable(f.fileName()),pnr);
-			}
-		}
-	}
-}
-*/
 
 
 

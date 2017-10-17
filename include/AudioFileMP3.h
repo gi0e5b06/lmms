@@ -2,7 +2,7 @@
  * AudioFileMP3.h - Audio-device which encodes a wave stream into
  *                  an MP3 file. This is used for song export.
  *
- * Copyright (c) 2017 to present Michael Gregorius <michael.gregorius.git/at/arcor[dot]de>
+ * Copyright (c) 2017 Michael Gregorius <michael.gregorius.git/at/arcor[dot]de>
  *
  * This file is part of LMMS - https://lmms.io
  *
@@ -37,35 +37,30 @@
 
 class AudioFileMP3 : public AudioFileDevice
 {
-public:
-	AudioFileMP3( OutputSettings const & outputSettings,
-			const ch_cnt_t _channels,
-			bool & successful,
-			const QString & _file,
-			Mixer* mixer );
+ public:
 	virtual ~AudioFileMP3();
 
-	static AudioFileDevice * getInst( const QString & outputFilename,
-					  OutputSettings const & outputSettings,
+	static AudioFileDevice * getInst( const QString & outputFileName,
+					  const OutputSettings & outputSettings,
 					  const ch_cnt_t channels,
 					  Mixer* mixer,
-					  bool & successful )
-	{
-		return new AudioFileMP3( outputSettings, channels, successful,
-					 outputFilename, mixer );
-	}
+					  bool & successful );
 
-protected:
-	virtual void writeBuffer( const surroundSampleFrame * /* _buf*/,
-				  const fpp_t /*_frames*/,
-				  const float /*_master_gain*/ );
+ protected:
+	AudioFileMP3( const OutputSettings & outputSettings,
+		      const ch_cnt_t _channels,
+		      bool & successful,
+		      const QString & _file,
+		      Mixer * mixer );
+	virtual void writeBuffer( const surroundSampleFrame * _ab,
+				  const fpp_t _frames,
+				  const float _master_gain ) override;
 
-private:
+ private:
 	void flushRemainingBuffers();
 	bool initEncoder();
 	void tearDownEncoder();
 
-private:
 	lame_t m_lame;
 };
 

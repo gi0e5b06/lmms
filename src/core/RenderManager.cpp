@@ -61,6 +61,9 @@ void RenderManager::abortProcessing()
 
 void RenderManager::postProcess(QString& file,bool aborted)
 {
+	QRegExp rx("[.](mp3|ogg|wav)$",Qt::CaseInsensitive);
+	if(rx.indexIn(file)<0) return;
+
 	qWarning("RenderManager::postProcess %s %d",qPrintable(file),aborted);
 
 	QFile f(file);
@@ -101,6 +104,7 @@ void RenderManager::renderNextTrack()
 		delete m_activeRenderer;
 		m_activeRenderer = NULL;
 
+		fprintf(stderr, "\n");
 		postProcess(f,a);
 	} else {
 		delete m_activeRenderer;
@@ -149,7 +153,7 @@ void RenderManager::renderNextTrack()
 		}
 		else
 		{
-			qDebug( "Renderer failed to acquire a file device!" );
+			qCritical( "Renderer failed to acquire a file device!" );
 			renderNextTrack();
 		}
 	}
@@ -214,7 +218,7 @@ void RenderManager::renderProject()
 	}
 	else
 	{
-		qDebug( "Renderer failed to acquire a file device!" );
+		qCritical( "Renderer failed to acquire a file device!" );
 		emit finished();
 	}
 }

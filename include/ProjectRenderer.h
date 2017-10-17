@@ -41,6 +41,7 @@ public:
 		FlacFile,
 		OggFile,
 		MP3File,
+		AUFile,
 		NumFileFormats
 	} ;
 

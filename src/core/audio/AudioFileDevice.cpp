@@ -24,6 +24,7 @@
  */
 
 #include <QMessageBox>
+#include <QTemporaryFile>
 
 #include "AudioFileDevice.h"
 #include "ExportProjectDialog.h"
@@ -35,32 +36,100 @@ AudioFileDevice::AudioFileDevice( OutputSettings const & outputSettings,
 					const QString & _file,
 					Mixer*  _mixer ) :
 	AudioDevice( _channels, _mixer ),
-	m_outputFile( _file ),
+	m_outputFileName( _file ),
+	m_outputFile( NULL ),
+	m_useTmpFile( false ),
+	m_useStdout ( false ),
 	m_outputSettings(outputSettings)
 {
 	setSampleRate( outputSettings.getSampleRate() );
+}
 
-	if( m_outputFile.open( QFile::WriteOnly | QFile::Truncate ) == false )
+
+
+
+AudioFileDevice::~AudioFileDevice()
+{
+	closeOutputFile();
+	if(m_outputFile) delete m_outputFile;
+}
+
+
+
+
+bool AudioFileDevice::hasStreamSupport() const
+{
+	return false;
+}
+
+
+
+
+void AudioFileDevice::initOutputFile()
+{
+	if(m_outputFileName == "-")
 	{
+		if(hasStreamSupport())
+		{
+			m_outputFile=new QFile();
+			m_useTmpFile=false;
+			m_useStdout=true;
+			qWarning("Notice: Streaming to stdout");
+		}
+		else
+	        {
+			m_outputFile=new QTemporaryFile("lmms-XXXXXX.tmp");
+			m_useTmpFile=true;
+			m_useStdout=false;
+			qWarning("Notice: Using a temporary file");
+		}
+	}
+	else
+	{
+		m_outputFile=new QFile(m_outputFileName);
+		m_useTmpFile=false;
+		m_useStdout=false;
+	}
+
+	qWarning("Notice: output uses tmpf=%d, stdout=%d, is %s",
+		 m_useTmpFile,
+		 m_useStdout,
+		 qPrintable(m_outputFileName));
+}
+
+
+
+
+void AudioFileDevice::openOutputFile()
+{
+	bool opened=false;
+
+	if(m_useStdout)
+		opened=true;
+	else
+		opened=m_outputFile->open( QFile::WriteOnly | QFile::Truncate );
+
+	if(!opened)
+        {
 		QString title, message;
 		title = ExportProjectDialog::tr( "Could not open file" );
 		message = ExportProjectDialog::tr( "Could not open file %1 "
-						"for writing.\nPlease make "
-						"sure you have write "
-						"permission to the file and "
-						"the directory containing the "
-						"file and try again!"
-								).arg( _file );
+						   "for writing.\nPlease make "
+						   "sure you have write "
+						   "permission to the file and "
+						   "the directory containing the "
+						   "file and try again!"
+						   ).arg( m_outputFile->fileName() );
 
 		if( gui )
 		{
 			QMessageBox::critical( NULL, title, message,
-						QMessageBox::Ok,
-						QMessageBox::NoButton );
+					       QMessageBox::Ok,
+					       QMessageBox::NoButton );
 		}
 		else
 		{
-			fprintf( stderr, "%s\n", message.toUtf8().constData() );
+			qCritical( "%s", message.toUtf8().constData() );
 			exit( EXIT_FAILURE );
 		}
 	}
@@ -69,9 +138,33 @@ AudioFileDevice::AudioFileDevice( OutputSettings const & outputSettings,
 
 
 
-AudioFileDevice::~AudioFileDevice()
+bool AudioFileDevice::outputFileOpened() const
 {
-	m_outputFile.close();
+	return (m_useStdout || (m_outputFile && m_outputFile->isOpen()));
+}
+
+
+
+
+void AudioFileDevice::closeOutputFile()
+{
+	if(!m_useStdout) m_outputFile->close();
+
+	if(m_useTmpFile)
+	{
+		qWarning("\nAudioFileDevice::closeOutputFile read tmp data");
+		m_outputFile->open(QFile::ReadOnly);
+		QFile out;
+		qWarning("AudioFileDevice::closeOutputFile send tmp data to stdout");
+		out.open(::stdout, QIODevice::WriteOnly);
+
+		QByteArray ba;
+		while(!(ba=m_outputFile->readLine(4096)).isEmpty())
+			out.write(ba);
+
+		out.flush();//close();
+		m_outputFile->close();
+	}
 }
 
 
@@ -79,11 +172,19 @@ AudioFileDevice::~AudioFileDevice()
 
 int AudioFileDevice::writeData( const void* data, int len )
 {
-	if( m_outputFile.isOpen() )
+	if( m_useStdout )
 	{
-		return m_outputFile.write( (const char *) data, len );
+		QFile out;
+		qWarning("AudioFileDevice::writeData to stdout");
+		out.open(::stdout, QIODevice::WriteOnly);
+		out.write( (const char *) data, len );
+		out.flush();
+	}
+	else
+	if( outputFileOpened() )
+	{
+		return m_outputFile->write( (const char *) data, len );
 	}
 
 	return -1;
 }
-

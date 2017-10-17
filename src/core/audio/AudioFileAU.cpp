@@ -1,8 +1,8 @@
 /*
- * AudioFileWave.cpp - audio-device which encodes wave-stream and writes it
- *                     into a WAVE-file. This is used for song-export.
+ * AudioFileAU.cpp - audio-device which encodes au-stream and writes it
+ *                   into a AU-file. This is used for song-export.
  *
- * Copyright (c) 2004-2013 Tobias Doerffel <tobydox/at/users.sourceforge.net>
+ * Copyright (c) 2017
  *
  * This file is part of LMMS - https://lmms.io
  *
@@ -23,24 +23,28 @@
  *
  */
 
-#include "AudioFileWave.h"
+#include <unistd.h>
+
+#include "AudioFileAU.h"
 #include "endian_handling.h"
 #include "Mixer.h"
 
 
-AudioFileDevice * AudioFileWave::getInst( const QString & outputFilename,
-					  const OutputSettings & outputSettings,
-					  const ch_cnt_t channels,
-					  Mixer * mixer,
-					  bool & successful )
+AudioFileDevice * AudioFileAU::getInst( const QString & outputFilename,
+					OutputSettings const & outputSettings,
+					const ch_cnt_t channels,
+					Mixer * mixer,
+					bool & successful )
 {
-	AudioFileWave * r=new AudioFileWave( outputSettings, channels,
-					     successful, outputFilename,
-					     mixer );
+	AudioFileAU * r=new AudioFileAU( outputSettings, channels,
+					 successful, outputFilename,
+					 mixer );
+	qWarning("AudioFileAU: hasStreamSupport=%d",r->hasStreamSupport());
 	r->initOutputFile();
 	r->openOutputFile();
 
 	successful = r->outputFileOpened() && r->startEncoding();
+	qWarning("AudioFileAU::getInst success=%d",successful);
 
 	return r;
 }
@@ -48,19 +52,19 @@ AudioFileDevice * AudioFileWave::getInst( const QString & outputFilename,
 
 
 
-AudioFileWave::AudioFileWave( OutputSettings const & outputSettings,
-			      const ch_cnt_t channels, bool & successful,
-			      const QString & file,
-			      Mixer* mixer ) :
+AudioFileAU::AudioFileAU( const OutputSettings & outputSettings,
+			  const ch_cnt_t channels, bool & successful,
+			  const QString & file,
+			  Mixer * mixer ) :
 	AudioFileDevice( outputSettings, channels, file, mixer ),
-	m_sf( NULL )
+	m_sf( nullptr )
 {
 }
 
 
 
 
-AudioFileWave::~AudioFileWave()
+AudioFileAU::~AudioFileAU()
 {
 	finishEncoding();
 }
@@ -68,7 +72,15 @@ AudioFileWave::~AudioFileWave()
 
 
 
-bool AudioFileWave::startEncoding()
+bool AudioFileAU::hasStreamSupport() const
+{
+	return true;
+}
+
+
+
+
+bool AudioFileAU::startEncoding()
 {
 	m_si.samplerate = sampleRate();
 	m_si.channels = channels();
@@ -76,7 +88,7 @@ bool AudioFileWave::startEncoding()
 	m_si.sections = 1;
 	m_si.seekable = 0;
 
-	m_si.format = SF_FORMAT_WAV;
+	m_si.format = SF_FORMAT_AU;
 
 	switch( getOutputSettings().getBitDepth() )
 	{
@@ -92,13 +104,25 @@ bool AudioFileWave::startEncoding()
 		break;
 	}
 
-	m_sf = sf_open(
+	//	if( m_si.format & SF_FORMAT_PCM_24 )
+	//	m_si.format = SF_FORMAT_AU | SF_ENDIAN_LITTLE | SF_FORMAT_PCM_16;
+
+	if( m_useStdout )
+	{
+		qWarning("AudioFileAU: output to STDOUT");
+		m_sf = sf_open_fd( STDOUT_FILENO, SFM_WRITE, &m_si, false );
+		qWarning("AudioFileAU: m_sf=%p",m_sf);
+ 	}
+	else
+	{
+		m_sf = sf_open(
 #ifdef LMMS_BUILD_WIN32
-		       outputFile().toLocal8Bit().constData(),
+			       outputFile().toLocal8Bit().constData(),
 #else
-		       outputFile().toUtf8().constData(),
+			       outputFile().toUtf8().constData(),
 #endif
-		       SFM_WRITE, &m_si );
+			       SFM_WRITE, &m_si );
+	}
 
 	// Prevent fold overs when encountering clipped data
 	sf_command(m_sf, SFC_SET_CLIPPING, NULL, SF_TRUE);
@@ -111,9 +135,9 @@ bool AudioFileWave::startEncoding()
 
 
 
-void AudioFileWave::writeBuffer( const surroundSampleFrame * _ab,
-				 const fpp_t _frames,
-				 const float _master_gain )
+void AudioFileAU::writeBuffer( const surroundSampleFrame * _ab,
+			       const fpp_t _frames,
+			       const float _master_gain )
 {
 	OutputSettings::BitDepth bitDepth = getOutputSettings().getBitDepth();
 
@@ -145,7 +169,7 @@ void AudioFileWave::writeBuffer( const surroundSampleFrame * _ab,
 
 
 
-void AudioFileWave::finishEncoding()
+void AudioFileAU::finishEncoding()
 {
 	if( m_sf )
 	{

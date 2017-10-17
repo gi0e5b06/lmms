@@ -1,8 +1,8 @@
 /*
- * AudioFileWave.h - AudioDevice which encodes wave-stream and writes it
- *                   into a WAVE-file. This is used for song-export.
+ * AudioFileAU.h - AudioDevice which encodes au-stream and writes it
+ *                   into a AU-file. This is used for song-export.
  *
- * Copyright (c) 2004-2009 Tobias Doerffel <tobydox/at/users.sourceforge.net>
+ * Copyright (c) 2017
  *
  * This file is part of LMMS - https://lmms.io
  *
@@ -23,8 +23,8 @@
  *
  */
 
-#ifndef AUDIO_FILE_WAVE_H
-#define AUDIO_FILE_WAVE_H
+#ifndef AUDIO_FILE_AU_H
+#define AUDIO_FILE_AU_H
 
 #include "lmmsconfig.h"
 #include "AudioFileDevice.h"
@@ -32,10 +32,10 @@
 #include <sndfile.h>
 
 
-class AudioFileWave : public AudioFileDevice
+class AudioFileAU : public AudioFileDevice
 {
  public:
-	virtual ~AudioFileWave();
+	virtual ~AudioFileAU();
 
 	static AudioFileDevice * getInst( const QString & outputFileName,
 					  const OutputSettings & outputSettings,
@@ -44,11 +44,12 @@ class AudioFileWave : public AudioFileDevice
 					  bool & successful );
 
  protected:
-	AudioFileWave( const OutputSettings & outputSettings,
-		       const ch_cnt_t channels,
-		       bool & successful,
-		       const QString & file,
-		       Mixer* mixer );
+	AudioFileAU( const OutputSettings & outputSettings,
+		     const ch_cnt_t channels,
+		     bool & successful,
+		     const QString & file,
+		     Mixer * mixer );
+	virtual bool hasStreamSupport() const override;
 	virtual void writeBuffer( const surroundSampleFrame * _ab,
 				  const fpp_t _frames,
 				  float _master_gain ) override;

@@ -212,14 +212,14 @@ void fileCheck( QString &file )
 
 	if( !fileToCheck.size() )
 	{
-		printf( "The file %s does not have any content.\n",
-				file.toUtf8().constData() );
+		qCritical( "The file %s does not have any content.\n",
+			   file.toUtf8().constData() );
 		exit( EXIT_FAILURE );
 	}
 	else if( fileToCheck.isDir() )
 	{
-		printf( "%s is a directory.\n",
-				file.toUtf8().constData() );
+		qCritical( "%s is a directory.\n",
+			   file.toUtf8().constData() );
 		exit( EXIT_FAILURE );
 	}
 }
@@ -301,7 +301,7 @@ int main( int argc, char * * argv )
 #if !defined(LMMS_BUILD_WIN32) && !defined(LMMS_BUILD_HAIKU)
 	if ( ( getuid() == 0 || geteuid() == 0 ) && !allowRoot )
 	{
-		printf( "LMMS cannot be run as root.\nUse \"--allowroot\" to override.\n\n" );
+		qCritical( "LMMS cannot be run as root.\nUse \"--allowroot\" to override.\n" );
 		return EXIT_FAILURE;
 	}
 #endif
@@ -335,7 +335,7 @@ int main( int argc, char * * argv )
 
 			if( i == argc )
 			{
-				printf( "\nNo input file specified.\n\n"
+				qWarning( "\nNo input file specified.\n\n"
 	"Try \"%s --help\" for more information.\n\n", argv[0] );
 				return EXIT_FAILURE;
 			}
@@ -362,7 +362,7 @@ int main( int argc, char * * argv )
 #ifdef LMMS_BUILD_WIN32
 			if( allowRoot )
 			{
-				printf( "\nOption \"--allowroot\" will be ignored on this platform.\n\n" );
+				qWarning( "\nOption \"--allowroot\" will be ignored on this platform.\n\n" );
 			}
 #endif
 
@@ -373,7 +373,7 @@ int main( int argc, char * * argv )
 
 			if( i == argc )
 			{
-				printf( "\nNo input file specified.\n\n"
+				qWarning( "\nNo input file specified.\n\n"
 	"Try \"%s --help\" for more information.\n\n", argv[0] );
 				return EXIT_FAILURE;
 			}
@@ -392,7 +392,7 @@ int main( int argc, char * * argv )
 
 			if( i == argc )
 			{
-				printf( "\nNo input file specified.\n\n"
+				qWarning( "\nNo input file specified.\n\n"
 	"Try \"%s --help\" for more information.\n\n", argv[0] );
 				return EXIT_FAILURE;
 			}
@@ -411,7 +411,7 @@ int main( int argc, char * * argv )
 
 			if( i == argc )
 			{
-				printf( "\nNo output file specified.\n\n"
+				qWarning( "\nNo output file specified.\n\n"
 	"Try \"%s --help\" for more information.\n\n", argv[0] );
 				return EXIT_FAILURE;
 			}
@@ -425,7 +425,7 @@ int main( int argc, char * * argv )
 
 			if( i == argc )
 			{
-				printf( "\nNo output format specified.\n\n"
+				qWarning( "\nNo output format specified.\n\n"
 	"Try \"%s --help\" for more information.\n\n", argv[0] );
 				return EXIT_FAILURE;
 			}
@@ -453,9 +453,13 @@ int main( int argc, char * * argv )
 			{
 				eff = ProjectRenderer::FlacFile;
 			}
+			else if (ext == "au")
+			{
+				eff = ProjectRenderer::AUFile;
+			}
 			else
 			{
-				printf( "\nInvalid output format %s.\n\n"
+				qWarning( "\nInvalid output format %s.\n\n"
 	"Try \"%s --help\" for more information.\n\n", argv[i], argv[0] );
 				return EXIT_FAILURE;
 			}
@@ -466,7 +470,7 @@ int main( int argc, char * * argv )
 
 			if( i == argc )
 			{
-				printf( "\nNo samplerate specified.\n\n"
+				qWarning( "\nNo samplerate specified.\n\n"
 	"Try \"%s --help\" for more information.\n\n", argv[0] );
 				return EXIT_FAILURE;
 			}
@@ -479,7 +483,7 @@ int main( int argc, char * * argv )
 			}
 			else
 			{
-				printf( "\nInvalid samplerate %s.\n\n"
+				qWarning( "\nInvalid samplerate %s.\n\n"
 	"Try \"%s --help\" for more information.\n\n", argv[i], argv[0] );
 				return EXIT_FAILURE;
 			}
@@ -490,7 +494,7 @@ int main( int argc, char * * argv )
 
 			if( i == argc )
 			{
-				printf( "\nNo bitrate specified.\n\n"
+				qWarning( "\nNo bitrate specified.\n\n"
 	"Try \"%s --help\" for more information.\n\n", argv[0] );
 				return EXIT_FAILURE;
 			}
@@ -506,7 +510,7 @@ int main( int argc, char * * argv )
 			}
 			else
 			{
-				printf( "\nInvalid bitrate %s.\n\n"
+				qWarning( "\nInvalid bitrate %s.\n\n"
 	"Try \"%s --help\" for more information.\n\n", argv[i], argv[0] );
 				return EXIT_FAILURE;
 			}
@@ -517,7 +521,7 @@ int main( int argc, char * * argv )
 
 			if( i == argc )
 			{
-				printf( "\nNo stereo mode specified.\n\n"
+				qWarning( "\nNo stereo mode specified.\n\n"
 	"Try \"%s --help\" for more information.\n\n", argv[0] );
 				return EXIT_FAILURE;
 			}
@@ -538,7 +542,7 @@ int main( int argc, char * * argv )
 			}
 			else
 			{
-				printf( "\nInvalid stereo mode %s.\n\n"
+				qWarning( "\nInvalid stereo mode %s.\n\n"
 	"Try \"%s --help\" for more information.\n\n", argv[i], argv[0] );
 				return EXIT_FAILURE;
 			}
@@ -553,7 +557,7 @@ int main( int argc, char * * argv )
 
 			if( i == argc )
 			{
-				printf( "\nNo interpolation method specified.\n\n"
+				qWarning( "\nNo interpolation method specified.\n\n"
 	"Try \"%s --help\" for more information.\n\n", argv[0] );
 				return EXIT_FAILURE;
 			}
@@ -579,7 +583,7 @@ int main( int argc, char * * argv )
 			}
 			else
 			{
-				printf( "\nInvalid interpolation method %s.\n\n"
+				qWarning( "\nInvalid interpolation method %s.\n\n"
 	"Try \"%s --help\" for more information.\n\n", argv[i], argv[0] );
 				return EXIT_FAILURE;
 			}
@@ -590,7 +594,7 @@ int main( int argc, char * * argv )
 
 			if( i == argc )
 			{
-				printf( "\nNo oversampling specified.\n\n"
+				qWarning( "\nNo oversampling specified.\n\n"
 	"Try \"%s --help\" for more information.\n\n", argv[0] );
 				return EXIT_FAILURE;
 			}
@@ -613,7 +617,7 @@ int main( int argc, char * * argv )
 		qs.oversampling = Mixer::qualitySettings::Oversampling_8x;
 		break;
 				default:
-				printf( "\nInvalid oversampling %s.\n\n"
+				qWarning( "\nInvalid oversampling %s.\n\n"
 	"Try \"%s --help\" for more information.\n\n", argv[i], argv[0] );
 				return EXIT_FAILURE;
 			}
@@ -624,7 +628,7 @@ int main( int argc, char * * argv )
 
 			if( i == argc )
 			{
-				printf( "\nNo file specified for importing.\n\n"
+				qWarning( "\nNo file specified for importing.\n\n"
 	"Try \"%s --help\" for more information.\n\n", argv[0] );
 				return EXIT_FAILURE;
 			}
@@ -645,7 +649,7 @@ int main( int argc, char * * argv )
 
 			if( i == argc )
 			{
-				printf( "\nNo profile specified.\n\n"
+				qWarning( "\nNo profile specified.\n\n"
 	"Try \"%s --help\" for more information.\n\n", argv[0] );
 				return EXIT_FAILURE;
 			}
@@ -659,7 +663,7 @@ int main( int argc, char * * argv )
 
 			if( i == argc )
 			{
-				printf( "\nNo configuration file specified.\n\n"
+				qWarning( "\nNo configuration file specified.\n\n"
 	"Try \"%s --help\" for more information.\n\n", argv[0] );
 				return EXIT_FAILURE;
 			}
@@ -670,7 +674,7 @@ int main( int argc, char * * argv )
 		{
 			if( argv[i][0] == '-' )
 			{
-				printf( "\nInvalid option %s.\n\n"
+				qWarning( "\nInvalid option %s.\n\n"
 	"Try \"%s --help\" for more information.\n\n", argv[i], argv[0] );
 				return EXIT_FAILURE;
 			}
@@ -720,7 +724,7 @@ int main( int argc, char * * argv )
 				sched_get_priority_min( SCHED_FIFO ) ) / 2;
 	if( sched_setscheduler( 0, SCHED_FIFO, &sparam ) == -1 )
 	{
-		printf( "Notice: could not set realtime priority.\n" );
+		qWarning( "Notice: could not set realtime priority." );
 	}
 #endif
 #endif
@@ -729,7 +733,7 @@ int main( int argc, char * * argv )
 #ifdef LMMS_BUILD_WIN32
 	if( !SetPriorityClass( GetCurrentProcess(), HIGH_PRIORITY_CLASS ) )
 	{
-		printf( "Notice: could not set high priority.\n" );
+		qWarning( "Notice: could not set high priority." );
 	}
 #endif
 
@@ -739,11 +743,11 @@ int main( int argc, char * * argv )
 	sa.sa_flags = SA_SIGINFO;
 	if ( sigemptyset( &sa.sa_mask ) )
 	{
-		fprintf( stderr, "Signal initialization failed.\n" );
+		qWarning( "Error: Signal initialization failed." );
 	}
 	if ( sigaction( SIGPIPE, &sa, NULL ) )
 	{
-		fprintf( stderr, "Signal initialization failed.\n" );
+		qWarning( "Error: Signal initialization failed." );
 	}
 #endif
 
@@ -756,14 +760,14 @@ int main( int argc, char * * argv )
 		Engine::init( true );
 		destroyEngine = true;
 
-		printf( "Loading project...\n" );
+		qWarning( "Loading project..." );
 		Engine::getSong()->loadProject( fileToLoad );
 		if( Engine::getSong()->isEmpty() )
 		{
-			printf("The project %s is empty, aborting!\n", fileToLoad.toUtf8().constData() );
+			qCritical( "Error: project %s is empty, aborting!", fileToLoad.toUtf8().constData() );
 			exit( EXIT_FAILURE );
 		}
-		printf( "Done\n" );
+		qWarning( "Done" );
 
 		Engine::getSong()->setExportLoop( renderLoop );
 
@@ -771,8 +775,9 @@ int main( int argc, char * * argv )
 		// otherwise, it is a file, so we need to append the file extension
 		if ( !renderTracks )
 		{
-			renderOut = baseName( renderOut ) +
-				ProjectRenderer::getFileExtensionFromFormat(eff);
+			if(renderOut != "-")
+				renderOut = baseName( renderOut ) +
+					ProjectRenderer::getFileExtensionFromFormat(eff);
 		}
 
 		// create renderer

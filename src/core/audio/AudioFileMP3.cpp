@@ -2,7 +2,7 @@
  * AudioFileMP3.cpp - Audio-device which encodes a wave stream into
  *                    an MP3 file. This is used for song export.
  *
- * Copyright (c) 2017 to present Michael Gregorius <michael.gregorius.git/at/arcor[dot]de>
+ * Copyright (c) 2017 Michael Gregorius <michael.gregorius.git/at/arcor[dot]de>
  *
  * This file is part of LMMS - https://lmms.io
  *
@@ -32,18 +32,35 @@
 #include <cassert>
 
 
-AudioFileMP3::AudioFileMP3(	OutputSettings const & outputSettings,
-				const ch_cnt_t channels,
-				bool & successful,
-				const QString & file,
-				Mixer* mixer ) :
+AudioFileDevice * AudioFileMP3::getInst( const QString & outputFilename,
+					 OutputSettings const & outputSettings,
+					 const ch_cnt_t channels,
+					 Mixer * mixer,
+					 bool & successful )
+{
+	AudioFileMP3 * r=new AudioFileMP3( outputSettings, channels,
+					   successful, outputFilename,
+					   mixer );
+	r->initOutputFile();
+	r->openOutputFile();
+
+	successful = r->outputFileOpened();// && r->startEncoding();
+
+	return r;
+}
+
+AudioFileMP3::AudioFileMP3( const OutputSettings & outputSettings,
+			    const ch_cnt_t channels,
+			    bool & successful,
+			    const QString & file,
+			    Mixer * mixer ) :
 	AudioFileDevice( outputSettings, channels, file, mixer )
 {
 	successful = true;
 	// For now only accept stereo sources
 	successful &= channels == 2;
 	successful &= initEncoder();
-	successful &= outputFileOpened();
+	//successful &= outputFileOpened();
 }
 
 AudioFileMP3::~AudioFileMP3()
@@ -53,8 +70,8 @@ AudioFileMP3::~AudioFileMP3()
 }
 
 void AudioFileMP3::writeBuffer( const surroundSampleFrame * _buf,
-					const fpp_t _frames,
-					const float _master_gain )
+				const fpp_t _frames,
+				const float _master_gain )
 {
 	if (_frames < 1)
 	{

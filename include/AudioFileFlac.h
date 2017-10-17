@@ -1,7 +1,7 @@
 /*
  * AudioFileFlac.h - Audio device which encodes a wave stream into a FLAC file.
  *
- * Copyright (c) 2017 to present Levin Oehlmann <irrenhaus3/at/gmail[dot]com> et al.
+ * Copyright (c) 2017 Levin Oehlmann <irrenhaus3/at/gmail[dot]com> et al.
  *
  * This file is part of LMMS - https://lmms.io
  *
@@ -32,43 +32,31 @@
 
 class AudioFileFlac: public AudioFileDevice
 {
-public:
-	AudioFileFlac(OutputSettings const& outputSettings,
-			ch_cnt_t const channels,
-			bool& successful,
-			QString const& file,
-			Mixer* mixer
-	);
-
+ public:
 	virtual ~AudioFileFlac();
 
-	static AudioFileDevice* getInst(QString const& outputFilename,
-			OutputSettings const& outputSettings,
-			ch_cnt_t const channels,
-			Mixer* mixer,
-			bool& successful)
-	{
-		return new AudioFileFlac(
-			outputSettings,
-			channels,
-			successful,
-			outputFilename,
-			mixer
-		);
-	}
+	static AudioFileDevice* getInst( const QString & outputFileName,
+					 const OutputSettings & outputSettings,
+					 const ch_cnt_t channels,
+					 Mixer* mixer,
+					 bool& successful );
 
-private:
+ protected:
+	AudioFileFlac( const OutputSettings & outputSettings,
+		       const ch_cnt_t channels,
+		       bool & successful,
+		       const QString & file,
+		       Mixer * mixer );
 
-	SF_INFO  m_sfinfo;
-	SNDFILE* m_sf;
-
-	virtual void writeBuffer(surroundSampleFrame const* _ab,
-						fpp_t const frames,
-						float master_gain) override;
-
+ private:
+	virtual void writeBuffer( const surroundSampleFrame * _ab,
+				  const fpp_t frames,
+				  float master_gain ) override;
 	bool startEncoding();
 	void finishEncoding();
 
+	SF_INFO  m_sfinfo;
+	SNDFILE* m_sf;
 };
 
 #endif //AUDIO_FILE_FLAC_H
