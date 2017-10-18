@@ -29,11 +29,13 @@
 class EXPORT MemoryManagerStandard
 {
  public:
+	static bool  init();
+	static void  cleanup();
 	static bool  safe(size_t size , const char* file , long line);
 	static void* alloc(size_t size , const char* file , long line);
 	static void  free(void* ptr , const char* file , long line);
-	static bool  init();
-	static void  cleanup();
+	static void * alignedAlloc( size_t size , const char* file , long line);
+	static void alignedFree( void * ptr , const char* file , long line);
 	//static int extend( int chunks ); // returns index of created pool (for use by alloc)
 };
 

@@ -1,4 +1,5 @@
 
+#include "lmms_basics.h"
 #include "MemoryManagerArray.h"
 
 bool MemoryManagerArray::active=false;
@@ -11,6 +12,7 @@ MemoryManagerArray MemoryManagerArray::S80  ( 2048,  80,"NotePlayHandle");
 MemoryManagerArray MemoryManagerArray::S112 (  128, 112);
 MemoryManagerArray MemoryManagerArray::S128 (   64, 128);
 MemoryManagerArray MemoryManagerArray::S192 (  256, 192);
+//200 drumsynth
 MemoryManagerArray MemoryManagerArray::S224 (  256, 224);
 MemoryManagerArray MemoryManagerArray::S256 (   64, 256);
 MemoryManagerArray MemoryManagerArray::S480 (  256, 480);
@@ -26,6 +28,7 @@ MemoryManagerArray MemoryManagerArray::S2464(   64,2464);
 //4096
 MemoryManagerArray MemoryManagerArray::S4128( 256,4128);
 
+//#define MMA_STD_ALLOC(size) ::malloc(size)
 #define MMA_STD_ALLOC(size) ::calloc(1,size)
 #define MMA_STD_FREE(ptr) ::free(ptr)
 
@@ -38,7 +41,7 @@ void MemoryManagerArray::cleanup()
 {
 }
 
-bool MemoryManagerArray::safe( size_t size , const char* file , long line)
+bool MemoryManagerArray::safe( size_t size, const char* file, long line)
 {
 	qWarning("MemoryManagerArray::safe %ld %s:%ld",size,file,line);
 
@@ -67,7 +70,7 @@ bool MemoryManagerArray::safe( size_t size , const char* file , long line)
 	return true;
 }
 
-void * MemoryManagerArray::alloc( size_t size , const char* file , long line)
+void * MemoryManagerArray::alloc( size_t size, const char* file, long line)
 {
 	//qWarning("MemoryManagerArray::alloc %ld",size);
 
@@ -98,7 +101,7 @@ void * MemoryManagerArray::alloc( size_t size , const char* file , long line)
 	return r;
 }
 
-void MemoryManagerArray::free( void * ptr , const char* file , long line)
+void MemoryManagerArray::free( void * ptr, const char* file, long line)
 {
 	if( !ptr )
 	{
@@ -127,6 +130,35 @@ void MemoryManagerArray::free( void * ptr , const char* file , long line)
 			//if(active) qWarning("std free %p in %s#%ld",ptr,file,line);
 			MMA_STD_FREE(ptr);
 		}
+}
+
+void* MemoryManagerArray::alignedAlloc( size_t size , const char* file, long line)
+{
+	char *ptr, *ptr2, *aligned_ptr;
+	const int align_mask = ALIGN_SIZE - 1;
+
+	//ptr = static_cast<char*>( malloc( size + ALIGN_SIZE + sizeof( int ) ) );
+	ptr = static_cast<char*>(MemoryManagerArray::alloc( size + ALIGN_SIZE + sizeof(int), file, line));
+
+	if( ptr == NULL ) return NULL;
+
+	ptr2 = ptr + sizeof( int );
+	aligned_ptr = ptr2 + ( ALIGN_SIZE - ( ( size_t ) ptr2 & align_mask ) );
+
+	ptr2 = aligned_ptr - sizeof( int );
+	*( ( int* ) ptr2 ) = ( int )( aligned_ptr - ptr );
+
+	return aligned_ptr;
+}
+
+void MemoryManagerArray::alignedFree( void* ptr, const char* file, long line )
+{
+	if( ptr )
+	{
+		int *ptr2 = static_cast<int*>( ptr ) - 1;
+		ptr = static_cast<char*>( ptr ) - *ptr2;
+		MemoryManagerArray::free( ptr, file, line );
+	}
 }
 
 MemoryManagerArray::MemoryManagerArray(const int nbe, const size_t size , const char* ref) :

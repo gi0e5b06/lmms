@@ -24,8 +24,10 @@
  */
 
 
-#include "MemoryManagerLegacy.h"
 #include <QReadWriteLock>
+
+#include "MemoryManagerLegacy.h"
+#include "MemoryHelper.h"
 
 MemoryPoolVector MemoryManagerLegacy::s_memoryPools;
 QReadWriteLock MemoryManagerLegacy::s_poolMutex;
@@ -224,4 +226,20 @@ void MemoryPool::releaseChunks( void * ptr, int chunks )
 	memset( &m_free[ start ], 1, chunks );
 
 	m_mutex.unlock();
+}
+
+
+
+
+void * MemoryManagerLegacy::alignedAlloc( size_t size , const char* file , long line)
+{
+	return MemoryHelper::alignedMalloc(size);
+}
+
+
+
+
+void MemoryManagerLegacy::alignedFree( void * ptr , const char* file , long line)
+{
+	MemoryHelper::alignedFree(ptr);
 }

@@ -139,9 +139,9 @@ Mixer::Mixer( bool renderOnly ) :
 
 	for( int i = 0; i < 3; i++ )
 	{
-		m_readBuf = (surroundSampleFrame*)
-			MemoryHelper::alignedMalloc( m_framesPerPeriod *
-						     sizeof( surroundSampleFrame ) );
+		//m_readBuf = (surroundSampleFrame*)
+		//MemoryHelper::alignedMalloc( m_framesPerPeriod * sizeof( surroundSampleFrame ) );
+		m_readBuf = MM_ALIGNED_ALLOC(surroundSampleFrame, m_framesPerPeriod);
 		m_bufferPool.push_back( m_readBuf );
 	}
 
@@ -190,7 +190,8 @@ Mixer::~Mixer()
 
 	for( int i = 0; i < 3; i++ )
 	{
-		MemoryHelper::alignedFree( m_bufferPool[i] );
+		//MemoryHelper::alignedFree( m_bufferPool[i] );
+		MM_ALIGNED_FREE( m_bufferPool[i] );
 	}
 
 	for( int i = 0; i < 2; ++i )

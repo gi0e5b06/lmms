@@ -64,6 +64,10 @@ static void operator delete[] ( void * ptr ) \
 #define MM_FREE( ptr ) MEMORY_MANAGER_CLASS::free( ptr , __FILE__ , __LINE__ )
 // checking for room
 #define MM_SAFE( type, count ) MEMORY_MANAGER_CLASS::safe( sizeof( type ) * count , __FILE__ , __LINE__ )
+// for use in cases where overriding new/delete isn't a possibility
+#define MM_ALIGNED_ALLOC( type, count ) (type*) MEMORY_MANAGER_CLASS::alignedAlloc( sizeof( type ) * count , __FILE__ , __LINE__ )
+// and just for symmetry...
+#define MM_ALIGNED_FREE( ptr ) MEMORY_MANAGER_CLASS::alignedFree( ptr , __FILE__ , __LINE__ )
 
 
 

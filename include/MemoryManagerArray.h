@@ -28,6 +28,8 @@ public:
 	static bool safe(size_t size , const char* file , long line);
 	static void * alloc(size_t size , const char* file , long line);
 	static void free(void * ptr , const char* file , long line);
+	static void * alignedAlloc( size_t size , const char* file , long line);
+	static void alignedFree( void * ptr , const char* file , long line);
 
 private:
 	QMutex  m_mutex;

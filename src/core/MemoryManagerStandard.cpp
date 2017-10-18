@@ -1,5 +1,6 @@
 
 #include "MemoryManagerStandard.h"
+#include "MemoryHelper.h"
 
 bool MemoryManagerStandard::init()
 {
@@ -17,7 +18,7 @@ bool MemoryManagerStandard::safe( size_t size , const char* file , long line)
 
 void * MemoryManagerStandard::alloc( size_t size , const char* file , long line)
 {
-	return ::calloc(1,size);
+	return ::malloc(size);//::calloc(1,size);
 }
 
 void MemoryManagerStandard::free( void * ptr , const char* file , long line)
@@ -28,4 +29,14 @@ void MemoryManagerStandard::free( void * ptr , const char* file , long line)
 	}
 
 	::free(ptr);
+}
+
+void * MemoryManagerStandard::alignedAlloc( size_t size , const char* file , long line)
+{
+	return MemoryHelper::alignedMalloc(size);
+}
+
+void MemoryManagerStandard::alignedFree( void * ptr , const char* file , long line)
+{
+	MemoryHelper::alignedFree(ptr);
 }

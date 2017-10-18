@@ -76,8 +76,7 @@ public:
 
 	virtual void quit();
 
-	static void resetJobQueue( JobQueue::OperationMode _opMode =
-													JobQueue::Static )
+	static void resetJobQueue( JobQueue::OperationMode _opMode = JobQueue::Static )
 	{
 		globalJobQueue.reset( _opMode );
 	}
@@ -91,7 +90,7 @@ public:
 	// to ThreadableJob objects
 	template<typename T>
 	static void fillJobQueue( const T & _vec,
-							JobQueue::OperationMode _opMode = JobQueue::Static )
+				  JobQueue::OperationMode _opMode = JobQueue::Static )
 	{
 		resetJobQueue( _opMode );
 		for( typename T::ConstIterator it = _vec.begin(); it != _vec.end(); ++it )
