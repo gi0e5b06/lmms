@@ -53,13 +53,13 @@ GuiApplication* GuiApplication::instance()
 }
 
 
-GuiApplication::GuiApplication()
+GuiApplication::GuiApplication(bool showSplashScreen)
 {
 	// enable HiDPI scaling before showing anything (Qt 5.6+ only)
 	#if (QT_VERSION >= QT_VERSION_CHECK(5, 6, 0))
 		QApplication::setAttribute(Qt::AA_EnableHighDpiScaling, true);
 	#endif
-	
+
 	// prompt the user to create the LMMS working directory (e.g. ~/lmms) if it doesn't exist
 	if ( !ConfigManager::inst()->hasWorkingDir() &&
 		QMessageBox::question( NULL,
@@ -91,7 +91,7 @@ GuiApplication::GuiApplication()
 
 	// Show splash screen
 	QSplashScreen splashScreen( embed::getIconPixmap( "splash" ) );
-	splashScreen.show();
+	if( showSplashScreen ) splashScreen.show();
 
 	QHBoxLayout layout;
 	layout.setAlignment(Qt::AlignBottom);
@@ -172,7 +172,7 @@ GuiApplication::~GuiApplication()
 void GuiApplication::displayInitProgress(const QString &msg)
 {
 	Q_ASSERT(m_loadingProgressLabel != nullptr);
-	
+
 	m_loadingProgressLabel->setText(msg);
 	// must force a UI update and process events, as there may be long gaps between processEvents() calls during init
 	m_loadingProgressLabel->repaint();
@@ -214,5 +214,24 @@ void GuiApplication::childDestroyed(QObject *obj)
 	else if (obj == m_controllerRackView)
 	{
 		m_controllerRackView = nullptr;
+	}
+}
+
+
+
+
+// tmp
+void GuiApplication::hasSongFinished()
+{
+	Song* song=Engine::getSong();
+	if( !song ) return;
+	tact_t t=song->getTacts();
+	if( t > song->length() )
+	{
+		qWarning("Song finished!");
+		qApp->closeAllWindows();
+		qWarning("All Windows closed");
+		qApp->exit(0);
+		qWarning("Exit Loop");
 	}
 }

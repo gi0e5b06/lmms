@@ -44,7 +44,7 @@ class EXPORT GuiApplication : public QObject
 {
 	Q_OBJECT;
 public:
-	explicit GuiApplication();
+	explicit GuiApplication(bool showSplashScreen = true);
 	~GuiApplication();
 
 	static GuiApplication* instance();
@@ -60,6 +60,7 @@ public:
 
 public slots:
 	void displayInitProgress(const QString &msg);
+	void hasSongFinished();
 
 private slots:
 	void childDestroyed(QObject *obj);

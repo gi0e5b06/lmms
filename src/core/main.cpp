@@ -153,7 +153,8 @@ void printHelp()
 		"            [ -l ]\n"
 		"            [ -m <mode>]\n"
 		"            [ -o <path> ]\n"
-		"            [ -p <out> ]\n"
+		"            [ -p ]\n"
+		"            [ --profile <out> ]\n"
 		"            [ -r <project file> ] [ options ]\n"
 		"            [ -s <samplerate> ]\n"
 		"            [ -u <in> <out> ]\n"
@@ -188,7 +189,8 @@ void printHelp()
 		"-o, --output <path>           Render into <path>\n"
 		"       For --render, provide a file path\n"
 		"       For --rendertracks, provide a directory path\n"
-		"-p, --profile <out>           Dump profiling information to file <out>\n"
+		"-p, --play                    Play given project file\n"
+		"    --profile <out>           Dump profiling information to file <out>\n"
 		"-r, --render <project file>   Render given project file\n"
 		"    --rendertracks <project>  Render each track to a different file\n"
 		"-s, --samplerate <samplerate> Specify output samplerate in Hz\n"
@@ -261,7 +263,7 @@ int main( int argc, char * * argv )
 	bool allowRoot = false;
 	bool renderLoop = false;
 	bool renderTracks = false;
-	QString fileToLoad, fileToImport, renderOut, profilerOutputFile, configFile;
+	QString fileToLoad, fileToImport, playOut, renderOut, profilerOutputFile, configFile;
 
 	// first of two command-line parsing stages
 	for( int i = 1; i < argc; ++i )
@@ -270,6 +272,7 @@ int main( int argc, char * * argv )
 
 		if( arg == "--help"    || arg == "-h" ||
 		    arg == "--version" || arg == "-v" ||
+		    //arg == "--play"    || arg == "-p" ||
 		    arg == "--render"  || arg == "-r" )
 		{
 			coreOnly = true;
@@ -385,6 +388,21 @@ int main( int argc, char * * argv )
 			printf( "%s\n", d.toUtf8().constData() );
 
 			return EXIT_SUCCESS;
+		}
+		else if( arg == "--play" || arg == "-p" )
+		{
+			++i;
+
+			if( i == argc )
+			{
+				qWarning( "\nNo input file specified.\n\n"
+	"Try \"%s --help\" for more information.\n\n", argv[0] );
+				return EXIT_FAILURE;
+			}
+
+
+			fileToLoad = QString::fromLocal8Bit( argv[i] );
+			playOut = "yes";
 		}
 		else if( arg == "--render" || arg == "-r" || arg == "--rendertracks" )
 		{
@@ -643,7 +661,7 @@ int main( int argc, char * * argv )
 				++i;
 			}
 		}
-		else if( arg == "--profile" || arg == "-p" )
+		else if( arg == "--profile" )
 		{
 			++i;
 
@@ -806,9 +824,42 @@ int main( int argc, char * * argv )
 			r->renderProject();
 		}
 	}
+	// if we have playOut, just play the song
+	// without starting the GUI
+	/*
+	else if( !playOut.isEmpty() )
+	{
+		Engine::init( true );
+		destroyEngine = true;
+
+		qWarning( "Loading project..." );
+		Engine::getSong()->loadProject( fileToLoad );
+		if( Engine::getSong()->isEmpty() )
+		{
+			qCritical( "Error: project %s is empty, aborting!", fileToLoad.toUtf8().constData() );
+			exit( EXIT_FAILURE );
+		}
+		qWarning( "Done" );
+
+		if( profilerOutputFile.isEmpty() == false )
+		{
+			Engine::mixer()->profiler().setOutputFile( profilerOutputFile );
+		}
+
+		//r->renderProject();
+		//emit playTriggered();
+
+		qWarning( "Playing project..." );
+		//if( Engine::getSong()->playMode() != Song::Mode_PlaySong )
+		Engine::getSong()->playSong();
+		//else
+		//Engine::getSong()->togglePause();
+		qWarning( "Done" );
+	}
+	*/
 	else // otherwise, start the GUI
 	{
-		new GuiApplication();
+		new GuiApplication(playOut.isEmpty());
 
 		// re-intialize RNG - shared libraries might have srand() or
 		// srandom() calls in their init procedure
@@ -821,6 +872,14 @@ int main( int argc, char * * argv )
 				QFileInfo( recoveryFile ).isFile();
 		bool autoSaveEnabled =
 			ConfigManager::inst()->value( "ui", "enableautosave" ).toInt();
+
+		if(!playOut.isEmpty())
+		{
+			recoveryFile        = "";
+			recoveryFilePresent = false;
+			autoSaveEnabled     = false;
+		}
+
 		if( recoveryFilePresent )
 		{
 			QMessageBox mb;
@@ -904,14 +963,21 @@ int main( int argc, char * * argv )
 			}
 		}
 
-		// first show the Main Window and then try to load given file
-
-		// [Settel] workaround: showMaximized() doesn't work with
-		// FVWM2 unless the window is already visible -> show() first
-		gui->mainWindow()->show();
-		if( fullscreen )
+		if( !playOut.isEmpty() )
 		{
-			gui->mainWindow()->showMaximized();
+		}
+		else
+		{
+		  // first show the Main Window and
+		  // then try to load given file
+
+		  // [Settel] workaround: showMaximized() doesn't work with
+		  // FVWM2 unless the window is already visible -> show() first
+			gui->mainWindow()->show();
+			if( fullscreen )
+			{
+				gui->mainWindow()->showMaximized();
+			}
 		}
 
 		// Handle macOS-style FileOpen QEvents
@@ -966,6 +1032,20 @@ int main( int argc, char * * argv )
 			Engine::getSong()->createNewProject();
 		}
 
+		if( !playOut.isEmpty() )
+		{
+			Engine::getSong()->updateLength();
+			QTimer * t1 = new QTimer( app );
+			t1->setSingleShot(true);
+			Engine::getSong()->connect( t1, SIGNAL( timeout() ),
+				SLOT( playSong() ) );
+			t1->start( 100 );
+
+			QTimer * t2 = new QTimer( app );
+			gui->connect( t2, SIGNAL( timeout() ), SLOT( hasSongFinished() ) );
+			t2->start( 100 );
+		}
+		else
 		// Finally we start the auto save timer and also trigger the
 		// autosave one time as recover.mmp is a signal to possible other
 		// instances of LMMS.
@@ -978,13 +1058,17 @@ int main( int argc, char * * argv )
 	const int ret = app->exec();
 	delete app;
 
+	// TODO: use aboutToQuit() signal
+
 	if( destroyEngine )
 	{
 		Engine::destroy();
 	}
 
+	qWarning("Cleanup Start");
 	// cleanup memory managers
 	MM_CLEANUP //MemoryManager::cleanup();
+	qWarning("Cleanup End");
 
 	// ProjectRenderer::updateConsoleProgress() doesn't return line after render
 	if( coreOnly )
@@ -992,5 +1076,6 @@ int main( int argc, char * * argv )
 		printf( "\n" );
 	}
 
+	qWarning("Return");
 	return ret;
 }

@@ -253,6 +253,3 @@ void ProjectRenderer::updateConsoleProgress()
 	fprintf( stderr, "%s", buf );
 	fflush( stderr );
 }
-
-
-

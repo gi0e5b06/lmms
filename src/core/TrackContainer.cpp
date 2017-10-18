@@ -96,7 +96,8 @@ void TrackContainer::loadSettings( const QDomElement & _this )
 						gui->mainWindow() );
 			pd->setWindowModality( Qt::ApplicationModal );
 			pd->setWindowTitle( tr( "Please wait..." ) );
-			pd->show();
+			if( gui && gui->mainWindow() && gui->mainWindow()->isVisible() )
+				pd->show();
 		}
 	}
 
