@@ -6,7 +6,7 @@
 //#include <string.h>
 //#include <QtCore/QMutex>
 
-class Bitset final
+class Bitset /*final*/
 {
  public:
 	Bitset(unsigned int size);

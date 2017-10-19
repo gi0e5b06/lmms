@@ -54,7 +54,7 @@ class AudioFileMP3 : public AudioFileDevice
 		      Mixer * mixer );
 	virtual void writeBuffer( const surroundSampleFrame * _ab,
 				  const fpp_t _frames,
-				  const float _master_gain ) override;
+				  const float _master_gain ) /*override*/;
 
  private:
 	void flushRemainingBuffers();

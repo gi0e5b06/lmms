@@ -51,7 +51,7 @@ class AudioFileWave : public AudioFileDevice
 		       Mixer* mixer );
 	virtual void writeBuffer( const surroundSampleFrame * _ab,
 				  const fpp_t _frames,
-				  float _master_gain ) override;
+				  float _master_gain ) /*override*/;
 
  private:
 	bool startEncoding();

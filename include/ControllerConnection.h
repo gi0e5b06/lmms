@@ -65,7 +65,7 @@ public:
 	{
 		return m_controller->currentValue( _offset );
 	}
-	
+
 	ValueBuffer * valueBuffer()
 	{
 		return m_controller->valueBuffer();

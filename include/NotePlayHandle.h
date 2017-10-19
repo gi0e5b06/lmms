@@ -41,7 +41,7 @@ typedef QList<NotePlayHandle *> NotePlayHandleList;
 typedef QList<const NotePlayHandle *> ConstNotePlayHandleList;
 
 
-class EXPORT NotePlayHandle final : public PlayHandle, public Note
+class EXPORT NotePlayHandle /*final*/ : public PlayHandle, public Note
 {
 	MM_OPERATORS
 public:

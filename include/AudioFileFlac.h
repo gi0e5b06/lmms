@@ -51,7 +51,7 @@ class AudioFileFlac: public AudioFileDevice
  private:
 	virtual void writeBuffer( const surroundSampleFrame * _ab,
 				  const fpp_t frames,
-				  float master_gain ) override;
+				  float master_gain ) /*override*/;
 	bool startEncoding();
 	void finishEncoding();
 
