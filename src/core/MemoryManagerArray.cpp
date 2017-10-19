@@ -32,6 +32,7 @@ MemoryManagerArray MemoryManagerArray::S4128( 256,4128);
 #define MMA_STD_ALLOC(size) ::calloc(1,size)
 #define MMA_STD_FREE(ptr) ::free(ptr)
 
+# define C2ULI (unsigned long int)
 bool MemoryManagerArray::init()
 {
 	return true;
@@ -43,7 +44,7 @@ void MemoryManagerArray::cleanup()
 
 bool MemoryManagerArray::safe( size_t size, const char* file, long line)
 {
-	qWarning("MemoryManagerArray::safe %ld %s:%ld",size,file,line);
+	//qWarning("MemoryManagerArray::safe %lu %s:%ld",C2ULI size,file,line);
 
 	if(active)
 	{
@@ -72,7 +73,7 @@ bool MemoryManagerArray::safe( size_t size, const char* file, long line)
 
 void * MemoryManagerArray::alloc( size_t size, const char* file, long line)
 {
-	//qWarning("MemoryManagerArray::alloc %ld",size);
+	//qWarning("MemoryManagerArray::alloc %lu",C2ULI size);
 
 	if(active)
 	{
@@ -174,7 +175,7 @@ MemoryManagerArray::MemoryManagerArray(const int nbe, const size_t size , const 
 	m_available(nbe,true)
 {
 	if(nbe>32*1024)           qFatal("MemoryManagerArray: too big %d (32768 elements max)",nbe);
-	if(nbe*size>32*1024*8192) qFatal("MemoryManagerArray: too big %ld (268435456 bytes max)",nbe*size);
+	if(nbe*size>32*1024*8192) qFatal("MemoryManagerArray: too big %lu (268435456 bytes max)",C2ULI nbe*size);
 
 	m_data     =(char*)::calloc(nbe,size);
 	//memset(available,0xFF,sizeof(unsigned int)*1024);
@@ -182,8 +183,8 @@ MemoryManagerArray::MemoryManagerArray(const int nbe, const size_t size , const 
 
 MemoryManagerArray::~MemoryManagerArray()
 {
-	qWarning("~MemoryManagerArray %6ld : cnt=%6d : max=%6d %s wasted=%llu %s",
-		 m_size,m_count,m_max,(m_nbe==m_max ? "!!!" : "   "),m_wasted,m_ref);
+	qWarning("~MemoryManagerArray %6lu : cnt=%6d : max=%lu %s wasted=%llu %s",
+		 C2ULI m_size,m_count,C2ULI m_max,(m_nbe==m_max ? "!!!" : "   "),m_wasted,m_ref);
 	::free(m_data);
 	//::free(m_available);
 
@@ -191,7 +192,7 @@ MemoryManagerArray::~MemoryManagerArray()
 	while (i.hasNext())
 	{
 		i.next();
-		qWarning("                    %6ld : bytes=%6ld cnt=%6ld",m_size,i.key(),i.value());
+		qWarning("                    %6lu : bytes=%6lu cnt=%6ld",C2ULI m_size,C2ULI i.key(),i.value());
 	}
 }
 
@@ -282,7 +283,7 @@ void * MemoryManagerArray::allocate( size_t size , const char* file , long line)
 	if(size>m_size) //!=
 	{
 		void* r=MMA_STD_ALLOC(size);
-		qWarning("invalid size %ld %p in %ld: %s#%ld",size,r,m_size,file,line);
+		qWarning("invalid size %lu %p in %lu: %s#%ld",C2ULI size,r,C2ULI m_size,file,line);
 		return r;
 	}
 
@@ -293,7 +294,7 @@ void * MemoryManagerArray::allocate( size_t size , const char* file , long line)
 	{
 		m_mutex.unlock();
 		void* r=MMA_STD_ALLOC(size);
-		qWarning("block %ld full %d (asking %ld bytes): %s#%ld",m_size,m_count,size,file,line);
+		qWarning("block %lu full %d (asking %lu bytes): %s#%ld",C2ULI m_size,m_count,C2ULI size,file,line);
 		return r;
 	}
 
@@ -302,12 +303,12 @@ void * MemoryManagerArray::allocate( size_t size , const char* file , long line)
 	{
 		m_wasted+=(m_size-size);
 		m_stats[size]+=1;
-		//qWarning("MemoryManagerArray::sup-allocate %ld %ld",size,m_size);
+		//qWarning("MemoryManagerArray::sup-allocate %lu %lu",C2ULI size,C2ULI m_size);
 	}
 
 	// development phase
 	if((m_count>=(m_nbe*90l)/100)&&(m_nbe>=100)&&((m_count%(m_nbe/100))==0))
-		qWarning("block %ld saturating %d (asking %ld bytes): %s#%ld",m_size,m_count,size,file,line);
+		qWarning("block %lu saturating %d (asking %lu bytes): %s#%ld",C2ULI m_size,m_count,C2ULI size,file,line);
 
 	if((m_lastfree>=0)&&(m_lastfree<m_nbe)&&m_available.bit(m_lastfree))//m_available[m_lastfree])
 	{
@@ -347,7 +348,7 @@ void * MemoryManagerArray::allocate( size_t size , const char* file , long line)
 
 	if(i>=m_nbe)
 	{
-		qWarning("block %ld suprizingly full %d %s#%ld",m_size,m_count,file,line);
+		qWarning("block %lu suprizingly full %d %s#%ld",C2ULI m_size,m_count,file,line);
 		return MMA_STD_ALLOC(size);
 	}
 
@@ -371,16 +372,16 @@ bool MemoryManagerArray::deallocate( void * ptr , const char* file , long line)
 	const int i=s/m_size;
 	m_mutex.lock();
 	if((i<0)||(i>=m_nbe))
-		qFatal("error: i out of range: %d in %ld: %s#%ld",i,m_size,file,line);
+		qFatal("error: i out of range: %d in %lu: %s#%ld",i,C2ULI m_size,file,line);
 	if(m_available.bit(i))//m_available[i])
-		qFatal("error: should be taken n°%d in %ld: %s#%ld",i,m_size,file,line);
+		qFatal("error: should be taken n°%d in %lu: %s#%ld",i,C2ULI m_size,file,line);
 	m_available.set(i);//m_available[i]=true;
 	m_lastfree=i;
 	m_count--;
 	if(m_count<0)
-		qFatal("error: negative count in %ld: %s#%ld",m_size,file,line);
+		qFatal("error: negative count in %lu: %s#%ld",C2ULI m_size,file,line);
 	m_mutex.unlock();
 
-	//qWarning("deallocate n°%d %d/%d in %ld %s#%ld",i,m_count,m_nbe,m_size,file,line);
+	//qWarning("deallocate n°%d %d/%d in %lu %s#%ld",i,m_count,m_nbe,C2ULI m_size,file,line);
 	return true;
 }

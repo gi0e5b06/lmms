@@ -32,6 +32,8 @@
 #include "MemoryHelper.h"
 #include "export.h"
 
+#define MEMORY_MANAGER_CLASS MemoryManagerLegacy
+
 class QReadWriteLock;
 
 const int MM_CHUNK_SIZE = 64; // granularity of managed memory

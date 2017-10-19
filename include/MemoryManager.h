@@ -33,8 +33,9 @@
 #include <string.h>
 #include "export.h"
 
-#define MEMORY_MANAGER_CLASS MemoryManagerArray
-#include "MemoryManagerArray.h"
+//#include "MemoryManagerArray.h"
+//#include "MemoryManagerLegacy.h"
+#include "MemoryManagerStandard.h"
 
 #define MM_INIT MEMORY_MANAGER_CLASS::init();
 #define MM_CLEANUP MEMORY_MANAGER_CLASS::cleanup();

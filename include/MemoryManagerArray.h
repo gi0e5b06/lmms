@@ -9,6 +9,8 @@
 
 #include "Bitset.h"
 
+#define MEMORY_MANAGER_CLASS MemoryManagerArray
+
 class MemoryManagerArray
 {
 public:

@@ -26,6 +26,8 @@
 #include <stdlib.h>
 #include "export.h"
 
+#define MEMORY_MANAGER_CLASS MemoryManagerStandard
+
 class EXPORT MemoryManagerStandard
 {
  public:
