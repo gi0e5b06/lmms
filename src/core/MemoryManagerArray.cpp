@@ -175,7 +175,7 @@ MemoryManagerArray::MemoryManagerArray(const int nbe, const size_t size , const 
 	m_available(nbe,true)
 {
 	if(nbe>32*1024)           qFatal("MemoryManagerArray: too big %d (32768 elements max)",nbe);
-	if(nbe*size>32*1024*8192) qFatal("MemoryManagerArray: too big %lu (268435456 bytes max)",C2ULI nbe*size);
+	if(nbe*size>32*1024*8192) qFatal("MemoryManagerArray: too big %lu (268435456 bytes max)",C2ULI (nbe*size));
 
 	m_data     =(char*)::calloc(nbe,size);
 	//memset(available,0xFF,sizeof(unsigned int)*1024);

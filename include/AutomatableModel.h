@@ -25,7 +25,8 @@
 #ifndef AUTOMATABLE_MODEL_H
 #define AUTOMATABLE_MODEL_H
 
-#include <QtCore/QMutex>
+#include <QMap>
+#include <QMutex>
 
 #include "JournallingObject.h"
 #include "Model.h"
