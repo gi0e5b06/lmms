@@ -156,7 +156,7 @@ void AudioFileDevice::closeOutputFile()
 		m_outputFile->open(QFile::ReadOnly);
 		QFile out;
 		qWarning("AudioFileDevice::closeOutputFile send tmp data to stdout");
-		out.open(::stdout, QIODevice::WriteOnly);
+		out.open(stdout, QIODevice::WriteOnly); //::stdout
 
 		QByteArray ba;
 		while(!(ba=m_outputFile->readLine(4096)).isEmpty())
@@ -176,7 +176,7 @@ int AudioFileDevice::writeData( const void* data, int len )
 	{
 		QFile out;
 		qWarning("AudioFileDevice::writeData to stdout");
-		out.open(::stdout, QIODevice::WriteOnly);
+		out.open(stdout, QIODevice::WriteOnly); //::stdout
 		out.write( (const char *) data, len );
 		out.flush();
 	}

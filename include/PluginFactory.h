@@ -27,8 +27,10 @@
 
 #include <memory>
 
-#include <QtCore/QFileInfo>
-#include <QtCore/QList>
+#include <QFileInfo>
+#include <QList>
+#include <QHash>
+#include <QMap>
 
 #include "export.h"
 #include "Plugin.h"
@@ -83,9 +85,9 @@ public slots:
 private:
 	DescriptorMap m_descriptors;
 	PluginInfoList m_pluginInfos;
-	QMap<QString, PluginInfo> m_pluginByExt;
+	QMap<QString,PluginInfo> m_pluginByExt;
 
-	QHash<QString, QString> m_errors;
+	QHash<QString,QString> m_errors;
 
 	static std::unique_ptr<PluginFactory> s_instance;
 };

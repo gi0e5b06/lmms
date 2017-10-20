@@ -183,8 +183,9 @@ MemoryManagerArray::MemoryManagerArray(const int nbe, const size_t size , const 
 
 MemoryManagerArray::~MemoryManagerArray()
 {
-	qWarning("~MemoryManagerArray %6lu : cnt=%6d : max=%lu %s wasted=%llu %s",
-		 C2ULI m_size,m_count,C2ULI m_max,(m_nbe==m_max ? "!!!" : "   "),m_wasted,m_ref);
+	qWarning("~MemoryManagerArray %6lu : cnt=%6d : max=%lu %s wasted=%lu %s",
+		 C2ULI m_size,m_count,C2ULI m_max,(char*)(m_nbe==m_max ? "!!!" : "   "),
+		 (unsigned long int)m_wasted,m_ref);
 	::free(m_data);
 	//::free(m_available);
 
