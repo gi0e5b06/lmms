@@ -2,7 +2,7 @@
 #include "lmms_basics.h"
 #include "MemoryManagerArray.h"
 
-bool MemoryManagerArray::active=false;
+bool MemoryManagerArray::s_active=false;
 
 MemoryManagerArray MemoryManagerArray::S4   (  512,   4);
 MemoryManagerArray MemoryManagerArray::S8   (   64,   8);
@@ -46,7 +46,7 @@ bool MemoryManagerArray::safe( size_t size, const char* file, long line)
 {
 	//qWarning("MemoryManagerArray::safe %lu %s:%ld",C2ULI size,file,line);
 
-	if(active)
+	if(s_active)
 	{
 		if(size<=   4) return !   S4.full();
 		if(size<=   8) return !   S8.full();
@@ -75,7 +75,7 @@ void * MemoryManagerArray::alloc( size_t size, const char* file, long line)
 {
 	//qWarning("MemoryManagerArray::alloc %lu",C2ULI size);
 
-	if(active)
+	if(s_active)
 	{
 		if(size<=   4) return    S4.allocate(size,file,line);
 		if(size<=   8) return    S8.allocate(size,file,line);
@@ -98,7 +98,7 @@ void * MemoryManagerArray::alloc( size_t size, const char* file, long line)
 	}
 
 	void* r=MMA_STD_ALLOC(size);
-	//if(active) qWarning("std malloc %ld %p %s#%ld",size,r,file,line);
+	//if(s_active) qWarning("std malloc %ld %p %s#%ld",size,r,file,line);
 	return r;
 }
 
@@ -128,7 +128,7 @@ void MemoryManagerArray::free( void * ptr, const char* file, long line)
 	if(!S2464.deallocate(ptr,file,line))
 	if(!S4128.deallocate(ptr,file,line))
 		{
-			//if(active) qWarning("std free %p in %s#%ld",ptr,file,line);
+			//if(s_active) qWarning("std free %p in %s#%ld",ptr,file,line);
 			MMA_STD_FREE(ptr);
 		}
 }
@@ -160,6 +160,11 @@ void MemoryManagerArray::alignedFree( void* ptr, const char* file, long line )
 		ptr = static_cast<char*>( ptr ) - *ptr2;
 		MemoryManagerArray::free( ptr, file, line );
 	}
+}
+
+void MemoryManagerArray::setActive(bool active)
+{
+	s_active=active;
 }
 
 MemoryManagerArray::MemoryManagerArray(const int nbe, const size_t size , const char* ref) :

@@ -98,6 +98,7 @@ class EXPORT MemoryManagerLegacy
 	static void free( void * ptr, const char* file , long line );
 	static void * alignedAlloc( size_t size , const char* file , long line);
 	static void alignedFree( void * ptr , const char* file , long line);
+	static void setActive(bool active) {};
 
  protected:
 	static int extend( int chunks ); // returns index of created pool (for use by alloc)

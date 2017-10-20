@@ -39,6 +39,7 @@
 
 #define MM_INIT MEMORY_MANAGER_CLASS::init();
 #define MM_CLEANUP MEMORY_MANAGER_CLASS::cleanup();
+#define MM_ACTIVE(b) MEMORY_MANAGER_CLASS::setActive(b);
 
 #define MM_OPERATORS \
 public: 	 \
