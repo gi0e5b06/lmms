@@ -50,7 +50,7 @@ public:
 #if (QT_VERSION >= 0x500000)
 		return widget->grab(rectangle);
 #else
-		return QPixmap::grabWidget(this,rectangle);
+		return QPixmap::grabWidget(widget,rectangle);
 #endif
 	}
 

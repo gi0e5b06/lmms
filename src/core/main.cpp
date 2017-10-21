@@ -70,6 +70,7 @@
 #include "RenderManager.h"
 #include "Song.h"
 #include "SetupDialog.h"
+#include "PerfLog.h"
 
 #ifdef LMMS_DEBUG_FPE
 #include <fenv.h> // For feenableexcept
@@ -77,7 +78,6 @@
 #include <unistd.h> // For STDERR_FILENO
 #include <csignal> // To register the signal handler
 #endif
-
 
 #ifdef LMMS_DEBUG_FPE
 void signalHandler( int signum ) {
@@ -778,8 +778,11 @@ int main( int argc, char * * argv )
 		Engine::init( true );
 		destroyEngine = true;
 
-		qWarning( "Loading project..." );
+		//qWarning( "Loading project..." );
+		PL_BEGIN("Project Loading")
 		Engine::getSong()->loadProject( fileToLoad );
+		PL_END("Project Loading")
+
 		if( Engine::getSong()->isEmpty() )
 		{
 			qCritical( "Error: project %s is empty, aborting!", fileToLoad.toUtf8().constData() );
@@ -817,10 +820,13 @@ int main( int argc, char * * argv )
 		// start now!
 		if ( renderTracks )
 		{
+			PL_BEGIN("Tracks Rendering")
 			r->renderTracks();
+			PL_END("Tracks Rendering")
 		}
 		else
 		{
+			PL_BEGIN("Project Rendering")
 			r->renderProject();
 		}
 	}
@@ -1058,17 +1064,10 @@ int main( int argc, char * * argv )
 	const int ret = app->exec();
 	delete app;
 
-	// TODO: use aboutToQuit() signal
-
-	if( destroyEngine )
+	if( !renderOut.isEmpty() )
 	{
-		Engine::destroy();
+		PL_END("Project Rendering")
 	}
-
-	qWarning("Cleanup Start");
-	// cleanup memory managers
-	MM_CLEANUP //MemoryManager::cleanup();
-	qWarning("Cleanup End");
 
 	// ProjectRenderer::updateConsoleProgress() doesn't return line after render
 	if( coreOnly )
@@ -1076,6 +1075,16 @@ int main( int argc, char * * argv )
 		printf( "\n" );
 	}
 
-	qWarning("Return");
+	// TODO: use aboutToQuit() signal
+
+	if( destroyEngine )
+	{
+		Engine::destroy();
+	}
+
+	//qWarning("Cleanup Start");
+	// cleanup memory managers
+	MM_CLEANUP //MemoryManager::cleanup();
+	//qWarning("Cleanup End");
 	return ret;
 }

@@ -9,7 +9,9 @@
 
 #include "Bitset.h"
 
+#ifndef MEMORY_MANAGER_CLASS
 #define MEMORY_MANAGER_CLASS MemoryManagerArray
+#endif
 
 class MemoryManagerArray
 {
@@ -52,7 +54,8 @@ private:
 
 	static bool s_active;
 	static MemoryManagerArray S4,S8,S16,S32,S80,S112,S128,S192,S224,
-		S256,S480,S496,S512,S552,S1024,S2048,S2464,S4128;
+		S256,S480,S496,S512,S552,S1024,S1056,S1392,S2048,S2464,
+		S4128;
 
 	/*
 	bool bit(const unsigned int i) const;

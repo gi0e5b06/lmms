@@ -20,9 +20,9 @@ MemoryManagerArray MemoryManagerArray::S496 (   64, 496);
 MemoryManagerArray MemoryManagerArray::S512 (   64, 512);
 MemoryManagerArray MemoryManagerArray::S552 (  512, 552);
 MemoryManagerArray MemoryManagerArray::S1024(   64,1024);
-//1056
-//1320
-MemoryManagerArray MemoryManagerArray::S2048(  512,2048,"Buffer");
+MemoryManagerArray MemoryManagerArray::S1056(  768,1056);
+MemoryManagerArray MemoryManagerArray::S1392(  128,1392);
+MemoryManagerArray MemoryManagerArray::S2048(  128,2048,"Buffer");
 MemoryManagerArray MemoryManagerArray::S2464(   64,2464);
 //2760
 //4096
@@ -63,6 +63,8 @@ bool MemoryManagerArray::safe( size_t size, const char* file, long line)
 		if(size<= 512) return ! S512.full();
 		if(size<= 552) return ! S552.full();
 		if(size<=1024) return !S1024.full();
+		if(size<=1056) return !S1056.full();
+		if(size<=1392) return !S1392.full();
 		if(size<=2048) return !S2048.full();
 		if(size<=2464) return !S2464.full();
 		if(size<=4128) return !S4128.full();
@@ -92,6 +94,8 @@ void * MemoryManagerArray::alloc( size_t size, const char* file, long line)
 		if(size<= 512) return  S512.allocate(size,file,line);
 		if(size<= 552) return  S552.allocate(size,file,line);
 		if(size<=1024) return S1024.allocate(size,file,line);
+		if(size<=1056) return S1056.allocate(size,file,line);
+		if(size<=1392) return S1392.allocate(size,file,line);
 		if(size<=2048) return S2048.allocate(size,file,line);
 		if(size<=2464) return S2464.allocate(size,file,line);
 		if(size<=4128) return S4128.allocate(size,file,line);
@@ -124,6 +128,8 @@ void MemoryManagerArray::free( void * ptr, const char* file, long line)
 	if(! S512.deallocate(ptr,file,line))
 	if(! S552.deallocate(ptr,file,line))
 	if(!S1024.deallocate(ptr,file,line))
+	if(!S1056.deallocate(ptr,file,line))
+	if(!S1392.deallocate(ptr,file,line))
 	if(!S2048.deallocate(ptr,file,line))
 	if(!S2464.deallocate(ptr,file,line))
 	if(!S4128.deallocate(ptr,file,line))
@@ -206,83 +212,6 @@ bool MemoryManagerArray::full()
 {
 	return m_count>=m_nbe;
 }
-
-/*
-bool MemoryManagerArray::bit(const unsigned int i) const
-{
-	return available[i>>5]&(1<<(i&0x1F));
-}
-
-void MemoryManagerArray::set(const unsigned int i)
-{
-	available[i>>5]|=(1<<(i&0x1F));
-}
-
-void MemoryManagerArray::unset(const unsigned int i)
-{
-	available[i>>5]&=~(1<<(i&0x1F));
-}
-
-int MemoryManagerArray::nextSet(const unsigned int i0) const
-{
-	unsigned int i=i0+1;
-	unsigned int j=i>>5;
-
-	if(available[j]!=0)
-	{
-		for(unsigned int k=i&0x1F;k<32;k++)
-		{
-			unsigned int l=j<<5|k;
-			if(l<i) continue;
-			if(bit(l)) return l;
-		}
-		j++; i+=32; i&=~0x1F;
-	}
-
-	while(j<1024)
-	{
-		if(available[j]==0) { j++; i+=32; continue; }
-		for(unsigned int k=0;k<32;k++)
-		{
-			unsigned int l=j<<5|k;
-			//if(l<i) continue;
-			if(bit(l)) return l;
-		}
-		j++; i+=32;
-	}
-	return -1;
-}
-
-int MemoryManagerArray::nextUnset(const unsigned int i0) const
-{
-	unsigned int i=i0+1;
-	unsigned int j=i>>5;
-
-	if(available[j]!=0xFFFFFFFF)
-	{
-		for(unsigned int k=i&0x1F;k<32;k++)
-		{
-			unsigned int l=j<<5|k;
-			if(l<i) continue;
-			if(!bit(l)) return l;
-		}
-		j++; i+=32; i&=~0x1F;
-	}
-
-	while(j<1024)
-	{
-		if(available[j]==0xFFFFFFFF) { j++; i+=32; continue; }
-		for(unsigned int k=0;k<32;k++)
-		{
-			unsigned int l=j<<5|k;
-			//if(l<i) continue;
-			if(!bit(l)) return l;
-		}
-		j++; i+=32;
-	}
-	return -1;
-}
-*/
 
 void * MemoryManagerArray::allocate( size_t size , const char* file , long line)
 {

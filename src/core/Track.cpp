@@ -1844,7 +1844,11 @@ void TrackOperationsWidget::mousePressEvent( QMouseEvent * me )
 		new StringPairDrag( QString( "track_%1" ).arg(
 					m_trackView->getTrack()->type() ),
 				    dataFile.toString(),
+#if (QT_VERSION >= 0x50000)
 				    m_trackView->getTrackSettingsWidget()->grab(),
+#else
+				    QPixmap::grabWidget(m_trackView->getTrackSettingsWidget()->grab()),
+#endif
 				    this );
 	}
 	else if( me->button() == Qt::LeftButton )

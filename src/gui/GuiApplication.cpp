@@ -56,9 +56,9 @@ GuiApplication* GuiApplication::instance()
 GuiApplication::GuiApplication(bool showSplashScreen)
 {
 	// enable HiDPI scaling before showing anything (Qt 5.6+ only)
-	#if (QT_VERSION >= QT_VERSION_CHECK(5, 6, 0))
-		QApplication::setAttribute(Qt::AA_EnableHighDpiScaling, true);
-	#endif
+#if (QT_VERSION >= 0x050600)
+	QApplication::setAttribute(Qt::AA_EnableHighDpiScaling, true);
+#endif
 
 	// prompt the user to create the LMMS working directory (e.g. ~/lmms) if it doesn't exist
 	if ( !ConfigManager::inst()->hasWorkingDir() &&
