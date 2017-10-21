@@ -30,8 +30,10 @@ QHash< QString,PerfLog::Entry> PerfLog::s_running;
 
 PerfLog::Entry::Entry()
 {
+#ifdef LMMS_BUILD_LINUX
 	c=times(&t);
 	if(c==-1) qFatal("PerfLogEntry: init failed");
+#endif
 }
 
 void PerfLog::begin(const QString& what)
@@ -44,6 +46,7 @@ void PerfLog::begin(const QString& what)
 
 void PerfLog::end(const QString& what)
 {
+#ifdef LMMS_BUILD_LINUX
 	static long clktck = 0;
 	if (!clktck)
 		if ((clktck = sysconf(_SC_CLK_TCK)) < 0)
@@ -51,12 +54,17 @@ void PerfLog::end(const QString& what)
 
 	PerfLog::Entry e;
 	PerfLog::Entry b=s_running.take(what);
-	//                | task | real  | user  | syst 
+	//                | task | real  | user  | syst
 	qWarning("PERFLOG | %20s | %7.2f | %7.2f | %7.2f",
 		 qPrintable(what),
 		 (e.c-b.c)/(double)clktck,
 		 (e.t.tms_utime - b.t.tms_utime)/(double)clktck,
 		 (e.t.tms_stime - b.t.tms_stime)/(double)clktck);
+#else
+	s_running.take(what);
+	qWarning("PERFLOG | %20s ",
+		 qPrintable(what));
+#endif
 }
 
 //#endif

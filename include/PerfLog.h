@@ -25,8 +25,10 @@
 #ifndef PERFLOG_H
 #define PERFLOG_H
 
+#ifdef LMMS_BUILD_LINUX
 #include <unistd.h>
 #include <sys/times.h>
+#endif
 
 #include <QHash>
 #include <QString>
@@ -41,8 +43,10 @@ class PerfLog
 	class Entry
 	{
 	public:
+#ifdef LMMS_BUILD_LINUX
 		clock_t c;
 		tms     t;
+#endif
 		Entry();
 	};
 
