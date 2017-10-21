@@ -243,10 +243,10 @@ int main( int argc, char * * argv )
 	signal(SIGFPE, signalHandler);
 #endif
 
-#ifdef LMMS_BUILD_WIN32
-	stderr = ::fopen("lmms-err.txt","a");
-	stdout = ::fopen("lmms-out.txt","a");
-#endif
+	#ifdef LMMS_BUILD_WIN32
+	if(!freopen("lmms-err.txt","a",stderr))
+		qWarning("Could not redirect stderr to lmms-err.txt");
+	#endif
 
 	// initialize memory managers
 	MM_INIT //MemoryManager::init();

@@ -1847,7 +1847,7 @@ void TrackOperationsWidget::mousePressEvent( QMouseEvent * me )
 #if (QT_VERSION >= 0x50000)
 				    m_trackView->getTrackSettingsWidget()->grab(),
 #else
-				    QPixmap::grabWidget(m_trackView->getTrackSettingsWidget()->grab()),
+				    QPixmap::grabWidget(m_trackView->getTrackSettingsWidget()),
 #endif
 				    this );
 	}
