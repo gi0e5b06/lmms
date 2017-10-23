@@ -68,6 +68,7 @@ PeakControllerEffect::PeakControllerEffect(
 {
 	m_autoController = new PeakController( Engine::getSong(), this );
 	if( !Engine::getSong()->isLoadingProject() &&
+	    !Engine::getSong()->isSavingProject() &&
 	    !PresetPreviewPlayHandle::isPreviewing() )
 	{
 		//qWarning("PeakControllerEffect::PeakControllerEffect() add auto peak controller");

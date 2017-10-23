@@ -152,7 +152,7 @@ void ControllerRackView::onControllerAdded( Controller * controller )
 {
 	QWidget * scrollAreaWidget = m_scrollArea->widget();
 
-	qWarning("ControllerRackView::onControllerAdded() issue #3897");
+	//qWarning("ControllerRackView::onControllerAdded() issue #3897");
 	if(controller == NULL)
 	{
 		qWarning("+++ controller is null");

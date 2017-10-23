@@ -249,6 +249,11 @@ public:
 		return m_loadingProject;
 	}
 
+	bool isSavingProject() const
+	{
+		return m_savingProject;
+	}
+
 	bool isModified() const
 	{
 		return m_modified;
@@ -387,6 +392,7 @@ private:
 	volatile bool m_paused;
 
 	bool m_loadingProject;
+	bool m_savingProject;
 
 	QStringList m_errors;
 

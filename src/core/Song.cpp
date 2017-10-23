@@ -88,6 +88,7 @@ Song::Song() :
 	m_playing( false ),
 	m_paused( false ),
 	m_loadingProject( false ),
+	m_savingProject( false ),
 	m_playMode( Mode_None ),
 	m_length( 0 ),
 	m_patternToPlay( NULL ),
@@ -1023,6 +1024,16 @@ void Song::createNewProjectFromTemplate( const QString & templ )
 // load given song
 void Song::loadProject( const QString & fileName )
 {
+	if( m_loadingProject )
+	{
+		qWarning("Song::loadProject() called when another load is running");
+	}
+
+	if( m_savingProject )
+	{
+		qWarning("Song::loadProject() called when a save is running");
+	}
+
 	QDomNode node;
 
 	m_loadingProject = true;
@@ -1199,6 +1210,18 @@ void Song::loadProject( const QString & fileName )
 // only save current song as _filename and do nothing else
 bool Song::saveProjectFile( const QString & filename )
 {
+	if( m_savingProject )
+	{
+		qWarning("Song::saveProjectFile() called when another save is running");
+	}
+
+	if( m_loadingProject )
+	{
+		qWarning("Song::saveProjectFile() called when a load is running");
+	}
+
+	m_savingProject = true;
+
 	DataFile::LocaleHelper localeHelper( DataFile::LocaleHelper::ModeSave );
 
 	DataFile dataFile( DataFile::SongProject );
@@ -1224,6 +1247,8 @@ bool Song::saveProjectFile( const QString & filename )
 	}
 
 	saveControllerStates( dataFile, dataFile.content() );
+
+	m_savingProject = false;
 
 	return dataFile.writeFile( filename );
 }
