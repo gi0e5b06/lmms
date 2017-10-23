@@ -229,7 +229,7 @@ bool PresetPreviewPlayHandle::isFinished() const
 
 bool PresetPreviewPlayHandle::isFromTrack( const Track * _track ) const
 {
-	return s_previewTC->previewInstrumentTrack() == _track;
+	return s_previewTC && s_previewTC->previewInstrumentTrack() == _track;
 }
 
 
