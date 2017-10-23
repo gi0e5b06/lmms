@@ -215,11 +215,6 @@ void ControllerView::paintEvent( QPaintEvent * )
 	f.setBold( true );
 	p.setFont( f );
 
-	if(model()==NULL)
-	{
-		qWarning("ControllerView::paintEvent() model() == NULL");
-	}
-
 	p.setPen( palette().shadow().color() );
 	p.drawText( 6, 55, model()->displayName() );
 	p.setPen( palette().text().color() );
@@ -230,9 +225,6 @@ void ControllerView::paintEvent( QPaintEvent * )
 	p.setFont( f );
 
 	Controller * c = controller();//castModel<Controller>();
-	if(controller()==NULL)
-		qWarning("ControllerView::paintEvent() controller() == NULL");
-
 	p.setPen( palette().shadow().color() );
 	p.drawText( 6, 33, c->name() );
 	p.setPen( palette().text().color() );
