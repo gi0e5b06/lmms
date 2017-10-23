@@ -259,7 +259,10 @@ intptr_t CarlaInstrument::handleDispatcher(const NativeHostDispatcherOpcode opco
     case NATIVE_HOST_OPCODE_RELOAD_PARAMETERS:
     case NATIVE_HOST_OPCODE_RELOAD_MIDI_PROGRAMS:
     case NATIVE_HOST_OPCODE_RELOAD_ALL:
-        // nothing
+	    // nothing
+        break;
+    case NATIVE_HOST_OPCODE_INTERNAL_PLUGIN:
+	    // tmp, avoid warning
         break;
     case NATIVE_HOST_OPCODE_UI_UNAVAILABLE:
         handleUiClosed();

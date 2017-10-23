@@ -361,7 +361,7 @@ private:
 
 
 class InstrumentTrackWindow : public QWidget, public ModelView,
-								public SerializingObjectHook
+	public SerializingObjectHook
 {
 	Q_OBJECT
 public:

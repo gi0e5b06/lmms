@@ -45,6 +45,7 @@
 #include "MainWindow.h"
 #include "ToolTip.h"
 
+#include "Backtrace.h"
 
 ControllerView::ControllerView( Controller * _model, QWidget * _parent ) :
 	QWidget(_parent),//QFrame( _parent ),
@@ -90,6 +91,8 @@ ControllerView::ControllerView( Controller * _model, QWidget * _parent ) :
 
 	ToolTip::add( m_bypass, tr( "On/Off" ) );
 
+	//qWarning("!!! Create a controller view model_is_null=%d",_model == NULL);
+	//BACKTRACE
 	setModel( _model );
 
 	QPushButton * ctls_btn = new QPushButton( tr( "Controls" ), this );
@@ -97,22 +100,6 @@ ControllerView::ControllerView( Controller * _model, QWidget * _parent ) :
 	ctls_btn->setFont( pointSize<8>( f ) );
 	ctls_btn->setGeometry( 136, 8, 66, 41 );
 	connect( ctls_btn, SIGNAL( clicked() ),	this, SLOT( editControls() ) );
-
-	m_controllerDlg = controller()->createDialog( gui->mainWindow()->workspace() );
-
-	m_subWindow = gui->mainWindow()->addWindowedWidget( m_controllerDlg );
-
-	Qt::WindowFlags flags = m_subWindow->windowFlags();
-	flags &= ~Qt::WindowMaximizeButtonHint;
-	m_subWindow->setWindowFlags( flags );
-	m_subWindow->setFixedSize( m_subWindow->size() );
-
-	m_subWindow->setWindowIcon( m_controllerDlg->windowIcon() );
-
-	connect( m_controllerDlg, SIGNAL( closed() ),
-		this, SLOT( closeControls() ) );
-
-	m_subWindow->hide();
 
 	setWhatsThis( tr( "Controllers are able to automate the value of a knob, "
 				"slider, and other controls."  ) );
@@ -130,10 +117,34 @@ ControllerView::~ControllerView()
 }
 
 
-
+void ControllerView::setModel( Model* model, bool isOldModelValid )
+{
+	if(model == NULL)
+		qWarning("!!! ControllerView::setModel() model is NULL");
+	this->ModelView::setModel(model,isOldModelValid);
+}
 
 void ControllerView::editControls()
 {
+	if(! m_subWindow )
+	{
+		m_controllerDlg = controller()->createDialog( gui->mainWindow()->workspace() );
+
+		m_subWindow = gui->mainWindow()->addWindowedWidget( m_controllerDlg );
+
+		Qt::WindowFlags flags = m_subWindow->windowFlags();
+		flags &= ~Qt::WindowMaximizeButtonHint;
+		m_subWindow->setWindowFlags( flags );
+		m_subWindow->setFixedSize( m_subWindow->size() );
+
+		m_subWindow->setWindowIcon( m_controllerDlg->windowIcon() );
+
+		connect( m_controllerDlg, SIGNAL( closed() ),
+			 this, SLOT( closeControls() ) );
+
+		m_subWindow->hide();
+	}
+
 	if( m_subWindow )
 	{
 		if( !m_subWindow->isVisible() )
@@ -204,6 +215,11 @@ void ControllerView::paintEvent( QPaintEvent * )
 	f.setBold( true );
 	p.setFont( f );
 
+	if(model()==NULL)
+	{
+		qWarning("ControllerView::paintEvent() model() == NULL");
+	}
+
 	p.setPen( palette().shadow().color() );
 	p.drawText( 6, 55, model()->displayName() );
 	p.setPen( palette().text().color() );
@@ -214,6 +230,9 @@ void ControllerView::paintEvent( QPaintEvent * )
 	p.setFont( f );
 
 	Controller * c = controller();//castModel<Controller>();
+	if(controller()==NULL)
+		qWarning("ControllerView::paintEvent() controller() == NULL");
+
 	p.setPen( palette().shadow().color() );
 	p.drawText( 6, 33, c->name() );
 	p.setPen( palette().text().color() );
@@ -249,8 +268,3 @@ void ControllerView::displayHelp()
 	QWhatsThis::showText( mapToGlobal( rect().center() ),
 								whatsThis() );
 }
-
-
-
-
-

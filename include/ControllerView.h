@@ -57,6 +57,7 @@ public:
 		return castModel<Controller>();
 	}
 
+	virtual void setModel( Model* model, bool isOldModelValid = true );
 
 public slots:
 	void editControls();

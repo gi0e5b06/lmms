@@ -288,7 +288,7 @@ void vestigeInstrument::play( sampleFrame * _buf )
 
 	if( m_plugin == NULL )
 	{
-		BufferManager::clear( _buf, frames );
+		BufferManager::clear( _buf );//, frames );
 
 		m_pluginMutex.unlock();
 		return;

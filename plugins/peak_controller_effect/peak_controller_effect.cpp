@@ -29,7 +29,7 @@
 #include "PeakController.h"
 #include "peak_controller_effect.h"
 #include "lmms_math.h"
-
+#include "PresetPreviewPlayHandle.h"
 #include "embed.h"
 
 extern "C"
@@ -67,8 +67,10 @@ PeakControllerEffect::PeakControllerEffect(
 	m_autoController( NULL )
 {
 	m_autoController = new PeakController( Engine::getSong(), this );
-	if( !Engine::getSong()->isLoadingProject() )
+	if( !Engine::getSong()->isLoadingProject() &&
+	    !PresetPreviewPlayHandle::isPreviewing() )
 	{
+		qWarning("PeakControllerEffect::PeakControllerEffect() add auto peak controller");
 		Engine::getSong()->addController( m_autoController );
 	}
 	PeakController::s_effects.append( this );
@@ -82,9 +84,11 @@ PeakControllerEffect::~PeakControllerEffect()
 	int idx = PeakController::s_effects.indexOf( this );
 	if( idx >= 0 )
 	{
-		PeakController::s_effects.remove( idx );
+		qWarning("PeakControllerEffect::~PeakControllerEffect() self-remove");
 		Engine::getSong()->removeController( m_autoController );
+		PeakController::s_effects.remove( idx );
 	}
+	if( m_autoController ) Engine::getSong()->removeController( m_autoController );
 }
 
 

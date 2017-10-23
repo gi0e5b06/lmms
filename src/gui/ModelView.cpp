@@ -26,7 +26,7 @@
 
 #include "ModelView.h"
 
-
+#include "Backtrace.h"
 
 ModelView::ModelView( Model* model, QWidget* widget ) :
 	m_widget( widget ),

@@ -39,7 +39,7 @@
 #include "ControllerRackView.h"
 #include "ControllerView.h"
 #include "LfoController.h"
-
+#include "Backtrace.h"
 
 ControllerRackView::ControllerRackView( ) :
 	QWidget(),
@@ -152,7 +152,23 @@ void ControllerRackView::onControllerAdded( Controller * controller )
 {
 	QWidget * scrollAreaWidget = m_scrollArea->widget();
 
+	qWarning("ControllerRackView::onControllerAdded() issue #3897");
+	if(controller == NULL)
+	{
+		qWarning("+++ controller is null");
+		BACKTRACE
+	}
+
 	ControllerView * controllerView = new ControllerView( controller, scrollAreaWidget );
+
+	if(controllerView->model() == NULL)
+        {
+		qWarning("+++ model is null");
+		BACKTRACE
+		//MyClass *m = dynamic_cast<MyClass *>(ptr);
+			//controllerView->setModel(new Controller( Controller::DummyController, NULL,
+			//					 "dummy controller" ));
+	}
 
 	connect( controllerView, SIGNAL( deleteController( ControllerView * ) ),
 		 this, SLOT( deleteController( ControllerView * ) ), Qt::QueuedConnection );

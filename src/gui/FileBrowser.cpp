@@ -53,6 +53,7 @@
 #include "StringPairDrag.h"
 #include "TextFloat.h"
 
+#include "Backtrace.h"
 
 
 enum TreeWidgetItemTypes
@@ -322,7 +323,7 @@ FileBrowserTreeWidget::FileBrowserTreeWidget(QWidget * parent ) :
 	m_mousePressed( false ),
 	m_pressPos(),
 	m_previewPlayHandle( NULL ),
-	m_pphMutex( QMutex::Recursive ),
+	m_pphMutex(),//tmp  QMutex::Recursive ),
 	m_contextMenuItem( NULL )
 {
 	setColumnCount( 1 );
@@ -383,6 +384,12 @@ void FileBrowserTreeWidget::mousePressEvent(QMouseEvent * me )
 		return;
 	}
 
+	//qWarning("FileBrowserTreeWidget::mousePressEvent()");
+	//qWarning("P   isPreviewing=%d",PresetPreviewPlayHandle::isPreviewing());
+	//qWarning("P   m_mousePressed=%d",m_mousePressed);
+
+	if(m_mousePressed || PresetPreviewPlayHandle::isPreviewing() ) return;
+
 	QTreeWidgetItem * i = itemAt( me->pos() );
 	if ( i )
 	{
@@ -399,7 +406,7 @@ void FileBrowserTreeWidget::mousePressEvent(QMouseEvent * me )
 	}
 
 	FileItem * f = dynamic_cast<FileItem *>( i );
-	if( f != NULL )
+	if(( f != NULL )&& !PresetPreviewPlayHandle::isPreviewing() )
 	{
 		m_pphMutex.lock();
 		if( m_previewPlayHandle != NULL )
@@ -517,6 +524,16 @@ void FileBrowserTreeWidget::mouseMoveEvent( QMouseEvent * me )
 
 void FileBrowserTreeWidget::mouseReleaseEvent(QMouseEvent * me )
 {
+	//qWarning("FileBrowserTreeWidget::mouseReleaseEvent()");
+	//qWarning("R   isPreviewing=%d",PresetPreviewPlayHandle::isPreviewing());
+	//qWarning("R   m_mousePressed=%d",m_mousePressed);
+	if(!m_mousePressed)
+	{
+		// release for double-click/activate/drop etc
+		//BACKTRACE
+		return;
+	}
+
 	m_mousePressed = false;
 
 	m_pphMutex.lock();
@@ -602,9 +619,19 @@ void FileBrowserTreeWidget::handleFile(FileItem * f, InstrumentTrack * it )
 void FileBrowserTreeWidget::activateListItem(QTreeWidgetItem * item,
 								int column )
 {
+	//qWarning("FileBrowserTreeWidget::activateListItem()");
+	//qWarning("A   isPreviewing=%d",PresetPreviewPlayHandle::isPreviewing());
+	//qWarning("A   m_mousePressed=%d",m_mousePressed);
+
+	// make sure any playback is stopped
+	//mouseReleaseEvent( NULL );
+	//qWarning("A   isPreviewing=%d",PresetPreviewPlayHandle::isPreviewing());
+	//qWarning("A   m_mousePressed=%d",m_mousePressed);
+
 	FileItem * f = dynamic_cast<FileItem *>( item );
 	if( f == NULL )
 	{
+		m_pphMutex.unlock();
 		return;
 	}
 
@@ -615,10 +642,14 @@ void FileBrowserTreeWidget::activateListItem(QTreeWidgetItem * item,
 	}
 	else if( f->handling() != FileItem::NotSupported )
 	{
-		InstrumentTrack * it = dynamic_cast<InstrumentTrack *>(
-				Track::create( Track::InstrumentTrack,
-					Engine::getBBTrackContainer() ) );
-		handleFile( f, it );
+		m_contextMenuItem = f;
+		sendToActiveInstrumentTrack();
+		/*
+		  InstrumentTrack * it = dynamic_cast<InstrumentTrack *>(
+		  Track::create( Track::InstrumentTrack,
+		  Engine::getBBTrackContainer() ) );
+		  handleFile( f, it );
+		*/
 	}
 }
 
@@ -657,25 +688,19 @@ void FileBrowserTreeWidget::openInNewInstrumentTrackSE( void )
 
 void FileBrowserTreeWidget::sendToActiveInstrumentTrack( void )
 {
-	// get all windows opened in the workspace
-	QList<QMdiSubWindow*> pl =
-			gui->mainWindow()->workspace()->
-				subWindowList( QMdiArea::StackingOrder );
-	QListIterator<QMdiSubWindow *> w( pl );
-	w.toBack();
-	// now we travel through the window-list until we find an
-	// instrument-track
-	while( w.hasPrevious() )
+	//qWarning("FileBrowserTreeWidget::sendToActiveInstrumentTrack");
+
+	QMdiSubWindow * sw=gui->mainWindow()->workspace()->activeSubWindow();
+
+	if( !sw->isVisible() ) return;
+
+	if( sw->widget()->inherits( "InstrumentTrackWindow" ) )
 	{
-		InstrumentTrackWindow * itw =
-			dynamic_cast<InstrumentTrackWindow *>(
-						w.previous()->widget() );
-		if( itw != NULL && itw->isHidden() == false )
-		{
-			handleFile( m_contextMenuItem, itw->model() );
-			break;
-		}
+		//qWarning("    windowTitle()=%s",qPrintable(w.peekPrevious()->windowTitle()));
+		InstrumentTrackWindow * w = qobject_cast<InstrumentTrackWindow *>( sw->widget() );
+		handleFile( m_contextMenuItem, w->model() );
 	}
+	//else SongEditor, BBTEditor, ...
 }
 
 

@@ -87,6 +87,7 @@ public:
 	bool isPreviewing()
 	{
 		bool ret = !m_dataMutex.tryLock();
+		//qWarning("PresetPreviewPlayHandle isPreviewing=%d",ret);
 		if( ret == false )
 		{
 			m_dataMutex.unlock();

@@ -31,6 +31,7 @@
 #include <QtCore/QHash>
 #include "MemoryHelper.h"
 #include "export.h"
+#include "MemoryManager.h"
 
 #ifndef MEMORY_MANAGER_CLASS
 #define MEMORY_MANAGER_CLASS MemoryManagerLegacy

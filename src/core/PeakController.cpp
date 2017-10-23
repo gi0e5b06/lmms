@@ -68,8 +68,10 @@ PeakController::~PeakController()
 	//When it's previewing, EffectChain::loadSettings(<Controller Fx XML>) is not called
 	//Therefore, we shouldn't call removeEffect() as it is not even appended.
 	//NB: Most XML setting are loaded on preview, except controller fx.
-	if( m_peakEffect != NULL && m_peakEffect->effectChain() != NULL && PresetPreviewPlayHandle::isPreviewing() == false )
+	if( m_peakEffect != NULL && m_peakEffect->effectChain() != NULL )
+		//&& PresetPreviewPlayHandle::isPreviewing() == false )
 	{
+		//qWarning("PeakController::~PeakController()");
 		m_peakEffect->effectChain()->removeEffect( m_peakEffect );
 	}
 }
