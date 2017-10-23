@@ -70,7 +70,7 @@ PeakControllerEffect::PeakControllerEffect(
 	if( !Engine::getSong()->isLoadingProject() &&
 	    !PresetPreviewPlayHandle::isPreviewing() )
 	{
-		qWarning("PeakControllerEffect::PeakControllerEffect() add auto peak controller");
+		//qWarning("PeakControllerEffect::PeakControllerEffect() add auto peak controller");
 		Engine::getSong()->addController( m_autoController );
 	}
 	PeakController::s_effects.append( this );
@@ -84,11 +84,11 @@ PeakControllerEffect::~PeakControllerEffect()
 	int idx = PeakController::s_effects.indexOf( this );
 	if( idx >= 0 )
 	{
-		qWarning("PeakControllerEffect::~PeakControllerEffect() self-remove");
-		Engine::getSong()->removeController( m_autoController );
+		//qWarning("PeakControllerEffect::~PeakControllerEffect() self-remove");
 		PeakController::s_effects.remove( idx );
 	}
-	if( m_autoController ) Engine::getSong()->removeController( m_autoController );
+	if( m_autoController )
+		Engine::getSong()->removeController( m_autoController );
 }
 
 
@@ -98,7 +98,7 @@ bool PeakControllerEffect::processAudioBuffer( sampleFrame * _buf,
 	PeakControllerEffectControls & c = m_peakControls;
 
 	// This appears to be used for determining whether or not to continue processing
-	// audio with this effect	
+	// audio with this effect
 	if( !isEnabled() || !isRunning() )
 	{
 		return false;
