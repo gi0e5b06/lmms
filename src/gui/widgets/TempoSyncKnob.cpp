@@ -292,10 +292,11 @@ void TempoSyncKnob::showCustom()
 {
 	if( m_custom == NULL )
 	{
-		m_custom = new MeterDialog( gui->mainWindow()->workspace() );
-		gui->mainWindow()->addWindowedWidget( m_custom );
-		m_custom->setWindowTitle( "Meter" );
+		m_custom = new MeterDialog( NULL );//gui->mainWindow()->workspace() );
+		//gui->mainWindow()->addWindowedWidget( m_custom );
+		m_custom->setWindowTitle( tr( "Meter" ) );
 		m_custom->setModel( &model()->m_custom );
+		SubWindow::putWidgetOnWorkspace(m_custom,false,false,false);
 	}
 	m_custom->parentWidget()->show();
 	model()->setTempoSync( TempoSyncKnobModel::SyncCustom );

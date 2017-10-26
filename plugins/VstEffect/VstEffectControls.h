@@ -29,19 +29,18 @@
 #include "VstEffectControlDialog.h"
 
 #include <QMenu>
-#include "embed.h"
-#include <QPushButton>
-
+//#include <QPushButton>
 #include <QMdiSubWindow>
 #include <QScrollArea>
-#include "Knob.h"
 #include <QLayout>
 #include <QPainter>
 #include <QObject>
 
+#include "embed.h"
+#include "Knob.h"
+#include "PixmapButton.h"
 
 class VstEffect;
-
 
 class VstEffectControls : public EffectControls
 {
@@ -76,16 +75,17 @@ protected slots:
 	void setParameter( void );
 
 protected:
-	virtual void paintEvent( QPaintEvent * _pe );
+	//virtual void paintEvent( QPaintEvent * _pe );
 
 private:
 	VstEffect * m_effect;
 
-	QPushButton * m_selPresetButton;
+	PixmapButton * m_selPresetButton; //QPushButton
 	QMenu *menu;
 
 	QMdiSubWindow * m_subWindow;
-	QScrollArea * m_scrollArea;
+	//QScrollArea * m_scrollArea;
+
 	FloatModel ** knobFModel;
 	Knob ** vstKnobs;
 	int paramCount;
@@ -107,32 +107,26 @@ class manageVSTEffectView : public QObject
 {
 	Q_OBJECT
 public:
-	manageVSTEffectView( VstEffect * _eff, VstEffectControls * m_vi );
+	manageVSTEffectView( VstEffect * _effect, VstEffectControls * _controls );
 	virtual ~manageVSTEffectView();
 
 
 protected slots:
-	void syncPlugin( void );
-	void displayAutomatedOnly( void );
-	void setParameter( void );
+	void syncPlugin();
+	void displayAutomatedOnly();
+	void setParameter();
 	void closeWindow();
 
 private:
 
 //	static QPixmap * s_artwork;
 
-	VstEffectControls * m_vi2;
-
-
 	VstEffect * m_effect;
-
-
-	QWidget *widget;
-	QGridLayout * l;
+	VstEffectControls * m_controls;
 
 	QPushButton * m_syncButton;
 	QPushButton * m_displayAutomatedOnly;
-	QPushButton * m_closeButton;
+	//QPushButton * m_closeButton;
 
 } ;
 

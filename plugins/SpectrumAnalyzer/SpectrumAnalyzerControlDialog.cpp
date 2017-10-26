@@ -170,12 +170,23 @@ SpectrumAnalyzerControlDialog::SpectrumAnalyzerControlDialog( SpectrumAnalyzerCo
 
 	connect( &controls->m_linearSpec, SIGNAL( dataChanged() ), this, SLOT( update() ) );
 	connect( &controls->m_linearYAxis, SIGNAL( dataChanged() ), this, SLOT( update() ) );
-/*	l->addWidget( v );
+	/*
+	l->addWidget( v );
 	l->addWidget( lin_spec );
-	l->addWidget( lin_y );*/
-
+	l->addWidget( lin_y );
+	*/
 }
 
+SpectrumAnalyzerControlDialog::~SpectrumAnalyzerControlDialog()
+{
+}
+
+void SpectrumAnalyzerControlDialog::setVisible(bool _b)
+{
+	EffectControlDialog::setVisible(_b);
+	if( m_controls->m_effect )
+		m_controls->m_effect->setDontRun(!_b);
+}
 
 void SpectrumAnalyzerControlDialog::paintEvent( QPaintEvent * )
 {

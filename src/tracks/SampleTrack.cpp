@@ -818,10 +818,14 @@ SampleTrackView::SampleTrackView( SampleTrack * _t, TrackContainerView* tcv ) :
 	m_effectRack = new EffectRackView( _t->audioPort()->effects() );
 	m_effectRack->setFixedSize( 240, 242 );
 
-	m_effWindow = gui->mainWindow()->addWindowedWidget( m_effectRack );
-	m_effWindow->setAttribute( Qt::WA_DeleteOnClose, false );
-	m_effWindow->layout()->setSizeConstraint( QLayout::SetFixedSize );
- 	m_effWindow->setWindowTitle( _t->name() );
+	/*
+	  m_effWindow = gui->mainWindow()->addWindowedWidget( m_effectRack );
+	  m_effWindow->setAttribute( Qt::WA_DeleteOnClose, false );
+	  m_effWindow->layout()->setSizeConstraint( QLayout::SetFixedSize );
+	*/
+	m_effWindow=SubWindow::putWidgetOnWorkspace(m_effectRack,false,false,false);
+	m_effWindow->setWindowTitle( _t->name() );
+	m_effWindow->setWindowIcon( embed::getIconPixmap( "instrument_track" ) );
 	m_effWindow->hide();
 
 	setModel( _t );

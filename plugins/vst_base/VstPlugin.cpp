@@ -2,7 +2,7 @@
  * VstPlugin.cpp - implementation of VstPlugin class
  *
  * Copyright (c) 2005-2014 Tobias Doerffel <tobydox/at/users.sourceforge.net>
- * 
+ *
  * This file is part of LMMS - https://lmms.io
  *
  * This program is free software; you can redistribute it and/or
@@ -24,22 +24,25 @@
 
 #include "VstPlugin.h"
 
+//#include <QBrush>
 #include <QDir>
+#include <QDomDocument>
 #include <QFileInfo>
+#include <QLayout>
 #include <QLocale>
 #include <QTemporaryFile>
 #include <QCloseEvent>
 #include <QMdiArea>
 #include <QMdiSubWindow>
+
 #ifdef LMMS_BUILD_LINUX
 #if QT_VERSION < 0x050000
 #include <QX11EmbedContainer>
 #include <QX11Info>
-#endif
 #else
-#include <QLayout>
-#endif
-#include <QDomDocument>
+#include <QWindow>
+#endif //QT_VERSION
+#endif //LMMS_BUILD_LINUX
 
 #ifdef LMMS_BUILD_WIN32
 #include <windows.h>
@@ -52,39 +55,34 @@
 #include "Song.h"
 #include "templates.h"
 #include "FileDialog.h"
-#include <QLayout>
 
-
-class vstSubWin : public QMdiSubWindow
+/*
+VstSubWindow::VstSubWindow() : // QWidget* _parent, Qt::WindowFlags _flags ) :
+	SubWindow()// _parent, _flags )
 {
-public:
-	vstSubWin( QWidget * _parent ) :
-		QMdiSubWindow( _parent )
-	{
-		setAttribute( Qt::WA_DeleteOnClose, false );
-	}
+	//setWindowFlags( _flags );
+	setAttribute( Qt::WA_DeleteOnClose, false );
+}
 
-	virtual ~vstSubWin()
-	{
-	}
+VstSubWindow::~VstSubWindow()
+{
+}
 
-	virtual void closeEvent( QCloseEvent * e )
-	{
-		// ignore close-events - for some reason otherwise the VST GUI
-		// remains hidden when re-opening
-		hide();
-		e->ignore();
-	}
-} ;
+void VstSubWindow::closeEvent( QCloseEvent* _evt )
+{
+	// ignore close-events - for some reason otherwise the VST GUI
+	// remains hidden when re-opening
+	hide();
+	_evt->ignore();
+}
+*/
 
-
-
-
-VstPlugin::VstPlugin( const QString & _plugin ) :
+VstPlugin::VstPlugin( const QString& _plugin ) :
 	RemotePlugin(),
 	JournallingObject(),
 	m_plugin( _plugin ),
 	m_pluginWidget( NULL ),
+	m_subWindow( NULL ),
 	m_pluginWindowID( 0 ),
 	m_badDllFormat( false ),
 	m_name(),
@@ -111,25 +109,19 @@ VstPlugin::VstPlugin( const QString & _plugin ) :
 	setTempo( Engine::getSong()->getTempo() );
 
 	connect( Engine::getSong(), SIGNAL( tempoChanged( bpm_t ) ),
-			this, SLOT( setTempo( bpm_t ) ) );
+		 this, SLOT( setTempo( bpm_t ) ) );
 	connect( Engine::mixer(), SIGNAL( sampleRateChanged() ),
-				this, SLOT( updateSampleRate() ) );
+		 this, SLOT( updateSampleRate() ) );
 
 	// update once per second
 	m_idleTimer.start( 1000 );
 	connect( &m_idleTimer, SIGNAL( timeout() ),
-				this, SLOT( idleUpdate() ) );
+		 this, SLOT( idleUpdate() ) );
 }
-
-
-
 
 VstPlugin::~VstPlugin()
 {
 }
-
-
-
 
 void VstPlugin::tryLoad( const QString &remoteVstPluginExecutable )
 {
@@ -188,11 +180,12 @@ void VstPlugin::tryLoad( const QString &remoteVstPluginExecutable )
 	if( !failed() && m_pluginWindowID )
 	{
 		target->setFixedSize( m_pluginGeometry );
-		vstSubWin * sw = new vstSubWin(
-					gui->mainWindow()->workspace() );
-		sw->setWidget( helper );
+		//VstSubWindow * sw = new VstSubWindow(	gui->mainWindow()->workspace() );
+		SubWindow sw=SubWindow::putWidgetOnWorkspace(helper,false,true);
+		//sw->setWidget( helper );
 		helper->setWindowTitle( name() );
 		m_pluginWidget = helper;
+		m_subWindow = sw;
 	}
 	else
 	{
@@ -201,93 +194,183 @@ void VstPlugin::tryLoad( const QString &remoteVstPluginExecutable )
 #endif
 }
 
-
-
-
-void VstPlugin::showEditor( QWidget * _parent, bool isEffect )
+void VstPlugin::showEditor( bool isEffect, QWidget* _parent )
 {
-	QWidget * w = pluginWidget();
-	if( w )
+	//qWarning("VstPlugin::showEditor parent=%p isEffect=%d",_parent,isEffect);
+
+	if( m_subWindow || m_pluginWidget )
 	{
+		if( m_pluginWidget )
+		{
 #ifdef LMMS_BUILD_WIN32
-		// hide sw, plugin window wrapper on win32
-		// this is obtained from pluginWidget()
-		if( isEffect )
-		{
-			w->setWindowFlags( Qt::FramelessWindowHint );
-			w->setAttribute( Qt::WA_TranslucentBackground );
-		}
-		else
-		{
-			w->setWindowFlags( Qt::WindowCloseButtonHint );
-		}
+			// hide sw, plugin window wrapper on win32
+			// this is obtained from pluginWidget()
+			if( isEffect )
+		        {
+				m_pluginWidget->setWindowFlags( Qt::FramelessWindowHint );
+				m_pluginWidget->setAttribute( Qt::WA_TranslucentBackground );
+			}
+			else
+		        {
+				m_pluginWidget->setWindowFlags( Qt::WindowTitleHint | Qt::WindowSystemMenuHint | Qt::WindowCloseButtonHint );
+			}
 #endif
-		w->show();
+			m_pluginWidget->show();
+		}
+
+		if( m_subWindow ) m_subWindow->show();
 		return;
 	}
 
 #ifdef LMMS_BUILD_LINUX
+
+	m_pluginWidget = new QWidget( _parent );
+
 	if( m_pluginWindowID == 0 )
 	{
 		return;
 	}
 
-	m_pluginWidget = new QWidget( _parent );
-	m_pluginWidget->setFixedSize( m_pluginGeometry );
-	m_pluginWidget->setWindowTitle( name() );
-	if( _parent == NULL )
+	//VstSubWindow * sw = new VstSubWindow();// gui->mainWindow()->workspace() );
+	//SubWindow* sw=new VstSubWindow(m_pluginWidget,false,true);
+
+	if( isEffect )
 	{
-		vstSubWin * sw = new vstSubWin(
-					gui->mainWindow()->workspace() );
-		if( isEffect )
-		{
-			sw->setAttribute( Qt::WA_TranslucentBackground );
-			sw->setWindowFlags( Qt::FramelessWindowHint );
-			sw->setWidget( m_pluginWidget );
+		//sw->setAttribute( Qt::WA_TranslucentBackground );
+		//sw->setWindowFlags( Qt::FramelessWindowHint );
+		//sw->setWidget( m_pluginWidget );
+		//sw->setWindowTitle("Hello Effect showEditor()!");
 #if QT_VERSION < 0x050000
-			QX11EmbedContainer * xe = new QX11EmbedContainer( sw );
-			xe->embedClient( m_pluginWindowID );
-			xe->setFixedSize( m_pluginGeometry );
-			xe->show();
-#endif
-		} 
-		else
+		QX11EmbedContainer * xe = new QX11EmbedContainer(m_pluginWidget );
+		xe->embedClient( m_pluginWindowID );
+		xe->setFixedSize( m_pluginGeometry );
+		xe->show();
+#else
+		QWindow * xe = QWindow::fromWinId(m_pluginWindowID);
+		if(xe)
 		{
-			sw->setWindowFlags( Qt::WindowCloseButtonHint );
-			sw->setWidget( m_pluginWidget );
-
-#if QT_VERSION < 0x050000
-			QX11EmbedContainer * xe = new QX11EmbedContainer( sw );
-			xe->embedClient( m_pluginWindowID );
-			xe->setFixedSize( m_pluginGeometry );
-			xe->move( 4, 24 );
+			//xe->setWindowFlags(Qt::FramelessWindowHint);
+			xe->setGeometry(0,0,m_pluginGeometry.width(),m_pluginGeometry.height());
 			xe->show();
-#endif
+			QWidget * xq = QWidget::createWindowContainer(xe,m_pluginWidget);
+			if(xq)
+			{
+				xq->setFixedSize(m_pluginGeometry);
+				xq->resize(m_pluginGeometry);
+				xq->show();
+			}
+			else m_pluginWidget=new QLabel("Error Vst Effect: XQ");
 		}
-	}
+		else m_pluginWidget=new QLabel("Error Vst Effect: XE");
+#endif
+		m_pluginWidget->resize( m_pluginGeometry );
+		m_pluginWidget->setFixedSize( m_pluginGeometry );
+		m_pluginWidget->setSizePolicy(QSizePolicy::Fixed,QSizePolicy::Fixed);
+		m_pluginWidget->setWindowTitle(name());
+		//m_pluginWidget->show();
+		//qWarning("PluginWidget Size: %d x %d",m_pluginWidget->width(),m_pluginWidget->height());
 
+		m_subWindow=NULL;
+		//SubWindow::putWidgetOnWorkspace(m_pluginWidget,false,true,false,true);
+		//m_subWindow->show();
+	}
+	else
+	{
+		/*
+		  sw->setWindowFlags( Qt::SubWindow | Qt::CustomizeWindowHint |
+		  Qt::WindowTitleHint | Qt::WindowSystemMenuHint |
+		  Qt::WindowCloseButtonHint );
+		  sw->setSizePolicy( QSizePolicy::Fixed, QSizePolicy::Fixed );
+		  sw->setWindowTitle("Hello Instrument showEditor()!");
+		  //sw->setWindowIcon();
+		  sw->setWidget( m_pluginWidget );
+		*/
+
+#if QT_VERSION < 0x050000
+		QX11EmbedContainer * xe = new QX11EmbedContainer();//m_pluginWidget );
+		xe->embedClient( m_pluginWindowID );
+		//xe->setFixedSize( m_pluginGeometry );
+		xe->move( 4, 24 );
+		xe->show();
+		m_pluginWidget=xe;
+#else
+		QWindow * xe = QWindow::fromWinId(m_pluginWindowID);
+		if(xe)
+		{
+			xe->setGeometry(0,0,m_pluginGeometry.width(),m_pluginGeometry.height());
+			//xe->show();
+			QWidget * xq = QWidget::createWindowContainer(xe,m_pluginWidget);
+			if(xq)
+			{
+				xq->setFixedSize( m_pluginGeometry );
+				xq->show();
+				//m_pluginWidget=xq;
+			}
+			else m_pluginWidget=new QLabel("Error Vst Instr: XQ");
+		}
+		else m_pluginWidget=new QLabel("Error Vst Instr: XE");
 #endif
 
+		m_pluginWidget->resize( m_pluginGeometry );
+		m_pluginWidget->setFixedSize( m_pluginGeometry );
+		m_pluginWidget->setSizePolicy(QSizePolicy::Fixed,QSizePolicy::Fixed);
+		m_pluginWidget->setWindowTitle(name());
+		m_pluginWidget->show();
+		//qWarning("PluginWidget Size: %d x %d",m_pluginWidget->width(),m_pluginWidget->height());
+
+		m_subWindow=SubWindow::putWidgetOnWorkspace(m_pluginWidget,false,true,false,false);
+		//m_subWindow->show();
+	}
+#endif
+
+	/*
 	if( m_pluginWidget )
 	{
-		m_pluginWidget->show();
+		m_pluginWidget->setWindowTitle(vendorString() + " UI");
 	}
+	*/
+
+	/*
+	if( m_subWindow )
+	{
+		m_subWindow->setWindowTitle(vendorString() + " UI");
+		m_subWindow->resize(m_subWindow->sizeHint());
+		m_subWindow->show();
+	}
+	*/
+
+	//if( m_pluginWidget ) m_pluginWidget->show();
+	//if( m_subWindow ) m_subWindow->show();
+
+	//if( m_subWindow && m_subWindow->isVisible() )
+	//	{ m_subWindow->resize(m_subWindow->sizeHint()); m_subWindow->update(); }
 }
-
-
-
 
 void VstPlugin::hideEditor()
 {
+	if( m_subWindow ) m_subWindow->hide();
+	else if( m_pluginWidget ) m_pluginWidget->hide();
+
+	//if( m_subWindow && m_subWindow->isVisible() )
+	//{ m_subWindow->resize(m_subWindow->sizeHint()); m_subWindow->update(); }
+	/*
 	QWidget * w = pluginWidget();
 	if( w )
 	{
 		w->hide();
 	}
+	*/
 }
 
+QWidget * VstPlugin::pluginWidget() const
+{
+	return m_pluginWidget;
+}
 
-
+QMdiSubWindow * VstPlugin::mdiSubWindow() const
+{
+	return m_subWindow;
+}
 
 void VstPlugin::loadSettings( const QDomElement & _this )
 {
@@ -295,7 +378,7 @@ void VstPlugin::loadSettings( const QDomElement & _this )
 	{
 		if( _this.attribute( "guivisible" ).toInt() )
 		{
-			showEditor( NULL, false );
+			showEditor(false);// NULL, false );
 		}
 		else
 		{
@@ -482,7 +565,7 @@ bool VstPlugin::processMessage( const message & _m )
 
 		case IdVstPluginUniqueID:
 			// TODO: display graphically in case of failure
-			printf("unique ID: %s\n", _m.getString().c_str() );
+			qWarning("VST: unique ID: %s", _m.getString().c_str() );
 			break;
 
 		case IdVstParameterDump:

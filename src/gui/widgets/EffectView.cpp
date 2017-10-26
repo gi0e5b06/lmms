@@ -50,14 +50,14 @@ EffectView::EffectView( Effect * _model, QWidget * _parent ) :
 	m_controlView( NULL )
 {
 	setFixedSize( 210, 60 );
-	
+
 	// Disable effects that are of type "DummyEffect"
 	bool isEnabled = !dynamic_cast<DummyEffect *>( effect() );
 	m_bypass = new LedCheckBox( this, "", isEnabled ? LedCheckBox::Green : LedCheckBox::Red );
 	m_bypass->move( 3, 3 );
 	m_bypass->setEnabled( isEnabled );
 	m_bypass->setWhatsThis( tr( "Toggles the effect on or off." ) );
-	
+
 	ToolTip::add( m_bypass, tr( "On/Off" ) );
 
 
@@ -102,23 +102,6 @@ EffectView::EffectView( Effect * _model, QWidget * _parent ) :
 		//ctls_btn->setGeometry( 140, 14, 50, 20 );
 		ctls_btn->setGeometry( 136, 8, 66, 41 );
 		connect( ctls_btn, SIGNAL( clicked() ), this, SLOT( editControls() ) );
-
-		m_controlView = effect()->controls()->createView();
-		if( m_controlView )
-		{
-			m_subWindow = gui->mainWindow()->addWindowedWidget( m_controlView );
-			m_subWindow->setSizePolicy( QSizePolicy::Fixed, QSizePolicy::Fixed );
-			m_subWindow->setFixedSize( m_subWindow->size() );
-
-			Qt::WindowFlags flags = m_subWindow->windowFlags();
-			flags &= ~Qt::WindowMaximizeButtonHint;
-			m_subWindow->setWindowFlags( flags );
-
-			connect( m_controlView, SIGNAL( closed() ),
-					this, SLOT( closeEffects() ) );
-
-			m_subWindow->hide();
-		}
 	}
 
 
@@ -179,18 +162,42 @@ EffectView::~EffectView()
 
 void EffectView::editControls()
 {
+	if( m_controlView == NULL )
+	{
+		m_controlView = effect()->controls()->createView();
+		if( m_controlView )
+		{
+			/*
+			  m_subWindow = gui->mainWindow()->addWindowedWidget( m_controlView );
+			  Qt::WindowFlags flags = m_subWindow->windowFlags();
+			  flags &= ~Qt::WindowMaximizeButtonHint;
+			  m_subWindow->setWindowFlags( flags );
+			  m_subWindow->resize(m_subWindow->sizeHint());
+			  m_subWindow->setSizePolicy( QSizePolicy::Fixed, QSizePolicy::Fixed );
+			  //m_subWindow->setFixedSize( m_subWindow->sizeHint() );
+			m_subWindow->setWindowIcon( m_controlView->windowIcon() );
+			*/
+			m_subWindow = SubWindow::putWidgetOnWorkspace
+				(m_controlView,false,false,true,false);
+
+			connect( m_controlView, SIGNAL( closed() ),
+				 this, SLOT( closeEffects() ) );
+			m_subWindow->hide();
+		}
+	}
+
 	if( m_subWindow )
 	{
 		if( !m_subWindow->isVisible() )
 		{
 			m_subWindow->show();
 			m_subWindow->raise();
-			effect()->controls()->setViewVisible( true );
+			//effect()->controls()->setViewVisible( true );
 		}
 		else
 		{
 			m_subWindow->hide();
-			effect()->controls()->setViewVisible( false );
+			//effect()->controls()->setViewVisible( false );
 		}
 	}
 }
@@ -224,7 +231,7 @@ void EffectView::deletePlugin()
 void EffectView::displayHelp()
 {
 	QWhatsThis::showText( mapToGlobal( rect().bottomRight() ),
-								whatsThis() );
+			      whatsThis() );
 }
 
 
@@ -236,7 +243,7 @@ void EffectView::closeEffects()
 	{
 		m_subWindow->hide();
 	}
-	effect()->controls()->setViewVisible( false );
+	//effect()->controls()->setViewVisible( false );
 }
 
 

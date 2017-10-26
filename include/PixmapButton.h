@@ -39,7 +39,7 @@ public:
 					const QString & _name = QString::null );
 	virtual ~PixmapButton();
 
-	void setActiveGraphic( const QPixmap & _pm );
+	void setActiveGraphic( const QPixmap & _pm, bool _update = true );
 	void setInactiveGraphic( const QPixmap & _pm, bool _update = true );
 
 	QSize sizeHint() const;

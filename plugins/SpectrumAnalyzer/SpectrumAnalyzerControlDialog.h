@@ -36,9 +36,8 @@ class SpectrumAnalyzerControlDialog : public EffectControlDialog
 	Q_OBJECT
 public:
 	SpectrumAnalyzerControlDialog( SpectrumAnalyzerControls* controls );
-	virtual ~SpectrumAnalyzerControlDialog()
-	{
-	}
+	virtual ~SpectrumAnalyzerControlDialog();
+	virtual void setVisible(bool _b);
 
 private:
 	virtual void paintEvent( QPaintEvent* event );

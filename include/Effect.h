@@ -55,9 +55,8 @@ public:
 		return "effect";
 	}
 
-	
 	virtual bool processAudioBuffer( sampleFrame * _buf,
-						const fpp_t _frames ) = 0;
+					 const fpp_t _frames ) = 0;
 
 	inline ch_cnt_t processorCount() const
 	{
@@ -85,10 +84,10 @@ public:
 		return m_running;
 	}
 
-	inline void startRunning() 
-	{ 
+	inline void startRunning()
+	{
 		m_bufferCount = 0;
-		m_running = true; 
+		m_running = true;
 	}
 
 	inline void stopRunning()
@@ -138,6 +137,7 @@ public:
 		++m_bufferCount;
 	}
 
+	// should be replaced by Runnable
 	inline bool dontRun() const
 	{
 		return m_noRun;
@@ -214,7 +214,7 @@ private:
 	FloatModel m_wetDryModel;
 	FloatModel m_gateModel;
 	TempoSyncKnobModel m_autoQuitModel;
-	
+
 	bool m_autoQuitDisabled;
 
 	SRC_DATA m_srcData[2];

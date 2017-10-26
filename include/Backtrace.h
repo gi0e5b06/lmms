@@ -6,14 +6,19 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+
+#ifdef LMMS_BUILD_LINUX
 #include <execinfo.h>
 #include <cxxabi.h>
+#endif
 
 #define BACKTRACE print_backtrace();
 
 /** Print a demangled stack backtrace of the caller function to FILE* out. */
-static inline void print_backtrace(FILE *out = stderr, unsigned int max_frames = 10) //63
+static inline void print_backtrace(FILE *out = stderr,
+				   unsigned int max_frames = 10) //63
 {
+#ifdef LMMS_BUILD_LINUX
     // storage array for stack trace address data
     void* addrlist[max_frames+1];
 
@@ -88,6 +93,9 @@ static inline void print_backtrace(FILE *out = stderr, unsigned int max_frames =
 
     free(funcname);
     free(symbollist);
+#else
+    fprintf(out, "Backtrace available only with g++ on Linux\n");
+#endif
 }
 
 #endif // BACKTRACE_H

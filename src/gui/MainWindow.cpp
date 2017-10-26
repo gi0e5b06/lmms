@@ -600,10 +600,11 @@ void MainWindow::finalize()
 			gui->songEditor()
 	})
 	{
-		QMdiSubWindow* window = addWindowedWidget(widget);
-		window->setWindowIcon(widget->windowIcon());
-		window->setAttribute(Qt::WA_DeleteOnClose, false);
-		window->resize(widget->sizeHint());
+		//QMdiSubWindow* window = addWindowedWidget(widget);
+		//window->setAttribute(Qt::WA_DeleteOnClose, false);
+		//window->resize(widget->sizeHint());
+		SubWindow* win=SubWindow::putWidgetOnWorkspace(widget,false,false,true);
+		win->setWindowIcon(widget->windowIcon());
 	}
 
 	gui->automationEditor()->parentWidget()->hide();
@@ -617,7 +618,8 @@ void MainWindow::finalize()
 	// reset window title every time we change the state of a subwindow to show the correct title
 	for( const QMdiSubWindow * subWindow : workspace()->subWindowList() )
 	{
-		connect( subWindow, SIGNAL( windowStateChanged(Qt::WindowStates,Qt::WindowStates) ), this, SLOT( resetWindowTitle() ) );
+		connect( subWindow, SIGNAL( windowStateChanged(Qt::WindowStates,Qt::WindowStates) ),
+			 this, SLOT( resetWindowTitle() ) );
 	}
 }
 
@@ -647,16 +649,20 @@ void MainWindow::addSpacingToToolBar( int _size )
 								7, _size );
 }
 
-SubWindow* MainWindow::addWindowedWidget(QWidget *w, Qt::WindowFlags windowFlags)
+/*
+SubWindow* MainWindow::addWindowedWidget(QWidget *w) //Qt::WindowFlags windowFlags
 {
 	// wrap the widget in our own *custom* window that patches some errors in QMdiSubWindow
-	SubWindow *win = new SubWindow(m_workspace->viewport(), windowFlags);
-	win->setAttribute(Qt::WA_DeleteOnClose);
-	win->setWidget(w);
+	//SubWindow *win = new SubWindow(m_workspace->viewport(), windowFlags);
+	//win->setAttribute(Qt::WA_DeleteOnClose);
+	//win->setWidget(w);
+	//return win;
+	SubWindow *win = new SubWindow(w);
+	//win->setWidget(w);
 	m_workspace->addSubWindow(win);
 	return win;
 }
-
+*/
 
 void MainWindow::resetWindowTitle()
 {

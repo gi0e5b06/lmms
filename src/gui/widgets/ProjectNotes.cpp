@@ -70,11 +70,15 @@ ProjectNotes::ProjectNotes() :
 	setWindowTitle( tr( "Project Notes" ) );
 	setWindowIcon( embed::getIconPixmap( "project_notes" ) );
 
-	gui->mainWindow()->addWindowedWidget( this );
-	parentWidget()->setAttribute( Qt::WA_DeleteOnClose, false );
-	parentWidget()->move( 700, 10 );
-	parentWidget()->resize( 400, 300 );
-	parentWidget()->hide();
+	resize( 400, 300 );
+
+	SubWindow* win=SubWindow::putWidgetOnWorkspace(this,false,false,false);
+	//win->setWindowIcon( this->windowIcon() );
+	//gui->mainWindow()->addWindowedWidget( this );
+	//parentWidget()->setAttribute( Qt::WA_DeleteOnClose, false );
+
+	win->move( 700, 10 );
+	win->hide();
 }
 
 

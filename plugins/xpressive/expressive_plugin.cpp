@@ -858,10 +858,17 @@ expressiveHelpView::expressiveHelpView():QTextEdit(s_helpText)
 {
 	setWindowTitle ( "X-Pressive Help" );
 	setTextInteractionFlags ( Qt::TextSelectableByKeyboard | Qt::TextSelectableByMouse );
-	gui->mainWindow()->addWindowedWidget( this );
-	parentWidget()->setAttribute( Qt::WA_DeleteOnClose, false );
-	parentWidget()->setWindowIcon( PLUGIN_NAME::getIconPixmap( "logo" ) );
-	parentWidget()->setFixedSize( 300, 500);
+	/*
+	  gui->mainWindow()->addWindowedWidget( this );
+	  parentWidget()->setAttribute( Qt::WA_DeleteOnClose, false );
+	  parentWidget()->setWindowIcon( PLUGIN_NAME::getIconPixmap( "logo" ) );
+	  parentWidget()->setFixedSize( 300, 500);
+	*/
+
+	setWindowIcon( PLUGIN_NAME::getIconPixmap( "logo" ) );
+	setFixedSize( 300, 500);
+	/*SubWindow* win=*/SubWindow::putWidgetOnWorkspace(this,false,false,false);
+	//Q_UNUSED(win)
 }
 
 void expressiveView::helpClicked() {

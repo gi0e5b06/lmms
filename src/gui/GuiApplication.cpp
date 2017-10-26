@@ -123,7 +123,7 @@ GuiApplication::GuiApplication(bool showSplashScreen)
 
 	displayInitProgress(tr("Preparing UI"));
 
-	m_mainWindow = new MainWindow;
+	m_mainWindow = new MainWindow();
 	connect(m_mainWindow, SIGNAL(destroyed(QObject*)), this, SLOT(childDestroyed(QObject*)));
 	connect(m_mainWindow, SIGNAL(initProgress(const QString&)), 
 		this, SLOT(displayInitProgress(const QString&)));

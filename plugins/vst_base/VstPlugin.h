@@ -31,10 +31,21 @@
 #include <QString>
 #include <QTimer>
 #include <QWidget>
+//#include <QMdiSubWindow>
 
 #include "JournallingObject.h"
 #include "communication.h"
+#include "SubWindow.h"
 
+/*
+class VstSubWindow : public SubWindow
+{
+ public:
+	VstSubWindow( );//QWidget * _parent, Qt::WindowFlags _flags = 0 );
+	virtual ~VstSubWindow();
+	virtual void closeEvent( QCloseEvent * e );
+};
+*/
 
 class PLUGIN_EXPORT VstPlugin : public RemotePlugin, public JournallingObject
 {
@@ -52,7 +63,8 @@ public:
 		return m_pluginWindowID != 0;
 	}
 
-	void showEditor( QWidget * _parent = NULL, bool isEffect = false );
+	void showEditor(bool isEffect=false, QWidget* _parent=NULL);
+
 	void hideEditor();
 
 	inline const QString & name() const
@@ -64,7 +76,7 @@ public:
 	{
 		return m_version;
 	}
-	
+
 	inline const QString & vendorString() const
 	{
 		return m_vendorString;
@@ -91,17 +103,8 @@ public:
 	void setParameterDump( const QMap<QString, QString> & _pdump );
 
 
-	inline QWidget * pluginWidget( bool _top_widget = true )
-	{
-		if( _top_widget && m_pluginWidget )
-		{
-			if( m_pluginWidget->parentWidget() )
-			{
-				return m_pluginWidget->parentWidget();
-			}
-		}
-		return m_pluginWidget;
-	}
+	QWidget * pluginWidget() const;
+	QMdiSubWindow * mdiSubWindow() const;
 
 	virtual void loadSettings( const QDomElement & _this );
 	virtual void saveSettings( QDomDocument & _doc, QDomElement & _this );
@@ -129,7 +132,8 @@ private:
 	QByteArray saveChunk();
 
 	QString m_plugin;
-	QPointer<QWidget> m_pluginWidget;
+	QPointer<QWidget>       m_pluginWidget;
+	QPointer<QMdiSubWindow> m_subWindow;
 	int m_pluginWindowID;
 	QSize m_pluginGeometry;
 

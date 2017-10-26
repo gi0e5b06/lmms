@@ -61,12 +61,14 @@ void PixmapButton::paintEvent( QPaintEvent * )
 	{
 		if( !m_activePixmap.isNull() )
 		{
-			p.drawPixmap( 0, 0, m_activePixmap );
+			p.drawPixmap( 0, 0, m_activePixmap.scaled
+				      (size().boundedTo(m_activePixmap.size())));
 		}
 	}
 	else if( !m_inactivePixmap.isNull() )
 	{
-		p.drawPixmap( 0, 0, m_inactivePixmap );
+		p.drawPixmap( 0, 0, m_inactivePixmap.scaled
+			      (size().boundedTo(m_activePixmap.size())));
 	}
 }
 
@@ -112,10 +114,11 @@ void PixmapButton::mouseDoubleClickEvent( QMouseEvent * _me )
 
 
 
-void PixmapButton::setActiveGraphic( const QPixmap & _pm )
+void PixmapButton::setActiveGraphic( const QPixmap & _pm, bool _update )
 {
 	m_activePixmap = _pm;
-	resize( m_activePixmap.width(), m_activePixmap.height() );
+	resize( sizeHint() );//m_activePixmap.width(), m_activePixmap.height() );
+	if( _update ) update();
 }
 
 
@@ -124,21 +127,19 @@ void PixmapButton::setActiveGraphic( const QPixmap & _pm )
 void PixmapButton::setInactiveGraphic( const QPixmap & _pm, bool _update )
 {
 	m_inactivePixmap = _pm;
-	if( _update )
-	{
-		update();
-	}
+	resize( sizeHint() );
+	if( _update ) update();
 }
 
 QSize PixmapButton::sizeHint() const
 {
 	if( ( model() != NULL && model()->value() ) || m_pressed )
 	{
-		return m_activePixmap.size();
+		return minimumSize().expandedTo(m_activePixmap.size()).boundedTo(maximumSize());
 	}
 	else 
 	{
-		return m_inactivePixmap.size();
+		return minimumSize().expandedTo(m_inactivePixmap.size()).boundedTo(maximumSize());
 	}
 }
 

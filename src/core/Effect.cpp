@@ -38,7 +38,7 @@ Effect::Effect( const Plugin::Descriptor * _desc,
 			const Descriptor::SubPluginFeatures::Key * _key ) :
 	Plugin( _desc, _parent ),
 	m_parent( NULL ),
-	m_key( _key ? *_key : Descriptor::SubPluginFeatures::Key()  ),
+	m_key( _key ? *_key : Descriptor::SubPluginFeatures::Key() ),
 	m_processors( 1 ),
 	m_okay( true ),
 	m_noRun( false ),
@@ -52,7 +52,7 @@ Effect::Effect( const Plugin::Descriptor * _desc,
 {
 	m_srcState[0] = m_srcState[1] = NULL;
 	reinitSRC();
-	
+
 	if( ConfigManager::inst()->value( "ui", "disableautoquit").toInt() )
 	{
 		m_autoQuitDisabled = true;

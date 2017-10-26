@@ -59,7 +59,7 @@ public:
 	virtual void saveSettings( QDomDocument & _doc, QDomElement & _parent );
 	virtual void loadSettings( const QDomElement & _this );
 
-	virtual QString nodeName( void ) const;
+	virtual QString nodeName() const;
 
 	virtual void loadFile( const QString & _file );
 
@@ -73,21 +73,21 @@ public:
 	virtual PluginView * instantiateView( QWidget * _parent );
 
 protected slots:
-	void setParameter( void );
+	void setParameter();
 
 private:
-	void closePlugin( void );
+	void closePlugin();
 
 
 	VstPlugin * m_plugin;
 	QMutex m_pluginMutex;
-
 	QString m_pluginDLL;
-	QMdiSubWindow * m_subWindow;
-	QScrollArea * m_scrollArea;
+
+	QMdiSubWindow * m_controls;
+	//QScrollArea * m_scrollArea;
 	Knob ** vstKnobs;
 	FloatModel ** knobFModel;
-	QObject * p_subWindow;
+	//QObject * p_subWindow;
 	int paramCount;
 
 
@@ -96,19 +96,19 @@ private:
 
 } ;
 
-
+// Controls (knobs)
 class manageVestigeInstrumentView : public InstrumentView
 {
 	Q_OBJECT
 public:
-	manageVestigeInstrumentView( Instrument * _instrument, QWidget * _parent, vestigeInstrument * m_vi2 );
+	manageVestigeInstrumentView( Instrument * _instrument, QWidget * _parent, vestigeInstrument * _vi );
 	virtual ~manageVestigeInstrumentView();
 
 
 protected slots:
-	void syncPlugin( void );
-	void displayAutomatedOnly( void );
-	void setParameter( void );
+	void syncPlugin();
+	void displayAutomatedOnly();
+	void setParameter();
 	void closeWindow();
 
 
@@ -127,7 +127,7 @@ private:
 	QGridLayout * l;
 	QPushButton * m_syncButton;
 	QPushButton * m_displayAutomatedOnly;
-	QPushButton * m_closeButton;
+	//QPushButton * m_closeButton;
 
 } ;
 
@@ -141,16 +141,17 @@ public:
 
 
 protected slots:
-	void updateMenu( void );
-	void openPlugin( void );
-	void managePlugin( void );
-	void openPreset( void );
-	void savePreset( void );
+	void updateMenu();
+	void openPlugin();
+	void managePlugin();
+	void openPreset();
+	void savePreset();
 	void nextProgram();
 	void previousProgram();
-	void selPreset( void );
-	void toggleGUI( void );
-	void noteOffAll( void );
+	void selPreset();
+	void toggleControls();
+	void toggleGUI();
+	void noteOffAll();
 
 
 protected:
@@ -160,7 +161,7 @@ protected:
 
 
 private:
-	virtual void modelChanged( void );
+	virtual void modelChanged();
 
 	static QPixmap * s_artwork;
 
@@ -168,17 +169,17 @@ private:
 
 	int lastPosInMenu;
 
-	PixmapButton * m_openPluginButton;
-	PixmapButton * m_openPresetButton;
-	PixmapButton * m_rolLPresetButton;
-	PixmapButton * m_rolRPresetButton;
-	QPushButton * m_selPresetButton;
-	QPushButton * m_toggleGUIButton;
-	PixmapButton * m_managePluginButton;
-	PixmapButton * m_savePresetButton;
+	PixmapButton* m_openPluginButton;
+	PixmapButton* m_openPresetButton;
+	PixmapButton* m_rolLPresetButton;
+	PixmapButton* m_rolRPresetButton;
+	QPushButton*  m_selPresetButton;
+	QPushButton*  m_toggleGUIButton;
+	PixmapButton* m_managePluginButton;
+	PixmapButton* m_savePresetButton;
 
-	Instrument * _instrument2;
-	QWidget * _parent2;
+	Instrument*   m_instrument2;
+	QWidget*      m_parent2;
 
 } ;
 

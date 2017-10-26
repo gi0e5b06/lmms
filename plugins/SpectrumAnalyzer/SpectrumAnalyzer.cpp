@@ -79,8 +79,11 @@ bool SpectrumAnalyzer::processAudioBuffer( sampleFrame* _buf, const fpp_t _frame
 		return false;
 	}
 
-	if( !m_saControls.isViewVisible() )
+	//tmp optimisation if the display is hidden, use dontRun
+	//if( !m_saControls.isViewVisible() )
+	if( dontRun() )
 	{
+		qWarning("SpectrumAnalyzer::processAudioBuffer dontRun is set, skip processing");
 		return true;
 	}
 

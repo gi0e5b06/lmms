@@ -82,18 +82,19 @@ ControllerRackView::ControllerRackView( ) :
 	layout->addWidget( m_addButton );
 	this->setLayout( layout );
 
-	QMdiSubWindow * subWin = gui->mainWindow()->addWindowedWidget( this );
-
+	/*
+	QMdiSubWindow * win = gui->mainWindow()->addWindowedWidget( this );
 	// No maximize button
-	Qt::WindowFlags flags = subWin->windowFlags();
+	Qt::WindowFlags flags = win->windowFlags();
 	flags &= ~Qt::WindowMaximizeButtonHint;
-	subWin->setWindowFlags( flags );
-	
-	subWin->setAttribute( Qt::WA_DeleteOnClose, false );
-	subWin->move( 680, 310 );
-	subWin->resize( 250, 200 );
-	subWin->setFixedWidth( 250 );
-	subWin->setMinimumHeight( 200 );
+	win->setWindowFlags( flags );
+	win->setAttribute( Qt::WA_DeleteOnClose, false );
+	*/
+	SubWindow* win=SubWindow::putWidgetOnWorkspace(this,false,false,false);
+	win->move( 680, 310 );
+	win->resize( 250, 200 );
+	win->setFixedWidth( 250 );
+	win->setMinimumHeight( 200 );
 }
 
 

@@ -29,7 +29,6 @@
 #include <QInputDialog>
 #include <QLayout>
 #include <QMdiArea>
-#include <QMdiSubWindow>
 #include <QPainter>
 #include <QPushButton>
 #include <QScrollArea>
@@ -48,6 +47,7 @@
 #include "gui_templates.h"
 #include "InstrumentTrack.h"
 #include "Song.h"
+#include "SubWindow.h"
 #include "BBTrackContainer.h"
 
 FxMixerView::FxMixerView() :
@@ -63,8 +63,6 @@ FxMixerView::FxMixerView() :
 	//setPalette( pal );
 
 	setAutoFillBackground( true );
-	setSizePolicy( QSizePolicy::Preferred, QSizePolicy::Fixed );
-
 	setWindowTitle( tr( "FX-Mixer" ) );
 	setWindowIcon( embed::getIconPixmap( "fx_mixer" ) );
 
@@ -149,19 +147,26 @@ FxMixerView::FxMixerView() :
 
 	// timer for updating faders
 	connect( gui->mainWindow(), SIGNAL( periodicUpdate() ),
-					this, SLOT( updateFaders() ) );
+		 this, SLOT( updateFaders() ) );
 
 
 	// add ourself to workspace
+	/*
 	QMdiSubWindow * subWin = gui->mainWindow()->addWindowedWidget( this );
 	Qt::WindowFlags flags = subWin->windowFlags();
 	flags &= ~Qt::WindowMaximizeButtonHint;
 	subWin->setWindowFlags( flags );
 	layout()->setSizeConstraint( QLayout::SetMinimumSize );
 	subWin->layout()->setSizeConstraint( QLayout::SetMinAndMaxSize );
-
 	parentWidget()->setAttribute( Qt::WA_DeleteOnClose, false );
 	parentWidget()->move( 5, 310 );
+	*/
+	SubWindow* win=SubWindow::putWidgetOnWorkspace(this,false,false,true);
+	setFixedSize(size());
+	setSizePolicy( QSizePolicy::Preferred, QSizePolicy::Fixed );
+	ml->setSizeConstraint( QLayout::SetMinimumSize );
+	ml->setSizeConstraint( QLayout::SetMinAndMaxSize );
+	win->move(5,310);
 
 	// we want to receive dataChanged-signals in order to update
 	setModel( m );

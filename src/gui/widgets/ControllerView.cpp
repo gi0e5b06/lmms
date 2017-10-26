@@ -130,18 +130,18 @@ void ControllerView::editControls()
 	{
 		m_controllerDlg = controller()->createDialog( gui->mainWindow()->workspace() );
 
+		/*
 		m_subWindow = gui->mainWindow()->addWindowedWidget( m_controllerDlg );
-
 		Qt::WindowFlags flags = m_subWindow->windowFlags();
 		flags &= ~Qt::WindowMaximizeButtonHint;
 		m_subWindow->setWindowFlags( flags );
 		m_subWindow->setFixedSize( m_subWindow->size() );
-
 		m_subWindow->setWindowIcon( m_controllerDlg->windowIcon() );
+		*/
+		m_subWindow = SubWindow::putWidgetOnWorkspace(m_controllerDlg,false,false,false);
 
 		connect( m_controllerDlg, SIGNAL( closed() ),
 			 this, SLOT( closeControls() ) );
-
 		m_subWindow->hide();
 	}
 

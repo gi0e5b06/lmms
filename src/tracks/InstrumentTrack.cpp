@@ -1510,21 +1510,23 @@ InstrumentTrackWindow::InstrumentTrackWindow( InstrumentTrackView * _itv ) :
 	setFixedWidth( INSTRUMENT_WIDTH );
 	resize( sizeHint() );
 
-	QMdiSubWindow * subWin = gui->mainWindow()->addWindowedWidget( this );
-	Qt::WindowFlags flags = subWin->windowFlags();
+	/*
+	QMdiSubWindow * win = gui->mainWindow()->addWindowedWidget( this );
+	Qt::WindowFlags flags = win->windowFlags();
 	flags |= Qt::MSWindowsFixedSizeDialogHint;
 	flags &= ~Qt::WindowMaximizeButtonHint;
-	subWin->setWindowFlags( flags );
+	win->setWindowFlags( flags );
+	*/
+	SubWindow* win=SubWindow::putWidgetOnWorkspace(this,false,false,false);
+	win->setWindowIcon( embed::getIconPixmap( "instrument_track" ) );
+	//win->setFixedSize( win->size() );
+	win->hide();
 
 	// Hide the Size and Maximize options from the system menu
 	// since the dialog size is fixed.
-	QMenu * systemMenu = subWin->systemMenu();
-	systemMenu->actions().at( 2 )->setVisible( false ); // Size
-	systemMenu->actions().at( 4 )->setVisible( false ); // Maximize
-
-	subWin->setWindowIcon( embed::getIconPixmap( "instrument_track" ) );
-	subWin->setFixedSize( subWin->size() );
-	subWin->hide();
+	//QMenu * systemMenu = win->systemMenu();
+	//systemMenu->actions().at( 2 )->setVisible( false ); // Size
+	//systemMenu->actions().at( 4 )->setVisible( false ); // Maximize
 }
 
 

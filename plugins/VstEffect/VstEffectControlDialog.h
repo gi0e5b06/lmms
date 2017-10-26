@@ -50,8 +50,11 @@ public:
 protected:
 	virtual void paintEvent( QPaintEvent * _pe );
 
+protected slots:
+	virtual void toggleVstWidget();
+
 private:
-	QWidget * m_pluginWidget;
+	//QWidget * m_pluginWidget;
 
 	PixmapButton * m_openPresetButton;
 	PixmapButton * m_rolLPresetButton;
@@ -61,7 +64,7 @@ private:
 
 	VstPlugin * m_plugin;
 
-	QLabel * tbLabel;
+	//QLabel * tbLabel;
 } ;
 
 #endif
