@@ -534,7 +534,7 @@ void Song::playSong()
 
 	savePos();
 
-	qWarning("Playing song...");
+	//qWarning("Playing song...");
 
 	emit playbackStateChanged();
 }

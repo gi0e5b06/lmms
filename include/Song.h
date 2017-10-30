@@ -109,6 +109,11 @@ public:
 		return m_elapsedMilliSeconds;
 	}
 
+	inline void setToTime( int millis )
+	{
+		m_elapsedMilliSeconds = millis;
+	}
+
 	inline void setToTime( MidiTime const & midiTime )
 	{
 		m_elapsedMilliSeconds = midiTime.getTimeInMilliseconds(getTempo());

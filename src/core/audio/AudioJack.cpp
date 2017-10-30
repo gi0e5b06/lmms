@@ -338,13 +338,6 @@ void AudioJack::transport()
 	jack_transport_state_t ts=jack_transport_query(m_client, &pos);
 	Song* song=Engine::getSong();
 
-	if(song->getFrames()!=pos.frame)
-	{
-		song->getPlayPos(song->playMode()).setTicks(pos.frame/Engine::framesPerTick());
-		song->setToTimeByTicks(pos.frame/Engine::framesPerTick());
-		song->getPlayPos(song->playMode()).setCurrentFrame( 0 );
-	}
-
 	if((ts==JackTransportRolling) && !song->isPlaying())
 	{
 		if(song->isPaused()) song->togglePause();
@@ -354,6 +347,13 @@ void AudioJack::transport()
 	if((ts==JackTransportStopped) && song->isPlaying())
 	{
 		song->togglePause();
+	}
+
+	if(song->isPlaying()&&(song->getFrames()!=pos.frame))
+	{
+		song->getPlayPos(song->playMode()).setTicks(pos.frame/Engine::framesPerTick());
+		song->setToTimeByTicks(pos.frame/Engine::framesPerTick());
+		song->getPlayPos(song->playMode()).setCurrentFrame( 0 );
 	}
 }
 

@@ -19,10 +19,11 @@ MemoryManagerArray MemoryManagerArray::S480 (  256, 480);
 MemoryManagerArray MemoryManagerArray::S496 (   64, 496);
 MemoryManagerArray MemoryManagerArray::S512 (   64, 512);
 MemoryManagerArray MemoryManagerArray::S552 (  512, 552);
+//968
 MemoryManagerArray MemoryManagerArray::S1024(   64,1024);
 MemoryManagerArray MemoryManagerArray::S1056(  768,1056);
 MemoryManagerArray MemoryManagerArray::S1392(  128,1392);
-MemoryManagerArray MemoryManagerArray::S2048(  128,2048,"Buffer");
+MemoryManagerArray MemoryManagerArray::S2048(  256,2048,"Buffer");
 MemoryManagerArray MemoryManagerArray::S2464(   64,2464);
 //2760
 //4096
