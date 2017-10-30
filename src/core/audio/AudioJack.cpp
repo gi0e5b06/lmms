@@ -31,6 +31,7 @@
 #include <QMessageBox>
 
 #include "Engine.h"
+#include "Song.h"
 #include "GuiApplication.h"
 #include "templates.h"
 #include "gui_templates.h"
@@ -144,8 +145,8 @@ bool AudioJack::initJackClient()
 	const char * serverName = NULL;
 	jack_status_t status;
 	m_client = jack_client_open( clientName.toLatin1().constData(),
-						JackNullOption, &status,
-								serverName );
+				     JackNullOption, &status,
+				     serverName );
 	if( m_client == NULL )
 	{
 		printf( "jack_client_open() failed, status 0x%2.0x\n", status );
@@ -158,18 +159,16 @@ bool AudioJack::initJackClient()
 	if( status & JackNameNotUnique )
 	{
 		printf( "there's already a client with name '%s', so unique "
-			"name '%s' was assigned\n", clientName.
-							toLatin1().constData(),
-					jack_get_client_name( m_client ) );
+			"name '%s' was assigned\n",
+			clientName.toLatin1().constData(),
+			jack_get_client_name( m_client ) );
 	}
 
 	// set process-callback
 	jack_set_process_callback( m_client, staticProcessCallback, this );
 
 	// set shutdown-callback
-	jack_on_shutdown( m_client, shutdownCallback, this );
-
-
+	jack_on_shutdown( m_client, staticShutdownCallback, this );
 
 	if( jack_get_sample_rate( m_client ) != sampleRate() )
 	{
@@ -333,11 +332,38 @@ void AudioJack::renamePort( AudioPort * _port )
 #endif
 }
 
+void AudioJack::transport()
+{
+	jack_position_t pos;
+	jack_transport_state_t ts=jack_transport_query(m_client, &pos);
+	Song* song=Engine::getSong();
+
+	if(song->getFrames()!=pos.frame)
+	{
+		song->getPlayPos(song->playMode()).setTicks(pos.frame/Engine::framesPerTick());
+		song->setToTimeByTicks(pos.frame/Engine::framesPerTick());
+		song->getPlayPos(song->playMode()).setCurrentFrame( 0 );
+	}
+
+	if((ts==JackTransportRolling) && !song->isPlaying())
+	{
+		if(song->isPaused()) song->togglePause();
+		else song->playSong();
+	}
+	else
+	if((ts==JackTransportStopped) && song->isPlaying())
+	{
+		song->togglePause();
+	}
+}
+
 
 
 
 int AudioJack::processCallback( jack_nframes_t _nframes, void * _udata )
 {
+	transport();
+
 	// do midi processing first so that midi input can
 	// add to the following sound processing
 	if( m_midiClient && _nframes > 0 )
@@ -349,8 +375,8 @@ int AudioJack::processCallback( jack_nframes_t _nframes, void * _udata )
 	for( int c = 0; c < channels(); ++c )
 	{
 		m_tempOutBufs[c] =
-			(jack_default_audio_sample_t *) jack_port_get_buffer(
-												m_outputPorts[c], _nframes );
+			(jack_default_audio_sample_t *) jack_port_get_buffer
+			( m_outputPorts[c], _nframes );
 	}
 
 #ifdef AUDIO_PORT_SUPPORT
@@ -422,21 +448,29 @@ int AudioJack::processCallback( jack_nframes_t _nframes, void * _udata )
 
 int AudioJack::staticProcessCallback( jack_nframes_t _nframes, void * _udata )
 {
-	return static_cast<AudioJack *>( _udata )->
-					processCallback( _nframes, _udata );
+	AudioJack* aj = static_cast<AudioJack *>( _udata );
+	return aj->processCallback( _nframes, _udata );
 }
 
 
 
 
-void AudioJack::shutdownCallback( void * _udata )
+void AudioJack::staticShutdownCallback( void * _udata )
 {
-	AudioJack * _this = static_cast<AudioJack *>( _udata );
-	_this->m_client = NULL;
-	_this->zombified();
+	AudioJack* aj = static_cast<AudioJack *>( _udata );
+	aj->m_client = NULL;
+	aj->zombified();
 }
 
 
+
+
+/*
+typedef int  (*JackSyncCallback)(jack_transport_state_t state,
+				 jack_position_t *pos, void *arg);
+int  jack_set_sync_callback (jack_client_t *client,
+			     JackSyncCallback sync_callback, void *arg);
+*/
 
 
 

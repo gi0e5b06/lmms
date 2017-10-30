@@ -92,11 +92,13 @@ private:
 	virtual void unregisterPort( AudioPort * _port );
 	virtual void renamePort( AudioPort * _port );
 
+	void transport();
+
 	int processCallback( jack_nframes_t _nframes, void * _udata );
 
 	static int staticProcessCallback( jack_nframes_t _nframes,
-							void * _udata );
-	static void shutdownCallback( void * _udata );
+					  void* _udata );
+	static void staticShutdownCallback( void* _udata );
 
 
 	jack_client_t * m_client;
