@@ -233,7 +233,7 @@ public:
 	bool needsUpdate();
 	void setNeedsUpdate( bool b );
 
-#if (QT_VERSION < 0x500000)
+#if (QT_VERSION < 0x050000)
 	inline QPixmap grab(const QRect &rectangle = QRect( QPoint( 0, 0 ), QSize( -1, -1 ) ))
 	{
 		return QPixmap::grabWidget(this,rectangle);

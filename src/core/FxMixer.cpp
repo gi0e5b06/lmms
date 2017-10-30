@@ -563,9 +563,9 @@ void FxMixer::mixToChannel( const sampleFrame * _buf, fx_ch_t _ch )
 
 void FxMixer::prepareMasterMix()
 {
-	m_fxChannels[0]->m_lock.lock();
+	//m_fxChannels[0]->m_lock.lock();
 	BufferManager::clear( m_fxChannels[0]->m_buffer );
-	m_fxChannels[0]->m_lock.unlock();
+	//m_fxChannels[0]->m_lock.unlock();
 }
 
 

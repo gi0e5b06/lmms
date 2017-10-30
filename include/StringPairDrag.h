@@ -47,7 +47,7 @@ public:
 
 	inline QPixmap grabWidget(QWidget* widget,const QRect &rectangle = QRect( QPoint( 0, 0 ), QSize( -1, -1 ) ))
 	{
-#if (QT_VERSION >= 0x500000)
+#if (QT_VERSION >= 0x050000)
 		return widget->grab(rectangle);
 #else
 		return QPixmap::grabWidget(widget,rectangle);

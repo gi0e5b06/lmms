@@ -401,51 +401,12 @@ VestigeInstrumentView::VestigeInstrumentView( Instrument * _instrument,
 		s_artwork = new QPixmap(PLUGIN_NAME::getIconPixmap("artwork"));
 	}
 
-	m_openPluginButton = new PixmapButton( this, "" );
-	m_openPluginButton->setCheckable( false );
-	m_openPluginButton->setCursor( Qt::PointingHandCursor );
-	m_openPluginButton->move( 216, 81 );
-	m_openPluginButton->setActiveGraphic  (PLUGIN_NAME::getIconPixmap("select_file_active"));
-	m_openPluginButton->setInactiveGraphic(PLUGIN_NAME::getIconPixmap("select_file"));
-	connect( m_openPluginButton, SIGNAL( clicked() ),
-		 this, SLOT( openPlugin() ) );
-	ToolTip::add( m_openPluginButton, tr( "Open other VST-plugin" ) );
-	m_openPluginButton->setWhatsThis
-		( tr( "Click here, if you want to open another VST-plugin. After "
-		      "clicking on this button, a file-open-dialog appears "
-		      "and you can select your file." ) );
-
-	m_managePluginButton = new PixmapButton( this, "" );
-	m_managePluginButton->setCheckable( false );
-	m_managePluginButton->setCursor( Qt::PointingHandCursor );
-	m_managePluginButton->move( 216, 101 );
-	m_managePluginButton->setActiveGraphic  (PLUGIN_NAME::getIconPixmap("controls_active"));
-	m_managePluginButton->setInactiveGraphic(PLUGIN_NAME::getIconPixmap("controls"));
-	connect( m_managePluginButton, SIGNAL( clicked() ),
-		 this, SLOT( toggleControls() ) );
-	ToolTip::add( m_managePluginButton, tr( "Control VST-plugin from LMMS host" ) );
-	m_managePluginButton->setWhatsThis
-		( tr( "Click here, if you want to control VST-plugin from host." ) );
-
-
-	m_openPresetButton = new PixmapButton( this, "" );
-	m_openPresetButton->setCheckable( false );
-	m_openPresetButton->setCursor( Qt::PointingHandCursor );
-	m_openPresetButton->move( 200, 224 );
-	m_openPresetButton->setActiveGraphic  ( embed::getIconPixmap("project_open", 20, 20 ) );
-	m_openPresetButton->setInactiveGraphic( embed::getIconPixmap("project_open", 20, 20 ) );
-	connect( m_openPresetButton, SIGNAL( clicked() ), this, SLOT( openPreset() ) );
-	ToolTip::add( m_openPresetButton, tr( "Open VST-plugin preset" ) );
-	m_openPresetButton->setWhatsThis
-		( tr( "Click here, if you want to open another *.fxp, *.fxb VST-plugin preset." ) );
-
-
 	m_rolLPresetButton = new PixmapButton( this, "" );
 	m_rolLPresetButton->setCheckable( false );
 	m_rolLPresetButton->setCursor( Qt::PointingHandCursor );
-	m_rolLPresetButton->move( 190, 201 );
-	m_rolLPresetButton->setActiveGraphic  ( embed::getIconPixmap("stepper-left-press"));
-	m_rolLPresetButton->setInactiveGraphic( embed::getIconPixmap("stepper-left"));
+	m_rolLPresetButton->move( 155, 201 );
+	m_rolLPresetButton->setActiveGraphic  ( embed::getIconPixmap("stepper-left-press",16,16));
+	m_rolLPresetButton->setInactiveGraphic( embed::getIconPixmap("stepper-left",16,16));
 	connect( m_rolLPresetButton, SIGNAL( clicked() ), this, SLOT( previousProgram() ) );
 	ToolTip::add( m_rolLPresetButton, tr( "Previous (-)" ) );
 
@@ -455,24 +416,12 @@ VestigeInstrumentView::VestigeInstrumentView( Instrument * _instrument,
 		tr( "Click here, if you want to switch to another VST-plugin preset program." ) );
 
 
-	m_savePresetButton = new PixmapButton( this, "" );
-	m_savePresetButton->setCheckable( false );
-	m_savePresetButton->setCursor( Qt::PointingHandCursor );
-	m_savePresetButton->move( 224, 224 );
-	m_savePresetButton->setActiveGraphic( embed::getIconPixmap("project_save", 20, 20  ) );
-	m_savePresetButton->setInactiveGraphic( embed::getIconPixmap("project_save", 20, 20  ) );
-	connect( m_savePresetButton, SIGNAL( clicked() ), this, SLOT( savePreset() ) );
-	ToolTip::add( m_savePresetButton, tr( "Save preset" ) );
-	m_savePresetButton->setWhatsThis
-		( tr( "Click here, if you want to save current VST-plugin preset program." ) );
-
-
 	m_rolRPresetButton = new PixmapButton( this, "" );
 	m_rolRPresetButton->setCheckable( false );
 	m_rolRPresetButton->setCursor( Qt::PointingHandCursor );
-	m_rolRPresetButton->move( 209, 201 );
-	m_rolRPresetButton->setActiveGraphic( embed::getIconPixmap("stepper-right-press"));
-	m_rolRPresetButton->setInactiveGraphic( embed::getIconPixmap("stepper-right"));
+	m_rolRPresetButton->move( 173, 201 );
+	m_rolRPresetButton->setActiveGraphic( embed::getIconPixmap("stepper-right-press",16,16));
+	m_rolRPresetButton->setInactiveGraphic( embed::getIconPixmap("stepper-right",16,16));
 	connect( m_rolRPresetButton, SIGNAL( clicked() ), this,	SLOT( nextProgram() ) );
 	ToolTip::add( m_rolRPresetButton, tr( "Next (+)" ) );
 	m_rolRPresetButton->setShortcut( Qt::Key_Plus );
@@ -480,7 +429,7 @@ VestigeInstrumentView::VestigeInstrumentView( Instrument * _instrument,
 		( tr( "Click here, if you want to switch to another VST-plugin preset program." ) );
 
 	m_selPresetButton = new QPushButton( tr( "" ), this );
-	m_selPresetButton->setGeometry( 228, 201, 16, 16 );
+	m_selPresetButton->setGeometry( 191, 201, 16, 16 );
 	m_selPresetButton->setIcon( embed::getIconPixmap( "stepper-down" ) ); // need PixmapButton
 	m_selPresetButton->setWhatsThis
 		( tr( "Click here to select presets that are currently loaded in VST." ) );
@@ -489,21 +438,97 @@ VestigeInstrumentView::VestigeInstrumentView( Instrument * _instrument,
 	m_selPresetButton->setMenu(menu);
 
 
-	m_toggleGUIButton = new QPushButton( tr( "Show/hide GUI" ), this );
-	m_toggleGUIButton->setGeometry( 20, 130, 200, 24 );
+	m_openPresetButton = new PixmapButton( this, "" );
+	m_openPresetButton->setCheckable( false );
+	m_openPresetButton->setCursor( Qt::PointingHandCursor );
+	m_openPresetButton->move( 209, 201 );
+	m_openPresetButton->setActiveGraphic  ( embed::getIconPixmap("project_open",16,16) );//20
+	m_openPresetButton->setInactiveGraphic( embed::getIconPixmap("project_open",16,16) );
+	connect( m_openPresetButton, SIGNAL( clicked() ), this, SLOT( openPreset() ) );
+	ToolTip::add( m_openPresetButton, tr( "Open VST-plugin preset" ) );
+	m_openPresetButton->setWhatsThis
+		( tr( "Click here, if you want to open another *.fxp, *.fxb VST-plugin preset." ) );
+
+
+	m_savePresetButton = new PixmapButton( this, "" );
+	m_savePresetButton->setCheckable( false );
+	m_savePresetButton->setCursor( Qt::PointingHandCursor );
+	m_savePresetButton->move( 227, 201 );
+	m_savePresetButton->setActiveGraphic( embed::getIconPixmap("project_save",16,16) );//20
+	m_savePresetButton->setInactiveGraphic( embed::getIconPixmap("project_save",16,16) );
+	connect( m_savePresetButton, SIGNAL( clicked() ), this, SLOT( savePreset() ) );
+	ToolTip::add( m_savePresetButton, tr( "Save preset" ) );
+	m_savePresetButton->setWhatsThis
+		( tr( "Click here, if you want to save current VST-plugin preset program." ) );
+
+
+
+
+	const QString CSS_BUTTON=("text-align: left; padding-left: 3px;");
+
+	QPushButton* m_toggleGUIButton = new QPushButton( tr( "Show/hide GUI" ), this );
+	m_toggleGUIButton->setGeometry( 6, 130, 118, 28 );
 	m_toggleGUIButton->setIcon( embed::getIconPixmap( "zoom" ) );
 	m_toggleGUIButton->setFont( pointSize<8>( m_toggleGUIButton->font() ) );
+	m_toggleGUIButton->setStyleSheet(CSS_BUTTON);
 	connect( m_toggleGUIButton, SIGNAL( clicked() ), this, SLOT( toggleGUI() ) );
 	m_toggleGUIButton->setWhatsThis
 		( tr( "Click here to show or hide the graphical user interface "
 		      "(GUI) of your VST-plugin." ) );
 
-	QPushButton * note_off_all_btn = new QPushButton
+	QPushButton* note_off_all_btn = new QPushButton
 		( tr( "Turn off all notes" ), this );
-	note_off_all_btn->setGeometry( 20, 160, 200, 24 );
+	note_off_all_btn->setGeometry( 6, 162, 118, 28 );
 	note_off_all_btn->setIcon( embed::getIconPixmap( "stop" ) );
 	note_off_all_btn->setFont( pointSize<8>( note_off_all_btn->font() ) );
+	note_off_all_btn->setStyleSheet(CSS_BUTTON);
 	connect( note_off_all_btn, SIGNAL( clicked() ), this, SLOT( noteOffAll() ) );
+
+	QPushButton* m_openPluginButton = new QPushButton
+		( tr( "Open other VST" ), this ); //VST-plugin
+	m_openPluginButton->setGeometry( 128, 130, 118, 28 );
+	m_openPluginButton->setIcon( PLUGIN_NAME::getIconPixmap( "select_file" ) );
+	m_openPluginButton->setFont( pointSize<8>( m_openPluginButton->font() ) );
+	m_openPluginButton->setStyleSheet(CSS_BUTTON);
+	connect( m_openPluginButton, SIGNAL( clicked() ), this, SLOT( openPlugin() ) );
+
+	/*
+	m_openPluginButton = new PixmapButton( this, "" );
+	m_openPluginButton->setCheckable( false );
+	m_openPluginButton->setCursor( Qt::PointingHandCursor );
+	m_openPluginButton->move( 216, 83 );
+	m_openPluginButton->setActiveGraphic  (PLUGIN_NAME::getIconPixmap("select_file_active",16,16));
+	m_openPluginButton->setInactiveGraphic(PLUGIN_NAME::getIconPixmap("select_file",16,16));
+	connect( m_openPluginButton, SIGNAL( clicked() ),
+		 this, SLOT( openPlugin() ) );
+	ToolTip::add( m_openPluginButton, tr( "Open other VST-plugin" ) );
+	m_openPluginButton->setWhatsThis
+		( tr( "Click here, if you want to open another VST-plugin. After "
+		      "clicking on this button, a file-open-dialog appears "
+		      "and you can select your file." ) );
+	*/
+
+	QPushButton* m_managePluginButton = new QPushButton
+		( tr( "Host controls" ), this );
+	m_managePluginButton->setGeometry( 128, 162, 118, 28 );
+	m_managePluginButton->setIcon( PLUGIN_NAME::getIconPixmap( "controls" ) );
+	m_managePluginButton->setFont( pointSize<8>( m_managePluginButton->font() ) );
+	m_managePluginButton->setStyleSheet(CSS_BUTTON);
+	connect( m_managePluginButton, SIGNAL( clicked() ), this, SLOT( toggleControls() ) );
+
+	/*
+	m_managePluginButton = new PixmapButton( this, "" );
+	m_managePluginButton->setCheckable( false );
+	m_managePluginButton->setCursor( Qt::PointingHandCursor );
+	m_managePluginButton->move( 216, 101 );
+	m_managePluginButton->setActiveGraphic  (PLUGIN_NAME::getIconPixmap("controls_active",16,16));
+	m_managePluginButton->setInactiveGraphic(PLUGIN_NAME::getIconPixmap("controls",16,16));
+	connect( m_managePluginButton, SIGNAL( clicked() ),
+		 this, SLOT( toggleControls() ) );
+	ToolTip::add( m_managePluginButton, tr( "Control VST-plugin from LMMS host" ) );
+	m_managePluginButton->setWhatsThis
+		( tr( "Click here, if you want to control VST-plugin from host." ) );
+	*/
 
 	setAcceptDrops( true );
 	m_instrument2 = _instrument;
@@ -843,10 +868,10 @@ void VestigeInstrumentView::paintEvent( QPaintEvent * )
 	f.setBold( true );
 	p.setFont( pointSize<10>( f ) );
 	p.setPen( QColor( 255, 255, 255 ) );
-	p.drawText( 10, 100, plugin_name );
+	p.drawText( 12, 100, plugin_name );
 
 	p.setPen( QColor( 50, 50, 50 ) );
-	p.drawText( 10, 211, tr( "Preset" ) );
+	p.drawText( 12, 215, tr( "Preset" ) );
 
 //	m_pluginMutex.lock();
 	if( m_vi->m_plugin != NULL )
@@ -854,10 +879,10 @@ void VestigeInstrumentView::paintEvent( QPaintEvent * )
 		p.setPen( QColor( 0, 0, 0 ) );
 		f.setBold( false );
 		p.setFont( pointSize<8>( f ) );
-		p.drawText( 10, 114, tr( "by " ) +
-					m_vi->m_plugin->vendorString() );
+		p.drawText( 12, 114, //tr( "by " ) +
+			    m_vi->m_plugin->vendorString() );
 		p.setPen( QColor( 255, 255, 255 ) );
-		p.drawText( 10, 225, m_vi->m_plugin->currentProgramName() );
+		p.drawText( 12, 229, m_vi->m_plugin->currentProgramName() );
 	}
 
 	/*

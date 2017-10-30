@@ -98,7 +98,7 @@ ControllerView::ControllerView( Controller * _model, QWidget * _parent ) :
 	QPushButton * ctls_btn = new QPushButton( tr( "Controls" ), this );
 	QFont f = ctls_btn->font();
 	ctls_btn->setFont( pointSize<8>( f ) );
-	ctls_btn->setGeometry( 136, 8, 66, 41 );
+	ctls_btn->setGeometry( 136, 4, 70, 35 );//41
 	connect( ctls_btn, SIGNAL( clicked() ),	this, SLOT( editControls() ) );
 
 	setWhatsThis( tr( "Controllers are able to automate the value of a knob, "
@@ -216,9 +216,9 @@ void ControllerView::paintEvent( QPaintEvent * )
 	p.setFont( f );
 
 	p.setPen( palette().shadow().color() );
-	p.drawText( 6, 55, model()->displayName() );
+	p.drawText( 7, 54, model()->displayName() );
 	p.setPen( palette().text().color() );
-	p.drawText( 5, 54, model()->displayName() );
+	p.drawText( 6, 53, model()->displayName() );
 
 	/*QFont*/ f = pointSizeF( font(), 9.5f );
 	//f.setBold( true );
@@ -226,9 +226,9 @@ void ControllerView::paintEvent( QPaintEvent * )
 
 	Controller * c = controller();//castModel<Controller>();
 	p.setPen( palette().shadow().color() );
-	p.drawText( 6, 33, c->name() );
+	p.drawText( 7, 29, c->name() );
 	p.setPen( palette().text().color() );
-	p.drawText( 5, 32, c->name() );
+	p.drawText( 6, 28, c->name() );
 }
 
 

@@ -100,7 +100,7 @@ EffectView::EffectView( Effect * _model, QWidget * _parent ) :
 		QFont f = ctls_btn->font();
 		ctls_btn->setFont( pointSize<8>( f ) );
 		//ctls_btn->setGeometry( 140, 14, 50, 20 );
-		ctls_btn->setGeometry( 136, 8, 66, 41 );
+		ctls_btn->setGeometry( 136, 4, 70, 35 );//41
 		connect( ctls_btn, SIGNAL( clicked() ), this, SLOT( editControls() ) );
 	}
 
@@ -280,9 +280,9 @@ void EffectView::paintEvent( QPaintEvent * )
 	p.setFont( f );
 
 	p.setPen( palette().shadow().color() );
-	p.drawText( 6, 55, model()->displayName() );
+	p.drawText( 7, 54, model()->displayName() );
 	p.setPen( palette().text().color() );
-	p.drawText( 5, 54, model()->displayName() );
+	p.drawText( 6, 53, model()->displayName() );
 }
 
 
