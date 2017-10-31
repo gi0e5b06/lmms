@@ -86,24 +86,24 @@ audioFileProcessor::audioFileProcessor( InstrumentTrack * _instrument_track ) :
 	m_nextPlayBackwards( false )
 {
 	connect( &m_reverseModel, SIGNAL( dataChanged() ),
-				this, SLOT( reverseModelChanged() ) );
+		 this, SLOT( reverseModelChanged() ) );
 	connect( &m_ampModel, SIGNAL( dataChanged() ),
-				this, SLOT( ampModelChanged() ) );
+		 this, SLOT( ampModelChanged() ) );
 	connect( &m_startPointModel, SIGNAL( dataChanged() ),
-				this, SLOT( startPointChanged() ) );
+		 this, SLOT( startPointChanged() ) );
 	connect( &m_endPointModel, SIGNAL( dataChanged() ),
-				this, SLOT( endPointChanged() ) );
+		 this, SLOT( endPointChanged() ) );
 	connect( &m_loopPointModel, SIGNAL( dataChanged() ),
-				this, SLOT( loopPointChanged() ) );
+		 this, SLOT( loopPointChanged() ) );
 	connect( &m_stutterModel, SIGNAL( dataChanged() ),
-	    		this, SLOT( stutterModelChanged() ) );
-	    		
-//interpolation modes
+		 this, SLOT( stutterModelChanged() ) );
+
+	//interpolation modes
 	m_interpolationModel.addItem( tr( "None" ) );
 	m_interpolationModel.addItem( tr( "Linear" ) );
 	m_interpolationModel.addItem( tr( "Sinc" ) );
 	m_interpolationModel.setValue( 1 );
-	
+
 	pointChanged();
 }
 
@@ -795,6 +795,7 @@ AudioFileProcessorWaveView::AudioFileProcessorWaveView( QWidget * _parent, int _
 
 	m_graph.fill( Qt::transparent );
 	update();
+	updateCursor();
 }
 
 
@@ -809,9 +810,26 @@ void AudioFileProcessorWaveView::isPlaying( f_cnt_t _current_frame )
 
 
 
+void AudioFileProcessorWaveView::updateCursor( QMouseEvent * _me )
+{
+	if( !m_isDragging &&
+	    (_me != NULL ) &&
+	    ( isCloseTo( _me->x(), m_startFrameX ) ||
+	      isCloseTo( _me->x(), m_endFrameX ) ||
+	      isCloseTo( _me->x(), m_loopFrameX ) ))
+		setCursor(Qt::SizeHorCursor);
+	else
+	if( m_isDragging && (m_draggingType == wave) )
+		setCursor(Qt::ClosedHandCursor);
+	else
+		setCursor(Qt::ArrowCursor);
+}
+
+
+
 void AudioFileProcessorWaveView::enterEvent( QEvent * _e )
 {
-	QApplication::setOverrideCursor( Qt::OpenHandCursor );
+	updateCursor();
 }
 
 
@@ -819,10 +837,7 @@ void AudioFileProcessorWaveView::enterEvent( QEvent * _e )
 
 void AudioFileProcessorWaveView::leaveEvent( QEvent * _e )
 {
-	while( QApplication::overrideCursor() )
-	{
-		QApplication::restoreOverrideCursor();
-	}
+	updateCursor();
 }
 
 
@@ -850,7 +865,7 @@ void AudioFileProcessorWaveView::mousePressEvent( QMouseEvent * _me )
 	else
 	{
 		m_draggingType = wave;
-		QApplication::setOverrideCursor( Qt::ClosedHandCursor );
+		updateCursor(_me);
 	}
 }
 
@@ -862,7 +877,7 @@ void AudioFileProcessorWaveView::mouseReleaseEvent( QMouseEvent * _me )
 	m_isDragging = false;
 	if( m_draggingType == wave )
 	{
-		QApplication::restoreOverrideCursor();
+		updateCursor(_me);
 	}
 }
 
@@ -873,22 +888,7 @@ void AudioFileProcessorWaveView::mouseMoveEvent( QMouseEvent * _me )
 {
 	if( ! m_isDragging )
 	{
-		const bool is_size_cursor =
-			QApplication::overrideCursor()->shape() == Qt::SizeHorCursor;
-
-		if( isCloseTo( _me->x(), m_startFrameX ) ||
-			isCloseTo( _me->x(), m_endFrameX ) ||
-			isCloseTo( _me->x(), m_loopFrameX ) )
-		{
-			if( ! is_size_cursor )
-			{
-				QApplication::setOverrideCursor( Qt::SizeHorCursor );
-			}
-		}
-		else if( is_size_cursor )
-		{
-			QApplication::restoreOverrideCursor();
-		}
+		updateCursor(_me);
 		return;
 	}
 
@@ -948,6 +948,7 @@ void AudioFileProcessorWaveView::mouseDoubleClickEvent ( QMouseEvent * _me )
 		default:
 			break;
 	};
+	updateCursor(_me);
 };
 
 

@@ -155,6 +155,7 @@ class AudioFileProcessorWaveView : public QWidget
 {
 	Q_OBJECT
 protected:
+	virtual void updateCursor( QMouseEvent * _me = NULL );
 	virtual void enterEvent( QEvent * _e );
 	virtual void leaveEvent( QEvent * _e );
 	virtual void mousePressEvent( QMouseEvent * _me );
