@@ -14,7 +14,7 @@
 #define MEMORY_MANAGER_CLASS MemoryManagerArray
 #endif
 
-class MemoryManagerArray
+class EXPORT MemoryManagerArray
 {
 public:
 	MemoryManagerArray(const int nbe,const size_t size,const char* ref="");
