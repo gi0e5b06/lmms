@@ -349,8 +349,9 @@ void AudioJack::transport()
 		song->togglePause();
 	}
 
-	if(song->isPlaying()&&(song->getFrames()!=pos.frame))
+	if(/*song->isPlaying()&&*/(song->getFrames()!=pos.frame))
 	{
+		qWarning("AudioJack: lmms=%d jack=%d",song->getFrames(),pos.frame);
 		song->getPlayPos(song->playMode()).setTicks(pos.frame/Engine::framesPerTick());
 		song->setToTimeByTicks(pos.frame/Engine::framesPerTick());
 		song->getPlayPos(song->playMode()).setCurrentFrame( 0 );
