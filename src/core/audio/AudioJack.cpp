@@ -26,6 +26,7 @@
 
 #ifdef LMMS_HAVE_JACK
 
+#include <QComboBox>
 #include <QLineEdit>
 #include <QLabel>
 #include <QMessageBox>
@@ -136,7 +137,7 @@ AudioJack* AudioJack::addMidiClient(MidiJack *midiClient)
 bool AudioJack::initJackClient()
 {
 	QString clientName = ConfigManager::inst()->value( "audiojack",
-								"clientname" );
+							   "clientname" );
 	if( clientName.isEmpty() )
 	{
 		clientName = "lmms";
@@ -332,29 +333,77 @@ void AudioJack::renamePort( AudioPort * _port )
 #endif
 }
 
-void AudioJack::transport()
+const QString AudioJack::transportMode()
+{
+	QString r=ConfigManager::inst()->value( "audiojack","transport" );
+	if(r.isEmpty()||
+	   ((r!="independent")&&(r!="slave")&&(r!="client")&&(r!="master")))
+	{
+		r="independent";
+		ConfigManager::inst()->setValue( "audiojack", "transport", r);
+	}
+	return r;
+}
+
+f_cnt_t AudioJack::transportPosition()
 {
 	jack_position_t pos;
+	/*jack_transport_state_t ts=*/jack_transport_query(m_client, &pos);
+	return pos.frame;
+}
+
+void AudioJack::transportStart()
+{
+	jack_transport_start(m_client);
+}
+
+void AudioJack::transportStop()
+{
+	jack_transport_stop(m_client);
+}
+
+void AudioJack::transportReposition(f_cnt_t _frame)
+{
+	jack_position_t pos;
+	pos.frame=_frame;
+
+	if(_frame<0)
+	{
+		Song* song=Engine::getSong();
+		MeterModel& mm=song->getTimeSigModel();
+
+		pos.valid          =JackPositionBBT;
+		pos.bar            =1+song->getTacts();
+		pos.beat           =1+song->getBeat();
+		pos.tick           =song->getBeatTicks();
+		pos.bar_start_tick =song->ticksPerTact()*song->getTacts();
+		pos.beats_per_bar  =mm.numeratorModel().value();
+		pos.beat_type      =mm.denominatorModel().value();
+		pos.ticks_per_beat =song->ticksPerTact()/pos.beats_per_bar;
+		pos.beats_per_minute=song->getTempo();
+	}
+
+	jack_transport_reposition(m_client, &pos);
+}
+
+
+void AudioJack::transportQuery()
+{
+	const QString& mode=transportMode();
+
+	if((mode != "slave") && (mode != "client")) return;
+
+	jack_position_t pos;
 	jack_transport_state_t ts=jack_transport_query(m_client, &pos);
-	Song* song=Engine::getSong();
+	ITransport* song=Engine::getSong();
 
-	if((ts==JackTransportRolling) && !song->isPlaying())
-	{
-		if(song->isPaused()) song->togglePause();
-		else song->playSong();
-	}
-	else
-	if((ts==JackTransportStopped) && song->isPlaying())
-	{
-		song->togglePause();
-	}
+	if(ts==JackTransportRolling) song->transportStart();
+	if(ts==JackTransportStopped) song->transportStop();
 
-	if(/*song->isPlaying()&&*/(song->getFrames()!=pos.frame))
+	if(song->transportPosition()!=pos.frame)
 	{
-		qWarning("AudioJack: lmms=%d jack=%d",song->getFrames(),pos.frame);
-		song->getPlayPos(song->playMode()).setTicks(pos.frame/Engine::framesPerTick());
-		song->setToTimeByTicks(pos.frame/Engine::framesPerTick());
-		song->getPlayPos(song->playMode()).setCurrentFrame( 0 );
+		qWarning("AudioJack: lmms=%d jack=%d",song->transportPosition(),pos.frame);
+		song->transportReposition(pos.frame);
 	}
 }
 
@@ -363,7 +412,7 @@ void AudioJack::transport()
 
 int AudioJack::processCallback( jack_nframes_t _nframes, void * _udata )
 {
-	transport();
+	transportQuery();
 
 	// do midi processing first so that midi input can
 	// add to the following sound processing
@@ -478,6 +527,11 @@ int  jack_set_sync_callback (jack_client_t *client,
 AudioJack::setupWidget::setupWidget( QWidget * _parent ) :
 	AudioDeviceSetupWidget( AudioJack::name(), _parent )
 {
+
+	QLabel * cn_lbl = new QLabel( tr( "CLIENT-NAME" ), this );
+	//cn_lbl->setFont( pointSize<6>( cn_lbl->font() ) );
+	cn_lbl->setGeometry( 10, 40, 160, 10 );
+
 	QString cn = ConfigManager::inst()->value( "audiojack", "clientname" );
 	if( cn.isEmpty() )
 	{
@@ -485,10 +539,6 @@ AudioJack::setupWidget::setupWidget( QWidget * _parent ) :
 	}
 	m_clientName = new QLineEdit( cn, this );
 	m_clientName->setGeometry( 10, 20, 160, 20 );
-
-	QLabel * cn_lbl = new QLabel( tr( "CLIENT-NAME" ), this );
-	cn_lbl->setFont( pointSize<7>( cn_lbl->font() ) );
-	cn_lbl->setGeometry( 10, 40, 160, 10 );
 
 	LcdSpinBoxModel * m = new LcdSpinBoxModel( /* this */ );
 	m->setRange( DEFAULT_CHANNELS, SURROUND_CHANNELS );
@@ -501,6 +551,20 @@ AudioJack::setupWidget::setupWidget( QWidget * _parent ) :
 	m_channels->setLabel( tr( "CHANNELS" ) );
 	m_channels->move( 180, 20 );
 
+	QLabel * mode_lbl = new QLabel( tr( "TRANSPORT" ), this );
+	//mode_lbl->setFont( pointSize<6>( mode_lbl->font() ) );
+	mode_lbl->setGeometry( 240, 40, 100, 10 );
+
+	QString mode = ConfigManager::inst()->value( "audiojack", "transport" );
+	if( mode.isEmpty() ) mode="none";
+	QStringList modes;
+	modes << "none" << "slave" << "client" << "master";
+	m_transports=new QComboBox( this );
+	m_transports->addItems(modes);
+	int i=m_transports->findText(mode);
+	if(i<0) i=0;
+	m_transports->setCurrentIndex(i);
+	m_transports->setGeometry( 240, 20, 100, 20 );
 }
 
 
@@ -517,9 +581,11 @@ AudioJack::setupWidget::~setupWidget()
 void AudioJack::setupWidget::saveSettings()
 {
 	ConfigManager::inst()->setValue( "audiojack", "clientname",
-							m_clientName->text() );
+					 m_clientName->text() );
 	ConfigManager::inst()->setValue( "audiojack", "channels",
-				QString::number( m_channels->value<int>() ) );
+					 QString::number( m_channels->value<int>() ) );
+	ConfigManager::inst()->setValue( "audiojack", "transport",
+					 m_transports->currentText() );
 }
 
 

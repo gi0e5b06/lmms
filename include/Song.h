@@ -32,6 +32,7 @@
 
 #include "MetaData.h"
 #include "TrackContainer.h"
+#include "ITransport.h"
 #include "Controller.h"
 #include "MeterModel.h"
 #include "VstSyncController.h"
@@ -48,7 +49,7 @@ const bpm_t MaxTempo = 999;
 const tick_t MaxSongLength = 9999 * DefaultTicksPerTact;
 
 
-class EXPORT Song : public TrackContainer
+class EXPORT Song : public TrackContainer, public virtual ITransport
 {
 	Q_OBJECT
 	mapPropertyFromModel( int,getTempo,setTempo,m_tempoModel );
@@ -293,6 +294,11 @@ public:
 
 	inline QString songStructure() { return songMetaData("Structure"); }
 	inline void setSongStructure(const QString& s) { setSongMetaData("Structure",s); }
+
+	virtual f_cnt_t transportPosition();
+	virtual void transportStart();
+	virtual void transportStop();
+	virtual void transportReposition(f_cnt_t _frame = -1);
 
 public slots:
 	void playSong();

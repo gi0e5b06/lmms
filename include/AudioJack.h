@@ -30,19 +30,22 @@
 #ifdef LMMS_HAVE_JACK
 #include <jack/jack.h>
 
-#include <QtCore/QVector>
-#include <QtCore/QList>
-#include <QtCore/QMap>
+#include <QList>
+#include <QMap>
+#include <QString>
+#include <QVector>
 
 #include "AudioDevice.h"
 #include "AudioDeviceSetupWidget.h"
+#include "ITransport.h"
 
+class QComboBox;
 class QLineEdit;
 class LcdSpinBox;
 class MidiJack;
 
 
-class AudioJack : public QObject, public AudioDevice
+class AudioJack : public QObject, public AudioDevice, virtual public ITransport
 {
 	Q_OBJECT
 public:
@@ -71,9 +74,9 @@ public:
 		virtual void saveSettings();
 
 	private:
-		QLineEdit * m_clientName;
-		LcdSpinBox * m_channels;
-
+		QLineEdit*  m_clientName;
+		LcdSpinBox* m_channels;
+		QComboBox*  m_transports;
 	} ;
 
 
@@ -92,7 +95,12 @@ private:
 	virtual void unregisterPort( AudioPort * _port );
 	virtual void renamePort( AudioPort * _port );
 
-	void transport();
+	const QString transportMode();
+	void transportQuery();
+	virtual f_cnt_t transportPosition();
+	virtual void transportStart();
+	virtual void transportStop();
+	virtual void transportReposition(f_cnt_t _frame = -1);
 
 	int processCallback( jack_nframes_t _nframes, void * _udata );
 

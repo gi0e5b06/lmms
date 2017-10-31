@@ -1632,3 +1632,38 @@ void Song::clearSongMetaData()
 		emit metaDataChanged();
 	}
 }
+
+f_cnt_t Song::transportPosition()
+{
+	return currentFrame();
+}
+
+void Song::transportStart()
+{
+	if(!isPlaying())
+	{
+		if(isPaused()) togglePause();
+		else playSong();
+	}
+}
+
+void Song::transportStop()
+{
+	if(isPlaying())
+	{
+		togglePause();
+	}
+}
+
+void Song::transportReposition(f_cnt_t _frame)
+{
+	if(_frame<0) return;
+
+	if(currentFrame()!=_frame)
+	{
+		tick_t t=_frame/Engine::framesPerTick();
+		getPlayPos(playMode()).setTicks(t);
+		setToTimeByTicks(t);
+		getPlayPos(playMode()).setCurrentFrame(_frame-t*Engine::framesPerTick());
+	}
+}
