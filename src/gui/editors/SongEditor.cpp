@@ -752,6 +752,13 @@ void SongEditorWindow::resizeEvent(QResizeEvent *event)
 void SongEditorWindow::play()
 {
 	emit playTriggered();
+
+	if( Engine::getSong()->isPlaying() )
+		Engine::transport()->transportStop();
+	else
+		Engine::transport()->transportStart();
+
+	/*
 	if( Engine::getSong()->playMode() != Song::Mode_PlaySong )
 	{
 		Engine::getSong()->playSong();
@@ -760,6 +767,7 @@ void SongEditorWindow::play()
 	{
 		Engine::getSong()->togglePause();
 	}
+	*/
 }
 
 
@@ -781,6 +789,7 @@ void SongEditorWindow::recordAccompany()
 
 void SongEditorWindow::stop()
 {
+	Engine::transport()->transportStop();
 	m_editor->m_song->stop();
 	gui->pianoRoll()->stopRecording();
 }

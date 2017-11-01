@@ -100,7 +100,7 @@ private:
 	virtual f_cnt_t transportPosition();
 	virtual void transportStart();
 	virtual void transportStop();
-	virtual void transportReposition(f_cnt_t _frame = -1);
+	virtual void transportLocate(f_cnt_t _frame);
 
 	int processCallback( jack_nframes_t _nframes, void * _udata );
 

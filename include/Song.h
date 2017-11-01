@@ -298,7 +298,7 @@ public:
 	virtual f_cnt_t transportPosition();
 	virtual void transportStart();
 	virtual void transportStop();
-	virtual void transportReposition(f_cnt_t _frame = -1);
+	virtual void transportLocate(f_cnt_t _frame);
 
 public slots:
 	void playSong();

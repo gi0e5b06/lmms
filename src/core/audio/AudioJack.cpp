@@ -192,6 +192,10 @@ bool AudioJack::initJackClient()
 		}
 	}
 
+	QString mode=transportMode();
+	if((mode=="client")||(mode=="master"))
+		Engine::s_transport=this;
+
 	return true;
 }
 
@@ -362,7 +366,15 @@ void AudioJack::transportStop()
 	jack_transport_stop(m_client);
 }
 
-void AudioJack::transportReposition(f_cnt_t _frame)
+void AudioJack::transportLocate(f_cnt_t _frame)
+{
+	qWarning("AudioJack::transportLocate %d",_frame);
+	jack_transport_locate(m_client, _frame);
+}
+
+
+/*
+void AudioJack::transportReposition()
 {
 	jack_position_t pos;
 	pos.frame=_frame;
@@ -383,19 +395,26 @@ void AudioJack::transportReposition(f_cnt_t _frame)
 		pos.beats_per_minute=song->getTempo();
 	}
 
+	qWarning("AudioJack::transportReposition %d",_frame);
 	jack_transport_reposition(m_client, &pos);
 }
+*/
 
 
 void AudioJack::transportQuery()
 {
 	const QString& mode=transportMode();
+	ITransport* song=Engine::getSong();
 
-	if((mode != "slave") && (mode != "client")) return;
+	if((mode=="client")||(mode=="master"))
+		Engine::s_transport=this;
+	else
+		Engine::s_transport=song;
+
+	if(mode=="independent") return;
 
 	jack_position_t pos;
 	jack_transport_state_t ts=jack_transport_query(m_client, &pos);
-	ITransport* song=Engine::getSong();
 
 	if(ts==JackTransportRolling) song->transportStart();
 	if(ts==JackTransportStopped) song->transportStop();
@@ -403,7 +422,7 @@ void AudioJack::transportQuery()
 	if(song->transportPosition()!=pos.frame)
 	{
 		qWarning("AudioJack: lmms=%d jack=%d",song->transportPosition(),pos.frame);
-		song->transportReposition(pos.frame);
+		song->transportLocate(pos.frame);
 	}
 }
 

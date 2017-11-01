@@ -34,7 +34,7 @@ class ITransport
 	virtual f_cnt_t transportPosition() =0;
 	virtual void transportStart() =0;
 	virtual void transportStop() =0;
-	virtual void transportReposition(f_cnt_t _frame = -1) =0;
+	virtual void transportLocate(f_cnt_t _frame) =0;
 };
 
 #endif

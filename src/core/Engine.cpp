@@ -37,8 +37,9 @@
 float LmmsCore::s_framesPerTick;
 Mixer* LmmsCore::s_mixer = NULL;
 FxMixer * LmmsCore::s_fxMixer = NULL;
-BBTrackContainer * LmmsCore::s_bbTrackContainer = NULL;
 Song * LmmsCore::s_song = NULL;
+ITransport * LmmsCore::s_transport = NULL;
+BBTrackContainer * LmmsCore::s_bbTrackContainer = NULL;
 ProjectJournal * LmmsCore::s_projectJournal = NULL;
 Ladspa2LMMS * LmmsCore::s_ladspaManager = NULL;
 DummyTrackContainer * LmmsCore::s_dummyTC = NULL;
@@ -58,6 +59,7 @@ void LmmsCore::init( bool renderOnly )
 	s_projectJournal = new ProjectJournal;
 	s_mixer = new Mixer( renderOnly );
 	s_song = new Song;
+	s_transport = s_song;
 	s_fxMixer = new FxMixer;
 	s_bbTrackContainer = new BBTrackContainer;
 

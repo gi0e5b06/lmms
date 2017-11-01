@@ -682,7 +682,7 @@ void Song::stop()
 	// do not stop/reset things again if we're stopped already
 	if( m_playMode == Mode_None )
 	{
-		return;
+		//return;
 	}
 
 	TimeLineWidget * tl = m_playPos[m_playMode].m_timeLine;
@@ -695,8 +695,9 @@ void Song::stop()
 		switch( tl->behaviourAtStop() )
 		{
 			case TimeLineWidget::BackToZero:
-				m_playPos[m_playMode].setTicks( 0 );
-				m_elapsedMilliSeconds = 0;
+				//m_playPos[m_playMode].setTicks( 0 );
+				//m_elapsedMilliSeconds = 0;
+				Engine::transport()->transportLocate(0);
 				if( gui && gui->songEditor() &&
 						( tl->autoScroll() == TimeLineWidget::AutoScrollEnabled ) )
 				{
@@ -707,11 +708,11 @@ void Song::stop()
 			case TimeLineWidget::BackToStart:
 				if( tl->savedPos() >= 0 )
 				{
-					m_playPos[m_playMode].setTicks( tl->savedPos().getTicks() );
-					setToTime(tl->savedPos());
-
+					//m_playPos[m_playMode].setTicks( tl->savedPos().getTicks() );
+					//setToTime(tl->savedPos());
+					Engine::transport()->transportLocate(tl->savedPos().frames(Engine::framesPerTick()));
 					if( gui && gui->songEditor() &&
-							( tl->autoScroll() == TimeLineWidget::AutoScrollEnabled ) )
+					    ( tl->autoScroll() == TimeLineWidget::AutoScrollEnabled ) )
 					{
 						gui->songEditor()->m_editor->updatePosition( MidiTime(tl->savedPos().getTicks() ) );
 					}
@@ -1655,15 +1656,14 @@ void Song::transportStop()
 	}
 }
 
-void Song::transportReposition(f_cnt_t _frame)
+void Song::transportLocate(f_cnt_t _frame)
 {
-	if(_frame<0) return;
-
 	if(currentFrame()!=_frame)
 	{
 		tick_t t=_frame/Engine::framesPerTick();
-		getPlayPos(playMode()).setTicks(t);
-		setToTimeByTicks(t);
-		getPlayPos(playMode()).setCurrentFrame(_frame-t*Engine::framesPerTick());
+		PlayPos& p=getPlayPos(playMode());
+		p.setTicks(t);
+		p.setCurrentFrame(_frame-t*Engine::framesPerTick());
+		setToTime(p);
 	}
 }
