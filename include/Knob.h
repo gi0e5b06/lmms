@@ -135,7 +135,8 @@ protected:
 	virtual void paintEvent( QPaintEvent * _me );
 	virtual void wheelEvent( QWheelEvent * _me );
 
-	virtual float getValue( const QPoint & _p );
+	//virtual float getValue( const QPoint & _p );
+	void polar(const QPoint& _p, float& value_, float& dist_);
 
 private slots:
 	virtual void enterValue();
@@ -152,7 +153,7 @@ private:
 						float _innerRadius = 1) const;
 
 	void drawKnob( QPainter * _p );
-	void setPosition( const QPoint & _p );
+	void setPosition( const QPoint & _p, bool _shift );
 	bool updateAngle();
 
 	int angleFromValue( float value, float minValue, float maxValue, float totalAngle ) const
@@ -160,13 +161,16 @@ private:
 		return static_cast<int>( ( value - 0.5 * ( minValue + maxValue ) ) / ( maxValue - minValue ) * m_totalAngle ) % 360;
 	}
 
+	/*
 	inline float pageSize() const
 	{
 		return ( model()->maxValue() - model()->minValue() ) / 100.0f;
 	}
-
+	*/
 
 	static TextFloat * s_textFloat;
+
+	float m_pressValue; // model value when left button pressed
 
 	QString m_label;
 
@@ -191,7 +195,7 @@ private:
 	QColor m_outerColor;
 	QColor m_lineColor; //!< unused yet
 	QColor m_arcColor; //!< unused yet
-	
+
 	QColor m_textColor;
 
 	knobTypes m_knobNum;

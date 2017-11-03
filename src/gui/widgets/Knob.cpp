@@ -1,6 +1,7 @@
 /*
  * Knob.cpp - powerful knob-widget
  *
+ * Copyright (c) 2017 gi0e5b06
  * Copyright (c) 2004-2014 Tobias Doerffel <tobydox/at/users.sourceforge.net>
  *
  * This file is part of LMMS - https://lmms.io
@@ -92,6 +93,7 @@ void Knob::initUi( const QString & _name )
 	}
 
 	setWindowTitle( _name );
+        setCursor(Qt::PointingHandCursor);
 
 	onKnobNumUpdated();
 	setTotalAngle( 270.0f );
@@ -499,20 +501,32 @@ void Knob::drawKnob( QPainter * _p )
 	_p->drawImage( 0, 0, m_cache );
 }
 
-float Knob::getValue( const QPoint & _p )
+void Knob::polar(const QPoint& _p, float& value_, float& dist_)
 {
-	float value;
-
 	// arcane mathemagicks for calculating knob movement
-	value = ( ( _p.y() + _p.y() * qMin( qAbs( _p.y() / 2.5f ), 6.0f ) ) ) / 12.0f;
+	//value = ( ( _p.y() + _p.y() * qMin( qAbs( _p.y() / 2.5f ), 6.0f ) ) ) / 12.0f;
+
+	dist_ = (_p.x()*_p.x()+_p.y()*_p.y()-100.f)/22500.f;
+	if(dist_<0.f) dist_=0.f;
+	if(dist_>1.f) dist_=1.f;
+
+	float angle=fmodf(atan2(_p.y()/dist_,_p.x()/dist_)+3.f*M_PI/2.,2.f*M_PI);
+	angle= qMax(0.80f,qMin(5.49f,angle));
+	value_= (angle-0.80f)/(5.49f-0.80f);
+
+	qWarning("x=%d y=%d d=%f a=%f v=%f",_p.x(),_p.y(),dist_,angle,value_);
+	if(value_<0.f) value_=0.f;
+	if(value_>1.f) value_=1.f;
 
 	// if shift pressed we want slower movement
+	/*
 	if( gui->mainWindow()->isShiftPressed() )
 	{
 		value /= 4.0f;
 		value = qBound( -4.0f, value, 4.0f );
 	}
-	return value * pageSize();
+	*/
+	//return value;// * pageSize();
 }
 
 
@@ -524,7 +538,7 @@ void Knob::contextMenuEvent( QContextMenuEvent * )
 	// button, the context-menu appears while mouse-cursor is still hidden
 	// and it isn't shown again until user does something which causes
 	// an QApplication::restoreOverrideCursor()-call...
-	mouseReleaseEvent( NULL );
+	//mouseReleaseEvent( NULL );
 
 	CaptionMenu contextMenu( model()->displayName(), this );
 	addDefaultActions( &contextMenu );
@@ -592,6 +606,9 @@ void Knob::mousePressEvent( QMouseEvent * _me )
 			thisModel->saveJournallingState( false );
 		}
 
+		if( model() ) m_pressValue=model()->value();
+		else          m_pressValue=0.f;
+
 		const QPoint & p = _me->pos();
 		m_origMousePos = p;
 		m_mouseOffset = QPoint(0, 0);
@@ -599,13 +616,15 @@ void Knob::mousePressEvent( QMouseEvent * _me )
 
 		emit sliderPressed();
 
-		QApplication::setOverrideCursor( Qt::BlankCursor );
+		setCursor(Qt::SizeAllCursor);
+		//QApplication::setOverrideCursor( Qt::BlankCursor );
 		s_textFloat->setText( displayValue() );
 		s_textFloat->moveGlobal( this,
 				QPoint( width() + 2, 0 ) );
 		s_textFloat->show();
 		m_buttonPressed = true;
 	}
+	/*
 	else if( _me->button() == Qt::LeftButton &&
 			gui->mainWindow()->isShiftPressed() == true )
 	{
@@ -613,6 +632,7 @@ void Knob::mousePressEvent( QMouseEvent * _me )
 					QString::number( model()->value() ),
 							QPixmap(), this );
 	}
+	*/
 	else
 	{
 		FloatModelView::mousePressEvent( _me );
@@ -627,9 +647,9 @@ void Knob::mouseMoveEvent( QMouseEvent * _me )
 	if( m_buttonPressed && _me->pos() != m_origMousePos )
 	{
 		m_mouseOffset = _me->pos() - m_origMousePos;
-		setPosition( m_mouseOffset );
+		setPosition( m_mouseOffset, _me->modifiers() & Qt::ShiftModifier);
 		emit sliderMoved( model()->value() );
-		QCursor::setPos( mapToGlobal( m_origMousePos ) );
+		//QCursor::setPos( mapToGlobal( m_origMousePos ) );
 	}
 	s_textFloat->setText( displayValue() );
 }
@@ -652,7 +672,9 @@ void Knob::mouseReleaseEvent( QMouseEvent* event )
 
 	emit sliderReleased();
 
-	QApplication::restoreOverrideCursor();
+        setCursor(Qt::PointingHandCursor);
+	//setCursor(Qt::ArrowCursor);
+	//QApplication::restoreOverrideCursor();
 
 	s_textFloat->hide();
 }
@@ -717,16 +739,24 @@ void Knob::wheelEvent( QWheelEvent * _we )
 
 
 
-void Knob::setPosition( const QPoint & _p )
+void Knob::setPosition( const QPoint & _p, bool _shift )
 {
-	const float value = getValue( _p ) + m_leftOver;
+	float value,dist;
+	polar(_p,value,dist);
+
 	const float step = model()->step<float>();
-	const float oldValue = model()->value();
+	//const float oldValue = model()->value();
 
-
+	if(_shift)
+        {
+		m_pressValue=model()->value();
+		dist/=4.f;
+		qWarning("shift pv=%f dist=%f",m_pressValue,dist);
+	}
 
 	if( model()->isScaleLogarithmic() ) // logarithmic code
 	{
+		/*
 		const float pos = model()->minValue() < 0
 			? oldValue / qMax( qAbs( model()->maxValue() ), qAbs( model()->minValue() ) )
 			: ( oldValue - model()->minValue() ) / model()->range();
@@ -742,10 +772,16 @@ void Knob::setPosition( const QPoint & _p )
 		{
 			m_leftOver = value;
 		}
+		*/
+		float roundedValue = qRound( (dist*(value*model()->range()+model()->minValue())
+					     +(1.f-dist)*m_pressValue) / step ) * step;
+		model()->setValue( roundedValue );
+		m_leftOver = 0.0f;
 	}
 
 	else // linear code
 	{
+		/*
 		if( qAbs( value ) >= step )
 		{
 			float roundedValue = qRound( ( oldValue - value ) / step ) * step;
@@ -756,6 +792,11 @@ void Knob::setPosition( const QPoint & _p )
 		{
 			m_leftOver = value;
 		}
+		*/
+		float roundedValue = qRound( (dist*(value*model()->range()+model()->minValue())
+					      +(1.f-dist)*m_pressValue) / step ) * step;
+		model()->setValue( roundedValue );
+		m_leftOver = 0.0f;
 	}
 }
 
