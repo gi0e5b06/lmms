@@ -262,6 +262,15 @@ void LcdWidget::updateSize()
 
 
 
+QRect LcdWidget::displayRect()
+{
+	int margin = 1;
+	return QRect(margin,margin,m_cellWidth*m_numDigits+2*m_marginWidth,m_cellHeight);
+}
+
+
+
+
 void LcdWidget::initUi(const QString& name , const QString& style)
 {
 	setEnabled( true );

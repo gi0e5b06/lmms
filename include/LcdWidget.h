@@ -74,12 +74,13 @@ protected:
 	virtual void paintEvent( QPaintEvent * pe );
 
 	virtual void updateSize();
-
+	virtual QRect displayRect();
+	/*
 	int cellHeight() const
 	{
 		return m_cellHeight;
 	}
-
+	*/
 
 private:
 

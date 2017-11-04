@@ -48,16 +48,20 @@ public:
 
 	/*! Sets an offset which is always added to value of model so we can
 	    display values in a user-friendly way if they internally start at 0 */
-	void setDisplayOffset( int offset )
+	/*
+	  void setDisplayOffset( int offset )
 	{
 		m_displayOffset = offset;
 	}
+	*/
 
 	/*! \brief Returns internal offset for displaying values */
-	int displayOffset() const
+	/*
+	  int displayOffset() const
 	{
 		return m_displayOffset;
 	}
+	*/
 
 
 public slots:
@@ -72,11 +76,24 @@ protected:
 	virtual void wheelEvent( QWheelEvent * _we );
 	virtual void mouseDoubleClickEvent( QMouseEvent * _me );
 
+	virtual void convert(const QPoint& _p, float& value_, float& dist_);
+	virtual void setPosition( const QPoint & _p, bool _shift );
+
+private slots:
+	virtual void enterValue();
+        //void displayHelp();
+	//void friendlyUpdate();
+	//void toggleScale();
+
 private:
-	bool m_mouseMoving;
-	QPoint m_origMousePos;
-	int m_displayOffset;
-	void enterValue();
+	float m_pressValue; // model value when left button pressed
+	QPoint m_pressPos;  // mouse pos when left button pressed
+	bool m_pressLeft;   // true when left button pressed
+
+	//bool m_mouseMoving;
+	//QPoint m_origMousePos;
+	//int m_displayOffset;
+	//void enterValue();
 
 signals:
 	void manualChange();
