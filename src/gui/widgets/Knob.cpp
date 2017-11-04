@@ -57,11 +57,11 @@ TextFloat * Knob::s_textFloat = NULL;
 #define DEFAULT_KNOB_INITIALIZER_LIST \
 	QWidget( _parent ), \
 	FloatModelView( new FloatModel( 0, 0, 0, 1, NULL, _name, true ), this ), \
+	m_pressLeft( false ), \
 	m_label( "" ), \
 	m_knobPixmap( NULL ), \
 	m_volumeKnob( false ), \
 	m_volumeRatio( 100.0, 0.0, 1000000.0 ), \
-	m_buttonPressed( false ), \
 	m_angle( -10 ), \
 	m_lineWidth( 0 ), \
 	m_textColor( 255, 255, 255 )
@@ -501,7 +501,7 @@ void Knob::drawKnob( QPainter * _p )
 	_p->drawImage( 0, 0, m_cache );
 }
 
-void Knob::polar(const QPoint& _p, float& value_, float& dist_)
+void Knob::convert(const QPoint& _p, float& value_, float& dist_)
 {
 	// arcane mathemagicks for calculating knob movement
 	//value = ( ( _p.y() + _p.y() * qMin( qAbs( _p.y() / 2.5f ), 6.0f ) ) ) / 12.0f;
@@ -527,6 +527,71 @@ void Knob::polar(const QPoint& _p, float& value_, float& dist_)
 	}
 	*/
 	//return value;// * pageSize();
+}
+
+
+
+
+void Knob::setPosition( const QPoint & _p, bool _shift )
+{
+	float value,dist;
+	convert(_p,value,dist);
+
+	const float step = model()->step<float>();
+	//const float oldValue = model()->value();
+
+	if(_shift)
+        {
+		m_pressValue=model()->value();
+		dist/=4.f;
+		qWarning("shift pv=%f dist=%f",m_pressValue,dist);
+	}
+
+	if( model()->isScaleLogarithmic() ) // logarithmic code
+	{
+		/*
+		const float pos = model()->minValue() < 0
+			? oldValue / qMax( qAbs( model()->maxValue() ), qAbs( model()->minValue() ) )
+			: ( oldValue - model()->minValue() ) / model()->range();
+		const float ratio = 0.1f + qAbs( pos ) * 15.f;
+		float newValue = value * ratio;
+		if( qAbs( newValue ) >= step )
+		{
+			float roundedValue = qRound( ( oldValue - value ) / step ) * step;
+			model()->setValue( roundedValue );
+			m_leftOver = 0.0f;
+		}
+		else
+		{
+			m_leftOver = value;
+		}
+		*/
+		float roundedValue = qRound( (dist*(value*model()->range()+model()->minValue())
+					     +(1.f-dist)*m_pressValue) / step ) * step;
+		model()->setValue( roundedValue );
+		//m_leftOver = 0.0f;
+	}
+
+	else // linear code
+	{
+		/*
+		if( qAbs( value ) >= step )
+		{
+			float roundedValue = qRound( ( oldValue - value ) / step ) * step;
+			model()->setValue( roundedValue );
+			m_leftOver = 0.0f;
+		}
+		else
+		{
+			m_leftOver = value;
+		}
+		*/
+		float roundedValue=qRound( (dist*value*model()->range()+
+					    (1.f-dist)*(m_pressValue-model()->minValue()))
+					   / step ) * step;
+		model()->setValue( model()->minValue()+qMax(0.f,qMin(roundedValue,model()->range())));
+		//m_leftOver = 0.0f;
+	}
 }
 
 
@@ -596,8 +661,8 @@ void Knob::dropEvent( QDropEvent * _de )
 void Knob::mousePressEvent( QMouseEvent * _me )
 {
 	if( _me->button() == Qt::LeftButton &&
-			! ( _me->modifiers() & Qt::ControlModifier ) &&
-			! ( _me->modifiers() & Qt::ShiftModifier ) )
+	    ! ( _me->modifiers() & Qt::ControlModifier ) &&
+	    ! ( _me->modifiers() & Qt::ShiftModifier ) )
 	{
 		AutomatableModel *thisModel = model();
 		if( thisModel )
@@ -609,10 +674,12 @@ void Knob::mousePressEvent( QMouseEvent * _me )
 		if( model() ) m_pressValue=model()->value();
 		else          m_pressValue=0.f;
 
-		const QPoint & p = _me->pos();
-		m_origMousePos = p;
-		m_mouseOffset = QPoint(0, 0);
-		m_leftOver = 0.0f;
+		m_pressPos=_me->pos();
+		m_pressLeft = true;
+		//const QPoint & p = _me->pos();
+		//m_origMousePos = p;
+		//m_mouseOffset = QPoint(0, 0);
+		//m_leftOver = 0.0f;
 
 		emit sliderPressed();
 
@@ -622,7 +689,6 @@ void Knob::mousePressEvent( QMouseEvent * _me )
 		s_textFloat->moveGlobal( this,
 				QPoint( width() + 2, 0 ) );
 		s_textFloat->show();
-		m_buttonPressed = true;
 	}
 	/*
 	else if( _me->button() == Qt::LeftButton &&
@@ -644,10 +710,12 @@ void Knob::mousePressEvent( QMouseEvent * _me )
 
 void Knob::mouseMoveEvent( QMouseEvent * _me )
 {
-	if( m_buttonPressed && _me->pos() != m_origMousePos )
+	if( m_pressLeft && _me->pos() != m_pressPos )//m_origMousePos )
 	{
-		m_mouseOffset = _me->pos() - m_origMousePos;
-		setPosition( m_mouseOffset, _me->modifiers() & Qt::ShiftModifier);
+		//m_mouseOffset = _me->pos() - m_origMousePos;
+		//setPosition( m_mouseOffset, _me->modifiers() & Qt::ShiftModifier);
+		setPosition( _me->pos()-m_pressPos,
+			     _me->modifiers() & Qt::ShiftModifier );
 		emit sliderMoved( model()->value() );
 		//QCursor::setPos( mapToGlobal( m_origMousePos ) );
 	}
@@ -668,7 +736,7 @@ void Knob::mouseReleaseEvent( QMouseEvent* event )
 		}
 	}
 
-	m_buttonPressed = false;
+	m_pressLeft = false;
 
 	emit sliderReleased();
 
@@ -734,70 +802,6 @@ void Knob::wheelEvent( QWheelEvent * _we )
 	s_textFloat->setVisibilityTimeOut( 1000 );
 
 	emit sliderMoved( model()->value() );
-}
-
-
-
-
-void Knob::setPosition( const QPoint & _p, bool _shift )
-{
-	float value,dist;
-	polar(_p,value,dist);
-
-	const float step = model()->step<float>();
-	//const float oldValue = model()->value();
-
-	if(_shift)
-        {
-		m_pressValue=model()->value();
-		dist/=4.f;
-		qWarning("shift pv=%f dist=%f",m_pressValue,dist);
-	}
-
-	if( model()->isScaleLogarithmic() ) // logarithmic code
-	{
-		/*
-		const float pos = model()->minValue() < 0
-			? oldValue / qMax( qAbs( model()->maxValue() ), qAbs( model()->minValue() ) )
-			: ( oldValue - model()->minValue() ) / model()->range();
-		const float ratio = 0.1f + qAbs( pos ) * 15.f;
-		float newValue = value * ratio;
-		if( qAbs( newValue ) >= step )
-		{
-			float roundedValue = qRound( ( oldValue - value ) / step ) * step;
-			model()->setValue( roundedValue );
-			m_leftOver = 0.0f;
-		}
-		else
-		{
-			m_leftOver = value;
-		}
-		*/
-		float roundedValue = qRound( (dist*(value*model()->range()+model()->minValue())
-					     +(1.f-dist)*m_pressValue) / step ) * step;
-		model()->setValue( roundedValue );
-		m_leftOver = 0.0f;
-	}
-
-	else // linear code
-	{
-		/*
-		if( qAbs( value ) >= step )
-		{
-			float roundedValue = qRound( ( oldValue - value ) / step ) * step;
-			model()->setValue( roundedValue );
-			m_leftOver = 0.0f;
-		}
-		else
-		{
-			m_leftOver = value;
-		}
-		*/
-		float roundedValue = qRound( (dist*(value*model()->range()+model()->minValue())
-					      +(1.f-dist)*m_pressValue) / step ) * step;
-		model()->setValue( roundedValue );
-		m_leftOver = 0.0f;
-	}
 }
 
 

@@ -209,7 +209,7 @@ public:
 
 	protected:
 		//float getValue( const QPoint & _p );
-		void polar(const QPoint& _p, float& value_, float& dist_);
+		void convert(const QPoint& _p, float& value_, float& dist_);
 
 
 	private:

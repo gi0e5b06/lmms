@@ -136,7 +136,8 @@ protected:
 	virtual void wheelEvent( QWheelEvent * _me );
 
 	//virtual float getValue( const QPoint & _p );
-	void polar(const QPoint& _p, float& value_, float& dist_);
+	virtual void convert(const QPoint& _p, float& value_, float& dist_);
+	virtual void setPosition( const QPoint & _p, bool _shift );
 
 private slots:
 	virtual void enterValue();
@@ -153,7 +154,6 @@ private:
 						float _innerRadius = 1) const;
 
 	void drawKnob( QPainter * _p );
-	void setPosition( const QPoint & _p, bool _shift );
 	bool updateAngle();
 
 	int angleFromValue( float value, float minValue, float maxValue, float totalAngle ) const
@@ -171,6 +171,8 @@ private:
 	static TextFloat * s_textFloat;
 
 	float m_pressValue; // model value when left button pressed
+	QPoint m_pressPos;  // mouse pos when left button pressed
+	bool m_pressLeft;   // true when left button pressed
 
 	QString m_label;
 
@@ -178,10 +180,10 @@ private:
 	BoolModel m_volumeKnob;
 	FloatModel m_volumeRatio;
 
-	QPoint m_mouseOffset;
-	QPoint m_origMousePos;
-	float m_leftOver;
-	bool m_buttonPressed;
+	//QPoint m_mouseOffset;
+	//QPoint m_origMousePos;
+	//float m_leftOver;
+	//bool m_buttonPressed;
 
 	float m_totalAngle;
 	int m_angle;

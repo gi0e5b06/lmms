@@ -1304,13 +1304,13 @@ void AudioFileProcessorWaveView::knob::slideTo( double _v, bool _check_bound )
 
 
 
-void AudioFileProcessorWaveView::knob::polar(const QPoint& _p, float& value_, float& dist_)
+void AudioFileProcessorWaveView::knob::convert(const QPoint& _p, float& value_, float& dist_)
 {
 	const double dec_fact = ! m_waveView ? 1 :
 		double( m_waveView->m_to - m_waveView->m_from )
 			/ m_waveView->m_sampleBuffer.frames();
 	//const float inc = ::Knob::getValue( _p ) * dec_fact;
-	::Knob::polar(_p,value_,dist_);
+	::Knob::convert(_p,value_,dist_);
 	value_*=dec_fact;
 }
 /*
