@@ -186,6 +186,7 @@ Mixer::~Mixer()
 	delete m_fifo;
 
 	delete m_audioDev;
+
 	delete m_midiClient;
 
 	for( int i = 0; i < 3; i++ )

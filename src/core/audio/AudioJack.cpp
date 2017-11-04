@@ -84,8 +84,11 @@ AudioJack::~AudioJack()
 	{
 		if( m_active )
 		{
+			stopProcessing();
 			jack_deactivate( m_client );
 		}
+
+		//qWarning("AudioJack::~AudioJack before close");
 		jack_client_close( m_client );
 	}
 
@@ -213,7 +216,7 @@ void AudioJack::startProcessing()
 
 	if( jack_activate( m_client ) )
 	{
-		printf( "cannot activate client\n" );
+		qCritical( "Jack: cannot activate client" );
 		return;
 	}
 
@@ -249,6 +252,8 @@ void AudioJack::startProcessing()
 	}
 
 	free( ports );
+
+	transportQuery();
 }
 
 
@@ -256,6 +261,7 @@ void AudioJack::startProcessing()
 
 void AudioJack::stopProcessing()
 {
+	m_active = false;
 }
 
 
@@ -431,7 +437,7 @@ void AudioJack::transportQuery()
 
 int AudioJack::processCallback( jack_nframes_t _nframes, void * _udata )
 {
-	transportQuery();
+	if( !m_active ) return 0;
 
 	// do midi processing first so that midi input can
 	// add to the following sound processing
@@ -508,6 +514,8 @@ int AudioJack::processCallback( jack_nframes_t _nframes, void * _udata )
 			memset( b, 0, sizeof( *b ) * ( _nframes - done ) );
 		}
 	}
+
+	transportQuery();
 
 	return 0;
 }

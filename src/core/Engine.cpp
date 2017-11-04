@@ -82,8 +82,11 @@ void LmmsCore::init( bool renderOnly )
 
 void LmmsCore::destroy()
 {
+	qWarning("Engine::destroy begin");
 	s_projectJournal->stopAllJournalling();
+	transport()->transportStop();
 	s_mixer->stopProcessing();
+	qWarning("Engine::destroy processing stopped");
 
 	PresetPreviewPlayHandle::cleanup();
 

@@ -83,6 +83,7 @@ FxChannel::~FxChannel()
 {
 	//delete[] m_buffer;
 	BufferManager::release(m_buffer);
+	//qWarning("FxChannel::~FxChannel idx=%d",m_channelIndex);
 }
 
 
