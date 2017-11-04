@@ -143,7 +143,7 @@ public:
 protected slots:
 	void updateMenu();
 	void openPlugin();
-	void managePlugin();
+	//void managePlugin();
 	void openPreset();
 	void savePreset();
 	void nextProgram();

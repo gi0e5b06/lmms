@@ -40,6 +40,7 @@ AutomatableSlider::AutomatableSlider( QWidget * _parent,
 	m_showStatus( false )
 {
 	setWindowTitle( _name );
+        setCursor(Qt::PointingHandCursor);
 
 	connect( this, SIGNAL( valueChanged( int ) ),
 					this, SLOT( changeValue( int ) ) );
@@ -54,6 +55,56 @@ AutomatableSlider::~AutomatableSlider()
 {
 }
 
+
+
+/*
+void AutomatableSlider::convert(const QPoint& _p, float& value_, float& dist_)
+{
+	//dist_ = (_p.x()*_p.x()+_p.y()*_p.y())/22500.f; //-100.f
+	dist_=1.+qAbs(_p.x()/125.f);
+	//if(dist_<0.f) dist_=0.f;
+	//if(dist_>1.f) dist_=1.f;
+
+	value_=-_p.y()/250.f;
+	if(value_<-1.f) value_=-1.f;
+	if(value_> 1.f) value_= 1.f;
+	value_=0.5f+value_/2.f;
+
+	qWarning("x=%d y=%d d=%f v=%f",_p.x(),_p.y(),dist_,value_);
+}
+*/
+
+
+/*
+void AutomatableSlider::setPosition( const QPoint & _p, bool _shift )
+{
+	float value,dist;
+	convert(_p,value,dist);
+
+	const float step = model()->step<float>();
+
+	if(_shift)
+        {
+		//m_pressValue=model()->value();
+		dist/=4.f;
+		qWarning("shift pv=%f dist=%f",m_pressValue,dist);
+	}
+
+
+	// absolute
+	//float roundedValue = model()->minValue()+
+	//	qRound( ( dist*value*model()->range()+
+	//		  (1.f-dist)*(m_pressValue-model()->minValue()) ) / step ) * step;
+
+	// relative
+	float roundedValue=qRound( ((m_pressValue-model()->minValue())+
+				    dist*(value-0.5)*qMin(50.f*step,model()->range()))
+				   / step ) * step;
+	//model()->setValue( roundedValue );
+	model()->setValue( model()->minValue()+qMax(0.f,qMin(roundedValue,model()->range())));
+	qWarning("       rv=%f dist=%f",roundedValue,dist);
+}
+*/
 
 
 
@@ -73,6 +124,7 @@ void AutomatableSlider::mousePressEvent( QMouseEvent * _me )
 	   ! ( _me->modifiers() & Qt::ControlModifier ) )
 	{
 		m_showStatus = true;
+		setCursor(Qt::SplitVCursor);
 		QSlider::mousePressEvent( _me );
 	}
 	else
@@ -87,6 +139,7 @@ void AutomatableSlider::mousePressEvent( QMouseEvent * _me )
 void AutomatableSlider::mouseReleaseEvent( QMouseEvent * _me )
 {
 	m_showStatus = false;
+        setCursor(Qt::PointingHandCursor);
 	QSlider::mouseReleaseEvent( _me );
 }
 
