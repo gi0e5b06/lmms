@@ -61,6 +61,7 @@
 #include "gui_templates.h"
 #include "MainWindow.h"
 #include "Mixer.h"
+#include "Pattern.h"
 #include "ProjectJournal.h"
 #include "SampleTrack.h"
 #include "Song.h"
@@ -1929,6 +1930,59 @@ void TrackOperationsWidget::cloneTrack()
 }
 
 
+/*! \brief Isolate this track
+ *  In the BBEditor, create a new pattern with only this track
+ */
+void TrackOperationsWidget::isolateTrack()
+{
+	/*const*/ TrackContainerView* tcview=m_trackView->trackContainerView();
+	/*const*/ Track* instr=m_trackView->getTrack(); // the inst. in BBEditor
+	/*const*/ BBTrackContainer* bbtc=Engine::getBBTrackContainer();
+	const int idxinstr=bbtc->tracks().indexOf(instr);
+	if( idxinstr<0 || idxinstr>bbtc->tracks().size()-1 )
+		qWarning("TrackOperationsWidget::isolateTrack#0 idxinstr=%d",idxinstr);
+
+	int idxbb=bbtc->currentBB();
+	if( idxbb<0 || idxbb>bbtc->numOfBBs()-1 )
+		qWarning("TrackOperationsWidget::isolateTrack#1 idxbb=%d",idxbb);
+
+	/*const*/ BBTrack *oldbbt=BBTrack::findBBTrack(idxbb);
+	if( !oldbbt )
+	{
+		qCritical("TrackOperationsWidget::isolateTrack oldbbt=null!!!");
+		return;
+	}
+
+	BBTrack* newbbt=dynamic_cast<BBTrack *>(oldbbt->clone());
+	newbbt->setName(instr->name()/*+" isolated"*/); // use the name of the instrument
+
+	idxbb=newbbt->index();
+	if( idxbb<0 || idxbb>bbtc->numOfBBs()-1 )
+		qWarning("TrackOperationsWidget::isolateTrack#2 idxbb=%d",idxbb);
+	bbtc->setCurrentBB(idxbb);
+
+	//qWarning("start cleaning");
+	for(Track* t : bbtc->tracks())
+	{
+		/*TrackView* tv=*/tcview->createTrackView(t);
+		if(t == instr) continue;
+
+		//qWarning("clear all notes in %s",qPrintable(t->name()));
+		TrackContentObject* o=t->getTCO(idxbb);
+		//for(TrackContentObject* o : t->getTCOs(idxbb))
+		{
+			Pattern* p=static_cast<Pattern*>(o);
+			if( !p )
+			{
+				qCritical("TrackOperationsWidget::isolateTrack p=null!!!");
+				continue;
+			}
+			p->clearNotes();
+		}
+	}
+}
+
+
 /*! \brief Clear this track - clears all TCOs from the track */
 void TrackOperationsWidget::clearTrack()
 {
@@ -1969,11 +2023,16 @@ void TrackOperationsWidget::updateMenu()
 	toMenu->addAction( embed::getIconPixmap( "cancel", 16, 16 ),
 						tr( "Remove this track" ),
 						this, SLOT( removeTrack() ) );
-	
+
 	if( ! m_trackView->trackContainerView()->fixedTCOs() )
 	{
 		toMenu->addAction( tr( "Clear this track" ), this, SLOT( clearTrack() ) );
 	}
+	else
+	{
+		toMenu->addAction( tr( "Isolate this track" ), this, SLOT( isolateTrack() ) );
+	}
+
 	if( InstrumentTrackView * trackView = dynamic_cast<InstrumentTrackView *>( m_trackView ) )
 	{
 		QMenu *fxMenu = trackView->createFxMenu( tr( "FX %1: %2" ), tr( "Assign to new FX Channel" ));

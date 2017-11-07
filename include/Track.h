@@ -480,6 +480,7 @@ protected:
 
 private slots:
 	void cloneTrack();
+	void isolateTrack();
 	void removeTrack();
 	void updateMenu();
 	void recordingOn();
