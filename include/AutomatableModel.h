@@ -180,6 +180,11 @@ public:
 	//! @brief Returns value applied with the inverse of this model's scale type
 	float inverseScaledValue( float value ) const;
 
+	//! @brief Convert value from min-max to 0-1
+	float normalizedValue( float value ) const;
+	//! @brief Convert value from 0-1 to min-max
+	float inverseNormalizedValue( float value ) const;
+
 	void setInitValue( const float value );
 
 	void setAutomatedValue( const float value );

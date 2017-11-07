@@ -228,7 +228,6 @@ void fileCheck( QString &file )
 
 
 
-
 int main( int argc, char * * argv )
 {
 #ifdef LMMS_DEBUG_FPE

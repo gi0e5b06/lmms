@@ -274,6 +274,24 @@ float AutomatableModel::inverseScaledValue( float value ) const
 
 
 
+float AutomatableModel::normalizedValue( float value ) const
+{
+	float r=value;
+	if( m_scaleType != Linear ) r = ::logToLinearScale( minValue<float>(), maxValue<float>(), r );
+	r = ( value - minValue<float>() ) / m_range;
+	return r;
+}
+
+
+float AutomatableModel::inverseNormalizedValue( float value ) const
+{
+	float r=value;
+	if( m_scaleType != Linear ) r = ::linearToLogScale( minValue<float>(), maxValue<float>(), r );
+	r = ( value * m_range ) + minValue<float>();
+	return r;
+}
+
+
 QString AutomatableModel::displayValue( const float val ) const
 {
 	switch( m_dataType )

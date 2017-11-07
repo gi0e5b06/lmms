@@ -537,18 +537,18 @@ void Knob::setPosition( const QPoint & _p, bool _shift )
 	float value,dist;
 	convert(_p,value,dist);
 
-	const float step = model()->step<float>();
+	//const float step = model()->step<float>();
 	//const float oldValue = model()->value();
 
 	if(_shift)
         {
-		m_pressValue=model()->value();
+		m_pressValue=model()->normalizedValue(model()->value());
 		dist/=4.f;
 		qWarning("shift pv=%f dist=%f",m_pressValue,dist);
 	}
 
-	if( model()->isScaleLogarithmic() ) // logarithmic code
-	{
+	//if( model()->isScaleLogarithmic() ) // logarithmic code
+	//{
 		/*
 		const float pos = model()->minValue() < 0
 			? oldValue / qMax( qAbs( model()->maxValue() ), qAbs( model()->minValue() ) )
@@ -566,14 +566,13 @@ void Knob::setPosition( const QPoint & _p, bool _shift )
 			m_leftOver = value;
 		}
 		*/
-		float roundedValue = qRound( (dist*(value*model()->range()+model()->minValue())
-					     +(1.f-dist)*m_pressValue) / step ) * step;
-		model()->setValue( roundedValue );
-		//m_leftOver = 0.0f;
-	}
 
-	else // linear code
-	{
+	model()->setValue( model()->inverseNormalizedValue( dist*value + (1.f-dist)*m_pressValue ));
+		//m_leftOver = 0.0f;
+		//	}
+
+//else // linear code
+//	{
 		/*
 		if( qAbs( value ) >= step )
 		{
@@ -586,12 +585,12 @@ void Knob::setPosition( const QPoint & _p, bool _shift )
 			m_leftOver = value;
 		}
 		*/
-		float roundedValue=qRound( (dist*value*model()->range()+
-					    (1.f-dist)*(m_pressValue-model()->minValue()))
-					   / step ) * step;
-		model()->setValue( model()->minValue()+qMax(0.f,qMin(roundedValue,model()->range())));
+		//float roundedValue=qRound( (dist*value*model()->range()+
+		//(1.f-dist)*(m_pressValue-model()->minValue()))
+		//        / step ) * step;
+		//model()->setValue( model()->minValue()+qMax(0.f,qMin(roundedValue,model()->range())));
 		//m_leftOver = 0.0f;
-	}
+		//}
 }
 
 
@@ -671,7 +670,7 @@ void Knob::mousePressEvent( QMouseEvent * _me )
 			thisModel->saveJournallingState( false );
 		}
 
-		if( model() ) m_pressValue=model()->value();
+		if( model() ) m_pressValue=model()->normalizedValue(model()->value());
 		else          m_pressValue=0.f;
 
 		m_pressPos=_me->pos();
