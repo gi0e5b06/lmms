@@ -1930,6 +1930,47 @@ void TrackOperationsWidget::cloneTrack()
 }
 
 
+/*! \brief Split the beat
+ *  In the SongEditor, create a new track for each instrument in the beat
+ */
+void TrackOperationsWidget::splitTrack()
+{
+	/*const*/ //TrackContainerView* tcview=m_trackView->trackContainerView();
+
+	/*const*/ Track* t=m_trackView->getTrack(); // the bbtrack in SongEditor
+	BBTrack* bbt=static_cast<BBTrack*>(t);
+	if( !bbt )
+	{
+		qCritical("TrackOperationsWidget::splitTrack bbt==null");
+		return;
+	}
+
+	const int newidxbb=bbt->index();
+	/*const*/ BBTrackContainer* bbtc=Engine::getBBTrackContainer();
+	const int oldidxbb=bbtc->currentBB();
+
+	qWarning("start splitting");
+	BBTrackContainerView* bbtcv=gui->getBBEditor()->trackContainerView();
+	for(TrackView* tv : bbtcv->trackViews())
+	{
+		qWarning("isolate track %s",qPrintable(tv->getTrack()->name()));
+		bbtc->setCurrentBB(newidxbb);
+
+		TrackOperationsWidget* tow=tv->getTrackOperationsWidget();
+
+		if( !tow )
+		{
+			qCritical("TrackOperationsWidget::split tow=null!!!");
+			continue;
+		}
+
+		tow->isolateTrack();
+	}
+
+	bbtc->setCurrentBB(oldidxbb);
+}
+
+
 /*! \brief Isolate this track
  *  In the BBEditor, create a new pattern with only this track
  */
@@ -1942,11 +1983,11 @@ void TrackOperationsWidget::isolateTrack()
 	if( idxinstr<0 || idxinstr>bbtc->tracks().size()-1 )
 		qWarning("TrackOperationsWidget::isolateTrack#0 idxinstr=%d",idxinstr);
 
-	int idxbb=bbtc->currentBB();
-	if( idxbb<0 || idxbb>bbtc->numOfBBs()-1 )
-		qWarning("TrackOperationsWidget::isolateTrack#1 idxbb=%d",idxbb);
+	int oldidxbb=bbtc->currentBB();
+	if( oldidxbb<0 || oldidxbb>bbtc->numOfBBs()-1 )
+		qWarning("TrackOperationsWidget::isolateTrack#1 oldidxbb=%d",oldidxbb);
 
-	/*const*/ BBTrack *oldbbt=BBTrack::findBBTrack(idxbb);
+	/*const*/ BBTrack *oldbbt=BBTrack::findBBTrack(oldidxbb);
 	if( !oldbbt )
 	{
 		qCritical("TrackOperationsWidget::isolateTrack oldbbt=null!!!");
@@ -1956,10 +1997,10 @@ void TrackOperationsWidget::isolateTrack()
 	BBTrack* newbbt=dynamic_cast<BBTrack *>(oldbbt->clone());
 	newbbt->setName(instr->name()/*+" isolated"*/); // use the name of the instrument
 
-	idxbb=newbbt->index();
-	if( idxbb<0 || idxbb>bbtc->numOfBBs()-1 )
-		qWarning("TrackOperationsWidget::isolateTrack#2 idxbb=%d",idxbb);
-	bbtc->setCurrentBB(idxbb);
+	int newidxbb=newbbt->index();
+	if( newidxbb<0 || newidxbb>bbtc->numOfBBs()-1 )
+		qWarning("TrackOperationsWidget::isolateTrack#2 newidxbb=%d",newidxbb);
+	bbtc->setCurrentBB(newidxbb);
 
 	//qWarning("start cleaning");
 	for(Track* t : bbtc->tracks())
@@ -1968,7 +2009,7 @@ void TrackOperationsWidget::isolateTrack()
 		if(t == instr) continue;
 
 		//qWarning("clear all notes in %s",qPrintable(t->name()));
-		TrackContentObject* o=t->getTCO(idxbb);
+		TrackContentObject* o=t->getTCO(newidxbb);
 		//for(TrackContentObject* o : t->getTCOs(idxbb))
 		{
 			Pattern* p=static_cast<Pattern*>(o);
@@ -1980,6 +2021,8 @@ void TrackOperationsWidget::isolateTrack()
 			p->clearNotes();
 		}
 	}
+
+	bbtc->setCurrentBB(oldidxbb);
 }
 
 
@@ -2020,25 +2063,34 @@ void TrackOperationsWidget::updateMenu()
 	toMenu->addAction( embed::getIconPixmap( "edit_copy", 16, 16 ),
 						tr( "Clone this track" ),
 						this, SLOT( cloneTrack() ) );
-	toMenu->addAction( embed::getIconPixmap( "cancel", 16, 16 ),
-						tr( "Remove this track" ),
-						this, SLOT( removeTrack() ) );
-
 	if( ! m_trackView->trackContainerView()->fixedTCOs() )
 	{
-		toMenu->addAction( tr( "Clear this track" ), this, SLOT( clearTrack() ) );
+		if( m_trackView->getTrack()->type() == Track::BBTrack )
+			toMenu->addAction( tr( "Split this track" ), this, SLOT( splitTrack() ) );
 	}
 	else
 	{
 		toMenu->addAction( tr( "Isolate this track" ), this, SLOT( isolateTrack() ) );
 	}
 
+	toMenu->addSeparator();
+
+	if( ! m_trackView->trackContainerView()->fixedTCOs() )
+	{
+		toMenu->addAction( tr( "Clear this track" ), this, SLOT( clearTrack() ) );
+	}
+
+	toMenu->addAction( embed::getIconPixmap( "cancel", 16, 16 ),
+						tr( "Remove this track" ),
+						this, SLOT( removeTrack() ) );
+
 	if( InstrumentTrackView * trackView = dynamic_cast<InstrumentTrackView *>( m_trackView ) )
 	{
+		toMenu->addSeparator();
+
 		QMenu *fxMenu = trackView->createFxMenu( tr( "FX %1: %2" ), tr( "Assign to new FX Channel" ));
 		toMenu->addMenu(fxMenu);
 
-		toMenu->addSeparator();
 		toMenu->addMenu( trackView->midiMenu() );
 	}
 	if( dynamic_cast<AutomationTrackView *>( m_trackView ) )
