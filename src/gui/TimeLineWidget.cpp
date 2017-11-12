@@ -46,6 +46,8 @@
 #define MiddleButton MidButton
 #endif
 
+const float TimeLineWidget::LOOP_SIZES[NB_LOOP_SIZES]
+={ 1.0f, 2.0f, 4.0f, 8.0f, 0.5f, 0.25f, 0.125f, 0.0625f, 0.03125f };
 
 QPixmap * TimeLineWidget::s_posMarkerPixmap = NULL;
 
@@ -219,6 +221,25 @@ void TimeLineWidget::addToolButtons( QToolBar * _tool_bar )
 			//connect(b, SIGNAL(toggled(bool)), this, SLOT(updateLoopButtons()));
 			//connect(b->model(), SIGNAL(dataChanged()), this, SLOT(updateLoopButtons()));
 		}
+
+		_tool_bar->addSeparator();
+		const QString labels[]={ "1","2","4","8","1/2","1/4","1/8","1/16","1/32" };
+		for(int i=0;i<NB_LOOP_SIZES;i++)
+		{
+			AutomatableToolButton* b=new AutomatableToolButton(_tool_bar);
+			QAction* a=new QAction(labels[i],b);
+			b->setDefaultAction(a);
+			a->setData( QVariant(LOOP_SIZES[i]) );
+			a->setCheckable(true);
+			a->setShortcut((char)(49+i));
+			m_resizeButtons[i]=b;
+			_tool_bar->addWidget(b);
+			//connect(b, SIGNAL(triggered(QAction*)), b, SLOT(update()));
+			//connect(g, SIGNAL(triggered(QAction*)), b, SLOT(update()));
+			connect(b, SIGNAL(triggered(QAction*)), this, SLOT(resizeLoop(QAction*)));
+			//connect(b, SIGNAL(toggled(bool)), this, SLOT(updateLoopButtons()));
+			//connect(b->model(), SIGNAL(dataChanged()), this, SLOT(updateLoopButtons()));
+		}
 	}
 }
 
@@ -232,7 +253,11 @@ void TimeLineWidget::setCurrentLoop(const int n)
 	m_currentLoop=n;
 	updatePosition(loopBegin());
 	update();
-	if(o!=n) updateLoopButtons();
+	if(o!=n)
+	{
+		updateLoopButtons();
+		updateResizeButtons();
+	}
 
 	/*
 	if(m_loopButton != NULL)
@@ -318,6 +343,39 @@ void TimeLineWidget::selectLoop(const MidiTime& t)
 }
 
 
+void TimeLineWidget::resizeLoop(QAction * _a)
+{
+	const float s=_a->data().toFloat();
+	qWarning("TimeLineWidget::resizeLoop(QAction*) s=%f",s);
+
+	tick_t t=m_pos.getTicks();
+	int n=findLoop(t);
+	if(n<0) n=m_currentLoop;
+
+	/*
+	if(s>=1.0)
+		m_loopPos[2*n+0]=qRound((float)(m_loopPos[2*n+0]/MidiTime::ticksPerTact()))
+			*MidiTime::ticksPerTact();
+	else
+	*/
+		m_loopPos[2*n+0]=qRound((float)(m_loopPos[2*n+0]/s/MidiTime::ticksPerTact()))
+			*s*MidiTime::ticksPerTact();
+
+	m_loopPos[2*n+1]=m_loopPos[2*n+0]+s*MidiTime::ticksPerTact();
+
+	while(t>m_loopPos[2*n+1])
+	{
+		m_loopPos[2*n+0]+=s*MidiTime::ticksPerTact();
+		m_loopPos[2*n+1]+=s*MidiTime::ticksPerTact();
+	}
+	while(t<m_loopPos[2*n+0])
+	{
+		m_loopPos[2*n+0]-=s*MidiTime::ticksPerTact();
+		m_loopPos[2*n+1]-=s*MidiTime::ticksPerTact();
+	}
+
+	updateResizeButtons();
+}
 
 
 void TimeLineWidget::updateLoopButtons()
@@ -336,6 +394,26 @@ void TimeLineWidget::updateLoopButtons()
 		//printf("B%d: %d | ",i,b);
 	}
 	//printf("\n");
+}
+
+
+
+
+void TimeLineWidget::updateResizeButtons()
+{
+	const MidiTime& tb=loopBegin();
+	const MidiTime& te=loopEnd();
+
+	float s=((float)(te-tb))/MidiTime::ticksPerTact();
+	qWarning("TimeLineWidget::resizeLoopButtons() s=%f",s);
+	int   imin=-1;
+	//float smin=0.0f;
+	for(int i=0;i<NB_LOOP_SIZES;i++)
+		if(qAbs(LOOP_SIZES[i]-s)<0.01f)
+			{ imin=i; /*smin=s;*/ }
+	for(int i=0;i<NB_LOOP_SIZES;i++)
+		if(m_resizeButtons[i]->isChecked()!=(i==imin))
+			{ m_resizeButtons[i]->setChecked(i==imin); }
 }
 
 

@@ -82,6 +82,7 @@ public:
 	} ;
 
 	static const int NB_LOOPS=8;
+	static const int NB_LOOP_SIZES=9;
 
 	TimeLineWidget( int xoff, int yoff, float ppt, Song::PlayPos & pos,
 				const MidiTime & begin, QWidget * parent );
@@ -236,14 +237,15 @@ public slots:
 	void updatePosition(const MidiTime & t);
 	void updatePosition();
 	void updateLoopButtons();
-	
+	void updateResizeButtons();
+
 	void toggleAutoScroll( int _n );
 	void toggleLoopPoints( int _n );
 	void toggleBehaviourAtStop( int _n );
 
 	void selectLoop(QAction * _a);
 	void selectLoop(const MidiTime & t);
-
+	void resizeLoop(QAction * _a);
 
 protected:
 	virtual void paintEvent( QPaintEvent * _pe );
@@ -294,6 +296,9 @@ private:
 	int m_currentLoop;
 	int m_nextLoop;
 	QToolButton* m_loopButtons[NB_LOOPS];
+
+	static const float LOOP_SIZES[NB_LOOP_SIZES];
+	QToolButton* m_resizeButtons[NB_LOOP_SIZES];
 
 	TextFloat * m_hint;
 	int m_initalXSelect;
