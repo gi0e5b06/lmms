@@ -50,12 +50,14 @@
 #include <QMouseEvent>
 #include <QPainter>
 
+#include "debug.h"
 #include "lmms_math.h"
 #include "embed.h"
 #include "CaptionMenu.h"
 #include "ConfigManager.h"
 #include "TextFloat.h"
 #include "MainWindow.h"
+#include "GuiApplication.h"
 
 
 TextFloat * Fader::s_textFloat = NULL;
@@ -343,7 +345,10 @@ inline int Fader::calculateDisplayPeak( float fPeak )
 
 void Fader::paintEvent( QPaintEvent * ev)
 {
-	QPainter painter(this);
+	PAINT_THREAD_CHECK
+	//DEBUG_THREAD_PRINT
+
+        QPainter painter(this);
 
 	// Draw the background
 	painter.drawPixmap( ev->rect(), *m_back, ev->rect() );

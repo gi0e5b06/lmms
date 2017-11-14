@@ -64,7 +64,7 @@ InstrumentMidiIOView::InstrumentMidiIOView( QWidget* parent ) :
 
 	m_fixedInputVelocitySpinBox = new LcdSpinBox( 3, m_midiInputGroupBox );
 	//m_fixedInputVelocitySpinBox->setDisplayOffset( 1 );
-	m_fixedInputVelocitySpinBox->addTextForValue( 0, "---" );
+	m_fixedInputVelocitySpinBox->addTextForValue( -1, "---" );//0
 	m_fixedInputVelocitySpinBox->setLabel( tr( "VELOCITY" ) );
 	m_fixedInputVelocitySpinBox->setEnabled( false );
 	midiInputLayout->addWidget( m_fixedInputVelocitySpinBox );
@@ -91,7 +91,7 @@ InstrumentMidiIOView::InstrumentMidiIOView( QWidget* parent ) :
 
 	m_fixedOutputVelocitySpinBox = new LcdSpinBox( 3, m_midiOutputGroupBox );
 	//m_fixedOutputVelocitySpinBox->setDisplayOffset( 1 );
-	m_fixedOutputVelocitySpinBox->addTextForValue( 0, "---" );
+	m_fixedOutputVelocitySpinBox->addTextForValue( -1, "---" );//0
 	m_fixedOutputVelocitySpinBox->setLabel( tr( "VELOCITY" ) );
 	m_fixedOutputVelocitySpinBox->setEnabled( false );
 	midiOutputLayout->addWidget( m_fixedOutputVelocitySpinBox );
@@ -103,7 +103,7 @@ InstrumentMidiIOView::InstrumentMidiIOView( QWidget* parent ) :
 
 	m_fixedOutputNoteSpinBox = new LcdSpinBox( 3, m_midiOutputGroupBox );
 	//m_fixedOutputNoteSpinBox->setDisplayOffset( 1 );
-	m_fixedOutputNoteSpinBox->addTextForValue( 0, "---" );
+	m_fixedOutputNoteSpinBox->addTextForValue(-1, "---" );//0
 	m_fixedOutputNoteSpinBox->setLabel( tr( "NOTE" ) );
 	m_fixedOutputNoteSpinBox->setEnabled( false );
 	midiOutputLayout->addWidget( m_fixedOutputNoteSpinBox );

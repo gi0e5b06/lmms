@@ -32,11 +32,21 @@
 // additional range-checkings) should be compiled
 
 #ifdef LMMS_DEBUG
-	#include <assert.h>
+#include <assert.h>
 #else
-	#define assert(x) ((void)(x))
+#ifndef assert
+#define assert(x) ((void)(x))
 #endif
-#include <cstdio>
+#endif
 
+#include <cstdio>
+#include <QObject>
+#include <QThread>
+
+#define DEBUG_THREAD_PRINT					     \
+	qWarning("THREAD: CT=%s P=%d %s#%d",			     \
+		 qPrintable(QThread::currentThread()->objectName()), \
+		 QThread::currentThread()->priority(),		     \
+		 __FILE__,__LINE__);
 
 #endif

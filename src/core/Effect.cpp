@@ -45,8 +45,8 @@ Effect::Effect( const Plugin::Descriptor * _desc,
 	m_running( false ),
 	m_bufferCount( 0 ),
 	m_enabledModel( true, this, tr( "Effect enabled" ) ),
-	m_wetDryModel( 1.0f, -1.0f, 1.0f, 0.01f, this, tr( "Wet/Dry mix" ) ),
-	m_gateModel( 0.0f, 0.0f, 1.0f, 0.01f, this, tr( "Gate" ) ),
+	m_wetDryModel  ( 1.0f, 0.0f, 1.0f, 0.01f, this, tr( "Wet/Dry mix" ) ), //min=-1
+	m_gateModel    ( 0.0f, 0.0f, 1.0f, 0.01f, this, tr( "Gate" ) ),
 	m_autoQuitModel( 1.0f, 1.0f, 8000.0f, 100.0f, 1.0f, this, tr( "Decay" ) ),
 	m_autoQuitDisabled( false )
 {
@@ -106,6 +106,17 @@ void Effect::loadSettings( const QDomElement & _this )
 			}
 		}
 		node = node.nextSibling();
+	}
+
+	/*
+	if(m_wetDryModel.minValue()==-1.f)
+	{
+		m_wetDryModel.setMinValue(0.f);
+	}
+	*/
+	if(m_wetDryModel.value()<0.f)
+	{
+		m_wetDryModel.setValue(-m_wetDryModel.value());
 	}
 }
 
@@ -168,7 +179,7 @@ PluginView * Effect::instantiateView( QWidget * _parent )
 	return new EffectView( this, _parent );
 }
 
-	
+
 
 
 void Effect::reinitSRC()

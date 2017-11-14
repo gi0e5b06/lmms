@@ -49,6 +49,10 @@
 #include "StringPairDrag.h"
 #include "TextFloat.h"
 
+#include "debug.h"
+
+
+
 TextFloat * Knob::s_textFloat = NULL;
 
 
@@ -767,8 +771,11 @@ void Knob::mouseDoubleClickEvent( QMouseEvent * )
 
 
 
-void Knob::paintEvent( QPaintEvent * _me )
+void Knob::paintEvent( QPaintEvent * _pe )
 {
+	PAINT_THREAD_CHECK
+	//DEBUG_THREAD_PRINT
+
 	QPainter p( this );
 
 	drawKnob( &p );

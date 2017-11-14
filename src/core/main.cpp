@@ -71,6 +71,7 @@
 #include "Song.h"
 #include "SetupDialog.h"
 #include "PerfLog.h"
+#include "debug.h"
 
 #ifdef LMMS_DEBUG_FPE
 #include <fenv.h> // For feenableexcept
@@ -1060,6 +1061,8 @@ int main( int argc, char * * argv )
 		}
 	}
 
+	QThread::currentThread()->setPriority( QThread::LowPriority );
+	DEBUG_THREAD_PRINT
 	const int ret = app->exec();
 	delete app;
 

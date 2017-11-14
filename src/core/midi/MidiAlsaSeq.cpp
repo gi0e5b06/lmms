@@ -22,6 +22,8 @@
  *
  */
 
+#include <QQueue>
+#include <QMultiHash>
 #include "MidiAlsaSeq.h"
 #include "ConfigManager.h"
 #include "Engine.h"
@@ -29,22 +31,34 @@
 #include "Song.h"
 #include "MidiPort.h"
 #include "Note.h"
-
+#include "debug.h"
 
 #ifdef LMMS_HAVE_ALSA
 
-const int EventPollTimeOut = 250;
+const int EventPollTimeOut = 5;//250
 
 
 // static helper functions
 static QString portName( snd_seq_client_info_t * _cinfo,
-								snd_seq_port_info_t * _pinfo )
+			 snd_seq_port_info_t * _pinfo )
 {
 	return QString( "%1:%2 %3:%4" ).
-					arg( snd_seq_port_info_get_client( _pinfo ) ).
-					arg( snd_seq_port_info_get_port( _pinfo ) ).
-					arg( snd_seq_client_info_get_name( _cinfo ) ).
-					arg( snd_seq_port_info_get_name( _pinfo ) );
+		arg( snd_seq_port_info_get_client( _pinfo ) ).
+		arg( snd_seq_port_info_get_port( _pinfo ) ).
+		arg( snd_seq_client_info_get_name( _cinfo ) ).
+		arg( snd_seq_port_info_get_name( _pinfo ) );
+
+	/*
+	QString cn(snd_seq_client_info_get_name( _cinfo ));
+	QString pn(snd_seq_port_info_get_name( _pinfo ));
+	if(pn.indexOf(cn)==0) pn=pn.remove(0,cn.size()).trimmed();
+	if(pn.indexOf("MIDI ")==0) pn=pn.remove(0,5).trimmed();
+	return QString("%1:%2 %3:%4").
+		arg(snd_seq_port_info_get_client( _pinfo ),3,10,'0').
+		arg(snd_seq_port_info_get_port( _pinfo )  ,2,10,'0').
+		arg( cn ).
+		arg( pn );
+	*/
 }
 
 static QString portName( snd_seq_t * _seq, const snd_seq_addr_t * _addr )
@@ -78,11 +92,11 @@ MidiAlsaSeq::MidiAlsaSeq() :
 {
 	int err;
 	if( ( err = snd_seq_open( &m_seqHandle,
-					probeDevice().toLatin1().constData(),
-						SND_SEQ_OPEN_DUPLEX, 0 ) ) < 0 )
+				  probeDevice().toLatin1().constData(),
+				  SND_SEQ_OPEN_DUPLEX, 0 ) ) < 0 )
 	{
-		fprintf( stderr, "cannot open sequencer: %s\n",
-							snd_strerror( err ) );
+		qCritical("MidiAlsaSeq: Cannot open sequencer: %s",
+			  snd_strerror( err ) );
 		return;
 	}
 	snd_seq_set_client_name( m_seqHandle, "LMMS" );
@@ -91,9 +105,9 @@ MidiAlsaSeq::MidiAlsaSeq() :
 	m_queueID = snd_seq_alloc_queue( m_seqHandle );
 	snd_seq_queue_tempo_t * tempo;
 	snd_seq_queue_tempo_malloc( &tempo );
-	snd_seq_queue_tempo_set_tempo( tempo, 6000000 /
+	snd_seq_queue_tempo_set_tempo( tempo, 60*1000000 /
 					Engine::getSong()->getTempo() );
-	snd_seq_queue_tempo_set_ppq( tempo, 16 );
+	snd_seq_queue_tempo_set_ppq( tempo, 160 );
 	snd_seq_set_queue_tempo( m_seqHandle, m_queueID, tempo );
 	snd_seq_queue_tempo_free( tempo );
 
@@ -116,7 +130,8 @@ MidiAlsaSeq::MidiAlsaSeq() :
 		perror( "MidiAlsaSeq: pipe" );
 	}
 
-	start( QThread::IdlePriority );
+	//start( QThread::IdlePriority );
+	start( QThread::HighestPriority );
 }
 
 
@@ -316,11 +331,11 @@ void MidiAlsaSeq::applyPortName( MidiPort * _port )
 		snd_seq_port_info_t * port_info;
 		snd_seq_port_info_malloc( &port_info );
 		snd_seq_get_port_info( m_seqHandle, m_portIDs[_port][i],
-							port_info );
+				       port_info );
 		snd_seq_port_info_set_name( port_info,
-				_port->displayName().toUtf8().constData() );
+					    _port->displayName().toUtf8().constData() );
 		snd_seq_set_port_info( m_seqHandle, m_portIDs[_port][i],
-							port_info );
+				       port_info );
 		snd_seq_port_info_free( port_info );
 	}
 
@@ -358,12 +373,22 @@ QString MidiAlsaSeq::sourcePortName( const MidiEvent & _event ) const
 	return MidiClient::sourcePortName( _event );
 }
 
+bool operator==(const snd_seq_addr_t& a,const snd_seq_addr_t& b)
+{
+	return (a.client==b.client)&&(a.port==b.port);
+}
 
+uint qHash(const snd_seq_addr_t& a)
+{
+	return (((uint)a.client)<<8)|((uint)a.port);
+}
 
+	// alsa port,midi port
+	static QMultiHash<snd_seq_addr_t,MidiPort*> m_mapReadSubs;
 
 void MidiAlsaSeq::subscribeReadablePort( MidiPort * _port,
-						const QString & _dest,
-						bool _subscribe )
+					 const QString & _dest,
+					 bool _subscribe )
 {
 	if( !m_portIDs.contains( _port ) || m_portIDs[_port][0] < 0 )
 	{
@@ -376,11 +401,34 @@ void MidiAlsaSeq::subscribeReadablePort( MidiPort * _port,
 	if( snd_seq_parse_address( m_seqHandle, &sender,
 			_dest.section( ' ', 0, 0 ).toLatin1().constData() ) )
 	{
-		fprintf( stderr, "error parsing sender-address!\n" );
-
+		qWarning("MidiAlsaSeq: Error parsing sender-address %s",qPrintable(_dest));
 		m_seqMutex.unlock();
 		return;
 	}
+
+	if(_subscribe&&m_mapReadSubs.contains(sender))
+	{
+		if(m_mapReadSubs.contains(sender,_port))
+			qWarning("MidiAlsaSeq: sender already subscribed %u:%u",sender.client,sender.port);
+		else
+			qWarning("MidiAlsaSeq: sender subscribing %u:%u",sender.client,sender.port);
+		m_mapReadSubs.insert(sender,_port);
+		m_seqMutex.unlock();
+		return;
+	}
+
+	if(!_subscribe&&m_mapReadSubs.contains(sender))
+	{
+		qWarning("MidiAlsaSeq: sender unsubscribing %u:%u",sender.client,sender.port);
+		m_mapReadSubs.remove(sender,_port);
+		if(m_mapReadSubs.contains(sender))
+		{
+			m_seqMutex.unlock();
+			return;
+		}
+	}
+
+
 	snd_seq_port_info_t * port_info;
 	snd_seq_port_info_malloc( &port_info );
 	snd_seq_get_port_info( m_seqHandle, m_portIDs[_port][0], port_info );
@@ -392,6 +440,7 @@ void MidiAlsaSeq::subscribeReadablePort( MidiPort * _port,
 	if( _subscribe )
 	{
 		snd_seq_subscribe_port( m_seqHandle, subs );
+		m_mapReadSubs.insert(sender,_port);
 	}
 	else
 	{
@@ -410,13 +459,10 @@ void MidiAlsaSeq::subscribeWritablePort( MidiPort * _port,
 						const QString & _dest,
 						bool _subscribe )
 {
+	// alsa port,midi port
+	static QMultiHash<snd_seq_addr_t,MidiPort*> m_mapWriteSubs;
+
 	if( !m_portIDs.contains( _port ) )
-	{
-		return;
-	}
-	const int pid = m_portIDs[_port][1] < 0 ? m_portIDs[_port][0] :
-							m_portIDs[_port][1];
-	if( pid < 0 )
 	{
 		return;
 	}
@@ -427,10 +473,42 @@ void MidiAlsaSeq::subscribeWritablePort( MidiPort * _port,
 	if( snd_seq_parse_address( m_seqHandle, &dest,
 			_dest.section( ' ', 0, 0 ).toLatin1().constData() ) )
 	{
-		fprintf( stderr, "error parsing dest-address!\n" );
+		qWarning("MidiAlsaSeq: Error parsing dest-address %s",qPrintable(_dest));
 		m_seqMutex.unlock();
 		return;
 	}
+
+	const int pid = (m_portIDs[_port][1] < 0)
+		? m_portIDs[_port][0]
+		: m_portIDs[_port][1];
+	if( pid < 0 )
+	{
+		m_seqMutex.unlock();
+		return;
+	}
+
+	if(_subscribe&&m_mapWriteSubs.contains(dest))
+	{
+		if(m_mapWriteSubs.contains(dest,_port))
+			qWarning("MidiAlsaSeq: dest already write subscribed");
+		else
+			qWarning("MidiAlsaSeq: dest subscribing %u:%u",dest.client,dest.port);
+		m_mapWriteSubs.insert(dest,_port);
+		m_seqMutex.unlock();
+		return;
+	}
+
+	if(!_subscribe&&m_mapWriteSubs.contains(dest))
+	{
+		qWarning("MidiAlsaSeq: dest unsubscribing %u:%u",dest.client,dest.port);
+		m_mapWriteSubs.remove(dest,_port);
+		if(m_mapWriteSubs.contains(dest))
+		{
+			m_seqMutex.unlock();
+			return;
+		}
+	}
+
 	snd_seq_port_info_t * port_info;
 	snd_seq_port_info_malloc( &port_info );
 	snd_seq_get_port_info( m_seqHandle, pid, port_info );
@@ -442,6 +520,7 @@ void MidiAlsaSeq::subscribeWritablePort( MidiPort * _port,
 	if( _subscribe )
 	{
 		snd_seq_subscribe_port( m_seqHandle, subs );
+		m_mapWriteSubs.insert(dest,_port);
 	}
 	else
 	{
@@ -457,6 +536,8 @@ void MidiAlsaSeq::subscribeWritablePort( MidiPort * _port,
 
 void MidiAlsaSeq::run()
 {
+	DEBUG_THREAD_PRINT
+
 	// watch the pipe and sequencer input events
 	int pollfd_count = snd_seq_poll_descriptors_count( m_seqHandle,
 								POLLIN );
@@ -467,12 +548,16 @@ void MidiAlsaSeq::run()
 	pollfd_set[0].events = POLLIN;
 	++pollfd_count;
 
+	static QQueue<snd_seq_event_t> s_evqueue;
+
 	while( m_quit == false )
 	{
 		int pollRet = poll( pollfd_set, pollfd_count, EventPollTimeOut );
+
 		if( pollRet == 0 )
 		{
-			continue;
+			//QThread::usleep( 10000 );
+			if(s_evqueue.size()==0) continue;
 		}
 		else if( pollRet == -1 )
 		{
@@ -490,112 +575,141 @@ void MidiAlsaSeq::run()
 			break;
 		}
 
-		m_seqMutex.lock();
-
-		// while event queue is not empty
-		while( snd_seq_event_input_pending( m_seqHandle, true ) > 0 )
+		if(pollRet>0)
 		{
-			snd_seq_event_t * ev;
-			if( snd_seq_event_input( m_seqHandle, &ev ) < 0 )
-			{
-				m_seqMutex.unlock();
+			DEBUG_THREAD_PRINT
+			m_seqMutex.lock();
 
-				qCritical( "error while fetching MIDI event from sequencer" );
-				break;
+			int nbe;
+			// while event queue is not empty
+			while( ((nbe=snd_seq_event_input_pending( m_seqHandle, false ))>0)||
+			       ((nbe=snd_seq_event_input_pending( m_seqHandle, true  ))>0 ))
+		        {
+				qWarning("MidiAlsaSeq: %d events pending",nbe);
+
+				snd_seq_event_t * ev;
+				int res;
+				if( (res=snd_seq_event_input( m_seqHandle, &ev )) < 0 )
+				{
+					//m_seqMutex.unlock();
+
+					if(res==-ENOSPC)
+						qCritical("MidiAlsaSeq: The input FIFO overran, and some events are lost.");
+					else
+						qCritical("MidiAlsaSeq: Error while fetching MIDI event from sequencer");
+					break;
+				}
+				//m_seqMutex.unlock();
+
+				/*
+				static snd_seq_event_t prev;
+				if((ev->type                 == prev.type) && //SND_SEQ_EVENT_CONTROLLER) &&
+				   (ev->data.control.channel == prev.data.control.channel) &&
+				   (ev->data.control.param   == prev.data.control.param) &&
+				   (ev->data.control.value   == prev.data.control.value) &&
+				   (ev->source.port          == prev.source.port) &&
+				   (ev->dest.port            == prev.dest.port) )
+				{
+				        //qWarning( "MidiAlsaSeq: skip input event %d %d %d %d",
+					//  ev->type,ev->data.control.channel,ev->data.control.param,
+					//  ev->data.control.value );
+					//m_seqMutex.lock();
+					//continue;
+				}
+				else
+				{
+				*/
+				//memcpy(&prev,ev,sizeof(snd_seq_event_t));
+				qWarning( "MidiAlsaSeq: enqueue input event %d", ev->type );
+				s_evqueue.enqueue(*ev);
+				//}
 			}
 			m_seqMutex.unlock();
+		}
 
-			snd_seq_addr_t * source = NULL;
-			MidiPort * dest = NULL;
-			for( int i = 0; i < m_portIDs.size(); ++i )
-			{
-				if( m_portIDs.values()[i][0] == ev->dest.port )
-				{
-					dest = m_portIDs.keys()[i];
-				}
-				if( ( m_portIDs.values()[i][1] != -1 &&
-						m_portIDs.values()[i][1] == ev->source.port ) ||
-							m_portIDs.values()[i][0] == ev->source.port )
-				{
-					source = &ev->source;
-				}
-			}
+		qWarning("MidiAlsaSeq: dequeue size=%d",s_evqueue.size());
+		if(s_evqueue.size()==0) continue;
 
-			if( dest == NULL )
-			{
-				qWarning("MidiAlsaSeq: dest=NULL");
-				continue;
-			}
+		snd_seq_event_t sev=s_evqueue.dequeue();
+		snd_seq_event_t* ev=&sev;
 
-			qWarning( "MidiAlsaSeq: input event %d", ev->type );
+		//static QMultiHash<snd_seq_addr_t,MidiPort*> m_mapReadSubs;
+
+		QList<MidiPort*> ports=m_mapReadSubs.values(ev->source);
+		for(int j=0;j<ports.size();j++)
+		{
+			MidiPort* dest=ports[j];
+			MidiTime  ticks=MidiTime(ev->time.tick);
+			snd_seq_addr_t* source=&ev->source;
+
+			qWarning("MidiAlsaSeq: dispatching event to %s",qPrintable(dest->name()));
 
 			switch( ev->type )
 			{
 			case SND_SEQ_EVENT_NOTEON:
-				dest->processInEvent( MidiEvent( MidiNoteOn,
-								 ev->data.note.channel,
-								 ev->data.note.note -
-								 KeysPerOctave,
-								 ev->data.note.velocity,
-								 source
-								 ),
-						      MidiTime( ev->time.tick ) );
+				dest->processInEvent(MidiEvent(MidiNoteOn,
+							       ev->data.note.channel,
+							       ev->data.note.note-KeysPerOctave,
+							       ev->data.note.velocity,
+							       source),
+						      ticks);
 				break;
 
 			case SND_SEQ_EVENT_NOTEOFF:
-				dest->processInEvent( MidiEvent( MidiNoteOff,
-								 ev->data.note.channel,
-								 ev->data.note.note -
-								 KeysPerOctave,
-								 ev->data.note.velocity,
-								 source
-								 ),
-						      MidiTime( ev->time.tick) );
+				dest->processInEvent(MidiEvent(MidiNoteOff,
+							       ev->data.note.channel,
+							       ev->data.note.note-KeysPerOctave,
+							       ev->data.note.velocity,
+							       source),
+						     ticks);
 				break;
 
 			case SND_SEQ_EVENT_KEYPRESS:
-				dest->processInEvent( MidiEvent(
-								MidiKeyPressure,
-								ev->data.note.channel,
-								ev->data.note.note -
-								KeysPerOctave,
-								ev->data.note.velocity,
-								source
-								), MidiTime() );
+				dest->processInEvent(MidiEvent(MidiKeyPressure,
+							       ev->data.note.channel,
+							       ev->data.note.note-KeysPerOctave,
+							       ev->data.note.velocity,
+							       source),
+						     ticks);
 				break;
 
 			case SND_SEQ_EVENT_CONTROLLER:
-				dest->processInEvent( MidiEvent(
-								MidiControlChange,
-								ev->data.control.channel,
-								ev->data.control.param,
-								ev->data.control.value, source ),
-						      MidiTime() );
+				qWarning("MidiAlsaSeq: controller value=%d time=%d",
+					 ev->data.control.value,
+					 ev->time.tick);
+				dest->processInEvent(MidiEvent(MidiControlChange,
+							       ev->data.control.channel,
+							       ev->data.control.param,
+							       ev->data.control.value,
+							       source),
+						     ticks);
 				break;
 
 			case SND_SEQ_EVENT_PGMCHANGE:
-				dest->processInEvent( MidiEvent(
-								MidiProgramChange,
-								ev->data.control.channel,
-								ev->data.control.param,
-								ev->data.control.value, source ),
-						      MidiTime() );
+				dest->processInEvent(MidiEvent(MidiProgramChange,
+							       ev->data.control.channel,
+							       ev->data.control.param,
+							       ev->data.control.value,
+							       source),
+						     ticks);
 				break;
 
 			case SND_SEQ_EVENT_CHANPRESS:
-				dest->processInEvent( MidiEvent(
-								MidiChannelPressure,
-								ev->data.control.channel,
-								ev->data.control.param,
-								ev->data.control.value, source ),
-						      MidiTime() );
+				dest->processInEvent(MidiEvent(MidiChannelPressure,
+							       ev->data.control.channel,
+							       ev->data.control.param,
+							       ev->data.control.value,
+							       source),
+						     ticks);
 				break;
 
 			case SND_SEQ_EVENT_PITCHBEND:
-				dest->processInEvent( MidiEvent( MidiPitchBend,
-								 ev->data.control.channel,
-								 ev->data.control.value + 8192, 0, source ),
-						      MidiTime() );
+				dest->processInEvent(MidiEvent(MidiPitchBend,
+							       ev->data.control.channel,
+							       ev->data.control.value+8192,
+							       0,
+							       source),
+						     ticks);
 				break;
 
 			case SND_SEQ_EVENT_SENSING:
@@ -613,14 +727,14 @@ void MidiAlsaSeq::run()
 			default:
 				qWarning( "ALSA-sequencer: unhandled input event %d", ev->type );
 				break;
-			}	// end switch
+			} // end switch
+		}
 
-			m_seqMutex.lock();
+			//m_seqMutex.lock();
 
-		}	// end while
+			//}	// end while
 
-		m_seqMutex.unlock();
-
+			//m_seqMutex.unlock();
 	}
 
 	delete[] pollfd_set;

@@ -374,6 +374,7 @@ void TimeLineWidget::resizeLoop(QAction * _a)
 		m_loopPos[2*n+1]-=s*MidiTime::ticksPerTact();
 	}
 
+	update();
 	updateResizeButtons();
 }
 

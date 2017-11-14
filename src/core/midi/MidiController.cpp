@@ -38,7 +38,8 @@ MidiController::MidiController( Model * _parent ) :
 	m_midiPort( tr( "unnamed_midi_controller" ),
 			Engine::mixer()->midiClient(), this, this, MidiPort::Input ),
 	m_lastValue( 0.0f ),
-	m_previousValue( 0.0f )
+	m_previousValue( 0.0f ),
+	m_switch( true )
 {
 	setSampleExact( true );
 	connect( &m_midiPort, SIGNAL( modeChanged() ),

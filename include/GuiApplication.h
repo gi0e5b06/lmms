@@ -25,7 +25,8 @@
 #ifndef GUIAPPLICATION_H
 #define GUIAPPLICATION_H
 
-#include <QtCore/QObject>
+#include <QObject>
+#include <QThread>
 
 #include "export.h"
 
@@ -80,5 +81,11 @@ private:
 };
 
 #define gui GuiApplication::instance()
+
+#define PAINT_THREAD_CHECK						\
+	if(QThread::currentThread()!=GuiApplication::instance()->thread()) \
+		qWarning("PAINT THREAD CHECK: CT=%s OT=%s %s#%d",	\
+			 qPrintable(QThread::currentThread()->objectName()), \
+			 qPrintable(thread()->objectName()),__FILE__,__LINE__);
 
 #endif // GUIAPPLICATION_H

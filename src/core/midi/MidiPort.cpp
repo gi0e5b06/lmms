@@ -33,10 +33,10 @@
 
 
 MidiPort::MidiPort( const QString& name,
-					MidiClient* client,
-					MidiEventProcessor* eventProcessor,
-					Model* parent,
-					Mode mode ) :
+		    MidiClient* client,
+		    MidiEventProcessor* eventProcessor,
+		    Model* parent,
+		    Mode mode ) :
 	Model( parent ),
 	m_readablePortsMenu( NULL ),
 	m_writablePortsMenu( NULL ),
@@ -152,8 +152,22 @@ void MidiPort::processInEvent( const MidiEvent& event, const MidiTime& time )
                         }
 		}
 		*/
-                //qWarning("MidiPort: in event");
-		m_midiEventProcessor->processInEvent( inEvent, time );
+		/*
+		static MidiEvent prev;
+		static tick_t    prtime;
+		if((prev == inEvent)&&(abs(prtime-time.getTicks())<16))
+		{
+			qWarning("MidiPort: skip duplicate in event");
+		}
+		else
+		*/
+		{
+			//qWarning("MidiPort: process in event t=%d pt=%d",time.getTicks(),prtime);
+			qWarning("MidiPort: process in event");
+			//prev=inEvent;
+			//prtime=time.getTicks();
+			m_midiEventProcessor->processInEvent( inEvent, time );
+		}
 	}
 }
 
@@ -194,6 +208,14 @@ void MidiPort::saveSettings( QDomDocument& doc, QDomElement& thisElement )
 	m_baseVelocityModel.saveSettings( doc, thisElement, "basevelocity" );
 	m_readableModel.saveSettings( doc, thisElement, "readable" );
 	m_writableModel.saveSettings( doc, thisElement, "writable" );
+
+	m_widgetTypeModel     .saveSettings( doc, thisElement, "ivtype"  );
+	m_minInputValueModel  .saveSettings( doc, thisElement, "ivmin"   );
+	m_maxInputValueModel  .saveSettings( doc, thisElement, "ivmax"   );
+	m_stepInputValueModel .saveSettings( doc, thisElement, "ivstep"  );
+	m_baseInputValueModel .saveSettings( doc, thisElement, "ivbase"  );
+	m_slopeInputValueModel.saveSettings( doc, thisElement, "ivslope" );
+	m_deltaInputValueModel.saveSettings( doc, thisElement, "ivdelta" );
 
 	if( isInputEnabled() )
 	{
@@ -247,6 +269,14 @@ void MidiPort::loadSettings( const QDomElement& thisElement )
 	m_baseVelocityModel.loadSettings( thisElement, "basevelocity" );
 	m_readableModel.loadSettings( thisElement, "readable" );
 	m_writableModel.loadSettings( thisElement, "writable" );
+
+	m_widgetTypeModel     .loadSettings( thisElement, "ivtype"  );
+	m_minInputValueModel  .loadSettings( thisElement, "ivmin"   );
+	m_maxInputValueModel  .loadSettings( thisElement, "ivmax"   );
+	m_stepInputValueModel .loadSettings( thisElement, "ivstep"  );
+	m_baseInputValueModel .loadSettings( thisElement, "ivbase"  );
+	m_slopeInputValueModel.loadSettings( thisElement, "ivslope" );
+	m_deltaInputValueModel.loadSettings( thisElement, "ivdelta" );
 
 	// restore connections
 

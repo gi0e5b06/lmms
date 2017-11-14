@@ -30,7 +30,7 @@
 #include "panning_constants.h"
 #include "volume.h"
 
-class MidiEvent
+class MidiEvent final
 {
 public:
 	MidiEvent( MidiEventTypes type = MidiActiveSensing,
@@ -190,6 +190,16 @@ public:
 		setParam( 0, pitchBend );
 	}
 
+	bool operator == (MidiEvent& b)
+	{
+		return
+		(m_type==b.m_type) &&
+		(m_metaEvent==b.m_metaEvent) &&
+		(m_channel==b.m_channel) &&
+		(m_data.m_sysExDataLen==b.m_data.m_sysExDataLen) &&
+		(m_sysExData==b.m_sysExData) &&
+		(m_sourcePort==b.m_sourcePort);
+	}
 
 private:
 	MidiEventTypes m_type;		// MIDI event type

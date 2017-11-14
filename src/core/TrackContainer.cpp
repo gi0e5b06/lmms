@@ -273,7 +273,13 @@ AutomatedValueMap TrackContainer::automatedValuesFromTracks(const TrackList &tra
 
 	AutomatedValueMap valueMap;
 
-	Q_ASSERT(std::is_sorted(tcos.begin(), tcos.end(), TrackContentObject::comparePosition));
+	//Q_ASSERT(std::is_sorted(tcos.begin(), tcos.end(), TrackContentObject::comparePosition));
+
+	if(!std::is_sorted(tcos.begin(), tcos.end(), TrackContentObject::comparePosition))
+	{
+		qCritical("Error: fail assert: is_sorted(tcos.begin(), tcos.end()) %s#%d",__FILE__,__LINE__);
+		return valueMap;
+	}
 
 	for(TrackContentObject* tco : tcos)
 	{
