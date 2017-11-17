@@ -91,6 +91,7 @@ set(LMMS_SRCS
 	core/audio/AudioSdl.cpp
 
 	core/midi/MidiAlsaRaw.cpp
+	core/midi/MidiAlsaGdx.cpp
 	core/midi/MidiAlsaSeq.cpp
 	core/midi/MidiClient.cpp
 	core/midi/MidiController.cpp

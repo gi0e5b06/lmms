@@ -59,6 +59,7 @@
 
 // platform-specific midi-interface-classes
 #include "MidiAlsaRaw.h"
+#include "MidiAlsaGdx.h"
 #include "MidiAlsaSeq.h"
 #include "MidiJack.h"
 #include "MidiOss.h"
@@ -869,6 +870,8 @@ SetupDialog::SetupDialog( ConfigTabs _tab_to_open ) :
 	//msw_layout->setAutoAdd( true );
 
 #ifdef LMMS_HAVE_ALSA
+	m_midiIfaceSetupWidgets[MidiAlsaGdx::name()] =
+					MidiSetupWidget::create<MidiAlsaGdx>( msw );
 	m_midiIfaceSetupWidgets[MidiAlsaSeq::name()] =
 					MidiSetupWidget::create<MidiAlsaSeq>( msw );
 	m_midiIfaceSetupWidgets[MidiAlsaRaw::name()] =
@@ -918,16 +921,17 @@ SetupDialog::SetupDialog( ConfigTabs _tab_to_open ) :
 		m_midiInterfaces->addItem( it.key() );
 	}
 
-	QString midiDevName = 
-		ConfigManager::inst()->value( "mixer", "mididev" );
+	QString midiDevName = ConfigManager::inst()->value( "mixer", "mididev" );
 	if( midiDevName.length() == 0 )
 	{
 		midiDevName = Engine::mixer()->midiClientName();
-		ConfigManager::inst()->setValue(
-					"mixer", "mididev", midiDevName );
+		ConfigManager::inst()->setValue( "mixer", "mididev", midiDevName );
 	}
-	m_midiInterfaces->setCurrentIndex( 
-		m_midiInterfaces->findText( midiDevName ) );
+
+	int mici=m_midiInterfaces->findText( midiDevName );
+	if(mici<0) midiDevName=MidiDummy::name();
+	mici=m_midiInterfaces->findText( midiDevName );
+	m_midiInterfaces->setCurrentIndex(mici);
 	m_midiIfaceSetupWidgets[midiDevName]->show();
 
 	connect( m_midiInterfaces, SIGNAL( activated( const QString & ) ),
@@ -1407,9 +1411,8 @@ void SetupDialog::openLADSPADir()
 void SetupDialog::openSTKDir()
 {
 #ifdef LMMS_HAVE_STK
-	QString new_dir = FileDialog::getExistingDirectory( this,
-				tr( "Choose STK rawwave directory" ),
-							m_stkDir );
+	QString new_dir = FileDialog::getExistingDirectory
+		( this, tr( "Choose STK rawwave directory" ), m_stkDir );
 	if( new_dir != QString::null )
 	{
 		m_stkLineEdit->setText( new_dir );
@@ -1423,10 +1426,10 @@ void SetupDialog::openSTKDir()
 void SetupDialog::openDefaultSoundfont()
 {
 #ifdef LMMS_HAVE_FLUIDSYNTH
-	QString new_file = FileDialog::getOpenFileName( this,
-				tr( "Choose default SoundFont" ), m_defaultSoundfont, 
-				"SoundFont2 Files (*.sf2)" );
-	
+	QString new_file = FileDialog::getOpenFileName
+		( this,	tr( "Choose default SoundFont" ), m_defaultSoundfont,
+		  "SoundFont2 Files (*.sf2)" );
+
 	if( new_file != QString::null )
 	{
 		m_sfLineEdit->setText( new_file );
@@ -1457,9 +1460,9 @@ void SetupDialog::openBackgroundArtwork()
 		m_artworkDir :
 		m_backgroundArtwork;
 	QString new_file = FileDialog::getOpenFileName( this,
-			tr( "Choose background artwork" ), dir, 
+			tr( "Choose background artwork" ), dir,
 			"Image Files (" + fileTypes + ")" );
-	
+
 	if( new_file != QString::null )
 	{
 		m_baLineEdit->setText( new_file );
@@ -1551,7 +1554,9 @@ void SetupDialog::audioInterfaceChanged( const QString & _iface )
 		it.value()->hide();
 	}
 
-	m_audioIfaceSetupWidgets[m_audioIfaceNames[_iface]]->show();
+	if(m_audioIfaceNames.contains(_iface)&&
+	   m_audioIfaceSetupWidgets.contains(m_audioIfaceNames[_iface]))
+		m_audioIfaceSetupWidgets[m_audioIfaceNames[_iface]]->show();
 }
 
 
@@ -1581,7 +1586,9 @@ void SetupDialog::midiInterfaceChanged( const QString & _iface )
 		it.value()->hide();
 	}
 
-	m_midiIfaceSetupWidgets[m_midiIfaceNames[_iface]]->show();
+	if(m_midiIfaceNames.contains(_iface)&&
+	   m_midiIfaceSetupWidgets.contains(m_midiIfaceNames[_iface]))
+		m_midiIfaceSetupWidgets[m_midiIfaceNames[_iface]]->show();
 }
 
 
