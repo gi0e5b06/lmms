@@ -50,6 +50,7 @@
 
 // platform-specific midi-interface-classes
 #include "MidiAlsaRaw.h"
+#include "MidiAlsaGdx.h"
 #include "MidiAlsaSeq.h"
 #include "MidiJack.h"
 #include "MidiOss.h"
@@ -963,6 +964,17 @@ MidiClient * Mixer::tryMidiClients()
 								"mididev" );
 
 #ifdef LMMS_HAVE_ALSA
+	if( client_name == MidiAlsaGdx::name() || client_name == "" )
+	{
+		MidiAlsaGdx * malsag = new MidiAlsaGdx();
+		if( malsag->isRunning() )
+		{
+			m_midiClientName = MidiAlsaGdx::name();
+			return malsag;
+		}
+		delete malsag;
+	}
+
 	if( client_name == MidiAlsaSeq::name() || client_name == "" )
 	{
 		MidiAlsaSeq * malsas = new MidiAlsaSeq;
@@ -1047,11 +1059,12 @@ MidiClient * Mixer::tryMidiClients()
         printf( "Returning midi apple\n" );
         return mapple;
     }
-    printf( "midi apple didn't work: client_name=%s\n", client_name.toUtf8().constData());
+
+    qWarning( "Error: MIDI apple didn't work: client_name=%s", qPrintable(client_name) );
 #endif
 
-	printf( "Couldn't create MIDI-client, neither with ALSA nor with "
-		"OSS. Will use dummy-MIDI-client.\n" );
+    qWarning( "Error: Couldn't create MIDI-client, neither with ALSA nor with "
+	      "OSS. Will use dummy-MIDI-client." );
 
 	m_midiClientName = MidiDummy::name();
 

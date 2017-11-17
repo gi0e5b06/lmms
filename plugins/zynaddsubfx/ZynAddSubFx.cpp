@@ -472,7 +472,7 @@ void ZynAddSubFxInstrument::initPlugin()
 
 void ZynAddSubFxInstrument::sendControlChange( MidiControllers midiCtl, float value )
 {
-	handleMidiEvent( MidiEvent( MidiControlChange, instrumentTrack()->midiPort()->realOutputChannel(), midiCtl, (int) value, this ) );
+	handleMidiEvent( MidiEvent( MidiControlChange, instrumentTrack()->midiPort()->outputChannel()-1, midiCtl, (int) value, this ) );
 }
 
 

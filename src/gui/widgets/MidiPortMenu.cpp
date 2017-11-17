@@ -32,9 +32,9 @@ MidiPortMenu::MidiPortMenu( MidiPort::Modes _mode ) :
 	ModelView( NULL, this ),
 	m_mode( _mode )
 {
-	setFont( pointSize<9>( font() ) );
+	//setFont( pointSize<9>( font() ) );
 	connect( this, SIGNAL( triggered( QAction * ) ),
-			this, SLOT( activatedPort( QAction * ) ) );
+		 this, SLOT( activatedPort( QAction * ) ) );
 }
 
 
@@ -73,7 +73,7 @@ void MidiPortMenu::activatedPort( QAction * _item )
 		castModel<MidiPort>()->subscribeReadablePort( _item->text(),
 							_item->isChecked() );
 	}
-	else if( m_mode == MidiPort::Output )
+	else //if( m_mode == MidiPort::Output )
 	{
 		castModel<MidiPort>()->subscribeWritablePort( _item->text(),
 							_item->isChecked() );
@@ -87,10 +87,9 @@ void MidiPortMenu::updateMenu()
 {
 	MidiPort * mp = castModel<MidiPort>();
 	const MidiPort::Map & map = ( m_mode == MidiPort::Input ) ?
-				mp->readablePorts() : mp->writablePorts();
+		mp->readablePorts() : mp->writablePorts();
 	clear();
-	for( MidiPort::Map::ConstIterator it = map.begin();
-							it != map.end(); ++it )
+	for( MidiPort::Map::ConstIterator it = map.begin(); it != map.end(); ++it )
 	{
 		QAction * a = addAction( it.key() );
 		a->setCheckable( true );

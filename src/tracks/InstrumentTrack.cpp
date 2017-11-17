@@ -400,10 +400,10 @@ void InstrumentTrack::processOutEvent( const MidiEvent& event, const MidiTime& t
 			{
 				if( m_runningMidiNotes[key] > 0 )
 				{
-					m_instrument->handleMidiEvent( MidiEvent( MidiNoteOff, midiPort()->realOutputChannel(), key, 0 ), time, offset );
+					m_instrument->handleMidiEvent( MidiEvent( MidiNoteOff, midiPort()->outputChannel()-1, key, 0 ), time, offset );
 				}
 				++m_runningMidiNotes[key];
-				m_instrument->handleMidiEvent( MidiEvent( MidiNoteOn, midiPort()->realOutputChannel(), key, event.velocity() ), time, offset );
+				m_instrument->handleMidiEvent( MidiEvent( MidiNoteOn, midiPort()->outputChannel()-1, key, event.velocity() ), time, offset );
 
 			}
 			m_midiNotesMutex.unlock();
@@ -416,7 +416,7 @@ void InstrumentTrack::processOutEvent( const MidiEvent& event, const MidiTime& t
 
 			if( key >= 0 && key < NumKeys && --m_runningMidiNotes[key] <= 0 )
 			{
-				m_instrument->handleMidiEvent( MidiEvent( MidiNoteOff, midiPort()->realOutputChannel(), key, 0 ), time, offset );
+				m_instrument->handleMidiEvent( MidiEvent( MidiNoteOff, midiPort()->outputChannel()-1, key, 0 ), time, offset );
 			}
 			m_midiNotesMutex.unlock();
 			break;
@@ -556,7 +556,7 @@ void InstrumentTrack::updatePitch()
 {
 	updateBaseNote();
 
-	processOutEvent( MidiEvent( MidiPitchBend, midiPort()->realOutputChannel(), midiPitch() ) );
+	processOutEvent( MidiEvent( MidiPitchBend, midiPort()->outputChannel()-1, midiPitch() ) );
 }
 
 
@@ -567,11 +567,12 @@ void InstrumentTrack::updatePitchRange()
 	const int r = m_pitchRangeModel.value();
 	m_pitchModel.setRange( MinPitchDefault * r, MaxPitchDefault * r );
 
-	processOutEvent( MidiEvent( MidiControlChange, midiPort()->realOutputChannel(),
-								MidiControllerRegisteredParameterNumberLSB, MidiPitchBendSensitivityRPN & 0x7F ) );
-	processOutEvent( MidiEvent( MidiControlChange, midiPort()->realOutputChannel(),
-								MidiControllerRegisteredParameterNumberMSB, ( MidiPitchBendSensitivityRPN >> 8 ) & 0x7F ) );
-	processOutEvent( MidiEvent( MidiControlChange, midiPort()->realOutputChannel(), MidiControllerDataEntry, midiPitchRange() ) );
+	processOutEvent( MidiEvent( MidiControlChange, midiPort()->outputChannel()-1,
+				    MidiControllerRegisteredParameterNumberLSB, MidiPitchBendSensitivityRPN & 0x7F ) );
+	processOutEvent( MidiEvent( MidiControlChange, midiPort()->outputChannel()-1,
+				    MidiControllerRegisteredParameterNumberMSB, ( MidiPitchBendSensitivityRPN >> 8 ) & 0x7F ) );
+	processOutEvent( MidiEvent( MidiControlChange, midiPort()->outputChannel()-1,
+				    MidiControllerDataEntry, midiPitchRange() ) );
 }
 
 

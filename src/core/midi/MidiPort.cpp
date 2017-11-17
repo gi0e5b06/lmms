@@ -177,7 +177,8 @@ void MidiPort::processInEvent( const MidiEvent& event, const MidiTime& time )
 void MidiPort::processOutEvent( const MidiEvent& event, const MidiTime& time )
 {
 	// mask event
-	if( isOutputEnabled() && realOutputChannel() == event.channel() )
+	if( isOutputEnabled() &&
+	    ( outputChannel() == 0 || outputChannel()-1 == event.channel() ) )
 	{
 		MidiEvent outEvent = event;
 		//Same: fixing velocity probably not at the right place
@@ -452,7 +453,7 @@ void MidiPort::updateWritablePorts()
 
 void MidiPort::updateOutputProgram()
 {
-	processOutEvent( MidiEvent( MidiProgramChange, realOutputChannel(), outputProgram()-1 ) );
+	processOutEvent( MidiEvent( MidiProgramChange, outputChannel()-1, outputProgram()-1 ) );
 }
 
 

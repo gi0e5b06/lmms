@@ -53,7 +53,8 @@ public:
 	AutoDetectMidiController( Model* parent ) :
 		MidiController( parent ),
 		m_detectedMidiChannel( 0 ),
-		m_detectedMidiController( 0 )
+		m_detectedMidiController( 0 ),
+		m_detectedMidiPort( "" )
 	{
 		updateName();
 	}
@@ -72,7 +73,7 @@ public:
 			m_detectedMidiChannel = event.channel() + 1;
 			m_detectedMidiController = event.controllerNumber() + 1;
 			m_detectedMidiPort = Engine::mixer()->midiClient()->sourcePortName( event );
-
+			qInfo("AutoDetectMidiController: detected '%s'",qPrintable(m_detectedMidiPort));
 			emit valueChanged();
 		}
 	}
@@ -100,7 +101,6 @@ public:
 		return c;
 	}
 
-
 	void useDetected()
 	{
 		m_midiPort.setInputChannel( m_detectedMidiChannel );
@@ -109,8 +109,10 @@ public:
 		const MidiPort::Map& map = m_midiPort.readablePorts();
 		for( MidiPort::Map::ConstIterator it = map.begin(); it != map.end(); ++it )
 		{
+			qInfo("AutoDetectMidiController: map '%s'",qPrintable(it.key()));
 			m_midiPort.subscribeReadablePort( it.key(),
-							  m_detectedMidiPort.isEmpty() || ( it.key() == m_detectedMidiPort ) );
+							  m_detectedMidiPort.isEmpty() ||
+							  ( it.key() == m_detectedMidiPort ) );
 		}
 	}
 
@@ -389,6 +391,8 @@ void ControllerConnectionDialog::selectController()
 	{
 		if( m_midiControllerSpinBox->model()->value() > 0 )
 		{
+			qWarning("ControllerConnectionDialog::selectController m_controller=%p",m_controller);
+
 			MidiController * mc;
 			mc = m_midiController->copyToMidiController( Engine::getSong() );
 

@@ -1949,11 +1949,11 @@ void TrackOperationsWidget::splitTrack()
 	/*const*/ BBTrackContainer* bbtc=Engine::getBBTrackContainer();
 	const int oldidxbb=bbtc->currentBB();
 
-	qWarning("start splitting");
+	//qInfo("TrackOperationsWidget::splitTrack start splitting");
 	BBTrackContainerView* bbtcv=gui->getBBEditor()->trackContainerView();
 	for(TrackView* tv : bbtcv->trackViews())
 	{
-		qWarning("isolate track %s",qPrintable(tv->getTrack()->name()));
+		//qInfo("TrackOperationsWidget::splitTrack isolate track %s",qPrintable(tv->getTrack()->name()));
 		bbtc->setCurrentBB(newidxbb);
 
 		TrackOperationsWidget* tow=tv->getTrackOperationsWidget();
@@ -2002,13 +2002,13 @@ void TrackOperationsWidget::isolateTrack()
 		qWarning("TrackOperationsWidget::isolateTrack#2 newidxbb=%d",newidxbb);
 	bbtc->setCurrentBB(newidxbb);
 
-	//qWarning("start cleaning");
+	//qInfo("TrackOperationsWidget::isolateTrack start cleaning");
 	for(Track* t : bbtc->tracks())
 	{
 		/*TrackView* tv=*/tcview->createTrackView(t);
 		if(t == instr) continue;
 
-		//qWarning("clear all notes in %s",qPrintable(t->name()));
+		//qInfo("TrackOperationsWidget::isolateTrack clear all notes in %s",qPrintable(t->name()));
 		TrackContentObject* o=t->getTCO(newidxbb);
 		//for(TrackContentObject* o : t->getTCOs(idxbb))
 		{
@@ -2339,8 +2339,8 @@ void Track::loadSettings( const QDomElement & element )
 {
 	if( element.attribute( "type" ).toInt() != type() )
 	{
-		qWarning( "Current track-type does not match track-type of "
-							"settings-node!\n" );
+		qWarning( "Track::loadSettings Current track-type does not"
+			  " match track-type of settings-node!" );
 	}
 
 	setName( element.hasAttribute( "name" ) ? element.attribute( "name" ) :

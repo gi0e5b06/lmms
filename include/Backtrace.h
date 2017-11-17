@@ -6,6 +6,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include "lmmsconfig.h"
 
 #ifdef LMMS_BUILD_LINUX
 #include <execinfo.h>

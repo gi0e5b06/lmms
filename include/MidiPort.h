@@ -42,7 +42,7 @@ class MidiPortMenu;
 
 
 // class for abstraction of MIDI-port
-class MidiPort : public Model, public SerializingObject
+class MidiPort final : public Model, public SerializingObject
 {
 	Q_OBJECT
 	mapPropertyFromModel(int,inputChannel,setInputChannel,m_inputChannelModel);
@@ -103,10 +103,12 @@ class MidiPort : public Model, public SerializingObject
 		return mode() == Output || mode() == Duplex;
 	}
 
+	/*
 	int realOutputChannel() const
 	{
 		return outputChannel() - 1;
 	}
+	*/
 
 	void processInEvent( const MidiEvent& event, const MidiTime& time = MidiTime() );
 	void processOutEvent( const MidiEvent& event, const MidiTime& time = MidiTime() );

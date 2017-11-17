@@ -76,7 +76,9 @@ NotePlayHandle::NotePlayHandle( InstrumentTrack* instrumentTrack,
 	//m_baseDetuning( NULL ),
 	m_baseDetune( 0.f ),
 	m_songGlobalParentOffset( 0 ),
-	m_midiChannel( midiEventChannel >= 0 ? midiEventChannel : instrumentTrack->midiPort()->realOutputChannel() ),
+	m_midiChannel( midiEventChannel >= 0
+		       ? midiEventChannel
+		       : instrumentTrack->midiPort()->outputChannel()-1 ),
 	m_origin( origin ),
 	m_frequencyNeedsUpdate( false )
 {
