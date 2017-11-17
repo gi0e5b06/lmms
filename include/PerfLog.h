@@ -25,10 +25,14 @@
 #ifndef PERFLOG_H
 #define PERFLOG_H
 
+#include "lmmsconfig.h"
+
 #ifdef LMMS_BUILD_LINUX
 #include <unistd.h>
 #include <sys/times.h>
 #endif
+
+#ifdef LMMS_DEBUG_PERFLOG
 
 #include <QHash>
 #include <QString>
@@ -50,18 +54,27 @@ class PerfLog
 		Entry();
 	};
 
+	class Cumul
+	{
+	public:
+		float ctreal;
+		float ctuser;
+		float ctsyst;
+
+		Cumul();
+	};
+
 	static QHash< QString,PerfLog::Entry> s_running;
+	static QHash< QString,PerfLog::Cumul> s_cumulated;
 };
-
-#ifndef LMMS_DEBUG_PERFLOG
-
-#define PL_BEGIN(w)
-#define PL_END(w)
-
-#else
 
 #define PL_BEGIN(w) PerfLog::begin(w);
 #define PL_END(w) PerfLog::end(w);
+
+#else
+
+#define PL_BEGIN(w)
+#define PL_END(w)
 
 #endif
 
