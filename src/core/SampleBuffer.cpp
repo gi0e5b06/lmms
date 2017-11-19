@@ -55,15 +55,17 @@
 #include "Engine.h"
 #include "GuiApplication.h"
 #include "Mixer.h"
-
 #include "FileDialog.h"
+
+#include "Backtrace.h"
 
 
 SampleBuffer::SampleBuffer( const QString & _audio_file,
-							bool _is_base64_data ) :
+				    bool _is_base64_data ) :
 	m_audioFile( ( _is_base64_data == true ) ? "" : _audio_file ),
 	m_origData( NULL ),
 	m_origFrames( 0 ),
+	m_mmapped( false ),
 	m_data( NULL ),
 	m_frames( 0 ),
 	m_startFrame( 0 ),
@@ -90,6 +92,7 @@ SampleBuffer::SampleBuffer( const sampleFrame * _data, const f_cnt_t _frames ) :
 	m_audioFile( "" ),
 	m_origData( NULL ),
 	m_origFrames( 0 ),
+	m_mmapped( false ),
 	m_data( NULL ),
 	m_frames( 0 ),
 	m_startFrame( 0 ),
@@ -118,6 +121,7 @@ SampleBuffer::SampleBuffer( const f_cnt_t _frames ) :
 	m_audioFile( "" ),
 	m_origData( NULL ),
 	m_origFrames( 0 ),
+	m_mmapped( false ),
 	m_data( NULL ),
 	m_frames( 0 ),
 	m_startFrame( 0 ),
@@ -129,13 +133,13 @@ SampleBuffer::SampleBuffer( const f_cnt_t _frames ) :
 	m_frequency( BaseFreq ),
 	m_sampleRate( Engine::mixer()->baseSampleRate() )
 {
-	if( _frames > 0 )
+        if( _frames > 0 )
 	{
 		m_origData = MM_ALLOC( sampleFrame, _frames );
 		memset( m_origData, 0, _frames * BYTES_PER_FRAME );
 		m_origFrames = _frames;
 	}
-	connect( Engine::mixer(), SIGNAL( sampleRateChanged() ), this, SLOT( sampleRateChanged() ) );
+        connect( Engine::mixer(), SIGNAL( sampleRateChanged() ), this, SLOT( sampleRateChanged() ) );
 	update();
 }
 
@@ -144,8 +148,10 @@ SampleBuffer::SampleBuffer( const f_cnt_t _frames ) :
 
 SampleBuffer::~SampleBuffer()
 {
-	MM_FREE( m_origData );
-	MM_FREE( m_data );
+	if(!m_mmapped) 	qWarning("~SampleBuffer: FREE origData %p",m_origData);
+	if(!m_mmapped) MM_FREE( m_origData );
+	if(m_origData!=m_data) qWarning("~SampleBuffer: FREE data %p",m_data);
+	if(m_origData!=m_data) MM_FREE( m_data );
 }
 
 
@@ -155,6 +161,19 @@ void SampleBuffer::sampleRateChanged()
 	update( true );
 }
 
+static QHash<QString,sampleFrame*> s_mmap_pointer;
+static QHash<QString,QFile*>       s_mmap_file;
+
+void SampleBuffer::clearMMap()
+{
+	s_mmap_pointer.clear();
+	foreach(QFile* f,s_mmap_file)
+	{
+		f->close();
+		delete f;
+	}
+	s_mmap_file.clear();
+}
 
 void SampleBuffer::update( bool _keep_settings )
 {
@@ -163,42 +182,118 @@ void SampleBuffer::update( bool _keep_settings )
 	{
 		Engine::mixer()->requestChangeInModel();
 		m_varLock.lockForWrite();
-		MM_FREE( m_data );
+		if(m_origData!=m_data)
+		{
+			qWarning("SampleBuffer::update FREE data %p",m_data);
+			//BACKTRACE
+			MM_FREE( m_data );
+			m_data=NULL;
+			m_frames=0;
+		}
 	}
 
 	// File size and sample length limits
 	const int fileSizeMax = 300; // MB
 	const int sampleLengthMax = 90; // Minutes
 
+	sample_rate_t samplerate = Engine::mixer()->baseSampleRate();
+	QString cchext=QString(".f2r%1").arg(samplerate);
+	QString filename;
+
 	bool fileLoadError = false;
 	if( m_audioFile.isEmpty() && m_origData != NULL && m_origFrames > 0 )
 	{
+		qWarning("SampleBuffer::update copy origData %p to data %p",m_origData,m_data);
+		if(m_data!=NULL) qWarning("SampleBuffer::update m_data is not null");
 		// TODO: reverse- and amplification-property is not covered
 		// by following code...
 		m_data = MM_ALLOC( sampleFrame, m_origFrames );
 		memcpy( m_data, m_origData, m_origFrames * BYTES_PER_FRAME );
+		m_frames = m_origFrames;
 		if( _keep_settings == false )
 		{
-			m_frames = m_origFrames;
 			m_loopStartFrame = m_startFrame = 0;
 			m_loopEndFrame = m_endFrame = m_frames;
 		}
 	}
+	else if( !m_audioFile.isEmpty() &&
+		 ( (filename=tryToMakeAbsolute(m_audioFile)).endsWith(cchext) ||
+		   QFile(filename+cchext).exists() ) )
+	{
+		if(QFile(filename+cchext).exists()) filename+=cchext;
+		qInfo("SampleBuffer: Trying cache %s",qPrintable(filename));
+
+		/*
+		if(n%BYTES_PER_FRAME!=0)
+		{
+			fileLoadError=true;
+			qWarning("SampleBuffer: Invalid size %lld for %s",n,qPrintable(filename));
+		}
+		else
+		*/
+		if(s_mmap_pointer.contains(filename)) //m_data = MM_ALLOC( sampleFrame, m_origFrames );
+		{
+			quint64 n =s_mmap_file.value(filename)->size();
+			m_origData=s_mmap_pointer.value(filename);
+			m_origFrames=n/BYTES_PER_FRAME;
+			m_mmapped=true;
+			m_data=m_origData;
+			m_frames=m_origFrames;
+			m_loopStartFrame = m_startFrame = 0;
+			m_loopEndFrame = m_endFrame = m_frames;
+			qInfo("SampleBuffer: File %s already mapped (%d frames,%lld bytes) %p",
+				 qPrintable(filename),m_frames,n,m_data);
+			//qInfo("--- testing #1 m_data[0][0]=%f",m_data[0][0]);
+		}
+		else
+		{
+			QFile*  file=new QFile(filename);
+			qint64  n=file->size();
+			file->open(QFile::ReadOnly);
+			if(!(m_origData=(sampleFrame*)(file->map(0,n))))
+			{
+				delete file;
+				m_origFrames=0;
+				m_mmapped=false;
+				fileLoadError=true;
+				qWarning("SampleBuffer: Fail to map %s",
+					 qPrintable(filename));
+
+			}
+			else
+			{
+				s_mmap_file   .insert(filename,file);
+				s_mmap_pointer.insert(filename,m_origData);
+				m_origFrames=n/BYTES_PER_FRAME;
+				m_mmapped=true;
+				m_data=m_origData;
+				m_frames=m_origFrames;
+				m_loopStartFrame = m_startFrame = 0;
+				m_loopEndFrame = m_endFrame = m_frames;
+				//file.unmap();
+				qInfo("SampleBuffer: File %s mapped successfully (%d frames,%lld bytes) %p",
+				      qPrintable(filename),m_frames,n,m_data);
+				//qInfo("--- testing #2 m_data[0][0]=%f",m_data[0][0]);
+			}
+		}
+	}
 	else if( !m_audioFile.isEmpty() )
 	{
-		QString file = tryToMakeAbsolute( m_audioFile );
+		if(m_origData) qWarning("SampleBuffer already has data...");
+
+		QString filename = tryToMakeAbsolute( m_audioFile );
 #ifdef LMMS_BUILD_WIN32
-		char * f = qstrdup( file.toLocal8Bit().constData() );
+		char * f = qstrdup( filename.toLocal8Bit().constData() );
 #else
-		char * f = qstrdup( file.toUtf8().constData() );
+		char * f = qstrdup( filename.toUtf8().constData() );
 #endif
 		int_sample_t * buf = NULL;
 		sample_t * fbuf = NULL;
 		ch_cnt_t channels = DEFAULT_CHANNELS;
-		sample_rate_t samplerate = Engine::mixer()->baseSampleRate();
+
 		m_frames = 0;
 
-		const QFileInfo fileInfo( file );
+		const QFileInfo fileInfo( filename );
 		if( fileInfo.size() > fileSizeMax * 1024 * 1024 )
 		{
 			fileLoadError = true;
@@ -233,20 +328,17 @@ void SampleBuffer::update( bool _keep_settings )
 #endif
 			if( m_frames == 0 )
 			{
-				m_frames = decodeSampleSF( f, fbuf, channels,
-									samplerate );
+				m_frames = decodeSampleSF( f, fbuf, channels, samplerate );
 			}
 #ifdef LMMS_HAVE_OGGVORBIS
 			if( m_frames == 0 )
 			{
-				m_frames = decodeSampleOGGVorbis( f, buf, channels,
-									samplerate );
+				m_frames = decodeSampleOGGVorbis( f, buf, channels, samplerate );
 			}
 #endif
 			if( m_frames == 0 )
 			{
-				m_frames = decodeSampleDS( f, buf, channels,
-									samplerate );
+				m_frames = decodeSampleDS( f, buf, channels, samplerate );
 			}
 
 			delete[] f;
@@ -256,8 +348,14 @@ void SampleBuffer::update( bool _keep_settings )
 		{
 			// sample couldn't be decoded, create buffer containing
 			// one sample-frame
+
+			if(m_origData) qFatal("SampleBuffer::update in error origData=%p",m_origData);
+			//not needed
+			m_origData=NULL;
+			m_origFrames=0;
+
 			m_data = MM_ALLOC( sampleFrame, 1 );
-			memset( m_data, 0, sizeof( *m_data ) );
+			memset( m_data, 0, 1*BYTES_PER_FRAME );
 			m_frames = 1;
 			m_loopStartFrame = m_startFrame = 0;
 			m_loopEndFrame = m_endFrame = 1;
@@ -265,15 +363,46 @@ void SampleBuffer::update( bool _keep_settings )
 		else // otherwise normalize sample rate
 		{
 			normalizeSampleRate( samplerate, _keep_settings );
+
+			if( !m_audioFile.isEmpty() && !filename.endsWith(cchext) )
+			{
+				QFile file(filename+cchext);//QDateTime QFileInfo::lastModified()
+				//QFileInfo info(file);
+				//if(info.exists()) file.unlink();
+				qWarning("SampleBuffer: Write cache %s",qPrintable(filename));
+				if(!file.open(QIODevice::WriteOnly))
+					qCritical("SampleBuffer: Can not write %s",qPrintable(filename));
+				else
+				{
+					if(m_origData) qFatal("SampleBuffer::update in write cache origData=%p",m_origData);
+					m_origData=NULL;
+					m_origFrames=0;
+
+					QDataStream out(&file);
+					quint64 n=m_frames*BYTES_PER_FRAME;
+					quint64 w=out.writeRawData((const char*)m_data,n);
+					if(n!=w)
+						qWarning("SampleBuffer: Fail to fully write %s",qPrintable(filename));
+					else
+						qInfo("SampleBuffer: Cache written %s",qPrintable(filename));
+					file.close();
+				}
+			}
 		}
 	}
 	else
 	{
 		// neither an audio-file nor a buffer to copy from, so create
 		// buffer containing one sample-frame
-		m_data = MM_ALLOC( sampleFrame, 1 );
-		memset( m_data, 0, sizeof( *m_data ) );
+
+			if(m_origData) qFatal("SampleBuffer::update in error origData=%p",m_origData);
+			//not needed
+			m_origData=NULL;
+			m_origFrames=0;
+
 		m_frames = 1;
+		m_data = MM_ALLOC( sampleFrame, m_frames );
+		memset( m_data, 0, m_frames*BYTES_PER_FRAME );
 		m_loopStartFrame = m_startFrame = 0;
 		m_loopEndFrame = m_endFrame = 1;
 	}
@@ -299,7 +428,7 @@ void SampleBuffer::update( bool _keep_settings )
 		}
 		else
 		{
-			fprintf( stderr, "%s\n", message.toUtf8().constData() );
+			qWarning("%s",qPrintable(message));
 			exit( EXIT_FAILURE );
 		}
 	}
@@ -308,10 +437,12 @@ void SampleBuffer::update( bool _keep_settings )
 
 void SampleBuffer::convertIntToFloat ( int_sample_t * & _ibuf, f_cnt_t _frames, int _channels)
 {
+	m_frames=_frames;
+	m_data  =MM_ALLOC( sampleFrame, m_frames );
+
 	// following code transforms int-samples into
 	// float-samples and does amplifying & reversing
 	const float fac = 1 / OUTPUT_SAMPLE_MULTIPLIER;
-	m_data = MM_ALLOC( sampleFrame, _frames );
 	const int ch = ( _channels > 1 ) ? 1 : 0;
 
 	// if reversing is on, we also reverse when
@@ -345,8 +476,9 @@ void SampleBuffer::convertIntToFloat ( int_sample_t * & _ibuf, f_cnt_t _frames, 
 void SampleBuffer::directFloatWrite ( sample_t * & _fbuf, f_cnt_t _frames, int _channels)
 
 {
+	m_frames=_frames;
+	m_data  =MM_ALLOC( sampleFrame, m_frames );
 
-	m_data = MM_ALLOC( sampleFrame, _frames );
 	const int ch = ( _channels > 1 ) ? 1 : 0;
 
 	// if reversing is on, we also reverse when
@@ -386,11 +518,11 @@ void SampleBuffer::normalizeSampleRate( const sample_rate_t _src_sr,
 	{
 		SampleBuffer * resampled = resample( _src_sr,
 					Engine::mixer()->baseSampleRate() );
-		MM_FREE( m_data );
+		if(m_origData!=m_data) qWarning("SampleBuffer::normalize FREE data %p",m_data);
+		if(m_origData!=m_data) MM_FREE( m_data );
 		m_frames = resampled->frames();
 		m_data = MM_ALLOC( sampleFrame, m_frames );
-		memcpy( m_data, resampled->data(), m_frames *
-							sizeof( sampleFrame ) );
+		memcpy( m_data, resampled->data(), m_frames*BYTES_PER_FRAME);
 		delete resampled;
 	}
 
@@ -623,10 +755,8 @@ f_cnt_t SampleBuffer::decodeSampleDS( const char * _f,
 
 
 
-bool SampleBuffer::play( sampleFrame * _ab, handleState * _state,
-					const fpp_t _frames,
-					const float _freq,
-					const LoopMode _loopmode )
+bool SampleBuffer::play( sampleFrame * _ab, handleState * _state, const fpp_t _frames,
+			 const float _freq, const LoopMode _loopmode )
 {
 	f_cnt_t startFrame = m_startFrame;
 	f_cnt_t endFrame = m_endFrame;
@@ -739,10 +869,25 @@ bool SampleBuffer::play( sampleFrame * _ab, handleState * _state,
 		// as is into pitched-copy-buffer
 
 		// Generate output
+		sampleFrame* pos=getSampleFragment( play_frame, _frames, _loopmode, &tmp, &is_backwards,
+						    loopStartFrame, loopEndFrame, endFrame );
+		qWarning("SampleBuffer::play m_data=%p m_origData=%p m_mmapped=%d\n"
+			 "                   m_frames=%d m_origFrames=%d\n"
+			 "                   _ab=%p pos=%p tmp=%p play_frame=%d\n"
+			 "                   frames=%d lstart=%d lend=%d send=%d",
+			 m_data,m_origData,m_mmapped,
+			 m_frames,m_origFrames,
+			 _ab,pos,tmp, play_frame,
+			 _frames, loopStartFrame, loopEndFrame, endFrame );
+		qWarning("pos[0][0]=%f",pos[0][0]);
+		qWarning("_ab[0][0]=%f",_ab[0][0]);
+		memcpy( _ab, pos, _frames * BYTES_PER_FRAME );
+			/*
 		memcpy( _ab,
-			getSampleFragment( play_frame, _frames, _loopmode, &tmp, &is_backwards,
-						loopStartFrame, loopEndFrame, endFrame ),
-						_frames * BYTES_PER_FRAME );
+		getSampleFragment( play_frame, _frames, _loopmode, &tmp, &is_backwards,
+		loopStartFrame, loopEndFrame, endFrame ),
+		_frames * BYTES_PER_FRAME );
+			*/
 		// Advance
 		switch( _loopmode )
 		{
@@ -773,9 +918,11 @@ bool SampleBuffer::play( sampleFrame * _ab, handleState * _state,
 		}
 	}
 
-	if( tmp != NULL ) 
+	if( tmp != NULL )
 	{
+		qWarning("SampleBuffer::play FREE tmp %p",tmp);
 		MM_FREE( tmp );
+		tmp=NULL;
 	}
 
 	_state->setBackwards( is_backwards );
@@ -811,7 +958,7 @@ sampleFrame * SampleBuffer::getSampleFragment( f_cnt_t _index,
 			return m_data + _index;
 		}
 	}
-	else
+	else // PingPong
 	{
 		if( ! *_backwards && _index + _frames < _loopend )
 		{
@@ -946,13 +1093,55 @@ f_cnt_t SampleBuffer::findClosestZero(f_cnt_t _index)
 }
 
 
-void SampleBuffer::visualize( QPainter & _p, const QRect & _dr,
-							const QRect & _clip, f_cnt_t _from_frame, f_cnt_t _to_frame )
+// fully rewriten. gi0e5b06
+void SampleBuffer::visualize( QPainter & _p, const QRect & _r,
+			      const QRect & _clip, f_cnt_t _from, f_cnt_t _to )
 {
 	if( m_frames == 0 ) return;
 
-	const bool focus_on_range = _to_frame <= m_frames
-					&& 0 <= _from_frame && _from_frame < _to_frame;
+	if(_from>_to) qSwap(_from,_to);
+
+	if((_from<0)||(_to>m_frames))
+		{ _from=0; _to=m_frames; }
+
+	//_p.setClipRect( _clip );
+	const int xr = _r.x();
+	const int yr = _r.y();
+	const int wr = _r.width();
+	const int hr = _r.height();
+
+	const int nbp=qMin<int>(wr,_to-_from);
+	if(nbp<=1) return;
+
+	QPointF* lc=new QPointF[nbp];
+	QPointF* rc=new QPointF[nbp];
+
+	for(int i=0;i<nbp;i++)
+	{
+		int frame=_from+(_to-_from)*i/nbp;
+		float xp =xr+(wr-1.f)/(nbp-1.f)*i;
+		float ypl=yr+(hr-1.f)/2.f*m_amplification*m_data[frame][0];
+		float ypr=yr+(hr-1.f)/2.f*m_amplification*m_data[frame][1];
+		lc[i]=QPointF(xp,ypl);
+		rc[i]=QPointF(xp,ypr);
+	}
+
+	//_p.setRenderHint(QPainter::Antialiasing);
+	_p.drawPolyline(lc,nbp);
+	_p.drawPolyline(rc,nbp);
+	delete[] lc;
+	delete[] rc;
+}
+
+/*
+void SampleBuffer::visualize( QPainter & _p, const QRect & _dr,
+			      const QRect & _clip, f_cnt_t _from_frame, f_cnt_t _to_frame )
+{
+	const bool focus_on_range =
+		_to_frame <= m_frames &&
+		0 <= _from_frame &&
+		_from_frame < _to_frame;
+
 	//_p.setClipRect( _clip );
 	const int w = _dr.width();
 	const int h = _dr.height();
@@ -982,6 +1171,7 @@ void SampleBuffer::visualize( QPainter & _p, const QRect & _dr,
 	delete[] l;
 	delete[] r;
 }
+*/
 
 
 
@@ -1015,14 +1205,14 @@ QString SampleBuffer::openAudioFile() const
 
 	// set filters
 	QStringList types;
-	types << tr( "All Audio-Files (*.wav *.ogg *.ds *.flac *.spx *.voc "
+	types << tr( "All Audio-Files (*.wav *.ogg *.ds *.flac *.mp3 *.spx *.voc "
 					"*.aif *.aiff *.au *.raw)" )
 		<< tr( "Wave-Files (*.wav)" )
 		<< tr( "OGG-Files (*.ogg)" )
 		<< tr( "DrumSynth-Files (*.ds)" )
 		<< tr( "FLAC-Files (*.flac)" )
 		<< tr( "SPEEX-Files (*.spx)" )
-		//<< tr( "MP3-Files (*.mp3)" )
+		<< tr( "MP3-Files (*.mp3)" )
 		//<< tr( "MIDI-Files (*.mid)" )
 		<< tr( "VOC-Files (*.voc)" )
 		<< tr( "AIFF-Files (*.aif *.aiff)" )
@@ -1372,17 +1562,29 @@ void SampleBuffer::loadFromBase64( const QString & _data )
 	ba_reader.close();
 
 	orig_data = ba_writer.buffer();
-	printf("%d\n", (int) orig_data.size() );
+	//qWarning("%d\n", (int) orig_data.size() );
 
-	m_origFrames = orig_data.size() / sizeof( sampleFrame );
-	MM_FREE( m_origData );
+	if(orig_data.size()/BYTES_PER_FRAME!=0)
+	{
+		qCritical("SampleBuffer::loadFromBase64#1 invalid data");
+		//BACKTRACE
+	}
+	m_origFrames = orig_data.size() / BYTES_PER_FRAME;
+	if(!m_mmapped) MM_FREE( m_origData );
+	else m_mmapped=false;
 	m_origData = MM_ALLOC( sampleFrame, m_origFrames );
 	memcpy( m_origData, orig_data.data(), orig_data.size() );
 
 #else /* LMMS_HAVE_FLAC_STREAM_DECODER_H */
 
-	m_origFrames = dsize / sizeof( sampleFrame );
-	MM_FREE( m_origData );
+	if(dsize/BYTES_PER_FRAME!=0)
+	{
+		qCritical("SampleBuffer::loadFromBase64#2 invalid data");
+		//BACKTRACE
+	}
+	m_origFrames = dsize / BYTES_PER_FRAME;
+	if(!m_mmapped) MM_FREE( m_origData );
+	else m_mmapped=false;
 	m_origData = MM_ALLOC( sampleFrame, m_origFrames );
 	memcpy( m_origData, dst, dsize );
 
@@ -1499,7 +1701,7 @@ SampleBuffer::handleState::handleState( bool _varying_pitch, int interpolation_m
 {
 	int error;
 	m_interpolationMode = interpolation_mode;
-	
+
 	if( ( m_resamplingData = src_new( interpolation_mode, DEFAULT_CHANNELS, &error ) ) == NULL )
 	{
 		qDebug( "Error: src_new() failed in sample_buffer.cpp!\n" );

@@ -97,11 +97,13 @@ SamplePlayHandle::~SamplePlayHandle()
 
 void SamplePlayHandle::play( sampleFrame * buffer )
 {
+	//qWarning("SamplePlayHandle::play buffer=%p",buffer);
+
 	const fpp_t fpp = Engine::mixer()->framesPerPeriod();
 	//play( 0, _try_parallelizing );
 	if( framesDone() >= totalFrames() )
 	{
-		memset( buffer, 0, sizeof( sampleFrame ) * fpp );
+		memset( buffer, 0, BYTES_PER_FRAME * fpp );
 		return;
 	}
 
@@ -111,21 +113,23 @@ void SamplePlayHandle::play( sampleFrame * buffer )
 	// apply offset for the first period
 	if( framesDone() == 0 )
 	{
-		memset( buffer, 0, sizeof( sampleFrame ) * offset() );
+		memset( buffer, 0, BYTES_PER_FRAME * offset() );
 		workingBuffer += offset();
 		frames -= offset();
 	}
 
-	if( !( m_track && m_track->isMuted() )
-				&& !( m_bbTrack && m_bbTrack->isMuted() ) )
+	if( !( m_track && m_track->isMuted() ) &&
+	    !( m_bbTrack && m_bbTrack->isMuted() ) )
 	{
 /*		stereoVolumeVector v =
 			{ { m_volumeModel->value() / DefaultVolume,
 				m_volumeModel->value() / DefaultVolume } };*/
+		//qWarning("SamplePlayHandle::play workingBuffer=%p",workingBuffer);
 		if( ! m_sampleBuffer->play( workingBuffer, &m_state, frames,
 								BaseFreq ) )
 		{
-			memset( workingBuffer, 0, frames * sizeof( sampleFrame ) );
+			//qWarning("SamplePlayHandle::play not played workingBuffer=%p",workingBuffer);
+			memset( workingBuffer, 0, frames * BYTES_PER_FRAME );
 		}
 	}
 

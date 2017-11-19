@@ -255,7 +255,7 @@ public:
 
 	static QString tryToMakeRelative( const QString & _file );
 	static QString tryToMakeAbsolute(const QString & file);
-
+	static void clearMMap();
 
 public slots:
 	void setAudioFile( const QString & _audio_file );
@@ -266,6 +266,9 @@ public slots:
 	void setReversed( bool _on );
 	void sampleRateChanged();
 
+signals:
+	void sampleUpdated();
+
 private:
 	void update( bool _keep_settings = false );
 
@@ -273,22 +276,30 @@ private:
 	void directFloatWrite ( sample_t * & _fbuf, f_cnt_t _frames, int _channels);
 
 	f_cnt_t decodeSampleSF( const char * _f, sample_t * & _buf,
-						ch_cnt_t & _channels,
-						sample_rate_t & _sample_rate );
+				ch_cnt_t & _channels,
+				sample_rate_t & _sample_rate );
 #ifdef LMMS_HAVE_OGGVORBIS
 	f_cnt_t decodeSampleOGGVorbis( const char * _f, int_sample_t * & _buf,
-						ch_cnt_t & _channels,
-						sample_rate_t & _sample_rate );
+				       ch_cnt_t & _channels,
+				       sample_rate_t & _sample_rate );
 #endif
 	f_cnt_t decodeSampleDS( const char * _f, int_sample_t * & _buf,
-						ch_cnt_t & _channels,
-						sample_rate_t & _sample_rate );
+				ch_cnt_t & _channels,
+				sample_rate_t & _sample_rate );
+
+	sampleFrame * getSampleFragment( f_cnt_t _index, f_cnt_t _frames,
+					 LoopMode _loopmode,
+					 sampleFrame * * _tmp,
+					 bool * _backwards, f_cnt_t _loopstart, f_cnt_t _loopend,
+					 f_cnt_t _end ) const;
+	f_cnt_t getLoopedIndex( f_cnt_t _index, f_cnt_t _startf, f_cnt_t _endf  ) const;
+	f_cnt_t getPingPongIndex( f_cnt_t _index, f_cnt_t _startf, f_cnt_t _endf  ) const;
 
 	QString m_audioFile;
 	sampleFrame * m_origData;
 	f_cnt_t m_origFrames;
+	bool m_mmapped;
 	sampleFrame * m_data;
-	QReadWriteLock m_varLock;
 	f_cnt_t m_frames;
 	f_cnt_t m_startFrame;
 	f_cnt_t m_endFrame;
@@ -298,18 +309,7 @@ private:
 	bool m_reversed;
 	float m_frequency;
 	sample_rate_t m_sampleRate;
-
-	sampleFrame * getSampleFragment( f_cnt_t _index, f_cnt_t _frames,
-						LoopMode _loopmode,
-						sampleFrame * * _tmp,
-						bool * _backwards, f_cnt_t _loopstart, f_cnt_t _loopend,
-						f_cnt_t _end ) const;
-	f_cnt_t getLoopedIndex( f_cnt_t _index, f_cnt_t _startf, f_cnt_t _endf  ) const;
-	f_cnt_t getPingPongIndex( f_cnt_t _index, f_cnt_t _startf, f_cnt_t _endf  ) const;
-
-signals:
-	void sampleUpdated();
-
+	QReadWriteLock m_varLock;
 } ;
 
 
