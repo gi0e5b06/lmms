@@ -254,7 +254,8 @@ void FxMixer::deactivateSolo()
 void FxMixer::toggledSolo()
 {
 	int soloedChan = -1;
-	bool resetSolo = m_lastSoloed != -1;
+	bool resetSolo = (m_lastSoloed>=0) && (m_lastSoloed<m_fxChannels.size());
+
 	//untoggle if lastsoloed is entered
 	if (resetSolo)
 	{
@@ -332,12 +333,22 @@ void FxMixer::deleteChannel( int index )
 	m_fxChannels.remove(index);
 	delete ch;
 
+	qInfo("FxMixer: delete #1 last soloed=%d",m_lastSoloed);
+	if(m_lastSoloed==index)
+		m_lastSoloed=-1;
+	qInfo("FxMixer: delete #2 last soloed=%d",m_lastSoloed);
+
 	for( int i = index; i < m_fxChannels.size(); ++i )
 	{
 		validateChannelName( i, i + 1 );
 
 		// set correct channel index
 		m_fxChannels[i]->m_channelIndex = i;
+
+		qInfo("FxMixer: delete #3 last soloed=%d",m_lastSoloed);
+		if(m_lastSoloed==i+1)
+			m_lastSoloed=i;
+		qInfo("FxMixer: delete #4 last soloed=%d",m_lastSoloed);
 
 		// now check all routes and update names of the send models
 		for( FxRoute * r : m_fxChannels[i]->m_sends )
@@ -390,6 +401,11 @@ void FxMixer::moveChannelLeft( int index )
 			}
 		}
 	}
+
+	qInfo("FxMixer: move last soloed=%d",m_lastSoloed);
+	     if(m_lastSoloed==a) m_lastSoloed=b;
+	else if(m_lastSoloed==b) m_lastSoloed=a;
+	qInfo("FxMixer: move #2 last soloed=%d",m_lastSoloed);
 
 	// Swap positions in array
 	qSwap(m_fxChannels[index], m_fxChannels[index - 1]);

@@ -36,83 +36,83 @@ typedef QVector<FxRoute *> FxRouteVector;
 
 class FxChannel : public ThreadableJob
 {
-	public:
-		FxChannel( int idx, Model * _parent );
-		virtual ~FxChannel();
+ public:
+	FxChannel( int idx, Model * _parent );
+	virtual ~FxChannel();
 
-		EffectChain m_fxChain;
+	EffectChain m_fxChain;
 
-		// set to true when input fed from mixToChannel or child channel
-		bool m_hasInput;
-		// set to true if any effect in the channel is enabled and running
-		bool m_stillRunning;
+	// set to true when input fed from mixToChannel or child channel
+	bool m_hasInput;
+	// set to true if any effect in the channel is enabled and running
+	bool m_stillRunning;
 
-		float m_peakLeft;
-		float m_peakRight;
-		sampleFrame * m_buffer;
-		bool m_muteBeforeSolo;
-		BoolModel m_muteModel;
-		BoolModel m_soloModel;
-		FloatModel m_volumeModel;
-		QString m_name;
-		QMutex m_lock;
-		int m_channelIndex; // what channel index are we
-		bool m_queued; // are we queued up for rendering yet?
-		bool m_muted; // are we muted? updated per period so we don't have to call m_muteModel.value() twice
+	float m_peakLeft;
+	float m_peakRight;
+	sampleFrame * m_buffer;
+	bool m_muteBeforeSolo;
+	BoolModel m_muteModel;
+	BoolModel m_soloModel;
+	FloatModel m_volumeModel;
+	QString m_name;
+	QMutex m_lock;
+	int m_channelIndex; // what channel index are we
+	bool m_queued; // are we queued up for rendering yet?
+	bool m_muted; // are we muted? updated per period so we don't have to call m_muteModel.value() twice
 
-		// pointers to other channels that this one sends to
-		FxRouteVector m_sends;
+	// pointers to other channels that this one sends to
+	FxRouteVector m_sends;
 
-		// pointers to other channels that send to this one
-		FxRouteVector m_receives;
+	// pointers to other channels that send to this one
+	FxRouteVector m_receives;
 
-		virtual bool requiresProcessing() const { return true; }
-		void unmuteForSolo();
+	virtual bool requiresProcessing() const { return true; }
+	void unmuteForSolo();
 
-	
-		QAtomicInt m_dependenciesMet;
-		void incrementDeps();
-		void processed();
-		
-	private:
-		virtual void doProcessing();
+	QAtomicInt m_dependenciesMet;
+	void incrementDeps();
+	void processed();
+
+ private:
+	virtual void doProcessing();
 };
 
 
 class FxRoute : public QObject
 {
 	Q_OBJECT
-	public:		
-		FxRoute( FxChannel * from, FxChannel * to, float amount );
-		virtual ~FxRoute();
-		
+
+ public:
+	FxRoute( FxChannel * from, FxChannel * to, float amount );
+	virtual ~FxRoute();
+
 	fx_ch_t senderIndex() const
 	{
 		return m_from->m_channelIndex;
 	}
-	
+
 	fx_ch_t receiverIndex() const
 	{
 		return m_to->m_channelIndex;
 	}
-	
+
 	FloatModel * amount()
 	{
 		return &m_amount;
 	}
-	
+
 	FxChannel * sender() const
 	{
 		return m_from;
 	}
-	
+
 	FxChannel * receiver() const
 	{
 		return m_to;
 	}
-	
+
 	void updateName();
-		
+
 	private:
 		FxChannel * m_from;
 		FxChannel * m_to;
@@ -123,7 +123,8 @@ class FxRoute : public QObject
 class EXPORT FxMixer : public Model, public JournallingObject
 {
 	Q_OBJECT
-public:
+
+ public:
 	FxMixer();
 	virtual ~FxMixer();
 
@@ -196,14 +197,13 @@ public:
 	FxRouteVector m_fxRoutes;
 
 private:
-	// the fx channels in the mixer. index 0 is always master.
-	QVector<FxChannel *> m_fxChannels;
-
 	// make sure we have at least num channels
 	void allocateChannelsTo(int num);
 
-	int m_lastSoloed;
+	// the fx channels in the mixer. index 0 is always master.
+	QVector<FxChannel *> m_fxChannels;
 
+	int m_lastSoloed;
 } ;
 
 
