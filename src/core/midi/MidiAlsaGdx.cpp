@@ -772,7 +772,14 @@ QString MidiAlsaGdx::sourcePortName( const MidiEvent & _event ) const
 		const snd_seq_addr_t addr =
 			*static_cast<const snd_seq_addr_t *>( _event.sourcePort() );
 		qInfo("MidiAlsaGdx::sourcePortName %u:%u",addr.client,addr.port);
-		return alsaPortName(addr);// m_seqHandle, addr );
+		QString prefix=QString("%1:%2 ")
+			.arg(addr.client==m_clientID ? 128 : addr.client)
+			.arg(addr.port);
+		foreach(QString s,m_readablePorts)
+			if(s.startsWith(prefix)) return s;
+		foreach(QString s,m_writablePorts)
+			if(s.startsWith(prefix)) return s;
+		return alsaPortName(addr);
 	}
 	return MidiClient::sourcePortName( _event );
 }
@@ -1149,7 +1156,7 @@ void MidiAlsaGdx::run()
 		snd_seq_addr_t* source=&ev->dest;//local port source;
 		QList<MidiPort*> ports=m_mapReadSubs.values(ev->dest);//local port source);
 
-		qInfo("MidiAlsaGdx::run new source is %u:%u",source->client,source->port);
+		qInfo("MidiAlsaGdx::run new source is %u:%u",128,source->port);//source->client
 		qInfo("MidiAlsaGdx::run %d ports found",ports.size());
 
 		for(int j=0;j<ports.size();j++)
@@ -1369,14 +1376,14 @@ void MidiAlsaGdx::updatePortList()
 	{
 		MidiPort* mp=s_lmmsPorts[_num];
 		readablePorts.push_back(QString("%1:%2 %3:in from %4")
-					.arg(m_clientID)
+					.arg(128)//m_clientID)
 					.arg(getFD(mp,0))
-					.arg(m_clientName)
+					.arg("LMMS")//m_clientName)
 					.arg(TYPICAL_CLIENT_NAME[_num].replace(':',' ')));
 		writablePorts.push_back(QString("%1:%2 %3:out to %4")
-					.arg(m_clientID)
+					.arg(128)//m_clientID)
 					.arg(getFD(mp,1))
-					.arg(m_clientName)
+					.arg("LMMS")//m_clientName)
 					.arg(TYPICAL_CLIENT_NAME[_num].replace(':',' ')));
 	}
 
