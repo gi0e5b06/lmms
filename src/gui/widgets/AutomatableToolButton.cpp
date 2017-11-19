@@ -63,7 +63,7 @@ void AutomatableToolButton::setCheckable( bool _on )
 
 void AutomatableToolButton::setChecked( bool _on )
 {
-	//qWarning("AutomatableToolButton::setChecked(%d)",_on);
+	//qInfo("AutomatableToolButton::setChecked(%d)",_on);
 
 	// QToolButton::setChecked is called in update-slot
 	//QToolButton::setChecked( _on );
@@ -75,7 +75,7 @@ void AutomatableToolButton::setChecked( bool _on )
 
 bool AutomatableToolButton::isChecked()
 {
-	//qWarning("AutomatableToolButton::isChecked() c=%d m=%d",QToolButton::isChecked(),model()->value());
+	//qInfo("AutomatableToolButton::isChecked() c=%d m=%d",QToolButton::isChecked(),model()->value());
 
 	return model()->value();
 }
@@ -85,7 +85,7 @@ bool AutomatableToolButton::isChecked()
 
 void AutomatableToolButton::modelChanged()
 {
-	//qWarning("AutomatableToolButton::modelChanged()");
+	//qInfo("AutomatableToolButton::modelChanged()");
 
 	update();
 	/*
@@ -101,11 +101,11 @@ void AutomatableToolButton::modelChanged()
 
 void AutomatableToolButton::update()
 {
-	qWarning("AutomatableToolButton::update() c=%d m=%d",QToolButton::isChecked(),model()->value());
+	//qInfo("AutomatableToolButton::update() c=%d m=%d",QToolButton::isChecked(),model()->value());
 
 	if( defaultAction()->isChecked() != model()->value() )
 	{
-		qWarning("AutomatableToolButton::update() -> setChecked");
+		//qInfo("AutomatableToolButton::update() -> setChecked");
 		emit triggered(defaultAction());
 	}
 
