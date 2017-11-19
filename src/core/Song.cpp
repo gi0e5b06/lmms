@@ -924,6 +924,8 @@ void Song::clearProject()
 
 	removeAllControllers();
 
+	SampleBuffer::clearMMap();
+
 	emit dataChanged();
 
 	Engine::projectJournal()->clearJournal();
