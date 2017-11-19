@@ -65,7 +65,7 @@ class EXPORT Knob : public QWidget, public FloatModelView
 	mapPropertyFromModel(float,volumeRatio,setVolumeRatio,m_volumeRatio);
 
 	Q_PROPERTY(knobTypes knobNum READ knobNum WRITE setknobNum)
-	
+
 	Q_PROPERTY(QColor textColor READ textColor WRITE setTextColor)
 
 	void initUi( const QString & _name ); //!< to be called by ctors
@@ -112,7 +112,7 @@ public:
 	void setlineColor( const QColor & c );
 	QColor arcColor() const;
 	void setarcColor( const QColor & c );
-	
+
 	QColor textColor() const;
 	void setTextColor( const QColor & c );
 
@@ -124,7 +124,7 @@ signals:
 
 
 protected:
-	virtual void contextMenuEvent( QContextMenuEvent * _me );
+	virtual void contextMenuEvent( QContextMenuEvent * _ce );
 	virtual void dragEnterEvent( QDragEnterEvent * _dee );
 	virtual void dropEvent( QDropEvent * _de );
 	virtual void focusOutEvent( QFocusEvent * _fe );
@@ -132,8 +132,9 @@ protected:
 	virtual void mouseReleaseEvent( QMouseEvent * _me );
 	virtual void mouseMoveEvent( QMouseEvent * _me );
 	virtual void mouseDoubleClickEvent( QMouseEvent * _me );
-	virtual void paintEvent( QPaintEvent * _me );
-	virtual void wheelEvent( QWheelEvent * _me );
+	virtual void paintEvent( QPaintEvent * _pe );
+	virtual void resizeEvent(QResizeEvent * _re);
+	virtual void wheelEvent( QWheelEvent * _we );
 
 	//virtual float getValue( const QPoint & _p );
 	virtual void convert(const QPoint& _p, float& value_, float& dist_);

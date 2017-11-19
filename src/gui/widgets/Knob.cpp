@@ -50,7 +50,7 @@
 #include "TextFloat.h"
 
 #include "debug.h"
-
+#include "PerfLog.h"
 
 
 TextFloat * Knob::s_textFloat = NULL;
@@ -158,7 +158,8 @@ void Knob::onKnobNumUpdated()
 		// If knobFilename is still empty here we should get the fallback pixmap of size 1x1
 		m_knobPixmap = new QPixmap( embed::getIconPixmap( knobFilename.toUtf8().constData() ) );
 
-		setFixedSize( m_knobPixmap->width(), m_knobPixmap->height() );
+		setMinimumSize( m_knobPixmap->width(), m_knobPixmap->height() );
+		resize( m_knobPixmap->width(), m_knobPixmap->height() );
 	}
 }
 
@@ -178,13 +179,19 @@ Knob::~Knob()
 
 void Knob::setLabel( const QString & txt )
 {
-	m_label = txt;
 	if( m_knobPixmap )
 	{
-		setFixedSize( qMax<int>( m_knobPixmap->width(),
-					QFontMetrics( pointSizeF( font(), 6.5) ).width( m_label ) ),
-						m_knobPixmap->height() + 10 );
+		QFontMetrics metrix( pointSizeF( font(), 6.5) );
+		int w=m_knobPixmap->width();
+		int h=m_knobPixmap->height() + 10;
+		if(!txt.isEmpty())
+		{
+			w=qMax<int>(w,qMin<int>(2*w,metrix.width(txt)));
+		}
+		setMinimumSize( w, h );
+		resize(w,h);
 	}
+	m_label = txt;
 	update();
 }
 
@@ -395,9 +402,11 @@ bool Knob::updateAngle()
 
 void Knob::drawKnob( QPainter * _p )
 {
+	//PL_BEGIN("KnobCache");
 	if( updateAngle() == false && !m_cache.isNull() )
 	{
 		_p->drawImage( 0, 0, m_cache );
+		//PL_END("KnobCache");
 		return;
 	}
 
@@ -405,6 +414,9 @@ void Knob::drawKnob( QPainter * _p )
 	m_cache.fill( qRgba( 0, 0, 0, 0 ) );
 
 	QPainter p( &m_cache );
+
+	//PL_END("KnobCache");
+	//PL_BEGIN("KnobDraw");
 
 	QPoint mid;
 
@@ -499,10 +511,18 @@ void Knob::drawKnob( QPainter * _p )
 	}
 
 	p.drawArc( mid.x() - arcRectSize/2, 1, arcRectSize, arcRectSize, (90-centerAngle)*16, -16*(m_angle-centerAngle) );
+	//PL_END("KnobDraw");
 
 	p.end();
 
 	_p->drawImage( 0, 0, m_cache );
+}
+
+void Knob::resizeEvent(QResizeEvent * _re)
+{
+	//qInfo("Knob::resizeEvent()");
+	m_cache=QImage();
+	//update();
 }
 
 void Knob::convert(const QPoint& _p, float& value_, float& dist_)
@@ -518,7 +538,7 @@ void Knob::convert(const QPoint& _p, float& value_, float& dist_)
 	angle= qMax(0.80f,qMin(5.49f,angle));
 	value_= (angle-0.80f)/(5.49f-0.80f);
 
-	qWarning("x=%d y=%d d=%f a=%f v=%f",_p.x(),_p.y(),dist_,angle,value_);
+	//qInfo("x=%d y=%d d=%f a=%f v=%f",_p.x(),_p.y(),dist_,angle,value_);
 	if(value_<0.f) value_=0.f;
 	if(value_>1.f) value_=1.f;
 
@@ -548,7 +568,7 @@ void Knob::setPosition( const QPoint & _p, bool _shift )
         {
 		m_pressValue=model()->normalizedValue(model()->value());
 		dist/=4.f;
-		qWarning("shift pv=%f dist=%f",m_pressValue,dist);
+		//qInfo("shift pv=%f dist=%f",m_pressValue,dist);
 	}
 
 	//if( model()->isScaleLogarithmic() ) // logarithmic code
@@ -787,9 +807,10 @@ void Knob::paintEvent( QPaintEvent * _pe )
 			p.fontMetrics().width( m_label ) / 2 + 1,
 				height() - 1, m_label );*/
 		p.setPen( textColor() );
-		p.drawText( width() / 2 -
-				p.fontMetrics().width( m_label ) / 2,
-				height() - 2, m_label );
+		QFontMetrics metrix=p.fontMetrics();
+		QString text=metrix.elidedText(m_label,Qt::ElideRight,width());
+		p.drawText( width() / 2 - metrix.width( text ) / 2,
+			    height() - 2, text );
 	}
 }
 

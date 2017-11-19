@@ -87,7 +87,7 @@ void LcdSpinBox::convert(const QPoint& _p, float& value_, float& dist_)
 	if(value_> 1.f) value_= 1.f;
 	value_=0.5f+value_/2.f;
 
-	qWarning("x=%d y=%d d=%f v=%f",_p.x(),_p.y(),dist_,value_);
+	//qInfo("x=%d y=%d d=%f v=%f",_p.x(),_p.y(),dist_,value_);
 }
 
 void LcdSpinBox::setPosition( const QPoint & _p, bool _shift )
@@ -102,7 +102,7 @@ void LcdSpinBox::setPosition( const QPoint & _p, bool _shift )
         {
 		//m_pressValue=model()->value();
 		dist/=5.f;
-		qWarning("shift pv=%f dist=%f",m_pressValue,dist);
+		//qInfo("shift pv=%f dist=%f",m_pressValue,dist);
 	}
 
 	/*
@@ -128,7 +128,7 @@ void LcdSpinBox::setPosition( const QPoint & _p, bool _shift )
 					   / step ) * step;
 		//model()->setValue( roundedValue );
 		model()->setValue( model()->minValue()+qMax(0.f,qMin(roundedValue,model()->range())));
-		qWarning("       rv=%f dist=%f",roundedValue,dist);
+		//qInfo("       rv=%f dist=%f",roundedValue,dist);
 	}
 }
 
