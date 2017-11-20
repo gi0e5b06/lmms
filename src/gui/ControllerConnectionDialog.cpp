@@ -29,6 +29,8 @@
 #include <QScrollArea>
 #include <QMessageBox>
 
+#include "debug.h"
+
 #include "ControllerConnectionDialog.h"
 #include "ControllerConnection.h"
 //#include "HwScreenWidget.h"

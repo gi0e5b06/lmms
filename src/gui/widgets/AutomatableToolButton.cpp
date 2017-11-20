@@ -22,9 +22,11 @@
  *
  */
 
-#include "AutomatableToolButton.h"
-
 #include <QMouseEvent>
+
+#include "debug.h"
+
+#include "AutomatableToolButton.h"
 
 #include "CaptionMenu.h"
 #include "MainWindow.h"

@@ -22,15 +22,17 @@
  *
  */
 
-#include "SampleBuffer.h"
-
-
 #include <QBuffer>
 #include <QFile>
 #include <QFileInfo>
 #include <QMessageBox>
 #include <QPainter>
 
+#include "lmmsconfig.h"
+#include "base64.h"
+
+#include "debug.h"
+#include "Backtrace.h"
 
 #include <sndfile.h>
 
@@ -47,8 +49,8 @@
 #include <FLAC/stream_decoder.h>
 #endif
 
+#include "SampleBuffer.h"
 
-#include "base64.h"
 #include "ConfigManager.h"
 #include "DrumSynth.h"
 #include "endian_handling.h"
@@ -56,8 +58,6 @@
 #include "GuiApplication.h"
 #include "Mixer.h"
 #include "FileDialog.h"
-
-#include "Backtrace.h"
 
 
 SampleBuffer::SampleBuffer( const QString & _audio_file,
@@ -1120,8 +1120,8 @@ void SampleBuffer::visualize( QPainter & _p, const QRect & _r,
 	{
 		int frame=_from+(_to-_from)*i/nbp;
 		float xp =xr+(wr-1.f)/(nbp-1.f)*i;
-		float ypl=yr+(hr-1.f)/2.f*m_amplification*m_data[frame][0];
-		float ypr=yr+(hr-1.f)/2.f*m_amplification*m_data[frame][1];
+		float ypl=yr+(hr-1.f)/2.f*(1.f+m_amplification*m_data[frame][0]);
+		float ypr=yr+(hr-1.f)/2.f*(1.f+m_amplification*m_data[frame][1]);
 		lc[i]=QPointF(xp,ypl);
 		rc[i]=QPointF(xp,ypr);
 	}

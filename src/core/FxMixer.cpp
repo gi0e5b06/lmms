@@ -24,13 +24,15 @@
 
 #include <QDomElement>
 
-#include "BufferManager.h"
+#include "debug.h"
+
 #include "FxMixer.h"
+
+#include "BufferManager.h"
 #include "Mixer.h"
 #include "MixerWorkerThread.h"
 #include "MixHelpers.h"
 #include "Song.h"
-
 #include "InstrumentTrack.h"
 #include "BBTrackContainer.h"
 

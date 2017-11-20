@@ -32,12 +32,8 @@
 // additional range-checkings) should be compiled
 
 #ifdef LMMS_DEBUG
+
 #include <assert.h>
-#else
-#ifndef assert
-#define assert(x) ((void)(x))
-#endif
-#endif
 
 #include <cstdio>
 #include <QObject>
@@ -49,4 +45,18 @@
 		 QThread::currentThread()->priority(),		     \
 		 __FILE__,__LINE__);
 
+#else
+
+#ifndef assert
+#define assert(x) ((void)(x))
 #endif
+
+#define DEBUG_THREAD_PRINT
+
+#endif // LMMS_DEBUG
+
+#ifndef qInfo
+#define qInfo qWarning
+#endif
+
+#endif // DEBUG_H

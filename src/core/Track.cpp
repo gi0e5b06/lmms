@@ -35,8 +35,6 @@
  * \todo fill this out
  */
 
-#include "Track.h"
-
 #include <assert.h>
 
 #include <QLayout>
@@ -45,6 +43,9 @@
 #include <QPainter>
 #include <QStyleOption>
 
+#include "debug.h"
+
+#include "Track.h"
 
 #include "AutomationPattern.h"
 #include "AutomationTrack.h"

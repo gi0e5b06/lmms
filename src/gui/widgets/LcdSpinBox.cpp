@@ -30,6 +30,8 @@
 #include <QStyleOptionFrameV2>
 #include <QInputDialog>
 
+#include "debug.h"
+
 #include "LcdSpinBox.h"
 #include "CaptionMenu.h"
 #include "GuiApplication.h"
