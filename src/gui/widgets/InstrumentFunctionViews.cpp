@@ -48,9 +48,9 @@ InstrumentFunctionNoteStackingView::InstrumentFunctionNoteStackingView( Instrume
 	topLayout->addWidget( m_chordsGroupBox );
 
 	QGridLayout* mainLayout = new QGridLayout( m_chordsGroupBox );
-	mainLayout->setContentsMargins( 8, 18, 8, 8 );
+	mainLayout->setContentsMargins( 6, 16, 6, 6 );
 	mainLayout->setColumnStretch( 0, 1 );
-	mainLayout->setHorizontalSpacing( 20 );
+	mainLayout->setHorizontalSpacing( 6 );
 	mainLayout->setVerticalSpacing( 1 );
 
 	QLabel* chordLabel = new QLabel( tr( "Chord:" ) );
@@ -82,7 +82,7 @@ InstrumentFunctionNoteStackingView::~InstrumentFunctionNoteStackingView()
 void InstrumentFunctionNoteStackingView::modelChanged()
 {
 	m_cc = castModel<InstrumentFunctionNoteStacking>();
-	m_chordsGroupBox->setModel( &m_cc->m_chordsEnabledModel );
+	m_chordsGroupBox->setModel( &m_cc->m_enabledModel );
 	m_chordsComboBox->setModel( &m_cc->m_chordsModel );
 	m_chordRangeKnob->setModel( &m_cc->m_chordRangeModel );
 }
@@ -113,9 +113,9 @@ InstrumentFunctionArpeggioView::InstrumentFunctionArpeggioView( InstrumentFuncti
 	topLayout->addWidget( m_arpGroupBox );
 
 	QGridLayout* mainLayout = new QGridLayout( m_arpGroupBox );
-	mainLayout->setContentsMargins( 8, 18, 8, 8 );
+	mainLayout->setContentsMargins( 6, 16, 6, 6 );
 	mainLayout->setColumnStretch( 0, 1 );
-	mainLayout->setHorizontalSpacing( 20 );
+	mainLayout->setHorizontalSpacing( 6 );
 	mainLayout->setVerticalSpacing( 1 );
 
 	m_arpGroupBox->setWhatsThis(
@@ -202,8 +202,8 @@ InstrumentFunctionArpeggioView::InstrumentFunctionArpeggioView( InstrumentFuncti
 	mainLayout->addWidget( m_arpGateKnob, 6, 1, 2, 1, Qt::AlignHCenter );
 	mainLayout->addWidget( m_arpTimeKnob, 6, 2, 2, 1, Qt::AlignHCenter );
 
-	mainLayout->setRowMinimumHeight( 2, 10 );
-	mainLayout->setRowMinimumHeight( 5, 10 );
+	mainLayout->setRowMinimumHeight( 2, 3 );
+	mainLayout->setRowMinimumHeight( 5, 3 );
 }
 
 
@@ -220,7 +220,7 @@ InstrumentFunctionArpeggioView::~InstrumentFunctionArpeggioView()
 void InstrumentFunctionArpeggioView::modelChanged()
 {
 	m_a = castModel<InstrumentFunctionArpeggio>();
-	m_arpGroupBox->setModel( &m_a->m_arpEnabledModel );
+	m_arpGroupBox->setModel( &m_a->m_enabledModel );
 	m_arpComboBox->setModel( &m_a->m_arpModel );
 	m_arpRangeKnob->setModel( &m_a->m_arpRangeModel );
 	m_arpCycleKnob->setModel( &m_a->m_arpCycleModel );
@@ -235,4 +235,79 @@ void InstrumentFunctionArpeggioView::modelChanged()
 
 
 
+InstrumentFunctionNoteHumanizingView::InstrumentFunctionNoteHumanizingView( InstrumentFunctionNoteHumanizing* cc, QWidget* parent ) :
+	QWidget( parent ),
+	ModelView( NULL, this ),
+	m_cc( cc ),
+	m_groupBox( new GroupBox( tr( "HUMANIZING" ) ) ),
+	//m_chordsComboBox( new ComboBox() ),
+	//m_chordRangeKnob( new Knob( knobBright_26 ) )
+	m_volumeRangeKnob( new Knob( knobBright_26 ) ),
+	m_panRangeKnob( new Knob( knobBright_26 ) ),
+	m_tuneRangeKnob( new Knob( knobBright_26 ) ),
+	m_offsetRangeKnob( new Knob( knobBright_26 ) ),
+	m_shortenRangeKnob( new Knob( knobBright_26 ) )
+{
+	QHBoxLayout* topLayout = new QHBoxLayout( this );
+	topLayout->setMargin( 0 );
+	topLayout->addWidget( m_groupBox );
 
+	QGridLayout* mainLayout = new QGridLayout( m_groupBox );
+	mainLayout->setContentsMargins( 6, 16, 6, 6 );
+	mainLayout->setColumnStretch( 5, 1 );
+	mainLayout->setHorizontalSpacing( 6 );
+	mainLayout->setVerticalSpacing( 1 );
+
+	m_volumeRangeKnob->setLabel( tr( "VOL%" ) );
+	m_volumeRangeKnob->setHintText( tr( "Volume change:" ), "" + tr( "%" ) );
+	m_volumeRangeKnob->setWhatsThis
+		( tr( "Use this knob for setting the volume change in %." ) );
+
+	m_panRangeKnob->setLabel( tr( "PAN%" ) );
+	m_panRangeKnob->setHintText( tr( "Pan change:" ), "" + tr( "%" ) );
+	m_panRangeKnob->setWhatsThis
+		( tr( "Use this knob for setting the pan change in %." ) );
+
+	m_tuneRangeKnob->setLabel( tr( "PITCH%" ) );
+	m_tuneRangeKnob->setHintText( tr( "Pitch change:" ), "" + tr( "%" ) );
+	m_tuneRangeKnob->setWhatsThis
+		( tr( "Use this knob for setting the tune change in %." ) );
+
+	m_offsetRangeKnob->setLabel( tr( "DELAY%" ) );
+	m_offsetRangeKnob->setHintText( tr( "Start delay:" ), "" + tr( "%" ) );
+	m_offsetRangeKnob->setWhatsThis
+		( tr( "Use this knob for setting the delay in %." ) );
+
+	m_shortenRangeKnob->setLabel( tr( "SHORT%" ) );
+	m_shortenRangeKnob->setHintText( tr( "Shortening:" ), "" + tr( "%" ) );
+	m_shortenRangeKnob->setWhatsThis
+		( tr( "Use this knob for shortening a %." ) );
+
+	mainLayout->addWidget( m_volumeRangeKnob,  0, 0, 1, 1, Qt::AlignHCenter );
+	mainLayout->addWidget( m_panRangeKnob,     0, 1, 1, 1, Qt::AlignHCenter );
+	mainLayout->addWidget( m_tuneRangeKnob,    0, 2, 1, 1, Qt::AlignHCenter );
+	mainLayout->addWidget( m_offsetRangeKnob,  0, 3, 1, 1, Qt::AlignHCenter );
+	mainLayout->addWidget( m_shortenRangeKnob, 0, 4, 1, 1, Qt::AlignHCenter );
+}
+
+
+
+
+InstrumentFunctionNoteHumanizingView::~InstrumentFunctionNoteHumanizingView()
+{
+	delete m_groupBox;
+}
+
+
+
+
+void InstrumentFunctionNoteHumanizingView::modelChanged()
+{
+	m_cc = castModel<InstrumentFunctionNoteHumanizing>();
+	m_groupBox        ->setModel( &m_cc->m_enabledModel );
+	m_volumeRangeKnob ->setModel( &m_cc->m_volumeRangeModel );
+	m_panRangeKnob    ->setModel( &m_cc->m_panRangeModel );
+	m_tuneRangeKnob   ->setModel( &m_cc->m_tuneRangeModel );
+	m_offsetRangeKnob ->setModel( &m_cc->m_offsetRangeModel );
+	m_shortenRangeKnob->setModel( &m_cc->m_shortenRangeModel );
+}

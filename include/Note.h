@@ -82,11 +82,11 @@ class EXPORT Note : public SerializingObject
 {
 public:
 	Note( const MidiTime & length = MidiTime( 0 ),
-		const MidiTime & pos = MidiTime( 0 ),
-		int key = DefaultKey,
-		volume_t volume = DefaultVolume,
-		panning_t panning = DefaultPanning,
-		DetuningHelper * detuning = NULL );
+	      const MidiTime & pos = MidiTime( 0 ),
+	      int key = DefaultKey,
+	      volume_t volume = DefaultVolume,
+	      panning_t panning = DefaultPanning,
+	      DetuningHelper * detuning = NULL );
 	Note( const Note & note );
 	virtual ~Note();
 

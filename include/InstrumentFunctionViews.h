@@ -90,4 +90,28 @@ private:
 } ;
 
 
+
+
+class InstrumentFunctionNoteHumanizingView : public QWidget, public ModelView
+{
+	Q_OBJECT
+public:
+	InstrumentFunctionNoteHumanizingView( InstrumentFunctionNoteHumanizing* cc, QWidget* parent = NULL );
+	virtual ~InstrumentFunctionNoteHumanizingView();
+
+
+private:
+	virtual void modelChanged();
+
+	InstrumentFunctionNoteHumanizing* m_cc;
+
+	GroupBox* m_groupBox;
+	Knob* m_volumeRangeKnob;
+	Knob* m_panRangeKnob;
+	Knob* m_tuneRangeKnob;
+	Knob* m_offsetRangeKnob;
+	Knob* m_shortenRangeKnob;
+} ;
+
+
 #endif

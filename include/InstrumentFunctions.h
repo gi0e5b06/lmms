@@ -35,9 +35,28 @@
 class InstrumentTrack;
 class NotePlayHandle;
 
+class InstrumentFunction : public Model, public JournallingObject
+{
+	Q_OBJECT
+
+ public:
+	virtual ~InstrumentFunction() { }
+
+	virtual void processNote( NotePlayHandle* n ) = 0;
+	virtual void saveSettings( QDomDocument & _doc, QDomElement & _parent ) = 0;
+	virtual void loadSettings( const QDomElement & _this ) = 0;
+	virtual QString nodeName() const = 0;
+
+ protected:
+	InstrumentFunction( Model * _parent, QString _name );
+
+	BoolModel m_enabledModel;
+};
 
 
-class InstrumentFunctionNoteStacking : public Model, public JournallingObject
+
+
+class InstrumentFunctionNoteStacking : public InstrumentFunction
 {
 	Q_OBJECT
 
@@ -51,8 +70,7 @@ public:
 	InstrumentFunctionNoteStacking( Model * _parent );
 	virtual ~InstrumentFunctionNoteStacking();
 
-	void processNote( NotePlayHandle* n );
-
+	virtual void processNote( NotePlayHandle* n );
 
 	virtual void saveSettings( QDomDocument & _doc, QDomElement & _parent );
 	virtual void loadSettings( const QDomElement & _this );
@@ -144,7 +162,7 @@ public:
 
 
 private:
-	BoolModel m_chordsEnabledModel;
+	//BoolModel m_chordsEnabledModel;
 	ComboBoxModel m_chordsModel;
 	FloatModel m_chordRangeModel;
 
@@ -156,7 +174,7 @@ private:
 
 
 
-class InstrumentFunctionArpeggio : public Model, public JournallingObject
+class InstrumentFunctionArpeggio : public InstrumentFunction
 {
 	Q_OBJECT
 public:
@@ -193,7 +211,7 @@ private:
 		SyncMode
 	} ;
 
-	BoolModel m_arpEnabledModel;
+	//BoolModel m_arpEnabledModel;
 	ComboBoxModel m_arpModel;
 	FloatModel m_arpRangeModel;
 	FloatModel m_arpCycleModel;
@@ -209,6 +227,39 @@ private:
 	friend class InstrumentFunctionArpeggioView;
 
 } ;
+
+
+
+
+class InstrumentFunctionNoteHumanizing : public InstrumentFunction
+{
+	Q_OBJECT
+
+public:
+	InstrumentFunctionNoteHumanizing( Model * _parent );
+	virtual ~InstrumentFunctionNoteHumanizing();
+
+	virtual void processNote( NotePlayHandle* n );
+
+	virtual void saveSettings( QDomDocument & _doc, QDomElement & _parent );
+	virtual void loadSettings( const QDomElement & _this );
+
+	inline virtual QString nodeName() const
+	{
+		return "notehumanizing";
+	}
+
+private:
+	FloatModel m_volumeRangeModel;
+	FloatModel m_panRangeModel;
+	FloatModel m_tuneRangeModel;
+	FloatModel m_offsetRangeModel;
+	FloatModel m_shortenRangeModel;
+
+	friend class InstrumentFunctionNoteHumanizingView;
+} ;
+
+
 
 
 #endif

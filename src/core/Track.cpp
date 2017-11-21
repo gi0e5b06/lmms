@@ -737,15 +737,16 @@ void TrackContentObjectView::mousePressEvent( QMouseEvent * me )
 					QApplication::setOverrideCursor( c );
 					s_textFloat->setTitle( tr( "Current position" ) );
 					delete m_hint;
-					m_hint = TextFloat::displayMessage( tr( "Hint" ),
-														tr( "Press <%1> and drag to make "
-															"a copy." ).arg(
-										#ifdef LMMS_BUILD_APPLE
-															"⌘"),
-									#else
-															"Ctrl"),
-									#endif
-														embed::getIconPixmap( "hint" ), 0 );
+					m_hint = TextFloat::displayMessage
+						( tr( "Hint" ),
+						  tr( "Press <%1> and drag to make "
+						      "a copy." ).arg(
+#ifdef LMMS_BUILD_APPLE
+								      "⌘"),
+#else
+						  "Ctrl"),
+#endif
+						embed::getIconPixmap( "hint" ), 0 );
 				}
 				else if( !m_tco->getAutoResize() )
 				{
@@ -755,15 +756,16 @@ void TrackContentObjectView::mousePressEvent( QMouseEvent * me )
 					QApplication::setOverrideCursor( c );
 					s_textFloat->setTitle( tr( "Current length" ) );
 					delete m_hint;
-					m_hint = TextFloat::displayMessage( tr( "Hint" ),
-														tr( "Press <%1> for free "
-															"resizing." ).arg(
-										#ifdef LMMS_BUILD_APPLE
-															"⌘"),
-									#else
-															"Ctrl"),
-									#endif
-														embed::getIconPixmap( "hint" ), 0 );
+					m_hint = TextFloat::displayMessage
+						( tr( "Hint" ),
+						  tr( "Press <%1> for free "
+						      "resizing." ).arg(
+#ifdef LMMS_BUILD_APPLE
+									"⌘"),
+#else
+						  "Ctrl"),
+#endif
+						embed::getIconPixmap( "hint" ), 0 );
 				}
 				//		s_textFloat->reparent( this );
 				// setup text-float as if TCO was already moved/resized
@@ -1030,13 +1032,13 @@ void TrackContentObjectView::contextMenuEvent( QContextMenuEvent * cme )
 					tr( "Paste" ), m_tco, SLOT( paste() ) );
 	contextMenu.addSeparator();
 	contextMenu.addAction( embed::getIconPixmap( "muted" ),
-				tr( "Mute/unmute (<%1> + middle click)" ).arg(
-					#ifdef LMMS_BUILD_APPLE
-					"⌘"),
-					#else
-					"Ctrl"),
-					#endif
-						m_tco, SLOT( toggleMute() ) );
+			       tr( "Mute/unmute (<%1> + middle click)" ).arg(
+#ifdef LMMS_BUILD_APPLE
+									     "⌘"),
+#else
+			       "Ctrl"),
+#endif
+		m_tco, SLOT( toggleMute() ) );
 	constructContextMenu( &contextMenu );
 
 	contextMenu.exec( QCursor::pos() );

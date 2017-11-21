@@ -53,6 +53,7 @@ public:
 	{
 		OriginPattern,		/*! playback of a note from a pattern */
 		OriginMidiInput,	/*! playback of a MIDI note input event */
+		OriginNoteHumanizing,	/*! created by note humanizing instrument function */
 		OriginNoteStacking,	/*! created by note stacking instrument function */
 		OriginArpeggio,		/*! created by arpeggio instrument function */
 		OriginCount
@@ -60,12 +61,12 @@ public:
 	typedef Origins Origin;
 
 	NotePlayHandle( InstrumentTrack* instrumentTrack,
-					const f_cnt_t offset,
-					const f_cnt_t frames,
-					const Note& noteToPlay,
-					NotePlayHandle* parent = NULL,
-					int midiEventChannel = -1,
-					Origin origin = OriginPattern );
+			const f_cnt_t offset,
+			const f_cnt_t frames,
+			const Note& noteToPlay,
+			NotePlayHandle* parent = NULL,
+			int midiEventChannel = -1,
+			Origin origin = OriginPattern );
 	virtual ~NotePlayHandle() {}
 	void done();
 
@@ -261,6 +262,16 @@ public:
 	void setFrequencyUpdate()
 	{
 		m_frequencyNeedsUpdate = true;
+	}
+
+	float baseDetune()
+	{
+		return m_baseDetune;
+	}
+
+	void setBaseDetune(const float _bdt)
+	{
+		m_baseDetune=_bdt;
 	}
 
 private:

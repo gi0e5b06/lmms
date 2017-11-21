@@ -25,11 +25,21 @@
 #include <QDomElement>
 
 #include "InstrumentFunctions.h"
+
+#include "lmms_math.h"
 #include "embed.h"
 #include "Engine.h"
 #include "InstrumentTrack.h"
 #include "Mixer.h"
+#include "Song.h"
 #include "PresetPreviewPlayHandle.h"
+
+
+InstrumentFunction::InstrumentFunction( Model * _parent, QString _name ) :
+	Model( _parent, _name ),
+	m_enabledModel( false, this )
+{
+}
 
 
 
@@ -204,8 +214,8 @@ const InstrumentFunctionNoteStacking::Chord & InstrumentFunctionNoteStacking::Ch
 
 
 InstrumentFunctionNoteStacking::InstrumentFunctionNoteStacking( Model * _parent ) :
-	Model( _parent, tr( "Chords" ) ),
-	m_chordsEnabledModel( false, this ),
+	InstrumentFunction( _parent, tr( "Chords" ) ),
+	//m_enabledModel( false, this ),
 	m_chordsModel( this, tr( "Chord type" ) ),
 	m_chordRangeModel( 1.0f, 1.0f, 9.0f, 1.0f, this, tr( "Chord range" ) )
 {
@@ -235,9 +245,10 @@ void InstrumentFunctionNoteStacking::processNote( NotePlayHandle * _n )
 	// at the same time we only add sub-notes if nothing of the note was
 	// played yet, because otherwise we would add chord-subnotes every
 	// time an audio-buffer is rendered...
-	if( ( _n->origin() == NotePlayHandle::OriginArpeggio || ( _n->hasParent() == false && _n->instrumentTrack()->isArpeggioEnabled() == false ) ) &&
-			_n->totalFramesPlayed() == 0 &&
-			m_chordsEnabledModel.value() == true && ! _n->isReleased() )
+	if( ( _n->origin() == NotePlayHandle::OriginArpeggio ||
+	      ( _n->hasParent() == false && _n->instrumentTrack()->isArpeggioEnabled() == false ) ) &&
+	    _n->totalFramesPlayed() == 0 &&
+	    m_enabledModel.value() == true && ! _n->isReleased() )
 	{
 		// then insert sub-notes for chord
 		const int selected_chord = m_chordsModel.value();
@@ -266,11 +277,10 @@ void InstrumentFunctionNoteStacking::processNote( NotePlayHandle * _n )
 
 					// create sub-note-play-handle, only note is
 					// different
-					Engine::mixer()->addPlayHandle(
-								       NotePlayHandleManager::acquire( _n->instrumentTrack(), _n->offset(),
-												       _n->frames(), note_copy,
-												       _n, -1, NotePlayHandle::OriginNoteStacking )
-								       );
+					Engine::mixer()->addPlayHandle
+						(NotePlayHandleManager::acquire( _n->instrumentTrack(), _n->offset(),
+										 _n->frames(), note_copy,
+										 _n, -1, NotePlayHandle::OriginNoteStacking ) );
 				}
 			}
 		}
@@ -282,7 +292,7 @@ void InstrumentFunctionNoteStacking::processNote( NotePlayHandle * _n )
 
 void InstrumentFunctionNoteStacking::saveSettings( QDomDocument & _doc, QDomElement & _this )
 {
-	m_chordsEnabledModel.saveSettings( _doc, _this, "chord-enabled" );
+	m_enabledModel.saveSettings( _doc, _this, "chord-enabled" );
 	m_chordsModel.saveSettings( _doc, _this, "chord" );
 	m_chordRangeModel.saveSettings( _doc, _this, "chordrange" );
 }
@@ -292,7 +302,7 @@ void InstrumentFunctionNoteStacking::saveSettings( QDomDocument & _doc, QDomElem
 
 void InstrumentFunctionNoteStacking::loadSettings( const QDomElement & _this )
 {
-	m_chordsEnabledModel.loadSettings( _this, "chord-enabled" );
+	m_enabledModel.loadSettings( _this, "chord-enabled" );
 	m_chordsModel.loadSettings( _this, "chord" );
 	m_chordRangeModel.loadSettings( _this, "chordrange" );
 }
@@ -304,8 +314,8 @@ void InstrumentFunctionNoteStacking::loadSettings( const QDomElement & _this )
 
 
 InstrumentFunctionArpeggio::InstrumentFunctionArpeggio( Model * _parent ) :
-	Model( _parent, tr( "Arpeggio" ) ),
-	m_arpEnabledModel( false ),
+	InstrumentFunction( _parent, tr( "Arpeggio" ) ),
+	//m_enabledModel( false ),
 	m_arpModel( this, tr( "Arpeggio type" ) ),
 	m_arpRangeModel( 1.0f, 1.0f, 9.0f, 1.0f, this, tr( "Arpeggio range" ) ),
 	m_arpCycleModel( 0.0f, 0.0f, 6.0f, 1.0f, this, tr( "Cycle steps" ) ),
@@ -348,9 +358,9 @@ void InstrumentFunctionArpeggio::processNote( NotePlayHandle * _n )
 {
 	const int base_note_key = _n->key();
 	if( _n->origin() == NotePlayHandle::OriginArpeggio ||
-		_n->origin() == NotePlayHandle::OriginNoteStacking ||
-		!m_arpEnabledModel.value() ||
-		( _n->isReleased() && _n->releaseFramesDone() >= _n->actualReleaseFramesToDo() ) )
+	    _n->origin() == NotePlayHandle::OriginNoteStacking ||
+	    !m_enabledModel.value() ||
+	    ( _n->isReleased() && _n->releaseFramesDone() >= _n->actualReleaseFramesToDo() ) )
 	{
 		return;
 	}
@@ -519,13 +529,14 @@ void InstrumentFunctionArpeggio::processNote( NotePlayHandle * _n )
 		{
 			// create sub-note-play-handle, only ptr to note is different
 			// and is_arp_note=true
-			Engine::mixer()->addPlayHandle(
-						       NotePlayHandleManager::acquire( _n->instrumentTrack(),
-										       frames_processed,
-										       gated_frames,
-										       Note( MidiTime( 0 ), MidiTime( 0 ), sub_note_key, (volume_t) qRound( _n->getVolume() * vol_level ),
-											     _n->getPanning(), _n->detuning() ),
-										       _n, -1, NotePlayHandle::OriginArpeggio )
+			Engine::mixer()->addPlayHandle
+				(NotePlayHandleManager::acquire( _n->instrumentTrack(),
+								 frames_processed,
+								 gated_frames,
+								 Note( MidiTime( 0 ), MidiTime( 0 ), sub_note_key,
+								       (volume_t) qRound( _n->getVolume() * vol_level ),
+								       _n->getPanning(), _n->detuning() ),
+								 _n, -1, NotePlayHandle::OriginArpeggio )
 						       );
 		}
 
@@ -547,7 +558,7 @@ void InstrumentFunctionArpeggio::processNote( NotePlayHandle * _n )
 
 void InstrumentFunctionArpeggio::saveSettings( QDomDocument & _doc, QDomElement & _this )
 {
-	m_arpEnabledModel.saveSettings( _doc, _this, "arp-enabled" );
+	m_enabledModel.saveSettings( _doc, _this, "arp-enabled" );
 	m_arpModel.saveSettings( _doc, _this, "arp" );
 	m_arpRangeModel.saveSettings( _doc, _this, "arprange" );
 	m_arpCycleModel.saveSettings( _doc, _this, "arpcycle" );
@@ -565,7 +576,7 @@ void InstrumentFunctionArpeggio::saveSettings( QDomDocument & _doc, QDomElement 
 
 void InstrumentFunctionArpeggio::loadSettings( const QDomElement & _this )
 {
-	m_arpEnabledModel.loadSettings( _this, "arp-enabled" );
+	m_enabledModel.loadSettings( _this, "arp-enabled" );
 	m_arpModel.loadSettings( _this, "arp" );
 	m_arpRangeModel.loadSettings( _this, "arprange" );
 	m_arpCycleModel.loadSettings( _this, "arpcycle" );
@@ -588,3 +599,121 @@ void InstrumentFunctionArpeggio::loadSettings( const QDomElement & _this )
 
 
 
+
+InstrumentFunctionNoteHumanizing::InstrumentFunctionNoteHumanizing( Model * _parent ) :
+	InstrumentFunction( _parent, tr( "NoteHumanizing" ) ),
+	//m_enabledModel( false, this ),
+	m_volumeRangeModel( 0.0f, 0.0f, 100.0f, 0.1f, this, tr( "Volume decrease" ) ),
+	m_panRangeModel( 0.0f, 0.0f, 100.0f, 0.1f, this, tr( "Pan change" ) ),
+	m_tuneRangeModel( 0.0f, 0.0f, 100.0f, 0.1f, this, tr( "Frequency change" ) ),
+	m_offsetRangeModel( 0.0f, 0.0f, 100.0f, 0.1f, this, tr( "Start delay" ) ),
+	m_shortenRangeModel( 0.0f, 0.0f, 100.0f, 0.1f, this, tr( "Shortening" ) )
+{
+}
+
+
+
+
+InstrumentFunctionNoteHumanizing::~InstrumentFunctionNoteHumanizing()
+{
+}
+
+
+
+
+void InstrumentFunctionNoteHumanizing::processNote( NotePlayHandle * _n )
+{
+	if( _n->totalFramesPlayed() == 0 &&
+	    m_enabledModel.value() == true && ! _n->isReleased() )
+	{
+		{
+			float l=m_volumeRangeModel.value()/100.f;
+			if(l>0.f)
+			{
+				float r=fastrandf01inc();
+				volume_t o=_n->getVolume(); // 0..200
+				volume_t n=qBound(0,qRound(o*(1.f-l*r)),200);
+				//qInfo("NH: volume %d->%d",o,n);
+				_n->setVolume(n);
+			}
+		}
+
+		{
+			float l=m_panRangeModel.value()/100.f;
+			if(l>0.f)
+			{
+				float r=fastrandf01inc();
+				panning_t o=_n->getPanning(); // -100..100
+				panning_t n=qBound(-100,qRound(o+200.f*l*(r-0.5f)),100);
+				//qInfo("NH: panning %d->%d",o,n);
+				_n->setPanning(n);
+			}
+		}
+
+		{
+			float l=m_tuneRangeModel.value()/100.f;
+			if(l>0.f)
+			{
+				float r=fastrandf01inc();
+				float o=_n->baseDetune();
+				float n=o+12.f*(l*(r-0.5f));
+				//qInfo("NH: detune %f->%f",o,n);
+				_n->setBaseDetune(n);
+				_n->setFrequencyUpdate();
+			}
+		}
+
+		{
+			float l=m_offsetRangeModel.value()/100.f;
+			if(l>0.f)
+			{
+				float   r=fastrandf01inc();
+				f_cnt_t o=_n->offset(); // ?
+				const fpp_t fpt = Engine::framesPerTick()*Engine::getSong()->ticksPerTact();
+				const fpp_t fpp = Engine::mixer()->framesPerPeriod();
+				f_cnt_t n=qRound(o+(fpt-1-o)*l*r);
+				n=qBound(o,n,fpp-1); // tmp: must be inside the period
+				//qInfo("NH: offset %d->%d",o,n);
+				_n->setOffset(n);
+			}
+		}
+
+		{
+			float l=m_shortenRangeModel.value()/100.f;
+			if(l>0.f)
+			{
+				float   r=fastrandf01inc();
+				f_cnt_t o=_n->frames(); // ?
+				f_cnt_t n=qBound(1,qRound(o*(1.f-l*r)),o);
+				qInfo("NH: shorten %d->%d",o,n);
+				_n->setFrames(n);
+			}
+		}
+	}
+}
+
+
+
+
+void InstrumentFunctionNoteHumanizing::saveSettings( QDomDocument & _doc, QDomElement & _this )
+{
+	m_enabledModel     .saveSettings( _doc, _this, "enabled" );
+	m_volumeRangeModel .saveSettings( _doc, _this, "volume" );
+	m_panRangeModel    .saveSettings( _doc, _this, "pan" );
+	m_tuneRangeModel   .saveSettings( _doc, _this, "tune" );
+	m_offsetRangeModel .saveSettings( _doc, _this, "offset" );
+	m_shortenRangeModel.saveSettings( _doc, _this, "shorten" );
+}
+
+
+
+
+void InstrumentFunctionNoteHumanizing::loadSettings( const QDomElement & _this )
+{
+	m_enabledModel     .loadSettings( _this, "enabled" );
+	m_volumeRangeModel .loadSettings( _this, "volume" );
+	m_panRangeModel    .loadSettings( _this, "pan" );
+	m_tuneRangeModel   .loadSettings( _this, "tune" );
+	m_offsetRangeModel .loadSettings( _this, "offset" );
+	m_shortenRangeModel.loadSettings( _this, "shorten" );
+}

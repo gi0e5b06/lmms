@@ -519,7 +519,7 @@ void NotePlayHandle::updateFrequency()
 		  m_instrumentTrack->baseNoteModel()->value() +
 		  mp +
 		  m_baseDetune /*m_baseDetuning->value()*/ )
-												 / 12.0f;
+		/ 12.0f;
 	m_frequency = BaseFreq * powf( 2.0f, pitch + m_instrumentTrack->pitchModel()->value() / ( 100 * 12.0f ) );
 	m_unpitchedFrequency = BaseFreq * powf( 2.0f, pitch );
 

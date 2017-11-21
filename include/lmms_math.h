@@ -125,6 +125,16 @@ static inline float fastRandf( float range )
 	return fast_rand() * range * fast_rand_ratio;
 }
 
+static inline float fastrandf01inc()
+{
+	return ((float)fast_rand()) / ((float)FAST_RAND_MAX);
+}
+
+static inline float fastrandf01exc()
+{
+	return ((float)fast_rand()) / ((float)(FAST_RAND_MAX+1));
+}
+
 //! @brief Takes advantage of fmal() function if present in hardware
 static inline long double fastFmal( long double a, long double b, long double c ) 
 {
