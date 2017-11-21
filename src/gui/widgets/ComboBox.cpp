@@ -66,8 +66,9 @@ ComboBox::ComboBox( QWidget * _parent, const QString & _name ) :
 		s_arrowSelected = new QPixmap( embed::getIconPixmap( "combobox_arrow_selected" ) );
 	}
 
-	setFont( pointSize<9>( font() ) );
-	m_menu.setFont( pointSize<8>( m_menu.font() ) );
+	//setFont( pointSize<9>( font() ) );
+	//m_menu.setFont( pointSize<8>( m_menu.font() ) );
+	setMinimumHeight(22);
 
 	connect( &m_menu, SIGNAL( triggered( QAction * ) ),
 				this, SLOT( setItem( QAction * ) ) );
@@ -246,9 +247,3 @@ void ComboBox::setItem( QAction* item )
 		model()->setInitValue( item->data().toInt() );
 	}
 }
-
-
-
-
-
-

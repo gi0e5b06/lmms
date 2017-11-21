@@ -871,6 +871,7 @@ bool SampleBuffer::play( sampleFrame * _ab, handleState * _state, const fpp_t _f
 		// Generate output
 		sampleFrame* pos=getSampleFragment( play_frame, _frames, _loopmode, &tmp, &is_backwards,
 						    loopStartFrame, loopEndFrame, endFrame );
+		/*
 		qWarning("SampleBuffer::play m_data=%p m_origData=%p m_mmapped=%d\n"
 			 "                   m_frames=%d m_origFrames=%d\n"
 			 "                   _ab=%p pos=%p tmp=%p play_frame=%d\n"
@@ -881,6 +882,7 @@ bool SampleBuffer::play( sampleFrame * _ab, handleState * _state, const fpp_t _f
 			 _frames, loopStartFrame, loopEndFrame, endFrame );
 		qWarning("pos[0][0]=%f",pos[0][0]);
 		qWarning("_ab[0][0]=%f",_ab[0][0]);
+		*/
 		memcpy( _ab, pos, _frames * BYTES_PER_FRAME );
 			/*
 		memcpy( _ab,
@@ -920,7 +922,7 @@ bool SampleBuffer::play( sampleFrame * _ab, handleState * _state, const fpp_t _f
 
 	if( tmp != NULL )
 	{
-		qWarning("SampleBuffer::play FREE tmp %p",tmp);
+		//qWarning("SampleBuffer::play FREE tmp %p",tmp);
 		MM_FREE( tmp );
 		tmp=NULL;
 	}

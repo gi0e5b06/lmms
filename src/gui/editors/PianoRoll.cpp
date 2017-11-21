@@ -4169,15 +4169,12 @@ PianoRollWindow::PianoRollWindow() :
 	copyPasteActionsToolBar->addAction( copyAction );
 	copyPasteActionsToolBar->addAction( pasteAction );
 
-
-	DropToolBar *timeLineToolBar = addDropToolBarToTop( tr( "Timeline controls" ) );
-	m_editor->m_timeLine->addToolButtons( timeLineToolBar );
-
+        /*DropToolBar *timeLineToolBar =*/ addDropToolBarToTop( tr( "Timeline controls" ) );
+        //m_editor->m_timeLine->addToolButtons( timeLineToolBar );
 
 	addToolBarBreak();
 
-
-	DropToolBar *zoomAndNotesToolBar = addDropToolBarToTop( tr( "Zoom and note controls" ) );
+	DropToolBar* zoomAndNotesToolBar=addDropToolBarToTop(tr("Zoom and note controls"));
 
 	QLabel * zoom_lbl = new QLabel( m_toolBar );
 	zoom_lbl->setPixmap( embed::getIconPixmap( "zoom" ) );

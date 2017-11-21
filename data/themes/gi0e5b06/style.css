@@ -186,6 +186,11 @@ GroupBox {
     /*border: 0px solid #3f4750;*/
 }
 
+ComboBox {
+    color: #ffffff;
+    font-size: 13px;
+}
+
 /* main toolbar oscilloscope - can have transparent bg now */
 
 VisualizationWidget  {
