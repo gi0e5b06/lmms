@@ -33,7 +33,7 @@
 
 static const QString names[LedCheckBox::NumColors] =
 {
-	"led_yellow", "led_green", "led_red"
+	"led_yellow", "led_green", "led_red", "led_blue"
 } ;
 
 

@@ -29,7 +29,9 @@
 #include "AutomatableToolButton.h"
 
 #include "CaptionMenu.h"
+#include "Engine.h"
 #include "MainWindow.h"
+#include "ProjectJournal.h"
 #include "StringPairDrag.h"
 
 
@@ -175,9 +177,36 @@ void AutomatableToolButton::mouseReleaseEvent( QMouseEvent * _me )
 		emit clicked();
 	}
 }
+*/
 
 
 
+
+void AutomatableToolButton::dropEvent( QDropEvent * _de )
+{
+	QString type = StringPairDrag::decodeKey( _de );
+	QString val = StringPairDrag::decodeValue( _de );
+	if( type == "float_value" )
+	{
+		model()->setValue( val.toFloat() ? true : false);
+		_de->accept();
+	}
+	else if( type == "automatable_model" )
+	{
+		AutomatableModel * mod = dynamic_cast<AutomatableModel *>
+			( Engine::projectJournal()->journallingObject( val.toInt() ) );
+		if( mod != NULL )
+		{
+			AutomatableModel::linkModels( model(), mod );
+			mod->setValue( model()->value() );
+		}
+	}
+}
+
+
+
+
+ /*
 void AutomatableToolButton::toggle()
 {
        	if( isCheckable() )
