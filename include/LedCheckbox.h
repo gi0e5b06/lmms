@@ -41,6 +41,7 @@ public:
 		Yellow,
 		Green,
 		Red,
+		Blue,
 		NumColors
 	} ;
 

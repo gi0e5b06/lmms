@@ -39,7 +39,7 @@ GroupBox::GroupBox( const QString & _caption, QWidget * _parent ) :
 	QWidget( _parent ),
 	BoolModelView( NULL, this ),
 	m_caption( _caption ),
-	m_titleBarHeight( 11 )
+	m_titleBarHeight( 14 )
 {
 	m_led = new PixmapButton( this, _caption );
 	m_led->setCheckable( true );
@@ -87,17 +87,20 @@ void GroupBox::paintEvent( QPaintEvent * pe )
 	QPainter p( this );
 
 	// Draw background
-	p.fillRect( 0, 0, width() - 1, height() - 1, p.background() );
+	//p.fillRect( 0, 0, width() - 1, height() - 1, p.background() );
+	//p.fillRect(0,0,width(),height(),p.background());
+	//p.fillRect(0,0,width(),height(),p.background().color().darker(150));
 
 	// outer rect
-	p.setPen( p.background().color().dark( 150 ) );
+	p.setPen(p.background().color().dark(150));
 	p.drawRect( 0, 0, width() - 1, height() - 1 );
 
 	// draw line below titlebar
-	p.fillRect( 1, 1, width() - 2, m_titleBarHeight + 1, p.background().color().darker( 150 ) );
+	//p.fillRect( 1, 1, width() - 2, m_titleBarHeight + 1, p.background().color().darker( 150 ) );
+	p.fillRect(0,0,width()-1,m_titleBarHeight-1,p.background().color().darker(150));
 
 	// draw text
 	p.setPen( palette().color( QPalette::Active, QPalette::Text ) );
 	p.setFont( pointSize<8>( font() ) );
-	p.drawText( 22, m_titleBarHeight, m_caption );
+	p.drawText( 22, m_titleBarHeight-3, m_caption );
 }

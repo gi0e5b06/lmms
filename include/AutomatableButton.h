@@ -63,6 +63,7 @@ public slots:
 
 protected:
 	virtual void contextMenuEvent( QContextMenuEvent * _me );
+	virtual void dropEvent( QDropEvent * _de );
 	virtual void mousePressEvent( QMouseEvent * _me );
 	virtual void mouseReleaseEvent( QMouseEvent * _me );
 

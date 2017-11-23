@@ -49,12 +49,12 @@ TabWidget::TabWidget( const QString & caption, QWidget * parent, bool usePixmap 
 	// Create taller tabbar when it's to display artwork tabs
 	m_tabbarHeight = usePixmap ? GRAPHIC_TAB_HEIGHT : TEXT_TAB_HEIGHT;
 
-	m_tabheight = caption.isEmpty() ? m_tabbarHeight - 3 : m_tabbarHeight - 4;
+	m_tabheight = /*caption.isEmpty() ? m_tabbarHeight - 3 :*/ m_tabbarHeight - 4;
 
 	setFont( pointSize<8>( font() ) );
 
 	setAutoFillBackground( true );
-	QColor bg_color = QApplication::palette().color( QPalette::Active, QPalette::Background ). darker( 132 );
+	QColor bg_color = QApplication::palette().color( QPalette::Active, QPalette::Background ). dark(150);//darker( 132 );
 	QPalette pal = palette();
 	pal.setColor( QPalette::Background, bg_color );
 	setPalette( pal );
@@ -88,7 +88,7 @@ void TabWidget::addTab( QWidget * w, const QString & name, const char *pixmap, i
 
 	// Position tab's window
 	w->setFixedSize( width() - 4, height() - m_tabbarHeight );
-	w->move( 2, m_tabbarHeight - 1 );
+	w->move( 2, m_tabbarHeight ); //-1
 	w->hide();
 
 	// Show tab's window if it's active
