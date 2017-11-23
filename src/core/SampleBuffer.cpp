@@ -184,7 +184,7 @@ void SampleBuffer::update( bool _keep_settings )
 		m_varLock.lockForWrite();
 		if(m_origData!=m_data)
 		{
-			qWarning("SampleBuffer::update FREE data %p",m_data);
+			//qWarning("SampleBuffer::update FREE data %p",m_data);
 			//BACKTRACE
 			MM_FREE( m_data );
 			m_data=NULL;
@@ -364,7 +364,7 @@ void SampleBuffer::update( bool _keep_settings )
 		{
 			normalizeSampleRate( samplerate, _keep_settings );
 
-			if( !m_audioFile.isEmpty() && !filename.endsWith(cchext) )
+			if( !m_audioFile.isEmpty() && !filename.endsWith(cchext) && (m_frames>102400) )
 			{
 				QFile file(filename+cchext);//QDateTime QFileInfo::lastModified()
 				//QFileInfo info(file);
