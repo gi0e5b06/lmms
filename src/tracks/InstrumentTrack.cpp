@@ -1340,7 +1340,7 @@ InstrumentTrackWindow::InstrumentTrackWindow( InstrumentTrackView * _itv ) :
 
 	QVBoxLayout* generalSettingsLayout = new QVBoxLayout( generalSettingsWidget );
 
-	generalSettingsLayout->setContentsMargins( 8, 18, 8, 8 );
+	generalSettingsLayout->setContentsMargins( 6, 16, 6, 6 );
 	generalSettingsLayout->setSpacing( 6 );
 
 	QWidget* nameAndChangeTrackWidget = new QWidget( generalSettingsWidget );
@@ -1496,8 +1496,8 @@ InstrumentTrackWindow::InstrumentTrackWindow( InstrumentTrackView * _itv ) :
 
 	QWidget* instrumentFunctions = new QWidget( saFunc );
 	QVBoxLayout* instrumentFunctionsLayout = new QVBoxLayout( instrumentFunctions );
-	instrumentFunctionsLayout->setContentsMargins( 0,6,0,6 );
-	instrumentFunctionsLayout->setMargin( 3 );
+	instrumentFunctionsLayout->setContentsMargins( 1,1,1,1 );
+	instrumentFunctionsLayout->setMargin( 2 );
 	//instrumentFunctionsLayout->addStrut( 230 );
 	instrumentFunctionsLayout->addWidget( m_noteHumanizingView );
 	instrumentFunctionsLayout->addWidget( m_noteStackingView );

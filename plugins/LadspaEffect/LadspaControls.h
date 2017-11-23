@@ -77,7 +77,6 @@ private:
 	friend class LadspaControlDialog;
 	friend class LadspaEffect;
 
-
 signals:
 	void effectModelChanged( LadspaControls * );
 

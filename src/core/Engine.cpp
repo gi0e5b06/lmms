@@ -57,13 +57,12 @@ void LmmsCore::init( bool renderOnly )
 
 	emit engine->initProgress(tr("Initializing data structures"));
 	s_projectJournal = new ProjectJournal;
+	s_ladspaManager = new Ladspa2LMMS;
 	s_mixer = new Mixer( renderOnly );
 	s_song = new Song;
 	s_transport = s_song;
 	s_fxMixer = new FxMixer;
 	s_bbTrackContainer = new BBTrackContainer;
-
-	s_ladspaManager = new Ladspa2LMMS;
 
 	s_projectJournal->setJournalling( true );
 

@@ -34,11 +34,12 @@
 
 
 LadspaControlView::LadspaControlView( QWidget * _parent,
-						LadspaControl * _ctl ) :
+				      LadspaControl * _ctl ) :
 	QWidget( _parent ),
 	ModelView( _ctl, this ),
 	m_ctl( _ctl )
 {
+	setObjectName(QString("LadspaControlView-%1").arg((unsigned long)this,16));
 	QHBoxLayout * layout = new QHBoxLayout( this );
 	layout->setMargin( 0 );
 	layout->setSpacing( 0 );
@@ -59,10 +60,14 @@ LadspaControlView::LadspaControlView( QWidget * _parent,
 	{
 		case TOGGLED:
 		{
-			LedCheckBox * toggle = new LedCheckBox(
-				m_ctl->port()->name, this, QString::null, LedCheckBox::Green );
+			LedCheckBox * toggle = new LedCheckBox
+				(m_ctl->port()->name, this,
+				 m_ctl->port()->name, //QString::null
+				 LedCheckBox::Green );
+			qWarning("LadspaControlView: LedCheckBox %p name=%s",toggle,qPrintable(m_ctl->port()->name));
 			toggle->setModel( m_ctl->toggledModel() );
 			layout->addWidget( toggle );
+			/*
 			if( link != NULL )
 			{
 				setFixedSize( link->width() + toggle->width(),
@@ -73,16 +78,19 @@ LadspaControlView::LadspaControlView( QWidget * _parent,
 				setFixedSize( toggle->width(),
 							toggle->height() );
 			}
+			*/
 			break;
 		}
 
 		case INTEGER:
 		case FLOATING:
 			knb = new Knob( knobBright_26, this, m_ctl->port()->name );
+			qWarning("LadspaControlView: Knob %p name=%s",knb,qPrintable(m_ctl->port()->name));
 			break;
 
 		case TIME:
 			knb = new TempoSyncKnob( knobBright_26, this, m_ctl->port()->name );
+			qWarning("LadspaControlView: TempoSyncKnob %p name=%s",knb,qPrintable(m_ctl->port()->name));
 			break;
 
 		default:
@@ -103,6 +111,7 @@ LadspaControlView::LadspaControlView( QWidget * _parent,
 		knb->setHintText( tr( "Value:" ), "" );
 		knb->setWhatsThis( tr( "Sorry, no help available." ) );
 		layout->addWidget( knb );
+		/*
 		if( link != NULL )
 		{
 			setFixedSize( link->width() + knb->width(),
@@ -112,6 +121,7 @@ LadspaControlView::LadspaControlView( QWidget * _parent,
 		{
 			setFixedSize( knb->width(), knb->height() );
 		}
+		*/
 	}
 }
 

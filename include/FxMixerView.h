@@ -32,7 +32,9 @@
 
 #include "ModelView.h"
 #include "Engine.h"
+#include "Effect.h"
 #include "Fader.h"
+#include "Knob.h"
 #include "PixmapButton.h"
 #include "ToolTip.h"
 #include "embed.h"
@@ -52,6 +54,12 @@ public:
 		FxChannelView(QWidget * _parent, FxMixerView * _mv, int _chIndex );
 
 		void setChannelIndex( int index );
+
+		//Effect*       m_eq;
+		PixmapButton* m_eqEnableBtn;
+		Knob*         m_eqHighKnob;
+		Knob*         m_eqMediumKnob;
+		Knob*         m_eqLowKnob;
 
 		FxLine * m_fxLine;
 		PixmapButton * m_muteBtn;

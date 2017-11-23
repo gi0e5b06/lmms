@@ -39,6 +39,8 @@
 
 #include "FxMixerView.h"
 #include "Knob.h"
+#include "EffectControls.h"
+#include "EffectControlDialog.h"
 #include "FxLine.h"
 #include "FxMixer.h"
 #include "GuiApplication.h"
@@ -225,10 +227,10 @@ void FxMixerView::refreshDisplay()
 		chLayout->addWidget(m_fxChannelViews[i]->m_fxLine);
 		m_racksLayout->addWidget( m_fxChannelViews[i]->m_rackView );
 	}
-	
+
 	// set selected fx line to 0
 	setCurrentFxLine( 0 );
-	
+
 	// update all fx lines
 	for( int i = 0; i < m_fxChannelViews.size(); ++i )
 	{
@@ -277,44 +279,110 @@ void FxMixerView::loadSettings( const QDomElement & _this )
 
 
 FxMixerView::FxChannelView::FxChannelView(QWidget * _parent, FxMixerView * _mv,
-										  int channelIndex )
+					  int channelIndex )
 {
 	m_fxLine = new FxLine(_parent, _mv, channelIndex);
 
 	FxChannel *fxChannel = Engine::fxMixer()->effectChannel(channelIndex);
 
 	m_fader = new Fader( &fxChannel->m_volumeModel,
-					tr( "FX Fader %1" ).arg( channelIndex ), m_fxLine );
+			     tr( "FX Fader %1" ).arg( channelIndex ), m_fxLine );
 	m_fader->setLevelsDisplayedInDBFS();
 	m_fader->setMinPeak(dbfsToAmp(-42));
 	m_fader->setMaxPeak(dbfsToAmp(9));
 
 	m_fader->move( 16-m_fader->width()/2,
-					m_fxLine->height()-
-					m_fader->height()-5 );
+		       m_fxLine->height()-
+		       m_fader->height()-5 );
 
 	m_muteBtn = new PixmapButton( m_fxLine, tr( "Mute" ) );
 	m_muteBtn->setModel( &fxChannel->m_muteModel );
-	m_muteBtn->setActiveGraphic(
-				embed::getIconPixmap( "led_off" ) );
-	m_muteBtn->setInactiveGraphic(
-				embed::getIconPixmap( "led_green" ) );
+	m_muteBtn->setActiveGraphic(embed::getIconPixmap( "led_off" ) );
+	m_muteBtn->setInactiveGraphic(embed::getIconPixmap( "led_green" ) );
 	m_muteBtn->setCheckable( true );
-	m_muteBtn->move( 9,  m_fader->y()-11);
+	m_muteBtn->move( 9,  m_fader->y()-21);
 	ToolTip::add( m_muteBtn, tr( "Mute this FX channel" ) );
 
 	m_soloBtn = new PixmapButton( m_fxLine, tr( "Solo" ) );
 	m_soloBtn->setModel( &fxChannel->m_soloModel );
-	m_soloBtn->setActiveGraphic(
-				embed::getIconPixmap( "led_red" ) );
-	m_soloBtn->setInactiveGraphic(
-				embed::getIconPixmap( "led_off" ) );
+	m_soloBtn->setActiveGraphic(embed::getIconPixmap( "led_red" ) );
+	m_soloBtn->setInactiveGraphic(embed::getIconPixmap( "led_off" ) );
 	m_soloBtn->setCheckable( true );
-	m_soloBtn->move( 9,  m_fader->y()-21);
+	m_soloBtn->move( 9,  m_fader->y()-11);
 	connect(&fxChannel->m_soloModel, SIGNAL( dataChanged() ),
-			_mv, SLOT ( toggledSolo() ) );
+		_mv, SLOT ( toggledSolo() ) );
 	ToolTip::add( m_soloBtn, tr( "Solo FX channel" ) );
-	
+
+	if(channelIndex==0)
+	{
+		m_eqEnableBtn =NULL;
+		m_eqHighKnob  =NULL;
+		m_eqMediumKnob=NULL;
+		m_eqLowKnob   =NULL;
+	}
+	else
+	{
+		m_eqEnableBtn=new PixmapButton(m_fxLine, tr("Eq"));
+		m_eqEnableBtn->setActiveGraphic(embed::getIconPixmap("led_blue"));
+		m_eqEnableBtn->setInactiveGraphic(embed::getIconPixmap("led_off"));
+		m_eqEnableBtn->setCheckable(true);
+		m_eqEnableBtn ->setModel( &fxChannel->m_eqDJEnableModel );
+		m_eqEnableBtn ->move(9, m_fader->y()-138);
+
+		Effect* eq=fxChannel->m_eqDJ;
+		EffectControls* cq=eq->controls();
+		if(cq)
+		{
+			EffectControlDialog* vq=cq->createView();
+			if(vq)
+		        {
+				QList<Knob*> all=vq->findChildren<Knob*>();
+				if(all.size()==3)
+				{
+					m_eqHighKnob  =all[2];
+					m_eqMediumKnob=all[1];
+					m_eqLowKnob   =all[0];
+
+					m_eqHighKnob  ->setLabel("");
+					m_eqMediumKnob->setLabel("");
+					m_eqLowKnob   ->setLabel("");
+
+					//m_fxLine->layout()->addWidget(m_eqHighKnob);
+					//m_fxLine->layout()->addWidget(m_eqMediumKnob);
+					//m_fxLine->layout()->addWidget(m_eqLowKnob);
+					m_eqHighKnob  ->setParent(m_fxLine);
+					m_eqMediumKnob->setParent(m_fxLine);
+					m_eqLowKnob   ->setParent(m_fxLine);
+
+					m_eqHighKnob  ->move(3, m_eqEnableBtn->y()+15);
+					m_eqMediumKnob->move(3, m_eqEnableBtn->y()+50);
+					m_eqLowKnob   ->move(3, m_eqEnableBtn->y()+85);
+				}
+				else qWarning("FxChannel: not 3???");
+			}
+			else qWarning("FxChannel: EffectControlDialog* v=NULL");
+		}
+		else qWarning("FxChannel: EffectControls* c=NULL");
+
+		/*
+		m_eqHighKnob  =new Knob(knobBright_26, m_fxLine );
+		m_eqMediumKnob=new Knob(knobBright_26, m_fxLine );
+		m_eqLowKnob   =new Knob(knobBright_26, m_fxLine );
+		m_eqHighKnob  ->setModel( &fxChannel->m_eqDJHighModel );
+		m_eqMediumKnob->setModel( &fxChannel->m_eqDJMediumModel );
+		m_eqLowKnob   ->setModel( &fxChannel->m_eqDJLowModel );
+		//m_eqHighKnob  ->setVolumeKnob(true);
+		//m_eqMediumKnob->setVolumeKnob(true);
+		//m_eqLowKnob   ->setVolumeKnob(true);
+		m_eqHighKnob  ->setUnit(" dB");
+		m_eqMediumKnob->setUnit(" dB");
+		m_eqLowKnob   ->setUnit(" dB");
+		m_eqHighKnob  ->move(3, m_eqEnableBtn->y()+13);
+		m_eqMediumKnob->move(3, m_eqEnableBtn->y()+43);
+		m_eqLowKnob   ->move(3, m_eqEnableBtn->y()+73);
+		*/
+	}
+
 	// Create EffectRack for the channel
 	m_rackView = new EffectRackView( &fxChannel->m_fxChain, _mv->m_racksWidget );
 	m_rackView->setFixedSize( 245, FxLine::FxLineHeight );

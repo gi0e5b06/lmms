@@ -49,13 +49,14 @@ public:
 	enum PluginTypes
 	{
 		Instrument,	// instrument being used in channel-track
-		Effect,		// effect-plugin for effect-board
+		Effect,		// audio effect-plugin for effect-board
 		ImportFilter,	// filter for importing a file
 		ExportFilter,	// filter for exporting a file
 		Tool,		// additional tool (level-meter etc)
 		Library,	// simple library holding a code-base for
 				// several other plugins (e.g. VST-support)
 		Other,
+		MidiEffect,     // midi effect
 		Undefined = 255
 	} ;
 

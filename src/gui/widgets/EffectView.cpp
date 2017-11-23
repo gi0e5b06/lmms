@@ -49,7 +49,7 @@ EffectView::EffectView( Effect * _model, QWidget * _parent ) :
 	m_subWindow( NULL ),
 	m_controlView( NULL )
 {
-	setFixedSize( 210, 60 );
+	setFixedSize( 230, 60 );
 
 	// Disable effects that are of type "DummyEffect"
 	bool isEnabled = !dynamic_cast<DummyEffect *>( effect() );
@@ -62,8 +62,9 @@ EffectView::EffectView( Effect * _model, QWidget * _parent ) :
 
 
 	m_wetDry = new Knob( knobBright_26, this );
-	m_wetDry->setLabel( tr( "W/D" ) );
-	m_wetDry->move( 27, 5 );
+	m_wetDry->setLabel( tr( "D-WET" ) );
+	//m_autoQuit->move( 20, 5 );
+	m_wetDry->setGeometry( 19,5,38,38 );
 	m_wetDry->setEnabled( isEnabled );
 	m_wetDry->setHintText( tr( "Wet Level:" ), "" );
 	m_wetDry->setWhatsThis( tr( "The Wet/Dry knob sets the ratio between "
@@ -73,7 +74,8 @@ EffectView::EffectView( Effect * _model, QWidget * _parent ) :
 
 	m_autoQuit = new TempoSyncKnob( knobBright_26, this );
 	m_autoQuit->setLabel( tr( "DECAY" ) );
-	m_autoQuit->move( 60, 5 );
+	//m_autoQuit->move( 60, 5 );
+	m_autoQuit->setGeometry( 57,5,38,38 );
 	m_autoQuit->setEnabled( isEnabled );
 	m_autoQuit->setHintText( tr( "Time:" ), "ms" );
 	m_autoQuit->setWhatsThis( tr(
@@ -84,7 +86,8 @@ EffectView::EffectView( Effect * _model, QWidget * _parent ) :
 
 	m_gate = new Knob( knobBright_26, this );
 	m_gate->setLabel( tr( "GATE" ) );
-	m_gate->move( 93, 5 );
+	//m_gate->move( 100, 5 );
+	m_gate->setGeometry( 95,5,38,38 );
 	m_gate->setEnabled( isEnabled );
 	m_gate->setHintText( tr( "Gate:" ), "" );
 	m_gate->setWhatsThis( tr(

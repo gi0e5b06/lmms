@@ -41,30 +41,33 @@ EffectRackView::EffectRackView( EffectChain* model, QWidget* parent ) :
 	QVBoxLayout* mainLayout = new QVBoxLayout( this );
 	mainLayout->setMargin( 0 );//5
 
-	m_effectsGroupBox = new GroupBox( tr( "EFFECTS CHAIN" ) );
+	m_effectsGroupBox = new GroupBox( tr( "AUDIO EFFECTS CHAIN" ) );
 	mainLayout->addWidget( m_effectsGroupBox );
 
 	QVBoxLayout* effectsLayout = new QVBoxLayout( m_effectsGroupBox );
 	effectsLayout->setSpacing( 0 );
 	//effectsLayout->setContentsMargins( 2, m_effectsGroupBox->titleBarHeight() + 4, 2, 2 );
-	effectsLayout->setContentsMargins( 1, m_effectsGroupBox->titleBarHeight() + 4, 1, 1 );
+	//effectsLayout->setContentsMargins( 1, m_effectsGroupBox->titleBarHeight() + 4, 1, 1 );
+	effectsLayout->setContentsMargins(1,m_effectsGroupBox->titleBarHeight(),1,1);
 
-	m_scrollArea = new QScrollArea;
+	m_scrollArea = new QScrollArea();
 	m_scrollArea->setVerticalScrollBarPolicy( Qt::ScrollBarAlwaysOn );
 	m_scrollArea->setHorizontalScrollBarPolicy( Qt::ScrollBarAlwaysOff );
 	m_scrollArea->setPalette( QApplication::palette( m_scrollArea ) );
+	//m_scrollArea->setFrameStyle( QFrame::Box );
+	//m_scrollArea->setLineWidth( 1 );
 	m_scrollArea->setFrameStyle( QFrame::NoFrame );
+	m_scrollArea->setLineWidth( 1 );
 	m_scrollArea->setWidget( new QWidget );
 
 	effectsLayout->addWidget( m_scrollArea );
 
 	QPushButton* addButton = new QPushButton;
-	addButton->setText( tr( "Add effect" ) );
+	addButton->setText( tr( "Add audio effect" ) );
 
 	effectsLayout->addWidget( addButton );
 
 	connect( addButton, SIGNAL( clicked() ), this, SLOT( addEffect() ) );
-
 
 	m_lastY = 0;
 

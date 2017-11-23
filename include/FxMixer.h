@@ -26,6 +26,7 @@
 #define FX_MIXER_H
 
 #include "Model.h"
+#include "Effect.h"
 #include "EffectChain.h"
 #include "JournallingObject.h"
 #include "ThreadableJob.h"
@@ -41,11 +42,16 @@ class FxChannel : public ThreadableJob
 	virtual ~FxChannel();
 
 	EffectChain m_fxChain;
-
 	// set to true when input fed from mixToChannel or child channel
 	bool m_hasInput;
 	// set to true if any effect in the channel is enabled and running
 	bool m_stillRunning;
+
+	Effect* m_eqDJ;
+	BoolModel m_eqDJEnableModel;
+	//FloatModel m_eqDJHighModel;
+	//FloatModel m_eqDJMediumModel;
+	//FloatModel m_eqDJLowModel;
 
 	float m_peakLeft;
 	float m_peakRight;
@@ -71,7 +77,7 @@ class FxChannel : public ThreadableJob
 
 	QAtomicInt m_dependenciesMet;
 	void incrementDeps();
-	void processed();
+	inline void processed();
 
  private:
 	virtual void doProcessing();

@@ -23,6 +23,7 @@
  */
 
 #include <QDomElement>
+#include <QLayout>
 
 #include "debug.h"
 
@@ -32,9 +33,15 @@
 #include "Mixer.h"
 #include "MixerWorkerThread.h"
 #include "MixHelpers.h"
+#include "PluginFactory.h"
 #include "Song.h"
 #include "InstrumentTrack.h"
 #include "BBTrackContainer.h"
+
+#include "EffectControlDialog.h"
+#include "EffectControls.h"
+#include "LadspaControlView.h"
+#include "Knob.h"
 
 FxRoute::FxRoute( FxChannel * from, FxChannel * to, float amount ) :
 	m_from( from ),
@@ -63,6 +70,11 @@ FxChannel::FxChannel( int idx, Model * _parent ) :
 	m_fxChain( NULL ),
 	m_hasInput( false ),
 	m_stillRunning( false ),
+	m_eqDJ( NULL ),
+	m_eqDJEnableModel( false, _parent ),
+	//m_eqDJHighModel  ( 0.f, -70.f, 0.f, 1.f, _parent ),
+	//m_eqDJMediumModel( 0.f, -70.f, 0.f, 1.f, _parent ),
+	//m_eqDJLowModel   ( 0.f, -70.f, 0.f, 1.f, _parent ),
 	m_peakLeft( 0.0f ),
 	m_peakRight( 0.0f ),
 	m_buffer( BufferManager::acquire() ),//new sampleFrame[Engine::mixer()->framesPerPeriod()] ),
@@ -75,6 +87,37 @@ FxChannel::FxChannel( int idx, Model * _parent ) :
 	m_queued( false ),
 	m_dependenciesMet( 0 )
 {
+	if(idx>0)
+	{
+		Effect::Descriptor::SubPluginFeatures::Key* key=
+			new Effect::Descriptor::SubPluginFeatures::Key();
+		key->name="ladspaeffect";
+		key->attributes.insert("file","dj_eq_1901");
+		key->attributes.insert("plugin","dj_eq");
+		m_eqDJ=Effect::instantiate(key->name,NULL,key);
+		qWarning("FxChannel::FxChannel eqDJ=%p",m_eqDJ);
+
+		/*
+		EffectControls* c=m_eqDJ->controls();
+		if(c)
+		{
+			EffectControlDialog* v=c->createView();
+			if(v)
+		        {
+				qWarning("FxChannel::FxChannel v object tree '%s'",qPrintable(v->objectName()));
+				v->dumpObjectTree();
+				qWarning("v %d children",v->children().size());
+				QList<Knob*> allKnobs=v->findChildren<Knob*>();
+				foreach(Knob* k,allKnobs)
+					qWarning("FxChannel::FxChannel knob k='%s'",
+						 qPrintable(k->objectName()));
+			}
+			else qWarning("FxChannel::FxChannel EffectControlDialog* v=NULL");
+		}
+		else qWarning("FxChannel::FxChannel EffectControls* c=NULL");
+		*/
+	}
+
 	BufferManager::clear( m_buffer );
 }
 
@@ -89,7 +132,7 @@ FxChannel::~FxChannel()
 }
 
 
-inline void FxChannel::processed()
+void FxChannel::processed()
 {
 	for( const FxRoute * receiverRoute : m_sends )
 	{
@@ -178,6 +221,16 @@ void FxChannel::doProcessing()
 		}
 
 		m_stillRunning = m_fxChain.processAudioBuffer( m_buffer, fpp, m_hasInput );
+
+		if(m_eqDJ && /*m_stillRunning && m_hasInput &&*/ m_eqDJEnableModel.value())
+		{
+			m_eqDJ->startRunning();
+			//qWarning("processing... fxmixer **************************************");
+			m_stillRunning=m_eqDJ->processAudioBuffer(m_buffer,fpp);
+		}
+		//else if(m_channelIndex)
+		//	qWarning("NOT processing... %p %d %d %d",m_eqDJ,m_stillRunning,
+		//	      m_hasInput,m_eqDJEnableModel.value());
 
 		float peakLeft = 0.;
 		float peakRight = 0.;

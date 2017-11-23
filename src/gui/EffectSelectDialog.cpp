@@ -155,8 +155,10 @@ Effect * EffectSelectDialog::instantiateSelectedPlugin( EffectChain * _parent )
 {
 	if( !m_currentSelection.name.isEmpty() && m_currentSelection.desc )
 	{
+		qWarning("EffectSelectDialog::instantiateSelectedPlugin %s",
+			 qPrintable(m_currentSelection.desc->name));
 		return Effect::instantiate( m_currentSelection.desc->name,
-										_parent, &m_currentSelection );
+					    _parent, &m_currentSelection );
 	}
 	return NULL;
 }

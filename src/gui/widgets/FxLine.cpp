@@ -35,7 +35,7 @@
 #include "Song.h"
 
 
-const int FxLine::FxLineHeight = 287;
+const int FxLine::FxLineHeight = 410;//287
 QPixmap * FxLine::s_sendBgArrow = NULL;
 QPixmap * FxLine::s_receiveBgArrow = NULL;
 
@@ -77,18 +77,18 @@ FxLine::FxLine( QWidget * _parent, FxMixerView * _mv, int _channelIndex ) :
 	m_lcd->setValue( m_channelIndex );
 	m_lcd->move( 4, 58 );
 	m_lcd->setMarginWidth( 1 );
-	
+
 	setWhatsThis( tr(
 	"The FX channel receives input from one or more instrument tracks.\n "
 	"It in turn can be routed to multiple other FX channels. LMMS automatically "
 	"takes care of preventing infinite loops for you and doesn't allow making "
 	"a connection that would result in an infinite loop.\n\n"
-	
+
 	"In order to route the channel to another channel, select the FX channel "
 	"and click on the \"send\" button on the channel you want to send to. "
 	"The knob under the send button controls the level of signal that is sent "
 	"to the channel.\n\n"
-	
+
 	"You can remove and move FX channels in the context menu, which is accessed "
 	"by right-clicking the FX channel.\n" ) );
 
@@ -154,11 +154,11 @@ void FxLine::drawFxLine( QPainter* p, const FxLine *fxLine, bool isActive, bool 
 	int height = fxLine->rect().height();
 
 	p->fillRect( fxLine->rect(), isActive ? fxLine->backgroundActive() : p->background() );
-	
+
 	// inner border
 	p->setPen( isActive ? fxLine->strokeInnerActive() : fxLine->strokeInnerInactive() );
 	p->drawRect( 1, 1, width-3, height-3 );
-	
+
 	// outer border
 	p->setPen( isActive ? fxLine->strokeOuterActive() : fxLine->strokeOuterInactive() );
 	p->drawRect( 0, 0, width-1, height-1 );

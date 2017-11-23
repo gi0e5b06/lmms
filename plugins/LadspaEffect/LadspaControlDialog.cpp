@@ -107,20 +107,23 @@ void LadspaControlDialog::updateEffectView( LadspaControls * _ctl )
 		grouper->setLayout( gl );
 		grouper->setAlignment( Qt::Vertical );
 
-		for( control_list_t::iterator it = controls.begin(); 
-						it != controls.end(); ++it )
+		int cw=0,rh=0;
+		for( control_list_t::iterator it = controls.begin(); it != controls.end(); ++it )
 		{
 			if( (*it)->port()->proc == proc )
 			{
 				if( last_port != NONE &&
-					(*it)->port()->data_type == TOGGLED &&
-					!( (*it)->port()->data_type == TOGGLED && 
-							last_port == TOGGLED ) )
+				    (*it)->port()->data_type == TOGGLED &&
+				    !( (*it)->port()->data_type == TOGGLED &&
+				       last_port == TOGGLED ) )
 				{
 					++row;
 					col = 0;
 				}
-				gl->addWidget( new LadspaControlView( grouper, *it ), row, col );
+				QWidget* qw=new LadspaControlView( grouper, *it );
+				gl->addWidget(qw,row,col);
+				cw=qMax<int>(cw,qw->sizeHint().width());
+				rh=qMax<int>(rh,qw->sizeHint().height());
 				if( ++col == cols )
 				{
 					++row;
@@ -128,6 +131,20 @@ void LadspaControlDialog::updateEffectView( LadspaControls * _ctl )
 				}
 				last_port = (*it)->port()->data_type;
 			}
+		}
+
+		const int rows=(col==0 ? row : row+1);
+
+		for(col=0;col<cols;col++)
+		{
+			gl->setColumnMinimumWidth(col,cw);
+			gl->setColumnStretch(col,1.f);
+		}
+
+		for(row=0;row<rows;row++)
+		{
+			gl->setRowMinimumHeight(row,rh);
+			gl->setRowStretch(row,1.f);
 		}
 
 		m_effectLayout->addWidget( grouper );

@@ -44,8 +44,8 @@ public:
 	virtual ~LadspaEffect();
 
 	virtual bool processAudioBuffer( sampleFrame * _buf,
-							const fpp_t _frames );
-	
+					 const fpp_t _frames );
+
 	void setControl( int _control, LADSPA_Data _data );
 
 	virtual EffectControls * controls()
