@@ -163,7 +163,7 @@ void MidiPort::processInEvent( const MidiEvent& event, const MidiTime& time )
 		*/
 		{
 			//qWarning("MidiPort: process in event t=%d pt=%d",time.getTicks(),prtime);
-			qWarning("MidiPort: process in event");
+			//qWarning("MidiPort: process in event");
 			//prev=inEvent;
 			//prtime=time.getTicks();
 			m_midiEventProcessor->processInEvent( inEvent, time );

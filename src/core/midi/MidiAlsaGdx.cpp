@@ -465,13 +465,13 @@ void MidiAlsaGdx::processOutEvent( const MidiEvent& event, const MidiTime& time,
 
 	if(port->mode()==MidiPort::Disabled)
 	{
-		qInfo("MidiAlsaGdx::run skip disabled port");
+		//qInfo("MidiAlsaGdx::run skip disabled port");
 		return; //not output, not duplex
 	}
 
 	if(port->mode()==MidiPort::Input)
 	{
-		qInfo("MidiAlsaGdx::run skip read-only port");
+		//qInfo("MidiAlsaGdx::run skip read-only port");
 		return; //not output, not duplex
 	}
 
@@ -483,7 +483,7 @@ void MidiAlsaGdx::processOutEvent( const MidiEvent& event, const MidiTime& time,
 
 	int p1=getFD(port,1);
 	//if((p1==-1)&&(port->mode()==MidiPort::Duplex)) p1=getFD(port,0);
-	qInfo("MidiAlsaGdx::processOutEvent p1=%d",p1);
+	//qInfo("MidiAlsaGdx::processOutEvent p1=%d",p1);
 
 	if(p1<0)
 	{
@@ -563,7 +563,7 @@ void MidiAlsaGdx::processOutEvent( const MidiEvent& event, const MidiTime& time,
 
 void MidiAlsaGdx::applyPortMode( MidiPort * _port )
 {
-	qInfo("MidiAlsaGdx::applyPortMode %p mode=%d name=%s",_port,_port->mode(),qPrintable(_port->displayName()));
+	//qInfo("MidiAlsaGdx::applyPortMode %p mode=%d name=%s",_port,_port->mode(),qPrintable(_port->displayName()));
 
 	/*
 	  if(!m_Addr.contains(_port))
@@ -705,7 +705,7 @@ void MidiAlsaGdx::applyPortMode( MidiPort * _port )
 
 void MidiAlsaGdx::applyPortName( MidiPort * _port )
 {
-	qInfo("MidiAlsaGdx::applyPortName %p mode=%d name=%s",_port,_port->mode(),qPrintable(_port->displayName()));
+	//qInfo("MidiAlsaGdx::applyPortName %p mode=%d name=%s",_port,_port->mode(),qPrintable(_port->displayName()));
 
 	/*
 	if(!m_Addr.contains(_port))
@@ -760,7 +760,7 @@ void MidiAlsaGdx::removePort( MidiPort * _port )
 	*/
 	//m_portIDs.remove( _port );
 	m_seqMutex.unlock();
-	SHOW_MIDI_MAP();
+	//SHOW_MIDI_MAP();
 
 	MidiClient::removePort( _port );
 }
@@ -774,7 +774,7 @@ QString MidiAlsaGdx::sourcePortName( const MidiEvent & _event ) const
 	{
 		const snd_seq_addr_t addr =
 			*static_cast<const snd_seq_addr_t *>( _event.sourcePort() );
-		qInfo("MidiAlsaGdx::sourcePortName %u:%u",addr.client,addr.port);
+		//qInfo("MidiAlsaGdx::sourcePortName %u:%u",addr.client,addr.port);
 		QString prefix=QString("%1:%2 ")
 			.arg(addr.client==m_clientID ? 128 : addr.client)
 			.arg(addr.port);
@@ -858,7 +858,7 @@ void MidiAlsaGdx::subscribeReadablePort( MidiPort * _port,
 			}
 			else
 			{
-				qWarning("MidiAlsaGdx: sender subscribing %u:%u %p",sender.client,sender.port,_port);
+				//qInfo("MidiAlsaGdx: sender subscribing %u:%u %p",sender.client,sender.port,_port);
 				m_mapReadSubs.insert(sender,_port);
 			}
 			m_seqMutex.unlock();
@@ -871,7 +871,7 @@ void MidiAlsaGdx::subscribeReadablePort( MidiPort * _port,
 	{
 		if(m_mapReadSubs.contains(sender))
 		{
-			qWarning("MidiAlsaGdx: sender unsubscribing %u:%u %p",sender.client,sender.port,_port);
+			//qInfo("MidiAlsaGdx: sender unsubscribing %u:%u %p",sender.client,sender.port,_port);
 			m_mapReadSubs.remove(sender,_port);
 			if(m_mapReadSubs.contains(sender))
 			{
@@ -886,7 +886,7 @@ void MidiAlsaGdx::subscribeReadablePort( MidiPort * _port,
 		}
 	}
 
-	qInfo("MidiAlsaGdx::subscribeReadablePort physical %u:%u %p",sender.client,sender.port,_port);
+	//qInfo("MidiAlsaGdx::subscribeReadablePort physical %u:%u %p",sender.client,sender.port,_port);
 
 	/*
 	  int p0=getFD(_port,0);
@@ -922,7 +922,7 @@ void MidiAlsaGdx::subscribeReadablePort( MidiPort * _port,
 
 	m_seqMutex.unlock();
 
-	qInfo("mapReadSubs.size=%d",m_mapReadSubs.size());
+	//qInfo("mapReadSubs.size=%d",m_mapReadSubs.size());
 	//SHOW_MIDI_MAP();
 }
 
@@ -988,7 +988,7 @@ void MidiAlsaGdx::subscribeWritablePort( MidiPort * _port,
 		}
 		else
 		{
-			qWarning("MidiAlsaGdx: dest subscribing %u:%u",dest.client,dest.port);
+			//qInfo("MidiAlsaGdx: dest subscribing %u:%u",dest.client,dest.port);
 			m_mapWriteSubs.insert(dest,_port);
 		}
 		m_seqMutex.unlock();
@@ -999,7 +999,7 @@ void MidiAlsaGdx::subscribeWritablePort( MidiPort * _port,
 	{
 		if(m_mapWriteSubs.contains(dest))
 		{
-			qWarning("MidiAlsaGdx: dest unsubscribing %u:%u",dest.client,dest.port);
+			//qInfo("MidiAlsaGdx: dest unsubscribing %u:%u",dest.client,dest.port);
 			m_mapWriteSubs.remove(dest,_port);
 			if(m_mapWriteSubs.contains(dest))
 			{
@@ -1044,7 +1044,7 @@ void MidiAlsaGdx::subscribeWritablePort( MidiPort * _port,
 
 	m_seqMutex.unlock();
 
-	qInfo("mapWriteSubs.size=%d",m_mapWriteSubs.size());
+	//qInfo("mapWriteSubs.size=%d",m_mapWriteSubs.size());
 	//SHOW_MIDI_MAP();
 }
 
@@ -1103,7 +1103,7 @@ void MidiAlsaGdx::run()
 			while( ((nbe=snd_seq_event_input_pending( m_seqHandle, false ))>0)||
 			       ((nbe=snd_seq_event_input_pending( m_seqHandle, true  ))>0 ))
 		        {
-				qWarning("MidiAlsaGdx: %d events pending",nbe);
+				//qInfo("MidiAlsaGdx: %d events pending",nbe);
 
 				snd_seq_event_t * ev;
 				int res;
@@ -1117,55 +1117,34 @@ void MidiAlsaGdx::run()
 						qCritical("MidiAlsaGdx: Error while fetching MIDI event from sequencer");
 					break;
 				}
-				//m_seqMutex.unlock();
 
-				/*
-				static snd_seq_event_t prev;
-				if((ev->type                 == prev.type) && //SND_SEQ_EVENT_CONTROLLER) &&
-				   (ev->data.control.channel == prev.data.control.channel) &&
-				   (ev->data.control.param   == prev.data.control.param) &&
-				   (ev->data.control.value   == prev.data.control.value) &&
-				   (ev->source.port          == prev.source.port) &&
-				   (ev->dest.port            == prev.dest.port) )
-				{
-				        //qWarning( "MidiAlsaGdx: skip input event %d %d %d %d",
-					//  ev->type,ev->data.control.channel,ev->data.control.param,
-					//  ev->data.control.value );
-					//m_seqMutex.lock();
-					//continue;
-				}
-				else
-				{
-				*/
-				//memcpy(&prev,ev,sizeof(snd_seq_event_t));
-				qWarning( "MidiAlsaGdx: enqueue input event %d from %d:%d to %d:%d",
-					  ev->type,ev->source.client,ev->source.port,ev->dest.client,ev->dest.port );
+				//qInfo( "MidiAlsaGdx: enqueue input event %d from %d:%d to %d:%d",
+				//	  ev->type,ev->source.client,ev->source.port,ev->dest.client,ev->dest.port );
 				s_evqueue.enqueue(*ev);
-				//}
 			}
 			m_seqMutex.unlock();
 			//PL_END("AlsaSeqInput")
 		}
 
-		qWarning("MidiAlsaGdx: dequeue size=%d",s_evqueue.size());
+		//qInfo("MidiAlsaGdx: dequeue size=%d",s_evqueue.size());
 		if(s_evqueue.size()==0) continue;
 
 		snd_seq_event_t sev=s_evqueue.dequeue();
 		snd_seq_event_t* ev=&sev;
 
-		qInfo("MidiAlsaGdx::run receive from %u:%u",sev.source.client,sev.source.port);
+		//qInfo("MidiAlsaGdx::run receive from %u:%u",sev.source.client,sev.source.port);
 
 		MidiTime  ticks=MidiTime(ev->time.tick);
 		snd_seq_addr_t* source=&ev->dest;//local port source;
 		QList<MidiPort*> ports=m_mapReadSubs.values(ev->dest);//local port source);
 
-		qInfo("MidiAlsaGdx::run new source is %u:%u",128,source->port);//source->client
-		qInfo("MidiAlsaGdx::run %d ports found",ports.size());
+		//qInfo("MidiAlsaGdx::run new source is %u:%u",128,source->port);//source->client
+		//qInfo("MidiAlsaGdx::run %d ports found",ports.size());
 
 		for(int j=0;j<ports.size();j++)
 		{
 			MidiPort* dest=ports[j];
-			qInfo("MidiAlsaGdx::run process event %d to %p",ev->type,dest);
+			//qInfo("MidiAlsaGdx::run process event %d to %p",ev->type,dest);
 			if(dest==NULL) qFatal("MidiAlsaGdx::run dest is null");
 
 			if(dest->mode()==MidiPort::Disabled)
@@ -1213,9 +1192,9 @@ void MidiAlsaGdx::run()
 				break;
 
 			case SND_SEQ_EVENT_CONTROLLER:
-				qWarning("MidiAlsaGdx: controller value=%d time=%d",
-					 ev->data.control.value,
-					 ev->time.tick);
+				//qInfo("MidiAlsaGdx: controller value=%d time=%d",
+				//      ev->data.control.value,
+				//      ev->time.tick);
 				dest->processInEvent(MidiEvent(MidiControlChange,
 							       ev->data.control.channel,
 							       ev->data.control.param,
@@ -1332,8 +1311,8 @@ void MidiAlsaGdx::updateAlsaPortList()
 				QString c=f.section(':',1,1);
 				if(d.startsWith("LMMS")) d="LMMS";
 				QString e=QString("%1:ch%2").arg(d).arg(p.toInt()%16);
-				qWarning("Writable: s=%s f=%s d=%s c=%s e=%s",
-					 qPrintable(s),qPrintable(f),qPrintable(d),qPrintable(c),qPrintable(e));
+				//qInfo("Writable: s=%s f=%s d=%s c=%s e=%s",
+				//	qPrintable(s),qPrintable(f),qPrintable(d),qPrintable(c),qPrintable(e));
 				s_alsaWritablePorts.insert(s,s);
 				s_alsaWritablePorts.insert(f,s);
 				s_alsaWritablePorts.insert(d,s);
@@ -1353,8 +1332,8 @@ void MidiAlsaGdx::updateAlsaPortList()
 				QString c=f.section(':',1,1);
 				if(d.startsWith("LMMS")) d="LMMS";
 				QString e=QString("%1:ch%2").arg(d).arg(p.toInt()%16);
-				qWarning("Readable: s=%s f=%s d=%s c=%s e=%s",
-					 qPrintable(s),qPrintable(f),qPrintable(d),qPrintable(c),qPrintable(e));
+				//qInfo("Readable: s=%s f=%s d=%s c=%s e=%s",
+				//	qPrintable(s),qPrintable(f),qPrintable(d),qPrintable(c),qPrintable(e));
 				s_alsaReadablePorts.insert(s,s);
 				s_alsaReadablePorts.insert(f,s);
 				s_alsaReadablePorts.insert(d,s);
@@ -1406,12 +1385,12 @@ void MidiAlsaGdx::updatePortList()
 
 void MidiAlsaGdx::SHOW_MIDI_MAP()
 {
-	qWarning("LMMS");
+	qInfo("LMMS");
 	foreach(const MidiPort* mp,m_FD0.keys())
 	{
 		int p0=getFD(mp,0);
 		int p1=getFD(mp,1);
-		qWarning("mp0 %p p0=%d p1=%d mode=%d name=%s",mp,
+		qInfo("mp0 %p p0=%d p1=%d mode=%d name=%s",mp,
 			 p0,p1,mp->mode(),qPrintable(mp->displayName()));
 
 	}
@@ -1420,28 +1399,28 @@ void MidiAlsaGdx::SHOW_MIDI_MAP()
 		if(m_FD0.contains(mp)) continue;
 		int p0=getFD(mp,0);
 		int p1=getFD(mp,1);
-		qWarning("mp1 %p p0=%d p1=%d mode=%d name=%s",mp,
+		qInfo("mp1 %p p0=%d p1=%d mode=%d name=%s",mp,
 			 p0,p1,mp->mode(),qPrintable(mp->displayName()));
 	}
-	qWarning("ALSA");
+	qInfo("ALSA");
 	foreach(const QString& p,m_writablePorts)
-		qWarning("writable %s",qPrintable(p));
+		qInfo("writable %s",qPrintable(p));
 	foreach(const QString& p,m_readablePorts)
-		qWarning("readable %s",qPrintable(p));
-	qWarning("SUBSCRIPTIONS");
+		qInfo("readable %s",qPrintable(p));
+	qInfo("SUBSCRIPTIONS");
 	foreach(const snd_seq_addr_t& a,m_mapReadSubs.uniqueKeys())
 	{
 		int n=m_mapReadSubs.values(a).size();
-		qWarning("read %d:%d (%d readers)",a.client,a.port,n);
+		qInfo("read %d:%d (%d readers)",a.client,a.port,n);
 		foreach(const MidiPort* mp,m_mapReadSubs.values(a))
-			qWarning("           %p %d %s",mp,mp->mode(),qPrintable(mp->displayName()));
+			qInfo("           %p %d %s",mp,mp->mode(),qPrintable(mp->displayName()));
 	}
 	foreach(const snd_seq_addr_t& a,m_mapWriteSubs.uniqueKeys())
 	{
 		int n=m_mapWriteSubs.values(a).size();
-		qWarning("write %d:%d (%d writers)",a.client,a.port,n);
+		qInfo("write %d:%d (%d writers)",a.client,a.port,n);
 		foreach(const MidiPort* mp,m_mapWriteSubs.values(a))
-			qWarning("           %p %d %s",mp,mp->mode(),qPrintable(mp->displayName()));
+			qInfo("           %p %d %s",mp,mp->mode(),qPrintable(mp->displayName()));
 	}
 }
 
