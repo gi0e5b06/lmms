@@ -114,6 +114,7 @@ InstrumentTrack::InstrumentTrack( TrackContainer* tc ) :
 	m_noteHumanizing( this ),
 	m_noteStacking( this ),
 	m_arpeggio( this ),
+	m_noteDuplicatesRemoving( this ),
 	m_piano( this )
 {
 	m_pitchModel.setCenterValue( 0 );
@@ -482,19 +483,22 @@ f_cnt_t InstrumentTrack::beatLen( NotePlayHandle * _n ) const
 
 
 
-void InstrumentTrack::playNote( NotePlayHandle* n, sampleFrame* workingBuffer )
+void InstrumentTrack::playNote( NotePlayHandle* _n, sampleFrame* _workingBuffer )
 {
 	// arpeggio- and chord-widget has to do its work -> adding sub-notes
 	// for chords/arpeggios
-	m_noteHumanizing.processNote( n );
-	m_noteStacking.processNote( n );
-	m_arpeggio.processNote( n );
+	if(!m_noteHumanizing        .processNote( _n )) return;
+	if(!m_noteStacking          .processNote( _n )) return;
+	if(!m_arpeggio              .processNote( _n )) return;
+	if(!m_noteDuplicatesRemoving.processNote( _n )) return;
 
-	if( n->isMasterNote() == false && m_instrument != NULL )
+	if( _n->isMasterNote() == false && m_instrument != NULL )
 	{
+		//qWarning("InstrumentTrack::play n.key=%d g=%d",_n->key(),_n->generation());
 		// all is done, so now lets play the note!
-		m_instrument->playNote( n, workingBuffer );
+		m_instrument->playNote( _n, _workingBuffer );
 	}
+	//else qWarning("InstrumentTrack::play SKIP n.key=%d g=%d",_n->key(),_n->generation());
 }
 
 
@@ -911,22 +915,25 @@ InstrumentTrackView::InstrumentTrackView( InstrumentTrack * _it, TrackContainerV
 		widgetWidth = DEFAULT_SETTINGS_WIDGET_WIDTH;
 	}
 
-	m_volumeKnob = new Knob( knobSmall_17, getTrackSettingsWidget(),
-							tr( "Volume" ) );
+	m_volumeKnob = new Knob( knobBright_26, //knobSmall_17,
+				 getTrackSettingsWidget(),
+				 tr( "Volume" ) );
 	m_volumeKnob->setVolumeKnob( true );
 	m_volumeKnob->setModel( &_it->m_volumeModel );
 	m_volumeKnob->setHintText( tr( "Volume:" ), "%" );
-	m_volumeKnob->move( widgetWidth-2*24, 2 );
-	m_volumeKnob->setLabel( tr( "VOL" ) );
+	m_volumeKnob->move( widgetWidth-2*29, 3 );//24,2
+	//m_volumeKnob->setLabel( tr( "VOL" ) );
 	m_volumeKnob->show();
 	m_volumeKnob->setWhatsThis( tr( volume_help ) );
 
-	m_panningKnob = new Knob( knobSmall_17, getTrackSettingsWidget(),
-							tr( "Panning" ) );
+	m_panningKnob = new Knob( knobBright_26, //knobSmall_17,
+				  getTrackSettingsWidget(),
+				  tr( "Panning" ) );
 	m_panningKnob->setModel( &_it->m_panningModel );
-    m_panningKnob->setHintText( tr( "Panning:" ), "%" );
-	m_panningKnob->move( widgetWidth-24, 2 );
-	m_panningKnob->setLabel( tr( "PAN" ) );
+	m_panningKnob->setHintText( tr( "Panning:" ), "%" );
+	m_panningKnob->move( widgetWidth-29, 3 );//24,2
+	//m_panningKnob->setLabel( tr( "PAN" ) );
+	m_panningKnob->setPointColor( Qt::magenta );
 	m_panningKnob->show();
 
 	m_midiMenu = new QMenu( tr( "MIDI" ), this );
@@ -969,8 +976,7 @@ InstrumentTrackView::InstrumentTrackView( InstrumentTrack * _it, TrackContainerV
 						QApplication::palette().color( QPalette::Active,
 							QPalette::BrightText ),
 						getTrackSettingsWidget() );
-	m_activityIndicator->setGeometry(
-					 widgetWidth-2*24-11, 2, 8, 28 );
+	m_activityIndicator->setGeometry(widgetWidth-2*29-11, 2, 8, 28 );//24
 	m_activityIndicator->show();
 	connect( m_activityIndicator, SIGNAL( pressed() ),
 				this, SLOT( activityIndicatorPressed() ) );
@@ -1401,6 +1407,7 @@ InstrumentTrackWindow::InstrumentTrackWindow( InstrumentTrackView * _itv ) :
 	// set up panning knob
 	m_panningKnob = new Knob( knobBright_26, NULL, tr( "Panning" ) );
 	m_panningKnob->setHintText( tr( "Panning:" ), "" );
+	m_panningKnob->setPointColor( Qt::magenta );
 
 	basicControlsLayout->addWidget( m_panningKnob, 0, 1 );
 	basicControlsLayout->setAlignment( m_panningKnob, widgetAlignment );
@@ -1416,6 +1423,7 @@ InstrumentTrackWindow::InstrumentTrackWindow( InstrumentTrackView * _itv ) :
 
 	// set up pitch knob
 	m_pitchKnob = new Knob( knobBright_26, NULL, tr( "Pitch" ) );
+	m_pitchKnob->setPointColor( Qt::cyan );
 	m_pitchKnob->setHintText( tr( "Pitch:" ), " " + tr( "cents" ) );
 
 	basicControlsLayout->addWidget( m_pitchKnob, 0, 3 );
@@ -1484,10 +1492,12 @@ InstrumentTrackWindow::InstrumentTrackWindow( InstrumentTrackView * _itv ) :
 	m_noteHumanizingView = new InstrumentFunctionNoteHumanizingView( &m_track->m_noteHumanizing );
 	m_noteStackingView = new InstrumentFunctionNoteStackingView( &m_track->m_noteStacking );
 	m_arpeggioView = new InstrumentFunctionArpeggioView( &m_track->m_arpeggio );
+	m_noteDuplicatesRemovingView = new InstrumentFunctionNoteDuplicatesRemovingView( &m_track->m_noteDuplicatesRemoving );
 
 	m_noteHumanizingView->setMinimumWidth(230);
 	m_noteStackingView->setMinimumWidth(230);
 	m_arpeggioView->setMinimumWidth(230);
+	m_noteDuplicatesRemovingView->setMinimumWidth(230);
 
 	QScrollArea* saFunc = new QScrollArea( m_tabWidget );
 	saFunc->setVerticalScrollBarPolicy( Qt::ScrollBarAlwaysOn );
@@ -1502,6 +1512,7 @@ InstrumentTrackWindow::InstrumentTrackWindow( InstrumentTrackView * _itv ) :
 	instrumentFunctionsLayout->addWidget( m_noteHumanizingView );
 	instrumentFunctionsLayout->addWidget( m_noteStackingView );
 	instrumentFunctionsLayout->addWidget( m_arpeggioView );
+	instrumentFunctionsLayout->addWidget( m_noteDuplicatesRemovingView );
 	instrumentFunctionsLayout->addStretch();
 
 	saFunc->setWidget(instrumentFunctions);
@@ -1517,7 +1528,7 @@ InstrumentTrackWindow::InstrumentTrackWindow( InstrumentTrackView * _itv ) :
 
 
 	m_tabWidget->addTab( m_ssView, tr( "Envelope, filter & LFO" ), "env_lfo_tab", 1 );
-	m_tabWidget->addTab( saFunc /*instrumentFunctions*/, tr( "Humanizing, stacking & arpeggio" ), "func_tab", 2 );
+	m_tabWidget->addTab( saFunc /*instrumentFunctions*/, tr( "Note effects" ), "func_tab", 2 );
 	m_tabWidget->addTab( m_effectView, tr( "Effects" ), "fx_tab", 3 );
 	m_tabWidget->addTab( m_midiView, tr( "MIDI settings" ), "midi_tab", 4 );
 	m_tabWidget->addTab( m_miscView, tr( "Miscellaneous" ), "misc_tab", 5 );
@@ -1630,6 +1641,8 @@ void InstrumentTrackWindow::modelChanged()
 	m_noteHumanizingView->setModel( &m_track->m_noteHumanizing );
 	m_noteStackingView->setModel( &m_track->m_noteStacking );
 	m_arpeggioView->setModel( &m_track->m_arpeggio );
+	m_noteDuplicatesRemovingView->setModel( &m_track->m_noteDuplicatesRemoving );
+
 	m_midiView->setModel( &m_track->m_midiPort );
 	m_effectView->setModel( m_track->m_audioPort.effects() );
 	m_miscView->pitchGroupBox()->setModel(&m_track->m_useMasterPitchModel);

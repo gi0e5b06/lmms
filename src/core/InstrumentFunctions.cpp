@@ -35,12 +35,24 @@
 #include "PresetPreviewPlayHandle.h"
 
 
-InstrumentFunction::InstrumentFunction( Model * _parent, QString _name ) :
+InstrumentFunction::InstrumentFunction(Model* _parent, QString _name) :
 	Model( _parent, _name ),
-	m_enabledModel( false, this )
+	m_enabledModel( false, this ),
+	m_minNoteGenerationModel(0,0,9,this,tr("Min")),
+	m_maxNoteGenerationModel(0,0,9,this,tr("Max"))
 {
 }
 
+
+bool InstrumentFunction::shouldProcessNote( NotePlayHandle* n )
+{
+	if(!n) return false;
+        if(!m_enabledModel.value()) return false;
+	int gen=n->generation();
+	if(gen<m_minNoteGenerationModel.value() ||
+	   gen>m_maxNoteGenerationModel.value()) return false;
+	return true;
+}
 
 
 InstrumentFunctionNoteStacking::ChordTable::Init InstrumentFunctionNoteStacking::ChordTable::s_initTable[] =
@@ -55,7 +67,7 @@ InstrumentFunctionNoteStacking::ChordTable::Init InstrumentFunctionNoteStacking:
 	{ QT_TRANSLATE_NOOP( "InstrumentFunctionNoteStacking", "aug" ), { 0, 4, 8, -1 } },
 	{ QT_TRANSLATE_NOOP( "InstrumentFunctionNoteStacking", "augsus4" ), { 0, 5, 8, -1 } },
 	{ QT_TRANSLATE_NOOP( "InstrumentFunctionNoteStacking", "tri" ), { 0, 3, 6, 9, -1 } },
-	
+
 	{ QT_TRANSLATE_NOOP( "InstrumentFunctionNoteStacking", "6" ), { 0, 4, 7, 9, -1 } },
 	{ QT_TRANSLATE_NOOP( "InstrumentFunctionNoteStacking", "6sus4" ), { 0, 5, 7, 9, -1 } },
 	{ QT_TRANSLATE_NOOP( "InstrumentFunctionNoteStacking", "6add9" ), { 0, 4, 7, 9, 14, -1 } },
@@ -143,7 +155,7 @@ InstrumentFunctionNoteStacking::ChordTable::Init InstrumentFunctionNoteStacking:
 	{ QT_TRANSLATE_NOOP( "InstrumentFunctionNoteStacking", "Minor" ), { 0, 2, 3, 5, 7, 8, 10, -1 } },
 	{ QT_TRANSLATE_NOOP( "InstrumentFunctionNoteStacking", "Chromatic" ), { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, -1 } },
 	{ QT_TRANSLATE_NOOP( "InstrumentFunctionNoteStacking", "Half-Whole Diminished" ), { 0, 1, 3, 4, 6, 7, 9, 10, -1 } },
-	
+
 	{ QT_TRANSLATE_NOOP( "InstrumentFunctionNoteStacking", "5" ), { 0, 7, -1 } },
 	{ QT_TRANSLATE_NOOP( "InstrumentFunctionNoteStacking", "Phrygian dominant" ), { 0, 1, 4, 5, 7, 8, 10, -1 } },
 	{ QT_TRANSLATE_NOOP( "InstrumentFunctionNoteStacking", "Persian" ), { 0, 1, 4, 5, 6, 8, 11, -1 } }
@@ -236,8 +248,13 @@ InstrumentFunctionNoteStacking::~InstrumentFunctionNoteStacking()
 
 
 
-void InstrumentFunctionNoteStacking::processNote( NotePlayHandle * _n )
+bool InstrumentFunctionNoteStacking::processNote( NotePlayHandle * _n )
 {
+	if(!shouldProcessNote(_n)) return true;
+	//qWarning("InstrumentFunctionNoteStacking::processNote n.key=%d in g=%d",_n->key(),_n->generation());
+	if(_n->totalFramesPlayed()!=0 || _n->isReleased()) return true;
+	//qWarning("InstrumentFunctionNoteStacking::processNote n.key=%d OK g=%d",_n->key(),_n->generation());
+
 	const int base_note_key = _n->key();
 	const ChordTable & chord_table = ChordTable::getInstance();
 	// we add chord-subnotes to note if either note is a base-note and
@@ -245,27 +262,28 @@ void InstrumentFunctionNoteStacking::processNote( NotePlayHandle * _n )
 	// at the same time we only add sub-notes if nothing of the note was
 	// played yet, because otherwise we would add chord-subnotes every
 	// time an audio-buffer is rendered...
-	if( ( _n->origin() == NotePlayHandle::OriginArpeggio ||
-	      ( _n->hasParent() == false && _n->instrumentTrack()->isArpeggioEnabled() == false ) ) &&
-	    _n->totalFramesPlayed() == 0 &&
-	    m_enabledModel.value() == true && ! _n->isReleased() )
+	//if(  _n->origin() == NotePlayHandle::OriginArpeggio ||
+	//   ( _n->hasParent() == false && _n->instrumentTrack()->isArpeggioEnabled() == false ) )
 	{
 		// then insert sub-notes for chord
 		const int selected_chord = m_chordsModel.value();
 
 		for( int octave_cnt = 0; octave_cnt < m_chordRangeModel.value(); ++octave_cnt )
 		{
-			const int sub_note_key_base = base_note_key + octave_cnt * KeysPerOctave;
+			const int subnote_key_base = base_note_key + octave_cnt * KeysPerOctave;
 
 			// process all notes in the chord
 			for( int i = 0; i < chord_table[selected_chord].size(); ++i )
 			{
 				// add interval to sub-note-key
-				const int sub_note_key = sub_note_key_base + (int) chord_table[selected_chord][i];
-				// maybe we're out of range -> let's get outta
-				// here!
-				if( sub_note_key > NumKeys )
+				const int subnote_key = subnote_key_base + (int) chord_table[selected_chord][i];
+				// maybe we're out of range -> let's get outta here!
+				// range-checking
+				if( subnote_key >= NumKeys ||
+				    subnote_key < 0 ||
+				    Engine::mixer()->criticalXRuns() )
 				{
+					//qWarning("InstrumentFunctionNoteStacking::processNote subnote break");
 					break;
 				}
 
@@ -273,18 +291,22 @@ void InstrumentFunctionNoteStacking::processNote( NotePlayHandle * _n )
 				{
 
 					// create copy of base-note
-					Note note_copy( _n->length(), 0, sub_note_key, _n->getVolume(), _n->getPanning(), _n->detuning() );
+					Note subnote( _n->length(), 0, subnote_key, _n->getVolume(), _n->getPanning(), _n->detuning() );
 
 					// create sub-note-play-handle, only note is
 					// different
 					Engine::mixer()->addPlayHandle
-						(NotePlayHandleManager::acquire( _n->instrumentTrack(), _n->offset(),
-										 _n->frames(), note_copy,
-										 _n, -1, NotePlayHandle::OriginNoteStacking ) );
+						(NotePlayHandleManager::acquire(_n->instrumentTrack(), _n->offset(),
+										_n->frames(), subnote,
+										_n, -1,
+										NotePlayHandle::OriginNoteStacking,
+										_n->generation()+1));
 				}
 			}
 		}
 	}
+
+	return true;
 }
 
 
@@ -354,18 +376,22 @@ InstrumentFunctionArpeggio::~InstrumentFunctionArpeggio()
 
 
 
-void InstrumentFunctionArpeggio::processNote( NotePlayHandle * _n )
+bool InstrumentFunctionArpeggio::processNote( NotePlayHandle * _n )
 {
-	const int base_note_key = _n->key();
-	if( _n->origin() == NotePlayHandle::OriginArpeggio ||
-	    _n->origin() == NotePlayHandle::OriginNoteStacking ||
-	    !m_enabledModel.value() ||
+	if(!shouldProcessNote(_n)) return true;
+
+	if( //_n->origin() == NotePlayHandle::OriginArpeggio ||
+	    //_n->origin() == NotePlayHandle::OriginNoteStacking ||
 	    ( _n->isReleased() && _n->releaseFramesDone() >= _n->actualReleaseFramesToDo() ) )
 	{
-		return;
+		return true;
 	}
 
+	//qWarning("InstrumentFunctionArpeggio::processNote n.key=%d in g=%d",_n->key(),_n->generation());
+	//if(_n->totalFramesPlayed()!=0 /*|| _n->isReleased()*/ ) return true;
+	//qWarning("InstrumentFunctionArpeggio::processNote n.key=%d OK g=%d",_n->key(),_n->generation());
 
+	const int base_note_key = _n->key();
 	const int selected_arp = m_arpModel.value();
 
 	ConstNotePlayHandleList cnphv = NotePlayHandle::nphsOfInstrumentTrack( _n->instrumentTrack() );
@@ -418,7 +444,7 @@ void InstrumentFunctionArpeggio::processNote( NotePlayHandle * _n )
 				( ( cur_frame / arp_frames ) % total_range ) / range != (f_cnt_t) _n->index() )
 		{
 			// Set master note if not playing arp note or it will play as an ordinary note
-			_n->setMasterNote();
+			if(_n->generation()==0) _n->setMasterNote();
 			// update counters
 			frames_processed += arp_frames;
 			cur_frame += arp_frames;
@@ -433,7 +459,7 @@ void InstrumentFunctionArpeggio::processNote( NotePlayHandle * _n )
 			{
 				// Set master note to prevent the note to extend over skipped notes
 				// This may only be needed for lb302
-				_n->setMasterNote();
+				if(_n->generation()==0) _n->setMasterNote();
 				// update counters
 				frames_processed += arp_frames;
 				cur_frame += arp_frames;
@@ -506,14 +532,15 @@ void InstrumentFunctionArpeggio::processNote( NotePlayHandle * _n )
 		}
 
 		// now calculate final key for our arp-note
-		const int sub_note_key = base_note_key + (cur_arp_idx / cur_chord_size ) *
-							KeysPerOctave + chord_table[selected_arp][cur_arp_idx % cur_chord_size];
+		const int subnote_key = base_note_key + (cur_arp_idx / cur_chord_size ) *
+			KeysPerOctave + chord_table[selected_arp][cur_arp_idx % cur_chord_size];
 
 		// range-checking
-		if( sub_note_key >= NumKeys ||
-			sub_note_key < 0 ||
-			Engine::mixer()->criticalXRuns() )
+		if( subnote_key >= NumKeys ||
+		    subnote_key < 0 ||
+		    Engine::mixer()->criticalXRuns() )
 		{
+			//qWarning("InstrumentFunctionArpeggio::processNote subnote break");
 			continue;
 		}
 
@@ -527,17 +554,20 @@ void InstrumentFunctionArpeggio::processNote( NotePlayHandle * _n )
 
 		//if(MM_SAFE(NotePlayHandle,1))
 		{
+			//Note subnote( _n->length(), 0, subnote_key, _n->getVolume(), _n->getPanning(), _n->detuning() );
+			Note subnote(/*MidiTime( 0 ), MidiTime( 0 ),*/
+				     _n->length(), 0,
+				     subnote_key,
+				     (volume_t) qRound( _n->getVolume() * vol_level ),
+				     _n->getPanning(), _n->detuning() );
+
 			// create sub-note-play-handle, only ptr to note is different
 			// and is_arp_note=true
 			Engine::mixer()->addPlayHandle
-				(NotePlayHandleManager::acquire( _n->instrumentTrack(),
-								 frames_processed,
-								 gated_frames,
-								 Note( MidiTime( 0 ), MidiTime( 0 ), sub_note_key,
-								       (volume_t) qRound( _n->getVolume() * vol_level ),
-								       _n->getPanning(), _n->detuning() ),
-								 _n, -1, NotePlayHandle::OriginArpeggio )
-						       );
+				(NotePlayHandleManager::acquire(_n->instrumentTrack(), frames_processed,
+								gated_frames, subnote,
+								_n, -1, NotePlayHandle::OriginArpeggio,
+								_n->generation()+1));
 		}
 
 		// update counters
@@ -549,8 +579,10 @@ void InstrumentFunctionArpeggio::processNote( NotePlayHandle * _n )
 	// if we didn't add a sub-note so far
 	if( m_arpModeModel.value() != FreeMode )
 	{
-		_n->setMasterNote();
+		if(_n->generation()==0) _n->setMasterNote();
 	}
+
+	return true;
 }
 
 
@@ -621,75 +653,76 @@ InstrumentFunctionNoteHumanizing::~InstrumentFunctionNoteHumanizing()
 
 
 
-void InstrumentFunctionNoteHumanizing::processNote( NotePlayHandle * _n )
+bool InstrumentFunctionNoteHumanizing::processNote( NotePlayHandle * _n )
 {
-	if( _n->totalFramesPlayed() == 0 &&
-	    m_enabledModel.value() == true && ! _n->isReleased() )
+	if(!shouldProcessNote(_n)) return true;
+	if( _n->totalFramesPlayed()!=0 || _n->isReleased() ) return true;
+
 	{
+		float l=m_volumeRangeModel.value()/100.f;
+		if(l>0.f)
 		{
-			float l=m_volumeRangeModel.value()/100.f;
-			if(l>0.f)
-			{
-				float r=fastrandf01inc();
-				volume_t o=_n->getVolume(); // 0..200
-				volume_t n=qBound(0,qRound(o*(1.f-l*r)),200);
-				//qInfo("NH: volume %d->%d",o,n);
-				_n->setVolume(n);
-			}
-		}
-
-		{
-			float l=m_panRangeModel.value()/100.f;
-			if(l>0.f)
-			{
-				float r=fastrandf01inc();
-				panning_t o=_n->getPanning(); // -100..100
-				panning_t n=qBound(-100,qRound(o+200.f*l*(r-0.5f)),100);
-				//qInfo("NH: panning %d->%d",o,n);
-				_n->setPanning(n);
-			}
-		}
-
-		{
-			float l=m_tuneRangeModel.value()/100.f;
-			if(l>0.f)
-			{
-				float r=fastrandf01inc();
-				float o=_n->baseDetune();
-				float n=o+12.f*(l*(r-0.5f));
-				//qInfo("NH: detune %f->%f",o,n);
-				_n->setBaseDetune(n);
-				_n->setFrequencyUpdate();
-			}
-		}
-
-		{
-			float l=m_offsetRangeModel.value()/100.f;
-			if(l>0.f)
-			{
-				float   r=fastrandf01inc();
-				f_cnt_t o=_n->offset(); // ?
-				const fpp_t fpt = Engine::framesPerTick()*Engine::getSong()->ticksPerTact();
-				const fpp_t fpp = Engine::mixer()->framesPerPeriod();
-				f_cnt_t n=qRound(o+(fpt-1-o)*l*r);
-				n=qBound(o,n,fpp-1); // tmp: must be inside the period
-				//qInfo("NH: offset %d->%d",o,n);
-				_n->setOffset(n);
-			}
-		}
-
-		{
-			float l=m_shortenRangeModel.value()/100.f;
-			if(l>0.f)
-			{
-				float   r=fastrandf01inc();
-				f_cnt_t o=_n->frames(); // ?
-				f_cnt_t n=qBound(1,qRound(o*(1.f-l*r)),o);
-				qInfo("NH: shorten %d->%d",o,n);
-				_n->setFrames(n);
-			}
+			float r=fastrandf01inc();
+			volume_t o=_n->getVolume(); // 0..200
+			volume_t n=qBound(0,qRound(o*(1.f-l*r)),200);
+			//qInfo("NH: volume %d->%d",o,n);
+			_n->setVolume(n);
 		}
 	}
+
+	{
+		float l=m_panRangeModel.value()/100.f;
+		if(l>0.f)
+		{
+			float r=fastrandf01inc();
+			panning_t o=_n->getPanning(); // -100..100
+			panning_t n=qBound(-100,qRound(o+200.f*l*(r-0.5f)),100);
+			//qInfo("NH: panning %d->%d",o,n);
+			_n->setPanning(n);
+		}
+	}
+
+	{
+		float l=m_tuneRangeModel.value()/100.f;
+		if(l>0.f)
+		{
+			float r=fastrandf01inc();
+			float o=_n->baseDetune();
+			float n=o+12.f*(l*(r-0.5f));
+			//qInfo("NH: detune %f->%f",o,n);
+			_n->setBaseDetune(n);
+			_n->setFrequencyUpdate();
+		}
+	}
+
+	{
+		float l=m_offsetRangeModel.value()/100.f;
+		if(l>0.f)
+		{
+			float   r=fastrandf01inc();
+			f_cnt_t o=_n->offset(); // ?
+			const fpp_t fpt = Engine::framesPerTick()*Engine::getSong()->ticksPerTact();
+			const fpp_t fpp = Engine::mixer()->framesPerPeriod();
+			f_cnt_t n=qRound(o+(fpt-1-o)*l*r);
+			n=qBound(o,n,fpp-1); // tmp: must be inside the period
+			//qInfo("NH: offset %d->%d",o,n);
+			_n->setOffset(n);
+		}
+	}
+
+	{
+		float l=m_shortenRangeModel.value()/100.f;
+		if(l>0.f)
+		{
+			float   r=fastrandf01inc();
+			f_cnt_t o=_n->frames(); // ?
+			f_cnt_t n=qBound(1,qRound(o*(1.f-l*r)),o);
+			//qInfo("NH: shorten %d->%d",o,n);
+			_n->setFrames(n);
+		}
+	}
+
+	return true;
 }
 
 
@@ -716,4 +749,69 @@ void InstrumentFunctionNoteHumanizing::loadSettings( const QDomElement & _this )
 	m_tuneRangeModel   .loadSettings( _this, "tune" );
 	m_offsetRangeModel .loadSettings( _this, "offset" );
 	m_shortenRangeModel.loadSettings( _this, "shorten" );
+}
+
+
+
+
+InstrumentFunctionNoteDuplicatesRemoving::InstrumentFunctionNoteDuplicatesRemoving( Model * _parent ) :
+	InstrumentFunction( _parent, tr( "NoteDuplicatesRemoving" ) )
+{
+}
+
+
+
+
+InstrumentFunctionNoteDuplicatesRemoving::~InstrumentFunctionNoteDuplicatesRemoving()
+{
+}
+
+
+
+
+bool InstrumentFunctionNoteDuplicatesRemoving::processNote( NotePlayHandle * _n )
+{
+	if(!shouldProcessNote(_n)) return true;
+
+        //if( _n->totalFramesPlayed()==0 && _n->playedFrames()!=0 )
+        //    qWarning("DuplicatesRemoving::processNote tpf=%d pf=%d",_n->totalFramesPlayed(),_n->playedFrames());
+
+	if( _n->totalFramesPlayed()!=0 || _n->isReleased() ) return true;
+
+	f_cnt_t k=_n->pos();
+	//qWarning("InstrumentFunctionNoteDuplicatesRemoving: cache k=%d v=%d in=%d",
+        //  k,_n->key(),m_cache.contains(k,_n->key()));
+	if(m_cache.contains(k,_n->key()))
+        {
+		qInfo("InstrumentFunctionNoteDuplicatesRemoving: HIT CACHE");
+		return false;
+	}
+
+	m_cache.insert(k,_n->key());
+	int i=0;
+	foreach(f_cnt_t ck,m_cache)
+	{
+		if(ck<k-4*DefaultTicksPerTact || ck>=k+8*4*DefaultTicksPerTact)
+			m_cache.remove(ck);
+		i++;
+		if(i>4) break;
+	}
+	//qInfo("NoteDuplicatesRemoving: cache size=%d",m_cache.size());
+	return true;
+}
+
+
+
+
+void InstrumentFunctionNoteDuplicatesRemoving::saveSettings( QDomDocument & _doc, QDomElement & _this )
+{
+	m_enabledModel     .saveSettings( _doc, _this, "enabled" );
+}
+
+
+
+
+void InstrumentFunctionNoteDuplicatesRemoving::loadSettings( const QDomElement & _this )
+{
+	m_enabledModel     .loadSettings( _this, "enabled" );
 }

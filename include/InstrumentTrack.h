@@ -45,6 +45,7 @@ template<class T> class QQueue;
 class InstrumentFunctionNoteHumanizingView;
 class InstrumentFunctionNoteStackingView;
 class InstrumentFunctionArpeggioView;
+class InstrumentFunctionNoteDuplicatesRemovingView;
 class EffectRackView;
 class InstrumentSoundShapingView;
 class FadeButton;
@@ -149,9 +150,19 @@ public:
 	// load instrument whose name matches given one
 	Instrument * loadInstrument( const QString & _instrument_name );
 
+	const AudioPort * audioPort() const
+	{
+		return &m_audioPort;
+	}
+
 	AudioPort * audioPort()
 	{
 		return &m_audioPort;
+	}
+
+	const MidiPort * midiPort() const
+	{
+		return &m_midiPort;
 	}
 
 	MidiPort * midiPort()
@@ -269,6 +280,7 @@ private:
 	InstrumentFunctionNoteHumanizing m_noteHumanizing;
 	InstrumentFunctionNoteStacking m_noteStacking;
 	InstrumentFunctionArpeggio m_arpeggio;
+	InstrumentFunctionNoteDuplicatesRemoving m_noteDuplicatesRemoving;
 
 	Piano m_piano;
 
@@ -453,6 +465,7 @@ private:
 	InstrumentFunctionNoteHumanizingView* m_noteHumanizingView;
 	InstrumentFunctionNoteStackingView* m_noteStackingView;
 	InstrumentFunctionArpeggioView* m_arpeggioView;
+	InstrumentFunctionNoteDuplicatesRemovingView* m_noteDuplicatesRemovingView;
 	InstrumentMidiIOView * m_midiView;
 	EffectRackView * m_effectView;
 	InstrumentMiscView *m_miscView;

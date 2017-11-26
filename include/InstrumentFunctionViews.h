@@ -39,8 +39,21 @@ class InstrumentFunctionArpeggio;
 class InstrumentFunctionNoteStacking;
 
 
+class InstrumentFunctionView : public QWidget, public ModelView
+{
+	Q_OBJECT
+ public:
+	virtual ~InstrumentFunctionView();
 
-class InstrumentFunctionNoteStackingView : public QWidget, public ModelView
+
+ protected:
+	InstrumentFunctionView(InstrumentFunction* cc, const QString& _caption, QWidget* _parent=NULL);
+
+	GroupBox* m_groupBox;
+};
+
+
+class InstrumentFunctionNoteStackingView : public InstrumentFunctionView
 {
 	Q_OBJECT
 public:
@@ -52,8 +65,6 @@ private:
 	virtual void modelChanged();
 
 	InstrumentFunctionNoteStacking * m_cc;
-
-	GroupBox * m_chordsGroupBox;
 	ComboBox * m_chordsComboBox;
 	Knob * m_chordRangeKnob;
 
@@ -63,7 +74,7 @@ private:
 
 
 
-class InstrumentFunctionArpeggioView : public QWidget, public ModelView
+class InstrumentFunctionArpeggioView : public InstrumentFunctionView
 {
 	Q_OBJECT
 public:
@@ -74,8 +85,7 @@ public:
 private:
 	virtual void modelChanged();
 
-	InstrumentFunctionArpeggio * m_a;
-	GroupBox * m_arpGroupBox;
+	InstrumentFunctionArpeggio * m_cc;
 	ComboBox * m_arpComboBox;
 	Knob * m_arpRangeKnob;
 	Knob * m_arpCycleKnob;
@@ -92,7 +102,7 @@ private:
 
 
 
-class InstrumentFunctionNoteHumanizingView : public QWidget, public ModelView
+class InstrumentFunctionNoteHumanizingView : public InstrumentFunctionView
 {
 	Q_OBJECT
 public:
@@ -104,13 +114,28 @@ private:
 	virtual void modelChanged();
 
 	InstrumentFunctionNoteHumanizing* m_cc;
-
-	GroupBox* m_groupBox;
 	Knob* m_volumeRangeKnob;
 	Knob* m_panRangeKnob;
 	Knob* m_tuneRangeKnob;
 	Knob* m_offsetRangeKnob;
 	Knob* m_shortenRangeKnob;
+} ;
+
+
+
+
+class InstrumentFunctionNoteDuplicatesRemovingView : public InstrumentFunctionView
+{
+	Q_OBJECT
+public:
+	InstrumentFunctionNoteDuplicatesRemovingView( InstrumentFunctionNoteDuplicatesRemoving* cc, QWidget* parent = NULL );
+	virtual ~InstrumentFunctionNoteDuplicatesRemovingView();
+
+
+private:
+	virtual void modelChanged();
+
+	InstrumentFunctionNoteDuplicatesRemoving* m_cc;
 } ;
 
 

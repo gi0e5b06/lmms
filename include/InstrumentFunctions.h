@@ -25,6 +25,8 @@
 #ifndef INSTRUMENT_FUNCTIONS_H
 #define INSTRUMENT_FUNCTIONS_H
 
+#include <QMultiHash>
+
 #include "JournallingObject.h"
 #include "lmms_basics.h"
 #include "AutomatableModel.h"
@@ -42,15 +44,25 @@ class InstrumentFunction : public Model, public JournallingObject
  public:
 	virtual ~InstrumentFunction() { }
 
-	virtual void processNote( NotePlayHandle* n ) = 0;
+	virtual bool processNote( NotePlayHandle* n ) = 0;
 	virtual void saveSettings( QDomDocument & _doc, QDomElement & _parent ) = 0;
 	virtual void loadSettings( const QDomElement & _this ) = 0;
 	virtual QString nodeName() const = 0;
 
+	IntModel* minNoteGenerationModel() { return &m_minNoteGenerationModel; }
+	IntModel* maxNoteGenerationModel() { return &m_maxNoteGenerationModel; }
+	//inline int minNoteGeneration() const { return m_minNoteGenerationModel.value(); }
+	//inline void setMinNoteGeneration(int _min) { m_minNoteGenerationModel.setValue(_min); }
+	//inline int maxNoteGeneration() const { return m_maxNoteGenerationModel.value(); }
+	//inline void setMaxNoteGeneration(int _max) { m_maxNoteGenerationModel.setValue(_max); }
+
  protected:
 	InstrumentFunction( Model * _parent, QString _name );
+	virtual bool shouldProcessNote( NotePlayHandle* n );
 
 	BoolModel m_enabledModel;
+	IntModel  m_minNoteGenerationModel;
+	IntModel  m_maxNoteGenerationModel;
 };
 
 
@@ -70,8 +82,7 @@ public:
 	InstrumentFunctionNoteStacking( Model * _parent );
 	virtual ~InstrumentFunctionNoteStacking();
 
-	virtual void processNote( NotePlayHandle* n );
-
+	virtual bool processNote( NotePlayHandle* n );
 	virtual void saveSettings( QDomDocument & _doc, QDomElement & _parent );
 	virtual void loadSettings( const QDomElement & _this );
 
@@ -191,9 +202,7 @@ public:
 	InstrumentFunctionArpeggio( Model * _parent );
 	virtual ~InstrumentFunctionArpeggio();
 
-	void processNote( NotePlayHandle* n );
-
-
+	virtual bool processNote( NotePlayHandle* n );
 	virtual void saveSettings( QDomDocument & _doc, QDomElement & _parent );
 	virtual void loadSettings( const QDomElement & _this );
 
@@ -239,8 +248,7 @@ public:
 	InstrumentFunctionNoteHumanizing( Model * _parent );
 	virtual ~InstrumentFunctionNoteHumanizing();
 
-	virtual void processNote( NotePlayHandle* n );
-
+	virtual bool processNote( NotePlayHandle* n );
 	virtual void saveSettings( QDomDocument & _doc, QDomElement & _parent );
 	virtual void loadSettings( const QDomElement & _this );
 
@@ -261,5 +269,28 @@ private:
 
 
 
+
+class InstrumentFunctionNoteDuplicatesRemoving : public InstrumentFunction
+{
+	Q_OBJECT
+
+public:
+	InstrumentFunctionNoteDuplicatesRemoving( Model * _parent );
+	virtual ~InstrumentFunctionNoteDuplicatesRemoving();
+
+	virtual bool processNote( NotePlayHandle* n );
+	virtual void saveSettings( QDomDocument & _doc, QDomElement & _parent );
+	virtual void loadSettings( const QDomElement & _this );
+
+	inline virtual QString nodeName() const
+	{
+		return "noteduplicatesremoving";
+	}
+
+private:
+	QMultiHash<f_cnt_t,int> m_cache;
+
+	friend class InstrumentFunctionNoteDuplicatesRemovingView;
+};
 
 #endif
