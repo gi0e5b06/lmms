@@ -148,9 +148,9 @@ SampleBuffer::SampleBuffer( const f_cnt_t _frames ) :
 
 SampleBuffer::~SampleBuffer()
 {
-	if(!m_mmapped) 	qWarning("~SampleBuffer: FREE origData %p",m_origData);
+	//if(!m_mmapped) qInfo("~SampleBuffer: FREE origData %p",m_origData);
 	if(!m_mmapped) MM_FREE( m_origData );
-	if(m_origData!=m_data) qWarning("~SampleBuffer: FREE data %p",m_data);
+	//if(m_origData!=m_data) qInfo("~SampleBuffer: FREE data %p",m_data);
 	if(m_origData!=m_data) MM_FREE( m_data );
 }
 
