@@ -13,7 +13,7 @@ MemoryManagerArray MemoryManagerArray::S112 (  128, 112);
 MemoryManagerArray MemoryManagerArray::S128 (   64, 128);
 MemoryManagerArray MemoryManagerArray::S192 (  256, 192);
 //200 drumsynth
-MemoryManagerArray MemoryManagerArray::S224 (  256, 224);
+MemoryManagerArray MemoryManagerArray::S224 ( 2048, 224,"DetuningHelper");
 MemoryManagerArray MemoryManagerArray::S256 (   64, 256);
 MemoryManagerArray MemoryManagerArray::S480 (  256, 480);
 MemoryManagerArray MemoryManagerArray::S496 (   64, 496);

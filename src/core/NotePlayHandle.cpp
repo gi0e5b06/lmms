@@ -45,12 +45,13 @@ NotePlayHandle::BaseDetuning::BaseDetuning( DetuningHelper *detuning ) :
 
 
 NotePlayHandle::NotePlayHandle( InstrumentTrack* instrumentTrack,
-								const f_cnt_t _offset,
-								const f_cnt_t _frames,
-								const Note& n,
-								NotePlayHandle *parent,
-								int midiEventChannel,
-								Origin origin ) :
+				const f_cnt_t _offset,
+				const f_cnt_t _frames,
+				const Note& n,
+				NotePlayHandle *parent,
+				const int midiEventChannel,
+				const Origin origin,
+				const int generation) :
 	PlayHandle( TypeNotePlayHandle, _offset ),
 	Note( n.length(), n.pos(), n.key(), n.getVolume(), n.getPanning(), n.detuning() ),
 	m_pluginData( NULL ),
@@ -80,6 +81,7 @@ NotePlayHandle::NotePlayHandle( InstrumentTrack* instrumentTrack,
 		       ? midiEventChannel
 		       : instrumentTrack->midiPort()->outputChannel()-1 ),
 	m_origin( origin ),
+	m_generation( generation ),
 	m_frequencyNeedsUpdate( false )
 {
 	lock();
@@ -129,7 +131,8 @@ NotePlayHandle::NotePlayHandle( InstrumentTrack* instrumentTrack,
 
 	if( m_instrumentTrack->instrument()->flags() & Instrument::IsSingleStreamed )
 	{
-		setUsesBuffer( false );
+		//setUsesBuffer( false );
+		m_usesBuffer=false;
 	}
 
 	setAudioPort( instrumentTrack->audioPort() );
@@ -492,20 +495,20 @@ ConstNotePlayHandleList NotePlayHandle::nphsOfInstrumentTrack( const InstrumentT
 bool NotePlayHandle::operator==( const NotePlayHandle & _nph ) const
 {
 	return length() == _nph.length() &&
-			pos() == _nph.pos() &&
-			key() == _nph.key() &&
-			getVolume() == _nph.getVolume() &&
-			getPanning() == _nph.getPanning() &&
-			m_instrumentTrack == _nph.m_instrumentTrack &&
-			m_frames == _nph.m_frames &&
-			offset() == _nph.offset() &&
-			m_totalFramesPlayed == _nph.m_totalFramesPlayed &&
-			m_released == _nph.m_released &&
-			m_hasParent == _nph.m_hasParent &&
-			m_origBaseNote == _nph.m_origBaseNote &&
-			m_muted == _nph.m_muted &&
-			m_midiChannel == _nph.m_midiChannel &&
-			m_origin == _nph.m_origin;
+		pos() == _nph.pos() &&
+		key() == _nph.key() &&
+		getVolume() == _nph.getVolume() &&
+		getPanning() == _nph.getPanning() &&
+		m_instrumentTrack == _nph.m_instrumentTrack &&
+		m_frames == _nph.m_frames &&
+		offset() == _nph.offset() &&
+		m_totalFramesPlayed == _nph.m_totalFramesPlayed &&
+		m_released == _nph.m_released &&
+		m_hasParent == _nph.m_hasParent &&
+		m_origBaseNote == _nph.m_origBaseNote &&
+		m_muted == _nph.m_muted &&
+		m_midiChannel == _nph.m_midiChannel &&
+		m_origin == _nph.m_origin;
 }
 
 
@@ -562,6 +565,34 @@ void NotePlayHandle::resize( const bpm_t _new_tempo )
 }
 
 
+void NotePlayHandleManager::init()
+{
+}
+
+NotePlayHandle * NotePlayHandleManager::acquire(InstrumentTrack* instrumentTrack,
+						const f_cnt_t offset,
+						const f_cnt_t frames,
+						const Note& noteToPlay,
+						NotePlayHandle* parent,
+						const int midiEventChannel,
+						const NotePlayHandle::Origin origin,
+						const int generation)
+{
+	NotePlayHandle* nph=MM_ALLOC(NotePlayHandle,1);
+	new( (void*)nph ) NotePlayHandle( instrumentTrack, offset, frames, noteToPlay, parent, midiEventChannel, origin, generation );
+	return nph;
+}
+
+void NotePlayHandleManager::release( NotePlayHandle * _nph )
+{
+	_nph->done();
+	MM_FREE(_nph);
+	//delete nph;
+}
+
+
+
+/*
 NotePlayHandle ** NotePlayHandleManager::s_available;
 QReadWriteLock NotePlayHandleManager::s_mutex;
 AtomicInt NotePlayHandleManager::s_availableIndex;
@@ -584,13 +615,14 @@ void NotePlayHandleManager::init()
 }
 
 
-NotePlayHandle * NotePlayHandleManager::acquire( InstrumentTrack* instrumentTrack,
-				const f_cnt_t offset,
-				const f_cnt_t frames,
-				const Note& noteToPlay,
-				NotePlayHandle* parent,
-				int midiEventChannel,
-				NotePlayHandle::Origin origin )
+NotePlayHandle * NotePlayHandleManager::acquire(InstrumentTrack* instrumentTrack,
+						const f_cnt_t offset,
+						const f_cnt_t frames,
+						const Note& noteToPlay,
+						NotePlayHandle* parent,
+						const int midiEventChannel,
+						const NotePlayHandle::Origin origin,
+						const int generation)
 {
 	if( s_availableIndex < 0 )
 	{
@@ -633,3 +665,4 @@ void NotePlayHandleManager::extend( int c )
 		++n;
 	}
 }
+*/

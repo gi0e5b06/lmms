@@ -40,7 +40,8 @@ class AudioPort;
 
 class PlayHandle : public ThreadableJob
 {
-public:
+	MM_OPERATORS
+ public:
 	enum Types
 	{
 		TypeNotePlayHandle = 0x01,
@@ -122,39 +123,41 @@ public:
 
 	virtual bool isFromTrack( const Track * _track ) const = 0;
 
-	bool usesBuffer() const
+	inline bool usesBuffer() const
 	{
 		return m_usesBuffer;
 	}
-	
-	void setUsesBuffer( const bool b )
+
+	inline void setUsesBuffer( const bool b )
 	{
 		m_usesBuffer = b;
 	}
-	
-	AudioPort * audioPort()
+
+	inline AudioPort* audioPort() const
 	{
 		return m_audioPort;
 	}
-	
-	void setAudioPort( AudioPort * port )
+
+	inline void setAudioPort(AudioPort * port)
 	{
 		m_audioPort = port;
 	}
-	
+
 	void releaseBuffer();
-	
+
 	sampleFrame * buffer();
 
-private:
+ protected:
+	bool m_usesBuffer;
+	AudioPort* m_audioPort;
+
+ private:
 	Type m_type;
 	f_cnt_t m_offset;
 	QThread* m_affinity;
 	QMutex m_processingLock;
 	sampleFrame* m_playHandleBuffer;
 	bool m_bufferReleased;
-	bool m_usesBuffer;
-	AudioPort * m_audioPort;
 } ;
 
 

@@ -183,9 +183,14 @@ void SubWindow::paintEvent( QPaintEvent * )
 	p.setPen( isActive ? activeColor().color() : borderColor() );
 
 	// bottom, left, and right lines
-	p.drawLine( 0, height() - 1, width(), height() - 1 );
+	p.drawLine( 0, height() - 1, width() - 1, height() - 1 );
 	p.drawLine( 0, m_titleBarHeight, 0, height() - 1 );
 	p.drawLine( width() - 1, m_titleBarHeight, width() - 1, height() - 1 );
+
+	//test thicker
+	p.drawLine( 1, height() - 2, width() - 2, height() - 2 );
+	p.drawLine( 1, m_titleBarHeight, 1, height() - 2 );
+	p.drawLine( width() - 2, m_titleBarHeight, width() - 2, height() - 2 );
 
 	// window icon
 

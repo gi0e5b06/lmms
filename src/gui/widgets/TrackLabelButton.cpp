@@ -47,23 +47,24 @@ TrackLabelButton::TrackLabelButton( TrackView * _tv, QWidget * _parent ) :
 {
 	setAttribute( Qt::WA_OpaquePaintEvent, true );
 	setAcceptDrops( true );
-	setCursor( QCursor( embed::getIconPixmap( "hand" ), 3, 3 ) );
+	//setCursor(Qt::PointingHandCursor);
+	//setCursor( QCursor( embed::getIconPixmap( "hand" ), 3, 3 ) );
 	setToolButtonStyle( Qt::ToolButtonTextBesideIcon );
 	m_renameLineEdit = new TrackRenameLineEdit( this );
 	m_renameLineEdit->hide();
-	
+
 	if( ConfigManager::inst()->value( "ui", "compacttrackbuttons" ).toInt() )
 	{
-		setFixedSize( 32, 29 );
+		setFixedSize( 33, 29 );//32
 	}
 	else
 	{
-		setFixedSize( 160, 29 );
-		m_renameLineEdit->move( 30, ( height() / 2 ) - ( m_renameLineEdit->sizeHint().height() / 2 ) );
-		m_renameLineEdit->setFixedWidth( width() - 33 );
+		setFixedSize( 148, 29 );//160
+		m_renameLineEdit->move( 31, ( height() / 2 ) - ( m_renameLineEdit->sizeHint().height() / 2 ) +2 );//+0
+		m_renameLineEdit->setFixedWidth( width() - 32 );//33
 		connect( m_renameLineEdit, SIGNAL( editingFinished() ), this, SLOT( renameFinished() ) );
 	}
-	
+
 	setIconSize( QSize( 24, 24 ) );
 	connect( m_trackView->getTrack(), SIGNAL( dataChanged() ), this, SLOT( update() ) );
 	connect( m_trackView->getTrack(), SIGNAL( nameChanged() ), this, SLOT( nameChanged() ) );
@@ -222,7 +223,7 @@ void TrackLabelButton::resizeEvent(QResizeEvent *_re)
 
 QString TrackLabelButton::elideName( const QString &name )
 {
-	const int spacing = 16;
+	const int spacing = 6; //16
 	const int maxTextWidth = width() - spacing - iconSize().width();
 	if( maxTextWidth < 1 )
 	{

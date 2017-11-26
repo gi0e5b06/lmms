@@ -354,6 +354,10 @@ FxMixerView::FxChannelView::FxChannelView(QWidget * _parent, FxMixerView * _mv,
 					m_eqMediumKnob->setParent(m_fxLine);
 					m_eqLowKnob   ->setParent(m_fxLine);
 
+					m_eqHighKnob  ->setPointColor(Qt::yellow);
+					m_eqMediumKnob->setPointColor(Qt::yellow);
+					m_eqLowKnob   ->setPointColor(Qt::yellow);
+
 					m_eqHighKnob  ->move(3, m_eqEnableBtn->y()+15);
 					m_eqMediumKnob->move(3, m_eqEnableBtn->y()+50);
 					m_eqLowKnob   ->move(3, m_eqEnableBtn->y()+85);

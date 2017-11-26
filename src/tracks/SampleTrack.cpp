@@ -813,6 +813,7 @@ SampleTrackView::SampleTrackView( SampleTrack * _t, TrackContainerView* tcv ) :
 	m_panningKnob->setHintText( tr( "Panning:" ), "%" );
 	m_panningKnob->move( DEFAULT_SETTINGS_WIDGET_WIDTH-24, 2 );
 	m_panningKnob->setLabel( tr( "PAN" ) );
+	m_panningKnob->setPointColor( Qt::magenta );
 	m_panningKnob->show();
 
 	m_effectRack = new EffectRackView( _t->audioPort()->effects() );

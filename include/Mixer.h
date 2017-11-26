@@ -33,7 +33,8 @@
 
 
 #include "lmms_basics.h"
-#include "LocklessList.h"
+//#include "LocklessList.h"
+#include "MemoryManager.h"
 #include "Note.h"
 #include "fifo_buffer.h"
 #include "MixerProfiler.h"
@@ -68,6 +69,7 @@ class MixerWorkerThread;
 
 class EXPORT Mixer : public QObject
 {
+	MM_OPERATORS
 	Q_OBJECT
 public:
 	struct qualitySettings
@@ -380,7 +382,8 @@ private:
 	// playhandle stuff
 	PlayHandleList m_playHandles;
 	// place where new playhandles are added temporarily
-	LocklessList<PlayHandle *> m_newPlayHandles;
+	//LocklessList<PlayHandle *> m_newPlayHandles;
+	PlayHandleList m_newPlayHandles;//QList<PlayHandle*>
 	ConstPlayHandleList m_playHandlesToRemove;
 
 

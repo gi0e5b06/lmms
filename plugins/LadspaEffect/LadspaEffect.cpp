@@ -83,7 +83,7 @@ LadspaEffect::LadspaEffect( Model * _parent,
 
 	setDisplayName( manager->getShortName( m_key ) );
 
-	qWarning("LadspaEffect::LadspaEffect pluginInstantiation()");
+	qInfo("LadspaEffect::LadspaEffect pluginInstantiation()");
 	setObjectName(QString("LadspaEffect-%1").arg((unsigned long)this,16));
 	pluginInstantiation();
 
@@ -137,8 +137,8 @@ bool LadspaEffect::processAudioBuffer( sampleFrame * _buf,
 	m_pluginMutex.lock();
 	if( !isOkay() || dontRun() || !isRunning() || !isEnabled() )
 	{
-		qWarning("okay=%d dontRun=%d isRunning=% isEnabled=%d",
-			 isOkay(),dontRun(),isRunning(),isEnabled());
+		qInfo("okay=%d dontRun=%d isRunning=%d isEnabled=%d",
+                      isOkay(),dontRun(),isRunning(),isEnabled());
 		m_pluginMutex.unlock();
 		return( false );
 	}

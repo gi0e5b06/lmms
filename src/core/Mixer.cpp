@@ -62,7 +62,7 @@
 #include "MemoryHelper.h"
 #include "BufferManager.h"
 
-typedef LocklessList<PlayHandle *>::Element LocklessListElement;
+//typedef LocklessList<PlayHandle *>::Element LocklessListElement;
 
 
 static __thread bool s_renderingThread;
@@ -79,7 +79,7 @@ Mixer::Mixer( bool renderOnly ) :
 	m_writeBuf( NULL ),
 	m_workers(),
 	m_numWorkers( QThread::idealThreadCount()-1 ),
-	m_newPlayHandles( PlayHandle::MaxNumber ),
+	m_newPlayHandles(),// PlayHandle::MaxNumber ),
 	m_qualitySettings( qualitySettings::Mode_Draft ),
 	m_masterGain( 1.0f ),
 	m_isProcessing( false ),
@@ -431,6 +431,7 @@ const surroundSampleFrame * Mixer::renderNextBuffer()
 	song->processNextBuffer();
 
 	// add all play-handles that have to be added
+	/*
 	for( LocklessListElement * e = m_newPlayHandles.popList(); e; )
 	{
 		m_playHandles += e->value;
@@ -438,6 +439,9 @@ const surroundSampleFrame * Mixer::renderNextBuffer()
 		m_newPlayHandles.free( e );
 		e = next;
 	}
+	*/
+	while(!m_newPlayHandles.isEmpty())
+		m_playHandles.append(m_newPlayHandles.takeFirst());
 
 	// STAGE 1: run and render all play handles
 	MixerWorkerThread::fillJobQueue<PlayHandleList>( m_playHandles );
@@ -652,22 +656,27 @@ void Mixer::removeAudioPort( AudioPort * _port )
 }
 
 
-bool Mixer::addPlayHandle( PlayHandle* handle )
+bool Mixer::addPlayHandle( PlayHandle* _ph )
 {
-	if( criticalXRuns() == false )
+	bool r;
+
+	if(criticalXRuns())
 	{
-		m_newPlayHandles.push( handle );
-		handle->audioPort()->addPlayHandle( handle );
-		return true;
+		//if( handle->type() == PlayHandle::TypeNotePlayHandle )
+		//	NotePlayHandleManager::release( (NotePlayHandle*)handle );
+		//else delete handle;
+		m_playHandlesToRemove.push_back( _ph );
+		r=false;
+	}
+	else
+	{
+		//m_newPlayHandles.push( handle );
+		m_newPlayHandles.push_back( _ph );
+		_ph->audioPort()->addPlayHandle( _ph );
+		r=true;
 	}
 
-	if( handle->type() == PlayHandle::TypeNotePlayHandle )
-	{
-		NotePlayHandleManager::release( (NotePlayHandle*)handle );
-	}
-	else delete handle;
-
-	return false;
+	return r;
 }
 
 
@@ -677,14 +686,15 @@ void Mixer::removePlayHandle( PlayHandle * _ph )
 	// check thread affinity as we must not delete play-handles
 	// which were created in a thread different than mixer thread
 	if( _ph->affinityMatters() &&
-				_ph->affinity() == QThread::currentThread() )
+	    _ph->affinity() == QThread::currentThread() )
 	{
 		_ph->audioPort()->removePlayHandle( _ph );
+		/*
 		bool removedFromList = false;
 		// Check m_newPlayHandles first because doing it the other way around
 		// creates a race condition
 		for( LocklessListElement * e = m_newPlayHandles.first(),
-				* ePrev = NULL; e; ePrev = e, e = e->next )
+			     * ePrev = NULL; e; ePrev = e, e = e->next )
 		{
 			if( e->value == _ph )
 			{
@@ -701,9 +711,10 @@ void Mixer::removePlayHandle( PlayHandle * _ph )
 				break;
 			}
 		}
+
 		// Now check m_playHandles
 		PlayHandleList::Iterator it = qFind( m_playHandles.begin(),
-					m_playHandles.end(), _ph );
+						     m_playHandles.end(), _ph );
 		if( it != m_playHandles.end() )
 		{
 			m_playHandles.erase( it );
@@ -718,6 +729,13 @@ void Mixer::removePlayHandle( PlayHandle * _ph )
 			{
 				NotePlayHandleManager::release( (NotePlayHandle*) _ph );
 			}
+			else delete _ph;
+		}
+		*/
+		if(m_newPlayHandles.removeOne(_ph) || m_playHandles.removeOne(_ph))
+		{
+			if( _ph->type() == PlayHandle::TypeNotePlayHandle )
+				NotePlayHandleManager::release( (NotePlayHandle*) _ph );
 			else delete _ph;
 		}
 	}

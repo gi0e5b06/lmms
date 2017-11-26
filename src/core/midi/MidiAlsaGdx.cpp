@@ -292,8 +292,8 @@ void MidiAlsaGdx::setFD(const MidiPort* _port,int _i,int _v)
 }
 
 static QString TYPICAL_CLIENT_NAME[16]=
-	{ "MPKmini2","Inst2","LaunchPad","Inst4","Mixxx","LMMS:ch5",
-	  "Inst7","Inst8","Pads","Drums","Inst11","Inst12",
+	{ "MPKmini2","Inst2","APC MINI","Inst4","Mixxx","LMMS:ch5",
+	  "Inst7","Inst8","Inst9","MPD218","Inst11","Inst12",
 	  "MIDI Mix","Midi Through","System:Announce","System:Timer" };
 void MidiAlsaGdx::createLmmsPorts()
 {
@@ -322,7 +322,7 @@ void MidiAlsaGdx::createLmmsPorts()
 		}
 		else
 		{
-			qInfo("Alsa out port created %d:%d",m_clientID,pout);
+			//qInfo("Alsa out port created %d:%d",m_clientID,pout);
 			setFD(s_lmmsPorts[_num],1,pout);
 			alsaConnectOut(pout,TYPICAL_CLIENT_NAME[_num]);
 		}
@@ -347,7 +347,7 @@ void MidiAlsaGdx::createLmmsPorts()
 		}
 		else
 		{
-			qInfo("Alsa in port created %d:%d",m_clientID,pin);
+			//qInfo("Alsa in port created %d:%d",m_clientID,pin);
 			setFD(s_lmmsPorts[_num],0,pin);
 			alsaConnectIn(pin,TYPICAL_CLIENT_NAME[_num]);
 
@@ -376,7 +376,7 @@ void MidiAlsaGdx::destroyLmmsPorts()
 
 void MidiAlsaGdx::alsaConnectOut(int _pout,QString _pextin)
 {
-	qInfo("MidiAlsaGdx::alsaConnectOut %d %s",_pout,qPrintable(_pextin));
+	//qInfo("MidiAlsaGdx::alsaConnectOut %d %s",_pout,qPrintable(_pextin));
 
 	//20:0 MIDI Mix:MIDI Mix MIDI 1
 	//MIDI Mix:MIDI Mix MIDI 1
@@ -385,7 +385,7 @@ void MidiAlsaGdx::alsaConnectOut(int _pout,QString _pextin)
 
 	if(!s_alsaReadablePorts.contains(_pextin))
 	{
-		qWarning("MidiAlsaGdx::alsaConnectOut %s is not an input port",qPrintable(_pextin));
+		//qWarning("MidiAlsaGdx::alsaConnectOut %s is not an input port",qPrintable(_pextin));
 		return;
 	}
 
@@ -406,11 +406,11 @@ void MidiAlsaGdx::alsaConnectOut(int _pout,QString _pextin)
 
 void MidiAlsaGdx::alsaConnectIn(int _pin,QString _pextout)
 {
-	qInfo("MidiAlsaGdx::alsaConnectIn %d %s",_pin,qPrintable(_pextout));
+	//qInfo("MidiAlsaGdx::alsaConnectIn %d %s",_pin,qPrintable(_pextout));
 
 	if(!s_alsaWritablePorts.contains(_pextout))
 	{
-		qWarning("MidiAlsaGdx::alsaConnectIn %s is not an output port",qPrintable(_pextout));
+		//qWarning("MidiAlsaGdx::alsaConnectIn %s is not an output port",qPrintable(_pextout));
 		return;
 	}
 
@@ -433,8 +433,8 @@ void MidiAlsaGdx::alsaConnect(const snd_seq_addr_t& sender, const snd_seq_addr_t
 {
 	m_seqMutex.lock();
 
-	qInfo("MidiAlsaGdx::alsaConnect from %u:%u to %u:%u",
-	      sender.client,sender.port,dest.client,dest.port);
+	//qInfo("MidiAlsaGdx::alsaConnect from %u:%u to %u:%u",
+	//      sender.client,sender.port,dest.client,dest.port);
 	snd_seq_port_subscribe_t * subs;
 	snd_seq_port_subscribe_malloc( &subs );
 	snd_seq_port_subscribe_set_sender( subs, &sender );

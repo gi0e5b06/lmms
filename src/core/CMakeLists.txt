@@ -95,6 +95,8 @@ set(LMMS_SRCS
 	core/midi/MidiAlsaSeq.cpp
 	core/midi/MidiClient.cpp
 	core/midi/MidiController.cpp
+	core/midi/MidiEffect.cpp
+	core/midi/MidiEffectChain.cpp
 	core/midi/MidiJack.cpp
 	core/midi/MidiOss.cpp
 	core/midi/MidiSndio.cpp

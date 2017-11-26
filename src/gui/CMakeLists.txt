@@ -21,6 +21,8 @@ SET(LMMS_SRCS
 	gui/LmmsStyle.cpp
 	gui/MainApplication.cpp
 	gui/MainWindow.cpp
+	gui/MidiEffectControlDialog.cpp
+	gui/MidiEffectSelectDialog.cpp
 	gui/MidiSetupWidget.cpp
 	gui/ModelView.cpp
 	gui/PeakControllerDialog.cpp
@@ -72,6 +74,8 @@ SET(LMMS_SRCS
 	gui/widgets/LcdWidget.cpp
 	gui/widgets/LedCheckbox.cpp
 	gui/widgets/MeterDialog.cpp
+	gui/widgets/MidiEffectView.cpp
+	gui/widgets/MidiEffectRackView.cpp
 	gui/widgets/MidiPortMenu.cpp
 	gui/widgets/NStateButton.cpp
 	gui/widgets/PixmapButton.cpp
@@ -102,6 +106,7 @@ set(LMMS_UIS
 	gui/dialogs/song_metadata.ui
 
 	gui/Forms/EffectSelectDialog.ui
+	gui/Forms/MidiEffectSelectDialog.ui
 
 	PARENT_SCOPE
 )

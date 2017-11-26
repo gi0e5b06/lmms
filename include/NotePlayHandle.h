@@ -51,22 +51,24 @@ public:
 	// specifies origin of NotePlayHandle
 	enum Origins
 	{
-		OriginPattern,		/*! playback of a note from a pattern */
-		OriginMidiInput,	/*! playback of a MIDI note input event */
-		OriginNoteHumanizing,	/*! created by note humanizing instrument function */
-		OriginNoteStacking,	/*! created by note stacking instrument function */
-		OriginArpeggio,		/*! created by arpeggio instrument function */
-		OriginCount
+		OriginPattern       = 1, /*! playback of a note from a pattern */
+		OriginMidiInput     = 2, /*! playback of a MIDI note input event */
+		OriginNoteHumanizing= 4, /*! created by note humanizing instrument function */
+		OriginNoteStacking  = 8, /*! created by note stacking instrument function */
+		OriginArpeggio      =16, /*! created by arpeggio instrument function */
+		//OriginCount //not used
 	};
-	typedef Origins Origin;
+	//typedef Origins Origin;
+	typedef int Origin;
 
 	NotePlayHandle( InstrumentTrack* instrumentTrack,
 			const f_cnt_t offset,
 			const f_cnt_t frames,
 			const Note& noteToPlay,
 			NotePlayHandle* parent = NULL,
-			int midiEventChannel = -1,
-			Origin origin = OriginPattern );
+			const int midiEventChannel = -1,
+			const Origin origin = OriginPattern,
+			const int generation = 0);
 	virtual ~NotePlayHandle() {}
 	void done();
 
@@ -195,6 +197,22 @@ public:
 		return m_origin;
 	}
 
+	/*! Returns origin of note */
+	void addOrigin(Origin _origin)
+	{
+		m_origin |= _origin;
+	}
+
+	int generation() const
+	{
+		return m_generation;
+	}
+
+	void incrGeneration()
+	{
+		m_generation++;
+	}
+
 	/*! Returns whether note has children */
 	bool isMasterNote() const
 	{
@@ -301,26 +319,21 @@ private:
 
 	void updateFrequency();
 
-	InstrumentTrack* m_instrumentTrack;		// needed for calling
-											// InstrumentTrack::playNote
-	f_cnt_t m_frames;						// total frames to play
-	f_cnt_t m_totalFramesPlayed;			// total frame-counter - used for
-											// figuring out whether a whole note
-											// has been played
-	f_cnt_t m_framesBeforeRelease;			// number of frames after which note
-											// is released
-	f_cnt_t m_releaseFramesToDo;			// total numbers of frames to be
-											// played after release
-	f_cnt_t m_releaseFramesDone;			// number of frames done after
-											// release of note
-	NotePlayHandleList m_subNotes;			// used for chords and arpeggios
-	volatile bool m_released;				// indicates whether note is released
+	InstrumentTrack* m_instrumentTrack;	// needed for calling InstrumentTrack::playNote
+	f_cnt_t m_frames;			// total frames to play
+	f_cnt_t m_totalFramesPlayed;		// total frame-counter - used for
+						// figuring out whether a whole note has been played
+	f_cnt_t m_framesBeforeRelease;		// number of frames after which note is released
+	f_cnt_t m_releaseFramesToDo;		// total numbers of frames to be played after release
+	f_cnt_t m_releaseFramesDone;		// number of frames done after release of note
+	NotePlayHandleList m_subNotes;		// used for chords and arpeggios
+	volatile bool m_released;		// indicates whether note is released
 	bool m_releaseStarted;
-	bool m_hasParent;						// indicates whether note has parent
-	NotePlayHandle * m_parent;			// parent note
+	bool m_hasParent;			// indicates whether note has parent
+	NotePlayHandle * m_parent;		// parent note
 	bool m_hadChildren;
-	bool m_muted;							// indicates whether note is muted
-	Track* m_bbTrack;						// related BB track
+	bool m_muted;				// indicates whether note is muted
+	Track* m_bbTrack;			// related BB track
 
 	// tempo reaction
 	bpm_t m_origTempo;						// original tempo
@@ -337,34 +350,36 @@ private:
 
 	int m_midiChannel;
 	Origin m_origin;
+	int m_generation;
 
 	bool m_frequencyNeedsUpdate;				// used to update pitch
 } ;
 
 
-const int INITIAL_NPH_CACHE = 256;
-const int NPH_CACHE_INCREMENT = 16;
+//const int INITIAL_NPH_CACHE = 256;
+//const int NPH_CACHE_INCREMENT = 16;
 
-class NotePlayHandleManager
+class EXPORT NotePlayHandleManager
 {
-	MM_OPERATORS
+	//MM_OPERATORS
 public:
 	static void init();
-	static NotePlayHandle * acquire( InstrumentTrack* instrumentTrack,
+	static NotePlayHandle * acquire(InstrumentTrack* instrumentTrack,
 					const f_cnt_t offset,
 					const f_cnt_t frames,
 					const Note& noteToPlay,
 					NotePlayHandle* parent = NULL,
-					int midiEventChannel = -1,
-					NotePlayHandle::Origin origin = NotePlayHandle::OriginPattern );
+					const int midiEventChannel = -1,
+					const NotePlayHandle::Origin origin = NotePlayHandle::OriginPattern,
+					const int generation = 0);
 	static void release( NotePlayHandle * nph );
-	static void extend( int i );
+	//static void extend( int i );
 
  private:
-	static NotePlayHandle ** s_available;
-	static QReadWriteLock s_mutex;
-	static AtomicInt s_availableIndex;
-	static int s_size;
+	//static NotePlayHandle ** s_available;
+	//static QReadWriteLock s_mutex;
+	//static AtomicInt s_availableIndex;
+	//static int s_size;
 };
 
 
