@@ -285,25 +285,26 @@ void TabWidget::paintEvent( QPaintEvent * pe )
 
 
 // Switch between tabs with mouse wheel
-void TabWidget::wheelEvent( QWheelEvent * we )
+void TabWidget::wheelEvent(QWheelEvent* _we)
 {
-	if( we->y() > m_tabheight )
-	{
-		return;
-  }
-
-	we->accept();
-	int dir = ( we->delta() < 0 ) ? 1 : -1;
-	int tab = m_activeTab;
-	while( tab > -1 && static_cast<int>( tab ) < m_widgets.count() )
-	{
-		tab += dir;
-		if( m_widgets.contains( tab ) )
+	if( _we->modifiers() & Qt::ShiftModifier )
+        {
+		if( _we->y() > m_tabheight )
 		{
-			break;
+			return;
 		}
+
+		_we->accept();
+		int dir = ( _we->delta() < 0 ) ? 1 : -1;
+		int tab = m_activeTab;
+		int old = tab;
+		while( tab > -1 && static_cast<int>( tab ) < m_widgets.count() )
+		{
+			tab += dir;
+			if( m_widgets.contains( tab ) )	break;
+		}
+		if(tab!=old) setActiveTab( tab );
 	}
-	setActiveTab( tab );
 }
 
 // Return the color to be used to draw a TabWidget's title text (if any)

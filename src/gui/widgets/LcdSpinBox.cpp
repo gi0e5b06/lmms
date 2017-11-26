@@ -52,7 +52,7 @@ LcdSpinBox::LcdSpinBox( int numDigits, QWidget* parent, const QString& name ) :
 
 
 LcdSpinBox::LcdSpinBox( int numDigits, const QString& style, QWidget* parent, const QString& name ) :
-	LcdWidget( numDigits, parent, name ),
+	LcdWidget( numDigits, style, parent, name ),
 	IntModelView( new IntModel( 0, 0, 0, NULL, name, true ), this ),
 	m_pressLeft( false )//,
 	//m_displayOffset( 0 )
@@ -230,10 +230,13 @@ void LcdSpinBox::mouseReleaseEvent( QMouseEvent* )
 
 void LcdSpinBox::wheelEvent( QWheelEvent * _we )
 {
-	_we->accept();
-	model()->setInitValue( model()->value() +
-			( ( _we->delta() > 0 ) ? 1 : -1 ) * model()->step<int>() );
-	emit manualChange();
+	if( _we->modifiers() & Qt::ShiftModifier )
+        {
+		_we->accept();
+		model()->setInitValue( model()->value() +
+				       ( ( _we->delta() > 0 ) ? 1 : -1 ) * model()->step<int>() );
+		emit manualChange();
+	}
 }
 
 void LcdSpinBox::mouseDoubleClickEvent( QMouseEvent * )

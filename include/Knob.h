@@ -55,18 +55,18 @@ class EXPORT Knob : public QWidget, public FloatModelView
 	Q_PROPERTY(float centerPointY READ centerPointY WRITE setCenterPointY)
 
 	Q_PROPERTY(float lineWidth READ lineWidth WRITE setLineWidth)
+	Q_PROPERTY(knobTypes knobNum READ knobNum WRITE setknobNum)
 
 	// Unfortunately, the gradient syntax doesn't create our gradient
 	// correctly so we need to do this:
 	Q_PROPERTY(QColor outerColor READ outerColor WRITE setOuterColor)
 	Q_PROPERTY(QColor lineColor READ lineColor WRITE setlineColor)
 	Q_PROPERTY(QColor arcColor READ arcColor WRITE setarcColor)
+	Q_PROPERTY(QColor pointColor READ pointColor WRITE setPointColor)
+	Q_PROPERTY(QColor textColor READ textColor WRITE setTextColor)
+
 	mapPropertyFromModel(bool,isVolumeKnob,setVolumeKnob,m_volumeKnob);
 	mapPropertyFromModel(float,volumeRatio,setVolumeRatio,m_volumeRatio);
-
-	Q_PROPERTY(knobTypes knobNum READ knobNum WRITE setknobNum)
-
-	Q_PROPERTY(QColor textColor READ textColor WRITE setTextColor)
 
 	void initUi( const QString & _name ); //!< to be called by ctors
 	void onKnobNumUpdated(); //!< to be called when you updated @a m_knobNum
@@ -112,7 +112,8 @@ public:
 	void setlineColor( const QColor & c );
 	QColor arcColor() const;
 	void setarcColor( const QColor & c );
-
+	QColor pointColor() const;
+	void setPointColor( const QColor & c );
 	QColor textColor() const;
 	void setTextColor( const QColor & c );
 
@@ -157,10 +158,7 @@ private:
 	void drawKnob( QPainter * _p );
 	bool updateAngle();
 
-	int angleFromValue( float value, float minValue, float maxValue, float totalAngle ) const
-	{
-		return static_cast<int>( ( value - 0.5 * ( minValue + maxValue ) ) / ( maxValue - minValue ) * m_totalAngle ) % 360;
-	}
+	float angleFromValue( float value, float minValue, float maxValue, float totalAngle ) const;
 
 	/*
 	inline float pageSize() const
@@ -186,8 +184,8 @@ private:
 	//float m_leftOver;
 	//bool m_buttonPressed;
 
-	float m_totalAngle;
-	int m_angle;
+	float  m_totalAngle;
+	float  m_angle;
 	QImage m_cache;
 
 	// Styled knob stuff, could break out
@@ -198,7 +196,7 @@ private:
 	QColor m_outerColor;
 	QColor m_lineColor; //!< unused yet
 	QColor m_arcColor; //!< unused yet
-
+	QColor m_pointColor;
 	QColor m_textColor;
 
 	knobTypes m_knobNum;

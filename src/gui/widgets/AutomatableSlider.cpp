@@ -146,12 +146,15 @@ void AutomatableSlider::mouseReleaseEvent( QMouseEvent * _me )
 
 
 
-void AutomatableSlider::wheelEvent( QWheelEvent * _me )
+void AutomatableSlider::wheelEvent( QWheelEvent * _we )
 {
-	bool old_status = m_showStatus;
-	m_showStatus = true;
-	QSlider::wheelEvent( _me );
-	m_showStatus = old_status;
+	if( _we->modifiers() & Qt::ShiftModifier )
+        {
+		bool old_status = m_showStatus;
+		m_showStatus = true;
+		QSlider::wheelEvent( _we );
+		m_showStatus = old_status;
+	}
 }
 
 

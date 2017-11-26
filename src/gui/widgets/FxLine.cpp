@@ -61,7 +61,8 @@ FxLine::FxLine( QWidget * _parent, FxMixerView * _mv, int _channelIndex ) :
 
 	setFixedSize( 33, FxLineHeight );
 	setAttribute( Qt::WA_OpaquePaintEvent, true );
-	setCursor( QCursor( embed::getIconPixmap( "hand" ), 3, 3 ) );
+	//setCursor(Qt::PointingHandCursor);
+	//setCursor( QCursor( embed::getIconPixmap( "hand" ), 3, 3 ) );
 
 	// mixer sends knob
 	m_sendKnob = new Knob( knobBright_26, this, tr( "Channel send amount" ) );
@@ -98,7 +99,7 @@ FxLine::FxLine( QWidget * _parent, FxMixerView * _mv, int _channelIndex ) :
 	m_renameLineEdit = new QLineEdit();
 	m_renameLineEdit->setText( name );
 	m_renameLineEdit->setFixedWidth( 65 );
-	m_renameLineEdit->setFont( pointSizeF( font(), 7.5f ) );
+	//m_renameLineEdit->setFont( pointSizeF( font(), 7.5f ) );
 	m_renameLineEdit->setReadOnly( true );
 
 	QGraphicsScene * scene = new QGraphicsScene();
@@ -113,7 +114,7 @@ FxLine::FxLine( QWidget * _parent, FxMixerView * _mv, int _channelIndex ) :
 
 	QGraphicsProxyWidget * proxyWidget = scene->addWidget( m_renameLineEdit );
 	proxyWidget->setRotation( -90 );
-	proxyWidget->setPos( 8, 145 );
+	proxyWidget->setPos( 6, 145 );//8
 
 	connect( m_renameLineEdit, SIGNAL( editingFinished() ), this, SLOT( renameFinished() ) );
 }

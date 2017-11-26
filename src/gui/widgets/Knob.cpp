@@ -66,8 +66,8 @@ TextFloat * Knob::s_textFloat = NULL;
 	m_knobPixmap( NULL ), \
 	m_volumeKnob( false ), \
 	m_volumeRatio( 100.0, 0.0, 1000000.0 ), \
-	m_angle( -10 ), \
-	m_lineWidth( 0 ), \
+	m_angle( -10.f ), \
+	m_lineWidth( 0.f ), \
 	m_textColor( 255, 255, 255 )
 
 Knob::Knob( knobTypes _knob_num, QWidget * _parent, const QString & _name ) :
@@ -126,6 +126,7 @@ void Knob::initUi( const QString & _name )
 		break;
 	}
 
+	setPointColor(lineColor());
 	doConnections();
 }
 
@@ -200,9 +201,9 @@ void Knob::setLabel( const QString & txt )
 
 void Knob::setTotalAngle( float angle )
 {
-	if( angle < 10.0 )
+	if( angle < 10.f )
 	{
-		m_totalAngle = 10.0;
+		m_totalAngle = 10.f;
 	}
 	else
 	{
@@ -356,11 +357,23 @@ void Knob::setarcColor( const QColor & c )
 
 
 
+QColor Knob::pointColor() const
+{
+	return m_pointColor;
+}
+
+
+
+void Knob::setPointColor( const QColor & c )
+{
+	m_pointColor = c;
+}
+
+
 QColor Knob::textColor() const
 {
 	return m_textColor;
 }
-
 
 
 void Knob::setTextColor( const QColor & c )
@@ -369,10 +382,9 @@ void Knob::setTextColor( const QColor & c )
 }
 
 
-
 QLineF Knob::calculateLine( const QPointF & _mid, float _radius, float _innerRadius ) const
 {
-	const float rarc = m_angle * F_PI / 180.0;
+	const float rarc = m_angle * F_PI / 180.f;
 	const float ca = cos( rarc );
 	const float sa = -sin( rarc );
 
@@ -384,12 +396,12 @@ QLineF Knob::calculateLine( const QPointF & _mid, float _radius, float _innerRad
 
 bool Knob::updateAngle()
 {
-	int angle = 0;
+	float angle = 0.f;
 	if( model() && model()->maxValue() != model()->minValue() )
 	{
 		angle = angleFromValue( model()->inverseScaledValue( model()->value() ), model()->minValue(), model()->maxValue(), m_totalAngle );
 	}
-	if( qAbs( angle - m_angle ) > 3 )
+	if( qAbs( angle - m_angle ) > 3.f )
 	{
 		m_angle = angle;
 		return true;
@@ -398,6 +410,10 @@ bool Knob::updateAngle()
 }
 
 
+float Knob::angleFromValue( float value, float minValue, float maxValue, float totalAngle ) const
+{
+	return fmodf((value - 0.5f*(minValue + maxValue)) / (maxValue - minValue)*m_totalAngle,360);
+}
 
 
 void Knob::drawKnob( QPainter * _p )
@@ -409,112 +425,130 @@ void Knob::drawKnob( QPainter * _p )
 		//PL_END("KnobCache");
 		return;
 	}
+	//PL_END("KnobCache");
+	//PL_BEGIN("KnobDraw");
+
 
 	m_cache = QImage( size(), QImage::Format_ARGB32 );
 	m_cache.fill( qRgba( 0, 0, 0, 0 ) );
 
 	QPainter p( &m_cache );
 
-	//PL_END("KnobCache");
-	//PL_BEGIN("KnobDraw");
-
-	QPoint mid;
+	QPointF mid;
+	QColor pc=pointColor();
+	if(isVolumeKnob()) pc=Qt::red;
+	//QColor lc=pc;//lineColor();
+	int    lw=lineWidth();
 
 	if( m_knobNum == knobStyled )
 	{
+		mid=centerPoint();
 		p.setRenderHint( QPainter::Antialiasing );
 
 		// Perhaps this can move to setOuterRadius()
 		if( m_outerColor.isValid() )
 		{
-			QRadialGradient gradient( centerPoint(), outerRadius() );
+			QRadialGradient gradient( mid, outerRadius() );
 			gradient.setColorAt( 0.4, _p->pen().brush().color() );
 			gradient.setColorAt( 1, m_outerColor );
 
-			p.setPen( QPen( gradient, lineWidth(),
-						Qt::SolidLine, Qt::RoundCap ) );
+			p.setPen( QPen( gradient, lw, Qt::SolidLine, Qt::RoundCap ) );
 		}
-		else {
+		else
+		{
 			QPen pen = p.pen();
-			pen.setWidth( (int) lineWidth() );
+			pen.setWidth( lw );
 			pen.setCapStyle( Qt::RoundCap );
 
 			p.setPen( pen );
 		}
 
-		p.drawLine( calculateLine( centerPoint(), outerRadius(),
-							innerRadius() ) );
-		p.end();
-		_p->drawImage( 0, 0, m_cache );
-		return;
+		p.drawLine( calculateLine( mid, outerRadius(), innerRadius() ) );
 	}
-
-
-	// Old-skool knobs
-	const float radius = m_knobPixmap->width() / 2.0f - 1;
-	mid = QPoint( width() / 2, m_knobPixmap->height() / 2 );
-
-	p.drawPixmap( static_cast<int>(
-				width() / 2 - m_knobPixmap->width() / 2 ), 0,
-				*m_knobPixmap );
-
-	p.setRenderHint( QPainter::Antialiasing );
-
-	const int centerAngle = angleFromValue( model()->inverseScaledValue( model()->centerValue() ), model()->minValue(), model()->maxValue(), m_totalAngle );
-
-	const int arcLineWidth = 2;
-	const int arcRectSize = m_knobPixmap->width() - arcLineWidth;
-
-	QColor col;
-	if( m_knobNum == knobVintage_32 )
-	{	col = QApplication::palette().color( QPalette::Active, QPalette::Shadow ); }
 	else
-	{	col = QApplication::palette().color( QPalette::Active, QPalette::WindowText ); }
-	col.setAlpha( 70 );
-
-	p.setPen( QPen( col, 2 ) );
-	p.drawArc( mid.x() - arcRectSize/2, 1, arcRectSize, arcRectSize, 315*16, 16*m_totalAngle );
-
-	switch( m_knobNum )
 	{
+		// Old-skool knobs
+		const float radius = m_knobPixmap->width() / 2.0f - 1.f;
+		mid = QPointF( width() / 2.f, m_knobPixmap->height() / 2.f );
+
+		/*
+		p.drawPixmap( QPointF((width()-m_knobPixmap->width())/2.f,
+				      0.f),*m_knobPixmap );
+		*/
+
+		p.setRenderHint( QPainter::Antialiasing );
+
+		const float centerAngle = angleFromValue( model()->inverseScaledValue( model()->centerValue() ),
+							  model()->minValue(), model()->maxValue(), m_totalAngle );
+
+		const float arcLineWidth = 2.f;
+		const float arcRectSize = m_knobPixmap->width() - arcLineWidth;
+
+		/*
+		QColor col;
+		if( m_knobNum == knobVintage_32 )
+			{	col = QApplication::palette().color( QPalette::Active, QPalette::Shadow ); }
+		else
+			{	col = QApplication::palette().color( QPalette::Active, QPalette::WindowText ); }
+		col.setAlpha( 70 );
+		*/
+
+		QLineF line;
+		switch( m_knobNum )
+		{
+			/*
 		case knobSmall_17:
-		{
-			p.setPen( QPen( lineColor(), 2 ) );
-			p.drawLine( calculateLine( mid, radius-2 ) );
-			break;
-		}
+			reline=calculateLine( mid, radius-2 );
+				break;
 		case knobBright_26:
-		{
-			p.setPen( QPen( lineColor(), 2 ) );
-			p.drawLine( calculateLine( mid, radius-5 ) );
-			break;
-		}
+				line=calculateLine( mid, radius-2 ); //-5
+				break;
+			*/
 		case knobDark_28:
-		{
-			p.setPen( QPen( lineColor(), 2 ) );
-			const float rb = qMax<float>( ( radius - 10 ) / 3.0,
-									0.0 );
-			const float re = qMax<float>( ( radius - 4 ), 0.0 );
-			QLineF ln = calculateLine( mid, re, rb );
-			ln.translate( 1, 1 );
-			p.drawLine( ln );
+			{
+				const float rb = qMax<float>( ( radius - 10 ) / 3.0, 0.0 );
+				const float re = qMax<float>( ( radius - 4 ), 0.0 );
+				line=calculateLine( mid, re, rb );
+				line.translate( 1, 1 );
+			}
 			break;
-		}
 		case knobVintage_32:
-		{
-			p.setPen( QPen( lineColor(), 2 ) );
-			p.drawLine( calculateLine( mid, radius-2, 2 ) );
+			line=calculateLine( mid, radius-2, 2 );
+			break;
+		default:
+			line=calculateLine( mid, radius );
 			break;
 		}
-		case knobStyled:
-			break;
+
+		QPen pen0(QColor(255,255,255,192),1,Qt::SolidLine,Qt::RoundCap);
+		p.setPen(pen0);
+		p.setBrush(QColor(255,255,255,192));
+		float re=radius+2.f;//-2.f;
+		p.drawEllipse(mid.x()-re/2.f,mid.y()-re/2.f,re+1.f,re+1.f);
+
+		QPen pen1(QColor(0,0,0,96),2,Qt::SolidLine,Qt::RoundCap);
+		p.setPen( pen1 );
+		p.drawArc( mid.x() - arcRectSize/2.f, 1.f, arcRectSize, arcRectSize, 16.f*315, 16.f*m_totalAngle );
+
+		QPen pen2(QColor(0,0,0,96),4,Qt::SolidLine,Qt::RoundCap);
+		p.setPen( pen2 );
+		p.drawLine(line);
+		p.drawArc( mid.x() - arcRectSize/2.f, 1.f, arcRectSize, arcRectSize, 16.f*(90.f-centerAngle), -16.f*(m_angle-centerAngle) );
+		p.setBrush(QColor(0,0,0,96));
+		//p.drawEllipse(mid.x()-2.f,mid.y()-2.f,5.f,5.f);
+		p.drawEllipse(mid.x()-1.f,mid.y()-1.f,3.f,3.f);
+
+		QPen pen3(pc,2,Qt::SolidLine,Qt::RoundCap);
+		p.setPen( pen3 );
+		p.drawLine(line);
+		p.drawArc( mid.x() - arcRectSize/2, 1, arcRectSize, arcRectSize, 16.f*(90.f-centerAngle), -16.f*(m_angle-centerAngle) );
+		p.setBrush(pc);
+		p.drawEllipse(mid.x()-1.f,mid.y()-1.f,3.f,3.f);
 	}
 
-	p.drawArc( mid.x() - arcRectSize/2, 1, arcRectSize, arcRectSize, (90-centerAngle)*16, -16*(m_angle-centerAngle) );
-	//PL_END("KnobDraw");
 
 	p.end();
-
+	//PL_END("KnobDraw");
 	_p->drawImage( 0, 0, m_cache );
 }
 
@@ -530,7 +564,7 @@ void Knob::convert(const QPoint& _p, float& value_, float& dist_)
 	// arcane mathemagicks for calculating knob movement
 	//value = ( ( _p.y() + _p.y() * qMin( qAbs( _p.y() / 2.5f ), 6.0f ) ) ) / 12.0f;
 
-	dist_ = (_p.x()*_p.x()+_p.y()*_p.y()-100.f)/22500.f;
+	dist_ = (_p.x()*_p.x()+_p.y()*_p.y()-80.f)/6400.f;
 	if(dist_<0.f) dist_=0.f;
 	if(dist_>1.f) dist_=1.f;
 
@@ -566,7 +600,7 @@ void Knob::setPosition( const QPoint & _p, bool _shift )
 
 	if(_shift)
         {
-		m_pressValue=model()->normalizedValue(model()->value());
+		m_pressValue=0.3f*value+0.7f*model()->normalizedValue(model()->value());
 		dist/=4.f;
 		//qInfo("shift pv=%f dist=%f",m_pressValue,dist);
 	}
@@ -819,16 +853,18 @@ void Knob::paintEvent( QPaintEvent * _pe )
 
 void Knob::wheelEvent( QWheelEvent * _we )
 {
-	_we->accept();
-	const int inc = ( _we->delta() > 0 ) ? 1 : -1;
-	model()->incValue( inc );
+	if( _we->modifiers() & Qt::ShiftModifier )
+        {
+		_we->accept();
+		const int inc = ( _we->delta() > 0 ) ? 1 : -1;
+		model()->incValue( inc );
 
+		s_textFloat->setText( displayValue() );
+		s_textFloat->moveGlobal( this, QPoint( width() + 2, 0 ) );
+		s_textFloat->setVisibilityTimeOut( 1000 );
 
-	s_textFloat->setText( displayValue() );
-	s_textFloat->moveGlobal( this, QPoint( width() + 2, 0 ) );
-	s_textFloat->setVisibilityTimeOut( 1000 );
-
-	emit sliderMoved( model()->value() );
+		emit sliderMoved( model()->value() );
+	}
 }
 
 

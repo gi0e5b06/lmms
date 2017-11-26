@@ -227,13 +227,17 @@ void ComboBox::paintEvent( QPaintEvent * _pe )
 
 
 
-void ComboBox::wheelEvent( QWheelEvent* event )
+void ComboBox::wheelEvent( QWheelEvent* _we )
 {
-	if( model() )
-	{
-		model()->setInitValue( model()->value() + ( ( event->delta() < 0 ) ? 1 : -1 ) );
-		update();
-		event->accept();
+	if( _we->modifiers() & Qt::ShiftModifier )
+        {
+		if( model() )
+		{
+			model()->setInitValue
+				( model()->value() + ( ( _we->delta() < 0 ) ? 1 : -1 ) );
+			update();
+			_we->accept();
+		}
 	}
 }
 

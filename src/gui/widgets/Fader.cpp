@@ -253,20 +253,15 @@ void Fader::mouseReleaseEvent( QMouseEvent * _me )
 }
 
 
-void Fader::wheelEvent ( QWheelEvent *ev )
+void Fader::wheelEvent ( QWheelEvent* _we )
 {
-	ev->accept();
-
-	if ( ev->delta() > 0 )
-	{
-		model()->incValue( 1 );
+	if( _we->modifiers() & Qt::ShiftModifier )
+        {
+		_we->accept();
+		model()->incValue( _we->delta() > 0 ? 1 : -1 );
+		updateTextFloat();
+		s_textFloat->setVisibilityTimeOut( 1000 );
 	}
-	else
-	{
-		model()->incValue( -1 );
-	}
-	updateTextFloat();
-	s_textFloat->setVisibilityTimeOut( 1000 );
 }
 
 
