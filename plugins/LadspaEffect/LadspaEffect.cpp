@@ -137,8 +137,8 @@ bool LadspaEffect::processAudioBuffer( sampleFrame * _buf,
 	m_pluginMutex.lock();
 	if( !isOkay() || dontRun() || !isRunning() || !isEnabled() )
 	{
-		qInfo("okay=%d dontRun=%d isRunning=%d isEnabled=%d",
-                      isOkay(),dontRun(),isRunning(),isEnabled());
+		//qInfo("okay=%d dontRun=%d isRunning=%d isEnabled=%d",
+                //      isOkay(),dontRun(),isRunning(),isEnabled());
 		m_pluginMutex.unlock();
 		return( false );
 	}

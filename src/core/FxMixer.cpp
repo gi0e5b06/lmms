@@ -80,7 +80,7 @@ FxChannel::FxChannel( int idx, Model * _parent ) :
 	m_buffer( BufferManager::acquire() ),//new sampleFrame[Engine::mixer()->framesPerPeriod()] ),
 	m_muteModel( false, _parent ),
 	m_soloModel( false, _parent ),
-	m_volumeModel( 1.0, 0.0, 2.0, 0.001, _parent ),
+	m_volumeModel( 1.0, 0.0, 1.0, 0.001, _parent ),//max=2.
 	m_name(),
 	m_lock(),
 	m_channelIndex( idx ),
