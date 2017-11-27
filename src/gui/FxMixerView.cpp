@@ -362,9 +362,9 @@ FxMixerView::FxChannelView::FxChannelView(QWidget * _parent, FxMixerView * _mv,
 					m_eqMediumKnob->move(3, m_eqEnableBtn->y()+50);
 					m_eqLowKnob   ->move(3, m_eqEnableBtn->y()+85);
 
-                                        m_eqHighKnob  ->model()->setRange(-50.f,0.f,0.5f);
-                                        m_eqMediumKnob->model()->setRange(-50.f,0.f,0.5f);
-                                        m_eqLowKnob   ->model()->setRange(-50.f,0.f,0.5f);
+                                        m_eqHighKnob  ->model()->setRange(-100.f,0.f,0.5f);
+                                        m_eqMediumKnob->model()->setRange(-100.f,0.f,0.5f);
+                                        m_eqLowKnob   ->model()->setRange(-100.f,0.f,0.5f);
 				}
 				else qWarning("FxChannel: not 3???");
 			}

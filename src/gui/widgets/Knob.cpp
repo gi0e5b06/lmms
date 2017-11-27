@@ -67,6 +67,7 @@ TextFloat * Knob::s_textFloat = NULL;
 	m_volumeKnob( false ), \
 	m_volumeRatio( 100.0, 0.0, 1000000.0 ), \
 	m_angle( -10.f ), \
+        m_cache( NULL ), \
 	m_lineWidth( 0.f ), \
 	m_textColor( 255, 255, 255 )
 
@@ -169,10 +170,8 @@ void Knob::onKnobNumUpdated()
 
 Knob::~Knob()
 {
-	if( m_knobPixmap )
-	{
-		delete m_knobPixmap;
-	}
+	if( m_knobPixmap ) delete m_knobPixmap;
+	if( m_cache ) delete m_cache;
 }
 
 
@@ -419,20 +418,19 @@ float Knob::angleFromValue( float value, float minValue, float maxValue, float t
 void Knob::drawKnob( QPainter * _p )
 {
 	//PL_BEGIN("KnobCache");
-	if( updateAngle() == false && !m_cache.isNull() )
+	if( m_cache && !updateAngle() )
 	{
-		_p->drawImage( 0, 0, m_cache );
+		_p->drawImage( 0, 0, *m_cache );
 		//PL_END("KnobCache");
 		return;
 	}
 	//PL_END("KnobCache");
 	//PL_BEGIN("KnobDraw");
 
+	m_cache = new QImage( size(), QImage::Format_ARGB32 );
+	m_cache->fill( qRgba( 0, 0, 0, 0 ) );
 
-	m_cache = QImage( size(), QImage::Format_ARGB32 );
-	m_cache.fill( qRgba( 0, 0, 0, 0 ) );
-
-	QPainter p( &m_cache );
+	QPainter p( m_cache );
 
 	QPointF mid;
 	QColor pc=pointColor();
@@ -549,13 +547,15 @@ void Knob::drawKnob( QPainter * _p )
 
 	p.end();
 	//PL_END("KnobDraw");
-	_p->drawImage( 0, 0, m_cache );
+	_p->drawImage( 0, 0, *m_cache );
 }
 
 void Knob::resizeEvent(QResizeEvent * _re)
 {
 	//qInfo("Knob::resizeEvent()");
-	m_cache=QImage();
+        QImage* old=m_cache;
+	m_cache=NULL;
+        if(old) delete old;
 	//update();
 }
 

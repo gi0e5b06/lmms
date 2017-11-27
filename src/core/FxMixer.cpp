@@ -388,10 +388,9 @@ void FxMixer::deleteChannel( int index )
 	m_fxChannels.remove(index);
 	delete ch;
 
-	qInfo("FxMixer: delete #1 last soloed=%d",m_lastSoloed);
-	if(m_lastSoloed==index)
-		m_lastSoloed=-1;
-	qInfo("FxMixer: delete #2 last soloed=%d",m_lastSoloed);
+	//qInfo("FxMixer: delete #1 last soloed=%d",m_lastSoloed);
+	if(m_lastSoloed==index)	m_lastSoloed=-1;
+	//qInfo("FxMixer: delete #2 last soloed=%d",m_lastSoloed);
 
 	for( int i = index; i < m_fxChannels.size(); ++i )
 	{

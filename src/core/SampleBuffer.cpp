@@ -364,8 +364,11 @@ void SampleBuffer::update( bool _keep_settings )
 		{
 			normalizeSampleRate( samplerate, _keep_settings );
 
-			if( !m_audioFile.isEmpty() && !filename.endsWith(cchext) && (m_frames>102400) )
-			{
+			if( !m_audioFile.isEmpty() &&
+                            !filename.endsWith(cchext) &&
+                            //(m_frames>102400) &&             // only for big samples?
+                            QFileInfo(filename+cchext).isWritable() )
+                        {
 				QFile file(filename+cchext);//QDateTime QFileInfo::lastModified()
 				//QFileInfo info(file);
 				//if(info.exists()) file.unlink();

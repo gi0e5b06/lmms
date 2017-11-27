@@ -59,7 +59,10 @@ void MidiClient::applyPortName( MidiPort* )
 
 void MidiClient::addPort( MidiPort* port )
 {
-	m_midiPorts.push_back( port );
+	//m_midiPorts.push_back( port );
+        if(m_midiPorts.contains(port))
+                qWarning("MidiClient::addPort MidiPort already registered");
+        m_midiPorts.append(port);
 }
 
 
@@ -72,12 +75,15 @@ void MidiClient::removePort( MidiPort* port )
 		return;
 	}
 
+        /*
 	QVector<MidiPort *>::Iterator it =
 		qFind( m_midiPorts.begin(), m_midiPorts.end(), port );
 	if( it != m_midiPorts.end() )
 	{
 		m_midiPorts.erase( it );
 	}
+        */
+        m_midiPorts.removeOne(port);
 }
 
 

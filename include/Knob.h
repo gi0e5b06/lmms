@@ -186,7 +186,7 @@ private:
 
 	float  m_totalAngle;
 	float  m_angle;
-	QImage m_cache;
+	QImage* m_cache;
 
 	// Styled knob stuff, could break out
 	QPointF m_centerPoint;
