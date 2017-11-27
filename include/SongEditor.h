@@ -74,6 +74,8 @@ public:
 
 	ComboBoxModel *zoomingModel() const;
 
+        const TimeLineWidget* timeLineWidget() { return m_timeLine; }
+
 public slots:
 	void scrolled( int new_pos );
 
@@ -140,8 +142,7 @@ private:
 	EditMode m_ctrlMode; // mode they were in before they hit ctrl
 
 	friend class SongEditorWindow;
-
-} ;
+};
 
 
 

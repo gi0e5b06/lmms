@@ -321,6 +321,9 @@ signals:
 	void loopPointStateLoaded( int _n );
 	void positionMarkerMoved();
 
+
+        friend class ExportFilter;
+        friend class ImportFilter;
 } ;
 
 

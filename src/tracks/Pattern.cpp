@@ -384,13 +384,15 @@ void Pattern::saveSettings( QDomDocument & _doc, QDomElement & _this )
 	// pattern, we must not store actual position, instead we store -1
 	// which tells loadSettings() not to mess around with position
 	if( _this.parentNode().nodeName() == "clipboard" ||
-			_this.parentNode().nodeName() == "dnddata" )
+            _this.parentNode().nodeName() == "dnddata" )
 	{
 		_this.setAttribute( "pos", -1 );
 	}
 	else
 	{
 		_this.setAttribute( "pos", startPosition() );
+                // len not used but added for coherency
+                _this.setAttribute( "len", length() );
 	}
 	_this.setAttribute( "muted", isMuted() );
 	_this.setAttribute( "steps", m_steps );

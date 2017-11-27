@@ -288,25 +288,30 @@ void MainWindow::finalize()
 
 	project_menu->addSeparator();
 	project_menu->addAction( embed::getIconPixmap( "project_import" ),
-					tr( "Import..." ),
-					Engine::getSong(),
-					SLOT( importProject() ) );
+                                 tr( "&Import..." ),
+                                 Engine::getSong(),
+                                 SLOT( importProject() ) );
 	project_menu->addAction( embed::getIconPixmap( "project_export" ),
-					tr( "E&xport..." ),
-					Engine::getSong(),
-					SLOT( exportProject() ),
-					Qt::CTRL + Qt::Key_E );
+                                 tr( "&Export Audio..." ),
+                                 Engine::getSong(),
+                                 SLOT( exportProject() ),
+                                 Qt::CTRL + Qt::Key_E );
 	project_menu->addAction( embed::getIconPixmap( "project_export" ),
-					tr( "E&xport Tracks..." ),
-					Engine::getSong(),
-					SLOT( exportProjectTracks() ),
-					Qt::CTRL + Qt::SHIFT + Qt::Key_E );
+                                 tr( "Export Audio &Tracks..." ),
+                                 Engine::getSong(),
+                                 SLOT( exportProjectTracks() ) );
+        //Qt::CTRL + Qt::SHIFT + Qt::Key_E );
 
 	project_menu->addAction( embed::getIconPixmap( "midi_file" ),
-					tr( "Export &MIDI..." ),
-					Engine::getSong(),
-					SLOT( exportProjectMidi() ),
-					Qt::CTRL + Qt::Key_M );
+                                 tr( "Export &MIDI..." ),
+                                 Engine::getSong(),
+                                 SLOT( exportProjectMidi() ),
+                                 Qt::CTRL + Qt::Key_M );
+
+	project_menu->addAction( embed::getIconPixmap( "project_export" ),
+                                 tr( "Export &Video line..." ),
+                                 Engine::getSong(),
+                                 SLOT( exportProjectVideoLine() ) );
 
 // Prevent dangling separator at end of menu per https://bugreports.qt.io/browse/QTBUG-40071
 #if !(defined(LMMS_BUILD_APPLE) && (QT_VERSION >= 0x050000) && (QT_VERSION < 0x050600))

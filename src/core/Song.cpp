@@ -1512,16 +1512,92 @@ void Song::exportProjectMidi()
 		// NOTE start midi export
 
 		// instantiate midi export plugin
-		TrackContainer::TrackList tracks;
-		TrackContainer::TrackList tracks_BB;
-		tracks = Engine::getSong()->tracks();
-		tracks_BB = Engine::getBBTrackContainer()->tracks();
+		/*
+                  TrackContainer::TrackList tracks;
+                  TrackContainer::TrackList tracks_BB;
+                  tracks = Engine::getSong()->tracks();
+                  tracks_BB = Engine::getBBTrackContainer()->tracks();
+                */
 		ExportFilter *exf = dynamic_cast<ExportFilter *> (Plugin::instantiate("midiexport", NULL, NULL));
 		if (exf==NULL) {
 			qDebug() << "failed to load midi export filter!";
 			return;
 		}
-		exf->tryExport(tracks, tracks_BB, getTempo(), m_masterPitchModel.value(), export_filename);
+                //exf->tryExport(tracks, tracks_BB, getTempo(), m_masterPitchModel.value(), export_filename);
+		exf->proceed(export_filename);
+	}
+}
+
+
+
+void Song::exportProjectVideoLine()
+{
+	if( isEmpty() )
+	{
+		QMessageBox::information( gui->mainWindow(),
+				tr( "Empty project" ),
+				tr( "This project is empty so exporting makes "
+					"no sense. Please put some items into "
+					"Song Editor first!" ) );
+		return;
+	}
+
+	FileDialog efd( gui->mainWindow() );
+
+	efd.setFileMode( FileDialog::AnyFile );
+
+	QStringList types;
+	types << tr("MP4 File (*.mp4)");
+	efd.setNameFilters( types );
+	QString base_filename;
+	if( !m_fileName.isEmpty() )
+	{
+		efd.setDirectory( QFileInfo( m_fileName ).absolutePath() );
+		base_filename = QFileInfo( m_fileName ).completeBaseName();
+	}
+	else
+	{
+		efd.setDirectory( ConfigManager::inst()->userProjectsDir() );
+		base_filename = tr( "untitled" );
+	}
+	efd.selectFile( base_filename + ".mp4" );
+	efd.setDefaultSuffix( "mp4");
+	efd.setWindowTitle( tr( "Select file for export..." ) );
+
+	efd.setAcceptMode( FileDialog::AcceptSave );
+
+
+	if( efd.exec() == QDialog::Accepted && !efd.selectedFiles().isEmpty() && !efd.selectedFiles()[0].isEmpty() )
+	{
+		const QString suffix = ".mp4";
+
+		QString export_filename = efd.selectedFiles()[0];
+		if (!export_filename.endsWith(suffix)) export_filename += suffix;
+
+		// instantiate videoline export plugin
+                /*
+		TrackContainer::TrackList tracks;
+		TrackContainer::TrackList tracks_BB;
+                QVector<QPair<tick_t,tick_t>> loops;
+
+		tracks = Engine::getSong()->tracks();
+		tracks_BB = Engine::getBBTrackContainer()->tracks();
+
+                TimeLineWidget * tl = m_playPos[m_playMode].m_timeLine;
+                if(tl)
+                {
+                        for(int l=0;l<tl->NB_LOOPS;l++)
+                          loops << QPair<tick_t,tick_t>(tl->loopBegin(l).getTicks(),
+                                                        tl->loopEnd(l).getTicks());
+                }
+                */
+		ExportFilter *exf = dynamic_cast<ExportFilter *> (Plugin::instantiate("videolineexport", NULL, NULL));
+		if (exf==NULL) {
+			qCritical("Song::exportProjectVideoLine: Failed to load videoline export filter");
+			return;
+		}
+		//exf->tryExport(tracks, tracks_BB, getTempo(), loops, export_filename);
+                exf->proceed(export_filename);
 	}
 }
 

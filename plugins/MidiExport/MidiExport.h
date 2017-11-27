@@ -65,10 +65,13 @@ public:
 		return nullptr;
 	}
 
+        /*
 	virtual bool tryExport(const TrackContainer::TrackList &tracks,
 				const TrackContainer::TrackList &tracks_BB,
 				int tempo, int masterPitch, const QString &filename);
-	
+        */
+        virtual bool proceed(const QString& _fileName);
+
 private:
 	void writePattern(MidiNoteVector &pat, QDomNode n,
 				int base_pitch, double base_volume, int base_time);

@@ -30,6 +30,7 @@
 #include <QtCore/QSharedMemory>
 #include <QtCore/QVector>
 
+#include "ExportFilter.h"
 #include "MetaData.h"
 #include "TrackContainer.h"
 #include "ITransport.h"
@@ -313,6 +314,7 @@ public slots:
 	void exportProject( bool multiExport = false );
 	void exportProjectTracks();
 	void exportProjectMidi();
+        void exportProjectVideoLine();
 
 	void startExport();
 	void stopExport();
@@ -437,7 +439,6 @@ signals:
 	void controllerAdded( Controller * );
 	void controllerRemoved( Controller * );
 	void updateSampleTracks();
-
 } ;
 
 

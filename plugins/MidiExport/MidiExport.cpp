@@ -33,8 +33,11 @@
 #include "MidiExport.h"
 
 #include "lmms_math.h"
-#include "TrackContainer.h"
+#include "Engine.h"
+#include "Song.h"
+#include "BBTrackContainer.h"
 #include "BBTrack.h"
+#include "TrackContainer.h"
 #include "InstrumentTrack.h"
 
 
@@ -71,19 +74,26 @@ MidiExport::~MidiExport()
 }
 
 
-
+/*
 bool MidiExport::tryExport(const TrackContainer::TrackList &tracks,
 			const TrackContainer::TrackList &tracks_BB,
 			int tempo, int masterPitch, const QString &filename)
+*/
+
+bool MidiExport::proceed(const QString& _fileName)
 {
-	QFile f(filename);
+        TrackContainer::TrackList tracks=Engine::getSong()->tracks();
+        TrackContainer::TrackList tracks_BB=Engine::getBBTrackContainer()->tracks();
+        int tempo=Engine::getSong()->getTempo();
+        int masterPitch=Engine::getSong()->masterPitch();
+
+        QFile f(_fileName);
 	f.open(QIODevice::WriteOnly);
 	QDataStream midiout(&f);
 
 	InstrumentTrack* instTrack;
 	BBTrack* bbTrack;
 	QDomElement element;
-
 
 	int nTracks = 0;
 	uint8_t buffer[BUFFER_SIZE];
