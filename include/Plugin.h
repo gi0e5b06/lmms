@@ -25,6 +25,7 @@
 #ifndef PLUGIN_H
 #define PLUGIN_H
 
+#include <QObject>
 #include <QtCore/QStringList>
 #include <QtCore/QMap>
 #include <QtXml/QDomDocument>
@@ -43,9 +44,10 @@ class AutomatableModel;
 
 class EXPORT Plugin : public Model, public JournallingObject
 {
-	MM_OPERATORS
 	Q_OBJECT
-public:
+	MM_OPERATORS
+
+ public:
 	enum PluginTypes
 	{
 		Instrument,	// instrument being used in channel-track
@@ -180,14 +182,19 @@ public:
 	// create a view for the model 
 	PluginView * createView( QWidget * parent );
 
+ signals:
+        // none
 
-protected:
+ public slots:
+         //none
+
+ protected:
 	// create a view for the model 
 	virtual PluginView* instantiateView( QWidget * ) = 0;
 	void collectErrorForUI( QString errMsg );
 
 
-private:
+ private:
 	const Descriptor * m_descriptor;
 
 	// pointer to instantiation-function in plugin

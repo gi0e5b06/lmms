@@ -543,13 +543,14 @@ void FileBrowserTreeWidget::mouseReleaseEvent(QMouseEvent * me )
 		// stop them if the user releases mouse-button...
 		if( m_previewPlayHandle->type() == PlayHandle::TypeSamplePlayHandle )
 		{
-			SamplePlayHandle * s = dynamic_cast<SamplePlayHandle *>(
-							m_previewPlayHandle );
-			if( s && s->totalFrames() - s->framesDone() <=
-				static_cast<f_cnt_t>( Engine::mixer()->
-						processingSampleRate() * 3 ) )
+			SamplePlayHandle* sph=dynamic_cast<SamplePlayHandle*>
+                                (m_previewPlayHandle);
+			if( sph &&
+                            (sph->frames()-sph->framesDone() <=
+                             static_cast<f_cnt_t>(Engine::mixer()->processingSampleRate()*3)) )
+                            //total
 			{
-				s->setDoneMayReturnTrue( true );
+				sph->setDoneMayReturnTrue( true );
 				m_previewPlayHandle = NULL;
 				m_pphMutex.unlock();
 				return;

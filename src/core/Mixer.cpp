@@ -151,6 +151,7 @@ Mixer::Mixer( bool renderOnly ) :
 		MixerWorkerThread * wt = new MixerWorkerThread( this );
 		if( i < m_numWorkers )
 		{
+                        wt->setObjectName(QString("mixer worker #%1").arg(i));
 			wt->start( QThread::TimeCriticalPriority );
 		}
 		m_workers.push_back( wt );
@@ -340,7 +341,8 @@ void Mixer::pushInputFrames( sampleFrame * _ab, const f_cnt_t _frames )
 }
 
 
-
+SampleBuffer* s_metronome1=NULL;
+SampleBuffer* s_metronome2=NULL;
 
 const surroundSampleFrame * Mixer::renderNextBuffer()
 {
@@ -348,7 +350,7 @@ const surroundSampleFrame * Mixer::renderNextBuffer()
 
 	s_renderingThread = true;
 
-	static Song::PlayPos last_metro_pos = -1;
+	//static Song::PlayPos last_metro_pos = -1;
 
 	Song *song = Engine::getSong();
 
@@ -360,21 +362,44 @@ const surroundSampleFrame * Mixer::renderNextBuffer()
 					 currentPlayMode == Song::Mode_PlayBB;
 
 	if( playModeSupportsMetronome && m_metronomeActive && !song->isExporting() &&
-		p != last_metro_pos &&
-			// Stop crash with metronome if empty project
-				Engine::getSong()->countTracks() )
+            //p != last_metro_pos &&
+            // Stop crash with metronome if empty project
+            Engine::getSong()->countTracks() )
 	{
-		tick_t ticksPerTact = MidiTime::ticksPerTact();
-		if ( p.getTicks() % (ticksPerTact / 1 ) == 0 )
-		{
-			addPlayHandle( new SamplePlayHandle( "misc/metronome02.ogg" ) );
-		}
-		else if ( p.getTicks() % (ticksPerTact /
-			song->getTimeSigModel().getNumerator() ) == 0 )
-		{
-			addPlayHandle( new SamplePlayHandle( "misc/metronome01.ogg" ) );
-		}
-		last_metro_pos = p;
+                if(!s_metronome1) s_metronome1=sharedObject::ref(new SampleBuffer("misc/metronome01.ogg"));
+                if(!s_metronome2) s_metronome2=sharedObject::ref(new SampleBuffer("misc/metronome02.ogg"));
+
+		const tick_t  ticksPerTact   =MidiTime::ticksPerTact();
+                const tick_t  ticksPerBeat   =ticksPerTact/song->getTimeSigModel().getNumerator();
+                const float   framesPerTick  =Engine::framesPerTick();
+                const fpp_t   framesPerPeriod=Engine::mixer()->framesPerPeriod();
+
+                const float fptact=framesPerTick*ticksPerTact;
+                const float fpbeat=framesPerTick*ticksPerBeat;
+                const float curfa=p.absoluteFrame();
+                 for(int k=0;k<framesPerPeriod;k++)
+                {
+                        const float metf=curfa+k;
+                        if(fmodf(metf,fptact)<1.f)
+                        {
+                                SamplePlayHandle* sph=new SamplePlayHandle(s_metronome2);
+                                sph->setOffset(k);
+                                //sph->setFrames(qMin(sph->frames(),framesPerBeat));
+                                addPlayHandle(sph);
+                                //k+=framesPerTick-1;
+                        }
+                        else
+                        if(fmodf(metf,fpbeat)<1.f)
+                        {
+                                SamplePlayHandle* sph=new SamplePlayHandle(s_metronome1);
+                                sph->setOffset(k);
+                                //sph->setFrames(qMin(sph->frames(),framesPerBeat));
+                                addPlayHandle(sph);
+                                //k+=framesPerTick-1;
+                        }
+                        //else k++;
+                }
+                //last_metro_f=curf;
 	}
 
 	// swap buffer
@@ -1102,6 +1127,7 @@ Mixer::fifoWriter::fifoWriter( Mixer* mixer, fifo * _fifo ) :
 	m_fifo( _fifo ),
 	m_writing( true )
 {
+        setObjectName("mixer fifo writer");
 }
 
 

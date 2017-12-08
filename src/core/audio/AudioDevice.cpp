@@ -43,7 +43,7 @@ AudioDevice::AudioDevice( const ch_cnt_t _channels, Mixer*  _mixer ) :
 		mixer()->currentQualitySettings().libsrcInterpolation(),
 				SURROUND_CHANNELS, &error ) ) == NULL )
 	{
-		qCritical( "Error: src_new() failed in audio_device.cpp!" );
+		qCritical("AudioDevice: src_new() failed");
 	}
 }
 

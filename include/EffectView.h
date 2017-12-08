@@ -44,7 +44,8 @@ class TempoSyncKnob;
 class EffectView : public PluginView
 {
 	Q_OBJECT
-public:
+
+ public:
 	EffectView( Effect * _model, QWidget * _parent );
 	virtual ~EffectView();
 
@@ -58,7 +59,7 @@ public:
 	}
 
 
-public slots:
+ public slots:
 	void editControls();
 	void moveUp();
 	void moveDown();
@@ -73,13 +74,13 @@ signals:
 	void deletePlugin( EffectView * _plugin );
 
 
-protected:
+ protected:
 	virtual void contextMenuEvent( QContextMenuEvent * _me );
 	virtual void paintEvent( QPaintEvent * _pe );
 	virtual void modelChanged();
 
 
-private:
+ private:
 	QPixmap m_bg;
 	LedCheckBox * m_bypass;
 	Knob * m_wetDry;

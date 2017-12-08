@@ -27,7 +27,6 @@
 #define TYPES_H
 
 #include <limits>
-
 #include "lmmsconfig.h"
 
 #ifdef LMMS_HAVE_STDINT_H

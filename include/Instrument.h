@@ -26,7 +26,9 @@
 #ifndef INSTRUMENT_H
 #define INSTRUMENT_H
 
+#include <QObject>
 #include <QString>
+
 #include "export.h"
 #include "lmms_basics.h"
 #include "MemoryManager.h"
@@ -43,8 +45,10 @@ class Track;
 
 class EXPORT Instrument : public Plugin
 {
+        Q_OBJECT
 	MM_OPERATORS
-public:
+
+ public:
 	enum Flag
 	{
 		NoFlags = 0x00,
@@ -125,6 +129,11 @@ public:
 		return m_instrumentTrack;
 	}
 
+ signals:
+        // none
+
+ public slots:
+         // none
 
 protected:
 	// instruments may use this to apply a soft fade out at the end of

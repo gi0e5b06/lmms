@@ -14,8 +14,8 @@ MemoryManagerArray MemoryManagerArray::S128 (   64, 128);
 MemoryManagerArray MemoryManagerArray::S192 (  256, 192);
 //200 drumsynth
 MemoryManagerArray MemoryManagerArray::S224 ( 2048, 224,"DetuningHelper");
-MemoryManagerArray MemoryManagerArray::S256 (   64, 256);
-MemoryManagerArray MemoryManagerArray::S480 (  256, 480);
+MemoryManagerArray MemoryManagerArray::S264 ( 2048, 264,"NotePlayHandle");
+MemoryManagerArray MemoryManagerArray::S480 ( 1024, 480,"BasicFilters");
 MemoryManagerArray MemoryManagerArray::S496 (   64, 496);
 MemoryManagerArray MemoryManagerArray::S512 (   64, 512);
 MemoryManagerArray MemoryManagerArray::S552 (  512, 552);
@@ -58,7 +58,7 @@ bool MemoryManagerArray::safe( size_t size, const char* file, long line)
 		if(size<= 128) return ! S128.full();
 		if(size<= 192) return ! S192.full();
 		if(size<= 224) return ! S224.full();
-		if(size<= 256) return ! S256.full();
+		if(size<= 264) return ! S264.full();
 		if(size<= 480) return ! S480.full();
 		if(size<= 496) return ! S496.full();
 		if(size<= 512) return ! S512.full();
@@ -89,7 +89,7 @@ void * MemoryManagerArray::alloc( size_t size, const char* file, long line)
 		if(size<= 128) return  S128.allocate(size,file,line);
 		if(size<= 192) return  S192.allocate(size,file,line);
 		if(size<= 224) return  S224.allocate(size,file,line);
-		if(size<= 256) return  S256.allocate(size,file,line);
+		if(size<= 264) return  S264.allocate(size,file,line);
 		if(size<= 480) return  S480.allocate(size,file,line);
 		if(size<= 496) return  S496.allocate(size,file,line);
 		if(size<= 512) return  S512.allocate(size,file,line);
@@ -123,7 +123,7 @@ void MemoryManagerArray::free( void * ptr, const char* file, long line)
 	if(! S128.deallocate(ptr,file,line))
 	if(! S192.deallocate(ptr,file,line))
 	if(! S224.deallocate(ptr,file,line))
-	if(! S256.deallocate(ptr,file,line))
+	if(! S264.deallocate(ptr,file,line))
 	if(! S480.deallocate(ptr,file,line))
 	if(! S496.deallocate(ptr,file,line))
 	if(! S512.deallocate(ptr,file,line))
@@ -195,7 +195,7 @@ MemoryManagerArray::MemoryManagerArray(const int nbe, const size_t size , const 
 
 MemoryManagerArray::~MemoryManagerArray()
 {
-	qWarning("~MemoryManagerArray %6lu : cnt=%6d : max=%lu %s wasted=%lu %s",
+	qWarning("~MemoryManagerArray %6lu : cnt=%6d : max=%6lu %s wasted=%6lu %s",
 		 C2ULI m_size,m_count,C2ULI m_max,(char*)(m_nbe==m_max ? "!!!" : "   "),
 		 (unsigned long int)m_wasted,m_ref);
 	::free(m_data);

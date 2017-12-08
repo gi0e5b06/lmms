@@ -48,17 +48,23 @@ public:
 		return true;
 	}
 
-
 	virtual void play( sampleFrame * buffer );
 	virtual bool isFinished() const;
 
 	virtual bool isFromTrack( const Track * _track ) const;
 
-	f_cnt_t totalFrames() const;
+	/*! Returns total numbers of frames to play (including release frames = 0) */
+	f_cnt_t frames() const;
+	/*! Sets the total number of frames to play (including release frames = 0) */
+	void setFrames( const f_cnt_t _frames );
+
+	//f_cnt_t totalFrames() const;
+
 	inline f_cnt_t framesDone() const
 	{
-		return( m_frame );
+		return m_currentFrame;
 	}
+
 	void setDoneMayReturnTrue( bool _enable )
 	{
 		m_doneMayReturnTrue = _enable;
@@ -79,17 +85,16 @@ private:
 	SampleBuffer * m_sampleBuffer;
 	bool m_doneMayReturnTrue;
 
-	f_cnt_t m_frame;
+	f_cnt_t m_currentFrame;
+	f_cnt_t m_frames;       // total frames to play
 	SampleBuffer::handleState m_state;
 
 	const bool m_ownAudioPort;
 
-	FloatModel m_defaultVolumeModel;
-	FloatModel * m_volumeModel;
-	Track * m_track;
-
-	BBTrack * m_bbTrack;
-
+	FloatModel  m_defaultVolumeModel;
+	FloatModel* m_volumeModel;
+	Track*      m_track;
+	BBTrack*    m_bbTrack;
 } ;
 
 

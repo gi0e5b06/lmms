@@ -64,6 +64,7 @@ IF("${PLUGIN_LIST}" STREQUAL "")
 		nes
 		opl2
 		organic
+                PadsGDX
 		papu
 		patman
 		peak_controller_effect

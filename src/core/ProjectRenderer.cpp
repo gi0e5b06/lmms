@@ -94,6 +94,7 @@ ProjectRenderer::ProjectRenderer( const Mixer::qualitySettings & qualitySettings
 	m_progress( 0 ),
 	m_abort( false )
 {
+        setObjectName("project renderer "+outputFilename);
 	AudioFileDeviceInstantiaton audioEncoderFactory = fileEncodeDevices[exportFileFormat].m_getDevInst;
 
 	if (audioEncoderFactory)

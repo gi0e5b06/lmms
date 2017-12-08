@@ -59,7 +59,8 @@ Plugin::Descriptor PLUGIN_EXPORT videolineexport_plugin_descriptor =
 	STRINGIFY( PLUGIN_NAME ),
 	"Video Line Export",
 	QT_TRANSLATE_NOOP( "pluginBrowser",
-                           "Filter for exporting M-JPEG Video lines" ),
+                           "Filter for exporting M-JPEG Video lines. "
+                           "72x40@15fps. 10 minutes max."),
 	"gi0e5b06",
 	0x0100,
 	Plugin::ExportFilter,
@@ -123,7 +124,7 @@ bool VideoLineExport::proceed(const QString& _fileName)
         // mpg is a vector of jpeg images
         const int WI=72;
         const int HI=40;
-        QVector<QImage> mpg(600*15,QImage(WI,HI,QImage::Format_ARGB32)); //tempo/10
+        QVector<QImage> mpg(600*15,QImage(WI,HI,QImage::Format_ARGB32));
 
         int c=0x00;
         int d=0x03;
@@ -250,24 +251,24 @@ bool VideoLineExport::proceed(const QString& _fileName)
 		}
 	} // for each track
 
-        rmax=posToImg(tempo,((imgToPos(tempo,rmax)+192)/192)*192);
+        rmax+=posToImg(tempo,192);
         if(rmax>=mpg.size()) rmax=mpg.size()-1;
         mpg=mpg.mid(0,rmax+1);
 
-        int fps=15;//tempo/10;
+        int fps=15;
         for(int i=0;i<=rmax;i++)
         {
                 QImage& img=mpg[i];
 
                 QPainter p(&img);
                 p.setPen(QColor(0xFF,0xFF,0x00,0x99));
-                for(int k=0;k<=WI+21;k++)
+                for(int k=-10;k<=WI+21;k++)
                 {
-                        if(k+i<0) continue;
+                        if(k+i<-10) continue;
                         int q=imgToPos(tempo,i+k);
-                        if(q% 48==0) p.drawLine(-21+k,0,-21+k,HI-1);
-                        if(q%192==0) p.drawLine(-19+k,0,-19+k,HI-1);
-                        if(q%768==0) p.drawLine(-17+k,0,-17+k,HI-1);
+                        if(i==0) qInfo("i=0  k=%d q=%d",k,q);
+                        if(q%192<7) p.drawLine(10+k,0,10+k,HI-1);
+                        if(q%768<7) p.drawLine( 8+k,0, 8+k,HI-1);
                 }
 
                 int frm=i%fps;

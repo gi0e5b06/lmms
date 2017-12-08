@@ -36,13 +36,14 @@ SamplePlayHandle::SamplePlayHandle( const QString& sampleFile ) :
 	PlayHandle( TypeSamplePlayHandle ),
 	m_sampleBuffer( new SampleBuffer( sampleFile ) ),
 	m_doneMayReturnTrue( true ),
-	m_frame( 0 ),
+	m_currentFrame( 0 ),
 	m_ownAudioPort( true ),
 	m_defaultVolumeModel( DefaultVolume, MinVolume, MaxVolume, 1 ),
 	m_volumeModel( &m_defaultVolumeModel ),
 	m_track( NULL ),
 	m_bbTrack( NULL )
 {
+        m_frames=m_sampleBuffer->frames();
 	setAudioPort( new AudioPort( "SamplePlayHandle", false ) );
 }
 
@@ -53,13 +54,14 @@ SamplePlayHandle::SamplePlayHandle( SampleBuffer* sampleBuffer ) :
 	PlayHandle( TypeSamplePlayHandle ),
 	m_sampleBuffer( sharedObject::ref( sampleBuffer ) ),
 	m_doneMayReturnTrue( true ),
-	m_frame( 0 ),
+	m_currentFrame( 0 ),
 	m_ownAudioPort( true ),
 	m_defaultVolumeModel( DefaultVolume, MinVolume, MaxVolume, 1 ),
 	m_volumeModel( &m_defaultVolumeModel ),
 	m_track( NULL ),
 	m_bbTrack( NULL )
 {
+        m_frames=m_sampleBuffer->frames();
 	setAudioPort( new AudioPort( "SamplePlayHandle", false ) );
 }
 
@@ -70,13 +72,14 @@ SamplePlayHandle::SamplePlayHandle( SampleTCO* tco ) :
 	PlayHandle( TypeSamplePlayHandle ),
 	m_sampleBuffer( sharedObject::ref( tco->sampleBuffer() ) ),
 	m_doneMayReturnTrue( true ),
-	m_frame( 0 ),
+	m_currentFrame( 0 ),
 	m_ownAudioPort( false ),
 	m_defaultVolumeModel( DefaultVolume, MinVolume, MaxVolume, 1 ),
 	m_volumeModel( &m_defaultVolumeModel ),
 	m_track( tco->getTrack() ),
 	m_bbTrack( NULL )
 {
+        m_frames=m_sampleBuffer->frames();
 	setAudioPort( ( (SampleTrack *)tco->getTrack() )->audioPort() );
 }
 
@@ -101,7 +104,7 @@ void SamplePlayHandle::play( sampleFrame * buffer )
 
 	const fpp_t fpp = Engine::mixer()->framesPerPeriod();
 	//play( 0, _try_parallelizing );
-	if( framesDone() >= totalFrames() )
+	if( framesDone() >= frames() )//totalFrames() )
 	{
 		memset( buffer, 0, BYTES_PER_FRAME * fpp );
 		return;
@@ -133,7 +136,7 @@ void SamplePlayHandle::play( sampleFrame * buffer )
 		}
 	}
 
-	m_frame += frames;
+	m_currentFrame += frames;
 }
 
 
@@ -141,7 +144,7 @@ void SamplePlayHandle::play( sampleFrame * buffer )
 
 bool SamplePlayHandle::isFinished() const
 {
-	return framesDone() >= totalFrames() && m_doneMayReturnTrue == true;
+	return framesDone() >= frames() && m_doneMayReturnTrue == true; //total
 }
 
 
@@ -154,12 +157,23 @@ bool SamplePlayHandle::isFromTrack( const Track * _track ) const
 
 
 
-
+/*
 f_cnt_t SamplePlayHandle::totalFrames() const
 {
 	return ( m_sampleBuffer->endFrame() - m_sampleBuffer->startFrame() ) * ( Engine::mixer()->processingSampleRate() / Engine::mixer()->baseSampleRate() );
 }
+*/
 
+f_cnt_t SamplePlayHandle::frames() const
+{
+        return m_frames;
+}
+
+
+void SamplePlayHandle::setFrames( const f_cnt_t _frames )
+{
+        m_frames=_frames;//qMin(_frames,totalFrames());
+}
 
 
 

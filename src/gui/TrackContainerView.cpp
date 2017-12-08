@@ -491,33 +491,31 @@ void TrackContainerView::dropEvent( QDropEvent * _de )
 	QString value = StringPairDrag::decodeValue( _de );
 	if( type == "instrument" )
 	{
-		InstrumentTrack * it = dynamic_cast<InstrumentTrack *>(
-				Track::create( Track::InstrumentTrack,
-								m_tc ) );
-		InstrumentLoaderThread *ilt = new InstrumentLoaderThread(
-					this, it, value );
+		InstrumentTrack * it = dynamic_cast<InstrumentTrack*>
+                        (Track::create( Track::InstrumentTrack,	m_tc));
+		InstrumentLoaderThread *ilt=new InstrumentLoaderThread(this,it,value);
+                ilt->setObjectName("load instrument "+value);
 		ilt->start();
 		//it->toggledInstrumentTrackButton( true );
 		_de->accept();
 	}
-	else if( type == "samplefile" || type == "pluginpresetfile" 
-		|| type == "soundfontfile" || type == "vstpluginfile")
+	else if( type == "samplefile" || type == "pluginpresetfile" ||
+                 type == "soundfontfile" || type == "vstpluginfile")
 	{
-		InstrumentTrack * it = dynamic_cast<InstrumentTrack *>(
-				Track::create( Track::InstrumentTrack,
-								m_tc ) );
-		Instrument * i = it->loadInstrument(
-			pluginFactory->pluginSupportingExtension(FileItem::extension(value)).name());
-		i->loadFile( value );
+		InstrumentTrack * it = dynamic_cast<InstrumentTrack*>
+                        (Track::create( Track::InstrumentTrack,	m_tc));
+		Instrument* i = it->loadInstrument
+                        (pluginFactory->pluginSupportingExtension
+                         (FileItem::extension(value)).name());
+		i->loadFile(value);
 		//it->toggledInstrumentTrackButton( true );
 		_de->accept();
 	}
 	else if( type == "presetfile" )
 	{
 		DataFile dataFile( value );
-		InstrumentTrack * it = dynamic_cast<InstrumentTrack *>(
-				Track::create( Track::InstrumentTrack,
-								m_tc ) );
+		InstrumentTrack * it = dynamic_cast<InstrumentTrack*>
+                        (Track::create( Track::InstrumentTrack,	m_tc));
 		it->setSimpleSerializing();
 		it->loadSettings( dataFile.content().toElement() );
 		//it->toggledInstrumentTrackButton( true );

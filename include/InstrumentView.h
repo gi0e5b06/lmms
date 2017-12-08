@@ -34,7 +34,9 @@ class InstrumentTrackWindow;
 
 class EXPORT InstrumentView : public PluginView
 {
-public:
+        Q_OBJECT
+
+ public:
 	InstrumentView( Instrument * _instrument, QWidget * _parent );
 	virtual ~InstrumentView();
 

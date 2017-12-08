@@ -620,12 +620,13 @@ FloatModel * FxMixer::channelSendModel( fx_ch_t fromChannel, fx_ch_t toChannel )
 
 void FxMixer::mixToChannel( const sampleFrame * _buf, fx_ch_t _ch )
 {
-	if( m_fxChannels[_ch]->m_muteModel.value() == false )
+        FxChannel* ch=m_fxChannels[_ch];
+	if(!ch->m_muteModel.value())
 	{
-		m_fxChannels[_ch]->m_lock.lock();
-		MixHelpers::add( m_fxChannels[_ch]->m_buffer, _buf, Engine::mixer()->framesPerPeriod() );
-		m_fxChannels[_ch]->m_hasInput = true;
-		m_fxChannels[_ch]->m_lock.unlock();
+		ch->m_lock.lock();
+		MixHelpers::add( ch->m_buffer, _buf, Engine::mixer()->framesPerPeriod() );
+		ch->m_hasInput=true;
+		ch->m_lock.unlock();
 	}
 }
 
@@ -656,7 +657,13 @@ void FxMixer::masterMix( sampleFrame * _buf )
 	MixerWorkerThread::resetJobQueue( MixerWorkerThread::JobQueue::Dynamic );
 	for( FxChannel * ch : m_fxChannels )
 	{
+                /*
+                bool old=ch->m_muted;
 		ch->m_muted = ch->m_muteModel.value();
+                if(old && (old!=ch->m_muted))
+                        BufferManager::clear(ch->m_buffer);
+                */
+
 		if( ch->m_muted ) // instantly "process" muted channels
 		{
 			ch->processed();

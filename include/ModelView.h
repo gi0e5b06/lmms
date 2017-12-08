@@ -25,13 +25,13 @@
 #ifndef MODEL_VIEW_H
 #define MODEL_VIEW_H
 
-#include <QtCore/QPointer>
+#include <QPointer>
 #include "Model.h"
 
 
 class EXPORT ModelView
 {
-public:
+ public:
 	ModelView( Model* model, QWidget* widget );
 	virtual ~ModelView();
 
@@ -61,18 +61,15 @@ public:
 
 
 protected:
+	virtual void doConnections();
+
 	// sub-classes can re-implement this to track model-changes
-	virtual void modelChanged()
-	{
-	}
+	virtual void modelChanged();
 
 	QWidget* widget()
 	{
 		return m_widget;
 	}
-
-	virtual void doConnections();
-
 
 private:
 	QWidget* m_widget;

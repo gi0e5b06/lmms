@@ -170,6 +170,7 @@ void InstrumentTrack::processAudioBuffer( sampleFrame* buf, const fpp_t frames, 
 	if( isMuted() || ( Engine::getSong()->playMode() != Song::Mode_PlayPattern &&
 				n && n->isBbTrackMuted() ) || ! m_instrument )
 	{
+		memset(buf,0,frames*BYTES_PER_FRAME);
 		return;
 	}
 
@@ -184,6 +185,7 @@ void InstrumentTrack::processAudioBuffer( sampleFrame* buf, const fpp_t frames, 
 		if( m_silentBuffersProcessed )
 		{
 			// skip further processing
+                        memset(buf,0,frames*BYTES_PER_FRAME);
 			return;
 		}
 		m_silentBuffersProcessed = true;

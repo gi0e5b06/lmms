@@ -49,7 +49,25 @@ DummyTrackContainer * LmmsCore::s_dummyTC = NULL;
 
 void LmmsCore::init( bool renderOnly )
 {
-	LmmsCore *engine = inst();
+        qRegisterMetaType<tact_t>("tact_t");
+        qRegisterMetaType<tick_t>("tick_t");
+        qRegisterMetaType<volume_t>("volume_t");
+        qRegisterMetaType<panning_t>("panning_t");
+        qRegisterMetaType<sample_t>("sample_t");
+        qRegisterMetaType<int_sample_t>("int_sample_t");
+        qRegisterMetaType<sample_rate_t>("sample_rate_t");
+        qRegisterMetaType<f_cnt_t>("f_cnt_t");
+        qRegisterMetaType<ch_cnt_t>( "ch_cnt_t" );
+        qRegisterMetaType<bpm_t>("bpm_t");
+        qRegisterMetaType<bitrate_t>("bitrate_t");
+        qRegisterMetaType<fx_ch_t>("fx_ch_t");
+        qRegisterMetaType<jo_id_t>("jo_id_t");
+
+        qRegisterMetaType<const sampleFrame*>("const sampleFrame*");
+        qRegisterMetaType<const surroundSampleFrame*>("const surroundSampleFrame*");
+        qRegisterMetaType<MidiTime>("MidiTime");
+
+        LmmsCore *engine = inst();
 
 	emit engine->initProgress(tr("Generating wavetables"));
 	// generate (load from file) bandlimited wavetables

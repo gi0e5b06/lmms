@@ -42,7 +42,7 @@
 
 #ifdef LMMS_HAVE_ALSA
 
-const int EventPollTimeOut = 5;//250
+const int EventPollTimeOut = 50;//5 //250
 
 
 QString MidiAlsaGdx::alsaPortName( snd_seq_client_info_t * _cinfo,
@@ -118,6 +118,8 @@ MidiAlsaGdx::MidiAlsaGdx() :
 	m_quit( false ),
 	m_portListUpdateTimer( this )
 {
+        setObjectName("midi alsa gdx");
+
 	int err;
 	if( ( err = snd_seq_open( &m_seqHandle,
 				  probeDevice().toLatin1().constData(),
@@ -177,8 +179,8 @@ MidiAlsaGdx::MidiAlsaGdx() :
 		qCritical("MidiAlsaGdx: pipe");
 	}
 
-	//start( QThread::IdlePriority );
-	start( QThread::HighestPriority );
+	start( QThread::IdlePriority );
+	//start( QThread::HighestPriority ); //GDX
 }
 
 
@@ -1053,7 +1055,7 @@ void MidiAlsaGdx::subscribeWritablePort( MidiPort * _port,
 
 void MidiAlsaGdx::run()
 {
-	DEBUG_THREAD_PRINT
+	//DEBUG_THREAD_PRINT
 
 	// watch the pipe and sequencer input events
 	int pollfd_count = snd_seq_poll_descriptors_count( m_seqHandle,
@@ -1094,7 +1096,7 @@ void MidiAlsaGdx::run()
 
 		if(pollRet>0)
 		{
-			DEBUG_THREAD_PRINT
+			//DEBUG_THREAD_PRINT
 		        //PL_BEGIN("AlsaSeqInput")
 			m_seqMutex.lock();
 

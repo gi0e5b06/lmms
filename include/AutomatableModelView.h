@@ -102,24 +102,24 @@ protected:
 
 
 
-#define generateTypedModelView(type)							\
-class EXPORT type##ModelView : public AutomatableModelView		\
-{																\
-public:															\
-	type##ModelView( Model* model, QWidget* _this ) :			\
-		AutomatableModelView( model, _this )					\
-	{															\
-	}															\
-																\
-	type##Model* model()										\
-	{															\
-		return castModel<type##Model>();						\
-	}															\
-																\
-	const type##Model* model() const							\
-	{															\
-		return castModel<type##Model>();						\
-	}															\
+#define generateTypedModelView(type)                            \
+class EXPORT type##ModelView : public AutomatableModelView      \
+{                                                               \
+ public:                                                        \
+        type##ModelView( Model* model, QWidget* _this ) :	\
+                AutomatableModelView( model, _this )            \
+	{							\
+	}							\
+								\
+	type##Model* model()					\
+	{							\
+		return castModel<type##Model>();		\
+	}							\
+								\
+	const type##Model* model() const			\
+	{							\
+		return castModel<type##Model>();		\
+	}							\
 }
 
 

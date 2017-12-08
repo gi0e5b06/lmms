@@ -734,6 +734,7 @@ int main( int argc, char * * argv )
 
 
 	// try to set realtime priority
+        /*
 #ifdef LMMS_BUILD_LINUX
 #ifdef LMMS_HAVE_SCHED_H
 #ifndef __OpenBSD__
@@ -747,6 +748,7 @@ int main( int argc, char * * argv )
 #endif
 #endif
 #endif
+        */
 
 #ifdef LMMS_BUILD_WIN32
 	if( !SetPriorityClass( GetCurrentProcess(), HIGH_PRIORITY_CLASS ) )
@@ -1061,8 +1063,8 @@ int main( int argc, char * * argv )
 		}
 	}
 
-	QThread::currentThread()->setPriority( QThread::LowPriority );
-	DEBUG_THREAD_PRINT
+	//QThread::currentThread()->setPriority( QThread::LowPriority );
+	//DEBUG_THREAD_PRINT
 	const int ret = app->exec();
 	delete app;
 

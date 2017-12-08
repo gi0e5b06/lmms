@@ -50,32 +50,35 @@ ModelView::~ModelView()
 
 void ModelView::setModel( Model* model, bool isOldModelValid )
 {
-	if( isOldModelValid && m_model != NULL )
-	{
-		if( m_model->isDefaultConstructed() )
-		{
-			delete m_model;
+        if(!model) qFatal("ModelView::setModel null not allowed");
+
+        if(model!=m_model)
+        {
+                if( isOldModelValid && m_model != NULL )
+                {
+                        if( m_model->isDefaultConstructed() )
+                                delete m_model;
+                        else
+                                m_model->disconnect( widget() );
 		}
-		else
-		{
-			m_model->disconnect( widget() );
-		}
-	}
-
-	m_model = model;
-
-	doConnections();
-
-	widget()->update();
+                m_model=model;
+                doConnections();
+        }
 
 	modelChanged();
 }
 
 
+void ModelView::modelChanged()
+{
+        qWarning("ModelView::setModel widget=%p ->update()",widget());
+        widget()->update();
+}
 
 
 void ModelView::doConnections()
 {
+        qWarning("ModelView::doConnections m_model=%p",m_model);
 	if( m_model != NULL )
 	{
 		QObject::connect( m_model, SIGNAL( dataChanged() ), widget(), SLOT( update() ) );

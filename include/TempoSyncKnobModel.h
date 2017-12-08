@@ -48,9 +48,9 @@ public:
 	} ;
 
 	TempoSyncKnobModel( const float _val, const float _min,
-				const float _max, const float _step,
-				const float _scale, Model * _parent,
-				const QString & _display_name = QString() );
+                            const float _max, const float _step,
+                            const float _scale, Model * _parent,
+                            const QString & _display_name = QString() );
 	virtual ~TempoSyncKnobModel();
 
 	void saveSettings( QDomDocument & _doc, QDomElement & _this, const QString& name );
@@ -72,7 +72,7 @@ public:
 
 signals:
 	void syncModeChanged( TempoSyncMode _new_mode );
-	void scaleChanged( float _new_scale );
+	//void scaleChanged( float _new_scale );
 
 
 public slots:

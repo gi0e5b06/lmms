@@ -227,7 +227,7 @@ signals:
 	void instrumentChanged();
 	void midiNoteOn( const Note& );
 	void midiNoteOff( const Note& );
-	void nameChanged();
+	//void nameChanged();
 	void newNote();
 
 

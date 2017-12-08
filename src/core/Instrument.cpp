@@ -28,7 +28,7 @@
 
 
 Instrument::Instrument( InstrumentTrack * _instrument_track,
-					const Descriptor * _descriptor ) :
+                        const Descriptor * _descriptor ) :
 	Plugin( _descriptor, NULL/* _instrument_track*/ ),
 	m_instrumentTrack( _instrument_track )
 {

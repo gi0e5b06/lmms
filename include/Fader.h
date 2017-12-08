@@ -48,7 +48,7 @@
 #ifndef FADER_H
 #define FADER_H
 
-#include <QtCore/QTime>
+#include <QTime>
 #include <QWidget>
 #include <QPixmap>
 

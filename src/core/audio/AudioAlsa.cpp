@@ -46,22 +46,23 @@ AudioAlsa::AudioAlsa( bool & _success_ful, Mixer*  _mixer ) :
 	m_swParams( NULL ),
 	m_convertEndian( false )
 {
+        setObjectName("audio alsa");
+
 	_success_ful = false;
 
 	if( setenv( "PULSE_ALSA_HOOK_CONF", "/dev/null", 0 ) )
 	{
-		fprintf( stderr,
-		"Could not avoid possible interception by PulseAudio\n" );
+                qWarning("AudioAlsa: Could not avoid possible interception by PulseAudio");
 	}
 
 	int err;
 
 	if( ( err = snd_pcm_open( &m_handle,
-					probeDevice().toLatin1().constData(),
-						SND_PCM_STREAM_PLAYBACK,
-						0 ) ) < 0 )
+                                  probeDevice().toLatin1().constData(),
+                                  SND_PCM_STREAM_PLAYBACK,
+                                  0 ) ) < 0 )
 	{
-		printf( "Playback open error: %s\n", snd_strerror( err ) );
+		qCritical("AudioAlsa: Playback open error: %s", snd_strerror(err));
 		return;
 	}
 
@@ -71,14 +72,12 @@ AudioAlsa::AudioAlsa( bool & _success_ful, Mixer*  _mixer ) :
 	if( ( err = setHWParams( channels(),
 					SND_PCM_ACCESS_RW_INTERLEAVED ) ) < 0 )
 	{
-		printf( "Setting of hwparams failed: %s\n",
-							snd_strerror( err ) );
+		qCritical("AudioAlsa: Setting of hwparams failed: %s",snd_strerror(err));
 		return;
 	}
 	if( ( err = setSWParams() ) < 0 )
 	{
-		printf( "Setting of swparams failed: %s\n",
-							snd_strerror( err ) );
+		qCritical("AudioAlsa: Setting of swparams failed: %s",snd_strerror(err));
 		return;
 	}
 

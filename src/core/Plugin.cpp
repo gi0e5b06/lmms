@@ -159,24 +159,22 @@ Plugin::Descriptor::SubPluginFeatures::Key::Key( const QDomElement & key ) :
 		QDomElement e = l.item( i ).toElement();
 		attributes[e.attribute( "name" )] = e.attribute( "value" );
 	}
-		
 }
 
 
 
 
-QDomElement Plugin::Descriptor::SubPluginFeatures::Key::saveXML(
-						QDomDocument & doc ) const
+QDomElement Plugin::Descriptor::SubPluginFeatures::Key::saveXML(QDomDocument& doc ) const
 {
 	QDomElement e = doc.createElement( "key" );
-	for( AttributeMap::ConstIterator it = attributes.begin(); 
-		it != attributes.end(); ++it )
-	{
-		QDomElement a = doc.createElement( "attribute" );
-		a.setAttribute( "name", it.key() );
-		a.setAttribute( "value", it.value() );
-		e.appendChild( a );
-	}
+	for( AttributeMap::ConstIterator it = attributes.begin();
+             it != attributes.end(); ++it )
+             {
+                     QDomElement a = doc.createElement( "attribute" );
+                     a.setAttribute( "name", it.key() );
+                     a.setAttribute( "value", it.value() );
+                     e.appendChild( a );
+             }
 	return e;
 }
 

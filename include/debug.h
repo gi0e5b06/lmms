@@ -28,6 +28,10 @@
 
 #include "lmmsconfig.h"
 
+#ifndef qInfo
+#define qInfo qWarning
+#endif
+
 // set whether debug-stuff (like messages on the console, asserts and other
 // additional range-checkings) should be compiled
 
@@ -45,18 +49,44 @@
 		 QThread::currentThread()->priority(),		     \
 		 __FILE__,__LINE__);
 
+//inline void DEBUG_CHECKED_CONNECT( const QObject * sender, const char * signal,
+//                                   const QObject * receiver,  const char * method,
+//                                   Qt::ConnectionType type = Qt::AutoConnection )
+//  if(!QObject::connect(sender, signal, receiver, method, type))
+//, Qt::DirectConnection
+#define DEBUG_CONNECT(sender,signal,receiver,slot)                      \
+        {                                                               \
+                qInfo("DEBUG_CONNECT from %p '%s' to %p '%s'",          \
+                      sender,STRINGIFY(signal),                         \
+                      receiver,STRINGIFY(slot));                        \
+                QMetaObject::Connection c=                              \
+                        QObject::connect(sender, signal, receiver,      \
+                                         slot);   \
+                if(!c)                                                  \
+                        qt_assert_x(Q_FUNC_INFO,                        \
+                                    "CHECKED_CONNECT failed",           \
+                                    __FILE__, __LINE__);                \
+        }
+
+#define DEBUG_DISCONNECT(sender,signal,receiver,slot)                   \
+        {                                                               \
+                qInfo("DEBUG_DISCONNECT from %p '%s' to %p '%s'",       \
+                      sender, STRINGIFY(signal),                        \
+                      receiver,STRINGIFY(slot));                        \
+                QObject::disconnect(sender, signal, receiver, slot);    \
+        }
+
 #else
 
 #ifndef assert
 #define assert(x) ((void)(x))
 #endif
 
+#define DEBUG_CONNECT(sender,signal,receiver,slot)      \
+        connect(sender,signal,receiver,slot);
+
 #define DEBUG_THREAD_PRINT
 
 #endif // LMMS_DEBUG
-
-#ifndef qInfo
-#define qInfo qWarning
-#endif
 
 #endif // DEBUG_H

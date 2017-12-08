@@ -117,8 +117,11 @@ public:
 				const float _freq,
 				const LoopMode _loopmode = LoopOff );
 
-	void visualize( QPainter & _p, const QRect & _dr, const QRect & _clip, f_cnt_t _from_frame = 0, f_cnt_t _to_frame = 0 );
-	inline void visualize( QPainter & _p, const QRect & _dr, f_cnt_t _from_frame = 0, f_cnt_t _to_frame = 0 )
+	void visualize( QPainter & _p, const QRect & _dr, const QRect & _clip,
+                        f_cnt_t _from_frame = 0, f_cnt_t _to_frame = 0 );
+
+	inline void visualize( QPainter & _p, const QRect & _dr,
+                               f_cnt_t _from_frame = 0, f_cnt_t _to_frame = 0 )
 	{
 		visualize( _p, _dr, _dr, _from_frame, _to_frame );
 	}
@@ -148,23 +151,9 @@ public:
 		return m_loopEndFrame;
 	}
 
-	void setLoopStartFrame( f_cnt_t _start )
-	{
-		m_loopStartFrame = _start;
-	}
-
-	void setLoopEndFrame( f_cnt_t _end )
-	{
-		m_loopEndFrame = _end;
-	}
-
-	void setAllPointFrames( f_cnt_t _start, f_cnt_t _end, f_cnt_t _loopstart, f_cnt_t _loopend )
-	{
-		m_startFrame = _start;
-		m_endFrame = _end;
-		m_loopStartFrame = _loopstart;
-		m_loopEndFrame = _loopend;
-	}
+	void setLoopStartFrame(f_cnt_t _start);
+	void setLoopEndFrame  (f_cnt_t _end);
+	void setAllPointFrames(f_cnt_t _start, f_cnt_t _end, f_cnt_t _loopstart, f_cnt_t _loopend);
 
 	inline f_cnt_t frames() const
 	{
@@ -222,11 +211,12 @@ public:
 
 	// protect calls from the GUI to this function with dataReadLock() and
 	// dataUnlock()
-	SampleBuffer * resample( const sample_rate_t _src_sr,
-						const sample_rate_t _dst_sr );
+	//SampleBuffer *
+        void resample( const sample_rate_t _src_sr,
+                       const sample_rate_t _dst_sr );
 
 	void normalizeSampleRate( const sample_rate_t _src_sr,
-						bool _keep_settings = false );
+                                  bool _keep_settings = false );
 
 	// protect calls from the GUI to this function with dataReadLock() and
 	// dataUnlock(), out of loops for efficiency
@@ -253,17 +243,18 @@ public:
 		m_varLock.unlock();
 	}
 
-	static QString tryToMakeRelative( const QString & _file );
-	static QString tryToMakeAbsolute(const QString & file);
+        static QString selectAudioFile  (const QString & _file = QString::null);
+	static QString tryToMakeRelative(const QString & _file);
+	static QString tryToMakeAbsolute(const QString & _file);
 	static void clearMMap();
 
 public slots:
-	void setAudioFile( const QString & _audio_file );
-	void loadFromBase64( const QString & _data );
-	void setStartFrame( const f_cnt_t _s );
-	void setEndFrame( const f_cnt_t _e );
-	void setAmplification( float _a );
-	void setReversed( bool _on );
+	void setAudioFile(const QString & _audioFile);
+	void loadFromBase64(const QString & _data);
+	void setStartFrame(f_cnt_t _f);
+	void setEndFrame(f_cnt_t _f);
+	void setAmplification(float _a);
+	void setReversed(bool _on);
 	void sampleRateChanged();
 
 signals:

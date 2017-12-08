@@ -41,10 +41,14 @@
 #include "LfoController.h"
 #include "Backtrace.h"
 
+
 ControllerRackView::ControllerRackView( ) :
 	QWidget(),
 	m_nextIndex(0)
 {
+        qRegisterMetaType<Controller*>("Controller*");
+        qRegisterMetaType<ControllerView*>("ControllerView*");
+
 	setWindowIcon( embed::getIconPixmap( "controller" ) );
 	setWindowTitle( tr( "Controller Rack" ) );
 

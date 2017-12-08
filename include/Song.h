@@ -76,21 +76,29 @@ public:
 	class PlayPos : public MidiTime
 	{
 	public:
-		PlayPos( const int abs = 0 ) :
-			MidiTime( abs ),
-			m_timeLine( NULL ),
-			m_currentFrame( 0.0f )
+                PlayPos( const int abs = 0 ) :
+                         MidiTime( abs ),
+			 m_timeLine( NULL ),
+			 m_currentFrame( 0.0f )
 		{
 		}
-		inline void setCurrentFrame( const float f )
+
+                inline void setCurrentFrame( const float f ) // relative
 		{
 			m_currentFrame = f;
 		}
-		inline float currentFrame() const
+
+		inline float currentFrame() const // relative
 		{
 			return m_currentFrame;
 		}
-		TimeLineWidget * m_timeLine;
+
+                inline float absoluteFrame() const
+                {
+                        return getTicks()*Engine::framesPerTick()+m_currentFrame;
+                }
+
+                TimeLineWidget * m_timeLine;
 
 	private:
 		float m_currentFrame;

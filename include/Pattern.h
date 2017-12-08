@@ -26,10 +26,10 @@
 #ifndef PATTERN_H
 #define PATTERN_H
 
-#include <QtCore/QVector>
+#include <QVector>
 #include <QWidget>
 #include <QDialog>
-#include <QtCore/QThread>
+//#include <QThread>
 #include <QPixmap>
 #include <QStaticText>
 

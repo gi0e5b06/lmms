@@ -27,7 +27,7 @@
 #define KNOB_H
 
 #include <QWidget>
-#include <QtCore/QPoint>
+#include <QPoint>
 
 #include "AutomatableModelView.h"
 #include "templates.h"
@@ -39,15 +39,14 @@ class TextFloat;
 enum knobTypes
 {
 	knobDark_28, knobBright_26, knobSmall_17, knobVintage_32, knobStyled
-} ;
-
-
+};
 
 class EXPORT Knob : public QWidget, public FloatModelView
 {
 	Q_OBJECT
 	Q_ENUMS( knobTypes )
 
+public:
 	Q_PROPERTY(float innerRadius READ innerRadius WRITE setInnerRadius)
 	Q_PROPERTY(float outerRadius READ outerRadius WRITE setOuterRadius)
 
@@ -68,13 +67,12 @@ class EXPORT Knob : public QWidget, public FloatModelView
 	mapPropertyFromModel(bool,isVolumeKnob,setVolumeKnob,m_volumeKnob);
 	mapPropertyFromModel(float,volumeRatio,setVolumeRatio,m_volumeRatio);
 
-	void initUi( const QString & _name ); //!< to be called by ctors
-	void onKnobNumUpdated(); //!< to be called when you updated @a m_knobNum
-
-public:
 	Knob( knobTypes _knob_num, QWidget * _parent = NULL, const QString & _name = QString() );
 	Knob( QWidget * _parent = NULL, const QString & _name = QString() ); //!< default ctor
 	virtual ~Knob();
+
+	void initUi( const QString & _name ); //!< to be called by ctors
+	void onKnobNumUpdated(); //!< to be called when you updated @a m_knobNum
 
 	// TODO: remove
 	inline void setHintText( const QString & _txt_before,
@@ -117,12 +115,17 @@ public:
 	QColor textColor() const;
 	void setTextColor( const QColor & c );
 
-
 signals:
 	void sliderPressed();
 	void sliderReleased();
 	void sliderMoved( float value );
 
+public slots:
+	virtual void modelChanged();
+	virtual void enterValue();
+	void displayHelp();
+	void friendlyUpdate();
+	void toggleScale();
 
 protected:
 	virtual void contextMenuEvent( QContextMenuEvent * _ce );
@@ -141,12 +144,6 @@ protected:
 	virtual void convert(const QPoint& _p, float& value_, float& dist_);
 	virtual void setPosition( const QPoint & _p, bool _shift );
 
-private slots:
-	virtual void enterValue();
-	void displayHelp();
-	void friendlyUpdate();
-	void toggleScale();
-
 private:
 	QString displayValue() const;
 
@@ -155,6 +152,7 @@ private:
 	QLineF calculateLine( const QPointF & _mid, float _radius,
 						float _innerRadius = 1) const;
 
+        void clearCache();
 	void drawKnob( QPainter * _p );
 	bool updateAngle();
 

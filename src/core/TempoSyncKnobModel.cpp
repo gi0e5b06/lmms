@@ -167,7 +167,7 @@ void TempoSyncKnobModel::setScale( float _new_scale )
 {
 	m_scale = _new_scale;
 	calculateTempoSyncTime( Engine::getSong()->getTempo() );
-	emit scaleChanged( _new_scale );
+	//emit scaleChanged( _new_scale );
 }
 
 

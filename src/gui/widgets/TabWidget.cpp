@@ -109,8 +109,8 @@ void TabWidget::setActiveTab( int idx )
 	{
 		int old_active = m_activeTab;
 		m_activeTab = idx;
-		m_widgets[m_activeTab].w->raise();
 		m_widgets[m_activeTab].w->show();
+		m_widgets[m_activeTab].w->raise();
 		if( old_active != idx && m_widgets.contains( old_active ) )
 		{
 			m_widgets[old_active].w->hide();

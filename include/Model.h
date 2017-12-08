@@ -25,8 +25,8 @@
 #ifndef MODEL_H
 #define MODEL_H
 
-#include <QtCore/QString>
-#include <QtCore/QObject>
+#include <QObject>
+#include <QString>
 
 #include "export.h"
 
@@ -34,7 +34,8 @@
 class EXPORT Model : public QObject
 {
 	Q_OBJECT
-public:
+
+ public:
 	Model( Model * _parent, QString _display_name = QString::null,
 					bool _default_constructed = false ) :
 		QObject( _parent ),
@@ -69,22 +70,19 @@ public:
 
 	virtual QString fullDisplayName() const;
 
-
-private:
-	QString m_displayName;
-	bool m_defaultConstructed;
-
-
-signals:
+ signals:
 	// emitted if actual data of the model (e.g. values) have changed
 	void dataChanged();
-
 	// emitted in case new data was not set as it's been equal to old data
 	void dataUnchanged();
-
 	// emitted if properties of the model (e.g. ranges) have changed
 	void propertiesChanged();
 
+ public slots:
+
+ private:
+	QString m_displayName;
+	bool m_defaultConstructed;
 } ;
 
 
