@@ -328,6 +328,10 @@ public:
 	// Create a menu for assigning/creating channels for this track
 	QMenu * createFxMenu( QString title, QString newFxLabel );
 
+        QMenu* createAudioInputMenu();
+        QMenu* createAudioOutputMenu();
+        QMenu* createMidiInputMenu();
+        QMenu* createMidiOutputMenu();
 
 protected:
 	virtual void resizeEvent( QResizeEvent * re );

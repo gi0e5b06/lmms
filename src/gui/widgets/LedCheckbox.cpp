@@ -101,6 +101,9 @@ void LedCheckBox::paintEvent( QPaintEvent * )
 	p.drawText( m_ledOffPixmap->width() + 4, 11, text() );
 	p.setPen( QColor( 255, 255, 255 ) );
 	p.drawText( m_ledOffPixmap->width() + 3, 10, text() );
+
+        //p.setPen(Qt::red);
+        //p.drawRect(0,0,width()-1,height()-1);
 }
 
 
@@ -114,9 +117,8 @@ void LedCheckBox::initUi( LedColors _color )
 	{
 		_color = Yellow;
 	}
-	m_ledOnPixmap = new QPixmap( embed::getIconPixmap(
-					names[_color].toUtf8().constData() ) );
-	m_ledOffPixmap = new QPixmap( embed::getIconPixmap( "led_off" ) );
+	m_ledOnPixmap =new QPixmap(embed::getIconPixmap(names[_color].toUtf8().constData()));
+	m_ledOffPixmap=new QPixmap(embed::getIconPixmap("led_off"));
 
 	setFont( pointSize<7>( font() ) );
 	setText( m_text );
@@ -127,7 +129,11 @@ void LedCheckBox::initUi( LedColors _color )
 
 void LedCheckBox::onTextUpdated()
 {
-	setFixedSize( m_ledOffPixmap->width() + 5 + QFontMetrics( font() ).width( text() ), m_ledOffPixmap->height() );
+        const QString& t=text();
+        int w=m_ledOffPixmap->width();
+        int h=m_ledOffPixmap->height();
+        if(!t.isEmpty()) w+=4+QFontMetrics(font()).width(t);
+        setFixedSize(w,h);
 }
 
 

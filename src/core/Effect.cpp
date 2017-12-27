@@ -34,21 +34,21 @@
 
 
 Effect::Effect( const Plugin::Descriptor * _desc,
-			Model * _parent,
-			const Descriptor::SubPluginFeatures::Key * _key ) :
-	Plugin( _desc, _parent ),
-	m_parent( NULL ),
-	m_key( _key ? *_key : Descriptor::SubPluginFeatures::Key() ),
-	m_processors( 1 ),
-	m_okay( true ),
-	m_noRun( false ),
-	m_running( false ),
-	m_bufferCount( 0 ),
-	m_enabledModel( true, this, tr( "Effect enabled" ) ),
-	m_wetDryModel  ( 1.0f, 0.0f, 1.0f, 0.01f, this, tr( "Wet/Dry mix" ) ), //min=-1
-	m_gateModel    ( 0.0f, 0.0f, 1.0f, 0.01f, this, tr( "Gate" ) ),
-	m_autoQuitModel( 1.0f, 1.0f, 8000.0f, 100.0f, 1.0f, this, tr( "Decay" ) ),
-	m_autoQuitDisabled( false )
+                Model * _parent,
+                const Descriptor::SubPluginFeatures::Key * _key ) :
+    Plugin( _desc, _parent ),
+    m_parent( NULL ),
+    m_key( _key ? *_key : Descriptor::SubPluginFeatures::Key() ),
+    m_processors( 1 ),
+    m_okay( true ),
+    m_noRun( false ),
+    m_running( false ),
+    m_bufferCount( 0 ),
+    m_enabledModel( true, this, tr( "Effect enabled" ) ),
+    m_wetDryModel  ( 1.0f, 0.0f, 1.0f, 0.01f, this, tr( "Wet/Dry mix" ) ), //min=-1
+    m_gateModel    ( 0.0f, 0.0f, 1.0f, 0.01f, this, tr( "Gate" ) ),
+    m_autoQuitModel( 1.0f, 1.0f, 8000.0f, 100.0f, 1.0f, this, tr( "Decay" ) ),
+    m_autoQuitDisabled( false )
 {
 	m_srcState[0] = m_srcState[1] = NULL;
 	reinitSRC();

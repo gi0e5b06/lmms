@@ -22,6 +22,7 @@
  *
  */
 
+#include <time.h>
 #include <QDomElement>
 
 #include "InstrumentFunctions.h"
@@ -251,9 +252,9 @@ InstrumentFunctionNoteStacking::~InstrumentFunctionNoteStacking()
 bool InstrumentFunctionNoteStacking::processNote( NotePlayHandle * _n )
 {
 	if(!shouldProcessNote(_n)) return true;
-	//qWarning("InstrumentFunctionNoteStacking::processNote n.key=%d in g=%d",_n->key(),_n->generation());
+	//qInfo("InstrumentFunctionNoteStacking::processNote n.key=%d in g=%d",_n->key(),_n->generation());
 	if(_n->totalFramesPlayed()!=0 || _n->isReleased()) return true;
-	//qWarning("InstrumentFunctionNoteStacking::processNote n.key=%d OK g=%d",_n->key(),_n->generation());
+	//qInfo("InstrumentFunctionNoteStacking::processNote n.key=%d OK g=%d",_n->key(),_n->generation());
 
 	const int base_note_key = _n->key();
 	const ChordTable & chord_table = ChordTable::getInstance();
@@ -283,7 +284,7 @@ bool InstrumentFunctionNoteStacking::processNote( NotePlayHandle * _n )
 				    subnote_key < 0 ||
 				    Engine::mixer()->criticalXRuns() )
 				{
-					//qWarning("InstrumentFunctionNoteStacking::processNote subnote break");
+					//qInfo("InstrumentFunctionNoteStacking::processNote subnote break");
 					break;
 				}
 
@@ -314,9 +315,11 @@ bool InstrumentFunctionNoteStacking::processNote( NotePlayHandle * _n )
 
 void InstrumentFunctionNoteStacking::saveSettings( QDomDocument & _doc, QDomElement & _this )
 {
-	m_enabledModel.saveSettings( _doc, _this, "chord-enabled" );
-	m_chordsModel.saveSettings( _doc, _this, "chord" );
-	m_chordRangeModel.saveSettings( _doc, _this, "chordrange" );
+        m_minNoteGenerationModel.saveSettings( _doc, _this, "mingen");
+        m_maxNoteGenerationModel.saveSettings( _doc, _this, "maxgen");
+	m_enabledModel          .saveSettings( _doc, _this, "chord-enabled" );
+	m_chordsModel           .saveSettings( _doc, _this, "chord" );
+	m_chordRangeModel       .saveSettings( _doc, _this, "chordrange" );
 }
 
 
@@ -324,9 +327,11 @@ void InstrumentFunctionNoteStacking::saveSettings( QDomDocument & _doc, QDomElem
 
 void InstrumentFunctionNoteStacking::loadSettings( const QDomElement & _this )
 {
-	m_enabledModel.loadSettings( _this, "chord-enabled" );
-	m_chordsModel.loadSettings( _this, "chord" );
-	m_chordRangeModel.loadSettings( _this, "chordrange" );
+        m_minNoteGenerationModel.loadSettings( _this, "mingen");
+        m_maxNoteGenerationModel.loadSettings( _this, "maxgen");
+	m_enabledModel          .loadSettings( _this, "chord-enabled" );
+	m_chordsModel           .loadSettings( _this, "chord" );
+	m_chordRangeModel       .loadSettings( _this, "chordrange" );
 }
 
 
@@ -387,9 +392,9 @@ bool InstrumentFunctionArpeggio::processNote( NotePlayHandle * _n )
 		return true;
 	}
 
-	//qWarning("InstrumentFunctionArpeggio::processNote n.key=%d in g=%d",_n->key(),_n->generation());
+	//qInfo("InstrumentFunctionArpeggio::processNote n.key=%d in g=%d",_n->key(),_n->generation());
 	//if(_n->totalFramesPlayed()!=0 /*|| _n->isReleased()*/ ) return true;
-	//qWarning("InstrumentFunctionArpeggio::processNote n.key=%d OK g=%d",_n->key(),_n->generation());
+	//qInfo("InstrumentFunctionArpeggio::processNote n.key=%d OK g=%d",_n->key(),_n->generation());
 
 	const int base_note_key = _n->key();
 	const int selected_arp = m_arpModel.value();
@@ -540,7 +545,7 @@ bool InstrumentFunctionArpeggio::processNote( NotePlayHandle * _n )
 		    subnote_key < 0 ||
 		    Engine::mixer()->criticalXRuns() )
 		{
-			//qWarning("InstrumentFunctionArpeggio::processNote subnote break");
+			//qInfo("InstrumentFunctionArpeggio::processNote subnote break");
 			continue;
 		}
 
@@ -590,17 +595,18 @@ bool InstrumentFunctionArpeggio::processNote( NotePlayHandle * _n )
 
 void InstrumentFunctionArpeggio::saveSettings( QDomDocument & _doc, QDomElement & _this )
 {
-	m_enabledModel.saveSettings( _doc, _this, "arp-enabled" );
-	m_arpModel.saveSettings( _doc, _this, "arp" );
-	m_arpRangeModel.saveSettings( _doc, _this, "arprange" );
-	m_arpCycleModel.saveSettings( _doc, _this, "arpcycle" );
-	m_arpSkipModel.saveSettings( _doc, _this, "arpskip" );
-	m_arpMissModel.saveSettings( _doc, _this, "arpmiss" );
-	m_arpTimeModel.saveSettings( _doc, _this, "arptime" );
-	m_arpGateModel.saveSettings( _doc, _this, "arpgate" );
-	m_arpDirectionModel.saveSettings( _doc, _this, "arpdir" );
-
-	m_arpModeModel.saveSettings( _doc, _this, "arpmode" );
+	m_enabledModel          .saveSettings( _doc, _this, "arp-enabled" );
+        m_minNoteGenerationModel.saveSettings( _doc, _this, "mingen");
+        m_maxNoteGenerationModel.saveSettings( _doc, _this, "maxgen");
+	m_arpModel              .saveSettings( _doc, _this, "arp" );
+	m_arpRangeModel         .saveSettings( _doc, _this, "arprange" );
+	m_arpCycleModel         .saveSettings( _doc, _this, "arpcycle" );
+	m_arpSkipModel          .saveSettings( _doc, _this, "arpskip" );
+	m_arpMissModel          .saveSettings( _doc, _this, "arpmiss" );
+	m_arpTimeModel          .saveSettings( _doc, _this, "arptime" );
+	m_arpGateModel          .saveSettings( _doc, _this, "arpgate" );
+	m_arpDirectionModel     .saveSettings( _doc, _this, "arpdir" );
+	m_arpModeModel          .saveSettings( _doc, _this, "arpmode" );
 }
 
 
@@ -608,6 +614,8 @@ void InstrumentFunctionArpeggio::saveSettings( QDomDocument & _doc, QDomElement 
 
 void InstrumentFunctionArpeggio::loadSettings( const QDomElement & _this )
 {
+        m_minNoteGenerationModel.loadSettings( _this, "mingen");
+        m_maxNoteGenerationModel.loadSettings( _this, "maxgen");
 	m_enabledModel.loadSettings( _this, "arp-enabled" );
 	m_arpModel.loadSettings( _this, "arp" );
 	m_arpRangeModel.loadSettings( _this, "arprange" );
@@ -730,12 +738,14 @@ bool InstrumentFunctionNoteHumanizing::processNote( NotePlayHandle * _n )
 
 void InstrumentFunctionNoteHumanizing::saveSettings( QDomDocument & _doc, QDomElement & _this )
 {
-	m_enabledModel     .saveSettings( _doc, _this, "enabled" );
-	m_volumeRangeModel .saveSettings( _doc, _this, "volume" );
-	m_panRangeModel    .saveSettings( _doc, _this, "pan" );
-	m_tuneRangeModel   .saveSettings( _doc, _this, "tune" );
-	m_offsetRangeModel .saveSettings( _doc, _this, "offset" );
-	m_shortenRangeModel.saveSettings( _doc, _this, "shorten" );
+	m_enabledModel          .saveSettings( _doc, _this, "enabled" );
+        m_minNoteGenerationModel.saveSettings( _doc, _this, "mingen");
+        m_maxNoteGenerationModel.saveSettings( _doc, _this, "maxgen");
+	m_volumeRangeModel      .saveSettings( _doc, _this, "volume" );
+	m_panRangeModel         .saveSettings( _doc, _this, "pan" );
+	m_tuneRangeModel        .saveSettings( _doc, _this, "tune" );
+	m_offsetRangeModel      .saveSettings( _doc, _this, "offset" );
+	m_shortenRangeModel     .saveSettings( _doc, _this, "shorten" );
 }
 
 
@@ -744,6 +754,8 @@ void InstrumentFunctionNoteHumanizing::saveSettings( QDomDocument & _doc, QDomEl
 void InstrumentFunctionNoteHumanizing::loadSettings( const QDomElement & _this )
 {
 	m_enabledModel     .loadSettings( _this, "enabled" );
+        m_minNoteGenerationModel.loadSettings( _this, "mingen");
+        m_maxNoteGenerationModel.loadSettings( _this, "maxgen");
 	m_volumeRangeModel .loadSettings( _this, "volume" );
 	m_panRangeModel    .loadSettings( _this, "pan" );
 	m_tuneRangeModel   .loadSettings( _this, "tune" );
@@ -769,34 +781,45 @@ InstrumentFunctionNoteDuplicatesRemoving::~InstrumentFunctionNoteDuplicatesRemov
 
 
 
-bool InstrumentFunctionNoteDuplicatesRemoving::processNote( NotePlayHandle * _n )
+bool InstrumentFunctionNoteDuplicatesRemoving::processNote(NotePlayHandle* _n)
 {
 	if(!shouldProcessNote(_n)) return true;
 
         //if( _n->totalFramesPlayed()==0 && _n->playedFrames()!=0 )
-        //    qWarning("DuplicatesRemoving::processNote tpf=%d pf=%d",_n->totalFramesPlayed(),_n->playedFrames());
+        //    qInfo("DuplicatesRemoving::processNote tpf=%d pf=%d",_n->totalFramesPlayed(),_n->playedFrames());
 
-	if( _n->totalFramesPlayed()!=0 || _n->isReleased() ) return true;
+	if(_n->totalFramesPlayed()!=0 || _n->isReleased())
+                return true;
 
-	f_cnt_t k=_n->pos();
-	//qWarning("InstrumentFunctionNoteDuplicatesRemoving: cache k=%d v=%d in=%d",
+        static QMutex mtx;
+        mtx.lock();
+	//const float k=Engine::getSong()->getPlayPos().absoluteFrame();
+        const int k=(1000*clock()/CLOCKS_PER_SEC); //ms
+	//qInfo("InstrumentFunctionNoteDuplicatesRemoving: cache k=%d v=%d in=%d",
         //  k,_n->key(),m_cache.contains(k,_n->key()));
+
+        //const float fpt=Engine::framesPerTick();
+	int i=0;
+	foreach(const int ck,m_cache)
+	{
+		if(ck<k-150)// || ck>=k+150)
+                {
+                        m_cache.remove(ck);
+                        i++;
+                        if(i>8) break;
+                }
+	}
+
 	if(m_cache.contains(k,_n->key()))
         {
-		qInfo("InstrumentFunctionNoteDuplicatesRemoving: HIT CACHE");
-		return false;
+		//qInfo("InstrumentFunctionNoteDuplicatesRemoving: HIT CACHE");
+                mtx.unlock();
+                return false;
 	}
 
+        //qInfo("NoteDuplicatesRemoving: cache size=%d",m_cache.size());
 	m_cache.insert(k,_n->key());
-	int i=0;
-	foreach(f_cnt_t ck,m_cache)
-	{
-		if(ck<k-4*DefaultTicksPerTact || ck>=k+8*4*DefaultTicksPerTact)
-			m_cache.remove(ck);
-		i++;
-		if(i>4) break;
-	}
-	//qInfo("NoteDuplicatesRemoving: cache size=%d",m_cache.size());
+        mtx.unlock();
 	return true;
 }
 
@@ -805,7 +828,9 @@ bool InstrumentFunctionNoteDuplicatesRemoving::processNote( NotePlayHandle * _n 
 
 void InstrumentFunctionNoteDuplicatesRemoving::saveSettings( QDomDocument & _doc, QDomElement & _this )
 {
-	m_enabledModel     .saveSettings( _doc, _this, "enabled" );
+	m_enabledModel          .saveSettings( _doc, _this, "enabled" );
+        m_minNoteGenerationModel.saveSettings( _doc, _this, "mingen");
+        m_maxNoteGenerationModel.saveSettings( _doc, _this, "maxgen");
 }
 
 
@@ -813,5 +838,7 @@ void InstrumentFunctionNoteDuplicatesRemoving::saveSettings( QDomDocument & _doc
 
 void InstrumentFunctionNoteDuplicatesRemoving::loadSettings( const QDomElement & _this )
 {
-	m_enabledModel     .loadSettings( _this, "enabled" );
+	m_enabledModel          .loadSettings( _this, "enabled" );
+        m_minNoteGenerationModel.loadSettings( _this, "mingen");
+        m_maxNoteGenerationModel.loadSettings( _this, "maxgen");
 }

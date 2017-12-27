@@ -168,10 +168,10 @@ MidiAlsaGdx::MidiAlsaGdx() :
 	createLmmsPorts();
 	updatePortList();
 
-	connect( &m_portListUpdateTimer, SIGNAL( timeout() ),
-		 this, SLOT( updatePortList() ) );
+	//connect( &m_portListUpdateTimer, SIGNAL( timeout() ),
+	//	 this, SLOT( updatePortList() ) );
 	// we check for port-changes every second
-	m_portListUpdateTimer.start( 1000 );
+	//m_portListUpdateTimer.start( 1000 );
 
 	// use a pipe to detect shutdown
 	if( pipe( m_pipe ) == -1 )
@@ -447,121 +447,6 @@ void MidiAlsaGdx::alsaConnect(const snd_seq_addr_t& sender, const snd_seq_addr_t
 
 	m_seqMutex.unlock();
 }
-
-void MidiAlsaGdx::processInEvent( const MidiEvent& event, const MidiTime& time, f_cnt_t offset)
-{
-	//processInEvent(event,time,s_lmmsPorts[event.channel()]);
-}
-
-void MidiAlsaGdx::processOutEvent( const MidiEvent& event, const MidiTime& time, f_cnt_t offset)
-{
-	processOutEvent(event,time,s_lmmsPorts[event.channel()]);
-}
-
-void MidiAlsaGdx::processOutEvent( const MidiEvent& event, const MidiTime& time, const MidiPort* port )
-{
-	if(port==NULL)
-	{
-		qFatal("MidiAlsaGdx::processOutEvent port is null");
-	}
-
-	if(port->mode()==MidiPort::Disabled)
-	{
-		//qInfo("MidiAlsaGdx::run skip disabled port");
-		return; //not output, not duplex
-	}
-
-	if(port->mode()==MidiPort::Input)
-	{
-		//qInfo("MidiAlsaGdx::run skip read-only port");
-		return; //not output, not duplex
-	}
-
-	// HACK!!! - need a better solution which isn't that easy since we
-	// cannot store const-ptrs in our map because we need to call non-const
-	// methods of MIDI-port - it's a mess...
-	MidiPort* p = const_cast<MidiPort *>( port );
-	Q_UNUSED(p);
-
-	int p1=getFD(port,1);
-	//if((p1==-1)&&(port->mode()==MidiPort::Duplex)) p1=getFD(port,0);
-	//qInfo("MidiAlsaGdx::processOutEvent p1=%d",p1);
-
-	if(p1<0)
-	{
-		qCritical("MidiAlsaGdx::processOutEvent bad port...");
-		return;
-	}
-
-	snd_seq_event_t ev;
-	snd_seq_ev_clear( &ev );
-	snd_seq_ev_set_source( &ev, p1 );
-	//( m_portIDs[p][1] != -1 ) ?	m_portIDs[p][1] : m_portIDs[p][0] );
-	snd_seq_ev_set_subs( &ev );
-	snd_seq_ev_schedule_tick( &ev, m_queueID, 1, static_cast<int>( time ) );
-	ev.queue =  m_queueID;
-	switch( event.type() )
-	{
-		case MidiNoteOn:
-			snd_seq_ev_set_noteon( &ev,
-						event.channel(),
-						event.key() + KeysPerOctave,
-						event.velocity() );
-			break;
-
-		case MidiNoteOff:
-			snd_seq_ev_set_noteoff( &ev,
-						event.channel(),
-						event.key() + KeysPerOctave,
-						event.velocity() );
-			break;
-
-		case MidiKeyPressure:
-			snd_seq_ev_set_keypress( &ev,
-						event.channel(),
-						event.key() + KeysPerOctave,
-						event.velocity() );
-			break;
-
-		case MidiControlChange:
-			snd_seq_ev_set_controller( &ev,
-						event.channel(),
-						event.controllerNumber(),
-						event.controllerValue() );
-			break;
-
-		case MidiProgramChange:
-			snd_seq_ev_set_pgmchange( &ev,
-						event.channel(),
-						event.program() );
-			break;
-
-		case MidiChannelPressure:
-			snd_seq_ev_set_chanpress( &ev,
-						event.channel(),
-						event.channelPressure() );
-			break;
-
-		case MidiPitchBend:
-			snd_seq_ev_set_pitchbend( &ev,
-						event.channel(),
-						event.param( 0 ) - 8192 );
-			break;
-
-		default:
-			qWarning( "MidiAlsaGdx: unhandled output event %d\n", (int) event.type() );
-			return;
-	}
-
-	m_seqMutex.lock();
-	snd_seq_event_output( m_seqHandle, &ev );
-	snd_seq_drain_output( m_seqHandle );
-	m_seqMutex.unlock();
-
-}
-
-
-
 
 void MidiAlsaGdx::applyPortMode( MidiPort * _port )
 {
@@ -931,8 +816,8 @@ void MidiAlsaGdx::subscribeReadablePort( MidiPort * _port,
 
 
 
-// alsa port,midi port
-static QMultiHash<snd_seq_addr_t,MidiPort*> m_mapWriteSubs;
+// midi port,alsa port
+static QMultiHash<MidiPort*,snd_seq_addr_t> m_mapWriteSubs;
 
 void MidiAlsaGdx::subscribeWritablePort( MidiPort * _port,
 					 const QString & _dest,
@@ -943,6 +828,8 @@ void MidiAlsaGdx::subscribeWritablePort( MidiPort * _port,
 		qWarning("MidiAlsaGdx::subscribeWritablePort port is null");
 		return;
 	}
+
+        qInfo("MidiAlsaGdx::subscribeWritablePort port=%p dest=%s subscribe=%d",_port,qPrintable(_dest),_subscribe);
 
 	/*
 	if(!m_Addr.contains(_port))//m_portIDs.contains(_port))
@@ -982,28 +869,32 @@ void MidiAlsaGdx::subscribeWritablePort( MidiPort * _port,
 	}
 	*/
 
-	if(_subscribe&&m_mapWriteSubs.contains(dest))
-	{
-		if(m_mapWriteSubs.contains(dest,_port))
-		{
-			qWarning("MidiAlsaGdx: dest already write subscribed");
-		}
-		else
-		{
-			//qInfo("MidiAlsaGdx: dest subscribing %u:%u",dest.client,dest.port);
-			m_mapWriteSubs.insert(dest,_port);
-		}
-		m_seqMutex.unlock();
-		return;
+	if(_subscribe)
+        {
+                if(m_mapWriteSubs.contains(_port))
+                {
+                        if(m_mapWriteSubs.contains(_port,dest))
+                        {
+                                //qWarning("MidiAlsaGdx: dest already write subscribed");
+                        }
+                        else
+                        {
+                                //qInfo("MidiAlsaGdx: dest subscribing %u:%u",dest.client,dest.port);
+                                m_mapWriteSubs.insert(_port,dest);
+                        }
+                        m_seqMutex.unlock();
+                        return;
+                }
+                else m_mapWriteSubs.insert(_port,dest);
 	}
 
 	if(!_subscribe)
 	{
-		if(m_mapWriteSubs.contains(dest))
+		if(m_mapWriteSubs.contains(_port))
 		{
 			//qInfo("MidiAlsaGdx: dest unsubscribing %u:%u",dest.client,dest.port);
-			m_mapWriteSubs.remove(dest,_port);
-			if(m_mapWriteSubs.contains(dest))
+			m_mapWriteSubs.remove(_port,dest);
+			if(m_mapWriteSubs.contains(_port))
 			{
 				m_seqMutex.unlock();
 				return;
@@ -1261,6 +1152,134 @@ void MidiAlsaGdx::run()
 }
 
 
+void MidiAlsaGdx::processInEvent( const MidiEvent& event, const MidiTime& time, f_cnt_t offset)
+{
+	//processInEvent(event,time,s_lmmsPorts[event.channel()]);
+}
+
+
+void MidiAlsaGdx::processOutEvent( const MidiEvent& event, const MidiTime& time, f_cnt_t offset)
+{
+	processOutEvent(event,time,s_lmmsPorts[event.channel()]);
+}
+
+
+void MidiAlsaGdx::processOutEvent( const MidiEvent& event, const MidiTime& time, const MidiPort* port )
+{
+	if(port==NULL)
+	{
+		qFatal("MidiAlsaGdx::processOutEvent port is null");
+	}
+
+	if(port->mode()==MidiPort::Disabled)
+	{
+		//qInfo("MidiAlsaGdx::run skip disabled port");
+		return; //not output, not duplex
+	}
+
+	if(port->mode()==MidiPort::Input)
+	{
+		//qInfo("MidiAlsaGdx::run skip read-only port");
+		return; //not output, not duplex
+	}
+
+	// HACK!!! - need a better solution which isn't that easy since we
+	// cannot store const-ptrs in our map because we need to call non-const
+	// methods of MIDI-port - it's a mess...
+	MidiPort* p = const_cast<MidiPort *>( port );
+	//Q_UNUSED(p);
+
+        qInfo("  %p mode=%d name=%s",port,port->mode(),qPrintable(port->displayName()));
+        SHOW_MIDI_MAP();
+        //int p1=getFD(port,1);
+	//qInfo("MidiAlsaGdx::processOutEvent #1 p1=%d",p1);
+	//if((p1==-1)&&(port->mode()==MidiPort::Duplex)) p1=getFD(port,0);
+	//qInfo("MidiAlsaGdx::processOutEvent #2 p1=%d",p1);
+
+        QList<snd_seq_addr_t> addrs=m_mapWriteSubs.values(p);
+        if(addrs.size()==0)
+        {
+                qInfo("MidiAlsaGdx::processOutEvent no alsa output");
+                return;
+        }
+
+        foreach(const snd_seq_addr_t a, addrs)
+        {
+                int p1=a.port;//getFD(port,1);
+                //qInfo(" out ev a.client=%d a.port=%d p1=%d",a.client,a.port,p1);
+
+                if(p1<0)
+                {
+                        qCritical("MidiAlsaGdx::processOutEvent bad port %d:%d",a.client,a.port);
+                        continue;
+                }
+
+                snd_seq_event_t ev;
+                snd_seq_ev_clear( &ev );
+                snd_seq_ev_set_source( &ev, p1 );
+                //( m_portIDs[p][1] != -1 ) ?	m_portIDs[p][1] : m_portIDs[p][0] );
+                snd_seq_ev_set_subs( &ev );
+                snd_seq_ev_schedule_tick( &ev, m_queueID, 1, static_cast<int>( time ) );
+                ev.queue =  m_queueID;
+                switch( event.type() )
+                {
+		case MidiNoteOn:
+			snd_seq_ev_set_noteon( &ev,
+						event.channel(),
+						event.key() + KeysPerOctave,
+						event.velocity() );
+			break;
+
+		case MidiNoteOff:
+			snd_seq_ev_set_noteoff( &ev,
+						event.channel(),
+						event.key() + KeysPerOctave,
+						event.velocity() );
+			break;
+
+		case MidiKeyPressure:
+			snd_seq_ev_set_keypress( &ev,
+						event.channel(),
+						event.key() + KeysPerOctave,
+						event.velocity() );
+			break;
+
+		case MidiControlChange:
+			snd_seq_ev_set_controller( &ev,
+						event.channel(),
+						event.controllerNumber(),
+						event.controllerValue() );
+			break;
+
+		case MidiProgramChange:
+			snd_seq_ev_set_pgmchange( &ev,
+						event.channel(),
+						event.program() );
+			break;
+
+		case MidiChannelPressure:
+			snd_seq_ev_set_chanpress( &ev,
+						event.channel(),
+						event.channelPressure() );
+			break;
+
+		case MidiPitchBend:
+			snd_seq_ev_set_pitchbend( &ev,
+						event.channel(),
+						event.param( 0 ) - 8192 );
+			break;
+
+		default:
+			qWarning( "MidiAlsaGdx: unhandled output event %d\n", (int) event.type() );
+			return;
+                }
+
+                m_seqMutex.lock();
+                snd_seq_event_output( m_seqHandle, &ev );
+                snd_seq_drain_output( m_seqHandle );
+                m_seqMutex.unlock();
+        }
+}
 
 
 void MidiAlsaGdx::changeQueueTempo( bpm_t _bpm )
@@ -1270,8 +1289,6 @@ void MidiAlsaGdx::changeQueueTempo( bpm_t _bpm )
 	snd_seq_drain_output( m_seqHandle );
 	m_seqMutex.unlock();
 }
-
-
 
 
 void MidiAlsaGdx::updateAlsaPortList()
@@ -1417,12 +1434,12 @@ void MidiAlsaGdx::SHOW_MIDI_MAP()
 		foreach(const MidiPort* mp,m_mapReadSubs.values(a))
 			qInfo("           %p %d %s",mp,mp->mode(),qPrintable(mp->displayName()));
 	}
-	foreach(const snd_seq_addr_t& a,m_mapWriteSubs.uniqueKeys())
+	foreach(MidiPort* mp,m_mapWriteSubs.uniqueKeys())
 	{
-		int n=m_mapWriteSubs.values(a).size();
-		qInfo("write %d:%d (%d writers)",a.client,a.port,n);
-		foreach(const MidiPort* mp,m_mapWriteSubs.values(a))
-			qInfo("           %p %d %s",mp,mp->mode(),qPrintable(mp->displayName()));
+		int n=m_mapWriteSubs.values(mp).size();
+                qInfo("write %p %d %s",mp,mp->mode(),qPrintable(mp->displayName()));
+                foreach(const snd_seq_addr_t& a,m_mapWriteSubs.values(mp))
+                        qInfo("           %d:%d (%d writers)",a.client,a.port,n);
 	}
 }
 

@@ -153,7 +153,8 @@ void NotePlayHandle::done()
 	}
 	else
 	{
-		m_parent->m_subNotes.removeOne( this );
+                if(m_parent->m_subNotes.contains(this)) //tmp test SIGSEGV
+                        m_parent->m_subNotes.removeOne( this );
 	}
 
 	if( m_pluginData != NULL )

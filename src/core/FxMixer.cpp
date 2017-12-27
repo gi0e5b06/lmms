@@ -95,7 +95,7 @@ FxChannel::FxChannel( int idx, Model * _parent ) :
 		key->attributes.insert("file","dj_eq_1901");
 		key->attributes.insert("plugin","dj_eq");
 		m_eqDJ=Effect::instantiate(key->name,NULL,key);
-		qWarning("FxChannel::FxChannel eqDJ=%p",m_eqDJ);
+		//qInfo("FxChannel::FxChannel eqDJ=%p",m_eqDJ);
 
 		/*
 		EffectControls* c=m_eqDJ->controls();
@@ -104,17 +104,17 @@ FxChannel::FxChannel( int idx, Model * _parent ) :
 			EffectControlDialog* v=c->createView();
 			if(v)
 		        {
-				qWarning("FxChannel::FxChannel v object tree '%s'",qPrintable(v->objectName()));
+				qInfo("FxChannel::FxChannel v object tree '%s'",qPrintable(v->objectName()));
 				v->dumpObjectTree();
-				qWarning("v %d children",v->children().size());
+				qInfo("v %d children",v->children().size());
 				QList<Knob*> allKnobs=v->findChildren<Knob*>();
 				foreach(Knob* k,allKnobs)
-					qWarning("FxChannel::FxChannel knob k='%s'",
+					qInfo("FxChannel::FxChannel knob k='%s'",
 						 qPrintable(k->objectName()));
 			}
-			else qWarning("FxChannel::FxChannel EffectControlDialog* v=NULL");
+			else qInfo("FxChannel::FxChannel EffectControlDialog* v=NULL");
 		}
-		else qWarning("FxChannel::FxChannel EffectControls* c=NULL");
+		else qInfo("FxChannel::FxChannel EffectControls* c=NULL");
 		*/
 	}
 
@@ -128,7 +128,7 @@ FxChannel::~FxChannel()
 {
 	//delete[] m_buffer;
 	BufferManager::release(m_buffer);
-	//qWarning("FxChannel::~FxChannel idx=%d",m_channelIndex);
+	//qInfo("FxChannel::~FxChannel idx=%d",m_channelIndex);
 }
 
 
@@ -136,7 +136,7 @@ void FxChannel::processed()
 {
 	for( const FxRoute * receiverRoute : m_sends )
 	{
-		if( receiverRoute->receiver()->m_muted == false )
+		//tmp if( receiverRoute->receiver()->m_muted == false )
 		{
 			receiverRoute->receiver()->incrementDeps();
 		}
@@ -166,7 +166,7 @@ void FxChannel::doProcessing()
 	const fpp_t fpp = Engine::mixer()->framesPerPeriod();
 	const bool exporting = Engine::getSong()->isExporting();
 
-	if( m_muted == false )
+	if(true)//tmp !m_muted)
 	{
 		for( FxRoute * senderRoute : m_receives )
 		{
@@ -176,6 +176,8 @@ void FxChannel::doProcessing()
 
 			if( sender->m_hasInput || sender->m_stillRunning )
 			{
+				m_hasInput = true;
+
 				// figure out if we're getting sample-exact input
 				ValueBuffer * sendBuf = sendModel->valueBuffer();
 				ValueBuffer * volBuf = sender->m_volumeModel.valueBuffer();
@@ -187,8 +189,12 @@ void FxChannel::doProcessing()
 				if( ! volBuf && ! sendBuf ) // neither volume nor send has sample-exact data...
 				{
 					const float v = sender->m_volumeModel.value() * sendModel->value();
-					if( exporting ) { MixHelpers::addSanitizedMultiplied( m_buffer, ch_buf, v, fpp ); }
-					else { MixHelpers::addMultiplied( m_buffer, ch_buf, v, fpp ); }
+                                        if(v>0.f)
+                                        {
+                                                if( exporting ) { MixHelpers::addSanitizedMultiplied( m_buffer, ch_buf, v, fpp ); }
+                                                else { MixHelpers::addMultiplied( m_buffer, ch_buf, v, fpp ); }
+                                        }
+                                        else continue;
 				}
 				else if( volBuf && sendBuf ) // both volume and send have sample-exact data
 				{
@@ -198,50 +204,59 @@ void FxChannel::doProcessing()
 				else if( volBuf ) // volume has sample-exact data but send does not
 				{
 					const float v = sendModel->value();
-					if( exporting ) { MixHelpers::addSanitizedMultipliedByBuffer( m_buffer, ch_buf, v, volBuf, fpp ); }
-					else { MixHelpers::addMultipliedByBuffer( m_buffer, ch_buf, v, volBuf, fpp ); }
+                                        if(v>0.f)
+                                        {
+                                                if( exporting ) { MixHelpers::addSanitizedMultipliedByBuffer( m_buffer, ch_buf, v, volBuf, fpp ); }
+                                                else { MixHelpers::addMultipliedByBuffer( m_buffer, ch_buf, v, volBuf, fpp ); }
+                                        }
+                                        else continue;
 				}
 				else // vice versa
 				{
 					const float v = sender->m_volumeModel.value();
-					if( exporting ) { MixHelpers::addSanitizedMultipliedByBuffer( m_buffer, ch_buf, v, sendBuf, fpp ); }
-					else { MixHelpers::addMultipliedByBuffer( m_buffer, ch_buf, v, sendBuf, fpp ); }
+                                        if(v>0.f)
+                                        {
+                                                if( exporting ) { MixHelpers::addSanitizedMultipliedByBuffer( m_buffer, ch_buf, v, sendBuf, fpp ); }
+                                                else { MixHelpers::addMultipliedByBuffer( m_buffer, ch_buf, v, sendBuf, fpp ); }
+                                        }
+                                        else continue;
 				}
-				m_hasInput = true;
 			}
 		}
 
+                if( m_hasInput )
+                {
+                        // only start fxchain when we have input...
+                        m_fxChain.startRunning();
+                }
 
-		const float v = m_volumeModel.value();
+                m_stillRunning = m_fxChain.processAudioBuffer( m_buffer, fpp, m_hasInput );
 
-		if( m_hasInput )
-		{
-			// only start fxchain when we have input...
-			m_fxChain.startRunning();
-		}
+                if(m_eqDJ && /*m_stillRunning && m_hasInput &&*/ m_eqDJEnableModel.value())
+                {
+                        m_eqDJ->startRunning();
+                        m_stillRunning=m_eqDJ->processAudioBuffer(m_buffer,fpp);
+                }
+                //else if(m_channelIndex)
+                //	qInfo("NOT processing... %p %d %d %d",m_eqDJ,m_stillRunning,
+                //	      m_hasInput,m_eqDJEnableModel.value());
 
-		m_stillRunning = m_fxChain.processAudioBuffer( m_buffer, fpp, m_hasInput );
-
-		if(m_eqDJ && /*m_stillRunning && m_hasInput &&*/ m_eqDJEnableModel.value())
-		{
-			m_eqDJ->startRunning();
-			//qWarning("processing... fxmixer **************************************");
-			m_stillRunning=m_eqDJ->processAudioBuffer(m_buffer,fpp);
-		}
-		//else if(m_channelIndex)
-		//	qWarning("NOT processing... %p %d %d %d",m_eqDJ,m_stillRunning,
-		//	      m_hasInput,m_eqDJEnableModel.value());
-
-		float peakLeft = 0.;
-		float peakRight = 0.;
-		Engine::mixer()->getPeakValues( m_buffer, fpp, peakLeft, peakRight );
-		m_peakLeft = qMax( m_peakLeft, peakLeft * v );
-		m_peakRight = qMax( m_peakRight, peakRight * v );
-	}
-	else
-	{
-		m_peakLeft = m_peakRight = 0.0f;
-	}
+		const float v=m_volumeModel.value();
+                if(v>0.f)
+                {
+                        float peakLeft =0.f;
+                        float peakRight=0.f;
+                        Engine::mixer()->getPeakValues( m_buffer, fpp, peakLeft, peakRight );
+                        m_peakLeft =qMax(m_peakLeft ,peakLeft *v);
+                        m_peakRight=qMax(m_peakRight,peakRight*v);
+                        //if(m_channelIndex==1)
+                        //      qInfo("ch1 peaks=%f,%f",m_peakLeft,m_peakRight);
+                }
+        }
+        else
+        {
+                m_peakRight=m_peakLeft=0.f;
+        }
 
 	// increment dependency counter of all receivers
 	processed();
@@ -399,10 +414,10 @@ void FxMixer::deleteChannel( int index )
 		// set correct channel index
 		m_fxChannels[i]->m_channelIndex = i;
 
-		qInfo("FxMixer: delete #3 last soloed=%d",m_lastSoloed);
+		//qInfo("FxMixer: delete #3 last soloed=%d",m_lastSoloed);
 		if(m_lastSoloed==i+1)
 			m_lastSoloed=i;
-		qInfo("FxMixer: delete #4 last soloed=%d",m_lastSoloed);
+		//qInfo("FxMixer: delete #4 last soloed=%d",m_lastSoloed);
 
 		// now check all routes and update names of the send models
 		for( FxRoute * r : m_fxChannels[i]->m_sends )
@@ -456,17 +471,17 @@ void FxMixer::moveChannelLeft( int index )
 		}
 	}
 
-	qInfo("FxMixer: move last soloed=%d",m_lastSoloed);
+	//qInfo("FxMixer: move last soloed=%d",m_lastSoloed);
 	     if(m_lastSoloed==a) m_lastSoloed=b;
 	else if(m_lastSoloed==b) m_lastSoloed=a;
-	qInfo("FxMixer: move #2 last soloed=%d",m_lastSoloed);
+        //qInfo("FxMixer: move #2 last soloed=%d",m_lastSoloed);
 
 	// Swap positions in array
-	qSwap(m_fxChannels[index], m_fxChannels[index - 1]);
+	qSwap(m_fxChannels[a],m_fxChannels[b]);
 
 	// Update m_channelIndex of both channels
-	m_fxChannels[index]->m_channelIndex = index;
-	m_fxChannels[index - 1]->m_channelIndex = index -1;
+	m_fxChannels[b]->m_channelIndex=b;
+	m_fxChannels[a]->m_channelIndex=a;
 }
 
 
@@ -664,12 +679,13 @@ void FxMixer::masterMix( sampleFrame * _buf )
                         BufferManager::clear(ch->m_buffer);
                 */
 
+                /*
 		if( ch->m_muted ) // instantly "process" muted channels
 		{
 			ch->processed();
 			ch->done();
 		}
-		else if( ch->m_receives.size() == 0 )
+		else*/ if( ch->m_receives.size() == 0 )
 		{
 			ch->m_queued = true;
 			MixerWorkerThread::addJob( ch );

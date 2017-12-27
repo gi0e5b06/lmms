@@ -98,6 +98,7 @@ void TabWidget::addTab( QWidget * w, const QString & name, const char *pixmap, i
 		m_widgets[m_activeTab].w->show();
 		m_widgets[m_activeTab].w->raise();
 	}
+        update();
 }
 
 
@@ -115,7 +116,7 @@ void TabWidget::setActiveTab( int idx )
 		{
 			m_widgets[old_active].w->hide();
 		}
-		update();
+		m_widgets[m_activeTab].w->update();
 	}
 }
 
@@ -139,7 +140,7 @@ int TabWidget::findTabAtPos( const QPoint *pos )
 	}
 
 	// Haven't found any tab at position "pos"
-	return( -1 );
+	return -1;
 }
 
 
@@ -200,6 +201,7 @@ void TabWidget::resizeEvent( QResizeEvent * )
 	{
 		( *it ).w->setFixedSize( width() - 4, height() - m_tabbarHeight );
 	}
+        update();
 }
 
 

@@ -135,10 +135,12 @@ void MidiController::processInEvent( const MidiEvent& event, const MidiTime& tim
 			int delta=m_midiPort.deltaInputValue();
 			val=base+slope*(val-delta);
 
+                        int vmin=m_midiPort.minInputValue();
+                        int vmax=m_midiPort.maxInputValue();
 			int step=m_midiPort.stepInputValue();
-			if(step>1) val=(int)((val+step/2)/step)*step;
-			if(val<m_midiPort.minInputValue()) val=m_midiPort.minInputValue();
-			if(val>m_midiPort.maxInputValue()) val=m_midiPort.maxInputValue();
+			if(step>1) val=vmin+((val-vmin)/step)*step;
+			if(val<vmin) val=vmin;
+			if(val>vmax) val=vmax;
 
 			if(val<0) val=0; //just for safety
 			if(val>127) val=127; //just for safety

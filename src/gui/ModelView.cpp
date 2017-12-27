@@ -32,6 +32,7 @@ ModelView::ModelView( Model* model, QWidget* widget ) :
 	m_widget( widget ),
 	m_model( model )
 {
+        doConnections();
 }
 
 
@@ -62,25 +63,26 @@ void ModelView::setModel( Model* model, bool isOldModelValid )
                                 m_model->disconnect( widget() );
 		}
                 m_model=model;
-                doConnections();
         }
 
+        doConnections();
 	modelChanged();
 }
 
 
 void ModelView::modelChanged()
 {
-        qWarning("ModelView::setModel widget=%p ->update()",widget());
+        //qWarning("ModelView::setModel widget=%p ->update()",widget());
         widget()->update();
 }
 
 
 void ModelView::doConnections()
 {
-        qWarning("ModelView::doConnections m_model=%p",m_model);
+        //qWarning("ModelView::doConnections m_model=%p",m_model);
 	if( m_model != NULL )
 	{
+                //m_model->disconnect(widget());
 		QObject::connect( m_model, SIGNAL( dataChanged() ), widget(), SLOT( update() ) );
 		QObject::connect( m_model, SIGNAL( propertiesChanged() ), widget(), SLOT( update() ) );
 	}

@@ -118,12 +118,11 @@ public:
 				const LoopMode _loopmode = LoopOff );
 
 	void visualize( QPainter & _p, const QRect & _dr, const QRect & _clip,
-                        f_cnt_t _from_frame = 0, f_cnt_t _to_frame = 0 );
+                        f_cnt_t _from_frame, f_cnt_t _to_frame);
 
-	inline void visualize( QPainter & _p, const QRect & _dr,
-                               f_cnt_t _from_frame = 0, f_cnt_t _to_frame = 0 )
+	inline void visualize(QPainter& _p, const QRect& _dr)
 	{
-		visualize( _p, _dr, _dr, _from_frame, _to_frame );
+		visualize(_p,_dr,_dr,0,m_frames);
 	}
 
 	inline const QString & audioFile() const
@@ -262,6 +261,7 @@ signals:
 
 private:
 	void update( bool _keep_settings = false );
+        void prefetch(f_cnt_t _index);
 
 	void convertIntToFloat ( int_sample_t * & _ibuf, f_cnt_t _frames, int _channels);
 	void directFloatWrite ( sample_t * & _fbuf, f_cnt_t _frames, int _channels);

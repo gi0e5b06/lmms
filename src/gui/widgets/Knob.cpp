@@ -65,7 +65,7 @@ TextFloat * Knob::s_textFloat = NULL;
 	m_knobPixmap( NULL ), \
 	m_volumeKnob( false ), \
 	m_volumeRatio( 100.0, 0.0, 1000000.0 ), \
-	m_angle( -10.f ), \
+	m_angle( -1000.f ), \
         m_cache( NULL ), \
 	m_lineWidth( 0.f ), \
 	m_textColor( 255, 255, 255 )
@@ -185,10 +185,11 @@ void Knob::setLabel( const QString & txt )
 	{
 		QFontMetrics metrix( pointSizeF( font(), 6.5) );
 		int w=m_knobPixmap->width();
-		int h=m_knobPixmap->height() + 10;
+		int h=m_knobPixmap->height();
 		if(!txt.isEmpty())
 		{
 			w=qMax<int>(w,qMin<int>(2*w,metrix.width(txt)));
+                        h+=10;
 		}
 		setMinimumSize( w, h );
 		resize(w,h);
@@ -398,12 +399,13 @@ QLineF Knob::calculateLine( const QPointF & _mid, float _radius, float _innerRad
 bool Knob::updateAngle()
 {
         FloatModel* m=model();
-        if(!m) return false;
+        if(!m) return true;
 
 	float angle = 0.f;
-	if( m && m->maxValue() != m->minValue() )
+	if( m )//&& m->maxValue() != m->minValue() )
 	{
-		angle = angleFromValue( m->inverseScaledValue( m->value() ), m->minValue(), m->maxValue(), m_totalAngle );
+		//angle = angleFromValue( m->inverseScaledValue( m->value() ), m->minValue(), m->maxValue(), m_totalAngle );
+                angle=m_totalAngle*(m->normalizedValue(m->value())-0.5f);
 	}
 	if( qAbs( angle - m_angle ) > 3.f )
 	{
@@ -416,27 +418,28 @@ bool Knob::updateAngle()
 
 float Knob::angleFromValue( float value, float minValue, float maxValue, float totalAngle ) const
 {
-	return fmodf((value - 0.5f*(minValue + maxValue)) / (maxValue - minValue)*m_totalAngle,360);
+	//return fmodf((value - 0.5f*(minValue + maxValue)) / (maxValue - minValue)*m_totalAngle,360);
+        return m_totalAngle*(fmodf(value,1.f)-0.5f);
 }
 
 
 void Knob::clearCache()
 {
-        qInfo("Knob::clearCache()");
+        //qInfo("Knob::clearCache()");
         QImage* old=m_cache;
 	m_cache=NULL;
         if(old) delete old;
 }
 
 
-void Knob::drawKnob( QPainter * _p )
+void Knob::drawKnob(QPainter* _p)
 {
         FloatModel* m=model();
         if(!m) return;
 
         //qInfo("Knob::drawKnob");
 	//PL_BEGIN("KnobCache");
-	if( m_cache && !updateAngle() )
+	if( !updateAngle() && m_cache )
 	{
                 //qInfo("Knob::drawKnob uses cache");
 		_p->drawImage( 0, 0, *m_cache );
@@ -543,7 +546,7 @@ void Knob::drawKnob( QPainter * _p )
 		p.setPen(pen0);
 		p.setBrush(QColor(255,255,255,192));
 		float re=radius+2.f;//-2.f;
-		p.drawEllipse(mid.x()-re/2.f,mid.y()-re/2.f,re+1.f,re+1.f);
+		p.drawEllipse(mid.x()-re/2.f,mid.y()-re/2.f,re,re);//+1.f,re+1.f);
 
 		QPen pen1(QColor(0,0,0,96),2,Qt::SolidLine,Qt::RoundCap);
 		p.setPen( pen1 );
@@ -575,14 +578,14 @@ void Knob::resizeEvent(QResizeEvent * _re)
 {
 	//qInfo("Knob::resizeEvent()");
         clearCache();
-	//update();
+	update();
 }
 
 void Knob::modelChanged()
 {
-        qInfo("Knob::modelChanged");
+        //qInfo("Knob::modelChanged");
         clearCache();
-        update();
+        //update();
 }
 
 void Knob::convert(const QPoint& _p, float& value_, float& dist_)
@@ -783,8 +786,7 @@ void Knob::mousePressEvent( QMouseEvent * _me )
 		setCursor(Qt::SizeAllCursor);
 		//QApplication::setOverrideCursor( Qt::BlankCursor );
 		s_textFloat->setText( displayValue() );
-		s_textFloat->moveGlobal( this,
-				QPoint( width() + 2, 0 ) );
+		s_textFloat->moveGlobal( this, QPoint( width() + 2, 0 ) );
 		s_textFloat->show();
 	}
 	/*
@@ -870,7 +872,7 @@ void Knob::mouseDoubleClickEvent( QMouseEvent * )
 
 
 
-void Knob::paintEvent( QPaintEvent * _pe )
+void Knob::paintEvent(QPaintEvent* _pe)
 {
 	PAINT_THREAD_CHECK
 	//DEBUG_THREAD_PRINT
@@ -891,6 +893,9 @@ void Knob::paintEvent( QPaintEvent * _pe )
 		p.drawText( width() / 2 - metrix.width( text ) / 2,
 			    height() - 2, text );
 	}
+
+        //p.setPen(Qt::red);
+        //p.drawRect(0,0,width()-1,height()-1);
 }
 
 
@@ -981,7 +986,7 @@ void Knob::friendlyUpdate()
 	}
         else
         {
-                qInfo("Knob::friendlyUpdate skipped");
+                //qInfo("Knob::friendlyUpdate skipped");
                 //update();
         }
 }
@@ -1009,15 +1014,14 @@ QString Knob::displayValue() const
 void Knob::doConnections()
 {
         FloatModel* m=model();
-        qInfo("Knob::doConnections model()=%p",m);
+        //qInfo("Knob::doConnections model()=%p",m);
 	if(m)
 	{
                 m->disconnect(this);
-
 		QObject::connect( m, SIGNAL( dataChanged() ),
                                   this, SLOT( friendlyUpdate() ) );
 		QObject::connect( m, SIGNAL( propertiesChanged() ),
-                                  this, SLOT( modelChanged() ) );
+                                  this, SLOT( update() ) );
 	}
 }
 

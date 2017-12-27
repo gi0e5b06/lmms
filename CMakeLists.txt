@@ -161,24 +161,24 @@ IF(WANT_QT5)
 
 	FIND_PACKAGE(Qt5Test)
 	SET(QT_QTTEST_LIBRARY Qt5::Test)
-ELSE()
-	SET(QT5 FALSE)
-
-	# check for Qt4
-	SET(QT_MIN_VERSION "4.6.0" COMPONENTS QtCore QtGui QtXml)
-	FIND_PACKAGE(Qt4 REQUIRED)
-	SET(QT_USE_QTXML 1)
-	IF(WIN32)
-		SET(QT_TRANSLATIONS_DIR "${MINGW_PREFIX}/share/qt4/translations/")
-	ENDIF(WIN32)
-	IF(EXISTS "${QT_TRANSLATIONS_DIR}")
-		MESSAGE("-- Found Qt translations in ${QT_TRANSLATIONS_DIR}")
-		ADD_DEFINITIONS(-D'QT_TRANSLATIONS_DIR="${QT_TRANSLATIONS_DIR}"')
-	ENDIF()
-	IF(NOT WIN32)
-		STRING(REPLACE "-DQT_DLL" "" QT_DEFINITIONS "${QT_DEFINITIONS}")
-	ENDIF()
-	INCLUDE("${QT_USE_FILE}")
+#ELSE()
+#	SET(QT5 FALSE)
+#
+#	# check for Qt4
+#	SET(QT_MIN_VERSION "4.6.0" COMPONENTS QtCore QtGui QtXml)
+#	FIND_PACKAGE(Qt4 REQUIRED)
+#	SET(QT_USE_QTXML 1)
+#	IF(WIN32)
+#		SET(QT_TRANSLATIONS_DIR "${MINGW_PREFIX}/share/qt4/translations/")
+#	ENDIF(WIN32)
+#	IF(EXISTS "${QT_TRANSLATIONS_DIR}")
+#		MESSAGE("-- Found Qt translations in ${QT_TRANSLATIONS_DIR}")
+#		ADD_DEFINITIONS(-D'QT_TRANSLATIONS_DIR="${QT_TRANSLATIONS_DIR}"')
+#	ENDIF()
+#	IF(NOT WIN32)
+#		STRING(REPLACE "-DQT_DLL" "" QT_DEFINITIONS "${QT_DEFINITIONS}")
+#	ENDIF()
+#	INCLUDE("${QT_USE_FILE}")
 ENDIF()
 
 # check for libsndfile
@@ -502,8 +502,8 @@ IF (CMAKE_COMPILER_IS_GNUCXX AND ((CMAKE_CXX_COMPILER_VERSION VERSION_EQUAL "4.8
 ENDIF()
 
 IF(NOT CMAKE_BUILD_TYPE)
-	message(STATUS "Setting build type to 'Release' as none was specified.")
-	set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build." FORCE)
+	message(STATUS "Setting build type to 'Debug' as none was specified.")
+	set(CMAKE_BUILD_TYPE Debug CACHE STRING "Choose the type of build." FORCE)
 	# Set the possible values of build type for cmake-gui
 	SET_PROPERTY(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release"
   		"MinSizeRel" "RelWithDebInfo")

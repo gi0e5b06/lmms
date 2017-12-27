@@ -25,6 +25,7 @@
 #include <QBuffer>
 #include <QFile>
 #include <QFileInfo>
+#include <QHash>
 #include <QMessageBox>
 #include <QPainter>
 
@@ -219,6 +220,7 @@ void SampleBuffer::update( bool _keepSettings )
 	else if( !m_audioFile.isEmpty() &&
 		 ( (filename=tryToMakeAbsolute(m_audioFile)).endsWith(cchext) ||
 		   QFile(filename+cchext).exists() ) )
+                 //&& QFile(filename).size()>102400 )
 	{
 		if(QFile(filename+cchext).exists()) filename+=cchext;
 		qInfo("SampleBuffer: Trying cache %s",qPrintable(filename));
@@ -349,7 +351,11 @@ void SampleBuffer::update( bool _keepSettings )
 			// sample couldn't be decoded, create buffer containing
 			// one sample-frame
 
-			if(m_origData) qFatal("SampleBuffer::update in error origData=%p",m_origData);
+			if(m_origData && !m_mmapped)
+                        {
+                                qCritical("SampleBuffer::update in error origData=%p",m_origData);
+                                MM_FREE(m_origData);
+                        }
 			//not needed
 			m_origData=NULL;
 			m_origFrames=0;
@@ -399,7 +405,11 @@ void SampleBuffer::update( bool _keepSettings )
 		// neither an audio-file nor a buffer to copy from, so create
 		// buffer containing one sample-frame
 
-			if(m_origData) qFatal("SampleBuffer::update in error origData=%p",m_origData);
+			if(m_origData && !m_mmapped)
+                        {
+                                qCritical("SampleBuffer::update in error origData=%p",m_origData);
+                                MM_FREE(m_origData);
+                        }
 			//not needed
 			m_origData=NULL;
 			m_origFrames=0;
@@ -436,6 +446,15 @@ void SampleBuffer::update( bool _keepSettings )
 			exit( EXIT_FAILURE );
 		}
 	}
+
+        if(m_data)
+        {
+                prefetch(0);
+                prefetch(m_startFrame);
+                prefetch(m_loopStartFrame);
+                prefetch(m_endFrame    -8*4096);
+                prefetch(m_loopEndFrame-8*4096);
+        }
 }
 
 
@@ -768,6 +787,20 @@ f_cnt_t SampleBuffer::decodeSampleDS( const char * _f,
 
 static float tmp_prefetch_for_mmapped_files=0.f;
 
+
+void SampleBuffer::prefetch(f_cnt_t _index)
+{
+        if(!m_data) return;
+        // prefetch. should be done in a separate thread
+        // 4096=typical OS page size
+        for(int j=1;j<9;j++)
+        {
+                int i=qMax(0,qMin(m_frames-1,_index+j*4096));
+                ::tmp_prefetch_for_mmapped_files=m_data[i][1];
+        }
+}
+
+
 bool SampleBuffer::play( sampleFrame * _ab, handleState * _state, const fpp_t _frames,
 			 const float _freq, const LoopMode _loopmode )
 {
@@ -820,59 +853,96 @@ bool SampleBuffer::play( sampleFrame * _ab, handleState * _state, const fpp_t _f
 
 	f_cnt_t fragment_size = (f_cnt_t)( _frames * freq_factor ) + MARGIN[ _state->interpolationMode() ];
 
-        // prefetch. should be done in a separate thread
-        if(m_mmapped)
-        {
-                int i;
-                for(int j=1;j<9;j++)
-                {
-                        i=qMin(m_frames-1,play_frame+qMax(j*4096,fragment_size)); // 4096=typical OS page size
-                        ::tmp_prefetch_for_mmapped_files=m_data[i][1];
-                }
-        }
+        if(m_mmapped) prefetch(play_frame);
 
 	sampleFrame * tmp = NULL;
 
 	// check whether we have to change pitch...
 	if( freq_factor != 1.0 || _state->m_varyingPitch )
 	{
-		SRC_DATA src_data;
-		// Generate output
-		src_data.data_in =
-			getSampleFragment( play_frame, fragment_size, _loopmode, &tmp, &is_backwards,
-			loopStartFrame, loopEndFrame, endFrame )[0];
-		src_data.data_out = _ab[0];
-		src_data.input_frames = fragment_size;
-		src_data.output_frames = _frames;
-		src_data.src_ratio = 1.0 / freq_factor;
-		src_data.end_of_input = 0;
-		int error = src_process( _state->m_resamplingData, &src_data );
-		if( error )
-		{
-			qWarning( "SampleBuffer: error while resampling: %s",
-                                  src_strerror( error ) );
-		}
-		if( src_data.output_frames_gen > _frames )
-		{
-			qWarning( "SampleBuffer: not enough frames: %ld / %d",
-                                  src_data.output_frames_gen, _frames );
-		}
+                if(m_mmapped) // undo mmap
+                {
+                        qInfo("SampleBuffer::play unmmap data");
+                        m_mmapped=false;
+                        m_origData=MM_ALLOC( sampleFrame, m_frames );
+                        m_origFrames=m_frames;
+                        memcpy(m_origData,m_data,m_frames*BYTES_PER_FRAME);
+                        m_data=MM_ALLOC( sampleFrame, m_frames );
+                        memcpy(m_data,m_origData,m_frames*BYTES_PER_FRAME);
+                }
+
+                int input_frames_used=0;
+                /*
+                static QHash<QString,QPair<sampleFrame*,int>> cache;
+                QString key("%1_%2_%3_%4_%5_%6_%7_%8_%9");
+                key=key.arg(play_frame).arg(fragment_size).arg(_loopmode).arg(is_backwards).arg(loopStartFrame)
+                        .arg(loopEndFrame).arg(endFrame).arg(freq_factor).arg(_frames);
+                if(cache.contains(key))
+                {
+                        qInfo("SampleBuffer::play use resample cache");
+                        QPair<sampleFrame*,int> v=cache.value(key);
+                        memcpy(_ab[0],v.first,_frames*BYTES_PER_FRAME);
+                        input_frames_used=v.second;
+                }
+                else
+                */
+                {
+                        SRC_DATA src_data;
+                        // Generate output
+                        src_data.data_in =
+                                getSampleFragment( play_frame, fragment_size, _loopmode, &tmp, &is_backwards,
+                                                   loopStartFrame, loopEndFrame, endFrame )[0];
+                        src_data.data_out = _ab[0];
+                        src_data.input_frames = fragment_size;
+                        src_data.output_frames = _frames;
+                        src_data.src_ratio = 1.0 / freq_factor;
+                        src_data.end_of_input = 0;
+                        int error = src_process( _state->m_resamplingData, &src_data );
+                        if( error )
+                        {
+                                qWarning( "SampleBuffer: error while resampling: %s",
+                                          src_strerror( error ) );
+                        }
+                        else
+                        if( src_data.output_frames_gen > _frames )
+                        {
+                                qWarning( "SampleBuffer: not enough frames: %ld / %d",
+                                          src_data.output_frames_gen, _frames );
+                        }
+                        /*
+                        else
+                        {
+                                qInfo("cache key=%s size=%d",qPrintable(key),cache.size());
+                                if(cache.size()>510)
+                                        foreach(const QString& k,cache.keys())
+                                        {
+                                                QPair<sampleFrame*,int> v=cache.value(k);
+                                                MM_FREE(v.first);
+                                                cache.remove(k);
+                                        }
+                                sampleFrame* v=MM_ALLOC(sampleFrame,_frames);
+                                memcpy(v,_ab[0],_frames*BYTES_PER_FRAME);
+                                cache.insert(key,QPair<sampleFrame*,int>(v,src_data.input_frames_used));
+                        }
+                        */
+                        input_frames_used=src_data.input_frames_used;
+                }
 		// Advance
 		switch( _loopmode )
 		{
 			case LoopOff:
-				play_frame += src_data.input_frames_used;
+				play_frame += input_frames_used;
 				break;
 			case LoopOn:
-				play_frame += src_data.input_frames_used;
+				play_frame += input_frames_used;
 				play_frame = getLoopedIndex( play_frame, loopStartFrame, loopEndFrame );
 				break;
 			case LoopPingPong:
 			{
-				f_cnt_t left = src_data.input_frames_used;
+				f_cnt_t left = input_frames_used;
 				if( _state->isBackwards() )
 				{
-					play_frame -= src_data.input_frames_used;
+					play_frame -= input_frames_used;
 					if( play_frame < loopStartFrame )
 					{
 						left -= ( loopStartFrame - play_frame );
@@ -1141,12 +1211,14 @@ f_cnt_t SampleBuffer::findClosestZero(f_cnt_t _index)
 void SampleBuffer::visualize( QPainter & _p, const QRect & _r,
 			      const QRect & _clip, f_cnt_t _from, f_cnt_t _to)
 {
-	if( m_frames == 0 ) return;
+        if(!m_data) return;
+	if(m_frames==0) return;
 
 	if(_from>_to) qSwap(_from,_to);
+        _from=qBound(0,_from,m_frames);
+        _to  =qBound(0,_to  ,m_frames);
 
-	if((_from<0)||(_to>m_frames))
-		{ _from=0; _to=m_frames; }
+        if(_from==_to) return;
 
 	//_p.setClipRect( _clip );
 	const int xr = _r.x();
@@ -1154,15 +1226,17 @@ void SampleBuffer::visualize( QPainter & _p, const QRect & _r,
 	const int wr = _r.width();
 	const int hr = _r.height();
 
-	const int nbp=qMin<int>(wr,_to-_from);
+	int nbp=qMin<int>(wr,_to-_from);
 	if(nbp<=1) return;
+        if(nbp>10000) nbp=10000;
 
 	QPointF* lc=new QPointF[nbp];
 	QPointF* rc=new QPointF[nbp];
 
 	for(int i=0;i<nbp;i++)
 	{
-		int frame=_from+(_to-_from)*i/nbp;
+                float tp=(float)i/(float)nbp;
+		f_cnt_t frame=_from+(_to-_from)*tp;
 		float xp =xr+(wr-1.f)/(nbp-1.f)*i;
 		float ypl=yr+(hr-1.f)/2.f*(1.f+m_amplification*m_data[frame][0]);
 		float ypr=yr+(hr-1.f)/2.f*(1.f+m_amplification*m_data[frame][1]);

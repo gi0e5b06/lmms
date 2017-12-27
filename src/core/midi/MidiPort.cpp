@@ -345,6 +345,7 @@ void MidiPort::subscribeWritablePort( const QString& port, bool subscribe )
 	{
 		m_writableModel.setValue( true );
 	}
+        qInfo("MidiPort::subscribeWritablePort dest=%s subscribe=%d",qPrintable(port),subscribe);
 	m_midiClient->subscribeWritablePort( this, port, subscribe );
 }
 

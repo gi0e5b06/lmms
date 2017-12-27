@@ -500,22 +500,21 @@ void SampleTCOView::paintEvent( QPaintEvent * pe )
 
 	QPainter p( &m_paintPixmap );
 
-	QLinearGradient lingrad( 0, 0, 0, height() );
-	QColor c;
 	bool muted = m_tco->getTrack()->isMuted() || m_tco->isMuted();
 
 	// state: selected, muted, normal
-	c = isSelected() ? selectedColor() : ( muted ? mutedBackgroundColor() 
-		: painter.background().color() );
-
-	lingrad.setColorAt( 1, c.darker( 300 ) );
-	lingrad.setColorAt( 0, c );
+	QColor c= isSelected()
+                ? selectedColor()
+                : ( muted ? mutedBackgroundColor() : painter.background().color() );
 
 	// paint a black rectangle under the pattern to prevent glitches with transparent backgrounds
 	p.fillRect( rect(), QColor( 0, 0, 0 ) );
 
 	if( gradient() )
 	{
+                QLinearGradient lingrad( 0, 0, 0, height() );
+                lingrad.setColorAt( 1, c.darker( 300 ) );
+                lingrad.setColorAt( 0, c );
 		p.fillRect( rect(), lingrad );
 	}
 	else
@@ -537,7 +536,7 @@ void SampleTCOView::paintEvent( QPaintEvent * pe )
 
 	QRect r = QRect( TCO_BORDER_WIDTH, spacing,
 			qMax( static_cast<int>( m_tco->sampleLength() * ppt / ticksPerTact ), 1 ), rect().bottom() - 2 * spacing );
-	m_tco->m_sampleBuffer->visualize( p, r, pe->rect() );
+	m_tco->m_sampleBuffer->visualize(p,r);//, pe->rect() );
 
 	QFileInfo fileInfo(m_tco->m_sampleBuffer->audioFile());
 	QString filename = fileInfo.fileName();

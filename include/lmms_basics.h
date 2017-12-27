@@ -109,12 +109,12 @@ inline bool typeInfo<float>::isEqual( float x, float y )
 
 const ch_cnt_t DEFAULT_CHANNELS = 2;
 
-const ch_cnt_t SURROUND_CHANNELS =
 #define LMMS_DISABLE_SURROUND
+
 #ifndef LMMS_DISABLE_SURROUND
-				4;
+const ch_cnt_t SURROUND_CHANNELS=4;
 #else
-				2;
+const ch_cnt_t SURROUND_CHANNELS=2;
 #endif
 
 
@@ -124,6 +124,11 @@ const ch_cnt_t SURROUND_CHANNELS =
 #define LADSPA_PATH_SEPERATOR ':'
 #endif
 
+#ifdef LMMS_BUILD_APPLE
+#define UI_CTRL_KEY "⌘"
+#else
+#define UI_CTRL_KEY "Ctrl"
+#endif
 
 
 typedef sample_t sampleFrame[DEFAULT_CHANNELS];

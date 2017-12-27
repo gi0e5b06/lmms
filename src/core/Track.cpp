@@ -1753,20 +1753,15 @@ TrackOperationsWidget::TrackOperationsWidget( TrackView * parent ) :
 {
 	if( s_grip == NULL )
 	{
-		s_grip = new QPixmap( embed::getIconPixmap(
-							"track_op_grip" ) );
+		s_grip=new QPixmap(embed::getIconPixmap("track_op_grip"));
 	}
 
-	ToolTip::add( this, tr( "Press <%1> while clicking on move-grip "
-				"to begin a new drag'n'drop-action." ).arg(
-					#ifdef LMMS_BUILD_APPLE
-					"⌘") );
-					#else
-					"Ctrl") );
-					#endif
+	ToolTip::add(this,tr( "Press <%1> while clicking on move-grip "
+                              "to begin a new drag'n'drop-action." ).
+                     arg(UI_CTRL_KEY));
 
-	QMenu * toMenu = new QMenu( this );
-	toMenu->setFont( pointSize<9>( toMenu->font() ) );
+        QMenu * toMenu = new QMenu( this );
+        toMenu->setFont( pointSize<9>( toMenu->font() ) );
 	connect( toMenu, SIGNAL( aboutToShow() ), this, SLOT( updateMenu() ) );
 
 
@@ -1784,29 +1779,25 @@ TrackOperationsWidget::TrackOperationsWidget( TrackView * parent ) :
 	m_muteBtn->setActiveGraphic( embed::getIconPixmap( "led_off" ) );
 	m_muteBtn->setInactiveGraphic( embed::getIconPixmap( "led_green" ) );
 	m_muteBtn->setCheckable( true );
+	ToolTip::add( m_muteBtn, tr( "Mute this track" ) );
 
 	m_soloBtn = new PixmapButton( this, tr( "Solo" ) );
 	m_soloBtn->setActiveGraphic( embed::getIconPixmap( "led_red" ) );
 	m_soloBtn->setInactiveGraphic( embed::getIconPixmap( "led_off" ) );
-	m_soloBtn->setCheckable( true );
+        m_soloBtn->setCheckable( true );
+	ToolTip::add( m_soloBtn, tr( "Solo" ) );
 
-	if( ConfigManager::inst()->value( "ui",
-					  "compacttrackbuttons" ).toInt() )
+	if(ConfigManager::inst()->value("ui","compacttrackbuttons").toInt())
 	{
-		m_muteBtn->move( 46, 0 );
-		m_soloBtn->move( 46, 16 );
+		m_muteBtn->setGeometry(45, 0,16,14);
+		m_soloBtn->setGeometry(45,16,16,14);
 	}
 	else
 	{
-		m_muteBtn->move( 46, 8 );
-		m_soloBtn->move( 62, 8 );
+		m_muteBtn->setGeometry(45,5,16,14);
+		m_soloBtn->setGeometry(62,5,16,14);
 	}
 
-	m_muteBtn->show();
-	ToolTip::add( m_muteBtn, tr( "Mute this track" ) );
-
-	m_soloBtn->show();
-	ToolTip::add( m_soloBtn, tr( "Solo" ) );
 
 	connect( this, SIGNAL( trackRemovalScheduled( TrackView * ) ),
 			m_trackView->trackContainerView(),
@@ -1892,12 +1883,12 @@ void TrackOperationsWidget::paintEvent( QPaintEvent * pe )
 	  if( m_trackView->isMovingTrack() == false )
 	{
 	*/
-		int y=2;
-		while(y<height())
-		{
-			p.drawPixmap( 2, y, *s_grip );
-			y+=s_grip->height();
-		}
+        int y=2;
+        while(y<height())
+	{
+                p.drawPixmap( 2, y, *s_grip );
+                y+=s_grip->height();
+        }
 	/*
 	  m_trackOps->show();
 	  //m_muteBtn->show();
@@ -1908,6 +1899,9 @@ void TrackOperationsWidget::paintEvent( QPaintEvent * pe )
 		m_muteBtn->hide();
 	}
 	*/
+
+        //p.setPen(Qt::yellow);
+        //p.drawRect(0,0,width()-1,height()-1);
 }
 
 
@@ -2090,10 +2084,14 @@ void TrackOperationsWidget::updateMenu()
 	if( InstrumentTrackView * trackView = dynamic_cast<InstrumentTrackView *>( m_trackView ) )
 	{
 		toMenu->addSeparator();
+                toMenu->addMenu(trackView->createAudioInputMenu());
+                toMenu->addMenu(trackView->createAudioOutputMenu());
+                toMenu->addMenu(trackView->createMidiInputMenu());
+                toMenu->addMenu(trackView->createMidiOutputMenu());
 
+		toMenu->addSeparator();
 		QMenu *fxMenu = trackView->createFxMenu( tr( "FX %1: %2" ), tr( "Assign to new FX Channel" ));
 		toMenu->addMenu(fxMenu);
-
 		toMenu->addMenu( trackView->midiMenu() );
 	}
 	if( dynamic_cast<AutomationTrackView *>( m_trackView ) )

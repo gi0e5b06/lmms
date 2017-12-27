@@ -288,7 +288,7 @@ public:
 	}
 
 private:
-	QMultiHash<f_cnt_t,int> m_cache;
+	QMultiHash<int,int> m_cache;
 
 	friend class InstrumentFunctionNoteDuplicatesRemovingView;
 };

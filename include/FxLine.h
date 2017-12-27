@@ -59,21 +59,21 @@ public:
 	inline int channelIndex() { return m_channelIndex; }
 	void setChannelIndex(int index);
 
-	Knob * m_sendKnob;
-	SendButtonIndicator * m_sendBtn;
+	Knob*                m_sendKnob;
+	SendButtonIndicator* m_sendBtn;
 
 	QBrush backgroundActive() const;
 	void setBackgroundActive( const QBrush & c );
-	
+
 	QColor strokeOuterActive() const;
 	void setStrokeOuterActive( const QColor & c );
-	
+
 	QColor strokeOuterInactive() const;
 	void setStrokeOuterInactive( const QColor & c );
-	
+
 	QColor strokeInnerActive() const;
 	void setStrokeInnerActive( const QColor & c );
-	
+
 	QColor strokeInnerInactive() const;
 	void setStrokeInnerInactive( const QColor & c );
 
@@ -83,21 +83,22 @@ private:
 	void drawFxLine( QPainter* p, const FxLine *fxLine, bool isActive, bool sendToThis, bool receiveFromThis );
 	QString elideName( const QString & name );
 
-	FxMixerView * m_mv;
-	LcdWidget* m_lcd;
-	int m_channelIndex;
-	QBrush m_backgroundActive;
-	QColor m_strokeOuterActive;
-	QColor m_strokeOuterInactive;
-	QColor m_strokeInnerActive;
-	QColor m_strokeInnerInactive;
-	static QPixmap * s_sendBgArrow;
-	static QPixmap * s_receiveBgArrow;
-	bool m_inRename;
-	QLineEdit * m_renameLineEdit;
-	QGraphicsView * m_view;
+	FxMixerView*   m_mv;
+	LcdWidget*     m_lcd;
+	int            m_channelIndex;
+	QBrush         m_backgroundActive;
+	QColor         m_strokeOuterActive;
+	QColor         m_strokeOuterInactive;
+	QColor         m_strokeInnerActive;
+	QColor         m_strokeInnerInactive;
+	bool           m_inRename;
+	QLineEdit*     m_renameLineEdit;
+	QGraphicsView* m_view;
 
-private slots:
+	static QPixmap* s_sendBgArrow;
+	static QPixmap* s_receiveBgArrow;
+
+ private slots:
 	void renameChannel();
 	void renameFinished();
 	void removeChannel();

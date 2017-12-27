@@ -22,7 +22,7 @@
  * Boston, MA 02110-1301 USA.
  *
  */
- 
+
 
 #include <QMouseEvent>
 #include <QPainter>
@@ -30,7 +30,7 @@
 #include "PixmapButton.h"
 #include "MainWindow.h"
 #include "embed.h"
-
+#include "Backtrace.h"
 
 
 PixmapButton::PixmapButton( QWidget * _parent, const QString & _name ) :
@@ -39,8 +39,8 @@ PixmapButton::PixmapButton( QWidget * _parent, const QString & _name ) :
 	m_inactivePixmap(),
 	m_pressed( false )
 {
-	setActiveGraphic( embed::getIconPixmap( "led_yellow" ) );
-	setInactiveGraphic( embed::getIconPixmap( "led_off" ), false );
+	setActiveGraphic  ( embed::getIconPixmap("led_yellow"));
+	setInactiveGraphic( embed::getIconPixmap("led_off"   ),false );
 }
 
 
@@ -61,19 +61,35 @@ void PixmapButton::paintEvent( QPaintEvent * )
 	{
 		if( !m_activePixmap.isNull() )
 		{
-			p.drawPixmap( 0, 0, m_activePixmap.scaled
-				      (size().boundedTo(m_activePixmap.size())));
+			//p.drawPixmap( 0, 0, m_activePixmap.scaled
+			//	      (size().boundedTo(m_activePixmap.size())));
+                        p.drawPixmap(0,0,m_activePixmap.scaled(size()));
 		}
 	}
 	else if( !m_inactivePixmap.isNull() )
 	{
-		p.drawPixmap( 0, 0, m_inactivePixmap.scaled
-			      (size().boundedTo(m_activePixmap.size())));
+		//p.drawPixmap( 0, 0, m_inactivePixmap.scaled
+		//	      (size().boundedTo(m_activePixmap.size())));
+                p.drawPixmap(0,0,m_inactivePixmap.scaled(size()));
 	}
+
+        //p.setPen(Qt::red);
+        //p.drawRect(0,0,width()-1,height()-1);
 }
 
 
-
+void PixmapButton::resizeEvent(QResizeEvent * _re)
+{
+	//qInfo("Knob::resizeEvent()");
+        //BACKTRACE
+        QSize sh=sizeHint();
+        //qInfo("PixmapButton::resizeEvent %dx%d -> %dx%d",width(),height(),sh.width(),sh.height());
+        if(sh!=size())
+        {
+                setFixedSize(sh);
+                resize(sh);
+        }
+}
 
 
 void PixmapButton::mousePressEvent( QMouseEvent * _me )
@@ -117,7 +133,7 @@ void PixmapButton::mouseDoubleClickEvent( QMouseEvent * _me )
 void PixmapButton::setActiveGraphic( const QPixmap & _pm, bool _update )
 {
 	m_activePixmap = _pm;
-	resize( sizeHint() );//m_activePixmap.width(), m_activePixmap.height() );
+	setFixedSize(sizeHint());//resize( sizeHint() );//m_activePixmap.width(), m_activePixmap.height() );
 	if( _update ) update();
 }
 
@@ -127,20 +143,29 @@ void PixmapButton::setActiveGraphic( const QPixmap & _pm, bool _update )
 void PixmapButton::setInactiveGraphic( const QPixmap & _pm, bool _update )
 {
 	m_inactivePixmap = _pm;
-	resize( sizeHint() );
+	setFixedSize(sizeHint());//resize( sizeHint() );
 	if( _update ) update();
 }
 
 QSize PixmapButton::sizeHint() const
 {
+        /*
 	if( ( model() != NULL && model()->value() ) || m_pressed )
 	{
-		return minimumSize().expandedTo(m_activePixmap.size()).boundedTo(maximumSize());
+		//return minimumSize().expandedTo(m_activePixmap.size()).boundedTo(maximumSize());
+                return m_activePixmap.size();
 	}
-	else 
+	else
 	{
-		return minimumSize().expandedTo(m_inactivePixmap.size()).boundedTo(maximumSize());
+		//return minimumSize().expandedTo(m_inactivePixmap.size()).boundedTo(maximumSize());
+                return m_inactivePixmap.size();
 	}
+        */
+
+        QSize r=QSize(0,0);
+        if(!m_activePixmap  .isNull()) r=r.expandedTo(m_activePixmap  .size());
+        if(!m_inactivePixmap.isNull()) r=r.expandedTo(m_inactivePixmap.size());
+        return r;
 }
 
 

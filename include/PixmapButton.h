@@ -35,8 +35,7 @@ class EXPORT PixmapButton : public AutomatableButton
 {
 	Q_OBJECT
 public:
-	PixmapButton( QWidget * _parent,
-					const QString & _name = QString::null );
+	PixmapButton(QWidget* _parent,const QString& _name=QString::null);
 	virtual ~PixmapButton();
 
 	void setActiveGraphic( const QPixmap & _pm, bool _update = true );
@@ -49,10 +48,11 @@ signals:
 
 
 protected:
-	virtual void paintEvent( QPaintEvent * _pe );
-	virtual void mousePressEvent( QMouseEvent * _me );
-	virtual void mouseReleaseEvent( QMouseEvent * _me );
-	virtual void mouseDoubleClickEvent( QMouseEvent * _me );
+	virtual void paintEvent           (QPaintEvent*  _pe);
+	virtual void resizeEvent          (QResizeEvent* _re);
+	virtual void mousePressEvent      (QMouseEvent*  _me);
+	virtual void mouseReleaseEvent    (QMouseEvent*  _me);
+	virtual void mouseDoubleClickEvent(QMouseEvent*  _me);
 
 
 private:

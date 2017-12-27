@@ -35,9 +35,9 @@
 #include "Song.h"
 
 
-const int FxLine::FxLineHeight = 410;//287
-QPixmap * FxLine::s_sendBgArrow = NULL;
-QPixmap * FxLine::s_receiveBgArrow = NULL;
+const int FxLine::FxLineHeight    =427;//287
+QPixmap*  FxLine::s_sendBgArrow   =NULL;
+QPixmap*  FxLine::s_receiveBgArrow=NULL;
 
 FxLine::FxLine( QWidget * _parent, FxMixerView * _mv, int _channelIndex ) :
 	QWidget( _parent ),

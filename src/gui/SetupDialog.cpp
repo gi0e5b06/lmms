@@ -119,26 +119,24 @@ SetupDialog::SetupDialog( ConfigTabs _tab_to_open ) :
 	m_stkDir( QDir::toNativeSeparators( ConfigManager::inst()->stkDir() ) ),
 #endif
 	m_backgroundArtwork( QDir::toNativeSeparators( ConfigManager::inst()->backgroundArtwork() ) ),
-	m_smoothScroll( ConfigManager::inst()->value( "ui", "smoothscroll" ).toInt() ),
-	m_enableAutoSave( ConfigManager::inst()->value( "ui", "enableautosave", "1" ).toInt() ),
-	m_enableRunningAutoSave( ConfigManager::inst()->value( "ui", "enablerunningautosave", "0" ).toInt() ),
-	m_saveInterval(	ConfigManager::inst()->value( "ui", "saveinterval" ).toInt() < 1 ?
-					MainWindow::DEFAULT_SAVE_INTERVAL_MINUTES :
-			ConfigManager::inst()->value( "ui", "saveinterval" ).toInt() ),
-	m_oneInstrumentTrackWindow( ConfigManager::inst()->value( "ui",
-					"oneinstrumenttrackwindow" ).toInt() ),
-	m_compactTrackButtons( ConfigManager::inst()->value( "ui",
-					"compacttrackbuttons" ).toInt() ),
-	m_syncVSTPlugins( ConfigManager::inst()->value( "ui",
-							"syncvstplugins" ).toInt() ),
-	m_animateAFP(ConfigManager::inst()->value( "ui",
-						   "animateafp", "1" ).toInt() ),
-	m_printNoteLabels(ConfigManager::inst()->value( "ui",
-						   "printnotelabels").toInt() ),
-	m_displayWaveform(ConfigManager::inst()->value( "ui",
-						   "displaywaveform").toInt() ),
-	m_disableAutoQuit(ConfigManager::inst()->value( "ui",
-						   "disableautoquit").toInt() )
+	m_smoothScroll( ConfigManager::inst()->value("ui","smoothscroll").toInt()),
+	m_enableAutoSave( ConfigManager::inst()->value("ui","enableautosave","1").toInt()),
+	m_enableRunningAutoSave( ConfigManager::inst()->value("ui","enablerunningautosave","0").toInt()),
+	m_saveInterval(	ConfigManager::inst()->value( "ui", "saveinterval" ).toInt()<1 ?
+                        MainWindow::DEFAULT_SAVE_INTERVAL_MINUTES :
+			ConfigManager::inst()->value( "ui", "saveinterval" ).toInt()),
+	m_oneInstrumentTrackWindow( ConfigManager::inst()->value
+                                    ("ui","oneinstrumenttrackwindow" ).toInt()),
+	m_compactTrackButtons( ConfigManager::inst()->value
+                               ("ui","compacttrackbuttons").toInt()),
+	m_syncVSTPlugins( ConfigManager::inst()->value("ui","syncvstplugins" ).toInt() ),
+	m_animateAFP(ConfigManager::inst()->value("ui","animateafp", "1" ).toInt() ),
+	m_printNoteLabels(ConfigManager::inst()->value
+                          ("ui","printnotelabels").toInt()),
+	m_displayWaveform(ConfigManager::inst()->value
+                          ("ui","displaywaveform","1").toInt()),
+	m_disableAutoQuit(ConfigManager::inst()->value
+                          ("ui","disableautoquit").toInt())
 {
 	setWindowIcon( embed::getIconPixmap( "setup_general" ) );
 	setWindowTitle( tr( "Setup LMMS" ) );

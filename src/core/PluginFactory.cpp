@@ -182,7 +182,9 @@ void PluginFactory::discoverPlugins()
 
 		for (const QString& ext : QString(info.descriptor->supportedFileTypes).split(','))
 		{
-			m_pluginByExt.insert(ext, info);
+                        // tmp: only keep the first one
+                        if(!m_pluginByExt.contains(ext))
+                                m_pluginByExt.insert(ext,info);
 		}
 
 		descriptors.insert(info.descriptor->type, info.descriptor);

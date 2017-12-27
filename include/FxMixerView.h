@@ -116,26 +116,25 @@ public slots:
 	int addNewChannel();
 
 protected:
-	virtual void closeEvent( QCloseEvent * _ce );
-	
+	virtual void closeEvent(QCloseEvent* _ce);
+
 private slots:
 	void updateFaders();
 	void toggledSolo();
 
 private:
 
-	QVector<FxChannelView *> m_fxChannelViews;
+	QVector<FxChannelView*> m_fxChannelViews;
 
-	FxLine * m_currentFxLine;
-
-	QScrollArea * channelArea;
-	QHBoxLayout * chLayout;
-	QWidget * m_channelAreaWidget;
-	QStackedLayout * m_racksLayout;
-	QWidget * m_racksWidget;
+	FxLine*         m_currentFxLine;
+	QScrollArea*    channelArea;
+	QHBoxLayout*    chLayout;
+	QWidget*        m_channelAreaWidget;
+	QStackedLayout* m_racksLayout;
+	QWidget*        m_racksWidget;
 
 	void updateMaxChannelSelector();
-	
+
 	friend class FxChannelView;
 } ;
 

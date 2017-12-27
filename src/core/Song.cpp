@@ -474,6 +474,8 @@ void Song::processAutomations(const TrackList &tracklist, MidiTime timeStart, fp
 	for (TrackContentObject* tco : tcos)
 	{
 		auto p = dynamic_cast<AutomationPattern *>(tco);
+                if(!p) continue;
+
 		MidiTime relTime = timeStart - p->startPosition();
 		if (p->isRecording() && relTime >= 0 && relTime < p->length())
 		{

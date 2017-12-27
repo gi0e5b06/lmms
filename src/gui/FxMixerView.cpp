@@ -300,7 +300,7 @@ FxMixerView::FxChannelView::FxChannelView(QWidget * _parent, FxMixerView * _mv,
 	m_muteBtn->setActiveGraphic(embed::getIconPixmap( "led_off" ) );
 	m_muteBtn->setInactiveGraphic(embed::getIconPixmap( "led_green" ) );
 	m_muteBtn->setCheckable( true );
-	m_muteBtn->move( 9,  m_fader->y()-21);
+	m_muteBtn->move( 9,  m_fader->y()-30);
 	ToolTip::add( m_muteBtn, tr( "Mute this FX channel" ) );
 
 	m_soloBtn = new PixmapButton( m_fxLine, tr( "Solo" ) );
@@ -308,7 +308,7 @@ FxMixerView::FxChannelView::FxChannelView(QWidget * _parent, FxMixerView * _mv,
 	m_soloBtn->setActiveGraphic(embed::getIconPixmap( "led_red" ) );
 	m_soloBtn->setInactiveGraphic(embed::getIconPixmap( "led_off" ) );
 	m_soloBtn->setCheckable( true );
-	m_soloBtn->move( 9,  m_fader->y()-11);
+	m_soloBtn->move( 9,  m_fader->y()-14);
 	connect(&fxChannel->m_soloModel, SIGNAL( dataChanged() ),
 		_mv, SLOT ( toggledSolo() ) );
 	ToolTip::add( m_soloBtn, tr( "Solo FX channel" ) );
@@ -327,7 +327,7 @@ FxMixerView::FxChannelView::FxChannelView(QWidget * _parent, FxMixerView * _mv,
 		m_eqEnableBtn->setInactiveGraphic(embed::getIconPixmap("led_off"));
 		m_eqEnableBtn->setCheckable(true);
 		m_eqEnableBtn ->setModel( &fxChannel->m_eqDJEnableModel );
-		m_eqEnableBtn ->move(9, m_fader->y()-138);
+		m_eqEnableBtn ->move(9, m_fader->y()-146);
 
 		Effect* eq=fxChannel->m_eqDJ;
 		EffectControls* cq=eq->controls();
@@ -358,9 +358,9 @@ FxMixerView::FxChannelView::FxChannelView(QWidget * _parent, FxMixerView * _mv,
 					m_eqMediumKnob->setPointColor(Qt::yellow);
 					m_eqLowKnob   ->setPointColor(Qt::yellow);
 
-					m_eqHighKnob  ->move(3, m_eqEnableBtn->y()+15);
-					m_eqMediumKnob->move(3, m_eqEnableBtn->y()+50);
-					m_eqLowKnob   ->move(3, m_eqEnableBtn->y()+85);
+					m_eqHighKnob  ->move(3, m_eqEnableBtn->y()+17);
+					m_eqMediumKnob->move(3, m_eqEnableBtn->y()+47);
+					m_eqLowKnob   ->move(3, m_eqEnableBtn->y()+77);
 
                                         m_eqHighKnob  ->model()->setRange(-100.f,0.f,0.5f);
                                         m_eqMediumKnob->model()->setRange(-100.f,0.f,0.5f);

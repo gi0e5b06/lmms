@@ -167,8 +167,9 @@ InstrumentTrack::~InstrumentTrack()
 void InstrumentTrack::processAudioBuffer( sampleFrame* buf, const fpp_t frames, NotePlayHandle* n )
 {
 	// we must not play the sound if this InstrumentTrack is muted...
-	if( isMuted() || ( Engine::getSong()->playMode() != Song::Mode_PlayPattern &&
-				n && n->isBbTrackMuted() ) || ! m_instrument )
+	if( /*tmp isMuted() ||*/
+           ( Engine::getSong()->playMode() != Song::Mode_PlayPattern
+             && n && n->isBbTrackMuted() ) || ! m_instrument )
 	{
 		memset(buf,0,frames*BYTES_PER_FRAME);
 		return;
@@ -755,10 +756,12 @@ void InstrumentTrack::saveTrackSpecificSettings( QDomDocument& doc, QDomElement 
 		m_instrument->saveState( doc, i );
 		thisElement.appendChild( i );
 	}
-	m_soundShaping.saveState( doc, thisElement );
-	m_noteHumanizing.saveState( doc, thisElement );
-	m_noteStacking.saveState( doc, thisElement );
-	m_arpeggio.saveState( doc, thisElement );
+	m_soundShaping          .saveState( doc, thisElement );
+	m_noteHumanizing        .saveState( doc, thisElement );
+	m_noteStacking          .saveState( doc, thisElement );
+	m_arpeggio              .saveState( doc, thisElement );
+        m_noteDuplicatesRemoving.saveState( doc, thisElement );
+
 	m_midiPort.saveState( doc, thisElement );
 	m_audioPort.effects()->saveState( doc, thisElement );
 }
@@ -808,6 +811,10 @@ void InstrumentTrack::loadTrackSpecificSettings( const QDomElement & thisElement
 			{
 				m_arpeggio.restoreState( node.toElement() );
 			}
+                        else if( m_noteDuplicatesRemoving.nodeName() == node.nodeName() )
+                        {
+                                m_noteDuplicatesRemoving.restoreState( node.toElement() );
+                        }
 			else if( m_midiPort.nodeName() == node.nodeName() )
 			{
 				m_midiPort.restoreState( node.toElement() );
@@ -1241,6 +1248,79 @@ void InstrumentTrackView::muteChanged()
 }
 
 
+QMenu* InstrumentTrackView::createAudioInputMenu()
+{
+        QString title=tr( "Audio Input (N/A)" );
+        //.arg( channelIndex ).arg( fxChannel->m_name );
+	QMenu* fxMenu = new QMenu( title );
+	return fxMenu;
+}
+
+
+QMenu* InstrumentTrackView::createAudioOutputMenu()
+{
+        int channelIndex=model()->effectChannelModel()->value();
+	FxChannel* fxChannel=Engine::fxMixer()->effectChannel(channelIndex);
+
+        QString title=tr( "Audio Output (%1:%2)" )
+                .arg( channelIndex ).arg( fxChannel->m_name );
+	QMenu* fxMenu = new QMenu( title );
+
+	QSignalMapper* fxMenuSignalMapper=new QSignalMapper(fxMenu);
+
+        QString newFxLabel=tr( "Assign to new channel" );
+	fxMenu->addAction( newFxLabel, this, SLOT( createFxLine() ) );
+	//fxMenu->addSeparator();
+	for (int i = 0; i < Engine::fxMixer()->numChannels(); ++i)
+	{
+		FxChannel* currentChannel = Engine::fxMixer()->effectChannel( i );
+
+		if(currentChannel!=fxChannel)
+		{
+			QString label = tr( "Mixer %1:%2" ).arg( currentChannel->m_channelIndex ).arg( currentChannel->m_name );
+			QAction * action = fxMenu->addAction( label, fxMenuSignalMapper, SLOT( map() ) );
+			fxMenuSignalMapper->setMapping(action, currentChannel->m_channelIndex);
+		}
+	}
+
+	connect(fxMenuSignalMapper, SIGNAL(mapped(int)), this, SLOT(assignFxLine(int)));
+
+	return fxMenu;
+}
+
+
+QMenu* InstrumentTrackView::createMidiInputMenu()
+{
+        InstrumentTrack* it=dynamic_cast<InstrumentTrack*>(getTrack());
+
+	// sequenced MIDI?
+	if( !Engine::mixer()->midiClient()->isRaw() )
+	{
+		it->m_midiPort.m_readablePortsMenu=new MidiPortMenu(MidiPort::Input);
+		it->m_midiPort.m_readablePortsMenu->setModel(&it->m_midiPort);
+                it->m_midiPort.m_readablePortsMenu->setTitle(tr( "MIDI Input" ));
+                return it->m_midiPort.m_readablePortsMenu;
+        }
+
+        return new QMenu("N/A");
+}
+
+
+QMenu* InstrumentTrackView::createMidiOutputMenu()
+{
+        InstrumentTrack* it=dynamic_cast<InstrumentTrack*>(getTrack());
+
+	// sequenced MIDI?
+	if( !Engine::mixer()->midiClient()->isRaw() )
+	{
+		it->m_midiPort.m_writablePortsMenu=new MidiPortMenu(MidiPort::Output);
+		it->m_midiPort.m_writablePortsMenu->setModel(&it->m_midiPort);
+                it->m_midiPort.m_writablePortsMenu->setTitle(tr( "MIDI Output" ));
+		return it->m_midiPort.m_writablePortsMenu;
+	}
+
+        return new QMenu("N/A");
+}
 
 
 QMenu * InstrumentTrackView::createFxMenu(QString title, QString newFxLabel)
@@ -1634,7 +1714,7 @@ void InstrumentTrackWindow::modelChanged()
 	{
 		m_pitchKnob->hide();
 		m_pitchLabel->hide();
-		m_pitchKnob->setModel( NULL );
+		m_pitchKnob->setModel( new FloatModel(0.f,0.f,0.f,0.01f,NULL,"",true)); //(NULL);
 		m_pitchRangeSpinBox->hide();
 		m_pitchRangeLabel->hide();
 	}

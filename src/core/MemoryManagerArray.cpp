@@ -1,6 +1,7 @@
 
 #include "lmms_basics.h"
 #include "MemoryManagerArray.h"
+#include "Backtrace.h"
 
 bool MemoryManagerArray::s_active=false;
 
@@ -17,7 +18,7 @@ MemoryManagerArray MemoryManagerArray::S224 ( 2048, 224,"DetuningHelper");
 MemoryManagerArray MemoryManagerArray::S264 ( 2048, 264,"NotePlayHandle");
 MemoryManagerArray MemoryManagerArray::S480 ( 1024, 480,"BasicFilters");
 MemoryManagerArray MemoryManagerArray::S496 (   64, 496);
-MemoryManagerArray MemoryManagerArray::S512 (   64, 512);
+MemoryManagerArray MemoryManagerArray::S512 (  512, 512);
 MemoryManagerArray MemoryManagerArray::S552 (  512, 552);
 //968
 MemoryManagerArray MemoryManagerArray::S1024(   64,1024);
@@ -303,19 +304,31 @@ bool MemoryManagerArray::deallocate( void * ptr , const char* file , long line)
 
 	size_t s=((char*)ptr)-m_data;
 	if((s%m_size)!=0)
-		qFatal("error: MemoryManagerArray::free: invalid ptr %s#%ld",file,line);
+        {
+                BACKTRACE
+		qCritical("error: MemoryManagerArray::free: invalid ptr %s#%ld",file,line);
+        }
 
 	const int i=s/m_size;
 	m_mutex.lock();
 	if((i<0)||(i>=m_nbe))
-		qFatal("error: i out of range: %d in %lu: %s#%ld",i,C2ULI m_size,file,line);
+        {
+                BACKTRACE
+		qCritical("error: i out of range: %d in %lu: %s#%ld",i,C2ULI m_size,file,line);
+        }
 	if(m_available.bit(i))//m_available[i])
-		qFatal("error: should be taken n°%d in %lu: %s#%ld",i,C2ULI m_size,file,line);
+        {
+                BACKTRACE
+                qWarning("error: should be taken n°%d in %lu: %s#%ld",i,C2ULI m_size,file,line);
+        }
 	m_available.set(i);//m_available[i]=true;
 	m_lastfree=i;
 	m_count--;
 	if(m_count<0)
-		qFatal("error: negative count in %lu: %s#%ld",C2ULI m_size,file,line);
+        {
+                BACKTRACE
+		qWarning("error: negative count in %lu: %s#%ld",C2ULI m_size,file,line);
+        }
 	m_mutex.unlock();
 
 	//qWarning("deallocate n°%d %d/%d in %lu %s#%ld",i,m_count,m_nbe,C2ULI m_size,file,line);

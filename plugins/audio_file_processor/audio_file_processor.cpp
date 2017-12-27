@@ -1110,11 +1110,9 @@ void AudioFileProcessorWaveView::updateGraph()
 	QPainter p( &m_graph );
 	p.setPen( QColor( 255, 255, 255 ) );
 
-	m_sampleBuffer.visualize(
-		p,
-		QRect( 0, 0, m_graph.width(), m_graph.height() ),
-		m_from, m_to
-	);
+        //QRect r(0,0,m_graph.width(),m_graph.height());
+	m_sampleBuffer.visualize(p,rect(),rect(),m_from,m_to);
+        p.end();
 }
 
 

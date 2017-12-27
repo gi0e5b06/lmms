@@ -287,31 +287,31 @@ void MainWindow::finalize()
 				     this, SLOT( saveProjectAsDefaultTemplate() ) );
 
 	project_menu->addSeparator();
-	project_menu->addAction( embed::getIconPixmap( "project_import" ),
-                                 tr( "&Import..." ),
-                                 Engine::getSong(),
-                                 SLOT( importProject() ) );
 	project_menu->addAction( embed::getIconPixmap( "project_export" ),
-                                 tr( "&Export Audio..." ),
+                                 tr( "Render Son&g..." ),
                                  Engine::getSong(),
                                  SLOT( exportProject() ),
-                                 Qt::CTRL + Qt::Key_E );
+                                 Qt::CTRL + Qt::Key_Enter );
 	project_menu->addAction( embed::getIconPixmap( "project_export" ),
-                                 tr( "Export Audio &Tracks..." ),
+                                 tr( "Render &Tracks..." ),
                                  Engine::getSong(),
                                  SLOT( exportProjectTracks() ) );
         //Qt::CTRL + Qt::SHIFT + Qt::Key_E );
+	project_menu->addAction( embed::getIconPixmap( "project_export" ),
+                                 tr( "Render &Video line..." ),
+                                 Engine::getSong(),
+                                 SLOT( exportProjectVideoLine() ) );
 
+	project_menu->addSeparator();
+	project_menu->addAction( embed::getIconPixmap( "project_import" ),
+                                 tr( "&Import MIDI..." ),
+                                 Engine::getSong(),
+                                 SLOT( importProject() ) );
 	project_menu->addAction( embed::getIconPixmap( "midi_file" ),
-                                 tr( "Export &MIDI..." ),
+                                 tr( "&Export MIDI..." ),
                                  Engine::getSong(),
                                  SLOT( exportProjectMidi() ),
                                  Qt::CTRL + Qt::Key_M );
-
-	project_menu->addAction( embed::getIconPixmap( "project_export" ),
-                                 tr( "Export &Video line..." ),
-                                 Engine::getSong(),
-                                 SLOT( exportProjectVideoLine() ) );
 
 // Prevent dangling separator at end of menu per https://bugreports.qt.io/browse/QTBUG-40071
 #if !(defined(LMMS_BUILD_APPLE) && (QT_VERSION >= 0x050000) && (QT_VERSION < 0x050600))
@@ -1634,12 +1634,12 @@ void MainWindow::browseHelp()
 void MainWindow::autoSave()
 {
 	if( !Engine::getSong()->isExporting() &&
-		!Engine::getSong()->isLoadingProject() &&
-		!RemotePluginBase::isMainThreadWaiting() &&
-		!QApplication::mouseButtons() &&
-		( ConfigManager::inst()->value( "ui",
-				"enablerunningautosave" ).toInt() ||
-			! Engine::getSong()->isPlaying() ) )
+            !Engine::getSong()->isLoadingProject() &&
+            !RemotePluginBase::isMainThreadWaiting() &&
+            !QApplication::mouseButtons() &&
+            ( ConfigManager::inst()->value
+              ("ui","enablerunningautosave").toInt() ||
+              !Engine::getSong()->isPlaying() ) )
 	{
 		Engine::getSong()->saveProjectFile(ConfigManager::inst()->recoveryFile());
 		autoSaveTimerReset();  // Reset timer

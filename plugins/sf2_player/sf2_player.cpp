@@ -581,12 +581,15 @@ void sf2Instrument::playNote( NotePlayHandle * _n, sampleFrame * )
 	else if( _n->isReleased() && ! _n->instrumentTrack()->isSustainPedalPressed() ) // note is released during this period
 	{
 		SF2PluginData * pluginData = static_cast<SF2PluginData *>( _n->m_pluginData );
-		pluginData->offset = _n->framesBeforeRelease();
-		pluginData->isNew = false;
+                if(pluginData)
+                {
+                        pluginData->offset = _n->framesBeforeRelease();
+                        pluginData->isNew = false;
 
-		m_playingNotesMutex.lock();
-		m_playingNotes.append( _n );
-		m_playingNotesMutex.unlock();
+                        m_playingNotesMutex.lock();
+                        m_playingNotes.append( _n );
+                        m_playingNotesMutex.unlock();
+                }
 	}
 }
 
