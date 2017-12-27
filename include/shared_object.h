@@ -61,7 +61,8 @@ public:
 
 		if ( deleteObject )
 		{
-			delete object;
+			object->deleteLater();
+                        //delete object;
 		}
 	}
 

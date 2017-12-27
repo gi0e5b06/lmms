@@ -27,16 +27,18 @@
 
 #include <utility>
 
-#include <QtCore/QSharedMemory>
-#include <QtCore/QVector>
+#include <QSharedMemory>
+#include <QVector>
 
-#include "ExportFilter.h"
-#include "MetaData.h"
 #include "TrackContainer.h"
-#include "ITransport.h"
 #include "Controller.h"
 #include "MeterModel.h"
+#include "Mixer.h"
 #include "VstSyncController.h"
+#include "ExportFilter.h"
+
+#include "ITransport.h"
+#include "MetaData.h"
 
 
 class AutomationTrack;
@@ -264,6 +266,17 @@ public:
 		return m_loadingProject;
 	}
 
+       void loadingCancelled()
+       {
+               m_isCancelled = true;
+               Engine::mixer()->clearNewPlayHandles();
+       }
+
+       bool isCancelled()
+       {
+               return m_isCancelled;
+       }
+
 	bool isSavingProject() const
 	{
 		return m_savingProject;
@@ -413,7 +426,8 @@ private:
 	volatile bool m_paused;
 
 	bool m_loadingProject;
-	bool m_savingProject;
+        bool m_isCancelled;
+        bool m_savingProject;
 
 	QStringList m_errors;
 

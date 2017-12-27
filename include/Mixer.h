@@ -157,7 +157,7 @@ public:
 
 	void initDevices();
 	void clear();
-
+        void clearNewPlayHandles();
 
 	// audio-device-stuff
 
