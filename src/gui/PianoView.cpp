@@ -109,7 +109,7 @@ PianoView::PianoView( QWidget * _parent ) :
 
 	setAttribute( Qt::WA_OpaquePaintEvent, true );
 	setFocusPolicy( Qt::StrongFocus );
-	setMaximumWidth( WhiteKeysPerOctave * NumOctaves * PW_WHITE_KEY_WIDTH );
+	setMaximumWidth( NumKeys * PW_WHITE_KEY_WIDTH );
 
 	// create scrollbar at the bottom
 	m_pianoScroll = new QScrollBar( Qt::Horizontal, this );
@@ -378,7 +378,7 @@ void PianoView::pianoScrolled( int _new_pos )
 {
 	m_startKey = WhiteKeys[_new_pos % WhiteKeysPerOctave]+
 			( _new_pos / WhiteKeysPerOctave ) * KeysPerOctave;
-
+        m_startKey=qBound(0,m_startKey,NumKeys-1);
 	update();
 }
 
@@ -695,9 +695,10 @@ void PianoView::focusOutEvent( QFocusEvent * )
 void PianoView::resizeEvent( QResizeEvent * _event )
 {
 	QWidget::resizeEvent( _event );
-	m_pianoScroll->setRange( 0, WhiteKeysPerOctave * NumOctaves -
-					(int) ceil( (float) width() /
-							PW_WHITE_KEY_WIDTH ) );
+	//m_pianoScroll->setRange( 0, (WhiteKeysPerOctave * NumOctaves -1)
+        //                       - (int) ceil( (float) width() / PW_WHITE_KEY_WIDTH ) );
+        // 75 (number of white keys) should be computed.
+        m_pianoScroll->setRange( 0, (int)ceil((75*PW_WHITE_KEY_WIDTH-width())/(float)PW_WHITE_KEY_WIDTH));
 }
 
 
@@ -805,12 +806,16 @@ void PianoView::paintEvent( QPaintEvent * )
 	int cur_key = m_startKey;
 
 	// draw all white keys...
-	for( int x = 0; x < width(); )
+        int x;
+	for( x = 0; x < width(); )
 	{
-		while( Piano::isBlackKey( cur_key ) )
+                if(cur_key>=NumKeys) break;
+                while( Piano::isBlackKey( cur_key ) )
 		{
 			++cur_key;
+                        if(cur_key>=NumKeys) break;
 		}
+                if(cur_key>=NumKeys) break;
 
 		// draw pressed or not pressed key, depending on state of
 		// current key
@@ -836,6 +841,7 @@ void PianoView::paintEvent( QPaintEvent * )
 		++cur_key;
 	}
 
+        p.fillRect(x,0,width()-x,height()-1,Qt::red);
 
 	// reset all values, because now we're going to draw all black keys
 	cur_key = m_startKey;
@@ -857,6 +863,7 @@ void PianoView::paintEvent( QPaintEvent * )
 	// now draw all black keys...
 	for( int x = 0; x < width(); )
 	{
+                if(cur_key>=NumKeys) break;
 		if( Piano::isBlackKey( cur_key ) )
 		{
 			// draw pressed or not pressed key, depending on

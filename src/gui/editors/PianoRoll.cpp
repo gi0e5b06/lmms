@@ -645,8 +645,8 @@ void PianoRoll::setCurrentPattern( Pattern* newPattern )
 	if( total_notes > 0 )
 	{
 		central_key = central_key / total_notes -
-				( KeysPerOctave * NumOctaves - m_totalKeysToScroll ) / 2;
-		m_startKey = tLimit( central_key, 0, NumOctaves * KeysPerOctave );
+                        ( NumKeys - m_totalKeysToScroll ) / 2; //KeysPerOctave * NumOctaves
+		m_startKey = tLimit( central_key, 0, NumKeys-1 ); //NumOctaves * KeysPerOctave
 	}
 
 	// resizeEvent() does the rest for us (scrolling, range-checking
@@ -2464,7 +2464,7 @@ void PianoRoll::dragNotes( int x, int y, bool alt, bool shift, bool ctrl )
 					pos_ticks = qMax(0, pos_ticks);
 					// upper/lower bound checks on key_num
 					key_num = qMax(0, key_num);
-					key_num = qMin(key_num, NumKeys);
+					key_num = qMin(key_num, NumKeys-1);
 
 					note->setPos( MidiTime( pos_ticks ) );
 					note->setKey( key_num );
@@ -2738,7 +2738,7 @@ void PianoRoll::paintEvent(QPaintEvent * pe )
 			{
 				QString noteString = getNoteString( key );
 
-				QPoint textStart( WHITE_KEY_WIDTH - 18, key_line_y );
+				QPoint textStart( WHITE_KEY_WIDTH - 20, key_line_y );
 				textStart += QPoint( 0, yCorrectionForNoteLabels );
 
 				p.setPen( textShadow() );
@@ -2756,6 +2756,7 @@ void PianoRoll::paintEvent(QPaintEvent * pe )
 			}
 		}
 		++key;
+                if(key>=NumKeys) break;
 	}
 
 	// reset all values, because now we're going to draw all black keys
@@ -2825,8 +2826,11 @@ void PianoRoll::paintEvent(QPaintEvent * pe )
 		}
 
 		++key;
+                if(key>=NumKeys) break;
 	}
 
+        //qInfo("paintEvent key=%d top=%d",key,PR_TOP_MARGIN);
+        bool redline=(key>=NumKeys);
 
 	// erase the area below the piano, because there might be keys that
 	// should be only half-visible
@@ -3117,6 +3121,8 @@ void PianoRoll::paintEvent(QPaintEvent * pe )
 	p.fillRect( QRect( 0, keyAreaBottom(),
 					width()-PR_RIGHT_MARGIN, NOTE_EDIT_RESIZE_BAR ), editAreaCol );
 
+        if(redline) p.fillRect(0,PR_TOP_MARGIN,width()-1,KEY_LINE_HEIGHT-2,Qt::red);
+
 	const QPixmap * cursor = NULL;
 	// draw current edit-mode-icon below the cursor
 	switch( m_editMode )
@@ -3162,10 +3168,9 @@ void PianoRoll::resizeEvent(QResizeEvent * re)
 						height() - PR_TOP_MARGIN -
 						SCROLLBAR_SIZE );
 
-	int total_pixels = OCTAVE_HEIGHT * NumOctaves - ( height() -
-					PR_TOP_MARGIN - PR_BOTTOM_MARGIN -
-							m_notesEditHeight );
-	m_totalKeysToScroll = total_pixels * KeysPerOctave / OCTAVE_HEIGHT;
+        int total_pixels = KEY_LINE_HEIGHT * (NumKeys+1) // OCTAVE_HEIGHT * NumOctaves
+                - ( height() - PR_TOP_MARGIN - PR_BOTTOM_MARGIN - m_notesEditHeight );
+	m_totalKeysToScroll = total_pixels / KEY_LINE_HEIGHT;//KeysPerOctave / OCTAVE_HEIGHT;
 
 	m_topBottomScroll->setRange( 0, m_totalKeysToScroll );
 
@@ -3345,9 +3350,9 @@ int PianoRoll::getKey(int y ) const
 		key_num = 0;
 	}
 
-	if( key_num >= KeysPerOctave * NumOctaves )
+	if( key_num >= NumKeys ) //KeysPerOctave * NumOctaves
 	{
-		key_num = KeysPerOctave * NumOctaves - 1;
+		key_num = NumKeys - 1; //KeysPerOctave * NumOctaves
 	}
 
 	return key_num;
