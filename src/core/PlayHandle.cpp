@@ -33,11 +33,11 @@
 #include <iterator>
 
 PlayHandle::PlayHandle(const Type type, f_cnt_t offset) :
+		m_usesBuffer(true),
 		m_type(type),
 		m_offset(offset),
 		m_affinity(QThread::currentThread()),
 		m_playHandleBuffer( NULL ),//BufferManager::acquire()),
-		m_usesBuffer(true),
 		m_bufferReleased(true)
 {
 }

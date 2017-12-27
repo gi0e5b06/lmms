@@ -56,18 +56,6 @@ class PlayHandle : public ThreadableJob
 		MaxNumber = 1024
 	} ;
 
-	PlayHandle( const Type type, f_cnt_t offset = 0 );
-
-	PlayHandle & operator = ( PlayHandle & p )
-	{
-		m_type = p.m_type;
-		m_offset = p.m_offset;
-		m_affinity = p.m_affinity;
-		m_usesBuffer = p.m_usesBuffer;
-		m_audioPort = p.m_audioPort;
-		return *this;
-	}
-
 	virtual ~PlayHandle();
 
 	virtual bool affinityMatters() const
@@ -148,6 +136,18 @@ class PlayHandle : public ThreadableJob
 	sampleFrame * buffer();
 
  protected:
+	PlayHandle( const Type type, f_cnt_t offset = 0 );
+
+	PlayHandle & operator = ( PlayHandle & p )
+	{
+		m_type = p.m_type;
+		m_offset = p.m_offset;
+		m_affinity = p.m_affinity;
+		m_usesBuffer = p.m_usesBuffer;
+		m_audioPort = p.m_audioPort;
+		return *this;
+	}
+
 	bool m_usesBuffer;
 	AudioPort* m_audioPort;
 

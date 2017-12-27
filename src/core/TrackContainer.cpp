@@ -37,8 +37,10 @@
 #include "InstrumentTrack.h"
 #include "Song.h"
 
+#include "embed.h"
 #include "GuiApplication.h"
 #include "MainWindow.h"
+#include "TextFloat.h"
 
 TrackContainer::TrackContainer() :
 	Model( NULL ),

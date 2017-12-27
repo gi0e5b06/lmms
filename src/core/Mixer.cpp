@@ -537,12 +537,22 @@ void Mixer::clear()
 void Mixer::clearNewPlayHandles()
 {
         requestChangeInModel();
+	while(!m_newPlayHandles.isEmpty())
+        {
+                PlayHandle* ph=m_newPlayHandles.takeFirst();
+                NotePlayHandle* nph=dynamic_cast<NotePlayHandle*>(ph);
+                if(nph) NotePlayHandleManager::release(nph);
+                else delete ph;
+        }
+
+        /*
         for( LocklessListElement * e = m_newPlayHandles.popList(); e; )
         {
                 LocklessListElement * next = e->next;
                 m_newPlayHandles.free( e );
                 e = next;
         }
+        */
         doneChangeInModel();
 }
 
