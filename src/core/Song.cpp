@@ -88,6 +88,7 @@ Song::Song() :
 	m_playing( false ),
 	m_paused( false ),
 	m_loadingProject( false ),
+        m_isCancelled( false ),
 	m_savingProject( false ),
 	m_playMode( Mode_None ),
 	m_length( 0 ),
@@ -1130,7 +1131,7 @@ void Song::loadProject( const QString & fileName )
 		}
 	}
 
-	while( !node.isNull() )
+	while( !node.isNull() && !isCancelled() )
 	{
 		if( node.isElement() )
 		{
@@ -1188,6 +1189,13 @@ void Song::loadProject( const QString & fileName )
 	Engine::projectJournal()->setJournalling( true );
 
 	emit projectLoaded();
+
+        if( isCancelled() )
+        {
+                m_isCancelled = false;
+                createNewProject();
+                return;
+        }
 
 	if ( hasErrors())
 	{
@@ -1350,7 +1358,7 @@ void Song::saveControllerStates( QDomDocument & doc, QDomElement & element )
 void Song::restoreControllerStates( const QDomElement & element )
 {
 	QDomNode node = element.firstChild();
-	while( !node.isNull() )
+	while( !node.isNull() && !isCancelled() )
 	{
 		Controller * c = Controller::create( node.toElement(), this );
 		Q_ASSERT( c != NULL );
@@ -1382,6 +1390,7 @@ void Song::exportProjectTracks()
 
 void Song::exportProject( bool multiExport )
 {
+        /*
 	if( isEmpty() )
 	{
 		QMessageBox::information( gui->mainWindow(),
@@ -1391,6 +1400,7 @@ void Song::exportProject( bool multiExport )
 					"Song Editor first!" ) );
 		return;
 	}
+        */
 
 	FileDialog efd( gui->mainWindow() );
 
@@ -1470,6 +1480,7 @@ void Song::exportProject( bool multiExport )
 
 void Song::exportProjectMidi()
 {
+        /*
 	if( isEmpty() )
 	{
 		QMessageBox::information( gui->mainWindow(),
@@ -1479,6 +1490,7 @@ void Song::exportProjectMidi()
 					"Song Editor first!" ) );
 		return;
 	}
+        */
 
 	FileDialog efd( gui->mainWindow() );
 

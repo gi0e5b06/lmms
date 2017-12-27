@@ -111,6 +111,14 @@ void TrackContainer::loadSettings( const QDomElement & _this )
 						QEventLoop::AllEvents, 100 );
 			if( pd->wasCanceled() )
 			{
+                                if ( gui )
+                                {
+                                        TextFloat::displayMessage( tr( "Loading cancelled" ),
+                                                                   tr( "Project loading was cancelled." ),
+                                                                   embed::getIconPixmap( "project_file", 24, 24 ),
+                                                                   2000 );
+                                }
+                                Engine::getSong()->loadingCancelled();
 				break;
 			}
 		}
@@ -293,7 +301,10 @@ AutomatedValueMap TrackContainer::automatedValuesFromTracks(const TrackList &tra
 				continue;
 			}
 			MidiTime relTime = time - p->startPosition();
-			float value = p->valueAt(relTime);
+                        if (! p->getAutoResize()) {
+				relTime = qMin(relTime, p->length());
+			}
+                        float value = p->valueAt(relTime);
 
 			for (AutomatableModel* model : p->objects())
 			{
