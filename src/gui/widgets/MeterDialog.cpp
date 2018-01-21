@@ -38,7 +38,11 @@ MeterDialog::MeterDialog( QWidget * _parent, bool _simple ) :
 	QWidget( _parent ),
 	ModelView( NULL, this )
 {
-	QVBoxLayout * vlayout = new QVBoxLayout( this );
+	//QVBoxLayout * vlayout = new QVBoxLayout( this );
+        QLayout* vlayout;
+        if(_simple) vlayout=new QHBoxLayout( this );
+        else        vlayout=new QVBoxLayout( this );
+
 	vlayout->setSpacing( 0 );
 	vlayout->setMargin( 0 );
 
@@ -71,7 +75,7 @@ MeterDialog::MeterDialog( QWidget * _parent, bool _simple ) :
 	m_denominator = new LcdSpinBox( 2, den, tr( "Meter Denominator" ) );
 	if( _simple )
 	{
-		m_denominator->setLabel( tr( "TIME SIG" ) );
+		//m_denominator->setLabel( tr( "TIME SIG" ) );
 	}
 
 	den_layout->addWidget( m_denominator );
@@ -88,11 +92,11 @@ MeterDialog::MeterDialog( QWidget * _parent, bool _simple ) :
 	den_layout->addStretch();
 
 
-	vlayout->addSpacing( _simple ? 1 : 3 );
+	//vlayout->addSpacing( _simple ? 1 : 3 );
 	vlayout->addWidget( num );
-	vlayout->addSpacing( 2 );
+	//vlayout->addSpacing( 2 );
 	vlayout->addWidget( den );
-	vlayout->addStretch();
+	//vlayout->addStretch();
 }
 
 

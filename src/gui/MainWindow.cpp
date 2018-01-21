@@ -633,7 +633,7 @@ void MainWindow::finalize()
 
 int MainWindow::addWidgetToToolBar( QWidget * _w, int _row, int _col )
 {
-	int col = ( _col == -1 ) ? m_toolBarLayout->columnCount() + 7 : _col;
+	int col = ( _col == -1 ) ? m_toolBarLayout->columnCount() + 8 : _col;
 	if( _w->height() > 32 || _row == -1 )
 	{
 		m_toolBarLayout->addWidget( _w, 0, col, 2, 1 );
@@ -642,16 +642,20 @@ int MainWindow::addWidgetToToolBar( QWidget * _w, int _row, int _col )
 	{
 		m_toolBarLayout->addWidget( _w, _row, col );
 	}
-	return( col );
+	return col;
 }
 
 
 
 
-void MainWindow::addSpacingToToolBar( int _size )
+int MainWindow::addSpacingToToolBar( int _size, int _col )
 {
-	m_toolBarLayout->setColumnMinimumWidth( m_toolBarLayout->columnCount() +
-								7, _size );
+	//m_toolBarLayout->setColumnMinimumWidth( m_toolBarLayout->columnCount()+7,_size );
+	int col = ( _col == -1 ) ? m_toolBarLayout->columnCount() + 8 : _col;
+        QWidget* w=new QWidget(m_toolBar);
+        w->setFixedWidth(_size);
+        m_toolBarLayout->addWidget( w, 0, col, 2, 1 );
+	return col;
 }
 
 /*

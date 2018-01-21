@@ -239,7 +239,8 @@ void MidiClientRaw::parseData( const unsigned char c )
 			// Pitch-bend is transmitted with 14-bit precision.
 			// Note: '|' does here the same as '+' (no common bits),
 			// but might be faster
-			m_midiParseData.m_midiEvent.setPitchBend( ( m_midiParseData.m_buffer[1] * 128 ) | m_midiParseData.m_buffer[0] );
+			//m_midiParseData.m_midiEvent.setMidiPitchBend( ( m_midiParseData.m_buffer[1] * 128 ) | m_midiParseData.m_buffer[0] );
+                        m_midiParseData.m_midiEvent.setMidiPitchBendLE(m_midiParseData.m_buffer[0],m_midiParseData.m_buffer[1]);
 			break;
 
 		default: 

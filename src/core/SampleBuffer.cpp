@@ -1,6 +1,7 @@
 /*
  * SampleBuffer.cpp - container-class SampleBuffer
  *
+ * Copyright (c) 2017 gi0e5b06
  * Copyright (c) 2005-2014 Tobias Doerffel <tobydox/at/users.sourceforge.net>
  *
  * This file is part of LMMS - https://lmms.io
@@ -194,7 +195,7 @@ void SampleBuffer::update( bool _keepSettings )
 	}
 
 	// File size and sample length limits
-	const int fileSizeMax = 300; // MB
+	const int fileSizeMax = 1024; // MB
 	const int sampleLengthMax = 90; // Minutes
 
 	sample_rate_t samplerate = Engine::mixer()->baseSampleRate();
@@ -301,7 +302,12 @@ void SampleBuffer::update( bool _keepSettings )
 			fileLoadError = true;
 		}
 		else
-		{
+                if(filename.endsWith(".mp3"))
+                {
+                        fileLoadError=true;
+                }
+                else
+                {
 			SNDFILE * snd_file;
 			SF_INFO sf_info;
 			sf_info.format = 0;
@@ -379,7 +385,7 @@ void SampleBuffer::update( bool _keepSettings )
 				QFile file(filename+cchext);//QDateTime QFileInfo::lastModified()
 				//QFileInfo info(file);
 				//if(info.exists()) file.unlink();
-				qWarning("SampleBuffer: Write cache %s",qPrintable(filename));
+				qInfo("SampleBuffer: Write cache %s",qPrintable(filename));
 				if(!file.open(QIODevice::WriteOnly))
 					qCritical("SampleBuffer: Can not write %s",qPrintable(filename));
 				else

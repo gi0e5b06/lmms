@@ -26,18 +26,21 @@
 #define MIDI_EVENT_H
 
 #include <cstdlib>
+#include <QtGlobal>
+
 #include "Midi.h"
 #include "panning_constants.h"
+#include "Pitch.h"
 #include "volume.h"
 
 class MidiEvent final
 {
 public:
 	MidiEvent( MidiEventTypes type = MidiActiveSensing,
-				int8_t channel = 0,
-				int16_t param1 = 0,
-				int16_t param2 = 0,
-				const void* sourcePort = NULL ) :
+                   int8_t channel = 0,
+                   int16_t param1 = 0,
+                   int16_t param2 = 0,
+                   const void* sourcePort = NULL ) :
 		m_type( type ),
 		m_metaEvent( MidiMetaInvalid ),
 		m_channel( channel ),
@@ -95,6 +98,8 @@ public:
 
 	void setChannel( int8_t channel )
 	{
+                if(channel<0||channel>15)
+                        qWarning("MidiEvent::setChannel invalid channel: %d",channel);
 		m_channel = channel;
 	}
 
@@ -105,6 +110,8 @@ public:
 
 	void setParam( int i, uint16_t value )
 	{
+                if(value<0||value>127)
+                        qWarning("MidiEvent::setParam [%d] invalid value: %d",i,value);
 		m_data.m_param[i] = value;
 	}
 
@@ -115,6 +122,8 @@ public:
 
 	void setKey( int16_t key )
 	{
+                if(key<0||key>127)
+                        qWarning("MidiEvent::setKey invalid key: %d",key);
 		m_data.m_param[0] = key;
 	}
 
@@ -125,6 +134,8 @@ public:
 
 	void setVelocity( int16_t velocity )
 	{
+                if(velocity<0||velocity>127)
+                        qWarning("MidiEvent::setVelocity invalid velocity: %d",velocity);
 		m_data.m_param[1] = velocity;
 	}
 
@@ -135,14 +146,17 @@ public:
 			( (float)( MidiMaxPanning - MidiMinPanning ) ) *
 			( (float)( PanningRight - PanningLeft ) ) );
 	}
-	int16_t midiPanning() const
+
+	uint8_t midiPanning() const
 	{
 		return m_data.m_param[1];
 	}
 
-	volume_t volume( int midiBaseVelocity ) const
+	volume_t volume( int _midiBaseVelocity ) const
 	{
-		return (volume_t)( velocity() * DefaultVolume / midiBaseVelocity );
+		return qBound(MinVolume,
+                              (volume_t)( velocity() * DefaultVolume / _midiBaseVelocity),
+                              MaxVolume);
 	}
 
 	const void* sourcePort() const
@@ -180,14 +194,52 @@ public:
 		return param( 0 );
 	}
 
-	int16_t pitchBend() const
+        // -100..+100 center 0.
+	float lmmsPitchBend() const
 	{
-		return param( 0 );
+                float r=midiPitchBend()-8192;
+                     if(r<0) r=r/-8192.f*MinPitchDefault;
+                else if(r>0) r=r/8191.f*MaxPitchDefault;
+                return r;
 	}
 
-	void setPitchBend( uint16_t pitchBend )
+	void setLmmsPitchBend( float pitchBend )
 	{
-		setParam( 0, pitchBend );
+                uint16_t r=pitchBend-DefaultPitch;
+                     if(r<0) r=r*-8192.f/MinPitchDefault;
+                else if(r>0) r=r/8191.f*MaxPitchDefault;
+                r=r+8192;
+		setMidiPitchBend(r);
+	}
+
+        // 0..16383 center 8192
+	uint16_t midiPitchBend() const
+	{
+		return ((param(1)&0x7F)<<7)|(param(0)&0x7F);
+	}
+
+	void setMidiPitchBend( uint16_t pitchBend )
+	{
+                if(pitchBend<0||pitchBend>16383)
+                        qWarning("MidiEvent::setMidiPitchBend invalid pitchBend: %d",pitchBend);
+                //( m_midiParseData.m_buffer[1] * 128 ) | m_midiParseData.m_buffer[0]
+                if(pitchBend<    0) pitchBend=0;
+                if(pitchBend>16383) pitchBend=16383;
+                setParam(0,(pitchBend   )&0x7F);
+                setParam(1,(pitchBend>>7)&0x7F);
+	}
+
+	void midiPitchBendLE(uint8_t* low_,uint8_t* high_) const
+	{
+		*low_ =param(0)&0x7F;
+                *high_=param(1)&0x7F;
+	}
+
+	void setMidiPitchBendLE(uint8_t _low, uint8_t _high)
+	{
+                //( m_midiParseData.m_buffer[1] * 128 ) | m_midiParseData.m_buffer[0]
+                setParam(0,_low &0x7F);
+                setParam(1,_high&0x7F);
 	}
 
 	bool operator == (MidiEvent& b)
@@ -208,7 +260,7 @@ private:
 	union
 	{
 		int16_t m_param[2];	// first/second parameter (key/velocity)
-		uint8_t m_bytes[4];		// raw bytes
+		uint8_t m_bytes[4];	// raw bytes
 		int32_t m_sysExDataLen;	// len of m_sysExData
 	} m_data;
 

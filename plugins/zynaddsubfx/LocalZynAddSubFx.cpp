@@ -246,7 +246,8 @@ void LocalZynAddSubFx::processMidiEvent( const MidiEvent& event )
 			}
 			break;
 		case MidiPitchBend:
-			m_master->setController( event.channel(), C_pitchwheel, event.pitchBend()-8192 );
+			m_master->setController( event.channel(), C_pitchwheel, event.midiPitchBend() );
+                                                 //event.pitchBend()-8192 );
 			break;
 		case MidiControlChange:
 			m_master->setController( event.channel(), event.controllerNumber(), event.controllerValue() );

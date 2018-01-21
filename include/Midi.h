@@ -123,18 +123,26 @@ enum MidiControllerRegisteredParameterNumbers
 	MidiNullFunctionNumberRPN = 0x7F7F
 };
 
-const int MidiChannelCount = 16;
-const int MidiControllerCount = 128;
-const int MidiProgramCount = 128;
-const int MidiMaxVelocity = 127;
-const int MidiDefaultVelocity = MidiMaxVelocity / 2;
-const int MidiMaxControllerValue = 127;
-const int MidiMaxKey = 127;
+const uint8_t MidiChannelCount = 16;
+const uint8_t MidiControllerCount = 128;
+const uint8_t MidiProgramCount = 128;
 
-const int MidiMaxPanning = 127;
-const int MidiMinPanning = -128;
+const uint8_t MidiMinVelocity = 0;
+const uint8_t MidiMaxVelocity = 127;
+const uint8_t MidiDefaultVelocity = 64;      // MidiMaxVelocity/2;
 
-const int MidiMinPitchBend = 0;
-const int MidiMaxPitchBend = 16383;
+const uint8_t MidiMinControllerValue = 0;
+const uint8_t MidiMaxControllerValue = 127;
+
+const uint8_t MidiMinKey = 0;
+const uint8_t MidiMaxKey = 127;
+
+const uint8_t MidiMinPanning = 0;     //-128;
+const uint8_t MidiMaxPanning = 127;
+const uint8_t MidiDefaultPanning = 64;
+
+const uint16_t MidiMinPitchBend = 0;
+const uint16_t MidiMaxPitchBend = 16383;
+const uint16_t MidiDefaultPitchBend = 8192;
 
 #endif

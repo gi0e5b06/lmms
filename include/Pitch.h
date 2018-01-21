@@ -26,13 +26,13 @@
 #define PITCH_H
 
 #include "lmms_basics.h"
-#include "Midi.h"
+//#include "Midi.h"
 
-typedef int16_t pitch_t;
+typedef float pitch_t; //int16_t
 
-const pitch_t CentsPerSemitone = 100;
+const pitch_t CentsPerSemitone = 100.f;
 const pitch_t MinPitchDefault = -CentsPerSemitone;
 const pitch_t MaxPitchDefault = CentsPerSemitone;
-const pitch_t DefaultPitch = 0;
+const pitch_t DefaultPitch = 0.f;
 
 #endif

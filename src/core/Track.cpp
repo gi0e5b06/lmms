@@ -44,6 +44,7 @@
 #include <QStyleOption>
 
 #include "debug.h"
+#include "Backtrace.h"
 
 #include "Track.h"
 
@@ -103,7 +104,18 @@ TrackContentObject::TrackContentObject( Track * track ) :
 	m_mutedModel( false, this, tr( "Mute" ) ),
 	m_selectViewOnCreate( false )
 {
-	if( getTrack() )
+        if(Engine::getSong()&&Engine::getSong()->isPlaying())
+        {
+                static bool s_once=false;
+                if(!s_once)
+                {
+                        BACKTRACE
+                        s_once=true;
+                        qWarning("TrackContentObject::TrackContentObject alloc...");
+                }
+        }
+
+        if( getTrack() )
 	{
 		getTrack()->addTCO( this );
 	}
@@ -1875,8 +1887,15 @@ void TrackOperationsWidget::paintEvent( QPaintEvent * pe )
 
 	if( m_trackView->isMovingTrack() )
 	{
-		p.setPen(Qt::red);
-		p.drawLine(r.x(),r.y(),r.x(),r.y()+r.height()-1);
+		//p.setPen(Qt::red);
+		//p.drawLine(r.x(),r.y(),r.x(),r.y()+r.height()-1);
+                /*
+                p.drawLine(r.x()  ,r.y()+1,r.x()  ,r.y()+r.height()-2);
+                p.drawLine(r.x()+2,r.y()+1,r.x()+2,r.y()+r.height()-2);
+                p.drawLine(r.x()+3,r.y()+1,r.x()+3,r.y()+r.height()-2);
+                p.drawLine(r.x()+6,r.y()+1,r.x()+6,r.y()+r.height()-2);
+                */
+                p.fillRect(r.x()+1,r.y()+1,8,r.height()-1,QColor(128,0,0));
 	}
 
 	/*

@@ -1058,9 +1058,14 @@ void MidiAlsaGdx::run()
 			switch( ev->type )
 			{
 			case SND_SEQ_EVENT_NOTEON:
+				qInfo("MidiAlsaGdx: noteon ch=%d key=%d val=%d time=%d",
+                                      ev->data.note.channel,
+                                      ev->data.note.note,
+                                      ev->data.note.velocity,
+                                      ev->time.tick);
 				dest->processInEvent(MidiEvent(MidiNoteOn,
 							       ev->data.note.channel,
-							       ev->data.note.note-KeysPerOctave,
+							       ev->data.note.note,//-KeysPerOctave,
 							       ev->data.note.velocity,
 							       source),
 						      ticks);
@@ -1069,7 +1074,7 @@ void MidiAlsaGdx::run()
 			case SND_SEQ_EVENT_NOTEOFF:
 				dest->processInEvent(MidiEvent(MidiNoteOff,
 							       ev->data.note.channel,
-							       ev->data.note.note-KeysPerOctave,
+							       ev->data.note.note,//-KeysPerOctave,
 							       ev->data.note.velocity,
 							       source),
 						     ticks);
@@ -1078,16 +1083,20 @@ void MidiAlsaGdx::run()
 			case SND_SEQ_EVENT_KEYPRESS:
 				dest->processInEvent(MidiEvent(MidiKeyPressure,
 							       ev->data.note.channel,
-							       ev->data.note.note-KeysPerOctave,
+							       ev->data.note.note,//-KeysPerOctave,
 							       ev->data.note.velocity,
 							       source),
 						     ticks);
 				break;
 
 			case SND_SEQ_EVENT_CONTROLLER:
-				//qInfo("MidiAlsaGdx: controller value=%d time=%d",
-				//      ev->data.control.value,
-				//      ev->time.tick);
+                                /*
+				qInfo("MidiAlsaGdx: controller ch=%d cc=%d val=%d time=%d",
+                                      ev->data.control.channel,
+                                      ev->data.control.param,
+                                      ev->data.control.value,
+                                      ev->time.tick);
+                                */
 				dest->processInEvent(MidiEvent(MidiControlChange,
 							       ev->data.control.channel,
 							       ev->data.control.param,
@@ -1115,12 +1124,22 @@ void MidiAlsaGdx::run()
 				break;
 
 			case SND_SEQ_EVENT_PITCHBEND:
-				dest->processInEvent(MidiEvent(MidiPitchBend,
-							       ev->data.control.channel,
-							       ev->data.control.value+8192,
-							       0,
-							       source),
-						     ticks);
+                                {
+                                        int p=ev->data.control.value+8192;
+                                        qInfo("MidiAlsaGdx: pitchbend ch=%d p=%d p1=%d -> %d,%d time=%d",
+                                              ev->data.control.channel,
+                                              p,
+                                              ev->data.control.value,
+                                              p     &0x7F,
+                                              (p>>7)&0x7F,
+                                              ev->time.tick);
+                                        dest->processInEvent(MidiEvent(MidiPitchBend,
+                                                                       ev->data.control.channel,
+                                                                       (p   )&0x7F,
+                                                                       (p>>7)&0x7F,
+                                                                       source),
+                                                             ticks);
+                                }
 				break;
 
 			case SND_SEQ_EVENT_SENSING:
@@ -1225,48 +1244,48 @@ void MidiAlsaGdx::processOutEvent( const MidiEvent& event, const MidiTime& time,
                 {
 		case MidiNoteOn:
 			snd_seq_ev_set_noteon( &ev,
-						event.channel(),
-						event.key() + KeysPerOctave,
-						event.velocity() );
+                                               event.channel(),
+                                               event.key(),// + KeysPerOctave,
+                                               event.velocity() );
 			break;
 
 		case MidiNoteOff:
 			snd_seq_ev_set_noteoff( &ev,
 						event.channel(),
-						event.key() + KeysPerOctave,
+						event.key(),// + KeysPerOctave,
 						event.velocity() );
 			break;
 
 		case MidiKeyPressure:
 			snd_seq_ev_set_keypress( &ev,
-						event.channel(),
-						event.key() + KeysPerOctave,
-						event.velocity() );
+                                                 event.channel(),
+                                                 event.key(),// + KeysPerOctave,
+                                                 event.velocity() );
 			break;
 
 		case MidiControlChange:
 			snd_seq_ev_set_controller( &ev,
-						event.channel(),
-						event.controllerNumber(),
-						event.controllerValue() );
+                                                   event.channel(),
+                                                   event.controllerNumber(),
+                                                   event.controllerValue() );
 			break;
 
 		case MidiProgramChange:
 			snd_seq_ev_set_pgmchange( &ev,
-						event.channel(),
-						event.program() );
+                                                  event.channel(),
+                                                  event.program() );
 			break;
 
 		case MidiChannelPressure:
 			snd_seq_ev_set_chanpress( &ev,
-						event.channel(),
-						event.channelPressure() );
+                                                  event.channel(),
+                                                  event.channelPressure() );
 			break;
 
 		case MidiPitchBend:
 			snd_seq_ev_set_pitchbend( &ev,
-						event.channel(),
-						event.param( 0 ) - 8192 );
+                                                  event.channel(),
+                                                  event.midiPitchBend()-8192 );
 			break;
 
 		default:

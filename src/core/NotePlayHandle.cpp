@@ -141,6 +141,20 @@ NotePlayHandle::NotePlayHandle( InstrumentTrack* instrumentTrack,
 }
 
 
+void NotePlayHandle::removeOneSubNote(NotePlayHandle* _nph)
+{
+        if(_nph)
+        {
+                if(tryLock())
+                {
+                        m_subNotes.removeOne(_nph);
+                        unlock();
+                }
+                else qWarning("NotePlayHandle::removeOneSubNote fail");
+        }
+}
+
+
 void NotePlayHandle::done()
 {
 	lock();
@@ -153,8 +167,9 @@ void NotePlayHandle::done()
 	}
 	else
 	{
-                if(m_parent->m_subNotes.contains(this)) //tmp test SIGSEGV
-                        m_parent->m_subNotes.removeOne( this );
+                //if(m_parent->m_subNotes.contains(this)) //tmp test SIGSEGV
+                //m_parent->m_subNotes.removeOne( this );
+                m_parent->removeOneSubNote(this);
 	}
 
 	if( m_pluginData != NULL )

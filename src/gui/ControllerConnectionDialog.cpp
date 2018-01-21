@@ -73,9 +73,20 @@ public:
 			( m_midiPort.inputChannel() == 0 || m_midiPort.inputChannel() == event.channel() + 1 ) )
 		{
 			m_detectedMidiChannel = event.channel() + 1;
-			m_detectedMidiController = event.controllerNumber() + 1;
 			m_detectedMidiPort = Engine::mixer()->midiClient()->sourcePortName( event );
-			qInfo("AutoDetectMidiController: detected '%s'",qPrintable(m_detectedMidiPort));
+                        if(event.type() == MidiPitchBend)
+                        {
+                                m_detectedMidiController = 0;
+                                m_midiPort.setWidgetType(6);
+                                qInfo("AutoDetectMidiController: detected '%s'",qPrintable(m_detectedMidiPort));
+                                qInfo("                        : ch=%d pitchbend",m_detectedMidiChannel);
+                        }
+                        else
+                        {
+                                m_detectedMidiController = event.controllerNumber() + 1;
+                                qInfo("AutoDetectMidiController: detected '%s'",qPrintable(m_detectedMidiPort));
+                                qInfo("                        : ch=%d cc=%d",m_detectedMidiChannel,m_detectedMidiController);
+                        }
 			emit valueChanged();
 		}
 	}
@@ -85,6 +96,8 @@ public:
 	// model has none.
 	MidiController* copyToMidiController( Model* parent )
 	{
+                qInfo("AutoDetectMidiController: copy");
+
 		MidiController* c = new MidiController( parent );
 		c->m_midiPort.setInputChannel( m_midiPort.inputChannel() );
 		c->m_midiPort.setInputController( m_midiPort.inputController() );
@@ -391,9 +404,10 @@ void ControllerConnectionDialog::selectController()
 	// Midi
 	if( m_midiGroupBox->model()->value() > 0 )
 	{
-		if( m_midiControllerSpinBox->model()->value() > 0 )
+		if( (m_midiControllerSpinBox->model()->value() >  0) ||
+                    (m_midiController->m_midiPort.widgetType() == 6) )
 		{
-			qWarning("ControllerConnectionDialog::selectController m_controller=%p",m_controller);
+			//qInfo("ControllerConnectionDialog::selectController m_controller=%p",m_controller);
 
 			MidiController * mc;
 			mc = m_midiController->copyToMidiController( Engine::getSong() );

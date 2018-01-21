@@ -231,7 +231,7 @@ void AudioPort::doProcessing()
 void AudioPort::addPlayHandle( PlayHandle * handle )
 {
 	m_playHandleLock.lock();
-		m_playHandles.append( handle );
+        m_playHandles.append( handle );
 	m_playHandleLock.unlock();
 }
 
@@ -239,7 +239,7 @@ void AudioPort::addPlayHandle( PlayHandle * handle )
 void AudioPort::removePlayHandle( PlayHandle * handle )
 {
 	m_playHandleLock.lock();
-		PlayHandleList::Iterator it =	qFind( m_playHandles.begin(), m_playHandles.end(), handle );
+        PlayHandleList::Iterator it =	qFind( m_playHandles.begin(), m_playHandles.end(), handle );
 		if( it != m_playHandles.end() )
 		{
 			m_playHandles.erase( it );

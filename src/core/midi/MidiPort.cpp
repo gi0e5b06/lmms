@@ -68,6 +68,7 @@ MidiPort::MidiPort( const QString& name,
 	m_widgetTypeModel.addItem("Switch");
 	m_widgetTypeModel.addItem("Knob/Fader");
 	m_widgetTypeModel.addItem("Pad/Key");
+	m_widgetTypeModel.addItem("PitchBend");
 	m_widgetTypeModel.setInitValue(4);
 
 	m_midiClient->addPort( this );
@@ -133,7 +134,7 @@ void MidiPort::processInEvent( const MidiEvent& event, const MidiTime& time )
 {
 	// mask event
 	if( isInputEnabled() &&
-		( inputChannel() == 0 || inputChannel()-1 == event.channel() ) )
+            ( inputChannel() == 0 || inputChannel()-1 == event.channel() ) )
 	{
 		MidiEvent inEvent = event;
 		/* not the place to filter or to fix the velocity
@@ -162,8 +163,8 @@ void MidiPort::processInEvent( const MidiEvent& event, const MidiTime& time )
 		else
 		*/
 		{
-			//qWarning("MidiPort: process in event t=%d pt=%d",time.getTicks(),prtime);
-			//qWarning("MidiPort: process in event");
+			//qInfo("MidiPort: process in event t=%d pt=%d",time.getTicks(),prtime);
+                        //qInfo("MidiPort: process in event");
 			//prev=inEvent;
 			//prtime=time.getTicks();
 			m_midiEventProcessor->processInEvent( inEvent, time );

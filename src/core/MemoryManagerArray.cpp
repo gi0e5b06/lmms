@@ -14,12 +14,12 @@ MemoryManagerArray MemoryManagerArray::S112 (  128, 112);
 MemoryManagerArray MemoryManagerArray::S128 (   64, 128);
 MemoryManagerArray MemoryManagerArray::S192 (  256, 192);
 //200 drumsynth
-MemoryManagerArray MemoryManagerArray::S224 ( 2048, 224,"DetuningHelper");
+MemoryManagerArray MemoryManagerArray::S224 ( 4096, 224,"DetuningHelper");
 MemoryManagerArray MemoryManagerArray::S264 ( 2048, 264,"NotePlayHandle");
 MemoryManagerArray MemoryManagerArray::S480 ( 1024, 480,"BasicFilters");
 MemoryManagerArray MemoryManagerArray::S496 (   64, 496);
-MemoryManagerArray MemoryManagerArray::S512 (  512, 512);
-MemoryManagerArray MemoryManagerArray::S552 (  512, 552);
+MemoryManagerArray MemoryManagerArray::S512 ( 2048, 512,"tmp");
+MemoryManagerArray MemoryManagerArray::S552 ( 4096, 552);
 //968
 MemoryManagerArray MemoryManagerArray::S1024(   64,1024);
 MemoryManagerArray MemoryManagerArray::S1056(  768,1056);

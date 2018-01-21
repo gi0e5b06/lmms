@@ -32,7 +32,7 @@
 
 
 
-class AutomatableSlider : public QSlider, public IntModelView
+class AutomatableSlider : public QSlider, public FloatModelView //IntModelView
 {
 	Q_OBJECT
 public:
@@ -51,10 +51,11 @@ signals:
 
 
 protected:
-	virtual void contextMenuEvent( QContextMenuEvent * _me );
+	virtual void contextMenuEvent( QContextMenuEvent * _cme );
 	virtual void mousePressEvent( QMouseEvent * _me );
 	virtual void mouseReleaseEvent( QMouseEvent * _me );
-	virtual void wheelEvent( QWheelEvent * _me );
+	virtual void mouseMoveEvent( QMouseEvent * _me );
+	virtual void wheelEvent( QWheelEvent * _we );
 
 	virtual void modelChanged();
 

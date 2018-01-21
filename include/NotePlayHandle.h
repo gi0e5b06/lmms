@@ -71,6 +71,7 @@ public:
 			const int generation = 0);
 	virtual ~NotePlayHandle() {}
 	void done();
+        void removeOneSubNote(NotePlayHandle* _nph);
 
 	void * operator new ( size_t size, void * p )
 	{

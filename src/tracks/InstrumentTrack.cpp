@@ -117,7 +117,7 @@ InstrumentTrack::InstrumentTrack( TrackContainer* tc ) :
 	m_noteDuplicatesRemoving( this ),
 	m_piano( this )
 {
-	m_pitchModel.setCenterValue( 0 );
+	m_pitchModel.setCenterValue( DefaultPitch );
 	m_panningModel.setCenterValue( DefaultPanning );
 	m_baseNoteModel.setInitValue( DefaultKey );
 
@@ -210,7 +210,7 @@ void InstrumentTrack::processAudioBuffer( sampleFrame* buf, const fpp_t frames, 
 	// instruments using instrument-play-handles will call this method
 	// without any knowledge about notes, so they pass NULL for n, which
 	// is no problem for us since we just bypass the envelopes+LFOs
-	if( m_instrument->flags().testFlag( Instrument::IsSingleStreamed ) == false && n != NULL )
+	if( n != NULL && m_instrument->flags().testFlag( Instrument::IsSingleStreamed ) == false )
 	{
 		const f_cnt_t offset = n->noteOffset();
 		m_soundShaping.processAudioBuffer( buf + offset, frames - offset, n );
@@ -319,7 +319,7 @@ void InstrumentTrack::processInEvent( const MidiEvent& event, const MidiTime& ti
 		case MidiPitchBend:
 			// updatePitch() is connected to m_pitchModel::dataChanged() which will send out
 			// MidiPitchBend events
-			m_pitchModel.setValue( m_pitchModel.minValue() + event.pitchBend() * m_pitchModel.range() / MidiMaxPitchBend );
+			m_pitchModel.setValue( m_pitchModel.minValue() + event.midiPitchBend() * m_pitchModel.range() / MidiMaxPitchBend );
 			break;
 
 		case MidiControlChange:

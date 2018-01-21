@@ -434,8 +434,9 @@ bool CarlaInstrument::handleMidiEvent(const MidiEvent& event, const MidiTime&, f
         break;
 
     case MidiPitchBend:
-        nEvent.data[1] = event.pitchBend() & 0x7f;
-        nEvent.data[2] = event.pitchBend() >> 7;
+        //nEvent.data[1] = event.pitchBend() & 0x7f;
+        //nEvent.data[2] = event.pitchBend() >> 7;
+        event.midiPitchBendLE(&nEvent.data[1],&nEvent.data[2]);
         nEvent.size    = 3;
         break;
 

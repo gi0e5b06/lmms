@@ -39,6 +39,7 @@ class QScrollBar;
 class AutomatableSlider;
 class ComboBox;
 class ComboBoxModel;
+class Knob;
 class LcdSpinBox;
 class MeterDialog;
 class Song;
@@ -123,8 +124,10 @@ private:
 	TimeLineWidget * m_timeLine;
 
 	MeterDialog * m_timeSigDisplay;
-	AutomatableSlider * m_masterVolumeSlider;
-	AutomatableSlider * m_masterPitchSlider;
+	//AutomatableSlider * m_masterVolumeSlider;
+        Knob* m_masterVolumeSlider;
+	//AutomatableSlider * m_masterPitchSlider;
+        Knob* m_masterPitchSlider;
 
 	TextFloat * m_mvsStatus;
 	TextFloat * m_mpsStatus;

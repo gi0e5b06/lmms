@@ -341,7 +341,7 @@ bool opl2instrument::handleMidiEvent( const MidiEvent& event, const MidiTime& ti
 		// Update fnumber table
 
 		// Neutral = 8192, full downbend = 0, full upbend = 16383
-		tmp_pb = ( event.pitchBend()-8192 ) * pitchBendRange / 8192;
+		tmp_pb = ( event.midiPitchBend()-8192 ) * pitchBendRange / 8192;
 
 		if( tmp_pb != pitchbend ) {
 			pitchbend = tmp_pb;
@@ -369,7 +369,7 @@ bool opl2instrument::handleMidiEvent( const MidiEvent& event, const MidiTime& ti
 			}
 			break;
 		default:
-#ifdef LMMS_DEBUG	
+#ifdef LMMS_DEBUG
 			printf("Midi CC %02x %02x\n", event.controllerNumber(), event.controllerValue() );
 #endif
 			break;

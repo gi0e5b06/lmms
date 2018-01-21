@@ -36,8 +36,8 @@
 
 typedef int32_t tact_t;
 typedef int32_t tick_t;
-typedef uint8_t volume_t;
-typedef int8_t panning_t;
+typedef float volume_t; //uint8_t
+typedef float panning_t; //int8_t
 
 
 typedef float sample_t;			// standard sample-type

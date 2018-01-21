@@ -403,8 +403,10 @@ private:
 	IntModel m_tempoModel;
 	MeterModel m_timeSigModel;
 	int m_oldTicksPerTact;
-	IntModel m_masterVolumeModel;
-	IntModel m_masterPitchModel;
+	//IntModel m_masterVolumeModel;
+        FloatModel m_masterVolumeModel;
+	//IntModel m_masterPitchModel;
+        FloatModel m_masterPitchModel;
 
 	MetaData m_metaData;
 

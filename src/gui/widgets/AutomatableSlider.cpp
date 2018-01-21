@@ -36,7 +36,8 @@
 AutomatableSlider::AutomatableSlider( QWidget * _parent,
 						const QString & _name ) :
 	QSlider( _parent ),
-	IntModelView( new IntModel( 0, 0, 0, NULL, _name, true ), this ),
+	//IntModelView( new IntModel( 0, 0, 0, NULL, _name, true ), this ),
+        FloatModelView( new FloatModel( 0, 0, 0, 1, NULL, _name, true ), this ),
 	m_showStatus( false )
 {
 	setWindowTitle( _name );
@@ -108,7 +109,7 @@ void AutomatableSlider::setPosition( const QPoint & _p, bool _shift )
 
 
 
-void AutomatableSlider::contextMenuEvent( QContextMenuEvent * _me )
+void AutomatableSlider::contextMenuEvent( QContextMenuEvent * _cme )
 {
 	CaptionMenu contextMenu( model()->displayName() );
 	addDefaultActions( &contextMenu );
@@ -116,20 +117,19 @@ void AutomatableSlider::contextMenuEvent( QContextMenuEvent * _me )
 }
 
 
-
-
 void AutomatableSlider::mousePressEvent( QMouseEvent * _me )
 {
 	if( _me->button() == Qt::LeftButton &&
 	   ! ( _me->modifiers() & Qt::ControlModifier ) )
 	{
-		m_showStatus = true;
+                m_showStatus = true;
 		setCursor(Qt::SplitVCursor);
 		QSlider::mousePressEvent( _me );
 	}
 	else
 	{
-		IntModelView::mousePressEvent( _me );
+		//IntModelView::mousePressEvent( _me );
+                FloatModelView::mousePressEvent( _me );
 	}
 }
 
@@ -141,6 +141,14 @@ void AutomatableSlider::mouseReleaseEvent( QMouseEvent * _me )
 	m_showStatus = false;
         setCursor(Qt::PointingHandCursor);
 	QSlider::mouseReleaseEvent( _me );
+}
+
+
+
+
+void AutomatableSlider::mouseMoveEvent( QMouseEvent * _me )
+{
+        QSlider::mouseMoveEvent(_me);
 }
 
 
@@ -165,7 +173,7 @@ void AutomatableSlider::modelChanged()
 	QSlider::setRange( model()->minValue(), model()->maxValue() );
 	updateSlider();
 	connect( model(), SIGNAL( dataChanged() ),
-				this, SLOT( updateSlider() ) );
+                 this, SLOT( updateSlider() ) );
 }
 
 
@@ -193,9 +201,3 @@ void AutomatableSlider::updateSlider()
 {
 	QSlider::setValue( model()->value() );
 }
-
-
-
-
-
-

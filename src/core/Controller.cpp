@@ -107,7 +107,7 @@ float Controller::currentValue( int _offset )
 	{
 		m_currentValue = fittedValue( value( _offset ) );
 	}
-	
+
 	return m_currentValue;
 }
 
@@ -125,7 +125,7 @@ float Controller::value( int offset )
 	}
 	else return m_currentValue;
 }
-	
+
 
 ValueBuffer * Controller::valueBuffer()
 {
@@ -162,7 +162,7 @@ float Controller::runningTime()
 
 void Controller::triggerFrameCounter()
 {
-	for( int i = 0; i < s_controllers.size(); ++i ) 
+	for( int i = 0; i < s_controllers.size(); ++i )
 	{
 		// This signal is for updating values for both stubborn knobs and for
 		// painting.  If we ever get all the widgets to use or at least check
@@ -179,10 +179,10 @@ void Controller::triggerFrameCounter()
 
 void Controller::resetFrameCounter()
 {
-	for( int i = 0; i < s_controllers.size(); ++i ) 
+	for( int i = 0; i < s_controllers.size(); ++i )
 	{
 		s_controllers.at( i )->m_bufferLastUpdated = 0;
-	} 
+	}
 	s_periods = 0;
 }
 
@@ -195,7 +195,7 @@ Controller * Controller::create( ControllerTypes _ct, Model * _parent )
 
 	switch( _ct )
 	{
-		case Controller::DummyController: 
+		case Controller::DummyController:
 			if( dummy )
 				c = dummy;
 			else
@@ -219,7 +219,7 @@ Controller * Controller::create( ControllerTypes _ct, Model * _parent )
 			c = new ::MidiController( _parent );
 			break;
 
-		default: 
+		default:
 			break;
 	}
 
@@ -276,7 +276,7 @@ bool Controller::hasModel( const Model * m )
 			}
 		}
 	}
-	
+
 	return false;
 }
 
@@ -336,13 +336,7 @@ void Controller::removeConnection( ControllerConnection * )
 
 
 
-int Controller::connectionCount() const{
+int Controller::connectionCount() const
+{
 	return m_connectionCount;
 }
-
-
-
-
-
-
-
