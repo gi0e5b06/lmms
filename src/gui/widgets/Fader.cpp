@@ -190,6 +190,13 @@ void Fader::mousePressEvent( QMouseEvent* mouseEvent )
 	if( mouseEvent->button() == Qt::LeftButton &&
 			! ( mouseEvent->modifiers() & Qt::ControlModifier ) )
 	{
+		AutomatableModel *thisModel = model();
+		if( thisModel )
+		{
+			thisModel->addJournalCheckPoint();
+			thisModel->saveJournallingState( false );
+		}
+
 		if( mouseEvent->y() >= knobPosY() - ( *m_knob ).height() && mouseEvent->y() < knobPosY() )
 		{
 			updateTextFloat();
@@ -247,8 +254,17 @@ void Fader::mouseDoubleClickEvent( QMouseEvent* mouseEvent )
 
 
 
-void Fader::mouseReleaseEvent( QMouseEvent * _me )
+void Fader::mouseReleaseEvent( QMouseEvent * mouseEvent )
 {
+	if( mouseEvent && mouseEvent->button() == Qt::LeftButton )
+	{
+		AutomatableModel *thisModel = model();
+		if( thisModel )
+		{
+			thisModel->restoreJournallingState();
+		}
+	}
+
 	s_textFloat->hide();
 }
 
