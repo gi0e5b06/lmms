@@ -164,34 +164,39 @@ typedef KickerOsc<DspEffectLibrary::MonoToStereoAdaptor<DistFX> > SweepOsc;
 void kickerInstrument::playNote( NotePlayHandle * _n,
 						sampleFrame * _working_buffer )
 {
-	const fpp_t frames = _n->framesLeftForCurrentPeriod();
-	const f_cnt_t offset = _n->noteOffset();
-	const float decfr = m_decayModel.value() *
-		Engine::mixer()->processingSampleRate() / 1000.0f;
-	const f_cnt_t tfp = _n->totalFramesPlayed();
+	const fpp_t   frames=_n->framesLeftForCurrentPeriod();
+	const f_cnt_t offset=_n->noteOffset();
+	const float   decfr =m_decayModel.value()*Engine::mixer()->processingSampleRate()/1000.0f;
+	const f_cnt_t tfp   =_n->totalFramesPlayed();
 
-	if ( tfp == 0 )
-	{
-		_n->m_pluginData = new SweepOsc(
-					DistFX( m_distModel.value(),
-							m_gainModel.value() ),
-					m_startNoteModel.value() ? _n->frequency() : m_startFreqModel.value(),
-					m_endNoteModel.value() ? _n->frequency() : m_endFreqModel.value(),
-					m_noiseModel.value() * m_noiseModel.value(),
-					m_clickModel.value() * 0.25f,
-					m_slopeModel.value(),
-					m_envModel.value(),
-					m_distModel.value(),
-					m_distEndModel.value(),
-					decfr );
-	}
-	else if( tfp > decfr && !_n->isReleased() )
+	if((tfp>decfr)&&!_n->isReleased())
 	{
 		_n->noteOff();
 	}
+        else
+        if(tfp==0)   //||!_n->m_pluginData)
+	{
+		_n->m_pluginData=new SweepOsc
+                        (DistFX( m_distModel.value(), m_gainModel.value() ),
+                         m_startNoteModel.value() ? _n->frequency() : m_startFreqModel.value(),
+                         m_endNoteModel.value() ? _n->frequency() : m_endFreqModel.value(),
+                         m_noiseModel.value() * m_noiseModel.value(),
+                         m_clickModel.value() * 0.25f,
+                         m_slopeModel.value(),
+                         m_envModel.value(),
+                         m_distModel.value(),
+                         m_distEndModel.value(),
+                         decfr );
+	}
 
-	SweepOsc * so = static_cast<SweepOsc *>( _n->m_pluginData );
-	so->update( _working_buffer + offset, frames, Engine::mixer()->processingSampleRate() );
+	//if(!_n->isReleased())
+        {
+                SweepOsc* so=static_cast<SweepOsc*>(_n->m_pluginData);
+                if(!so)
+                        qWarning("kickerInstrument::playNote null pluginData");
+                else
+                        so->update( _working_buffer + offset, frames, Engine::mixer()->processingSampleRate() );
+        }
 
 	if( _n->isReleased() )
 	{
@@ -211,9 +216,14 @@ void kickerInstrument::playNote( NotePlayHandle * _n,
 
 
 
-void kickerInstrument::deleteNotePluginData( NotePlayHandle * _n )
+void kickerInstrument::deleteNotePluginData( NotePlayHandle* _n )
 {
-	delete static_cast<SweepOsc *>( _n->m_pluginData );
+	SweepOsc* so=static_cast<SweepOsc*>(_n->m_pluginData);
+        if(so)
+        {
+                delete so;
+                _n->m_pluginData=NULL;
+        }
 }
 
 

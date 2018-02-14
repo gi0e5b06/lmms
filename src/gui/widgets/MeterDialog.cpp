@@ -53,6 +53,10 @@ MeterDialog::MeterDialog( QWidget * _parent, bool _simple ) :
 
 
 	m_numerator = new LcdSpinBox( 2, num, tr( "Meter Numerator" ) );
+	if( _simple )
+	{
+		m_numerator->setLabel( tr( "TIME SIG" ) );
+	}
 
 	num_layout->addWidget( m_numerator );
 
@@ -75,7 +79,7 @@ MeterDialog::MeterDialog( QWidget * _parent, bool _simple ) :
 	m_denominator = new LcdSpinBox( 2, den, tr( "Meter Denominator" ) );
 	if( _simple )
 	{
-		//m_denominator->setLabel( tr( "TIME SIG" ) );
+		m_denominator->setLabel( tr( "NATURE" ) );
 	}
 
 	den_layout->addWidget( m_denominator );

@@ -22,6 +22,8 @@
  *
  */
 
+#include <QFuture>
+#include <QtConcurrent>
 
 #include "Engine.h"
 #include "BBTrackContainer.h"
@@ -70,22 +72,35 @@ void LmmsCore::init( bool renderOnly )
         LmmsCore *engine = inst();
 
 	emit engine->initProgress(tr("Generating wavetables"));
-	// generate (load from file) bandlimited wavetables
-	BandLimitedWave::generateWaves();
+        QFuture<void> t1 = QtConcurrent::run(init1);
 
-	emit engine->initProgress(tr("Initializing data structures"));
-	s_projectJournal = new ProjectJournal;
+        emit engine->initProgress(tr("Initializing data structures"));
+        QFuture<void> t2 = QtConcurrent::run(init2);
+
 	emit engine->initProgress(tr("Initializing Ladspa effects"));
-	s_ladspaManager = new Ladspa2LMMS;
+        QFuture<void> t3 = QtConcurrent::run(init3);
+
 	emit engine->initProgress(tr("Initializing Mixer"));
-	s_mixer = new Mixer( renderOnly );
+        QFuture<void> t4 = QtConcurrent::run(init4,renderOnly);
+
+        t1.waitForFinished();
+        t2.waitForFinished();
+        t3.waitForFinished();
+        t4.waitForFinished();
+
 	emit engine->initProgress(tr("Initializing Song"));
-	s_song = new Song;
-	s_transport = s_song;
+        init5();
+        //QFuture<void> t5 = QtConcurrent::run(init5);
+        //t5.waitForFinished();
+
 	emit engine->initProgress(tr("Initializing FX Mixer"));
-	s_fxMixer = new FxMixer;
+        QFuture<void> t6 = QtConcurrent::run(init6);
+
 	emit engine->initProgress(tr("Initializing BB"));
-	s_bbTrackContainer = new BBTrackContainer;
+        QFuture<void> t7 = QtConcurrent::run(init7);
+
+        t6.waitForFinished();
+        t7.waitForFinished();
 
 	s_projectJournal->setJournalling( true );
 
@@ -93,14 +108,48 @@ void LmmsCore::init( bool renderOnly )
 	s_mixer->initDevices();
 
 	PresetPreviewPlayHandle::init();
-	s_dummyTC = new DummyTrackContainer;
+	s_dummyTC = new DummyTrackContainer();
 
 	emit engine->initProgress(tr("Launching mixer threads"));
 	s_mixer->startProcessing();
 }
 
+void LmmsCore::init1()
+{
+	// generate (load from file) bandlimited wavetables
+	BandLimitedWave::generateWaves();
+}
 
+void LmmsCore::init2()
+{
+	s_projectJournal = new ProjectJournal();
+}
 
+void LmmsCore::init3()
+{
+	s_ladspaManager = new Ladspa2LMMS();
+}
+
+void LmmsCore::init4(bool _renderOnly)
+{
+        s_mixer = new Mixer(_renderOnly);
+}
+
+void LmmsCore::init5()
+{
+	s_song = new Song();
+	s_transport = s_song;
+}
+
+void LmmsCore::init6()
+{
+	s_fxMixer = new FxMixer();
+}
+
+void LmmsCore::init7()
+{
+	s_bbTrackContainer = new BBTrackContainer();
+}
 
 void LmmsCore::destroy()
 {

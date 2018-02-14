@@ -261,9 +261,7 @@ AutomatedValueMap TrackContainer::automatedValuesFromTracks(const TrackList &tra
 
 	for (Track* track: tracks)
 	{
-		/*tmp if (track->isMuted()) {
-			continue;
-                        }*/
+		if(track->isMuted()) continue;
 
 		switch(track->type())
 		{

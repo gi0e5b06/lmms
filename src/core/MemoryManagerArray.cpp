@@ -9,7 +9,7 @@ MemoryManagerArray MemoryManagerArray::S4   (  512,   4);
 MemoryManagerArray MemoryManagerArray::S8   (   64,   8);
 MemoryManagerArray MemoryManagerArray::S16  (  256,  16);
 MemoryManagerArray MemoryManagerArray::S32  (  512,  32,"SampleBuffer::handleState");
-MemoryManagerArray MemoryManagerArray::S80  ( 2048,  80,"NotePlayHandle");
+MemoryManagerArray MemoryManagerArray::S80  ( 4096,  80,"NotePlayHandle");
 MemoryManagerArray MemoryManagerArray::S112 (  128, 112);
 MemoryManagerArray MemoryManagerArray::S128 (   64, 128);
 MemoryManagerArray MemoryManagerArray::S192 (  256, 192);

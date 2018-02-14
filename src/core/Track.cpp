@@ -180,7 +180,8 @@ void TrackContentObject::changeLength( const MidiTime & length )
 	emit lengthChanged();
 }
 
-bool TrackContentObject::comparePosition(const TrackContentObject *a, const TrackContentObject *b)
+bool TrackContentObject::comparePosition(const TrackContentObject *a,
+                                         const TrackContentObject *b)
 {
 	return a->startPosition() < b->startPosition();
 }

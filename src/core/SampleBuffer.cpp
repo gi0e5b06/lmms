@@ -290,7 +290,7 @@ void SampleBuffer::update( bool _keepSettings )
 #else
 		char * f = qstrdup( filename.toUtf8().constData() );
 #endif
-		int_sample_t * buf = NULL;
+		int_sample_t * ibuf = NULL;
 		sample_t * fbuf = NULL;
 		ch_cnt_t channels = DEFAULT_CHANNELS;
 
@@ -301,11 +301,15 @@ void SampleBuffer::update( bool _keepSettings )
 		{
 			fileLoadError = true;
 		}
+#ifdef LMMS_HAVE_MPG123
 		else
                 if(filename.endsWith(".mp3"))
                 {
-                        fileLoadError=true;
+                        //fileLoadError=true;
+                        m_frames = decodeSampleMPG123( f, fbuf, channels, samplerate );
+
                 }
+#endif
                 else
                 {
 			SNDFILE * snd_file;
@@ -325,13 +329,21 @@ void SampleBuffer::update( bool _keepSettings )
 
 		if( !fileLoadError )
 		{
+                        /*
+#ifdef LMMS_HAVE_MPG123
+			if( m_frames == 0 && fileInfo.suffix() == "mp3" )
+			{
+				m_frames = decodeSampleMPG123( f, fbuf, channels, samplerate );
+			}
+#endif
+                        */
 #ifdef LMMS_HAVE_OGGVORBIS
 			// workaround for a bug in libsndfile or our libsndfile decoder
 			// causing some OGG files to be distorted -> try with OGG Vorbis
 			// decoder first if filename extension matches "ogg"
 			if( m_frames == 0 && fileInfo.suffix() == "ogg" )
 			{
-				m_frames = decodeSampleOGGVorbis( f, buf, channels, samplerate );
+				m_frames = decodeSampleOGGVorbis( f, ibuf, channels, samplerate );
 			}
 #endif
 			if( m_frames == 0 )
@@ -341,12 +353,12 @@ void SampleBuffer::update( bool _keepSettings )
 #ifdef LMMS_HAVE_OGGVORBIS
 			if( m_frames == 0 )
 			{
-				m_frames = decodeSampleOGGVorbis( f, buf, channels, samplerate );
+				m_frames = decodeSampleOGGVorbis( f, ibuf, channels, samplerate );
 			}
 #endif
 			if( m_frames == 0 )
 			{
-				m_frames = decodeSampleDS( f, buf, channels, samplerate );
+				m_frames = decodeSampleDS( f, ibuf, channels, samplerate );
 			}
 
 			delete[] f;
@@ -1558,6 +1570,141 @@ void SampleBuffer::setAudioFile( const QString & _audio_file )
 	update();
 }
 
+#ifdef LMMS_HAVE_MPG123
+
+//#include <out123.h>
+//#include <mpg123.h>
+//#include <stdio.h>
+//#include <strings.h>
+
+
+void SampleBuffer::cleanupMPG123(void* mh)
+{
+        /* It's really to late for error checks here;-) */
+        mpg123_close((mpg123_handle*)mh);
+        mpg123_delete((mpg123_handle*)mh);
+        mpg123_exit();
+}
+
+
+f_cnt_t SampleBuffer::decodeSampleMPG123(const char* _infile,
+                                         sample_t* & buf_,
+                                         ch_cnt_t & channels_,
+                                         sample_rate_t & samplerate_ )
+{
+        mpg123_handle *mh = NULL;
+        //char *driver = NULL;
+        //char *outfile = NULL;
+        //const char *encname;
+        unsigned char* buffer = NULL;
+        size_t buffer_size = 0;
+        size_t done = 0;
+        int channels = 0;
+        int encoding = 0;
+        int framesize = 1;
+        long rate = 0;
+        int err = MPG123_OK;
+        off_t samples = 0;
+
+        err = mpg123_init();
+        if(err != MPG123_OK || (mh = mpg123_new(NULL, &err)) == NULL)
+        {
+                qCritical("libmpg123: setup goes wrong: %s",
+                          mpg123_plain_strerror(err));
+                cleanupMPG123(mh);
+                return -1;
+        }
+
+        mpg123_format_none(mh);
+        mpg123_format(mh, 48000, MPG123_STEREO, MPG123_ENC_FLOAT_32);
+        mpg123_format(mh, 44100, MPG123_STEREO, MPG123_ENC_FLOAT_32);
+        mpg123_format(mh, 32000, MPG123_STEREO, MPG123_ENC_FLOAT_32);
+        mpg123_format(mh, 24000, MPG123_STEREO, MPG123_ENC_FLOAT_32);
+        mpg123_format(mh, 22050, MPG123_STEREO, MPG123_ENC_FLOAT_32);
+        mpg123_format(mh, 16000, MPG123_STEREO, MPG123_ENC_FLOAT_32);
+        mpg123_format(mh, 12000, MPG123_STEREO, MPG123_ENC_FLOAT_32);
+        mpg123_format(mh, 11025, MPG123_STEREO, MPG123_ENC_FLOAT_32);
+        mpg123_format(mh,  8000, MPG123_STEREO, MPG123_ENC_FLOAT_32);
+
+        mpg123_param(mh, MPG123_VERBOSE,  2, 2.);
+        mpg123_param(mh, MPG123_ADD_FLAGS, MPG123_FORCE_FLOAT, 0.);
+        mpg123_param(mh, MPG123_ADD_FLAGS, MPG123_FORCE_STEREO | MPG123_FUZZY, 0.);
+
+        /* Let mpg123 work with the file, that excludes MPG123_NEED_MORE
+           messages. */
+        if( mpg123_open(mh,_infile) != MPG123_OK
+            /* Peek into track and get first output format. */
+            || mpg123_getformat(mh,&rate,&channels,&encoding) != MPG123_OK )
+        {
+                qWarning("libmpg123: could not open: %s", mpg123_strerror(mh) );
+                cleanupMPG123(mh);
+                return -1;
+        }
+
+        //qInfo("libmpg123: rate=%ld, channels=%d, encoding=%d",
+        //      rate,channels,encoding);
+
+        //encoding=MPG123_ENC_FLOAT_32;//MPG123_FORCE_STEREO|MPG123_FORCE_FLOAT;
+        //mpg123_param(mh, MPG123_OUTSCALE, 1, 1.);
+        //rate=m_sampleRate;
+        //channels=2;
+        //encoding=1;
+
+        /* Ensure that this output format will not change
+           (it might, when we allow it). */
+        mpg123_format_none(mh);
+        mpg123_format(mh,rate,channels,encoding);
+
+        framesize=mpg123_encsize(encoding);
+        //channels*sizeof(float);
+        //framesize=sizeof(sample_t)=sizeof(float)=4
+
+        qInfo("libmpg123: rate=%ld, channels=%d, encoding=%d, framesize=%d",
+              rate,channels,encoding,framesize);
+
+        QByteArray b;
+        /* Buffer could be almost any size here, mpg123_outblock() is just
+           some recommendation. The size should be a multiple of the PCM
+           frame size. */
+        buffer_size = mpg123_outblock(mh);
+        buffer = MM_ALLOC(unsigned char,buffer_size);
+
+        size_t played=0;
+        do
+        {
+                err = mpg123_read( mh, buffer, buffer_size, &done );
+                b.append((const char*)buffer,done);
+                played+=done;
+                //qInfo("libmpg123: done=%ld played=%ld",done,played);
+
+                samples += done/framesize;
+                /* We are not in feeder mode, so MPG123_OK, MPG123_ERR and
+                   MPG123_NEW_FORMAT are the only possibilities.
+                   We do not handle a new format, MPG123_DONE is the end... so
+                   abort on anything not MPG123_OK. */
+        } while (done && err==MPG123_OK);
+
+        MM_FREE(buffer);
+
+        if(err != MPG123_DONE)
+                qWarning("Warning: Decoding ended prematurely because: %s",
+                         err == MPG123_ERR
+                         ? mpg123_strerror(mh)
+                         : mpg123_plain_strerror(err) );
+
+        qInfo("libmpg123: %li samples", (long)samples);
+        cleanupMPG123(mh);
+
+        buf_=new sample_t[samples];
+        memcpy(buf_,b.constData(),samples*sizeof(sample_t));
+        directFloatWrite( buf_, samples/channels, channels );
+
+        channels_=channels;
+        samplerate_=rate;
+        return samples/channels;
+}
+
+#endif
 
 
 #ifdef LMMS_HAVE_FLAC_STREAM_DECODER_H

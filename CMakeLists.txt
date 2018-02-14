@@ -51,6 +51,7 @@ OPTION(WANT_CAPS	"Include C* Audio Plugin Suite (LADSPA plugins)" ON)
 OPTION(WANT_CARLA	"Include Carla plugin" ON)
 OPTION(WANT_CMT		"Include Computer Music Toolkit LADSPA plugins" ON)
 OPTION(WANT_JACK	"Include JACK (Jack Audio Connection Kit) support" ON)
+OPTION(WANT_MPG123	"Include MP3/mpg123 support" ON)
 OPTION(WANT_MP3LAME	"Include MP3/Lame support" ON)
 OPTION(WANT_OGGVORBIS	"Include OGG/Vorbis support" ON)
 OPTION(WANT_OSS		"Include OSS (Open Sound System) support" ON)
@@ -140,6 +141,7 @@ IF(WANT_QT5)
 	SET(QT5 TRUE)
 
 	FIND_PACKAGE(Qt5Core REQUIRED)
+	FIND_PACKAGE(Qt5Concurrent REQUIRED)
 	FIND_PACKAGE(Qt5Gui REQUIRED)
 	FIND_PACKAGE(Qt5LinguistTools)
 	FIND_PACKAGE(Qt5Widgets REQUIRED)
@@ -147,6 +149,7 @@ IF(WANT_QT5)
 
 	INCLUDE_DIRECTORIES(
 		${Qt5Core_INCLUDE_DIRS}
+		${Qt5Concurrent_INCLUDE_DIRS}
 		${Qt5Gui_INCLUDE_DIRS}
 		${Qt5Widgets_INCLUDE_DIRS}
 		${Qt5Xml_INCLUDE_DIRS}
@@ -154,6 +157,7 @@ IF(WANT_QT5)
 
 	SET(QT_LIBRARIES
 		Qt5::Core
+		Qt5::Concurrent
 		Qt5::Gui
 		Qt5::Widgets
 		Qt5::Xml
@@ -332,6 +336,21 @@ IF(NOT LMMS_HAVE_PULSEAUDIO)
 	SET(PULSEAUDIO_LIBRARIES "")
 ENDIF(NOT LMMS_HAVE_PULSEAUDIO)
 
+
+# check for MP3/mpg123-library
+IF(WANT_MPG123)
+	FIND_PACKAGE(MPG123)
+	IF(MPG123_FOUND)
+		SET(LMMS_HAVE_MPG123 TRUE)
+		SET(STATUS_MPG123 "OK")
+	ELSE(MPG123_FOUND)
+		SET(STATUS_MPG123 "not found, please install libmpg123-dev (or similar)")
+		SET(MPG123_LIBRARIES "")
+		SET(MPG123_INCLUDE_DIRS "")
+	ENDIF(MPG123_FOUND)
+ELSE(WANT_MPG123)
+	SET(STATUS_MPG123 "Disabled for build")
+ENDIF(WANT_MPG123)
 
 # check for MP3/Lame-libraries
 IF(WANT_MP3LAME)
@@ -639,6 +658,13 @@ MESSAGE(
 "* JACK                        : ${STATUS_JACK}\n"
 "* WinMM                       : ${STATUS_WINMM}\n"
 "* AppleMidi                   : ${STATUS_APPLEMIDI}\n"
+)
+
+MESSAGE(
+"Supported file formats for project import\n"
+"-----------------------------------------\n"
+"* libsndfile                  : OK\n"
+"* libmpg123                   : ${STATUS_MPG123}\n"
 )
 
 MESSAGE(

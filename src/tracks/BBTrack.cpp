@@ -85,7 +85,7 @@ void BBTCO::saveSettings( QDomDocument & doc, QDomElement & element )
 	element.setAttribute( "len", length() );
 	element.setAttribute( "muted", isMuted() );
 	element.setAttribute( "color", color() );
-	
+
 	if( m_useStyleColor )
 	{
 		element.setAttribute( "usestyle", 1 );
@@ -116,7 +116,7 @@ void BBTCO::loadSettings( const QDomElement & element )
 	{
 		setColor( QColor( element.attribute( "color" ).toUInt() ) );
 	}
-	
+
 	if( element.hasAttribute( "usestyle" ) )
 	{
 		if( element.attribute( "usestyle" ).toUInt() == 1 ) 

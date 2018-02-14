@@ -121,8 +121,16 @@ signals:
 
 
 private:
-	// small helper function which sets the pointer to NULL before actually deleting
-	// the object it refers to
+        static void init1();
+        static void init2();
+        static void init3();
+        static void init4(bool _renderOnly);
+        static void init5();
+        static void init6();
+        static void init7();
+
+	// small helper function which sets the pointer to NULL before
+        // actually deleting the object it refers to
 	template<class T>
 	static inline void deleteHelper( T * * ptr )
 	{

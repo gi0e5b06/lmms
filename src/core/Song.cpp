@@ -468,7 +468,9 @@ void Song::processAutomations(const TrackList &tracklist, MidiTime timeStart, fp
 	Track::tcoVector tcos;
 	for (Track* track : tracks)
 	{
-		if (track->type() == Track::AutomationTrack) {
+		if((track->type()==Track::AutomationTrack)&&
+                   !track->isMuted())
+                {
 			track->getTCOsInRange(tcos, 0, timeStart);
 		}
 	}
@@ -476,7 +478,7 @@ void Song::processAutomations(const TrackList &tracklist, MidiTime timeStart, fp
 	// Process recording
 	for (TrackContentObject* tco : tcos)
 	{
-		auto p = dynamic_cast<AutomationPattern *>(tco);
+		auto p = dynamic_cast<AutomationPattern*>(tco);
                 if(!p) continue;
 
 		MidiTime relTime = timeStart - p->startPosition();

@@ -814,6 +814,7 @@ bool InstrumentFunctionNoteDuplicatesRemoving::processNote(NotePlayHandle* _n)
         {
 		//qInfo("InstrumentFunctionNoteDuplicatesRemoving: HIT CACHE");
                 mtx.unlock();
+                _n->noteOff(); //???? kicker
                 return false;
 	}
 

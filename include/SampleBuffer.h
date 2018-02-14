@@ -29,6 +29,10 @@
 #include <QtCore/QReadWriteLock>
 #include <QtCore/QObject>
 
+#ifdef LMMS_HAVE_MPG123
+#include <mpg123.h>
+#endif
+
 #include <samplerate.h>
 
 #include "export.h"
@@ -269,6 +273,14 @@ private:
 	f_cnt_t decodeSampleSF( const char * _f, sample_t * & _buf,
 				ch_cnt_t & _channels,
 				sample_rate_t & _sample_rate );
+#ifdef LMMS_HAVE_MPG123
+        void cleanupMPG123(void* mh);
+        f_cnt_t decodeSampleMPG123(const char* _f,
+                                   sample_t* & _buf,
+                                   ch_cnt_t & _channels,
+                                   sample_rate_t & _samplerate);
+#endif
+
 #ifdef LMMS_HAVE_OGGVORBIS
 	f_cnt_t decodeSampleOGGVorbis( const char * _f, int_sample_t * & _buf,
 				       ch_cnt_t & _channels,

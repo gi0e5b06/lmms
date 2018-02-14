@@ -39,7 +39,7 @@ class KickerOsc
 {
 	MM_OPERATORS
 public:
-	KickerOsc( const FX & fx, const float start, const float end, const float noise, const float offset, 
+	KickerOsc( const FX & fx, const float start, const float end, const float noise, const float offset,
 		const float slope, const float env, const float diststart, const float distend, const float length ) :
 		m_phase( offset ),
 		m_startFreq( start ),
@@ -65,11 +65,21 @@ public:
 	{
 		for( fpp_t frame = 0; frame < frames; ++frame )
 		{
-			const double gain = ( 1 - fastPow( ( m_counter < m_length ) ? m_counter / m_length : 1, m_env ) );
-			const sample_t s = ( Oscillator::sinSample( m_phase ) * ( 1 - m_noise ) ) + ( Oscillator::noiseSample( 0 ) * gain * gain * m_noise );
-			buf[frame][0] = s * gain;
-			buf[frame][1] = s * gain;
-			
+			//const double gain = ( 1 - fastPow( ( m_counter < m_length ) ? m_counter / m_length : 1, m_env ) );
+                        if(m_counter < m_length)
+                        {
+                                const float gain = 1.f - fastPow( m_counter / m_length, m_env );
+                                const sample_t s = ( Oscillator::sinSample( m_phase ) * ( 1 - m_noise ) ) +
+                                                   ( Oscillator::noiseSample( 0 ) * gain * gain * m_noise );
+                                buf[frame][0] = s * gain;
+                                buf[frame][1] = s * gain;
+                        }
+                        else
+                        {
+                                buf[frame][0] = 0.f;
+                                buf[frame][1] = 0.f;
+                        }
+
 			// update distortion envelope if necessary
 			if( m_hasDistEnv && m_counter < m_length )
 			{
@@ -77,12 +87,15 @@ public:
 				m_FX.leftFX().setThreshold( thres );
 				m_FX.rightFX().setThreshold( thres );
 			}
-			
+
 			m_FX.nextSample( buf[frame][0], buf[frame][1] );
 			m_phase += m_freq / sampleRate;
 
-			const double change = ( m_counter < m_length ) ? ( ( m_startFreq - m_endFreq ) * ( 1 - fastPow( m_counter / m_length, m_slope ) ) ) : 0;
-			m_freq = m_endFreq + change;
+                        if(m_counter < m_length)
+                        {
+                                const double change = ( ( m_startFreq - m_endFreq ) * ( 1 - fastPow( m_counter / m_length, m_slope ) ) );
+                                m_freq = m_endFreq + change;
+                        }
 			++m_counter;
 		}
 	}
