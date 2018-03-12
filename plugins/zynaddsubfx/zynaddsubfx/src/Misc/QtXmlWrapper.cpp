@@ -504,7 +504,7 @@ float QtXmlWrapper::getparreal(const char *name, float defaultpar) const
 		return defaultpar;
 	}
 
-    return tmp.attribute( "value" ).toFloat();
+	return QLocale().toFloat( tmp.attribute( "value" ) );
 }
 
 float QtXmlWrapper::getparreal(const char *name,
