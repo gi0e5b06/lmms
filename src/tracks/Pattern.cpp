@@ -102,12 +102,12 @@ Pattern::~Pattern()
 {
 	emit destroyedPattern( this );
 
+        //clearNotes();
 	for( NoteVector::Iterator it = m_notes.begin();
-						it != m_notes.end(); ++it )
+             it != m_notes.end(); ++it )
 	{
 		delete *it;
 	}
-
 	m_notes.clear();
 }
 
@@ -301,14 +301,18 @@ void Pattern::rearrangeAllNotes()
 
 void Pattern::clearNotes()
 {
-	instrumentTrack()->lock();
-	for( NoteVector::Iterator it = m_notes.begin(); it != m_notes.end();
-									++it )
-	{
-		delete *it;
-	}
-	m_notes.clear();
-	instrumentTrack()->unlock();
+        if(m_notes.size()>0)
+        {
+                if(instrumentTrack()) instrumentTrack()->lock();
+                for( NoteVector::Iterator it = m_notes.begin();
+                     it != m_notes.end(); ++it )
+                {
+                        //qInfo("deleting note %p pattern %p",*it,this);
+                        delete *it;
+                }
+                m_notes.clear();
+                if(instrumentTrack()) instrumentTrack()->unlock();
+        }
 
 	checkType();
 	emit dataChanged();

@@ -84,6 +84,7 @@ Note::Note( const Note & note ) :
 
 Note::~Note()
 {
+        //qInfo("deleting note %p",this);
 	if( m_detuning )
 	{
 		sharedObject::unref( m_detuning );

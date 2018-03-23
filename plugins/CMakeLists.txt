@@ -70,6 +70,7 @@ IF("${PLUGIN_LIST}" STREQUAL "")
 		peak_controller_effect
 		GigPlayer
 		ReverbSC
+		ScatterGDX
 		sf2_player
 		sfxr
 		sid

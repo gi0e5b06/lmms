@@ -734,7 +734,6 @@ int main( int argc, char * * argv )
 
 
 	// try to set realtime priority
-        /*
 #ifdef LMMS_BUILD_LINUX
 #ifdef LMMS_HAVE_SCHED_H
 #ifndef __OpenBSD__
@@ -743,12 +742,11 @@ int main( int argc, char * * argv )
 				sched_get_priority_min( SCHED_FIFO ) ) / 2;
 	if( sched_setscheduler( 0, SCHED_FIFO, &sparam ) == -1 )
 	{
-		qWarning( "Notice: could not set realtime priority." );
+		qInfo( "Notice: could not set realtime priority." );
 	}
 #endif
 #endif
 #endif
-        */
 
 #ifdef LMMS_BUILD_WIN32
 	if( !SetPriorityClass( GetCurrentProcess(), HIGH_PRIORITY_CLASS ) )

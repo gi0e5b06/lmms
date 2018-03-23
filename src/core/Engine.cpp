@@ -71,21 +71,18 @@ void LmmsCore::init( bool renderOnly )
 
         LmmsCore *engine = inst();
 
-	emit engine->initProgress(tr("Generating wavetables"));
         QFuture<void> t1 = QtConcurrent::run(init1);
-
-        emit engine->initProgress(tr("Initializing data structures"));
         QFuture<void> t2 = QtConcurrent::run(init2);
-
-	emit engine->initProgress(tr("Initializing Ladspa effects"));
         QFuture<void> t3 = QtConcurrent::run(init3);
-
-	emit engine->initProgress(tr("Initializing Mixer"));
         QFuture<void> t4 = QtConcurrent::run(init4,renderOnly);
 
+	emit engine->initProgress(tr("Generating wavetables"));
         t1.waitForFinished();
+        emit engine->initProgress(tr("Initializing data structures"));
         t2.waitForFinished();
+	emit engine->initProgress(tr("Initializing Ladspa effects"));
         t3.waitForFinished();
+	emit engine->initProgress(tr("Initializing Mixer"));
         t4.waitForFinished();
 
 	emit engine->initProgress(tr("Initializing Song"));
@@ -94,12 +91,13 @@ void LmmsCore::init( bool renderOnly )
         //t5.waitForFinished();
 
 	emit engine->initProgress(tr("Initializing FX Mixer"));
-        QFuture<void> t6 = QtConcurrent::run(init6);
+        //QFuture<void> t6 = QtConcurrent::run(init6);
+	s_fxMixer = new FxMixer();
 
 	emit engine->initProgress(tr("Initializing BB"));
         QFuture<void> t7 = QtConcurrent::run(init7);
 
-        t6.waitForFinished();
+        //t6.waitForFinished();
         t7.waitForFinished();
 
 	s_projectJournal->setJournalling( true );
@@ -143,7 +141,6 @@ void LmmsCore::init5()
 
 void LmmsCore::init6()
 {
-	s_fxMixer = new FxMixer();
 }
 
 void LmmsCore::init7()
