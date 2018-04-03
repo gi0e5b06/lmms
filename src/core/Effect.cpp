@@ -204,10 +204,9 @@ void Effect::reinitSRC()
 
 
 
-void Effect::resample( int _i, const sampleFrame * _src_buf,
-							sample_rate_t _src_sr,
-				sampleFrame * _dst_buf, sample_rate_t _dst_sr,
-								f_cnt_t _frames )
+void Effect::resample( int _i, const sampleFrame * _src_buf, sample_rate_t _src_sr,
+                       sampleFrame * _dst_buf, sample_rate_t _dst_sr,
+                       f_cnt_t _frames )
 {
 	if( m_srcState[_i] == NULL )
 	{

@@ -470,8 +470,8 @@ void SampleBuffer::update( bool _keepSettings )
                 prefetch(0);
                 prefetch(m_startFrame);
                 prefetch(m_loopStartFrame);
-                prefetch(m_endFrame    -8*4096);
-                prefetch(m_loopEndFrame-8*4096);
+                prefetch(m_endFrame    -4096);
+                prefetch(m_loopEndFrame-4096);
         }
 }
 
@@ -810,10 +810,10 @@ void SampleBuffer::prefetch(f_cnt_t _index)
 {
         if(!m_data) return;
         // prefetch. should be done in a separate thread
-        // 4096=typical OS page size
+        // 4096=typical OS page size / sizeof(float) / nbch
         for(int j=1;j<9;j++)
         {
-                int i=qMax(0,qMin(m_frames-1,_index+j*4096));
+                int i=qMax(0,qMin(m_frames-1,_index+j*512));
                 ::tmp_prefetch_for_mmapped_files=m_data[i][1];
         }
 }
