@@ -405,7 +405,10 @@ bool Knob::updateAngle()
 	if( m )//&& m->maxValue() != m->minValue() )
 	{
 		//angle = angleFromValue( m->inverseScaledValue( m->value() ), m->minValue(), m->maxValue(), m_totalAngle );
-                angle=m_totalAngle*(m->normalizedValue(m->value())-0.5f);
+                float v=m->minValue()+qRound( (m->value()-m->minValue()) /
+                                              m->step<float>() ) * m->step<float>();
+                v=m->normalizedValue(v);
+                angle=m_totalAngle*(v-0.5f);
 	}
 	if( qAbs( angle - m_angle ) > 3.f )
 	{

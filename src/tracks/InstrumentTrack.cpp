@@ -75,10 +75,10 @@
 #include "TrackLabelButton.h"
 
 
-const char * volume_help = QT_TRANSLATE_NOOP( "InstrumentTrack",
-						"With this knob you can set "
-						"the volume of the opened "
-						"channel.");
+const char* ITVOLHELP = QT_TRANSLATE_NOOP( "InstrumentTrack",
+                                           "With this knob you can set "
+                                           "the volume of the opened "
+                                           "channel.");
 
 const int INSTRUMENT_WIDTH	= 254;
 const int INSTRUMENT_HEIGHT	= INSTRUMENT_WIDTH;
@@ -779,11 +779,13 @@ void InstrumentTrack::loadTrackSpecificSettings( const QDomElement & thisElement
 	m_panningModel.loadSettings( thisElement, "pan" );
 	m_pitchRangeModel.loadSettings( thisElement, "pitchrange" );
 	m_pitchModel.loadSettings( thisElement, "pitch" );
+
 	m_effectChannelModel.setRange( 0, Engine::fxMixer()->numChannels()-1 );
 	if ( !m_previewMode )
 	{
 		m_effectChannelModel.loadSettings( thisElement, "fxch" );
 	}
+
 	m_baseNoteModel.loadSettings( thisElement, "basenote" );
 	m_useMasterPitchModel.loadSettings( thisElement, "usemasterpitch");
 
@@ -892,8 +894,8 @@ QQueue<InstrumentTrackWindow *> InstrumentTrackView::s_windowCache;
 
 
 
-InstrumentTrackView::InstrumentTrackView( InstrumentTrack * _it, TrackContainerView* tcv ) :
-	TrackView( _it, tcv ),
+InstrumentTrackView::InstrumentTrackView( InstrumentTrack * _it, TrackContainerView* _tcv ) :
+	TrackView( _it, _tcv ),
 	m_window( NULL ),
 	m_lastPos( -1, -1 )
 {
@@ -933,7 +935,7 @@ InstrumentTrackView::InstrumentTrackView( InstrumentTrack * _it, TrackContainerV
 	m_volumeKnob->move( widgetWidth-2*29, 3 );//24,2
 	//m_volumeKnob->setLabel( tr( "VOL" ) );
 	m_volumeKnob->show();
-	m_volumeKnob->setWhatsThis( tr( volume_help ) );
+	m_volumeKnob->setWhatsThis( tr( ITVOLHELP ) );
 
 	m_panningKnob = new Knob( knobBright_26, //knobSmall_17,
 				  getTrackSettingsWidget(),
@@ -1099,7 +1101,7 @@ void InstrumentTrackView::cleanupWindowCache()
 
 
 
-InstrumentTrackWindow * InstrumentTrackView::getInstrumentTrackWindow()
+InstrumentTrackWindow * InstrumentTrackView::instrumentTrackWindow()
 {
 	if( m_window != NULL )
 	{
@@ -1166,7 +1168,7 @@ void InstrumentTrackView::dragEnterEvent( QDragEnterEvent * _dee )
 
 void InstrumentTrackView::dropEvent( QDropEvent * _de )
 {
-	getInstrumentTrackWindow()->dropEvent( _de );
+	instrumentTrackWindow()->dropEvent( _de );
 	TrackView::dropEvent( _de );
 }
 
@@ -1175,7 +1177,7 @@ void InstrumentTrackView::dropEvent( QDropEvent * _de )
 
 void InstrumentTrackView::toggleInstrumentWindow( bool _on )
 {
-	getInstrumentTrackWindow()->toggleVisibility( _on );
+	instrumentTrackWindow()->toggleVisibility( _on );
 
 	if( !_on )
 	{
@@ -1475,7 +1477,7 @@ InstrumentTrackWindow::InstrumentTrackWindow( InstrumentTrackView * _itv ) :
 	m_volumeKnob = new Knob( knobBright_26, NULL, tr( "Instrument volume" ) );
 	m_volumeKnob->setVolumeKnob( true );
 	m_volumeKnob->setHintText( tr( "Volume:" ), "%" );
-	m_volumeKnob->setWhatsThis( tr( volume_help ) );
+	m_volumeKnob->setWhatsThis( tr( ITVOLHELP ) );
 
 	basicControlsLayout->addWidget( m_volumeKnob, 0, 0 );
 	basicControlsLayout->setAlignment( m_volumeKnob, widgetAlignment );
@@ -1982,12 +1984,12 @@ void InstrumentTrackWindow::viewInstrumentInDirection(int d)
 
 		// enable the new window by checking its track list button & moving it to where our window just was
 		newView->m_tlb->setChecked(true);
-		newView->getInstrumentTrackWindow()->parentWidget()->move(curPos);
+		newView->instrumentTrackWindow()->parentWidget()->move(curPos);
 
 		// scroll the SongEditor/BB-editor to make sure the new trackview label is visible
 		bringToFront->trackContainerView()->scrollToTrackView(bringToFront);
 	}
-	bringToFront->getInstrumentTrackWindow()->setFocus();
+	bringToFront->instrumentTrackWindow()->setFocus();
 }
 
 void InstrumentTrackWindow::viewNextInstrument()

@@ -25,14 +25,20 @@
 #ifndef SAMPLE_TRACK_H
 #define SAMPLE_TRACK_H
 
-#include <QDialog>
+//#include <QDialog>
 
 #include "AudioPort.h"
 #include "Track.h"
 
-class EffectRackView;
-class Knob;
+class QLineEdit;
+class QLabel;
+class LedCheckBox;
 class SampleBuffer;
+class EffectRackView;
+class FadeButton;
+class Knob;
+class TabWidget;
+class TrackLabelButton;
 
 
 class SampleTCO : public TrackContentObject
@@ -143,25 +149,55 @@ public:
 							QDomElement & _parent );
 	virtual void loadTrackSpecificSettings( const QDomElement & _this );
 
-	inline AudioPort * audioPort()
+	const AudioPort * audioPort() const
 	{
 		return &m_audioPort;
 	}
 
-	virtual QString nodeName() const
+	AudioPort * audioPort()
 	{
-		return "sampletrack";
+		return &m_audioPort;
 	}
+
+	FloatModel * volumeModel()
+	{
+		return &m_volumeModel;
+	}
+
+	FloatModel * panningModel()
+	{
+		return &m_panningModel;
+	}
+
+	IntModel * effectChannelModel()
+	{
+		return &m_effectChannelModel;
+	}
+
 
 public slots:
 	void updateTcos();
 	void setPlayingTcos( bool isPlaying );
 
-private:
+
+ protected:
+	virtual QString nodeName() const
+	{
+		return "sampletrack";
+	}
+
+
+ protected slots:
+	void updateEffectChannel();
+
+
+ private:
 	FloatModel m_volumeModel;
 	FloatModel m_panningModel;
+
 	AudioPort m_audioPort;
 
+	IntModel m_effectChannelModel;
 
 
 	friend class SampleTrackView;
@@ -174,29 +210,188 @@ class SampleTrackView : public TrackView
 {
 	Q_OBJECT
 public:
-	SampleTrackView( SampleTrack* Track, TrackContainerView* tcv );
+	SampleTrackView( SampleTrack* _st, TrackContainerView* _tcv );
 	virtual ~SampleTrackView();
 
+	//SampleTrackWindow* sampleTrackWindow();
+        QWidget* sampleTrackWindow();
+
+	SampleTrack * model()
+	{
+		return castModel<SampleTrack>();
+	}
+
+	const SampleTrack * model() const
+	{
+		return castModel<SampleTrack>();
+	}
+
+	void freeSampleTrackWindow();
+
+	// Create a menu for assigning/creating channels for this track
+	QMenu * createFxMenu( QString title, QString newFxLabel );
+
+        QMenu* createAudioInputMenu();
+        QMenu* createAudioOutputMenu();
+        //QMenu* createMidiInputMenu();
+        //QMenu* createMidiOutputMenu();
 
 public slots:
-	void showEffects();
+	//void showEffects();
+	//void textChanged( const QString & _new_name );
+	//void toggleVisibility( bool _on );
+	//void updateName();
+	//void updateSampleView();
 
 
 protected:
-	void modelChanged();
+	virtual void resizeEvent( QResizeEvent * _re );
+	virtual void dragEnterEvent( QDragEnterEvent * _dee );
+	virtual void dropEvent( QDropEvent * _de );
+
+        void modelChanged();
 	virtual QString nodeName() const
 	{
 		return "SampleTrackView";
 	}
 
 
+private slots:
+	void toggleSampleWindow( bool _on );
+	void activityIndicatorPressed();
+	void activityIndicatorReleased();
+
+	//void midiInSelected();
+	//void midiOutSelected();
+	//void midiConfigChanged();
+	void muteChanged();
+
+	void assignFxLine( int channelIndex );
+	void createFxLine();
+
+
 private:
+        //SampleTrackWindow* m_window;
+        QWidget* m_window;
 	EffectRackView * m_effectRack;
-	QWidget * m_effWindow;
-	Knob * m_volumeKnob;
+	//QWidget * m_effWindow;
+
+	// widgets in track-settings-widget
+	TrackLabelButton * m_tlb;
+        Knob * m_volumeKnob;
 	Knob * m_panningKnob;
+	FadeButton * m_activityIndicator;
+
+	QPoint m_lastPos;
+
+
+	//friend class SampleTrackWindow;
 
 } ;
+
+
+/*
+class SampleTrackWindow : public QWidget, public ModelView //, public SerializingObjectHook
+{
+	Q_OBJECT
+public:
+	SampleTrackWindow( SampleTrackView* _stv );
+	virtual ~SampleTrackWindow();
+
+	// parent for all internal tab-widgets
+	TabWidget * tabWidgetParent()
+	{
+		return m_tabWidget;
+	}
+
+	SampleTrack * model()
+	{
+		return castModel<SampleTrack>();
+	}
+
+	const SampleTrack * model() const
+	{
+		return castModel<SampleTrack>();
+	}
+
+	void setSampleTrackView( SampleTrackView * _stv );
+
+	SampleTrackView* sampleTrackView()
+	{
+		return m_stv;
+	}
+
+	//PianoView * pianoView()
+	//{
+	//	return m_pianoView;
+	//}
+
+	//static void dragEnterEventGeneric( QDragEnterEvent * _dee );
+
+	//virtual void dragEnterEvent( QDragEnterEvent * _dee );
+	//virtual void dropEvent( QDropEvent * _de );
+
+public slots:
+	//void textChanged( const QString & _new_name );
+	void toggleVisibility( bool _on );
+	//void updateName();
+	//void updateSampleView();
+
+
+protected:
+	// capture close-events for toggling instrument-track-button
+	//virtual void closeEvent( QCloseEvent * _ce );
+	//virtual void focusInEvent( QFocusEvent * _fe );
+
+	//virtual void saveSettings( QDomDocument & _doc, QDomElement & _this );
+	//virtual void loadSettings( const QDomElement & _this );
+
+
+protected slots:
+	//void saveSettingsBtnClicked();
+	//void viewNextSample();
+	//void viewPrevSample();
+
+private:
+	virtual void modelChanged();
+	//void viewSampleInDirection(int d);
+
+	SampleTrack * m_track;
+	SampleTrackView * m_stv;
+
+	// widgets on the top of an instrument-track-window
+	QLineEdit * m_nameLineEdit;
+	//LeftRightNav * m_leftRightNav;
+	Knob * m_volumeKnob;
+	Knob * m_panningKnob;
+	//Knob * m_pitchKnob;
+	//QLabel * m_pitchLabel;
+	//LcdSpinBox* m_pitchRangeSpinBox;
+	//QLabel * m_pitchRangeLabel;
+	LcdSpinBox * m_effectChannelNumber;
+
+
+
+	// tab-widget with all children
+	TabWidget * m_tabWidget;
+	//PluginView * m_instrumentView;
+	//SampleSoundShapingView * m_ssView;
+	//SampleFunctionNoteHumanizingView* m_noteHumanizingView;
+	//SampleFunctionNoteStackingView* m_noteStackingView;
+	//SampleFunctionArpeggioView* m_arpeggioView;
+	//SampleFunctionNoteDuplicatesRemovingView* m_noteDuplicatesRemovingView;
+	//SampleMidiIOView * m_midiView;
+	EffectRackView * m_effectView;
+	//SampleMiscView *m_miscView;
+
+
+	// test-piano at the bottom of every instrument-settings-window
+	//PianoView * m_pianoView;
+
+	friend class SampleView;
+
+} ;
+*/
 
 
 #endif

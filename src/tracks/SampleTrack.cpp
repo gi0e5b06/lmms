@@ -22,7 +22,6 @@
  * Boston, MA 02110-1301 USA.
  *
  */
-#include "SampleTrack.h"
 
 #include <QDropEvent>
 #include <QFileInfo>
@@ -33,6 +32,47 @@
 #include <QPainter>
 #include <QPushButton>
 
+//#include "FileDialog.h"
+#include "SampleTrack.h"
+//#include "AutomationPattern.h"
+#include "BBTrack.h"
+//#include "CaptionMenu.h"
+#include "ConfigManager.h"
+//#include "ControllerConnection.h"
+#include "EffectChain.h"
+#include "EffectRackView.h"
+#include "embed.h"
+//#include "FileBrowser.h"
+#include "FxMixer.h"
+#include "FxMixerView.h"
+#include "GuiApplication.h"
+//#include "InstrumentSoundShapingView.h"
+#include "FadeButton.h"
+#include "gui_templates.h"
+//#include "Instrument.h"
+//#include "InstrumentFunctionViews.h"
+//#include "InstrumentMidiIOView.h"
+#include "Knob.h"
+#include "LcdSpinBox.h"
+#include "LedCheckbox.h"
+#include "LeftRightNav.h"
+#include "MainWindow.h"
+//#include "MidiClient.h"
+//#include "MidiPortMenu.h"
+#include "Mixer.h"
+#include "MixHelpers.h"
+//#include "Pattern.h"
+//#include "PluginFactory.h"
+//#include "PluginView.h"
+#include "SamplePlayHandle.h"
+#include "SampleRecordHandle.h"
+#include "Song.h"
+#include "StringPairDrag.h"
+#include "TimeLineWidget.h"
+//#include "TrackContainerView.h"
+#include "TrackLabelButton.h"
+
+/*
 #include "gui_templates.h"
 #include "GuiApplication.h"
 #include "Song.h"
@@ -49,6 +89,12 @@
 #include "Mixer.h"
 #include "EffectRackView.h"
 #include "TrackLabelButton.h"
+*/
+
+const char* STVOLHELP = QT_TRANSLATE_NOOP( "SampleTrack",
+					   "With this knob you can set "
+					   "the volume of the opened "
+					   "channel.");
 
 SampleTCO::SampleTCO( Track * _track ) :
 	TrackContentObject( _track ),
@@ -594,10 +640,18 @@ SampleTrack::SampleTrack( TrackContainer* tc ) :
 							tr( "Volume" ) ),
 	m_panningModel( DefaultPanning, PanningLeft, PanningRight, 0.1f,
 					this, tr( "Panning" ) ),
-	m_audioPort( tr( "Sample track" ), true, &m_volumeModel, &m_panningModel, &m_mutedModel )
+	m_audioPort( tr( "Sample track" ), true, &m_volumeModel, &m_panningModel, &m_mutedModel ),
+	m_effectChannelModel( 0, 0, 0, this, tr( "FX channel" ) )
 {
-	setName( tr( "Sample track" ) );
 	m_panningModel.setCenterValue( DefaultPanning );
+
+	m_effectChannelModel.setRange( 0, Engine::fxMixer()->numChannels()-1, 1);
+
+	setName( tr( "Sample track" ) );
+
+        connect( &m_effectChannelModel, SIGNAL( dataChanged() ),
+		 this, SLOT( updateEffectChannel() ) );
+
 }
 
 
@@ -606,6 +660,35 @@ SampleTrack::SampleTrack( TrackContainer* tc ) :
 SampleTrack::~SampleTrack()
 {
 	Engine::mixer()->removePlayHandlesOfTypes( this, PlayHandle::TypeSamplePlayHandle );
+}
+
+
+
+/*
+void InstrumentTrack::setName( const QString & _new_name )
+{
+	// when changing name of track, also change name of those patterns,
+	// which have the same name as the instrument-track
+	for( int i = 0; i < numOfTCOs(); ++i )
+	{
+		Pattern* p = dynamic_cast<Pattern*>( getTCO( i ) );
+		if( ( p != NULL && p->name() == name() ) || p->name() == "" )
+		{
+			p->setName( _new_name );
+		}
+	}
+
+	Track::setName( _new_name );
+	m_midiPort.setName( name() );
+	m_audioPort.setName( name() );
+
+	emit nameChanged();
+}
+*/
+
+void SampleTrack::updateEffectChannel()
+{
+	m_audioPort.setNextFxChannel( m_effectChannelModel.value() );
 }
 
 
@@ -717,23 +800,37 @@ TrackContentObject * SampleTrack::createTCO( const MidiTime & )
 
 
 void SampleTrack::saveTrackSpecificSettings( QDomDocument & _doc,
-							QDomElement & _this )
+                                             QDomElement & thisElement )
 {
-	m_audioPort.effects()->saveState( _doc, _this );
+	m_volumeModel.saveSettings( _doc, thisElement, "vol" );
+	m_panningModel.saveSettings( _doc, thisElement, "pan" );
+
+	m_effectChannelModel.saveSettings( _doc, thisElement, "fxch" );
+
+	m_audioPort.effects()->saveState( _doc, thisElement );
+
 #if 0
-	_this.setAttribute( "icon", tlb->pixmapFile() );
+	thisElement.setAttribute( "icon", tlb->pixmapFile() );
 #endif
-	m_volumeModel.saveSettings( _doc, _this, "vol" );
-	m_panningModel.saveSettings( _doc, _this, "pan" );
 }
 
 
 
 
-void SampleTrack::loadTrackSpecificSettings( const QDomElement & _this )
+void SampleTrack::loadTrackSpecificSettings( const QDomElement & thisElement )
 {
-	QDomNode node = _this.firstChild();
+	m_volumeModel.loadSettings( thisElement, "vol" );
+	m_panningModel.loadSettings( thisElement, "pan" );
+
+	m_effectChannelModel.setRange( 0, Engine::fxMixer()->numChannels()-1 );
+	//if ( !m_previewMode )
+	{
+		m_effectChannelModel.loadSettings( thisElement, "fxch" );
+	}
+
 	m_audioPort.effects()->clear();
+
+	QDomNode node = thisElement.firstChild();
 	while( !node.isNull() )
 	{
 		if( node.isElement() )
@@ -745,8 +842,6 @@ void SampleTrack::loadTrackSpecificSettings( const QDomElement & _this )
 		}
 		node = node.nextSibling();
 	}
-	m_volumeModel.loadSettings( _this, "vol" );
-	m_panningModel.loadSettings( _this, "pan" );
 }
 
 
@@ -776,59 +871,87 @@ void SampleTrack::setPlayingTcos( bool isPlaying )
 
 
 
-SampleTrackView::SampleTrackView( SampleTrack * _t, TrackContainerView* tcv ) :
-	TrackView( _t, tcv )
+SampleTrackView::SampleTrackView(SampleTrack* _st, TrackContainerView* _tcv) :
+	TrackView( _st, _tcv ),
+	m_window( NULL ),
+	m_lastPos( -1, -1 )
 {
+	setAcceptDrops( true );
 	setFixedHeight( 32 );
 
-	TrackLabelButton * tlb = new TrackLabelButton( this,
-						getTrackSettingsWidget() );
-	connect( tlb, SIGNAL( clicked( bool ) ),
-			this, SLOT( showEffects() ) );
-	tlb->setIcon( embed::getIconPixmap( "sample_track" ) );
-	tlb->move( 3, 1 );
-	tlb->show();
+	m_tlb = new TrackLabelButton( this, getTrackSettingsWidget() );
+        m_tlb->setCheckable( true );
+        m_tlb->setIcon( embed::getIconPixmap( "sample_track" ) );
+	m_tlb->move( 3, 1 );
+	m_tlb->show();
 
-	m_volumeKnob = new Knob( knobSmall_17, getTrackSettingsWidget(),
-						    tr( "Track volume" ) );
-	m_volumeKnob->setVolumeKnob( true );
-	m_volumeKnob->setModel( &_t->m_volumeModel );
-	m_volumeKnob->setHintText( tr( "Channel volume:" ), "%" );
+	//connect( m_tlb, SIGNAL( clicked( bool ) ),
+        //         this, SLOT( showEffects() ) );
+	connect( m_tlb, SIGNAL( toggled( bool ) ),
+                 this, SLOT( toggleSampleWindow( bool ) ) );
+
+	connect( _st, SIGNAL( nameChanged() ),
+                 m_tlb, SLOT( update() ) );
+
+	// creation of widgets for track-settings-widget
+	int widgetWidth;
 	if( ConfigManager::inst()->value( "ui",
 					  "compacttrackbuttons" ).toInt() )
 	{
-		m_volumeKnob->move( DEFAULT_SETTINGS_WIDGET_WIDTH_COMPACT-2*24, 2 );
+		widgetWidth = DEFAULT_SETTINGS_WIDGET_WIDTH_COMPACT;
 	}
 	else
 	{
-		m_volumeKnob->move( DEFAULT_SETTINGS_WIDGET_WIDTH-2*24, 2 );
+		widgetWidth = DEFAULT_SETTINGS_WIDGET_WIDTH;
 	}
-	m_volumeKnob->setLabel( tr( "VOL" ) );
-	m_volumeKnob->show();
 
-	m_panningKnob = new Knob( knobSmall_17, getTrackSettingsWidget(),
-							tr( "Panning" ) );
-	m_panningKnob->setModel( &_t->m_panningModel );
+	m_volumeKnob = new Knob( knobBright_26, //knobSmall_17,
+                                 getTrackSettingsWidget(),
+                                 tr( "Volume" ) );
+	m_volumeKnob->setVolumeKnob( true );
+	m_volumeKnob->setModel( &_st->m_volumeModel );
+	m_volumeKnob->setHintText( tr( "Volume:" ), "%" );
+	m_volumeKnob->move( widgetWidth-2*29, 3 );//24,2
+	//m_volumeKnob->setLabel( tr( "VOL" ) );
+	m_volumeKnob->show();
+	m_volumeKnob->setWhatsThis( tr( STVOLHELP ) );
+
+	m_panningKnob = new Knob( knobBright_26, //knobSmall_17,
+                                  getTrackSettingsWidget(),
+                                  tr( "Panning" ) );
+	m_panningKnob->setModel( &_st->m_panningModel );
 	m_panningKnob->setHintText( tr( "Panning:" ), "%" );
-	m_panningKnob->move( DEFAULT_SETTINGS_WIDGET_WIDTH-24, 2 );
-	m_panningKnob->setLabel( tr( "PAN" ) );
+	m_panningKnob->move( widgetWidth-29, 3 );//24,2
+	//m_panningKnob->setLabel( tr( "PAN" ) );
 	m_panningKnob->setPointColor( Qt::magenta );
 	m_panningKnob->show();
 
-	m_effectRack = new EffectRackView( _t->audioPort()->effects() );
+	m_effectRack = new EffectRackView( _st->audioPort()->effects() );
 	m_effectRack->setFixedSize( 240, 242 );
 
-	/*
-	  m_effWindow = gui->mainWindow()->addWindowedWidget( m_effectRack );
-	  m_effWindow->setAttribute( Qt::WA_DeleteOnClose, false );
-	  m_effWindow->layout()->setSizeConstraint( QLayout::SetFixedSize );
-	*/
-	m_effWindow=SubWindow::putWidgetOnWorkspace(m_effectRack,false,false,false);
-	m_effWindow->setWindowTitle( _t->name() );
-	m_effWindow->setWindowIcon( embed::getIconPixmap( "instrument_track" ) );
-	m_effWindow->hide();
+        m_window=SubWindow::putWidgetOnWorkspace(m_effectRack,false,false,false);
+        m_window->setWindowTitle( _st->name() );
+        m_window->setWindowIcon( embed::getIconPixmap( "instrument_track" ) );
+        m_window->hide();
 
-	setModel( _t );
+	m_activityIndicator = new FadeButton( QApplication::palette().color( QPalette::Active,
+                                                                             QPalette::Background),
+                                              QApplication::palette().color( QPalette::Active,
+                                                                             QPalette::BrightText ),
+                                              getTrackSettingsWidget() );
+	m_activityIndicator->setGeometry(widgetWidth-2*29-11, 2, 8, 28 );//24
+	m_activityIndicator->show();
+	connect( m_activityIndicator, SIGNAL( pressed() ),
+                 this, SLOT( activityIndicatorPressed() ) );
+	connect( m_activityIndicator, SIGNAL( released() ),
+                 this, SLOT( activityIndicatorReleased() ) );
+	//connect( _it, SIGNAL( newNote() ),
+	//		 m_activityIndicator, SLOT( activate() ) );
+
+	connect( &_st->m_mutedModel, SIGNAL( dataChanged() ),
+                 this, SLOT( muteChanged() ) );
+
+	setModel( _st );
 }
 
 
@@ -836,25 +959,10 @@ SampleTrackView::SampleTrackView( SampleTrack * _t, TrackContainerView* tcv ) :
 
 SampleTrackView::~SampleTrackView()
 {
-	m_effWindow->deleteLater();
+        freeSampleTrackWindow();
+	//m_window->deleteLater();
 }
 
-
-
-
-void SampleTrackView::showEffects()
-{
-	if( m_effWindow->isHidden() )
-	{
-		m_effectRack->show();
-		m_effWindow->show();
-		m_effWindow->raise();
-	}
-	else
-	{
-		m_effWindow->hide();
-	}
-}
 
 
 
@@ -864,4 +972,249 @@ void SampleTrackView::modelChanged()
 	m_volumeKnob->setModel( &st->m_volumeModel );
 
 	TrackView::modelChanged();
+}
+
+
+
+void SampleTrackView::muteChanged()
+{
+	if(model()->m_mutedModel.value() )
+	{
+		m_activityIndicator->setActiveColor( QApplication::palette().color( QPalette::Active,
+										    QPalette::Highlight ) );
+	} else
+	{
+		m_activityIndicator->setActiveColor( QApplication::palette().color( QPalette::Active,
+										    QPalette::BrightText ) );
+	}
+}
+
+
+QMenu* SampleTrackView::createAudioInputMenu()
+{
+        QString title=tr( "Audio Input (N/A)" );
+        //.arg( channelIndex ).arg( fxChannel->m_name );
+	QMenu* fxMenu = new QMenu( title );
+	return fxMenu;
+}
+
+
+QMenu* SampleTrackView::createAudioOutputMenu()
+{
+        int channelIndex=model()->effectChannelModel()->value();
+	FxChannel* fxChannel=Engine::fxMixer()->effectChannel(channelIndex);
+
+        QString title=tr( "Audio Output (%1:%2)" )
+                .arg( channelIndex ).arg( fxChannel->m_name );
+	QMenu* fxMenu = new QMenu( title );
+
+	QSignalMapper* fxMenuSignalMapper=new QSignalMapper(fxMenu);
+
+        QString newFxLabel=tr( "Assign to new channel" );
+	fxMenu->addAction( newFxLabel, this, SLOT( createFxLine() ) );
+	//fxMenu->addSeparator();
+	for (int i = 0; i < Engine::fxMixer()->numChannels(); ++i)
+	{
+		FxChannel* currentChannel = Engine::fxMixer()->effectChannel( i );
+
+		if(currentChannel!=fxChannel)
+		{
+			QString label = tr( "Mixer %1:%2" ).arg( currentChannel->m_channelIndex ).arg( currentChannel->m_name );
+			QAction * action = fxMenu->addAction( label, fxMenuSignalMapper, SLOT( map() ) );
+			fxMenuSignalMapper->setMapping(action, currentChannel->m_channelIndex);
+		}
+	}
+
+	connect(fxMenuSignalMapper, SIGNAL(mapped(int)), this, SLOT(assignFxLine(int)));
+
+	return fxMenu;
+}
+
+
+
+// obsolete
+QMenu * SampleTrackView::createFxMenu(QString title, QString newFxLabel)
+{
+	int channelIndex = model()->effectChannelModel()->value();
+
+	FxChannel *fxChannel = Engine::fxMixer()->effectChannel( channelIndex );
+
+	// If title allows interpolation, pass channel index and name
+	if ( title.contains( "%2" ) )
+	{
+		title = title.arg( channelIndex ).arg( fxChannel->m_name );
+	}
+
+	QMenu *fxMenu = new QMenu( title );
+
+	QSignalMapper * fxMenuSignalMapper = new QSignalMapper(fxMenu);
+
+	fxMenu->addAction( newFxLabel, this, SLOT( createFxLine() ) );
+	fxMenu->addSeparator();
+
+	for (int i = 0; i < Engine::fxMixer()->numChannels(); ++i)
+	{
+		FxChannel * currentChannel = Engine::fxMixer()->effectChannel( i );
+
+		if ( currentChannel != fxChannel )
+		{
+			QString label = tr( "FX %1: %2" ).arg( currentChannel->m_channelIndex ).arg( currentChannel->m_name );
+			QAction * action = fxMenu->addAction( label, fxMenuSignalMapper, SLOT( map() ) );
+			fxMenuSignalMapper->setMapping(action, currentChannel->m_channelIndex);
+		}
+	}
+
+	connect(fxMenuSignalMapper, SIGNAL(mapped(int)), this, SLOT(assignFxLine(int)));
+
+	return fxMenu;
+}
+
+
+
+
+/*! \brief Create and assign a new FX Channel for this track */
+void SampleTrackView::createFxLine()
+{
+	int channelIndex = gui->fxMixerView()->addNewChannel();
+
+	Engine::fxMixer()->effectChannel( channelIndex )->m_name = getTrack()->name();
+
+	assignFxLine(channelIndex);
+}
+
+
+
+
+/*! \brief Assign a specific FX Channel for this track */
+void SampleTrackView::assignFxLine(int channelIndex)
+{
+	model()->effectChannelModel()->setValue( channelIndex );
+
+	gui->fxMixerView()->setCurrentFxLine( channelIndex );
+}
+
+
+
+// TODO: Add windows to free list on freeInstrumentTrackWindow.
+// But, don't NULL m_window or disconnect signals.  This will allow windows
+// that are being show/hidden frequently to stay connected.
+void SampleTrackView::freeSampleTrackWindow()
+{
+	if( m_window != NULL )
+	{
+		m_lastPos = m_window->parentWidget()->pos();
+
+                /*
+		if( ConfigManager::inst()->value( "ui",
+                                                  "oneinstrumenttrackwindow" ).toInt() ||
+                    s_windowCache.count() < INSTRUMENT_WINDOW_CACHE_SIZE )
+		{
+			model()->setHook( NULL );
+			m_window->setInstrumentTrackView( NULL );
+			m_window->parentWidget()->hide();
+			//m_window->setModel(
+			//	engine::dummyTrackContainer()->
+			//			dummyInstrumentTrack() );
+			m_window->updateInstrumentView();
+			s_windowCache << m_window;
+		}
+		else
+		{
+                delete m_window;
+		}
+                */
+
+                m_window->deleteLater();
+		m_window = NULL;
+	}
+}
+
+
+
+
+void SampleTrackView::resizeEvent( QResizeEvent * re )
+{
+	TrackView::resizeEvent(re);
+	/*
+	  I don't how to vertical align the content to the top
+	  m_tlb->setFixedHeight(height()-2);
+	*/
+}
+
+
+
+
+void SampleTrackView::dragEnterEvent( QDragEnterEvent * _dee )
+{
+	//SampleTrackWindow::dragEnterEventGeneric( _dee );
+	if( !_dee->isAccepted() )
+	{
+		TrackView::dragEnterEvent( _dee );
+	}
+}
+
+
+
+
+void SampleTrackView::dropEvent( QDropEvent * _de )
+{
+	//getInstrumentTrackWindow()->dropEvent( _de );
+	TrackView::dropEvent( _de );
+}
+
+
+
+
+/*
+void SampleTrackView::showEffects()
+{
+	if( m_window->isHidden() )
+	{
+		m_effectRack->show();
+		m_window->show();
+		m_window->raise();
+	}
+	else
+	{
+		m_window->hide();
+	}
+}
+*/
+
+
+void SampleTrackView::toggleSampleWindow( bool _on )
+{
+        //sampleTrackWindow()->toggleVisibility( _on );
+
+	if( _on ) //m_window->isHidden() )
+	{
+		m_effectRack->show();
+		m_window->show();
+		m_window->raise();
+	}
+	else
+	{
+		m_window->hide();
+	}
+
+        /*
+	if( !_on )
+	{
+		freeSampleTrackWindow();
+	}
+        */
+}
+
+
+void SampleTrackView::activityIndicatorPressed()
+{
+	//model()->processInEvent( MidiEvent( MidiNoteOn, 0, DefaultKey, MidiDefaultVelocity ) );
+}
+
+
+
+
+void SampleTrackView::activityIndicatorReleased()
+{
+	//model()->processInEvent( MidiEvent( MidiNoteOff, 0, DefaultKey, 0 ) );
 }

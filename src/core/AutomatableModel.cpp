@@ -728,7 +728,9 @@ float AutomatableModel::globalAutomationValueAt( const MidiTime& time )
 
 float FloatModel::getRoundedValue() const
 {
-	return qRound( value() / step<float>() ) * step<float>();
+	//return qRound( value() / step<float>() ) * step<float>();
+        return minValue()+qRound( (value()-minValue()) /
+                                  step<float>() ) * step<float>();
 }
 
 

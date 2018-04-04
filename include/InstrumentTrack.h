@@ -39,9 +39,9 @@
 #include "Track.h"
 
 
+template<class T> class QQueue;
 
 class QLineEdit;
-template<class T> class QQueue;
 class InstrumentFunctionNoteHumanizingView;
 class InstrumentFunctionNoteStackingView;
 class InstrumentFunctionArpeggioView;
@@ -299,10 +299,10 @@ class InstrumentTrackView : public TrackView
 {
 	Q_OBJECT
 public:
-	InstrumentTrackView( InstrumentTrack * _it, TrackContainerView* tc );
+	InstrumentTrackView( InstrumentTrack* _it, TrackContainerView* _tcv );
 	virtual ~InstrumentTrackView();
 
-	InstrumentTrackWindow * getInstrumentTrackWindow();
+	InstrumentTrackWindow* instrumentTrackWindow();
 
 	InstrumentTrack * model()
 	{

@@ -2110,12 +2110,26 @@ void TrackOperationsWidget::updateMenu()
                 toMenu->addMenu(trackView->createMidiOutputMenu());
 
 		toMenu->addSeparator();
-		QMenu *fxMenu = trackView->createFxMenu( tr( "FX %1: %2" ), tr( "Assign to new FX Channel" ));
-		toMenu->addMenu(fxMenu);
+		//QMenu *fxMenu = trackView->createFxMenu( tr( "FX %1: %2" ), tr( "Assign to new FX Channel" ));
+		//toMenu->addMenu(fxMenu);
 		toMenu->addMenu( trackView->midiMenu() );
+	}
+	if( SampleTrackView * trackView = dynamic_cast<SampleTrackView *>( m_trackView ) )
+	{
+		toMenu->addSeparator();
+                toMenu->addMenu(trackView->createAudioInputMenu());
+                toMenu->addMenu(trackView->createAudioOutputMenu());
+                //toMenu->addMenu(trackView->createMidiInputMenu());
+                //toMenu->addMenu(trackView->createMidiOutputMenu());
+
+		//toMenu->addSeparator();
+		//QMenu *fxMenu = trackView->createFxMenu( tr( "FX %1: %2" ), tr( "Assign to new FX Channel" ));
+		//toMenu->addMenu(fxMenu);
+		//toMenu->addMenu( trackView->midiMenu() );
 	}
 	if( dynamic_cast<AutomationTrackView *>( m_trackView ) )
 	{
+		toMenu->addSeparator();
 		toMenu->addAction( tr( "Turn all recording on" ), this, SLOT( recordingOn() ) );
 		toMenu->addAction( tr( "Turn all recording off" ), this, SLOT( recordingOff() ) );
 	}
