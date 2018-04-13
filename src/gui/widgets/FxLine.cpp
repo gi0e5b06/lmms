@@ -263,6 +263,7 @@ void FxLine::renameChannel()
 void FxLine::renameFinished()
 {
 	m_inRename = false;
+	m_renameLineEdit->deselect();
 	m_renameLineEdit->setReadOnly( true );
 	m_renameLineEdit->setFixedWidth( 65 );
 	m_lcd->show();
