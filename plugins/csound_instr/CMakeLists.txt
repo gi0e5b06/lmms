@@ -1,0 +1,5 @@
+INCLUDE(BuildPlugin)
+
+LINK_DIRECTORIES(${SAMPLERATE_LIBRARY_DIRS})
+LINK_LIBRARIES(${SAMPLERATE_LIBRARIES} -lcsnd6 -lcsound64)
+BUILD_PLUGIN(csound_instr CsoundInstr.cpp CsoundInstr.h MOCFILES CsoundInstr.h EMBEDDED_RESOURCES *.png)
