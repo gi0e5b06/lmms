@@ -66,21 +66,10 @@ private slots:
 private:
 	ScatterGDXEffect* m_effect;
 
-	FloatModel m_lenModel;
-
-        /*
-	FloatModel m_attackTimeModel;
-	FloatModel m_descentTimeModel;
-	FloatModel m_panTimeModel;
-
-	FloatModel m_attackTypeModel;   // don't use IntModel, Knob will break!
-	FloatModel m_descentTypeModel;
-	FloatModel m_panTypeModel;
-
-	FloatModel m_attackTempoModel;
-	FloatModel m_descentTempoModel;
-	FloatModel m_panTempoModel;
-        */
+	FloatModel m_pwrModel; //power
+        FloatModel m_spdModel; //speed
+        FloatModel m_frcModel; //fraction
+        FloatModel m_ovrModel; //override
 
 	friend class ScatterGDXControlDialog;
 	friend class ScatterGDXEffect;

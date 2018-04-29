@@ -39,74 +39,29 @@ ScatterGDXControlDialog::ScatterGDXControlDialog( ScatterGDXControls* controls )
 	QPalette pal;
 	pal.setBrush( backgroundRole(), PLUGIN_NAME::getIconPixmap( "artwork" ) );
 	setPalette( pal );
-	setFixedSize( 100, 100 );
+	setFixedSize( 160, 120 );
 
-        Knob* lenKnob = new Knob( knobBright_26, this );//attGB);
-	lenKnob -> move( 10, 10 );
-	lenKnob->setModel( &controls->m_lenModel );
-	lenKnob->setLabel( tr( "FractionsLenght" ) );
-	lenKnob->setHintText( tr( "Loops:" ) , "/bar" );
+        Knob* pwrKnob = new Knob( knobBright_26, this );
+	pwrKnob -> move( 10, 10 );
+	pwrKnob->setModel( &controls->m_pwrModel );
+	pwrKnob->setLabel( tr( "Power" ) );
+	pwrKnob->setHintText( tr( "Power:" ) , "/bar" );
 
-        /*
-	QGroupBox * attGB=new QGroupBox(tr ( "Attack" ), this);
-	QGroupBox * desGB=new QGroupBox(tr ( "Descent" ), this);
-	QGroupBox * panGB=new QGroupBox(tr ( "Pan" ), this);
-	attGB->setGeometry(10,10,60,185);
-	desGB->setGeometry(80,10,60,185);
-	panGB->setGeometry(10,205,60,185);
+        Knob* spdKnob = new Knob( knobBright_26, this );
+	spdKnob -> move( 80, 10 );
+	spdKnob->setModel( &controls->m_spdModel );
+	spdKnob->setLabel( tr( "Speed" ) );
+	spdKnob->setHintText( tr( "Speed:" ) , "" );
 
-	Knob * attTimeKnob = new Knob( knobBright_26, attGB);
-	attTimeKnob -> move( 17, 35 );
-	attTimeKnob->setModel( &controls->m_attackTimeModel );
-	attTimeKnob->setLabel( tr( "Time" ) );
-	attTimeKnob->setHintText( tr( "Attack Time:" ) , " beat" );
+        Knob* frcKnob = new Knob( knobBright_26, this );
+	frcKnob -> move( 10, 60 );
+	frcKnob->setModel( &controls->m_frcModel );
+	frcKnob->setLabel( tr( "Fraction" ) );
+	frcKnob->setHintText( tr( "Fraction:" ) , "" );
 
-	Knob * desTimeKnob = new Knob( knobBright_26, desGB);
-	desTimeKnob -> move( 17, 35 );
-	desTimeKnob->setModel( &controls->m_descentTimeModel );
-	desTimeKnob->setLabel( tr( "Time" ) );
-	desTimeKnob->setHintText( tr( "Descent Time:" ) , " beat" );
-
-	Knob * attTypeKnob = new Knob( knobBright_26, attGB);
-	attTypeKnob -> move( 17, 85 );
-	attTypeKnob->setModel( &controls->m_attackTypeModel );
-	attTypeKnob->setLabel( tr( "Type" ) );
-	attTypeKnob->setHintText( tr( "Attack Type:" ) , "" );
-
-	Knob * desTypeKnob = new Knob( knobBright_26, desGB);
-	desTypeKnob -> move( 17, 85 );
-	desTypeKnob->setModel( &controls->m_descentTypeModel );
-	desTypeKnob->setLabel( tr( "Type" ) );
-	desTypeKnob->setHintText( tr( "Descent Type:" ) , "" );
-
-	Knob * attTempoKnob = new Knob( knobBright_26, attGB);
-	attTempoKnob -> move( 17, 135 );
-	attTempoKnob->setModel( &controls->m_attackTempoModel );
-	attTempoKnob->setLabel( tr( "Tempo" ) );
-	attTempoKnob->setHintText( tr( "Attack Tempo:" ) , "" );
-
-	Knob * desTempoKnob = new Knob( knobBright_26, desGB);
-	desTempoKnob -> move( 17, 135 );
-	desTempoKnob->setModel( &controls->m_descentTempoModel );
-	desTempoKnob->setLabel( tr( "Tempo" ) );
-	desTempoKnob->setHintText( tr( "Descent Tempo:" ) , "" );
-
-	Knob * panTimeKnob = new Knob( knobBright_26, panGB);
-	panTimeKnob -> move( 17, 35 );
-	panTimeKnob->setModel( &controls->m_panTimeModel );
-	panTimeKnob->setLabel( tr( "Time" ) );
-	panTimeKnob->setHintText( tr( "Pan Time:" ) , "" );
-
-	Knob * panTypeKnob = new Knob( knobBright_26, panGB);
-	panTypeKnob -> move( 17, 85 );
-	panTypeKnob->setModel( &controls->m_panTypeModel );
-	panTypeKnob->setLabel( tr( "Type" ) );
-	panTypeKnob->setHintText( tr( "Pan Type:" ) , "" );
-
-	Knob * panTempoKnob = new Knob( knobBright_26, panGB);
-	panTempoKnob -> move( 17, 135 );
-	panTempoKnob->setModel( &controls->m_panTempoModel );
-	panTempoKnob->setLabel( tr( "Tempo" ) );
-	panTempoKnob->setHintText( tr( "Pan Tempo:" ) , "" );
-        */
+        Knob* ovrKnob = new Knob( knobBright_26, this );
+	ovrKnob -> move( 80, 60 );
+	ovrKnob->setModel( &controls->m_ovrModel );
+	ovrKnob->setLabel( tr( "Override" ) );
+	ovrKnob->setHintText( tr( "Override:" ) , "" );
 }
