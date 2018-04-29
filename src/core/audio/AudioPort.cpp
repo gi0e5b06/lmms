@@ -29,12 +29,13 @@
 #include "Engine.h"
 #include "Mixer.h"
 #include "MixHelpers.h"
+#include "Song.h"
 #include "BufferManager.h"
 
 
 AudioPort::AudioPort( const QString & _name, bool _has_effect_chain,
 		FloatModel * volumeModel, FloatModel * panningModel,
-		BoolModel * mutedModel ) :
+                      BoolModel * mutedModel, BoolModel * frozenModel ) :
 	m_bufferUsage( false ),
 	m_portBuffer( BufferManager::acquire() ),
 	m_extOutputEnabled( false ),
@@ -43,7 +44,10 @@ AudioPort::AudioPort( const QString & _name, bool _has_effect_chain,
 	m_effects( _has_effect_chain ? new EffectChain( NULL ) : NULL ),
 	m_volumeModel( volumeModel ),
 	m_panningModel( panningModel ),
-	m_mutedModel( mutedModel )
+	m_mutedModel( mutedModel ),
+	m_frozenModel( frozenModel ),
+        m_frozenBuf( NULL ),
+        m_frozenLen( 0 )
 {
 	Engine::mixer()->addAudioPort( this );
 	setExtOutputEnabled( true );
@@ -58,6 +62,9 @@ AudioPort::~AudioPort()
 	Engine::mixer()->removeAudioPort( this );
 	delete m_effects;
 	BufferManager::release( m_portBuffer );
+
+        m_frozenLen=0;
+        if(m_frozenBuf) MM_FREE(m_frozenBuf);
 }
 
 
@@ -109,7 +116,34 @@ void AudioPort::doProcessing()
 		return;
 	}
 
-	const fpp_t fpp = Engine::mixer()->framesPerPeriod();
+        const Song*   song=Engine::getSong();
+	const fpp_t   fpp =Engine::mixer()->framesPerPeriod();
+        const f_cnt_t af  =song->getPlayPos().absoluteFrame();
+
+        if(m_frozenModel&&
+           m_frozenModel->value()&&
+           (song->playMode() == Song::Mode_PlaySong)&&
+           song->isPlaying())
+        {
+                if(m_frozenBuf&&(af+fpp<=m_frozenLen))
+                {
+                        /*
+                          qInfo("AudioPort::doProcessing use frozen buffer"
+                          " af=%d s=%p t=%p",
+                          af,m_portBuffer,this);
+                        */
+                        //memset(buf,0,frames*BYTES_PER_FRAME);
+                        for(f_cnt_t f=0;f<fpp;++f)
+                                for(int c=0; c<2; ++c)
+                                        m_portBuffer[f][c]=m_frozenBuf[af+f][c];
+
+                        // send output to fx mixer
+                        Engine::fxMixer()->mixToChannel( m_portBuffer, m_nextFxChannel );
+                        // TODO: improve the flow here - convert to pull model
+                        m_bufferUsage = false;
+                        return;
+                }
+        }
 
 	// clear the buffer
 	BufferManager::clear( m_portBuffer );
@@ -221,6 +255,25 @@ void AudioPort::doProcessing()
 	const bool me = processEffects();
 	if( me || m_bufferUsage )
 	{
+                if(m_frozenModel&&
+                   !m_frozenModel->value()&&
+                   m_frozenBuf&&
+                   (song->playMode() == Song::Mode_PlaySong)&&
+                   song->isPlaying())
+                {
+                        /*
+                        qInfo("AudioPort::doProcessing freeze"
+                        " af=%d s=%p t=%p",
+                        af,m_portBuffer,this);
+                        */
+                        for(f_cnt_t f=0; f <fpp; ++f)
+                        for(int c=0; c<2; ++c)
+                        {
+                                if(af+f<m_frozenLen)
+                                        m_frozenBuf[af+f][c]=m_portBuffer[f][c];
+                        }
+                }
+
 		Engine::fxMixer()->mixToChannel( m_portBuffer, m_nextFxChannel ); 	// send output to fx mixer
 																			// TODO: improve the flow here - convert to pull model
 		m_bufferUsage = false;
@@ -245,4 +298,27 @@ void AudioPort::removePlayHandle( PlayHandle * handle )
 			m_playHandles.erase( it );
 		}
 	m_playHandleLock.unlock();
+}
+
+
+void AudioPort::updateFrozenBuffer()
+{
+        if(m_frozenModel)
+        {
+                const Song* song=Engine::getSong();
+                const float fpt =Engine::framesPerTick();
+                const int   len =song->ticksPerTact()*song->length()*fpt;
+
+                if(len!=m_frozenLen)
+                {
+                        m_frozenLen=0;
+                        if(m_frozenBuf) MM_FREE(m_frozenBuf);
+                        if(len>0)
+                        {
+                                m_frozenBuf=MM_ALLOC(sampleFrame,len);
+                                m_frozenLen=len;
+                        }
+                        //qInfo("AudioPort::updateFrozenBuffer len=%d",len);
+                }
+        }
 }

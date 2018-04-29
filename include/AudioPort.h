@@ -25,9 +25,9 @@
 #ifndef AUDIO_PORT_H
 #define AUDIO_PORT_H
 
-#include <QtCore/QString>
-#include <QtCore/QMutex>
-#include <QtCore/QMutexLocker>
+#include <QString>
+#include <QMutex>
+#include <QMutexLocker>
 
 #include "MemoryManager.h"
 #include "PlayHandle.h"
@@ -41,8 +41,8 @@ class AudioPort : public ThreadableJob
 	MM_OPERATORS
 public:
 	AudioPort( const QString & _name, bool _has_effect_chain = true,
-		FloatModel * volumeModel = NULL, FloatModel * panningModel = NULL,
-		BoolModel * mutedModel = NULL );
+                   FloatModel * volumeModel = NULL, FloatModel * panningModel = NULL,
+                   BoolModel * mutedModel = NULL, BoolModel * frozenModel = NULL );
 	virtual ~AudioPort();
 
 	inline sampleFrame * buffer()
@@ -108,6 +108,8 @@ public:
 	void addPlayHandle( PlayHandle * handle );
 	void removePlayHandle( PlayHandle * handle );
 
+        void updateFrozenBuffer();
+
 private:
 	volatile bool m_bufferUsage;
 
@@ -127,6 +129,10 @@ private:
 	FloatModel * m_volumeModel;
 	FloatModel * m_panningModel;
 	BoolModel * m_mutedModel;
+	BoolModel * m_frozenModel;
+
+        sampleFrame* m_frozenBuf;
+        int          m_frozenLen;
 
 	friend class Mixer;
 	friend class MixerWorkerThread;

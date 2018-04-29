@@ -26,8 +26,8 @@
 #ifndef TRACK_H
 #define TRACK_H
 
-#include <QtCore/QVector>
-#include <QtCore/QList>
+#include <QVector>
+#include <QList>
 #include <QWidget>
 #include <QSignalMapper>
 #include <QColor>
@@ -493,9 +493,10 @@ private:
 
 	TrackView * m_trackView;
 
-	QPushButton * m_trackOps;
-	PixmapButton * m_muteBtn;
-	PixmapButton * m_soloBtn;
+	QPushButton*  m_trackOps;
+	PixmapButton* m_muteBtn;
+	PixmapButton* m_soloBtn;
+	PixmapButton* m_frozenBtn;
 
 
 	friend class TrackView;
@@ -516,6 +517,7 @@ class EXPORT Track : public Model, public JournallingObject
 	MM_OPERATORS
 	mapPropertyFromModel(bool,isMuted,setMuted,m_mutedModel);
 	mapPropertyFromModel(bool,isSolo,setSolo,m_soloModel);
+        mapPropertyFromModel(bool,isFrozen,setFrozen,m_frozenModel);
 public:
 	typedef QVector<TrackContentObject *> tcoVector;
 
@@ -637,6 +639,13 @@ public:
 
 	BoolModel* getMutedModel();
 
+        /*
+        BoolModel* frozenModel()
+        {
+                return &m_frozenModel;
+        }
+        */
+
 public slots:
 	virtual void setName( const QString & newName )
 	{
@@ -655,6 +664,7 @@ private:
 
 protected:
 	BoolModel m_mutedModel;
+	BoolModel m_frozenModel;
 private:
 	BoolModel m_soloModel;
 	bool m_mutedBeforeSolo;

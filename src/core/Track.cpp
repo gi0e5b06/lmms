@@ -1800,17 +1800,28 @@ TrackOperationsWidget::TrackOperationsWidget( TrackView * parent ) :
         m_soloBtn->setCheckable( true );
 	ToolTip::add( m_soloBtn, tr( "Solo" ) );
 
+	m_frozenBtn = new PixmapButton( this, tr( "Frozen" ) );
+	m_frozenBtn->setActiveGraphic( embed::getIconPixmap( "led_blue" ) );
+	m_frozenBtn->setInactiveGraphic( embed::getIconPixmap( "led_off" ) );
+        m_frozenBtn->setCheckable( true );
+	ToolTip::add( m_frozenBtn, tr( "Frozen" ) );
+
 	if(ConfigManager::inst()->value("ui","compacttrackbuttons").toInt())
 	{
-		m_muteBtn->setGeometry(45, 0,16,14);
-		m_soloBtn->setGeometry(45,16,16,14);
+		m_muteBtn  ->setGeometry(45, 0,16,14);
+		m_soloBtn  ->setGeometry(45,16,16,14);
+		m_frozenBtn->setGeometry(45,32,16,14);
 	}
 	else
 	{
-		m_muteBtn->setGeometry(45,5,16,14);
-		m_soloBtn->setGeometry(62,5,16,14);
+		m_muteBtn  ->move(45,4);//setGeometry(45, 4,16,14);
+		m_soloBtn  ->move(62,4);//setGeometry(62, 4,16,14);
+		m_frozenBtn->move(62,18);//setGeometry(62,18,16,14);
 	}
 
+        if((m_trackView->getTrack()->type()!=Track::InstrumentTrack)||
+           (m_trackView->getTrack()->trackContainer()==(TrackContainer*)Engine::getBBTrackContainer()))
+                m_frozenBtn->setVisible(false);
 
 	connect( this, SIGNAL( trackRemovalScheduled( TrackView * ) ),
 			m_trackView->trackContainerView(),
@@ -2029,7 +2040,7 @@ void TrackOperationsWidget::isolateTrack()
 		TrackContentObject* o=t->getTCO(newidxbb);
 		//for(TrackContentObject* o : t->getTCOs(idxbb))
 		{
-			Pattern* p=static_cast<Pattern*>(o);
+			Pattern* p=dynamic_cast<Pattern*>(o);//static
 			if( !p )
 			{
 				qCritical("TrackOperationsWidget::isolateTrack p=null!!!");
@@ -2897,6 +2908,7 @@ void TrackView::modelChanged()
 	connect( m_track, SIGNAL( destroyedTrack() ), this, SLOT( close() ) );
 	m_trackOperationsWidget.m_muteBtn->setModel( &m_track->m_mutedModel );
 	m_trackOperationsWidget.m_soloBtn->setModel( &m_track->m_soloModel );
+	m_trackOperationsWidget.m_frozenBtn->setModel( &m_track->m_frozenModel );
 	ModelView::modelChanged();
 	setFixedHeight( m_track->getHeight() );
 }
