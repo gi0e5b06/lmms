@@ -67,8 +67,8 @@ public:
 		m_unit = unit;
 	}
 
-	void addDefaultActions( QMenu* menu );
-
+	virtual void addDefaultActions( QMenu* menu );
+        virtual void enterValue() { qWarning("enterValue() not implemented"); }
 
 protected:
 	virtual void mousePressEvent( QMouseEvent* event );
@@ -88,6 +88,7 @@ public:
 	AutomatableModelViewSlots( AutomatableModelView* amv, QObject* parent );
 
 public slots:
+        void enterValue();
 	void execConnectionDialog();
 	void removeConnection();
 	void editSongGlobalAutomation();

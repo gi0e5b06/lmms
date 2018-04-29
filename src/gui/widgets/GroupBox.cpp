@@ -22,6 +22,7 @@
  *
  */
 
+#include <QInputDialog>
 #include <QMouseEvent>
 #include <QPainter>
 
@@ -103,4 +104,30 @@ void GroupBox::paintEvent( QPaintEvent * pe )
 	p.setPen( palette().color( QPalette::Active, QPalette::Text ) );
 	p.setFont( pointSize<8>( font() ) );
 	p.drawText( 22, m_titleBarHeight-3, m_caption );
+}
+
+
+void GroupBox::enterValue()
+{
+        BoolModel* m=model();
+        if(!m) return;
+
+	bool ok;
+	bool new_val;
+
+        new_val = QInputDialog::getInt(this, windowTitle(),
+                                       tr( "Please enter a new value between "
+                                           "%1 and %2:" ).
+                                       arg( m->minValue() ).
+                                       arg( m->maxValue() ),
+                                       m->value(),//getRoundedValue(),
+                                       m->minValue(),
+                                       m->maxValue(),
+                                       0,//m->getDigitCount(),
+                                       &ok );
+
+	if( ok )
+	{
+		m->setValue( new_val );
+	}
 }

@@ -34,6 +34,7 @@ class ComboBox;
 class GroupBox;
 class Knob;
 class TempoSyncKnob;
+class LedCheckBox;
 
 class InstrumentFunctionArpeggio;
 class InstrumentFunctionNoteStacking;
@@ -97,6 +98,25 @@ private:
 	ComboBox * m_arpDirectionComboBox;
 	ComboBox * m_arpModeComboBox;
 
+} ;
+
+
+
+
+class InstrumentFunctionNoteFilteringView : public InstrumentFunctionView
+{
+	Q_OBJECT
+public:
+	InstrumentFunctionNoteFilteringView( InstrumentFunctionNoteFiltering* cc, QWidget* parent = NULL );
+	virtual ~InstrumentFunctionNoteFilteringView();
+
+
+private:
+	virtual void modelChanged();
+
+	InstrumentFunctionNoteFiltering* m_cc;
+	LedCheckBox* m_noteSelectionLed[12];
+	ComboBox*    m_actionComboBox;
 } ;
 
 

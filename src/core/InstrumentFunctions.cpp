@@ -730,6 +730,7 @@ bool InstrumentFunctionNoteHumanizing::processNote( NotePlayHandle * _n )
 		}
 	}
 
+        //qInfo("InstrumentFunctionNoteHumanizing::process Note");
 	return true;
 }
 
@@ -842,4 +843,72 @@ void InstrumentFunctionNoteDuplicatesRemoving::loadSettings( const QDomElement &
 	m_enabledModel          .loadSettings( _this, "enabled" );
         m_minNoteGenerationModel.loadSettings( _this, "mingen");
         m_maxNoteGenerationModel.loadSettings( _this, "maxgen");
+}
+
+
+
+
+InstrumentFunctionNoteFiltering::InstrumentFunctionNoteFiltering( Model * _parent ) :
+	InstrumentFunction( _parent, tr( "NoteFiltering" ) ),
+	//m_enabledModel( false, this ),
+	m_actionModel(0,0,2,this,tr( "Action" ))
+{
+        for(int i=0;i<12;++i)
+                m_noteSelectionModel[i]=new BoolModel(true,this,Note::findKeyName(i));
+}
+
+
+
+
+InstrumentFunctionNoteFiltering::~InstrumentFunctionNoteFiltering()
+{
+        for(int i=0;i<12;++i)
+                delete m_noteSelectionModel[i];
+}
+
+
+
+
+bool InstrumentFunctionNoteFiltering::processNote( NotePlayHandle * _n )
+{
+	if(!shouldProcessNote(_n)) return true;
+	if( _n->totalFramesPlayed()!=0 || _n->isReleased() ) return true;
+
+        int  k=_n->key()%12;
+        bool v=m_noteSelectionModel[k]->value();
+        //qInfo("InstrumentFunctionNoteFiltering::processNote k=%d v=%d",k,v);
+        if(v) return true;
+
+        _n->setMasterNote();
+	return false;
+}
+
+
+
+
+void InstrumentFunctionNoteFiltering::saveSettings( QDomDocument & _doc, QDomElement & _this )
+{
+	m_enabledModel          .saveSettings( _doc, _this, "enabled" );
+        m_minNoteGenerationModel.saveSettings( _doc, _this, "mingen"  );
+        m_maxNoteGenerationModel.saveSettings( _doc, _this, "maxgen"  );
+	m_actionModel           .saveSettings( _doc, _this, "action"  );
+
+	for(int i=0;i<12;++i)
+                m_noteSelectionModel[i]->saveSettings( _doc, _this,
+                                                       QString("ns%1").arg(i) );
+}
+
+
+
+
+void InstrumentFunctionNoteFiltering::loadSettings( const QDomElement & _this )
+{
+	m_enabledModel          .loadSettings( _this, "enabled" );
+        m_minNoteGenerationModel.loadSettings( _this, "mingen");
+        m_maxNoteGenerationModel.loadSettings( _this, "maxgen");
+	m_actionModel           .loadSettings( _this, "action" );
+
+	for(int i=0;i<12;++i)
+                m_noteSelectionModel[i]->loadSettings( _this,
+                                                       QString("ns%1").arg(i) );
 }

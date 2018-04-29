@@ -108,6 +108,8 @@ public:
 		setUnit( _txt_after );
 	}
 
+        virtual void enterValue();
+
 private:
 	virtual void contextMenuEvent( QContextMenuEvent * _me );
 	virtual void mousePressEvent( QMouseEvent *ev );

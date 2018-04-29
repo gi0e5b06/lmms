@@ -399,7 +399,16 @@ void TrackContainerView::computeHyperBarViews()
 				hbl=p.first;
 				hbc=p.second;
 			}
-			hyperBarViews().append(new HyperBarView(hbl,hbc,c));
+                        int   n=0;
+                        QChar d;
+                        while((i+1<s.length())&&(d=s.at(i+1)).isDigit())
+                        {
+                                n=10*n+d.digitValue();
+                                i++;
+                        }
+                        if(n>0) hbl=n;
+                        if(hbl==0) continue;
+                        hyperBarViews().append(new HyperBarView(hbl,hbc,c));
 		}
 
 		computeBarViews();

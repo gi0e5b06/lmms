@@ -53,9 +53,9 @@ public:
 	{
 		OriginPattern       = 1, /*! playback of a note from a pattern */
 		OriginMidiInput     = 2, /*! playback of a MIDI note input event */
-		OriginNoteHumanizing= 4, /*! created by note humanizing instrument function */
-		OriginNoteStacking  = 8, /*! created by note stacking instrument function */
-		OriginArpeggio      =16, /*! created by arpeggio instrument function */
+		OriginNoteStacking  = 4, /*! created by note stacking instrument function */
+		OriginArpeggio      = 8, /*! created by arpeggio instrument function */
+		//OriginNoteHumanizing=16, /*! created by note humanizing instrument function */
 		//OriginCount //not used
 	};
 	//typedef Origins Origin;

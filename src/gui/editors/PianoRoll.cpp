@@ -547,6 +547,7 @@ void PianoRoll::markSemiTone( int i )
 			break;
 		}
 		case stmaMarkCurrentScale:
+                        //qInfo("PianoRoll scale=%s",m_scaleModel.currentText());
 			chord = & InstrumentFunctionNoteStacking::ChordTable::getInstance()
 					.getScaleByName( m_scaleModel.currentText() );
 		case stmaMarkCurrentChord:

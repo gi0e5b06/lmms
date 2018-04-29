@@ -240,6 +240,33 @@ private:
 
 
 
+class InstrumentFunctionNoteFiltering : public InstrumentFunction
+{
+	Q_OBJECT
+
+public:
+	InstrumentFunctionNoteFiltering( Model * _parent );
+	virtual ~InstrumentFunctionNoteFiltering();
+
+	virtual bool processNote( NotePlayHandle* n );
+	virtual void saveSettings( QDomDocument & _doc, QDomElement & _parent );
+	virtual void loadSettings( const QDomElement & _this );
+
+	inline virtual QString nodeName() const
+	{
+		return "notefiltering";
+	}
+
+private:
+        BoolModel*  m_noteSelectionModel[12];
+	IntModel    m_actionModel;
+
+	friend class InstrumentFunctionNoteFilteringView;
+} ;
+
+
+
+
 class InstrumentFunctionNoteHumanizing : public InstrumentFunction
 {
 	Q_OBJECT

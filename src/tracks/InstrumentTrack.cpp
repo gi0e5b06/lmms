@@ -103,7 +103,7 @@ InstrumentTrack::InstrumentTrack( TrackContainer* tc ) :
 	m_panningModel( DefaultPanning, PanningLeft, PanningRight, 0.1f, this,
 			tr( "Panning" ) ),
 	m_audioPort( tr( "unnamed_track" ), true, &m_volumeModel,
-		     &m_panningModel, &m_mutedModel ),
+		     &m_panningModel, &m_mutedModel, &m_frozenModel ),
 	m_pitchModel( 0, MinPitchDefault, MaxPitchDefault, 1, this,
 		      tr( "Pitch" ) ),
 	m_pitchRangeModel( 1, 1, 60, this, tr( "Pitch range" ) ),
@@ -111,6 +111,7 @@ InstrumentTrack::InstrumentTrack( TrackContainer* tc ) :
 	m_useMasterPitchModel( true, this, tr( "Master Pitch") ),
 	m_instrument( NULL ),
 	m_soundShaping( this ),
+	m_noteFiltering( this ),
 	m_noteHumanizing( this ),
 	m_noteStacking( this ),
 	m_arpeggio( this ),
@@ -140,16 +141,9 @@ InstrumentTrack::InstrumentTrack( TrackContainer* tc ) :
 		 this, SLOT( updatePitchRange() ) );
 	connect( &m_effectChannelModel, SIGNAL( dataChanged() ),
 		 this, SLOT( updateEffectChannel() ) );
+	connect( &m_frozenModel, SIGNAL( dataChanged() ),
+		 this, SLOT( updateFrozenBuffer() ) );
 }
-
-
-int InstrumentTrack::baseNote() const
-{
-	int mp = m_useMasterPitchModel.value() ? Engine::getSong()->masterPitch() : 0;
-
-	return m_baseNoteModel.value() - mp;
-}
-
 
 
 InstrumentTrack::~InstrumentTrack()
@@ -164,16 +158,48 @@ InstrumentTrack::~InstrumentTrack()
 
 
 
+int InstrumentTrack::baseNote() const
+{
+	int mp = m_useMasterPitchModel.value() ? Engine::getSong()->masterPitch() : 0;
+
+	return m_baseNoteModel.value() - mp;
+}
+
+
+
 void InstrumentTrack::processAudioBuffer( sampleFrame* buf, const fpp_t frames, NotePlayHandle* n )
 {
+        const Song* song=Engine::getSong();
+
 	// we must not play the sound if this InstrumentTrack is muted...
 	if( /*tmp isMuted() ||*/
-           ( Engine::getSong()->playMode() != Song::Mode_PlayPattern
+           ( song->playMode() != Song::Mode_PlayPattern
              && n && n->isBbTrackMuted() ) || ! m_instrument )
 	{
 		memset(buf,0,frames*BYTES_PER_FRAME);
 		return;
 	}
+
+        /*
+        const f_cnt_t af=song->getPlayPos().absoluteFrame();
+
+        if(isFrozen()&&
+           (song->playMode() == Song::Mode_PlaySong)&&
+           song->isPlaying())
+        {
+                if(m_frozenBuf&&(af+frames<=m_frozenLen))
+                {
+                        qInfo("InstrumentTrack::processAudioBuffer use frozen buffer"
+                              " af=%d n=%p s=%p t=%p",
+                              af,n,buf,this);
+                        //memset(buf,0,frames*BYTES_PER_FRAME);
+                        for(f_cnt_t f=0;f<frames;++f)
+                                for(int c=0; c<2; ++c)
+                                        buf[f][c]=m_frozenBuf[af+f][c];
+                        return;
+                }
+        }
+        */
 
 	// Test for silent input data if instrument provides a single stream only (i.e. driven by InstrumentPlayHandle)
 	// We could do that in all other cases as well but the overhead for silence test is bigger than
@@ -225,6 +251,24 @@ void InstrumentTrack::processAudioBuffer( sampleFrame* buf, const fpp_t frames, 
 			}
 		}
 	}
+
+        /*
+        if(!isFrozen()&&
+           m_frozenBuf&&
+           (song->playMode() == Song::Mode_PlaySong)&&
+           song->isPlaying())
+        {
+                qInfo("InstrumentTrack::processAudioBuffer freeze"
+                      " af=%d n=%p s=%p t=%p",
+                      af,n,buf,this);
+                for( f_cnt_t f = 0; f < frames; ++f )
+                        for( int c = 0; c < 2; ++c )
+                        {
+                                if(af+f<m_frozenLen)
+                                        m_frozenBuf[af+f][c]=buf[f][c];
+                        }
+        }
+        */
 }
 
 
@@ -490,6 +534,7 @@ void InstrumentTrack::playNote( NotePlayHandle* _n, sampleFrame* _workingBuffer 
 {
 	// arpeggio- and chord-widget has to do its work -> adding sub-notes
 	// for chords/arpeggios
+	if(!m_noteFiltering         .processNote( _n )) return;
 	if(!m_noteHumanizing        .processNote( _n )) return;
 	if(!m_noteStacking          .processNote( _n )) return;
 	if(!m_arpeggio              .processNote( _n )) return;
@@ -551,6 +596,13 @@ void InstrumentTrack::setName( const QString & _new_name )
 }
 
 
+
+
+void InstrumentTrack::updateFrozenBuffer()
+{
+        //qInfo("InstrumentTrack::updateFrozenBuffer ap=%p",&m_audioPort);
+        m_audioPort.updateFrozenBuffer();
+}
 
 
 
@@ -621,13 +673,26 @@ void InstrumentTrack::removeMidiPortNode( DataFile & _dataFile )
 
 
 bool InstrumentTrack::play( const MidiTime & _start, const fpp_t _frames,
-							const f_cnt_t _offset, int _tco_num )
+                            const f_cnt_t _offset, int _tco_num )
 {
 	if( ! m_instrument || ! tryLock() )
 	{
 		return false;
 	}
-	const float frames_per_tick = Engine::framesPerTick();
+
+        const Song*   song  =Engine::getSong();
+        const float   fpt   =Engine::framesPerTick();
+	//const f_cnt_t fstart=_start.getTicks()*fpt;
+
+        if(isFrozen()&&
+           (song->playMode()==Song::Mode_PlaySong)&&
+           song->isPlaying())
+        {
+                //qInfo("InstrumentTrack::play FROZEN f=%d",fstart);
+                //silenceAllNotes(true);
+                unlock();
+                return true;
+        }
 
 	tcoVector tcos;
 	::BBTrack * bb_track = NULL;
@@ -643,7 +708,7 @@ bool InstrumentTrack::play( const MidiTime & _start, const fpp_t _frames,
 	else
 	{
 		getTCOsInRange( tcos, _start,
-				_start + static_cast<int>( _frames / frames_per_tick ) );
+				_start + static_cast<int>( _frames / fpt ) );
 	}
 
 	// Handle automation: detuning
@@ -697,8 +762,7 @@ bool InstrumentTrack::play( const MidiTime & _start, const fpp_t _frames,
 		Note * cur_note;
 		while( nit != notes.end() && ( cur_note = *nit )->pos() == cur_start )
 		{
-			const f_cnt_t note_frames =
-				cur_note->length().frames( frames_per_tick );
+			const f_cnt_t note_frames=cur_note->length().frames(fpt);
 
 			NotePlayHandle* notePlayHandle = NotePlayHandleManager::acquire( this, _offset, note_frames, *cur_note );
 			notePlayHandle->setBBTrack( bb_track );
@@ -757,6 +821,7 @@ void InstrumentTrack::saveTrackSpecificSettings( QDomDocument& doc, QDomElement 
 		thisElement.appendChild( i );
 	}
 	m_soundShaping          .saveState( doc, thisElement );
+	m_noteFiltering         .saveState( doc, thisElement );
 	m_noteHumanizing        .saveState( doc, thisElement );
 	m_noteStacking          .saveState( doc, thisElement );
 	m_arpeggio              .saveState( doc, thisElement );
@@ -800,6 +865,10 @@ void InstrumentTrack::loadTrackSpecificSettings( const QDomElement & thisElement
 			if( m_soundShaping.nodeName() == node.nodeName() )
 			{
 				m_soundShaping.restoreState( node.toElement() );
+			}
+			else if( m_noteFiltering.nodeName() == node.nodeName() )
+			{
+				m_noteFiltering.restoreState( node.toElement() );
 			}
 			else if( m_noteHumanizing.nodeName() == node.nodeName() )
 			{
@@ -1049,8 +1118,9 @@ void InstrumentTrackView::createFxLine()
 /*! \brief Assign a specific FX Channel for this track */
 void InstrumentTrackView::assignFxLine(int channelIndex)
 {
-	model()->effectChannelModel()->setValue( channelIndex );
+        qInfo("InstrumentTrackView::assignFxLine %d",channelIndex);
 
+	model()->effectChannelModel()->setValue( channelIndex );
 	gui->fxMixerView()->setCurrentFxLine( channelIndex );
 }
 
@@ -1275,13 +1345,13 @@ QMenu* InstrumentTrackView::createAudioOutputMenu()
 	//fxMenu->addSeparator();
 	for (int i = 0; i < Engine::fxMixer()->numChannels(); ++i)
 	{
-		FxChannel* currentChannel = Engine::fxMixer()->effectChannel( i );
+		FxChannel* ch=Engine::fxMixer()->effectChannel(i);
 
-		if(currentChannel!=fxChannel)
+		if(ch!=fxChannel)
 		{
-			QString label = tr( "Mixer %1:%2" ).arg( currentChannel->m_channelIndex ).arg( currentChannel->m_name );
-			QAction * action = fxMenu->addAction( label, fxMenuSignalMapper, SLOT( map() ) );
-			fxMenuSignalMapper->setMapping(action, currentChannel->m_channelIndex);
+			QString  label =tr( "Mixer %1:%2" ).arg( ch->m_channelIndex ).arg( ch->m_name );
+			QAction* action=fxMenu->addAction( label, fxMenuSignalMapper, SLOT( map() ) );
+			fxMenuSignalMapper->setMapping(action, ch->m_channelIndex);
 		}
 	}
 
@@ -1346,13 +1416,13 @@ QMenu * InstrumentTrackView::createFxMenu(QString title, QString newFxLabel)
 
 	for (int i = 0; i < Engine::fxMixer()->numChannels(); ++i)
 	{
-		FxChannel * currentChannel = Engine::fxMixer()->effectChannel( i );
+		FxChannel* ch=Engine::fxMixer()->effectChannel(i);
 
-		if ( currentChannel != fxChannel )
+		if (ch!=fxChannel)
 		{
-			QString label = tr( "FX %1: %2" ).arg( currentChannel->m_channelIndex ).arg( currentChannel->m_name );
-			QAction * action = fxMenu->addAction( label, fxMenuSignalMapper, SLOT( map() ) );
-			fxMenuSignalMapper->setMapping(action, currentChannel->m_channelIndex);
+			QString  label =tr( "FX %1: %2" ).arg( ch->m_channelIndex ).arg( ch->m_name );
+			QAction* action=fxMenu->addAction( label, fxMenuSignalMapper, SLOT( map() ) );
+			fxMenuSignalMapper->setMapping(action, ch->m_channelIndex);
 		}
 	}
 
@@ -1573,11 +1643,13 @@ InstrumentTrackWindow::InstrumentTrackWindow( InstrumentTrackView * _itv ) :
 	m_ssView = new InstrumentSoundShapingView( m_tabWidget );
 
 	// FUNC tab
+	m_noteFilteringView = new InstrumentFunctionNoteFilteringView( &m_track->m_noteFiltering );
 	m_noteHumanizingView = new InstrumentFunctionNoteHumanizingView( &m_track->m_noteHumanizing );
 	m_noteStackingView = new InstrumentFunctionNoteStackingView( &m_track->m_noteStacking );
 	m_arpeggioView = new InstrumentFunctionArpeggioView( &m_track->m_arpeggio );
 	m_noteDuplicatesRemovingView = new InstrumentFunctionNoteDuplicatesRemovingView( &m_track->m_noteDuplicatesRemoving );
 
+	m_noteFilteringView->setMinimumWidth(230);
 	m_noteHumanizingView->setMinimumWidth(230);
 	m_noteStackingView->setMinimumWidth(230);
 	m_arpeggioView->setMinimumWidth(230);
@@ -1593,6 +1665,7 @@ InstrumentTrackWindow::InstrumentTrackWindow( InstrumentTrackView * _itv ) :
 	instrumentFunctionsLayout->setContentsMargins( 1,1,1,1 );
 	instrumentFunctionsLayout->setMargin( 2 );
 	//instrumentFunctionsLayout->addStrut( 230 );
+	instrumentFunctionsLayout->addWidget( m_noteFilteringView );
 	instrumentFunctionsLayout->addWidget( m_noteHumanizingView );
 	instrumentFunctionsLayout->addWidget( m_noteStackingView );
 	instrumentFunctionsLayout->addWidget( m_arpeggioView );
@@ -1722,6 +1795,7 @@ void InstrumentTrackWindow::modelChanged()
 	}
 
 	m_ssView->setModel( &m_track->m_soundShaping );
+	m_noteFilteringView->setModel( &m_track->m_noteFiltering );
 	m_noteHumanizingView->setModel( &m_track->m_noteHumanizing );
 	m_noteStackingView->setModel( &m_track->m_noteStacking );
 	m_arpeggioView->setModel( &m_track->m_arpeggio );

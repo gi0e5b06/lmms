@@ -25,6 +25,8 @@
 #include <QLabel>
 #include <QLayout>
 
+#include "Note.h"
+#include "LedCheckbox.h"
 #include "InstrumentFunctions.h"
 #include "InstrumentFunctionViews.h"
 #include "ComboBox.h"
@@ -336,3 +338,54 @@ void InstrumentFunctionNoteDuplicatesRemovingView::modelChanged()
 	m_cc = castModel<InstrumentFunctionNoteDuplicatesRemoving>();
 	m_groupBox        ->setModel( &m_cc->m_enabledModel );
 }
+
+
+
+
+InstrumentFunctionNoteFilteringView::InstrumentFunctionNoteFilteringView( InstrumentFunctionNoteFiltering* cc, QWidget* parent ) :
+	InstrumentFunctionView( cc, tr( "FILTERING" ), parent ),
+	m_cc( cc ),
+	m_actionComboBox( new ComboBox() )
+{
+	QGridLayout* mainLayout = new QGridLayout( m_groupBox );
+	mainLayout->setContentsMargins( 6, 16, 6, 6 );
+	mainLayout->setColumnStretch( 5, 1 );
+	mainLayout->setHorizontalSpacing( 6 );
+	mainLayout->setVerticalSpacing( 1 );
+
+	mainLayout->addWidget( m_actionComboBox, 0, 0, 1, 4 );
+
+        for(int i=0;i<12;++i)
+        {
+                m_noteSelectionLed[i]=new LedCheckBox(Note::findKeyName(i)
+                                                      .replace("0",""),NULL,"");
+                mainLayout->addWidget( m_noteSelectionLed[i],
+                                       i/4+1, i%4, 1, 1,
+                                       Qt::AlignHCenter );
+        }
+}
+
+
+
+
+InstrumentFunctionNoteFilteringView::~InstrumentFunctionNoteFilteringView()
+{
+        for(int i=0;i<12;++i)
+                delete m_noteSelectionLed[i];
+}
+
+
+
+
+void InstrumentFunctionNoteFilteringView::modelChanged()
+{
+	m_cc = castModel<InstrumentFunctionNoteFiltering>();
+	m_groupBox      ->setModel( &m_cc->m_enabledModel );
+	m_actionComboBox->setModel( &m_cc->m_actionModel );
+        for(int i=0;i<12;++i)
+                m_noteSelectionLed[i]->setModel(m_cc->m_noteSelectionModel[i]);
+}
+
+
+
+

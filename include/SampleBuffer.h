@@ -218,6 +218,9 @@ public:
         void resample( const sample_rate_t _src_sr,
                        const sample_rate_t _dst_sr );
 
+        void retune( //const sample_rate_t _src_sr,
+                     const double _semitones );
+
 	void normalizeSampleRate( const sample_rate_t _src_sr,
                                   bool _keep_settings = false );
 

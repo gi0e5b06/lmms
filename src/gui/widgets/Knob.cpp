@@ -866,9 +866,6 @@ void Knob::focusOutEvent( QFocusEvent * _fe )
 
 void Knob::mouseDoubleClickEvent( QMouseEvent * )
 {
-        FloatModel* m=model();
-        if(!m) return;
-
 	enterValue();
 }
 
@@ -877,7 +874,7 @@ void Knob::mouseDoubleClickEvent( QMouseEvent * )
 
 void Knob::paintEvent(QPaintEvent* _pe)
 {
-	PAINT_THREAD_CHECK
+	//PAINT_THREAD_CHECK
 	//DEBUG_THREAD_PRINT
 
 	QPainter p( this );

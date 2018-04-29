@@ -42,6 +42,7 @@
 template<class T> class QQueue;
 
 class QLineEdit;
+class InstrumentFunctionNoteFilteringView;
 class InstrumentFunctionNoteHumanizingView;
 class InstrumentFunctionNoteStackingView;
 class InstrumentFunctionArpeggioView;
@@ -222,7 +223,6 @@ public:
 
 	void setPreviewMode( const bool );
 
-
 signals:
 	void instrumentChanged();
 	void midiNoteOn( const Note& );
@@ -243,6 +243,7 @@ protected slots:
 	void updatePitch();
 	void updatePitchRange();
 	void updateEffectChannel();
+        void updateFrozenBuffer();
 
 
 private:
@@ -277,13 +278,13 @@ private:
 
 	Instrument * m_instrument;
 	InstrumentSoundShaping m_soundShaping;
+	InstrumentFunctionNoteFiltering m_noteFiltering;
 	InstrumentFunctionNoteHumanizing m_noteHumanizing;
 	InstrumentFunctionNoteStacking m_noteStacking;
 	InstrumentFunctionArpeggio m_arpeggio;
 	InstrumentFunctionNoteDuplicatesRemoving m_noteDuplicatesRemoving;
 
 	Piano m_piano;
-
 
 	friend class InstrumentTrackView;
 	friend class InstrumentTrackWindow;
@@ -466,6 +467,7 @@ private:
 	TabWidget * m_tabWidget;
 	PluginView * m_instrumentView;
 	InstrumentSoundShapingView * m_ssView;
+	InstrumentFunctionNoteFilteringView* m_noteFilteringView;
 	InstrumentFunctionNoteHumanizingView* m_noteHumanizingView;
 	InstrumentFunctionNoteStackingView* m_noteStackingView;
 	InstrumentFunctionArpeggioView* m_arpeggioView;

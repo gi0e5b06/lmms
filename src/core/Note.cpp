@@ -233,3 +233,42 @@ bool Note::withinRange(int tickStart, int tickEnd) const
 	return pos().getTicks() >= tickStart && pos().getTicks() <= tickEnd
 		&& length().getTicks() != 0;
 }
+
+static QHash<QString,int> MIDI_KEYS_N2I;
+static QVector<QString>   MIDI_KEYS_I2N;
+
+void Note::buildKeyTables()
+{
+        if(MIDI_KEYS_N2I.size()==0)
+        {
+                const char* NOK[12]={ "c","c#","d","d#","e","f","f#","g","g#","a","a#","b" };
+                for(int o=0; o<11; o++)
+                for(int n=0;n<12;n++)
+                {
+                        int i=o*12+n;
+                        if(i>127) continue;
+                        QString k=QString("%1%2").arg(NOK[n]).arg(o);
+                        MIDI_KEYS_N2I.insert(k,i);
+                        MIDI_KEYS_I2N.insert(i,k);
+                }
+        }
+}
+
+
+int Note::findKeyNum(QString& _name)
+{
+        buildKeyTables();
+        int r=MIDI_KEYS_N2I.value(_name.toLower(),-1);
+        if((r>=0)||r<=127) return r;
+        r=_name.toInt();
+        if((r>0)||(r<=127)||(_name=="0")) return r;
+        return -1;
+}
+
+
+QString Note::findKeyName(int _num)
+{
+        if((_num<0)||(_num>127)) return "";
+        buildKeyTables();
+        return MIDI_KEYS_I2N.value(_num,"");
+}

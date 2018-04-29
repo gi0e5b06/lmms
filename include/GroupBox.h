@@ -54,6 +54,7 @@ public:
 		return m_titleBarHeight;
 	}
 
+        virtual void enterValue();
 
 protected:
 	virtual void mousePressEvent( QMouseEvent * _me );

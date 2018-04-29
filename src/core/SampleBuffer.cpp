@@ -1564,6 +1564,55 @@ void SampleBuffer::resample( const sample_rate_t _srcSR,
 
 
 
+void SampleBuffer::retune( //const sample_rate_t _srcSR,
+                           const double _semitones )
+{
+        if(_semitones==0.) return;
+
+        double df=pow( 2., _semitones/-12. );
+	const f_cnt_t dst_frames=static_cast<f_cnt_t>( m_frames * df );
+        sampleFrame * dst_data=MM_ALLOC(sampleFrame,dst_frames);
+
+	// yeah, libsamplerate, let's rock with sinc-interpolation!
+	int error;
+	SRC_STATE * state;
+	if( ( state = src_new( SRC_SINC_MEDIUM_QUALITY,
+                               DEFAULT_CHANNELS, &error ) ) != NULL )
+	{
+		SRC_DATA src_data;
+		src_data.end_of_input = 1;
+		src_data.data_in = m_data[0];//data[0];
+		src_data.data_out = dst_data[0];//dst_buf[0];
+		src_data.input_frames = m_frames;
+		src_data.output_frames = dst_frames;
+		src_data.src_ratio = df;
+		if( ( error = src_process( state, &src_data ) ) )
+		{
+			qWarning( "SampleBuffer: error while retuning: %s",
+                                  src_strerror( error ) );
+		}
+		src_delete( state );
+	}
+	else
+	{
+		qWarning("Error: src_new() failed in sample_buffer.cpp!");
+	}
+	//dst_sb->update();
+	//return dst_sb;
+        if(!error)
+        {
+                if(m_data!=m_origData) MM_FREE(m_data);
+                m_data=dst_data;
+                m_frames=dst_frames;
+
+                //TODO: adjust points with ratio
+        }
+        else MM_FREE(dst_data);
+}
+
+
+
+
 void SampleBuffer::setAudioFile( const QString & _audio_file )
 {
 	m_audioFile = tryToMakeRelative( _audio_file );

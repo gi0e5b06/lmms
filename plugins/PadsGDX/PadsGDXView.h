@@ -61,6 +61,8 @@ class PadsGDXView : public InstrumentView
 	virtual void onSampleUpdated();
 	virtual void openAudioFile();
 	virtual void onKeyUpdated(int);
+        virtual void loadSFZFile();
+        virtual void saveSFZFile();
 
  protected:
 	virtual void dragEnterEvent(QDragEnterEvent* _dee);
@@ -69,6 +71,7 @@ class PadsGDXView : public InstrumentView
 
  private:
 	void updateWaveView(bool _full);
+        static QString selectSFZFile(const QString& _file);
 
 	static QPixmap* s_artwork;
 
@@ -77,12 +80,14 @@ class PadsGDXView : public InstrumentView
 	Knob*                   m_endKnob;
 	Knob*                   m_loopStartKnob;
 	Knob*                   m_loopEndKnob;
-	//Knob*                   m_ampKnob;
+	Knob*                   m_ampKnob;
 	PixmapButton*           m_openAudioFileButton;
 	PixmapButton*           m_reverseButton;
 	automatableButtonGroup* m_loopGroup;
 	PixmapButton*           m_stutterButton;
 	//ComboBox*               m_interpBox;
+        PixmapButton*           m_loadSFZFileButton;
+        PixmapButton*           m_saveSFZFileButton;
 } ;
 
 

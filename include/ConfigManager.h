@@ -45,6 +45,7 @@ const QString PRESETS_PATH = "presets/";
 const QString SAMPLES_PATH = "samples/";
 const QString GIG_PATH = "samples/gig/";
 const QString SF2_PATH = "samples/sf2/";
+const QString SOUNDFONTS_PATH = "soundfonts/";
 const QString LADSPA_PATH ="plugins/ladspa/";
 const QString DEFAULT_THEME_PATH = "themes/default/";
 const QString TRACK_ICON_PATH = "track_icons/";
@@ -92,6 +93,11 @@ public:
 	QString userSamplesDir() const
 	{
 		return workingDir() + SAMPLES_PATH;
+	}
+
+	QString userSoundfontsDir() const
+	{
+		return workingDir() + SOUNDFONTS_PATH;
 	}
 
 	QString userGigDir() const

@@ -23,10 +23,15 @@
  */
 
 
+#include <QHash>
 #include <QPainter>
 #include <QBitmap>
 #include <QDomDocument>
+#include <QDir>
+#include <QFile>
 #include <QFileInfo>
+#include <QIODevice>
+#include <QTextStream>
 #include <QDropEvent>
 
 #include <samplerate.h>
@@ -74,6 +79,7 @@ PadsGDX::PadsGDX( InstrumentTrack * _instrument_track ) :
         m_currentKey(-1),
         m_checking( false ),
         m_loading( false ),
+        m_SFZFile( "" ),
 	m_nextPlayStartPoint( 0 ),
 	m_nextPlayBackwards( false )
 {
@@ -133,7 +139,9 @@ void PadsGDX::playNote(NotePlayHandle* _n, sampleFrame* _buffer )
 	// Magic key - a frequency < 20 (say, the bottom piano note if using
 	// a A4 base tuning) restarts the start point. The note is not actually
 	// played.
-	if( m_stutterModel[key]->value() == true && _n->frequency() < 20.0 )
+	if( m_stutterModel[key]&&
+            m_stutterModel[key]->value()==true&&
+            _n->frequency()<20.0 )
 	{
 		m_nextPlayStartPoint = sample->startFrame();
 		m_nextPlayBackwards = false;
@@ -142,13 +150,16 @@ void PadsGDX::playNote(NotePlayHandle* _n, sampleFrame* _buffer )
 
 	if( !_n->m_pluginData )
 	{
-		if( m_stutterModel[key]->value() == true && m_nextPlayStartPoint >= sample->endFrame() )
+		if( m_stutterModel[key]&&
+                    m_stutterModel[key]->value()==true&&
+                    m_nextPlayStartPoint >= sample->endFrame() )
 		{
 			// Restart playing the note if in stutter mode, not in loop mode,
 			// and we're at the end of the sample.
 			m_nextPlayStartPoint = sample->startFrame();
 			m_nextPlayBackwards = false;
 		}
+
 		// set interpolation mode for libsamplerate
 		int srcmode = SRC_LINEAR;
                 /*
@@ -255,13 +266,13 @@ PluginView* PadsGDX::instantiateView( QWidget* _parent )
 }
 
 
-void PadsGDX::createKey(int _key,const QString& _fileName)
+void PadsGDX::createKey(int _key,const QString& _fileName,double _semitones)
 {
         if(_key<0 || _key>127) return;
-        createKey(_key,new SampleBuffer(_fileName));
+        createKey(_key,new SampleBuffer(_fileName),_semitones);
 }
 
-void PadsGDX::createKey(int _key,SampleBuffer* _sample)
+void PadsGDX::createKey(int _key,SampleBuffer* _sample,double _semitones)
 {
         if(_key<0 || _key>127) return;
         if(!_sample) return;
@@ -269,12 +280,14 @@ void PadsGDX::createKey(int _key,SampleBuffer* _sample)
         SampleBuffer* old=m_sampleBuffer[_key];
         if(old) destroyKey(_key);
 
-        m_sampleBuffer[_key]=_sample;
-	//m_ampModel( 100, 0, 500, 1, this, tr( "Amplify" ) );
-	m_startPointModel    [_key]=new FloatModel( 0.f, 0.f, 1, 0.0000001f, this, tr( "Start of sample" ) );
-	m_endPointModel      [_key]=new FloatModel( 1.f, 0.f, 1, 0.0000001f, this, tr( "End of sample" ) );
-	m_loopStartPointModel[_key]=new FloatModel( 0.f, 0.f, 1, 0.0000001f, this, tr( "Start of loop" ) );
-	m_loopEndPointModel  [_key]=new FloatModel( 1.f, 0.f, 1, 0.0000001f, this, tr( "End of loop" ) );
+        if(_semitones!=0.) _sample->retune(_semitones);
+        m_semitones          [_key]=_semitones;
+        m_sampleBuffer       [_key]=_sample;
+	m_ampModel           [_key]=new FloatModel( 100.f, 0.f, 500.f, 0.1f,       this, tr( "Amplify" ) );
+	m_startPointModel    [_key]=new FloatModel(   0.f, 0.f,   1.f, 0.0000001f, this, tr( "Start of sample" ) );
+	m_endPointModel      [_key]=new FloatModel(   1.f, 0.f,   1.f, 0.0000001f, this, tr( "End of sample" ) );
+	m_loopStartPointModel[_key]=new FloatModel(   0.f, 0.f,   1.f, 0.0000001f, this, tr( "Start of loop" ) );
+	m_loopEndPointModel  [_key]=new FloatModel(   1.f, 0.f,   1.f, 0.0000001f, this, tr( "End of loop" ) );
 	m_reverseModel       [_key]=new BoolModel ( false, this, tr( "Reverse sample" ) );
 	m_loopModel          [_key]=new IntModel  ( 0, 0, 2, this, tr( "Loop mode" ) );
 	m_stutterModel       [_key]=new BoolModel ( false, this, tr( "Stutter" ) );
@@ -283,6 +296,8 @@ void PadsGDX::createKey(int _key,SampleBuffer* _sample)
         connect( _sample, SIGNAL( sampleUpdated() ),
                  this, SLOT( onSampleUpdated() ) );
 
+	connect( m_ampModel[_key], SIGNAL( dataChanged() ),
+		 this, SLOT( onAmpModelChanged() ) );
         connect( m_reverseModel[_key], SIGNAL( dataChanged() ),
                  this, SLOT( onReverseModelChanged() ) );
 	connect( m_startPointModel[_key], SIGNAL( dataChanged() ),
@@ -296,8 +311,6 @@ void PadsGDX::createKey(int _key,SampleBuffer* _sample)
 	connect( m_stutterModel[_key], SIGNAL( dataChanged() ),
 		 this, SLOT( onStutterModelChanged() ) );
 
-	//connect( m_ampModel[_key], SIGNAL( dataChanged() ),
-	//	 this, SLOT( onAmpModelChanged() ) );
 	//interpolation modes
 	//m_interpolationModel.addItem( tr( "None" ) );
 	//m_interpolationModel.addItem( tr( "Linear" ) );
@@ -452,18 +465,20 @@ void PadsGDX::onReverseModelChanged()
 }
 
 
-/*
 void PadsGDX::onAmpModelChanged( void )
 {
         if(m_loading) return;
+
+        int key=currentKey();
         SampleBuffer* sample=currentSample();
 
         if(sample)
         {
                 sample->setAmplification(m_ampModel[key]->value()/100.0f);
+                emit dataChanged();
         }
 }
-*/
+
 
 void PadsGDX::onStutterModelChanged()
 {
@@ -620,6 +635,9 @@ void PadsGDX::saveSettings(QDomDocument& _doc, QDomElement& _this)
                 QDomElement e=_doc.createElement("sample");
                 samples.appendChild(e);
                 e.setAttribute("key",i);
+                if(m_semitones[i]!=0.)
+                        e.setAttribute("semitones",m_semitones[i]);
+
                 QString f=sample->audioFile();
                 if(f=="")
                 {
@@ -634,7 +652,7 @@ void PadsGDX::saveSettings(QDomDocument& _doc, QDomElement& _this)
 
                 m_reverseModel        [i]->saveSettings( _doc, e, "reversed" );
                 m_loopModel           [i]->saveSettings( _doc, e, "looped" );
-                //m_ampModel          [i]->saveSettings( _doc, e, "amp" );
+                m_ampModel            [i]->saveSettings( _doc, e, "amp" );
                 m_stutterModel        [i]->saveSettings( _doc, e, "stutter" );
                 //m_interpolationModel[i]->saveSettings( _doc, e, "interp" );
                 m_startPointModel     [i]->saveSettings( _doc, e, "start" );
@@ -666,8 +684,9 @@ void PadsGDX::loadSettings( const QDomElement & _this )
 
                         destroyKey(i);
 
-                        QString file=e.attribute("src");
-                        QString data=e.attribute("data");
+                        double semitones=e.attribute("semitones").toDouble();
+                        QString     file=e.attribute("src");
+                        QString     data=e.attribute("data");
 
                         if(file!="")
                         {
@@ -704,11 +723,11 @@ void PadsGDX::loadSettings( const QDomElement & _this )
                                 continue;
                         }
 
-                        createKey(i,sample);
+                        createKey(i,sample,semitones);
 
                         m_reverseModel        [i]->loadSettings( _this, "reversed" );
                         m_loopModel           [i]->loadSettings( _this, "looped" );
-                        //m_ampModel          [i]->loadSettings( _this, "amp" );
+                        m_ampModel            [i]->loadSettings( _this, "amp" );
                         m_stutterModel        [i]->loadSettings( _this, "stutter" );
                         //m_interpolationModel[i]->loadSettings( _this, "interp" );
                         m_startPointModel     [i]->loadSettings( _this, "start" );
@@ -738,6 +757,216 @@ void PadsGDX::loadSettings( const QDomElement & _this )
                         onPointChanged();
                 }
         }
+}
+
+
+const QString PadsGDX::SFZFile()
+{
+        return m_SFZFile;
+}
+
+
+void PadsGDX::loadSFZ(const QString& _file)
+{
+        m_SFZFile=_file;
+
+        QFile in(_file);
+        if(!in.open(QIODevice::ReadOnly))
+        {
+                in.close();
+        }
+        else
+        {
+                QTextStream tin(&in);
+                QString s=tin.readAll();
+                QRegExp rx2("\n[ \r\t\f\n]*\n+");
+                s.replace(rx2,"\n");
+                QRegExp rx1("(\\s|^)/[^\n]*\n*");
+                s.replace(rx1,"\n");
+                s=s.trimmed();
+                //qWarning("[S]%s\n---\n",s.toUtf8().constData());
+                QStringList groups=s.split("<group>");
+                foreach(QString g,groups)
+                {
+                        g=g.trimmed();
+                        //qWarning("[G]%s\n---",g.toUtf8().constData());
+                        QStringList regions=g.split("<region>");
+                        bool first=true;
+                        QHash<QString,QString> tg;
+
+                        foreach(QString r,regions)
+                        {
+                                QHash<QString,QString> tr;
+                                r=r.trimmed();
+                                //qWarning("[R]%s\n---",r.toUtf8().constData());
+                                QStringList opcodes=r.split(QRegExp("\\b(?=[_a-z]+=)"));
+                                foreach(QString o,opcodes)
+                                {
+                                        o=o.trimmed();
+                                        if(o=="") continue;
+                                        //qWarning("[O]%s\n---",o.toUtf8().constData());
+                                        QStringList elements=o.split("=");
+                                        /*
+                                        foreach(QString e,elements)
+                                        {
+                                                e=e.trimmed();
+                                                qWarning("[E]%s",e.toUtf8().constData());
+                                        }
+                                        */
+                                        if(elements.size()!=2)
+                                        {
+                                                qWarning("SFZ bad format: %s",o.toUtf8().constData());
+                                                continue;
+                                        }
+                                        QString k=elements[0];
+                                        QString v=elements[1];
+                                        /*
+                                        qWarning("k[%s]=v[%s]",
+                                                 k.toUtf8().constData(),
+                                                 v.toUtf8().constData());
+                                        */
+                                        if(v=="") continue;
+                                        if(first) tg.insert(k,v);
+                                        else      tr.insert(k,v);
+                                }
+
+                                if(first) { first=false; continue; }
+
+                                foreach(QString k,tg.keys())
+                                        tr.insert(k,tg.value(k));
+
+                                QString f_sample("");
+                                int     f_lokey=-1;
+                                int     f_hikey=-1;
+                                int     f_pitch_keycenter=-1;
+                                int     f_transpose=0;
+                                int     f_tune=0;
+                                //lovel=0 hivel=127 tune=0
+
+                                foreach(QString k,tr.keys())
+                                {
+                                        QString v=tr.value(k);
+                                        if(k=="sample"         ) f_sample         =v;
+                                        if(k=="lokey"          ) f_lokey          =Note::findKeyNum(v);
+                                        if(k=="hikey"          ) f_hikey          =Note::findKeyNum(v);
+                                        if(k=="pitch_keycenter") f_pitch_keycenter=Note::findKeyNum(v);
+                                        if(k=="transpose"      ) f_transpose      =v.toInt();
+                                        if(k=="tune"           ) f_tune           =v.toInt();
+                                }
+
+                                if(f_sample=="") continue;
+                                f_sample.replace('\\','/');
+                                QFileInfo fi(QFileInfo(QFileInfo(in).dir(),f_sample));
+                                if(!fi.exists())
+                                {
+                                        qWarning("PadsGDX: sample file not found: %s",
+                                                 fi.absoluteFilePath().toUtf8().constData());
+                                        continue;
+                                }
+                                if((f_lokey==-1)||(f_hikey==-1)||(f_pitch_keycenter==-1)||
+                                   (f_lokey>f_hikey)||(f_lokey<0)||(f_hikey>127))
+                                {
+                                        qWarning("PadsGDX: info missing: lo=%d hi=%d kc=%d",
+                                                 f_lokey,f_hikey,f_pitch_keycenter);
+                                        continue;
+                                }
+                                for(int i=f_lokey;i<=f_hikey;++i)
+                                {
+                                        createKey(i,fi.absoluteFilePath(),
+                                                  f_transpose+f_tune/100.+i-f_pitch_keycenter);
+                                }
+                                //qWarning("[end of region]\n");
+                                //first=false;
+                        }
+                        //qWarning("[end of group]\n");
+                }
+                in.close();
+        }
+}
+
+
+void PadsGDX::saveSFZ(const QString& _file)
+{
+        m_SFZFile=_file;
+
+        QFile out(_file);
+        if(!out.open(QIODevice::WriteOnly))
+        {
+                out.close();
+        }
+        else
+        {
+                QString s=QString("// %1\n").arg(_file);
+                out.write(s.toUtf8());
+
+                s=QString("\n\n<group>\n\n");
+                //loop_mode=one_shot\nseq_position=1\n"
+                //        "seq_length=2\nampeg_sustain=0\nampeg_decay=1\nampeg_vel2decay=10\n");
+                out.write(s.toUtf8());
+
+                for(int i=0;i<128;i++)
+                {
+                        SampleBuffer* sample=m_sampleBuffer[i];
+                        if(sample==NULL) continue;
+
+                        QString f=sample->audioFile();
+                        if(f=="")
+                        {
+                                continue;
+                                //QString s;
+                                //e.setAttribute("data",sample->toBase64(s));
+                        }
+                        else
+                        {
+                                //TODO relative to sfz file
+                                f=SampleBuffer::tryToMakeRelative(f);
+                                //e.setAttribute("src",f);
+                        }
+
+                        /*
+                        m_reverseModel        [i]->saveSettings( _doc, e, "reversed" );
+                        m_loopModel           [i]->saveSettings( _doc, e, "looped" );
+                        m_ampModel            [i]->saveSettings( _doc, e, "amp" );
+                        m_stutterModel        [i]->saveSettings( _doc, e, "stutter" );
+                        //m_interpolationModel[i]->saveSettings( _doc, e, "interp" );
+                        m_startPointModel     [i]->saveSettings( _doc, e, "start" );
+                        m_endPointModel       [i]->saveSettings( _doc, e, "end" );
+                        m_loopStartPointModel [i]->saveSettings( _doc, e, "loopstart" );
+                        m_loopEndPointModel   [i]->saveSettings( _doc, e, "loopend" );
+                        */
+
+                        s=QString("\n<region>"
+                                  "\nsample=%1"
+                                  "\nlokey=%2\nhikey=%2\npitch_keycenter=%2"
+                                  "\ntranspose=%3"
+                                  "\ntune=%4"
+                                  "\n")
+                                .arg(f)
+                                .arg(Note::findKeyName(i))
+                                .arg((int)(m_semitones[i]))
+                                .arg((int)(100.*(m_semitones[i]-(int)m_semitones[i])));
+                        out.write(s.toUtf8());
+                }
+
+                //QTextStream out(&file); out << mystring;
+                out.close();
+        }
+
+        /*
+<group>
+loop_mode=one_shot
+seq_position=1
+seq_length=2
+ampeg_sustain=0
+ampeg_decay=1
+ampeg_vel2decay=10
+
+<region>
+sample=Samples\1st Violins\1st-violins-piz-rr1-g3.wav
+lokey=g3
+hikey=g#3
+pitch_keycenter=g3
+        */
 }
 
 

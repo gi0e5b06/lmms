@@ -22,6 +22,7 @@
  *
  */
 
+#include <QInputDialog>
 #include <QMenu>
 #include <QMouseEvent>
 
@@ -62,6 +63,10 @@ void AutomatableModelView::addDefaultActions( QMenu* menu )
 	AutomatableModel* model = modelUntyped();
 
 	AutomatableModelViewSlots* amvSlots = new AutomatableModelViewSlots( this, menu );
+
+	menu->addAction( embed::getIconPixmap( "edit_rename" ),
+						AutomatableModel::tr( "Enter &Value" ),
+						amvSlots, SLOT( enterValue() ) );
 
 	menu->addAction( embed::getIconPixmap( "reload" ),
 						AutomatableModel::tr( "&Reset (%1%2)" ).
@@ -161,8 +166,6 @@ void AutomatableModelView::mousePressEvent( QMouseEvent* event )
 
 
 
-
-
 AutomatableModelViewSlots::AutomatableModelViewSlots( AutomatableModelView* amv, QObject* parent ) :
 	QObject(),
 	m_amv( amv )
@@ -170,6 +173,13 @@ AutomatableModelViewSlots::AutomatableModelViewSlots( AutomatableModelView* amv,
 	connect( parent, SIGNAL( destroyed() ), this, SLOT( deleteLater() ), Qt::QueuedConnection );
 }
 
+
+
+
+void AutomatableModelViewSlots::enterValue()
+{
+        m_amv->enterValue();
+}
 
 
 

@@ -590,6 +590,6 @@ bool PadsGDXWaveView::knob::checkBound(double _v) const
 
 void PadsGDXWaveView::knob::paintEvent(QPaintEvent* _pe)
 {
-        if(model()->isDefaultConstructed()) return;
+        if(model() && model()->isDefaultConstructed()) return;
         Knob::paintEvent(_pe);
 }

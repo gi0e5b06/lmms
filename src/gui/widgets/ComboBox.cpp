@@ -28,6 +28,7 @@
 
 #include <QApplication>
 #include <QDesktopWidget>
+#include <QInputDialog>
 #include <QMouseEvent>
 #include <QPainter>
 #include <QStyleOptionFrame>
@@ -249,5 +250,33 @@ void ComboBox::setItem( QAction* item )
 	if( model() )
 	{
 		model()->setInitValue( item->data().toInt() );
+	}
+}
+
+
+
+
+void ComboBox::enterValue()
+{
+        IntModel* m=model();
+        if(!m) return;
+
+	bool ok;
+	bool new_val;
+
+        new_val = QInputDialog::getInt(this, windowTitle(),
+                                       tr( "Please enter a new value between "
+                                           "%1 and %2:" ).
+                                       arg( m->minValue() ).
+                                       arg( m->maxValue() ),
+                                       m->value(),//m->getRoundedValue(),
+                                       m->minValue(),
+                                       m->maxValue(),
+                                       0,//m->getDigitCount(),
+                                       &ok );
+
+	if( ok )
+	{
+		m->setValue( new_val );
 	}
 }

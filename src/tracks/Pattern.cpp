@@ -30,6 +30,8 @@
 #include <QPainter>
 #include <QPushButton>
 
+#include "Backtrace.h"
+
 #include "InstrumentTrack.h"
 #include "gui_templates.h"
 #include "embed.h"
@@ -43,7 +45,6 @@
 #include "MainWindow.h"
 
 #include <limits>
-
 
 QPixmap * PatternView::s_stepBtnOn0 = NULL;
 QPixmap * PatternView::s_stepBtnOn200 = NULL;
@@ -301,8 +302,9 @@ void Pattern::rearrangeAllNotes()
 
 void Pattern::clearNotes()
 {
-        if(m_notes.size()>0)
+        if((m_notes.size()>0)&&(dynamic_cast<Pattern*>(this)!=NULL))
         {
+                //BACKTRACE
                 if(instrumentTrack()) instrumentTrack()->lock();
                 for( NoteVector::Iterator it = m_notes.begin();
                      it != m_notes.end(); ++it )
@@ -313,6 +315,7 @@ void Pattern::clearNotes()
                 m_notes.clear();
                 if(instrumentTrack()) instrumentTrack()->unlock();
         }
+        //else qFatal("not a pattern\n");
 
 	checkType();
 	emit dataChanged();

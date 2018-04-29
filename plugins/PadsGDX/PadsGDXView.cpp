@@ -24,6 +24,7 @@
 
 
 #include <QObject>
+#include <QDialog>
 #include <QDir>
 #include <QPixmap>
 #include <QPainter>
@@ -36,7 +37,9 @@
 #include "PadsGDXView.h"
 #include "PadsGDXWaveView.h"
 
+#include "ConfigManager.h"
 #include "Engine.h"
+#include "FileDialog.h"
 #include "Song.h"
 #include "ToolTip.h"
 
@@ -80,17 +83,15 @@ PadsGDXView::PadsGDXView( Instrument * _instrument, QWidget * _parent ) :
 		(tr( "With this knob you can set the point where "
                      "PadsGDX should stop playing your sample. " ));
 
-        /*
-	m_ampKnob = new Knob( knobBright_26, this );
+	m_ampKnob = new PadsGDXWaveView::knob( this );
 	m_ampKnob->setVolumeKnob( true );
-	m_ampKnob->move(6,6);
+	m_ampKnob->move(6,86);
 	m_ampKnob->setHintText( tr( "Amplify:" ), "%" );
 	m_ampKnob->setWhatsThis
 		(tr( "With this knob you can set the amplify ratio. When you "
                      "set a value of 100% your sample isn't changed. "
                      "Otherwise it will be amplified up or down (your "
                      "actual sample-file isn't touched!)" ));
-        */
 
         // interpolation selector
         /*
@@ -177,6 +178,40 @@ PadsGDXView::PadsGDXView( Instrument * _instrument, QWidget * _parent ) :
                      "amplify-value, and so on are not reset. So, it may not "
                      "sound like the original sample." ));
 
+	m_loadSFZFileButton = new PixmapButton( this );
+	m_loadSFZFileButton->setCursor( QCursor( Qt::PointingHandCursor ) );
+	m_loadSFZFileButton->move(186,106);
+	m_loadSFZFileButton->setActiveGraphic  (PLUGIN_NAME::getIconPixmap("load_sf"));
+	m_loadSFZFileButton->setInactiveGraphic(PLUGIN_NAME::getIconPixmap("load_sf"));
+	connect( m_loadSFZFileButton, SIGNAL( clicked() ),
+                 this, SLOT( loadSFZFile() ) );
+	ToolTip::add( m_loadSFZFileButton, tr( "Load another SFZ soundfont" ) );
+        /*
+	m_loadSFZFileButton->setWhatsThis
+                (tr( "Click here, if you want to open another audio-file. "
+                     "A dialog will appear where you can select your file. "
+                     "Settings like looping-mode, start and end-points, "
+                     "amplify-value, and so on are not reset. So, it may not "
+                     "sound like the original sample." ));
+        */
+
+	m_saveSFZFileButton = new PixmapButton( this );
+	m_saveSFZFileButton->setCursor( QCursor( Qt::PointingHandCursor ) );
+	m_saveSFZFileButton->move(186,126);
+	m_saveSFZFileButton->setActiveGraphic  (PLUGIN_NAME::getIconPixmap("save_sf"));
+	m_saveSFZFileButton->setInactiveGraphic(PLUGIN_NAME::getIconPixmap("save_sf"));
+	connect( m_saveSFZFileButton, SIGNAL( clicked() ),
+                 this, SLOT( saveSFZFile() ) );
+	ToolTip::add( m_saveSFZFileButton, tr( "Save the SFZ soundfont" ) );
+        /*
+	m_saveSFZFileButton->setWhatsThis
+                (tr( "Click here, if you want to open another audio-file. "
+                     "A dialog will appear where you can select your file. "
+                     "Settings like looping-mode, start and end-points, "
+                     "amplify-value, and so on are not reset. So, it may not "
+                     "sound like the original sample." ));
+        */
+
         // wavegraph
 	m_waveView=new PadsGDXWaveView(this,245,75);
 	m_waveView->move(2,172);
@@ -245,13 +280,14 @@ void PadsGDXView::onModelChanged()
         if(key<0 || key>127 || !a->currentSample())
         {
                 //qInfo("PadsGDXView::onModelChanged key not set");
-                m_startKnob    ->setModel(new FloatModel(0,0,0,1,NULL,"",true));
-                m_endKnob      ->setModel(new FloatModel(0,0,0,1,NULL,"",true));
-                m_loopStartKnob->setModel(new FloatModel(0,0,0,1,NULL,"",true));
-                m_loopEndKnob  ->setModel(new FloatModel(0,0,0,1,NULL,"",true));
-                m_reverseButton->setModel(new BoolModel (false  ,NULL,"",true));
-                m_loopGroup    ->setModel(new IntModel  (0,0,0  ,NULL,"",true));
-                m_stutterButton->setModel(new BoolModel (false  ,NULL,"",true));
+                m_startKnob    ->setModel(new FloatModel(0,0,0,1    ,NULL,"",true));
+                m_endKnob      ->setModel(new FloatModel(0,0,0,1    ,NULL,"",true));
+                m_loopStartKnob->setModel(new FloatModel(0,0,0,1    ,NULL,"",true));
+                m_loopEndKnob  ->setModel(new FloatModel(0,0,0,1    ,NULL,"",true));
+                m_reverseButton->setModel(new BoolModel (false      ,NULL,"",true));
+                m_loopGroup    ->setModel(new IntModel  (0,0,0      ,NULL,"",true));
+                m_stutterButton->setModel(new BoolModel (false      ,NULL,"",true));
+                m_ampKnob      ->setModel(new FloatModel(100,0,500,1,NULL,"",true));
         }
         else
         {
@@ -262,7 +298,7 @@ void PadsGDXView::onModelChanged()
                 m_reverseButton->setModel(a->m_reverseModel        [key]);
                 m_loopGroup    ->setModel(a->m_loopModel           [key]);
                 m_stutterButton->setModel(a->m_stutterModel        [key]);
-                //m_ampKnob      ->setModel( &a->m_ampModel            );
+                m_ampKnob      ->setModel(a->m_ampModel            [key]);
                 //m_interpBox    ->setModel( &a->m_interpolationModel  );
         }
 
@@ -418,4 +454,81 @@ void PadsGDXView::openAudioFile()
 		updateWaveView(true);
                 //m_waveView->setSample(castModel<PadsGDX>()->currentSample());
 	}
+}
+
+void PadsGDXView::loadSFZFile()
+{
+        PadsGDX* m=castModel<PadsGDX>();
+
+        QString file=m->SFZFile();
+        file=selectSFZFile(file);
+
+	if(file!="")
+	{
+                m->loadSFZ(file);
+		Engine::getSong()->setModified();
+		updateWaveView(true);
+        }
+}
+
+void PadsGDXView::saveSFZFile()
+{
+        PadsGDX* m=castModel<PadsGDX>();
+
+        QString file=m->SFZFile();
+        file=selectSFZFile(file);
+
+	if(file!="")
+	{
+                m->saveSFZ(file);
+                //Engine::getSong()->setModified();
+                //updateWaveView(true);
+        }
+}
+
+QString PadsGDXView::selectSFZFile(const QString& _file)
+{
+	FileDialog ofd( NULL, tr( "Open soundfont" ) );
+
+	QString dir;
+        QString file;
+	if( !_file.isNull() && _file!="" )
+	{
+		if(QFileInfo(_file).isRelative())
+		{
+			QString g=ConfigManager::inst()->userSoundfontsDir()+_file;
+			if(QFileInfo(g).exists()) file=g;
+		}
+		dir=QFileInfo(file).absolutePath();
+	}
+	else
+	{
+		dir=ConfigManager::inst()->userSoundfontsDir();
+	}
+	// change dir to position of previously opened file
+	ofd.setDirectory( dir );
+	ofd.setFileMode( FileDialog::ExistingFiles );
+
+	// set filters
+	QStringList types;
+	types << tr( "All Soundfonts (*.sfz)" )
+              << tr( "SFZ-Files (*.sfz)" )
+		;
+	ofd.setNameFilters(types);
+	if(!file.isEmpty())
+	{
+		// select previously opened file
+		ofd.selectFile(file);// QFileInfo( m_audioFile ).fileName() );
+	}
+
+	if( ofd.exec()==QDialog::Accepted )
+	{
+		if( ofd.selectedFiles().isEmpty() )
+		{
+			return QString::null;
+		}
+		return SampleBuffer::tryToMakeRelative( ofd.selectedFiles()[0] );
+	}
+
+	return QString::null;
 }

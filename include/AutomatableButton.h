@@ -49,7 +49,7 @@ public:
 	}
 
 	virtual void modelChanged();
-
+        virtual void enterValue();
 
 public slots:
 	virtual void update();
@@ -94,7 +94,7 @@ public:
 	void activateButton( AutomatableButton * _btn );
 
 	virtual void modelChanged();
-
+        virtual void enterValue();
 
 private slots:
 	void updateButtons();

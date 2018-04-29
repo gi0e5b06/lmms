@@ -73,6 +73,7 @@ set(LMMS_SRCS
 	core/VstSyncController.cpp
 
 	core/audio/AudioAlsa.cpp
+	core/audio/AudioAlsaGdx.cpp
 	core/audio/AudioDevice.cpp
 	core/audio/AudioFileDevice.cpp
 	core/audio/AudioFileAU.cpp

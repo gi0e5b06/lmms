@@ -51,6 +51,8 @@ public:
 		return castModel<ComboBoxModel>();
 	}
 
+        virtual void enterValue();
+
 public slots:
 	void selectNext();
 	void selectPrevious();

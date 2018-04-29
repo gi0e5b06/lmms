@@ -64,6 +64,8 @@ public:
 
 	Q_PROPERTY( QString text READ text WRITE setText )
 
+        virtual void enterValue();
+
 protected:
 	virtual void paintEvent( QPaintEvent * _pe );
 

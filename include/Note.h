@@ -26,7 +26,7 @@
 #ifndef NOTE_H
 #define NOTE_H
 
-#include <QtCore/QVector>
+#include <QVector>
 
 #include "volume.h"
 #include "panning.h"
@@ -77,7 +77,6 @@ const int NumKeys = 128;//NumOctaves * KeysPerOctave;
 const int DefaultKey = DefaultOctave*KeysPerOctave + Key_A;
 
 const float MaxDetuning = 4 * 12.0f;
-
 
 
 class EXPORT Note : public SerializingObject
@@ -210,6 +209,9 @@ public:
 
 	void createDetuning();
 
+        static int findKeyNum(QString& _name);
+        static QString findKeyName(int _num);
+
 
 protected:
 	virtual void saveSettings( QDomDocument & doc, QDomElement & parent );
@@ -217,6 +219,8 @@ protected:
 
 
 private:
+        static void buildKeyTables();
+
 	// for piano roll editing
 	bool m_selected;
 	int m_oldKey;

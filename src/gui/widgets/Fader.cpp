@@ -222,6 +222,13 @@ void Fader::mousePressEvent( QMouseEvent* mouseEvent )
 
 void Fader::mouseDoubleClickEvent( QMouseEvent* mouseEvent )
 {
+        enterValue();
+}
+
+
+
+void Fader::enterValue()
+{
 	bool ok;
 	float newValue;
 	// TODO: dbV handling

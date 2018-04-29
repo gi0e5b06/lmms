@@ -59,6 +59,10 @@ class PadsGDX : public Instrument
         virtual const QString audioFile();
 	virtual void loadFile(const QString& _file);
 
+        virtual const QString SFZFile();
+        virtual void loadSFZ(const QString& _file);
+        virtual void saveSFZ(const QString& _file);
+
 	virtual QString nodeName() const;
 
 	virtual int getBeatLen(NotePlayHandle* _n) const;
@@ -70,18 +74,18 @@ class PadsGDX : public Instrument
 
 	virtual PluginView* instantiateView(QWidget * _parent);
 
- signals:
+signals:
         //void dataChanged();
         void sampleUpdated();
         void isPlaying(f_cnt_t);
         void keyUpdated(int);
 
- public slots:
+public slots:
         virtual void setAudioFile(const QString& _audio_file,
                                   bool _rename=true);
         virtual void onSampleUpdated();
         virtual void onReverseModelChanged();
-        //virtual void onAmpModelChanged();
+        virtual void onAmpModelChanged();
         virtual void onStartPointChanged();
         virtual void onEndPointChanged();
         virtual void onLoopStartPointChanged();
@@ -90,8 +94,8 @@ class PadsGDX : public Instrument
         virtual void onStutterModelChanged();
 
  private:
-        void createKey(int _key,const QString& _fileName);
-        void createKey(int _key,SampleBuffer* _sample);
+        void createKey(int _key,const QString& _fileName,double _semitones=0.);
+        void createKey(int _key,SampleBuffer* _sample,double _semitones=0.);
         void destroyKey(int _key);
         int  currentKey();
         void setCurrentKey(int _key);
@@ -102,8 +106,10 @@ class PadsGDX : public Instrument
 	typedef SampleBuffer::handleState handleState;
 
         int           m_currentKey;
+        double        m_semitones[128];
 	SampleBuffer* m_sampleBuffer[128];
-	//FloatModel* m_ampModel[128];
+	FloatModel*   m_ampModel[128];
+	//FloatModel* m_panningModel[128];
 	FloatModel*   m_startPointModel[128];
 	FloatModel*   m_endPointModel[128];
 	FloatModel*   m_loopStartPointModel[128];
@@ -113,6 +119,7 @@ class PadsGDX : public Instrument
 	BoolModel*    m_stutterModel[128];
         bool          m_checking;
         bool          m_loading;
+        QString       m_SFZFile;
 
 	//ComboBoxModel m_interpolationModel;
 	f_cnt_t       m_nextPlayStartPoint;

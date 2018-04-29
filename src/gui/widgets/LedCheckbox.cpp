@@ -24,6 +24,7 @@
 
 
 #include <QFontMetrics>
+#include <QInputDialog>
 #include <QPainter>
 
 #include "LedCheckbox.h"
@@ -137,6 +138,30 @@ void LedCheckBox::onTextUpdated()
 }
 
 
+void LedCheckBox::enterValue()
+{
+        BoolModel* m=model();
+        if(!m) return;
+
+	bool ok;
+	bool new_val;
+
+        new_val = QInputDialog::getInt(this, windowTitle(),
+                                       tr( "Please enter a new value between "
+                                           "%1 and %2:" ).
+                                       arg( m->minValue() ).
+                                       arg( m->maxValue() ),
+                                       m->value(),//m->getRoundedValue(),
+                                       m->minValue(),
+                                       m->maxValue(),
+                                       0,//m->getDigitCount(),
+                                       &ok );
+
+	if( ok )
+	{
+		m->setValue( new_val );
+	}
+}
 
 
 

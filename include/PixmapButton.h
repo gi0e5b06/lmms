@@ -43,6 +43,8 @@ public:
 
 	QSize sizeHint() const;
 
+        virtual void enterValue();
+
 signals:
 	void doubleClicked();
 
