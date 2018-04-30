@@ -37,7 +37,8 @@ ScatterGDXControls::ScatterGDXControls( ScatterGDXEffect* effect ) :
 	m_pwrModel(  0.f,  0.f, 8.f, 1.f,      this, tr( "Power"    ) ),
         m_spdModel(  1.f, -1.f, 1.f, 0.00001f, this, tr( "Speed"    ) ),
 	m_frcModel(  2.f,  1.f, 8.f, 1.f,      this, tr( "Fraction" ) ),
-	m_ovrModel(  0.f,  0.f, 1.f, 0.00001f, this, tr( "Override" ) )
+	m_ovrModel(  0.f,  0.f, 1.f, 0.00001f, this, tr( "Override" ) ),
+	m_strModel(  0.f,  0.f, 1.f, 0.00001f, this, tr( "Start"    ) )
 {
 /*	connect( &m_volumeModel, SIGNAL( dataChanged() ), this, SLOT( changeControl() ) );
 	connect( &m_panModel, SIGNAL( dataChanged() ), this, SLOT( changeControl() ) );
@@ -62,6 +63,7 @@ void ScatterGDXControls::loadSettings( const QDomElement& _this )
 	m_spdModel.loadSettings( _this, "speed" );
 	m_frcModel.loadSettings( _this, "fraction" );
 	m_ovrModel.loadSettings( _this, "override" );
+	m_strModel.loadSettings( _this, "start" );
 }
 
 
@@ -73,4 +75,5 @@ void ScatterGDXControls::saveSettings( QDomDocument& doc, QDomElement& _this )
 	m_spdModel.saveSettings( doc, _this, "speed" );
 	m_frcModel.saveSettings( doc, _this, "fraction" );
 	m_ovrModel.saveSettings( doc, _this, "override" );
+	m_strModel.saveSettings( doc, _this, "start" );
 }

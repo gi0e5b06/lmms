@@ -851,13 +851,14 @@ void InstrumentFunctionNoteDuplicatesRemoving::loadSettings( const QDomElement &
 InstrumentFunctionNoteFiltering::InstrumentFunctionNoteFiltering( Model * _parent ) :
 	InstrumentFunction( _parent, tr( "NoteFiltering" ) ),
 	//m_enabledModel( false, this ),
-	m_actionModel(0,0,2,this,tr( "Action" ))
+	m_actionModel(this,tr( "Action" ))
 {
         for(int i=0;i<12;++i)
                 m_noteSelectionModel[i]=new BoolModel(true,this,Note::findKeyName(i));
+        m_actionModel.addItem(tr( "Skip" ));
+        m_actionModel.addItem(tr( "Up"   ));
+        m_actionModel.addItem(tr( "Down" ));
 }
-
-
 
 
 InstrumentFunctionNoteFiltering::~InstrumentFunctionNoteFiltering()
@@ -880,7 +881,31 @@ bool InstrumentFunctionNoteFiltering::processNote( NotePlayHandle * _n )
         if(v) return true;
 
         _n->setMasterNote();
-	return false;
+
+        const int action=m_actionModel.value();
+
+        if(action==1) //Up
+        {
+                for(int i=_n->key()+1;i<=127;i++)
+                {
+                        int  k=i%12;
+                        bool v=m_noteSelectionModel[k]->value();
+                        //qInfo("InstrumentFunctionNoteFiltering::processNote k=%d v=%d",k,v);
+                        if(v) { _n->setKey(i); return true; }
+                }
+        }
+        else if(action==2) //Down
+        {
+                for(int i=_n->key()-1;i>=0;i--)
+                {
+                        int  k=i%12;
+                        bool v=m_noteSelectionModel[k]->value();
+                        //qInfo("InstrumentFunctionNoteFiltering::processNote k=%d v=%d",k,v);
+                        if(v) { _n->setKey(i); return true; }
+                }
+        }
+
+        return false;
 }
 
 

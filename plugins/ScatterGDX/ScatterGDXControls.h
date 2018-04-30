@@ -70,6 +70,7 @@ private:
         FloatModel m_spdModel; //speed
         FloatModel m_frcModel; //fraction
         FloatModel m_ovrModel; //override
+        FloatModel m_strModel; //start
 
 	friend class ScatterGDXControlDialog;
 	friend class ScatterGDXEffect;

@@ -49,9 +49,8 @@ class ScatterGDXEffect : public Effect
 	ScatterGDXControls m_gdxControls;
         sampleFrame*       m_buffer;
         uint32_t           m_len,m_prev;
-        int32_t            m_pos,m_time,m_end;
-	//uint32_t           m_volCurrent;
-	//uint32_t           m_panCurrent;
+        int32_t            m_pos,m_time;
+        int32_t            m_start,m_end;
 
 	friend class ScatterGDXControls;
 

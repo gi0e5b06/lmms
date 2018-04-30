@@ -39,7 +39,7 @@ ScatterGDXControlDialog::ScatterGDXControlDialog( ScatterGDXControls* controls )
 	QPalette pal;
 	pal.setBrush( backgroundRole(), PLUGIN_NAME::getIconPixmap( "artwork" ) );
 	setPalette( pal );
-	setFixedSize( 160, 120 );
+	setFixedSize( 150, 170 );
 
         Knob* pwrKnob = new Knob( knobBright_26, this );
 	pwrKnob -> move( 10, 10 );
@@ -64,4 +64,10 @@ ScatterGDXControlDialog::ScatterGDXControlDialog( ScatterGDXControls* controls )
 	ovrKnob->setModel( &controls->m_ovrModel );
 	ovrKnob->setLabel( tr( "Override" ) );
 	ovrKnob->setHintText( tr( "Override:" ) , "" );
+
+        Knob* strKnob = new Knob( knobBright_26, this );
+	strKnob -> move( 80, 120 );
+	strKnob->setModel( &controls->m_strModel );
+	strKnob->setLabel( tr( "Start" ) );
+	strKnob->setHintText( tr( "Start:" ) , "" );
 }

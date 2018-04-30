@@ -58,7 +58,7 @@ ScatterGDXEffect::ScatterGDXEffect( Model* parent, const Descriptor::SubPluginFe
         m_time(0),
         m_end(0)
 {
-        m_buffer=MM_ALLOC(sampleFrame,384000);
+        m_buffer=MM_ALLOC(sampleFrame,1536000); //8s*192k
 }
 
 
@@ -77,7 +77,8 @@ bool ScatterGDXEffect::processAudioBuffer( sampleFrame* buf, const fpp_t frames 
 	if( !isEnabled() || !isRunning () ) return false;
 
         uint32_t MAXT=(uint32_t)(4.f*Engine::mixer()->baseSampleRate()*120.f/Engine::getSong()->getTempo());
-        while(MAXT>384000) MAXT/=2;
+        while(2*MAXT>1536000) MAXT/=2;
+        //uint32_t MAXT=1536000;
         //uint32_t MINT=MAXT/32; //unused
 
         int p=(int)m_gdxControls.m_pwrModel.value();
@@ -87,7 +88,7 @@ bool ScatterGDXEffect::processAudioBuffer( sampleFrame* buf, const fpp_t frames 
         {
                 if(m_pos<MAXT)
                 {
-                        for(fpp_t f=0; (f<frames)&&(m_pos<MAXT); ++f, ++m_pos)
+                        for(fpp_t f=0; (f<frames)&&(m_pos<2*MAXT); ++f, ++m_pos)
                         {
                                 m_buffer[m_pos][0]=buf[f][0];
                                 m_buffer[m_pos][1]=buf[f][1];
@@ -110,7 +111,7 @@ bool ScatterGDXEffect::processAudioBuffer( sampleFrame* buf, const fpp_t frames 
         if(m_prev==0) m_pos=0;
         m_prev=m_len;
 
-        if(m_pos<MAXT)
+        if(m_pos<2*MAXT)
         {
                 for(fpp_t f=0; (f<frames)&&(m_pos<MAXT); ++f, ++m_pos)
                 {
@@ -119,7 +120,9 @@ bool ScatterGDXEffect::processAudioBuffer( sampleFrame* buf, const fpp_t frames 
                 }
         }
 
-        m_end=MAXT/m_len;
+        float str=m_gdxControls.m_strModel.value();
+        m_start=lround(str*MAXT/m_len);
+        m_end=m_start+MAXT/m_len;
 
         //qInfo("MAXT=%d MINT=%d time=%d end=%d pos=%d",MAXT,MINT,m_time,m_end,m_pos);
 
@@ -137,8 +140,8 @@ bool ScatterGDXEffect::processAudioBuffer( sampleFrame* buf, const fpp_t frames 
 		curVal1=buf[f][1];
 		outSum += curVal0*curVal0+curVal1*curVal1;
 
-                if(m_time>=m_end) m_time=0;
-                if(m_time<0) m_time=m_end-1;
+                if(m_time>=m_end ) m_time=m_start;
+                if(m_time<m_start) m_time=m_end-1;
 
                 float s=m_gdxControls.m_spdModel.value();
                 int   t=abs(s)*m_time;

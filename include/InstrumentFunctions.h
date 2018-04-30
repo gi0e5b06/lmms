@@ -258,8 +258,8 @@ public:
 	}
 
 private:
-        BoolModel*  m_noteSelectionModel[12];
-	IntModel    m_actionModel;
+        BoolModel*    m_noteSelectionModel[12];
+	ComboBoxModel m_actionModel;
 
 	friend class InstrumentFunctionNoteFilteringView;
 } ;
