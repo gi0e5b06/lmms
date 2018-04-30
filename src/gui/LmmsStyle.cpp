@@ -177,7 +177,14 @@ void LmmsStyle::drawComplexControl( ComplexControl control,
 			return;
 		}
 	}
-/*	else if( control == CC_ScrollBar )
+        else if (control == CC_MdiControls)
+	{
+		QStyleOptionComplex so(*option);
+		so.palette.setColor(QPalette::Button, QColor(223, 228, 236));
+		QProxyStyle::drawComplexControl(control, &so, painter, widget);
+		return;
+	}
+        /*	else if( control == CC_ScrollBar )
 	{
 		painter->fillRect( option->rect, QApplication::palette().color( QPalette::Active,
 							QPalette::Background ) );

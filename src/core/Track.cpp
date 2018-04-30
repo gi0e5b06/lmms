@@ -726,91 +726,81 @@ void TrackContentObjectView::mousePressEvent( QMouseEvent * me )
 						    dataFile.toString(), thumbnail, this );
 			}
 		}
-		else
+		else if( isSelected() )
+                {
+                        m_action = MoveSelection;
+                }
+                else
 		{
-			if( isSelected() )
-			{
-				m_action = MoveSelection;
-			}
-			else
-			{
-				gui->songEditor()->m_editor->selectAllTcos( false );
-				m_tco->addJournalCheckPoint();
+                        gui->songEditor()->m_editor->selectAllTcos( false );
+                        m_tco->addJournalCheckPoint();
 
-				// move or resize
-				m_tco->setJournalling( false );
+                        // move or resize
+                        m_tco->setJournalling( false );
 
-				setInitialMousePos( me->pos() );
+                        setInitialMousePos( me->pos() );
 
-				if( me->x() < width() - RESIZE_GRIP_WIDTH )
-				{
-					m_action = Move;
-					m_oldTime = m_tco->startPosition();
-					QCursor c( Qt::SizeAllCursor );
-					QApplication::setOverrideCursor( c );
-					s_textFloat->setTitle( tr( "Current position" ) );
-					delete m_hint;
-					m_hint = TextFloat::displayMessage
-						( tr( "Hint" ),
-						  tr( "Press <%1> and drag to make "
-						      "a copy." ).arg(
-#ifdef LMMS_BUILD_APPLE
-								      "⌘"),
-#else
-						  "Ctrl"),
-#endif
-						embed::getIconPixmap( "hint" ), 0 );
-				}
-				else if( !m_tco->getAutoResize() )
-				{
-					m_action = Resize;
-					m_oldTime = m_tco->length();
-					QCursor c( Qt::SizeHorCursor );
-					QApplication::setOverrideCursor( c );
-					s_textFloat->setTitle( tr( "Current length" ) );
-					delete m_hint;
-					m_hint = TextFloat::displayMessage
-						( tr( "Hint" ),
-						  tr( "Press <%1> for free "
-						      "resizing." ).arg(
-#ifdef LMMS_BUILD_APPLE
-									"⌘"),
-#else
-						  "Ctrl"),
-#endif
-						embed::getIconPixmap( "hint" ), 0 );
-				}
-				//		s_textFloat->reparent( this );
-				// setup text-float as if TCO was already moved/resized
-				mouseMoveEvent( me );
-				s_textFloat->show();
-			}
-		}
-	}
-	else if( me->button() == Qt::RightButton )
+                        if( me->x() < width() - RESIZE_GRIP_WIDTH )
+                        {
+                                m_action = Move;
+                                QCursor c( Qt::SizeAllCursor );
+                                QApplication::setOverrideCursor( c );
+                                delete m_hint;
+                                m_hint = TextFloat::displayMessage
+                                        ( tr( "Hint" ),
+                                          tr( "Press <%1> and drag to make "
+                                              "a copy." ).arg(UI_CTRL_KEY),
+                                          embed::getIconPixmap( "hint" ), 0 );
+                                s_textFloat->setTitle( tr( "Current position" ) );
+                                s_textFloat->setText( QString( "%1:%2" ).
+                                                      arg( m_tco->startPosition().getTact() + 1 ).
+                                                      arg( m_tco->startPosition().getTicks() %
+                                                           MidiTime::ticksPerTact() ) );
+                                s_textFloat->moveGlobal( this, QPoint( width() + 2, height() + 2 ) );
+                        }
+                        else if( !m_tco->getAutoResize() )
+		        {
+                                m_action = Resize;
+                                QCursor c( Qt::SizeHorCursor );
+                                QApplication::setOverrideCursor( c );
+                                delete m_hint;
+                                m_hint = TextFloat::displayMessage
+                                        ( tr( "Hint" ),
+                                          tr( "Press <%1> for free "
+                                              "resizing." ).arg(UI_CTRL_KEY),
+                                          embed::getIconPixmap( "hint" ), 0 );
+                                s_textFloat->setTitle( tr( "Current length" ) );
+                                s_textFloat->setText( tr( "%1:%2 (%3:%4 to %5:%6)" ).
+                                                      arg( m_tco->length().getTact() ).
+                                                      arg( m_tco->length().getTicks() %
+                                                           MidiTime::ticksPerTact() ).
+                                                      arg( m_tco->startPosition().getTact() + 1 ).
+                                                      arg( m_tco->startPosition().getTicks() %
+                                                           MidiTime::ticksPerTact() ).
+                                                      arg( m_tco->endPosition().getTact() + 1 ).
+                                                      arg( m_tco->endPosition().getTicks() %
+                                                           MidiTime::ticksPerTact() ) );
+                                s_textFloat->moveGlobal( this, QPoint( width() + 2, height() + 2) );
+                        }
+                        //s_textFloat->reparent( this );
+                        s_textFloat->show();
+                }
+        }
+        else if( me->button() == Qt::RightButton )
+        {
+                if( me->modifiers() & Qt::ControlModifier )
+                        m_tco->toggleMute();
+                else if( me->modifiers() & Qt::ShiftModifier && !fixedTCOs() )
+                        remove();
+        }
+        else if( me->button() == Qt::MidButton )
 	{
-		if( me->modifiers() & Qt::ControlModifier )
-		{
-			m_tco->toggleMute();
-		}
-		else if( me->modifiers() & Qt::ShiftModifier && !fixedTCOs() )
-		{
-			remove();
-		}
-	}
-	else if( me->button() == Qt::MidButton )
-	{
-		if( me->modifiers() & Qt::ControlModifier )
-		{
-			m_tco->toggleMute();
-		}
-		else if( !fixedTCOs() )
-		{
-			remove();
-		}
-	}
+                if( me->modifiers() & Qt::ControlModifier )
+                        m_tco->toggleMute();
+                else if( !fixedTCOs() )
+                        remove();
+        }
 }
-
 
 
 
@@ -892,8 +882,7 @@ void TrackContentObjectView::mouseMoveEvent( QMouseEvent * me )
 				arg( m_tco->startPosition().getTact() + 1 ).
 				arg( m_tco->startPosition().getTicks() %
 						MidiTime::ticksPerTact() ) );
-		s_textFloat->moveGlobal( this, QPoint( width() + 2,
-		                                        height() + 2 ) );
+		s_textFloat->moveGlobal( this, QPoint( width() + 2, height() + 2 ) );
 	}
 	else if( m_action == MoveSelection )
 	{
@@ -952,8 +941,7 @@ void TrackContentObjectView::mouseMoveEvent( QMouseEvent * me )
 				arg( m_tco->endPosition().getTact() + 1 ).
 				arg( m_tco->endPosition().getTicks() %
 						MidiTime::ticksPerTact() ) );
-		s_textFloat->moveGlobal( this, QPoint( width() + 2,
-					height() + 2) );
+		s_textFloat->moveGlobal( this, QPoint( width() + 2, height() + 2) );
 	}
 	else
 	{
@@ -1955,6 +1943,8 @@ void TrackOperationsWidget::cloneTrack()
 		tcView->moveTrackView( newTrackView, i - 1 );
 		i--;
 	}
+
+        if(newTrack->isSolo()) newTrack->setSolo(false);
 }
 
 

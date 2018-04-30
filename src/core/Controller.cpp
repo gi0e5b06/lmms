@@ -64,11 +64,9 @@ Controller::Controller( ControllerTypes _type, Model * _parent,
 
 			// Check if name is already in use
 			bool name_used = false;
-			QVector<Controller *>::const_iterator it;
-			for ( it = s_controllers.constBegin();
-				  it != s_controllers.constEnd(); ++it )
-			{
-				if ( (*it)->name() == new_name )
+			for (Controller * controller : s_controllers)
+ 			{
+				if ( controller->name() == new_name )
 				{
 					name_used = true;
 					break;
@@ -162,13 +160,13 @@ float Controller::runningTime()
 
 void Controller::triggerFrameCounter()
 {
-	for( int i = 0; i < s_controllers.size(); ++i )
+	for (Controller * controller : s_controllers)
 	{
 		// This signal is for updating values for both stubborn knobs and for
 		// painting.  If we ever get all the widgets to use or at least check
 		// currentValue() then we can throttle the signal and only use it for
 		// GUI.
-		emit s_controllers.at(i)->valueChanged();
+		emit controller->valueChanged();
 	}
 
 	s_periods ++;
@@ -179,9 +177,9 @@ void Controller::triggerFrameCounter()
 
 void Controller::resetFrameCounter()
 {
-	for( int i = 0; i < s_controllers.size(); ++i )
+	for (Controller * controller : s_controllers)
 	{
-		s_controllers.at( i )->m_bufferLastUpdated = 0;
+		controller->m_bufferLastUpdated = 0;
 	}
 	s_periods = 0;
 }
@@ -196,14 +194,10 @@ Controller * Controller::create( ControllerTypes _ct, Model * _parent )
 	switch( _ct )
 	{
 		case Controller::DummyController:
-			if( dummy )
-				c = dummy;
-			else
-			{
-				c = new Controller( DummyController, NULL,
-								QString() );
-				dummy = c;
-			}
+			if( !dummy )
+				dummy = new Controller( DummyController, NULL,
+                                                        QString() );
+                        c = dummy;
 			break;
 
 		case Controller::LfoController:
@@ -252,12 +246,10 @@ Controller * Controller::create( const QDomElement & _this, Model * _parent )
 
 
 
-bool Controller::hasModel( const Model * m )
+bool Controller::hasModel( const Model * m ) const
 {
-	QObjectList chldren = children();
-	for( int i = 0; i < chldren.size(); ++i )
+	for (QObject * c : children())
 	{
-		QObject * c = chldren.at(i);
 		AutomatableModel * am = qobject_cast<AutomatableModel*>(c);
 		if( am != NULL )
 		{
@@ -267,13 +259,10 @@ bool Controller::hasModel( const Model * m )
 			}
 
 			ControllerConnection * cc = am->controllerConnection();
-			if( cc != NULL )
+			if( cc != NULL && cc->getController()->hasModel( m ) )
 			{
-				if( cc->getController()->hasModel( m ) )
-				{
-					return true;
-				}
-			}
+                                return true;
+                        }
 		}
 	}
 

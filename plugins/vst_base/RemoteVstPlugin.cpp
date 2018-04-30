@@ -1472,7 +1472,8 @@ intptr_t RemoteVstPlugin::hostCallback( AEffect * _effect, int32_t _opcode,
 		case audioMasterAutomate:
 			SHOW_CALLBACK( "amc: audioMasterAutomate\n" );
 			// index, value, returns 0
-			_effect->setParameter( _effect, _index, _opt );
+			//PR #4279
+                        //_effect->setParameter( _effect, _index, _opt );
 			return 0;
 
 		case audioMasterVersion:

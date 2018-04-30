@@ -95,6 +95,11 @@ public slots:
 	void unlinkAllModels();
 	void removeSongGlobalAutomation();
 
+private slots:
+	/// Copy the model's value to the clipboard.
+	void copyToClipboard();
+	/// Paste the model's value from the clipboard.
+	void pasteFromClipboard();
 
 protected:
 	AutomatableModelView* m_amv;

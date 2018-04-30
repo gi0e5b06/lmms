@@ -77,29 +77,8 @@ public:
 		Decibel
 	};
 
-	enum DataType
-	{
-		Float,
-		Integer,
-		Bool
-	} ;
-
-	AutomatableModel( DataType type,
-						const float val = 0,
-						const float min = 0,
-						const float max = 0,
-						const float step = 0,
-						Model* parent = NULL,
-						const QString& displayName = QString(),
-						bool defaultConstructed = false );
-
 	virtual ~AutomatableModel();
 
-
-	static float copiedValue()
-	{
-		return s_copiedValue;
-	}
 
 	bool isAutomated() const;
 	bool isAutomatedOrControlled() const
@@ -132,7 +111,7 @@ public:
 	template<class T>
 	inline T value( int frameOffset = 0 ) const
 	{
-		if( unlikely( m_hasLinkedModels || m_controllerConnection != NULL ) )
+		if( unlikely( hasLinkedModels() || m_controllerConnection != NULL ) )
 		{
 			return castValue<T>( controllerValue( frameOffset ) );
 		}
@@ -249,11 +228,11 @@ public:
 		return "automatablemodel";
 	}
 
-	QString displayValue( const float val ) const;
+	virtual QString displayValue( const float val ) const = 0;
 
 	bool hasLinkedModels() const
 	{
-		return m_hasLinkedModels;
+		return !m_linkedModels.empty();
 	}
 
 	// a way to track changed values in the model and avoid using signals/slots - useful for speed-critical code.
@@ -293,13 +272,19 @@ public:
 
 public slots:
 	virtual void reset();
-	virtual void copyValue();
-	virtual void pasteValue();
 	void unlinkControllerConnection();
 
 
 protected:
-	//! returns a value which is in range between min() and
+	AutomatableModel(const float val = 0,
+                         const float min = 0,
+                         const float max = 0,
+                         const float step = 0,
+                         Model* parent = NULL,
+                         const QString& displayName = QString(),
+                         bool defaultConstructed = false );
+
+        //! returns a value which is in range between min() and
 	//! max() and aligned according to the step size (step size 0.05 -> value
 	//! 0.12345 becomes 0.10 etc.). You should always call it at the end after
 	//! doing your own calculations.
@@ -329,7 +314,6 @@ private:
 	template<class T> void roundAt( T &value, const T &where ) const;
 
 
-	DataType m_dataType;
 	ScaleType m_scaleType; //! scale type, linear by default
 	float m_value;
 	float m_initValue;
@@ -350,14 +334,11 @@ private:
 	bool m_hasStrictStepSize;
 
 	AutoModelVector m_linkedModels;
-	bool m_hasLinkedModels;
 
 
 	//! NULL if not appended to controller, otherwise connection info
 	ControllerConnection* m_controllerConnection;
 
-
-	static float s_copiedValue;
 
 	ValueBuffer m_valueBuffer;
 	long m_lastUpdatedPeriod;
@@ -371,84 +352,80 @@ private:
 signals:
 	void initValueChanged( float val );
 	void destroyed( jo_id_t id );
-
-} ;
-
+};
 
 
+template <typename T> class EXPORT TypedAutomatableModel :
+public AutomatableModel
+{
+ public:
+	using AutomatableModel::AutomatableModel;
+	T value( int frameOffset = 0 ) const
+	{
+		return AutomatableModel::value<T>( frameOffset );
+	}
 
+	T initValue() const
+	{
+		return AutomatableModel::initValue<T>();
+	}
 
-#define defaultTypedMethods(type)								\
-	type value( int frameOffset = 0 ) const						\
-	{															\
-		return AutomatableModel::value<type>( frameOffset );	\
-	}															\
-																\
-	type initValue() const										\
-	{															\
-		return AutomatableModel::initValue<type>();				\
-	}															\
-																\
-	type minValue() const										\
-	{															\
-		return AutomatableModel::minValue<type>();				\
-	}															\
-																\
-	type maxValue() const										\
-	{															\
-		return AutomatableModel::maxValue<type>();				\
-	}															\
+	T minValue() const
+	{
+		return AutomatableModel::minValue<T>();
+	}
+
+	T maxValue() const
+	{
+		return AutomatableModel::maxValue<T>();
+	}
+};
 
 
 // some typed AutomatableModel-definitions
 
-class FloatModel : public AutomatableModel
+class FloatModel : public TypedAutomatableModel<float>
 {
 public:
 	FloatModel( float val = 0, float min = 0, float max = 0, float step = 0,
-				Model * parent = NULL,
-				const QString& displayName = QString(),
-				bool defaultConstructed = false ) :
-		AutomatableModel( Float, val, min, max, step, parent, displayName, defaultConstructed )
+                    Model * parent = NULL,
+                    const QString& displayName = QString(),
+                    bool defaultConstructed = false ) :
+        TypedAutomatableModel( val, min, max, step, parent, displayName, defaultConstructed )
 	{
 	}
 	float getRoundedValue() const;
 	int getDigitCount() const;
-	defaultTypedMethods(float);
+	QString displayValue( const float val ) const override;
+};
 
-} ;
 
-
-class IntModel : public AutomatableModel
+class IntModel : public TypedAutomatableModel<int>
 {
 public:
 	IntModel( int val = 0, int min = 0, int max = 0,
-				Model* parent = NULL,
-				const QString& displayName = QString(),
-				bool defaultConstructed = false ) :
-		AutomatableModel( Integer, val, min, max, 1, parent, displayName, defaultConstructed )
+                  Model* parent = NULL,
+                  const QString& displayName = QString(),
+                  bool defaultConstructed = false ) :
+        TypedAutomatableModel( val, min, max, 1, parent, displayName, defaultConstructed )
 	{
 	}
-
-	defaultTypedMethods(int);
-
-} ;
+	QString displayValue( const float val ) const override;
+};
 
 
-class BoolModel : public AutomatableModel
+class BoolModel : public TypedAutomatableModel<bool>
 {
 public:
 	BoolModel( const bool val = false,
-				Model* parent = NULL,
-				const QString& displayName = QString(),
-				bool defaultConstructed = false ) :
-		AutomatableModel( Bool, val, false, true, 1, parent, displayName, defaultConstructed )
-	{
+                   Model* parent = NULL,
+                   const QString& displayName = QString(),
+                   bool defaultConstructed = false ) :
+        TypedAutomatableModel( val, false, true, 1, parent, displayName, defaultConstructed )
+        {
 	}
-
-	defaultTypedMethods(bool);
-
-} ;
+	QString displayValue( const float val ) const override;
+};
 
 typedef QMap<AutomatableModel*, float> AutomatedValueMap;
 
