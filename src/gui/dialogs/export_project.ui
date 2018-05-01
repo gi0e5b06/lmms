@@ -68,6 +68,9 @@
            </item>
            <item>
             <widget class="QComboBox" name="samplerateCB">
+             <property name="currentIndex">
+              <number>1</number>
+             </property>
              <item>
               <property name="text">
                <string>44100 Hz</string>
@@ -129,7 +132,7 @@
            <item>
             <widget class="QComboBox" name="depthCB">
              <property name="currentIndex">
-              <number>1</number>
+              <number>2</number>
              </property>
              <item>
               <property name="text">
@@ -261,7 +264,7 @@
            <item>
             <widget class="QComboBox" name="bitrateCB">
              <property name="currentIndex">
-              <number>2</number>
+              <number>5</number>
              </property>
              <item>
               <property name="text">
@@ -300,6 +303,9 @@
              <property name="text">
               <string>Use variable bitrate</string>
              </property>
+             <property name="checked">
+              <bool>true</bool>
+             </property>
             </widget>
            </item>
           </layout>
@@ -337,7 +343,7 @@
         <item>
          <widget class="QComboBox" name="interpolationCB">
           <property name="currentIndex">
-           <number>2</number>
+           <number>3</number>
           </property>
           <item>
            <property name="text">
@@ -410,6 +416,9 @@
          <widget class="QCheckBox" name="peakNormalizeCB">
           <property name="text">
            <string>Peak normalize</string>
+          </property>
+          <property name="checked">
+           <bool>true</bool>
           </property>
          </widget>
         </item>

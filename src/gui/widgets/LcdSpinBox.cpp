@@ -71,7 +71,8 @@ LcdSpinBox::~LcdSpinBox()
 
 void LcdSpinBox::update()
 {
-	LcdWidget::setValue( model()->value() );//+ m_displayOffset );
+	if(model())
+                LcdWidget::setValue( model()->value() );//+ m_displayOffset );
 	QWidget::update();
 }
 
@@ -97,7 +98,8 @@ void LcdSpinBox::setPosition( const QPoint & _p, bool _shift )
 	float value,dist;
 	convert(_p,value,dist);
 
-	const float step = model()->step<float>();
+        if(!model()) return;
+
 	//const float oldValue = model()->value();
 
 	if(_shift)
@@ -106,6 +108,8 @@ void LcdSpinBox::setPosition( const QPoint & _p, bool _shift )
 		dist/=5.f;
 		//qInfo("shift pv=%f dist=%f",m_pressValue,dist);
 	}
+
+	const float step = model()->step<float>();
 
 	/*
 	if( model()->isScaleLogarithmic() ) // logarithmic code
@@ -139,6 +143,8 @@ void LcdSpinBox::setPosition( const QPoint & _p, bool _shift )
 
 void LcdSpinBox::contextMenuEvent( QContextMenuEvent* event )
 {
+        if(!model()) return;
+
 	// for the case, the user clicked right while pressing left mouse-
 	// button, the context-menu appears while mouse-cursor is still hidden
 	// and it isn't shown again until user does something which causes
@@ -215,7 +221,7 @@ void LcdSpinBox::mouseReleaseEvent( QMouseEvent* )
 {
 	if( m_pressLeft )
 	{
-		model()->restoreJournallingState();
+		if(model()) model()->restoreJournallingState();
 
 		//QCursor::setPos( m_pressPos );
 		setCursor(Qt::PointingHandCursor);
@@ -233,8 +239,11 @@ void LcdSpinBox::wheelEvent( QWheelEvent * _we )
 	if( _we->modifiers() & Qt::ShiftModifier )
         {
 		_we->accept();
-		model()->setInitValue( model()->value() +
-				       ( ( _we->delta() > 0 ) ? 1 : -1 ) * model()->step<int>() );
+                if(model())
+                        model()->setInitValue
+                                ( model()->value() +
+                                  ( ( _we->delta() > 0 ) ? 1 : -1 ) *
+                                  model()->step<int>() );
 		emit manualChange();
 	}
 }
@@ -246,6 +255,8 @@ void LcdSpinBox::mouseDoubleClickEvent( QMouseEvent * )
 
 void LcdSpinBox::enterValue()
 {
+        if(!model()) return;
+
 	bool ok;
 	int new_val;
 
@@ -263,6 +274,3 @@ void LcdSpinBox::enterValue()
 		model()->setValue( new_val );
 	}
 }
-
-
-

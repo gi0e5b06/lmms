@@ -32,6 +32,7 @@ ModelView::ModelView( Model* model, QWidget* widget ) :
 	m_widget( widget ),
 	m_model( model )
 {
+        //if(!model) qFatal("ModelView::ModelView null not allowed");
         doConnections();
 }
 
@@ -73,14 +74,14 @@ void ModelView::setModel( Model* model, bool isOldModelValid )
 void ModelView::modelChanged()
 {
         //qWarning("ModelView::setModel widget=%p ->update()",widget());
-        widget()->update();
+        if(widget()) widget()->update();
 }
 
 
 void ModelView::doConnections()
 {
         //qWarning("ModelView::doConnections m_model=%p",m_model);
-	if( m_model != NULL )
+	if( m_model && widget() )
 	{
                 //m_model->disconnect(widget());
 		QObject::connect( m_model, SIGNAL( dataChanged() ), widget(), SLOT( update() ) );

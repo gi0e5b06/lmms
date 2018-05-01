@@ -79,7 +79,7 @@ ExportProjectDialog::ExportProjectDialog( const QString & _file_name,
 			cbIndex++;
 		}
 	}
-	
+
 	int const MAX_LEVEL=8;
 	for(int i=0; i<=MAX_LEVEL; ++i)
 	{
@@ -87,7 +87,7 @@ ExportProjectDialog::ExportProjectDialog( const QString & _file_name,
 		if (i==0){ info = tr("(fastest)"); }
 		else if (i==4){ info = tr("(default)"); }
 		else if (i==MAX_LEVEL){ info = tr("(smallest)"); }
-		
+
 		compLevelCB->addItem(
 			QString::number(i)+" "+info,
 			QVariant(i/static_cast<double>(MAX_LEVEL))

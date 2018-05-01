@@ -240,33 +240,6 @@ private:
 
 
 
-class InstrumentFunctionNoteFiltering : public InstrumentFunction
-{
-	Q_OBJECT
-
-public:
-	InstrumentFunctionNoteFiltering( Model * _parent );
-	virtual ~InstrumentFunctionNoteFiltering();
-
-	virtual bool processNote( NotePlayHandle* n );
-	virtual void saveSettings( QDomDocument & _doc, QDomElement & _parent );
-	virtual void loadSettings( const QDomElement & _this );
-
-	inline virtual QString nodeName() const
-	{
-		return "notefiltering";
-	}
-
-private:
-        BoolModel*    m_noteSelectionModel[12];
-	ComboBoxModel m_actionModel;
-
-	friend class InstrumentFunctionNoteFilteringView;
-} ;
-
-
-
-
 class InstrumentFunctionNoteHumanizing : public InstrumentFunction
 {
 	Q_OBJECT
@@ -318,6 +291,34 @@ private:
 	QMultiHash<int,int> m_cache;
 
 	friend class InstrumentFunctionNoteDuplicatesRemovingView;
+};
+
+
+
+
+class InstrumentFunctionNoteFiltering : public InstrumentFunction
+{
+	Q_OBJECT
+
+public:
+	InstrumentFunctionNoteFiltering( Model * _parent );
+	virtual ~InstrumentFunctionNoteFiltering();
+
+	virtual bool processNote( NotePlayHandle* n );
+	virtual void saveSettings( QDomDocument & _doc, QDomElement & _parent );
+	virtual void loadSettings( const QDomElement & _this );
+
+	inline virtual QString nodeName() const
+	{
+		return "notefiltering";
+	}
+
+private:
+	ComboBoxModel  m_configModel;
+	ComboBoxModel* m_actionModel[4];
+        BoolModel*     m_noteSelectionModel[4][12];
+
+	friend class InstrumentFunctionNoteFilteringView;
 };
 
 #endif

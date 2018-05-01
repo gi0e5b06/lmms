@@ -69,7 +69,7 @@ private:
 	ComboBox * m_chordsComboBox;
 	Knob * m_chordRangeKnob;
 
-} ;
+};
 
 
 
@@ -98,26 +98,7 @@ private:
 	ComboBox * m_arpDirectionComboBox;
 	ComboBox * m_arpModeComboBox;
 
-} ;
-
-
-
-
-class InstrumentFunctionNoteFilteringView : public InstrumentFunctionView
-{
-	Q_OBJECT
-public:
-	InstrumentFunctionNoteFilteringView( InstrumentFunctionNoteFiltering* cc, QWidget* parent = NULL );
-	virtual ~InstrumentFunctionNoteFilteringView();
-
-
-private:
-	virtual void modelChanged();
-
-	InstrumentFunctionNoteFiltering* m_cc;
-	LedCheckBox* m_noteSelectionLed[12];
-	ComboBox*    m_actionComboBox;
-} ;
+};
 
 
 
@@ -139,7 +120,7 @@ private:
 	Knob* m_tuneRangeKnob;
 	Knob* m_offsetRangeKnob;
 	Knob* m_shortenRangeKnob;
-} ;
+};
 
 
 
@@ -156,7 +137,27 @@ private:
 	virtual void modelChanged();
 
 	InstrumentFunctionNoteDuplicatesRemoving* m_cc;
-} ;
+};
+
+
+
+
+class InstrumentFunctionNoteFilteringView : public InstrumentFunctionView
+{
+	Q_OBJECT
+ public:
+	InstrumentFunctionNoteFilteringView( InstrumentFunctionNoteFiltering* cc, QWidget* parent = NULL );
+	virtual ~InstrumentFunctionNoteFilteringView();
+
+ public slots:
+         virtual void modelChanged();
+
+private:
+	InstrumentFunctionNoteFiltering* m_cc;
+	ComboBox*    m_configComboBox;
+	ComboBox*    m_actionComboBox;
+	LedCheckBox* m_noteSelectionLed[12];
+};
 
 
 #endif

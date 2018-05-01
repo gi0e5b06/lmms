@@ -345,6 +345,7 @@ void InstrumentFunctionNoteDuplicatesRemovingView::modelChanged()
 InstrumentFunctionNoteFilteringView::InstrumentFunctionNoteFilteringView( InstrumentFunctionNoteFiltering* cc, QWidget* parent ) :
 	InstrumentFunctionView( cc, tr( "FILTERING" ), parent ),
 	m_cc( cc ),
+	m_configComboBox( new ComboBox() ),
 	m_actionComboBox( new ComboBox() )
 {
 	QGridLayout* mainLayout = new QGridLayout( m_groupBox );
@@ -353,15 +354,14 @@ InstrumentFunctionNoteFilteringView::InstrumentFunctionNoteFilteringView( Instru
 	mainLayout->setHorizontalSpacing( 6 );
 	mainLayout->setVerticalSpacing( 1 );
 
-	mainLayout->addWidget( m_actionComboBox, 0, 0, 1, 4 );
+	mainLayout->addWidget( m_configComboBox, 0, 0, 1, 2 );
+	mainLayout->addWidget( m_actionComboBox, 0, 2, 1, 2 );
 
         for(int i=0;i<12;++i)
         {
                 m_noteSelectionLed[i]=new LedCheckBox(Note::findKeyName(i)
                                                       .replace("0",""),NULL,"");
-                mainLayout->addWidget( m_noteSelectionLed[i],
-                                       i/4+1, i%4, 1, 1,
-                                       Qt::AlignHCenter );
+                mainLayout->addWidget( m_noteSelectionLed[i], i/4+1, i%4, 1, 1 );
         }
 }
 
@@ -380,12 +380,21 @@ InstrumentFunctionNoteFilteringView::~InstrumentFunctionNoteFilteringView()
 void InstrumentFunctionNoteFilteringView::modelChanged()
 {
 	m_cc = castModel<InstrumentFunctionNoteFiltering>();
-	m_groupBox      ->setModel( &m_cc->m_enabledModel );
-	m_actionComboBox->setModel( &m_cc->m_actionModel );
+	m_groupBox->setModel( &m_cc->m_enabledModel );
+
+        ComboBoxModel* old_m=m_configComboBox->model();
+        if(old_m!=&m_cc->m_configModel)
+        {
+                if(old_m)
+                        disconnect(old_m, SIGNAL( dataChanged() ),
+                                   this, SLOT( modelChanged() ));
+                m_configComboBox->setModel( &m_cc->m_configModel );
+                connect(&m_cc->m_configModel, SIGNAL( dataChanged() ),
+                        this, SLOT( modelChanged() ));
+        }
+
+        const int j=m_cc->m_configModel.value();
+	m_actionComboBox->setModel(m_cc->m_actionModel[j]);
         for(int i=0;i<12;++i)
-                m_noteSelectionLed[i]->setModel(m_cc->m_noteSelectionModel[i]);
+                m_noteSelectionLed[i]->setModel(m_cc->m_noteSelectionModel[j][i]);
 }
-
-
-
-

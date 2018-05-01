@@ -881,12 +881,16 @@ bool SampleBuffer::play( sampleFrame * _ab, handleState * _state, const fpp_t _f
                 if(m_mmapped) // undo mmap
                 {
                         qInfo("SampleBuffer::play unmmap data");
+                        //Engine::mixer()->requestChangeInModel();
+                        m_varLock.lockForWrite();
                         m_mmapped=false;
                         m_origData=MM_ALLOC( sampleFrame, m_frames );
                         m_origFrames=m_frames;
                         memcpy(m_origData,m_data,m_frames*BYTES_PER_FRAME);
                         m_data=MM_ALLOC( sampleFrame, m_frames );
                         memcpy(m_data,m_origData,m_frames*BYTES_PER_FRAME);
+                        m_varLock.unlock();
+                        //Engine::mixer()->doneChangeInModel();
                 }
 
                 int input_frames_used=0;

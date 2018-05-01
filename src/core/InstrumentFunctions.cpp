@@ -851,20 +851,30 @@ void InstrumentFunctionNoteDuplicatesRemoving::loadSettings( const QDomElement &
 InstrumentFunctionNoteFiltering::InstrumentFunctionNoteFiltering( Model * _parent ) :
 	InstrumentFunction( _parent, tr( "NoteFiltering" ) ),
 	//m_enabledModel( false, this ),
-	m_actionModel(this,tr( "Action" ))
+	m_configModel(this,tr( "Configuration" ))
 {
-        for(int i=0;i<12;++i)
-                m_noteSelectionModel[i]=new BoolModel(true,this,Note::findKeyName(i));
-        m_actionModel.addItem(tr( "Skip" ));
-        m_actionModel.addItem(tr( "Up"   ));
-        m_actionModel.addItem(tr( "Down" ));
+        for(int j=0;j<4;j++)
+        {
+                m_configModel.addItem(QString("%1").arg(j));
+                m_actionModel[j]=new ComboBoxModel(this,tr( "Action" ));
+                m_actionModel[j]->addItem(tr( "Skip" ));
+                m_actionModel[j]->addItem(tr( "Up"   ));
+                m_actionModel[j]->addItem(tr( "Down" ));
+                for(int i=0;i<12;++i)
+                        m_noteSelectionModel[j][i]=
+                                new BoolModel(true,this,Note::findKeyName(i));
+        }
 }
 
 
 InstrumentFunctionNoteFiltering::~InstrumentFunctionNoteFiltering()
 {
-        for(int i=0;i<12;++i)
-                delete m_noteSelectionModel[i];
+        for(int j=0;j<4;j++)
+        {
+                delete m_actionModel[j];
+                for(int i=0;i<12;++i)
+                        delete m_noteSelectionModel[j][i];
+        }
 }
 
 
@@ -875,21 +885,25 @@ bool InstrumentFunctionNoteFiltering::processNote( NotePlayHandle * _n )
 	if(!shouldProcessNote(_n)) return true;
 	if( _n->totalFramesPlayed()!=0 || _n->isReleased() ) return true;
 
-        int  k=_n->key()%12;
-        bool v=m_noteSelectionModel[k]->value();
-        //qInfo("InstrumentFunctionNoteFiltering::processNote k=%d v=%d",k,v);
-        if(v) return true;
+        const int j=m_configModel.value();
+
+        {
+                const int k=_n->key()%12;
+                const bool v=m_noteSelectionModel[j][k]->value();
+                //qInfo("InstrumentFunctionNoteFiltering::processNote k=%d v=%d",k,v);
+                if(v) return true;
+        }
 
         _n->setMasterNote();
 
-        const int action=m_actionModel.value();
+        const int action=m_actionModel[j]->value();
 
         if(action==1) //Up
         {
                 for(int i=_n->key()+1;i<=127;i++)
                 {
-                        int  k=i%12;
-                        bool v=m_noteSelectionModel[k]->value();
+                        const int  k=i%12;
+                        const bool v=m_noteSelectionModel[j][k]->value();
                         //qInfo("InstrumentFunctionNoteFiltering::processNote k=%d v=%d",k,v);
                         if(v) { _n->setKey(i); return true; }
                 }
@@ -898,8 +912,8 @@ bool InstrumentFunctionNoteFiltering::processNote( NotePlayHandle * _n )
         {
                 for(int i=_n->key()-1;i>=0;i--)
                 {
-                        int  k=i%12;
-                        bool v=m_noteSelectionModel[k]->value();
+                        const int  k=i%12;
+                        const bool v=m_noteSelectionModel[j][k]->value();
                         //qInfo("InstrumentFunctionNoteFiltering::processNote k=%d v=%d",k,v);
                         if(v) { _n->setKey(i); return true; }
                 }
@@ -916,11 +930,15 @@ void InstrumentFunctionNoteFiltering::saveSettings( QDomDocument & _doc, QDomEle
 	m_enabledModel          .saveSettings( _doc, _this, "enabled" );
         m_minNoteGenerationModel.saveSettings( _doc, _this, "mingen"  );
         m_maxNoteGenerationModel.saveSettings( _doc, _this, "maxgen"  );
-	m_actionModel           .saveSettings( _doc, _this, "action"  );
+	m_configModel           .saveSettings( _doc, _this, "config"  );
 
-	for(int i=0;i<12;++i)
-                m_noteSelectionModel[i]->saveSettings( _doc, _this,
-                                                       QString("ns%1").arg(i) );
+        for(int j=0;j<4;j++)
+        {
+                m_actionModel[j]->saveSettings( _doc, _this, QString("c%1").arg(j)  );
+                for(int i=0;i<12;++i)
+                        m_noteSelectionModel[j][i]->saveSettings
+                                ( _doc, _this, QString("c%1n%2").arg(j).arg(i) );
+        }
 }
 
 
@@ -931,9 +949,13 @@ void InstrumentFunctionNoteFiltering::loadSettings( const QDomElement & _this )
 	m_enabledModel          .loadSettings( _this, "enabled" );
         m_minNoteGenerationModel.loadSettings( _this, "mingen");
         m_maxNoteGenerationModel.loadSettings( _this, "maxgen");
-	m_actionModel           .loadSettings( _this, "action" );
+	m_configModel           .loadSettings( _this, "config" );
 
-	for(int i=0;i<12;++i)
-                m_noteSelectionModel[i]->loadSettings( _this,
-                                                       QString("ns%1").arg(i) );
+        for(int j=0;j<4;j++)
+        {
+                m_actionModel[j]->loadSettings( _this, QString("c%1").arg(j) );
+                for(int i=0;i<12;++i)
+                        m_noteSelectionModel[j][i]->loadSettings
+                                ( _this, QString("c%1n%2").arg(j).arg(i) );
+        }
 }
