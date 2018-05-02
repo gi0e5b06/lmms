@@ -26,6 +26,7 @@
 
 #include <QMessageBox>
 
+#include "debug.h"
 #include "LadspaEffect.h"
 #include "DataFile.h"
 #include "AudioDevice.h"
