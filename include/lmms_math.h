@@ -27,16 +27,33 @@
 #define LMMS_MATH_H
 
 #include <cstdint>
-#include <qglobal.h> //Travis #include <QtGlobal>
-
 #include "lmms_constants.h"
 #include "lmmsconfig.h"
+#include <QtCore/QtGlobal>
+
 
 #include <cmath>
 using namespace std;
 
+#if defined (LMMS_BUILD_WIN32) || defined (LMMS_BUILD_APPLE) || defined(LMMS_BUILD_HAIKU)  || defined (__FreeBSD__) || defined(__OpenBSD__)
+#ifndef isnanf
+#define isnanf(x)	isnan(x)
+#endif
+#ifndef isinff
+#define isinff(x)	isinf(x)
+#endif
+#ifndef _isnanf
+#define _isnanf(x) isnan(x)
+#endif
+#ifndef _isinff
+#define _isinff(x) isinf(x)
+#endif
 #ifndef exp10
-#define exp10(x) std::pow( 10.0, x )
+#define exp10(x) pow( 10.0, x )
+#endif
+#ifndef exp10f
+#define exp10f(x) powf( 10.0f, x )
+#endif
 #endif
 
 #ifdef __INTEL_COMPILER
