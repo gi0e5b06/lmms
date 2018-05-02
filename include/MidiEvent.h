@@ -26,7 +26,7 @@
 #define MIDI_EVENT_H
 
 #include <cstdlib>
-#include <QtGlobal>
+#include <qglobal.h> //Travis #include <QtGlobal>
 
 #include "Midi.h"
 #include "panning_constants.h"

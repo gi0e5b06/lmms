@@ -27,7 +27,8 @@
 #define LMMS_MATH_H
 
 #include <cstdint>
-#include <QtGlobal>
+#include <qglobal.h> //Travis #include <QtGlobal>
+
 #include "lmms_constants.h"
 #include "lmmsconfig.h"
 

@@ -45,7 +45,6 @@
 #include <process.h>
 #endif
 
-//#include <QtCore/QtGlobal>
 #include <QSystemSemaphore>
 #endif
 
@@ -59,8 +58,7 @@
 #else
 #define USE_QT_SHMEM
 
-#include <QtCore/QtGlobal>
-#include <QtCore/QSharedMemory>
+#include <QSharedMemory>
 
 #if !defined(LMMS_HAVE_SYS_TYPES_H) || defined(LMMS_BUILD_WIN32)
 typedef int32_t key_t;
