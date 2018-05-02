@@ -26,7 +26,7 @@
 #define MIDI_EVENT_H
 
 #include <cstdlib>
-#include <QtCore/QtGlobal>
+#include <QMessageLogger>
 
 #include "Midi.h"
 #include "panning_constants.h"
