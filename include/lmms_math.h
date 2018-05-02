@@ -27,9 +27,9 @@
 #define LMMS_MATH_H
 
 #include <cstdint>
+#include <QtGlobal>
 #include "lmms_constants.h"
 #include "lmmsconfig.h"
-#include <QtCore/QtGlobal>
 
 #include <cmath>
 using namespace std;

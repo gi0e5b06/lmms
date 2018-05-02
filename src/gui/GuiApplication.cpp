@@ -41,7 +41,7 @@
 
 #include <QApplication>
 #include <QDir>
-#include <QtGlobal>
+//#include <QtGlobal>
 #include <QMessageBox>
 #include <QSplashScreen>
 

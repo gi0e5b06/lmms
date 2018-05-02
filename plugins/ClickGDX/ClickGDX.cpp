@@ -24,6 +24,7 @@
  */
 
 #include <math.h>
+#include "lmms_math.h"
 #include "ClickGDX.h"
 #include "embed.h"
 

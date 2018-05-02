@@ -45,8 +45,8 @@
 #include <process.h>
 #endif
 
-#include <QtCore/QtGlobal>
-#include <QtCore/QSystemSemaphore>
+//#include <QtCore/QtGlobal>
+#include <QSystemSemaphore>
 #endif
 
 

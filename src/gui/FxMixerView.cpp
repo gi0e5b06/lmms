@@ -22,7 +22,7 @@
  *
  */
 
-#include <QtGlobal>
+//#include <QtGlobal>
 #include <QDebug>
 
 #include <QButtonGroup>

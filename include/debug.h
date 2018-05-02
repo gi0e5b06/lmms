@@ -26,6 +26,9 @@
 #ifndef DEBUG_H
 #define DEBUG_H
 
+#include <cstdio>
+#include <QObject>
+#include <QThread>
 #include "lmmsconfig.h"
 
 #ifndef qInfo
@@ -39,21 +42,12 @@
 
 #include <assert.h>
 
-#include <cstdio>
-#include <QObject>
-#include <QThread>
-
 #define DEBUG_THREAD_PRINT					     \
 	qWarning("THREAD: CT=%s P=%d %s#%d",			     \
 		 qPrintable(QThread::currentThread()->objectName()), \
 		 QThread::currentThread()->priority(),		     \
 		 __FILE__,__LINE__);
 
-//inline void DEBUG_CHECKED_CONNECT( const QObject * sender, const char * signal,
-//                                   const QObject * receiver,  const char * method,
-//                                   Qt::ConnectionType type = Qt::AutoConnection )
-//  if(!QObject::connect(sender, signal, receiver, method, type))
-//, Qt::DirectConnection
 #define DEBUG_CONNECT(sender,signal,receiver,slot)                      \
         {                                                               \
                 qInfo("DEBUG_CONNECT from %p '%s' to %p '%s'",          \
@@ -84,6 +78,9 @@
 
 #define DEBUG_CONNECT(sender,signal,receiver,slot)      \
         connect(sender,signal,receiver,slot);
+
+#define DEBUG_DISCONNECT(sender,signal,receiver,slot)   \
+        disconnect(sender,signal,receiver,slot);
 
 #define DEBUG_THREAD_PRINT
 

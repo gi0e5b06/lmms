@@ -27,7 +27,7 @@
 #ifndef MIDI_TIME_H
 #define MIDI_TIME_H
 
-#include <QtGlobal>
+//#include <QtGlobal>
 
 #include "export.h"
 #include "lmms_basics.h"
