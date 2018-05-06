@@ -34,7 +34,9 @@
 #include "MidiPort.h"
 #include "NotePlayHandle.h"
 #include "Piano.h"
-#include "PianoView.h"
+//#include "PianoView.h"
+#include "PeripheralView.h"
+//#include "PeripheralPadsView.h"
 #include "Pitch.h"
 #include "Track.h"
 
@@ -411,9 +413,9 @@ public:
 	}
 
 
-	PianoView * pianoView()
+	PeripheralView * peripheralView()
 	{
-		return m_pianoView;
+		return m_peripheralView;
 	}
 
 	static void dragEnterEventGeneric( QDragEnterEvent * _dee );
@@ -427,7 +429,8 @@ public slots:
 	void toggleVisibility( bool _on );
 	void updateName();
 	void updateInstrumentView();
-
+        void switchToPiano();
+        void switchToPads();
 
 protected:
 	// capture close-events for toggling instrument-track-button
@@ -478,7 +481,7 @@ private:
 
 
 	// test-piano at the bottom of every instrument-settings-window
-	PianoView * m_pianoView;
+	PeripheralView * m_peripheralView;
 
 	friend class InstrumentView;
 

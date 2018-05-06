@@ -66,6 +66,8 @@
 #include "Mixer.h"
 #include "MixHelpers.h"
 #include "Pattern.h"
+#include "PeripheralPadsView.h"
+#include "PianoView.h"
 #include "PluginFactory.h"
 #include "PluginView.h"
 #include "SamplePlayHandle.h"
@@ -1690,14 +1692,16 @@ InstrumentTrackWindow::InstrumentTrackWindow( InstrumentTrackView * _itv ) :
 	m_tabWidget->addTab( m_midiView, tr( "MIDI settings" ), "midi_tab", 4 );
 	m_tabWidget->addTab( m_miscView, tr( "Miscellaneous" ), "misc_tab", 5 );
 
-	// setup piano-widget
-	m_pianoView = new PianoView( this );
-	m_pianoView->setFixedSize( INSTRUMENT_WIDTH, PIANO_HEIGHT );
-
 	vlayout->addWidget( generalSettingsWidget );
 	vlayout->addWidget( m_tabWidget );
-	vlayout->addWidget( m_pianoView );
 
+	// setup piano-widget
+	//m_peripheralView = new PianoView( this );
+	//m_peripheralView->setFixedSize( INSTRUMENT_WIDTH, PIANO_HEIGHT );
+	//vlayout->addWidget( m_peripheralView );
+	m_peripheralView = new PeripheralPadsView(this);
+	m_peripheralView->setFixedSize( INSTRUMENT_WIDTH, PIANO_HEIGHT );
+	vlayout->addWidget( m_peripheralView );
 
 	setModel( _itv->model() );
 
@@ -1774,7 +1778,7 @@ void InstrumentTrackWindow::modelChanged()
 	m_volumeKnob->setModel( &m_track->m_volumeModel );
 	m_panningKnob->setModel( &m_track->m_panningModel );
 	m_effectChannelNumber->setModel( &m_track->m_effectChannelModel );
-	m_pianoView->setModel( &m_track->m_piano );
+	m_peripheralView->setModel( &m_track->m_piano );
 
 	if( m_track->instrument() && m_track->instrument()->flags().testFlag( Instrument::IsNotBendable ) == false )
 	{
@@ -1930,7 +1934,7 @@ void InstrumentTrackWindow::closeEvent( QCloseEvent* event )
 
 void InstrumentTrackWindow::focusInEvent( QFocusEvent* )
 {
-	m_pianoView->setFocus();
+	m_peripheralView->setFocus();
 }
 
 
@@ -2073,6 +2077,28 @@ void InstrumentTrackWindow::viewNextInstrument()
 void InstrumentTrackWindow::viewPrevInstrument()
 {
 	viewInstrumentInDirection(-1);
+}
+
+void InstrumentTrackWindow::switchToPiano()
+{
+	PeripheralView* old=m_peripheralView;
+        m_peripheralView=new PianoView(this);
+	m_peripheralView->setFixedSize( INSTRUMENT_WIDTH, PIANO_HEIGHT );
+	m_peripheralView->setModel( &m_track->m_piano );
+	if(old) { layout()->removeWidget(old); delete old; }
+        layout()->addWidget(m_peripheralView);
+        update();
+}
+
+void InstrumentTrackWindow::switchToPads()
+{
+	PeripheralView* old=m_peripheralView;
+	m_peripheralView=new PeripheralPadsView(this);
+	m_peripheralView->setFixedSize( INSTRUMENT_WIDTH, PIANO_HEIGHT );
+	m_peripheralView->setModel( &m_track->m_piano );
+	layout()->addWidget( m_peripheralView );
+	if(old) { layout()->removeWidget(old); delete old; }
+        update();
 }
 
 #include "InstrumentTrack.moc"

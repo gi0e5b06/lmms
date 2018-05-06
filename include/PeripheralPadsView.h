@@ -1,5 +1,5 @@
 /*
- * PianoView.h - declaration of PianoView, an interactive piano/keyboard-widget
+ * PeripheralPadsView.h - declaration of PeripheralPadsView, an interactive piano/keyboard-widget
  *
  * Copyright (c) 2004-2010 Tobias Doerffel <tobydox/at/users.sourceforge.net>
  *
@@ -22,8 +22,8 @@
  *
  */
 
-#ifndef PIANO_VIEW_H
-#define PIANO_VIEW_H
+#ifndef PERIPHERAL_PADS_VIEW_H
+#define PERIPHERAL_PADS_VIEW_H
 
 #include <QPixmap>
 #include <QScrollBar>
@@ -34,14 +34,14 @@
 class Piano;
 
 
-class PianoView : public PeripheralView
+class PeripheralPadsView : public PeripheralView
 //public QWidget, public ModelView
 {
 	Q_OBJECT
 
  public:
-	PianoView( QWidget * _parent );
-	virtual ~PianoView();
+	PeripheralPadsView( QWidget * _parent );
+	virtual ~PeripheralPadsView();
 
 	virtual void keyPressEvent( QKeyEvent * ke );
 	virtual void keyReleaseEvent( QKeyEvent * ke );
@@ -58,27 +58,25 @@ class PianoView : public PeripheralView
 
 
  private:
-	int getKeyFromMouse( const QPoint & _p ) const;
-	int getKeyX( int _key_num ) const;
+	int getKeyFromMouse( const QPoint& _p ) const;
+	//int getKeyX( int _key_num ) const;
+        QRect getBankRect(int _b) const;
+        QRect getPadRect(int _k) const;
 
-	static QPixmap * s_whiteKeyPm;
-	static QPixmap * s_blackKeyPm;
-	static QPixmap * s_whiteKeyPressedPm;
-	static QPixmap * s_blackKeyPressedPm;
+        //static QPixmap * s_padPm;
+        //static QPixmap * s_padPressedPm;
 
-	QScrollBar * m_pianoScroll;
+	QScrollBar* m_pianoScroll;
 	int m_startKey;			// first key when drawing
 	int m_lastKey;
 
-
  private slots:
-	void pianoScrolled( int _new_pos );
+	void pianoScrolled( int _newPos );
 
-        /*
-          signals:
-          void keyPressed( int );
-          void baseNoteChanged();
-        */
+signals:
+	void keyPressed( int );
+	void baseNoteChanged();
+
 } ;
 
 

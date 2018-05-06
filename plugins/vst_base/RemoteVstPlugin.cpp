@@ -927,8 +927,8 @@ void RemoteVstPlugin::processMidiEvent( const MidiEvent& event, const f_cnt_t of
 	switch( event.type() )
 	{
 		case MidiPitchBend:
-			vme.midiData[1] = event.pitchBend() & 0x7f;
-			vme.midiData[2] = event.pitchBend() >> 7;
+			vme.midiData[1] = event.midiPitchBend() & 0x7f;
+			vme.midiData[2] = event.midiPitchBend() >> 7;
 			break;
 		// TODO: handle more special cases
 		default:

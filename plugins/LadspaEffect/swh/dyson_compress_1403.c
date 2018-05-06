@@ -846,7 +846,7 @@ static void __attribute__((constructor)) swh_init() {
 		 D_("Fast compression ratio");
 		port_range_hints[DYSONCOMPRESS_CFRATE].HintDescriptor =
 		 LADSPA_HINT_BOUNDED_BELOW | LADSPA_HINT_BOUNDED_ABOVE | LADSPA_HINT_DEFAULT_MIDDLE;
-		port_range_hints[DYSONCOMPRESS_CFRATE].LowerBound = 0;
+		port_range_hints[DYSONCOMPRESS_CFRATE].LowerBound = 0.0000001;
 		port_range_hints[DYSONCOMPRESS_CFRATE].UpperBound = 1;
 
 		/* Parameters for Compression ratio */

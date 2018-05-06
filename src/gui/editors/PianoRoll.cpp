@@ -1045,7 +1045,7 @@ void PianoRoll::keyPressEvent(QKeyEvent* ke )
 {
 	if( hasValidPattern() && ke->modifiers() == Qt::NoModifier )
 	{
-		const int key_num = PianoView::getKeyFromKeyEvent( ke ) + ( DefaultOctave - 1 ) * KeysPerOctave;
+		const int key_num = PeripheralView::getKeyFromKeyEvent( ke ) + ( DefaultOctave - 1 ) * KeysPerOctave;
 
 		if(! ke->isAutoRepeat() && key_num > -1)
 		{
@@ -1229,7 +1229,7 @@ void PianoRoll::keyReleaseEvent(QKeyEvent* ke )
 {
 	if( hasValidPattern() && ke->modifiers() == Qt::NoModifier )
 	{
-		const int key_num = PianoView::getKeyFromKeyEvent( ke ) + ( DefaultOctave - 1 ) * KeysPerOctave;
+		const int key_num = PeripheralView::getKeyFromKeyEvent( ke ) + ( DefaultOctave - 1 ) * KeysPerOctave;
 
 		if( ! ke->isAutoRepeat() && key_num > -1 )
 		{

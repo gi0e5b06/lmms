@@ -93,6 +93,8 @@
 #include "DGKZTCOIDE/moc_NStateButton.cpp"
 #include "DGKZTCOIDE/moc_Pattern.cpp"
 #include "DGKZTCOIDE/moc_PeakController.cpp"
+#include "DGKZTCOIDE/moc_PeripheralPadsView.cpp"
+#include "DGKZTCOIDE/moc_PeripheralView.cpp"
 #include "DGKZTCOIDE/moc_PianoRoll.cpp"
 #include "DGKZTCOIDE/moc_PianoView.cpp"
 #include "DGKZTCOIDE/moc_PixmapButton.cpp"

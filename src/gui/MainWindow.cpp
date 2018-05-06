@@ -1523,7 +1523,7 @@ void MainWindow::keyPressEvent( QKeyEvent * _ke )
 						InstrumentTrackView::topLevelInstrumentTrackWindow();
 			if( w )
 			{
-				w->pianoView()->keyPressEvent( _ke );
+				w->peripheralView()->keyPressEvent( _ke );
 			}
 			if( !_ke->isAccepted() )
 			{
@@ -1547,7 +1547,7 @@ void MainWindow::keyReleaseEvent( QKeyEvent * _ke )
 			if( InstrumentTrackView::topLevelInstrumentTrackWindow() )
 			{
 				InstrumentTrackView::topLevelInstrumentTrackWindow()->
-					pianoView()->keyReleaseEvent( _ke );
+					peripheralView()->keyReleaseEvent( _ke );
 			}
 			if( !_ke->isAccepted() )
 			{
