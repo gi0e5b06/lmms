@@ -56,6 +56,11 @@ public:
 		return( m_selected );
 	}
 
+        static inline bool lessThan( selectableObject* &a, selectableObject* &b )
+	{
+		return ( a->x()<b->x() ) ||
+                        (( a->x()==b->x() )&&( a->y()==b->y() ));
+	}
 
 public slots:
 	virtual void update()

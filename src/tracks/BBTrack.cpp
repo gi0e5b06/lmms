@@ -62,6 +62,15 @@ BBTCO::BBTCO( Track * _track ) :
 }
 
 
+BBTCO::BBTCO( const BBTCO& _other ) :
+	TrackContentObject( _other.getTrack() ),
+	//m_patternType( _other.m_patternType ),
+        m_color( _other.m_color ),
+	m_useStyleColor( _other.m_useStyleColor )
+{
+        changeLength( _other.length() );
+        setAutoResize( _other.getAutoResize() );
+}
 
 
 BBTCO::~BBTCO()

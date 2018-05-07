@@ -51,6 +51,9 @@
 #include "TimeDisplayWidget.h"
 #include "AudioDevice.h"
 #include "PianoRoll.h"
+#include "AutomationPattern.h"
+#include "Pattern.h"
+#include "BBTrack.h"
 
 
 positionLine::positionLine( QWidget * parent ) :
@@ -364,13 +367,163 @@ void SongEditor::keyPressEvent( QKeyEvent * ke )
 			tcov->remove();
 		}
 	}
-	else if( ke->key() == Qt::Key_A && ke->modifiers() & Qt::ControlModifier )
+	else if( ke->key() == Qt::Key_A &&
+                 ke->modifiers() & Qt::ControlModifier )
 	{
 		selectAllTcos( !(ke->modifiers() & Qt::ShiftModifier) );
 	}
 	else if( ke->key() == Qt::Key_Escape )
 	{
 		selectAllTcos( false );
+	}
+	else if( ke->key() == Qt::Key_J &&
+                 ke->modifiers() & Qt::ControlModifier )
+	{
+		//Join patterns
+		QVector<selectableObject*> so=selectedObjects();
+                qSort(so.begin(),so.end(),selectableObject::lessThan);
+                for(Track* t: model()->tracks())
+                {
+                        if(t->type()==Track::InstrumentTrack)
+                        {
+                                qInfo("Union: instrument track %p",t);
+                                Pattern* newp=NULL;
+                                for( QVector<selectableObject *>::iterator
+                                             it = so.begin();
+                                     it != so.end(); ++it )
+                                {
+                                        TrackContentObjectView* tcov=
+                                                dynamic_cast<TrackContentObjectView*>(*it);
+                                        //tcov->remove();
+                                        if(!tcov) { qCritical("Union: tcov null"); continue; }
+                                        TrackContentObject* tco=tcov->getTrackContentObject();
+                                        if(!tco) { qCritical("Union: tco null"); continue; }
+                                        if(tco->getTrack()!=t) continue;
+                                        Pattern* p=dynamic_cast<Pattern*>(tco);
+                                        if(!p) { qCritical("Union: p null"); continue; }
+                                        if(newp==NULL)
+                                        {
+                                                t->addJournalCheckPoint();
+                                                newp=new Pattern(*p);
+                                                newp->setJournalling(false);
+                                                newp->movePosition(p->startPosition());
+                                        }
+                                        else
+                                        {
+                                                for(Note* n: p->notes())
+                                                {
+                                                        Note* newn=new Note(*n);
+                                                        newn->setPos(newn->pos()
+                                                                     +p->startPosition()
+                                                                     -newp->startPosition());
+                                                        newp->addNote(*newn,false);
+                                                }
+                                        }
+                                        tcov->remove();
+                                }
+                                if(newp)
+                                {
+                                        newp->rearrangeAllNotes();
+                                        newp->setJournalling(true);
+                                }
+                                qInfo("  end of instrument track");
+                        }
+                        else
+                        if(t->type()==Track::AutomationTrack)
+                        {
+                                qInfo("Union: automation track %p",t);
+                                AutomationPattern* newp=NULL;
+                                MidiTime endPos;
+                                for( QVector<selectableObject *>::iterator
+                                             it = so.begin();
+                                     it != so.end(); ++it )
+                                {
+                                        TrackContentObjectView* tcov=
+                                                dynamic_cast<TrackContentObjectView*>(*it);
+                                        //tcov->remove();
+                                        if(!tcov) { qCritical("Union: tcov null"); continue; }
+                                        TrackContentObject* tco=tcov->getTrackContentObject();
+                                        if(!tco) { qCritical("Union: tco null"); continue; }
+                                        if(tco->getTrack()!=t) continue;
+                                        AutomationPattern* p=dynamic_cast<AutomationPattern*>(tco);
+                                        if(!p) { qCritical("Union: p null"); continue; }
+                                        if(newp==NULL)
+                                        {
+                                                t->addJournalCheckPoint();
+                                                newp=new AutomationPattern(*p);
+                                                newp->setJournalling(false);
+                                                //newp->cleanObjects();
+                                                newp->movePosition(p->startPosition());
+                                                endPos=p->endPosition();
+                                        }
+                                        else
+                                        {
+                                                AutomationPattern::timeMap& map=p->getTimeMap();
+                                                for(int t: map.keys())
+                                                {
+                                                        float v=map.value(t);
+                                                        int newt=t
+                                                                +p->startPosition()
+                                                                -newp->startPosition();
+                                                        newp->getTimeMap().insert(newt,v);
+                                                }
+                                                for(QPointer<AutomatableModel> o: p->objects())
+                                                        newp->addObject(o);
+                                                endPos=qMax(endPos,p->endPosition());
+                                        }
+                                        tcov->remove();
+                                }
+                                if(newp)
+                                {
+                                        newp->changeLength(endPos-newp->startPosition());
+                                        newp->setJournalling(true);
+                                        newp->emit dataChanged();
+                                }
+                                qInfo("  end of automation track");
+                        }
+                        else
+                        if(t->type()==Track::BBTrack)
+                        {
+                                qInfo("Union: bb track %p",t);
+                                BBTCO* newp=NULL;
+                                MidiTime endPos;
+                                for( QVector<selectableObject *>::iterator
+                                             it = so.begin();
+                                     it != so.end(); ++it )
+                                {
+                                        TrackContentObjectView* tcov=
+                                                dynamic_cast<TrackContentObjectView*>(*it);
+                                        //tcov->remove();
+                                        if(!tcov) { qCritical("Union: tcov null"); continue; }
+                                        TrackContentObject* tco=tcov->getTrackContentObject();
+                                        if(!tco) { qCritical("Union: tco null"); continue; }
+                                        if(tco->getTrack()!=t) continue;
+                                        BBTCO* p=dynamic_cast<BBTCO*>(tco);
+                                        if(!p) { qCritical("Union: p null"); continue; }
+                                        if(newp==NULL)
+                                        {
+                                                t->addJournalCheckPoint();
+                                                newp=new BBTCO(*p);
+                                                newp->setJournalling(false);
+                                                //newp->cleanObjects();
+                                                newp->movePosition(p->startPosition());
+                                                endPos=p->endPosition();
+                                        }
+                                        else
+                                        {
+                                                endPos=qMax(endPos,p->endPosition());
+                                        }
+                                        tcov->remove();
+                                }
+                                if(newp)
+                                {
+                                        newp->changeLength(endPos-newp->startPosition());
+                                        newp->setJournalling(true);
+                                        newp->emit dataChanged();
+                                }
+                                qInfo("  end of bb track");
+                        }
+                }
 	}
 	else
 	{

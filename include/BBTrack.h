@@ -41,6 +41,7 @@ class BBTCO : public TrackContentObject
 {
 public:
 	BBTCO( Track * _track );
+	BBTCO( const BBTCO& _other );
 	virtual ~BBTCO();
 
 	virtual void saveSettings( QDomDocument & _doc, QDomElement & _parent );
@@ -54,7 +55,7 @@ public:
 	{
 		return( m_color.rgb() );
 	}
-	
+
 	QColor colorObj() const
 	{
 		return m_color;
