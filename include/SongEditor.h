@@ -70,6 +70,9 @@ public:
 	SongEditor( Song * song );
 	~SongEditor();
 
+        void unitePatterns();
+        void dividePatterns();
+
 	void saveSettings( QDomDocument& doc, QDomElement& element );
 	void loadSettings( const QDomElement& element );
 

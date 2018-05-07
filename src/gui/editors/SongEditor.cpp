@@ -2,6 +2,7 @@
  * SongEditor.cpp - basic window for song-editing
  *
  * Copyright (c) 2004-2014 Tobias Doerffel <tobydox/at/users.sourceforge.net>
+ * Copyright (c) 2018 gi0e5b06 (on github.com)
  *
  * This file is part of LMMS - https://lmms.io
  *
@@ -325,13 +326,15 @@ void SongEditor::setEditModeSelect()
 
 void SongEditor::keyPressEvent( QKeyEvent * ke )
 {
+        //qInfo("SongEditor::keyPressEvent key=%d",ke->key());
+
 	if( ke->modifiers() & Qt::ShiftModifier &&
-						ke->key() == Qt::Key_Insert )
+            ke->key() == Qt::Key_Insert )
 	{
 		m_song->insertBar();
 	}
 	else if( ke->modifiers() & Qt::ShiftModifier &&
-						ke->key() == Qt::Key_Delete )
+                 ke->key() == Qt::Key_Delete )
 	{
 		m_song->removeBar();
 	}
@@ -367,8 +370,8 @@ void SongEditor::keyPressEvent( QKeyEvent * ke )
 			tcov->remove();
 		}
 	}
-	else if( ke->key() == Qt::Key_A &&
-                 ke->modifiers() & Qt::ControlModifier )
+	else if( ke->modifiers() & Qt::ControlModifier &&
+                 ke->key() == Qt::Key_A )
 	{
 		selectAllTcos( !(ke->modifiers() & Qt::ShiftModifier) );
 	}
@@ -376,155 +379,16 @@ void SongEditor::keyPressEvent( QKeyEvent * ke )
 	{
 		selectAllTcos( false );
 	}
-	else if( ke->key() == Qt::Key_J &&
-                 ke->modifiers() & Qt::ControlModifier )
+	else if( ke->modifiers() & Qt::ControlModifier &&
+                 ke->key() == Qt::Key_U )
 	{
-		//Join patterns
-		QVector<selectableObject*> so=selectedObjects();
-                qSort(so.begin(),so.end(),selectableObject::lessThan);
-                for(Track* t: model()->tracks())
-                {
-                        if(t->type()==Track::InstrumentTrack)
-                        {
-                                qInfo("Union: instrument track %p",t);
-                                Pattern* newp=NULL;
-                                for( QVector<selectableObject *>::iterator
-                                             it = so.begin();
-                                     it != so.end(); ++it )
-                                {
-                                        TrackContentObjectView* tcov=
-                                                dynamic_cast<TrackContentObjectView*>(*it);
-                                        //tcov->remove();
-                                        if(!tcov) { qCritical("Union: tcov null"); continue; }
-                                        TrackContentObject* tco=tcov->getTrackContentObject();
-                                        if(!tco) { qCritical("Union: tco null"); continue; }
-                                        if(tco->getTrack()!=t) continue;
-                                        Pattern* p=dynamic_cast<Pattern*>(tco);
-                                        if(!p) { qCritical("Union: p null"); continue; }
-                                        if(newp==NULL)
-                                        {
-                                                t->addJournalCheckPoint();
-                                                newp=new Pattern(*p);
-                                                newp->setJournalling(false);
-                                                newp->movePosition(p->startPosition());
-                                        }
-                                        else
-                                        {
-                                                for(Note* n: p->notes())
-                                                {
-                                                        Note* newn=new Note(*n);
-                                                        newn->setPos(newn->pos()
-                                                                     +p->startPosition()
-                                                                     -newp->startPosition());
-                                                        newp->addNote(*newn,false);
-                                                }
-                                        }
-                                        tcov->remove();
-                                }
-                                if(newp)
-                                {
-                                        newp->rearrangeAllNotes();
-                                        newp->setJournalling(true);
-                                }
-                                qInfo("  end of instrument track");
-                        }
-                        else
-                        if(t->type()==Track::AutomationTrack)
-                        {
-                                qInfo("Union: automation track %p",t);
-                                AutomationPattern* newp=NULL;
-                                MidiTime endPos;
-                                for( QVector<selectableObject *>::iterator
-                                             it = so.begin();
-                                     it != so.end(); ++it )
-                                {
-                                        TrackContentObjectView* tcov=
-                                                dynamic_cast<TrackContentObjectView*>(*it);
-                                        //tcov->remove();
-                                        if(!tcov) { qCritical("Union: tcov null"); continue; }
-                                        TrackContentObject* tco=tcov->getTrackContentObject();
-                                        if(!tco) { qCritical("Union: tco null"); continue; }
-                                        if(tco->getTrack()!=t) continue;
-                                        AutomationPattern* p=dynamic_cast<AutomationPattern*>(tco);
-                                        if(!p) { qCritical("Union: p null"); continue; }
-                                        if(newp==NULL)
-                                        {
-                                                t->addJournalCheckPoint();
-                                                newp=new AutomationPattern(*p);
-                                                newp->setJournalling(false);
-                                                //newp->cleanObjects();
-                                                newp->movePosition(p->startPosition());
-                                                endPos=p->endPosition();
-                                        }
-                                        else
-                                        {
-                                                AutomationPattern::timeMap& map=p->getTimeMap();
-                                                for(int t: map.keys())
-                                                {
-                                                        float v=map.value(t);
-                                                        int newt=t
-                                                                +p->startPosition()
-                                                                -newp->startPosition();
-                                                        newp->getTimeMap().insert(newt,v);
-                                                }
-                                                for(QPointer<AutomatableModel> o: p->objects())
-                                                        newp->addObject(o);
-                                                endPos=qMax(endPos,p->endPosition());
-                                        }
-                                        tcov->remove();
-                                }
-                                if(newp)
-                                {
-                                        newp->changeLength(endPos-newp->startPosition());
-                                        newp->setJournalling(true);
-                                        newp->emit dataChanged();
-                                }
-                                qInfo("  end of automation track");
-                        }
-                        else
-                        if(t->type()==Track::BBTrack)
-                        {
-                                qInfo("Union: bb track %p",t);
-                                BBTCO* newp=NULL;
-                                MidiTime endPos;
-                                for( QVector<selectableObject *>::iterator
-                                             it = so.begin();
-                                     it != so.end(); ++it )
-                                {
-                                        TrackContentObjectView* tcov=
-                                                dynamic_cast<TrackContentObjectView*>(*it);
-                                        //tcov->remove();
-                                        if(!tcov) { qCritical("Union: tcov null"); continue; }
-                                        TrackContentObject* tco=tcov->getTrackContentObject();
-                                        if(!tco) { qCritical("Union: tco null"); continue; }
-                                        if(tco->getTrack()!=t) continue;
-                                        BBTCO* p=dynamic_cast<BBTCO*>(tco);
-                                        if(!p) { qCritical("Union: p null"); continue; }
-                                        if(newp==NULL)
-                                        {
-                                                t->addJournalCheckPoint();
-                                                newp=new BBTCO(*p);
-                                                newp->setJournalling(false);
-                                                //newp->cleanObjects();
-                                                newp->movePosition(p->startPosition());
-                                                endPos=p->endPosition();
-                                        }
-                                        else
-                                        {
-                                                endPos=qMax(endPos,p->endPosition());
-                                        }
-                                        tcov->remove();
-                                }
-                                if(newp)
-                                {
-                                        newp->changeLength(endPos-newp->startPosition());
-                                        newp->setJournalling(true);
-                                        newp->emit dataChanged();
-                                }
-                                qInfo("  end of bb track");
-                        }
-                }
+                unitePatterns();
 	}
+	else if( ke->modifiers() & Qt::ControlModifier &&
+                 ke->key() == Qt::Key_D )
+	{
+                dividePatterns();
+        }
 	else
 	{
 		QWidget::keyPressEvent( ke );
@@ -532,6 +396,360 @@ void SongEditor::keyPressEvent( QKeyEvent * ke )
 }
 
 
+void SongEditor::unitePatterns()
+{
+        //Unite multiple selected patterns horizontally
+        QVector<selectableObject*> so=selectedObjects();
+        qSort(so.begin(),so.end(),selectableObject::lessThan);
+        for(Track* t: model()->tracks())
+        {
+                if(t->type()==Track::InstrumentTrack)
+                {
+                        //qInfo("Unite: instrument track %p",t);
+                        Pattern* newp=NULL;
+                        for( QVector<selectableObject *>::iterator
+                                     it = so.begin();
+                             it != so.end(); ++it )
+                        {
+                                TrackContentObjectView* tcov=
+                                        dynamic_cast<TrackContentObjectView*>(*it);
+                                //tcov->remove();
+                                if(!tcov) { qCritical("Unite: tcov null"); continue; }
+                                TrackContentObject* tco=tcov->getTrackContentObject();
+                                if(!tco) { qCritical("Unite: tco null"); continue; }
+                                if(tco->getTrack()!=t) continue;
+                                Pattern* p=dynamic_cast<Pattern*>(tco);
+                                if(!p) { qCritical("Unite: p null"); continue; }
+                                if(newp==NULL)
+                                {
+                                        t->addJournalCheckPoint();
+                                        newp=new Pattern(*p);
+                                        newp->setJournalling(false);
+                                        newp->movePosition(p->startPosition());
+                                }
+                                else
+                                {
+                                        for(Note* n: p->notes())
+                                        {
+                                                Note* newn=new Note(*n);
+                                                newn->setPos(newn->pos()
+                                                             +p->startPosition()
+                                                             -newp->startPosition());
+                                                newp->addNote(*newn,false);
+                                        }
+                                }
+                                tcov->remove();
+                        }
+                        if(newp)
+                        {
+                                newp->rearrangeAllNotes();
+                                newp->setJournalling(true);
+                        }
+                        //qInfo("  end of instrument track");
+                }
+                else
+                if(t->type()==Track::AutomationTrack)
+                {
+                        //qInfo("Unite: automation track %p",t);
+                        AutomationPattern* newp=NULL;
+                        MidiTime endPos;
+                        for( QVector<selectableObject *>::iterator
+                                     it = so.begin();
+                             it != so.end(); ++it )
+                        {
+                                TrackContentObjectView* tcov=
+                                        dynamic_cast<TrackContentObjectView*>(*it);
+                                //tcov->remove();
+                                if(!tcov) { qCritical("Unite: tcov null"); continue; }
+                                TrackContentObject* tco=tcov->getTrackContentObject();
+                                if(!tco) { qCritical("Unite: tco null"); continue; }
+                                if(tco->getTrack()!=t) continue;
+                                AutomationPattern* p=dynamic_cast<AutomationPattern*>(tco);
+                                if(!p) { qCritical("Unite: p null"); continue; }
+                                if(newp==NULL)
+                                {
+                                        t->addJournalCheckPoint();
+                                        newp=new AutomationPattern(*p);
+                                        newp->setJournalling(false);
+                                        //newp->cleanObjects();
+                                        newp->movePosition(p->startPosition());
+                                        endPos=p->endPosition();
+                                }
+                                else
+                                {
+                                        AutomationPattern::timeMap& map=p->getTimeMap();
+                                        for(int t: map.keys())
+                                        {
+                                                float v=map.value(t);
+                                                int newt=t
+                                                        +p->startPosition()
+                                                        -newp->startPosition();
+                                                newp->getTimeMap().insert(newt,v);
+                                        }
+                                        for(QPointer<AutomatableModel> o: p->objects())
+                                                newp->addObject(o);
+                                        endPos=qMax(endPos,p->endPosition());
+                                }
+                                tcov->remove();
+                        }
+                        if(newp)
+                        {
+                                newp->changeLength(endPos-newp->startPosition());
+                                newp->setJournalling(true);
+                                newp->emit dataChanged();
+                        }
+                        //qInfo("  end of automation track");
+                }
+                else
+                if(t->type()==Track::BBTrack)
+                {
+                        //qInfo("Unite: bb track %p",t);
+                        BBTCO* newp=NULL;
+                        MidiTime endPos;
+                        for( QVector<selectableObject *>::iterator
+                                     it = so.begin();
+                             it != so.end(); ++it )
+                        {
+                                TrackContentObjectView* tcov=
+                                        dynamic_cast<TrackContentObjectView*>(*it);
+                                //tcov->remove();
+                                if(!tcov) { qCritical("Unite: tcov null"); continue; }
+                                TrackContentObject* tco=tcov->getTrackContentObject();
+                                if(!tco) { qCritical("Unite: tco null"); continue; }
+                                if(tco->getTrack()!=t) continue;
+                                BBTCO* p=dynamic_cast<BBTCO*>(tco);
+                                if(!p) { qCritical("Unite: p null"); continue; }
+                                if(newp==NULL)
+                                {
+                                        t->addJournalCheckPoint();
+                                        newp=new BBTCO(*p);
+                                        newp->setJournalling(false);
+                                        //newp->cleanObjects();
+                                        newp->movePosition(p->startPosition());
+                                        endPos=p->endPosition();
+                                }
+                                else
+                                {
+                                        endPos=qMax(endPos,p->endPosition());
+                                }
+                                tcov->remove();
+                        }
+                        if(newp)
+                        {
+                                newp->changeLength(endPos-newp->startPosition());
+                                newp->setJournalling(true);
+                                newp->emit dataChanged();
+                        }
+                        //qInfo("  end of bb track");
+                }
+        }
+}
+
+
+void SongEditor::dividePatterns()
+{
+        //qInfo("SongEditor::dividePatterns");
+        //Split multiple selected patterns at the current position
+        QVector<selectableObject*> so=selectedObjects();
+        qSort(so.begin(),so.end(),selectableObject::lessThan);
+        Song* song=Engine::getSong();
+        if(song->isPlaying()) return;
+
+        int splitPos=song->getPlayPos(Song::Mode_PlaySong);
+        bool first=true;
+        for(Track* t: model()->tracks())
+        {
+                if(t->type()==Track::InstrumentTrack)
+                {
+                        //qInfo("Divide: instrument track %p",t);
+                        for( QVector<selectableObject *>::iterator
+                                     it = so.begin();
+                             it != so.end(); ++it )
+                        {
+                                TrackContentObjectView* tcov=
+                                        dynamic_cast<TrackContentObjectView*>(*it);
+                                if(!tcov) { qCritical("Divide: tcov null"); continue; }
+                                TrackContentObject* tco=tcov->getTrackContentObject();
+                                if(!tco) { qCritical("Divide: tco null"); continue; }
+                                if(tco->getTrack()!=t) continue;
+                                Pattern* p=dynamic_cast<Pattern*>(tco);
+                                if(!p) { qCritical("Divide: p null"); continue; }
+
+                                //qInfo("pos: s=%d e=%d r=%d",
+                                //  (int)p->startPosition(),(int)p->endPosition(),splitPos);
+                                if(p->startPosition()>=splitPos) continue;
+                                if(p->endPosition()  <=splitPos) continue;
+
+                                if(first)
+                                {
+                                        t->addJournalCheckPoint();
+                                        first=false;
+                                }
+
+                                Pattern* newp1=new Pattern(*p); // 1 left, before
+                                newp1->setJournalling(false);
+                                newp1->movePosition(p->startPosition());
+                                for(Note* n: newp1->notes())
+                                {
+                                        if(newp1->startPosition()+n->pos()<splitPos) continue;
+                                        //qInfo("p1 pos: s=%d n=%d r=%d remove note",
+                                        //  (int)newp1->startPosition(),(int)n->pos(),splitPos);
+                                        newp1->removeNote(n);
+                                }
+
+                                Pattern* newp2=new Pattern(*p); // 2 right, after
+                                newp2->setJournalling(false);
+                                newp2->movePosition(p->startPosition());
+                                for(Note* n: newp2->notes())
+                                {
+                                        if(newp2->startPosition()+n->pos()>=splitPos)
+                                        {
+                                                n->setPos(n->pos()
+                                                          +newp2->startPosition()
+                                                          -splitPos);
+                                                continue;
+                                        }
+                                        newp2->removeNote(n);
+                                }
+                                newp2->movePosition(splitPos);
+
+                                tcov->remove();
+
+                                newp1->rearrangeAllNotes();
+                                newp2->rearrangeAllNotes();
+                                newp1->setJournalling(true);
+                                newp2->setJournalling(true);
+                                newp1->emit dataChanged();
+                                newp2->emit dataChanged();
+                                //qInfo("  end of instrument track");
+                        }
+                }
+                else
+                if(t->type()==Track::AutomationTrack)
+                {
+                        //qInfo("Divide: automation track %p",t);
+                        for( QVector<selectableObject *>::iterator
+                                     it = so.begin();
+                             it != so.end(); ++it )
+                        {
+                                TrackContentObjectView* tcov=
+                                        dynamic_cast<TrackContentObjectView*>(*it);
+                                if(!tcov) { qCritical("Unite: tcov null"); continue; }
+                                TrackContentObject* tco=tcov->getTrackContentObject();
+                                if(!tco) { qCritical("Unite: tco null"); continue; }
+                                if(tco->getTrack()!=t) continue;
+                                AutomationPattern* p=dynamic_cast<AutomationPattern*>(tco);
+                                if(!p) { qCritical("Divide: p null"); continue; }
+
+                                //qInfo("pos: s=%d e=%d r=%d",
+                                //  (int)p->startPosition(),(int)p->endPosition(),splitPos);
+                                if(p->startPosition()>=splitPos) continue;
+                                if(p->endPosition()  <=splitPos) continue;
+
+                                if(first)
+                                {
+                                        t->addJournalCheckPoint();
+                                        first=false;
+                                }
+
+                                AutomationPattern* newp1=new AutomationPattern(*p); // 1 left, before
+                                newp1->setJournalling(false);
+                                newp1->movePosition(p->startPosition());
+                                AutomationPattern::timeMap& map1=newp1->getTimeMap();
+                                for(int t: map1.keys())
+                                {
+                                        //qInfo(" val: t=%d",t);
+                                        if(t>=splitPos-p->startPosition())
+                                                map1.remove(t);
+                                }
+                                if(!map1.contains(splitPos-p->startPosition()))
+                                        map1.insert(splitPos-p->startPosition(),
+                                                    p->valueAt(splitPos));
+
+                                //for(QPointer<AutomatableModel> o: p->objects())
+                                //              newp->addObject(o);
+
+                                newp1->changeLength(splitPos-p->startPosition());
+
+                                AutomationPattern* newp2=new AutomationPattern(*p); // 2 right, after
+                                newp2->setJournalling(false);
+                                newp2->movePosition(p->startPosition());
+                                AutomationPattern::timeMap& map2=newp2->getTimeMap();
+                                if(!map2.contains(0))
+                                        map2.insert(0,p->valueAt(splitPos));
+                                for(int t: map2.keys())
+                                {
+                                        float v=map2.value(t);
+                                        newp2->removeValue(t);
+                                        if(t>=splitPos-p->startPosition())
+                                                map2.insert(t-splitPos+p->startPosition(),v);
+                                }
+
+                                //for(QPointer<AutomatableModel> o: p->objects())
+                                //              newp->addObject(o);
+
+                                newp2->changeLength(p->endPosition()-splitPos);
+                                newp2->movePosition(splitPos);
+
+                                tcov->remove();
+
+                                newp1->setJournalling(true);
+                                newp2->setJournalling(true);
+                                newp1->emit dataChanged();
+                                newp2->emit dataChanged();
+                                //qInfo("  end of automation track");
+                        }
+                }
+                else
+                if(t->type()==Track::BBTrack)
+                {
+                        //qInfo("Divide: bb track %p",t);
+                        for( QVector<selectableObject *>::iterator
+                                     it = so.begin();
+                             it != so.end(); ++it )
+                        {
+                                TrackContentObjectView* tcov=
+                                        dynamic_cast<TrackContentObjectView*>(*it);
+                                //tcov->remove();
+                                if(!tcov) { qCritical("Divide: tcov null"); continue; }
+                                TrackContentObject* tco=tcov->getTrackContentObject();
+                                if(!tco) { qCritical("Divide: tco null"); continue; }
+                                if(tco->getTrack()!=t) continue;
+                                BBTCO* p=dynamic_cast<BBTCO*>(tco);
+                                if(!p) { qCritical("Divide: p null"); continue; }
+
+                                //qInfo("pos: s=%d e=%d r=%d",
+                                //  (int)p->startPosition(),(int)p->endPosition(),splitPos);
+                                if(p->startPosition()>=splitPos) continue;
+                                if(p->endPosition()  <=splitPos) continue;
+
+                                if(first)
+                                {
+                                        t->addJournalCheckPoint();
+                                        first=false;
+                                }
+
+                                BBTCO* newp1=new BBTCO(*p); // 1 left, before
+                                newp1->setJournalling(false);
+                                newp1->movePosition(p->startPosition());
+                                newp1->changeLength(splitPos-p->startPosition());
+
+                                BBTCO* newp2=new BBTCO(*p); // 2 right, after
+                                newp2->setJournalling(false);
+                                newp2->movePosition(splitPos);
+                                newp2->changeLength(p->endPosition()-splitPos);
+
+                                tcov->remove();
+
+                                newp1->setJournalling(true);
+                                newp2->setJournalling(true);
+                                newp1->emit dataChanged();
+                                newp2->emit dataChanged();
+                        }
+                        //qInfo("  end of bb track");
+                }
+        }
+}
 
 
 void SongEditor::wheelEvent( QWheelEvent * we )
