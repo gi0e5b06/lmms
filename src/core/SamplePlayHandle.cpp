@@ -72,14 +72,15 @@ SamplePlayHandle::SamplePlayHandle( SampleTCO* tco ) :
 	PlayHandle( TypeSamplePlayHandle ),
 	m_sampleBuffer( sharedObject::ref( tco->sampleBuffer() ) ),
 	m_doneMayReturnTrue( true ),
-	m_currentFrame( 0 ),
 	m_ownAudioPort( false ),
 	m_defaultVolumeModel( DefaultVolume, MinVolume, MaxVolume, 1 ),
 	m_volumeModel( &m_defaultVolumeModel ),
 	m_track( tco->getTrack() ),
 	m_bbTrack( NULL )
 {
-        m_frames=m_sampleBuffer->frames();
+	m_currentFrame=0;//tco->initialPlayTick() * Engine::framesPerTick();
+        m_frames=(/*tco->initialPlayTick() +*/ tco->length()) * Engine::framesPerTick();
+        m_state.setFrameIndex(tco->initialPlayTick() * Engine::framesPerTick());
 	setAudioPort( ( (SampleTrack *)tco->getTrack() )->audioPort() );
 }
 

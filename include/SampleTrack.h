@@ -47,6 +47,7 @@ class SampleTCO : public TrackContentObject
 	mapPropertyFromModel(bool,isRecord,setRecord,m_recordModel);
 public:
 	SampleTCO( Track * _track );
+        SampleTCO( const SampleTCO& _other );
 	virtual ~SampleTCO();
 
 	virtual void changeLength( const MidiTime & _length );
@@ -65,8 +66,9 @@ public:
 	}
 
 	MidiTime sampleLength() const;
-	void setSampleStartFrame( f_cnt_t startFrame );
-	void setSamplePlayLength( f_cnt_t length );
+
+        tick_t initialPlayTick();
+	void setInitialPlayTick(tick_t _t);
 	virtual TrackContentObjectView * createView( TrackView * _tv );
 
 
@@ -82,7 +84,15 @@ public slots:
 	void updateTrackTcos();
 
 
+protected:
+        virtual void doConnections();
+
+
 private:
+        //number of ticts skipped (after the start frame)
+        //most of the time, 0
+        tick_t m_initialPlayTick;
+
 	SampleBuffer* m_sampleBuffer;
 	BoolModel m_recordModel;
 	bool m_isPlaying;

@@ -62,6 +62,35 @@
 #include "FileDialog.h"
 
 
+SampleBuffer::SampleBuffer( const SampleBuffer& _other ) :
+	m_audioFile( _other.m_audioFile ),
+	m_origData( _other.m_origData ),
+	m_origFrames( _other.m_origFrames ),
+	m_mmapped( _other.m_mmapped ),
+	m_data( NULL ),
+	m_frames( 0 ),
+	m_startFrame( _other.m_startFrame ),
+	m_endFrame( _other.m_endFrame ),
+	m_loopStartFrame( _other.m_loopStartFrame ),
+	m_loopEndFrame( _other.m_loopEndFrame ),
+	m_amplification( _other.m_amplification ),
+	m_reversed( _other.m_reversed ),
+	m_frequency( BaseFreq ),
+	m_sampleRate( Engine::mixer()->baseSampleRate() )
+{
+        if(!m_mmapped)
+	{
+		m_origData = NULL;
+                m_origFrames = 0;
+	}
+
+	connect( Engine::mixer(), SIGNAL( sampleRateChanged() ), this, SLOT( sampleRateChanged() ) );
+	update(true);
+}
+
+
+
+
 SampleBuffer::SampleBuffer( const QString & _audio_file,
 				    bool _is_base64_data ) :
 	m_audioFile( ( _is_base64_data == true ) ? "" : _audio_file ),

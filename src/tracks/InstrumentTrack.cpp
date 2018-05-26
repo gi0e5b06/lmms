@@ -70,7 +70,7 @@
 #include "PianoView.h"
 #include "PluginFactory.h"
 #include "PluginView.h"
-#include "SamplePlayHandle.h"
+//#include "SamplePlayHandle.h"
 #include "Song.h"
 #include "StringPairDrag.h"
 #include "TrackContainerView.h"

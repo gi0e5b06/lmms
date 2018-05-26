@@ -98,36 +98,20 @@ const char* STVOLHELP = QT_TRANSLATE_NOOP( "SampleTrack",
 
 SampleTCO::SampleTCO( Track * _track ) :
 	TrackContentObject( _track ),
-	m_sampleBuffer( new SampleBuffer ),
+        m_initialPlayTick( 0 ),
+	m_sampleBuffer( new SampleBuffer() ),
 	m_isPlaying( false )
 {
 	saveJournallingState( false );
 	setSampleFile( "" );
 	restoreJournallingState();
 
-	// we need to receive bpm-change-events, because then we have to
-	// change length of this TCO
-	connect( Engine::getSong(), SIGNAL( tempoChanged( bpm_t ) ),
-					this, SLOT( updateLength() ) );
-	connect( Engine::getSong(), SIGNAL( timeSignatureChanged( int,int ) ),
-					this, SLOT( updateLength() ) );
+	float nom = Engine::getSong()->getTimeSigModel().getNumerator();
+	float den = Engine::getSong()->getTimeSigModel().getDenominator();
+	int ticksPerTact = DefaultTicksPerTact * ( nom / den );
+	TrackContentObject::changeLength( ticksPerTact );
 
-	//care about positionmarker
-	TimeLineWidget * timeLine = Engine::getSong()->getPlayPos( Engine::getSong()->Mode_PlaySong ).m_timeLine;
-	if( timeLine )
-	{
-		connect( timeLine, SIGNAL( positionMarkerMoved() ), this, SLOT( playbackPositionChanged() ) );
-	}
-	//playbutton clicked or space key / on Export Song set isPlaying to false
-	connect( Engine::getSong(), SIGNAL( playbackStateChanged() ), this, SLOT( playbackPositionChanged() ) );
-	//care about loops
-	connect( Engine::getSong(), SIGNAL( updateSampleTracks() ), this, SLOT( playbackPositionChanged() ) );
-	//care about mute TCOs
-	connect( this, SIGNAL( dataChanged() ), this, SLOT( playbackPositionChanged() ) );
-	//care about mute track
-	connect( getTrack()->getMutedModel(), SIGNAL( dataChanged() ),this, SLOT( playbackPositionChanged() ) );
-	//care about TCO position
-	connect( this, SIGNAL( positionChanged() ), this, SLOT( updateTrackTcos() ) );
+        doConnections();
 
 	switch( getTrack()->trackContainer()->type() )
 	{
@@ -145,6 +129,16 @@ SampleTCO::SampleTCO( Track * _track ) :
 }
 
 
+SampleTCO::SampleTCO( const SampleTCO& _other ) :
+        TrackContentObject( _other.getTrack() ),
+        m_initialPlayTick( _other.m_initialPlayTick ),
+	m_sampleBuffer( new SampleBuffer(*_other.m_sampleBuffer) ),
+	m_isPlaying( false )
+{
+        doConnections();
+        setAutoResize(_other.getAutoResize());
+	updateTrackTcos();
+}
 
 
 SampleTCO::~SampleTCO()
@@ -158,6 +152,42 @@ SampleTCO::~SampleTCO()
 }
 
 
+void SampleTCO::doConnections()
+{
+        Song* song=Engine::getSong();
+
+        // we need to receive bpm-change-events, because then we have to
+	// change length of this TCO
+	connect( song, SIGNAL( tempoChanged( bpm_t ) ),
+					this, SLOT( updateLength() ) );
+	connect( song, SIGNAL( timeSignatureChanged( int,int ) ),
+					this, SLOT( updateLength() ) );
+
+	//care about positionmarker
+	TimeLineWidget* timeLine=
+                song->getPlayPos( song->Mode_PlaySong ).m_timeLine;
+
+	if( timeLine )
+	{
+		connect( timeLine, SIGNAL( positionMarkerMoved() ),
+                         this, SLOT( playbackPositionChanged() ) );
+	}
+	//playbutton clicked or space key / on Export Song set isPlaying to false
+	connect( song, SIGNAL( playbackStateChanged() ),
+                 this, SLOT( playbackPositionChanged() ) );
+	//care about loops
+	connect( song, SIGNAL( updateSampleTracks() ),
+                 this, SLOT( playbackPositionChanged() ) );
+	//care about mute TCOs
+	connect( this, SIGNAL( dataChanged() ),
+                 this, SLOT( playbackPositionChanged() ) );
+	//care about mute track
+	connect( getTrack()->getMutedModel(), SIGNAL( dataChanged() ),
+                 this, SLOT( playbackPositionChanged() ) );
+	//care about TCO position
+	connect( this, SIGNAL( positionChanged() ),
+                 this, SLOT( updateTrackTcos() ) );
+}
 
 
 void SampleTCO::changeLength( const MidiTime & _length )
@@ -165,7 +195,9 @@ void SampleTCO::changeLength( const MidiTime & _length )
 	float nom = Engine::getSong()->getTimeSigModel().getNumerator();
 	float den = Engine::getSong()->getTimeSigModel().getDenominator();
 	int ticksPerTact = DefaultTicksPerTact * ( nom / den );
-	TrackContentObject::changeLength( qMax( static_cast<int>( _length ), ticksPerTact ) );
+	TrackContentObject::changeLength( qMax( static_cast<int>( _length ), ticksPerTact/32 ) );
+
+        //TrackContentObject::changeLength( qMax( static_cast<int>( _length ), 1 ) );
 }
 
 
@@ -256,22 +288,16 @@ MidiTime SampleTCO::sampleLength() const
 }
 
 
-
-
-void SampleTCO::setSampleStartFrame(f_cnt_t startFrame)
+tick_t SampleTCO::initialPlayTick()
 {
-	m_sampleBuffer->setStartFrame( startFrame );
+	return m_initialPlayTick;
 }
 
 
-
-
-void SampleTCO::setSamplePlayLength(f_cnt_t length)
+void SampleTCO::setInitialPlayTick(tick_t _t)
 {
-	m_sampleBuffer->setEndFrame( length );
+	m_initialPlayTick=_t;
 }
-
-
 
 
 void SampleTCO::saveSettings( QDomDocument & _doc, QDomElement & _this )
@@ -286,6 +312,7 @@ void SampleTCO::saveSettings( QDomDocument & _doc, QDomElement & _this )
 	}
 	_this.setAttribute( "len", length() );
 	_this.setAttribute( "muted", isMuted() );
+	_this.setAttribute( "initial", initialPlayTick() );
 	_this.setAttribute( "src", sampleFile() );
 	if( sampleFile() == "" )
 	{
@@ -311,6 +338,7 @@ void SampleTCO::loadSettings( const QDomElement & _this )
 	}
 	changeLength( _this.attribute( "len" ).toInt() );
 	setMuted( _this.attribute( "muted" ).toInt() );
+        setInitialPlayTick( _this.attribute( "initial" ).toInt() );
 }
 
 
@@ -695,7 +723,7 @@ void SampleTrack::updateEffectChannel()
 
 
 bool SampleTrack::play( const MidiTime & _start, const fpp_t _frames,
-					const f_cnt_t _offset, int _tco_num )
+                        const f_cnt_t _offset, int _tco_num )
 {
 	m_audioPort.effects()->startRunning();
 	bool played_a_note = false;	// will be return variable
@@ -734,8 +762,8 @@ bool SampleTrack::play( const MidiTime & _start, const fpp_t _frames,
 					//we only play within the sampleBuffer limits
 					if( sampleStart < sampleBufferLength )
 					{
-						sTco->setSampleStartFrame( sampleStart );
-						sTco->setSamplePlayLength( samplePlayLength );
+						sTco->sampleBuffer()->setStartFrame( sampleStart );
+						sTco->sampleBuffer()->setEndFrame( samplePlayLength );
 						tcos.push_back( sTco );
 						sTco->setIsPlaying( true );
 					}

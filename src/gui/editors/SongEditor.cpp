@@ -55,6 +55,7 @@
 #include "AutomationPattern.h"
 #include "Pattern.h"
 #include "BBTrack.h"
+#include "SampleTrack.h"
 
 
 positionLine::positionLine( QWidget * parent ) :
@@ -542,6 +543,11 @@ void SongEditor::unitePatterns()
                         }
                         //qInfo("  end of bb track");
                 }
+                else
+                if(t->type()==Track::BBTrack)
+                {
+                        //Currently not imlementable without creating a new sample
+                }
         }
 }
 
@@ -748,6 +754,60 @@ void SongEditor::dividePatterns()
                         }
                         //qInfo("  end of bb track");
                 }
+                /*
+                  NOT SUPPORTED FOR NOW
+                else
+                if(t->type()==Track::SampleTrack)
+                {
+                        qInfo("Divide: sample track %p",t);
+                        for( QVector<selectableObject *>::iterator
+                                     it = so.begin();
+                             it != so.end(); ++it )
+                        {
+                                TrackContentObjectView* tcov=
+                                        dynamic_cast<TrackContentObjectView*>(*it);
+                                //tcov->remove();
+                                if(!tcov) { qCritical("Divide: tcov null"); continue; }
+                                TrackContentObject* tco=tcov->getTrackContentObject();
+                                if(!tco) { qCritical("Divide: tco null"); continue; }
+                                if(tco->getTrack()!=t) continue;
+                                SampleTCO* p=dynamic_cast<SampleTCO*>(tco);
+                                if(!p) { qCritical("Divide: p null"); continue; }
+
+                                //qInfo("pos: s=%d e=%d r=%d",
+                                //  (int)p->startPosition(),(int)p->endPosition(),splitPos);
+                                if(p->startPosition()>=splitPos) continue;
+                                if(p->endPosition()  <=splitPos) continue;
+
+                                if(first)
+                                {
+                                        t->addJournalCheckPoint();
+                                        first=false;
+                                }
+
+                                SampleTCO* newp1=new SampleTCO(*p); // 1 left, before
+                                newp1->setJournalling(false);
+                                newp1->movePosition(p->startPosition());
+                                newp1->changeLength(splitPos-p->startPosition());
+
+                                SampleTCO* newp2=new SampleTCO(*p); // 2 right, after
+                                newp2->setJournalling(false);
+                                newp2->movePosition(splitPos);
+                                newp2->changeLength(p->endPosition()-splitPos);
+
+                                newp2->setInitialPlayTick
+                                        (newp2->initialPlayTick()+(splitPos-p->startPosition()));
+
+                                tcov->remove();
+
+                                newp1->setJournalling(true);
+                                newp2->setJournalling(true);
+                                newp1->emit dataChanged();
+                                newp2->emit dataChanged();
+                        }
+                        qInfo("  end of sample track");
+                }
+                */
         }
 }
 
