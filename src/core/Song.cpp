@@ -1192,6 +1192,11 @@ void Song::loadProject( const QString & fileName )
 	// now that everything is loaded
 	ControllerConnection::finalizeConnections();
 
+	// Remove dummy controllers that was added for correct connections
+	m_controllers.erase(std::remove_if(m_controllers.begin(), m_controllers.end(),
+		[](Controller* c){return c->type() == Controller::DummyController;}),
+		m_controllers.end());
+
 	// resolve all IDs so that autoModels are automated
 	AutomationPattern::resolveAllIDs();
 
@@ -1384,9 +1389,13 @@ void Song::restoreControllerStates( const QDomElement & element )
 	while( !node.isNull() && !isCancelled() )
 	{
 		Controller * c = Controller::create( node.toElement(), this );
-		Q_ASSERT( c != NULL );
-
-		addController( c );
+		if (c) {addController(c);}
+		else
+		{
+			// Fix indices to ensure correct connections
+			m_controllers.append(Controller::create(
+				Controller::DummyController, this));
+		}
 
 		node = node.nextSibling();
 	}
