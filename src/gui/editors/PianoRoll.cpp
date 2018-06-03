@@ -1066,12 +1066,18 @@ void PianoRoll::keyPressEvent(QKeyEvent* ke )
 				{
 					// shift selection up an octave
 					// if nothing selected, shift _everything_
-					shiftSemiTone( 12 * direction );
+					if (hasValidPattern())
+					{
+						shiftSemiTone( 12 * direction );
+					}
 				}
 				else if((ke->modifiers() & Qt::ShiftModifier) && m_action == ActionNone)
 				{
 					// Move selected notes up by one semitone
-					shiftSemiTone( 1 * direction );
+					if (hasValidPattern())
+					{
+						shiftSemiTone( 1 * direction );
+					}
 				}
 				else
 				{
@@ -1101,7 +1107,10 @@ void PianoRoll::keyPressEvent(QKeyEvent* ke )
 				if( ke->modifiers() & Qt::ControlModifier && m_action == ActionNone )
 				{
 					// Move selected notes by one bar to the left
-					shiftPos( direction * MidiTime::ticksPerTact() );
+					if (hasValidPattern())
+					{
+						shiftPos( direction * MidiTime::ticksPerTact() );
+					}
 				}
 				else if( ke->modifiers() & Qt::ShiftModifier && m_action == ActionNone)
 				{
@@ -1113,10 +1122,14 @@ void PianoRoll::keyPressEvent(QKeyEvent* ke )
 				else if( ke->modifiers() & Qt::AltModifier)
 				{
 					// switch to editing a pattern adjacent to this one in the song editor
-					Pattern * p = direction > 0 ? m_pattern->nextPattern() : m_pattern->previousPattern();
-					if(p != NULL)
+					if (hasValidPattern())
 					{
-						setCurrentPattern(p);
+						Pattern * p = direction > 0 ? m_pattern->nextPattern()
+										: m_pattern->previousPattern();
+						if(p != NULL)
+						{
+							setCurrentPattern(p);
+						}
 					}
 				}
 				else
@@ -3199,6 +3212,7 @@ void PianoRoll::wheelEvent(QWheelEvent * we )
 	if( we->x() > noteEditLeft() && we->x() < noteEditRight()
 	&& we->y() > noteEditTop() && we->y() < noteEditBottom() )
 	{
+		if (!hasValidPattern()) {return;}
 		// get values for going through notes
 		int pixel_range = 8;
 		int x = we->x() - WHITE_KEY_WIDTH;
