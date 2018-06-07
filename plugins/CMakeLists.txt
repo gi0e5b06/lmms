@@ -71,6 +71,7 @@ IF("${PLUGIN_LIST}" STREQUAL "")
 		patman
 		peak_controller_effect
 		GigPlayer
+                RandomGDX
 		ReverbSC
 		ScatterGDX
 		sf2_player

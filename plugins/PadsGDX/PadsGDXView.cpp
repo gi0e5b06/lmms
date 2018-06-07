@@ -523,7 +523,8 @@ QString PadsGDXView::selectSFZFile(const QString& _file)
 		{
 			return QString::null;
 		}
-		return SampleBuffer::tryToMakeRelative( ofd.selectedFiles()[0] );
+		//return SampleBuffer::tryToMakeRelative( ofd.selectedFiles()[0] );
+                return SampleBuffer::tryToMakeAbsolute( ofd.selectedFiles()[0] );
 	}
 
 	return QString::null;

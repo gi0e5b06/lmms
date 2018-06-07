@@ -773,6 +773,8 @@ void PadsGDX::loadSFZ(const QString& _file)
         QFile in(_file);
         if(!in.open(QIODevice::ReadOnly))
         {
+                qWarning("PadsGDX::loadSFZ can not open file %s",
+                         _file.toUtf8().constData());
                 in.close();
         }
         else
@@ -784,12 +786,12 @@ void PadsGDX::loadSFZ(const QString& _file)
                 QRegExp rx1("(\\s|^)/[^\n]*\n*");
                 s.replace(rx1,"\n");
                 s=s.trimmed();
-                //qWarning("[S]%s\n---\n",s.toUtf8().constData());
+                qInfo("[S]%s\n---\n",s.toUtf8().constData());
                 QStringList groups=s.split("<group>");
                 foreach(QString g,groups)
                 {
                         g=g.trimmed();
-                        //qWarning("[G]%s\n---",g.toUtf8().constData());
+                        qInfo("[G]%s\n---",g.toUtf8().constData());
                         QStringList regions=g.split("<region>");
                         bool first=true;
                         QHash<QString,QString> tg;
@@ -798,13 +800,13 @@ void PadsGDX::loadSFZ(const QString& _file)
                         {
                                 QHash<QString,QString> tr;
                                 r=r.trimmed();
-                                //qWarning("[R]%s\n---",r.toUtf8().constData());
+                                qInfo("[R]%s\n---",r.toUtf8().constData());
                                 QStringList opcodes=r.split(QRegExp("\\b(?=[_a-z]+=)"));
                                 foreach(QString o,opcodes)
                                 {
                                         o=o.trimmed();
                                         if(o=="") continue;
-                                        //qWarning("[O]%s\n---",o.toUtf8().constData());
+                                        qInfo("[O]%s\n---",o.toUtf8().constData());
                                         QStringList elements=o.split("=");
                                         /*
                                         foreach(QString e,elements)
@@ -875,10 +877,10 @@ void PadsGDX::loadSFZ(const QString& _file)
                                         createKey(i,fi.absoluteFilePath(),
                                                   f_transpose+f_tune/100.+i-f_pitch_keycenter);
                                 }
-                                //qWarning("[end of region]\n");
+                                qInfo("[end of region]\n");
                                 //first=false;
                         }
-                        //qWarning("[end of group]\n");
+                        qInfo("[end of group]\n");
                 }
                 in.close();
         }

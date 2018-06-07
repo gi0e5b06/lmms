@@ -231,6 +231,7 @@ void * MemoryManagerArray::allocate( size_t size , const char* file , long line)
 	{
 		m_mutex.unlock();
 		void* r=MMA_STD_ALLOC(size);
+                BACKTRACE
 		qWarning("block %lu full %d (asking %lu bytes): %s#%ld",C2ULI m_size,m_count,C2ULI size,file,line);
 		return r;
 	}
