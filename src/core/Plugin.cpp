@@ -91,8 +91,10 @@ AutomatableModel * Plugin::childModel( const QString & )
 
 #include "PluginFactory.h"
 Plugin * Plugin::instantiate( const QString& pluginName, Model * parent,
-								void * data )
+                              void * data )
 {
+        qInfo("Plugin::instantiate name=%s data=%p",qPrintable(pluginName),data);
+
 	const PluginFactory::PluginInfo& pi = pluginFactory->pluginInfo(pluginName.toUtf8());
 	if( pi.isNull() )
 	{

@@ -42,7 +42,7 @@ VisualizationWidget::VisualizationWidget( const QPixmap & _bg, QWidget * _p,
 						visualizationTypes _vtype ) :
 	QWidget( _p ),
 	s_background( _bg ),
-	m_points( new QPointF[Engine::mixer()->framesPerPeriod()] ),
+	m_points( new QPointF[256] ),//Engine::mixer()->framesPerPeriod()] ),
 	m_active( false )
 {
 	setFixedSize( s_background.width(), s_background.height() );
@@ -96,21 +96,19 @@ void VisualizationWidget::setActive( bool _active )
 	m_active = _active;
 	if( m_active )
 	{
-		connect( gui->mainWindow(),
-					SIGNAL( periodicUpdate() ),
-					this, SLOT( update() ) );
+		connect( gui->mainWindow(), SIGNAL( periodicUpdate() ),
+                         this, SLOT( update() ) );
 		connect( Engine::mixer(),
-			SIGNAL( nextAudioBuffer( const surroundSampleFrame* ) ),
-			this, SLOT( updateAudioBuffer( const surroundSampleFrame* ) ) );
+                         SIGNAL( nextAudioBuffer( const surroundSampleFrame* ) ),
+                         this, SLOT( updateAudioBuffer( const surroundSampleFrame* ) ) );
 	}
 	else
 	{
-		disconnect( gui->mainWindow(),
-					SIGNAL( periodicUpdate() ),
-					this, SLOT( update() ) );
+		disconnect( gui->mainWindow(), SIGNAL( periodicUpdate() ),
+                            this, SLOT( update() ) );
 		disconnect( Engine::mixer(),
-			SIGNAL( nextAudioBuffer( const surroundSampleFrame* ) ),
-			this, SLOT( updateAudioBuffer( const surroundSampleFrame* ) ) );
+                            SIGNAL( nextAudioBuffer( const surroundSampleFrame* ) ),
+                            this, SLOT( updateAudioBuffer( const surroundSampleFrame* ) ) );
 		// we have to update (remove last waves),
 		// because timer doesn't do that anymore
 		update();
@@ -144,14 +142,15 @@ void VisualizationWidget::paintEvent( QPaintEvent * )
 		float peakLeft;
 		float peakRight;
 		mixer->getPeakValues( m_buffer, frames, peakLeft, peakRight );
-		const float max_level = qMax<float>( peakLeft, peakRight );
+		const float max_level=
+                        qMax<float>( peakLeft, peakRight ) * master_output;
 
 		// and set color according to that...
-		if( max_level * master_output < 0.9 )
+		if( max_level < 0.9 )
 		{
 			p.setPen( QColor( 71, 253, 133 ) );
 		}
-		else if( max_level * master_output < 1.0 )
+		else if( max_level < 1.0 )
 		{
 			p.setPen( QColor( 255, 192, 64 ) );
 		}
@@ -160,22 +159,44 @@ void VisualizationWidget::paintEvent( QPaintEvent * )
 			p.setPen( QColor( 255, 64, 64 ) );
 		}
 
-		p.setPen( QPen( p.pen().color(), 0.7 ) );
+		//p.setPen( QPen( p.pen().color(), 0.7 ) );
+		//p.setRenderHint( QPainter::Antialiasing );
 
-		const float xd = (float) w / frames;
-		p.setRenderHint( QPainter::Antialiasing );
+                //if(max_level>0.0001f)
+                {
+                        int nbp=qMin<int>(w,frames);
+                        if(nbp<=1) return;
+                        if(nbp>256) nbp=256;
 
-		// now draw all that stuff
-		for( ch_cnt_t ch = 0; ch < DEFAULT_CHANNELS; ++ch )
-		{
-			for( int frame = 0; frame < frames; ++frame )
-			{
-				m_points[frame] = QPointF(
-					x_base + (float) frame * xd,
-					y_base + Mixer::clip( m_buffer[frame][ch] ) * half_h );
-			}
-			p.drawPolyline( m_points, frames );
-		}
+                        for( ch_cnt_t ch = 0; ch < DEFAULT_CHANNELS; ++ch )
+                        {
+                                for(int i=0;i<nbp;i++)
+                                {
+                                        float tp=(float)i/(float)nbp;
+                                        f_cnt_t frame=frames*tp;
+                                        float xp=x_base+(w-1.f)/(nbp-1.f)*i;
+                                        float yp=y_base+half_h*Mixer::clip( m_buffer[frame][ch] );
+                                        m_points[i]=QPointF(xp,yp);
+                                }
+                                p.drawPolyline( m_points, nbp );
+                        }
+
+                        /*
+                        const float xd = (float) w / frames;
+                        // now draw all that stuff
+                        for( ch_cnt_t ch = 0; ch < DEFAULT_CHANNELS; ++ch )
+                        {
+                                for( int frame = 0; frame < frames; frame+=qMax(1,frames/w) )//++frame )
+                                {
+                                        m_points[frame]=
+                                                QPointF(x_base + (float) frame * xd,
+                                                        y_base + Mixer::clip( m_buffer[frame][ch] ) * half_h );
+                                }
+                                p.drawPolyline( m_points, frames );
+                        }
+                        */
+                }
+                //else draw an horizontal line (TODO)
 	}
 	else
 	{

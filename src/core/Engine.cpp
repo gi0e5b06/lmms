@@ -30,23 +30,24 @@
 #include "ConfigManager.h"
 #include "FxMixer.h"
 #include "Ladspa2LMMS.h"
+#include "LV22LMMS.h"
 #include "Mixer.h"
 #include "PresetPreviewPlayHandle.h"
 #include "ProjectJournal.h"
 #include "Song.h"
 #include "BandLimitedWave.h"
 
-float LmmsCore::s_framesPerTick;
-Mixer* LmmsCore::s_mixer = NULL;
-FxMixer * LmmsCore::s_fxMixer = NULL;
-Song * LmmsCore::s_song = NULL;
-ITransport * LmmsCore::s_transport = NULL;
-BBTrackContainer * LmmsCore::s_bbTrackContainer = NULL;
-ProjectJournal * LmmsCore::s_projectJournal = NULL;
-Ladspa2LMMS * LmmsCore::s_ladspaManager = NULL;
-DummyTrackContainer * LmmsCore::s_dummyTC = NULL;
 
-
+float                LmmsCore::s_framesPerTick;
+Mixer*               LmmsCore::s_mixer = NULL;
+FxMixer*             LmmsCore::s_fxMixer = NULL;
+Song*                LmmsCore::s_song = NULL;
+ITransport*          LmmsCore::s_transport = NULL;
+BBTrackContainer*    LmmsCore::s_bbTrackContainer = NULL;
+ProjectJournal*      LmmsCore::s_projectJournal = NULL;
+Ladspa2LMMS*         LmmsCore::s_ladspaManager = NULL;
+LV22LMMS*            LmmsCore::s_lv2Manager = NULL;
+DummyTrackContainer* LmmsCore::s_dummyTC = NULL;
 
 
 void LmmsCore::init( bool renderOnly )
@@ -71,10 +72,11 @@ void LmmsCore::init( bool renderOnly )
 
         LmmsCore *engine = inst();
 
-        QFuture<void> t1 = QtConcurrent::run(init1);
-        QFuture<void> t2 = QtConcurrent::run(init2);
-        QFuture<void> t3 = QtConcurrent::run(init3);
-        QFuture<void> t4 = QtConcurrent::run(init4,renderOnly);
+        QFuture<void> t1  = QtConcurrent::run(init1);
+        QFuture<void> t2  = QtConcurrent::run(init2);
+        QFuture<void> t3  = QtConcurrent::run(init3);
+        QFuture<void> t3b = QtConcurrent::run(init3b);
+        QFuture<void> t4  = QtConcurrent::run(init4,renderOnly);
 
 	emit engine->initProgress(tr("Generating wavetables"));
         t1.waitForFinished();
@@ -82,6 +84,8 @@ void LmmsCore::init( bool renderOnly )
         t2.waitForFinished();
 	emit engine->initProgress(tr("Initializing Ladspa effects"));
         t3.waitForFinished();
+	emit engine->initProgress(tr("Initializing LV2 effects"));
+        t3b.waitForFinished();
 	emit engine->initProgress(tr("Initializing Mixer"));
         t4.waitForFinished();
 
@@ -126,6 +130,11 @@ void LmmsCore::init2()
 void LmmsCore::init3()
 {
 	s_ladspaManager = new Ladspa2LMMS();
+}
+
+void LmmsCore::init3b()
+{
+	s_lv2Manager = new LV22LMMS();
 }
 
 void LmmsCore::init4(bool _renderOnly)

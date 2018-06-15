@@ -97,7 +97,14 @@ EffectView::EffectView( Effect * _model, QWidget * _parent ) :
 
 	setModel( _model );
 
-	if( effect()->controls()->controlCount() > 0 )
+        if(!effect())
+                qWarning("EffectView: effect null");
+        else if(!effect()->controls())
+                qWarning("EffectView: effect controls null");
+        else if(!effect()->controls()->controlCount())
+                qWarning("EffectView: effect control count 0");
+        else
+                //if( effect()->controls()->controlCount() > 0 )
 	{
 		QPushButton * ctls_btn = new QPushButton( tr( "Controls" ),this );
 		QFont f = ctls_btn->font();

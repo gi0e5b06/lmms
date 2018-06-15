@@ -39,17 +39,18 @@
 class LmmsCore;
 
 
-const QString PROJECTS_PATH = "projects/";
-const QString TEMPLATE_PATH = "templates/";
-const QString PRESETS_PATH = "presets/";
-const QString SAMPLES_PATH = "samples/";
-const QString GIG_PATH = "samples/gig/";
-const QString SF2_PATH = "samples/sf2/";
-const QString SOUNDFONTS_PATH = "soundfonts/";
-const QString LADSPA_PATH ="plugins/ladspa/";
+const QString PROJECTS_PATH      = "projects/";
+const QString TEMPLATE_PATH      = "templates/";
+const QString PRESETS_PATH       = "presets/";
+const QString SAMPLES_PATH       = "samples/";
+const QString GIG_PATH           = "samples/gig/";
+const QString SF2_PATH           = "samples/sf2/";
+const QString SOUNDFONTS_PATH    = "soundfonts/";
+const QString LADSPA_PATH        = "plugins/ladspa/";
+const QString LV2_PATH           = "plugins/lv2/";
 const QString DEFAULT_THEME_PATH = "themes/default/";
-const QString TRACK_ICON_PATH = "track_icons/";
-const QString LOCALE_PATH = "locale/";
+const QString TRACK_ICON_PATH    = "track_icons/";
+const QString LOCALE_PATH        = "locale/";
 
 
 class EXPORT ConfigManager
@@ -113,6 +114,11 @@ public:
 	QString userLadspaDir() const
 	{
 		return workingDir() + LADSPA_PATH;
+	}
+
+	QString userLV2Dir() const
+	{
+		return workingDir() + LV2_PATH;
 	}
 
 	QString userVstDir() const
@@ -182,11 +188,16 @@ public:
 		return m_ladDir;
 	}
 
+	const QString & lv2Dir() const
+	{
+		return m_lv2Dir;
+	}
+
 	const QString recoveryFile() const
 	{
 		return m_workingDir + "recover.mmp";
 	}
-	
+
 	const QString & version() const
 	{
 		return m_version;
@@ -238,6 +249,7 @@ public:
 	void setVSTDir( const QString & _vd );
 	void setArtworkDir( const QString & _ad );
 	void setLADSPADir( const QString & _fd );
+	void setLV2Dir( const QString & _fd );
 	void setVersion( const QString & _cv );
 	void setSTKDir( const QString & _fd );
 	void setDefaultSoundfont( const QString & _sf );
@@ -266,6 +278,7 @@ private:
 	QString m_artworkDir;
 	QString m_vstDir;
 	QString m_ladDir;
+	QString m_lv2Dir;
 	QString m_gigDir;
 	QString m_sf2Dir;
 	QString m_version;

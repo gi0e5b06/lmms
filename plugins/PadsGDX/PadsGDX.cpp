@@ -280,10 +280,10 @@ void PadsGDX::createKey(int _key,SampleBuffer* _sample,double _semitones)
         SampleBuffer* old=m_sampleBuffer[_key];
         if(old) destroyKey(_key);
 
-        if(_semitones!=0.) _sample->retune(_semitones);
-        m_semitones          [_key]=_semitones;
+        //m_semitones          [_key]=_semitones;
         m_sampleBuffer       [_key]=_sample;
 	m_ampModel           [_key]=new FloatModel( 100.f, 0.f, 500.f, 0.1f,       this, tr( "Amplify" ) );
+	m_tuneModel          [_key]=new FloatModel(   0.f, -144.f, 144.f, 0.01f,   this, tr( "Tune" ) );
 	m_startPointModel    [_key]=new FloatModel(   0.f, 0.f,   1.f, 0.0000001f, this, tr( "Start of sample" ) );
 	m_endPointModel      [_key]=new FloatModel(   1.f, 0.f,   1.f, 0.0000001f, this, tr( "End of sample" ) );
 	m_loopStartPointModel[_key]=new FloatModel(   0.f, 0.f,   1.f, 0.0000001f, this, tr( "Start of loop" ) );
@@ -298,6 +298,8 @@ void PadsGDX::createKey(int _key,SampleBuffer* _sample,double _semitones)
 
 	connect( m_ampModel[_key], SIGNAL( dataChanged() ),
 		 this, SLOT( onAmpModelChanged() ) );
+	connect( m_tuneModel[_key], SIGNAL( dataChanged() ),
+		 this, SLOT( onTuneModelChanged() ) );
         connect( m_reverseModel[_key], SIGNAL( dataChanged() ),
                  this, SLOT( onReverseModelChanged() ) );
 	connect( m_startPointModel[_key], SIGNAL( dataChanged() ),
@@ -310,6 +312,9 @@ void PadsGDX::createKey(int _key,SampleBuffer* _sample,double _semitones)
 		 this, SLOT( onLoopEndPointChanged() ) );
 	connect( m_stutterModel[_key], SIGNAL( dataChanged() ),
 		 this, SLOT( onStutterModelChanged() ) );
+
+        if(_semitones!=0.) m_tuneModel[_key]->setValue(_semitones);
+        //_sample->retune(_semitones);
 
 	//interpolation modes
 	//m_interpolationModel.addItem( tr( "None" ) );
@@ -465,7 +470,7 @@ void PadsGDX::onReverseModelChanged()
 }
 
 
-void PadsGDX::onAmpModelChanged( void )
+void PadsGDX::onAmpModelChanged()
 {
         if(m_loading) return;
 
@@ -475,6 +480,23 @@ void PadsGDX::onAmpModelChanged( void )
         if(sample)
         {
                 sample->setAmplification(m_ampModel[key]->value()/100.0f);
+                emit dataChanged();
+        }
+}
+
+
+void PadsGDX::onTuneModelChanged()
+{
+        if(m_loading) return;
+
+        int key=currentKey();
+        SampleBuffer* sample=currentSample();
+
+        if(sample)
+        {
+                qInfo("PadsGDX::onTuneModelChanged t=%f",
+                      m_tuneModel[key]->value());
+                sample->retune(m_tuneModel[key]->value());
                 emit dataChanged();
         }
 }
@@ -635,8 +657,6 @@ void PadsGDX::saveSettings(QDomDocument& _doc, QDomElement& _this)
                 QDomElement e=_doc.createElement("sample");
                 samples.appendChild(e);
                 e.setAttribute("key",i);
-                if(m_semitones[i]!=0.)
-                        e.setAttribute("semitones",m_semitones[i]);
 
                 QString f=sample->audioFile();
                 if(f=="")
@@ -650,6 +670,9 @@ void PadsGDX::saveSettings(QDomDocument& _doc, QDomElement& _this)
                         e.setAttribute("src",f);
                 }
 
+                //if(m_semitones[i]!=0.)
+                //        e.setAttribute("semitones",m_semitones[i]);
+                m_tuneModel           [i]->saveSettings( _doc, e, "semitones" );
                 m_reverseModel        [i]->saveSettings( _doc, e, "reversed" );
                 m_loopModel           [i]->saveSettings( _doc, e, "looped" );
                 m_ampModel            [i]->saveSettings( _doc, e, "amp" );
@@ -725,9 +748,10 @@ void PadsGDX::loadSettings( const QDomElement & _this )
 
                         createKey(i,sample,semitones);
 
+                        m_ampModel            [i]->loadSettings( _this, "amp" );
+                        m_tuneModel           [i]->loadSettings( _this, "semitones" );
                         m_reverseModel        [i]->loadSettings( _this, "reversed" );
                         m_loopModel           [i]->loadSettings( _this, "looped" );
-                        m_ampModel            [i]->loadSettings( _this, "amp" );
                         m_stutterModel        [i]->loadSettings( _this, "stutter" );
                         //m_interpolationModel[i]->loadSettings( _this, "interp" );
                         m_startPointModel     [i]->loadSettings( _this, "start" );
@@ -786,12 +810,12 @@ void PadsGDX::loadSFZ(const QString& _file)
                 QRegExp rx1("(\\s|^)/[^\n]*\n*");
                 s.replace(rx1,"\n");
                 s=s.trimmed();
-                qInfo("[S]%s\n---\n",s.toUtf8().constData());
+                //qInfo("[S]%s\n---\n",s.toUtf8().constData());
                 QStringList groups=s.split("<group>");
                 foreach(QString g,groups)
                 {
                         g=g.trimmed();
-                        qInfo("[G]%s\n---",g.toUtf8().constData());
+                        //qInfo("[G]%s\n---",g.toUtf8().constData());
                         QStringList regions=g.split("<region>");
                         bool first=true;
                         QHash<QString,QString> tg;
@@ -937,6 +961,8 @@ void PadsGDX::saveSFZ(const QString& _file)
                         m_loopEndPointModel   [i]->saveSettings( _doc, e, "loopend" );
                         */
 
+                        double semitones=m_tuneModel[i]->value();
+
                         s=QString("\n<region>"
                                   "\nsample=%1"
                                   "\nlokey=%2\nhikey=%2\npitch_keycenter=%2"
@@ -945,8 +971,8 @@ void PadsGDX::saveSFZ(const QString& _file)
                                   "\n")
                                 .arg(f)
                                 .arg(Note::findKeyName(i))
-                                .arg((int)(m_semitones[i]))
-                                .arg((int)(100.*(m_semitones[i]-(int)m_semitones[i])));
+                                .arg((int)(semitones))
+                                .arg((int)(100.*(semitones-(int)semitones)));
                         out.write(s.toUtf8());
                 }
 

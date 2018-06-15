@@ -56,9 +56,10 @@ IF("${PLUGIN_LIST}" STREQUAL "")
 		Eq
 		Flanger
 		HydrogenImport
-		ladspa_browser
+		# ladspa_browser
 		LadspaEffect
 		lb302
+		LV2EffectGDX
 		MidiImport
 		MidiExport
 		MultitapEcho

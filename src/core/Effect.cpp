@@ -57,6 +57,7 @@ Effect::Effect( const Plugin::Descriptor * _desc,
 	{
 		m_autoQuitDisabled = true;
 	}
+        qInfo("Effect::Effect end constructor");
 }
 
 
@@ -132,12 +133,14 @@ Effect * Effect::instantiate( const QString& pluginName,
 	// check whether instantiated plugin is an effect
 	if( dynamic_cast<Effect *>( p ) != NULL )
 	{
+                qInfo("Effect::instantiate SUCCESS %s",qPrintable(pluginName));
 		// everything ok, so return pointer
 		Effect * effect = dynamic_cast<Effect *>( p );
 		effect->m_parent = dynamic_cast<EffectChain *>(_parent);
 		return effect;
 	}
 
+        qWarning("Effect::instantiate FAILED %s",qPrintable(pluginName));
 	// not quite... so delete plugin and leave it up to the caller to instantiate a DummyEffect
 	delete p;
 

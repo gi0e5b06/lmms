@@ -32,6 +32,9 @@ set(LMMS_SRCS
 	core/LadspaManager.cpp
 	core/LfoController.cpp
 	core/LocklessAllocator.cpp
+	core/LV2Manager.cpp
+	core/LV2Control.cpp
+	core/LV22LMMS.cpp
 	core/MemoryHelper.cpp
 	core/MemoryManager.cpp
 	core/MemoryManagerArray.cpp

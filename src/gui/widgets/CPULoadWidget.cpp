@@ -45,11 +45,11 @@ CPULoadWidget::CPULoadWidget( QWidget * _parent ) :
 	setFixedSize( m_background.width(), m_background.height() );
 
 	m_temp = QPixmap( width(), height() );
-	
 
 	connect( &m_updateTimer, SIGNAL( timeout() ),
-					this, SLOT( updateCpuLoad() ) );
-	m_updateTimer.start( 100 );	// update cpu-load at 10 fps
+                 this, SLOT( updateCpuLoad() ) );
+
+	m_updateTimer.start( 1000 / 48 ); // update cpu-load at 48 fps
 }
 
 
@@ -67,7 +67,7 @@ void CPULoadWidget::paintEvent( QPaintEvent *  )
 	if( m_changed == true )
 	{
 		m_changed = false;
-		
+
 		m_temp.fill( QColor(0,0,0,0) );
 		QPainter p( &m_temp );
 		p.drawPixmap( 0, 0, m_background );
@@ -79,7 +79,7 @@ void CPULoadWidget::paintEvent( QPaintEvent *  )
 		if( w > 0 )
 		{
 			p.drawPixmap( 23, 3, m_leds, 0, 0, w,
-							m_leds.height() );
+                                      m_leds.height() );
 		}
 	}
 	QPainter p( this );

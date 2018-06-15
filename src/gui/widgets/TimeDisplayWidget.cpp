@@ -55,7 +55,7 @@ TimeDisplayWidget::TimeDisplayWidget() :
 	setDisplayMode( m_displayMode );
 
 	connect( gui->mainWindow(), SIGNAL( periodicUpdate() ),
-					this, SLOT( updateTime() ) );
+                 this, SLOT( updateTime() ) );
 }
 
 
@@ -96,25 +96,31 @@ void TimeDisplayWidget::setDisplayMode( DisplayMode displayMode )
 
 void TimeDisplayWidget::updateTime()
 {
-	Song* s = Engine::getSong();
+	Song* s =Engine::getSong();
+        int   ms=s->getMilliseconds();
 
 	switch( m_displayMode )
 	{
 		case MinutesSeconds:
-			m_majorLCD.setValue( s->getMilliseconds() / 60000 );
-			m_minorLCD.setValue( ( s->getMilliseconds() / 1000 ) % 60 );
-			m_milliSecondsLCD.setValue( s->getMilliseconds() % 1000 );
-			break;
+                {
+                        int mins=ms/60000;
+                        int secs=(ms/1000)%60;
+                        m_majorLCD.setValue(mins);
+			m_minorLCD.setValue(secs);
+			m_milliSecondsLCD.setValue(ms%1000);
+                }
+                break;
 
 		case BarsTicks:
-			int tick;
-			tick = ( s->getMilliseconds() * s->getTempo() * (DefaultTicksPerTact / 4 ) ) / 60000 ;
-			m_majorLCD.setValue( (int)(tick / s->ticksPerTact() ) + 1);
-			m_minorLCD.setValue( ( tick % s->ticksPerTact() ) /
-						 ( s->ticksPerTact() / s->getTimeSigModel().getNumerator() ) +1 );
-			m_milliSecondsLCD.setValue( ( tick % s->ticksPerTact() ) %
-							( s->ticksPerTact() / s->getTimeSigModel().getNumerator() ) );
-			break;
+                {
+                        int TPT =s->ticksPerTact();
+                        int NUM =s->getTimeSigModel().getNumerator();
+			int tick=( ms * s->getTempo() * (DefaultTicksPerTact / 4 ) ) / 60000 ;
+			m_majorLCD.setValue( (tick / TPT ) + 1);
+			m_minorLCD.setValue( ( tick % TPT ) / ( TPT / NUM ) +1 );
+			m_milliSecondsLCD.setValue( ( tick % TPT ) % ( TPT / NUM ) );
+                }
+                break;
 
 		default: break;
 	}

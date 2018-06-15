@@ -100,19 +100,19 @@ void LcdWidget::setValue( int value )
 		}
 		*/
 	}
-
-	m_display = s;
-
-	update();
+        if(s!=m_display)
+        {
+                m_display = s;
+                update();
+        }
 }
-
-
 
 
 QColor LcdWidget::textColor() const
 {
 	return m_textColor;
 }
+
 
 void LcdWidget::setTextColor( const QColor & c )
 {

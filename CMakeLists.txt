@@ -51,6 +51,7 @@ OPTION(WANT_CAPS	"Include C* Audio Plugin Suite (LADSPA plugins)" ON)
 OPTION(WANT_CARLA	"Include Carla plugin" ON)
 OPTION(WANT_CMT		"Include Computer Music Toolkit LADSPA plugins" ON)
 OPTION(WANT_JACK	"Include JACK (Jack Audio Connection Kit) support" ON)
+OPTION(WANT_LV2	        "Include LV2 support" ON)
 OPTION(WANT_MPG123	"Include MP3/mpg123 support" ON)
 OPTION(WANT_MP3LAME	"Include MP3/Lame support" ON)
 OPTION(WANT_OGGVORBIS	"Include OGG/Vorbis support" ON)
@@ -305,6 +306,7 @@ IF(WANT_PORTAUDIO)
 	ENDIF(PORTAUDIO_FOUND)
 ENDIF(WANT_PORTAUDIO)
 
+
 # check for libsoundio
 IF(WANT_SOUNDIO)
   FIND_PACKAGE(SoundIo)
@@ -337,6 +339,22 @@ IF(NOT LMMS_HAVE_PULSEAUDIO)
 ENDIF(NOT LMMS_HAVE_PULSEAUDIO)
 
 
+# check for LV2 lilv library
+IF(WANT_LILV)
+	FIND_PACKAGE(LILV)
+	IF(LILV_FOUND)
+		SET(LMMS_HAVE_LILV TRUE)
+		SET(STATUS_LILV "OK")
+	ELSE(LILV_FOUND)
+		SET(STATUS_LILV "not found, please install liblilv-dev (or similar)")
+		SET(LILV_LIBRARIES "")
+		SET(LILV_INCLUDE_DIRS "")
+	ENDIF(LILV_FOUND)
+ELSE(WANT_LILV)
+	SET(STATUS_LILV "Disabled for build")
+ENDIF(WANT_LILV)
+
+
 # check for MP3/mpg123-library
 IF(WANT_MPG123)
 	FIND_PACKAGE(MPG123)
@@ -352,6 +370,7 @@ ELSE(WANT_MPG123)
 	SET(STATUS_MPG123 "Disabled for build")
 ENDIF(WANT_MPG123)
 
+
 # check for MP3/Lame-libraries
 IF(WANT_MP3LAME)
 	FIND_PACKAGE(Lame)
@@ -366,6 +385,7 @@ IF(WANT_MP3LAME)
 ELSE(WANT_MP3LAME)
 	SET(STATUS_MP3LAME "Disabled for build")
 ENDIF(WANT_MP3LAME)
+
 
 # check for OGG/Vorbis-libraries
 IF(WANT_OGGVORBIS)
@@ -389,6 +409,7 @@ IF(WANT_OSS)
 		SET(STATUS_OSS "<not found or not supported on this platform>")
 	ENDIF(LMMS_HAVE_SOUNDCARD_H OR LMMS_HAVE_SYS_SOUNDCARD_H)
 ENDIF(WANT_OSS)
+
 
 # check for ALSA
 IF(WANT_ALSA)
@@ -431,6 +452,7 @@ ELSE()
 	SET(STATUS_ZYN "not found, please install fltk")
 ENDIF()
 
+
 # check for Fluidsynth
 IF(WANT_SF2)
 	PKG_CHECK_MODULES(FLUIDSYNTH fluidsynth>=1.0.7)
@@ -442,6 +464,7 @@ IF(WANT_SF2)
 			"is highly recommended")
 	ENDIF(FLUIDSYNTH_FOUND)
 ENDIF(WANT_SF2)
+
 
 # check for libgig
 If(WANT_GIG)
@@ -459,6 +482,7 @@ IF(LMMS_BUILD_LINUX OR LMMS_BUILD_APPLE OR LMMS_BUILD_OPENBSD)
 	FIND_PACKAGE(Threads)
 ENDIF(LMMS_BUILD_LINUX OR LMMS_BUILD_APPLE OR LMMS_BUILD_OPENBSD)
 
+
 # check for sndio (openbsd only, roaraudio won't work yet)
 FIND_PACKAGE(Sndio)
 IF(LMMS_BUILD_OPENBSD AND SNDIO_FOUND)
@@ -468,6 +492,7 @@ ELSE()
 	SET(STATUS_SNDIO "<not found or not supported on this platform>")
 	SET(SNDIO_LIBRARY "")
 ENDIF()
+
 
 # check for WINE
 IF(WANT_VST)
@@ -687,6 +712,7 @@ MESSAGE(
 "* ZynAddSubFX instrument      : ${STATUS_ZYN}\n"
 "* Carla Patchbay & Rack       : ${STATUS_CARLA}\n"
 "* SoundFont2 player           : ${STATUS_FLUIDSYNTH}\n"
+"* GIG player                  : ${STATUS_GIG}\n"
 "* Stk Mallets                 : ${STATUS_STK}\n"
 "* VST-instrument hoster       : ${STATUS_VST}\n"
 "* VST-effect hoster           : ${STATUS_VST}\n"
@@ -695,7 +721,7 @@ MESSAGE(
 "* CMT LADSPA plugins          : ${STATUS_CMT}\n"
 "* TAP LADSPA plugins          : ${STATUS_TAP}\n"
 "* SWH LADSPA plugins          : ${STATUS_SWH}\n"
-"* GIG player                  : ${STATUS_GIG}\n"
+"* LV2 plugins                 : ${STATUS_LILV}\n"
 )
 
 MESSAGE(

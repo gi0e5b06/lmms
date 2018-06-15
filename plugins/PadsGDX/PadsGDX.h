@@ -84,8 +84,9 @@ public slots:
         virtual void setAudioFile(const QString& _audio_file,
                                   bool _rename=true);
         virtual void onSampleUpdated();
-        virtual void onReverseModelChanged();
         virtual void onAmpModelChanged();
+        virtual void onTuneModelChanged();
+        virtual void onReverseModelChanged();
         virtual void onStartPointChanged();
         virtual void onEndPointChanged();
         virtual void onLoopStartPointChanged();
@@ -106,9 +107,10 @@ public slots:
 	typedef SampleBuffer::handleState handleState;
 
         int           m_currentKey;
-        double        m_semitones[128];
+        //double        m_semitones[128];
 	SampleBuffer* m_sampleBuffer[128];
 	FloatModel*   m_ampModel[128];
+	FloatModel*   m_tuneModel[128];
 	//FloatModel* m_panningModel[128];
 	FloatModel*   m_startPointModel[128];
 	FloatModel*   m_endPointModel[128];

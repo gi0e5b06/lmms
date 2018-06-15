@@ -119,9 +119,11 @@ const ch_cnt_t SURROUND_CHANNELS=2;
 
 
 #ifdef LMMS_BUILD_WIN32
-#define LADSPA_PATH_SEPERATOR ';'
+#define LADSPA_PATH_SEPARATOR ';'
+#define LV2_PATH_SEPARATOR ';'
 #else
-#define LADSPA_PATH_SEPERATOR ':'
+#define LADSPA_PATH_SEPARATOR ':'
+#define LV2_PATH_SEPARATOR ':'
 #endif
 
 #ifdef LMMS_BUILD_APPLE

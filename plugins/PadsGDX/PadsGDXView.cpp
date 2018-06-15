@@ -85,12 +85,22 @@ PadsGDXView::PadsGDXView( Instrument * _instrument, QWidget * _parent ) :
 
 	m_ampKnob = new PadsGDXWaveView::knob( this );
 	m_ampKnob->setVolumeKnob( true );
-	m_ampKnob->move(6,86);
+	m_ampKnob->move(6,6);
 	m_ampKnob->setHintText( tr( "Amplify:" ), "%" );
 	m_ampKnob->setWhatsThis
 		(tr( "With this knob you can set the amplify ratio. When you "
                      "set a value of 100% your sample isn't changed. "
                      "Otherwise it will be amplified up or down (your "
+                     "actual sample-file isn't touched!)" ));
+
+	m_tuneKnob = new PadsGDXWaveView::knob( this );
+	m_tuneKnob->setPointColor( Qt::cyan );
+	m_tuneKnob->move(46,6);
+	m_tuneKnob->setHintText( tr( "Tune:" ), " semitones" );
+	m_tuneKnob->setWhatsThis
+		(tr( "With this knob you retune. When you "
+                     "set a value of 0 your sample isn't changed. "
+                     "Otherwise it will be pitched up or down (your "
                      "actual sample-file isn't touched!)" ));
 
         // interpolation selector
@@ -284,6 +294,7 @@ void PadsGDXView::onModelChanged()
                 m_loopGroup    ->setModel(new IntModel  (0,0,0      ,NULL,"",true));
                 m_stutterButton->setModel(new BoolModel (false      ,NULL,"",true));
                 m_ampKnob      ->setModel(new FloatModel(100,0,500,1,NULL,"",true));
+                m_tuneKnob     ->setModel(new FloatModel(0,-144,144,0.01,NULL,"",true));
         }
         else
         {
@@ -295,6 +306,7 @@ void PadsGDXView::onModelChanged()
                 m_loopGroup    ->setModel(a->m_loopModel           [key]);
                 m_stutterButton->setModel(a->m_stutterModel        [key]);
                 m_ampKnob      ->setModel(a->m_ampModel            [key]);
+                m_tuneKnob     ->setModel(a->m_tuneModel           [key]);
                 //m_interpBox    ->setModel( &a->m_interpolationModel  );
         }
 

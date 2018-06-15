@@ -39,10 +39,10 @@ RandomGDXControlDialog::RandomGDXControlDialog( RandomGDXControls* controls ) :
 	QPalette pal;
 	pal.setBrush( backgroundRole(), PLUGIN_NAME::getIconPixmap( "artwork" ) );
 	setPalette( pal );
-	setFixedSize( 150, 170 );
+	setFixedSize( 150, 160 );
 
 	QGroupBox* ctlGB=new QGroupBox(tr ( "Controls" ), this);
-	ctlGB->setGeometry(10,10,130,160);
+	ctlGB->setGeometry(10,10,130,140);
 
 	Knob * rndAmpKnob = new Knob( knobBright_26, ctlGB);
 	rndAmpKnob -> move( 17, 35 );

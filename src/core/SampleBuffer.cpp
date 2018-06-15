@@ -1600,6 +1600,7 @@ void SampleBuffer::resample( const sample_rate_t _srcSR,
 void SampleBuffer::retune( //const sample_rate_t _srcSR,
                            const double _semitones )
 {
+        update(true); //Test?
         if(_semitones==0.) return;
 
         double df=pow( 2., _semitones/-12. );

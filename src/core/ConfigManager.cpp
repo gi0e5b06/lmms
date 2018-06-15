@@ -140,9 +140,9 @@ void ConfigManager::upgrade_1_1_90()
 	}
 }
 
-	
+
 void ConfigManager::upgrade_1_1_91()
-{		
+{
 	// rename displaydbv to displaydbfs
 	if ( !value( "app", "displaydbv" ).isNull() ) {
 		setValue( "app", "displaydbfs", value( "app", "displaydbv" ) );
@@ -219,6 +219,14 @@ void ConfigManager::setArtworkDir( const QString & _ad )
 void ConfigManager::setLADSPADir( const QString & _fd )
 {
 	m_ladDir = _fd;
+}
+
+
+
+
+void ConfigManager::setLV2Dir( const QString & _fd )
+{
+	m_lv2Dir = _fd;
 }
 
 

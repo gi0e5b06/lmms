@@ -76,7 +76,8 @@ bool ScatterGDXEffect::processAudioBuffer( sampleFrame* buf, const fpp_t frames 
 {
 	if( !isEnabled() || !isRunning () ) return false;
 
-        uint32_t MAXT=(uint32_t)(4.f*Engine::mixer()->baseSampleRate()*120.f/Engine::getSong()->getTempo());
+        uint32_t MAXT=(uint32_t)(4.f*Engine::mixer()->processingSampleRate()
+                                 *120.f/Engine::getSong()->getTempo());
         while(2*MAXT>1536000) MAXT/=2;
         //uint32_t MAXT=1536000;
         //uint32_t MINT=MAXT/32; //unused

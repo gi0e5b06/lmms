@@ -81,6 +81,7 @@ class PadsGDXView : public InstrumentView
 	Knob*                   m_loopStartKnob;
 	Knob*                   m_loopEndKnob;
 	Knob*                   m_ampKnob;
+	Knob*                   m_tuneKnob;
 	PixmapButton*           m_openAudioFileButton;
 	PixmapButton*           m_reverseButton;
 	automatableButtonGroup* m_loopGroup;

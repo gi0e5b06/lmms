@@ -156,14 +156,14 @@ void EffectRackView::update()
 {
 	QWidget * w = m_scrollArea->widget();
 	QVector<bool> view_map( qMax<int>( fxChain()->m_effects.size(),
-						m_effectViews.size() ), false );
+                                           m_effectViews.size() ), false );
 
 	for( QVector<Effect *>::Iterator it = fxChain()->m_effects.begin();
-					it != fxChain()->m_effects.end(); ++it )
+             it != fxChain()->m_effects.end(); ++it )
 	{
 		int i = 0;
 		for( QVector<EffectView *>::Iterator vit = m_effectViews.begin();
-				vit != m_effectViews.end(); ++vit, ++i )
+                     vit != m_effectViews.end(); ++vit, ++i )
 		{
 			if( ( *vit )->model() == *it )
 			{
@@ -235,21 +235,32 @@ void EffectRackView::addEffect()
 		return;
 	}
 
-	Effect * fx = esd.instantiateSelectedPlugin( fxChain() );
+	Effect* fx=esd.instantiateSelectedPlugin( fxChain() );
+        if(!fx->isOkay())
+        {
+                qWarning("EffectRackView::addEffect effect is not okay");
+                delete fx;
+                return;
+        }
 
+        qInfo("EffectRackView::addEffect() 0");
 	fxChain()->m_enabledModel.setValue( true );
+        qInfo("EffectRackView::addEffect() 1");
 	fxChain()->appendEffect( fx );
+        qInfo("EffectRackView::addEffect() 2");
 	update();
+        qInfo("EffectRackView::addEffect() 3 %p",fx->controls());
 
 	// Find the effectView, and show the controls
 	for( QVector<EffectView *>::Iterator vit = m_effectViews.begin();
-					vit != m_effectViews.end(); ++vit )
+             vit != m_effectViews.end(); ++vit )
 	{
 		if( ( *vit )->effect() == fx )
 		{
+                        qInfo("EffectRackView::addEffect() 4");
 			( *vit )->editControls();
-
-			break;
+                        qInfo("EffectRackView::addEffect() 5");
+                        break;
 		}
 	}
 
@@ -266,8 +277,3 @@ void EffectRackView::modelChanged()
 	connect( fxChain(), SIGNAL( aboutToClear() ), this, SLOT( clearViews() ) );
 	update();
 }
-
-
-
-
-

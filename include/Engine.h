@@ -39,6 +39,8 @@ class ProjectJournal;
 class Mixer;
 class Song;
 class Ladspa2LMMS;
+class LV22LMMS;
+//class LV2Manager;
 class ITransport;
 
 // Note: This class is called 'LmmsCore' instead of 'Engine' because of naming
@@ -96,6 +98,11 @@ public:
 		return s_ladspaManager;
 	}
 
+	static LV22LMMS* getLV2Manager()
+	{
+		return s_lv2Manager;
+	}
+
 	static DummyTrackContainer * dummyTrackContainer()
 	{
 		return s_dummyTC;
@@ -124,6 +131,7 @@ private:
         static void init1();
         static void init2();
         static void init3();
+        static void init3b();
         static void init4(bool _renderOnly);
         static void init5();
         static void init6();
@@ -150,7 +158,8 @@ private:
 	static ProjectJournal * s_projectJournal;
 	static DummyTrackContainer * s_dummyTC;
 
-	static Ladspa2LMMS * s_ladspaManager;
+	static Ladspa2LMMS* s_ladspaManager;
+        static LV22LMMS*    s_lv2Manager;
 
 	// even though most methods are static, an instance is needed for Qt slots/signals
 	static LmmsCore * s_instanceOfMe;
