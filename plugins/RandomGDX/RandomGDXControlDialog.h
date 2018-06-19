@@ -36,9 +36,7 @@ class RandomGDXControlDialog : public EffectControlDialog
 	Q_OBJECT
 public:
 	RandomGDXControlDialog( RandomGDXControls* controls );
-	virtual ~RandomGDXControlDialog()
-	{
-	}
+	virtual ~RandomGDXControlDialog() { }
 
 } ;
 

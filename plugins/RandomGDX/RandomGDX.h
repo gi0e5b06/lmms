@@ -1,7 +1,7 @@
 /*
- * RandomGDX.h - click remover effect
+ * RandomGDX.h - randomizing effect
  *
- * Copyright (c) 2017
+ * Copyright (c) 2018 gi0e5b06 (on github.com)
  *
  * This file is part of LMMS - https://lmms.io
  *
@@ -31,7 +31,7 @@
 #include "RandomGDXControls.h"
 #include "ValueBuffer.h"
 
-class RandomGDXEffect : public Effect
+class PLUGIN_EXPORT RandomGDXEffect : public Effect
 {
  public:
 	RandomGDXEffect( Model* parent, const Descriptor::SubPluginFeatures::Key* key );
