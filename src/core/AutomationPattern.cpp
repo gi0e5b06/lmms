@@ -84,6 +84,7 @@ AutomationPattern::AutomationPattern( const AutomationPattern & _pat_to_copy ) :
 		m_timeMap[it.key()] = it.value();
 		m_tangents[it.key()] = _pat_to_copy.m_tangents[it.key()];
 	}
+
 	switch( getTrack()->trackContainer()->type() )
 	{
 		case TrackContainer::BBContainer:
@@ -108,7 +109,7 @@ AutomationPattern::~AutomationPattern()
 
 
 
-bool AutomationPattern::addObject( AutomatableModel * _obj, bool _search_dup )
+bool AutomationPattern::addObject( AutomatableModel* _obj, bool _search_dup )
 {
 	if( _search_dup && m_objects.contains(_obj) )
 	{
@@ -122,11 +123,11 @@ bool AutomationPattern::addObject( AutomatableModel * _obj, bool _search_dup )
 		putValue( MidiTime(0), _obj->inverseScaledValue( _obj->value<float>() ), false );
 	}
 
-	m_objects += _obj;
+	m_objects += QPointer<AutomatableModel>(_obj);
 
 	connect( _obj, SIGNAL( destroyed( jo_id_t ) ),
-			this, SLOT( objectDestroyed( jo_id_t ) ),
-						Qt::DirectConnection );
+                 this, SLOT( objectDestroyed( jo_id_t ) ),
+                 Qt::DirectConnection );
 
 	emit dataChanged();
 
@@ -136,12 +137,11 @@ bool AutomationPattern::addObject( AutomatableModel * _obj, bool _search_dup )
 
 
 
-void AutomationPattern::setProgressionType(
-					ProgressionTypes _new_progression_type )
+void AutomationPattern::setProgressionType(ProgressionTypes _new_progression_type)
 {
 	if ( _new_progression_type == DiscreteProgression ||
-		_new_progression_type == LinearProgression ||
-		_new_progression_type == CubicHermiteProgression )
+             _new_progression_type == LinearProgression ||
+             _new_progression_type == CubicHermiteProgression )
 	{
 		m_progressionType = _new_progression_type;
 		emit dataChanged();
@@ -204,9 +204,9 @@ void AutomationPattern::updateLength()
 
 
 MidiTime AutomationPattern::putValue( const MidiTime & time,
-					const float value,
-					const bool quantPos,
-					const bool ignoreSurroundingPoints )
+                                      const float value,
+                                      const bool quantPos,
+                                      const bool ignoreSurroundingPoints )
 {
 	cleanObjects();
 

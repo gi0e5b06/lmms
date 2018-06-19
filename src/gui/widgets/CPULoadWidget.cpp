@@ -49,7 +49,7 @@ CPULoadWidget::CPULoadWidget( QWidget * _parent ) :
 	connect( &m_updateTimer, SIGNAL( timeout() ),
                  this, SLOT( updateCpuLoad() ) );
 
-	m_updateTimer.start( 1000 / 48 ); // update cpu-load at 48 fps
+	m_updateTimer.start( 1000 / 60 ); // update cpu-load at 60 fps
 }
 
 
@@ -82,6 +82,7 @@ void CPULoadWidget::paintEvent( QPaintEvent *  )
                                       m_leds.height() );
 		}
 	}
+
 	QPainter p( this );
 	p.drawPixmap( 0, 0, m_temp );
 }
@@ -92,7 +93,10 @@ void CPULoadWidget::paintEvent( QPaintEvent *  )
 void CPULoadWidget::updateCpuLoad()
 {
 	// smooth load-values a bit
-	int new_load = ( m_currentLoad + Engine::mixer()->cpuLoad() ) / 2;
+	//int new_load = ( m_currentLoad + Engine::mixer()->cpuLoad() ) / 2;
+
+        int new_load = qMax<int>((m_currentLoad*9)/10,
+                                 Engine::mixer()->cpuLoad());
 	if( new_load != m_currentLoad )
 	{
 		m_currentLoad = new_load;
@@ -100,9 +104,3 @@ void CPULoadWidget::updateCpuLoad()
 		update();
 	}
 }
-
-
-
-
-
-

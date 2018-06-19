@@ -1,7 +1,8 @@
 /*
- * InstrumentView.h - definition of InstrumentView-class
+ * InstrumentControlDialog.h - base-class for instrument-dialogs for dis-
+ * playing and editing control port values
  *
- * Copyright (c) 2008 Tobias Doerffel <tobydox/at/users.sourceforge.net>
+ * Copyright (c) 2018 gi0e5b06 (on github.com)
  *
  * This file is part of LMMS - https://lmms.io
  *
@@ -22,40 +23,33 @@
  *
  */
 
+#ifndef INSTRUMENT_CONTROL_DIALOG_H
+#define INSTRUMENT_CONTROL_DIALOG_H
 
-#ifndef INSTRUMENT_VIEW_H
-#define INSTRUMENT_VIEW_H
+#include <QWidget>
 
-#include "AutomatableModel.h"
-#include "PluginView.h"
-#include "Instrument.h"
+#include "ModelView.h"
 
-class InstrumentTrackWindow;
+class InstrumentControls;
 
 
-class EXPORT InstrumentView : public PluginView
+class EXPORT InstrumentControlDialog : public QWidget, public ModelView
 {
-        Q_OBJECT
+	Q_OBJECT
+public:
+	InstrumentControlDialog( InstrumentControls * _controls );
+	virtual ~InstrumentControlDialog();
 
- public:
-	InstrumentView( Instrument * _instrument, QWidget * _parent );
-	virtual ~InstrumentView();
 
-	Instrument * model()
-	{
-		return( castModel<Instrument>() );
-	}
+signals:
+	void closed();
 
-	const Instrument * model() const
-	{
-		return( castModel<Instrument>() );
-	}
 
-	virtual void setModel( Model * _model, bool = false );
+protected:
+	virtual void closeEvent( QCloseEvent * _ce );
 
-	InstrumentTrackWindow * instrumentTrackWindow();
+	InstrumentControls * m_instrumentControls;
 
 } ;
-
 
 #endif

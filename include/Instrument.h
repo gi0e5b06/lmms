@@ -31,9 +31,14 @@
 
 #include "export.h"
 #include "lmms_basics.h"
+
+#include "Plugin.h"
+#include "Engine.h"
+#include "Mixer.h"
+#include "AutomatableModel.h"
+#include "TempoSyncKnobModel.h"
 #include "MemoryManager.h"
 #include "MidiTime.h"
-#include "Plugin.h"
 
 
 // forward-declarations
@@ -113,6 +118,35 @@ class EXPORT Instrument : public Plugin
 
 	virtual QString fullDisplayName() const;
 
+
+        // !!! GDX added methods like for an effect
+
+	inline ch_cnt_t processorCount() const
+	{
+		return 1;
+	}
+
+	// should be replaced by Runnable
+	inline bool dontRun() const
+	{
+		return m_noRun;
+	}
+
+	inline void setDontRun( bool _state )
+	{
+		m_noRun = _state;
+	}
+
+        inline bool isOkay() const
+	{
+		return m_okay;
+	}
+
+	inline void setOkay( bool _state )
+	{
+		m_okay = _state;
+	}
+
 	// --------------------------------------------------------------------
 	// provided functions:
 	// --------------------------------------------------------------------
@@ -144,7 +178,8 @@ protected:
 
 private:
 	InstrumentTrack * m_instrumentTrack;
-
+        bool m_okay;
+	bool m_noRun;
 } ;
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(Instrument::Flags)

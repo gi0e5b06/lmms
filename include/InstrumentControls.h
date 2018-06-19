@@ -1,7 +1,7 @@
 /*
- * InstrumentView.h - definition of InstrumentView-class
+ * InstrumentControls.h - model for instrument-controls
  *
- * Copyright (c) 2008 Tobias Doerffel <tobydox/at/users.sourceforge.net>
+ * Copyright (c) 2018 gi0e5b06 (on github.com)
  *
  * This file is part of LMMS - https://lmms.io
  *
@@ -22,40 +22,42 @@
  *
  */
 
+#ifndef INSTRUMENT_CONTROLS_H
+#define INSTRUMENT_CONTROLS_H
 
-#ifndef INSTRUMENT_VIEW_H
-#define INSTRUMENT_VIEW_H
-
-#include "AutomatableModel.h"
-#include "PluginView.h"
+#include "Model.h"
+#include "JournallingObject.h"
 #include "Instrument.h"
 
-class InstrumentTrackWindow;
+class InstrumentControlDialog;
 
 
-class EXPORT InstrumentView : public PluginView
+class InstrumentControls : public JournallingObject, public Model
 {
-        Q_OBJECT
-
  public:
-	InstrumentView( Instrument * _instrument, QWidget * _parent );
-	virtual ~InstrumentView();
+        InstrumentControls( Instrument* _instrument ) :
+	        JournallingObject(),
+		Model( _instrument ),
+		m_instrument( _instrument )
+		{
+		}
 
-	Instrument * model()
+	virtual ~InstrumentControls()
 	{
-		return( castModel<Instrument>() );
 	}
 
-	const Instrument * model() const
+	virtual int controlCount() = 0;
+	virtual InstrumentControlDialog * createView() = 0;
+
+	Instrument* instrument()
 	{
-		return( castModel<Instrument>() );
+		return m_instrument;
 	}
 
-	virtual void setModel( Model * _model, bool = false );
 
-	InstrumentTrackWindow * instrumentTrackWindow();
+private:
+	Instrument* m_instrument;
 
 } ;
-
 
 #endif

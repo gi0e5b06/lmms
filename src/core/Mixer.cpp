@@ -270,7 +270,7 @@ sample_rate_t Mixer::baseSampleRate() const
 		ConfigManager::inst()->value( "mixer", "samplerate" ).toInt();
 	if( sr < 44100 )
 	{
-		sr = 44100;
+		sr = 48000;//44100;
 	}
 	return sr;
 }

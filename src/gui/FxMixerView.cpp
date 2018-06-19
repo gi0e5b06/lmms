@@ -657,6 +657,7 @@ void FxMixerView::updateFaders()
 		const float opl = m_fxChannelViews[i]->m_fader->getPeak_L();
 		const float opr = m_fxChannelViews[i]->m_fader->getPeak_R();
 		const float fall_off = 1.2;
+
 		if( m->effectChannel(i)->m_peakLeft > opl )
 		{
 			m_fxChannelViews[i]->m_fader->setPeak_L( m->effectChannel(i)->m_peakLeft );
@@ -676,5 +677,8 @@ void FxMixerView::updateFaders()
 		{
 			m_fxChannelViews[i]->m_fader->setPeak_R( opr/fall_off );
 		}
+
+                if(m_fxChannelViews[i]->m_fader->needsUpdate())
+                        m_fxChannelViews[i]->m_fader->update();
 	}
 }

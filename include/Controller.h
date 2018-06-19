@@ -86,14 +86,8 @@ public:
 	// determining when to update GUI
 	inline bool frequentUpdates() const
 	{
-		switch( m_type )
-		{
-			case LfoController: return( true );
-			case PeakController: return( true );
-			default:
-				break;
-		}
-		return( false );
+                return  (m_type==LfoController)||
+                        (m_type==PeakController);
 	}
 
 	virtual const QString & name() const

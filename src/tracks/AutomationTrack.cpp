@@ -154,6 +154,9 @@ void AutomationTrackView::dropEvent( QDropEvent * _de )
 			AutomationPattern * pat = dynamic_cast<AutomationPattern *>( tco );
 			pat->addObject( mod );
 			pat->movePosition( pos );
+
+                        //mod->emit propertiesChanged();
+                        mod->emit controllerValueChanged();
 		}
 	}
 

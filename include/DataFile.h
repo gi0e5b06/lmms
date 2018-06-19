@@ -48,6 +48,7 @@ public:
 		ClipboardData,
 		JournalData,
 		EffectSettings,
+		InstrumentSettings,
 		TypeCount
 	} ;
 	typedef Types Type;

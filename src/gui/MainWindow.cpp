@@ -191,7 +191,7 @@ MainWindow::MainWindow() :
 	vbox->addWidget( w );
 	setCentralWidget( main_widget );
 
-	m_updateTimer.start( 1000 / 48, this );  // 48 fps
+	m_updateTimer.start( 1000 / 60, this );  // 60 fps
 
 	if( ConfigManager::inst()->value( "ui", "enableautosave" ).toInt() )
 	{

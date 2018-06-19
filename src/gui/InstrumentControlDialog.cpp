@@ -1,7 +1,8 @@
 /*
- * InstrumentView.h - definition of InstrumentView-class
+ * InstrumentControlDialog.cpp - base-class for instrument-dialogs for dis-
+ * playing and editing control port values
  *
- * Copyright (c) 2008 Tobias Doerffel <tobydox/at/users.sourceforge.net>
+ * Copyright (c) 2018 gi0e5b06 (on github.com)
  *
  * This file is part of LMMS - https://lmms.io
  *
@@ -22,40 +23,38 @@
  *
  */
 
+#include <QMessageBox>
+#include <QCloseEvent>
 
-#ifndef INSTRUMENT_VIEW_H
-#define INSTRUMENT_VIEW_H
-
-#include "AutomatableModel.h"
-#include "PluginView.h"
-#include "Instrument.h"
-
-class InstrumentTrackWindow;
+#include "InstrumentControlDialog.h"
+#include "InstrumentControls.h"
 
 
-class EXPORT InstrumentView : public PluginView
+InstrumentControlDialog::InstrumentControlDialog( InstrumentControls * _controls ) :
+	QWidget( NULL ),
+	ModelView( _controls, this ),
+	m_instrumentControls( _controls )
 {
-        Q_OBJECT
-
- public:
-	InstrumentView( Instrument * _instrument, QWidget * _parent );
-	virtual ~InstrumentView();
-
-	Instrument * model()
-	{
-		return( castModel<Instrument>() );
-	}
-
-	const Instrument * model() const
-	{
-		return( castModel<Instrument>() );
-	}
-
-	virtual void setModel( Model * _model, bool = false );
-
-	InstrumentTrackWindow * instrumentTrackWindow();
-
-} ;
+	setWindowTitle( m_instrumentControls->instrument()->displayName() );
+}
 
 
-#endif
+
+
+InstrumentControlDialog::~InstrumentControlDialog()
+{
+}
+
+
+
+
+void InstrumentControlDialog::closeEvent( QCloseEvent * _ce )
+{
+	_ce->ignore();
+	emit closed();
+}
+
+
+
+
+

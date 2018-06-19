@@ -60,7 +60,7 @@ class TextFloat;
 class EXPORT Fader : public QWidget, public FloatModelView
 {
 	Q_OBJECT
-public:
+ public:
 	Q_PROPERTY( QColor peakGreen READ peakGreen WRITE setPeakGreen )
 	Q_PROPERTY( QColor peakRed READ peakRed WRITE setPeakRed )
 	Q_PROPERTY( QColor peakYellow READ peakYellow WRITE setPeakYellow )
@@ -72,11 +72,13 @@ public:
 
 	void init(FloatModel * model, QString const & name);
 
+        inline bool needsUpdate() const { return m_needsUpdate; }
+
 	void setPeak_L( float fPeak );
-	float getPeak_L() {	return m_fPeakValue_L;	}
+	inline float getPeak_L() const { return m_fPeakValue_L;	}
 
 	void setPeak_R( float fPeak );
-	float getPeak_R() {	return m_fPeakValue_R;	}
+	inline float getPeak_R() const { return m_fPeakValue_R; }
 
 	inline float getMinPeak() const { return m_fMinPeak; }
 	inline void setMinPeak(float minPeak) { m_fMinPeak = minPeak; }
@@ -110,7 +112,8 @@ public:
 
         virtual void enterValue();
 
-private:
+
+ protected:
 	virtual void contextMenuEvent( QContextMenuEvent * _me );
 	virtual void mousePressEvent( QMouseEvent *ev );
 	virtual void mouseDoubleClickEvent( QMouseEvent* mouseEvent );
@@ -119,6 +122,8 @@ private:
 	virtual void wheelEvent( QWheelEvent *ev );
 	virtual void paintEvent( QPaintEvent *ev );
 
+
+ private:
 	inline bool clips(float const & value) const { return value >= 1.0f; }
 
 	void paintDBFSLevels(QPaintEvent *ev, QPainter & painter);
@@ -137,8 +142,8 @@ private:
 
 	void updateTextFloat();
 
-	// Private members
-private:
+        bool  m_needsUpdate;
+
 	float m_fPeakValue_L;
 	float m_fPeakValue_R;
 	float m_persistentPeak_L;
@@ -152,11 +157,11 @@ private:
 	static QPixmap * s_back;
 	static QPixmap * s_leds;
 	static QPixmap * s_knob;
-	
+
 	QPixmap * m_back;
 	QPixmap * m_leds;
 	QPixmap * m_knob;
-	
+
 	bool m_displayConversion;
 	bool m_levelsDisplayedInDBFS;
 

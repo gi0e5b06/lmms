@@ -125,6 +125,7 @@ public slots:
 	virtual void enterValue();
 	void displayHelp();
 	void friendlyUpdate();
+	void mandatoryUpdate();
 	void toggleScale();
 
 protected:

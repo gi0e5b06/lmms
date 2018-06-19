@@ -314,7 +314,8 @@ int main( int argc, char * * argv )
 					new MainApplication( argc, argv );
 
 	Mixer::qualitySettings qs( Mixer::qualitySettings::Mode_HighQuality );
-	OutputSettings os( 44100, OutputSettings::BitRateSettings(160, false), OutputSettings::Depth_16Bit, OutputSettings::StereoMode_JointStereo );
+	//OutputSettings os( 44100, OutputSettings::BitRateSettings(160, false), OutputSettings::Depth_16Bit, OutputSettings::StereoMode_JointStereo );
+        OutputSettings os( 48000, OutputSettings::BitRateSettings(320, false), OutputSettings::Depth_32Bit, OutputSettings::StereoMode_JointStereo );
 	ProjectRenderer::ExportFileFormats eff = ProjectRenderer::WaveFile;
 
 	// second of two command-line parsing stages

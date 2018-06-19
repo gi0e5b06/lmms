@@ -43,8 +43,8 @@ class EXPORT Effect : public Plugin
 	Q_OBJECT
 public:
 	Effect( const Plugin::Descriptor * _desc,
-			Model * _parent,
-			const Descriptor::SubPluginFeatures::Key * _key );
+                Model * _parent,
+                const Descriptor::SubPluginFeatures::Key * _key );
 	virtual ~Effect();
 
 	virtual void saveSettings( QDomDocument & _doc, QDomElement & _parent );
@@ -197,9 +197,9 @@ protected:
 private:
 	EffectChain * m_parent;
 	void resample( int _i, const sampleFrame * _src_buf,
-					sample_rate_t _src_sr,
-					sampleFrame * _dst_buf, sample_rate_t _dst_sr,
-					const f_cnt_t _frames );
+                       sample_rate_t _src_sr,
+                       sampleFrame * _dst_buf, sample_rate_t _dst_sr,
+                       const f_cnt_t _frames );
 
 	Descriptor::SubPluginFeatures::Key m_key;
 

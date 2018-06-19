@@ -81,9 +81,15 @@ public:
 
 
 	bool isAutomated() const;
+
+	inline bool isControlled() const
+	{
+		return m_controllerConnection!=NULL;
+	}
+
 	bool isAutomatedOrControlled() const
 	{
-		return isAutomated() || m_controllerConnection != NULL;
+		return isAutomated() || isControlled();
 	}
 
 	ControllerConnection* controllerConnection() const
@@ -270,10 +276,15 @@ public:
 		s_periodCounter = 0;
 	}
 
+signals:
+	void initValueChanged( float val );
+	void destroyed( jo_id_t id );
+        void controllerValueChanged();
+
 public slots:
 	virtual void reset();
 	void unlinkControllerConnection();
-
+        virtual void onControllerValueChanged();
 
 protected:
 	AutomatableModel(const float val = 0,
@@ -348,10 +359,6 @@ private:
 
 	// prevent several threads from attempting to write the same vb at the same time
 	QMutex m_valueBufferMutex;
-
-signals:
-	void initValueChanged( float val );
-	void destroyed( jo_id_t id );
 };
 
 

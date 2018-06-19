@@ -68,6 +68,7 @@ QPixmap * Fader::s_knob = NULL;
 Fader::Fader( FloatModel * _model, const QString & _name, QWidget * _parent ) :
 	QWidget( _parent ),
 	FloatModelView( _model, this ),
+        m_needsUpdate( true ),
 	m_fPeakValue_L( 0.0 ),
 	m_fPeakValue_R( 0.0 ),
 	m_persistentPeak_L( 0.0 ),
@@ -311,13 +312,13 @@ void Fader::setPeak( float fPeak, float &targetPeak, float &persistentPeak, QTim
 			persistentPeak = targetPeak;
 			lastPeakTime.restart();
 		}
-		update();
+		m_needsUpdate=true;
 	}
 
 	if( persistentPeak > 0 && lastPeakTime.elapsed() > 1500 )
 	{
 		persistentPeak = qMax<float>( 0, persistentPeak-0.05 );
-		update();
+		m_needsUpdate=true;
 	}
 }
 

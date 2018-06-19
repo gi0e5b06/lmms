@@ -494,9 +494,11 @@ void Song::processAutomations(const TrackList &tracklist, MidiTime timeStart, fp
 	// Apply values
 	for (auto it = values.begin(); it != values.end(); it++)
 	{
-		if (! recordedModels.contains(it.key()))
+                auto m=it.key();
+                if(!m) continue;
+		if(!recordedModels.contains(m))
 		{
-			it.key()->setAutomatedValue(it.value());
+                        m->setAutomatedValue(it.value());
 		}
 	}
 }

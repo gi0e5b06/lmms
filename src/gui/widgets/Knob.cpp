@@ -545,11 +545,28 @@ void Knob::drawKnob(QPainter* _p)
 			break;
 		}
 
-		QPen pen0(QColor(255,255,255,192),1,Qt::SolidLine,Qt::RoundCap);
-		p.setPen(pen0);
-		p.setBrush(QColor(255,255,255,192));
-		float re=radius+2.f;//-2.f;
-		p.drawEllipse(mid.x()-re/2.f,mid.y()-re/2.f,re,re);//+1.f,re+1.f);
+                QPen pen0(QColor(255,255,255,192),1,Qt::SolidLine,Qt::RoundCap);
+                p.setPen(pen0);
+                QColor bg0(255,255,255,192);
+
+                /*
+                  m->controllerConnection() == NULL ||
+                  m->controllerConnection()->getController()->frequentUpdates() == false ||
+                  m->hasLinkedModels() ||
+
+                  else
+                  m->controllerConnection()->getController()->frequentUpdates() == false ||
+                */
+
+                if(m->isAutomated())     bg0=QColor(128,128,255,192); //automation pattern
+                else
+                if(m->isControlled())    bg0=QColor(255,192,0,192);   //midi
+                else
+                if(m->hasLinkedModels()) bg0=QColor(128,128,255,192); // link
+
+                p.setBrush(bg0);
+                float re=radius+2.f;//-2.f;
+                p.drawEllipse(mid.x()-re/2.f,mid.y()-re/2.f,re,re);//+1.f,re+1.f);
 
 		QPen pen1(QColor(0,0,0,96),2,Qt::SolidLine,Qt::RoundCap);
 		p.setPen( pen1 );
@@ -580,8 +597,8 @@ void Knob::drawKnob(QPainter* _p)
 void Knob::resizeEvent(QResizeEvent * _re)
 {
 	//qInfo("Knob::resizeEvent()");
-        clearCache();
-	update();
+        //clearCache(); update();
+        mandatoryUpdate();
 }
 
 void Knob::modelChanged()
@@ -748,15 +765,31 @@ void Knob::dropEvent( QDropEvent * _de )
 	}
 	else if( type == "automatable_model" )
 	{
-		AutomatableModel* mod=dynamic_cast<AutomatableModel*>
-                        (Engine::projectJournal()->journallingObject(val.toInt()));
-		if(mod)
-		{
-			AutomatableModel::linkModels( m, mod );
-			mod->setValue( m->value() );
-                        _de->accept();
-		}
+                if(!m->controllerConnection())
+                {
+                        AutomatableModel* mod=dynamic_cast<AutomatableModel*>
+                                (Engine::projectJournal()->journallingObject(val.toInt()));
+                        if(mod)
+                        {
+                                //not a midi or dummy
+                                //if(! mod->controllerConnection() )
+                                if( mod->controllerConnection() )
+                                        qInfo("src Knob has a controller Connection");
+                                else
+                                        qInfo("src Knob has NO controller Connection");
+
+                                {
+                                        AutomatableModel::linkModels( m, mod );
+                                        mod->setValue( m->value() );
+                                        _de->accept();
+                                        mod->emit propertiesChanged();
+                                }
+                        }
+                }
+		else qInfo("dst Knob has a controller Connection");
 	}
+
+        mandatoryUpdate();
 }
 
 
@@ -976,9 +1009,11 @@ void Knob::friendlyUpdate()
         FloatModel* m=model();
         //qInfo("Knob::friendlyUpdate 1");
 	if( !m ||
+            !m->isAutomated() ||
+            m->isControlled() ||
             m->controllerConnection() == NULL ||
 	    m->controllerConnection()->getController()->frequentUpdates() == false ||
-	    m->hasLinkedModels() ||
+	    //m->hasLinkedModels() ||
 	    Controller::runningFrames() % (256*4) == 0 )
 	{
                 //qInfo("Knob::friendlyUpdate 2");
@@ -989,6 +1024,14 @@ void Knob::friendlyUpdate()
                 //qInfo("Knob::friendlyUpdate skipped");
                 //update();
         }
+}
+
+
+void Knob::mandatoryUpdate()
+{
+        qInfo("Knob::mandatoryUpdate");
+        clearCache();
+        update();
 }
 
 
@@ -1021,7 +1064,9 @@ void Knob::doConnections()
 		QObject::connect( m, SIGNAL( dataChanged() ),
                                   this, SLOT( friendlyUpdate() ) );
 		QObject::connect( m, SIGNAL( propertiesChanged() ),
-                                  this, SLOT( update() ) );
+                                  this, SLOT( mandatoryUpdate() ) );
+		QObject::connect( m, SIGNAL( controllerValueChanged() ),
+                                  this, SLOT( mandatoryUpdate() ) );
 	}
 }
 

@@ -81,8 +81,6 @@ AutomatableModel::~AutomatableModel()
 }
 
 
-
-
 bool AutomatableModel::isAutomated() const
 {
 	return AutomationPattern::isAutomated( this );
@@ -411,13 +409,14 @@ float AutomatableModel::fittedValue( float value ) const
 
 void AutomatableModel::linkModel( AutomatableModel* model )
 {
-	if( !m_linkedModels.contains( model ) && model != this )
+	if( model && !m_linkedModels.contains( model ) && model!=this )
 	{
 		m_linkedModels.push_back( model );
 
 		if( !model->hasLinkedModels() )
 		{
 			QObject::connect( this, SIGNAL( dataChanged() ), model, SIGNAL( dataChanged() ) );
+                        QObject::connect( this, SIGNAL( controllerValueChanged() ), model, SLOT( onControllerValueChanged() ) );
 		}
 	}
 }
@@ -427,11 +426,16 @@ void AutomatableModel::linkModel( AutomatableModel* model )
 
 void AutomatableModel::unlinkModel( AutomatableModel* model )
 {
-	AutoModelVector::Iterator it = qFind( m_linkedModels.begin(), m_linkedModels.end(), model );
-	if( it != m_linkedModels.end() )
-	{
-		m_linkedModels.erase( it );
-	}
+        if( model && m_linkedModels.contains( model ) && model!=this )
+        {
+                disconnect(model);
+
+                AutoModelVector::Iterator it = qFind( m_linkedModels.begin(), m_linkedModels.end(), model );
+                if( it != m_linkedModels.end() )
+                {
+                        m_linkedModels.erase( it );
+                }
+        }
 }
 
 
@@ -473,14 +477,28 @@ void AutomatableModel::setControllerConnection( ControllerConnection* c )
 	m_controllerConnection = c;
 	if( c )
 	{
-		QObject::connect( m_controllerConnection, SIGNAL( valueChanged() ), this, SIGNAL( dataChanged() ) );
+		QObject::connect( m_controllerConnection, SIGNAL( valueChanged() ), this, SLOT( onControllerValueChanged() ) );
 		QObject::connect( m_controllerConnection, SIGNAL( destroyed() ), this, SLOT( unlinkControllerConnection() ) );
 		m_valueChanged = true;
+                emit propertiesChanged();
 		emit dataChanged();
 	}
 }
 
 
+void AutomatableModel::onControllerValueChanged()
+{
+        qInfo("AutomatableModel::onControllerValueChanged");
+        emit controllerValueChanged();
+
+        //if( m_controllerConnection &&
+        //    m_controllerConnection->getController() )
+        if( hasLinkedModels() )
+        {
+		for(AutomatableModel* m: m_linkedModels)
+                        m->emit dataChanged();
+        }
+}
 
 
 float AutomatableModel::controllerValue( int frameOffset ) const

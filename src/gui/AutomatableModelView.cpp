@@ -111,7 +111,7 @@ void AutomatableModelView::addDefaultActions( QMenu* menu )
 
 	if( model->hasLinkedModels() )
 	{
-		menu->addAction( embed::getIconPixmap( "edit-delete" ),
+		menu->addAction( embed::getIconPixmap( "edit_erase" ),
 							AutomatableModel::tr( "Remove all linked controls" ),
 							amvSlots, SLOT( unlinkAllModels() ) );
 		menu->addSeparator();
