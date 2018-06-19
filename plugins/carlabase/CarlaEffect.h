@@ -1,5 +1,5 @@
 /*
- * carla.h - Carla for LMMS
+ * Carla for LMMS
  *
  * Copyright (C) 2014 Filipe Coelho <falktx@falktx.com>
  * Copyright (c) 2018 gi0e5b06 (on github.com)
@@ -23,27 +23,30 @@
  *
  */
 
-#ifndef CARLA_H
-#define CARLA_H
+#ifndef CARLA_EFFECT_H
+#define CARLA_EFFECT_H
 
 #include <QMutex>
 
 #include "CarlaNative.h"
+#include "Plugin.h"
 
-#include "Instrument.h"
-#include "InstrumentView.h"
+#include "EffectControls.h"
+//#include "CarlaEffectControlDialog.h"
+class CarlaEffectControls;
+class CarlaEffectControlDialog;
 
-class QPushButton;
-
-class PLUGIN_EXPORT CarlaInstrument : public Instrument
+class PLUGIN_EXPORT CarlaEffect : public Effect
 {
     Q_OBJECT
 
 public:
     static const uint32_t kMaxMidiEvents = 512;
 
-    CarlaInstrument(InstrumentTrack* const instrumentTrack, const Descriptor* const descriptor, const bool isPatchbay);
-    virtual ~CarlaInstrument();
+    CarlaEffect(Model* parent,
+                const Plugin::Descriptor* const descriptor,
+                const bool isPatchbay);
+    virtual ~CarlaEffect();
 
     // CarlaNative functions
     uint32_t handleGetBufferSize() const;
@@ -55,13 +58,17 @@ public:
     intptr_t handleDispatcher(const NativeHostDispatcherOpcode opcode, const int32_t index, const intptr_t value, void* const ptr, const float opt);
 
     // LMMS functions
-    virtual Flags flags() const;
-    virtual QString nodeName() const;
+    //virtual Flags flags() const;
     virtual void saveSettings(QDomDocument& doc, QDomElement& parent);
     virtual void loadSettings(const QDomElement& elem);
-    virtual void play(sampleFrame* workingBuffer);
-    virtual bool handleMidiEvent(const MidiEvent& event, const MidiTime& time, f_cnt_t offset);
-    virtual PluginView* instantiateView(QWidget* parent);
+    virtual QString nodeName() const;
+    //virtual void play(sampleFrame* workingBuffer);
+    //virtual bool handleMidiEvent(const MidiEvent& event, const MidiTime& time, f_cnt_t offset);
+    virtual bool processAudioBuffer(sampleFrame* _buf,const fpp_t _frames);
+
+    virtual EffectControls* controls();
+
+    //PluginView* createNativeView(QWidget* parent);
 
 signals:
     void uiClosed();
@@ -69,44 +76,25 @@ signals:
 private slots:
     void sampleRateChanged();
 
-private:
+ private:
+    CarlaEffectControls* m_gdxControls;
+
     const bool kIsPatchbay;
 
     NativePluginHandle fHandle;
     NativeHostDescriptor fHost;
     const NativePluginDescriptor* fDescriptor;
 
-    uint32_t        fMidiEventCount;
-    NativeMidiEvent fMidiEvents[kMaxMidiEvents];
+    uint32_t        fMidiEventCount=0;
+    NativeMidiEvent fMidiEvents[0];//kMaxMidiEvents];
     NativeTimeInfo  fTimeInfo;
 
     // this is only needed because note-offs are being sent during play
     QMutex fMutex;
 
-    friend class CarlaInstrumentView;
-};
-
-class CarlaInstrumentView : public InstrumentView
-{
-    Q_OBJECT
-
-public:
-    CarlaInstrumentView(CarlaInstrument* const instrument, QWidget* const parent);
-    virtual ~CarlaInstrumentView();
-
-private slots:
-    void toggleUI(bool);
-    void uiClosed();
-
-private:
-    virtual void modelChanged();
-    virtual void timerEvent(QTimerEvent*);
-
-    NativePluginHandle fHandle;
-    const NativePluginDescriptor* fDescriptor;
-    int fTimerId;
-
-    QPushButton * m_toggleUIButton;
+    friend class CarlaEffectControls;
+    friend class CarlaEffectControlDialog;
+    //friend class CarlaEffectView;
 };
 
 #endif

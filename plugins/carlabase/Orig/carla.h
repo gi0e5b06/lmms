@@ -2,7 +2,6 @@
  * carla.h - Carla for LMMS
  *
  * Copyright (C) 2014 Filipe Coelho <falktx@falktx.com>
- * Copyright (c) 2018 gi0e5b06 (on github.com)
  *
  * This file is part of LMMS - https://lmms.io
  *
