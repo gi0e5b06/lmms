@@ -45,6 +45,8 @@ IF("${PLUGIN_LIST}" STREQUAL "")
 		bit_invader
 		Bitcrush
 		carlabase
+                carlaeffectbay
+                carlaeffectrack
 		carlapatchbay
 		carlarack
 		ClickGDX
@@ -56,10 +58,14 @@ IF("${PLUGIN_LIST}" STREQUAL "")
 		Eq
 		Flanger
 		HydrogenImport
+                #Ilv2GDX
+                #jalv
 		# ladspa_browser
 		LadspaEffect
 		lb302
 		LV2EffectGDX
+		LV2InstrumentGDX
+		LV2InstrumentGDXUI
 		MidiImport
 		MidiExport
 		MultitapEcho

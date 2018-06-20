@@ -207,29 +207,40 @@ void LcdWidget::paintEvent( QPaintEvent* )
 	// Label
 	if( !m_label.isEmpty() )
 	{
-		p.setFont( pointSizeF( p.font(), 6.5 ) );
+		p.setFont( pointSizeF( p.font(), 7 ));//6.5 ) );
+                /*
 		p.setPen( textShadowColor() );
 		p.drawText( width() / 2 -
 				p.fontMetrics().width( m_label ) / 2 + 1,
 						height(), m_label );
+                */
+                const QFontMetrics mx=p.fontMetrics();
+                int xt=width()/2-mx.width(m_label)/2;
+                int yt=m_cellHeight+margin+mx.height()-4;
 		p.setPen( textColor() );
-		p.drawText( width() / 2 -
-				p.fontMetrics().width( m_label ) / 2,
-						height() - 1, m_label );
+		p.drawText(xt,yt,m_label);
 	}
 
 }
 
 
-
-
-void LcdWidget::setLabel( const QString& label )
+void LcdWidget::setLabel(const QString& _s)
 {
-	m_label = label;
-	updateSize();
+        setText(_s);
 }
 
 
+QString LcdWidget::text() const
+{
+        return m_label;
+}
+
+
+void LcdWidget::setText(const QString& _s)
+{
+	m_label=_s;
+	updateSize();
+}
 
 
 void LcdWidget::setMarginWidth( int width )
@@ -238,8 +249,6 @@ void LcdWidget::setMarginWidth( int width )
 
 	updateSize();
 }
-
-
 
 
 void LcdWidget::updateSize()

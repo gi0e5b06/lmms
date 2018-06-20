@@ -29,11 +29,11 @@
 
 #include "CarlaNative.h"
 
+#include "CarlaEffectControls.h"
 #include "EffectControlDialog.h"
-//#include "CarlaEffect.h"
-
-
-class CarlaEffectControls;
+#include "Knob.h"
+#include "LedCheckbox.h"
+#include "LcdSpinBox.h"
 
 class CarlaEffectControlDialog : public EffectControlDialog
 {
@@ -45,6 +45,7 @@ class CarlaEffectControlDialog : public EffectControlDialog
 private slots:
         void toggleUI(bool);
         void uiClosed();
+        void onDataChanged();
 
 private:
         virtual void modelChanged();
@@ -54,7 +55,10 @@ private:
         const NativePluginDescriptor* fDescriptor;
         int fTimerId;
 
-        QPushButton * m_toggleUIButton;
+        QPushButton* m_toggleUIButton;
+        Knob*        m_knobs[NB_KNOBS];
+        LedCheckBox* m_leds [NB_LEDS ];
+        LcdSpinBox*  m_lcds [NB_LCDS ];
 } ;
 
 

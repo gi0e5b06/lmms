@@ -1089,8 +1089,8 @@ InstrumentTrackWindow * InstrumentTrackView::topLevelInstrumentTrackWindow()
 {
 	InstrumentTrackWindow * w = NULL;
 	for( const QMdiSubWindow * sw :
-				gui->mainWindow()->workspace()->subWindowList(
-											QMdiArea::ActivationHistoryOrder ) )
+                     gui->mainWindow()->workspace()->subWindowList
+                     ( QMdiArea::ActivationHistoryOrder ) )
 	{
 		if( sw->isVisible() && sw->widget()->inherits( "InstrumentTrackWindow" ) )
 		{

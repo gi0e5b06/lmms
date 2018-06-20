@@ -29,6 +29,7 @@
 #include <QMutex>
 
 #include "CarlaNative.h"
+#include "MidiEvent.h"
 #include "Plugin.h"
 
 #include "EffectControls.h"
@@ -63,7 +64,7 @@ public:
     virtual void loadSettings(const QDomElement& elem);
     virtual QString nodeName() const;
     //virtual void play(sampleFrame* workingBuffer);
-    //virtual bool handleMidiEvent(const MidiEvent& event, const MidiTime& time, f_cnt_t offset);
+    virtual bool handleMidiEvent(const MidiEvent& event, const MidiTime& time, f_cnt_t offset);
     virtual bool processAudioBuffer(sampleFrame* _buf,const fpp_t _frames);
 
     virtual EffectControls* controls();
@@ -85,8 +86,8 @@ private slots:
     NativeHostDescriptor fHost;
     const NativePluginDescriptor* fDescriptor;
 
-    uint32_t        fMidiEventCount=0;
-    NativeMidiEvent fMidiEvents[0];//kMaxMidiEvents];
+    uint32_t        fMidiEventCount;
+    NativeMidiEvent fMidiEvents[kMaxMidiEvents];
     NativeTimeInfo  fTimeInfo;
 
     // this is only needed because note-offs are being sent during play

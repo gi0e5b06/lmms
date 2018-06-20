@@ -47,7 +47,12 @@ public:
 	virtual ~LcdWidget();
 
 	void setValue( int value );
-	void setLabel( const QString& label );
+
+	void setLabel( const QString& label ); //deprecated
+
+        QString text() const;
+        void setText(const QString& _s);
+
 
 	void addTextForValue( int value, const QString& text )
 	{

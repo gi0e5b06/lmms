@@ -33,9 +33,9 @@ extern "C"
 Plugin::Descriptor PLUGIN_EXPORT carlaeffectbay_plugin_descriptor =
 {
     STRINGIFY( PLUGIN_NAME ),
-    "Carla Effect Bay",
+    "Carla Patchbay FX",
     QT_TRANSLATE_NOOP( "pluginBrowser",
-                       "Carla Effect Bay" ),
+                       "Carla Patchbay for Effects" ),
     "gi0e5b06, falkTX",
     0x0195,
     Plugin::Effect,

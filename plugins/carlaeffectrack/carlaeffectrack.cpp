@@ -33,9 +33,9 @@ extern "C"
 Plugin::Descriptor PLUGIN_EXPORT carlaeffectrack_plugin_descriptor =
 {
     STRINGIFY( PLUGIN_NAME ),
-    "Carla Effect Rack",
+    "Carla Rack FX",
     QT_TRANSLATE_NOOP( "pluginBrowser",
-                       "Carla Effect Rack" ),
+                       "Carla Rack for Effects" ),
     "gi0e5b06, falkTX",
     0x0195,
     Plugin::Effect,

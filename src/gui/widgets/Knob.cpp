@@ -1,7 +1,7 @@
 /*
- * Knob.cpp - powerful knob-widget
+ * Knob.cpp - knob widget
  *
- * Copyright (c) 2017 gi0e5b06
+ * Copyright (c) 2017-2018 gi0e5b06
  * Copyright (c) 2004-2014 Tobias Doerffel <tobydox/at/users.sourceforge.net>
  *
  * This file is part of LMMS - https://lmms.io
@@ -181,14 +181,26 @@ Knob::~Knob()
 
 void Knob::setLabel( const QString & txt )
 {
+        setText(txt);
+}
+
+
+QString Knob::text() const
+{
+        return m_label;
+}
+
+
+void Knob::setText( const QString & txt )
+{
 	if( m_knobPixmap )
 	{
-		QFontMetrics metrix( pointSizeF( font(), 6.5) );
 		int w=m_knobPixmap->width();
 		int h=m_knobPixmap->height();
 		if(!txt.isEmpty())
 		{
-			w=qMax<int>(w,qMin<int>(2*w,metrix.width(txt)));
+                        QFontMetrics mx( pointSizeF( font(), 7) ); //6.5
+			w=qMax<int>(w,qMin<int>(2*w,mx.width(txt)));
                         h+=10;
 		}
 		setMinimumSize( w, h );
@@ -923,8 +935,11 @@ void Knob::paintEvent(QPaintEvent* _pe)
 		p.setPen( textColor() );
 		QFontMetrics metrix=p.fontMetrics();
 		QString text=metrix.elidedText(m_label,Qt::ElideRight,width());
-		p.drawText( width() / 2 - metrix.width( text ) / 2,
-			    height() - 2, text );
+                int x=width()/2-metrix.width(text)/2;
+                int y=height()-2;
+                if(m_knobPixmap)
+                        y=m_knobPixmap->height()+7;
+                p.drawText(x,y,text);
 	}
 
         //p.setPen(Qt::red);
@@ -1029,7 +1044,7 @@ void Knob::friendlyUpdate()
 
 void Knob::mandatoryUpdate()
 {
-        qInfo("Knob::mandatoryUpdate");
+        //qInfo("Knob::mandatoryUpdate");
         clearCache();
         update();
 }

@@ -55,14 +55,11 @@ public:
 	virtual ~LedCheckBox();
 
 
-	inline const QString & text()
-	{
-		return( m_text );
-	}
-
-	void setText( const QString& s );
-
-	Q_PROPERTY( QString text READ text WRITE setText )
+	QString text() const;
+	void setText(const QString& _s);
+	//Q_PROPERTY( QString text READ text WRITE setText )
+        Qt::AnchorPoint textAnchorPoint() const;
+        void setTextAnchorPoint(Qt::AnchorPoint _a);
 
         virtual void enterValue();
 
@@ -75,6 +72,8 @@ private:
 	QPixmap * m_ledOffPixmap;
 
 	QString m_text;
+        Qt::AnchorPoint m_textAnchor;
+
 
 	void initUi( LedColors _color ); //!< to be called by ctors
 	void onTextUpdated(); //!< to be called when you updated @a m_text

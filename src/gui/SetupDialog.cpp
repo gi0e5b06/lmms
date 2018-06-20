@@ -1120,7 +1120,7 @@ void SetupDialog::setBufferSize( int _value )
 	}
 
 	m_bufferSize = _value * 64;
-	m_bufSizeLbl->setText( tr( "Frames: %1\nLatency: %2 ms" ).arg(
+	m_bufSizeLbl->setText( tr( "Frames: %1, Latency: %2 ms" ).arg(
 					m_bufferSize ).arg(
 						1000.0f * m_bufferSize /
 				Engine::mixer()->processingSampleRate(),

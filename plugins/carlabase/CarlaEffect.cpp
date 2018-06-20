@@ -317,7 +317,96 @@ void CarlaEffect::loadSettings(const QDomElement& elem)
     fDescriptor->set_state(fHandle, carlaDoc.toString(0).toUtf8().constData());
 }
 
-//void CarlaEffect::play(sampleFrame* workingBuffer)
+
+bool CarlaEffect::handleMidiEvent(const MidiEvent& event, const MidiTime&, f_cnt_t offset)
+{
+    qInfo("CarlaEffect::handleMidiEvent");
+
+    const QMutexLocker ml(&fMutex);
+
+    if (fMidiEventCount >= kMaxMidiEvents)
+    {
+            qWarning("CarlaEffect::handleMidiEvent: midi event stack full");
+            return false;
+    }
+
+    NativeMidiEvent& nEvent(fMidiEvents[fMidiEventCount++]);
+    std::memset(&nEvent, 0, sizeof(NativeMidiEvent));
+
+    nEvent.port    = 0;
+    nEvent.time    = offset;
+    nEvent.data[0] = event.type() | (event.channel() & 0x0F);
+
+    switch (event.type())
+    {
+    case MidiNoteOn:
+        if (event.velocity() > 0)
+        {
+            if (event.key() < 0 || event.key() > MidiMaxKey)
+                break;
+
+            nEvent.data[1] = event.key();
+            nEvent.data[2] = event.velocity();
+            nEvent.size    = 3;
+            break;
+        }
+        else
+        {
+            nEvent.data[0] = MidiNoteOff | (event.channel() & 0x0F);
+            // nobreak
+        }
+
+    case MidiNoteOff:
+        if (event.key() < 0 || event.key() > MidiMaxKey)
+            break;
+
+        nEvent.data[1] = event.key();
+        nEvent.data[2] = event.velocity();
+        nEvent.size    = 3;
+        break;
+
+    case MidiKeyPressure:
+        nEvent.data[1] = event.key();
+        nEvent.data[2] = event.velocity();
+        nEvent.size    = 3;
+        break;
+
+    case MidiControlChange:
+        qInfo("preparing event");
+        nEvent.data[1] = event.controllerNumber();
+        nEvent.data[2] = event.controllerValue();
+        nEvent.size    = 3;
+        break;
+
+    case MidiProgramChange:
+        nEvent.data[1] = event.program();
+        nEvent.size    = 2;
+        break;
+
+    case MidiChannelPressure:
+        nEvent.data[1] = event.channelPressure();
+        nEvent.size    = 2;
+        break;
+
+    case MidiPitchBend:
+        //nEvent.data[1] = event.pitchBend() & 0x7f;
+        //nEvent.data[2] = event.pitchBend() >> 7;
+        event.midiPitchBendLE(&nEvent.data[1],&nEvent.data[2]);
+        nEvent.size    = 3;
+        break;
+
+    default:
+        // unhandled
+        --fMidiEventCount;
+        qInfo("unhandled");
+        break;
+    }
+
+    qInfo("handle events %d",fMidiEventCount);
+    return true;
+}
+
+
 bool CarlaEffect::processAudioBuffer(sampleFrame* buf, const fpp_t frames)
 {
     if( !isEnabled() || !isRunning () )
@@ -371,6 +460,7 @@ bool CarlaEffect::processAudioBuffer(sampleFrame* buf, const fpp_t frames)
 
     {
         const QMutexLocker ml(&fMutex);
+        //qInfo("carla effect: event count=%d",fMidiEventCount);
         fDescriptor->process(fHandle, rBuf, rBuf, bufsize, fMidiEvents, fMidiEventCount);
         fMidiEventCount = 0;
     }

@@ -26,11 +26,20 @@
 #define CARLA_EFFECT_CONTROLS_H
 
 #include "EffectControls.h"
-#include "CarlaEffectControlDialog.h"
+//#include "CarlaEffectControlDialog.h"
 //#include "Knob.h"
 
 
 class CarlaEffect;
+
+
+#define NB_KNOBS      18
+#define NB_LEDS        8
+#define NB_LCDS        4
+#define NB_KNOB_START 40
+#define NB_LED_START  60
+#define NB_LCD_START  70
+#define MIDI_CH        1
 
 
 class CarlaEffectControls : public EffectControls
@@ -49,17 +58,20 @@ public:
 
 	virtual int controlCount()
 	{
-		return 0;
+                return NB_KNOBS+NB_LEDS+NB_LCDS;
 	}
 
 	virtual EffectControlDialog* createView();
-
 
 private slots:
 	void changeControl();
 
 private:
 	CarlaEffect* m_effect;
+
+        FloatModel*  m_knobs[NB_KNOBS];
+        BoolModel*   m_leds [NB_LEDS ];
+        IntModel*    m_lcds [NB_LCDS ];
 
 	friend class CarlaEffectControlDialog;
 	friend class CarlaEffect;

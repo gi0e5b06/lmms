@@ -2,6 +2,7 @@
  * carla.cpp - Carla for LMMS
  *
  * Copyright (C) 2014 Filipe Coelho <falktx@falktx.com>
+ * Copyright (c) 2018 gi0e5b06 (on github.com)
  *
  * This file is part of LMMS - https://lmms.io
  *
@@ -33,6 +34,7 @@
 #include "InstrumentPlayHandle.h"
 #include "InstrumentTrack.h"
 #include "Mixer.h"
+#include "Knob.h"
 
 #include <QApplication>
 #include <QFileDialog>
@@ -179,6 +181,24 @@ CarlaInstrument::CarlaInstrument(InstrumentTrack* const instrumentTrack, const D
 
     if (fHandle != NULL && fDescriptor->activate != NULL)
         fDescriptor->activate(fHandle);
+
+    for(int i=0;i<NB_KNOBS;i++)
+    {
+            m_knobs[i]=new FloatModel
+                    (0.f,0.f,127.f,1.f,
+                     NULL,QString("KNB%1").arg(NB_KNOB_START+i),false);
+    }
+    for(int i=0;i<NB_LEDS;i++)
+    {
+            m_leds[i]=new BoolModel
+                    (false,NULL,QString("LED%1").arg(NB_LED_START+i),false);
+    }
+    for(int i=0;i<NB_LCDS;i++)
+    {
+            m_lcds[i]=new IntModel
+                    (0,0,127,
+                     NULL,QString("LCD%1").arg(NB_LCD_START+i),false);
+    }
 
     // we need a play-handle which cares for calling play()
     InstrumentPlayHandle * iph = new InstrumentPlayHandle( this, instrumentTrack );
@@ -479,13 +499,15 @@ CarlaInstrumentView::CarlaInstrumentView(CarlaInstrument* const instrument, QWid
       fTimerId(fHandle != NULL && fDescriptor->ui_idle != NULL ? startTimer(30) : 0)
 {
     setAutoFillBackground(true);
-
     QPalette pal;
-    pal.setBrush(backgroundRole(), instrument->kIsPatchbay ? PLUGIN_NAME::getIconPixmap("artwork-patchbay") : PLUGIN_NAME::getIconPixmap("artwork-rack"));
+    pal.setBrush(backgroundRole(),
+                 instrument->kIsPatchbay
+                 ? PLUGIN_NAME::getIconPixmap("artwork-patchbay")
+                 : PLUGIN_NAME::getIconPixmap("artwork-rack"));
     setPalette(pal);
 
     QVBoxLayout * l = new QVBoxLayout( this );
-    l->setContentsMargins( 20, 180, 10, 10 );
+    l->setContentsMargins( 8, 66, 8, 8 );
     l->setSpacing( 10 );
 
     m_toggleUIButton = new QPushButton( tr( "Show GUI" ), this );
@@ -494,11 +516,52 @@ CarlaInstrumentView::CarlaInstrumentView(CarlaInstrument* const instrument, QWid
     m_toggleUIButton->setIcon( embed::getIconPixmap( "zoom" ) );
     m_toggleUIButton->setFont( pointSize<8>( m_toggleUIButton->font() ) );
     connect( m_toggleUIButton, SIGNAL( clicked(bool) ), this, SLOT( toggleUI( bool ) ) );
-
     m_toggleUIButton->setWhatsThis(
                 tr( "Click here to show or hide the graphical user interface (GUI) of Carla." ) );
-
     l->addWidget( m_toggleUIButton );
+
+
+    QWidget* kg=new QWidget(this);
+    kg->setFixedSize(228,117+21+0);
+    for(int i=0;i<NB_KNOBS;i++)
+    {
+            m_knobs[i]=new Knob(knobBright_26,kg);
+            m_knobs[i]->setLabel(QString("CC %1").arg(NB_KNOB_START+i));
+            m_knobs[i]->setHintText(QString("MIDI Channel %1, CC %2, V ")
+                                    .arg(MIDI_CH).arg(NB_KNOB_START+i),"");
+            m_knobs[i]->setWhatsThis("");
+            m_knobs[i]->setGeometry(39*(i%6),39*(i/6),39,39);
+            m_knobs[i]->setModel(instrument->m_knobs[i]);
+            connect(instrument->m_knobs[i], SIGNAL(dataChanged()),
+                    this, SLOT(onDataChanged()));
+    }
+    for(int i=0;i<NB_LEDS;i++)
+    {
+            m_leds[i]=new LedCheckBox(kg);
+            m_leds[i]->setText(QString("CC %1").arg(NB_LED_START+i));
+            m_leds[i]->setTextAnchorPoint(Qt::AnchorBottom);
+            //m_leds[i]->setHintText(QString("MIDI Channel %1, CC %2, V ")
+            //                        .arg(MIDI_CH).arg(NB_LED_START+i),"");
+            //m_leds[i]->setWhatsThis("");
+            m_leds[i]->setGeometry(29*(i%8),117+21*(i/8),29,21);
+            m_leds[i]->setModel(instrument->m_leds[i]);
+            connect(instrument->m_leds[i], SIGNAL(dataChanged()),
+                    this, SLOT(onDataChanged()));
+    }
+    for(int i=0;i<NB_LCDS;i++)
+    {
+            m_lcds[i]=new LcdSpinBox(3,kg);
+            m_lcds[i]->setText(QString("CC %1").arg(NB_LCD_START+i));
+            //m_lcds[i]->setHintText(QString("MIDI Channel %1, CC %2, V ")
+            //                        .arg(MIDI_CH).arg(NB_LCD_START+i),"");
+            //m_lcds[i]->setWhatsThis("");
+            m_lcds[i]->setGeometry(58*(i%4),117+21+34*(i/4),58,34);
+            m_lcds[i]->setModel(instrument->m_lcds[i]);
+            connect(instrument->m_lcds[i],SIGNAL(dataChanged()),
+                    this, SLOT(onDataChanged()));
+    }
+    l->addWidget(kg);
+
     l->addStretch();
 
     connect(instrument, SIGNAL(uiClosed()), this, SLOT(uiClosed()));
@@ -520,6 +583,59 @@ void CarlaInstrumentView::uiClosed()
 {
     m_toggleUIButton->setChecked(false);
 }
+
+void CarlaInstrumentView::onDataChanged()
+{
+        QObject* o=sender();
+        if(!o) qInfo("no sender");
+        AutomatableModel* m=dynamic_cast<AutomatableModel*>(sender());
+        if(m)
+        {
+                int cc=-1;
+                int v =-1;
+                if(cc==-1)
+                        for(int i=0;i<NB_KNOBS;i++)
+                                if(m_knobs[i]->model()==m)
+                                {
+                                        cc=NB_KNOB_START+i;
+                                        v =m_knobs[i]->model()->value();
+                                }
+                if(cc==-1)
+                        for(int i=0;i<NB_LEDS;i++)
+                                if(m_leds[i]->model()==m)
+                                {
+                                        cc=NB_LED_START+i;
+                                        v =m_leds[i]->model()->value();
+                                }
+
+                if(cc==-1)
+                        for(int i=0;i<NB_LCDS;i++)
+                                if(m_lcds[i]->model()==m)
+                                {
+                                        cc=NB_LCD_START+i;
+                                        v =m_lcds[i]->model()->value();
+                                }
+                if(cc!=-1)
+                {
+                        qInfo("cc %d: data changed: %d",cc,v);
+                        CarlaInstrument* fx=dynamic_cast<CarlaInstrument*>(model());
+                        if(fx)
+                        {
+                                MidiEvent ev(MidiEventTypes::MidiControlChange,
+                                             MIDI_CH-1,
+                                             cc,
+                                             v);
+                                Song::PlayPos pos=Engine::getSong()->getPlayPos();
+                                //qInfo("sending midi event");
+                                fx->handleMidiEvent(ev,pos,pos.currentFrame());
+                        }
+                        else qInfo("fx is null");
+                }
+                else qInfo("cc model not found");
+        }
+        else qInfo("sender but no model");
+}
+
 
 void CarlaInstrumentView::modelChanged()
 {

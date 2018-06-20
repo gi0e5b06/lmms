@@ -81,7 +81,11 @@ public:
 		setDescription( _txt_before );
 		setUnit( _txt_after );
 	}
-	void setLabel( const QString & txt );
+
+	void setLabel( const QString & txt ); //deprecated
+
+        QString text() const;
+        void setText(const QString& _s);
 
 	void setTotalAngle( float angle );
 

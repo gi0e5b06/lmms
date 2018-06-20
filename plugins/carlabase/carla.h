@@ -32,8 +32,22 @@
 
 #include "Instrument.h"
 #include "InstrumentView.h"
+#include "Knob.h"
+#include "LedCheckbox.h"
+#include "LcdSpinBox.h"
+
 
 class QPushButton;
+
+
+#define NB_KNOBS      18
+#define NB_LEDS        8
+#define NB_LCDS        0
+#define NB_KNOB_START 40
+#define NB_LED_START  60
+#define NB_LCD_START  70
+#define MIDI_CH        1
+
 
 class PLUGIN_EXPORT CarlaInstrument : public Instrument
 {
@@ -83,8 +97,13 @@ private:
     // this is only needed because note-offs are being sent during play
     QMutex fMutex;
 
+    FloatModel*  m_knobs[NB_KNOBS];
+    BoolModel*   m_leds [NB_LEDS ];
+    IntModel*    m_lcds [NB_LCDS ];
+
     friend class CarlaInstrumentView;
 };
+
 
 class CarlaInstrumentView : public InstrumentView
 {
@@ -97,6 +116,7 @@ public:
 private slots:
     void toggleUI(bool);
     void uiClosed();
+    void onDataChanged();
 
 private:
     virtual void modelChanged();
@@ -106,7 +126,10 @@ private:
     const NativePluginDescriptor* fDescriptor;
     int fTimerId;
 
-    QPushButton * m_toggleUIButton;
+    QPushButton* m_toggleUIButton;
+    Knob*        m_knobs[NB_KNOBS];
+    LedCheckBox* m_leds [NB_LEDS ];
+    LcdSpinBox*  m_lcds [NB_LCDS ];
 };
 
 #endif

@@ -36,6 +36,23 @@ CarlaEffectControls::CarlaEffectControls( CarlaEffect* effect ) :
 	EffectControls( effect ),
 	m_effect( effect )
 {
+    for(int i=0;i<NB_KNOBS;i++)
+    {
+            m_knobs[i]=new FloatModel
+                    (0.f,0.f,127.f,1.f,
+                     NULL,QString("KNB%1").arg(NB_KNOB_START+i),false);
+    }
+    for(int i=0;i<NB_LEDS;i++)
+    {
+            m_leds[i]=new BoolModel
+                    (false,NULL,QString("LED%1").arg(NB_LED_START+i),false);
+    }
+    for(int i=0;i<NB_LCDS;i++)
+    {
+            m_lcds[i]=new IntModel
+                    (0,0,127,
+                     NULL,QString("LCD%1").arg(NB_LCD_START+i),false);
+    }
 }
 
 

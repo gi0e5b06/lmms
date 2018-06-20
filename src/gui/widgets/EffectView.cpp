@@ -188,7 +188,7 @@ void EffectView::editControls()
 			m_subWindow->setWindowIcon( m_controlView->windowIcon() );
 			*/
 			m_subWindow = SubWindow::putWidgetOnWorkspace
-				(m_controlView,false,false,true,false);
+				(m_controlView,false,false,false,false);
 
 			connect( m_controlView, SIGNAL( closed() ),
 				 this, SLOT( closeEffects() ) );
