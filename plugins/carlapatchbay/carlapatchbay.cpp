@@ -32,13 +32,13 @@ extern "C"
 Plugin::Descriptor PLUGIN_EXPORT carlapatchbay_plugin_descriptor =
 {
     STRINGIFY( PLUGIN_NAME ),
-    "Carla Patchbay",
+    "Carla Patchbay SY",
     QT_TRANSLATE_NOOP( "pluginBrowser",
                        "Carla Patchbay Instrument" ),
     "falkTX <falktx/at/falktx.com>",
     0x0195,
     Plugin::Instrument,
-    new PluginPixmapLoader( "logo" ),
+    new PluginPixmapLoader( "logo.png" ),
     NULL,
     NULL
 } ;

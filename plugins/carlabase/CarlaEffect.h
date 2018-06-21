@@ -60,9 +60,9 @@ public:
 
     // LMMS functions
     //virtual Flags flags() const;
-    virtual void saveSettings(QDomDocument& doc, QDomElement& parent);
-    virtual void loadSettings(const QDomElement& elem);
-    virtual QString nodeName() const;
+    //virtual void saveSettings(QDomDocument& doc, QDomElement& parent);
+    //virtual void loadSettings(const QDomElement& elem);
+    //virtual QString nodeName() const;
     //virtual void play(sampleFrame* workingBuffer);
     virtual bool handleMidiEvent(const MidiEvent& event, const MidiTime& time, f_cnt_t offset);
     virtual bool processAudioBuffer(sampleFrame* _buf,const fpp_t _frames);

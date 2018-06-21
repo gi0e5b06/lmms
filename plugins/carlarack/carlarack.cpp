@@ -32,13 +32,13 @@ extern "C"
 Plugin::Descriptor PLUGIN_EXPORT carlarack_plugin_descriptor =
 {
     STRINGIFY( PLUGIN_NAME ),
-    "Carla Rack",
+    "Carla Rack SY",
     QT_TRANSLATE_NOOP( "pluginBrowser",
                        "Carla Rack Instrument" ),
     "falkTX <falktx/at/falktx.com>",
     0x0195,
     Plugin::Instrument,
-    new PluginPixmapLoader( "logo" ),
+    new PluginPixmapLoader( "logo.png" ),
     NULL,
     NULL
 } ;

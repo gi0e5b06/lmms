@@ -57,7 +57,7 @@ Effect::Effect( const Plugin::Descriptor * _desc,
 	{
 		m_autoQuitDisabled = true;
 	}
-        qInfo("Effect::Effect end constructor");
+        //qInfo("Effect::Effect end constructor");
 }
 
 

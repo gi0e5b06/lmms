@@ -312,13 +312,27 @@ QString CarlaInstrument::nodeName() const
 
 void CarlaInstrument::saveSettings(QDomDocument& doc, QDomElement& parent)
 {
-    if (fHandle == NULL || fDescriptor->get_state == NULL)
+    for(int i=0;i<NB_KNOBS;i++)
+            m_knobs[i]->saveSettings( doc, parent, QString("knob%1").arg(i) );
+    for(int i=0;i<NB_LEDS;i++)
+            m_leds[i]->saveSettings( doc, parent, QString("led%1").arg(i) );
+    for(int i=0;i<NB_LCDS;i++)
+            m_lcds[i]->saveSettings( doc, parent, QString("lcd%1").arg(i) );
+
+    if (fHandle == NULL ||
+        fDescriptor->get_state == NULL)
+    {
+        qWarning("CarlaInstrument::saveSettings fHandle or fDescriptor is null");
         return;
+    }
 
     char* const state = fDescriptor->get_state(fHandle);
 
     if (state == NULL)
+    {
+        qWarning("CarlaInstrument: retrieved state is null");
         return;
+    }
 
     QDomDocument carlaDoc("carla");
 
@@ -333,13 +347,34 @@ void CarlaInstrument::saveSettings(QDomDocument& doc, QDomElement& parent)
 
 void CarlaInstrument::loadSettings(const QDomElement& elem)
 {
+    for(int i=0;i<NB_KNOBS;i++)
+            m_knobs[i]->loadSettings( elem, QString("knob%1").arg(i) );
+    for(int i=0;i<NB_LEDS;i++)
+            m_leds[i]->loadSettings( elem, QString("led%1").arg(i) );
+    for(int i=0;i<NB_LCDS;i++)
+            m_lcds[i]->loadSettings( elem, QString("lcd%1").arg(i) );
+
     if (fHandle == NULL || fDescriptor->set_state == NULL)
-        return;
+    {
+            qWarning("CarlaInstrument: fHandle or fDescriptor is null");
+                return;
+    }
 
-    QDomDocument carlaDoc("carla");
-    carlaDoc.appendChild(carlaDoc.importNode(elem.firstChildElement(), true ));
-
-    fDescriptor->set_state(fHandle, carlaDoc.toString(0).toUtf8().constData());
+    QDomNode node=elem.firstChild();
+    while( !node.isNull() )
+    {
+        if( node.isElement() )
+        {
+            if( node.nodeName() == "CARLA-PROJECT" )
+            {
+                QDomDocument carlaDoc("carla");
+                carlaDoc.appendChild(carlaDoc.importNode(node, true ));
+                fDescriptor->set_state(fHandle,
+                                       carlaDoc.toString(0).toUtf8().constData());
+            }
+        }
+        node = node.nextSibling();
+    }
 }
 
 void CarlaInstrument::play(sampleFrame* workingBuffer)

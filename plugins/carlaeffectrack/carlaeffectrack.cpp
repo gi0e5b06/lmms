@@ -35,17 +35,18 @@ Plugin::Descriptor PLUGIN_EXPORT carlaeffectrack_plugin_descriptor =
     STRINGIFY( PLUGIN_NAME ),
     "Carla Rack FX",
     QT_TRANSLATE_NOOP( "pluginBrowser",
-                       "Carla Rack for Effects" ),
+                       "Carla Rack Effect" ),
     "gi0e5b06, falkTX",
     0x0195,
     Plugin::Effect,
-    new PluginPixmapLoader( "logo" ),
+    new PluginPixmapLoader( "logo.png" ),
     NULL,
     NULL
 } ;
 
 Plugin* PLUGIN_EXPORT lmms_plugin_main(Model* _parent, void*)
 {
+    qInfo("carlaeffectrack::lmms_plugin_main");
     return new CarlaEffect(_parent, &carlaeffectrack_plugin_descriptor, false);
 }
 

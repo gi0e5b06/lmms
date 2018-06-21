@@ -100,7 +100,7 @@ void LadspaControlDialog::updateEffectView( LadspaControls * _ctl )
 		}
 		else
 		{
-			grouper = new QGroupBox( this );
+			grouper = new QGroupBox( tr( "Stereo" ), this );
 		}
 
 		QGridLayout * gl = new QGridLayout( grouper );

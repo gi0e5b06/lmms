@@ -152,6 +152,8 @@ CarlaEffect::CarlaEffect(Model* parent, const Descriptor* const descriptor, cons
           fDescriptor(isPatchbay ? carla_get_native_patchbay_plugin() : carla_get_native_rack_plugin()),
           fMidiEventCount(0)
 {
+    //qInfo("CarlaEffect::CarlaEffect");
+
     fHost.handle      = this;
     fHost.uiName      = NULL;
     fHost.uiParentId  = 0;
@@ -280,43 +282,12 @@ intptr_t CarlaEffect::handleDispatcher(const NativeHostDispatcherOpcode opcode, 
 
 // -------------------------------------------------------------------
 
+/*
 QString CarlaEffect::nodeName() const
 {
     return  descriptor()->name;
 }
-
-void CarlaEffect::saveSettings(QDomDocument& doc, QDomElement& parent)
-{
-    if (fHandle == NULL || fDescriptor->get_state == NULL)
-        return;
-
-    char* const state = fDescriptor->get_state(fHandle);
-
-    if (state == NULL)
-        return;
-
-    QDomDocument carlaDoc("carla");
-
-    if (carlaDoc.setContent(QString(state)))
-    {
-        QDomNode n = doc.importNode(carlaDoc.documentElement(), true);
-        parent.appendChild(n);
-    }
-
-    std::free(state);
-}
-
-void CarlaEffect::loadSettings(const QDomElement& elem)
-{
-    if (fHandle == NULL || fDescriptor->set_state == NULL)
-        return;
-
-    QDomDocument carlaDoc("carla");
-    carlaDoc.appendChild(carlaDoc.importNode(elem.firstChildElement(), true ));
-
-    fDescriptor->set_state(fHandle, carlaDoc.toString(0).toUtf8().constData());
-}
-
+*/
 
 bool CarlaEffect::handleMidiEvent(const MidiEvent& event, const MidiTime&, f_cnt_t offset)
 {

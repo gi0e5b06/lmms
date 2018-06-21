@@ -61,13 +61,82 @@ void CarlaEffectControls::changeControl()
 }
 
 
-void CarlaEffectControls::loadSettings( const QDomElement& _this )
+void CarlaEffectControls::loadSettings( const QDomElement& elem )
 {
+        for(int i=0;i<NB_KNOBS;i++)
+                m_knobs[i]->loadSettings( elem, QString("knob%1").arg(i) );
+        for(int i=0;i<NB_LEDS;i++)
+                m_leds[i]->loadSettings( elem, QString("led%1").arg(i) );
+        for(int i=0;i<NB_LCDS;i++)
+                m_lcds[i]->loadSettings( elem, QString("lcd%1").arg(i) );
+
+        if (m_effect->fHandle == NULL ||
+            m_effect->fDescriptor->set_state == NULL)
+        {
+                qWarning("CarlaEffectControls::loadSettings fHandle or fDescriptor is null");
+                return;
+        }
+
+	QDomNode node=elem.firstChild();
+        if( node.isNull() )
+        {
+                qWarning("elem first child is null");
+        }
+	while( !node.isNull() )
+	{
+                if( !node.isElement() )
+                {
+                        qWarning("elem not an element: %s",qPrintable(node.nodeName()));
+                }
+		if( node.isElement() )
+		{
+                        //qInfo("node name: %s",qPrintable(node.nodeName()));
+			if( node.nodeName() == "CARLA-PROJECT" )
+			{
+                                QDomDocument carlaDoc("carla");
+                                carlaDoc.appendChild(carlaDoc.importNode(node, true ));
+                                m_effect->fDescriptor->set_state(m_effect->fHandle,
+                                                                 carlaDoc.toString(0).toUtf8().constData());
+			}
+		}
+		node = node.nextSibling();
+	}
 }
 
 
-void CarlaEffectControls::saveSettings( QDomDocument& doc, QDomElement& _this )
+void CarlaEffectControls::saveSettings( QDomDocument& doc, QDomElement& parent )
 {
+        for(int i=0;i<NB_KNOBS;i++)
+                m_knobs[i]->saveSettings( doc, parent, QString("knob%1").arg(i) );
+        for(int i=0;i<NB_LEDS;i++)
+                m_leds[i]->saveSettings( doc, parent, QString("led%1").arg(i) );
+        for(int i=0;i<NB_LCDS;i++)
+                m_lcds[i]->saveSettings( doc, parent, QString("lcd%1").arg(i) );
+
+        if (m_effect->fHandle == NULL ||
+            m_effect->fDescriptor->get_state == NULL)
+        {
+                qWarning("CarlaEffectControls::saveSettings fHandle or fDescriptor is null");
+                return;
+        }
+
+        char* const state = m_effect->fDescriptor->get_state(m_effect->fHandle);
+
+        if (state == NULL)
+        {
+                qWarning("CarlaEffectControls: retrieved state is null");
+                return;
+        }
+
+        QDomDocument carlaDoc("carla");
+
+        if (carlaDoc.setContent(QString(state)))
+        {
+                QDomNode n = doc.importNode(carlaDoc.documentElement(), true);
+                parent.appendChild(n);
+        }
+
+        std::free(state);
 }
 
 
