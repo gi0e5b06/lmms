@@ -35,7 +35,7 @@ LV2Control::LV2Control( Model * _parent, lv2_port_desc_t * _port, bool _link ) :
 	m_linkEnabledModel( _link, this, tr( "Link channels" ) ),
 	m_toggledModel( false, this, m_port->name ),
 	m_knobModel( 0, 0, 0, 1, this, m_port->name ),
-	m_tempoSyncKnobModel( 0, 0, 0, 1, m_port->max, this, m_port->name )
+	m_tempoSyncKnobModel( 0, 0, 0, 1, m_port->max.f, this, m_port->name )
 {
 	if( m_link )
 	{
@@ -48,7 +48,7 @@ LV2Control::LV2Control( Model * _parent, lv2_port_desc_t * _port, bool _link ) :
 		case TOGGLED:
 			connect( &m_toggledModel, SIGNAL( dataChanged() ),
                                  this, SLOT( ledChanged() ) );
-			if( m_port->def == 1.0f )
+			if( m_port->def.f == 1.0f )
 			{
 				m_toggledModel.setValue( true );
 			}
@@ -57,12 +57,12 @@ LV2Control::LV2Control( Model * _parent, lv2_port_desc_t * _port, bool _link ) :
 			break;
 
 		case INTEGER:
-			m_knobModel.setRange( static_cast<int>( m_port->max ),
-					  static_cast<int>( m_port->min ),
-					  1 + static_cast<int>( m_port->max -
-							  m_port->min ) / 400 );
+			m_knobModel.setRange( static_cast<int>( m_port->max.f ),
+					  static_cast<int>( m_port->min.f ),
+					  1 + static_cast<int>( m_port->max.f -
+							  m_port->min.f ) / 400 );
 			m_knobModel.setInitValue(
-					static_cast<int>( m_port->def ) );
+					static_cast<int>( m_port->def.f ) );
 			connect( &m_knobModel, SIGNAL( dataChanged() ),
 						 this, SLOT( knobChanged() ) );
 			// TODO: careful: we must prevent saved scales
@@ -70,12 +70,12 @@ LV2Control::LV2Control( Model * _parent, lv2_port_desc_t * _port, bool _link ) :
 			break;
 
 		case FLOATING:
-			m_knobModel.setRange( m_port->min, m_port->max,
-				( m_port->max - m_port->min )
+			m_knobModel.setRange( m_port->min.f, m_port->max.f,
+				( m_port->max.f - m_port->min.f )
 				/ ( m_port->name.toUpper() == "GAIN"
-					&& m_port->max == 10.0f ? 4000.0f :
+					&& m_port->max.f == 10.0f ? 4000.0f :
 								( m_port->suggests_logscale ? 8000.0f : 800.0f ) ) );
-			m_knobModel.setInitValue( m_port->def );
+			m_knobModel.setInitValue( m_port->def.f );
 			connect( &m_knobModel, SIGNAL( dataChanged() ),
 						 this, SLOT( knobChanged() ) );
 			// TODO: careful: we must prevent saved scales
@@ -83,10 +83,10 @@ LV2Control::LV2Control( Model * _parent, lv2_port_desc_t * _port, bool _link ) :
 			break;
 
 		case TIME:
-			m_tempoSyncKnobModel.setRange( m_port->min, m_port->max,
-					  ( m_port->max -
-						m_port->min ) / 800.0f );
-			m_tempoSyncKnobModel.setInitValue( m_port->def );
+			m_tempoSyncKnobModel.setRange( m_port->min.f, m_port->max.f,
+					  ( m_port->max.f -
+						m_port->min.f ) / 800.0f );
+			m_tempoSyncKnobModel.setInitValue( m_port->def.f );
 			connect( &m_tempoSyncKnobModel, SIGNAL( dataChanged() ),
 					 this, SLOT( tempoKnobChanged() ) );
 			// TODO: careful: we must prevent saved scales
@@ -110,21 +110,27 @@ LV2Control::~LV2Control()
 
 LV2_Data LV2Control::value()
 {
+        LV2_Data r;
+        r.f=0.f;
+
 	switch( m_port->data_type )
 	{
 		case TOGGLED:
-			return static_cast<LV2_Data>( m_toggledModel.value() );
+			r.f=m_toggledModel.value();
+                        break;
 		case INTEGER:
 		case FLOATING:
-			return static_cast<LV2_Data>( m_knobModel.value() );
+			r.f=m_knobModel.value();
+                        break;
 		case TIME:
-			return static_cast<LV2_Data>( m_tempoSyncKnobModel.value() );
+			r.f=m_tempoSyncKnobModel.value();
+                        break;
 		default:
 			qWarning( "LV2Control::value(): BAD BAD BAD\n" );
 			break;
 	}
 
-	return 0;
+	return r;
 }
 
 
@@ -154,17 +160,17 @@ void LV2Control::setValue( LV2_Data _value )
 	switch( m_port->data_type )
 	{
 		case TOGGLED:
-			m_toggledModel.setValue( static_cast<bool>( _value ) );
+			m_toggledModel.setValue( static_cast<bool>( _value.f ) );
 			break;
 		case INTEGER:
-			m_knobModel.setValue( static_cast<int>( _value ) );
+			m_knobModel.setValue( static_cast<int>( _value.f ) );
 			break;
 		case FLOATING:
-			m_knobModel.setValue( static_cast<float>( _value ) );
+			m_knobModel.setValue( static_cast<float>( _value.f ) );
 			break;
 		case TIME:
 			m_tempoSyncKnobModel.setValue( static_cast<float>(
-								_value ) );
+								_value.f ) );
 			break;
 		default:
 			printf("LV2Control::setValue BAD BAD BAD\n");
@@ -274,8 +280,9 @@ void LV2Control::linkControls( LV2Control * _control )
 
 void LV2Control::ledChanged()
 {
-	emit changed( m_port->port_id, static_cast<LV2_Data>(
-						m_toggledModel.value() ) );
+        LV2_Data r;
+        r.f=m_toggledModel.value();
+	emit changed( m_port->port_id, r );
 }
 
 
@@ -283,8 +290,9 @@ void LV2Control::ledChanged()
 
 void LV2Control::knobChanged()
 {
-	emit changed( m_port->port_id, static_cast<LV2_Data>(
-						m_knobModel.value() ) );
+        LV2_Data r;
+        r.f=m_knobModel.value();
+	emit changed( m_port->port_id, r );
 }
 
 
@@ -292,8 +300,9 @@ void LV2Control::knobChanged()
 
 void LV2Control::tempoKnobChanged()
 {
-	emit changed( m_port->port_id, static_cast<LV2_Data>(
-					m_tempoSyncKnobModel.value() ) );
+        LV2_Data r;
+        r.f=m_tempoSyncKnobModel.value();
+	emit changed( m_port->port_id, r );
 }
 
 

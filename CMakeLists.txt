@@ -340,19 +340,21 @@ ENDIF(NOT LMMS_HAVE_PULSEAUDIO)
 
 
 # check for LV2 lilv library
-IF(WANT_LILV)
-	FIND_PACKAGE(LILV)
-	IF(LILV_FOUND)
-		SET(LMMS_HAVE_LILV TRUE)
-		SET(STATUS_LILV "OK")
-	ELSE(LILV_FOUND)
-		SET(STATUS_LILV "not found, please install liblilv-dev (or similar)")
-		SET(LILV_LIBRARIES "")
-		SET(LILV_INCLUDE_DIRS "")
-	ENDIF(LILV_FOUND)
-ELSE(WANT_LILV)
-	SET(STATUS_LILV "Disabled for build")
-ENDIF(WANT_LILV)
+IF(WANT_LV2)
+  FIND_PACKAGE(LILV)
+  IF(LILV_FOUND)
+    SET(LMMS_HAVE_LILV TRUE)
+    SET(STATUS_LILV "OK")
+  ELSE(LILV_FOUND)
+    SET(STATUS_LILV "not found, please install liblilv-dev (or similar) "
+      "if you require LV2 support")
+    SET(LILV_LIBRARIES "")
+    SET(LILV_INCLUDE_DIRS "")
+    SET(WANT_LV2 FALSE)
+  ENDIF(LILV_FOUND)
+ELSE(WANT_LV2)
+  SET(STATUS_LILV "Disabled for build")
+ENDIF(WANT_LV2)
 
 
 # check for MP3/mpg123-library

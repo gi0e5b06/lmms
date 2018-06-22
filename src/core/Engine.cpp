@@ -30,7 +30,6 @@
 #include "ConfigManager.h"
 #include "FxMixer.h"
 #include "Ladspa2LMMS.h"
-#include "LV22LMMS.h"
 #include "Mixer.h"
 #include "PresetPreviewPlayHandle.h"
 #include "ProjectJournal.h"
@@ -46,8 +45,13 @@ ITransport*          LmmsCore::s_transport = NULL;
 BBTrackContainer*    LmmsCore::s_bbTrackContainer = NULL;
 ProjectJournal*      LmmsCore::s_projectJournal = NULL;
 Ladspa2LMMS*         LmmsCore::s_ladspaManager = NULL;
-LV22LMMS*            LmmsCore::s_lv2Manager = NULL;
 DummyTrackContainer* LmmsCore::s_dummyTC = NULL;
+
+
+#ifdef WANT_LV2
+#include "LV22LMMS.h"
+LV22LMMS*            LmmsCore::s_lv2Manager = NULL;
+#endif
 
 
 void LmmsCore::init( bool renderOnly )
@@ -84,7 +88,10 @@ void LmmsCore::init( bool renderOnly )
         t2.waitForFinished();
 	emit engine->initProgress(tr("Initializing Ladspa effects"));
         t3.waitForFinished();
+
+#ifdef WANT_LV2
 	emit engine->initProgress(tr("Initializing LV2 effects"));
+#endif
         t3b.waitForFinished();
 	emit engine->initProgress(tr("Initializing Mixer"));
         t4.waitForFinished();
@@ -134,7 +141,9 @@ void LmmsCore::init3()
 
 void LmmsCore::init3b()
 {
+#ifdef WANT_LV2
 	s_lv2Manager = new LV22LMMS();
+#endif
 }
 
 void LmmsCore::init4(bool _renderOnly)

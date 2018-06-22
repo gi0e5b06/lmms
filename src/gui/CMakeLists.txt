@@ -1,5 +1,14 @@
+SET(LMMS_LV2_SRCS "")
+IF(WANT_LV2)
+  SET(LMMS_LV2_SRCS
+    ${LMMS_LV2_SRCS}
+    gui/widgets/LV2ControlView.cpp
+    )
+ENDIF(WANT_LV2)
+
 SET(LMMS_SRCS
 	${LMMS_SRCS}
+        ${LMMS_LV2_SRCS}
 	gui/AboutDialog.cpp
 	gui/ActionGroup.cpp
 	gui/AudioAlsaSetupWidget.cpp
@@ -73,7 +82,6 @@ SET(LMMS_SRCS
 	gui/widgets/LeftRightNav.cpp
 	gui/widgets/Knob.cpp
 	gui/widgets/LadspaControlView.cpp
-	gui/widgets/LV2ControlView.cpp
 	gui/widgets/LcdSpinBox.cpp
 	gui/widgets/LcdWidget.cpp
 	gui/widgets/LedCheckbox.cpp

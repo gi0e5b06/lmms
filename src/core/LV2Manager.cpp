@@ -45,7 +45,7 @@ LV2Manager::LV2Manager()
         // A world contains all the info about every plugin on the system
         m_world=new Lilv::World();
 
-        //NP_ATOM
+        NP_ATOM     =m_world->new_uri(LILV_URI_ATOM_PORT);
         NP_AUDIO    =m_world->new_uri(LILV_URI_AUDIO_PORT);
         NP_CONTROL  =m_world->new_uri(LILV_URI_CONTROL_PORT);
         //NP_CV
@@ -58,6 +58,9 @@ LV2Manager::LV2Manager()
         PP_INTEGER  =m_world->new_uri(LV2_CORE__integer);
         PP_LOGARITHM=m_world->new_uri("http://lv2plug.in/ns/ext/port-props/#logarithmic");
         PP_TOGGLED  =m_world->new_uri(LV2_CORE__toggled);
+
+        SE_MIDIEVENT=m_world->new_uri(LILV_URI_MIDI_EVENT);
+
         //qWarning("LV2Manager: lilv loads world of plugins now");
         // load the entire world
         m_world->load_all();
@@ -177,10 +180,7 @@ void LV2Manager::addPlugin(const lv2_key_t& k)
         Lilv::Plugin p=plugin(k);
         QString n=p.get_name().as_string();
         QString c=p.get_class().get_label().as_string();
-        qWarning("LV2: %s %s [%s]",
-                 qPrintable(n),
-                 qPrintable(k),
-                 qPrintable(c));
+        qInfo("LV2: %s %s [%s]",qPrintable(n),qPrintable(k),qPrintable(c));
 
         if(c=="Instrument") m_instruments.push_back(k);
         else if(c=="Analyzer") m_tools.push_back(k);
@@ -393,7 +393,7 @@ bool LV2Manager::isRealTimeCapable(
 QString LV2Manager::getName(const lv2_key_t& _key)
 {
         if(!m_keys.contains(_key)) return "";
-        Lilv::Plugin p=LV2Manager::plugin(_key);
+        Lilv::Plugin p=plugin(_key);
 	return p.get_name().as_string();
 }
 
@@ -401,7 +401,7 @@ QString LV2Manager::getName(const lv2_key_t& _key)
 /*
 QString LV2Manager::getLibrary(const lv2_key_t& _key)
 {
-	Lilv::Plugin* p=LV2Manager::plugin(_key);
+	Lilv::Plugin* p=plugin(_key);
 	return p
                 ? p->get_library_uri().as_uri()
                 : "";
@@ -412,7 +412,7 @@ QString LV2Manager::getLibrary(const lv2_key_t& _key)
 QString LV2Manager::getMaker( const lv2_key_t & _key )
 {
         if(!m_keys.contains(_key)) return "";
-	Lilv::Plugin p=LV2Manager::plugin(_key);
+	Lilv::Plugin p=plugin(_key);
 	return QString("%1 <%2>")
                 .arg(p.get_author_name().as_string())
                 .arg(p.get_author_email().as_string());
@@ -422,7 +422,7 @@ QString LV2Manager::getMaker( const lv2_key_t & _key )
 QString LV2Manager::getCopyright( const lv2_key_t & _key )
 {
         if(!m_keys.contains(_key)) return "";
-	Lilv::Plugin p=LV2Manager::plugin(_key);
+	Lilv::Plugin p=plugin(_key);
 	return p.get_author_homepage().as_string();
 }
 
@@ -430,7 +430,7 @@ QString LV2Manager::getCopyright( const lv2_key_t & _key )
 uint32_t LV2Manager::getPortCount(const lv2_key_t& _key)
 {
         if(!m_keys.contains(_key)) return 0;
-        Lilv::Plugin p=LV2Manager::plugin(_key);
+        Lilv::Plugin p=plugin(_key);
 	return p.get_num_ports();
 }
 
@@ -438,7 +438,7 @@ uint32_t LV2Manager::getPortCount(const lv2_key_t& _key)
 bool LV2Manager::isPortInput(const lv2_key_t& _key, uint32_t _port)
 {
         if(!m_keys.contains(_key)) return false;
-        Lilv::Plugin p=LV2Manager::plugin(_key);
+        Lilv::Plugin p=plugin(_key);
         return p.get_port_by_index(_port).is_a(NP_INPUT);
 }
 
@@ -446,7 +446,7 @@ bool LV2Manager::isPortInput(const lv2_key_t& _key, uint32_t _port)
 bool LV2Manager::isPortOutput(const lv2_key_t& _key, uint32_t _port)
 {
         if(!m_keys.contains(_key)) return false;
-        Lilv::Plugin p=LV2Manager::plugin(_key);
+        Lilv::Plugin p=plugin(_key);
         return p.get_port_by_index(_port).is_a(NP_OUTPUT);
 }
 
@@ -454,7 +454,7 @@ bool LV2Manager::isPortOutput(const lv2_key_t& _key, uint32_t _port)
 bool LV2Manager::isPortAudio(const lv2_key_t& _key, uint32_t _port)
 {
         if(!m_keys.contains(_key)) return false;
-        Lilv::Plugin p=LV2Manager::plugin(_key);
+        Lilv::Plugin p=plugin(_key);
         return p.get_port_by_index(_port).is_a(NP_AUDIO);
 }
 
@@ -462,8 +462,21 @@ bool LV2Manager::isPortAudio(const lv2_key_t& _key, uint32_t _port)
 bool LV2Manager::isPortControl(const lv2_key_t& _key, uint32_t _port)
 {
         if(!m_keys.contains(_key)) return false;
-        Lilv::Plugin p=LV2Manager::plugin(_key);
+        Lilv::Plugin p=plugin(_key);
         return p.get_port_by_index(_port).is_a(NP_CONTROL);
+}
+
+
+bool LV2Manager::isPortMidi(const lv2_key_t& _key, uint32_t _port)
+{
+        if(!m_keys.contains(_key)) return false;
+        Lilv::Plugin p=plugin(_key);
+        //atom:supports <http://lv2plug.in/ns/ext/midi#MidiEvent>
+        Lilv::Port   q=p.get_port_by_index(_port);
+        bool r= q.is_a(NP_ATOM)&&
+                q.supports_event(SE_MIDIEVENT);
+        if(r) qInfo("LV2: port #%d supports midi",_port);
+        return r;
 }
 
 
@@ -488,7 +501,7 @@ float LV2Manager::getLowerBound(const lv2_key_t& _key, uint32_t _port)
         for(int i=0;i<nbp;i++)
                 vmin[i]=vdef[i]=vmax[i]=0.f;
 
-        Lilv::Plugin p=LV2Manager::plugin(_key);
+        Lilv::Plugin p=plugin(_key);
         p.get_port_ranges_float(vmin,vmax,vdef);
         return vmin[_port];
 }
@@ -506,7 +519,7 @@ float LV2Manager::getUpperBound(const lv2_key_t& _key, uint32_t _port)
         for(int i=0;i<nbp;i++)
                 vmin[i]=vdef[i]=vmax[i]=0.f;
 
-        Lilv::Plugin p=LV2Manager::plugin(_key);
+        Lilv::Plugin p=plugin(_key);
         p.get_port_ranges_float(vmin,vmax,vdef);
         return vmax[_port];
 }
@@ -524,7 +537,7 @@ float LV2Manager::getDefaultSetting(const lv2_key_t& _key, uint32_t _port)
         for(int i=0;i<nbp;i++)
                 vmin[i]=vdef[i]=vmax[i]=0.f;
 
-        Lilv::Plugin p=LV2Manager::plugin(_key);
+        Lilv::Plugin p=plugin(_key);
         p.get_port_ranges_float(vmin,vmax,vdef);
         return vdef[_port];
 }
@@ -533,9 +546,9 @@ float LV2Manager::getDefaultSetting(const lv2_key_t& _key, uint32_t _port)
 bool LV2Manager::isPortToggled(const lv2_key_t& _key, uint32_t _port)
 {
         if(!m_keys.contains(_key)) return false;
-        Lilv::Plugin p=LV2Manager::plugin(_key);
+        Lilv::Plugin p=plugin(_key);
         bool r=p.get_port_by_index(_port).has_property(PP_TOGGLED);
-        if(r) qInfo("port #%d is toggled",_port);
+        if(r) qInfo("LV2: port #%d is toggled",_port);
         return r;
 }
 
@@ -543,7 +556,7 @@ bool LV2Manager::isPortToggled(const lv2_key_t& _key, uint32_t _port)
 bool LV2Manager::isLogarithmic( const lv2_key_t& _key, uint32_t _port)
 {
         if(!m_keys.contains(_key)) return false;
-        Lilv::Plugin p=LV2Manager::plugin(_key);
+        Lilv::Plugin p=plugin(_key);
         return p.get_port_by_index(_port).has_property(PP_LOGARITHM);
 }
 
@@ -551,9 +564,9 @@ bool LV2Manager::isLogarithmic( const lv2_key_t& _key, uint32_t _port)
 bool LV2Manager::isInteger(const lv2_key_t& _key, uint32_t _port)
 {
         if(!m_keys.contains(_key)) return false;
-        Lilv::Plugin p=LV2Manager::plugin(_key);
+        Lilv::Plugin p=plugin(_key);
         bool r=p.get_port_by_index(_port).has_property(PP_INTEGER);
-        if(r) qInfo("port #%d is integer",_port);
+        if(r) qInfo("LV2: port #%d is integer",_port);
         return r;
 }
 
@@ -561,7 +574,7 @@ bool LV2Manager::isInteger(const lv2_key_t& _key, uint32_t _port)
 QString LV2Manager::getPortName(const lv2_key_t& _key, uint32_t _port)
 {
         if(!m_keys.contains(_key)) return "";
-        Lilv::Plugin p=LV2Manager::plugin(_key);
+        Lilv::Plugin p=plugin(_key);
         Lilv::Node   n=p.get_port_by_index(_port).get_name();
         return n.as_string();
 }
@@ -595,8 +608,34 @@ const LV2_Descriptor* LV2Manager::getDescriptor(const lv2_key_t& _key)
 
 LV2_Instance LV2Manager::instantiate(const lv2_key_t& _key, uint32_t _sampleRate)
 {
-        Lilv::Plugin p=LV2Manager::plugin(_key);
-        return Lilv::Instance::create(p, (double)_sampleRate, NULL);
+        qInfo("LV2Manager::instantiate k=%s sr=%d",
+              qPrintable(_key),_sampleRate);
+
+        if(!m_keys.contains(_key))
+        {
+                qWarning("LVEManager::instantiate key not found: %s",
+                         qPrintable(_key));
+                return NULL;
+        }
+
+        Lilv::Plugin p=plugin(_key);
+
+        /*
+        LV2_Feature lv2urid_map
+                (LV2_URID__map,//"http://lv2plug.in/ns/ext/urid/#map",
+                 NULL);
+        LV2_Feature lv2urid_schedule
+                (LV2_WORKER__schedule,//"http://lv2plug.in/ns/ext/worker/#schedule",
+                 NULL);
+        LV2_Feature* f[3]={ lv2urid_map,
+                            lv2urid_schedule,
+                            NULL };
+        */
+
+        qInfo("LV2Manager::instantiate before create p=%p",p.me);
+        LV2_Instance r=Lilv::Instance::create(p, (double)_sampleRate, NULL);
+        qInfo("LV2Manager::instantiate after create");
+        return r;
 }
 
 
@@ -735,3 +774,92 @@ bool LV2Manager::cleanup(const lv2_key_t& _key, LV2_Instance _instance)
         //_instance->cleanup();
         return true;
 }
+
+
+// URI map/unmap features.
+#include "lv2/lv2plug.in/ns/ext/urid/urid.h"
+
+static QHash<QString, LV2_URID>    g_uri_map;
+static QHash<LV2_URID, QByteArray> g_ids_map;
+
+
+static LV2_URID qtractor_lv2_urid_map (
+	LV2_URID_Map_Handle, const char *uri )
+{
+	if (strcmp(uri, LILV_URI_MIDI_EVENT) == 0)
+		return 1; //QTRACTOR_LV2_MIDI_EVENT_ID;
+	else
+		return LV2Manager::lv2_urid_map(uri);
+}
+
+static LV2_URID_Map g_lv2_urid_map =
+	{ NULL, qtractor_lv2_urid_map };
+static const LV2_Feature g_lv2_urid_map_feature =
+	{ LV2_URID_MAP_URI, &g_lv2_urid_map };
+
+static const char *qtractor_lv2_urid_unmap (
+	LV2_URID_Unmap_Handle, LV2_URID id )
+{
+	if (id == 1) //QTRACTOR_LV2_MIDI_EVENT_ID
+		return LILV_URI_MIDI_EVENT;
+	else
+		return LV2Manager::lv2_urid_unmap(id);
+}
+
+// URI map helpers (static) from qTractor.
+LV2_URID LV2Manager::lv2_urid_map ( const char *uri )
+{
+	const QString sUri(uri);
+
+	QHash<QString, uint32_t>::ConstIterator iter
+		= g_uri_map.constFind(sUri);
+	if (iter == g_uri_map.constEnd()) {
+		LV2_URID id = g_uri_map.size() + 1000;
+		g_uri_map.insert(sUri, id);
+		g_ids_map.insert(id, sUri.toUtf8());
+		return id;
+	}
+
+	return iter.value();
+}
+
+const char *LV2Manager::lv2_urid_unmap ( LV2_URID id )
+{
+	QHash<LV2_URID, QByteArray>::ConstIterator iter
+		= g_ids_map.constFind(id);
+	if (iter == g_ids_map.constEnd())
+		return NULL;
+
+	return iter.value().constData();
+}
+
+
+static LV2_URID_Unmap g_lv2_urid_unmap =
+	{ NULL, qtractor_lv2_urid_unmap };
+static const LV2_Feature g_lv2_urid_unmap_feature =
+	{ LV2_URID_UNMAP_URI, &g_lv2_urid_unmap };
+
+
+/*
+#ifdef CONFIG_LV2_EVENT
+
+// URI map (uri_to_id) feature (DEPRECATED)
+#include "lv2/lv2plug.in/ns/ext/uri-map/uri-map.h"
+
+static LV2_URID qtractor_lv2_uri_to_id (
+	LV2_URI_Map_Callback_Data, const char *map, const char *uri )
+{
+	if ((map && strcmp(map, LV2_EVENT_URI) == 0)
+		&& strcmp(uri, LILV_URI_MIDI_EVENT) == 0)
+		return QTRACTOR_LV2_MIDI_EVENT_ID;
+	else
+		return qtractorLv2Plugin::lv2_urid_map(uri);
+}
+
+static LV2_URI_Map_Feature g_lv2_uri_map =
+	{ NULL, qtractor_lv2_uri_to_id };
+static const LV2_Feature g_lv2_uri_map_feature =
+	{ LV2_URI_MAP_URI, &g_lv2_uri_map };
+
+#endif	// CONFIG_LV2_EVENT
+*/

@@ -40,7 +40,6 @@ class Mixer;
 class Song;
 class Ladspa2LMMS;
 class LV22LMMS;
-//class LV2Manager;
 class ITransport;
 
 // Note: This class is called 'LmmsCore' instead of 'Engine' because of naming
@@ -98,10 +97,12 @@ public:
 		return s_ladspaManager;
 	}
 
+#ifdef WANT_LV2
 	static LV22LMMS* getLV2Manager()
 	{
 		return s_lv2Manager;
 	}
+#endif
 
 	static DummyTrackContainer * dummyTrackContainer()
 	{
@@ -159,7 +160,10 @@ private:
 	static DummyTrackContainer * s_dummyTC;
 
 	static Ladspa2LMMS* s_ladspaManager;
+
+#ifdef WANT_LV2
         static LV22LMMS*    s_lv2Manager;
+#endif
 
 	// even though most methods are static, an instance is needed for Qt slots/signals
 	static LmmsCore * s_instanceOfMe;

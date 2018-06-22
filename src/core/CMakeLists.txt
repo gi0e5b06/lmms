@@ -1,5 +1,16 @@
-set(LMMS_SRCS
+SET(LMMS_LV2_SRCS "")
+IF(WANT_LV2)
+  SET(LMMS_LV2_SRCS
+    ${LMMS_LV2_SRCS}
+    core/LV2Manager.cpp
+    core/LV2Control.cpp
+    core/LV22LMMS.cpp
+    )
+ENDIF(WANT_LV2)
+
+SET(LMMS_SRCS
 	${LMMS_SRCS}
+	${LMMS_LV2_SRCS}
 	core/AutomatableModel.cpp
 	core/AutomationPattern.cpp
 	core/BandLimitedWave.cpp
@@ -32,9 +43,6 @@ set(LMMS_SRCS
 	core/LadspaManager.cpp
 	core/LfoController.cpp
 	core/LocklessAllocator.cpp
-	core/LV2Manager.cpp
-	core/LV2Control.cpp
-	core/LV22LMMS.cpp
 	core/MemoryHelper.cpp
 	core/MemoryManager.cpp
 	core/MemoryManagerArray.cpp

@@ -37,9 +37,22 @@ IF(LMMS_MINIMAL)
 	SET(PLUGIN_LIST ${MINIMAL_LIST} ${PLUGIN_LIST})
 ENDIF()
 
+SET(LMMS_LV2_PLUGINS "")
+IF(WANT_LV2)
+  SET(LMMS_LV2_PLUGINS
+    ${LMMS_LV2_PLUGINS}
+    #Ilv2GDX
+    #jalv
+    LV2EffectGDX
+    #LV2InstrumentGDX
+    #LV2InstrumentGDXUI
+    )
+ENDIF(WANT_LV2)
+
 IF("${PLUGIN_LIST}" STREQUAL "")
 	SET(PLUGIN_LIST
 		${MINIMAL_LIST}
+                ${LMMS_LV2_PLUGINS}
 		Amplifier
 		BassBooster
 		bit_invader
@@ -58,14 +71,9 @@ IF("${PLUGIN_LIST}" STREQUAL "")
 		Eq
 		Flanger
 		HydrogenImport
-                #Ilv2GDX
-                #jalv
 		# ladspa_browser
 		LadspaEffect
 		lb302
-		LV2EffectGDX
-		LV2InstrumentGDX
-		LV2InstrumentGDXUI
 		MidiImport
 		MidiExport
 		MultitapEcho
