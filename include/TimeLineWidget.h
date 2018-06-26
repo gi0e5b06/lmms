@@ -211,7 +211,8 @@ public:
 	}
 
 	void addToolButtons(QToolBar* _toolBar );
-	void addLoopButtons(QToolBar* _toolBar );
+	void addLoopMarkButtons(QToolBar* _toolBar );
+	void addLoopSizeButtons(QToolBar* _toolBar );
 
 
 	virtual void saveSettings( QDomDocument & _doc, QDomElement & _parent );

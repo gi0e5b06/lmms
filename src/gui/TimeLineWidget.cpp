@@ -199,9 +199,8 @@ void TimeLineWidget::addToolButtons( QToolBar * _tool_bar )
 }
 
 
-void TimeLineWidget::addLoopButtons( QToolBar * _tool_bar )
+void TimeLineWidget::addLoopMarkButtons( QToolBar * _tool_bar )
 {
-        _tool_bar->addSeparator();
         const int n =m_currentLoop;
         const int nn=m_nextLoop;
 
@@ -223,15 +222,39 @@ void TimeLineWidget::addLoopButtons( QToolBar * _tool_bar )
                 //connect(b, SIGNAL(toggled(bool)), this, SLOT(updateLoopButtons()));
                 //connect(b->model(), SIGNAL(dataChanged()), this, SLOT(updateLoopButtons()));
         }
+}
 
-        _tool_bar->addSeparator();
-        const QString labels[]={ "1","2","4","8","1/2","1/4","1/8","1/16","1/32" };
+
+void TimeLineWidget::addLoopSizeButtons( QToolBar * _tool_bar )
+{
+        static const QString labels[]={
+                "1","2","4","8","1/2","1/4","1/8","1/16","1/32" };
+        static const QString icons[]={
+                "note_quarter",
+                "note_half",
+                "note_whole",
+                "note_double_whole",
+                "note_eighth",
+                "note_sixteenth",
+                "note_thirtysecond",
+                "note_sixtyfourth",
+                "note_onehundredtwentyeighth"};
+                //note_eight"
+                //note_none"
+                //note_tripleteighth
+                //note_triplethalf
+                //note_tripletquarter
+                //note_tripletsixteenth
+                //note_tripletthirtysecond
+
         for(int i=0;i<NB_LOOP_SIZES;i++)
 	{
                 AutomatableToolButton* b=new AutomatableToolButton(_tool_bar);
-                QAction* a=new QAction(labels[i],b);
+                //QAction* a=new QAction(labels[i],b);
+                QAction* a=new QAction(embed::getIconPixmap(icons[i]),"",b);
                 b->setDefaultAction(a);
                 a->setData( QVariant(LOOP_SIZES[i]) );
+                a->setToolTip(labels[i]);
                 a->setCheckable(true);
                 a->setShortcut((char)(49+i));
                 m_resizeButtons[i]=b;

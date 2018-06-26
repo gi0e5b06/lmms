@@ -1181,6 +1181,11 @@ SongEditorWindow::SongEditorWindow(Song* song) :
 	connect(m_selectModeAction, SIGNAL(triggered()), m_editor, SLOT(setEditModeSelect()));
 	m_drawModeAction->setChecked(true);
 
+        // Loop mark actions
+	DropToolBar *loopMarkToolBar = addDropToolBarToTop(tr("Loop marks"));
+        loopMarkToolBar->addSeparator();
+	m_editor->m_timeLine->addLoopMarkButtons(loopMarkToolBar);
+
 
         addToolBarBreak();
 
@@ -1209,7 +1214,14 @@ SongEditorWindow::SongEditorWindow(Song* song) :
         // Timeline actions
 	DropToolBar *timeLineToolBar = addDropToolBarToTop(tr("Timeline controls"));
 	m_editor->m_timeLine->addToolButtons(timeLineToolBar);
-	m_editor->m_timeLine->addLoopButtons(timeLineToolBar);
+
+        // Loop size actions
+	DropToolBar *loopSizeToolBar = addDropToolBarToTop(tr("Loop sizes"));
+        loopSizeToolBar->addSeparator();
+        loopSizeToolBar->addBlank();
+        loopSizeToolBar->addBlank();
+        loopSizeToolBar->addSeparator();
+	m_editor->m_timeLine->addLoopSizeButtons(loopSizeToolBar);
 
 
 

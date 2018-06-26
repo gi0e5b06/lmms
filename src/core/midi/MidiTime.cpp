@@ -179,23 +179,11 @@ tick_t MidiTime::ticksPerTact( const TimeSig &sig )
 }
 
 
-int MidiTime::stepsPerTact()
-{
-	int steps = ticksPerTact() / DefaultBeatsPerTact;
-	return qMax( 1, steps );
-}
-
-
 void MidiTime::setTicksPerTact( tick_t tpt )
 {
 	s_ticksPerTact = tpt;
 }
 
-
-MidiTime MidiTime::stepPosition( int step )
-{
-	return step * ticksPerTact() / stepsPerTact();
-}
 
 double MidiTime::ticksToMilliseconds(tick_t ticks, bpm_t beatsPerMinute)
 {

@@ -131,6 +131,9 @@ protected slots:
 	void removeOneStep();
 	void clear();
 	void changeTimeSignature();
+        void setStepResolution(int _res);
+	int      stepsPerTact() const;
+	MidiTime stepPosition(int _step) const;
 
 
 private:
@@ -146,6 +149,7 @@ private:
 	// data-stuff
 	NoteVector m_notes;
 	int m_steps;
+        int m_stepResolution;
 
 	Pattern * adjacentPatternByOffset(int offset) const;
 
@@ -195,6 +199,7 @@ protected slots:
 	void resetName();
 	void changeName();
 
+        void changeStepResolution(QAction* _a);
 
 protected:
 	virtual void constructContextMenu( QMenu * );
@@ -202,7 +207,6 @@ protected:
 	virtual void mouseDoubleClickEvent( QMouseEvent * _me );
 	virtual void paintEvent( QPaintEvent * pe );
 	virtual void wheelEvent( QWheelEvent * _we );
-
 
 private:
 	static QPixmap * s_stepBtnOn0;

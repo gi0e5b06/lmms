@@ -133,6 +133,14 @@ DropToolBar::DropToolBar(QWidget* parent) : QToolBar(parent)
 	setAcceptDrops(true);
 }
 
+void DropToolBar::addBlank()
+{
+        QLabel* lbl = new QLabel(this);
+        lbl->setFixedSize(34,34);
+        //lbl->setAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
+        addWidget(lbl);
+}
+
 void DropToolBar::dragEnterEvent(QDragEnterEvent* event)
 {
 	dragEntered(event);

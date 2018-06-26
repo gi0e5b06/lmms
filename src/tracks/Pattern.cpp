@@ -58,7 +58,8 @@ Pattern::Pattern( InstrumentTrack * _instrument_track ) :
 	TrackContentObject( _instrument_track ),
 	m_instrumentTrack( _instrument_track ),
 	m_patternType( MelodyPattern ),
-	m_steps( MidiTime::stepsPerTact() )
+	m_steps( DefaultStepsPerTact ), //stepsPerTact
+        m_stepResolution( DefaultStepsPerTact )
 {
 	setName( _instrument_track->name() );
 	if( _instrument_track->trackContainer()
@@ -153,6 +154,18 @@ void Pattern::init()
 }
 
 
+int Pattern::stepsPerTact() const
+{
+	int steps = MidiTime::ticksPerTact() / DefaultBeatsPerTact;
+	return qMax( 1, steps );
+}
+
+
+MidiTime Pattern::stepPosition(int _step) const
+{
+	return _step * 16.f / m_stepResolution *
+                MidiTime::ticksPerTact() / stepsPerTact();
+}
 
 
 void Pattern::updateLength()
@@ -187,10 +200,13 @@ MidiTime Pattern::beatPatternLength() const
 {
 	tick_t max_length;
 
-	if( m_steps != MidiTime::stepsPerTact() )
+        /*
+	if( m_steps != stepsPerTact() )
 	{
-		max_length = m_steps * MidiTime::ticksPerTact() /
-						MidiTime::stepsPerTact();
+        */
+        max_length = m_steps * MidiTime::ticksPerTact()
+                * 16 / m_stepResolution / stepsPerTact();
+        /*
 	}
         else
         {
@@ -206,6 +222,7 @@ MidiTime Pattern::beatPatternLength() const
                         }
                 }
         }
+        */
 
 	return MidiTime( max_length );
         //.nextFullTact() * MidiTime::ticksPerTact();
@@ -288,7 +305,7 @@ Note * Pattern::noteAtStep( int _step )
 	for( NoteVector::Iterator it = m_notes.begin(); it != m_notes.end();
 									++it )
 	{
-		if( ( *it )->pos() == MidiTime::stepPosition( _step )
+		if( ( *it )->pos() == stepPosition( _step )
 						&& ( *it )->length() < 0 )
 		{
 			return *it;
@@ -334,7 +351,7 @@ void Pattern::clearNotes()
 Note * Pattern::addStepNote( int step )
 {
 	return addNote( Note( MidiTime( -DefaultTicksPerTact ),
-				MidiTime::stepPosition( step ) ), false );
+				stepPosition( step ) ), false );
 }
 
 
@@ -456,7 +473,7 @@ void Pattern::loadSettings( const QDomElement & _this )
 	m_steps = _this.attribute( "steps" ).toInt();
 	if( m_steps == 0 )
 	{
-		m_steps = MidiTime::stepsPerTact();
+		m_steps = stepsPerTact();
 	}
 
 	checkType();
@@ -526,14 +543,14 @@ void Pattern::cloneSteps()
 
 void Pattern::addBarSteps()
 {
-	m_steps += MidiTime::stepsPerTact();
+	m_steps += stepsPerTact();
 	updateLength();
 	emit dataChanged();
 }
 
 void Pattern::addBeatSteps()
 {
-	m_steps += MidiTime::stepsPerTact() /
+	m_steps += stepsPerTact() /
                 Engine::getSong()->getTimeSigModel().getNumerator();
 	updateLength();
 	emit dataChanged();
@@ -541,14 +558,14 @@ void Pattern::addBeatSteps()
 
 void Pattern::addOneStep()
 {
-	m_steps ++; //= MidiTime::stepsPerTact();
+	m_steps ++; //= stepsPerTact();
 	updateLength();
 	emit dataChanged();
 }
 
 void Pattern::removeBarSteps()
 {
-	int n = MidiTime::stepsPerTact();
+	int n = stepsPerTact();
 	if( n < m_steps )
 	{
 		for( int i = m_steps - n; i < m_steps; ++i )
@@ -563,7 +580,7 @@ void Pattern::removeBarSteps()
 
 void Pattern::removeBeatSteps()
 {
-	int n = MidiTime::stepsPerTact() /
+	int n = stepsPerTact() /
                 Engine::getSong()->getTimeSigModel().getNumerator();
 	if( n < m_steps )
 	{
@@ -644,15 +661,30 @@ void Pattern::changeTimeSignature()
 		if( ( *cit )->length() < 0 && ( *cit )->pos() > last_pos )
 		{
 			last_pos = ( *cit )->pos()+MidiTime::ticksPerTact() /
-						MidiTime::stepsPerTact();
+						stepsPerTact();
 		}
 	}
 	last_pos = last_pos.nextFullTact() * MidiTime::ticksPerTact();
-	m_steps = qMax<tick_t>( MidiTime::stepsPerTact(),
-				last_pos.getTact() * MidiTime::stepsPerTact() );
+	m_steps = qMax<tick_t>( stepsPerTact(),
+				last_pos.getTact() * stepsPerTact() );
 	updateLength();
 }
 
+
+
+void Pattern::setStepResolution(int _res)
+{
+        if(_res>0)
+        {
+                int old=m_stepResolution;
+                if(_res!=old)
+                {
+                        m_steps=qMax(1,(m_steps*_res/old));
+                        m_stepResolution=_res;
+                        emit dataChanged();
+                }
+        }
+}
 
 
 
@@ -751,6 +783,19 @@ void PatternView::changeName()
 
 
 
+void PatternView::changeStepResolution(QAction* _a)
+{
+ 	const int res=_a->data().toInt();
+        if(res>0)
+        {
+                m_pat->setStepResolution(res);
+                update();
+        }
+}
+
+
+
+
 void PatternView::constructContextMenu( QMenu * _cm )
 {
 	QAction * a = new QAction( embed::getIconPixmap( "piano" ),
@@ -781,6 +826,10 @@ void PatternView::constructContextMenu( QMenu * _cm )
 		smr->addAction( embed::getIconPixmap( "step_btn_remove" ),
                                 tr( "One bar" ), m_pat, SLOT( removeBarSteps() ) );
 		sma->addAction( embed::getIconPixmap( "step_btn_add" ),
+                                tr( "One beat" ), m_pat, SLOT( addBeatSteps() ) );
+		smr->addAction( embed::getIconPixmap( "step_btn_remove" ),
+                                tr( "One beat" ), m_pat, SLOT( removeBeatSteps() ) );
+		sma->addAction( embed::getIconPixmap( "step_btn_add" ),
                                 tr( "One step" ), m_pat, SLOT( addOneStep() ) );
 		smr->addAction( embed::getIconPixmap( "step_btn_remove" ),
                                 tr( "One step" ), m_pat, SLOT( removeOneStep() ) );
@@ -790,6 +839,28 @@ void PatternView::constructContextMenu( QMenu * _cm )
                 _cm->addMenu(smr);
 		_cm->addAction( embed::getIconPixmap( "step_btn_duplicate" ),
                                 tr( "Clone Steps" ), m_pat, SLOT( cloneSteps() ) );
+
+                QMenu* sme=new QMenu(tr("Step resolution"));
+                connect(sme,SIGNAL( triggered(QAction*) ),
+                        this, SLOT( changeStepResolution(QAction*)));
+
+                static const int labels[]={
+                        2,4,8,16,32,64,128};
+                static const QString icons[]={
+                        "note_whole.png",
+                        "note_half.png",
+                        "note_quarter.png",
+                        "note_eighth.png",
+                        "note_sixteenth.png",
+                        "note_thirtysecond.png",
+                        "note_sixtyfourth.png",
+                        "note_onehundredtwentyeighth.png"};
+                for(int i=0;i<7;i++)
+                        sme->addAction(embed::getIconPixmap(icons[i]),
+                                       QString::number(labels[i]))
+                                ->setData(labels[i]);
+		_cm->addSeparator();
+                _cm->addMenu(sme);
 	}
 }
 
@@ -803,9 +874,11 @@ void PatternView::mousePressEvent( QMouseEvent * _me )
 
         if( _me->button() == Qt::LeftButton &&
             m_pat->m_patternType == Pattern::BeatPattern &&
-            ( fixedTCOs() || pixelsPerTact() >= 96 ||
-              m_pat->m_steps != MidiTime::stepsPerTact() ) &&
-            _me->y() > height() - s_stepBtnOff->height() )
+            _me->y() > height() - s_stepBtnOff->height() &&
+            fixedTCOs() )
+                //|| pixelsPerTact() >= 96 ||
+                //m_pat->m_steps != m_pat->stepsPerTact() ) &&
+
 
 	// when mouse button is pressed in beat/bassline -mode
 
@@ -815,8 +888,9 @@ void PatternView::mousePressEvent( QMouseEvent * _me )
 		//float tmp = ( ( float(_me->x()) - TCO_BORDER_WIDTH ) *
                 //              float( m_pat -> m_steps ) ) / float(width() - TCO_BORDER_WIDTH*2);
 		//const int steps = qMax( 1, m_pat->m_steps );
-                const int ws= 16;
-                const int w1= 12;
+                const int sr=m_pat->m_stepResolution;
+                const float ws= 16.f*16.f/sr;
+                const float w1= qMin(12,int(ws>=16.f ? ws-4.f : ws-1.f));
                 const int h1= 24;
 
 		float tmp = ( float(_me->x()) - TCO_BORDER_WIDTH - 2 ) / ws ;
@@ -888,12 +962,13 @@ void PatternView::wheelEvent( QWheelEvent * _we )
                 _we->ignore();
 
 	if( m_pat->m_patternType == Pattern::BeatPattern &&
-				( fixedTCOs() || pixelsPerTact() >= 96 ||
-				m_pat->m_steps != MidiTime::stepsPerTact() ) &&
-				_we->y() > height() - s_stepBtnOff->height() )
-	{
-//	get the step number that was wheeled on and
-//	do calculations in floats to prevent rounding errors...
+            _we->y() > height() - s_stepBtnOff->height() &&
+            fixedTCOs())
+                //|| pixelsPerTact() >= 96 ||
+                //m_pat->m_steps != m_pat->stepsPerTact() )
+        {
+                // get the step number that was wheeled on and
+                // do calculations in floats to prevent rounding errors...
 		float tmp = ( ( float(_we->x()) - TCO_BORDER_WIDTH ) *
 				float( m_pat -> m_steps ) ) / float(width() - TCO_BORDER_WIDTH*2);
 
@@ -1136,10 +1211,10 @@ void PatternView::paintEvent( QPaintEvent * )
 	}
 
 	// beat pattern paint event
-	else if( beatPattern &&
-                 ( fixedTCOs() ||
-                   // pixelsPerTact >= 96 ||
-                   m_pat->m_steps != MidiTime::stepsPerTact() ) )
+	else if( beatPattern && fixedTCOs() )
+                //||
+                // pixelsPerTact >= 96 ||
+                //m_pat->m_steps != m_pat->stepsPerTact() ) )
 	{
 		QPixmap stepon0;
 		QPixmap stepon200;
@@ -1147,11 +1222,13 @@ void PatternView::paintEvent( QPaintEvent * )
 		QPixmap stepoffl;
 
 		const int steps = qMax( 1, m_pat->m_steps );
-                const int ws= 16;
-                const int w1= 12;
+                const int sr=m_pat->m_stepResolution;
+                const float ws= 16.f*16.f/sr;
+                const float w1= qMin(12,int(ws>=16.f ? ws-4.f : ws-1.f));
                 const int h1= 24;
 
-                //qInfo("steps=%d w1=%d h1=%d",steps,w1,h1);
+                qInfo("steps=%d sr=%d ws=%f w1=%f h1=%d",steps,sr,ws,w1,h1);
+
 		// scale step graphics to fit the beat pattern length
 		stepon0 = s_stepBtnOn0->scaled( w1,
                                                 h1,//s_stepBtnOn0->height(),
@@ -1228,7 +1305,7 @@ void PatternView::paintEvent( QPaintEvent * )
 		paintTextLabel(m_pat->name(), p);
 	}
 
-	if( !( fixedTCOs() && beatPattern ) )
+	if( !( beatPattern && fixedTCOs() ) )
 	{
 		// inner border
 		/*

@@ -88,7 +88,9 @@ class DropToolBar : public QToolBar
 {
 	Q_OBJECT
 public:
-	DropToolBar(QWidget* parent=0);
+	DropToolBar(QWidget* parent = NULL);
+
+        void addBlank();
 
 signals:
 	void dragEntered(QDragEnterEvent* event);
