@@ -235,7 +235,8 @@ void AudioAlsa::startProcessing()
 {
 	if( !isRunning() )
 	{
-		start( QThread::HighPriority );
+		//start( QThread::HighPriority );
+                start( QThread::NormalPriority );
 	}
 }
 
@@ -430,8 +431,8 @@ int AudioAlsa::setHWParams( const ch_cnt_t _channels, snd_pcm_access_t _access )
 		if( ( err = snd_pcm_hw_params_set_rate( m_handle, m_hwParams,
 				mixer()->baseSampleRate(), 0 ) ) < 0 )
 		{
-			printf( "Could not set sample rate: %s\n",
-							snd_strerror( err ) );
+			printf( "Could not set sample rate: %s: %d\n",
+                                snd_strerror( err ), mixer()->baseSampleRate() );
 			return err;
 		}
 	}

@@ -266,12 +266,15 @@ void Mixer::stopProcessing()
 
 sample_rate_t Mixer::baseSampleRate() const
 {
-	sample_rate_t sr =
-		ConfigManager::inst()->value( "mixer", "samplerate" ).toInt();
-	if( sr < 44100 )
-	{
-		sr = 48000;//44100;
-	}
+        ConfigManager* cm=ConfigManager::inst();
+
+	sample_rate_t sr = cm!=NULL
+                ? qMax(44100,cm->value( "mixer", "samplerate" ).toInt())
+                : 44100;
+
+        // temporary reminder
+        if(cm==NULL) qWarning("       : in Mixer::baseSampleRate()");
+
 	return sr;
 }
 
@@ -306,7 +309,7 @@ sample_rate_t Mixer::processingSampleRate() const
 
 bool Mixer::criticalXRuns() const
 {
-	return cpuLoad() >= 99 && Engine::getSong()->isExporting() == false;
+	return cpuLoad() >= 95 && Engine::getSong()->isExporting() == false;
 }
 
 

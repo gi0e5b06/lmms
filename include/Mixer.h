@@ -29,7 +29,7 @@
 #include <QtCore/QThread>
 #include <QtCore/QVector>
 #include <QtCore/QWaitCondition>
-#include <samplerate.h>
+#include <samplerate.h> //libsamplerate
 
 
 #include "lmms_basics.h"

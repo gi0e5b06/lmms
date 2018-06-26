@@ -339,7 +339,7 @@ IF(NOT LMMS_HAVE_PULSEAUDIO)
 ENDIF(NOT LMMS_HAVE_PULSEAUDIO)
 
 
-# check for LV2 lilv library
+# check for libraries lilv, suil, ... needed for LV2
 IF(WANT_LV2)
   FIND_PACKAGE(LILV)
   IF(LILV_FOUND)
@@ -352,8 +352,20 @@ IF(WANT_LV2)
     SET(LILV_INCLUDE_DIRS "")
     SET(WANT_LV2 FALSE)
   ENDIF(LILV_FOUND)
+  FIND_PACKAGE(SUIL)
+  IF(SUIL_FOUND)
+    SET(LMMS_HAVE_SUIL TRUE)
+    SET(STATUS_SUIL "OK")
+  ELSE(SUIL_FOUND)
+    SET(STATUS_SUIL "not found, please install libsuil-dev (or similar) "
+      "if you require LV2 support")
+    SET(SUIL_LIBRARIES "")
+    SET(SUIL_INCLUDE_DIRS "")
+    SET(WANT_LV2 FALSE)
+  ENDIF(SUIL_FOUND)
 ELSE(WANT_LV2)
   SET(STATUS_LILV "Disabled for build")
+  SET(STATUS_SUIL "Disabled for build")
 ENDIF(WANT_LV2)
 
 
@@ -723,7 +735,8 @@ MESSAGE(
 "* CMT LADSPA plugins          : ${STATUS_CMT}\n"
 "* TAP LADSPA plugins          : ${STATUS_TAP}\n"
 "* SWH LADSPA plugins          : ${STATUS_SWH}\n"
-"* LV2 plugins                 : ${STATUS_LILV}\n"
+"* LV2 plugins            lilv : ${STATUS_LILV}\n"
+"*                        suil : ${STATUS_SUIL}\n"
 )
 
 MESSAGE(

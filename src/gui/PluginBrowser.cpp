@@ -66,6 +66,7 @@ PluginBrowser::PluginBrowser( QWidget * _parent ) :
 					"existing instrument track." ),
 								m_view );
 	hint->setWordWrap( true );
+	hint->setMinimumHeight(hint->sizeHint().height());
 
 	QScrollArea* scrollarea = new QScrollArea( m_view );
 	PluginDescList* descList = new PluginDescList( m_view );
@@ -157,18 +158,20 @@ void PluginDescWidget::paintEvent( QPaintEvent * e )
 	}
 
 	p.setFont( f );
-	p.drawText( 10 + logo_size.width(), 15,
-					m_pluginDescriptor.displayName );
+	p.drawText( 10 + logo_size.width(), 17,
+                    m_pluginDescriptor.displayName );
 
 	if( height() > 24 || m_mouseOver )
 	{
 		f.setBold( false );
+                f.setPixelSize((f.pixelSize()*12)/14 );
 		p.setFont( f );
 		QRect br;
-		p.drawText( 10 + logo_size.width(), 20, width() - 58 - 5, 999,
-								Qt::TextWordWrap,
-								qApp->translate( "pluginBrowser", m_pluginDescriptor.description ),
-								&br );
+		p.drawText( 10 + logo_size.width(), 22, width() - 58 - 5, 999,
+                            Qt::TextWordWrap,
+                            qApp->translate( "pluginBrowser",
+                                             m_pluginDescriptor.description ),
+                            &br );
 		if( m_mouseOver )
 		{
 			m_targetHeight = qMax( 60, 25 + br.height() );

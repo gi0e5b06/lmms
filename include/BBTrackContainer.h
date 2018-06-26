@@ -53,6 +53,9 @@ public:
 	{
 		return lengthOfBB( currentBB() );
 	}
+
+        tick_t beatLengthOfBB( int _bb ) const;
+
 	int numOfBBs() const;
 	void removeBB( int _bb );
 

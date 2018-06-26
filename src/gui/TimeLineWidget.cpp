@@ -136,33 +136,32 @@ void TimeLineWidget::addToolButtons( QToolBar * _tool_bar )
 	autoScroll->setGeneralToolTip( tr( "Enable/disable auto-scrolling" ) );
 	autoScroll->addState( embed::getIconPixmap( "autoscroll_on" ) );
 	autoScroll->addState( embed::getIconPixmap( "autoscroll_off" ) );
-	connect( autoScroll, SIGNAL( changedState( int ) ), this,
-					SLOT( toggleAutoScroll( int ) ) );
+	connect( autoScroll, SIGNAL( changedState( int ) ),
+                 this, SLOT( toggleAutoScroll( int ) ) );
 
 	NStateButton * loopPoints = new NStateButton( _tool_bar );
 	loopPoints->setShortcut('X');
 	loopPoints->setGeneralToolTip( tr( "Enable/disable loop-points" ) );
 	loopPoints->addState( embed::getIconPixmap( "loop_points_off" ) );
 	loopPoints->addState( embed::getIconPixmap( "loop_points_on" ) );
-	connect( loopPoints, SIGNAL( changedState( int ) ), this,
-					SLOT( toggleLoopPoints( int ) ) );
-	connect( this, SIGNAL( loopPointStateLoaded( int ) ), loopPoints,
-					SLOT( changeState( int ) ) );
+	connect( loopPoints, SIGNAL( changedState( int ) ),
+                 this, SLOT( toggleLoopPoints( int ) ) );
+	connect( this, SIGNAL( loopPointStateLoaded( int ) ),
+                 loopPoints, SLOT( changeState( int ) ) );
 	connect( loopPoints, SIGNAL( pressed() ),
 		 loopPoints, SLOT( moveToNextState() ) );
 
 	NStateButton * behaviourAtStop = new NStateButton( _tool_bar );
 	behaviourAtStop->addState( embed::getIconPixmap( "back_to_zero" ),
-					tr( "After stopping go back to begin" )
-									);
+                                   tr( "After stopping go back to begin" ) );
 	behaviourAtStop->addState( embed::getIconPixmap( "back_to_start" ),
-					tr( "After stopping go back to "
-						"position at which playing was "
-						"started" ) );
+                                   tr( "After stopping go back to "
+                                       "position at which playing was "
+                                       "started" ) );
 	behaviourAtStop->addState( embed::getIconPixmap( "keep_stop_position" ),
-					tr( "After stopping keep position" ) );
-	connect( behaviourAtStop, SIGNAL( changedState( int ) ), this,
-					SLOT( toggleBehaviourAtStop( int ) ) );
+                                   tr( "After stopping keep position" ) );
+	connect( behaviourAtStop, SIGNAL( changedState( int ) ),
+                 this, SLOT( toggleBehaviourAtStop( int ) ) );
 
 	_tool_bar->addWidget( autoScroll );
 	_tool_bar->addWidget( loopPoints );
@@ -197,50 +196,52 @@ void TimeLineWidget::addToolButtons( QToolBar * _tool_bar )
 		_tool_bar->addWidget(b);
 	}
 	*/
+}
 
+
+void TimeLineWidget::addLoopButtons( QToolBar * _tool_bar )
+{
+        _tool_bar->addSeparator();
+        const int n =m_currentLoop;
+        const int nn=m_nextLoop;
+
+        for(int i=0;i<NB_LOOPS;i++)
+        {
+                AutomatableToolButton* b=new AutomatableToolButton(_tool_bar);
+                QAction* a=new QAction(QString((char)(65+i)),b);//.append(QString(" loop")));
+                b->setDefaultAction(a);
+                a->setData( QVariant(i) );
+                a->setCheckable(true);
+                a->setShortcut((char)(65+i));
+                if((i==n)||(i==nn)) a->setChecked(true);
+                //g->addAction(a);
+                m_loopButtons[i]=b;
+                _tool_bar->addWidget(b);
+                //connect(b, SIGNAL(triggered(QAction*)), b, SLOT(update()));
+                //connect(g, SIGNAL(triggered(QAction*)), b, SLOT(update()));
+                connect(b, SIGNAL(triggered(QAction*)), this, SLOT(selectLoop(QAction*)));
+                //connect(b, SIGNAL(toggled(bool)), this, SLOT(updateLoopButtons()));
+                //connect(b->model(), SIGNAL(dataChanged()), this, SLOT(updateLoopButtons()));
+        }
+
+        _tool_bar->addSeparator();
+        const QString labels[]={ "1","2","4","8","1/2","1/4","1/8","1/16","1/32" };
+        for(int i=0;i<NB_LOOP_SIZES;i++)
 	{
-		_tool_bar->addSeparator();
-		const int n =m_currentLoop;
-		const int nn=m_nextLoop;
-
-		for(int i=0;i<NB_LOOPS;i++)
-		{
-			AutomatableToolButton* b=new AutomatableToolButton(_tool_bar);
-			QAction* a=new QAction(QString((char)(65+i)),b);//.append(QString(" loop")));
-			b->setDefaultAction(a);
-			a->setData( QVariant(i) );
-			a->setCheckable(true);
-			a->setShortcut((char)(65+i));
-			if((i==n)||(i==nn)) a->setChecked(true);
-			//g->addAction(a);
-			m_loopButtons[i]=b;
-			_tool_bar->addWidget(b);
-			//connect(b, SIGNAL(triggered(QAction*)), b, SLOT(update()));
-			//connect(g, SIGNAL(triggered(QAction*)), b, SLOT(update()));
-			connect(b, SIGNAL(triggered(QAction*)), this, SLOT(selectLoop(QAction*)));
-			//connect(b, SIGNAL(toggled(bool)), this, SLOT(updateLoopButtons()));
-			//connect(b->model(), SIGNAL(dataChanged()), this, SLOT(updateLoopButtons()));
-		}
-
-		_tool_bar->addSeparator();
-		const QString labels[]={ "1","2","4","8","1/2","1/4","1/8","1/16","1/32" };
-		for(int i=0;i<NB_LOOP_SIZES;i++)
-		{
-			AutomatableToolButton* b=new AutomatableToolButton(_tool_bar);
-			QAction* a=new QAction(labels[i],b);
-			b->setDefaultAction(a);
-			a->setData( QVariant(LOOP_SIZES[i]) );
-			a->setCheckable(true);
-			a->setShortcut((char)(49+i));
-			m_resizeButtons[i]=b;
-			_tool_bar->addWidget(b);
-			//connect(b, SIGNAL(triggered(QAction*)), b, SLOT(update()));
-			//connect(g, SIGNAL(triggered(QAction*)), b, SLOT(update()));
-			connect(b, SIGNAL(triggered(QAction*)), this, SLOT(resizeLoop(QAction*)));
-			//connect(b, SIGNAL(toggled(bool)), this, SLOT(updateLoopButtons()));
-			//connect(b->model(), SIGNAL(dataChanged()), this, SLOT(updateLoopButtons()));
-		}
-	}
+                AutomatableToolButton* b=new AutomatableToolButton(_tool_bar);
+                QAction* a=new QAction(labels[i],b);
+                b->setDefaultAction(a);
+                a->setData( QVariant(LOOP_SIZES[i]) );
+                a->setCheckable(true);
+                a->setShortcut((char)(49+i));
+                m_resizeButtons[i]=b;
+                _tool_bar->addWidget(b);
+                //connect(b, SIGNAL(triggered(QAction*)), b, SLOT(update()));
+                //connect(g, SIGNAL(triggered(QAction*)), b, SLOT(update()));
+                connect(b, SIGNAL(triggered(QAction*)), this, SLOT(resizeLoop(QAction*)));
+                //connect(b, SIGNAL(toggled(bool)), this, SLOT(updateLoopButtons()));
+                //connect(b->model(), SIGNAL(dataChanged()), this, SLOT(updateLoopButtons()));
+        }
 }
 
 
@@ -348,31 +349,33 @@ void TimeLineWidget::resizeLoop(QAction * _a)
 	const float s=_a->data().toFloat();
 	qWarning("TimeLineWidget::resizeLoop(QAction*) s=%f",s);
 
-	tick_t t=m_pos.getTicks();
-	int n=findLoop(t);
-	if(n<0) n=m_currentLoop;
-
-	/*
-	if(s>=1.0)
-		m_loopPos[2*n+0]=qRound((float)(m_loopPos[2*n+0]/MidiTime::ticksPerTact()))
-			*MidiTime::ticksPerTact();
-	else
-	*/
-		m_loopPos[2*n+0]=qRound((float)(m_loopPos[2*n+0]/s/MidiTime::ticksPerTact()))
-			*s*MidiTime::ticksPerTact();
-
-	m_loopPos[2*n+1]=m_loopPos[2*n+0]+s*MidiTime::ticksPerTact();
-
-	while(t>m_loopPos[2*n+1])
+	if(!Engine::getSong()->isPlaying())
+        {
+                int n=m_currentLoop;
+                m_loopPos[2*n+1]=m_loopPos[2*n+0]+s*MidiTime::ticksPerTact();
+        }
+        else
 	{
-		m_loopPos[2*n+0]+=s*MidiTime::ticksPerTact();
-		m_loopPos[2*n+1]+=s*MidiTime::ticksPerTact();
-	}
-	while(t<m_loopPos[2*n+0])
-	{
-		m_loopPos[2*n+0]-=s*MidiTime::ticksPerTact();
-		m_loopPos[2*n+1]-=s*MidiTime::ticksPerTact();
-	}
+                tick_t t=m_pos.getTicks();
+                int n=findLoop(t);
+                if(n<0) n=m_currentLoop;
+
+                m_loopPos[2*n+0]=qRound((float)(m_loopPos[2*n+0]/s/MidiTime::ticksPerTact()))
+                        *s*MidiTime::ticksPerTact();
+
+                m_loopPos[2*n+1]=m_loopPos[2*n+0]+s*MidiTime::ticksPerTact();
+
+                while(t>m_loopPos[2*n+1])
+                {
+                        m_loopPos[2*n+0]+=s*MidiTime::ticksPerTact();
+                        m_loopPos[2*n+1]+=s*MidiTime::ticksPerTact();
+                }
+                while(t<m_loopPos[2*n+0])
+	        {
+                        m_loopPos[2*n+0]-=s*MidiTime::ticksPerTact();
+                        m_loopPos[2*n+1]-=s*MidiTime::ticksPerTact();
+                }
+        }
 
 	update();
 	updateResizeButtons();
@@ -665,12 +668,15 @@ void TimeLineWidget::mousePressEvent( QMouseEvent* event )
 			m_moveXOff = s_posMarkerPixmap->width() / 2;
 		}
 	}
-	else if( event->button() == Qt::LeftButton  && (event->modifiers() & Qt::ShiftModifier) )
+	else
+        if( event->button() == Qt::LeftButton  &&
+            (event->modifiers() & Qt::ShiftModifier) )
 	{
 		m_action = SelectSongTCO;
 		m_initalXSelect = event->x();
 	}
-	else if( event->button() == Qt::RightButton || event->button() == Qt::MiddleButton )
+	else
+        if( /*event->button() == Qt::RightButton ||*/ event->button() == Qt::MiddleButton )
 	{
         	m_moveXOff = s_posMarkerPixmap->width() / 2;
 		const MidiTime t = m_begin + static_cast<int>( event->x() * MidiTime::ticksPerTact() / m_ppt );
@@ -680,40 +686,37 @@ void TimeLineWidget::mousePressEvent( QMouseEvent* event )
 		{
 			qSwap( m_loopPos[2*n+0], m_loopPos[2*n+1] );
 		}
-		if( ( event->modifiers() & Qt::ShiftModifier ) || event->button() == Qt::MiddleButton )
+		if( !( event->modifiers() & Qt::ShiftModifier ) )
+                        // || event->button() == Qt::MiddleButton )
 		{
 			m_action = MoveLoopBegin;
+                        MidiTime d = m_loopPos[2*n+1]-m_loopPos[2*n+0];
+                        m_loopPos[2*n+0] = t;
+                        m_loopPos[2*n+1] = t+d;
 		}
 		else
 		{
 			m_action = MoveLoopEnd;
+                        m_loopPos[2*n+1] = t;
 		}
-		m_loopPos[( m_action == MoveLoopBegin ) ? 2*n+0 : 2*n+1] = t;
 	}
 
-	if( m_action == MoveLoopBegin )
+	if( m_action == MovePositionMarker || m_action == MoveLoopEnd )
 	{
 		delete m_hint;
-		m_hint = TextFloat::displayMessage( tr( "Hint" ),
-					tr( "Press <%1> to disable magnetic loop points." ).arg(
-						#ifdef LMMS_BUILD_APPLE
-						"⌘"),
-						#else
-						"Ctrl"),
-						#endif
-					embed::getIconPixmap( "hint" ), 0 );
+		m_hint = TextFloat::displayMessage
+                        ( tr( "Hint" ),
+                          tr( "Press <%1> to disable magnetic loop points." ).arg(UI_CTRL_KEY),
+                          embed::getIconPixmap( "hint" ), 0 );
 	}
-	else if( m_action == MoveLoopEnd )
+	else if( m_action == MoveLoopBegin )
 	{
 		delete m_hint;
-		m_hint = TextFloat::displayMessage( tr( "Hint" ),
-					tr( "Hold <Shift> to move the begin loop point; Press <%1> to disable magnetic loop points." ).arg(
-						#ifdef LMMS_BUILD_APPLE
-						"⌘"),
-						#else
-						"Ctrl"),
-						#endif
-					embed::getIconPixmap( "hint" ), 0 );
+		m_hint = TextFloat::displayMessage
+                        ( tr( "Hint" ),
+                          tr( "Hold <Shift> to move the end loop point; "
+                              "Press <%1> to disable magnetic loop points." ).arg(UI_CTRL_KEY),
+                          embed::getIconPixmap( "hint" ), 0 );
 	}
 
 	mouseMoveEvent( event );
@@ -724,7 +727,8 @@ void TimeLineWidget::mousePressEvent( QMouseEvent* event )
 
 void TimeLineWidget::mouseMoveEvent( QMouseEvent* event )
 {
-	MidiTime t = m_begin + static_cast<int>( qMax( event->x() - m_xOffset - m_moveXOff, 0 ) * MidiTime::ticksPerTact() / m_ppt );
+	MidiTime t = m_begin + static_cast<int>( qMax( event->x() - m_xOffset - m_moveXOff, 0 )
+                                                 * MidiTime::ticksPerTact() / m_ppt );
 	const int n=m_currentLoop;
 
 	switch( m_action )
@@ -746,29 +750,49 @@ void TimeLineWidget::mouseMoveEvent( QMouseEvent* event )
 			break;
 
 		case MoveLoopBegin:
-		case MoveLoopEnd:
 		{
-			const int i = m_action - MoveLoopBegin;
 			if( event->modifiers() & Qt::ControlModifier )
 			{
 				// no ctrl-press-hint when having ctrl pressed
 				delete m_hint;
 				m_hint = NULL;
-				m_loopPos[2*n+i] = t;
-			}
-			else
-			{
-				m_loopPos[2*n+i] = t.toNearestTact();
-			}
+                        }
+                        else t = t.toNearestTact();
+
+                        MidiTime d = qMax(m_loopPos[2*n+1]-m_loopPos[2*n+0],
+                                          MidiTime::ticksPerTact()/32);
+                        m_loopPos[2*n+0] = t;
+                        m_loopPos[2*n+1] = t+d;
+
 			// Catch begin == end
-			if( m_loopPos[2*n+0] == m_loopPos[2*n+1] )
+                        /*
+			while( m_loopPos[2*n+0] >= m_loopPos[2*n+1] )
 			{
 				// Note, swap 1 and 0 below and the behavior "skips" the other
 				// marking instead of pushing it.
-				if( m_action == MoveLoopBegin ) 
-					m_loopPos[2*n+0] -= MidiTime::ticksPerTact();
-				else
-					m_loopPos[2*n+1] += MidiTime::ticksPerTact();
+                                m_loopPos[2*n+1] += MidiTime::ticksPerTact();
+			}
+                        */
+			update();
+			break;
+		}
+		case MoveLoopEnd:
+		{
+                        int d=MidiTime::ticksPerTact();
+			if( event->modifiers() & Qt::ControlModifier )
+			{
+				// no ctrl-press-hint when having ctrl pressed
+				delete m_hint;
+				m_hint = NULL;
+                                d=MidiTime::ticksPerTact()/32;
+                        }
+                        else t = t.toNearestTact();
+
+                        m_loopPos[2*n+1] = t;
+			// Catch begin == end
+			if( m_loopPos[2*n+1]<m_loopPos[2*n+0]+d )
+                        {
+                                m_loopPos[2*n+1] = m_loopPos[2*n+0]+d;
 			}
 			update();
 			break;

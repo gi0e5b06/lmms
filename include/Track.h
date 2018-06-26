@@ -70,7 +70,7 @@ const int TRACK_OP_WIDTH_COMPACT = 62;
 const int MINIMAL_TRACK_HEIGHT = 32;
 const int DEFAULT_TRACK_HEIGHT = 32;
 
-const int TCO_BORDER_WIDTH = 2;
+const int TCO_BORDER_WIDTH = 1;//2
 
 
 class TrackContentObject : public Model, public JournallingObject
@@ -199,7 +199,7 @@ class TrackContentObjectView : public selectableObject, public ModelView
 	Q_PROPERTY( QColor textBackgroundColor READ textBackgroundColor WRITE setTextBackgroundColor )
 	Q_PROPERTY( QColor textShadowColor READ textShadowColor WRITE setTextShadowColor )
 	Q_PROPERTY( QColor BBPatternBackground READ BBPatternBackground WRITE setBBPatternBackground )
-	Q_PROPERTY( bool gradient READ gradient WRITE setGradient )
+	//Q_PROPERTY( bool gradient READ gradient WRITE setGradient )
 
 public:
 	TrackContentObjectView( TrackContentObject * tco, TrackView * tv );
@@ -219,7 +219,7 @@ public:
 	QColor textBackgroundColor() const;
 	QColor textShadowColor() const;
 	QColor BBPatternBackground() const;
-	bool gradient() const;
+	//bool gradient() const;
 	void setMutedColor( const QColor & c );
 	void setMutedBackgroundColor( const QColor & c );
 	void setSelectedColor( const QColor & c );
@@ -227,7 +227,7 @@ public:
 	void setTextBackgroundColor( const QColor & c );
 	void setTextShadowColor( const QColor & c );
 	void setBBPatternBackground( const QColor & c );
-	void setGradient( const bool & b );
+	//void setGradient( const bool & b );
 
 	// access needsUpdate member variable
 	bool needsUpdate();
@@ -273,7 +273,10 @@ protected:
 
 	DataFile createTCODataFiles(const QVector<TrackContentObjectView *> & tcos) const;
 
-	virtual void paintTextLabel(QString const & text, QPainter & painter);
+	virtual void paintTextLabel(const QString& text, QPainter& painter);
+	virtual void paintTileBorder(const bool current, const QColor& bg, const int w, const int h, QPainter& painter);
+        virtual void paintTileTacts(const bool current, tact_t nbt, tact_t tpg, const QColor& bg, const int w, const int h, QPainter& painter);
+        virtual void paintMutedIcon(const bool muted, QPainter& painter);
 
 
 protected slots:
@@ -310,7 +313,7 @@ private:
 	QColor m_textBackgroundColor;
 	QColor m_textShadowColor;
 	QColor m_BBPatternBackground;
-	bool m_gradient;
+	//bool m_gradient;
 
  	bool m_needsUpdate;
 	inline void setInitialMousePos( QPoint pos )
@@ -635,14 +638,11 @@ public:
 		return m_processingLock.tryLock();
 	}
 
-	BoolModel* getMutedModel();
+        inline const BoolModel* mutedModel() const
+        { return &m_mutedModel; }
 
-        /*
-        BoolModel* frozenModel()
-        {
-                return &m_frozenModel;
-        }
-        */
+        inline const BoolModel* frozenModel() const
+        { return &m_frozenModel; }
 
 public slots:
 	virtual void setName( const QString & newName )
@@ -651,22 +651,23 @@ public slots:
 		emit nameChanged();
 	}
 
-	void toggleSolo();
+        virtual void toggleSolo();
+        virtual void toggleFrozen();
 
 
-private:
+ protected:
+	BoolModel m_frozenModel;
+	BoolModel m_mutedModel;
+	BoolModel m_soloModel;
+
+
+ private:
 	TrackContainer* m_trackContainer;
 	TrackTypes m_type;
-	QString m_name;
-	int m_height;
+	QString    m_name;
+	int        m_height;
 
-protected:
-	BoolModel m_mutedModel;
-	BoolModel m_frozenModel;
-private:
-	BoolModel m_soloModel;
 	bool m_mutedBeforeSolo;
-
 	bool m_simpleSerializingMode;
 
 	tcoVector m_trackContentObjects;

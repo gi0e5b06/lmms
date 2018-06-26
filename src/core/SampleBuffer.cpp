@@ -1,7 +1,7 @@
 /*
  * SampleBuffer.cpp - container-class SampleBuffer
  *
- * Copyright (c) 2017 gi0e5b06
+ * Copyright (c) 2017-2018 gi0e5b06
  * Copyright (c) 2005-2014 Tobias Doerffel <tobydox/at/users.sourceforge.net>
  *
  * This file is part of LMMS - https://lmms.io
@@ -228,13 +228,13 @@ void SampleBuffer::update( bool _keepSettings )
 	const int sampleLengthMax = 90; // Minutes
 
 	sample_rate_t samplerate = Engine::mixer()->baseSampleRate();
-	QString cchext=QString(".f2r%1").arg(samplerate);
+	QString cchext=QString(".f%1r%2").arg(DEFAULT_CHANNELS).arg(samplerate);
 	QString filename;
 
 	bool fileLoadError = false;
 	if( m_audioFile.isEmpty() && m_origData != NULL && m_origFrames > 0 )
 	{
-		qWarning("SampleBuffer::update copy origData %p to data %p",m_origData,m_data);
+		//qInfo("SampleBuffer::update copy origData %p to data %p",m_origData,m_data);
 		if(m_data!=NULL) qWarning("SampleBuffer::update m_data is not null");
 		// TODO: reverse- and amplification-property is not covered
 		// by following code...
@@ -589,6 +589,7 @@ void SampleBuffer::normalizeSampleRate( const sample_rate_t _srcSR,
             _srcSR!=Engine::mixer()->baseSampleRate() )
 	{
 		//if(m_origData!=m_data)
+                qWarning("SampleBuffer::normalize %s",qPrintable(m_audioFile));
                 qWarning("SampleBuffer::normalize before m_data=%p m_frames=%d sr=%d mixersr=%d",
                          m_data,m_frames,_srcSR,Engine::mixer()->baseSampleRate());
 		/*
@@ -1742,8 +1743,8 @@ f_cnt_t SampleBuffer::decodeSampleMPG123(const char* _infile,
         //channels*sizeof(float);
         //framesize=sizeof(sample_t)=sizeof(float)=4
 
-        qInfo("libmpg123: rate=%ld, channels=%d, encoding=%d, framesize=%d",
-              rate,channels,encoding,framesize);
+        //qInfo("libmpg123: rate=%ld, channels=%d, encoding=%d, framesize=%d",
+        //      rate,channels,encoding,framesize);
 
         QByteArray b;
         /* Buffer could be almost any size here, mpg123_outblock() is just
@@ -1775,7 +1776,7 @@ f_cnt_t SampleBuffer::decodeSampleMPG123(const char* _infile,
                          ? mpg123_strerror(mh)
                          : mpg123_plain_strerror(err) );
 
-        qInfo("libmpg123: %li samples", (long)samples);
+        //qInfo("libmpg123: %li samples", (long)samples);
         cleanupMPG123(mh);
 
         buf_=new sample_t[samples];
@@ -1918,7 +1919,7 @@ void SampleBuffer::loadFromBase64( const QString & _data )
 	orig_data = ba_writer.buffer();
 	//qInfo("SampleBuffer::loadFromBase64 %d", (int) orig_data.size() );
 
-	if(orig_data.size()/BYTES_PER_FRAME!=0)
+	if(orig_data.size()%BYTES_PER_FRAME!=0) // osize/BYTES
 	{
 		qCritical("SampleBuffer::loadFromBase64#1 invalid data");
 		//BACKTRACE
@@ -1931,7 +1932,7 @@ void SampleBuffer::loadFromBase64( const QString & _data )
 
 #else /* LMMS_HAVE_FLAC_STREAM_DECODER_H */
 
-	if(dsize/BYTES_PER_FRAME!=0)
+	if(dsize%BYTES_PER_FRAME!=0) //dsize/BYTES
 	{
 		qCritical("SampleBuffer::loadFromBase64#2 invalid data");
 		//BACKTRACE

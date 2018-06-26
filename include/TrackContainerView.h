@@ -69,10 +69,10 @@ public:
 
 	inline float pixelsPerTact() const
 	{
-		return( m_ppt );
+		return m_ppt;
 	}
 
-	void setPixelsPerTact( int _ppt );
+	virtual void setPixelsPerTact(float _ppt);
 
 	const TrackView * trackViewAt( const int _y ) const;
 
@@ -127,8 +127,9 @@ public:
 	RubberBand *rubberBand() const;
 
 public slots:
-	void realignTracks();
-	void updateBackgrounds();
+	virtual void realignTracks();
+	virtual void updateBackgrounds();
+
 	TrackView * createTrackView( Track * _t );
 	void deleteTrackView( TrackView * _tv );
 

@@ -33,6 +33,7 @@
 #include <QPainter>
 #include <QPointer>
 #include <QScrollBar>
+#include <QShortcut>
 #include <QStyleOption>
 #include <QSignalMapper>
 
@@ -143,8 +144,9 @@ PianoRoll::PianoRollKeyTypes PianoRoll::prKeyOrder[] =
 
 const int DEFAULT_PR_PPT = KEY_LINE_HEIGHT * DefaultStepsPerTact;
 
-const QVector<double> PianoRoll::m_zoomLevels =
-		{ 0.125f, 0.25f, 0.5f, 1.0f, 2.0f, 4.0f, 8.0f };
+//const QVector<double> PianoRoll::m_zoomLevels =
+//      { 0.10f, 0.20f, 0.50f, 1.0f, 2.0f, 5.0f, 10.0f, 20.0f };
+//{ 0.125f, 0.25f, 0.5f, 1.0f, 2.0f, 4.0f, 8.0f };
 
 
 PianoRoll::PianoRoll() :
@@ -346,13 +348,13 @@ PianoRoll::PianoRoll() :
 						SLOT( verScrolled( int ) ) );
 
 	// setup zooming-stuff
-	for( float const & zoomLevel : m_zoomLevels )
+	for( float const & zoomLevel : Editor::ZOOM_LEVELS )
 	{
 		m_zoomingModel.addItem( QString( "%1\%" ).arg( zoomLevel * 100 ) );
 	}
 	m_zoomingModel.setValue( m_zoomingModel.findText( "100%" ) );
 	connect( &m_zoomingModel, SIGNAL( dataChanged() ),
-					this, SLOT( zoomingChanged() ) );
+                 this, SLOT( zoomingChanged() ) );
 
 	// Set up quantization model
 	m_quantizeModel.addItem( tr( "Note lock" ) );
@@ -2905,7 +2907,7 @@ void PianoRoll::paintEvent(QPaintEvent * pe )
 		// Draw alternating shades on bars
 		float timeSignature = static_cast<float>( Engine::getSong()->getTimeSigModel().getNumerator() )
 				/ static_cast<float>( Engine::getSong()->getTimeSigModel().getDenominator() );
-		float zoomFactor = m_zoomLevels[m_zoomingModel.value()];
+		float zoomFactor = Editor::ZOOM_LEVELS[m_zoomingModel.value()];
 		//the bars which disappears at the left side by scrolling
 		int leftBars = m_currentPosition * zoomFactor / MidiTime::ticksPerTact();
 
@@ -3894,9 +3896,9 @@ void PianoRoll::updatePositionAccompany( const MidiTime & t )
 
 void PianoRoll::zoomingChanged()
 {
-	m_ppt = m_zoomLevels[m_zoomingModel.value()] * DEFAULT_PR_PPT;
+	m_ppt = Editor::ZOOM_LEVELS[m_zoomingModel.value()] * DEFAULT_PR_PPT;
 
-	assert( m_ppt > 0 );
+	Q_ASSERT( m_ppt > 0.f );
 
 	m_timeLine->setPixelsPerTact( m_ppt );
 	update();
@@ -4061,29 +4063,33 @@ PianoRollWindow::PianoRollWindow() :
 		tr( "Click here to play the current pattern. "
 			"This is useful while editing it. The pattern is "
 			"automatically looped when its end is reached." ) );
-	m_recordAction->setWhatsThis(
-		tr( "Click here to record notes from a MIDI-"
-			"device or the virtual test-piano of the according "
-			"channel-window to the current pattern. When recording "
-			"all notes you play will be written to this pattern "
-			"and you can play and edit them afterwards." ) );
-	m_recordAccompanyAction->setWhatsThis(
-		tr( "Click here to record notes from a MIDI-"
-			"device or the virtual test-piano of the according "
-			"channel-window to the current pattern. When recording "
-			"all notes you play will be written to this pattern "
-			"and you will hear the song or BB track in the background." ) );
-	m_stopAction->setWhatsThis(
-		tr( "Click here to stop playback of current pattern." ) );
+	m_recordAction->setWhatsThis
+                (tr( "Click here to record notes from a MIDI-"
+                     "device or the virtual test-piano of the according "
+                     "channel-window to the current pattern. When recording "
+                     "all notes you play will be written to this pattern "
+                     "and you can play and edit them afterwards." ) );
+	m_recordAccompanyAction->setWhatsThis
+                (tr( "Click here to record notes from a MIDI-"
+                     "device or the virtual test-piano of the according "
+                     "channel-window to the current pattern. When recording "
+                     "all notes you play will be written to this pattern "
+                     "and you will hear the song or BB track in the background." ) );
+	m_stopAction->setWhatsThis
+                (tr( "Click here to stop playback of current pattern." ) );
 
 	DropToolBar *notesActionsToolBar = addDropToolBarToTop( tr( "Edit actions" ) );
 
 	// init edit-buttons at the top
 	ActionGroup* editModeGroup = new ActionGroup( this );
-	QAction* drawAction = editModeGroup->addAction( embed::getIconPixmap( "edit_draw" ), tr( "Draw mode (Shift+D)" ) );
-	QAction* eraseAction = editModeGroup->addAction( embed::getIconPixmap( "edit_erase" ), tr("Erase mode (Shift+E)" ) );
-	QAction* selectAction = editModeGroup->addAction( embed::getIconPixmap( "edit_select" ), tr( "Select mode (Shift+S)" ) );
-	QAction* detuneAction = editModeGroup->addAction( embed::getIconPixmap( "automation" ), tr("Detune mode (Shift+T)" ) );
+	QAction* drawAction = editModeGroup->addAction(embed::getIconPixmap( "edit_draw" ),
+                                                       tr( "Draw mode (Shift+D)" ) );
+	QAction* eraseAction = editModeGroup->addAction(embed::getIconPixmap( "edit_erase" ),
+                                                        tr("Erase mode (Shift+E)" ) );
+	QAction* selectAction = editModeGroup->addAction(embed::getIconPixmap( "edit_select" ),
+                                                         tr( "Select mode (Shift+S)" ) );
+	QAction* detuneAction = editModeGroup->addAction(embed::getIconPixmap( "automation" ),
+                                                         tr("Detune mode (Shift+T)" ) );
 
 	drawAction->setChecked( true );
 
@@ -4092,38 +4098,28 @@ PianoRollWindow::PianoRollWindow() :
 	selectAction->setShortcut( Qt::SHIFT | Qt::Key_S );
 	detuneAction->setShortcut( Qt::SHIFT | Qt::Key_T );
 
-	drawAction->setWhatsThis(
-		tr( "Click here and draw mode will be activated. In this "
-			"mode you can add, resize and move notes. This "
-			"is the default mode which is used most of the time. "
-			"You can also press 'Shift+D' on your keyboard to "
-			"activate this mode. In this mode, hold %1 to "
-			"temporarily go into select mode." ).arg(
-				#ifdef LMMS_BUILD_APPLE
-				"⌘" ) );
-				#else
-				"Ctrl" ) );
-				#endif
-	eraseAction->setWhatsThis(
-		tr( "Click here and erase mode will be activated. In this "
-			"mode you can erase notes. You can also press "
-			"'Shift+E' on your keyboard to activate this mode." ) );
-	selectAction->setWhatsThis(
-		tr( "Click here and select mode will be activated. "
-			"In this mode you can select notes. Alternatively, "
-			"you can hold %1 in draw mode to temporarily use "
-			"select mode." ).arg(
-				#ifdef LMMS_BUILD_APPLE
-				"⌘" ) );
-				#else
-				"Ctrl" ) );
-				#endif
-	detuneAction->setWhatsThis(
-		tr( "Click here and detune mode will be activated. "
-			"In this mode you can click a note to open its "
-			"automation detuning. You can utilize this to slide "
-			"notes from one to another. You can also press "
-			"'Shift+T' on your keyboard to activate this mode." ) );
+	drawAction->setWhatsThis
+                (tr( "Click here and draw mode will be activated. In this "
+                     "mode you can add, resize and move notes. This "
+                     "is the default mode which is used most of the time. "
+                     "You can also press 'Shift+D' on your keyboard to "
+                     "activate this mode. In this mode, hold %1 to "
+                     "temporarily go into select mode." ).arg(UI_CTRL_KEY));
+	eraseAction->setWhatsThis
+		(tr( "Click here and erase mode will be activated. In this "
+                     "mode you can erase notes. You can also press "
+                     "'Shift+E' on your keyboard to activate this mode." ) );
+	selectAction->setWhatsThis
+                (tr( "Click here and select mode will be activated. "
+                     "In this mode you can select notes. Alternatively, "
+                     "you can hold %1 in draw mode to temporarily use "
+                     "select mode." ).arg(UI_CTRL_KEY));
+	detuneAction->setWhatsThis
+		(tr( "Click here and detune mode will be activated. "
+                     "In this mode you can click a note to open its "
+                     "automation detuning. You can utilize this to slide "
+                     "notes from one to another. You can also press "
+                     "'Shift+T' on your keyboard to activate this mode." ) );
 
 	connect( editModeGroup, SIGNAL( triggered( int ) ), m_editor, SLOT( setEditMode( int ) ) );
 
@@ -4140,41 +4136,29 @@ PianoRollWindow::PianoRollWindow() :
 	// Copy + paste actions
 	DropToolBar *copyPasteActionsToolBar =  addDropToolBarToTop( tr( "Copy paste controls" ) );
 
-	QAction* cutAction = new QAction(embed::getIconPixmap( "edit_cut" ),
-							  tr( "Cut selected notes (%1+X)" ).arg(
-									#ifdef LMMS_BUILD_APPLE
-									"⌘" ), this );
-									#else
-									"Ctrl" ), this );
-									#endif
+        QAction* cutAction = new QAction(embed::getIconPixmap( "edit_cut" ),
+                                         tr( "Cut selected notes (%1+X)" ).arg(UI_CTRL_KEY),
+                                         this);
 
-	QAction* copyAction = new QAction(embed::getIconPixmap( "edit_copy" ),
-							   tr( "Copy selected notes (%1+C)" ).arg(
-	 								#ifdef LMMS_BUILD_APPLE
-	 								"⌘"), this);
-	 								#else
-									"Ctrl" ), this );
-	 								#endif
+        QAction* copyAction = new QAction(embed::getIconPixmap( "edit_copy" ),
+                                          tr( "Copy selected notes (%1+C)" ).arg(UI_CTRL_KEY),
+                                          this);
 
-	QAction* pasteAction = new QAction(embed::getIconPixmap( "edit_paste" ),
-					tr( "Paste notes from clipboard (%1+V)" ).arg(
-						#ifdef LMMS_BUILD_APPLE
-						"⌘" ), this );
-						#else
-						"Ctrl" ), this );
-						#endif
+        QAction* pasteAction = new QAction(embed::getIconPixmap( "edit_paste" ),
+                                           tr( "Paste notes from clipboard (%1+V)" ).arg(UI_CTRL_KEY),
+                                           this);
 
-	cutAction->setWhatsThis(
-		tr( "Click here and the selected notes will be cut into the "
-			"clipboard. You can paste them anywhere in any pattern "
-			"by clicking on the paste button." ) );
-	copyAction->setWhatsThis(
-		tr( "Click here and the selected notes will be copied into the "
-			"clipboard. You can paste them anywhere in any pattern "
-			"by clicking on the paste button." ) );
-	pasteAction->setWhatsThis(
-		tr( "Click here and the notes from the clipboard will be "
-			"pasted at the first visible measure." ) );
+	cutAction->setWhatsThis
+                (tr( "Click here and the selected notes will be cut into the "
+                     "clipboard. You can paste them anywhere in any pattern "
+                     "by clicking on the paste button." ) );
+	copyAction->setWhatsThis
+		(tr( "Click here and the selected notes will be copied into the "
+                     "clipboard. You can paste them anywhere in any pattern "
+                     "by clicking on the paste button." ) );
+	pasteAction->setWhatsThis
+		(tr( "Click here and the notes from the clipboard will be "
+                     "pasted at the first visible measure." ) );
 
 	cutAction->setShortcut( Qt::CTRL | Qt::Key_X );
 	copyAction->setShortcut( Qt::CTRL | Qt::Key_C );
@@ -4193,64 +4177,78 @@ PianoRollWindow::PianoRollWindow() :
 
 	addToolBarBreak();
 
-	DropToolBar* zoomAndNotesToolBar=addDropToolBarToTop(tr("Zoom and note controls"));
+        DropToolBar* zoomAndNotesToolBar=addDropToolBarToTop(tr("Zoom and note controls"));
 
+        // setup zoom-stuff
 	QLabel * zoom_lbl = new QLabel( m_toolBar );
-	zoom_lbl->setPixmap( embed::getIconPixmap( "zoom" ) );
+	zoom_lbl->setPixmap( embed::getIconPixmap( "zoom_x" ) );
+        zoom_lbl->setFixedSize( 32, 32 );
+        zoom_lbl->setAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
 
 	m_zoomingComboBox = new ComboBox( m_toolBar );
 	m_zoomingComboBox->setModel( &m_editor->m_zoomingModel );
-	m_zoomingComboBox->setFixedSize( 64, 22 );
+	m_zoomingComboBox->setFixedSize( 70, 32 );
+
+	new QShortcut(Qt::Key_Minus, m_zoomingComboBox, SLOT(selectPrevious()));
+	new QShortcut(Qt::Key_Plus, m_zoomingComboBox, SLOT(selectNext()));
 
 	// setup quantize-stuff
 	QLabel * quantize_lbl = new QLabel( m_toolBar );
 	quantize_lbl->setPixmap( embed::getIconPixmap( "quantize" ) );
+        quantize_lbl->setFixedSize( 32, 32 );
+        quantize_lbl->setAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
 
 	m_quantizeComboBox = new ComboBox( m_toolBar );
 	m_quantizeComboBox->setModel( &m_editor->m_quantizeModel );
-	m_quantizeComboBox->setFixedSize( 64, 22 );
+	m_quantizeComboBox->setFixedSize( 70, 32 );
 
 	// setup note-len-stuff
 	QLabel * note_len_lbl = new QLabel( m_toolBar );
 	note_len_lbl->setPixmap( embed::getIconPixmap( "note" ) );
+        note_len_lbl->setFixedSize( 32, 32 );
+        note_len_lbl->setAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
 
 	m_noteLenComboBox = new ComboBox( m_toolBar );
 	m_noteLenComboBox->setModel( &m_editor->m_noteLenModel );
-	m_noteLenComboBox->setFixedSize( 105, 22 );
+	m_noteLenComboBox->setFixedSize( 105, 32 );
 
 	// setup scale-stuff
 	QLabel * scale_lbl = new QLabel( m_toolBar );
 	scale_lbl->setPixmap( embed::getIconPixmap( "scale" ) );
+        scale_lbl->setFixedSize( 32, 32 );
+        scale_lbl->setAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
 
 	m_scaleComboBox = new ComboBox( m_toolBar );
 	m_scaleComboBox->setModel( &m_editor->m_scaleModel );
-	m_scaleComboBox->setFixedSize( 105, 22 );
+	m_scaleComboBox->setFixedSize( 105, 32 );
 
 	// setup chord-stuff
 	QLabel * chord_lbl = new QLabel( m_toolBar );
 	chord_lbl->setPixmap( embed::getIconPixmap( "chord" ) );
+        chord_lbl->setFixedSize( 32, 32 );
+        chord_lbl->setAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
 
 	m_chordComboBox = new ComboBox( m_toolBar );
 	m_chordComboBox->setModel( &m_editor->m_chordModel );
-	m_chordComboBox->setFixedSize( 105, 22 );
+	m_chordComboBox->setFixedSize( 105, 32 );
 
 
 	zoomAndNotesToolBar->addWidget( zoom_lbl );
 	zoomAndNotesToolBar->addWidget( m_zoomingComboBox );
 
-	zoomAndNotesToolBar->addSeparator();
+	//zoomAndNotesToolBar->addSeparator();
 	zoomAndNotesToolBar->addWidget( quantize_lbl );
 	zoomAndNotesToolBar->addWidget( m_quantizeComboBox );
 
-	zoomAndNotesToolBar->addSeparator();
+	//zoomAndNotesToolBar->addSeparator();
 	zoomAndNotesToolBar->addWidget( note_len_lbl );
 	zoomAndNotesToolBar->addWidget( m_noteLenComboBox );
 
-	zoomAndNotesToolBar->addSeparator();
+	//zoomAndNotesToolBar->addSeparator();
 	zoomAndNotesToolBar->addWidget( scale_lbl );
 	zoomAndNotesToolBar->addWidget( m_scaleComboBox );
 
-	zoomAndNotesToolBar->addSeparator();
+	//zoomAndNotesToolBar->addSeparator();
 	zoomAndNotesToolBar->addWidget( chord_lbl );
 	zoomAndNotesToolBar->addWidget( m_chordComboBox );
 

@@ -957,8 +957,11 @@ void Knob::wheelEvent( QWheelEvent * _we )
 	if( _we->modifiers() & Qt::ShiftModifier )
         {
 		_we->accept();
-		const int inc = ( _we->delta() > 0 ) ? 1 : -1;
-		m->incValue( inc );
+                if( _we->delta() > 0 )
+                        m->incrValue();
+                else
+                if( _we->delta() < 0 )
+                        m->decrValue();
 
 		s_textFloat->setText( displayValue() );
 		s_textFloat->moveGlobal( this, QPoint( width() + 2, 0 ) );

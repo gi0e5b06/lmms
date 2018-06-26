@@ -139,8 +139,6 @@ private:
 
 	ComboBoxModel* m_zoomingModel;
 
-	static const QVector<double> m_zoomLevels;
-
 	bool m_scrollBack;
 	bool m_smoothScroll;
 

@@ -207,7 +207,10 @@ public slots:
 
 	AudioPort m_audioPort;
 
+	//FloatModel m_pitchModel;         //TODO?
+	//IntModel m_pitchRangeModel;      //TODO?
 	IntModel m_effectChannelModel;
+	//BoolModel m_useMasterPitchModel; //TODO?
 
 
 	friend class SampleTrackView;
@@ -247,10 +250,9 @@ public:
         //QMenu* createMidiOutputMenu();
 
 public slots:
-	//void showEffects();
 	//void textChanged( const QString & _new_name );
-	//void toggleVisibility( bool _on );
-	//void updateName();
+	void toggleVisibility( bool _on );
+	void updateName();
 	//void updateSampleView();
 
 
@@ -259,7 +261,6 @@ protected:
 	virtual void dragEnterEvent( QDragEnterEvent * _dee );
 	virtual void dropEvent( QDropEvent * _de );
 
-        void modelChanged();
 	virtual QString nodeName() const
 	{
 		return "SampleTrackView";
@@ -267,13 +268,14 @@ protected:
 
 
 private slots:
-	void toggleSampleWindow( bool _on );
+	//void toggleSampleWindow( bool _on );
 	void activityIndicatorPressed();
 	void activityIndicatorReleased();
 
 	//void midiInSelected();
 	//void midiOutSelected();
 	//void midiConfigChanged();
+        void modelChanged();
 	void muteChanged();
 
 	void assignFxLine( int channelIndex );

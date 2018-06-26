@@ -143,8 +143,6 @@ InstrumentTrack::InstrumentTrack( TrackContainer* tc ) :
 		 this, SLOT( updatePitchRange() ) );
 	connect( &m_effectChannelModel, SIGNAL( dataChanged() ),
 		 this, SLOT( updateEffectChannel() ) );
-	connect( &m_frozenModel, SIGNAL( dataChanged() ),
-		 this, SLOT( updateFrozenBuffer() ) );
 }
 
 
@@ -598,15 +596,11 @@ void InstrumentTrack::setName( const QString & _new_name )
 }
 
 
-
-
-void InstrumentTrack::updateFrozenBuffer()
+void InstrumentTrack::toggleFrozen()
 {
         //qInfo("InstrumentTrack::updateFrozenBuffer ap=%p",&m_audioPort);
         m_audioPort.updateFrozenBuffer();
 }
-
-
 
 
 void InstrumentTrack::updateBaseNote()
@@ -1214,6 +1208,14 @@ InstrumentTrackWindow * InstrumentTrackView::instrumentTrackWindow()
 
 
 
+void InstrumentTrackView::paintEvent( QPaintEvent * _pe )
+{
+	TrackView::paintEvent(_pe);
+}
+
+
+
+
 void InstrumentTrackView::resizeEvent( QResizeEvent * re )
 {
 	TrackView::resizeEvent(re);
@@ -1228,7 +1230,7 @@ void InstrumentTrackView::resizeEvent( QResizeEvent * re )
 
 void InstrumentTrackView::dragEnterEvent( QDragEnterEvent * _dee )
 {
-	InstrumentTrackWindow::dragEnterEventGeneric( _dee );
+        InstrumentTrackWindow::dragEnterEventGeneric( _dee );
 	if( !_dee->isAccepted() )
 	{
 		TrackView::dragEnterEvent( _dee );

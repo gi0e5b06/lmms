@@ -36,6 +36,7 @@
  */
 
 #include <assert.h>
+#include <cmath>
 
 #include <QLayout>
 #include <QMenu>
@@ -269,7 +270,7 @@ TrackContentObjectView::TrackContentObjectView( TrackContentObject * tco,
 	m_textColor( 0, 0, 0 ),
 	m_textShadowColor( 0, 0, 0 ),
 	m_BBPatternBackground( 0, 0, 0 ),
-	m_gradient( true ),
+	//m_gradient( true ),
 	m_needsUpdate( true )
 {
 	if( s_textFloat == NULL )
@@ -285,7 +286,7 @@ TrackContentObjectView::TrackContentObjectView( TrackContentObject * tco,
 	move( 0, 0 );
 	show();
 
-	setFixedHeight( tv->getTrackContentWidget()->height() - 1);
+	setFixedHeight( tv->getTrackContentWidget()->height() - 1 );
 	setAcceptDrops( true );
 	setMouseTracking( true );
 
@@ -380,8 +381,8 @@ QColor TrackContentObjectView::textShadowColor() const
 QColor TrackContentObjectView::BBPatternBackground() const
 { return m_BBPatternBackground; }
 
-bool TrackContentObjectView::gradient() const
-{ return m_gradient; }
+//bool TrackContentObjectView::gradient() const
+//{ return m_gradient; }
 
 //! \brief CSS theming qproperty access method
 void TrackContentObjectView::setMutedColor( const QColor & c )
@@ -407,8 +408,8 @@ void TrackContentObjectView::setTextShadowColor( const QColor & c )
 void TrackContentObjectView::setBBPatternBackground( const QColor & c )
 { m_BBPatternBackground = QColor( c ); }
 
-void TrackContentObjectView::setGradient( const bool & b )
-{ m_gradient = b; }
+//void TrackContentObjectView::setGradient( const bool & b )
+//{ m_gradient = b; }
 
 // access needsUpdate member variable
 bool TrackContentObjectView::needsUpdate()
@@ -480,10 +481,10 @@ void TrackContentObjectView::updateLength()
 	}
 	else
 	{
-		setFixedWidth(
-		static_cast<int>( m_tco->length() * pixelsPerTact() /
-					MidiTime::ticksPerTact() ) + 1 /*+
-						TCO_BORDER_WIDTH * 2-1*/ );
+		setFixedWidth
+                        (static_cast<int>( round(pixelsPerTact() * m_tco->length() /
+                                                 MidiTime::ticksPerTact() )));
+                         //+ 1 + TCO_BORDER_WIDTH * 2-1 );
 	}
 	m_trackView->trackContainerView()->update();
 }
@@ -518,6 +519,12 @@ void TrackContentObjectView::updatePosition()
  */
 void TrackContentObjectView::dragEnterEvent( QDragEnterEvent * dee )
 {
+        if(m_tco->getTrack()->isFrozen())
+        {
+                dee->ignore();
+                return;
+        }
+
 	TrackContentWidget * tcw = getTrackView()->getTrackContentWidget();
 	MidiTime tcoPos = MidiTime( m_tco->startPosition().getTact(), 0 );
 	if( tcw->canPasteSelection( tcoPos, dee->mimeData() ) == false )
@@ -545,6 +552,12 @@ void TrackContentObjectView::dragEnterEvent( QDragEnterEvent * dee )
  */
 void TrackContentObjectView::dropEvent( QDropEvent * de )
 {
+        if(m_tco->getTrack()->isFrozen())
+        {
+                de->ignore();
+                return;
+        }
+
 	QString type = StringPairDrag::decodeKey( de );
 	QString value = StringPairDrag::decodeValue( de );
 
@@ -591,15 +604,21 @@ void TrackContentObjectView::dropEvent( QDropEvent * de )
  *
  * \param e The QEvent to watch.
  */
-void TrackContentObjectView::leaveEvent( QEvent * e )
+void TrackContentObjectView::leaveEvent(QEvent* _le)
 {
+        if(m_tco->getTrack()->isFrozen())
+        {
+                _le->ignore();
+                return;
+        }
+
 	while( QApplication::overrideCursor() != NULL )
 	{
 		QApplication::restoreOverrideCursor();
 	}
-	if( e != NULL )
+	if(_le!=NULL )
 	{
-		QWidget::leaveEvent( e );
+		QWidget::leaveEvent(_le);
 	}
 }
 
@@ -676,7 +695,7 @@ void TrackContentObjectView::paintTextLabel(QString const & text, QPainter & pai
 		elidedPatternName = text.trimmed();
 	}
 
-	painter.fillRect(QRect(0, 0, width(), fontMetrics.height() + 2 * textTop), textBackgroundColor());
+	//painter.fillRect(QRect(0, 0, width(), fontMetrics.height() + 2 * textTop), textBackgroundColor());
 
 	int const finalTextTop = textTop + fontMetrics.ascent();
 	painter.setPen(textShadowColor());
@@ -684,6 +703,72 @@ void TrackContentObjectView::paintTextLabel(QString const & text, QPainter & pai
 	painter.setPen( textColor() );
 	painter.drawText( textLeft, finalTextTop, elidedPatternName );
 }
+
+
+void TrackContentObjectView::paintTileBorder(const bool current, const QColor& c,
+                                             const int w, const int h, QPainter& p)
+{
+        if(TCO_BORDER_WIDTH>0)
+        {
+                p.setPen(current ? c.lighter(150) : c.lighter(200));
+                p.drawLine(0,0,w-1,0);
+                p.drawLine(0,1,0,h-1);
+                p.setPen(current ? c.darker(150) : c.darker(200));
+                p.drawLine(0,h-1,w-1,h-1);
+                p.drawLine(w-1,1,w-1,h-2);
+                if(current)
+                {
+                        p.setPen(Qt::yellow);
+                        p.drawRect(0,0,w-1,h-1);//1,1,w-2,h-2);
+                }
+        }
+}
+
+
+void TrackContentObjectView::paintTileTacts(const bool current, tact_t nbt, tick_t tpg,
+                                            const QColor& c,
+                                            const int w, const int h, QPainter& p)
+{
+        float ppt=pixelsPerTact();
+        const QPen pen1(QPen(current
+                             ? Qt::yellow
+                             : c.darker(125),
+                             1,Qt::DashLine));
+        p.setPen(pen1);
+        for(tact_t t=1; t<=nbt; t++)
+        {
+                float x=ppt * t;
+                p.drawLine(x,1,x,height()-2);
+        }
+
+        int tpt=MidiTime::ticksPerTact();
+        if((tpg!=1)&&(tpg!=tpt))
+        {
+                const QPen pen2(QPen(current
+                                     ? Qt::yellow
+                                     : c.darker(200),
+                                     1,Qt::SolidLine));
+                p.setPen(pen2);
+                for(tick_t t=tpg; t<=nbt*tpt; t+=tpg)
+                {
+                        float x=ppt * t / tpt;
+                        p.drawLine(x,1,x,height()-2);
+                }
+        }
+}
+
+
+void TrackContentObjectView::paintMutedIcon(const bool muted, QPainter& p)
+{
+        if(muted)
+        {
+                const int spacing = TCO_BORDER_WIDTH;
+                const int size = 14;
+                p.drawPixmap( spacing, height() - ( size + spacing ),
+                              embed::getIconPixmap( "muted", size, size ) );
+        }
+}
+
 
 /*! \brief Handle a mouse press on this trackContentObjectView.
  *
@@ -702,6 +787,12 @@ void TrackContentObjectView::paintTextLabel(QString const & text, QPainter & pai
  */
 void TrackContentObjectView::mousePressEvent( QMouseEvent * me )
 {
+        if(m_tco->getTrack()->isFrozen())
+        {
+                me->ignore();
+                return;
+        }
+
 	setInitialMousePos( me->pos() );
 	if( !fixedTCOs() && me->button() == Qt::LeftButton )
 	{
@@ -819,6 +910,12 @@ void TrackContentObjectView::mousePressEvent( QMouseEvent * me )
  */
 void TrackContentObjectView::mouseMoveEvent( QMouseEvent * me )
 {
+        if(m_tco->getTrack()->isFrozen())
+        {
+                me->ignore();
+                return;
+        }
+
 	if( m_action == CopySelection )
 	{
 		if( mouseMovedDistance( me, 2 ) == true )
@@ -978,6 +1075,12 @@ void TrackContentObjectView::mouseMoveEvent( QMouseEvent * me )
  */
 void TrackContentObjectView::mouseReleaseEvent( QMouseEvent * me )
 {
+        if(m_tco->getTrack()->isFrozen())
+        {
+                me->ignore();
+                return;
+        }
+
 	// If the CopySelection was chosen as the action due to mouse movement,
 	// it will have been cleared.  At this point Toggle is the desired action.
 	// An active StringPairDrag will prevent this method from being called,
@@ -1012,8 +1115,15 @@ void TrackContentObjectView::mouseReleaseEvent( QMouseEvent * me )
  */
 void TrackContentObjectView::contextMenuEvent( QContextMenuEvent * cme )
 {
+        if(m_tco->getTrack()->isFrozen())
+        {
+                cme->ignore();
+                return;
+        }
+
 	if( cme->modifiers() )
 	{
+                cme->ignore();
 		return;
 	}
 
@@ -1096,14 +1206,15 @@ TrackContentWidget::TrackContentWidget( TrackView * parent ) :
 	m_embossColor( Qt::SolidPattern )
 {
 	setAcceptDrops( true );
+	setStyle( QApplication::style() );
+	updateBackground();
 
 	connect( parent->trackContainerView(),
-			SIGNAL( positionChanged( const MidiTime & ) ),
-			this, SLOT( changePosition( const MidiTime & ) ) );
+                 SIGNAL( positionChanged( const MidiTime & ) ),
+                 this, SLOT( changePosition( const MidiTime & ) ) );
 
-	setStyle( QApplication::style() );
-
-	updateBackground();
+        connect( getTrack()->frozenModel(), SIGNAL( dataChanged() ),
+                 this, SLOT( update() ) );
 }
 
 
@@ -1331,27 +1442,6 @@ MidiTime TrackContentWidget::getPosition( int mouseX )
 
 
 
-/*! \brief Respond to a drag enter event on the trackContentWidget
- *
- * \param dee the Drag Enter Event to respond to
- */
-void TrackContentWidget::dragEnterEvent( QDragEnterEvent * dee )
-{
-	MidiTime tcoPos = MidiTime( getPosition( dee->pos().x() ).getTact(), 0 );
-	if( canPasteSelection( tcoPos, dee->mimeData() ) == false )
-	{
-		dee->ignore();
-	}
-	else
-	{
-		StringPairDrag::processDragEnterEvent( dee, "tco_" +
-						QString::number( getTrack()->type() ) );
-	}
-}
-
-
-
-
 /*! \brief Returns whether a selection of TCOs can be pasted into this
  *
  * \param tcoPos the position of the TCO slot being pasted on
@@ -1360,6 +1450,12 @@ void TrackContentWidget::dragEnterEvent( QDragEnterEvent * dee )
 bool TrackContentWidget::canPasteSelection( MidiTime tcoPos, const QMimeData * mimeData )
 {
 	Track * t = getTrack();
+
+        if(t->isFrozen())
+        {
+                return false;
+        }
+
 	QString type = StringPairDrag::decodeMimeKey( mimeData );
 	QString value = StringPairDrag::decodeMimeValue( mimeData );
 
@@ -1511,12 +1607,43 @@ bool TrackContentWidget::pasteSelection( MidiTime tcoPos, QDropEvent * de )
 }
 
 
+/*! \brief Respond to a drag enter event on the trackContentWidget
+ *
+ * \param dee the Drag Enter Event to respond to
+ */
+void TrackContentWidget::dragEnterEvent( QDragEnterEvent * dee )
+{
+        if(getTrack()->isFrozen())
+        {
+                dee->ignore();
+                return;
+        }
+
+	MidiTime tcoPos = MidiTime( getPosition( dee->pos().x() ).getTact(), 0 );
+	if( canPasteSelection( tcoPos, dee->mimeData() ) == false )
+	{
+		dee->ignore();
+	}
+	else
+	{
+		StringPairDrag::processDragEnterEvent( dee, "tco_" +
+						QString::number( getTrack()->type() ) );
+	}
+}
+
+
 /*! \brief Respond to a drop event on the trackContentWidget
  *
  * \param de the Drop Event to respond to
  */
 void TrackContentWidget::dropEvent( QDropEvent * de )
 {
+        if(getTrack()->isFrozen())
+        {
+                de->ignore();
+                return;
+        }
+
 	MidiTime tcoPos = MidiTime( getPosition( de->pos().x() ).getTact(), 0 );
 	if( pasteSelection( tcoPos, de ) == true )
 	{
@@ -1533,6 +1660,12 @@ void TrackContentWidget::dropEvent( QDropEvent * de )
  */
 void TrackContentWidget::mousePressEvent( QMouseEvent * me )
 {
+        if(getTrack()->isFrozen())
+        {
+                me->ignore();
+                return;
+        }
+
 	if( m_trackView->trackContainerView()->allowRubberband() == true )
 	{
 		QWidget::mousePressEvent( me );
@@ -1572,16 +1705,26 @@ void TrackContentWidget::paintEvent( QPaintEvent * pe )
 	// Assume even-pixels-per-tact. Makes sense, should be like this anyways
 	/*const*/ TrackContainerView * tcv = m_trackView->trackContainerView();
 	int ppt = static_cast<int>( tcv->pixelsPerTact() );
-	QPainter p( this );
+
 	// Don't draw background on BB-Editor
 	if( m_trackView->trackContainerView() != gui->getBBEditor()->trackContainerView() )
 	{
-		/*
+                QPainter p( this );
+                /*
 		p.drawTiledPixmap( rect(), m_background, QPoint(
 				tcv->currentPosition().getTact() * ppt, 0 ) );
 		*/
 		paintGrid(p,tcv->currentPosition().getTact(),ppt,tcv->barViews());
-	}
+        }
+
+        if(getTrack()->isFrozen())
+        {
+                QPainter p(this);
+                p.fillRect(0,0,width()-1,height()-1,
+                           QBrush(Qt::cyan,Qt::BDiagPattern));
+                p.fillRect(0,0,width()-1,height()-1,
+                           QBrush(QColor(0,160,160,64),Qt::SolidPattern));
+        }
 }
 
 
@@ -1945,6 +2088,7 @@ void TrackOperationsWidget::cloneTrack()
 	}
 
         if(newTrack->isSolo()) newTrack->setSolo(false);
+        if(newTrack->isFrozen()) newTrack->setFrozen(false);
 }
 
 
@@ -2185,13 +2329,15 @@ void TrackOperationsWidget::recordingOff()
  */
 Track::Track( TrackTypes type, TrackContainer * tc ) :
 	Model( tc ),                   /*!< The track Model */
-	m_trackContainer( tc ),        /*!< The track container object */
-	m_type( type ),                /*!< The track type */
-	m_name(),                       /*!< The track's name */
+	m_frozenModel( false, this, tr( "Frozen" ) ),
+					/*!< For controlling track freezing */
 	m_mutedModel( false, this, tr( "Mute" ) ),
 					 /*!< For controlling track muting */
 	m_soloModel( false, this, tr( "Solo" ) ),
 					/*!< For controlling track soloing */
+	m_trackContainer( tc ),        /*!< The track container object */
+	m_type( type ),                /*!< The track type */
+	m_name(),                       /*!< The track's name */
 	m_simpleSerializingMode( false ),
 	m_trackContentObjects()         /*!< The track content objects (segments) */
 {
@@ -2331,6 +2477,7 @@ void Track::saveSettings( QDomDocument & doc, QDomElement & element )
 	element.setAttribute( "name", name() );
 	element.setAttribute( "muted", isMuted() );
 	element.setAttribute( "solo", isSolo() );
+	element.setAttribute( "frozen", isFrozen() );
 	if( m_height >= MINIMAL_TRACK_HEIGHT )
 	{
 		element.setAttribute( "trackheight", m_height );
@@ -2384,6 +2531,7 @@ void Track::loadSettings( const QDomElement & element )
 
 	setMuted( element.attribute( "muted" ).toInt() );
 	setSolo( element.attribute( "solo" ).toInt() );
+	setFrozen( element.attribute( "frozen" ).toInt() );
 
 	if( m_simpleSerializingMode )
 	{
@@ -2538,10 +2686,12 @@ int Track::getTCONum( const TrackContentObject * tco )
 					tco );
 	if( it != m_trackContentObjects.end() )
 	{
-/*		if( getTCO( i ) == _tco )
-		{
-			return i;
-		}*/
+                /*
+                  if( getTCO( i ) == _tco )
+                  {
+                  return i;
+                  }
+                */
 		return it - m_trackContentObjects.begin();
 	}
 	qWarning( "Track::getTCONum(...) -> _tco not found!\n" );
@@ -2746,14 +2896,9 @@ void Track::toggleSolo()
 }
 
 
-
-
-BoolModel *Track::getMutedModel()
+void Track::toggleFrozen()
 {
-	return &m_mutedModel;
 }
-
-
 
 
 
@@ -2809,10 +2954,14 @@ TrackView::TrackView( Track * track, TrackContainerView * tcv ) :
 			Qt::QueuedConnection );
 
 	connect( &m_track->m_mutedModel, SIGNAL( dataChanged() ),
-			&m_trackContentWidget, SLOT( update() ) );
+                 &m_trackContentWidget, SLOT( update() ) );
 
 	connect( &m_track->m_soloModel, SIGNAL( dataChanged() ),
-			m_track, SLOT( toggleSolo() ) );
+                 m_track, SLOT( toggleSolo() ) );
+
+	connect( &m_track->m_frozenModel, SIGNAL( dataChanged() ),
+		 &m_trackContentWidget, SLOT( update() ) );
+
 	// create views for already existing TCOs
 	for( Track::tcoVector::iterator it =
 					m_track->m_trackContentObjects.begin();

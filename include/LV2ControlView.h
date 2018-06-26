@@ -25,6 +25,9 @@
 #ifndef LV2_CONTROL_VIEW_H
 #define LV2_CONTROL_VIEW_H
 
+#ifdef WANT_LV2
+
+
 #include <QWidget>
 
 #include "ModelView.h"
@@ -44,4 +47,5 @@ private:
 
 } ;
 
+#endif
 #endif

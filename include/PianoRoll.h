@@ -303,8 +303,6 @@ private:
 	ComboBoxModel m_scaleModel;
 	ComboBoxModel m_chordModel;
 
-	static const QVector<double> m_zoomLevels;
-
 	Pattern* m_pattern;
 	QScrollBar * m_leftRightScroll;
 	QScrollBar * m_topBottomScroll;

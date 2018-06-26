@@ -238,16 +238,17 @@ void BBTCOView::paintEvent( QPaintEvent * )
 
 	QPainter p( &m_paintPixmap );
 
-	QLinearGradient lingrad( 0, 0, 0, height() );
+	//QLinearGradient lingrad( 0, 0, 0, height() );
 	QColor c;
 	bool muted = m_bbTCO->getTrack()->isMuted() || m_bbTCO->isMuted();
-	
+
 	// state: selected, muted, default, user selected
-	c = isSelected() ? selectedColor() : ( muted ? mutedBackgroundColor() 
-		: ( m_bbTCO->m_useStyleColor ? painter.background().color() 
+	c = isSelected() ? selectedColor() : ( muted ? mutedBackgroundColor()
+		: ( m_bbTCO->m_useStyleColor ? painter.background().color()
 		: m_bbTCO->colorObj() ) );
-	
-	lingrad.setColorAt( 0, c.light( 130 ) );
+
+	/*
+        lingrad.setColorAt( 0, c.light( 130 ) );
 	lingrad.setColorAt( 1, c.light( 70 ) );
 
 	// paint a black rectangle under the pattern to prevent glitches with transparent backgrounds
@@ -258,15 +259,17 @@ void BBTCOView::paintEvent( QPaintEvent * )
 		p.fillRect( rect(), lingrad );
 	}
 	else
+        */
 	{
 		p.fillRect( rect(), c );
 	}
-	
+
+	/*
 	// bar lines
 	const int lineSize = 3;
 	p.setPen( c.darker( 200 ) );
 
-	tact_t t = Engine::getBBTrackContainer()->lengthOfBB( m_bbTCO->bbTrackIndex() );
+        tact_t t = Engine::getBBTrackContainer()->lengthOfBB( m_bbTCO->bbTrackIndex() );
 	if( m_bbTCO->length() > MidiTime::ticksPerTact() && t > 0 )
 	{
 		for( int x = static_cast<int>( t * pixelsPerTact() );
@@ -278,19 +281,41 @@ void BBTCOView::paintEvent( QPaintEvent * )
 			 	x, rect().bottom() - TCO_BORDER_WIDTH );
 		}
 	}
+        */
+
+        if(m_bbTCO->getTrack()->isFrozen())
+        {
+                p.fillRect(0,0,width()-1,height()-1,
+                           QBrush(Qt::cyan,Qt::BDiagPattern));
+                p.fillRect(0,0,width()-1,height()-1,
+                           QBrush(QColor(0,160,160,64),Qt::SolidPattern));
+        }
+        else
+        {
+                //float  ppt=(width()-2*TCO_BORDER_WIDTH)/(float)m_bbTCO->length().getTact();
+                //tact_t tpg=Engine::getBBTrackContainer()->...lengthOfBB( m_bbTCO->bbTrackIndex() );
+                tick_t tpg=Engine::getBBTrackContainer()->
+                        beatLengthOfBB( m_bbTCO->bbTrackIndex() );
+                paintTileTacts(false,m_bbTCO->length().nextFullTact(),tpg,
+                               c,width(),height(),p);
+        }
 
 	// pattern name
 	paintTextLabel(m_bbTCO->name(), p);
 
+        /*
 	// inner border
 	p.setPen( c.lighter( 130 ) );
 	p.drawRect( 1, 1, rect().right() - TCO_BORDER_WIDTH,
-		rect().bottom() - TCO_BORDER_WIDTH );	
+		rect().bottom() - TCO_BORDER_WIDTH );
 
 	// outer border
 	p.setPen( c.darker( 300 ) );
 	p.drawRect( 0, 0, rect().right(), rect().bottom() );
-	
+        */
+        paintTileBorder(false,c,width(),height(),p);
+
+        /*
 	// draw the 'muted' pixmap only if the pattern was manualy muted
 	if( m_bbTCO->isMuted() )
 	{
@@ -299,11 +324,12 @@ void BBTCOView::paintEvent( QPaintEvent * )
 		p.drawPixmap( spacing, height() - ( size + spacing ),
 			embed::getIconPixmap( "muted", size, size ) );
 	}
-	
+	*/
+        paintMutedIcon(m_bbTCO->isMuted(),p);
+
 	p.end();
-	
+
 	painter.drawPixmap( 0, 0, m_paintPixmap );
-	
 }
 
 
@@ -453,7 +479,7 @@ BBTrack::~BBTrack()
 
 // play _frames frames of given TCO within starting with _start
 bool BBTrack::play( const MidiTime & _start, const fpp_t _frames,
-					const f_cnt_t _offset, int _tco_num )
+                    const f_cnt_t _offset, int _tco_num )
 {
 	if( isMuted() )
 	{
@@ -462,6 +488,7 @@ bool BBTrack::play( const MidiTime & _start, const fpp_t _frames,
 
 	if( _tco_num >= 0 )
 	{
+                // playing in BB editor qInfo("tco_num=%d",_tco_num);
 		return Engine::getBBTrackContainer()->play( _start, _frames, _offset, s_infoMap[this] );
 	}
 
@@ -478,13 +505,15 @@ bool BBTrack::play( const MidiTime & _start, const fpp_t _frames,
 	for( tcoVector::iterator it = tcos.begin(); it != tcos.end(); ++it )
 	{
 		if( !( *it )->isMuted() &&
-				( *it )->startPosition() >= lastPosition )
+                    ( *it )->startPosition() >= lastPosition )
 		{
 			lastPosition = ( *it )->startPosition();
 			lastLen = ( *it )->length();
 		}
 	}
 
+        //qInfo("bbtrack sz=%d _start=%d lastPos=%d lastLen=%d",
+        //      tcos.size(),_start,lastPosition,lastLen);
 	if( _start - lastPosition < lastLen )
 	{
 		return Engine::getBBTrackContainer()->play( _start - lastPosition, _frames, _offset, s_infoMap[this] );

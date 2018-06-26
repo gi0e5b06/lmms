@@ -282,7 +282,12 @@ void Fader::wheelEvent ( QWheelEvent* _we )
 	if( _we->modifiers() & Qt::ShiftModifier )
         {
 		_we->accept();
-		model()->incValue( _we->delta() > 0 ? 1 : -1 );
+                if( _we->delta() > 0 )
+                        model()->incrValue();
+                else
+                if( _we->delta() < 0 )
+                        model()->decrValue();
+
 		updateTextFloat();
 		s_textFloat->setVisibilityTimeOut( 1000 );
 	}

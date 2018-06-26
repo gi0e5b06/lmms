@@ -39,27 +39,14 @@ class DropToolBar;
 class Editor : public QMainWindow
 {
 	Q_OBJECT
-public:
+
+ public:
 	void setPauseIcon(bool displayPauseIcon=true);
 	QAction *playAction() const;
-protected:
-	DropToolBar * addDropToolBarToTop(QString const & windowTitle);
-	DropToolBar * addDropToolBar(Qt::ToolBarArea whereToAdd, QString const & windowTitle);
-	DropToolBar * addDropToolBar(QWidget * parent, Qt::ToolBarArea whereToAdd, QString const & windowTitle);
 
-protected slots:
-	virtual void play() {}
-	virtual void record() {}
-	virtual void recordAccompany() {}
-	virtual void stop() {}
+	static const QVector<float> ZOOM_LEVELS;
 
-private slots:
-	/// Called by pressing the space key. Plays or stops.
-	void togglePlayStop();
-
-signals:
-
-protected:
+ protected:
 	/// \brief	Constructor.
 	///
 	/// \param	record	If set true, the editor's toolbar will contain record
@@ -67,7 +54,26 @@ protected:
 	Editor(bool record = false);
 	virtual ~Editor();
 
+	DropToolBar * addDropToolBarToTop(QString const & windowTitle);
+	DropToolBar * addDropToolBar(Qt::ToolBarArea whereToAdd,
+                                     QString const & windowTitle);
+	DropToolBar * addDropToolBar(QWidget * parent,
+                                     Qt::ToolBarArea whereToAdd,
+                                     QString const & windowTitle);
 
+ protected slots:
+	virtual void play() {}
+	virtual void record() {}
+	virtual void recordAccompany() {}
+	virtual void stop() {}
+
+ private slots:
+	/// Called by pressing the space key. Plays or stops.
+	void togglePlayStop();
+
+signals:
+
+protected:
 	DropToolBar* m_toolBar;
 
 	QAction* m_playAction;

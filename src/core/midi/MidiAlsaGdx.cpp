@@ -179,7 +179,7 @@ MidiAlsaGdx::MidiAlsaGdx() :
 		qCritical("MidiAlsaGdx: pipe");
 	}
 
-	start( QThread::IdlePriority );
+	start( QThread::LowPriority );//IdlePriority );
 	//start( QThread::HighestPriority ); //GDX
 }
 

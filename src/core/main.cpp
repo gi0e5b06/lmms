@@ -243,13 +243,14 @@ int main( int argc, char * * argv )
 	signal(SIGFPE, signalHandler);
 #endif
 
-	#ifdef LMMS_BUILD_WIN32
+#ifdef LMMS_BUILD_WIN32
 	if(!freopen("lmms-err.txt","a",stderr))
-		qWarning("Could not redirect stderr to lmms-err.txt");
-	#endif
+		qWarning("Warning: Could not redirect stderr to lmms-err.txt");
+#endif
 
 	// initialize memory managers
 	MM_INIT //MemoryManager::init();
+        ConfigManager::init(argv[0]);
 	NotePlayHandleManager::init();
 
 	// intialize RNG
@@ -276,11 +277,6 @@ int main( int argc, char * * argv )
 		    arg == "--render"  || arg == "-r" )
 		{
 			coreOnly = true;
-		}
-		else if( arg == "--rendertracks" )
-		{
-			coreOnly = true;
-			renderTracks = true;
 		}
 		else if( arg == "--allowroot" )
 		{
@@ -315,7 +311,7 @@ int main( int argc, char * * argv )
 
 	Mixer::qualitySettings qs( Mixer::qualitySettings::Mode_HighQuality );
 	//OutputSettings os( 44100, OutputSettings::BitRateSettings(160, false), OutputSettings::Depth_16Bit, OutputSettings::StereoMode_JointStereo );
-        OutputSettings os( 48000, OutputSettings::BitRateSettings(320, false), OutputSettings::Depth_32Bit, OutputSettings::StereoMode_JointStereo );
+        OutputSettings os( 44100, OutputSettings::BitRateSettings(320, false), OutputSettings::Depth_32Bit, OutputSettings::StereoMode_JointStereo );
 	ProjectRenderer::ExportFileFormats eff = ProjectRenderer::WaveFile;
 
 	// second of two command-line parsing stages
@@ -339,8 +335,9 @@ int main( int argc, char * * argv )
 
 			if( i == argc )
 			{
-				qWarning( "\nNo input file specified.\n\n"
-	"Try \"%s --help\" for more information.\n\n", argv[0] );
+				qWarning("Error: No input file specified.\n"
+                                         "       Try \"%s --help\" for more information.",
+                                         argv[0] );
 				return EXIT_FAILURE;
 			}
 
@@ -366,7 +363,7 @@ int main( int argc, char * * argv )
 #ifdef LMMS_BUILD_WIN32
 			if( allowRoot )
 			{
-				qWarning( "\nOption \"--allowroot\" will be ignored on this platform.\n\n" );
+				qNotice("Notice: Option \"--allowroot\" is ignored on this platform.");
 			}
 #endif
 
@@ -377,8 +374,8 @@ int main( int argc, char * * argv )
 
 			if( i == argc )
 			{
-				qWarning( "\nNo input file specified.\n\n"
-	"Try \"%s --help\" for more information.\n\n", argv[0] );
+				qWarning("Error: No input file specified.\n"
+                                         "     : Try \"%s --help\" for more information.",argv[0]);
 				return EXIT_FAILURE;
 			}
 
@@ -396,8 +393,8 @@ int main( int argc, char * * argv )
 
 			if( i == argc )
 			{
-				qWarning( "\nNo input file specified.\n\n"
-	"Try \"%s --help\" for more information.\n\n", argv[0] );
+				qWarning( "Error: No input file specified.\n"
+                                          "     : Try \"%s --help\" for more information.",argv[0]);
 				return EXIT_FAILURE;
 			}
 
@@ -405,14 +402,14 @@ int main( int argc, char * * argv )
 			fileToLoad = QString::fromLocal8Bit( argv[i] );
 			playOut = "yes";
 		}
-		else if( arg == "--render" || arg == "-r" || arg == "--rendertracks" )
+		else if( arg == "--render" || arg == "-r" )
 		{
 			++i;
 
 			if( i == argc )
 			{
-				qWarning( "\nNo input file specified.\n\n"
-	"Try \"%s --help\" for more information.\n\n", argv[0] );
+				qWarning("Error: No input file specified.\n"
+                                         "     : Try \"%s --help\" for more information.",argv[0]);
 				return EXIT_FAILURE;
 			}
 
@@ -424,14 +421,22 @@ int main( int argc, char * * argv )
 		{
 			renderLoop = true;
 		}
+		else if( arg == "--song" )
+		{
+			renderTracks = false;
+		}
+		else if( arg == "--tracks" || arg == "-t" )
+		{
+			renderTracks = true;
+		}
 		else if( arg == "--output" || arg == "-o" )
 		{
 			++i;
 
 			if( i == argc )
 			{
-				qWarning( "\nNo output file specified.\n\n"
-	"Try \"%s --help\" for more information.\n\n", argv[0] );
+				qWarning("Error: No output file specified.\n"
+                                         "     : Try \"%s --help\" for more information.",argv[0]);
 				return EXIT_FAILURE;
 			}
 
@@ -444,8 +449,8 @@ int main( int argc, char * * argv )
 
 			if( i == argc )
 			{
-				qWarning( "\nNo output format specified.\n\n"
-	"Try \"%s --help\" for more information.\n\n", argv[0] );
+				qWarning("Error: No output format specified.\n"
+                                         "     : Try \"%s --help\" for more information.",argv[0]);
 				return EXIT_FAILURE;
 			}
 
@@ -478,8 +483,9 @@ int main( int argc, char * * argv )
 			}
 			else
 			{
-				qWarning( "\nInvalid output format %s.\n\n"
-	"Try \"%s --help\" for more information.\n\n", argv[i], argv[0] );
+				qWarning("Error: Invalid output format %s.\n"
+                                         "     : Try \"%s --help\" for more information.",
+                                         argv[i], argv[0]);
 				return EXIT_FAILURE;
 			}
 		}
@@ -489,8 +495,8 @@ int main( int argc, char * * argv )
 
 			if( i == argc )
 			{
-				qWarning( "\nNo samplerate specified.\n\n"
-	"Try \"%s --help\" for more information.\n\n", argv[0] );
+				qWarning("Error: No samplerate specified.\n"
+                                         "     : Try \"%s --help\" for more information.",argv[0]);
 				return EXIT_FAILURE;
 			}
 
@@ -502,8 +508,9 @@ int main( int argc, char * * argv )
 			}
 			else
 			{
-				qWarning( "\nInvalid samplerate %s.\n\n"
-	"Try \"%s --help\" for more information.\n\n", argv[i], argv[0] );
+				qWarning("Error: Invalid samplerate %s.\n"
+                                         "     : Try \"%s --help\" for more information.",
+                                         argv[i], argv[0] );
 				return EXIT_FAILURE;
 			}
 		}
@@ -513,8 +520,8 @@ int main( int argc, char * * argv )
 
 			if( i == argc )
 			{
-				qWarning( "\nNo bitrate specified.\n\n"
-	"Try \"%s --help\" for more information.\n\n", argv[0] );
+				qWarning( "Error: No bitrate specified.\n"
+                                          "     : Try \"%s --help\" for more information.",argv[0]);
 				return EXIT_FAILURE;
 			}
 
@@ -529,8 +536,9 @@ int main( int argc, char * * argv )
 			}
 			else
 			{
-				qWarning( "\nInvalid bitrate %s.\n\n"
-	"Try \"%s --help\" for more information.\n\n", argv[i], argv[0] );
+				qWarning("Error: Invalid bitrate %s.\n"
+                                         "     : Try \"%s --help\" for more information.",
+                                         argv[i], argv[0] );
 				return EXIT_FAILURE;
 			}
 		}
@@ -540,29 +548,30 @@ int main( int argc, char * * argv )
 
 			if( i == argc )
 			{
-				qWarning( "\nNo stereo mode specified.\n\n"
-	"Try \"%s --help\" for more information.\n\n", argv[0] );
+				qWarning("Error: No stereo mode specified.\n"
+                                         "     : Try \"%s --help\" for more information.",argv[0]);
 				return EXIT_FAILURE;
 			}
 
 			QString const mode( argv[i] );
 
-			if( mode == "s" )
+			if( mode == "s" || mode == "stereo" )
 			{
 				os.setStereoMode(OutputSettings::StereoMode_Stereo);
 			}
-			else if( mode == "j" )
+			else if( mode == "j" || mode == "joint" )
 			{
 				os.setStereoMode(OutputSettings::StereoMode_JointStereo);
 			}
-			else if( mode == "m" )
+			else if( mode == "m" || mode == "mono" )
 			{
 				os.setStereoMode(OutputSettings::StereoMode_Mono);
 			}
 			else
 			{
-				qWarning( "\nInvalid stereo mode %s.\n\n"
-	"Try \"%s --help\" for more information.\n\n", argv[i], argv[0] );
+				qWarning("Error: Invalid stereo mode %s.\n"
+                                         "     : Try \"%s --help\" for more information.",
+                                         argv[i], argv[0] );
 				return EXIT_FAILURE;
 			}
 		}
@@ -576,8 +585,8 @@ int main( int argc, char * * argv )
 
 			if( i == argc )
 			{
-				qWarning( "\nNo interpolation method specified.\n\n"
-	"Try \"%s --help\" for more information.\n\n", argv[0] );
+				qWarning("Error: No interpolation method specified.\n"
+                                         "     : Try \"%s --help\" for more information.",argv[0]);
 				return EXIT_FAILURE;
 			}
 
@@ -602,8 +611,9 @@ int main( int argc, char * * argv )
 			}
 			else
 			{
-				qWarning( "\nInvalid interpolation method %s.\n\n"
-	"Try \"%s --help\" for more information.\n\n", argv[i], argv[0] );
+				qWarning("Error: Invalid interpolation method %s.\n"
+                                         "     : Try \"%s --help\" for more information.",
+                                         argv[i], argv[0] );
 				return EXIT_FAILURE;
 			}
 		}
@@ -613,8 +623,8 @@ int main( int argc, char * * argv )
 
 			if( i == argc )
 			{
-				qWarning( "\nNo oversampling specified.\n\n"
-	"Try \"%s --help\" for more information.\n\n", argv[0] );
+				qWarning("Error: No oversampling specified.\n"
+                                         "     : Try \"%s --help\" for more information.",argv[0]);
 				return EXIT_FAILURE;
 			}
 
@@ -636,8 +646,9 @@ int main( int argc, char * * argv )
 		qs.oversampling = Mixer::qualitySettings::Oversampling_8x;
 		break;
 				default:
-				qWarning( "\nInvalid oversampling %s.\n\n"
-	"Try \"%s --help\" for more information.\n\n", argv[i], argv[0] );
+				qWarning("Error: Invalid oversampling %s.\n"
+                                         "     : Try \"%s --help\" for more information.",
+                                         argv[i], argv[0] );
 				return EXIT_FAILURE;
 			}
 		}
@@ -647,8 +658,8 @@ int main( int argc, char * * argv )
 
 			if( i == argc )
 			{
-				qWarning( "\nNo file specified for importing.\n\n"
-	"Try \"%s --help\" for more information.\n\n", argv[0] );
+				qWarning("Error: No file specified for importing.\n"
+                                         "     : Try \"%s --help\" for more information.",argv[0]);
 				return EXIT_FAILURE;
 			}
 
@@ -668,8 +679,8 @@ int main( int argc, char * * argv )
 
 			if( i == argc )
 			{
-				qWarning( "\nNo profile specified.\n\n"
-	"Try \"%s --help\" for more information.\n\n", argv[0] );
+				qWarning("Error: No profile specified.\n"
+                                         "     : Try \"%s --help\" for more information.",argv[0]);
 				return EXIT_FAILURE;
 			}
 
@@ -682,8 +693,8 @@ int main( int argc, char * * argv )
 
 			if( i == argc )
 			{
-				qWarning( "\nNo configuration file specified.\n\n"
-	"Try \"%s --help\" for more information.\n\n", argv[0] );
+				qWarning("Error: No configuration file specified.\n"
+                                         "     : Try \"%s --help\" for more information.",argv[0]);
 				return EXIT_FAILURE;
 			}
 
@@ -693,8 +704,9 @@ int main( int argc, char * * argv )
 		{
 			if( argv[i][0] == '-' )
 			{
-				qWarning( "\nInvalid option %s.\n\n"
-	"Try \"%s --help\" for more information.\n\n", argv[i], argv[0] );
+				qWarning("Error: Invalid option %s.\n"
+                                         "     : Try \"%s --help\" for more information.",
+                                         argv[i],argv[0]);
 				return EXIT_FAILURE;
 			}
 			fileToLoad = QString::fromLocal8Bit( argv[i] );
@@ -743,7 +755,7 @@ int main( int argc, char * * argv )
 				sched_get_priority_min( SCHED_FIFO ) ) / 2;
 	if( sched_setscheduler( 0, SCHED_FIFO, &sparam ) == -1 )
 	{
-		qInfo( "Notice: could not set realtime priority." );
+		qNotice( "Notice: Could not set realtime priority." );
 	}
 #endif
 #endif
@@ -752,7 +764,7 @@ int main( int argc, char * * argv )
 #ifdef LMMS_BUILD_WIN32
 	if( !SetPriorityClass( GetCurrentProcess(), HIGH_PRIORITY_CLASS ) )
 	{
-		qWarning( "Notice: could not set high priority." );
+		qNotice( "Notice: Could not set high priority." );
 	}
 #endif
 
@@ -776,6 +788,29 @@ int main( int argc, char * * argv )
 	// without starting the GUI
 	if( !renderOut.isEmpty() )
 	{
+		// when rendering multiple tracks, renderOut is a directory
+		// otherwise, it is a file, so we need to append the file extension
+		if ( !renderTracks )
+		{
+			if(renderOut != "-")
+                        {
+                                renderOut = baseName( renderOut ) +
+					ProjectRenderer::getFileExtensionFromFormat(eff);
+                                QFileInfo fi(renderOut);
+                                // to check if(!fi.isWritable()) ...
+                        }
+		}
+                else
+                {
+                        QFileInfo fi(renderOut);
+                        if(!fi.exists()||!fi.isDir()) // to check !fi.isWritable()||!fi.isWritable()
+                        {
+                                qCritical( "Error: invalid output directory %s, aborting!",
+                                           renderOut.toUtf8().constData() );
+                                exit( EXIT_FAILURE );
+                        }
+                }
+
 		Engine::init( true );
 		destroyEngine = true;
 
@@ -792,15 +827,6 @@ int main( int argc, char * * argv )
 		qWarning( "Done" );
 
 		Engine::getSong()->setExportLoop( renderLoop );
-
-		// when rendering multiple tracks, renderOut is a directory
-		// otherwise, it is a file, so we need to append the file extension
-		if ( !renderTracks )
-		{
-			if(renderOut != "-")
-				renderOut = baseName( renderOut ) +
-					ProjectRenderer::getFileExtensionFromFormat(eff);
-		}
 
 		// create renderer
 		RenderManager * r = new RenderManager( qs, os, eff, renderOut );
@@ -866,6 +892,7 @@ int main( int argc, char * * argv )
 	*/
 	else // otherwise, start the GUI
 	{
+                //qInfo("main: initialize gui");
 		new GuiApplication(playOut.isEmpty());
 
 		// re-intialize RNG - shared libraries might have srand() or

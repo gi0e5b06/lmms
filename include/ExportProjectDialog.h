@@ -23,44 +23,54 @@
  *
  */
 
-
 #ifndef EXPORT_PROJECT_DIALOG_H
 #define EXPORT_PROJECT_DIALOG_H
 
-#include <QDialog>
 #include <memory>
-#include "ui_export_project.h"
+
+#include <QDialog>
 
 #include "ProjectRenderer.h"
 #include "RenderManager.h"
+#include "ui_export_project.h"
 
-class ExportProjectDialog : public QDialog, public Ui::ExportProjectDialog
+class ExportProjectDialog
+      : public QDialog
+      , public Ui::ExportProjectDialog
 {
-	Q_OBJECT
-public:
-	ExportProjectDialog( const QString & _file_name, QWidget * _parent, bool multi_export );
+    Q_OBJECT
+  public:
+    ExportProjectDialog(const QString& _file_name,
+            QWidget*                   _parent,
+            bool                       multi_export);
 
-protected:
-	virtual void reject( void );
-	virtual void closeEvent( QCloseEvent * _ce );
+  protected:
+    virtual void
+            reject(void);
+    virtual void
+            closeEvent(QCloseEvent* _ce);
 
+  private slots:
+    void
+            startBtnClicked(void);
+    void
+            updateTitleBar(int);
+    void
+            accept();
+    void
+            startExport();
 
-private slots:
-	void startBtnClicked( void );
-	void updateTitleBar( int );
-	void accept();
-	void startExport();
+    void
+            onFileFormatChanged(int);
 
-	void onFileFormatChanged(int);
+  private:
+    QString m_fileName;
+    QString m_dirName;
+    QString m_fileExtension;
+    bool    m_multiExport;
 
-private:
-	QString m_fileName;
-	QString m_dirName;
-	QString m_fileExtension;
-	bool m_multiExport;
-
-	ProjectRenderer::ExportFileFormats m_ft;
-	std::unique_ptr<RenderManager> m_renderManager;
-} ;
+    ProjectRenderer::ExportFileFormats m_ft;
+    std::unique_ptr<RenderManager>     m_renderManager;
+};
 
 #endif

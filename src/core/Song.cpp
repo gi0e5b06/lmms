@@ -23,6 +23,7 @@
  */
 
 #include "Song.h"
+
 #include <QTextStream>
 #include <QCoreApplication>
 #include <QDebug>
@@ -63,7 +64,6 @@
 
 
 tick_t MidiTime::s_ticksPerTact = DefaultTicksPerTact;
-
 
 
 Song::Song() :
@@ -821,6 +821,14 @@ void Song::removeBar()
 
 
 
+void Song::addInstrumentTrack()
+{
+	(void) Track::create( Track::InstrumentTrack, this );
+}
+
+
+
+
 void Song::addBBTrack()
 {
 	Track * t = Track::create( Track::BBTrack, this );
@@ -1228,7 +1236,7 @@ void Song::loadProject( const QString & fileName )
 
 
 // only save current song as _filename and do nothing else
-bool Song::saveProjectFile( const QString & filename )
+bool Song::saveProjectFile(const QString& _fileName)
 {
 	if( m_savingProject )
 	{
@@ -1270,7 +1278,15 @@ bool Song::saveProjectFile( const QString & filename )
 
 	m_savingProject = false;
 
-	return dataFile.writeFile( filename );
+	bool r=dataFile.writeFile( _fileName );
+        if(r && (_fileName==m_fileName))
+        {
+                //QFileInfo fi(filename);
+                dataFile.writeFile(projectDir()+QDir::separator()+"project.mmp");
+                dataFile.writeFile(projectDir()+QDir::separator()+"backup"+QDir::separator()+
+                                   QDate::currentDate().toString("yyyyMMdd")+".mmpz");
+        }
+        return r;
 }
 
 
@@ -1280,6 +1296,7 @@ bool Song::guiSaveProject()
 {
 	DataFile dataFile( DataFile::SongProject );
 	m_fileName = dataFile.nameWithExtension( m_fileName );
+        createProjectTree();
 	if( saveProjectFile( m_fileName ) && gui != nullptr )
 	{
 		TextFloat::displayMessage( tr( "Project saved" ),
@@ -1389,10 +1406,59 @@ void Song::removeAllControllers()
 
 
 
+
+QString Song::projectDir()
+{
+        QString fname=m_fileName;
+        if(fname.isEmpty())
+        {
+                qWarning("Song::projectDir no project filename");
+                fname=ConfigManager::inst()->userProjectsDir()+QDir::separator()+
+                        tr("untitled")+".mmp";
+        }
+
+        qInfo("Song::projectDir filename is %s",qPrintable(fname));
+        QFileInfo fi(fname);
+        QString   fs=fi.suffix().toLower();
+        qInfo("Song::projectDir suffix is %s",qPrintable(fs));
+        if((fs!="mmp")&&(fs!="mmpz"))
+        {
+                qWarning("Song::projectDir invalid project suffix: %s",
+                         qPrintable(fi.suffix()));
+                fs="mmp";
+                fname+="."+fs;
+                fi=QFileInfo(fname);
+        }
+
+        QString pname=fi.completeBaseName();
+        qInfo("Song::projectDir pname is %s",qPrintable(pname));
+        QString pdir =fi.absolutePath();       // ~/lmms/projects
+        qInfo("Song::projectDir pdir is %s",qPrintable(pdir));
+        return pdir+QDir::separator()+pname;
+}
+
+
+bool Song::createProjectTree()
+{
+        QString r=projectDir();
+        qInfo("Song::createProjectTree %s",qPrintable(r));
+        QDir pdir(r);
+        pdir.mkpath("backup");
+        pdir.mkpath("tracks");
+        pdir.mkpath(QString("tracks")+QDir::separator()+"rendered");
+        pdir.mkpath(QString("tracks")+QDir::separator()+"frozen");
+        // samples/used
+        pdir.mkpath(QString("song")+QDir::separator()+"rendered");
+
+        return true;
+}
+
+
 void Song::exportProjectTracks()
 {
 	exportProject( true );
 }
+
 
 void Song::exportProject( bool multiExport )
 {
@@ -1416,7 +1482,10 @@ void Song::exportProject( bool multiExport )
 		efd.setWindowTitle( tr( "Select directory for writing exported tracks..." ) );
 		if( !m_fileName.isEmpty() )
 		{
-			efd.setDirectory( QFileInfo( m_fileName ).absolutePath() );
+                        createProjectTree();
+                        //QString rtdp= QFileInfo( m_fileName ).absolutePath();
+                        QString rtdp=projectDir()+QDir::separator()+"tracks"+QDir::separator()+"rendered";
+                        efd.setDirectory(rtdp);
 		}
 	}
 	else
@@ -1427,7 +1496,7 @@ void Song::exportProject( bool multiExport )
 		while( ProjectRenderer::fileEncodeDevices[idx].m_fileFormat != ProjectRenderer::NumFileFormats)
 		{
 			if(ProjectRenderer::fileEncodeDevices[idx].isAvailable()) {
-				types << tr(ProjectRenderer::fileEncodeDevices[idx].m_description);
+				types << /*tr*/(ProjectRenderer::fileEncodeDevices[idx].m_description);
 			}
 			++idx;
 		}
@@ -1435,7 +1504,10 @@ void Song::exportProject( bool multiExport )
 		QString baseFilename;
 		if( !m_fileName.isEmpty() )
 		{
-			efd.setDirectory( QFileInfo( m_fileName ).absolutePath() );
+                        createProjectTree();
+                        //QString rtdp= QFileInfo( m_fileName ).absolutePath();
+                        QString rtdp= projectDir()+QDir::separator()+"song"+QDir::separator()+"rendered";
+                        efd.setDirectory(rtdp);
 			baseFilename = QFileInfo( m_fileName ).completeBaseName();
 		}
 		else

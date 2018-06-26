@@ -84,7 +84,7 @@ LadspaEffect::LadspaEffect( Model * _parent,
 
 	setDisplayName( manager->getShortName( m_key ) );
 
-	qInfo("LadspaEffect::LadspaEffect pluginInstantiation()");
+	//qInfo("LadspaEffect::LadspaEffect pluginInstantiation()");
 	setObjectName(QString("LadspaEffect-%1").arg((unsigned long)this,16));
 	pluginInstantiation();
 

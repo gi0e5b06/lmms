@@ -47,10 +47,14 @@ BBEditor::BBEditor( BBTrackContainer* tc ) :
 	setWindowTitle( tr( "Beat+Bassline Editor" ) );
 	setCentralWidget(m_trackContainerView);
 
-	setAcceptDrops(true);
-	m_toolBar->setAcceptDrops(true);
-	connect(m_toolBar, SIGNAL(dragEntered(QDragEnterEvent*)), m_trackContainerView, SLOT(dragEnterEvent(QDragEnterEvent*)));
-	connect(m_toolBar, SIGNAL(dropped(QDropEvent*)), m_trackContainerView, SLOT(dropEvent(QDropEvent*)));
+	/*
+          setAcceptDrops(true);
+          m_toolBar->setAcceptDrops(true);
+          connect(m_toolBar, SIGNAL(dragEntered(QDragEnterEvent*)),
+          m_trackContainerView, SLOT(dragEnterEvent(QDragEnterEvent*)));
+          connect(m_toolBar, SIGNAL(dropped(QDropEvent*)),
+          m_trackContainerView, SLOT(dropEvent(QDropEvent*)));
+        */
 
 	// TODO: Use style sheet
 	if( ConfigManager::inst()->value( "ui",
@@ -69,50 +73,70 @@ BBEditor::BBEditor( BBTrackContainer* tc ) :
 	m_playAction->setToolTip(tr( "Play/pause current beat/bassline (Space)" ));
 	m_stopAction->setToolTip(tr( "Stop playback of current beat/bassline (Space)" ));
 
-	m_playAction->setWhatsThis(
-		tr( "Click here to play the current "
-			"beat/bassline.  The beat/bassline is automatically "
-			"looped when its end is reached." ) );
-	m_stopAction->setWhatsThis(
-		tr( "Click here to stop playing of current "
-							"beat/bassline." ) );
+	m_playAction->setWhatsThis(tr( "Click here to play the current "
+                                       "beat/bassline.  The beat/bassline is automatically "
+                                       "looped when its end is reached." ));
+	m_stopAction->setWhatsThis(tr( "Click here to stop playing of current "
+                                       "beat/bassline." ));
 
 
 	// Beat selector
 	DropToolBar *beatSelectionToolBar = addDropToolBarToTop(tr("Beat selector"));
 
 	m_bbComboBox = new ComboBox( m_toolBar );
-	m_bbComboBox->setFixedSize( 200, 22 );
+	m_bbComboBox->setFixedSize( 140, 32 );
 	m_bbComboBox->setModel( &tc->m_bbComboBoxModel );
 
+	beatSelectionToolBar->addSeparator();
 	beatSelectionToolBar->addWidget( m_bbComboBox );
-
+	beatSelectionToolBar->addSeparator();
 
 	// Track actions
-	DropToolBar *trackAndStepActionsToolBar = addDropToolBarToTop(tr("Track and step actions"));
+	DropToolBar* trackActionsToolBar = addDropToolBarToTop(tr("Track actions"));
 
+	trackActionsToolBar->addAction(embed::getIconPixmap("add_instrument_track"),
+                                       tr("Add instrument-track"),
+                                       m_trackContainerView,
+                                       SLOT(addInstrumentTrack()));
 
-	trackAndStepActionsToolBar->addAction(embed::getIconPixmap("add_bb_track"), tr("Add beat/bassline"),
-						 Engine::getSong(), SLOT(addBBTrack()));
-	trackAndStepActionsToolBar->addAction(
-				embed::getIconPixmap("add_sample_track"),
-				tr("Add sample-track"), m_trackContainerView,
-				SLOT(addSampleTrack()));
-	trackAndStepActionsToolBar->addAction(embed::getIconPixmap("add_automation"), tr("Add automation-track"),
-						 m_trackContainerView, SLOT(addAutomationTrack()));
+        /*
+	trackActionsToolBar->addAction(embed::getIconPixmap("add_bb_track"),
+                                       tr("Add beat/bassline"),
+                                       Engine::getSong(),
+                                       SLOT(addBBTrack()));
+        */
 
+	trackActionsToolBar->addAction(embed::getIconPixmap("add_sample_track"),
+                                       tr("Add sample-track"),
+                                       m_trackContainerView,
+                                       SLOT(addSampleTrack()));
+
+	trackActionsToolBar->addAction(embed::getIconPixmap("add_automation_track"),
+                                       tr("Add automation-track"),
+                                       m_trackContainerView,
+                                       SLOT(addAutomationTrack()));
+
+        /*
 	QWidget* stretch = new QWidget(m_toolBar);
 	stretch->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-	trackAndStepActionsToolBar->addWidget(stretch);
-
+	trackActionsToolBar->addWidget(stretch);
+        */
 
 	// Step actions
-	trackAndStepActionsToolBar->addAction(embed::getIconPixmap("step_btn_remove"), tr("Remove steps"),
-						 m_trackContainerView, SLOT(removeSteps()));
-	trackAndStepActionsToolBar->addAction(embed::getIconPixmap("step_btn_add"), tr("Add steps"),
-						 m_trackContainerView, SLOT( addSteps()));
-	trackAndStepActionsToolBar->addAction( embed::getIconPixmap( "step_btn_duplicate" ), tr( "Clone Steps" ),
-						  m_trackContainerView, SLOT( cloneSteps() ) );
+	DropToolBar* stepActionsToolBar = addDropToolBarToTop(tr("Step actions"));
+
+	stepActionsToolBar->addAction(embed::getIconPixmap("step_btn_remove"),
+                                      tr("Remove steps"),
+                                      m_trackContainerView,
+                                      SLOT(removeSteps()));
+        stepActionsToolBar->addAction(embed::getIconPixmap("step_btn_add"),
+                                      tr("Add steps"),
+                                      m_trackContainerView,
+                                      SLOT( addSteps()));
+	stepActionsToolBar->addAction(embed::getIconPixmap("step_btn_duplicate"),
+                                      tr( "Clone Steps" ),
+                                      m_trackContainerView,
+                                      SLOT(cloneSteps()));
 
 	connect( &tc->m_bbComboBoxModel, SIGNAL( dataChanged() ),
 			m_trackContainerView, SLOT( updatePosition() ) );
@@ -201,9 +225,17 @@ void BBTrackContainerView::removeSteps()
 		if( ( *it )->type() == Track::InstrumentTrack )
 		{
 			Pattern* p = static_cast<Pattern *>( ( *it )->getTCO( m_bbtc->currentBB() ) );
-			p->removeSteps();
+			p->removeBarSteps();
 		}
 	}
+}
+
+
+
+
+void BBTrackContainerView::addInstrumentTrack()
+{
+	(void) Track::create( Track::InstrumentTrack, model() );
 }
 
 
@@ -296,7 +328,7 @@ void BBTrackContainerView::makeSteps( bool clone )
 				p->cloneSteps();
 			} else
 			{
-				p->addSteps();
+				p->addBarSteps();
 			}
 		}
 	}

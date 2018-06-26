@@ -233,6 +233,9 @@ signals:
 	void newNote();
 
 
+public slots:
+        virtual void toggleFrozen();
+
 protected:
 	virtual QString nodeName() const
 	{
@@ -245,8 +248,6 @@ protected slots:
 	void updatePitch();
 	void updatePitchRange();
 	void updateEffectChannel();
-        void updateFrozenBuffer();
-
 
 private:
 	MidiPort m_midiPort;
@@ -337,6 +338,7 @@ public:
         QMenu* createMidiOutputMenu();
 
 protected:
+	virtual void paintEvent( QPaintEvent * pe );
 	virtual void resizeEvent( QResizeEvent * re );
 	virtual void dragEnterEvent( QDragEnterEvent * _dee );
 	virtual void dropEvent( QDropEvent * _de );

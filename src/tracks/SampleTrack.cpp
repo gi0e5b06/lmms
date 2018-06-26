@@ -182,7 +182,7 @@ void SampleTCO::doConnections()
 	connect( this, SIGNAL( dataChanged() ),
                  this, SLOT( playbackPositionChanged() ) );
 	//care about mute track
-	connect( getTrack()->getMutedModel(), SIGNAL( dataChanged() ),
+	connect( getTrack()->mutedModel(), SIGNAL( dataChanged() ),
                  this, SLOT( playbackPositionChanged() ) );
 	//care about TCO position
 	connect( this, SIGNAL( positionChanged() ),
@@ -443,13 +443,8 @@ void SampleTCOView::contextMenuEvent( QContextMenuEvent * _cme )
 					tr( "Paste" ), m_tco, SLOT( paste() ) );
 	contextMenu.addSeparator();
 	contextMenu.addAction( embed::getIconPixmap( "muted" ),
-				tr( "Mute/unmute (<%1> + middle click)" ).arg(
-					#ifdef LMMS_BUILD_APPLE
-					"⌘"),
-					#else
-					"Ctrl"),
-					#endif
-						m_tco, SLOT( toggleMute() ) );
+                               tr( "Mute/unmute (<%1> + middle click)" ).arg(UI_CTRL_KEY),
+                               m_tco, SLOT( toggleMute() ) );
 	/*contextMenu.addAction( embed::getIconPixmap( "record" ),
 				tr( "Set/clear record" ),
 						m_tco, SLOT( toggleRecord() ) );*/
@@ -581,6 +576,7 @@ void SampleTCOView::paintEvent( QPaintEvent * pe )
                 ? selectedColor()
                 : ( muted ? mutedBackgroundColor() : painter.background().color() );
 
+        /*
 	// paint a black rectangle under the pattern to prevent glitches with transparent backgrounds
 	p.fillRect( rect(), QColor( 0, 0, 0 ) );
 
@@ -592,6 +588,7 @@ void SampleTCOView::paintEvent( QPaintEvent * pe )
 		p.fillRect( rect(), lingrad );
 	}
 	else
+        */
 	{
 		p.fillRect( rect(), c );
 	}
@@ -612,6 +609,20 @@ void SampleTCOView::paintEvent( QPaintEvent * pe )
 			qMax( static_cast<int>( m_tco->sampleLength() * ppt / ticksPerTact ), 1 ), rect().bottom() - 2 * spacing );
 	m_tco->m_sampleBuffer->visualize(p,r);//, pe->rect() );
 
+
+        if(m_tco->getTrack()->isFrozen())
+        {
+                p.fillRect(0,0,width()-1,height()-1,
+                           QBrush(Qt::cyan,Qt::BDiagPattern));
+                p.fillRect(0,0,width()-1,height()-1,
+                           QBrush(QColor(0,160,160,64),Qt::SolidPattern));
+        }
+        else
+        {
+                paintTileTacts(false,m_tco->length().nextFullTact(),1,
+                               c,width(),height(),p);
+        }
+
 	QFileInfo fileInfo(m_tco->m_sampleBuffer->audioFile());
 	QString filename = fileInfo.fileName();
 	paintTextLabel(filename, p);
@@ -619,15 +630,19 @@ void SampleTCOView::paintEvent( QPaintEvent * pe )
 	// disable antialiasing for borders, since its not needed
 	p.setRenderHint( QPainter::Antialiasing, false );
 
+        /*
 	// inner border
 	p.setPen( c.lighter( 160 ) );
-	p.drawRect( 1, 1, rect().right() - TCO_BORDER_WIDTH, 
+	p.drawRect( 1, 1, rect().right() - TCO_BORDER_WIDTH,
 		rect().bottom() - TCO_BORDER_WIDTH );
 
 	// outer border
 	p.setPen( c.darker( 300 ) );
 	p.drawRect( 0, 0, rect().right(), rect().bottom() );
+        */
+        paintTileBorder(false,c,width(),height(),p);
 
+        /*
 	// draw the 'muted' pixmap only if the pattern was manualy muted
 	if( m_tco->isMuted() )
 	{
@@ -636,6 +651,8 @@ void SampleTCOView::paintEvent( QPaintEvent * pe )
 		p.drawPixmap( spacing, height() - ( size + spacing ),
 			embed::getIconPixmap( "muted", size, size ) );
 	}
+        */
+        paintMutedIcon(m_tco->isMuted(),p);
 
 	// recording sample tracks is not possible at the moment 
 
@@ -916,10 +933,12 @@ SampleTrackView::SampleTrackView(SampleTrack* _st, TrackContainerView* _tcv) :
 	//connect( m_tlb, SIGNAL( clicked( bool ) ),
         //         this, SLOT( showEffects() ) );
 	connect( m_tlb, SIGNAL( toggled( bool ) ),
-                 this, SLOT( toggleSampleWindow( bool ) ) );
+                 this, SLOT( toggleVisibility( bool ) ) );
 
-	connect( _st, SIGNAL( nameChanged() ),
+	connect( _st, SIGNAL( dataChanged() ),
                  m_tlb, SLOT( update() ) );
+	connect( _st, SIGNAL( dataChanged() ),
+                 this, SLOT( updateName() ) );
 
 	// creation of widgets for track-settings-widget
 	int widgetWidth;
@@ -955,11 +974,12 @@ SampleTrackView::SampleTrackView(SampleTrack* _st, TrackContainerView* _tcv) :
 	m_panningKnob->show();
 
 	m_effectRack = new EffectRackView( _st->audioPort()->effects() );
-	m_effectRack->setFixedSize( 240, 242 );
+	m_effectRack->setFixedSize(250+3,200);//( 240, 242 );
+
+        m_effectRack->setWindowTitle( QString(tr("Effects on %1")).arg(_st->name()) );
+        m_effectRack->setWindowIcon( embed::getIconPixmap( "sample_track" ) );
 
         m_window=SubWindow::putWidgetOnWorkspace(m_effectRack,false,false,false);
-        m_window->setWindowTitle( _st->name() );
-        m_window->setWindowIcon( embed::getIconPixmap( "instrument_track" ) );
         m_window->hide();
 
 	m_activityIndicator = new FadeButton( QApplication::palette().color( QPalette::Active,
@@ -978,6 +998,8 @@ SampleTrackView::SampleTrackView(SampleTrack* _st, TrackContainerView* _tcv) :
 
 	connect( &_st->m_mutedModel, SIGNAL( dataChanged() ),
                  this, SLOT( muteChanged() ) );
+	//connect( _st, SIGNAL( dataChanged() ),
+        //this, SLOT( modelChanged() ) );
 
 	setModel( _st );
 }
@@ -992,12 +1014,26 @@ SampleTrackView::~SampleTrackView()
 }
 
 
+void SampleTrackView::updateName()
+{
+        //qInfo("SampleTrackView::updateName");
+	SampleTrack* st = castModel<SampleTrack>();
+        m_effectRack->setWindowTitle( QString(tr("Effects on %1")).arg(st->name()) );
+}
+
 
 
 void SampleTrackView::modelChanged()
 {
-	SampleTrack * st = castModel<SampleTrack>();
+	SampleTrack* st = castModel<SampleTrack>();
+
+	st->disconnect( SIGNAL( nameChanged() ), this );
+	connect( st, SIGNAL( nameChanged() ),
+                 this, SLOT( updateName() ) );
+
 	m_volumeKnob->setModel( &st->m_volumeModel );
+	m_panningKnob->setModel( &st->m_panningModel );
+	//m_effectChannelNumber->setModel( &st->m_effectChannelModel );
 
 	TrackView::modelChanged();
 }
@@ -1210,7 +1246,7 @@ void SampleTrackView::showEffects()
 */
 
 
-void SampleTrackView::toggleSampleWindow( bool _on )
+void SampleTrackView::toggleVisibility( bool _on )
 {
         //sampleTrackWindow()->toggleVisibility( _on );
 

@@ -383,6 +383,13 @@ bool RemotePlugin::process( const sampleFrame * _in_buf,
 void RemotePlugin::processMidiEvent( const MidiEvent & _e,
 							const f_cnt_t _offset )
 {
+        /*
+          if(_e.type()==MidiEventTypes::MidiNoteOff ||
+          _e.type()==MidiEventTypes::MidiNoteOn)
+          qInfo("RemotePlugin::processMidiEvent t=%d c=%d k=%d v=%d",
+          _e.type(),_e.channel(),_e.param(0),_e.param(1));
+        */
+
 	message m( IdMidiEvent );
 	m.addInt( _e.type() );
 	m.addInt( _e.channel() );

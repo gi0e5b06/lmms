@@ -44,10 +44,10 @@
 #include "TextFloat.h"
 
 #include "lmmsversion.h"
+#include "Backtrace.h"
+
 
 static void findIds(const QDomElement& elem, QList<jo_id_t>& idList);
-
-
 
 
 DataFile::typeDescStruct
@@ -294,6 +294,7 @@ bool DataFile::writeFile( const QString& filename )
 	{
 		if( gui )
 		{
+                        BACKTRACE
 			QMessageBox::critical( NULL,
 				SongEditor::tr( "Could not write file" ),
 				SongEditor::tr( "Could not open %1 for writing. You probably are not permitted to "

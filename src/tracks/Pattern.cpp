@@ -45,6 +45,7 @@
 #include "MainWindow.h"
 
 #include <limits>
+#include <cmath>
 
 QPixmap * PatternView::s_stepBtnOn0 = NULL;
 QPixmap * PatternView::s_stepBtnOn200 = NULL;
@@ -56,13 +57,14 @@ QPixmap * PatternView::s_stepBtnOffLight = NULL;
 Pattern::Pattern( InstrumentTrack * _instrument_track ) :
 	TrackContentObject( _instrument_track ),
 	m_instrumentTrack( _instrument_track ),
-	m_patternType( BeatPattern ),
+	m_patternType( MelodyPattern ),
 	m_steps( MidiTime::stepsPerTact() )
 {
 	setName( _instrument_track->name() );
 	if( _instrument_track->trackContainer()
-					== Engine::getBBTrackContainer() )
+            == Engine::getBBTrackContainer() )
 	{
+                m_patternType = BeatPattern;
 		resizeToFirstTrack();
 	}
 	init();
@@ -183,25 +185,30 @@ void Pattern::updateLength()
 
 MidiTime Pattern::beatPatternLength() const
 {
-	tick_t max_length = MidiTime::ticksPerTact();
-
-	for( NoteVector::ConstIterator it = m_notes.begin();
-						it != m_notes.end(); ++it )
-	{
-		if( ( *it )->length() < 0 )
-		{
-			max_length = qMax<tick_t>( max_length,
-				( *it )->pos() + 1 );
-		}
-	}
+	tick_t max_length;
 
 	if( m_steps != MidiTime::stepsPerTact() )
 	{
 		max_length = m_steps * MidiTime::ticksPerTact() /
 						MidiTime::stepsPerTact();
 	}
+        else
+        {
+                max_length = MidiTime::ticksPerTact();
 
-	return MidiTime( max_length ).nextFullTact() * MidiTime::ticksPerTact();
+                for( NoteVector::ConstIterator it = m_notes.begin();
+                     it != m_notes.end(); ++it )
+                {
+                        if( ( *it )->length() < 0 )
+                        {
+                                max_length = qMax<tick_t>( max_length,
+                                                           ( *it )->pos() + 1 );
+                        }
+                }
+        }
+
+	return MidiTime( max_length );
+        //.nextFullTact() * MidiTime::ticksPerTact();
 }
 
 
@@ -496,13 +503,6 @@ void Pattern::clear()
 
 
 
-void Pattern::addSteps()
-{
-	m_steps += MidiTime::stepsPerTact();
-	updateLength();
-	emit dataChanged();
-}
-
 void Pattern::cloneSteps()
 {
 	int oldLength = m_steps;
@@ -524,12 +524,62 @@ void Pattern::cloneSteps()
 	emit dataChanged();
 }
 
+void Pattern::addBarSteps()
+{
+	m_steps += MidiTime::stepsPerTact();
+	updateLength();
+	emit dataChanged();
+}
 
+void Pattern::addBeatSteps()
+{
+	m_steps += MidiTime::stepsPerTact() /
+                Engine::getSong()->getTimeSigModel().getNumerator();
+	updateLength();
+	emit dataChanged();
+}
 
+void Pattern::addOneStep()
+{
+	m_steps ++; //= MidiTime::stepsPerTact();
+	updateLength();
+	emit dataChanged();
+}
 
-void Pattern::removeSteps()
+void Pattern::removeBarSteps()
 {
 	int n = MidiTime::stepsPerTact();
+	if( n < m_steps )
+	{
+		for( int i = m_steps - n; i < m_steps; ++i )
+		{
+			setStep( i, false );
+		}
+		m_steps -= n;
+		updateLength();
+		emit dataChanged();
+	}
+}
+
+void Pattern::removeBeatSteps()
+{
+	int n = MidiTime::stepsPerTact() /
+                Engine::getSong()->getTimeSigModel().getNumerator();
+	if( n < m_steps )
+	{
+		for( int i = m_steps - n; i < m_steps; ++i )
+		{
+			setStep( i, false );
+		}
+		m_steps -= n;
+		updateLength();
+		emit dataChanged();
+	}
+}
+
+void Pattern::removeOneStep()
+{
+        int n = 1;
 	if( n < m_steps )
 	{
 		for( int i = m_steps - n; i < m_steps; ++i )
@@ -724,14 +774,22 @@ void PatternView::constructContextMenu( QMenu * _cm )
 
 	if ( m_pat->type() == Pattern::BeatPattern )
 	{
-		_cm->addSeparator();
+                QMenu* sma=new QMenu(tr("Add steps"));
+                QMenu* smr=new QMenu(tr("Remove steps"));
+		sma->addAction( embed::getIconPixmap( "step_btn_add" ),
+                                tr( "One bar" ), m_pat, SLOT( addBarSteps() ) );
+		smr->addAction( embed::getIconPixmap( "step_btn_remove" ),
+                                tr( "One bar" ), m_pat, SLOT( removeBarSteps() ) );
+		sma->addAction( embed::getIconPixmap( "step_btn_add" ),
+                                tr( "One step" ), m_pat, SLOT( addOneStep() ) );
+		smr->addAction( embed::getIconPixmap( "step_btn_remove" ),
+                                tr( "One step" ), m_pat, SLOT( removeOneStep() ) );
 
-		_cm->addAction( embed::getIconPixmap( "step_btn_add" ),
-			tr( "Add steps" ), m_pat, SLOT( addSteps() ) );
-		_cm->addAction( embed::getIconPixmap( "step_btn_remove" ),
-			tr( "Remove steps" ), m_pat, SLOT( removeSteps() ) );
+		_cm->addSeparator();
+                _cm->addMenu(sma);
+                _cm->addMenu(smr);
 		_cm->addAction( embed::getIconPixmap( "step_btn_duplicate" ),
-			tr( "Clone Steps" ), m_pat, SLOT( cloneSteps() ) );
+                                tr( "Clone Steps" ), m_pat, SLOT( cloneSteps() ) );
 	}
 }
 
@@ -740,24 +798,35 @@ void PatternView::constructContextMenu( QMenu * _cm )
 
 void PatternView::mousePressEvent( QMouseEvent * _me )
 {
-	if( _me->button() == Qt::LeftButton &&
-				m_pat->m_patternType == Pattern::BeatPattern &&
-				( fixedTCOs() || pixelsPerTact() >= 96 ||
-				m_pat->m_steps != MidiTime::stepsPerTact() ) &&
-				_me->y() > height() - s_stepBtnOff->height() )
+        if(m_pat->getTrack()->isFrozen())
+                _me->ignore();
+
+        if( _me->button() == Qt::LeftButton &&
+            m_pat->m_patternType == Pattern::BeatPattern &&
+            ( fixedTCOs() || pixelsPerTact() >= 96 ||
+              m_pat->m_steps != MidiTime::stepsPerTact() ) &&
+            _me->y() > height() - s_stepBtnOff->height() )
 
 	// when mouse button is pressed in beat/bassline -mode
 
 	{
-//	get the step number that was clicked on and
-//	do calculations in floats to prevent rounding errors...
-		float tmp = ( ( float(_me->x()) - TCO_BORDER_WIDTH ) *
-				float( m_pat -> m_steps ) ) / float(width() - TCO_BORDER_WIDTH*2);
+                //	get the step number that was clicked on and
+                //	do calculations in floats to prevent rounding errors...
+		//float tmp = ( ( float(_me->x()) - TCO_BORDER_WIDTH ) *
+                //              float( m_pat -> m_steps ) ) / float(width() - TCO_BORDER_WIDTH*2);
+		//const int steps = qMax( 1, m_pat->m_steps );
+                const int ws= 16;
+                const int w1= 12;
+                const int h1= 24;
 
+		float tmp = ( float(_me->x()) - TCO_BORDER_WIDTH - 2 ) / ws ;
 		int step = int( tmp );
+                if((tmp-step)*ws>=w1) return;
+                if(_me->y()<(height()-h1)/2) return;
+                if(_me->y()>(height()+h1)/2) return;
 
-//	debugging to ensure we get the correct step...
-//		qDebug( "Step (%f) %d", tmp, step );
+                //	debugging to ensure we get the correct step...
+                //		qDebug( "Step (%f) %d", tmp, step );
 
 		if( step >= m_pat->m_steps )
 		{
@@ -796,6 +865,9 @@ void PatternView::mousePressEvent( QMouseEvent * _me )
 
 void PatternView::mouseDoubleClickEvent(QMouseEvent *_me)
 {
+        if(m_pat->getTrack()->isFrozen())
+                _me->ignore();
+
 	if( _me->button() != Qt::LeftButton )
 	{
 		_me->ignore();
@@ -812,6 +884,9 @@ void PatternView::mouseDoubleClickEvent(QMouseEvent *_me)
 
 void PatternView::wheelEvent( QWheelEvent * _we )
 {
+        if(m_pat->getTrack()->isFrozen())
+                _we->ignore();
+
 	if( m_pat->m_patternType == Pattern::BeatPattern &&
 				( fixedTCOs() || pixelsPerTact() >= 96 ||
 				m_pat->m_steps != MidiTime::stepsPerTact() ) &&
@@ -902,6 +977,7 @@ void PatternView::paintEvent( QPaintEvent * )
                         : mutedBackgroundColor() ) );
 
 	// invert the gradient for the background in the B&B editor
+        /*
 	QLinearGradient lingrad( 0, 0, 0, height() );
 	lingrad.setColorAt( beatPattern ? 0 : 1, c.darker( 300 ) );
 	lingrad.setColorAt( beatPattern ? 1 : 0, c );
@@ -914,6 +990,7 @@ void PatternView::paintEvent( QPaintEvent * )
 		p.fillRect( rect(), lingrad );
 	}
 	else
+        */
 	{
 		p.fillRect( rect(), c );
 	}
@@ -936,14 +1013,12 @@ void PatternView::paintEvent( QPaintEvent * )
 	}
 
 	// Compute pixels per tact
-	const int baseWidth = fixedTCOs() ? parentWidget()->width() : width();
-	const float pixelsPerTact = ( baseWidth - 2 * TCO_BORDER_WIDTH ) / (float) m_pat->length().getTact();
+	//const int baseWidth = fixedTCOs() ? parentWidget()->width() : width();
+	//const float pixelsPerTact = ( baseWidth - 2 * TCO_BORDER_WIDTH ) / (float) m_pat->length().getTact();
 
 	// Length of one tact/beat in the [0,1] x [0,1] coordinate system
 	const float tactLength = 1. / m_pat->length().getTact();
 	const float tickLength = tactLength / MidiTime::ticksPerTact();
-
-	const int x_base = TCO_BORDER_WIDTH;
 
 	// melody pattern paint event
 	NoteVector const & noteCollection = m_pat->m_notes;
@@ -1061,42 +1136,50 @@ void PatternView::paintEvent( QPaintEvent * )
 	}
 
 	// beat pattern paint event
-	else if( beatPattern &&	( fixedTCOs() || pixelsPerTact >= 96
-			|| m_pat->m_steps != MidiTime::stepsPerTact() ) )
+	else if( beatPattern &&
+                 ( fixedTCOs() ||
+                   // pixelsPerTact >= 96 ||
+                   m_pat->m_steps != MidiTime::stepsPerTact() ) )
 	{
 		QPixmap stepon0;
 		QPixmap stepon200;
 		QPixmap stepoff;
 		QPixmap stepoffl;
-		const int steps = qMax( 1,
-					m_pat->m_steps );
-		const int w = width() - 2 * TCO_BORDER_WIDTH;
 
+		const int steps = qMax( 1, m_pat->m_steps );
+                const int ws= 16;
+                const int w1= 12;
+                const int h1= 24;
+
+                //qInfo("steps=%d w1=%d h1=%d",steps,w1,h1);
 		// scale step graphics to fit the beat pattern length
-		stepon0 = s_stepBtnOn0->scaled( w / steps,
-					      s_stepBtnOn0->height(),
-					      Qt::IgnoreAspectRatio,
-					      Qt::SmoothTransformation );
-		stepon200 = s_stepBtnOn200->scaled( w / steps,
-					      s_stepBtnOn200->height(),
-					      Qt::IgnoreAspectRatio,
-					      Qt::SmoothTransformation );
-		stepoff = s_stepBtnOff->scaled( w / steps,
-						s_stepBtnOff->height(),
+		stepon0 = s_stepBtnOn0->scaled( w1,
+                                                h1,//s_stepBtnOn0->height(),
+                                                Qt::IgnoreAspectRatio,
+                                                Qt::SmoothTransformation );
+		stepon200 = s_stepBtnOn200->scaled( w1,
+                                                    h1,//s_stepBtnOn200->height(),
+                                                    Qt::IgnoreAspectRatio,
+                                                    Qt::SmoothTransformation );
+		stepoff = s_stepBtnOff->scaled( w1,
+						h1,//s_stepBtnOff->height(),
 						Qt::IgnoreAspectRatio,
 						Qt::SmoothTransformation );
-		stepoffl = s_stepBtnOffLight->scaled( w / steps,
-						s_stepBtnOffLight->height(),
-						Qt::IgnoreAspectRatio,
-						Qt::SmoothTransformation );
+		stepoffl = s_stepBtnOffLight->scaled( w1,
+                                                      h1,//s_stepBtnOffLight->height(),
+                                                      Qt::IgnoreAspectRatio,
+                                                      Qt::SmoothTransformation );
 
-	for( int it = 0; it < steps; it++ )	// go through all the steps in the beat pattern
+                int den = Engine::getSong()->getTimeSigModel().getDenominator();
+                for( int it = 0; it < steps; it++ )	// go through all the steps in the beat pattern
 		{
 			Note * n = m_pat->noteAtStep( it );
 
 			// figure out x and y coordinates for step graphic
-			const int x = TCO_BORDER_WIDTH + static_cast<int>( it * w / steps );
-			const int y = height() - s_stepBtnOff->height() - 1;
+			//const int x = TCO_BORDER_WIDTH + static_cast<int>( it * w / steps );
+			//const int y = height() - s_stepBtnOff->height() - 1;
+                        const int x=TCO_BORDER_WIDTH + static_cast<int>(it*ws) + 2;
+                        const int y=(height()-h1)/2;
 
 			if( n )
 			{
@@ -1107,7 +1190,7 @@ void PatternView::paintEvent( QPaintEvent * )
 				p.drawPixmap( x, y, stepon200 );
 				p.setOpacity( 1 );
 			}
-			else if( ( it / 4 ) % 2 )
+			else if(it%den) // ( it / 4 ) % 2 )
 			{
 				p.drawPixmap( x, y, stepoffl );
 			}
@@ -1126,20 +1209,18 @@ void PatternView::paintEvent( QPaintEvent * )
 		}
 	}
 
-	// bar lines
-	const int lineSize = 3;
-	p.setPen( c.darker( 200 ) );
-
-	for( tact_t t = 1; t < m_pat->length().getTact(); ++t )
-	{
-		p.drawLine( x_base + static_cast<int>( pixelsPerTact * t ) - 1,
-				TCO_BORDER_WIDTH, x_base + static_cast<int>(
-						pixelsPerTact * t ) - 1, TCO_BORDER_WIDTH + lineSize );
-		p.drawLine( x_base + static_cast<int>( pixelsPerTact * t ) - 1,
-				rect().bottom() - ( lineSize + TCO_BORDER_WIDTH ),
-				x_base + static_cast<int>( pixelsPerTact * t ) - 1,
-				rect().bottom() - TCO_BORDER_WIDTH );
-	}
+        if(m_pat->getTrack()->isFrozen())
+        {
+                p.fillRect(0,0,width()-1,height()-1,
+                           QBrush(Qt::cyan,Qt::BDiagPattern));
+                p.fillRect(0,0,width()-1,height()-1,
+                           QBrush(QColor(0,160,160,64),Qt::SolidPattern));
+        }
+        else
+        {
+                paintTileTacts(current,m_pat->length().nextFullTact(),1,
+                               c,width(),height(),p);
+        }
 
 	// pattern name
 	if (drawTextBox)
@@ -1150,15 +1231,27 @@ void PatternView::paintEvent( QPaintEvent * )
 	if( !( fixedTCOs() && beatPattern ) )
 	{
 		// inner border
-		p.setPen( c.lighter( current ? 160 : 130 ) );
+		/*
+                p.setPen( c.lighter( current ? 160 : 130 ) );
 		p.drawRect( 1, 1, rect().right() - TCO_BORDER_WIDTH,
 			rect().bottom() - TCO_BORDER_WIDTH );
+                */
 
 		// outer border
-		p.setPen( current ? c.lighter( 130 ) : c.darker( 300 ) );
-		p.drawRect( rect() );
+		//p.setPen( current ? c.lighter( 130 ) : c.darker( 300 ) );
+		//p.drawRect( rect() );
+                /*
+                p.setPen(current ? c.lighter(300) : c.lighter(150));
+                p.drawLine(0,0,width()-1,0);
+                p.drawLine(0,1,0,height()-1);
+                p.setPen(current ? c.darker(300) : c.darker(150));
+                p.drawLine(0,height()-1,width()-1,height()-1);
+                p.drawLine(width()-1,1,width()-1,height()-2);
+                */
+                paintTileBorder(current,c,width(),height(),p);
 	}
 
+        /*
 	// draw the 'muted' pixmap only if the pattern was manually muted
 	if( m_pat->isMuted() )
 	{
@@ -1167,6 +1260,8 @@ void PatternView::paintEvent( QPaintEvent * )
 		p.drawPixmap( spacing, height() - ( size + spacing ),
 			embed::getIconPixmap( "muted", size, size ) );
 	}
+        */
+        paintMutedIcon(m_pat->isMuted(),p);
 
 	painter.drawPixmap( 0, 0, m_paintPixmap );
 }

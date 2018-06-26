@@ -191,7 +191,7 @@ MainWindow::MainWindow() :
 	vbox->addWidget( w );
 	setCentralWidget( main_widget );
 
-	m_updateTimer.start( 1000 / 60, this );  // 60 fps
+	m_updateTimer.start( 1000 / 6, this );  // 60 fps
 
 	if( ConfigManager::inst()->value( "ui", "enableautosave" ).toInt() )
 	{
@@ -612,13 +612,26 @@ void MainWindow::finalize()
 		win->setWindowIcon(widget->windowIcon());
 	}
 
-	gui->automationEditor()->parentWidget()->hide();
-	gui->getBBEditor()->parentWidget()->move( 610, 5 );
-	gui->getBBEditor()->parentWidget()->hide();
-	gui->pianoRoll()->parentWidget()->move(5, 5);
-	gui->pianoRoll()->parentWidget()->hide();
-	gui->songEditor()->parentWidget()->move(5, 5);
+        //gui->fxMixerView()->parentWidget()->move(5,290);
+        gui->fxMixerView()->parentWidget()->show();
+
+	//gui->songEditor()->parentWidget()->move(5,5);
 	gui->songEditor()->parentWidget()->show();
+
+	//gui->getBBEditor()->parentWidget()->move(550,290);
+	gui->getBBEditor()->parentWidget()->hide();
+
+	//gui->automationEditor()->parentWidget()->move(200,200);
+	gui->automationEditor()->parentWidget()->hide();
+
+	//gui->pianoRoll()->parentWidget()->move(200,200);
+	gui->pianoRoll()->parentWidget()->hide();
+
+        //gui->getProjectNotes()->parentWidget()->move(200,200);
+        gui->getProjectNotes()->parentWidget()->hide();
+
+        //gui->getControllerRackView()->parentWidget()->move(ww-250,200);
+        gui->getControllerRackView()->parentWidget()->hide();
 
 	// reset window title every time we change the state of a subwindow to show the correct title
 	for( const QMdiSubWindow * subWindow : workspace()->subWindowList() )
@@ -1356,14 +1369,15 @@ void MainWindow::toggleControllerRack()
 void MainWindow::reorganizeWindows()
 {
 	//total space
-	int wt=m_workspace->width();
-	int ht=m_workspace->height();
+	int wt=width()-44;//sidebar m_workspace->width();
+	int ht=height()-144;//toolbar m_workspace->height();
 	//2nd row
-	int h2=gui->fxMixerView()->height()+52; //tmp 2 titlebars
+	int h2=gui->fxMixerView()->height();
 	int w2=wt-262; //tmp instr.
 	//1st row
-	int h1=ht-h2+8;
+	int h1=ht-h2+6;
 	int w1=gui->fxMixerView()->width()+6; //tmp
+        int y3=ht-gui->getControllerRackView()->height()+6;
 
 	/*
 	  toggleWindow( gui->getBBEditor(), forceShow );
@@ -1385,24 +1399,24 @@ void MainWindow::reorganizeWindows()
 			(*it)->setGeometry(0,0,w2,h1);
 		else
 		if(*it==gui->getBBEditor()->parentWidget())
-			(*it)->setGeometry(0,0,w2,h1);
+			(*it)->setGeometry(w1+2,h1,w2-w1,h1);
 		else
 		if(*it==gui->getProjectNotes()->parentWidget())
-			(*it)->setGeometry(0,0,w2,h1);
+			(*it)->setGeometry(20,20,wt-80,ht-80);//0,0,w2,h1);
 		else
 		if(*it==gui->pianoRoll()->parentWidget())
-			(*it)->setGeometry(0,0,w2,h1);
+			(*it)->setGeometry(40,40,wt-80,ht-80);//0,0,w2,h1);
 		else
 		if(*it==gui->automationEditor()->parentWidget())
-			(*it)->setGeometry(0,0,w2,h1);
+			(*it)->setGeometry(60,60,wt-80,ht-80);//0,0,w2,h1);
 		else
 		if(*it==gui->fxMixerView()->parentWidget())
-			(*it)->move(0,h2);
+			(*it)->move(0,h1);
 		else
 		if(*it==gui->getControllerRackView()->parentWidget())
-			(*it)->move(w1+2,h2);
+			(*it)->move(w2+4,y3);
 		else
-			{ (*it)->move(w2+2,yt); yt+=24; }
+			{ (*it)->move(w2+4,yt); yt+=24; }
 	}
 }
 

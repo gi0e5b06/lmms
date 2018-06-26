@@ -188,7 +188,8 @@ GroupBox {
 }
 
 ComboBox {
-    color: #ffffff;
+    color: #FFFFFF;
+    background-color: #23272d;
     font-size: 13px;
 }
 
@@ -451,7 +452,7 @@ QWidget#mainToolbar {
         background-color: #3f4750;
         /*background: qlineargradient(spread:reflect, x1:0, y1:0, x2:0, y2:0.5, stop:0 #3f4750, stop:1 #373e45);*/
 	border: 0px none;
-	padding: 1px;/*2px*/
+	padding: 1px 5px 1px 0px;/*all 1px*/
 	spacing: 0;
 }
 
@@ -462,7 +463,7 @@ QToolBar {
         /*background: qlineargradient(spread:reflect, x1:0, y1:0, x2:0, y2:0.5, stop:0 #3f4750, stop:1 #373e45);*/
 	/*background-color: #434b57;*/
 	border: 0px none;
-	padding: 1px;/*2px*/
+	padding: 1px 5px 1px 0px;/*all 1px*/
 	spacing: 0;
 }
 
@@ -668,16 +669,19 @@ PluginDescWidget {
 	border-top: 1px solid #3E474F;
 	border-bottom: 1px solid #101314;
 	border-radius: 2px;
-	background-color: qlineargradient(spread:reflect, x1:0, y1:0, x2:0, y2:1, stop:0 #2E343B, stop:1 #1E2326);
+	background-color: #2E343B; /*qlineargradient(spread:reflect, x1:0, y1:0, x2:0, y2:1, stop:0 #2E343B, stop:1 #1E2326);*/
 	color: #d1d8e4;
+	font-size:14px;
 	/*font-weight: bold;*/
 	margin: 0px;
 }
 
+/*
 PluginDescWidget:hover {
-	background-color: qlineargradient(spread:reflect, x1:0, y1:0, x2:0, y2:1, stop:0 #2E343B, stop:1 #1E2326);
+    background-color: #2E343B; **qlineargradient(spread:reflect, x1:0, y1:0, x2:0, y2:1, stop:0 #2E343B, stop:1 #1E2326);**
 	color: #d1d8e4;
 }
+*/
 
 /* piano widget */
 
@@ -730,40 +734,40 @@ TrackContainerView QLabel
 /* Patterns */
 
 /* common pattern colors */
-TrackContentObjectView   {
-	qproperty-mutedColor: rgb(255,255,255,100);
-	qproperty-mutedBackgroundColor: #373d48;
-	qproperty-selectedColor: #006B65;
-	qproperty-BBPatternBackground: #373d48;
-	qproperty-textColor: #fff;
-	qproperty-textBackgroundColor: rgba(0, 0, 0, 75);
-	qproperty-textShadowColor: rgb(0,0,0,200);
-	qproperty-gradient: false; /* boolean property, set true to have a gradient */
-
-	font-size: 11px;
+TrackContentObjectView {
+    qproperty-mutedColor: #788899; /*rgb(255,255,255,100);*/
+    qproperty-mutedBackgroundColor: #3f4750; /*373d48;*/
+    qproperty-selectedColor: #006666; /*#006B65;*/
+    qproperty-BBPatternBackground: #3f4750; /*#373d48;*/
+    qproperty-textColor: #FFFFFF;
+    qproperty-textBackgroundColor: #FF0000; /*rgba(0, 0, 0, 75);*/
+    qproperty-textShadowColor: #22262b; /*unused rgb(0,0,0,200);*/
+    /*qproperty-gradient: false;*/ /* boolean property, set true to have a gradient */
+    font-size: 11px;
 }
 
 /* instrument pattern */
 PatternView {
-	background-color: #21A14F;
-	color: rgba(255,255,255,220);
+    background-color: #31BF56; /* #21A14F; */
+    color: #DDFFEE; /*rgba(255,255,255,220);*/
 }
 
 /* sample track pattern */
 SampleTCOView {
-	background-color: #DE7C05;
-	color: #FFE8CD;
+    background-color: #E69729; /*#DE7C05;*/
+    color: #FFEEFF; /*#FFE8CD;*/
 }
 
 /* automation pattern */
 AutomationPatternView {
-	background-color: #663DE1;
-	color: rgba(255,255,255,90);
+    background-color: #924AFF; /*#663DE1;*/
+    color: #FFDDEE; /*rgba(255,255,255,90);*/
 }
 
 /* bb-pattern */
 BBTCOView {
-	background-color: #20BDB2; /* default colour for bb-tracks */
+    background-color: #22BBBB;/* #20BDB2; default colour for bb-tracks */
+    color: #DDFFFF;
 }
 
 /* Subwindows in MDI-Area */

@@ -34,6 +34,8 @@
 #include "GuiApplication.h"
 
 #include "lmmsversion.h"
+#include "Backtrace.h"
+
 
 static inline QString ensureTrailingSlash( const QString & s )
 {
@@ -45,10 +47,45 @@ static inline QString ensureTrailingSlash( const QString & s )
 }
 
 
-ConfigManager * ConfigManager::s_instanceOfMe = NULL;
+ConfigManager* ConfigManager::s_instanceOfMe = NULL;
 
 
-ConfigManager::ConfigManager() :
+void ConfigManager::init(const char* argv0)
+{
+        if( s_instanceOfMe == NULL )
+        {
+                QDir appPath(QFileInfo(argv0).absolutePath());
+                qInfo("Notice: appPath=%s",qPrintable(appPath.absolutePath()));
+                s_instanceOfMe = new ConfigManager(appPath);
+        }
+        else qWarning("Fatal: Call ConfigManager::init() only once");
+}
+
+
+void ConfigManager::deinit()
+{
+        ConfigManager* old=s_instanceOfMe;
+        if(old != NULL )
+        {
+                s_instanceOfMe = NULL;
+                delete old;
+        }
+        else qFatal("Fatal: Call ConfigManager::deinit() only once");
+}
+
+
+ConfigManager* ConfigManager::inst()
+{
+        if( s_instanceOfMe == NULL )
+	{
+                //BACKTRACE
+                qWarning("Warning: Call ConfigManager::init() first");
+        }
+        return s_instanceOfMe;
+}
+
+
+ConfigManager::ConfigManager(QDir& appPath) :
 	m_lmmsRcFile( QDir::home().absolutePath() +"/.lmmsrc.xml" ),
 	m_workingDir( QDir::home().absolutePath() + "/lmms/"),
 	m_dataDir( "data:/" ),
@@ -58,16 +95,17 @@ ConfigManager::ConfigManager() :
 	m_sf2Dir( m_workingDir + SF2_PATH ),
 	m_version( defaultVersion() )
 {
-	if (! qgetenv("LMMS_DATA_DIR").isEmpty())
-		QDir::addSearchPath("data", QString::fromLocal8Bit(qgetenv("LMMS_DATA_DIR")));
-
 	// If we're in development (lmms is not installed) let's get the source and
 	// binary directories by reading the CMake Cache
-	QDir appPath = qApp->applicationDirPath();
+        //qInfo("ConfigManager: before appDirPath()");
+	//QDir appPath = qApp->applicationDirPath();
+        //qInfo("ConfigManager: after appDirPath()");
 	// If in tests, get parent directory
 	if (appPath.dirName() == "tests") {
 		appPath.cdUp();
 	}
+
+        /*
 	QFile cmakeCache(appPath.absoluteFilePath("CMakeCache.txt"));
 	if (cmakeCache.exists()) {
 		cmakeCache.open(QFile::ReadOnly);
@@ -98,14 +136,43 @@ ConfigManager::ConfigManager() :
 
 		cmakeCache.close();
 	}
+        */
 
+        /*
 #ifdef LMMS_BUILD_WIN32
 	QDir::addSearchPath("data", qApp->applicationDirPath() + "/data/");
 #else
 	QDir::addSearchPath("data", qApp->applicationDirPath().section('/', 0, -2) + "/share/lmms/");
 #endif
+        */
 
+        QString data;
+	if(!(data=QString::fromLocal8Bit(qgetenv("LMMS_DATA_DIR"))).isEmpty())
+                QDir::addSearchPath("data",data);
+        else
+        if(QFileInfo(data=appPath.absolutePath()+"/data/").exists())
+                QDir::addSearchPath("data",data);
+#ifndef LMMS_BUILD_WIN32
+        else
+        if(QFileInfo(data=appPath.absolutePath().section('/',0,-2)+"/share/lmms/").exists())
+                QDir::addSearchPath("data",data);
+#endif
+        else qFatal("Fatal: data path for resources undefined");
 
+        QString fp;
+        QFileInfo fi;
+	if(!(fp=QString::fromLocal8Bit(qgetenv("LMMS_RC_FILE"))).isEmpty()&&
+           (fi=QFileInfo(fp)).exists())
+        {
+                m_lmmsRcFile = fi.absoluteFilePath();
+                qInfo("Notice: LMMSRC=%s",qPrintable(fi.absoluteFilePath()));
+        }
+        else
+        if((fi=QFileInfo(appPath.absolutePath(),".lmmsrc.xml")).exists())
+        {
+                m_lmmsRcFile = fi.absoluteFilePath();
+                qInfo("Notice: LMMSRC=%s",qPrintable(fi.absoluteFilePath()));
+        }
 }
 
 

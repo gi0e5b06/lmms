@@ -157,6 +157,7 @@ GuiApplication::GuiApplication(bool showSplashScreen)
 
 	splashScreen.finish(m_mainWindow);
 	m_mainWindow->finalize();
+	m_mainWindow->reorganizeWindows();
 
 	m_loadingProgressLabel = nullptr;
 }

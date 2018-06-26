@@ -60,7 +60,8 @@ Plugin::Descriptor PLUGIN_EXPORT padsgdx_plugin_descriptor =
 	STRINGIFY( PLUGIN_NAME ),
 	"PadsGDX",
 	QT_TRANSLATE_NOOP( "pluginBrowser",
-                           "One sample per key. Intended for pads." ),
+                           "One sample per key. Intended for pads. "
+                           "Limited support for SFZ soundfonts." ),
 	"gi0e5b06",
 	0x0100,
 	Plugin::Instrument,

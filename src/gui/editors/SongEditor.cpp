@@ -33,6 +33,7 @@
 #include <QMdiArea>
 #include <QMdiSubWindow>
 #include <QPainter>
+#include <QShortcut>
 
 #include "AutomatableSlider.h"
 #include "ComboBox.h"
@@ -74,9 +75,6 @@ void positionLine::paintEvent( QPaintEvent * pe )
 	p.fillRect( rect(), QColor( 255, 255, 255, 153 ) );
 }
 
-const QVector<double> SongEditor::m_zoomLevels =
-		{ 0.125f, 0.25f, 0.5f, 1.0f, 2.0f, 4.0f, 8.0f, 16.0f };
-
 
 SongEditor::SongEditor( Song * song ) :
 	TrackContainerView( song ),
@@ -93,9 +91,9 @@ SongEditor::SongEditor( Song * song ) :
 		DEFAULT_SETTINGS_WIDGET_WIDTH_COMPACT + TRACK_OP_WIDTH_COMPACT :
 		DEFAULT_SETTINGS_WIDGET_WIDTH + TRACK_OP_WIDTH;
 	m_timeLine = new TimeLineWidget( widgetTotal, 32,
-					pixelsPerTact(),
-					m_song->m_playPos[Song::Mode_PlaySong],
-					m_currentPosition, this );
+                                         pixelsPerTact(),
+                                         m_song->m_playPos[Song::Mode_PlaySong],
+                                         m_currentPosition, this );
 	connect( this, SIGNAL( positionChanged( const MidiTime & ) ),
 				m_song->m_playPos[Song::Mode_PlaySong].m_timeLine,
 			SLOT( updatePosition( const MidiTime & ) ) );
@@ -250,19 +248,18 @@ SongEditor::SongEditor( Song * song ) :
 	m_leftRightScroll->setPageStep( 20 );
 	static_cast<QVBoxLayout *>( layout() )->addWidget( m_leftRightScroll );
 	connect( m_leftRightScroll, SIGNAL( valueChanged( int ) ),
-					this, SLOT( scrolled( int ) ) );
+                 this, SLOT( scrolled( int ) ) );
 	connect( m_song, SIGNAL( lengthChanged( int ) ),
-			this, SLOT( updateScrollBar( int ) ) );
+                 this, SLOT( updateScrollBar( int ) ) );
 
 	// Set up zooming model
-	for( float const & zoomLevel : m_zoomLevels )
+	for(const float& zoomLevel : Editor::ZOOM_LEVELS )
 	{
 		m_zoomingModel->addItem( QString( "%1\%" ).arg( zoomLevel * 100 ) );
 	}
-	m_zoomingModel->setInitValue(
-			m_zoomingModel->findText( "100%" ) );
+	m_zoomingModel->setInitValue(m_zoomingModel->findText( "100%" ));
 	connect( m_zoomingModel, SIGNAL( dataChanged() ),
-					this, SLOT( zoomingChanged() ) );
+                 this, SLOT( zoomingChanged() ) );
 
 	setFocusPolicy( Qt::StrongFocus );
 	setFocus();
@@ -1055,10 +1052,11 @@ void SongEditor::updatePositionLine()
 
 void SongEditor::zoomingChanged()
 {
-	setPixelsPerTact( m_zoomLevels[m_zoomingModel->value()] * DEFAULT_PIXELS_PER_TACT );
+	setPixelsPerTact( Editor::ZOOM_LEVELS[m_zoomingModel->value()]
+                          * DEFAULT_PIXELS_PER_TACT );
 
 	m_song->m_playPos[Song::Mode_PlaySong].m_timeLine->
-					setPixelsPerTact( pixelsPerTact() );
+                setPixelsPerTact( pixelsPerTact() );
 	realignTracks();
 }
 
@@ -1123,16 +1121,17 @@ SongEditorWindow::SongEditorWindow(Song* song) :
 
 
 	// Track actions
-	DropToolBar *trackActionsToolBar = addDropToolBarToTop(tr("Track actions"));
+        /*
+	DropToolBar* trackActionsToolBar = addDropToolBarToTop(tr("Track actions"));
 
 	m_addBBTrackAction = new QAction(embed::getIconPixmap("add_bb_track"),
-									 tr("Add beat/bassline"), this);
+                                         tr("Add beat/bassline"), this);
 
 	m_addSampleTrackAction = new QAction(embed::getIconPixmap("add_sample_track"),
-										 tr("Add sample-track"), this);
+                                             tr("Add sample-track"), this);
 
 	m_addAutomationTrackAction = new QAction(embed::getIconPixmap("add_automation"),
-											 tr("Add automation-track"), this);
+                                                 tr("Add automation-track"), this);
 
 	connect(m_addBBTrackAction, SIGNAL(triggered()), m_editor->m_song, SLOT(addBBTrack()));
 	connect(m_addSampleTrackAction, SIGNAL(triggered()), m_editor->m_song, SLOT(addSampleTrack()));
@@ -1141,39 +1140,78 @@ SongEditorWindow::SongEditorWindow(Song* song) :
 	trackActionsToolBar->addAction( m_addBBTrackAction );
 	trackActionsToolBar->addAction( m_addSampleTrackAction );
 	trackActionsToolBar->addAction( m_addAutomationTrackAction );
+        */
 
+	DropToolBar* trackActionsToolBar = addDropToolBarToTop(tr("Track actions"));
+
+	trackActionsToolBar->addAction(embed::getIconPixmap("add_instrument_track"),
+                                       tr("Add instrument-track"),
+                                       Engine::getSong(),
+                                       SLOT(addInstrumentTrack()));
+
+	trackActionsToolBar->addAction(embed::getIconPixmap("add_bb_track"),
+                                       tr("Add beat/bassline"),
+                                       Engine::getSong(),
+                                       SLOT(addBBTrack()));
+
+	trackActionsToolBar->addAction(embed::getIconPixmap("add_sample_track"),
+                                       tr("Add sample-track"),
+                                       Engine::getSong(),
+                                       SLOT(addSampleTrack()));
+
+	trackActionsToolBar->addAction(embed::getIconPixmap("add_automation_track"),
+                                       tr("Add automation-track"),
+                                       Engine::getSong(),
+                                       SLOT(addAutomationTrack()));
 
 	// Edit actions
-	DropToolBar *editActionsToolBar = addDropToolBarToTop(tr("Edit actions"));
+	DropToolBar* editActionsToolBar = addDropToolBarToTop(tr("Edit actions"));
 
 	m_editModeGroup = new ActionGroup(this);
-	m_drawModeAction = m_editModeGroup->addAction(embed::getIconPixmap("edit_draw"), tr("Draw mode"));
-	m_selectModeAction = m_editModeGroup->addAction(embed::getIconPixmap("edit_select"), tr("Edit mode (select and move)"));
-	m_drawModeAction->setChecked(true);
+	m_drawModeAction = m_editModeGroup->addAction(embed::getIconPixmap("edit_draw"),
+                                                      tr("Draw mode"));
+	m_selectModeAction = m_editModeGroup->addAction(embed::getIconPixmap("edit_select"),
+                                                        tr("Edit mode (select and move)"));
 
-	connect(m_drawModeAction, SIGNAL(triggered()), m_editor, SLOT(setEditModeDraw()));
-	connect(m_selectModeAction, SIGNAL(triggered()), m_editor, SLOT(setEditModeSelect()));
-
+	editActionsToolBar->addSeparator();
 	editActionsToolBar->addAction( m_drawModeAction );
 	editActionsToolBar->addAction( m_selectModeAction );
 
-	DropToolBar *timeLineToolBar = addDropToolBarToTop(tr("Timeline controls"));
-	m_editor->m_timeLine->addToolButtons(timeLineToolBar);
+	connect(m_drawModeAction, SIGNAL(triggered()), m_editor, SLOT(setEditModeDraw()));
+	connect(m_selectModeAction, SIGNAL(triggered()), m_editor, SLOT(setEditModeSelect()));
+	m_drawModeAction->setChecked(true);
 
 
-	DropToolBar *zoomToolBar = addDropToolBarToTop(tr("Zoom controls"));
+        addToolBarBreak();
 
-	QLabel * zoom_lbl = new QLabel( m_toolBar );
-	zoom_lbl->setPixmap( embed::getIconPixmap( "zoom" ) );
+
+        // Zoom actions
+	DropToolBar* zoomToolBar = addDropToolBarToTop(tr("Zoom controls"));
+
+	QLabel* zoom_lbl = new QLabel( m_toolBar );
+	zoom_lbl->setPixmap( embed::getIconPixmap( "zoom_x" ) );
+        zoom_lbl->setFixedSize( 32, 32 );
+        zoom_lbl->setAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
 
 	// setup zooming-stuff
 	m_zoomingComboBox = new ComboBox( m_toolBar );
-	m_zoomingComboBox->setFixedSize( 80, 22 );
-	m_zoomingComboBox->move( 580, 4 );
+	m_zoomingComboBox->setFixedSize( 70, 32 );
+	//m_zoomingComboBox->move( 580, 4 );
 	m_zoomingComboBox->setModel(m_editor->m_zoomingModel);
 
 	zoomToolBar->addWidget( zoom_lbl );
 	zoomToolBar->addWidget( m_zoomingComboBox );
+
+	new QShortcut(Qt::Key_Minus, m_zoomingComboBox, SLOT(selectPrevious()));
+	new QShortcut(Qt::Key_Plus, m_zoomingComboBox, SLOT(selectNext()));
+
+
+        // Timeline actions
+	DropToolBar *timeLineToolBar = addDropToolBarToTop(tr("Timeline controls"));
+	m_editor->m_timeLine->addToolButtons(timeLineToolBar);
+	m_editor->m_timeLine->addLoopButtons(timeLineToolBar);
+
+
 
 	connect(song, SIGNAL(projectLoaded()), this, SLOT(adjustUiAfterProjectLoad()));
 	connect(this, SIGNAL(resized()), m_editor, SLOT(updatePositionLine()));
@@ -1181,7 +1219,7 @@ SongEditorWindow::SongEditorWindow(Song* song) :
 
 QSize SongEditorWindow::sizeHint() const
 {
-	return {600, 300};
+	return {900, 280};
 }
 
 

@@ -22,248 +22,251 @@
  *
  */
 
+#include "RenderManager.h"
+
 #include <QDebug>
 #include <QDir>
 #include <QFile>
 #include <QProcess>
 
-#include "RenderManager.h"
-#include "Song.h"
-#include "BBTrackContainer.h"
 #include "BBTrack.h"
+#include "BBTrackContainer.h"
+#include "Song.h"
 
-
-RenderManager::RenderManager(
-		const Mixer::qualitySettings & qualitySettings,
-		const OutputSettings & outputSettings,
-		ProjectRenderer::ExportFileFormats fmt,
-		QString outputPath) :
-	m_qualitySettings(qualitySettings),
-	m_oldQualitySettings( Engine::mixer()->currentQualitySettings() ),
-	m_outputSettings(outputSettings),
-	m_format(fmt),
-	m_outputPath(outputPath),
-	m_activeRenderer(NULL)
+RenderManager::RenderManager(const Mixer::qualitySettings& qualitySettings,
+                             const OutputSettings&         outputSettings,
+                             ProjectRenderer::ExportFileFormats fmt,
+                             QString                            outputPath) :
+      m_qualitySettings(qualitySettings),
+      m_oldQualitySettings(Engine::mixer()->currentQualitySettings()),
+      m_outputSettings(outputSettings), m_format(fmt),
+      m_outputPath(outputPath), m_activeRenderer(NULL)
 {
-	Engine::mixer()->storeAudioDevice();
+    Engine::mixer()->storeAudioDevice();
 }
 
 RenderManager::~RenderManager()
 {
-	delete m_activeRenderer;
-	m_activeRenderer = NULL;
+    delete m_activeRenderer;
+    m_activeRenderer = NULL;
 
-	Engine::mixer()->restoreAudioDevice();  // Also deletes audio dev.
-	Engine::mixer()->changeQuality( m_oldQualitySettings );
+    Engine::mixer()->restoreAudioDevice();  // Also deletes audio dev.
+    Engine::mixer()->changeQuality(m_oldQualitySettings);
 }
 
 void RenderManager::abortProcessing()
 {
-	if ( m_activeRenderer ) {
-		disconnect( m_activeRenderer, SIGNAL( finished() ),
-				this, SLOT( renderNextTrack() ) );
-		m_activeRenderer->abortProcessing();
-	}
-	restoreMutedState();
+    if(m_activeRenderer)
+    {
+        disconnect(m_activeRenderer, SIGNAL(finished()), this,
+                   SLOT(renderNextTrack()));
+        m_activeRenderer->abortProcessing();
+    }
+    restoreMutedState();
 }
 
-void RenderManager::postProcess(QString& file,bool aborted)
+void RenderManager::postProcess(QString& file, bool aborted)
 {
-	QRegExp rx("[.](mp3|ogg|wav)$",Qt::CaseInsensitive);
-	if(rx.indexIn(file)<0) return;
+    QRegExp rx("[.](mp3|ogg|wav)$", Qt::CaseInsensitive);
+    if(rx.indexIn(file) < 0)
+        return;
 
-	qWarning("RenderManager::postProcess %s %d",qPrintable(file),aborted);
+    qWarning("RenderManager::postProcess %s %d", qPrintable(file), aborted);
 
-	QFile f(file);
-	if(f.exists())
-	{
-		// if the user aborted export-process, the file has to be deleted
-		if( aborted )
-		{
-			f.remove();
-		}
-		else
-	        {
-			QFile p("/usr/bin/normalize-audio");
-			if(Engine::getSong()->peakNormalizeFlag()&&
-			   p.exists())
-			{
-				//qWarning("excuting normalization: size=%ld",(long)f.size());
-				//QProcess::execute("/bin/ls",QStringList() << "-l" << f.fileName());
-				/*int pnr=*/
-				QProcess::execute(p.fileName(),QStringList() << "--peak" << f.fileName());
-				//qWarning("%s %s %d",qPrintable(p.fileName()),qPrintable(f.fileName()),pnr);
-			}
-		}
-	}
+    QFile f(file);
+    if(f.exists())
+    {
+        // if the user aborted export-process, the file has to be deleted
+        if(aborted)
+        {
+            f.remove();
+        }
+        else
+        {
+            QFile p("/usr/bin/normalize-audio");
+            if(Engine::getSong()->peakNormalizeFlag() && p.exists())
+            {
+                // qWarning("excuting normalization:
+                // size=%ld",(long)f.size());
+                // QProcess::execute("/bin/ls",QStringList() << "-l" <<
+                // f.fileName());
+                /*int pnr=*/
+                QProcess::execute(p.fileName(),
+                                  QStringList() << "--peak" << f.fileName());
+                // qWarning("%s %s
+                // %d",qPrintable(p.fileName()),qPrintable(f.fileName()),pnr);
+            }
+        }
+    }
 }
 
 // Called to render each new track when rendering tracks individually.
 void RenderManager::renderNextTrack()
 {
-	//qWarning("RenderManager::renderNextTrack");
+    // qWarning("RenderManager::renderNextTrack");
 
-	// post-process current track
-	if(m_activeRenderer != NULL)
-	{
-		QString f=m_activeRenderer->outputFile();
-		bool    a=m_activeRenderer->aborted();
+    // post-process current track
+    if(m_activeRenderer != NULL)
+    {
+        QString f = m_activeRenderer->outputFile();
+        bool    a = m_activeRenderer->aborted();
 
-		delete m_activeRenderer;
-		m_activeRenderer = NULL;
+        delete m_activeRenderer;
+        m_activeRenderer = NULL;
 
-		fprintf(stderr, "\n");
-		postProcess(f,a);
-	} else {
-		delete m_activeRenderer;
-		m_activeRenderer = NULL;
-	}
+        fprintf(stderr, "\n");
+        postProcess(f, a);
+    }
+    else
+    {
+        delete m_activeRenderer;
+        m_activeRenderer = NULL;
+    }
 
-	if( m_tracksToRender.isEmpty() )
-	{
-		// nothing left to render
-		restoreMutedState();
-		emit finished();
-	}
-	else
-	{
-		// pop the next track from our rendering queue
-		Track* renderTrack = m_tracksToRender.back();
-		m_tracksToRender.pop_back();
+    if(m_tracksToRender.isEmpty())
+    {
+        // nothing left to render
+        restoreMutedState();
+        emit finished();
+    }
+    else
+    {
+        // pop the next track from our rendering queue
+        Track* renderTrack = m_tracksToRender.back();
+        m_tracksToRender.pop_back();
 
-		// mute everything but the track we are about to render
-		for( auto it = m_unmuted.begin(); it != m_unmuted.end(); ++it )
-		{
-			(*it)->setMuted( (*it) != renderTrack );
-		}
+        // mute everything but the track we are about to render
+        for(auto it = m_unmuted.begin(); it != m_unmuted.end(); ++it)
+        {
+            (*it)->setMuted((*it) != renderTrack);
+        }
 
-		// for multi-render, prefix each output file with a different number
-		int trackNum = m_tracksToRender.size() + 1;
+        // for multi-render, prefix each output file with a different number
+        int trackNum = m_tracksToRender.size() + 1;
 
-		// create a renderer for this track
-		m_activeRenderer = new ProjectRenderer(
-				m_qualitySettings,
-				m_outputSettings,
-				m_format,
-				pathForTrack(renderTrack, trackNum));
+        // create a renderer for this track
+        m_activeRenderer = new ProjectRenderer(
+                m_qualitySettings, m_outputSettings, m_format,
+                pathForTrack(renderTrack, trackNum));
 
-		if ( m_activeRenderer->isReady() )
-		{
-			// pass progress signals through
-			connect( m_activeRenderer, SIGNAL( progressChanged( int ) ),
-					this, SIGNAL( progressChanged( int ) ) );
+        if(m_activeRenderer->isReady())
+        {
+            // pass progress signals through
+            connect(m_activeRenderer, SIGNAL(progressChanged(int)), this,
+                    SIGNAL(progressChanged(int)));
 
-			// when it is finished, render the next track
-			connect( m_activeRenderer, SIGNAL( finished() ),
-					this, SLOT( renderNextTrack() ) );
+            // when it is finished, render the next track
+            connect(m_activeRenderer, SIGNAL(finished()), this,
+                    SLOT(renderNextTrack()));
 
-			m_activeRenderer->startProcessing();
-		}
-		else
-		{
-			qCritical( "Renderer failed to acquire a file device!" );
-			renderNextTrack();
-		}
-	}
+            m_activeRenderer->startProcessing();
+        }
+        else
+        {
+            qCritical("Renderer failed to acquire a file device!");
+            renderNextTrack();
+        }
+    }
 }
 
 // Render the song into individual tracks
 void RenderManager::renderTracks()
 {
-	const TrackContainer::TrackList & tl = Engine::getSong()->tracks();
+    const TrackContainer::TrackList& tl = Engine::getSong()->tracks();
 
-	// find all currently unnmuted tracks -- we want to render these.
-	for( auto it = tl.begin(); it != tl.end(); ++it )
-	{
-		Track* tk = (*it);
-		Track::TrackTypes type = tk->type();
+    // find all currently unnmuted tracks -- we want to render these.
+    for(auto it = tl.begin(); it != tl.end(); ++it)
+    {
+        Track*            tk   = (*it);
+        Track::TrackTypes type = tk->type();
 
-		// Don't mute automation tracks
-		if ( tk->isMuted() == false &&
-				( type == Track::InstrumentTrack || type == Track::SampleTrack ) )
-		{
-			m_unmuted.push_back(tk);
-		}
-	}
+        // Don't mute automation tracks
+        if(tk->isMuted() == false
+           && (type == Track::InstrumentTrack || type == Track::SampleTrack))
+        {
+            m_unmuted.push_back(tk);
+        }
+    }
 
-	const TrackContainer::TrackList t2 = Engine::getBBTrackContainer()->tracks();
-	for( auto it = t2.begin(); it != t2.end(); ++it )
-	{
-		Track* tk = (*it);
-		if ( tk->isMuted() == false )
-		{
-			m_unmuted.push_back(tk);
-		}
-	}
+    const TrackContainer::TrackList t2
+            = Engine::getBBTrackContainer()->tracks();
+    for(auto it = t2.begin(); it != t2.end(); ++it)
+    {
+        Track* tk = (*it);
+        if(tk->isMuted() == false)
+        {
+            m_unmuted.push_back(tk);
+        }
+    }
 
-	// copy the list of unmuted tracks into our rendering queue.
-	// we need to remember which tracks were unmuted to restore state at the end.
-	m_tracksToRender = m_unmuted;
+    // copy the list of unmuted tracks into our rendering queue.
+    // we need to remember which tracks were unmuted to restore state at the
+    // end.
+    m_tracksToRender = m_unmuted;
 
-	renderNextTrack();
+    renderNextTrack();
 }
 
 // Render the song into a single track
 void RenderManager::renderProject()
 {
-	m_activeRenderer = new ProjectRenderer(
-			m_qualitySettings,
-			m_outputSettings,
-			m_format,
-			m_outputPath);
+    m_activeRenderer = new ProjectRenderer(
+            m_qualitySettings, m_outputSettings, m_format, m_outputPath);
 
-	if( m_activeRenderer->isReady() )
-	{
-		// pass progress signals through
-		connect( m_activeRenderer, SIGNAL( progressChanged( int ) ),
-				this, SIGNAL( progressChanged( int ) ) );
+    if(m_activeRenderer->isReady())
+    {
+        // pass progress signals through
+        connect(m_activeRenderer, SIGNAL(progressChanged(int)), this,
+                SIGNAL(progressChanged(int)));
 
-		// as we have not queued any tracks, renderNextTrack will just clean up
-		connect( m_activeRenderer, SIGNAL( finished() ),
-				this, SLOT( renderNextTrack() ) );
+        // as we have not queued any tracks, renderNextTrack will just clean
+        // up
+        connect(m_activeRenderer, SIGNAL(finished()), this,
+                SLOT(renderNextTrack()));
 
-		m_activeRenderer->startProcessing();
-	}
-	else
-	{
-		qCritical( "Renderer failed to acquire a file device!" );
-		emit finished();
-	}
+        m_activeRenderer->startProcessing();
+    }
+    else
+    {
+        qCritical("Renderer failed to acquire a file device!");
+        emit finished();
+    }
 }
 
 // Unmute all tracks that were muted while rendering tracks
 void RenderManager::restoreMutedState()
 {
-	while( !m_unmuted.isEmpty() )
-	{
-		Track* restoreTrack = m_unmuted.back();
-		m_unmuted.pop_back();
-		restoreTrack->setMuted( false );
-	}
+    while(!m_unmuted.isEmpty())
+    {
+        Track* restoreTrack = m_unmuted.back();
+        m_unmuted.pop_back();
+        restoreTrack->setMuted(false);
+    }
 }
 
 // Determine the output path for a track when rendering tracks individually
-QString RenderManager::pathForTrack(const Track *track, int num)
+QString RenderManager::pathForTrack(const Track* track, int num)
 {
-	QString extension = ProjectRenderer::getFileExtensionFromFormat( m_format );
-	QString name = track->name();
-	name = name.remove(QRegExp("[^a-zA-Z]"));
-	name = QString( "%1_%2%3" ).arg( num ).arg( name ).arg( extension );
-	return QDir(m_outputPath).filePath(name);
+    QString extension = ProjectRenderer::getFileExtensionFromFormat(m_format);
+    QString name      = track->name();
+    name              = name.remove(QRegExp("[^a-zA-Z]"));
+    name              = QString("%1_%2%3").arg(num).arg(name).arg(extension);
+    return QDir(m_outputPath).filePath(name);
 }
 
 void RenderManager::updateConsoleProgress()
 {
-	if ( m_activeRenderer )
-	{
-		m_activeRenderer->updateConsoleProgress();
+    if(m_activeRenderer)
+    {
+        m_activeRenderer->updateConsoleProgress();
 
-		int totalNum = m_unmuted.size();
-		if ( totalNum > 0 )
-		{
-			// we are rendering multiple tracks, append a track counter to the output
-			int trackNum = totalNum - m_tracksToRender.size();
-			fprintf( stderr, "(%d/%d)", trackNum, totalNum );
-		}
-	}
+        int totalNum = m_unmuted.size();
+        if(totalNum > 0)
+        {
+            // we are rendering multiple tracks, append a track counter to the
+            // output
+            int trackNum = totalNum - m_tracksToRender.size();
+            fprintf(stderr, "(%d/%d)", trackNum, totalNum);
+        }
+    }
 }

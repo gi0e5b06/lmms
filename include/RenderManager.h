@@ -28,55 +28,52 @@
 
 #include <vector>
 
-#include "ProjectRenderer.h"
 #include "OutputSettings.h"
-
+#include "ProjectRenderer.h"
 
 class RenderManager : public QObject
 {
-	Q_OBJECT
-public:
-	RenderManager(
-		const Mixer::qualitySettings & qualitySettings,
-		const OutputSettings & outputSettings,
-		ProjectRenderer::ExportFileFormats fmt,
-		QString outputPath);
+    Q_OBJECT
 
-	virtual ~RenderManager();
+  public:
+    RenderManager(const Mixer::qualitySettings&      _qualitySettings,
+                  const OutputSettings&              _outputSettings,
+                  ProjectRenderer::ExportFileFormats _fmt,
+                  QString                            _outputPath);
 
-	/// Export all unmuted tracks into a single file
-	void renderProject();
+    virtual ~RenderManager();
 
-	/// Export all unmuted tracks into individual file
-	void renderTracks();
+    /// Export all unmuted tracks into a single file
+    void renderProject();
 
-	void abortProcessing();
+    /// Export all unmuted tracks into individual file
+    void renderTracks();
 
-signals:
-	void progressChanged( int );
-	void finished();
+    void abortProcessing();
 
- protected:
-	void postProcess(QString& file,bool aborted);
+  signals:
+    void progressChanged(int);
+    void finished();
 
-private slots:
-	void renderNextTrack();
-	void updateConsoleProgress();
+  protected:
+    void postProcess(QString& _file, bool _aborted);
 
-private:
-	QString pathForTrack( const Track *track, int num );
-	void restoreMutedState();
+  private slots:
+    void renderNextTrack();
+    void updateConsoleProgress();
 
-	const Mixer::qualitySettings m_qualitySettings;
-	const Mixer::qualitySettings m_oldQualitySettings;
-	const OutputSettings m_outputSettings;
-	ProjectRenderer::ExportFileFormats m_format;
-	QString m_outputPath;
+  private:
+    QString pathForTrack(const Track* track, int num);
+    void    restoreMutedState();
 
-	ProjectRenderer* m_activeRenderer;
-
-	QVector<Track*> m_tracksToRender;
-	QVector<Track*> m_unmuted;
-} ;
+    const Mixer::qualitySettings       m_qualitySettings;
+    const Mixer::qualitySettings       m_oldQualitySettings;
+    const OutputSettings               m_outputSettings;
+    ProjectRenderer::ExportFileFormats m_format;
+    QString                            m_outputPath;
+    ProjectRenderer*                   m_activeRenderer;
+    QVector<Track*>                    m_tracksToRender;
+    QVector<Track*>                    m_unmuted;
+};
 
 #endif

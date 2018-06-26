@@ -37,7 +37,7 @@ SideBarWidget::SideBarWidget( const QString & _title, const QPixmap & _icon,
 {
 	m_contents = new QWidget( this );
 	m_layout = new QVBoxLayout( m_contents );
-	m_layout->setSpacing( 0 );//5
+	m_layout->setSpacing( 5 );
 	m_layout->setMargin( 0 );
 }
 
@@ -54,19 +54,10 @@ SideBarWidget::~SideBarWidget()
 void SideBarWidget::paintEvent( QPaintEvent * )
 {
 	QPainter p( this );
-	//p.fillRect( 0, 0, width(), 27, palette().highlight().color() );
+
 	p.fillRect( 0, 0, width(), height(), p.background());
 
 	QFont f = p.font();
-	/*
-	f.setBold( true );
-	f.setUnderline( true );
-	f.setPointSize( f.pointSize() + 2 );
-	p.setFont( f );
-	*/
-	
-	//p.setPen(p.color());// palette().highlightedText().color() );
-
 	const int tx = m_icon.width()+12;
 
 	QFontMetrics metrics( f );

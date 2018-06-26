@@ -119,7 +119,7 @@ void SideBar::appendTab( SideBarWidget *widget )
 	addWidget( button );
 
 	widget->hide();
-	widget->setMinimumWidth( 200 );
+	widget->setMinimumWidth( 270 );
 
 	ToolTip::add( button, widget->title() );
 }

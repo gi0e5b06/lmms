@@ -254,15 +254,16 @@ void AutomationPatternView::paintEvent( QPaintEvent * )
 
 	QPainter p( &m_paintPixmap );
 
-	QLinearGradient lingrad( 0, 0, 0, height() );
+	//QLinearGradient lingrad( 0, 0, 0, height() );
 	QColor c;
 	bool muted = m_pat->getTrack()->isMuted() || m_pat->isMuted();
 	bool current = gui->automationEditor()->currentPattern() == m_pat;
-	
+
 	// state: selected, muted, normal
 	c = isSelected() ? selectedColor() : ( muted ? mutedBackgroundColor() 
 		:	painter.background().color() );
 
+        /*
 	lingrad.setColorAt( 1, c.darker( 300 ) );
 	lingrad.setColorAt( 0, c );
 
@@ -274,17 +275,18 @@ void AutomationPatternView::paintEvent( QPaintEvent * )
 		p.fillRect( rect(), lingrad );
 	}
 	else
+        */
 	{
 		p.fillRect( rect(), c );
 	}
-	
+
 	const float ppt = fixedTCOs() ?
 			( parentWidget()->width() - 2 * TCO_BORDER_WIDTH )
 				/ (float) m_pat->timeMapLength().getTact() :
 								pixelsPerTact();
 
 	const int x_base = TCO_BORDER_WIDTH;
-	
+
 	const float min = m_pat->firstObject()->minValue<float>();
 	const float max = m_pat->firstObject()->maxValue<float>();
 
@@ -295,14 +297,16 @@ void AutomationPatternView::paintEvent( QPaintEvent * )
 	p.translate( 0.0f, max * height() / y_scale - TCO_BORDER_WIDTH );
 	p.scale( 1.0f, -h );
 
-	QLinearGradient lin2grad( 0, min, 0, max );
+	//QLinearGradient lin2grad( 0, min, 0, max );
 	QColor col;
-	
+
 	col = !muted ? painter.pen().brush().color() : mutedColor();
 
+        /*
 	lin2grad.setColorAt( 1, col.lighter( 150 ) );
 	lin2grad.setColorAt( 0.5, col );
 	lin2grad.setColorAt( 0, col.darker( 150 ) );
+        */
 
 	p.setRenderHints( QPainter::Antialiasing, true );
 	for( AutomationPattern::timeMap::const_iterator it =
@@ -314,11 +318,13 @@ void AutomationPatternView::paintEvent( QPaintEvent * )
 			const float x1 = x_base + it.key() * ppTick;
 			const float x2 = (float)( width() - TCO_BORDER_WIDTH );
 			if( x1 > ( width() - TCO_BORDER_WIDTH ) ) break;
+                        /*
 			if( gradient() )
 			{
 				p.fillRect( QRectF( x1, 0.0f, x2 - x1, it.value() ), lin2grad );
 			}
 			else
+                        */
 			{
 				p.fillRect( QRectF( x1, 0.0f, x2 - x1, it.value() ), col );
 			}
@@ -354,11 +360,13 @@ void AutomationPatternView::paintEvent( QPaintEvent * )
 		path.lineTo( x_base + ( ( it + 1 ).key() ) * ppTick, 0.0f );
 		path.lineTo( origin );
 
+                /*
 		if( gradient() )
 		{
 			p.fillPath( path, lin2grad );
 		}
 		else
+                */
 		{
 			p.fillPath( path, col );
 		}
@@ -367,7 +375,8 @@ void AutomationPatternView::paintEvent( QPaintEvent * )
 
 	p.setRenderHints( QPainter::Antialiasing, false );
 	p.resetMatrix();
-	
+
+        /*
 	// bar lines
 	const int lineSize = 3;
 	p.setPen( c.darker( 300 ) );
@@ -379,6 +388,7 @@ void AutomationPatternView::paintEvent( QPaintEvent * )
 		p.drawLine( tx,	rect().bottom() - ( lineSize + TCO_BORDER_WIDTH ),
 					tx, rect().bottom() - TCO_BORDER_WIDTH );
 	}
+        */
 
 	// recording icon for when recording automation
 	if( m_pat->isRecording() )
@@ -386,20 +396,37 @@ void AutomationPatternView::paintEvent( QPaintEvent * )
 		p.drawPixmap( 1, rect().bottom() - s_pat_rec->height(),
 		 	*s_pat_rec );
 	}
-	
+
+        if(m_pat->getTrack()->isFrozen())
+        {
+                p.fillRect(0,0,width()-1,height()-1,
+                           QBrush(Qt::cyan,Qt::BDiagPattern));
+                p.fillRect(0,0,width()-1,height()-1,
+                           QBrush(QColor(0,160,160,64),Qt::SolidPattern));
+        }
+        else
+        {
+                paintTileTacts(false,m_pat->length().nextFullTact(),1,
+                               c,width(),height(),p);
+        }
+
 	// pattern name
 	paintTextLabel(m_pat->name(), p);
-	
+
+        /*
 	// inner border
 	p.setPen( c.lighter( current ? 160 : 130 ) );
-	p.drawRect( 1, 1, rect().right() - TCO_BORDER_WIDTH, 
+	p.drawRect( 1, 1, rect().right() - TCO_BORDER_WIDTH,
 		rect().bottom() - TCO_BORDER_WIDTH );
-		
-	// outer border	
+
+	// outer border
 	p.setPen( current? c.lighter( 130 ) : c.darker( 300 ) );
-	p.drawRect( 0, 0, rect().right(), rect().bottom() );	
+	p.drawRect( 0, 0, rect().right(), rect().bottom() );
+        */
+        paintTileBorder(current,c,width(),height(),p);
 
 	// draw the 'muted' pixmap only if the pattern was manualy muted
+        /*
 	if( m_pat->isMuted() )
 	{
 		const int spacing = TCO_BORDER_WIDTH;
@@ -407,6 +434,8 @@ void AutomationPatternView::paintEvent( QPaintEvent * )
 		p.drawPixmap( spacing, height() - ( size + spacing ),
 			embed::getIconPixmap( "muted", size, size ) );
 	}
+        */
+        paintMutedIcon(m_pat->isMuted(),p);
 
 	p.end();
 

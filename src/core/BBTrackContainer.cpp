@@ -27,7 +27,7 @@
 #include "BBTrack.h"
 #include "Engine.h"
 #include "Song.h"
-
+#include "Pattern.h"
 
 
 BBTrackContainer::BBTrackContainer() :
@@ -54,20 +54,30 @@ BBTrackContainer::~BBTrackContainer()
 
 
 bool BBTrackContainer::play( MidiTime _start, fpp_t _frames,
-								f_cnt_t _offset, int _tco_num )
+                             f_cnt_t _offset, int _tco_num )
 {
 	bool played_a_note = false;
-	if( lengthOfBB( _tco_num ) <= 0 )
+        tact_t beatlen = lengthOfBB( _tco_num );
+	if( beatlen <= 0 )
 	{
 		return false;
 	}
 
-	_start = _start % ( lengthOfBB( _tco_num ) * MidiTime::ticksPerTact() );
+	_start = _start % ( beatlen * MidiTime::ticksPerTact() );
 
 	TrackList tl = tracks();
 	for( TrackList::iterator it = tl.begin(); it != tl.end(); ++it )
 	{
-		if( ( *it )->play( _start, _frames, _offset, _tco_num ) )
+                f_cnt_t realstart = _start;
+                Pattern* p=dynamic_cast<Pattern*>((*it)->getTCO( _tco_num ));
+                if(p)
+                {
+                        tick_t tlen=p->beatPatternLength();
+                        if(tlen <= 0) continue;
+                        realstart = _start % tlen;//GDX
+                        //qInfo("realstart=%d tlen=%d",realstart,tlen);
+                }
+		if( ( *it )->play( realstart, _frames, _offset, _tco_num ) )
 		{
 			played_a_note = true;
 		}
@@ -98,10 +108,27 @@ tact_t BBTrackContainer::lengthOfBB( int _bb ) const
 	for( TrackList::const_iterator it = tl.begin(); it != tl.end(); ++it )
 	{
 		max_length = qMax( max_length,
-					( *it )->getTCO( _bb )->length() );
+                                   ( *it )->getTCO( _bb )->length() );
 	}
 
 	return max_length.nextFullTact();
+}
+
+
+tick_t BBTrackContainer::beatLengthOfBB( int _bb ) const
+{
+        tick_t max_length=0;
+        const TrackList& tl = tracks();
+	for( TrackList::const_iterator it = tl.begin(); it != tl.end(); ++it )
+	{
+                Pattern* p=dynamic_cast<Pattern*>((*it)->getTCO( _bb ));
+                if(p)
+                {
+                        tick_t plen=p->beatPatternLength();
+                        max_length = qMax( max_length, plen);
+                }
+        }
+        return max_length;
 }
 
 

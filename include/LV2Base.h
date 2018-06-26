@@ -25,6 +25,9 @@
 #ifndef LV2_BASE_H
 #define LV2_BASE_H
 
+#ifdef WANT_LV2
+
+
 #include "LV2Manager.h"
 #include "Plugin.h"
 
@@ -39,6 +42,8 @@ typedef enum BufferRates
 	AUDIO_RATE_OUTPUT,
 	CONTROL_RATE_INPUT,
 	CONTROL_RATE_OUTPUT,
+	MIDI_RATE_INPUT,
+	MIDI_RATE_OUTPUT,
         IGNORED
 } buffer_rate_t;
 
@@ -87,4 +92,5 @@ inline Plugin::Descriptor::SubPluginFeatures::Key lv2KeyToSubPluginKey
 }
 
 
+#endif
 #endif

@@ -175,7 +175,12 @@ public:
 	void setAutomatedValue( const float value );
 	void setValue( const float value );
 
-	void incValue( int steps )
+	void decrValue( int steps = 1)
+	{
+		setValue( m_value - steps * m_step );
+	}
+
+	void incrValue( int steps = 1)
 	{
 		setValue( m_value + steps * m_step );
 	}

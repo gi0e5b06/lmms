@@ -133,7 +133,7 @@ Effect * Effect::instantiate( const QString& pluginName,
 	// check whether instantiated plugin is an effect
 	if( dynamic_cast<Effect *>( p ) != NULL )
 	{
-                qInfo("Effect::instantiate SUCCESS %s",qPrintable(pluginName));
+                //qInfo("Effect::instantiate SUCCESS %s",qPrintable(pluginName));
 		// everything ok, so return pointer
 		Effect * effect = dynamic_cast<Effect *>( p );
 		effect->m_parent = dynamic_cast<EffectChain *>(_parent);

@@ -25,7 +25,10 @@
 #ifndef LV2_CONTROL_H
 #define LV2_CONTROL_H
 
-typedef float LV2_Data;
+#ifdef WANT_LV2
+
+
+//typedef float LV2_Data;
 //#include <lv2.h>
 
 #include "AutomatableModel.h"
@@ -119,4 +122,5 @@ private:
 
 } ;
 
+#endif
 #endif

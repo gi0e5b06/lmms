@@ -36,6 +36,7 @@
 #include <QMdiArea>
 #include <QPainter>
 #include <QScrollBar>
+#include <QShortcut>
 #include <QStyleOption>
 #include <QToolTip>
 
@@ -68,8 +69,9 @@ QPixmap * AutomationEditor::s_toolMove = NULL;
 QPixmap * AutomationEditor::s_toolYFlip = NULL;
 QPixmap * AutomationEditor::s_toolXFlip = NULL;
 
-const QVector<double> AutomationEditor::m_zoomXLevels =
-		{ 0.125f, 0.25f, 0.5f, 1.0f, 2.0f, 4.0f, 8.0f };
+//const QVector<double> AutomationEditor::m_zoomXLevels =
+//      { 0.10f, 0.20f, 0.50f, 1.0f, 2.0f, 5.0f, 10.0f, 20.0f };
+//{ 0.125f, 0.25f, 0.5f, 1.0f, 2.0f, 4.0f, 8.0f };
 
 
 
@@ -1243,7 +1245,7 @@ void AutomationEditor::paintEvent(QPaintEvent * pe )
 		// alternating shades for better contrast
 		float timeSignature = static_cast<float>( Engine::getSong()->getTimeSigModel().getNumerator() )
 				/ static_cast<float>( Engine::getSong()->getTimeSigModel().getDenominator() );
-		float zoomFactor = m_zoomXLevels[m_zoomingXModel.value()];
+		float zoomFactor = Editor::ZOOM_LEVELS[m_zoomingXModel.value()];
 		//the bars which disappears at the left side by scrolling
 		int leftBars = m_currentPosition * zoomFactor / MidiTime::ticksPerTact();
 
@@ -2059,9 +2061,9 @@ void AutomationEditor::updatePosition(const MidiTime & t )
 
 void AutomationEditor::zoomingXChanged()
 {
-	m_ppt = m_zoomXLevels[m_zoomingXModel.value()] * DEFAULT_PPT;
+	m_ppt = Editor::ZOOM_LEVELS[m_zoomingXModel.value()] * DEFAULT_PPT;
 
-	assert( m_ppt > 0 );
+	Q_ASSERT( m_ppt > 0.f );
 
 	m_timeLine->setPixelsPerTact( m_ppt );
 	update();
@@ -2080,7 +2082,7 @@ void AutomationEditor::zoomingYChanged()
 							* DEFAULT_Y_DELTA / 100;
 	}
 #ifdef LMMS_DEBUG
-	assert( m_y_delta > 0 );
+	Q_ASSERT( m_y_delta > 0 );
 #endif
 	resizeEvent( NULL );
 }
@@ -2236,8 +2238,8 @@ AutomationEditorWindow::AutomationEditorWindow() :
 
 	editActionsToolBar->addAction(drawAction);
 	editActionsToolBar->addAction(eraseAction);
-//	editActionsToolBar->addAction(m_selectButton);
-//	editActionsToolBar->addAction(m_moveButton);
+        //	editActionsToolBar->addAction(m_selectButton);
+        //	editActionsToolBar->addAction(m_moveButton);
 	editActionsToolBar->addAction(m_flipXAction);
 	editActionsToolBar->addAction(m_flipYAction);
 
@@ -2259,7 +2261,10 @@ AutomationEditorWindow::AutomationEditorWindow() :
 	connect(progression_type_group, SIGNAL(triggered(int)), m_editor, SLOT(setProgressionType(int)));
 
 	// setup tension-stuff
-	m_tensionKnob = new Knob( knobSmall_17, this, "Tension" );
+	//m_tensionKnob = new Knob( knobSmall_17, this, "Tension" );
+        m_tensionKnob = new Knob( this, "Tension" );
+        m_tensionKnob->setFixedSize(32,32);
+        m_tensionKnob->setPointColor(QColor(146,74,255));
 	m_tensionKnob->setModel(m_editor->m_tensionModel);
 	ToolTip::add(m_tensionKnob, tr("Tension value for spline"));
 	m_tensionKnob->setWhatsThis(
@@ -2293,7 +2298,8 @@ AutomationEditorWindow::AutomationEditorWindow() :
 	interpolationActionsToolBar->addAction(m_linearAction);
 	interpolationActionsToolBar->addAction(m_cubicHermiteAction);
 	interpolationActionsToolBar->addSeparator();
-	interpolationActionsToolBar->addWidget( new QLabel( tr("Tension: "), interpolationActionsToolBar ));
+	interpolationActionsToolBar->addWidget( new QLabel( tr("Tension: "),
+                                                            interpolationActionsToolBar ));
 	interpolationActionsToolBar->addWidget( m_tensionKnob );
 
 
@@ -2302,38 +2308,23 @@ AutomationEditorWindow::AutomationEditorWindow() :
 	/*DropToolBar *copyPasteActionsToolBar = addDropToolBarToTop(tr("Copy paste actions"));*/
 
 	QAction* cutAction = new QAction(embed::getIconPixmap("edit_cut"),
-					tr("Cut selected values (%1+X)").arg(
-						#ifdef LMMS_BUILD_APPLE
-						"⌘"), this);
-						#else
-						"Ctrl"), this);
-						#endif
+                                         tr("Cut selected values (%1+X)").arg(UI_CTRL_KEY));
 	QAction* copyAction = new QAction(embed::getIconPixmap("edit_copy"),
-					tr("Copy selected values (%1+C)").arg(
-						#ifdef LMMS_BUILD_APPLE
-						"⌘"), this);
-						#else
-						"Ctrl"), this);
-						#endif
-	QAction* pasteAction = new QAction(embed::getIconPixmap("edit_paste"),
-					tr("Paste values from clipboard (%1+V)").arg(
-						#ifdef LMMS_BUILD_APPLE
-						"⌘"), this);
-						#else
-						"Ctrl"), this);
-						#endif
+                                          tr("Copy selected values (%1+C)").arg(UI_CTRL_KEY));
+        QAction* pasteAction = new QAction(embed::getIconPixmap("edit_paste"),
+                                           tr("Paste values from clipboard (%1+V)").arg(UI_CTRL_KEY));
 
-	cutAction->setWhatsThis(
-		tr( "Click here and selected values will be cut into the "
-			"clipboard.  You can paste them anywhere in any pattern "
-			"by clicking on the paste button." ) );
-	copyAction->setWhatsThis(
-		tr( "Click here and selected values will be copied into "
-			"the clipboard.  You can paste them anywhere in any "
-			"pattern by clicking on the paste button." ) );
-	pasteAction->setWhatsThis(
-		tr( "Click here and the values from the clipboard will be "
-			"pasted at the first visible measure." ) );
+	cutAction->setWhatsThis
+                (tr( "Click here and selected values will be cut into the "
+                     "clipboard.  You can paste them anywhere in any pattern "
+                     "by clicking on the paste button." ) );
+	copyAction->setWhatsThis
+                (tr( "Click here and selected values will be copied into "
+                     "the clipboard.  You can paste them anywhere in any "
+                     "pattern by clicking on the paste button." ) );
+        pasteAction->setWhatsThis
+		(tr( "Click here and the values from the clipboard will be "
+                     "pasted at the first visible measure." ) );
 
 	cutAction->setShortcut(Qt::CTRL | Qt::Key_X);
 	copyAction->setShortcut(Qt::CTRL | Qt::Key_C);
@@ -2354,19 +2345,21 @@ AutomationEditorWindow::AutomationEditorWindow() :
 	//m_editor->m_timeLine->addToolButtons(timeLineToolBar);
 
 
-	addToolBarBreak();
+        addToolBarBreak();
 
 
 	// Zoom controls
 	DropToolBar *zoomToolBar = addDropToolBarToTop(tr("Zoom controls"));
 
-	QLabel * zoom_x_label = new QLabel( zoomToolBar );
-	zoom_x_label->setPixmap( embed::getIconPixmap( "zoom_x" ) );
+	QLabel * zoom_x_lbl = new QLabel( zoomToolBar );
+	zoom_x_lbl->setPixmap( embed::getIconPixmap( "zoom_x" ) );
+        zoom_x_lbl->setFixedSize( 32, 32 );
+        zoom_x_lbl->setAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
 
-	m_zoomingXComboBox = new ComboBox( zoomToolBar );
-	m_zoomingXComboBox->setFixedSize( 80, 22 );
+        m_zoomingXComboBox = new ComboBox( zoomToolBar );
+        m_zoomingXComboBox->setFixedSize( 70, 32 );
 
-	for( float const & zoomLevel : m_editor->m_zoomXLevels )
+        for(const float& zoomLevel : Editor::ZOOM_LEVELS )
 	{
 		m_editor->m_zoomingXModel.addItem( QString( "%1\%" ).arg( zoomLevel * 100 ) );
 	}
@@ -2374,15 +2367,20 @@ AutomationEditorWindow::AutomationEditorWindow() :
 
 	m_zoomingXComboBox->setModel( &m_editor->m_zoomingXModel );
 
+	new QShortcut(Qt::Key_Minus, m_zoomingXComboBox, SLOT(selectPrevious()));
+	new QShortcut(Qt::Key_Plus, m_zoomingXComboBox, SLOT(selectNext()));
+
 	connect( &m_editor->m_zoomingXModel, SIGNAL( dataChanged() ),
 			m_editor, SLOT( zoomingXChanged() ) );
 
 
-	QLabel * zoom_y_label = new QLabel( zoomToolBar );
-	zoom_y_label->setPixmap( embed::getIconPixmap( "zoom_y" ) );
+	QLabel * zoom_y_lbl = new QLabel( zoomToolBar );
+	zoom_y_lbl->setPixmap( embed::getIconPixmap( "zoom_y" ) );
+        zoom_y_lbl->setFixedSize( 32, 32 );
+        zoom_y_lbl->setAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
 
 	m_zoomingYComboBox = new ComboBox( zoomToolBar );
-	m_zoomingYComboBox->setFixedSize( 80, 22 );
+	m_zoomingYComboBox->setFixedSize( 70, 32 );
 
 	m_editor->m_zoomingYModel.addItem( "Auto" );
 	for( int i = 0; i < 7; ++i )
@@ -2396,10 +2394,10 @@ AutomationEditorWindow::AutomationEditorWindow() :
 	connect( &m_editor->m_zoomingYModel, SIGNAL( dataChanged() ),
 			m_editor, SLOT( zoomingYChanged() ) );
 
-	zoomToolBar->addWidget( zoom_x_label );
+	zoomToolBar->addWidget( zoom_x_lbl );
 	zoomToolBar->addWidget( m_zoomingXComboBox );
 	zoomToolBar->addSeparator();
-	zoomToolBar->addWidget( zoom_y_label );
+	zoomToolBar->addWidget( zoom_y_lbl );
 	zoomToolBar->addWidget( m_zoomingYComboBox );
 
 
@@ -2409,9 +2407,11 @@ AutomationEditorWindow::AutomationEditorWindow() :
 
 	QLabel * quantize_lbl = new QLabel( m_toolBar );
 	quantize_lbl->setPixmap( embed::getIconPixmap( "quantize" ) );
+        quantize_lbl->setFixedSize( 32, 32 );
+        quantize_lbl->setAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
 
 	m_quantizeComboBox = new ComboBox( m_toolBar );
-	m_quantizeComboBox->setFixedSize( 60, 22 );
+	m_quantizeComboBox->setFixedSize( 70, 32 );
 
 	m_quantizeComboBox->setModel( &m_editor->m_quantizeModel );
 

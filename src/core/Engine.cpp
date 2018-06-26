@@ -35,6 +35,7 @@
 #include "ProjectJournal.h"
 #include "Song.h"
 #include "BandLimitedWave.h"
+#include "Backtrace.h"
 
 
 float                LmmsCore::s_framesPerTick;
@@ -191,7 +192,8 @@ void LmmsCore::destroy()
 
 	deleteHelper( &s_song );
 
-	delete ConfigManager::inst();
+	//delete ConfigManager::inst();
+        ConfigManager::deinit();
 }
 
 

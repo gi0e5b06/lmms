@@ -3,6 +3,7 @@
  *                    a class to manage loading and instantiation
  *                    of lv2 plugins
  *
+ * Copyright (C) 2005-2018 Rui Nuno Capela
  * Copyright (c) 2005-2008 Danny McRae <khjklujn@netscape.net>
  *
  * This file is part of LMMS - https://lmms.io
@@ -28,6 +29,9 @@
 #ifndef LV2_MANAGER_H
 #define LV2_MANAGER_H
 
+#ifdef WANT_LV2
+
+
 //#include <lv2.h>
 
 #include <QtCore/QMap>
@@ -49,8 +53,16 @@
 
 typedef QString lv2_key_t;
 typedef Lilv::Instance* LV2_Instance;
-typedef float LV2_Data;
 typedef QVector<lv2_key_t> l_lv2_sortable_plugin_t;
+
+union LV2_Data
+{
+        float   f;
+        int16_t w[2];
+        uint8_t b[4];
+        int32_t i;
+};
+
 
 //typedef QPair<QString, lv2_key_t> lv2_sortable_plugin_t;
 //typedef QList<lv2_sortable_plugin_t> l_lv2_sortable_plugin_t;
@@ -147,6 +159,9 @@ class EXPORT LV2Manager
 
 	/* Indicates that the port is an control. */
 	bool isPortControl(const lv2_key_t& _key, uint32_t _port);
+
+	/* Indicates that the port is a midi (atom). */
+	bool isPortMidi(const lv2_key_t& _key, uint32_t _port);
 
 	/* Indicates that any bounds specified should be interpreted as
 	multiples of the sample rate. For instance, a frequency range from
@@ -324,6 +339,10 @@ class EXPORT LV2Manager
 	is called. */
 	bool cleanup(const lv2_key_t& _key, LV2_Instance _instance);
 
+	// URID map/unmap helpers.
+	static LV2_URID    lv2_urid_map(const char *uri);
+	static const char *lv2_urid_unmap(LV2_URID id);
+
  protected:
         //l_lv2_sortable_plugin_t
         QVector<lv2_key_t> m_effects;
@@ -340,6 +359,7 @@ class EXPORT LV2Manager
 
         //Lilv::Plugin*   plugin;
         //Lilv::Instance* instance;
+        LilvNode* NP_ATOM     ;
         LilvNode* NP_AUDIO    ;
         LilvNode* NP_CONTROL  ;
         LilvNode* NP_INPUT    ;
@@ -348,6 +368,7 @@ class EXPORT LV2Manager
         LilvNode* PP_INTEGER  ;
         LilvNode* PP_LOGARITHM;
         LilvNode* PP_TOGGLED  ;
+        LilvNode* SE_MIDIEVENT;
 
         Lilv::Plugin plugin(const lv2_key_t& _key);
         void addPlugin(const lv2_key_t& _key);
@@ -365,4 +386,5 @@ class EXPORT LV2Manager
 
 } ;
 
+#endif
 #endif

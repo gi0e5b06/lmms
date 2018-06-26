@@ -26,6 +26,8 @@
 #ifndef LV2_2_LMMS_H
 #define LV2_2_LMMS_H
 
+#ifdef WANT_LV2
+
 
 #include "LV2Manager.h"
 
@@ -77,4 +79,5 @@ private:
 
 } ;
 
+#endif
 #endif

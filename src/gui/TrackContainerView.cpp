@@ -312,7 +312,7 @@ bool TrackContainerView::allowRubberband() const
 
 
 
-void TrackContainerView::setPixelsPerTact( int _ppt )
+void TrackContainerView::setPixelsPerTact(float _ppt )
 {
 	m_ppt = _ppt;
 	updateBackgrounds();

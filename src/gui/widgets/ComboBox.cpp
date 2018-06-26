@@ -43,8 +43,7 @@ QPixmap * ComboBox::s_background = NULL;
 QPixmap * ComboBox::s_arrow = NULL;
 QPixmap * ComboBox::s_arrowSelected = NULL;
 
-const int CB_ARROW_BTN_WIDTH = 20;
-
+const int CB_ARROW_BTN_WIDTH  = 20;
 
 ComboBox::ComboBox( QWidget * _parent, const QString & _name ) :
 	QWidget( _parent ),
@@ -135,8 +134,10 @@ void ComboBox::mousePressEvent( QMouseEvent* event )
 			m_menu.clear();
 			for( int i = 0; i < model()->size(); ++i )
 			{
-				QAction * a = m_menu.addAction( model()->itemPixmap( i ) ? model()->itemPixmap( i )->pixmap() : QPixmap(),
-													model()->itemText( i ) );
+				QAction * a = m_menu.addAction( model()->itemPixmap( i )
+                                                                ? model()->itemPixmap( i )->pixmap()
+                                                                : QPixmap(),
+                                                                model()->itemText( i ) );
 				a->setData( i );
 			}
 
@@ -176,7 +177,8 @@ void ComboBox::paintEvent( QPaintEvent * _pe )
 {
 	QPainter p( this );
 
-	p.fillRect( 2, 2, width()-2, height()-4, *s_background );
+	//p.fillRect( 2, 2, width()-2, height()-4, *s_background );
+        p.fillRect( 2, 2, width()-2, height()-4, p.background() );
 
 	QColor shadow = palette().shadow().color();
 	QColor highlight = palette().highlight().color();
@@ -200,7 +202,8 @@ void ComboBox::paintEvent( QPaintEvent * _pe )
 
 	QPixmap * arrow = m_pressed ? s_arrowSelected : s_arrow;
 
-	p.drawPixmap( width() - CB_ARROW_BTN_WIDTH + 5, 4, *arrow );
+	p.drawPixmap( width() - CB_ARROW_BTN_WIDTH + 5,
+                      (height() - 15)/2, *arrow );
 
 	if( model() && model()->size() > 0 )
 	{

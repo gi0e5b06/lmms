@@ -42,6 +42,7 @@ public:
 		OggFile,
 		MP3File,
 		AUFile,
+                RawFile,
 		NumFileFormats
 	} ;
 
@@ -50,8 +51,8 @@ public:
 		bool isAvailable() const { return m_getDevInst != nullptr; }
 
 		ExportFileFormats m_fileFormat;
-		const char * m_description;
-		const char * m_extension;
+		QString /*const char **/ m_description;
+		QString /*const char **/ m_extension;
 		AudioFileDeviceInstantiaton m_getDevInst;
 	} ;
 

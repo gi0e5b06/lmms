@@ -340,21 +340,24 @@ public slots:
 	void startExport();
 	void stopExport();
 
-
 	void setModified();
-
 	void clearProject();
 
+	void addInstrumentTrack();
 	void addBBTrack();
+	void addSampleTrack();
+	void addAutomationTrack();
+
 
  protected:
 	void clearSongMetaData();
+        bool createProjectTree();
+        QString projectDir();
+
 
 private slots:
 	void insertBar();
 	void removeBar();
-	void addSampleTrack();
-	void addAutomationTrack();
 
 	void setTempo();
 	void setTimeSignature();

@@ -35,6 +35,10 @@
 #define qInfo qWarning
 #endif
 
+#ifndef qNotice
+#define qNotice qWarning
+#endif
+
 // set whether debug-stuff (like messages on the console, asserts and other
 // additional range-checkings) should be compiled
 
@@ -43,10 +47,10 @@
 #include <assert.h>
 
 #define DEBUG_THREAD_PRINT					     \
-	qWarning("THREAD: CT=%s P=%d %s#%d",			     \
-		 qPrintable(QThread::currentThread()->objectName()), \
-		 QThread::currentThread()->priority(),		     \
-		 __FILE__,__LINE__);
+	qInfo("THREAD: CT=%s P=%d %s#%d",			     \
+              qPrintable(QThread::currentThread()->objectName()),    \
+              QThread::currentThread()->priority(),		     \
+              __FILE__,__LINE__);
 
 #define DEBUG_CONNECT(sender,signal,receiver,slot)                      \
         {                                                               \

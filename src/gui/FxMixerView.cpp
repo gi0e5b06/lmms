@@ -71,7 +71,8 @@ FxMixerView::FxMixerView() :
 	QHBoxLayout * ml = new QHBoxLayout;
 
 	// Set margins
-	ml->setContentsMargins(4, style()->pixelMetric( QStyle::PM_ScrollBarExtent )+2 /*16*/, 4, 0 );
+	ml->setContentsMargins(4,6,4,0);
+        //style()->pixelMetric( QStyle::PM_ScrollBarExtent )+2 /*16*/, 4, 0 );
 
 	// Channel area
 	m_channelAreaWidget = new QWidget;
@@ -162,12 +163,12 @@ FxMixerView::FxMixerView() :
 	parentWidget()->setAttribute( Qt::WA_DeleteOnClose, false );
 	parentWidget()->move( 5, 310 );
 	*/
-	SubWindow* win=SubWindow::putWidgetOnWorkspace(this,false,false,true);
+	/*SubWindow* win=*/SubWindow::putWidgetOnWorkspace(this,false,false,true);
 	setFixedSize(size());
 	setSizePolicy( QSizePolicy::Preferred, QSizePolicy::Fixed );
 	ml->setSizeConstraint( QLayout::SetMinimumSize );
 	ml->setSizeConstraint( QLayout::SetMinAndMaxSize );
-	win->move(5,310);
+	//win->move(5,310);
 
 	// we want to receive dataChanged-signals in order to update
 	setModel( m );

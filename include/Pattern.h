@@ -64,6 +64,7 @@ public:
 	void init();
 
 	void updateLength();
+	MidiTime beatPatternLength() const;
 
 	// note management
 	Note * addNote( const Note & _new_note, const bool _quant_pos = true );
@@ -121,16 +122,18 @@ protected:
 
 
 protected slots:
-	void addSteps();
 	void cloneSteps();
-	void removeSteps();
+	void addBarSteps();
+	void addBeatSteps();
+	void addOneStep();
+	void removeBarSteps();
+	void removeBeatSteps();
+	void removeOneStep();
 	void clear();
 	void changeTimeSignature();
 
 
 private:
-	MidiTime beatPatternLength() const;
-
 	void setType( PatternTypes _new_pattern_type );
 	void checkType();
 

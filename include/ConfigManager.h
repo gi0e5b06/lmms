@@ -23,20 +23,23 @@
  */
 
 
-#ifndef CONFIG_MGR_H
-#define CONFIG_MGR_H
+#ifndef CONFIG_MANAGER_H
+#define CONFIG_MANAGER_H
 
 #include "lmmsconfig.h"
 
-#include <QtCore/QMap>
-#include <QtCore/QPair>
-#include <QtCore/QStringList>
-#include <QtCore/QVector>
+#include <QMap>
+#include <QPair>
+#include <QStringList>
+#include <QVector>
+#include <QDir>
 
 #include "export.h"
 #include "MemoryManager.h"
+#include "Backtrace.h"
 
-class LmmsCore;
+
+//class LmmsCore;
 
 
 const QString PROJECTS_PATH      = "projects/";
@@ -57,14 +60,10 @@ class EXPORT ConfigManager
 {
 	MM_OPERATORS
 public:
-	static inline ConfigManager * inst()
-	{
-		if( s_instanceOfMe == NULL )
-		{
-			s_instanceOfMe = new ConfigManager();
-		}
-		return s_instanceOfMe;
-	}
+
+        static void init(const char* arg0);
+        static void deinit();
+        static ConfigManager* inst();
 
 	const QString & dataDir() const
 	{
@@ -264,8 +263,8 @@ public:
 private:
 	static ConfigManager * s_instanceOfMe;
 
-	ConfigManager();
-	ConfigManager( const ConfigManager & _c );
+	ConfigManager(QDir& _appPath);
+        //ConfigManager( const ConfigManager & _c );
 	~ConfigManager();
 
 	void upgrade_1_1_90();
@@ -296,7 +295,7 @@ private:
 	settingsMap m_settings;
 
 
-	friend class LmmsCore;
+	//friend class LmmsCore;
 
 } ;
 

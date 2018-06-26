@@ -223,8 +223,8 @@ int QtXmlWrapper::dosavefile(const char *filename,
 
 void QtXmlWrapper::addpar(const std::string &name, int val)
 {
-    d->addparams("par", 2, "name", name.c_str(), "value", stringFrom<int>(
-                  val).c_str());
+    d->addparams("par", 2, "name", name.c_str(), "value",
+                 stringFrom<int>(val).c_str());
 }
 
 void QtXmlWrapper::addparreal(const std::string &name, float val)
@@ -257,7 +257,8 @@ void QtXmlWrapper::beginbranch(const std::string &name)
 
 void QtXmlWrapper::beginbranch(const std::string &name, int id)
 {
-    d->m_node = d->addparams(name.c_str(), 1, "id", stringFrom<int>(id).c_str());
+    d->m_node = d->addparams(name.c_str(), 1, "id",
+                             stringFrom<int>(id).c_str());
 }
 
 void QtXmlWrapper::endbranch()
@@ -504,7 +505,8 @@ float QtXmlWrapper::getparreal(const char *name, float defaultpar) const
 		return defaultpar;
 	}
 
-	return QLocale().toFloat( tmp.attribute( "value" ) );
+	//return QLocale().toFloat( tmp.attribute( "value" ) );
+        return tmp.attribute( "value" ).replace(',','.').toFloat();
 }
 
 float QtXmlWrapper::getparreal(const char *name,
