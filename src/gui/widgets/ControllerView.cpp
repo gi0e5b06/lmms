@@ -220,15 +220,16 @@ void ControllerView::paintEvent( QPaintEvent * )
 	p.setPen( palette().text().color() );
 	p.drawText( 6, 53, model()->displayName() );
 
-	/*QFont*/ f = pointSizeF( font(), 9.5f );
+	/*QFont*/ f = pointSizeF( font(), 7.5f );//9.5
 	//f.setBold( true );
 	p.setFont( f );
 
 	Controller * c = controller();//castModel<Controller>();
 	p.setPen( palette().shadow().color() );
-	p.drawText( 7, 29, c->name() );
+	//p.drawText( 7, 29, c->name() );
+        p.drawText( 107, 54, c->name() );
 	p.setPen( palette().text().color() );
-	p.drawText( 6, 28, c->name() );
+	p.drawText( 106, 53, c->name() );
 }
 
 

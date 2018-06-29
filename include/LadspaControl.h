@@ -107,6 +107,7 @@ protected:
 
 private:
 	bool m_link;
+        int m_linkDepth;
 	port_desc_t * m_port;
 
 	BoolModel m_linkEnabledModel;

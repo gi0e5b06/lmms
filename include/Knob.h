@@ -82,6 +82,8 @@ public:
 		setUnit( _txt_after );
 	}
 
+        virtual void setModel(Model* _m, bool isOldModelValid = true);
+
 	void setLabel( const QString & txt ); //deprecated
 
         QString text() const;
@@ -155,7 +157,9 @@ private:
 	virtual void doConnections();
 
 	QLineF calculateLine( const QPointF & _mid, float _radius,
-						float _innerRadius = 1) const;
+                              float _innerRadius = 1) const;
+
+        QColor statusColor();
 
         void clearCache();
 	void drawKnob( QPainter * _p );
@@ -200,6 +204,7 @@ private:
 	QColor m_lineColor; //!< unused yet
 	QColor m_arcColor; //!< unused yet
 	QColor m_pointColor;
+        QColor m_statusColor; //!< used as an indicator
 	QColor m_textColor;
 
 	knobTypes m_knobNum;

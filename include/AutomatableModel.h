@@ -68,8 +68,6 @@ class EXPORT AutomatableModel : public Model, public JournallingObject
 	Q_OBJECT
 	MM_OPERATORS
 public:
-	typedef QVector<AutomatableModel *> AutoModelVector;
-
 	enum ScaleType
 	{
 		Linear,
@@ -174,6 +172,7 @@ public:
 
 	void setAutomatedValue( const float value );
 	void setValue( const float value );
+        void propagateValue();
 
 	void decrValue( int steps = 1)
 	{
@@ -281,17 +280,23 @@ public:
 		s_periodCounter = 0;
 	}
 
+        //tmp
+	QVector<AutomatableModel *> m_linkedModels;
+
+
 signals:
 	void initValueChanged( float val );
 	void destroyed( jo_id_t id );
         void controllerValueChanged();
+
 
 public slots:
 	virtual void reset();
 	void unlinkControllerConnection();
         virtual void onControllerValueChanged();
 
-protected:
+
+ protected:
 	AutomatableModel(const float val = 0,
                          const float min = 0,
                          const float max = 0,
@@ -318,7 +323,7 @@ private:
 		loadSettings( element, "value" );
 	}
 
-	void linkModel( AutomatableModel* model );
+	void linkModel( AutomatableModel* model, bool propagate );
 	void unlinkModel( AutomatableModel* model );
 
 	//! @brief Scales @value from linear to logarithmic.
@@ -348,8 +353,6 @@ private:
 	// used to determine if step size should be applied strictly (ie. always)
 	// or only when value set from gui (default)
 	bool m_hasStrictStepSize;
-
-	AutoModelVector m_linkedModels;
 
 
 	//! NULL if not appended to controller, otherwise connection info

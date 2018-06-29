@@ -56,10 +56,12 @@
 TextFloat * Knob::s_textFloat = NULL;
 
 
+//new FloatModel(0.7f,0.f,1.f,0.01f, NULL, _name, true ), this ),
+
 //! @todo: in C++11, we can use delegating ctors
 #define DEFAULT_KNOB_INITIALIZER_LIST \
 	QWidget( _parent ), \
-	FloatModelView( new FloatModel(0.7f,0.f,1.f,0.01f, NULL, _name, true ), this ), \
+        FloatModelView( NULL, this ), \
 	m_pressLeft( false ), \
 	m_label( "" ), \
 	m_knobPixmap( NULL ), \
@@ -128,9 +130,10 @@ void Knob::initUi( const QString & _name )
 		break;
 	}
 
+        m_statusColor=Qt::black;
 	setPointColor(lineColor());
-	doConnections();
-        update();
+	//doConnections();
+        //update();
 }
 
 
@@ -438,6 +441,23 @@ float Knob::angleFromValue( float value, float minValue, float maxValue, float t
 }
 
 
+QColor Knob::statusColor()
+{
+        FloatModel* m=model();
+        QColor r(255,255,255,192);
+
+        if(!m)                   r=QColor(128,128,128,192); //no model...
+        else
+        if(m->isAutomated())     r=QColor(128,128,255,192); //automation pattern
+        else
+        if(m->isControlled())    r=QColor(255,192,0,192);   //midi
+        else
+        if(m->hasLinkedModels()) r=QColor(128,128,255,192); // link
+
+        return r;
+}
+
+
 void Knob::clearCache()
 {
         //qInfo("Knob::clearCache()");
@@ -450,21 +470,36 @@ void Knob::clearCache()
 void Knob::drawKnob(QPainter* _p)
 {
         FloatModel* m=model();
-        if(!m) return;
+        if(!m)
+        {
+                qInfo("Knob::drawKnob NO MODEL p=%p",this);
+                return;
+        }
+        if(!isVisible())
+        {
+                qInfo("Knob::drawKnob NOT VISIBLE p=%p",this);
+                clearCache();
+                return;
+        }
 
+        QColor newStatusColor=statusColor();
         //qInfo("Knob::drawKnob");
 	//PL_BEGIN("KnobCache");
-	if( !updateAngle() && m_cache )
+	if( !updateAngle() &&
+            newStatusColor==m_statusColor &&
+            m_cache )
 	{
-                //qInfo("Knob::drawKnob uses cache");
+                //qInfo("Knob::drawKnob uses cache p=%p",this);
 		_p->drawImage( 0, 0, *m_cache );
 		//PL_END("KnobCache");
 		return;
 	}
 	//PL_END("KnobCache");
 	//PL_BEGIN("KnobDraw");
+        m_statusColor=newStatusColor;
 
-        //qInfo("Knob::drawKnob no cache");
+        //qInfo("Knob::drawKnob no cache p=%p val=%f min=%f max=%f cv=%f ta=%f a=%f",this,
+        //  m->value(),m->minValue(),m->maxValue(),m->centerValue(),m_totalAngle,m_angle);
         if(!m_cache) m_cache=new QImage( size(), QImage::Format_ARGB32 );
 	m_cache->fill( qRgba( 0, 0, 0, 0 ) );
 
@@ -559,24 +594,8 @@ void Knob::drawKnob(QPainter* _p)
 
                 QPen pen0(QColor(255,255,255,192),1,Qt::SolidLine,Qt::RoundCap);
                 p.setPen(pen0);
-                QColor bg0(255,255,255,192);
 
-                /*
-                  m->controllerConnection() == NULL ||
-                  m->controllerConnection()->getController()->frequentUpdates() == false ||
-                  m->hasLinkedModels() ||
-
-                  else
-                  m->controllerConnection()->getController()->frequentUpdates() == false ||
-                */
-
-                if(m->isAutomated())     bg0=QColor(128,128,255,192); //automation pattern
-                else
-                if(m->isControlled())    bg0=QColor(255,192,0,192);   //midi
-                else
-                if(m->hasLinkedModels()) bg0=QColor(128,128,255,192); // link
-
-                p.setBrush(bg0);
+                p.setBrush(m_statusColor);
                 float re=radius+2.f;//-2.f;
                 p.drawEllipse(mid.x()-re/2.f,mid.y()-re/2.f,re,re);//+1.f,re+1.f);
 
@@ -613,11 +632,17 @@ void Knob::resizeEvent(QResizeEvent * _re)
         mandatoryUpdate();
 }
 
+void Knob::setModel(Model* _m, bool isOldModelValid)
+{
+        FloatModelView::setModel(_m,isOldModelValid);
+        //mandatoryUpdate();
+}
+
 void Knob::modelChanged()
 {
-        //qInfo("Knob::modelChanged");
-        clearCache();
-        //update();
+        //qInfo("Knob::modelChanged p=%p",this);
+        //clearCache();
+        mandatoryUpdate();
 }
 
 void Knob::convert(const QPoint& _p, float& value_, float& dist_)
@@ -1034,7 +1059,7 @@ void Knob::friendlyUpdate()
 	    //m->hasLinkedModels() ||
 	    Controller::runningFrames() % (256*4) == 0 )
 	{
-                //qInfo("Knob::friendlyUpdate 2");
+                //qInfo("Knob::friendlyUpdate 2 p=%p",this);
 		update();
 	}
         else
@@ -1047,7 +1072,7 @@ void Knob::friendlyUpdate()
 
 void Knob::mandatoryUpdate()
 {
-        //qInfo("Knob::mandatoryUpdate");
+        //qInfo("Knob::mandatoryUpdate p=%p",this);
         clearCache();
         update();
 }
@@ -1075,7 +1100,7 @@ QString Knob::displayValue() const
 void Knob::doConnections()
 {
         FloatModel* m=model();
-        //qInfo("Knob::doConnections model()=%p",m);
+        //qInfo("Knob::doConnections p=%p model()=%p",this,m);
 	if(m)
 	{
                 m->disconnect(this);

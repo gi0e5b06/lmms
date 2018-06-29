@@ -40,8 +40,11 @@ public:
 	LadspaControlView( QWidget * _parent, LadspaControl * _ctl );
 	virtual ~LadspaControlView();
 
-private:
-	LadspaControl * m_ctl;
+private slots:
+        void bigUpdate();
+
+ private:
+        LadspaControl * m_ctl;
 
 } ;
 

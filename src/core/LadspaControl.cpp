@@ -30,19 +30,20 @@
 
 
 LadspaControl::LadspaControl( Model * _parent, port_desc_t * _port,
-								bool _link ) :
+                              bool _link ) :
 	Model( _parent ),
 	m_link( _link ),
+	m_linkDepth( 0 ),
 	m_port( _port ),
 	m_linkEnabledModel( _link, this, tr( "Link channels" ) ),
 	m_toggledModel( false, this, m_port->name ),
 	m_knobModel( 0, 0, 0, 1, this, m_port->name ),
 	m_tempoSyncKnobModel( 0, 0, 0, 1, m_port->max, this, m_port->name )
 {
-	if( m_link )
+	//if( m_link )
 	{
 		connect( &m_linkEnabledModel, SIGNAL( dataChanged() ),
-					 this, SLOT( linkStateChanged() ) );
+                         this, SLOT( linkStateChanged() ) );
 	}
 
 	switch( m_port->data_type )
@@ -122,7 +123,7 @@ LADSPA_Data LadspaControl::value()
 		case TIME:
 			return static_cast<LADSPA_Data>( m_tempoSyncKnobModel.value() );
 		default:
-			qWarning( "LadspaControl::value(): BAD BAD BAD\n" );
+			qWarning( "LadspaControl::value() invalid data type" );
 			break;
 	}
 
@@ -142,7 +143,7 @@ ValueBuffer * LadspaControl::valueBuffer()
 		case TIME:
 			return m_tempoSyncKnobModel.valueBuffer();
 		default:
-			qWarning( "LadspaControl::valueBuffer(): BAD BAD BAD\n" );
+			qWarning( "LadspaControl::valueBuffer() invalid data type" );
 			break;
 	}
 
@@ -169,7 +170,7 @@ void LadspaControl::setValue( LADSPA_Data _value )
 								_value ) );
 			break;
 		default:
-			printf("LadspaControl::setValue BAD BAD BAD\n");
+			qWarning("LadspaControl::setValue()  invalid data type" );
 			break;
 	}
 }
@@ -200,7 +201,7 @@ void LadspaControl::saveSettings( QDomDocument& doc,
 			m_tempoSyncKnobModel.saveSettings( doc, e, "data" );
 			break;
 		default:
-			printf("LadspaControl::saveSettings BAD BAD BAD\n");
+			qWarning("LadspaControl::saveSettings() invalid data type" );
 			break;
 	}
 
@@ -243,7 +244,7 @@ void LadspaControl::loadSettings( const QDomElement& parent, const QString& name
 			m_tempoSyncKnobModel.loadSettings( e, dataModelName );
 			break;
 		default:
-			printf("LadspaControl::loadSettings BAD BAD BAD\n");
+			qWarning("LadspaControl::loadSettings() invalid data type" );
 			break;
 	}
 }
@@ -251,21 +252,24 @@ void LadspaControl::loadSettings( const QDomElement& parent, const QString& name
 
 
 
-void LadspaControl::linkControls( LadspaControl * _control )
+void LadspaControl::linkControls( LadspaControl * _ctrl )
 {
 	switch( m_port->data_type )
 	{
 		case TOGGLED:
-			BoolModel::linkModels( &m_toggledModel, _control->toggledModel() );
+			BoolModel::linkModels( &m_toggledModel, _ctrl->toggledModel() );
+                        //m_toggledModel.propagateValue();
 			break;
 		case INTEGER:
 		case FLOATING:
-			FloatModel::linkModels( &m_knobModel, _control->knobModel() );
-			break;
+			FloatModel::linkModels( &m_knobModel, _ctrl->knobModel() );
+                        //m_knobModel.propagateValue();
+                        break;
 		case TIME:
 			TempoSyncKnobModel::linkModels( &m_tempoSyncKnobModel,
-					_control->tempoSyncKnobModel() );
-			break;
+                                                        _ctrl->tempoSyncKnobModel() );
+                        //m_tempoSyncKnobModel.propagateValue();
+                        break;
 		default:
 			break;
 	}
@@ -301,20 +305,20 @@ void LadspaControl::tempoKnobChanged()
 
 
 
-void LadspaControl::unlinkControls( LadspaControl * _control )
+void LadspaControl::unlinkControls( LadspaControl * _ctrl )
 {
 	switch( m_port->data_type )
 	{
 		case TOGGLED:
-			BoolModel::unlinkModels( &m_toggledModel, _control->toggledModel() );
+			BoolModel::unlinkModels( &m_toggledModel, _ctrl->toggledModel() );
 			break;
 		case INTEGER:
 		case FLOATING:
-			FloatModel::unlinkModels( &m_knobModel, _control->knobModel() );
+			FloatModel::unlinkModels( &m_knobModel, _ctrl->knobModel() );
 			break;
 		case TIME:
 			TempoSyncKnobModel::unlinkModels( &m_tempoSyncKnobModel,
-					_control->tempoSyncKnobModel() );
+                                                          _ctrl->tempoSyncKnobModel() );
 			break;
 		default:
 			break;
@@ -326,7 +330,28 @@ void LadspaControl::unlinkControls( LadspaControl * _control )
 
 void LadspaControl::linkStateChanged()
 {
-	emit linkChanged( m_port->control_id, m_linkEnabledModel.value() );
+        if(m_linkDepth<1)
+        {
+                m_linkDepth++;
+                emit linkChanged( m_port->control_id, m_linkEnabledModel.value() );
+
+                for( AutomatableModel* model : m_toggledModel.m_linkedModels )
+                {
+                        LadspaControl* ctrl=dynamic_cast<LadspaControl*>(model->parentModel());
+                        if(ctrl) ctrl->linkStateChanged();
+                }
+                for( AutomatableModel* model : m_knobModel.m_linkedModels )
+                {
+                        LadspaControl* ctrl=dynamic_cast<LadspaControl*>(model->parentModel());
+                        if(ctrl) ctrl->linkStateChanged();
+                }
+                for( AutomatableModel* model : m_tempoSyncKnobModel.m_linkedModels )
+                {
+                        LadspaControl* ctrl=dynamic_cast<LadspaControl*>(model->parentModel());
+                        if(ctrl) ctrl->linkStateChanged();
+                }
+                m_linkDepth--;
+        }
 }
 
 
@@ -336,7 +361,3 @@ void LadspaControl::setLink( bool _state )
 {
 	m_linkEnabledModel.setValue( _state );
 }
-
-
-
-

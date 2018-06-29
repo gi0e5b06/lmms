@@ -52,7 +52,14 @@ LadspaControlView::LadspaControlView( QWidget * _parent,
 		link->setModel( &m_ctl->m_linkEnabledModel );
 		ToolTip::add( link, tr( "Link channels" ) );
 		layout->addWidget( link );
+                connect( m_ctl, SIGNAL( linkChanged(int,bool) ),
+                         this, SLOT( bigUpdate() ) );
 	}
+        else
+        {
+                connect( m_ctl, SIGNAL( linkChanged(int,bool) ),
+                         this, SLOT( update() ) );
+        }
 
 	Knob * knb = NULL;
 
@@ -64,7 +71,7 @@ LadspaControlView::LadspaControlView( QWidget * _parent,
 				(m_ctl->port()->name, this,
 				 m_ctl->port()->name, //QString::null
 				 LedCheckBox::Green );
-			qWarning("LadspaControlView: LedCheckBox %p name=%s",toggle,qPrintable(m_ctl->port()->name));
+			//qInfo("LadspaControlView: LedCheckBox %p name=%s",toggle,qPrintable(m_ctl->port()->name));
 			toggle->setModel( m_ctl->toggledModel() );
 			layout->addWidget( toggle );
 			/*
@@ -85,12 +92,12 @@ LadspaControlView::LadspaControlView( QWidget * _parent,
 		case INTEGER:
 		case FLOATING:
 			knb = new Knob( knobBright_26, this, m_ctl->port()->name );
-			qWarning("LadspaControlView: Knob %p name=%s",knb,qPrintable(m_ctl->port()->name));
+			//qInfo("LadspaControlView: Knob %p name=%s",knb,qPrintable(m_ctl->port()->name));
 			break;
 
 		case TIME:
 			knb = new TempoSyncKnob( knobBright_26, this, m_ctl->port()->name );
-			qWarning("LadspaControlView: TempoSyncKnob %p name=%s",knb,qPrintable(m_ctl->port()->name));
+			//qInfo("LadspaControlView: TempoSyncKnob %p name=%s",knb,qPrintable(m_ctl->port()->name));
 			break;
 
 		default:
@@ -130,6 +137,18 @@ LadspaControlView::LadspaControlView( QWidget * _parent,
 
 LadspaControlView::~LadspaControlView()
 {
+}
+
+
+
+
+
+void LadspaControlView::bigUpdate()
+{
+        QWidget* w=this;
+        QWidget* p=w->parentWidget();
+        if(p) p->update();
+        else  w->update();
 }
 
 

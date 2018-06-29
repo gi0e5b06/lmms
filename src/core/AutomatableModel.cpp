@@ -213,37 +213,42 @@ void AutomatableModel::loadSettings( const QDomElement& element, const QString& 
 
 void AutomatableModel::setValue( const float value )
 {
-	m_oldValue = m_value;
-	++m_setValueDepth;
-	const float old_val = m_value;
+	const float oldval = m_value;
+        const float newval = fittedValue( value );
 
-	m_value = fittedValue( value );
-	if( old_val != m_value )
+	if( oldval != newval )
 	{
-		// add changes to history so user can undo it
-		addJournalCheckPoint();
-
-		// notify linked models
-		for( AutoModelVector::Iterator it = m_linkedModels.begin(); it != m_linkedModels.end(); ++it )
-		{
-			if( (*it)->m_setValueDepth < 1 && (*it)->fittedValue( value ) != (*it)->m_value )
-			{
-				bool journalling = (*it)->testAndSetJournalling( isJournalling() );
-				(*it)->setValue( value );
-				(*it)->setJournalling( journalling );
-			}
-		}
-		m_valueChanged = true;
+                m_oldValue = m_value;
+                m_value    = newval; 
+                propagateValue();
 		emit dataChanged();
 	}
 	else
 	{
 		emit dataUnchanged();
 	}
-	--m_setValueDepth;
 }
 
 
+void AutomatableModel::propagateValue()
+{
+        ++m_setValueDepth;
+        // add changes to history so user can undo it
+        addJournalCheckPoint();
+
+        // notify linked models
+        for( QVector<AutomatableModel *>::Iterator it = m_linkedModels.begin(); it != m_linkedModels.end(); ++it )
+	{
+                if( (*it)->m_setValueDepth < 1 && (*it)->fittedValue( m_value ) != (*it)->m_value )
+		{
+                        bool journalling = (*it)->testAndSetJournalling( isJournalling() );
+                        (*it)->setValue( m_value );
+                        (*it)->setJournalling( journalling );
+                }
+        }
+        m_valueChanged = true;
+        --m_setValueDepth;
+}
 
 
 template<class T> T AutomatableModel::logToLinearScale( T value ) const
@@ -323,7 +328,7 @@ void AutomatableModel::setAutomatedValue( const float value )
 	if( oldValue != m_value )
 	{
 		// notify linked models
-		for( AutoModelVector::Iterator it = m_linkedModels.begin();
+		for( QVector<AutomatableModel *>::Iterator it = m_linkedModels.begin();
 									it != m_linkedModels.end(); ++it )
 		{
 			if( (*it)->m_setValueDepth < 1 &&
@@ -344,7 +349,7 @@ void AutomatableModel::setAutomatedValue( const float value )
 void AutomatableModel::setRange( const float min, const float max,
 							const float step )
 {
-	if( ( m_maxValue != max ) || ( m_minValue != min ) )
+	if( ( m_maxValue != max ) || ( m_minValue != min ) || ( m_step != step ))
 	{
 		m_minValue = min;
 		m_maxValue = max;
@@ -353,8 +358,7 @@ void AutomatableModel::setRange( const float min, const float max,
 			qSwap<float>( m_minValue, m_maxValue );
 		}
 		m_range = m_maxValue - m_minValue;
-
-		setStep( step );
+                m_step=step;
 
 		// re-adjust value
 		setValue( value<float>() );
@@ -407,7 +411,7 @@ float AutomatableModel::fittedValue( float value ) const
 
 
 
-void AutomatableModel::linkModel( AutomatableModel* model )
+void AutomatableModel::linkModel( AutomatableModel* model, bool propagate )
 {
 	if( model && !m_linkedModels.contains( model ) && model!=this )
 	{
@@ -418,6 +422,8 @@ void AutomatableModel::linkModel( AutomatableModel* model )
 			QObject::connect( this, SIGNAL( dataChanged() ), model, SIGNAL( dataChanged() ) );
                         QObject::connect( this, SIGNAL( controllerValueChanged() ), model, SLOT( onControllerValueChanged() ) );
 		}
+
+                if(propagate) propagateValue();
 	}
 }
 
@@ -429,8 +435,10 @@ void AutomatableModel::unlinkModel( AutomatableModel* model )
         if( model && m_linkedModels.contains( model ) && model!=this )
         {
                 disconnect(model);
+                emit propertiesChanged();
+                emit model->propertiesChanged();
 
-                AutoModelVector::Iterator it = qFind( m_linkedModels.begin(), m_linkedModels.end(), model );
+                QVector<AutomatableModel *>::Iterator it = qFind( m_linkedModels.begin(), m_linkedModels.end(), model );
                 if( it != m_linkedModels.end() )
                 {
                         m_linkedModels.erase( it );
@@ -445,8 +453,8 @@ void AutomatableModel::unlinkModel( AutomatableModel* model )
 
 void AutomatableModel::linkModels( AutomatableModel* model1, AutomatableModel* model2 )
 {
-		model1->linkModel( model2 );
-		model2->linkModel( model1 );
+        model1->linkModel( model2, true  );
+        model2->linkModel( model1, false );
 }
 
 
@@ -639,6 +647,7 @@ void AutomatableModel::setInitValue( const float value )
 	m_oldValue = m_value;
 	setJournalling( journalling );
 	emit initValueChanged( value );
+        emit propertiesChanged();
 }
 
 
