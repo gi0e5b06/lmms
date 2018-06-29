@@ -58,7 +58,7 @@ Plugin::Descriptor PLUGIN_EXPORT lv2effectgdx_plugin_descriptor =
 	"gi0e5b06 (on github.com)",
 	0x0100,
 	Plugin::Effect,
-	new PluginPixmapLoader("logo"),
+	new PluginPixmapLoader("logo.png"),
 	NULL,
 	new LV2EffectGDXSubPluginFeatures( Plugin::Effect )
 } ;
@@ -184,7 +184,7 @@ bool LV2EffectGDX::processAudioBuffer( sampleFrame * _buf,
 					for( fpp_t frame = 0;
 						frame < frames; ++frame )
 					{
-						pp->buffer[frame] =
+						pp->buffer[frame].f =
 							_buf[frame][channel];
 					}
 					++channel;
@@ -198,7 +198,7 @@ bool LV2EffectGDX::processAudioBuffer( sampleFrame * _buf,
 					}
 					else
 					{
-						pp->value = static_cast<LV2_Data>( pp->control->value() / pp->scale );
+						pp->value.f = pp->control->value().f / pp->scale;
 						// This only supports control rate ports, so the audio rates are
 						// treated as though they were control rate by setting the
 						// port buffer to all the same value.
@@ -214,7 +214,7 @@ bool LV2EffectGDX::processAudioBuffer( sampleFrame * _buf,
 					{
 						break;
 					}
-					pp->value = static_cast<LV2_Data>( pp->control->value() / pp->scale );
+					pp->value.f = pp->control->value().f / pp->scale;
 					pp->buffer[0] = pp->value;
 					break;
 				case CHANNEL_OUT:
@@ -257,7 +257,7 @@ bool LV2EffectGDX::processAudioBuffer( sampleFrame * _buf,
 					for( fpp_t frame = 0; 
 						frame < frames; ++frame )
 					{
-						_buf[frame][channel] = d * _buf[frame][channel] + w * pp->buffer[frame];
+						_buf[frame][channel] = d * _buf[frame][channel] + w * pp->buffer[frame].f;
 						out_sum += _buf[frame][channel] * _buf[frame][channel];
 					}
 					++channel;
@@ -457,7 +457,7 @@ void LV2EffectGDX::pluginInstantiation()
 			}
 
 			// Get the range and default values.
-			p->max = manager->getUpperBound( m_uri, port );
+			p->max.f = manager->getUpperBound( m_uri, port );
 			/*
                           if( p->max == NOHINT )
 			{
@@ -474,7 +474,7 @@ void LV2EffectGDX::pluginInstantiation()
 			}
                         */
 
-			p->min = manager->getLowerBound( m_uri, port );
+			p->min.f = manager->getLowerBound( m_uri, port );
                         /*
 			if( p->min == NOHINT )
 			{
@@ -490,7 +490,7 @@ void LV2EffectGDX::pluginInstantiation()
 			}
                         */
 
-			p->def = manager->getDefaultSetting( m_uri, port );
+			p->def.f = manager->getDefaultSetting( m_uri, port );
                         /*
 			if( p->def == NOHINT )
 			{
@@ -510,11 +510,11 @@ void LV2EffectGDX::pluginInstantiation()
 			}
                         */
 
-			p->max *= p->scale;
-			p->min *= p->scale;
-			p->def *= p->scale;
+			p->max.f *= p->scale;
+			p->min.f *= p->scale;
+			p->def.f *= p->scale;
 
-			p->value = p->def;
+			p->value.f = p->def.f;
 
 			p->suggests_logscale = manager->isLogarithmic( m_uri, port );
 

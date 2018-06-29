@@ -159,7 +159,7 @@ void LV2EffectGDXSubPluginFeatures::listSubPluginKeys
 	for(l_lv2_sortable_plugin_t::const_iterator it = plugins.begin();
             it != plugins.end(); ++it)
 	{
-                qWarning("LV2EffectGDXSubPluginFeatures::listSubPluginKeys %s",qPrintable(*it));
+                //qWarning("LV2EffectGDXSubPluginFeatures::listSubPluginKeys %s",qPrintable(*it));
 		//if(lm->getDescription((*it).second)->inputChannels <= 
                 //Engine::mixer()->audioDev()->channels())
 		//{

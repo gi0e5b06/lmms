@@ -22,8 +22,8 @@
  *
  */
 
-#ifndef LV2EFFECTGDXCONTROLS_H
-#define LV2EFFECTGDXCONTROLS_H
+#ifndef LV2_EFFECT_GDX_CONTROLS_H
+#define LV2_EFFECT_GDX_CONTROLS_H
 
 #include "EffectControls.h"
 #include "LV2EffectGDXControls.h"
