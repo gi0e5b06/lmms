@@ -113,13 +113,23 @@ InstrumentTrack::InstrumentTrack( TrackContainer* tc ) :
 	m_useMasterPitchModel( true, this, tr( "Master Pitch") ),
 	m_instrument( NULL ),
 	m_soundShaping( this ),
+        /*
 	m_noteFiltering( this ),
 	m_noteHumanizing( this ),
 	m_noteStacking( this ),
 	m_arpeggio( this ),
 	m_noteDuplicatesRemoving( this ),
+        */
 	m_piano( this )
 {
+        m_noteFunctions.append(new InstrumentFunctionNoteFiltering(this));
+	m_noteFunctions.append(new InstrumentFunctionNoteDuplicatesRemoving(this));
+	m_noteFunctions.append(new InstrumentFunctionNoteKeying(this));
+	m_noteFunctions.append(new InstrumentFunctionNoteHumanizing(this));
+	m_noteFunctions.append(new InstrumentFunctionNoteStacking(this));
+	m_noteFunctions.append(new InstrumentFunctionArpeggio(this));
+	m_noteFunctions.append(new InstrumentFunctionNoteOutting(this));
+
 	m_pitchModel.setCenterValue( DefaultPitch );
 	m_panningModel.setCenterValue( DefaultPanning );
 	m_baseNoteModel.setInitValue( DefaultKey );
@@ -131,7 +141,6 @@ InstrumentTrack::InstrumentTrack( TrackContainer* tc ) :
 		m_notes[i] = NULL;
 		m_runningMidiNotes[i] = 0;
 	}
-
 
 	setName( tr( "Default preset" ) );
 
@@ -532,6 +541,7 @@ f_cnt_t InstrumentTrack::beatLen( NotePlayHandle * _n ) const
 
 void InstrumentTrack::playNote( NotePlayHandle* _n, sampleFrame* _workingBuffer )
 {
+        /*
 	// arpeggio- and chord-widget has to do its work -> adding sub-notes
 	// for chords/arpeggios
 	if(!m_noteFiltering         .processNote( _n )) return;
@@ -539,6 +549,9 @@ void InstrumentTrack::playNote( NotePlayHandle* _n, sampleFrame* _workingBuffer 
 	if(!m_noteStacking          .processNote( _n )) return;
 	if(!m_arpeggio              .processNote( _n )) return;
 	if(!m_noteDuplicatesRemoving.processNote( _n )) return;
+        */
+        for(InstrumentFunction* f: m_noteFunctions)
+                if(!f->processNote(_n)) return;
 
 	if( _n->isMasterNote() == false && m_instrument != NULL )
 	{
@@ -817,11 +830,16 @@ void InstrumentTrack::saveTrackSpecificSettings( QDomDocument& doc, QDomElement 
 		thisElement.appendChild( i );
 	}
 	m_soundShaping          .saveState( doc, thisElement );
-	m_noteFiltering         .saveState( doc, thisElement );
-	m_noteHumanizing        .saveState( doc, thisElement );
-	m_noteStacking          .saveState( doc, thisElement );
-	m_arpeggio              .saveState( doc, thisElement );
-        m_noteDuplicatesRemoving.saveState( doc, thisElement );
+
+	/*
+          m_noteFiltering         .saveState( doc, thisElement );
+          m_noteHumanizing        .saveState( doc, thisElement );
+          m_noteStacking          .saveState( doc, thisElement );
+          m_arpeggio              .saveState( doc, thisElement );
+          m_noteDuplicatesRemoving.saveState( doc, thisElement );
+        */
+        for(InstrumentFunction* f: m_noteFunctions)
+                f->saveState(doc,thisElement);
 
 	m_midiPort.saveState( doc, thisElement );
 	m_audioPort.effects()->saveState( doc, thisElement );
@@ -858,10 +876,25 @@ void InstrumentTrack::loadTrackSpecificSettings( const QDomElement & thisElement
 	{
 		if( node.isElement() )
 		{
+                        bool found=false;
+                        for(InstrumentFunction* f: m_noteFunctions)
+                                if( f->nodeName() == node.nodeName() )
+                                {
+                                        f->restoreState( node.toElement() );
+                                        found=true;
+                                        break;
+                                }
+                        if(found)
+                        {
+                                node = node.nextSibling();
+                                continue;
+                        }
+
 			if( m_soundShaping.nodeName() == node.nodeName() )
 			{
 				m_soundShaping.restoreState( node.toElement() );
 			}
+                        /*
 			else if( m_noteFiltering.nodeName() == node.nodeName() )
 			{
 				m_noteFiltering.restoreState( node.toElement() );
@@ -882,6 +915,7 @@ void InstrumentTrack::loadTrackSpecificSettings( const QDomElement & thisElement
                         {
                                 m_noteDuplicatesRemoving.restoreState( node.toElement() );
                         }
+                        */
 			else if( m_midiPort.nodeName() == node.nodeName() )
 			{
 				m_midiPort.restoreState( node.toElement() );
@@ -1647,6 +1681,24 @@ InstrumentTrackWindow::InstrumentTrackWindow( InstrumentTrackView * _itv ) :
 	m_ssView = new InstrumentSoundShapingView( m_tabWidget );
 
 	// FUNC tab
+	QScrollArea* saFunc = new QScrollArea( m_tabWidget );
+	saFunc->setVerticalScrollBarPolicy( Qt::ScrollBarAlwaysOn );
+	saFunc->setHorizontalScrollBarPolicy( Qt::ScrollBarAlwaysOff );
+	saFunc->setFrameStyle( QFrame::NoFrame );
+
+	QWidget* instrumentFunctions = new QWidget( saFunc );
+	QVBoxLayout* instrumentFunctionsLayout = new QVBoxLayout( instrumentFunctions );
+        instrumentFunctionsLayout->setContentsMargins(2,3,2,5);
+	//instrumentFunctionsLayout->addStrut( 230 );
+
+        for(InstrumentFunction* f: m_track->m_noteFunctions)
+        {
+                InstrumentFunctionView* v=f->createView();
+                m_noteFunctionViews.append(v);
+                v->setMinimumWidth(230);
+                instrumentFunctionsLayout->addWidget(v);
+        }
+        /*
 	m_noteFilteringView = new InstrumentFunctionNoteFilteringView( &m_track->m_noteFiltering );
 	m_noteHumanizingView = new InstrumentFunctionNoteHumanizingView( &m_track->m_noteHumanizing );
 	m_noteStackingView = new InstrumentFunctionNoteStackingView( &m_track->m_noteStacking );
@@ -1659,22 +1711,13 @@ InstrumentTrackWindow::InstrumentTrackWindow( InstrumentTrackView * _itv ) :
 	m_arpeggioView->setMinimumWidth(230);
 	m_noteDuplicatesRemovingView->setMinimumWidth(230);
 
-	QScrollArea* saFunc = new QScrollArea( m_tabWidget );
-	saFunc->setVerticalScrollBarPolicy( Qt::ScrollBarAlwaysOn );
-	saFunc->setHorizontalScrollBarPolicy( Qt::ScrollBarAlwaysOff );
-	saFunc->setFrameStyle( QFrame::NoFrame );
-
-	QWidget* instrumentFunctions = new QWidget( saFunc );
-	QVBoxLayout* instrumentFunctionsLayout = new QVBoxLayout( instrumentFunctions );
-	instrumentFunctionsLayout->setContentsMargins( 1,1,1,1 );
-	instrumentFunctionsLayout->setMargin( 2 );
-	//instrumentFunctionsLayout->addStrut( 230 );
 	instrumentFunctionsLayout->addWidget( m_noteFilteringView );
 	instrumentFunctionsLayout->addWidget( m_noteHumanizingView );
 	instrumentFunctionsLayout->addWidget( m_noteStackingView );
 	instrumentFunctionsLayout->addWidget( m_arpeggioView );
 	instrumentFunctionsLayout->addWidget( m_noteDuplicatesRemovingView );
 	instrumentFunctionsLayout->addStretch();
+        */
 
 	saFunc->setWidget(instrumentFunctions);
 
@@ -1801,11 +1844,18 @@ void InstrumentTrackWindow::modelChanged()
 	}
 
 	m_ssView->setModel( &m_track->m_soundShaping );
+
+        /*
 	m_noteFilteringView->setModel( &m_track->m_noteFiltering );
 	m_noteHumanizingView->setModel( &m_track->m_noteHumanizing );
 	m_noteStackingView->setModel( &m_track->m_noteStacking );
 	m_arpeggioView->setModel( &m_track->m_arpeggio );
 	m_noteDuplicatesRemovingView->setModel( &m_track->m_noteDuplicatesRemoving );
+        */
+        for(int i=0;i<m_track->m_noteFunctions.size();i++)
+        {
+                m_noteFunctionViews[i]->setModel(m_track->m_noteFunctions[i]);
+        }
 
 	m_midiView->setModel( &m_track->m_midiPort );
 	m_effectView->setModel( m_track->m_audioPort.effects() );

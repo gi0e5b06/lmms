@@ -1,6 +1,7 @@
 /*
  * InstrumentFunctions.h - models for instrument-functions-tab
  *
+ * Copyright (c) 2017-2018 gi0e5b06
  * Copyright (c) 2004-2014 Tobias Doerffel <tobydox/at/users.sourceforge.net>
  *
  * This file is part of LMMS - https://lmms.io
@@ -27,298 +28,367 @@
 
 #include <QMultiHash>
 
-#include "JournallingObject.h"
-#include "lmms_basics.h"
 #include "AutomatableModel.h"
-#include "TempoSyncKnobModel.h"
 #include "ComboBoxModel.h"
-
+#include "JournallingObject.h"
+#include "TempoSyncKnobModel.h"
+#include "lmms_basics.h"
 
 class InstrumentTrack;
 class NotePlayHandle;
+class InstrumentFunctionView;
 
-class InstrumentFunction : public Model, public JournallingObject
+class InstrumentFunction
+      : public Model
+      , public JournallingObject
 {
-	Q_OBJECT
+    Q_OBJECT
 
- public:
-	virtual ~InstrumentFunction() { }
+  public:
+    virtual ~InstrumentFunction()
+    {
+    }
 
-	virtual bool processNote( NotePlayHandle* n ) = 0;
-	virtual void saveSettings( QDomDocument & _doc, QDomElement & _parent ) = 0;
-	virtual void loadSettings( const QDomElement & _this ) = 0;
-	virtual QString nodeName() const = 0;
+    virtual bool processNote(NotePlayHandle* n)                         = 0;
+    virtual void saveSettings(QDomDocument& _doc, QDomElement& _parent) = 0;
+    virtual void loadSettings(const QDomElement& _this)                 = 0;
+    virtual QString nodeName() const                                    = 0;
 
-	IntModel* minNoteGenerationModel() { return &m_minNoteGenerationModel; }
-	IntModel* maxNoteGenerationModel() { return &m_maxNoteGenerationModel; }
-	//inline int minNoteGeneration() const { return m_minNoteGenerationModel.value(); }
-	//inline void setMinNoteGeneration(int _min) { m_minNoteGenerationModel.setValue(_min); }
-	//inline int maxNoteGeneration() const { return m_maxNoteGenerationModel.value(); }
-	//inline void setMaxNoteGeneration(int _max) { m_maxNoteGenerationModel.setValue(_max); }
+    virtual InstrumentFunctionView* createView() = 0;
 
- protected:
-	InstrumentFunction( Model * _parent, QString _name );
-	virtual bool shouldProcessNote( NotePlayHandle* n );
+    IntModel* minNoteGenerationModel()
+    {
+        return &m_minNoteGenerationModel;
+    }
+    IntModel* maxNoteGenerationModel()
+    {
+        return &m_maxNoteGenerationModel;
+    }
+    // inline int minNoteGeneration() const { return
+    // m_minNoteGenerationModel.value(); } inline void setMinNoteGeneration(int
+    // _min) { m_minNoteGenerationModel.setValue(_min); } inline int
+    // maxNoteGeneration() const { return m_maxNoteGenerationModel.value(); }
+    // inline void setMaxNoteGeneration(int _max) {
+    // m_maxNoteGenerationModel.setValue(_max); }
 
-	BoolModel m_enabledModel;
-	IntModel  m_minNoteGenerationModel;
-	IntModel  m_maxNoteGenerationModel;
+  protected:
+    InstrumentFunction(Model* _parent, QString _name);
+    virtual bool shouldProcessNote(NotePlayHandle* n);
+
+    BoolModel m_enabledModel;
+    IntModel  m_minNoteGenerationModel;
+    IntModel  m_maxNoteGenerationModel;
 };
-
-
-
 
 class InstrumentFunctionNoteStacking : public InstrumentFunction
 {
-	Q_OBJECT
+    Q_OBJECT
 
-public:
-	static const int MAX_CHORD_POLYPHONY = 13;
+  public:
+    static const int MAX_CHORD_POLYPHONY = 13;
 
-private:
-	typedef int8_t ChordSemiTones [MAX_CHORD_POLYPHONY];
+  private:
+    typedef int8_t ChordSemiTones[MAX_CHORD_POLYPHONY];
 
-public:
-	InstrumentFunctionNoteStacking( Model * _parent );
-	virtual ~InstrumentFunctionNoteStacking();
+  public:
+    InstrumentFunctionNoteStacking(Model* _parent);
+    virtual ~InstrumentFunctionNoteStacking();
 
-	virtual bool processNote( NotePlayHandle* n );
-	virtual void saveSettings( QDomDocument & _doc, QDomElement & _parent );
-	virtual void loadSettings( const QDomElement & _this );
+    virtual bool processNote(NotePlayHandle* n);
+    virtual void saveSettings(QDomDocument& _doc, QDomElement& _parent);
+    virtual void loadSettings(const QDomElement& _this);
 
-	inline virtual QString nodeName() const
-	{
-		return "chordcreator";
-	}
+    inline virtual QString nodeName() const
+    {
+        return "chordcreator";
+    }
 
+    virtual InstrumentFunctionView* createView();
 
-	struct Chord
-	{
-	private:
-		QString m_name;
-		ChordSemiTones m_semiTones;
-		int m_size;
+    struct Chord
+    {
+      private:
+        QString        m_name;
+        ChordSemiTones m_semiTones;
+        int            m_size;
 
-	public:
-		Chord() : m_size( 0 ) {}
+      public:
+        Chord() : m_size(0)
+        {
+        }
 
-		Chord( const char * n, const ChordSemiTones & semi_tones );
+        Chord(const char* n, const ChordSemiTones& semi_tones);
 
-		int size() const
-		{
-			return m_size;
-		}
+        int size() const
+        {
+            return m_size;
+        }
 
-		bool isScale() const
-		{
-			return size() > 6;
-		}
+        bool isScale() const
+        {
+            return size() > 6;
+        }
 
-		bool isEmpty() const
-		{
-			return size() == 0;
-		}
+        bool isEmpty() const
+        {
+            return size() == 0;
+        }
 
-		bool hasSemiTone( int8_t semiTone ) const;
+        bool hasSemiTone(int8_t semiTone) const;
 
-		int8_t last() const
-		{
-			return m_semiTones[size() - 1];
-		}
+        int8_t last() const
+        {
+            return m_semiTones[size() - 1];
+        }
 
-		const QString & getName() const
-		{
-			return m_name;
-		}
+        const QString& getName() const
+        {
+            return m_name;
+        }
 
-		int8_t operator [] ( int n ) const
-		{
-			return m_semiTones[n];
-		}
-	};
+        int8_t operator[](int n) const
+        {
+            return m_semiTones[n];
+        }
+    };
 
+    struct ChordTable : public QVector<Chord>
+    {
+      private:
+        ChordTable();
 
-	struct ChordTable : public QVector<Chord>
-	{
-	private:
-		ChordTable();
+        struct Init
+        {
+            const char*    m_name;
+            ChordSemiTones m_semiTones;
+        };
 
-		struct Init
-		{
-			const char * m_name;
-			ChordSemiTones m_semiTones;
-		};
+        static Init s_initTable[];
 
-		static Init s_initTable[];
+      public:
+        static const ChordTable& getInstance()
+        {
+            static ChordTable inst;
+            return inst;
+        }
 
-	public:
-		static const ChordTable & getInstance()
-		{
-			static ChordTable inst;
-			return inst;
-		}
+        const Chord& getByName(const QString& name,
+                               bool           is_scale = false) const;
 
-		const Chord & getByName( const QString & name, bool is_scale = false ) const;
+        const Chord& getScaleByName(const QString& name) const
+        {
+            return getByName(name, true);
+        }
 
-		const Chord & getScaleByName( const QString & name ) const
-		{
-			return getByName( name, true );
-		}
+        const Chord& getChordByName(const QString& name) const
+        {
+            return getByName(name, false);
+        }
+    };
 
-		const Chord & getChordByName( const QString & name ) const
-		{
-			return getByName( name, false );
-		}
-	};
+  private:
+    // BoolModel m_chordsEnabledModel;
+    ComboBoxModel m_chordsModel;
+    FloatModel    m_chordRangeModel;
 
-
-private:
-	//BoolModel m_chordsEnabledModel;
-	ComboBoxModel m_chordsModel;
-	FloatModel m_chordRangeModel;
-
-
-	friend class InstrumentFunctionNoteStackingView;
-
-} ;
-
-
-
+    friend class InstrumentFunctionNoteStackingView;
+};
 
 class InstrumentFunctionArpeggio : public InstrumentFunction
 {
-	Q_OBJECT
-public:
-	enum ArpDirections
-	{
-		ArpDirUp,
-		ArpDirDown,
-		ArpDirUpAndDown,
-		ArpDirDownAndUp,
-		ArpDirRandom,
-		NumArpDirections
-	} ;
+    Q_OBJECT
+  public:
+    enum ArpDirections
+    {
+        ArpDirUp,
+        ArpDirDown,
+        ArpDirUpAndDown,
+        ArpDirDownAndUp,
+        ArpDirRandom,
+        NumArpDirections
+    };
 
-	InstrumentFunctionArpeggio( Model * _parent );
-	virtual ~InstrumentFunctionArpeggio();
+    InstrumentFunctionArpeggio(Model* _parent);
+    virtual ~InstrumentFunctionArpeggio();
 
-	virtual bool processNote( NotePlayHandle* n );
-	virtual void saveSettings( QDomDocument & _doc, QDomElement & _parent );
-	virtual void loadSettings( const QDomElement & _this );
+    virtual bool processNote(NotePlayHandle* n);
+    virtual void saveSettings(QDomDocument& _doc, QDomElement& _parent);
+    virtual void loadSettings(const QDomElement& _this);
 
-	inline virtual QString nodeName() const
-	{
-		return "arpeggiator";
-	}
+    inline virtual QString nodeName() const
+    {
+        return "arpeggiator";
+    }
 
+    virtual InstrumentFunctionView* createView();
 
-private:
-	enum ArpModes
-	{
-		FreeMode,
-		SortMode,
-		SyncMode
-	} ;
+  private:
+    enum ArpModes
+    {
+        FreeMode,
+        SortMode,
+        SyncMode
+    };
 
-	//BoolModel m_arpEnabledModel;
-	ComboBoxModel m_arpModel;
-	FloatModel m_arpRangeModel;
-	FloatModel m_arpCycleModel;
-	FloatModel m_arpSkipModel;
-	FloatModel m_arpMissModel;
-	TempoSyncKnobModel m_arpTimeModel;
-	FloatModel m_arpGateModel;
-	ComboBoxModel m_arpDirectionModel;
-	ComboBoxModel m_arpModeModel;
+    // BoolModel m_arpEnabledModel;
+    ComboBoxModel      m_arpModel;
+    FloatModel         m_arpRangeModel;
+    FloatModel         m_arpCycleModel;
+    FloatModel         m_arpSkipModel;
+    FloatModel         m_arpMissModel;
+    TempoSyncKnobModel m_arpTimeModel;
+    FloatModel         m_arpGateModel;
+    ComboBoxModel      m_arpDirectionModel;
+    ComboBoxModel      m_arpModeModel;
 
-
-	friend class InstrumentTrack;
-	friend class InstrumentFunctionArpeggioView;
-
-} ;
-
-
-
+    friend class InstrumentTrack;
+    friend class InstrumentFunctionArpeggioView;
+};
 
 class InstrumentFunctionNoteHumanizing : public InstrumentFunction
 {
-	Q_OBJECT
+    Q_OBJECT
 
-public:
-	InstrumentFunctionNoteHumanizing( Model * _parent );
-	virtual ~InstrumentFunctionNoteHumanizing();
+  public:
+    InstrumentFunctionNoteHumanizing(Model* _parent);
+    virtual ~InstrumentFunctionNoteHumanizing();
 
-	virtual bool processNote( NotePlayHandle* n );
-	virtual void saveSettings( QDomDocument & _doc, QDomElement & _parent );
-	virtual void loadSettings( const QDomElement & _this );
+    virtual bool processNote(NotePlayHandle* n);
+    virtual void saveSettings(QDomDocument& _doc, QDomElement& _parent);
+    virtual void loadSettings(const QDomElement& _this);
 
-	inline virtual QString nodeName() const
-	{
-		return "notehumanizing";
-	}
+    inline virtual QString nodeName() const
+    {
+        return "notehumanizing";
+    }
 
-private:
-	FloatModel m_volumeRangeModel;
-	FloatModel m_panRangeModel;
-	FloatModel m_tuneRangeModel;
-	FloatModel m_offsetRangeModel;
-	FloatModel m_shortenRangeModel;
+    virtual InstrumentFunctionView* createView();
 
-	friend class InstrumentFunctionNoteHumanizingView;
-} ;
+  private:
+    FloatModel m_volumeRangeModel;
+    FloatModel m_panRangeModel;
+    FloatModel m_tuneRangeModel;
+    FloatModel m_offsetRangeModel;
+    FloatModel m_shortenRangeModel;
 
-
-
+    friend class InstrumentFunctionNoteHumanizingView;
+};
 
 class InstrumentFunctionNoteDuplicatesRemoving : public InstrumentFunction
 {
-	Q_OBJECT
+    Q_OBJECT
 
-public:
-	InstrumentFunctionNoteDuplicatesRemoving( Model * _parent );
-	virtual ~InstrumentFunctionNoteDuplicatesRemoving();
+  public:
+    InstrumentFunctionNoteDuplicatesRemoving(Model* _parent);
+    virtual ~InstrumentFunctionNoteDuplicatesRemoving();
 
-	virtual bool processNote( NotePlayHandle* n );
-	virtual void saveSettings( QDomDocument & _doc, QDomElement & _parent );
-	virtual void loadSettings( const QDomElement & _this );
+    virtual bool processNote(NotePlayHandle* n);
+    virtual void saveSettings(QDomDocument& _doc, QDomElement& _parent);
+    virtual void loadSettings(const QDomElement& _this);
 
-	inline virtual QString nodeName() const
-	{
-		return "noteduplicatesremoving";
-	}
+    inline virtual QString nodeName() const
+    {
+        return "noteduplicatesremoving";
+    }
 
-private:
-	QMultiHash<int,int> m_cache;
+    virtual InstrumentFunctionView* createView();
 
-	friend class InstrumentFunctionNoteDuplicatesRemovingView;
+  private:
+    QMultiHash<int, int> m_cache;
+
+    friend class InstrumentFunctionNoteDuplicatesRemovingView;
 };
-
-
-
 
 class InstrumentFunctionNoteFiltering : public InstrumentFunction
 {
-	Q_OBJECT
+    Q_OBJECT
 
-public:
-	InstrumentFunctionNoteFiltering( Model * _parent );
-	virtual ~InstrumentFunctionNoteFiltering();
+  public:
+    InstrumentFunctionNoteFiltering(Model* _parent);
+    virtual ~InstrumentFunctionNoteFiltering();
 
-	virtual bool processNote( NotePlayHandle* n );
-	virtual void saveSettings( QDomDocument & _doc, QDomElement & _parent );
-	virtual void loadSettings( const QDomElement & _this );
+    virtual bool processNote(NotePlayHandle* n);
+    virtual void saveSettings(QDomDocument& _doc, QDomElement& _parent);
+    virtual void loadSettings(const QDomElement& _this);
 
-	inline virtual QString nodeName() const
-	{
-		return "notefiltering";
-	}
+    inline virtual QString nodeName() const
+    {
+        return "notefiltering";
+    }
 
-private:
-	ComboBoxModel  m_configModel;
-	ComboBoxModel* m_actionModel[4];
-        BoolModel*     m_noteSelectionModel[4][12];
+    virtual InstrumentFunctionView* createView();
 
-	friend class InstrumentFunctionNoteFilteringView;
+  private:
+    ComboBoxModel  m_configModel;
+    ComboBoxModel* m_actionModel[4];
+    BoolModel*     m_noteSelectionModel[4][12];
+
+    friend class InstrumentFunctionNoteFilteringView;
+};
+
+class InstrumentFunctionNoteKeying : public InstrumentFunction
+{
+    Q_OBJECT
+
+  public:
+    InstrumentFunctionNoteKeying(Model* _parent);
+    virtual ~InstrumentFunctionNoteKeying();
+
+    virtual bool processNote(NotePlayHandle* n);
+    virtual void saveSettings(QDomDocument& _doc, QDomElement& _parent);
+    virtual void loadSettings(const QDomElement& _this);
+
+    inline virtual QString nodeName() const
+    {
+        return "notekeying";
+    }
+
+    virtual InstrumentFunctionView* createView();
+
+  private:
+    FloatModel m_volumeRangeModel;
+    FloatModel m_volumeBaseModel;
+    FloatModel m_volumeMinModel;
+    FloatModel m_volumeMaxModel;
+
+    FloatModel m_panRangeModel;
+    FloatModel m_panBaseModel;
+    FloatModel m_panMinModel;
+    FloatModel m_panMaxModel;
+
+    friend class InstrumentFunctionNoteKeyingView;
+};
+
+class InstrumentFunctionNoteOutting : public InstrumentFunction
+{
+    Q_OBJECT
+
+  public:
+    InstrumentFunctionNoteOutting(Model* _parent);
+    virtual ~InstrumentFunctionNoteOutting();
+
+    virtual bool processNote(NotePlayHandle* n);
+    virtual void saveSettings(QDomDocument& _doc, QDomElement& _parent);
+    virtual void loadSettings(const QDomElement& _this);
+
+    inline virtual QString nodeName() const
+    {
+        return "noteoutting";
+    }
+
+    virtual InstrumentFunctionView* createView();
+
+  private:
+    FloatModel m_keyModel;
+    FloatModel m_volumeModel;
+    FloatModel m_panModel;
+    // FloatModel m_offsetModel;
+    // FloatModel m_frequencyModel;
+    // FloatModel m_framesLeftModel;
+    // FloatModel m_releaseModel;
+    // FloatModel m_detuneModel;
+
+    friend class InstrumentFunctionNoteOuttingView;
 };
 
 #endif

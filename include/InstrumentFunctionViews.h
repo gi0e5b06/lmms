@@ -1,6 +1,7 @@
 /*
  * InstrumentFunctionViews.h - views for instrument-functions-tab
  *
+ * Copyright (c) 2017-2018 gi0e5b06
  * Copyright (c) 2004-2014 Tobias Doerffel <tobydox/at/users.sourceforge.net>
  *
  * This file is part of LMMS - https://lmms.io
@@ -25,9 +26,10 @@
 #ifndef INSTRUMENT_FUNCTION_VIEWS_H
 #define INSTRUMENT_FUNCTION_VIEWS_H
 
-#include "ModelView.h"
-
 #include <QWidget>
+
+#include "InstrumentFunctions.h"
+#include "ModelView.h"
 
 class QLabel;
 class ComboBox;
@@ -36,128 +38,166 @@ class Knob;
 class TempoSyncKnob;
 class LedCheckBox;
 
-class InstrumentFunctionArpeggio;
-class InstrumentFunctionNoteStacking;
-
-
-class InstrumentFunctionView : public QWidget, public ModelView
+class InstrumentFunctionView
+      : public QWidget
+      , public ModelView
 {
-	Q_OBJECT
- public:
-	virtual ~InstrumentFunctionView();
+    Q_OBJECT
 
+  public:
+    virtual ~InstrumentFunctionView();
 
- protected:
-	InstrumentFunctionView(InstrumentFunction* cc, const QString& _caption, QWidget* _parent=NULL);
+  protected:
+    InstrumentFunctionView(InstrumentFunction* cc,
+                           const QString&      _caption,
+                           QWidget*            _parent = NULL);
 
-	GroupBox* m_groupBox;
+    GroupBox* m_groupBox;
 };
-
 
 class InstrumentFunctionNoteStackingView : public InstrumentFunctionView
 {
-	Q_OBJECT
-public:
-	InstrumentFunctionNoteStackingView( InstrumentFunctionNoteStacking* cc, QWidget* parent = NULL );
-	virtual ~InstrumentFunctionNoteStackingView();
+    Q_OBJECT
 
+  public:
+    InstrumentFunctionNoteStackingView(InstrumentFunctionNoteStacking* cc,
+                                       QWidget* parent = NULL);
+    virtual ~InstrumentFunctionNoteStackingView();
 
-private:
-	virtual void modelChanged();
+  public slots:
+    virtual void modelChanged();
 
-	InstrumentFunctionNoteStacking * m_cc;
-	ComboBox * m_chordsComboBox;
-	Knob * m_chordRangeKnob;
-
+  private:
+    InstrumentFunctionNoteStacking* m_cc;
+    ComboBox*                       m_chordsComboBox;
+    Knob*                           m_chordRangeKnob;
 };
-
-
-
-
 
 class InstrumentFunctionArpeggioView : public InstrumentFunctionView
 {
-	Q_OBJECT
-public:
-	InstrumentFunctionArpeggioView( InstrumentFunctionArpeggio* arp, QWidget* parent = NULL );
-	virtual ~InstrumentFunctionArpeggioView();
+    Q_OBJECT
 
+  public:
+    InstrumentFunctionArpeggioView(InstrumentFunctionArpeggio* arp,
+                                   QWidget*                    parent = NULL);
+    virtual ~InstrumentFunctionArpeggioView();
 
-private:
-	virtual void modelChanged();
+  public slots:
+    virtual void modelChanged();
 
-	InstrumentFunctionArpeggio * m_cc;
-	ComboBox * m_arpComboBox;
-	Knob * m_arpRangeKnob;
-	Knob * m_arpCycleKnob;
-	Knob * m_arpSkipKnob;
-	Knob * m_arpMissKnob;
-	TempoSyncKnob * m_arpTimeKnob;
-	Knob * m_arpGateKnob;
+  private:
+    InstrumentFunctionArpeggio* m_cc;
+    ComboBox*                   m_arpComboBox;
+    Knob*                       m_arpRangeKnob;
+    Knob*                       m_arpCycleKnob;
+    Knob*                       m_arpSkipKnob;
+    Knob*                       m_arpMissKnob;
+    TempoSyncKnob*              m_arpTimeKnob;
+    Knob*                       m_arpGateKnob;
 
-	ComboBox * m_arpDirectionComboBox;
-	ComboBox * m_arpModeComboBox;
-
+    ComboBox* m_arpDirectionComboBox;
+    ComboBox* m_arpModeComboBox;
 };
-
-
-
 
 class InstrumentFunctionNoteHumanizingView : public InstrumentFunctionView
 {
-	Q_OBJECT
-public:
-	InstrumentFunctionNoteHumanizingView( InstrumentFunctionNoteHumanizing* cc, QWidget* parent = NULL );
-	virtual ~InstrumentFunctionNoteHumanizingView();
+    Q_OBJECT
 
+  public:
+    InstrumentFunctionNoteHumanizingView(InstrumentFunctionNoteHumanizing* cc,
+                                         QWidget* parent = NULL);
+    virtual ~InstrumentFunctionNoteHumanizingView();
 
-private:
-	virtual void modelChanged();
+  public slots:
+    virtual void modelChanged();
 
-	InstrumentFunctionNoteHumanizing* m_cc;
-	Knob* m_volumeRangeKnob;
-	Knob* m_panRangeKnob;
-	Knob* m_tuneRangeKnob;
-	Knob* m_offsetRangeKnob;
-	Knob* m_shortenRangeKnob;
+  private:
+    InstrumentFunctionNoteHumanizing* m_cc;
+    Knob*                             m_volumeRangeKnob;
+    Knob*                             m_panRangeKnob;
+    Knob*                             m_tuneRangeKnob;
+    Knob*                             m_offsetRangeKnob;
+    Knob*                             m_shortenRangeKnob;
 };
 
-
-
-
-class InstrumentFunctionNoteDuplicatesRemovingView : public InstrumentFunctionView
+class InstrumentFunctionNoteDuplicatesRemovingView
+      : public InstrumentFunctionView
 {
-	Q_OBJECT
-public:
-	InstrumentFunctionNoteDuplicatesRemovingView( InstrumentFunctionNoteDuplicatesRemoving* cc, QWidget* parent = NULL );
-	virtual ~InstrumentFunctionNoteDuplicatesRemovingView();
+    Q_OBJECT
 
+  public:
+    InstrumentFunctionNoteDuplicatesRemovingView(
+            InstrumentFunctionNoteDuplicatesRemoving* cc,
+            QWidget*                                  parent = NULL);
+    virtual ~InstrumentFunctionNoteDuplicatesRemovingView();
 
-private:
-	virtual void modelChanged();
+  public slots:
+    virtual void modelChanged();
 
-	InstrumentFunctionNoteDuplicatesRemoving* m_cc;
+  private:
+    InstrumentFunctionNoteDuplicatesRemoving* m_cc;
 };
-
-
-
 
 class InstrumentFunctionNoteFilteringView : public InstrumentFunctionView
 {
-	Q_OBJECT
- public:
-	InstrumentFunctionNoteFilteringView( InstrumentFunctionNoteFiltering* cc, QWidget* parent = NULL );
-	virtual ~InstrumentFunctionNoteFilteringView();
+    Q_OBJECT
 
- public slots:
-         virtual void modelChanged();
+  public:
+    InstrumentFunctionNoteFilteringView(InstrumentFunctionNoteFiltering* cc,
+                                        QWidget* parent = NULL);
+    virtual ~InstrumentFunctionNoteFilteringView();
 
-private:
-	InstrumentFunctionNoteFiltering* m_cc;
-	ComboBox*    m_configComboBox;
-	ComboBox*    m_actionComboBox;
-	LedCheckBox* m_noteSelectionLed[12];
+  public slots:
+    virtual void modelChanged();
+
+  private:
+    InstrumentFunctionNoteFiltering* m_cc;
+    ComboBox*                        m_configComboBox;
+    ComboBox*                        m_actionComboBox;
+    LedCheckBox*                     m_noteSelectionLed[12];
 };
 
+class InstrumentFunctionNoteKeyingView : public InstrumentFunctionView
+{
+    Q_OBJECT
+
+  public:
+    InstrumentFunctionNoteKeyingView(InstrumentFunctionNoteKeying* cc,
+                                     QWidget* parent = NULL);
+    virtual ~InstrumentFunctionNoteKeyingView();
+
+  public slots:
+    virtual void modelChanged();
+
+  private:
+    InstrumentFunctionNoteKeying* m_cc;
+    Knob*                         m_volumeRangeKnob;
+    Knob*                         m_volumeBaseKnob;
+    Knob*                         m_volumeMinKnob;
+    Knob*                         m_volumeMaxKnob;
+    Knob*                         m_panRangeKnob;
+    Knob*                         m_panBaseKnob;
+    Knob*                         m_panMinKnob;
+    Knob*                         m_panMaxKnob;
+};
+
+class InstrumentFunctionNoteOuttingView : public InstrumentFunctionView
+{
+    Q_OBJECT
+
+  public:
+    InstrumentFunctionNoteOuttingView(InstrumentFunctionNoteOutting* cc,
+                                      QWidget* parent = NULL);
+    virtual ~InstrumentFunctionNoteOuttingView();
+
+  public slots:
+    virtual void modelChanged();
+
+  private:
+    InstrumentFunctionNoteOutting* m_cc;
+    Knob*                          m_keyKnob;
+    Knob*                          m_volumeKnob;
+    Knob*                          m_panKnob;
+};
 
 #endif

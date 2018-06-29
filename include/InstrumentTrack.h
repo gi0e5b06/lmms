@@ -190,10 +190,12 @@ public:
 		return &m_piano;
 	}
 
+        /*
 	bool isArpeggioEnabled() const
 	{
 		return m_arpeggio.m_enabledModel.value();
 	}
+        */
 
 	// simple helper for removing midiport-XML-node when loading presets
 	static void removeMidiPortNode( DataFile& dataFile );
@@ -281,11 +283,15 @@ private:
 
 	Instrument * m_instrument;
 	InstrumentSoundShaping m_soundShaping;
+
+        QVector<InstrumentFunction*> m_noteFunctions;
+        /*
 	InstrumentFunctionNoteFiltering m_noteFiltering;
 	InstrumentFunctionNoteHumanizing m_noteHumanizing;
 	InstrumentFunctionNoteStacking m_noteStacking;
 	InstrumentFunctionArpeggio m_arpeggio;
 	InstrumentFunctionNoteDuplicatesRemoving m_noteDuplicatesRemoving;
+        */
 
 	Piano m_piano;
 
@@ -472,11 +478,16 @@ private:
 	TabWidget * m_tabWidget;
 	PluginView * m_instrumentView;
 	InstrumentSoundShapingView * m_ssView;
-	InstrumentFunctionNoteFilteringView* m_noteFilteringView;
+
+        QVector<InstrumentFunctionView*> m_noteFunctionViews;
+	/*
+        InstrumentFunctionNoteFilteringView* m_noteFilteringView;
 	InstrumentFunctionNoteHumanizingView* m_noteHumanizingView;
 	InstrumentFunctionNoteStackingView* m_noteStackingView;
 	InstrumentFunctionArpeggioView* m_arpeggioView;
 	InstrumentFunctionNoteDuplicatesRemovingView* m_noteDuplicatesRemovingView;
+        */
+
 	InstrumentMidiIOView * m_midiView;
 	EffectRackView * m_effectView;
 	InstrumentMiscView *m_miscView;
