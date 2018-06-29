@@ -42,14 +42,14 @@ QMdiArea {
 
 AutomationEditor {
 	color: #ffffff;
-	background-color: #141616;
-	qproperty-backgroundShade: rgba(255, 255, 255, 15);
+	background-color: #14171A;
+	qproperty-backgroundShade: /*#2D3238;*/ rgba(255, 255, 255, 15);
 	qproperty-vertexColor: #6749C2;
-	qproperty-crossColor: rgba(215, 210, 254, 150);
+	qproperty-crossColor: #FFFFFF;/*rgba(215, 210, 254, 150);*/
 	/* Grid colors */
-	qproperty-lineColor: #292929;
-	qproperty-beatLineColor: #4a3bba;
-	qproperty-barLineColor: #8173fe;
+	qproperty-lineColor: #555555; /* #292929; */
+	qproperty-beatLineColor: #4433A0; /*#4a3bba;*/
+	qproperty-barLineColor: #5545D6; /*#8173fe;*/
 
 	qproperty-graphColor: rgba(69,42,153,180);
 	qproperty-scaleColor: #262b30;
@@ -168,9 +168,9 @@ PianoRoll {
 	qproperty-barLineColor: #42a065;
 
 	/* Text on the white piano keys */
-	qproperty-textColor: #000;
+	qproperty-textColor: #000000;
 	qproperty-textColorLight: #0bd556;
-	qproperty-textShadow: #fff;
+	qproperty-textShadow: #FFFFFF;
 }
 
 TabWidget {
@@ -748,20 +748,20 @@ TrackContentObjectView {
 
 /* instrument pattern */
 PatternView {
-    background-color: #31BF56; /* #21A14F; */
+    background-color: #2BB34E; /* #21A14F; */
     color: #DDFFEE; /*rgba(255,255,255,220);*/
 }
 
 /* sample track pattern */
 SampleTCOView {
-    background-color: #E69729; /*#DE7C05;*/
+    background-color: #D98F26; /*#DE7C05;*/
     color: #FFEEFF; /*#FFE8CD;*/
 }
 
 /* automation pattern */
 AutomationPatternView {
-    background-color: #924AFF; /*#663DE1;*/
-    color: #FFDDEE; /*rgba(255,255,255,90);*/
+    background-color: #5F30A4; /*#663DE1;*/
+    color: #7F50C6; /*FFDDEE; rgba(255,255,255,90);*/
 }
 
 /* bb-pattern */

@@ -72,6 +72,11 @@ class PadsGDX : public Instrument
 		return 128;
 	}
 
+        virtual Flags flags() const
+        {
+                return IsNotBendable;
+        }
+
 	virtual PluginView* instantiateView(QWidget * _parent);
 
 signals:

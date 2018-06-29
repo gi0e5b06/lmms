@@ -1002,11 +1002,12 @@ int main( int argc, char * * argv )
 		}
 		else
 		{
-		  // first show the Main Window and
-		  // then try to load given file
+                        // first show the Main Window and
+                        // then try to load given file
 
-		  // [Settel] workaround: showMaximized() doesn't work with
-		  // FVWM2 unless the window is already visible -> show() first
+                        // [Settel] workaround: showMaximized() doesn't work with
+                        // FVWM2 unless the window is already visible -> show() first
+                        //qInfo("main window shows");
 			gui->mainWindow()->show();
 			if( fullscreen )
 			{

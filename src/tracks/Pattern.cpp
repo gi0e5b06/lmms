@@ -79,7 +79,8 @@ Pattern::Pattern( const Pattern& other ) :
 	TrackContentObject( other.m_instrumentTrack ),
 	m_instrumentTrack( other.m_instrumentTrack ),
 	m_patternType( other.m_patternType ),
-	m_steps( other.m_steps )
+	m_steps( other.m_steps ),
+        m_stepResolution( other.m_stepResolution )
 {
 	for( NoteVector::ConstIterator it = other.m_notes.begin(); it != other.m_notes.end(); ++it )
 	{
@@ -379,11 +380,13 @@ void Pattern::setStep( int step, bool enabled )
 
 void Pattern::setType( PatternTypes _new_pattern_type )
 {
+        /*
 	if( _new_pattern_type == BeatPattern ||
-				_new_pattern_type == MelodyPattern )
+            _new_pattern_type == MelodyPattern )
 	{
-		m_patternType = _new_pattern_type;
-	}
+        */
+        m_patternType = _new_pattern_type;
+	//}
 }
 
 
@@ -425,10 +428,11 @@ void Pattern::saveSettings( QDomDocument & _doc, QDomElement & _this )
 	}
 
         // len not used but added for coherency
-        _this.setAttribute( "len", length() );
+        if(length()>0) _this.setAttribute( "len", length() );
 
         _this.setAttribute( "muted", isMuted() );
 	_this.setAttribute( "steps", m_steps );
+	_this.setAttribute( "stepres", m_stepResolution );
 
 	// now save settings of all notes
 	for( NoteVector::Iterator it = m_notes.begin();
@@ -474,6 +478,12 @@ void Pattern::loadSettings( const QDomElement & _this )
 	if( m_steps == 0 )
 	{
 		m_steps = stepsPerTact();
+	}
+
+	m_stepResolution = _this.attribute( "stepres" ).toInt();
+	if( m_stepResolution == 0 )
+	{
+		m_stepResolution = DefaultStepsPerTact;
 	}
 
 	checkType();
@@ -681,6 +691,8 @@ void Pattern::setStepResolution(int _res)
                 {
                         m_steps=qMax(1,(m_steps*_res/old));
                         m_stepResolution=_res;
+                        checkType();
+                        updateLength();
                         emit dataChanged();
                 }
         }
@@ -845,17 +857,23 @@ void PatternView::constructContextMenu( QMenu * _cm )
                         this, SLOT( changeStepResolution(QAction*)));
 
                 static const int labels[]={
-                        2,4,8,16,32,64,128};
+                        2,4,8,16,32,64,128,
+                        3,6,12,24,48};
                 static const QString icons[]={
-                        "note_whole.png",
-                        "note_half.png",
-                        "note_quarter.png",
-                        "note_eighth.png",
-                        "note_sixteenth.png",
-                        "note_thirtysecond.png",
-                        "note_sixtyfourth.png",
-                        "note_onehundredtwentyeighth.png"};
-                for(int i=0;i<7;i++)
+                        "note_whole",
+                        "note_half",
+                        "note_quarter",
+                        "note_eighth",
+                        "note_sixteenth",
+                        "note_thirtysecond",
+                        "note_sixtyfourth",
+                        "note_onehundredtwentyeighth",
+                        "note_triplethalf",
+                        "note_tripletquarter",
+                        "note_tripleteighth",
+                        "note_tripletsixteenth",
+                        "note_tripletthirtysecond"};
+                for(int i=0;i<11;i++)
                         sme->addAction(embed::getIconPixmap(icons[i]),
                                        QString::number(labels[i]))
                                 ->setData(labels[i]);
@@ -874,8 +892,8 @@ void PatternView::mousePressEvent( QMouseEvent * _me )
 
         if( _me->button() == Qt::LeftButton &&
             m_pat->m_patternType == Pattern::BeatPattern &&
-            _me->y() > height() - s_stepBtnOff->height() &&
-            fixedTCOs() )
+            _me->y() > height() - s_stepBtnOff->height() )
+                //fixedTCOs() )
                 //|| pixelsPerTact() >= 96 ||
                 //m_pat->m_steps != m_pat->stepsPerTact() ) &&
 
@@ -962,8 +980,8 @@ void PatternView::wheelEvent( QWheelEvent * _we )
                 _we->ignore();
 
 	if( m_pat->m_patternType == Pattern::BeatPattern &&
-            _we->y() > height() - s_stepBtnOff->height() &&
-            fixedTCOs())
+            _we->y() > height() - s_stepBtnOff->height() )
+                //&& ( fixedTCOs())
                 //|| pixelsPerTact() >= 96 ||
                 //m_pat->m_steps != m_pat->stepsPerTact() )
         {
@@ -1211,7 +1229,7 @@ void PatternView::paintEvent( QPaintEvent * )
 	}
 
 	// beat pattern paint event
-	else if( beatPattern && fixedTCOs() )
+	else if( beatPattern )//&& fixedTCOs() )
                 //||
                 // pixelsPerTact >= 96 ||
                 //m_pat->m_steps != m_pat->stepsPerTact() ) )
@@ -1227,7 +1245,7 @@ void PatternView::paintEvent( QPaintEvent * )
                 const float w1= qMin(12,int(ws>=16.f ? ws-4.f : ws-1.f));
                 const int h1= 24;
 
-                qInfo("steps=%d sr=%d ws=%f w1=%f h1=%d",steps,sr,ws,w1,h1);
+                //qInfo("steps=%d sr=%d ws=%f w1=%f h1=%d",steps,sr,ws,w1,h1);
 
 		// scale step graphics to fit the beat pattern length
 		stepon0 = s_stepBtnOn0->scaled( w1,
@@ -1294,6 +1312,7 @@ void PatternView::paintEvent( QPaintEvent * )
                            QBrush(QColor(0,160,160,64),Qt::SolidPattern));
         }
         else
+        if(!beatPattern)
         {
                 paintTileTacts(current,m_pat->length().nextFullTact(),1,
                                c,width(),height(),p);
@@ -1305,7 +1324,7 @@ void PatternView::paintEvent( QPaintEvent * )
 		paintTextLabel(m_pat->name(), p);
 	}
 
-	if( !( beatPattern && fixedTCOs() ) )
+	if( !beatPattern )//&& fixedTCOs() ) )
 	{
 		// inner border
 		/*

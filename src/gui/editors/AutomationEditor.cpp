@@ -1212,14 +1212,22 @@ void AutomationEditor::paintEvent(QPaintEvent * pe )
 		/// \todo move this horizontal line drawing code into the same loop as the value ticks?
 		if( m_y_auto )
 		{
-			QPen pen( beatLineColor() );
-			pen.setStyle( Qt::DotLine );
-			p.setPen( pen );
+			//QPen pen( beatLineColor() );
+			//pen.setStyle( Qt::DotLine );
+			//p.setPen( pen );
+                        p.setPen( beatLineColor() );
 			float y_delta = ( grid_bottom - TOP_MARGIN ) / 8.0f;
 			for( int i = 1; i < 8; ++i )
 			{
 				int y = (int)( grid_bottom - i * y_delta );
 				p.drawLine( VALUES_WIDTH, y, width(), y );
+			}
+                        //emboss
+                        p.setPen(QColor(16,18,20));
+			for( int i = 1; i < 8; ++i )
+			{
+				int y = (int)( grid_bottom - i * y_delta );
+				p.drawLine( VALUES_WIDTH, y-1, width(), y-1 );
 			}
 		}
 		else
@@ -1238,6 +1246,9 @@ void AutomationEditor::paintEvent(QPaintEvent * pe )
 				}
 				// draw level line
 				p.drawLine( VALUES_WIDTH, (int) y, width(), (int) y );
+                                //emboss
+                                p.setPen(QColor(16,18,20));
+				p.drawLine( VALUES_WIDTH, (int) y-1, width(), (int) y-1 );
 			}
 		}
 
@@ -1270,6 +1281,9 @@ void AutomationEditor::paintEvent(QPaintEvent * pe )
 		{
 			p.setPen( beatLineColor() );
 			p.drawLine( x, grid_bottom, x, x_line_end );
+                        //emboss
+                        p.setPen(QColor(16,18,20));
+			p.drawLine( x-1, grid_bottom, x-1, x_line_end );
 		}
 
 		// and finally bars
@@ -1280,6 +1294,9 @@ void AutomationEditor::paintEvent(QPaintEvent * pe )
 		{
 			p.setPen( barLineColor() );
 			p.drawLine( x, grid_bottom, x, x_line_end );
+                        //emboss
+                        p.setPen(QColor(16,18,20));
+			p.drawLine( x-1, grid_bottom, x-1, x_line_end );
 		}
 	}
 

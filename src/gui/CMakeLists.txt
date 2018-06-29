@@ -63,6 +63,7 @@ SET(LMMS_SRCS
 	gui/widgets/AutomatableSlider.cpp
 	gui/widgets/AutomatableToolButton.cpp
 	gui/widgets/CaptionMenu.cpp
+	gui/widgets/Chart.cpp
 	gui/widgets/ComboBox.cpp
 	gui/widgets/ControllerRackView.cpp
 	gui/widgets/ControllerView.cpp
