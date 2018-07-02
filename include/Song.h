@@ -256,6 +256,8 @@ public:
 	bool guiSaveProjectAs( const QString & filename );
 	bool saveProjectFile( const QString & filename );
 
+        QString projectDir();
+
 	const QString & projectFileName() const
 	{
 		return m_fileName;
@@ -331,6 +333,7 @@ public slots:
 	void togglePause();
 	void stop();
 
+        void freezeTracks();
 	void importProject();
 	void exportProject( bool multiExport = false );
 	void exportProjectTracks();
@@ -352,7 +355,6 @@ public slots:
  protected:
 	void clearSongMetaData();
         bool createProjectTree();
-        QString projectDir();
 
 
 private slots:

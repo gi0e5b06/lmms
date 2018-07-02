@@ -80,7 +80,7 @@ ControllerView::ControllerView( Controller * _model, QWidget * _parent ) :
 	  vBoxLayout->addWidget(m_nameLabel);
 	*/
 
-	setFixedSize( 210, 60 );
+	setFixedSize( 230, 60 );
 
 	// Disable controllers that are of type "DummyController"
 	bool isEnabled = true;//!dynamic_cast<DummyController *>( controller() );
@@ -227,9 +227,9 @@ void ControllerView::paintEvent( QPaintEvent * )
 	Controller * c = controller();//castModel<Controller>();
 	p.setPen( palette().shadow().color() );
 	//p.drawText( 7, 29, c->name() );
-        p.drawText( 107, 54, c->name() );
+        p.drawText( 87, 54, c->name() );
 	p.setPen( palette().text().color() );
-	p.drawText( 106, 53, c->name() );
+	p.drawText( 86, 53, c->name() );
 }
 
 

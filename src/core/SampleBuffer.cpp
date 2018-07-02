@@ -1,7 +1,7 @@
 /*
  * SampleBuffer.cpp - container-class SampleBuffer
  *
- * Copyright (c) 2017-2018 gi0e5b06
+ * Copyright (c) 2017-2018 gi0e5b06 (on github.com)
  * Copyright (c) 2005-2014 Tobias Doerffel <tobydox/at/users.sourceforge.net>
  *
  * This file is part of LMMS - https://lmms.io
@@ -208,6 +208,7 @@ void SampleBuffer::clearMMap()
 
 void SampleBuffer::update( bool _keepSettings )
 {
+        //qInfo("SampleBuffer::update");
 	const bool lock = ( m_data != NULL );
 	if( lock )
 	{
@@ -228,7 +229,7 @@ void SampleBuffer::update( bool _keepSettings )
 	const int sampleLengthMax = 90; // Minutes
 
 	sample_rate_t samplerate = Engine::mixer()->baseSampleRate();
-	QString cchext=QString(".f%1r%2").arg(DEFAULT_CHANNELS).arg(samplerate);
+	QString cchext="."+rawStereoSuffix();//QString(".f%1r%2").arg(DEFAULT_CHANNELS).arg(samplerate);
 	QString filename;
 
 	bool fileLoadError = false;
@@ -400,7 +401,9 @@ void SampleBuffer::update( bool _keepSettings )
 
 			if(m_origData && !m_mmapped)
                         {
-                                qCritical("SampleBuffer::update in error origData=%p",m_origData);
+                                BACKTRACE
+                                qCritical("SampleBuffer::update in error origData=%p file=%s",
+                                          m_origData,qPrintable(m_audioFile));
                                 MM_FREE(m_origData);
                         }
 			//not needed
@@ -423,11 +426,18 @@ void SampleBuffer::update( bool _keepSettings )
                             //(m_frames>102400) &&             // only for big samples?
                             QFileInfo(filename+cchext).isWritable() )
                         {
-				QFile file(filename+cchext);//QDateTime QFileInfo::lastModified()
+				qInfo("SampleBuffer: Write cache %s",qPrintable(filename));
+
+                                if(m_origData) qFatal("SampleBuffer::update in write cache origData=%p",m_origData);
+                                m_origData=NULL;
+                                m_origFrames=0;
+
+				//QFile file(filename+cchext);//QDateTime QFileInfo::lastModified()
 				//QFileInfo info(file);
 				//if(info.exists()) file.unlink();
-				qInfo("SampleBuffer: Write cache %s",qPrintable(filename));
-				if(!file.open(QIODevice::WriteOnly))
+                                writeCacheData(filename+cchext);
+                                /*
+                                if(!file.open(QIODevice::WriteOnly))
 					qCritical("SampleBuffer: Can not write %s",qPrintable(filename));
 				else
 				{
@@ -444,6 +454,7 @@ void SampleBuffer::update( bool _keepSettings )
 						qInfo("SampleBuffer: Cache written %s",qPrintable(filename));
 					file.close();
 				}
+                                */
 			}
 		}
 	}
@@ -454,7 +465,7 @@ void SampleBuffer::update( bool _keepSettings )
 
 			if(m_origData && !m_mmapped)
                         {
-                                qCritical("SampleBuffer::update in error origData=%p",m_origData);
+                                //qCritical("SampleBuffer::update #2 error origData=%p",m_origData);
                                 MM_FREE(m_origData);
                         }
 			//not needed
@@ -589,9 +600,9 @@ void SampleBuffer::normalizeSampleRate( const sample_rate_t _srcSR,
             _srcSR!=Engine::mixer()->baseSampleRate() )
 	{
 		//if(m_origData!=m_data)
-                qWarning("SampleBuffer::normalize %s",qPrintable(m_audioFile));
-                qWarning("SampleBuffer::normalize before m_data=%p m_frames=%d sr=%d mixersr=%d",
-                         m_data,m_frames,_srcSR,Engine::mixer()->baseSampleRate());
+                //qWarning("SampleBuffer::normalize %s",qPrintable(m_audioFile));
+                //qWarning("SampleBuffer::normalize before m_data=%p m_frames=%d sr=%d mixersr=%d",
+                //  m_data,m_frames,_srcSR,Engine::mixer()->baseSampleRate());
 		/*
                   SampleBuffer* resampled=resample(_srcSR,Engine::mixer()->baseSampleRate());
                   if(m_origData!=m_data) MM_FREE( m_data );
@@ -601,7 +612,7 @@ void SampleBuffer::normalizeSampleRate( const sample_rate_t _srcSR,
                   delete resampled;
                 */
                 resample(_srcSR,Engine::mixer()->baseSampleRate());
-                qWarning("SampleBuffer::normalize after m_data=%p m_frames=%d",m_data,m_frames);
+                //qWarning("SampleBuffer::normalize after m_data=%p m_frames=%d",m_data,m_frames);
 	}
 
 	if( _keepSettings == false )
@@ -1346,6 +1357,24 @@ void SampleBuffer::visualize( QPainter & _p, const QRect & _dr,
 */
 
 
+const QString SampleBuffer::rawStereoSuffix()
+{
+        //qInfo("SampleBuffer::rawStereoSuffix");
+        return QString("f%1s%2")
+                .arg(DEFAULT_CHANNELS)
+                .arg(Engine::mixer()->baseSampleRate());
+}
+
+
+const QString SampleBuffer::rawSurroundSuffix()
+{
+        //qInfo("SampleBuffer::rawSurroundSuffix");
+        return QString("f%1s%2")
+                .arg(SURROUND_CHANNELS)
+                .arg(Engine::mixer()->processingSampleRate());
+}
+
+
 QString SampleBuffer::selectAudioFile(const QString& _file)
 {
 	FileDialog ofd( NULL, tr( "Open audio file" ) );
@@ -1375,7 +1404,7 @@ QString SampleBuffer::selectAudioFile(const QString& _file)
 	// set filters
 	QStringList types;
 	types << tr( "All Audio-Files (*.wav *.ogg *.ds *.flac *.mp3 *.spx *.voc "
-                     "*.aif *.aiff *.au *.raw)" )
+                     "*.aif *.aiff *.au *.%1 *.%2)" ).arg(rawStereoSuffix()).arg(rawSurroundSuffix())
 		<< tr( "Wave-Files (*.wav)" )
 		<< tr( "OGG-Files (*.ogg)" )
 		<< tr( "DrumSynth-Files (*.ds)" )
@@ -1386,7 +1415,10 @@ QString SampleBuffer::selectAudioFile(const QString& _file)
 		<< tr( "VOC-Files (*.voc)" )
 		<< tr( "AIFF-Files (*.aif *.aiff)" )
 		<< tr( "AU-Files (*.au)" )
-		<< tr( "RAW-Files (*.raw)" )
+		<< tr( "Stereo RAW-Files (*.%1)" ).arg(rawStereoSuffix())
+#ifndef LMMS_DISABLE_SURROUND
+                << tr( "Surround RAW-Files (*.%1)" ).arg(rawSurroundSuffix())
+#endif
 		//<< tr( "MOD-Files (*.mod)" )
 		;
 	ofd.setNameFilters(types);
@@ -2005,6 +2037,82 @@ void SampleBuffer::setReversed( bool _on )
 {
 	m_reversed=_on;
 	update(true);
+}
+
+
+
+
+void SampleBuffer::getDataFrame(f_cnt_t _f,sample_t& ch0_,sample_t& ch1_)
+{
+        ch0_=0.f;
+        ch1_=0.f;
+        if(_f<0 || _f>=m_origFrames)
+        {
+                //qWarning("SampleBuffer::getDataFrame invalid frame _f=%d",_f);
+                return;
+        }
+        if(m_origData==NULL)
+        {
+                qWarning("SampleBuffer::getDataFrame m_data is null");
+                return;
+        }
+        ch0_=m_origData[_f][0];
+        ch1_=m_origData[_f][1];
+
+        if(_f==1000)
+                qInfo("SampleBuffer::getDataFrame f=%d ch0=%f ch1=%f",_f,ch0_,ch1_);
+}
+
+
+
+
+void SampleBuffer::setDataFrame(f_cnt_t _f,sample_t _ch0,sample_t _ch1)
+{
+        if(_f<0 || _f>=m_origFrames)
+        {
+                //qWarning("SampleBuffer::setDataFrame invalid frame _f=%d",_f);
+                return;
+        }
+        if(m_origData==NULL)
+        {
+                qWarning("SampleBuffer::setDataFrame m_data is null");
+                return;
+        }
+        if(m_mmapped)
+        {
+                qWarning("SampleBuffer::setDataFrame sample is mmapped");
+                return;
+        }
+        m_origData[_f][0]=_ch0;
+        m_origData[_f][1]=_ch1;
+        if(_f==1000)
+                qInfo("SampleBuffer::setDataFrame f=%d ch0=%f ch1=%f",_f,_ch0,_ch1);
+}
+
+
+
+
+void SampleBuffer::writeCacheData(QString _fileName) const
+{
+        qInfo("SampleBuffer: Write cache %s",qPrintable(_fileName));
+        QFile file(_fileName);
+        if(!file.open(QIODevice::WriteOnly))
+                qCritical("SampleBuffer: Can not write %s",qPrintable(_fileName));
+        else
+        {
+                //if(m_origData) qFatal("SampleBuffer::update in write cache origData=%p",m_origData);
+                //m_origData=NULL;
+                //m_origFrames=0;
+
+                QDataStream out(&file);
+                quint64 n=m_frames*BYTES_PER_FRAME;
+                quint64 w=out.writeRawData((const char*)m_data,n);
+                if(n!=w)
+                        qWarning("SampleBuffer: Fail to fully write %s",qPrintable(_fileName));
+                else
+                        qInfo("SampleBuffer: Cache written %s",qPrintable(_fileName));
+                file.close();
+        }
 }
 
 

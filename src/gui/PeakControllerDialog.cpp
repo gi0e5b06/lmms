@@ -45,15 +45,20 @@ PeakControllerDialog::PeakControllerDialog( Controller * _model, QWidget * _pare
 {
 	setWindowTitle( tr( "PEAK" ) );
 	setWindowIcon( embed::getIconPixmap( "controller" ) );
-	setFixedSize( 256, 64 );
+	setFixedSize( 254,60 );
 	
 	ToolTip::add( this, tr( "LFO Controller" ) );
 
 	QLabel * l = new QLabel( this );
 	l->setText( "Use FX's controls" );
-	l->move(10, 10);
+	l->setGeometry(6,6,width()-12,height()-12);//0,0,move(10, 10);
 
 	setModel( _model );
+
+	setAutoFillBackground( true );
+	QPalette pal;
+	pal.setBrush( backgroundRole(), embed::getIconPixmap( "lfo_controller_artwork" ) );
+	setPalette( pal );
 }
 
 
@@ -90,9 +95,10 @@ void PeakControllerDialog::contextMenuEvent( QContextMenuEvent * )
 
 
 
-void PeakControllerDialog::paintEvent( QPaintEvent * )
+void PeakControllerDialog::paintEvent( QPaintEvent* _pe )
 {
-	QPainter p( this );
+	//QPainter p( this );
+        ControllerDialog::paintEvent(_pe);
 }
 
 

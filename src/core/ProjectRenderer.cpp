@@ -33,63 +33,63 @@
 #include "AudioFileOgg.h"
 #include "AudioFileRaw.h"
 #include "AudioFileWave.h"
+#include "RenderManager.h"
+#include "SampleBuffer.h"
 #include "Song.h"
 
 #ifdef LMMS_HAVE_SCHED_H
 #include "sched.h"
 #endif
 
-const QString RAW_EXT=QString("f%1s%2")
-        .arg(SURROUND_CHANNELS)
-        .arg(Engine::mixer()->baseSampleRate());
-
+// GDX This big constant is a problem...
 const ProjectRenderer::FileEncodeDevice ProjectRenderer::fileEncodeDevices[]
         = {
 
                 {ProjectRenderer::WaveFile,
-                        QT_TRANSLATE_NOOP("ProjectRenderer",
-                                "WAV-File (*.wav)"),
-                        ".wav",
-                        &AudioFileWave::getInst},
+                 QT_TRANSLATE_NOOP("ProjectRenderer", "WAV-File (*.wav)"),
+                 ".wav", &AudioFileWave::getInst},
                 {ProjectRenderer::FlacFile,
-                        QT_TRANSLATE_NOOP("ProjectRenderer",
-                                "FLAC-File (*.flac)"),
-                        ".flac",
-                        &AudioFileFlac::getInst},
+                 QT_TRANSLATE_NOOP("ProjectRenderer", "FLAC-File (*.flac)"),
+                 ".flac", &AudioFileFlac::getInst},
                 {ProjectRenderer::OggFile,
-                        QT_TRANSLATE_NOOP("ProjectRenderer",
-                                "Compressed OGG-File (*.ogg)"),
-                        ".ogg",
+                 QT_TRANSLATE_NOOP("ProjectRenderer",
+                                   "Compressed OGG-File (*.ogg)"),
+                 ".ogg",
 #ifdef LMMS_HAVE_OGGVORBIS
-                        &AudioFileOgg::getInst
+                 &AudioFileOgg::getInst
 #else
-                        NULL
+                 NULL
 #endif
                 },
                 {ProjectRenderer::MP3File,
-                        QT_TRANSLATE_NOOP("ProjectRenderer",
-                                "Compressed MP3-File (*.mp3)"),
-                        ".mp3",
+                 QT_TRANSLATE_NOOP("ProjectRenderer",
+                                   "Compressed MP3-File (*.mp3)"),
+                 ".mp3",
 #ifdef LMMS_HAVE_MP3LAME
-                        &AudioFileMP3::getInst
+                 &AudioFileMP3::getInst
 #else
-                        NULL
+                 NULL
 #endif
                 },
                 {ProjectRenderer::AUFile,
-                        QT_TRANSLATE_NOOP("ProjectRenderer",
-                                "Sun/Next AU-File (*.au)"),
-                        ".au",
-                        &AudioFileAU::getInst
-                },
+                 QT_TRANSLATE_NOOP("ProjectRenderer",
+                                   "Sun/Next AU-File (*.au)"),
+                 ".au", &AudioFileAU::getInst},
                 {ProjectRenderer::RawFile,
                  QString(QT_TRANSLATE_NOOP("ProjectRenderer",
-                                           "Raw File (*.%1)")).arg(RAW_EXT),
-                 "."+RAW_EXT,
-                 &AudioFileRaw::getInst
-                },
-                // ... insert your own file-encoder-infos here... may be one
-                // day the user can add own encoders inside the program...
+                                           "Stereo Raw File (*.%1)"))
+                         .arg(SampleBuffer::rawStereoSuffix()),
+                 "." + SampleBuffer::rawStereoSuffix(),
+                 &AudioFileRaw::getInst},
+#ifndef LMMS_DISABLE_SURROUND
+                {ProjectRenderer::RawFile,
+                 QString(QT_TRANSLATE_NOOP("ProjectRenderer",
+                                           "Surround Raw File (*.%1)"))
+                         .arg(SampleBuffer::rawSurroundSuffix()),
+                 "." + SampleBuffer::rawSurroundSuffix(),
+                 &AudioFileRaw::getInst},
+#endif  // ... insert your own file-encoder-infos here... may be one
+        // day the user can add own encoders inside the program...
 
                 {ProjectRenderer::NumFileFormats, NULL, NULL, NULL}
 
@@ -99,12 +99,12 @@ ProjectRenderer::ProjectRenderer(
         const Mixer::qualitySettings& qualitySettings,
         const OutputSettings&         outputSettings,
         ExportFileFormats             exportFileFormat,
-        const QString&                outputFilename)
-      : QThread(Engine::mixer())
-      , m_fileDev(NULL)
-      , m_qualitySettings(qualitySettings)
-      , m_progress(0)
-      , m_abort(false)
+        const QString&                outputFilename,
+        RenderManager*                _rm) :
+      QThread(_rm),
+      // QThread(Engine::mixer()),
+      m_fileDev(NULL), m_qualitySettings(qualitySettings), m_progress(0),
+      m_abort(false)
 {
     setObjectName("project renderer " + outputFilename);
     AudioFileDeviceInstantiaton audioEncoderFactory
@@ -114,11 +114,9 @@ ProjectRenderer::ProjectRenderer(
     {
         bool successful = false;
 
-        m_fileDev = audioEncoderFactory(outputFilename,
-                outputSettings,
-                DEFAULT_CHANNELS,
-                Engine::mixer(),
-                successful);
+        m_fileDev = audioEncoderFactory(outputFilename, outputSettings,
+                                        DEFAULT_CHANNELS, Engine::mixer(),
+                                        successful);
         if(!successful)
         {
             delete m_fileDev;
@@ -149,15 +147,14 @@ ProjectRenderer::ExportFileFormats
     return (WaveFile);  // default
 }
 
-QString
-        ProjectRenderer::getFileExtensionFromFormat(ExportFileFormats fmt)
+QString ProjectRenderer::getFileExtensionFromFormat(ExportFileFormats fmt)
 {
     return fileEncodeDevices[fmt].m_extension;
 }
 
-void
-        ProjectRenderer::startProcessing()
+void ProjectRenderer::startProcessing()
 {
+    qInfo("ProjectRenderer::startProcessing #1");
 
     if(isReady())
     {
@@ -166,16 +163,17 @@ void
         // called immediately
         Engine::mixer()->setAudioDevice(m_fileDev, m_qualitySettings, false);
 
+        qInfo("ProjectRenderer::startProcessing #2");
         start(
 #ifndef LMMS_BUILD_WIN32
                 QThread::HighPriority
 #endif
         );
+        qInfo("ProjectRenderer::startProcessing #3");
     }
 }
 
-void
-        ProjectRenderer::run()
+void ProjectRenderer::run()
 {
 #if 0
 #ifdef LMMS_BUILD_LINUX
@@ -188,10 +186,14 @@ void
 #endif
 #endif
 
+    qInfo("ProjectRenderer::run #1");
+
     Engine::getSong()->startExport();
     Engine::getSong()->updateLength();
     // skip first empty buffer
     Engine::mixer()->nextBuffer();
+
+    qInfo("ProjectRenderer::run #2");
 
     const Song::PlayPos& exportPos
             = Engine::getSong()->getPlayPos(Song::Mode_PlaySong);
@@ -204,7 +206,7 @@ void
 
     // Continually track and emit progress percentage to listeners
     while(exportPos.getTicks() < endTick
-            && Engine::getSong()->isExporting() == true && !m_abort)
+          && Engine::getSong()->isExporting() == true && !m_abort)
     {
         m_fileDev->processNextBuffer();
         const int nprog = lengthTicks == 0
@@ -224,15 +226,13 @@ void
     Engine::getSong()->stopExport();
 }
 
-void
-        ProjectRenderer::abortProcessing()
+void ProjectRenderer::abortProcessing()
 {
     m_abort = true;
     wait();
 }
 
-void
-        ProjectRenderer::updateConsoleProgress()
+void ProjectRenderer::updateConsoleProgress()
 {
     const int  cols = 50;
     static int rot  = 0;

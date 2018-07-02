@@ -64,8 +64,9 @@ LfoControllerDialog::LfoControllerDialog( Controller * _model, QWidget * _parent
 	title.append( ")" );
 	setWindowTitle( title );
 	setWindowIcon( embed::getIconPixmap( "controller" ) );
-	setFixedSize( 240, 58 );
-	
+	//setFixedSize( 240, 58 );
+        setFixedSize( 254, 60 );
+
 	ToolTip::add( this, tr( "LFO Controller" ) );
 
 	m_baseKnob = new Knob( knobBright_26, this );
@@ -230,7 +231,6 @@ LfoControllerDialog::LfoControllerDialog( Controller * _model, QWidget * _parent
 	QPalette pal;
 	pal.setBrush( backgroundRole(), embed::getIconPixmap( "lfo_controller_artwork" ) );
 	setPalette( pal );
-
 }
 
 

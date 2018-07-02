@@ -846,7 +846,7 @@ void FxMixer::loadSettings( const QDomElement & _this )
 		allocateChannelsTo( num );
 
 		m_fxChannels[num]->m_volumeModel.loadSettings( fxch, "volume" );
-		m_fxChannels[num]->m_muteModel.loadSettings( fxch, "muted" );
+                m_fxChannels[num]->m_muteModel.loadSettings( fxch, "muted" );
 		m_fxChannels[num]->m_soloModel.loadSettings( fxch, "soloed" );
 		m_fxChannels[num]->m_name = fxch.attribute( "name" );
 

@@ -1,7 +1,7 @@
 /*
- * PeripheralPadsView.cpp - implementation of an interactive
- * pads widget (like the MPD218) used in a instrument track window
- * for testing + according model class
+ * PeripheralLaunchpadView.cpp - implementation of an interactive launchpad
+ * widget (like the APCmini) used in the instrument track window for testing +
+ * according model class
  *
  * Copyright (c) 2018 gi0e5b06 (on github.com)
  * Copyright (c) 2004-2014 Tobias Doerffel <tobydox/at/users.sourceforge.net>
@@ -25,11 +25,11 @@
  *
  */
 
-/** \brief Pads to play notes on in the instrument plugin window.
+/** \brief A launchpad to play notes on in the instrument plugin window.
  */
 
 /*
- * \mainpage Instrument plugin pads display classes
+ * \mainpage Instrument plugin keyboard display classes
  *
  * \section introduction Introduction
  *
@@ -37,7 +37,7 @@
  * \todo write isWhite inline function and replace throughout
  */
 
-#include "PeripheralPadsView.h"
+#include "PeripheralLaunchpadView.h"
 
 #include <cmath>
 
@@ -55,8 +55,9 @@
 #include "embed.h"
 #include "gui_templates.h"
 
-// QPixmap * PeripheralPadsView::s_padPm = NULL;           /*!< A pad released
-// */ QPixmap * PeripheralPadsView::s_padPressedPm = NULL;    /*!< A pad
+// QPixmap * PeripheralLaunchpadView::s_padPm = NULL;           /*!< A pad
+// released
+// */ QPixmap * PeripheralLaunchpadView::s_padPressedPm = NULL;    /*!< A pad
 // pressed */
 
 // const int PIANO_BASE = 11;          /*!< The height of the root note
@@ -77,14 +78,16 @@ const int PW_GAP_HEIGHT = 1;
  *  \todo are the descriptions of the m_startkey and m_lastkey properties
  * correct?
  */
-PeripheralPadsView::PeripheralPadsView(QWidget* _parent) :
+PeripheralLaunchpadView::PeripheralLaunchpadView(QWidget* _parent) :
       PeripheralView(_parent), /*!< Our parent */
-      m_startKey(36), m_lastKey(-1)
+      //m_startKey(0),
+      m_lastKey(-1)
 {
     setAttribute(Qt::WA_OpaquePaintEvent, true);
     setFocusPolicy(Qt::StrongFocus);
     setMaximumWidth(250);  // NumKeys * PW_WHITE_KEY_WIDTH );
 
+    /*
     // create scrollbar at the bottom
     m_pianoScroll = new QScrollBar(Qt::Horizontal, this);
     m_pianoScroll->setSingleStep(16);
@@ -101,20 +104,21 @@ PeripheralPadsView::PeripheralPadsView(QWidget* _parent) :
     layout->setMargin(0);
     layout->addSpacing(68);  // PIANO_BASE+PW_WHITE_KEY_HEIGHT );
     layout->addWidget(m_pianoScroll);
+    */
 }
 
-/*! \brief Destroy this view
+/*! \brief Destroy this piano display view
  *
  */
-PeripheralPadsView::~PeripheralPadsView()
+PeripheralLaunchpadView::~PeripheralLaunchpadView()
 {
 }
 
-/*! \brief Register a change to this view
+/*! \brief Register a change to this piano display view
  *
  */
 /*
-void PeripheralPadsView::modelChanged()
+void PeripheralLaunchpadView::modelChanged()
 {
         m_piano = castModel<Piano>();
         if( m_piano != NULL )
@@ -146,7 +150,7 @@ dataChanged() ), this, SLOT( update() ) );
  *
  *  \param _p The point that the mouse was pressed.
  */
-int PeripheralPadsView::getKeyFromMouse(const QPoint& _p) const
+int PeripheralLaunchpadView::getKeyFromMouse(const QPoint& _p) const
 {
     for(int k = 0; k < NumKeys; ++k)
         if(getPadRect(k).contains(_p))
@@ -161,23 +165,26 @@ int PeripheralPadsView::getKeyFromMouse(const QPoint& _p) const
  *
  *  \param _new_pos the new key position.
  */
-void PeripheralPadsView::pianoScrolled(int _newPos)
+/*
+void PeripheralLaunchpadView::pianoScrolled(int _newPos)
 {
     // m_startKey = WhiteKeys[_new_pos % WhiteKeysPerOctave]+
     //		( _new_pos / WhiteKeysPerOctave ) * KeysPerOctave;
     // m_startKey=qBound(0,m_startKey,NumKeys-1);
-    m_startKey = qBound(4, (_newPos / 16) * 16 + 4, 84);
-    qInfo("PeripheralPadsView::pianoScrolled np=%d sk=%d", _newPos,
-          m_startKey);
-    update();
+
+      m_startKey = qBound(4, (_newPos / 16) * 16 + 4, 84);
+      qInfo("PeripheralLaunchpadView::pianoScrolled np=%d sk=%d", _newPos,
+      m_startKey);
+      update();
 }
+*/
 
 /*! \brief Handle a context menu selection on the piano display view
  *
  *  \param _me the ContextMenuEvent to handle.
  *  \todo Is this right, or does this create the context menu?
  */
-void PeripheralPadsView::contextMenuEvent(QContextMenuEvent* _me)
+void PeripheralLaunchpadView::contextMenuEvent(QContextMenuEvent* _me)
 {
     {
         PeripheralView::contextMenuEvent(_me);
@@ -202,7 +209,7 @@ void PeripheralPadsView::contextMenuEvent(QContextMenuEvent* _me)
  *
  *  \param _me the mouse click to handle.
  */
-void PeripheralPadsView::mousePressEvent(QMouseEvent* _me)
+void PeripheralLaunchpadView::mousePressEvent(QMouseEvent* _me)
 {
     if(_me->button() == Qt::LeftButton)
     {
@@ -252,7 +259,7 @@ void PeripheralPadsView::mousePressEvent(QMouseEvent* _me)
  *
  *  \param _me the mousePressEvent to handle.
  */
-void PeripheralPadsView::mouseReleaseEvent(QMouseEvent*)
+void PeripheralLaunchpadView::mouseReleaseEvent(QMouseEvent*)
 {
     if(m_lastKey != -1)
     {
@@ -284,7 +291,7 @@ void PeripheralPadsView::mouseReleaseEvent(QMouseEvent*)
  *  reduce or remove the duplication between this, the mousePressEvent()
  *  and mouseReleaseEvent() methods.
  */
-void PeripheralPadsView::mouseMoveEvent(QMouseEvent* _me)
+void PeripheralLaunchpadView::mouseMoveEvent(QMouseEvent* _me)
 {
     if(m_piano == NULL)
     {
@@ -356,7 +363,7 @@ void PeripheralPadsView::mouseMoveEvent(QMouseEvent* _me)
  *
  *  \param _ke the KeyEvent to handle.
  */
-void PeripheralPadsView::keyPressEvent(QKeyEvent* _ke)
+void PeripheralLaunchpadView::keyPressEvent(QKeyEvent* _ke)
 {
     const int keyNum
             = getKeyFromKeyEvent(_ke) + (DefaultOctave - 1) * KeysPerOctave;
@@ -382,7 +389,7 @@ void PeripheralPadsView::keyPressEvent(QKeyEvent* _ke)
  *
  *  \param _ke the KeyEvent to handle.
  */
-void PeripheralPadsView::keyReleaseEvent(QKeyEvent* _ke)
+void PeripheralLaunchpadView::keyReleaseEvent(QKeyEvent* _ke)
 {
     const int keyNum
             = getKeyFromKeyEvent(_ke) + (DefaultOctave - 1) * KeysPerOctave;
@@ -407,7 +414,7 @@ void PeripheralPadsView::keyReleaseEvent(QKeyEvent* _ke)
  *
  *  \todo Is there supposed to be a parameter given here?
  */
-void PeripheralPadsView::focusOutEvent(QFocusEvent*)
+void PeripheralLaunchpadView::focusOutEvent(QFocusEvent*)
 {
     if(m_piano == NULL)
     {
@@ -447,7 +454,7 @@ void PeripheralPadsView::focusOutEvent(QFocusEvent*)
  *
  *  \param _event resize-event object (unused)
  */
-void PeripheralPadsView::resizeEvent(QResizeEvent* _event)
+void PeripheralLaunchpadView::resizeEvent(QResizeEvent* _event)
 {
     QWidget::resizeEvent(_event);
     /*
@@ -464,7 +471,7 @@ void PeripheralPadsView::resizeEvent(QResizeEvent* _event)
  *
  *  \todo Is there supposed to be a parameter given here?
  */
-void PeripheralPadsView::paintEvent(QPaintEvent*)
+void PeripheralLaunchpadView::paintEvent(QPaintEvent*)
 {
     QPainter p(this);
 
@@ -472,27 +479,12 @@ void PeripheralPadsView::paintEvent(QPaintEvent*)
     p.fillRect(QRect(0, 0, width(), height()), p.background());
     p.setPen(Qt::white);
 
-    const char bankletters[] = {'Y', 'Z', 'A', 'B', 'C', 'D', 'E', 'F'};
-    for(int b = 0; b < 8; ++b)
-    {
-        QRect r = getBankRect(b);
-        // p.fillRect(r,p.background());
-        // if(b%2==1) p.fillRect(r,QColor(255,255,255,32));
-
-        p.setFont(pointSize<12>(p.font()));
-        p.drawText(r.x() + 2, r.y() + 15, QString(bankletters[b]));
-
-        p.setFont(pointSize<6>(p.font()));
-        p.drawText(r.x(), r.y() + r.height() - 7,
-                   Note::findKeyName(4 + b * 16 + 12).toUpper());
-    }
-
     const int baseKey
             = (m_piano != NULL)
                       ? m_piano->instrumentTrack()->baseNoteModel()->value()
                       : 0;
 
-    for(int k = m_startKey; k < 128; k++)
+    for(int k = 0; k < 64; k++)
     {
         QColor padfg(255, 255, 255);
         QColor padbg(40, 40, 40);
@@ -508,36 +500,21 @@ void PeripheralPadsView::paintEvent(QPaintEvent*)
         p.fillRect(r, padbg);
 
         if(k == baseKey)
-            p.fillRect(r.adjusted(+3, +3, -3, -3), Qt::white);
+            p.fillRect(r.adjusted(+1, +1, -1, -1), Qt::white);
     }
 }
 
-QRect PeripheralPadsView::getBankRect(int _b) const
+QRect PeripheralLaunchpadView::getPadRect(int _k) const
 {
-    if((_b < 0) || (_b >= 8))
+    if((_k < 0) || (_k > 63))
         return QRect();
-    _b -= m_startKey / 16;
 
-    int x = _b * 82;
-    int y = 0;
-    int w = 82;
-    int h = 68;
-    return QRect(x, y, w, h);
-}
+    const int padi = _k % 8;
+    const int padj = 7 - (_k / 8);
 
-QRect PeripheralPadsView::getPadRect(int _k) const
-{
-    if((_k < 4) || (_k > 127))
-        return QRect();
-    _k -= m_startKey;
-
-    const int bank = _k / 16;
-    const int padi = _k % 16 % 4;
-    const int padj = 3 - _k % 16 / 4;
-
-    int x = bank * 82 + 16 + padi * 16;
-    int y = 2 + padj * 16;
-    int w = 14;
-    int h = 14;
+    int x = 45 + padi * 20;
+    int y = 1 + padj * 10;
+    int w = 18;
+    int h = 8;
     return QRect(x, y, w, h);
 }

@@ -43,6 +43,7 @@
 #include <QMouseEvent>
 #include <QPainter>
 #include <QStyleOption>
+#include <QUuid>
 
 #include "debug.h"
 #include "Backtrace.h"
@@ -1720,10 +1721,10 @@ void TrackContentWidget::paintEvent( QPaintEvent * pe )
         if(getTrack()->isFrozen())
         {
                 QPainter p(this);
-                p.fillRect(0,0,width()-1,height()-1,
+                p.fillRect(0,height()-9,width()-1,7,
                            QBrush(Qt::cyan,Qt::BDiagPattern));
-                p.fillRect(0,0,width()-1,height()-1,
-                           QBrush(QColor(0,160,160,64),Qt::SolidPattern));
+                //p.fillRect(0,0,width()-1,height()-1,
+                //           QBrush(QColor(0,160,160,48),Qt::SolidPattern));
         }
 }
 
@@ -1950,8 +1951,8 @@ TrackOperationsWidget::TrackOperationsWidget( TrackView * parent ) :
 		m_frozenBtn->move(62,18);//setGeometry(62,18,16,14);
 	}
 
-        if((m_trackView->getTrack()->type()!=Track::InstrumentTrack)||
-           (m_trackView->getTrack()->trackContainer()==(TrackContainer*)Engine::getBBTrackContainer()))
+        //(m_trackView->getTrack()->type()!=Track::InstrumentTrack)||
+        if((m_trackView->getTrack()->trackContainer()==(TrackContainer*)Engine::getBBTrackContainer()))
                 m_frozenBtn->setVisible(false);
 
 	connect( this, SIGNAL( trackRemovalScheduled( TrackView * ) ),
@@ -2338,14 +2339,31 @@ Track::Track( TrackTypes type, TrackContainer * tc ) :
 	m_trackContainer( tc ),        /*!< The track container object */
 	m_type( type ),                /*!< The track type */
 	m_name(),                       /*!< The track's name */
+        m_uuid(""),
 	m_simpleSerializingMode( false ),
 	m_trackContentObjects()         /*!< The track content objects (segments) */
 {
 	m_trackContainer->addTrack( this );
 	m_height = -1;
+
+        connect( &m_soloModel, SIGNAL( dataChanged() ),
+                 this, SLOT( toggleSolo() ) );
+
+	connect( &m_frozenModel, SIGNAL( dataChanged() ),
+		 this, SLOT( toggleFrozen() ) );
 }
 
-
+const QString Track::uuid()
+{
+        if(m_uuid.isEmpty())
+        {
+                m_uuid=QUuid::createUuid().toString()
+                        .replace("{","").replace("}","");
+		if( Engine::getSong() )
+			Engine::getSong()->setModified();
+        }
+        return m_uuid;
+}
 
 
 /*! \brief Destroy this track
@@ -2478,10 +2496,14 @@ void Track::saveSettings( QDomDocument & doc, QDomElement & element )
 	element.setAttribute( "muted", isMuted() );
 	element.setAttribute( "solo", isSolo() );
 	element.setAttribute( "frozen", isFrozen() );
+
 	if( m_height >= MINIMAL_TRACK_HEIGHT )
 	{
 		element.setAttribute( "trackheight", m_height );
 	}
+
+        if( !m_uuid.isEmpty())
+                element.setAttribute( "uuid", m_uuid );
 
 	QDomElement tsDe = doc.createElement( nodeName() );
 	// let actual track (InstrumentTrack, bbTrack, sampleTrack etc.) save
@@ -2582,6 +2604,14 @@ void Track::loadSettings( const QDomElement & element )
 	{
 		m_height = storedHeight;
 	}
+
+	if(element.hasAttribute( "uuid" ))
+        {
+                if(!m_uuid.isEmpty())
+                        qWarning("Track::loadSettings this track already has an UUID");
+                m_uuid=element.attribute( "uuid" );
+                readFrozenBuffer();
+        }
 }
 
 
@@ -2898,6 +2928,17 @@ void Track::toggleSolo()
 
 void Track::toggleFrozen()
 {
+        qInfo("Track::toggleFrozen");
+}
+
+
+void Track::writeFrozenBuffer()
+{
+}
+
+
+void Track::readFrozenBuffer()
+{
 }
 
 
@@ -2956,8 +2997,13 @@ TrackView::TrackView( Track * track, TrackContainerView * tcv ) :
 	connect( &m_track->m_mutedModel, SIGNAL( dataChanged() ),
                  &m_trackContentWidget, SLOT( update() ) );
 
+        /*
 	connect( &m_track->m_soloModel, SIGNAL( dataChanged() ),
                  m_track, SLOT( toggleSolo() ) );
+
+	connect( &m_track->m_frozenModel, SIGNAL( dataChanged() ),
+		 m_track, SLOT( toggleFrozen() ) );
+        */
 
 	connect( &m_track->m_frozenModel, SIGNAL( dataChanged() ),
 		 &m_trackContentWidget, SLOT( update() ) );

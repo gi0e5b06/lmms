@@ -399,10 +399,10 @@ void AutomationPatternView::paintEvent( QPaintEvent * )
 
         if(m_pat->getTrack()->isFrozen())
         {
-                p.fillRect(0,0,width()-1,height()-1,
+                p.fillRect(0,height()-9,width()-1,height()-1,
                            QBrush(Qt::cyan,Qt::BDiagPattern));
                 p.fillRect(0,0,width()-1,height()-1,
-                           QBrush(QColor(0,160,160,64),Qt::SolidPattern));
+                           QBrush(QColor(0,160,160,48),Qt::SolidPattern));
         }
         else
         {

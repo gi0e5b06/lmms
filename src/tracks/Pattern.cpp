@@ -1306,10 +1306,10 @@ void PatternView::paintEvent( QPaintEvent * )
 
         if(m_pat->getTrack()->isFrozen())
         {
-                p.fillRect(0,0,width()-1,height()-1,
+                p.fillRect(0,height()-8,width()-1,7,
                            QBrush(Qt::cyan,Qt::BDiagPattern));
-                p.fillRect(0,0,width()-1,height()-1,
-                           QBrush(QColor(0,160,160,64),Qt::SolidPattern));
+                //p.fillRect(0,0,width()-1,height()-1,
+                //           QBrush(QColor(0,160,160,48),Qt::SolidPattern));
         }
         else
         if(!beatPattern)

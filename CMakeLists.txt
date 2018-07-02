@@ -55,7 +55,7 @@ OPTION(WANT_CAPS	"Include C* Audio Plugin Suite (LADSPA plugins)" ON)
 OPTION(WANT_CARLA	"Include Carla plugin" ON)
 OPTION(WANT_CMT		"Include Computer Music Toolkit LADSPA plugins" ON)
 OPTION(WANT_JACK	"Include JACK (Jack Audio Connection Kit) support" ON)
-OPTION(WANT_LV2	        "Include LV2 support" ON)
+OPTION(WANT_LV2	        "Include LV2 support" OFF)
 OPTION(WANT_MPG123	"Include MP3/mpg123 support" ON)
 OPTION(WANT_MP3LAME	"Include MP3/Lame support" ON)
 OPTION(WANT_OGGVORBIS	"Include OGG/Vorbis support" ON)
@@ -143,7 +143,7 @@ CHECK_INCLUDE_FILES(locale.h LMMS_HAVE_LOCALE_H)
 LIST(APPEND CMAKE_PREFIX_PATH "${CMAKE_INSTALL_PREFIX}")
 
 
-SET(QT5 TRUE)
+#SET(QT5 TRUE)
 
 FIND_PACKAGE(Qt5Core REQUIRED)
 FIND_PACKAGE(Qt5Concurrent REQUIRED)

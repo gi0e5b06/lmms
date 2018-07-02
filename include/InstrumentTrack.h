@@ -34,9 +34,7 @@
 #include "MidiPort.h"
 #include "NotePlayHandle.h"
 #include "Piano.h"
-//#include "PianoView.h"
 #include "PeripheralView.h"
-//#include "PeripheralPadsView.h"
 #include "Pitch.h"
 #include "Track.h"
 
@@ -226,6 +224,10 @@ public:
 	}
 
 	void setPreviewMode( const bool );
+
+        virtual void writeFrozenBuffer();
+        virtual void readFrozenBuffer();
+
 
 signals:
 	void instrumentChanged();
@@ -437,8 +439,9 @@ public slots:
 	void toggleVisibility( bool _on );
 	void updateName();
 	void updateInstrumentView();
-        void switchToPiano();
+        void switchToLaunchpad();
         void switchToPads();
+        void switchToPiano();
 
 protected:
 	// capture close-events for toggling instrument-track-button

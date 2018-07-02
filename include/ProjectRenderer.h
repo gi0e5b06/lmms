@@ -30,6 +30,8 @@
 #include "Mixer.h"
 #include "OutputSettings.h"
 
+class RenderManager;
+
 
 class ProjectRenderer : public QThread
 {
@@ -58,9 +60,10 @@ public:
 
 
 	ProjectRenderer( const Mixer::qualitySettings & _qs,
-				const OutputSettings & _os,
-				ExportFileFormats _file_format,
-				const QString & _out_file );
+                         const OutputSettings & _os,
+                         ExportFileFormats _file_format,
+                         const QString & _out_file,
+                         RenderManager* _rm);
 	virtual ~ProjectRenderer();
 
 	bool isReady() const

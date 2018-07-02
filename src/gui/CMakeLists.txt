@@ -37,6 +37,7 @@ SET(LMMS_SRCS
 	gui/ModelView.cpp
 	gui/PeakControllerDialog.cpp
         gui/PeripheralView.cpp
+        gui/PeripheralLaunchpadView.cpp
         gui/PeripheralPadsView.cpp
 	gui/PianoView.cpp
 	gui/PluginBrowser.cpp

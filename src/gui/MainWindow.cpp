@@ -288,6 +288,11 @@ void MainWindow::finalize()
 
 	project_menu->addSeparator();
 	project_menu->addAction( embed::getIconPixmap( "project_export" ),
+                                 tr( "&Freeze Tracks..." ),
+                                 Engine::getSong(),
+                                 SLOT( freezeTracks() ) );
+	project_menu->addSeparator();
+	project_menu->addAction( embed::getIconPixmap( "project_export" ),
                                  tr( "Render Son&g..." ),
                                  Engine::getSong(),
                                  SLOT( exportProject() ),
@@ -1375,9 +1380,10 @@ void MainWindow::reorganizeWindows()
 	int h2=gui->fxMixerView()->height();
 	int w2=wt-262; //tmp instr.
 	//1st row
-	int h1=ht-h2+6;
+	int h1=ht-h2+8;
 	int w1=gui->fxMixerView()->width()+6; //tmp
-        int y3=ht-gui->getControllerRackView()->height()+6;
+        int h3=gui->getControllerRackView()->height();
+        int y3=ht-h3+8;
 
 	/*
 	  toggleWindow( gui->getBBEditor(), forceShow );
@@ -1399,7 +1405,7 @@ void MainWindow::reorganizeWindows()
 			(*it)->setGeometry(0,0,w2,h1);
 		else
 		if(*it==gui->getBBEditor()->parentWidget())
-			(*it)->setGeometry(w1+2,h1,w2-w1,h1);
+			(*it)->setGeometry(w1+2,h1,w2-w1,ht-h1-h3-2);
 		else
 		if(*it==gui->getProjectNotes()->parentWidget())
 			(*it)->setGeometry(20,20,wt-80,ht-80);//0,0,w2,h1);
@@ -1414,9 +1420,12 @@ void MainWindow::reorganizeWindows()
 			(*it)->move(0,h1);
 		else
 		if(*it==gui->getControllerRackView()->parentWidget())
-			(*it)->move(w2+4,y3);
+			(*it)->move(w1+2,y3);
 		else
-			{ (*it)->move(w2+4,yt); yt+=24; }
+		{
+                        (*it)->move(w2+2,yt);
+                        yt+=(*it)->height()+2; //24;
+                }
 	}
 }
 

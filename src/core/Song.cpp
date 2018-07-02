@@ -1432,9 +1432,13 @@ QString Song::projectDir()
 
         QString pname=fi.completeBaseName();
         qInfo("Song::projectDir pname is %s",qPrintable(pname));
-        QString pdir =fi.absolutePath();       // ~/lmms/projects
+        QString pdir =fi.absolutePath()
+                +QDir::separator()+".."
+                +QDir::separator()+"balls"
+                +QDir::separator()+pname;       // ~/lmms/balls/<prj>
+        pdir=QFileInfo(pdir).absoluteFilePath();
         qInfo("Song::projectDir pdir is %s",qPrintable(pdir));
-        return pdir+QDir::separator()+pname;
+        return pdir;
 }
 
 
@@ -1451,6 +1455,41 @@ bool Song::createProjectTree()
         pdir.mkpath(QString("song")+QDir::separator()+"rendered");
 
         return true;
+}
+
+
+void Song::freezeTracks()
+{
+	for(Track* t: tracks())
+	{
+		t->setFrozen(false);
+		t->setFrozen(true);
+		t->setFrozen(false);
+	}
+
+        ExportProjectDialog epd( "/tmp/tmp."+SampleBuffer::rawStereoSuffix(),
+                                 gui->mainWindow(), false );
+        epd.setWindowTitle( tr("Freeze tracks") );
+        epd.fileFormatCB->setCurrentIndex(5);
+        epd.bitrateCB->setCurrentIndex(0);
+        epd.depthCB->setCurrentIndex(2);
+        epd.stereoModeComboBox->setCurrentIndex(0);
+        epd.interpolationCB->setCurrentIndex(2);
+        epd.oversamplingCB->setCurrentIndex(0);
+        epd.checkBoxVariableBitRate->setChecked(false);
+        epd.exportLoopCB->setChecked(false);
+        epd.renderMarkersCB->setChecked(false);
+        epd.peakNormalizeCB->setChecked(false);
+
+        qInfo("Song::freezeTracks before exec");
+        epd.exec();
+        qInfo("Song::freezeTracks after exec");
+
+	for(Track* t: tracks())
+	{
+		t->setFrozen(true);
+                t->writeFrozenBuffer();
+	}
 }
 
 

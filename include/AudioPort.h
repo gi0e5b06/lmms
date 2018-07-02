@@ -35,6 +35,8 @@
 class EffectChain;
 class FloatModel;
 class BoolModel;
+class SampleBuffer;
+
 
 class AudioPort : public ThreadableJob
 {
@@ -108,7 +110,10 @@ public:
 	void addPlayHandle( PlayHandle * handle );
 	void removePlayHandle( PlayHandle * handle );
 
-        void updateFrozenBuffer();
+        void updateFrozenBuffer(f_cnt_t _len);
+        void writeFrozenBuffer(QString _uuid);
+        void readFrozenBuffer(QString _uuid);
+
 
 private:
 	volatile bool m_bufferUsage;
@@ -131,8 +136,9 @@ private:
 	BoolModel * m_mutedModel;
 	BoolModel * m_frozenModel;
 
-        sampleFrame* m_frozenBuf;
-        int          m_frozenLen;
+        SampleBuffer*  m_frozenBuf;
+        //sampleFrame* m_frozenBuf;
+        //int          m_frozenLen;
 
 	friend class Mixer;
 	friend class MixerWorkerThread;

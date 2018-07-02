@@ -25,17 +25,12 @@
 #ifndef REMOTE_PLUGIN_H
 #define REMOTE_PLUGIN_H
 
-#include "export.h"
-#include "MidiEvent.h"
-#include "VstSyncData.h"
-
 #include <vector>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <string>
 #include <cassert>
-
 
 #if !(defined(LMMS_HAVE_SYS_IPC_H) && defined(LMMS_HAVE_SEMAPHORE_H))
 #define SYNC_WITH_SHM_FIFO
@@ -96,6 +91,12 @@ typedef int32_t key_t;
 #endif
 
 #endif
+
+//#include <QtGlobal>
+
+#include "export.h"
+#include "MidiEvent.h"
+#include "VstSyncData.h"
 
 #ifdef SYNC_WITH_SHM_FIFO
 // sometimes we need to exchange bigger messages (e.g. for VST parameter dumps)

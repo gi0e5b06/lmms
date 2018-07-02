@@ -1,6 +1,7 @@
 /*
  * SampleBuffer.h - container-class SampleBuffer
  *
+ * Copyright (c) 2018 gi0e5b06 (on github.com)
  * Copyright (c) 2005-2014 Tobias Doerffel <tobydox/at/users.sourceforge.net>
  *
  * This file is part of LMMS - https://lmms.io
@@ -26,8 +27,8 @@
 #ifndef SAMPLE_BUFFER_H
 #define SAMPLE_BUFFER_H
 
-#include <QtCore/QReadWriteLock>
-#include <QtCore/QObject>
+#include <QReadWriteLock>
+#include <QObject>
 
 #ifdef LMMS_HAVE_MPG123
 #include <mpg123.h>
@@ -42,15 +43,16 @@
 #include "shared_object.h"
 #include "MemoryManager.h"
 
-
 class QPainter;
 class QRect;
+
 
 // values for buffer margins, used for various libsamplerate interpolation modes
 // the array positions correspond to the converter_type parameter values in libsamplerate
 // if there appears problems with playback on some interpolation mode, then the value for that mode
 // may need to be higher - conversely, to optimize, some may work with lower values
 const f_cnt_t MARGIN[] = { 64, 64, 64, 4, 4 };
+
 
 class EXPORT SampleBuffer : public QObject, public sharedObject
 {
@@ -110,10 +112,10 @@ public:
 	// constructor which either loads sample _audio_file or decodes
 	// base64-data out of string
         SampleBuffer( const SampleBuffer& _other );
-	SampleBuffer( const QString & _audio_file = QString(),
+	SampleBuffer( const QString & _audio_file,
                       bool _is_base64_data = false );
 	SampleBuffer( const sampleFrame * _data, const f_cnt_t _frames );
-	SampleBuffer( const f_cnt_t _frames );
+	SampleBuffer( const f_cnt_t _frames = 0);
 
 	virtual ~SampleBuffer();
 
@@ -250,6 +252,8 @@ public:
 		m_varLock.unlock();
 	}
 
+        static const QString rawStereoSuffix(); // typically f2r44100
+        static const QString rawSurroundSuffix(); // not used, f4r48000
         static QString selectAudioFile  (const QString & _file = QString::null);
 	static QString tryToMakeRelative(const QString & _file);
 	static QString tryToMakeAbsolute(const QString & _file);
@@ -270,6 +274,10 @@ signals:
 private:
 	void update( bool _keep_settings = false );
         void prefetch(f_cnt_t _index);
+
+        void getDataFrame(f_cnt_t _f,sample_t& ch0_,sample_t& ch1_);
+        void setDataFrame(f_cnt_t _f,sample_t _ch0,sample_t _ch1);
+        void writeCacheData(QString _fileName) const;
 
 	void convertIntToFloat ( int_sample_t * & _ibuf, f_cnt_t _frames, int _channels);
 	void directFloatWrite ( sample_t * & _fbuf, f_cnt_t _frames, int _channels);
@@ -317,6 +325,8 @@ private:
 	float m_frequency;
 	sample_rate_t m_sampleRate;
 	QReadWriteLock m_varLock;
+
+        friend class AudioPort;
 } ;
 
 

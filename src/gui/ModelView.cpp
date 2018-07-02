@@ -80,9 +80,9 @@ void ModelView::modelChanged()
 
 void ModelView::doConnections()
 {
-        //qWarning("ModelView::doConnections m_model=%p",m_model);
 	if( m_model && widget() )
 	{
+                //qWarning("ModelView::doConnections m_model=%p",m_model);
                 //m_model->disconnect(widget());
 		QObject::connect( m_model, SIGNAL( dataChanged() ), widget(), SLOT( update() ) );
 		QObject::connect( m_model, SIGNAL( propertiesChanged() ), widget(), SLOT( update() ) );

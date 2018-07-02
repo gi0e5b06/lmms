@@ -1,6 +1,6 @@
 /*
- * PeripheralPadsView.h - declaration of PeripheralPadsView, an interactive
- * pads widget (like the MPD218)
+ * PeripheralLaunchpadView.h - declaration of PeripheralLaunchpadView, an
+ * interactive launchpad widget (like the APCmini)
  *
  * Copyright (c) 2018 gi0e5b06 (on github.com)
  * Copyright (c) 2004-2010 Tobias Doerffel <tobydox/at/users.sourceforge.net>
@@ -24,8 +24,8 @@
  *
  */
 
-#ifndef PERIPHERAL_PADS_VIEW_H
-#define PERIPHERAL_PADS_VIEW_H
+#ifndef PERIPHERAL_LAUNCHPAD_VIEW_H
+#define PERIPHERAL_LAUNCHPAD_VIEW_H
 
 #include <QPixmap>
 #include <QScrollBar>
@@ -35,14 +35,14 @@
 
 class Piano;
 
-class PeripheralPadsView : public PeripheralView
+class PeripheralLaunchpadView : public PeripheralView
 // public QWidget, public ModelView
 {
     Q_OBJECT
 
   public:
-    PeripheralPadsView(QWidget* _parent);
-    virtual ~PeripheralPadsView();
+    PeripheralLaunchpadView(QWidget* _parent);
+    virtual ~PeripheralLaunchpadView();
 
     virtual void keyPressEvent(QKeyEvent* ke);
     virtual void keyReleaseEvent(QKeyEvent* ke);
@@ -59,18 +59,18 @@ class PeripheralPadsView : public PeripheralView
   private:
     int getKeyFromMouse(const QPoint& _p) const;
     // int getKeyX( int _key_num ) const;
-    QRect getBankRect(int _b) const;
+    //QRect getBankRect(int _b) const;
     QRect getPadRect(int _k) const;
 
     // static QPixmap * s_padPm;
     // static QPixmap * s_padPressedPm;
 
-    QScrollBar* m_pianoScroll;
-    int         m_startKey;  // first key when drawing
+    //QScrollBar* m_pianoScroll;
+    //int         m_startKey;  // first key when drawing
     int         m_lastKey;
 
   private slots:
-    void pianoScrolled(int _newPos);
+          //void pianoScrolled(int _newPos);
 
   signals:
     void keyPressed(int);

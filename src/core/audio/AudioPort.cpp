@@ -22,6 +22,9 @@
  *
  */
 
+
+#include <QDir>
+
 #include "AudioPort.h"
 #include "AudioDevice.h"
 #include "EffectChain.h"
@@ -31,6 +34,7 @@
 #include "MixHelpers.h"
 #include "Song.h"
 #include "BufferManager.h"
+#include "SampleBuffer.h"
 
 
 AudioPort::AudioPort( const QString & _name, bool _has_effect_chain,
@@ -46,8 +50,7 @@ AudioPort::AudioPort( const QString & _name, bool _has_effect_chain,
 	m_panningModel( panningModel ),
 	m_mutedModel( mutedModel ),
 	m_frozenModel( frozenModel ),
-        m_frozenBuf( NULL ),
-        m_frozenLen( 0 )
+        m_frozenBuf( NULL )
 {
 	Engine::mixer()->addAudioPort( this );
 	setExtOutputEnabled( true );
@@ -63,8 +66,7 @@ AudioPort::~AudioPort()
 	delete m_effects;
 	BufferManager::release( m_portBuffer );
 
-        m_frozenLen=0;
-        if(m_frozenBuf) MM_FREE(m_frozenBuf);
+        if(m_frozenBuf) delete m_frozenBuf;
 }
 
 
@@ -125,17 +127,43 @@ void AudioPort::doProcessing()
            (song->playMode() == Song::Mode_PlaySong)&&
            song->isPlaying())
         {
+                /*
                 if(m_frozenBuf&&(af+fpp<=m_frozenLen))
                 {
-                        /*
-                          qInfo("AudioPort::doProcessing use frozen buffer"
-                          " af=%d s=%p t=%p",
-                          af,m_portBuffer,this);
-                        */
+                        //qInfo("AudioPort::doProcessing use frozen buffer"
+                        //  " af=%d s=%p t=%p",
+                        //  af,m_portBuffer,this);
                         //memset(buf,0,frames*BYTES_PER_FRAME);
                         for(f_cnt_t f=0;f<fpp;++f)
                                 for(int c=0; c<2; ++c)
                                         m_portBuffer[f][c]=m_frozenBuf[af+f][c];
+
+                        // send output to fx mixer
+                        Engine::fxMixer()->mixToChannel( m_portBuffer, m_nextFxChannel );
+                        // TODO: improve the flow here - convert to pull model
+                        m_bufferUsage = false;
+                        return;
+                }
+                */
+                if(m_frozenBuf)
+                {
+                        /*
+                          qInfo("AudioPort::doProcessing use frozen buffer"
+                              " fb=%p af=%d s=%p ap=%p",
+                                m_frozenBuf,af,m_portBuffer,this);
+                        */
+                        for(f_cnt_t f=0;f<fpp;++f)
+                        {
+                                sample_t vch0,vch1;
+                                m_frozenBuf->getDataFrame(af+f,vch0,vch1);
+                                m_portBuffer[f][0]=vch0;
+                                m_portBuffer[f][1]=vch1;
+
+                                if(af+f>=1000 && af+f<1005)
+                                        qInfo("AudioPort::doProcessing use frozen buffer"
+                                              " fb=%p af=%d s=%p ap=%p vch0=%f vch1=%f",
+                                              m_frozenBuf,af+f,m_portBuffer,this,vch0,vch1);
+                        }
 
                         // send output to fx mixer
                         Engine::fxMixer()->mixToChannel( m_portBuffer, m_nextFxChannel );
@@ -148,6 +176,7 @@ void AudioPort::doProcessing()
 	// clear the buffer
 	BufferManager::clear( m_portBuffer );
 
+        //qInfo("AudioPort::doProcessing #1");
 	//qDebug( "Playhandles: %d", m_playHandles.size() );
 	for( PlayHandle * ph : m_playHandles ) // now we mix all playhandle buffers into the audioport buffer
 	{
@@ -158,13 +187,17 @@ void AudioPort::doProcessing()
 				m_bufferUsage = true;
 				MixHelpers::add( m_portBuffer, ph->buffer(), fpp );
 			}
-			ph->releaseBuffer(); 	// gets rid of playhandle's buffer and sets
-									// pointer to null, so if it doesn't get re-acquired we know to skip it next time
+
+                        // gets rid of playhandle's buffer and sets
+                        // pointer to null, so if it doesn't get re-acquired we know to skip it next time
+			ph->releaseBuffer();
 		}
 	}
 
+        //qInfo("AudioPort::doProcessing #2");
 	if( m_bufferUsage )
 	{
+                //qInfo("AudioPort::doProcessing #3");
 		// handle volume and panning
 		// has both vol and pan models
 		if( m_volumeModel && m_panningModel )
@@ -253,29 +286,51 @@ void AudioPort::doProcessing()
 
 	// handle effects
 	const bool me = processEffects();
+        //qInfo("AudioPort::doProcessing #4 me=%d",me);
 	if( me || m_bufferUsage )
 	{
+                /*
+                qInfo("AudioPort::doProcessing #5 frozen=%d fb=%p song=%d playing==%d",
+                      m_frozenModel->value(),m_frozenBuf,
+                      (song->playMode() == Song::Mode_PlaySong),
+                      song->isPlaying());
+                */
+
                 if(m_frozenModel&&
                    !m_frozenModel->value()&&
                    m_frozenBuf&&
-                   (song->playMode() == Song::Mode_PlaySong)&&
-                   song->isPlaying())
+                   (((song->playMode() == Song::Mode_PlaySong)&&song->isPlaying()) ||
+                    (Engine::getSong()->isExporting() &&
+                     Engine::mixer()->processingSampleRate()==Engine::mixer()->baseSampleRate())))
                 {
+                        //qInfo("AudioPort::doProcessing #6");
                         /*
-                        qInfo("AudioPort::doProcessing freeze"
-                        " af=%d s=%p t=%p",
-                        af,m_portBuffer,this);
-                        */
+                          qInfo("AudioPort::doProcessing freeze"
+                              " af=%d s=%p t=%p",
+                              af,m_portBuffer,this);
                         for(f_cnt_t f=0; f <fpp; ++f)
                         for(int c=0; c<2; ++c)
                         {
                                 if(af+f<m_frozenLen)
                                         m_frozenBuf[af+f][c]=m_portBuffer[f][c];
                         }
+                        */
+                        for(f_cnt_t f=0; f <fpp; ++f)
+                        {
+                                m_frozenBuf->setDataFrame(af+f,
+                                                          m_portBuffer[f][0],
+                                                          m_portBuffer[f][1]);
+                                if(af+f>=1000 && af+f<1005)
+                                        qInfo("AudioPort::doProcessing freeze to buffer"
+                                              " fb=%p af=%d s=%p ap=%p vch0=%f vch1=%f",
+                                              m_frozenBuf,af+f,m_portBuffer,this,
+                                              m_portBuffer[f][0],m_portBuffer[f][1]);
+                        }
                 }
 
-		Engine::fxMixer()->mixToChannel( m_portBuffer, m_nextFxChannel ); 	// send output to fx mixer
-																			// TODO: improve the flow here - convert to pull model
+                // send output to fx mixer
+		Engine::fxMixer()->mixToChannel( m_portBuffer, m_nextFxChannel );
+                // TODO: improve the flow here - convert to pull model
 		m_bufferUsage = false;
 	}
 }
@@ -301,24 +356,71 @@ void AudioPort::removePlayHandle( PlayHandle * handle )
 }
 
 
-void AudioPort::updateFrozenBuffer()
+void AudioPort::updateFrozenBuffer(f_cnt_t _len)
 {
         if(m_frozenModel)
         {
-                const Song* song=Engine::getSong();
-                const float fpt =Engine::framesPerTick();
-                const int   len =song->ticksPerTact()*song->length()*fpt;
-
-                if(len!=m_frozenLen)
+                if((m_frozenBuf==NULL)||
+                   (_len!=m_frozenBuf->frames()))
                 {
-                        m_frozenLen=0;
-                        if(m_frozenBuf) MM_FREE(m_frozenBuf);
-                        if(len>0)
+                        if(m_frozenBuf) delete m_frozenBuf;
+                        m_frozenBuf=new SampleBuffer(_len);
+                        qInfo("AudioPort::updateFrozenBuffer len=%d",_len);
+                }
+        }
+}
+
+
+
+
+void AudioPort::writeFrozenBuffer(QString _uuid)
+{
+        if(m_frozenModel&&
+           //m_frozenModel->value()&&
+           m_frozenBuf)
+        {
+                QString d=Engine::getSong()->projectDir()
+                        +QDir::separator()+"tracks"
+                        +QDir::separator()+"frozen";
+                if(QFileInfo(d).exists())
+                {
+                        QString f=d+QDir::separator()+_uuid
+                                +"."+SampleBuffer::rawStereoSuffix();
+                        qInfo("AudioPort::writeFrozenBuffer f=%s",
+                              qPrintable(f));
+                        m_frozenBuf->writeCacheData(f);
+                }
+        }
+}
+
+
+
+
+void AudioPort::readFrozenBuffer(QString _uuid)
+{
+        if(m_frozenModel&&
+           //m_frozenModel->value()&&
+           m_frozenBuf)
+        {
+                delete m_frozenBuf;
+                m_frozenBuf=NULL;
+                QString d=Engine::getSong()->projectDir()
+                        +QDir::separator()+"tracks"
+                        +QDir::separator()+"frozen";
+                if(QFileInfo(d).exists())
+                {
+                        QString f=d+QDir::separator()+_uuid
+                                +"."+SampleBuffer::rawStereoSuffix();
+                        qInfo("AudioPort::readFrozenBuffer f=%s",
+                              qPrintable(f));
+                        QFile fi(f);
+                        if(fi.exists())
                         {
-                                m_frozenBuf=MM_ALLOC(sampleFrame,len);
-                                m_frozenLen=len;
+                                if(fi.size()==0)
+                                        fi.remove();
+                                else
+                                        m_frozenBuf=new SampleBuffer(f);
                         }
-                        //qInfo("AudioPort::updateFrozenBuffer len=%d",len);
                 }
         }
 }

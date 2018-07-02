@@ -612,6 +612,8 @@ public:
 		return name();
 	}
 
+        const QString uuid();
+
 	using Model::dataChanged;
 
 	inline int getHeight() 
@@ -644,6 +646,10 @@ public:
         inline const BoolModel* frozenModel() const
         { return &m_frozenModel; }
 
+        virtual void writeFrozenBuffer();
+        virtual void readFrozenBuffer();
+
+
 public slots:
 	virtual void setName( const QString & newName )
 	{
@@ -656,7 +662,7 @@ public slots:
 
 
  protected:
-	BoolModel m_frozenModel;
+        BoolModel m_frozenModel;
 	BoolModel m_mutedModel;
 	BoolModel m_soloModel;
 
@@ -665,6 +671,7 @@ public slots:
 	TrackContainer* m_trackContainer;
 	TrackTypes m_type;
 	QString    m_name;
+	QString    m_uuid;
 	int        m_height;
 
 	bool m_mutedBeforeSolo;

@@ -189,7 +189,7 @@ IF(LMMS_BUILD_WIN32)
 
 	INSTALL(TARGETS lmms RUNTIME DESTINATION "${BIN_DIR}")
 
-	IF(QT5)
+	#IF(QT5)
 		INSTALL(FILES
 					"${MINGW_PREFIX}/bin/Qt5Core.dll"
 					"${MINGW_PREFIX}/bin/Qt5Gui.dll"
@@ -199,14 +199,14 @@ IF(LMMS_BUILD_WIN32)
 		INSTALL(FILES
 					"${MINGW_PREFIX}/lib/qt5/plugins/platforms/qwindows.dll"
 				DESTINATION ./platforms)
-	ELSE()
-		INSTALL(FILES
-					"${MINGW_PREFIX}/bin/QtCore4.dll"
-					"${MINGW_PREFIX}/bin/QtGui4.dll"
-					"${MINGW_PREFIX}/bin/QtSvg4.dll"
-					"${MINGW_PREFIX}/bin/QtXml4.dll"
-				DESTINATION .)
-	ENDIF()
+	#ELSE()
+	#	INSTALL(FILES
+	#				"${MINGW_PREFIX}/bin/QtCore4.dll"
+	#				"${MINGW_PREFIX}/bin/QtGui4.dll"
+	#				"${MINGW_PREFIX}/bin/QtSvg4.dll"
+	#				"${MINGW_PREFIX}/bin/QtXml4.dll"
+	#			DESTINATION .)
+	#ENDIF()
 
 	INSTALL(FILES
 					"${MINGW_PREFIX}/bin/libsamplerate-0.dll"

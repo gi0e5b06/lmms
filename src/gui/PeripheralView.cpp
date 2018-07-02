@@ -228,13 +228,21 @@ int PeripheralView::getKeyFromKeyEvent( QKeyEvent * _ke )
  */
 void PeripheralView::modelChanged()
 {
-        //qInfo("PeripheralView::modelChanged");
 	m_piano = castModel<Piano>();
+        qInfo("PeripheralView::modelChanged piano=%p",m_piano);
 	if( m_piano != NULL )
-		connect( m_piano->instrumentTrack()->baseNoteModel(),
+        {
+                connect( m_piano->instrumentTrack()->baseNoteModel(),
                          SIGNAL( dataChanged() ),
                          this, SLOT( update() ) );
-
+                connect( m_piano,
+                         SIGNAL( dataChanged() ),
+                         this, SLOT( update() ) );
+                connect( m_piano,
+                         SIGNAL( propertiesChanged() ),
+                         this, SLOT( update() ) );
+        }
+        ModelView::modelChanged();
 }
 
 
@@ -254,8 +262,11 @@ void PeripheralView::contextMenuEvent( QContextMenuEvent * _me )
 	menu.addAction( embed::getIconPixmap( "midi_tab" ),//"piano_view" ),
                          AutomatableModel::tr( "&Piano View" ),
                          parent(), SLOT( switchToPiano() ) );
+	menu.addAction( embed::getIconPixmap( "bb_track" ),//"launchpad_view" ),
+                         AutomatableModel::tr( "&Launchpad View" ),
+                         parent(), SLOT( switchToLaunchpad() ) );
 	menu.addAction( embed::getIconPixmap( "bb_track" ),//"pads_view" ),
-                         AutomatableModel::tr( "&Pads View" ),
+                         AutomatableModel::tr( "P&ads View" ),
                          parent(), SLOT( switchToPads() ) );
 
 	menu.exec( QCursor::pos() );

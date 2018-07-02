@@ -155,6 +155,8 @@ OutputSettings::StereoMode mapToStereoMode(int index)
 
 void ExportProjectDialog::startExport()
 {
+    qInfo("ExportProjectDialog::startExport #1");
+
     Mixer::qualitySettings qs = Mixer::qualitySettings(
             static_cast<Mixer::qualitySettings::Interpolation>(
                     interpolationCB->currentIndex()),
@@ -188,6 +190,7 @@ void ExportProjectDialog::startExport()
     {
         output_name += m_fileExtension;
     }
+    qInfo("ExportProjectDialog::startExport #2");
     m_renderManager.reset(new RenderManager(qs, os, m_ft, output_name));
 
     Engine::getSong()->setExportLoop(exportLoopCB->isChecked());
@@ -202,6 +205,7 @@ void ExportProjectDialog::startExport()
     connect(m_renderManager.get(), SIGNAL(finished()), gui->mainWindow(),
             SLOT(resetWindowTitle()));
 
+    qInfo("ExportProjectDialog::startExport #3");
     if(m_multiExport)
     {
         m_renderManager->renderTracks();

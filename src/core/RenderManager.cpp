@@ -147,7 +147,7 @@ void RenderManager::renderNextTrack()
         // create a renderer for this track
         m_activeRenderer = new ProjectRenderer(
                 m_qualitySettings, m_outputSettings, m_format,
-                pathForTrack(renderTrack, trackNum));
+                pathForTrack(renderTrack, trackNum), this);
 
         if(m_activeRenderer->isReady())
         {
@@ -210,8 +210,11 @@ void RenderManager::renderTracks()
 // Render the song into a single track
 void RenderManager::renderProject()
 {
-    m_activeRenderer = new ProjectRenderer(
-            m_qualitySettings, m_outputSettings, m_format, m_outputPath);
+    qInfo("RenderManager::renderProject #1");
+    m_activeRenderer
+            = new ProjectRenderer(m_qualitySettings, m_outputSettings,
+                                  m_format, m_outputPath, this);
+    qInfo("RenderManager::renderProject #2");
 
     if(m_activeRenderer->isReady())
     {
@@ -224,6 +227,7 @@ void RenderManager::renderProject()
         connect(m_activeRenderer, SIGNAL(finished()), this,
                 SLOT(renderNextTrack()));
 
+        qInfo("RenderManager::renderProject #3");
         m_activeRenderer->startProcessing();
     }
     else
@@ -250,7 +254,7 @@ QString RenderManager::pathForTrack(const Track* track, int num)
     QString extension = ProjectRenderer::getFileExtensionFromFormat(m_format);
     QString name      = track->name();
     name              = name.remove(QRegExp("[^a-zA-Z]"));
-    name              = QString("%1_%2%3").arg(num).arg(name).arg(extension);
+    name              = QString("%1_%2%3").arg(num,2,10,QChar('0')).arg(name).arg(extension);
     return QDir(m_outputPath).filePath(name);
 }
 

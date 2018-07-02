@@ -66,6 +66,7 @@
 #include "Mixer.h"
 #include "MixHelpers.h"
 #include "Pattern.h"
+#include "PeripheralLaunchpadView.h"
 #include "PeripheralPadsView.h"
 #include "PianoView.h"
 #include "PluginFactory.h"
@@ -189,27 +190,6 @@ void InstrumentTrack::processAudioBuffer( sampleFrame* buf, const fpp_t frames, 
 		return;
 	}
 
-        /*
-        const f_cnt_t af=song->getPlayPos().absoluteFrame();
-
-        if(isFrozen()&&
-           (song->playMode() == Song::Mode_PlaySong)&&
-           song->isPlaying())
-        {
-                if(m_frozenBuf&&(af+frames<=m_frozenLen))
-                {
-                        qInfo("InstrumentTrack::processAudioBuffer use frozen buffer"
-                              " af=%d n=%p s=%p t=%p",
-                              af,n,buf,this);
-                        //memset(buf,0,frames*BYTES_PER_FRAME);
-                        for(f_cnt_t f=0;f<frames;++f)
-                                for(int c=0; c<2; ++c)
-                                        buf[f][c]=m_frozenBuf[af+f][c];
-                        return;
-                }
-        }
-        */
-
 	// Test for silent input data if instrument provides a single stream only (i.e. driven by InstrumentPlayHandle)
 	// We could do that in all other cases as well but the overhead for silence test is bigger than
 	// what we potentially save. While playing a note, a NotePlayHandle-driven instrument will produce sound in
@@ -260,24 +240,6 @@ void InstrumentTrack::processAudioBuffer( sampleFrame* buf, const fpp_t frames, 
 			}
 		}
 	}
-
-        /*
-        if(!isFrozen()&&
-           m_frozenBuf&&
-           (song->playMode() == Song::Mode_PlaySong)&&
-           song->isPlaying())
-        {
-                qInfo("InstrumentTrack::processAudioBuffer freeze"
-                      " af=%d n=%p s=%p t=%p",
-                      af,n,buf,this);
-                for( f_cnt_t f = 0; f < frames; ++f )
-                        for( int c = 0; c < 2; ++c )
-                        {
-                                if(af+f<m_frozenLen)
-                                        m_frozenBuf[af+f][c]=buf[f][c];
-                        }
-        }
-        */
 }
 
 
@@ -611,8 +573,25 @@ void InstrumentTrack::setName( const QString & _new_name )
 
 void InstrumentTrack::toggleFrozen()
 {
-        //qInfo("InstrumentTrack::updateFrozenBuffer ap=%p",&m_audioPort);
-        m_audioPort.updateFrozenBuffer();
+        qInfo("InstrumentTrack::updateFrozenBuffer ap=%p",&m_audioPort);
+        const Song*   song=Engine::getSong();
+        const float   fpt =Engine::framesPerTick();
+        const f_cnt_t len =song->ticksPerTact()*song->length()*fpt;
+        m_audioPort.updateFrozenBuffer(len);
+}
+
+
+void InstrumentTrack::writeFrozenBuffer()
+{
+        qInfo("InstrumentTrack::writeFrozenBuffer");
+        m_audioPort.writeFrozenBuffer(uuid());
+}
+
+
+void InstrumentTrack::readFrozenBuffer()
+{
+        qInfo("InstrumentTrack::readFrozenBuffer");
+        m_audioPort.readFrozenBuffer(uuid());
 }
 
 
@@ -691,12 +670,14 @@ bool InstrumentTrack::play( const MidiTime & _start, const fpp_t _frames,
 
         const Song*   song  =Engine::getSong();
         const float   fpt   =Engine::framesPerTick();
-	//const f_cnt_t fstart=_start.getTicks()*fpt;
 
+        //qInfo("InstrumentTrack::play exporting=%d",Engine::getSong()->isExporting());
         if(isFrozen()&&
            (song->playMode()==Song::Mode_PlaySong)&&
-           song->isPlaying())
+           song->isPlaying()&&
+           !Engine::getSong()->isExporting())
         {
+                //const f_cnt_t fstart=_start.getTicks()*fpt;
                 //qInfo("InstrumentTrack::play FROZEN f=%d",fstart);
                 //silenceAllNotes(true);
                 unlock();
@@ -1741,10 +1722,8 @@ InstrumentTrackWindow::InstrumentTrackWindow( InstrumentTrackView * _itv ) :
 	vlayout->addWidget( m_tabWidget );
 
 	// setup piano-widget
-	//m_peripheralView = new PianoView( this );
-	//m_peripheralView->setFixedSize( INSTRUMENT_WIDTH, PIANO_HEIGHT );
-	//vlayout->addWidget( m_peripheralView );
-	m_peripheralView = new PeripheralPadsView(this);
+	m_peripheralView = new PianoView( this );
+	//m_peripheralView = new PeripheralPadsView(this);
 	m_peripheralView->setFixedSize( INSTRUMENT_WIDTH, PIANO_HEIGHT );
 	vlayout->addWidget( m_peripheralView );
 
@@ -2131,14 +2110,14 @@ void InstrumentTrackWindow::viewPrevInstrument()
 	viewInstrumentInDirection(-1);
 }
 
-void InstrumentTrackWindow::switchToPiano()
+void InstrumentTrackWindow::switchToLaunchpad()
 {
 	PeripheralView* old=m_peripheralView;
-        m_peripheralView=new PianoView(this);
+	m_peripheralView=new PeripheralLaunchpadView(this);
 	m_peripheralView->setFixedSize( INSTRUMENT_WIDTH, PIANO_HEIGHT );
 	m_peripheralView->setModel( &m_track->m_piano );
+	layout()->addWidget( m_peripheralView );
 	if(old) { layout()->removeWidget(old); delete old; }
-        layout()->addWidget(m_peripheralView);
         update();
 }
 
@@ -2150,6 +2129,17 @@ void InstrumentTrackWindow::switchToPads()
 	m_peripheralView->setModel( &m_track->m_piano );
 	layout()->addWidget( m_peripheralView );
 	if(old) { layout()->removeWidget(old); delete old; }
+        update();
+}
+
+void InstrumentTrackWindow::switchToPiano()
+{
+	PeripheralView* old=m_peripheralView;
+        m_peripheralView=new PianoView(this);
+	m_peripheralView->setFixedSize( INSTRUMENT_WIDTH, PIANO_HEIGHT );
+	m_peripheralView->setModel( &m_track->m_piano );
+	if(old) { layout()->removeWidget(old); delete old; }
+        layout()->addWidget(m_peripheralView);
         update();
 }
 

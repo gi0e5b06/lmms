@@ -1081,11 +1081,11 @@ InstrumentFunctionNoteKeying::InstrumentFunctionNoteKeying(Model* _parent) :
       // m_enabledModel( false, this ),
       m_volumeRangeModel(
               0.0f, -500.0f, 500.0f, 1.0f, this, tr("Volume change")),
-      m_volumeBaseModel(0.0f, 0.0f, 127.0f, 1.f, this, tr("Volume base key")),
+      m_volumeBaseModel(0.0f, 0.0f, 127.0f, 1.0f, this, tr("Volume base key")),
       m_volumeMinModel(0.0f, 0.0f, 200.0f, 0.1f, this, tr("Volume min")),
       m_volumeMaxModel(100.0f, 0.0f, 200.0f, 0.1f, this, tr("Volume max")),
       m_panRangeModel(0.0f, -500.0f, 500.0f, 1.0f, this, tr("Pan change")),
-      m_panBaseModel(0.0f, -1.0f, 1.0f, 0.01f, this, tr("Pan base")),
+      m_panBaseModel(0.0f, 0.0f, 127.0f, 1.0f, this, tr("Pan base key")),
       m_panMinModel(0.0f, -100.0f, 100.0f, 0.1f, this, tr("Pan min")),
       m_panMaxModel(0.0f, -100.0f, 100.0f, 0.1f, this, tr("Pan max"))
 {

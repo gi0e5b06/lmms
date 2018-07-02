@@ -44,7 +44,8 @@ PeakControllerEffectControlDialog::PeakControllerEffectControlDialog(
 	QPalette pal;
 	pal.setBrush( backgroundRole(), PLUGIN_NAME::getIconPixmap( "artwork" ) );
 	setPalette( pal );
-	setFixedSize( 240, 80 );
+	//setFixedSize( 240, 80 );
+        setFixedSize(254,70);
 
 	m_baseKnob = new Knob( knobBright_26, this );
 	m_baseKnob->setLabel( tr( "BASE" ) );
@@ -96,9 +97,13 @@ PeakControllerEffectControlDialog::PeakControllerEffectControlDialog(
 	ledLayout->addWidget( m_muteLed );
 	ledLayout->addWidget( m_absLed );
 
-	mainLayout->setContentsMargins( 3, 10, 0, 0 );
 	mainLayout->addLayout( knobLayout );
 	mainLayout->addLayout( ledLayout );
+
+	mainLayout->setContentsMargins(6,6,6,6);
+        mainLayout->setSpacing(3);
+        knobLayout->setSpacing(3);
+        ledLayout->setSpacing(3);
 
 	setLayout( mainLayout );
 }

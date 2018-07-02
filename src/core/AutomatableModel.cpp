@@ -100,8 +100,8 @@ void AutomatableModel::saveSettings( QDomDocument& doc, QDomElement& element, co
 		me.setAttribute( "scale_type", m_scaleType == Logarithmic ? "log" : "linear" );
 		element.appendChild( me );
 	}
-	else
-	{
+        else
+        {
 		// non automation, linear scale (default), can be saved as attribute
 		element.setAttribute( name, m_value );
 	}
@@ -193,7 +193,6 @@ void AutomatableModel::loadSettings( const QDomElement& element, const QString& 
 	}
 	else
 	{
-
 		setScaleType( Linear );
 
 		if( element.hasAttribute( name ) )
@@ -496,7 +495,7 @@ void AutomatableModel::setControllerConnection( ControllerConnection* c )
 
 void AutomatableModel::onControllerValueChanged()
 {
-        qInfo("AutomatableModel::onControllerValueChanged");
+        //qInfo("AutomatableModel::onControllerValueChanged");
         emit controllerValueChanged();
 
         //if( m_controllerConnection &&

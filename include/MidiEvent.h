@@ -26,12 +26,16 @@
 #define MIDI_EVENT_H
 
 #include <cstdlib>
-#include <QMessageLogger>
+//#include <QMessageLogger>
 
 #include "Midi.h"
 #include "panning_constants.h"
 #include "Pitch.h"
 #include "volume.h"
+
+#ifndef qWarning
+#define qWarning printf
+#endif
 
 class MidiEvent final
 {
@@ -154,9 +158,11 @@ public:
 
 	volume_t volume( int _midiBaseVelocity ) const
 	{
-		return qBound(MinVolume,
-                              (volume_t)( velocity() * DefaultVolume / _midiBaseVelocity),
-                              MaxVolume);
+                // no qBound because of RemotePlugin
+                volume_t r=(volume_t)( velocity() * DefaultVolume / _midiBaseVelocity);
+                if(r<MinVolume) r=MinVolume;
+                if(r>MaxVolume) r=MaxVolume;
+                return r;
 	}
 
 	const void* sourcePort() const
