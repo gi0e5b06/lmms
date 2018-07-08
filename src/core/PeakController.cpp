@@ -116,7 +116,7 @@ void PeakController::updateValueBuffer()
 	}
 	else
 	{
-		m_valueBuffer.fill( 0 );
+		m_valueBuffer.clear(); //GDX fill( 0 );
 	}
 	m_bufferLastUpdated = s_periods;
 }

@@ -1447,12 +1447,20 @@ bool Song::createProjectTree()
         QString r=projectDir();
         qInfo("Song::createProjectTree %s",qPrintable(r));
         QDir pdir(r);
-        pdir.mkpath("backup");
-        pdir.mkpath("tracks");
-        pdir.mkpath(QString("tracks")+QDir::separator()+"rendered");
-        pdir.mkpath(QString("tracks")+QDir::separator()+"frozen");
-        // samples/used
-        pdir.mkpath(QString("song")+QDir::separator()+"rendered");
+        pdir.mkpath("backup" );
+        pdir.mkpath("images" );
+        pdir.mkpath("midi"   );
+        pdir.mkpath("samples");
+        pdir.mkpath("song"   );
+        pdir.mkpath("tracks" );
+        pdir.mkpath("videos" );
+
+        pdir.mkpath(QString("midi"   )+QDir::separator()+"exported");
+        pdir.mkpath(QString("song"   )+QDir::separator()+"rendered");
+        pdir.mkpath(QString("tracks" )+QDir::separator()+"rendered");
+        pdir.mkpath(QString("tracks" )+QDir::separator()+"frozen");
+        pdir.mkpath(QString("videos" )+QDir::separator()+"rendered");
+        pdir.mkpath(QString("samples")+QDir::separator()+"used");
 
         return true;
 }
@@ -1463,8 +1471,7 @@ void Song::freezeTracks()
 	for(Track* t: tracks())
 	{
 		t->setFrozen(false);
-		t->setFrozen(true);
-		t->setFrozen(false);
+		t->cleanFrozenBuffer();
 	}
 
         ExportProjectDialog epd( "/tmp/tmp."+SampleBuffer::rawStereoSuffix(),
@@ -1540,21 +1547,21 @@ void Song::exportProject( bool multiExport )
 			++idx;
 		}
 		efd.setNameFilters( types );
-		QString baseFilename;
+		QString baseFileName;
 		if( !m_fileName.isEmpty() )
 		{
                         createProjectTree();
-                        //QString rtdp= QFileInfo( m_fileName ).absolutePath();
-                        QString rtdp= projectDir()+QDir::separator()+"song"+QDir::separator()+"rendered";
-                        efd.setDirectory(rtdp);
-			baseFilename = QFileInfo( m_fileName ).completeBaseName();
+                        //QString rpdp= QFileInfo( m_fileName ).absolutePath();
+                        QString rpdp= projectDir()+QDir::separator()+"song"+QDir::separator()+"rendered";
+                        efd.setDirectory(rpdp);
+			baseFileName = QFileInfo( m_fileName ).completeBaseName();
 		}
 		else
 		{
 			efd.setDirectory( ConfigManager::inst()->userProjectsDir() );
-			baseFilename = tr( "untitled" );
+			baseFileName = tr( "untitled" );
 		}
-		efd.selectFile( baseFilename + ProjectRenderer::fileEncodeDevices[0].m_extension );
+		efd.selectFile( baseFileName + ProjectRenderer::fileEncodeDevices[0].m_extension );
 		efd.setWindowTitle( tr( "Select file for project-export..." ) );
 	}
 
@@ -1616,18 +1623,24 @@ void Song::exportProjectMidi()
 	QStringList types;
 	types << tr("MIDI File (*.mid)");
 	efd.setNameFilters( types );
-	QString base_filename;
+	QString baseFileName;
 	if( !m_fileName.isEmpty() )
 	{
 		efd.setDirectory( QFileInfo( m_fileName ).absolutePath() );
-		base_filename = QFileInfo( m_fileName ).completeBaseName();
+		baseFileName = QFileInfo( m_fileName ).completeBaseName();
+
+                createProjectTree();
+                //QString rmdp= QFileInfo( m_fileName ).absolutePath();
+                QString rmdp= projectDir()+QDir::separator()+"midi"+QDir::separator()+"exported";
+                efd.setDirectory(rmdp);
+                baseFileName = QFileInfo( m_fileName ).completeBaseName();
 	}
 	else
 	{
 		efd.setDirectory( ConfigManager::inst()->userProjectsDir() );
-		base_filename = tr( "untitled" );
+		baseFileName = tr( "untitled" );
 	}
-	efd.selectFile( base_filename + ".mid" );
+	efd.selectFile( baseFileName + ".mid" );
 	efd.setDefaultSuffix( "mid");
 	efd.setWindowTitle( tr( "Select file for project-export..." ) );
 
@@ -1681,18 +1694,21 @@ void Song::exportProjectVideoLine()
 	QStringList types;
 	types << tr("MP4 File (*.mp4)");
 	efd.setNameFilters( types );
-	QString base_filename;
+	QString baseFileName;
 	if( !m_fileName.isEmpty() )
 	{
-		efd.setDirectory( QFileInfo( m_fileName ).absolutePath() );
-		base_filename = QFileInfo( m_fileName ).completeBaseName();
+                createProjectTree();
+                //QString rvldp= QFileInfo( m_fileName ).absolutePath();
+                QString rvldp= projectDir()+QDir::separator()+"video"+QDir::separator()+"rendered";
+                efd.setDirectory(rvldp);
+                baseFileName = "line";//QFileInfo( m_fileName ).completeBaseName();
 	}
 	else
 	{
 		efd.setDirectory( ConfigManager::inst()->userProjectsDir() );
-		base_filename = tr( "untitled" );
+		baseFileName = tr( "untitled" );
 	}
-	efd.selectFile( base_filename + ".mp4" );
+	efd.selectFile( baseFileName + ".mp4" );
 	efd.setDefaultSuffix( "mp4");
 	efd.setWindowTitle( tr( "Select file for export..." ) );
 

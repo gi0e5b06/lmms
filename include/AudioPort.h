@@ -111,8 +111,9 @@ public:
 	void removePlayHandle( PlayHandle * handle );
 
         void updateFrozenBuffer(f_cnt_t _len);
-        void writeFrozenBuffer(QString _uuid);
+        void cleanFrozenBuffer(f_cnt_t _len);
         void readFrozenBuffer(QString _uuid);
+        void writeFrozenBuffer(QString _uuid);
 
 
 private:

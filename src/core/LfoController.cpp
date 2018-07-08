@@ -100,13 +100,18 @@ void LfoController::updateValueBuffer()
 	int amountInc = amountBuffer ? 1 : 0;
 	float *amountPtr = amountBuffer ? &(amountBuffer->values()[ 0 ] ) : &amount;
 
-	for( float& f : m_valueBuffer )
+	//for( float& f : m_valueBuffer )
+        int    len=m_valueBuffer.length();
+        float* val=m_valueBuffer.values();
+        for(int i=0;i<len;++i)
 	{
 		const float currentSample = m_sampleFunction != NULL
 			? m_sampleFunction( phase )
 			: m_userDefSampleBuffer->userWaveSample( phase );
 
-		f = qBound( 0.0f, m_baseModel.value() + ( *amountPtr * currentSample / 2.0f ), 1.0f );
+		//f
+                //m_valueBuffer.set(i,...);
+                val[i]=qBound( 0.0f, m_baseModel.value() + ( *amountPtr * currentSample / 2.0f ), 1.0f );
 
 		phase += 1.0 / m_duration;
 		amountPtr += amountInc;

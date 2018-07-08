@@ -646,8 +646,9 @@ public:
         inline const BoolModel* frozenModel() const
         { return &m_frozenModel; }
 
-        virtual void writeFrozenBuffer();
+        virtual void cleanFrozenBuffer();
         virtual void readFrozenBuffer();
+        virtual void writeFrozenBuffer();
 
 
 public slots:

@@ -581,10 +581,13 @@ void InstrumentTrack::toggleFrozen()
 }
 
 
-void InstrumentTrack::writeFrozenBuffer()
+void InstrumentTrack::cleanFrozenBuffer()
 {
-        qInfo("InstrumentTrack::writeFrozenBuffer");
-        m_audioPort.writeFrozenBuffer(uuid());
+        qInfo("InstrumentTrack::cleanFrozenBuffer");
+        const Song*   song=Engine::getSong();
+        const float   fpt =Engine::framesPerTick();
+        const f_cnt_t len =song->ticksPerTact()*song->length()*fpt;
+        m_audioPort.cleanFrozenBuffer(len);
 }
 
 
@@ -592,6 +595,13 @@ void InstrumentTrack::readFrozenBuffer()
 {
         qInfo("InstrumentTrack::readFrozenBuffer");
         m_audioPort.readFrozenBuffer(uuid());
+}
+
+
+void InstrumentTrack::writeFrozenBuffer()
+{
+        qInfo("InstrumentTrack::writeFrozenBuffer");
+        m_audioPort.writeFrozenBuffer(uuid());
 }
 
 

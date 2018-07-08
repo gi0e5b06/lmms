@@ -373,22 +373,17 @@ void AudioPort::updateFrozenBuffer(f_cnt_t _len)
 
 
 
-void AudioPort::writeFrozenBuffer(QString _uuid)
+void AudioPort::cleanFrozenBuffer(f_cnt_t _len)
 {
-        if(m_frozenModel&&
-           //m_frozenModel->value()&&
-           m_frozenBuf)
+        if(m_frozenModel)
         {
-                QString d=Engine::getSong()->projectDir()
-                        +QDir::separator()+"tracks"
-                        +QDir::separator()+"frozen";
-                if(QFileInfo(d).exists())
+                if((m_frozenBuf==NULL)||
+                   (_len!=m_frozenBuf->frames())||
+                   m_frozenBuf->m_mmapped)
                 {
-                        QString f=d+QDir::separator()+_uuid
-                                +"."+SampleBuffer::rawStereoSuffix();
-                        qInfo("AudioPort::writeFrozenBuffer f=%s",
-                              qPrintable(f));
-                        m_frozenBuf->writeCacheData(f);
+                        if(m_frozenBuf) delete m_frozenBuf;
+                        m_frozenBuf=new SampleBuffer(_len);
+                        qInfo("AudioPort::cleanFrozenBuffer len=%d",_len);
                 }
         }
 }
@@ -421,6 +416,29 @@ void AudioPort::readFrozenBuffer(QString _uuid)
                                 else
                                         m_frozenBuf=new SampleBuffer(f);
                         }
+                }
+        }
+}
+
+
+
+
+void AudioPort::writeFrozenBuffer(QString _uuid)
+{
+        if(m_frozenModel&&
+           //m_frozenModel->value()&&
+           m_frozenBuf)
+        {
+                QString d=Engine::getSong()->projectDir()
+                        +QDir::separator()+"tracks"
+                        +QDir::separator()+"frozen";
+                if(QFileInfo(d).exists())
+                {
+                        QString f=d+QDir::separator()+_uuid
+                                +"."+SampleBuffer::rawStereoSuffix();
+                        qInfo("AudioPort::writeFrozenBuffer f=%s",
+                              qPrintable(f));
+                        m_frozenBuf->writeCacheData(f);
                 }
         }
 }

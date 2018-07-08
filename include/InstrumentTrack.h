@@ -225,8 +225,9 @@ public:
 
 	void setPreviewMode( const bool );
 
-        virtual void writeFrozenBuffer();
+        virtual void cleanFrozenBuffer();
         virtual void readFrozenBuffer();
+        virtual void writeFrozenBuffer();
 
 
 signals:

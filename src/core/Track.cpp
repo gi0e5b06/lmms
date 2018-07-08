@@ -2932,12 +2932,17 @@ void Track::toggleFrozen()
 }
 
 
-void Track::writeFrozenBuffer()
+void Track::cleanFrozenBuffer()
 {
 }
 
 
 void Track::readFrozenBuffer()
+{
+}
+
+
+void Track::writeFrozenBuffer()
 {
 }
 
