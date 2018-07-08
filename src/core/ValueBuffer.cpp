@@ -2,42 +2,84 @@
 
 #include "interpolation.h"
 
-ValueBuffer::ValueBuffer()
-{}
+//ValueBuffer::ValueBuffer()
+//{}
 
-ValueBuffer::ValueBuffer(int length)
-	: std::vector<float>(length)
-{}
-
-void ValueBuffer::fill(float value)
+ValueBuffer::ValueBuffer(int _length)
+//: std::vector<float>(_length)
 {
-	std::fill(begin(), end(), value);
+        Q_ASSERT(_length>2);
+        m_len=_length;
+        m_data=new float[m_len];
+
 }
 
-float ValueBuffer::value(int offset) const
+
+ValueBuffer::~ValueBuffer()
+//: std::vector<float>(_length)
 {
-	return at(offset % length());
+        delete m_data;
+        m_len=0;
+        m_data=nullptr;
 }
 
-const float *ValueBuffer::values() const
+
+/*
+float ValueBuffer::value(int _offset) const
 {
-	return data();
+        //return at(_offset % length());
+	return m_data[_offset % m_len];
+}
+
+const float* ValueBuffer::values() const
+{
+	//return data();
+        return m_data;
 }
 
 float *ValueBuffer::values()
 {
-	return data();
+	//return data();
+        return m_data;
 }
 
 int ValueBuffer::length() const
 {
-	return size();
+        //return size();
+        return m_len;
 }
 
-void ValueBuffer::interpolate(float start, float end_)
+void ValueBuffer::set(int _i, float _v)
 {
+	m_data[_i]=_v;
+}
+
+void ValueBuffer::clear()
+{
+        memset(m_data,0,sizeof(float)*m_len);
+}
+*/
+
+void ValueBuffer::fill(float _value)
+{
+	//std::fill(begin(), end(), value);
+        for(int i=m_len-1; i>=0; --i)
+                m_data[i]=_value;
+}
+
+void ValueBuffer::interpolate(float _start, float _end)
+{
+        /*
 	float i = 0;
 	std::generate(begin(), end(), [&]() {
 		return linearInterpolate( start, end_, i++ / length());
 	});
+        */
+        float step=(_end-_start)/(m_len-1);
+        float v=_end;
+        for(int i=m_len-1; i>=0; --i)
+        {
+                m_data[i]=v;
+                v-=step;
+        }//_start+(_end-_start)*i/(m_len-1);
 }

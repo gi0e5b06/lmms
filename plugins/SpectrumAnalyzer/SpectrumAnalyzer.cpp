@@ -74,18 +74,19 @@ SpectrumAnalyzer::~SpectrumAnalyzer()
 
 bool SpectrumAnalyzer::processAudioBuffer( sampleFrame* _buf, const fpp_t _frames )
 {
-	if( !isEnabled() || !isRunning () )
-	{
-		return false;
-	}
+        bool smoothBegin, smoothEnd;
+        if(!shouldProcessAudioBuffer(_buf, _frames, smoothBegin, smoothEnd))
+                return false;
 
 	//tmp optimisation if the display is hidden, use dontRun
 	//if( !m_saControls.isViewVisible() )
+        /*
 	if( dontRun() )
 	{
 		qWarning("SpectrumAnalyzer::processAudioBuffer dontRun is set, skip processing");
 		return true;
 	}
+        */
 
 	fpp_t f = 0;
 	if( _frames > FFT_BUFFER_SIZE )
@@ -153,9 +154,7 @@ bool SpectrumAnalyzer::processAudioBuffer( sampleFrame* _buf, const fpp_t _frame
 
 	m_framesFilledUp = 0;
 
-	checkGate( 1 );
-
-	return isRunning();
+	return true;
 }
 
 

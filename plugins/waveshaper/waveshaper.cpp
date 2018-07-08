@@ -69,20 +69,13 @@ waveShaperEffect::~waveShaperEffect()
 
 
 bool waveShaperEffect::processAudioBuffer( sampleFrame * _buf,
-							const fpp_t _frames )
+                                           const fpp_t _frames )
 {
-	if( !isEnabled() || !isRunning () )
-	{
-		return( false );
-	}
+         bool smoothBegin, smoothEnd;
+         if(!shouldProcessAudioBuffer(_buf, _frames, smoothBegin, smoothEnd))
+                 return false;
 
-// variables for effect
-	int i = 0;
-
-	double out_sum = 0.0;
-	const float d = dryLevel();
-	const float w = wetLevel();
-	float input = m_wsControls.m_inputModel.value();
+        float input = m_wsControls.m_inputModel.value();
 	float output = m_wsControls.m_outputModel.value();
 	const float * samples = m_wsControls.m_wavegraphModel.samples();
 	const bool clip = m_wsControls.m_clipModel.value();
@@ -98,25 +91,25 @@ bool waveShaperEffect::processAudioBuffer( sampleFrame * _buf,
 
 	for( fpp_t f = 0; f < _frames; ++f )
 	{
-		float s[2] = { _buf[f][0], _buf[f][1] };
+                float w0, d0, w1, d1;
+                computeWetDryLevels(f, _frames, smoothBegin, smoothEnd,
+                                    w0, d0, w1, d1);
 
-// apply input gain
-		s[0] *= *inputPtr;
-		s[1] *= *inputPtr;
+		sample_t s[2] = { _buf[f][0],_buf[f][1] };
 
-// clip if clip enabled
-		if( clip )
+
+		for(int i=0; i <= 1; ++i )
 		{
-			s[0] = qBound( -1.0f, s[0], 1.0f );
-			s[1] = qBound( -1.0f, s[1], 1.0f );
-		}
+                        // apply input gain
+                        s[i] *= *inputPtr;
 
-// start effect
+                        // clip if clip enabled
+                        if( clip )
+                                s[i] = qBound( -1.0f, s[i], 1.0f );
 
-		for( i=0; i <= 1; ++i )
-		{
+                        // start effect
 			const int lookup = static_cast<int>( qAbs( s[i] ) * 200.0f );
-			const float frac = fraction( qAbs( s[i] ) * 200.0f ); 
+			const float frac = fraction( qAbs( s[i] ) * 200.0f );
 			const float posneg = s[i] < 0 ? -1.0f : 1.0f;
 
 			if( lookup < 1 )
@@ -124,8 +117,8 @@ bool waveShaperEffect::processAudioBuffer( sampleFrame * _buf,
 				s[i] = frac * samples[0] * posneg;
 			}
 			else if( lookup < 200 )
-			{	
-				s[i] = linearInterpolate( samples[ lookup - 1 ], 
+			{
+				s[i] = linearInterpolate( samples[ lookup - 1 ],
 						samples[ lookup ], frac )
 						* posneg;
 			}
@@ -133,24 +126,20 @@ bool waveShaperEffect::processAudioBuffer( sampleFrame * _buf,
 			{
 				s[i] *= samples[199];
 			}
+
+                        // apply output gain
+                        s[i] *= *outputPtr;
 		}
 
-// apply output gain
-		s[0] *= *outputPtr;
-		s[1] *= *outputPtr;
-
-		out_sum += _buf[f][0]*_buf[f][0] + _buf[f][1]*_buf[f][1];
-// mix wet/dry signals
-		_buf[f][0] = d * _buf[f][0] + w * s[0];
-		_buf[f][1] = d * _buf[f][1] + w * s[1];
+                // mix wet/dry signals
+                _buf[f][0] = d0 * _buf[f][0] + w0 * s[0];
+                _buf[f][1] = d1 * _buf[f][1] + w1 * s[1];
 
 		outputPtr += outputInc;
 		inputPtr += inputInc;
 	}
 
-	checkGate( out_sum / _frames );
-
-	return( isRunning() );
+	return true;
 }
 
 

@@ -32,11 +32,17 @@
 class stereoMatrixEffect : public Effect
 {
 public:
-	stereoMatrixEffect( Model * parent, 
+	stereoMatrixEffect( Model * parent,
 	                      const Descriptor::SubPluginFeatures::Key * _key );
 	virtual ~stereoMatrixEffect();
+
 	virtual bool processAudioBuffer( sampleFrame * _buf,
-		                                          const fpp_t _frames );
+                                         const fpp_t _frames );
+
+        virtual bool isBalanceable() const
+        {
+                return false;
+        }
 
 	virtual EffectControls * controls()
 	{

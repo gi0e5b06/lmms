@@ -38,6 +38,11 @@ public:
 	virtual bool processAudioBuffer( sampleFrame * _buf,
 									const fpp_t _frames );
 
+        virtual bool isBalanceable() const
+        {
+                return false;
+        }
+
 	virtual EffectControls * controls()
 	{
 		return &m_peakControls;

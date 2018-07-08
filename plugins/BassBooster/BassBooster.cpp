@@ -70,10 +70,10 @@ BassBoosterEffect::~BassBoosterEffect()
 
 bool BassBoosterEffect::processAudioBuffer( sampleFrame* buf, const fpp_t frames )
 {
-	if( !isEnabled() || !isRunning () )
-	{
-		return( false );
-	}
+        bool smoothBegin, smoothEnd;
+        if(!shouldProcessAudioBuffer(buf, frames, smoothBegin, smoothEnd))
+                return false;
+
 	// check out changed controls
 	if( m_frequencyChangeNeeded || m_bbControls.m_freqModel.isValueChanged() )
 	{
@@ -86,12 +86,12 @@ bool BassBoosterEffect::processAudioBuffer( sampleFrame* buf, const fpp_t frames
 	const float const_gain = m_bbControls.m_gainModel.value();
 	const ValueBuffer *gainBuffer = m_bbControls.m_gainModel.valueBuffer();
 
-	double outSum = 0.0;
-	const float d = dryLevel();
-	const float w = wetLevel();
-
 	for( fpp_t f = 0; f < frames; ++f )
 	{
+                float w0, d0, w1, d1;
+                computeWetDryLevels(f, frames, smoothBegin, smoothEnd,
+                                    w0, d0, w1, d1);
+
 		float gain = const_gain;
 		if (gainBuffer) {
 			//process period using sample exact data
@@ -100,18 +100,15 @@ bool BassBoosterEffect::processAudioBuffer( sampleFrame* buf, const fpp_t frames
 		//float gain = gainBuffer ? gainBuffer[f] : gain;
 		m_bbFX.leftFX().setGain( gain );
 		m_bbFX.rightFX().setGain( gain);
-		outSum += buf[f][0]*buf[f][0] + buf[f][1]*buf[f][1];
 
 		sample_t s[2] = { buf[f][0], buf[f][1] };
 		m_bbFX.nextSample( s[0], s[1] );
 
-		buf[f][0] = d * buf[f][0] + w * s[0];
-		buf[f][1] = d * buf[f][1] + w * s[1];
+		buf[f][0] = d0 * buf[f][0] + w0 * s[0];
+		buf[f][1] = d1 * buf[f][1] + w1 * s[1];
 	}
 
-	checkGate( outSum / frames );
-
-	return isRunning();
+	return true;
 }
 
 

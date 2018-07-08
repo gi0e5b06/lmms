@@ -88,32 +88,30 @@ inline void dynProcEffect::calcRelease()
 bool dynProcEffect::processAudioBuffer( sampleFrame * _buf,
 							const fpp_t _frames )
 {
-	if( !isEnabled() || !isRunning () )
+        bool smoothBegin, smoothEnd;
+        if(!shouldProcessAudioBuffer(_buf, _frames, smoothBegin, smoothEnd))
 	{
-//apparently we can't keep running after the decay value runs out so we'll just set the peaks to zero
+                // apparently we can't keep running after the decay value runs out
+                // so we'll just set the peaks to zero
 		m_currentPeak[0] = m_currentPeak[1] = DYN_NOISE_FLOOR;
-		return( false );
+		return false;
 	}
 	//qDebug( "%f %f", m_currentPeak[0], m_currentPeak[1] );
 
-// variables for effect
+        // variables for effect
 	int i = 0;
 
 	float sm_peak[2] = { 0.0f, 0.0f };
 	float gain;
 
-	double out_sum = 0.0;
-	const float d = dryLevel();
-	const float w = wetLevel();
-	
 	const int stereoMode = m_dpControls.m_stereomodeModel.value();
 	const float inputGain = m_dpControls.m_inputModel.value();
 	const float outputGain = m_dpControls.m_outputModel.value();
-	
+
 	const float * samples = m_dpControls.m_wavegraphModel.samples();
 
-// debug code
-//	qDebug( "peaks %f %f", m_currentPeak[0], m_currentPeak[1] );
+        // debug code
+        //qDebug( "peaks %f %f", m_currentPeak[0], m_currentPeak[1] );
 
 	if( m_needsUpdate )
 	{
@@ -137,13 +135,17 @@ bool dynProcEffect::processAudioBuffer( sampleFrame * _buf,
 
 	for( fpp_t f = 0; f < _frames; ++f )
 	{
-		double s[2] = { _buf[f][0], _buf[f][1] };
+                float w0, d0, w1, d1;
+                computeWetDryLevels(f, _frames, smoothBegin, smoothEnd,
+                                    w0, d0, w1, d1);
 
-// apply input gain
+ 		double s[2] = { _buf[f][0], _buf[f][1] };
+
+                // apply input gain
 		s[0] *= inputGain;
 		s[1] *= inputGain;
 
-// update peak values
+                // update peak values
 		for ( i=0; i <= 1; i++ )
 		{
 			const double t = m_rms[i]->update( s[i] );
@@ -160,7 +162,7 @@ bool dynProcEffect::processAudioBuffer( sampleFrame * _buf,
 			m_currentPeak[i] = qBound( DYN_NOISE_FLOOR, m_currentPeak[i], 10.0f );
 		}
 
-// account for stereo mode
+                // account for stereo mode
 		switch( stereoMode )
 		{
 			case dynProcControls::SM_Maximum:
@@ -181,8 +183,7 @@ bool dynProcEffect::processAudioBuffer( sampleFrame * _buf,
 			}
 		}
 
-// start effect
-
+                // start effect
 		for ( i=0; i <= 1; i++ )
 		{
 			const int lookup = static_cast<int>( sm_peak[i] * 200.0f );
@@ -208,21 +209,17 @@ bool dynProcEffect::processAudioBuffer( sampleFrame * _buf,
 				s[i] *= gain; 
 				s[i] /= sm_peak[i];
 			}
+
+                        // apply output gain
+                        s[i] *= outputGain;
 		}
 
-// apply output gain
-		s[0] *= outputGain;
-		s[1] *= outputGain;
-
-		out_sum += _buf[f][0]*_buf[f][0] + _buf[f][1]*_buf[f][1];
-// mix wet/dry signals
-		_buf[f][0] = d * _buf[f][0] + w * s[0];
-		_buf[f][1] = d * _buf[f][1] + w * s[1];
+                // mix wet/dry signals
+		_buf[f][0] = d0 * _buf[f][0] + w0 * s[0];
+		_buf[f][1] = d1 * _buf[f][1] + w1 * s[1];
 	}
 
-	checkGate( out_sum / _frames );
-
-	return( isRunning() );
+	return true;
 }
 
 

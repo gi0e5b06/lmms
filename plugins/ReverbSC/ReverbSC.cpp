@@ -70,62 +70,60 @@ ReverbSCEffect::~ReverbSCEffect()
 	sp_destroy(&sp);
 }
 
-bool ReverbSCEffect::processAudioBuffer( sampleFrame* buf, const fpp_t frames )
+bool ReverbSCEffect::processAudioBuffer( sampleFrame* _buf, const fpp_t _frames )
 {
-	if( !isEnabled() || !isRunning () )
-	{
-		return( false );
-	}
-
-	double outSum = 0.0;
-	const float d = dryLevel();
-	const float w = wetLevel();
+        bool smoothBegin, smoothEnd;
+        if(!shouldProcessAudioBuffer(_buf, _frames, smoothBegin, smoothEnd))
+                return false;
 
 	SPFLOAT tmpL, tmpR;
 	SPFLOAT dcblkL, dcblkR;
-	
+
 	ValueBuffer * inGainBuf = m_reverbSCControls.m_inputGainModel.valueBuffer();
 	ValueBuffer * sizeBuf = m_reverbSCControls.m_sizeModel.valueBuffer();
 	ValueBuffer * colorBuf = m_reverbSCControls.m_colorModel.valueBuffer();
 	ValueBuffer * outGainBuf = m_reverbSCControls.m_outputGainModel.valueBuffer();
 
-	for( fpp_t f = 0; f < frames; ++f )
+	for( fpp_t f = 0; f < _frames; ++f )
 	{
-		sample_t s[2] = { buf[f][0], buf[f][1] };
+                float w0, d0, w1, d1;
+                computeWetDryLevels(f, _frames, smoothBegin, smoothEnd,
+                                    w0, d0, w1, d1);
 
-		const SPFLOAT inGain = (SPFLOAT)DB2LIN((inGainBuf ? 
-			inGainBuf->values()[f] 
+		float s[2] = { _buf[f][0],_buf[f][1] };
+
+		const SPFLOAT inGain = (SPFLOAT)DB2LIN((inGainBuf ?
+			inGainBuf->values()[f]
 			: m_reverbSCControls.m_inputGainModel.value()));
-		const SPFLOAT outGain = (SPFLOAT)DB2LIN((outGainBuf ? 
-			outGainBuf->values()[f] 
+		const SPFLOAT outGain = (SPFLOAT)DB2LIN((outGainBuf ?
+			outGainBuf->values()[f]
 			: m_reverbSCControls.m_outputGainModel.value()));
 
 		s[0] *= inGain;
 		s[1] *= inGain;
-		revsc->feedback = (SPFLOAT)(sizeBuf ? 
-			sizeBuf->values()[f] 
+		revsc->feedback = (SPFLOAT)(sizeBuf ?
+			sizeBuf->values()[f]
 			: m_reverbSCControls.m_sizeModel.value());
 
-		revsc->lpfreq = (SPFLOAT)(colorBuf ? 
-			colorBuf->values()[f] 
+		revsc->lpfreq = (SPFLOAT)(colorBuf ?
+			colorBuf->values()[f]
 			: m_reverbSCControls.m_colorModel.value());
-
 
 		sp_revsc_compute(sp, revsc, &s[0], &s[1], &tmpL, &tmpR);
 		sp_dcblock_compute(sp, dcblk[0], &tmpL, &dcblkL);
 		sp_dcblock_compute(sp, dcblk[1], &tmpR, &dcblkR);
-		buf[f][0] = d * buf[f][0] + w * dcblkL * outGain;
-		buf[f][1] = d * buf[f][1] + w * dcblkR * outGain;
 
-		outSum += buf[f][0]*buf[f][0] + buf[f][1]*buf[f][1];
+                float curVal0=dcblkL * outGain;
+                float curVal1=dcblkR * outGain;
+
+                _buf[f][0] = d0 * _buf[f][0] + w0 * curVal0;
+                _buf[f][1] = d1 * _buf[f][1] + w1 * curVal1;
 	}
 
-
-	checkGate( outSum / frames );
-
-	return isRunning();
+	return true;
 }
-	
+
+
 void ReverbSCEffect::changeSampleRate()
 {
 	// Change sr variable in Soundpipe. does not need to be destroyed

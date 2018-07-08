@@ -81,42 +81,37 @@ VstEffect::~VstEffect()
 
 bool VstEffect::processAudioBuffer( sampleFrame * _buf, const fpp_t _frames )
 {
-	if( !isEnabled() || !isRunning () )
-	{
-		return false;
-	}
+        bool smoothBegin, smoothEnd;
+        if(!shouldProcessAudioBuffer(_buf, _frames, smoothBegin, smoothEnd))
+                return false;
 
-	if( m_plugin )
-	{
-		const float d = dryLevel();
+	if(! m_plugin ) return false;
+
 #ifdef __GNUC__
-		sampleFrame buf[_frames];
+        sampleFrame vstbuf[_frames];
 #else
-		sampleFrame * buf = new sampleFrame[_frames];
+        sampleFrame * vstbuf = new sampleFrame[_frames];
 #endif
-		memcpy( buf, _buf, sizeof( sampleFrame ) * _frames );
-		m_pluginMutex.lock();
-		m_plugin->process( buf, buf );
-		m_pluginMutex.unlock();
+        memcpy( vstbuf, _buf, sizeof( sampleFrame ) * _frames );
+        m_pluginMutex.lock();
+        m_plugin->process( vstbuf, vstbuf );
+        m_pluginMutex.unlock();
 
-		double out_sum = 0.0;
-		const float w = wetLevel();
-		for( fpp_t f = 0; f < _frames; ++f )
-		{
-			_buf[f][0] = w*buf[f][0] + d*_buf[f][0];
-			_buf[f][1] = w*buf[f][1] + d*_buf[f][1];
-		}
-		for( fpp_t f = 0; f < _frames; ++f )
-		{
-			out_sum += _buf[f][0]*_buf[f][0] + _buf[f][1]*_buf[f][1];
-		}
+        for(fpp_t f = 0; f < _frames; ++f)
+        {
+                float w0, d0, w1, d1;
+                computeWetDryLevels(f, _frames, smoothBegin, smoothEnd,
+                                    w0, d0, w1, d1);
+
+                _buf[f][0] = d0 * _buf[f][0] + w0 * vstbuf[f][0];
+                _buf[f][1] = d1 * _buf[f][1] + w1 * vstbuf[f][1];
+        }
+
 #ifndef __GNUC__
-		delete[] buf;
+        delete[] vstbuf;
 #endif
 
-		checkGate( out_sum / _frames );
-	}
-	return isRunning();
+        return true;
 }
 
 

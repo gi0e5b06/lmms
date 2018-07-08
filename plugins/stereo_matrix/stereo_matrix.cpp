@@ -69,41 +69,29 @@ stereoMatrixEffect::~stereoMatrixEffect()
 bool stereoMatrixEffect::processAudioBuffer( sampleFrame * _buf,
 							const fpp_t _frames )
 {
-	
-	// This appears to be used for determining whether or not to continue processing
-	// audio with this effect	
-	if( !isEnabled() || !isRunning() )
-	{
-		return( false );
-	}
+        bool smoothBegin, smoothEnd;
+        if(!shouldProcessAudioBuffer(_buf, _frames, smoothBegin, smoothEnd))
+                return false;
 
-	double out_sum = 0.0;
+        for( fpp_t f = 0; f < _frames; ++f )
+        {
+                float w0, d0, w1, d1;
+                computeWetDryLevels(f, _frames, smoothBegin, smoothEnd,
+                                    w0, d0, w1, d1);
 
-	for( fpp_t f = 0; f < _frames; ++f )
-	{	
-		const float d = dryLevel();
-		const float w = wetLevel();
-		
 		sample_t l = _buf[f][0];
 		sample_t r = _buf[f][1];
 
-		// Init with dry-mix
-		_buf[f][0] = l * d;
-		_buf[f][1] = r * d;
+		_buf[f][0] = l * d0 +
+                        ( m_smControls.m_llModel.value( f ) * l  +
+                          m_smControls.m_rlModel.value( f ) * r ) * w0;
 
-		// Add it wet
-		_buf[f][0] += ( m_smControls.m_llModel.value( f ) * l  +
-					m_smControls.m_rlModel.value( f ) * r ) * w;
-
-		_buf[f][1] += ( m_smControls.m_lrModel.value( f ) * l  +
-					m_smControls.m_rrModel.value( f ) * r ) * w;
-		out_sum += _buf[f][0]*_buf[f][0] + _buf[f][1]*_buf[f][1];
-
+		_buf[f][1] = r * d1 +
+                        ( m_smControls.m_lrModel.value( f ) * l  +
+                          m_smControls.m_rrModel.value( f ) * r ) * w1;
 	}
 
-	checkGate( out_sum / _frames );
-
-	return( isRunning() );
+	return true;
 }
 
 

@@ -67,20 +67,11 @@ ClickGDXEffect::~ClickGDXEffect()
 
 
 
-bool ClickGDXEffect::processAudioBuffer( sampleFrame* buf, const fpp_t frames )
+bool ClickGDXEffect::processAudioBuffer( sampleFrame* _buf, const fpp_t _frames )
 {
-	if( !isEnabled() || !isRunning () )
-	{
-		return( false );
-	}
-
-	float curVal0;
-	float curVal1;
-
-	double outSum = 0.0;
-
-	const float d = dryLevel();
-	const float w = wetLevel();
+        bool smoothBegin, smoothEnd;
+        if(!shouldProcessAudioBuffer(_buf, _frames, smoothBegin, smoothEnd))
+                return false;
 
 	const ValueBuffer * attTimeBuf  = m_gdxControls.m_attackTimeModel.valueBuffer();
 	const ValueBuffer * desTimeBuf  = m_gdxControls.m_descentTimeModel.valueBuffer();
@@ -94,11 +85,14 @@ bool ClickGDXEffect::processAudioBuffer( sampleFrame* buf, const fpp_t frames )
 	const ValueBuffer * desTempoBuf = m_gdxControls.m_descentTempoModel.valueBuffer();
 	const ValueBuffer * panTempoBuf = m_gdxControls.m_panTempoModel.valueBuffer();
 
-	for( fpp_t f = 0; f < frames; ++f )
+	for( fpp_t f = 0; f < _frames; ++f )
 	{
-		curVal0=buf[f][0];
-		curVal1=buf[f][1];
-		outSum += curVal0*curVal0+curVal1*curVal1;
+                float w0, d0, w1, d1;
+                computeWetDryLevels(f, _frames, smoothBegin, smoothEnd, w0, d0, w1,
+                                    d1);
+
+		float curVal0=_buf[f][0];
+		float curVal1=_buf[f][1];
 
 		uint32_t tempo1=(uint32_t)(attTempoBuf
 					   ? attTempoBuf->value( f )
@@ -110,14 +104,14 @@ bool ClickGDXEffect::processAudioBuffer( sampleFrame* buf, const fpp_t frames )
 					   ? panTempoBuf->value( f )
 					   : m_gdxControls.m_panTempoModel.value());
 		uint32_t step1=(uint32_t)(44100.f*60.f/tempo1*(attTimeBuf
-						   ? attTimeBuf->value( f )
-						   : m_gdxControls.m_attackTimeModel.value()));
+                                           ? attTimeBuf->value( f )
+					   : m_gdxControls.m_attackTimeModel.value()));
 		uint32_t step2=(uint32_t)(44100.f*60.f/tempo2*(desTimeBuf
-						   ? desTimeBuf->value( f )
-						   : m_gdxControls.m_descentTimeModel.value()));
+					   ? desTimeBuf->value( f )
+					   : m_gdxControls.m_descentTimeModel.value()));
 		uint32_t step3=(uint32_t)(44100.f*60.f/tempo3*(panTimeBuf
-						   ? panTimeBuf->value( f )
-						   : m_gdxControls.m_panTimeModel.value()));
+					   ? panTimeBuf->value( f )
+					   : m_gdxControls.m_panTimeModel.value()));
 		int type1=(int)(attTypeBuf
 				? attTypeBuf->value( f )
 				: m_gdxControls.m_attackTypeModel.value());
@@ -231,13 +225,11 @@ bool ClickGDXEffect::processAudioBuffer( sampleFrame* buf, const fpp_t frames )
 			}
 		}
 
-		buf[f][0] = d * buf[f][0] + w * curVal0;
-		buf[f][1] = d * buf[f][1] + w * curVal1;
+		_buf[f][0] = d0 * _buf[f][0] + w0 * curVal0;
+		_buf[f][1] = d1 * _buf[f][1] + w1 * curVal1;
 	}
 
-	checkGate( outSum / frames );
-
-	return isRunning();
+	return true;
 }
 
 

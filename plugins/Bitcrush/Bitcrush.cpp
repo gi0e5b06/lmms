@@ -97,10 +97,9 @@ inline float BitcrushEffect::noise( float amt )
 
 bool BitcrushEffect::processAudioBuffer( sampleFrame* buf, const fpp_t frames )
 {
-	if( !isEnabled() || !isRunning () )
-	{
-		return( false );
-	}
+        bool smoothBegin, smoothEnd;
+        if(!shouldProcessAudioBuffer(buf, frames, smoothBegin, smoothEnd))
+                return false;
 
 	// update values
 	if( m_needsUpdate || m_controls.m_rateEnabled.isValueChanged() )
@@ -120,7 +119,7 @@ bool BitcrushEffect::processAudioBuffer( sampleFrame* buf, const fpp_t frames )
 
 		m_rateCoeffL = ( m_sampleRate * OS_RATE ) / ( rate - diff );
 		m_rateCoeffR = ( m_sampleRate * OS_RATE ) / ( rate + diff );
-		
+
 		m_bitCounterL = 0.0f;
 		m_bitCounterR = 0.0f;
 	}
@@ -142,9 +141,9 @@ bool BitcrushEffect::processAudioBuffer( sampleFrame* buf, const fpp_t frames )
 		m_outClip = dbfsToAmp( m_controls.m_outClip.value() );
 	}
 	m_needsUpdate = false;
-	
+
 	const float noiseAmt = m_controls.m_inNoise.value() * 0.01f;
-	
+
 	// read input buffer and write it to oversampled buffer
 	if( m_rateEnabled ) // rate crushing enabled so do that
 	{
@@ -188,9 +187,9 @@ bool BitcrushEffect::processAudioBuffer( sampleFrame* buf, const fpp_t frames )
 			}
 		}
 	}
-	
+
 	// the oversampled buffer is now written, so filter it to reduce aliasing
-	
+
 	for( int f = 0; f < frames * OS_RATE; ++f )
 	{
 		if( qMax( qAbs( m_buffer[f][0] ), qAbs( m_buffer[f][1] ) ) >= 1.0e-10f )
@@ -213,15 +212,15 @@ bool BitcrushEffect::processAudioBuffer( sampleFrame* buf, const fpp_t frames )
 			}
 		}
 	}
-	
-	
+
+
 	// now downsample and write it back to main buffer
-	
-	double outSum = 0.0;
-	const float d = dryLevel();
-	const float w = wetLevel();
 	for( int f = 0; f < frames; ++f )
 	{
+                float w0, d0, w1, d1;
+                computeWetDryLevels(f, frames, smoothBegin, smoothEnd,
+                                    w0, d0, w1, d1);
+
 		float lsum = 0.0f;
 		float rsum = 0.0f;
 		for( int o = 0; o < OS_RATE; ++o )
@@ -229,14 +228,11 @@ bool BitcrushEffect::processAudioBuffer( sampleFrame* buf, const fpp_t frames )
 			lsum += m_buffer[f * OS_RATE + o][0] * OS_RESAMPLE[o];
 			rsum += m_buffer[f * OS_RATE + o][1] * OS_RESAMPLE[o];
 		}
-		buf[f][0] = d * buf[f][0] + w * qBound( -m_outClip, lsum, m_outClip ) * m_outGain;
-		buf[f][1] = d * buf[f][1] + w * qBound( -m_outClip, rsum, m_outClip ) * m_outGain;
-		outSum += buf[f][0]*buf[f][0] + buf[f][1]*buf[f][1];
+		buf[f][0] = d0 * buf[f][0] + w0 * qBound( -m_outClip, lsum, m_outClip ) * m_outGain;
+		buf[f][1] = d1 * buf[f][1] + w1 * qBound( -m_outClip, rsum, m_outClip ) * m_outGain;
 	}
-	
-	checkGate( outSum / frames );
 
-	return isRunning();
+	return true;
 }
 
 

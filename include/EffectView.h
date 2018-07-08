@@ -1,6 +1,7 @@
 /*
  * EffectView.h - view-component for an effect
  *
+ * Copyright (c) 2018 gi0e5b06 (on github.com)
  * Copyright (c) 2006-2007 Danny McRae <khjklujn/at/users.sourceforge.net>
  * Copyright (c) 2007-2010 Tobias Doerffel <tobydox/at/users.sourceforge.net>
  *
@@ -86,6 +87,7 @@ signals:
 	Knob * m_wetDry;
 	TempoSyncKnob * m_autoQuit;
 	Knob * m_gate;
+        Knob * m_balance;
 	QMdiSubWindow * m_subWindow;
 	EffectControlDialog * m_controlView;
 

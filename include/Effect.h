@@ -1,6 +1,7 @@
 /*
  * Effect.h - base class for effects
  *
+ * Copyright (c) 2018 gi0e5b06 (on github.com)
  * Copyright (c) 2006-2007 Danny McRae <khjklujn/at/users.sourceforge.net>
  * Copyright (c) 2006-2014 Tobias Doerffel <tobydox/at/users.sourceforge.net>
  *
@@ -100,11 +101,10 @@ public:
 		return m_enabledModel.value();
 	}
 
-	inline f_cnt_t timeout() const
-	{
-		const float samples = Engine::mixer()->processingSampleRate() * m_autoQuitModel.value() / 1000.0f;
-		return 1 + ( static_cast<int>( samples ) / Engine::mixer()->framesPerPeriod() );
-	}
+        virtual bool isBalanceable() const
+        {
+                return true;
+        }
 
 	inline float wetLevel() const
 	{
@@ -120,21 +120,6 @@ public:
 	{
 		const float level = m_gateModel.value();
 		return level*level * m_processors;
-	}
-
-	inline f_cnt_t bufferCount() const
-	{
-		return m_bufferCount;
-	}
-
-	inline void resetBufferCount()
-	{
-		m_bufferCount = 0;
-	}
-
-	inline void incrementBufferCount()
-	{
-		++m_bufferCount;
 	}
 
 	// should be replaced by Runnable
@@ -166,7 +151,35 @@ public:
 
 
 protected:
-	void checkGate( double _out_sum );
+	bool gateHasClosed(float _rms);
+	bool gateHasOpen(float _rms);
+        float computeRMS(sampleFrame* _buf, const fpp_t _frames);
+
+	inline bool isAutoQuitEnabled() const
+        {
+                return !m_autoQuitDisabled;
+        }
+
+	inline int timeout() const
+	{
+		const float samples = Engine::mixer()->processingSampleRate() * m_autoQuitModel.value() / 1000.0f;
+		return /*1+*/ static_cast<int>( samples / Engine::mixer()->framesPerPeriod() );
+	}
+
+	inline f_cnt_t bufferCount() const
+	{
+		return m_bufferCount;
+	}
+
+	inline void resetBufferCount()
+	{
+		m_bufferCount = 0;
+	}
+
+	inline void incrementBufferCount()
+	{
+		++m_bufferCount;
+	}
 
 	virtual PluginView * instantiateView( QWidget * );
 
@@ -193,8 +206,26 @@ protected:
 	}
 	void reinitSRC();
 
+        inline bool isGateClosed() const
+        {
+                return m_gateClosed;
+        }
 
-private:
+        bool shouldProcessAudioBuffer(sampleFrame* _buf, const fpp_t _frames,
+                                      bool& _smoothBegin, bool& _smoothEnd);
+
+        void computeWetDryLevels(fpp_t _f, fpp_t _frames,
+                                 bool _smoothBegin, bool _smoothEnd,
+                                 float& _w0,float &_d0,
+                                 float& _w1,float &_d1);
+
+        //should be private
+	FloatModel m_wetDryModel;
+	FloatModel m_balanceModel;
+
+
+ private:
+        bool m_gateClosed;
 	EffectChain * m_parent;
 	void resample( int _i, const sampleFrame * _src_buf,
                        sample_rate_t _src_sr,
@@ -211,7 +242,6 @@ private:
 	f_cnt_t m_bufferCount;
 
 	BoolModel m_enabledModel;
-	FloatModel m_wetDryModel;
 	FloatModel m_gateModel;
 	TempoSyncKnobModel m_autoQuitModel;
 

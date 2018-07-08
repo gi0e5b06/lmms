@@ -380,13 +380,11 @@ bool CarlaEffect::handleMidiEvent(const MidiEvent& event, const MidiTime&, f_cnt
 
 bool CarlaEffect::processAudioBuffer(sampleFrame* buf, const fpp_t frames)
 {
-    if( !isEnabled() || !isRunning () )
-    {
-            return false;
-    }
+    bool smoothBegin, smoothEnd;
+    if(!shouldProcessAudioBuffer(buf, frames, smoothBegin, smoothEnd))
+        return false;
 
     const uint bufsize = frames;//Engine::mixer()->framesPerPeriod();
-
 
     if(fHandle==NULL)
     {
@@ -414,19 +412,10 @@ bool CarlaEffect::processAudioBuffer(sampleFrame* buf, const fpp_t frames)
     //std::memset(buf1, 0, sizeof(float)*bufsize);
     //std::memset(buf2, 0, sizeof(float)*bufsize);
 
-    float curVal0;
-    float curVal1;
-
-    double outSum = 0.0;
-
     for(fpp_t f=0;f<frames;f++)
     {
             buf1[f]=buf[f][0];
             buf2[f]=buf[f][1];
-
-            curVal0=buf[f][0];
-            curVal1=buf[f][1];
-            outSum += curVal0*curVal0+curVal1*curVal1;
     }
 
     {
@@ -436,18 +425,17 @@ bool CarlaEffect::processAudioBuffer(sampleFrame* buf, const fpp_t frames)
         fMidiEventCount = 0;
     }
 
-    const float d = dryLevel();
-    const float w = wetLevel();
-
     for(fpp_t f=0;f<frames;f++)
     {
-            buf[f][0]=d*buf[f][0]+w*buf1[f];
-            buf[f][1]=d*buf[f][1]+w*buf2[f];
+          float w0, d0, w1, d1;
+          computeWetDryLevels(f, frames, smoothBegin, smoothEnd,
+                              w0, d0, w1, d1);
+
+          buf[f][0]=d0*buf[f][0]+w0*buf1[f];
+          buf[f][1]=d1*buf[f][1]+w1*buf2[f];
     }
 
-    checkGate( outSum / frames );
-
-    return isRunning();
+    return true;
 }
 
 

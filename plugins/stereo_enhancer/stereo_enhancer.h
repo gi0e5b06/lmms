@@ -37,8 +37,14 @@ public:
 	stereoEnhancerEffect( Model * parent,
 	                      const Descriptor::SubPluginFeatures::Key * _key );
 	virtual ~stereoEnhancerEffect();
+
 	virtual bool processAudioBuffer( sampleFrame * _buf,
-		                                          const fpp_t _frames );
+                                         const fpp_t _frames );
+
+        virtual bool isBalanceable() const
+        {
+                return false;
+        }
 
 	virtual EffectControls * controls()
 	{
@@ -50,10 +56,10 @@ public:
 
 private:
 	DspEffectLibrary::StereoEnhancer m_seFX;
-	
+
 	sampleFrame * m_delayBuffer;
 	int m_currFrame;
-	
+
 	stereoEnhancerControls m_bbControls;
 
 	friend class stereoEnhancerControls;

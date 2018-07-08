@@ -47,8 +47,14 @@ public:
 	SpectrumAnalyzer( Model * _parent,
 			const Descriptor::SubPluginFeatures::Key * _key );
 	virtual ~SpectrumAnalyzer();
+
 	virtual bool processAudioBuffer( sampleFrame * _buf,
-							const fpp_t _frames );
+                                         const fpp_t _frames );
+
+        virtual bool isBalanceable() const
+        {
+                return false;
+        }
 
 	virtual EffectControls * controls()
 	{

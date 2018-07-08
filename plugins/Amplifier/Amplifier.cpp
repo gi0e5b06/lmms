@@ -66,15 +66,10 @@ AmplifierEffect::~AmplifierEffect()
 
 bool AmplifierEffect::processAudioBuffer( sampleFrame* buf, const fpp_t frames )
 {
-	if( !isEnabled() || !isRunning () )
-	{
-		return( false );
-	}
+        bool smoothBegin, smoothEnd;
+        if(!shouldProcessAudioBuffer(buf, frames, smoothBegin, smoothEnd))
+                return false;
 
-	double outSum = 0.0;
-	const float d = dryLevel();
-	const float w = wetLevel();
-	
 	const ValueBuffer * volBuf = m_ampControls.m_volumeModel.valueBuffer();
 	const ValueBuffer * panBuf = m_ampControls.m_panModel.valueBuffer();
 	const ValueBuffer * leftBuf = m_ampControls.m_leftModel.valueBuffer();
@@ -82,52 +77,47 @@ bool AmplifierEffect::processAudioBuffer( sampleFrame* buf, const fpp_t frames )
 
 	for( fpp_t f = 0; f < frames; ++f )
 	{
-//		qDebug( "offset %d, value %f", f, m_ampControls.m_volumeModel.value( f ) );
-		outSum += buf[f][0]*buf[f][0] + buf[f][1]*buf[f][1];
-	
+                float w0, d0, w1, d1;
+                computeWetDryLevels(f, frames, smoothBegin, smoothEnd,
+                                    w0, d0, w1, d1);
+
+                //qDebug( "offset %d, value %f", f, m_ampControls.m_volumeModel.value( f ) );
 		sample_t s[2] = { buf[f][0], buf[f][1] };
 
 		// vol knob
-		if( volBuf )
-		{
-			s[0] *= volBuf->value( f ) * 0.01f;
-			s[1] *= volBuf->value( f ) * 0.01f;
-		}
-		else
-		{
-			s[0] *= m_ampControls.m_volumeModel.value() * 0.01f;
-			s[1] *= m_ampControls.m_volumeModel.value() * 0.01f;
-		}
+		const float vol = volBuf 
+			? volBuf->value( f ) 
+			: m_ampControls.m_volumeModel.value();
+                s[0] *= vol * 0.01f;
+                s[1] *= vol * 0.01f;
 
 		// convert pan values to left/right values
-		const float pan = panBuf 
-			? panBuf->value( f ) 
+		const float pan = panBuf
+			? panBuf->value( f )
 			: m_ampControls.m_panModel.value();
-		const float left1 = pan <= 0
-			? 1.0
-			: 1.0 - pan * 0.01f;
-		const float right1 = pan >= 0
-			? 1.0
-			: 1.0 + pan * 0.01f;
+		const float left1 = pan <= 0.f
+			? 1.f
+			: 1.f - pan * 0.01f;
+		const float right1 = pan >= 0.f
+                        ? 1.f
+                        : 1.f + pan * 0.01f;
 
 		// second stage amplification
 		const float left2 = leftBuf
-			? leftBuf->value( f ) 
+			? leftBuf->value( f )
 			: m_ampControls.m_leftModel.value();
 		const float right2 = rightBuf
-			? rightBuf->value( f ) 
+			? rightBuf->value( f )
 			: m_ampControls.m_rightModel.value();
-			
+
 		s[0] *= left1 * left2 * 0.01;
 		s[1] *= right1 * right2 * 0.01;
 
-		buf[f][0] = d * buf[f][0] + w * s[0];
-		buf[f][1] = d * buf[f][1] + w * s[1];
+		buf[f][0] = d0 * buf[f][0] + w0 * s[0];
+		buf[f][1] = d1 * buf[f][1] + w1 * s[1];
 	}
 
-	checkGate( outSum / frames );
-
-	return isRunning();
+	return true;
 }
 
 

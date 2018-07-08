@@ -81,15 +81,12 @@ FlangerEffect::~FlangerEffect()
 
 
 
-bool FlangerEffect::processAudioBuffer( sampleFrame *buf, const fpp_t frames )
+bool FlangerEffect::processAudioBuffer( sampleFrame *_buf, const fpp_t _frames )
 {
-	if( !isEnabled() || !isRunning () )
-	{
-		return( false );
-	}
-	double outSum = 0.0;
-	const float d = dryLevel();
-	const float w = wetLevel();
+        bool smoothBegin, smoothEnd;
+        if(!shouldProcessAudioBuffer(_buf, _frames, smoothBegin, smoothEnd))
+                return false;
+
 	const float length = m_flangerControls.m_delayTimeModel.value() * Engine::mixer()->processingSampleRate();
 	const float noise = m_flangerControls.m_whiteNoiseAmountModel.value();
 	float amplitude = m_flangerControls.m_lfoAmountModel.value() * Engine::mixer()->processingSampleRate();
@@ -97,34 +94,39 @@ bool FlangerEffect::processAudioBuffer( sampleFrame *buf, const fpp_t frames )
 	m_lfo->setFrequency(  1.0/m_flangerControls.m_lfoFrequencyModel.value() );
 	m_lDelay->setFeedback( m_flangerControls.m_feedbackModel.value() );
 	m_rDelay->setFeedback( m_flangerControls.m_feedbackModel.value() );
-	sample_t dryS[2];
+
 	float leftLfo;
 	float rightLfo;
-	for( fpp_t f = 0; f < frames; ++f )
+
+	for( fpp_t f = 0; f < _frames; ++f )
 	{
-		buf[f][0] += m_noise->tick() * noise;
-		buf[f][1] += m_noise->tick() * noise;
-		dryS[0] = buf[f][0];
-		dryS[1] = buf[f][1];
+                float w0, d0, w1, d1;
+                computeWetDryLevels(f, _frames, smoothBegin, smoothEnd,
+                                    w0, d0, w1, d1);
+
+                sample_t curVal0 = _buf[f][0];
+                sample_t curVal1 = _buf[f][1];
+
+		curVal0 += m_noise->tick() * noise;
+		curVal1 += m_noise->tick() * noise;
 		m_lfo->tick(&leftLfo, &rightLfo);
 		m_lDelay->setLength( ( float )length + amplitude * (leftLfo+1.0)  );
 		m_rDelay->setLength( ( float )length + amplitude * (rightLfo+1.0)  );
 		if(invertFeedback)
 		{
-			m_lDelay->tick( &buf[f][1] );
-			m_rDelay->tick(&buf[f][0] );
+			m_lDelay->tick(&curVal1);
+			m_rDelay->tick(&curVal0);
 		} else
 		{
-			m_lDelay->tick( &buf[f][0] );
-			m_rDelay->tick( &buf[f][1] );
+			m_lDelay->tick(&curVal0);
+			m_rDelay->tick(&curVal1);
 		}
 
-		buf[f][0] = ( d * dryS[0] ) + ( w * buf[f][0] );
-		buf[f][1] = ( d * dryS[1] ) + ( w * buf[f][1] );
-		outSum += buf[f][0]*buf[f][0] + buf[f][1]*buf[f][1];
+                _buf[f][0] = d0 * _buf[f][0] + w0 * curVal0;
+                _buf[f][1] = d1 * _buf[f][1] + w1 * curVal1;
 	}
-	checkGate( outSum / frames );
-	return isRunning();
+
+	return true;
 }
 
 

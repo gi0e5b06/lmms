@@ -81,26 +81,18 @@ stereoEnhancerEffect::~stereoEnhancerEffect()
 bool stereoEnhancerEffect::processAudioBuffer( sampleFrame * _buf,
 							const fpp_t _frames )
 {
-	
-	// This appears to be used for determining whether or not to continue processing
-	// audio with this effect	
-	double out_sum = 0.0;
-	
+        bool smoothBegin, smoothEnd;
+        if(!shouldProcessAudioBuffer(_buf, _frames, smoothBegin, smoothEnd))
+                return false;
+
 	float width;
 	int frameIndex = 0;
-	
-	
-	if( !isEnabled() || !isRunning() )
-	{
-		return( false );
-	}
-
-	const float d = dryLevel();
-	const float w = wetLevel();
-
 	for( fpp_t f = 0; f < _frames; ++f )
 	{
-		
+                float w0, d0, w1, d1;
+                computeWetDryLevels(f, _frames, smoothBegin, smoothEnd,
+                                    w0, d0, w1, d1);
+
 		// copy samples into the delay buffer
 		m_delayBuffer[m_currFrame][0] = _buf[f][0];
 		m_delayBuffer[m_currFrame][1] = _buf[f][1];
@@ -122,22 +114,18 @@ bool stereoEnhancerEffect::processAudioBuffer( sampleFrame * _buf,
 
 		m_seFX.nextSample( s[0], s[1] );
 
-		_buf[f][0] = d * _buf[f][0] + w * s[0];
-		_buf[f][1] = d * _buf[f][1] + w * s[1];
-		out_sum += _buf[f][0]*_buf[f][0] + _buf[f][1]*_buf[f][1];
+		_buf[f][0] = d0 * _buf[f][0] + w0 * s[0];
+		_buf[f][1] = d1 * _buf[f][1] + w1 * s[1];
 
 		// Update currFrame
 		m_currFrame += 1;
 		m_currFrame %= DEFAULT_BUFFER_SIZE;
 	}
 
-	checkGate( out_sum / _frames );
-	if( !isRunning() )
-	{
+	if(smoothEnd)
 		clearMyBuffer();
-	}
 
-	return( isRunning() );
+	return true;
 }
 
 

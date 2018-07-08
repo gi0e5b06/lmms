@@ -1,6 +1,7 @@
 /*
  * Effect.cpp - base-class for effects
  *
+ * Copyright (c) 2018 gi0e5b06 (on github.com)
  * Copyright (c) 2006-2007 Danny McRae <khjklujn/at/users.sourceforge.net>
  * Copyright (c) 2006-2014 Tobias Doerffel <tobydox/at/users.sourceforge.net>
  *
@@ -37,6 +38,9 @@ Effect::Effect( const Plugin::Descriptor * _desc,
                 Model * _parent,
                 const Descriptor::SubPluginFeatures::Key * _key ) :
     Plugin( _desc, _parent ),
+    m_wetDryModel  ( 1.0f, 0.0f, 1.0f, 0.01f, this, tr( "Wet/Dry mix" ) ), //min=-1
+    m_balanceModel ( 0.0f,-1.0f, 1.0f, 0.01f, this, tr( "Balance" ) ),
+    m_gateClosed( false ),
     m_parent( NULL ),
     m_key( _key ? *_key : Descriptor::SubPluginFeatures::Key() ),
     m_processors( 1 ),
@@ -45,9 +49,8 @@ Effect::Effect( const Plugin::Descriptor * _desc,
     m_running( false ),
     m_bufferCount( 0 ),
     m_enabledModel( true, this, tr( "Effect enabled" ) ),
-    m_wetDryModel  ( 1.0f, 0.0f, 1.0f, 0.01f, this, tr( "Wet/Dry mix" ) ), //min=-1
     m_gateModel    ( 0.0f, 0.0f, 1.0f, 0.01f, this, tr( "Gate" ) ),
-    m_autoQuitModel( 1.0f, 1.0f, 8000.0f, 100.0f, 1.0f, this, tr( "Decay" ) ),
+    m_autoQuitModel( 0.0f, 0.0f, 8000.0f, 1.0f, 1.0f, this, tr( "Decay" ) ),
     m_autoQuitDisabled( false )
 {
 	m_srcState[0] = m_srcState[1] = NULL;
@@ -83,6 +86,7 @@ void Effect::saveSettings( QDomDocument & _doc, QDomElement & _this )
 	m_wetDryModel.saveSettings( _doc, _this, "wet" );
 	m_autoQuitModel.saveSettings( _doc, _this, "autoquit" );
 	m_gateModel.saveSettings( _doc, _this, "gate" );
+	m_balanceModel.saveSettings( _doc, _this, "balance" );
 	controls()->saveState( _doc, _this );
 }
 
@@ -95,6 +99,7 @@ void Effect::loadSettings( const QDomElement & _this )
 	m_wetDryModel.loadSettings( _this, "wet" );
 	m_autoQuitModel.loadSettings( _this, "autoquit" );
 	m_gateModel.loadSettings( _this, "gate" );
+	m_balanceModel.loadSettings( _this, "balance" );
 
 	QDomNode node = _this.firstChild();
 	while( !node.isNull() )
@@ -150,31 +155,156 @@ Effect * Effect::instantiate( const QString& pluginName,
 
 
 
-void Effect::checkGate( double _out_sum )
+bool Effect::gateHasClosed(float _rms)
 {
-	if( m_autoQuitDisabled )
-	{
-		return;
-	}
+	if(!isAutoQuitEnabled()) return false;
+        if(!isRunning()) return false;
 
 	// Check whether we need to continue processing input.  Restart the
 	// counter if the threshold has been exceeded.
-	if( _out_sum - gate() <= typeInfo<float>::minEps() )
+	if( _rms <= gate() ) // <= typeInfo<float>::minEps() )
 	{
 		incrementBufferCount();
-		if( bufferCount() > timeout() )
+		if( !m_gateClosed && (bufferCount() > timeout() ))
 		{
+                        m_gateClosed=true;
 			stopRunning();
 			resetBufferCount();
+                        return true;
 		}
 	}
 	else
 	{
 		resetBufferCount();
 	}
+
+        return false;
 }
 
 
+bool Effect::gateHasOpen(float _rms)
+{
+	if(!isAutoQuitEnabled()) return false;
+        //if(isRunning()) return false;
+
+	// Check whether we need to continue processing input.  Restart the
+	// counter if the threshold has been exceeded.
+	if( m_gateClosed &&
+            (_rms > qMin(1.2f*gate(),(1.0f+gate())/2.f) )) // <= typeInfo<float>::minEps() )
+	{
+                m_gateClosed=false;
+                if(!isRunning()) startRunning();
+                resetBufferCount();
+                return true;
+        }
+
+        return false;
+}
+
+
+float Effect::computeRMS(sampleFrame* _buf, const fpp_t _frames)
+{
+	//if( !isEnabled() ) return 0.f;
+	//if(!isAutoQuitEnabled()) return 1.f;
+
+        float rms = 0.0f;
+        for( fpp_t f = 0; f < _frames; ++f )
+                rms+=_buf[f][0]*_buf[f][0]+_buf[f][1]*_buf[f][1];
+        rms/=_frames;
+        return rms;
+}
+
+
+bool Effect::shouldProcessAudioBuffer(sampleFrame* _buf, const fpp_t _frames,
+                                      bool& _smoothBegin, bool& _smoothEnd)
+{
+	if(!isOkay() || dontRun() || !isEnabled()) return false;
+
+        _smoothBegin=false;
+        _smoothEnd  =false;
+
+	if(isAutoQuitEnabled())
+        {
+                float rms=computeRMS(_buf,_frames);
+                if(gateHasOpen(rms))
+                {
+                        qInfo("%s: gate open",qPrintable(nodeName()));
+                        _smoothBegin=true;
+                }
+                else
+                if(gateHasClosed(rms))
+                {
+                        qInfo("%s: gate closed",qPrintable(nodeName()));
+                        _smoothEnd=true;
+                }
+        }
+
+        if(!isRunning() && !_smoothEnd)
+        {
+                const ValueBuffer* wetDryBuf = m_wetDryModel.valueBuffer();
+
+                for(fpp_t f=0; f<_frames; ++f)
+                {
+                        float w = (wetDryBuf ? wetDryBuf->value(f)
+                                   : m_wetDryModel.value());
+                        float d = 1.0f-w;
+                        _buf[f][0]*=d;
+                        _buf[f][1]*=d;
+                }
+
+                return false;
+        }
+
+        return true;
+}
+
+
+void Effect::computeWetDryLevels(fpp_t _f, fpp_t _frames,
+                                 bool _smoothBegin, bool _smoothEnd,
+                                 float& _w0,float &_d0,
+                                 float& _w1,float &_d1)
+{
+        const ValueBuffer* wetDryBuf = m_wetDryModel.valueBuffer();
+
+        float w = (wetDryBuf ? wetDryBuf->value(_f)
+                   : m_wetDryModel.value());
+
+        //int nsb=_frames;
+        //if(nsb>128) nsb=128;
+        //if(_smoothBegin && _f<nsb)
+        //        w*=1.f*_f/nsb;
+        int nse=_frames;
+        if(nse>128) nse=128;
+        if(_smoothEnd && _f>=_frames-nse)
+                w*=1.f*(_frames-1-_f)/nse;
+
+        float d=1.0f-w;
+        if(isGateClosed() &&!_smoothEnd)
+        {
+                //w=0.f;
+                _w0=0.f;
+                _w1=0.f;
+        }
+        else
+        if(isBalanceable())
+        {
+                const ValueBuffer* balanceBuf = m_balanceModel.valueBuffer();
+                const float bal = (balanceBuf ? balanceBuf->value(_f)
+                                   : m_balanceModel.value());
+                const float bal0 = bal < 0.f ? 1.f : 1.f - bal;
+                const float bal1 = bal < 0.f ? 1.f + bal : 1.f;
+                _w0   = bal0 * w;
+                _w1   = bal1 * w;
+        }
+        else
+        {
+                _w0=w;
+                _w1=w;
+        }
+
+        _d0   = d*(1.0f - _w0);
+        _d1   = d*(1.0f - _w1);
+}
 
 
 PluginView * Effect::instantiateView( QWidget * _parent )

@@ -77,15 +77,11 @@ DelayEffect::~DelayEffect()
 
 bool DelayEffect::processAudioBuffer( sampleFrame* buf, const fpp_t frames )
 {
-	if( !isEnabled() || !isRunning () )
-	{
-		return( false );
-	}
-	double outSum = 0.0;
+        bool smoothBegin, smoothEnd;
+        if(!shouldProcessAudioBuffer(buf, frames, smoothBegin, smoothEnd))
+                return false;
+
 	const float sr = Engine::mixer()->processingSampleRate();
-	const float d = dryLevel();
-	const float w = wetLevel();
-	sample_t dryS[2];
 	float lPeak = 0.0;
 	float rPeak = 0.0;
 	float length = m_delayControls.m_delayTimeModel.value();
@@ -109,11 +105,15 @@ bool DelayEffect::processAudioBuffer( sampleFrame* buf, const fpp_t frames )
 	{
 		m_outGain = dbfsToAmp( m_delayControls.m_outGainModel.value() );
 	}
+
 	int sampleLength;
 	for( fpp_t f = 0; f < frames; ++f )
 	{
-		dryS[0] = buf[f][0];
-		dryS[1] = buf[f][1];
+                float w0, d0, w1, d1;
+                computeWetDryLevels(f, frames, smoothBegin, smoothEnd,
+                                    w0, d0, w1, d1);
+
+                sample_t dryS[2] = { buf[f][0], buf[f][1] };
 
 		m_delay->setFeedback( *feedbackPtr );
 		m_lfo->setFrequency( *lfoTimePtr );
@@ -128,20 +128,19 @@ bool DelayEffect::processAudioBuffer( sampleFrame* buf, const fpp_t frames )
 		lPeak = buf[f][0] > lPeak ? buf[f][0] : lPeak;
 		rPeak = buf[f][1] > rPeak ? buf[f][1] : rPeak;
 
-		buf[f][0] = ( d * dryS[0] ) + ( w * buf[f][0] );
-		buf[f][1] = ( d * dryS[1] ) + ( w * buf[f][1] );
-		outSum += buf[f][0]*buf[f][0] + buf[f][1]*buf[f][1];
+		buf[f][0] = ( d0 * dryS[0] ) + ( w0 * buf[f][0] );
+		buf[f][1] = ( d1 * dryS[1] ) + ( w1 * buf[f][1] );
 
 		lengthPtr += lengthInc;
 		amplitudePtr += amplitudeInc;
 		lfoTimePtr += lfoTimeInc;
 		feedbackPtr += feedbackInc;
 	}
-	checkGate( outSum / frames );
+
 	m_delayControls.m_outPeakL = lPeak;
 	m_delayControls.m_outPeakR = rPeak;
 
-	return isRunning();
+	return true;
 }
 
 void DelayEffect::changeSampleRate()

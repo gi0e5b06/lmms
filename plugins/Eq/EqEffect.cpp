@@ -70,10 +70,10 @@ EqEffect::~EqEffect()
 
 bool EqEffect::processAudioBuffer( sampleFrame *buf, const fpp_t frames )
 {
-	//wet/dry controls
-	const float dry = dryLevel();
-	const float wet = wetLevel();
-	sample_t dryS[2];
+        bool smoothBegin, smoothEnd;
+        if(!shouldProcessAudioBuffer(buf, frames, smoothBegin, smoothEnd))
+                return false;
+
 	// setup sample exact controls
 	float hpRes = m_eqControls.m_hpResModel.value();
 	float lowShelfRes = m_eqControls.m_lowShelfResModel.value();
@@ -167,11 +167,6 @@ bool EqEffect::processAudioBuffer( sampleFrame *buf, const fpp_t frames )
 	float para4Gain = m_eqControls.m_para4GainModel.value();
 	float highShelfGain = m_eqControls.m_highShelfGainModel.value();
 
-	if( !isEnabled() || !isRunning () )
-	{
-		return( false );
-	}
-
 	if( m_eqControls.m_outGainModel.isValueChanged() )
 	{
 		m_outGain = dbfsToAmp(m_eqControls.m_outGainModel.value());
@@ -183,18 +178,12 @@ bool EqEffect::processAudioBuffer( sampleFrame *buf, const fpp_t frames )
 	}
 
 	m_eqControls.m_inProgress = true;
-	double outSum = 0.0;
-
-	for( fpp_t f = 0; f < frames; ++f )
-	{
-		outSum += buf[f][0]*buf[f][0] + buf[f][1]*buf[f][1];
-	}
 
 	const float outGain =  m_outGain;
 	const int sampleRate = Engine::mixer()->processingSampleRate();
 	sampleFrame m_inPeak = { 0, 0 };
 
-	if(m_eqControls.m_analyseInModel.value( true ) &&  outSum > 0 )
+	if(m_eqControls.m_analyseInModel.value( true ) && !smoothEnd) // outSum > 0 )
 	{
 		m_eqControls.m_inFftBands.analyze( buf, frames );
 	}
@@ -209,9 +198,13 @@ bool EqEffect::processAudioBuffer( sampleFrame *buf, const fpp_t frames )
 
 	for( fpp_t f = 0; f < frames; f++)
 	{
-		//wet dry buffer
-		dryS[0] = buf[f][0];
-		dryS[1] = buf[f][1];
+                float w0, d0, w1, d1;
+                computeWetDryLevels(f, frames, smoothBegin, smoothEnd, w0, d0, w1, d1);
+
+		sample_t dryS[2] = { buf[f][0], buf[f][1] };
+                //dryS[0] = buf[f][0];
+		//dryS[1] = buf[f][1];
+
 		if( hpActive )
 		{
 			m_hp12.setParameters( sampleRate, *hpFreqPtr, *hpResPtr, 1 );
@@ -304,8 +297,8 @@ bool EqEffect::processAudioBuffer( sampleFrame *buf, const fpp_t frames )
 		}
 
 		//apply wet / dry levels
-		buf[f][1] = ( dry * dryS[1] ) + ( wet * buf[f][1] );
-		buf[f][0] = ( dry * dryS[0] ) + ( wet * buf[f][0] );
+		buf[f][0] = ( d0 * dryS[0] ) + ( w0 * buf[f][0] );
+		buf[f][1] = ( d1 * dryS[1] ) + ( w1 * buf[f][1] );
 
 		//increment pointers if needed
 		hpResPtr += hpResInc;
@@ -332,9 +325,7 @@ bool EqEffect::processAudioBuffer( sampleFrame *buf, const fpp_t frames )
 	m_eqControls.m_outPeakL = m_eqControls.m_outPeakL < outPeak[0] ? outPeak[0] : m_eqControls.m_outPeakL;
 	m_eqControls.m_outPeakR = m_eqControls.m_outPeakR < outPeak[1] ? outPeak[1] : m_eqControls.m_outPeakR;
 
-	checkGate( outSum / frames );
-
-	if(m_eqControls.m_analyseOutModel.value( true ) && outSum > 0 )
+	if(m_eqControls.m_analyseOutModel.value( true ) && !smoothEnd )//outSum > 0 )
 	{
 		m_eqControls.m_outFftBands.analyze( buf, frames );
 		setBandPeaks( &m_eqControls.m_outFftBands , ( int )( sampleRate ) );
@@ -345,7 +336,8 @@ bool EqEffect::processAudioBuffer( sampleFrame *buf, const fpp_t frames )
 	}
 
 	m_eqControls.m_inProgress = false;
-	return isRunning();
+
+	return true;
 }
 
 

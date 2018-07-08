@@ -1,6 +1,7 @@
 /*
  * EffectView.cpp - view-component for an effect
  *
+ * Copyright (c) 2018 gi0e5b06 (on github.com)
  * Copyright (c) 2006-2007 Danny McRae <khjklujn/at/users.sourceforge.net>
  * Copyright (c) 2007-2014 Tobias Doerffel <tobydox/at/users.sourceforge.net>
  *
@@ -64,7 +65,7 @@ EffectView::EffectView( Effect * _model, QWidget * _parent ) :
 	m_wetDry = new Knob( knobBright_26, this );
 	m_wetDry->setLabel( tr( "D-WET" ) );
 	//m_autoQuit->move( 20, 5 );
-	m_wetDry->setGeometry( 19,5,38,38 );
+	m_wetDry->setGeometry( 19,5,36,36 );
 	m_wetDry->setEnabled( isEnabled );
 	m_wetDry->setHintText( tr( "Wet Level:" ), "" );
 	m_wetDry->setWhatsThis( tr( "The Wet/Dry knob sets the ratio between "
@@ -75,7 +76,7 @@ EffectView::EffectView( Effect * _model, QWidget * _parent ) :
 	m_autoQuit = new TempoSyncKnob( knobBright_26, this );
 	m_autoQuit->setLabel( tr( "DECAY" ) );
 	//m_autoQuit->move( 60, 5 );
-	m_autoQuit->setGeometry( 57,5,38,38 );
+	m_autoQuit->setGeometry( 55,5,36,36 );
 	m_autoQuit->setEnabled( isEnabled );
 	m_autoQuit->setHintText( tr( "Time:" ), "ms" );
 	m_autoQuit->setWhatsThis( tr(
@@ -87,12 +88,22 @@ EffectView::EffectView( Effect * _model, QWidget * _parent ) :
 	m_gate = new Knob( knobBright_26, this );
 	m_gate->setLabel( tr( "GATE" ) );
 	//m_gate->move( 100, 5 );
-	m_gate->setGeometry( 95,5,38,38 );
+	m_gate->setGeometry( 91,5,36,36 );
 	m_gate->setEnabled( isEnabled );
 	m_gate->setHintText( tr( "Gate:" ), "" );
 	m_gate->setWhatsThis( tr(
 "The Gate knob controls the signal level that is considered to be 'silence' "
 "while deciding when to stop processing signals." ) );
+
+
+	m_balance = new Knob( knobBright_26, this );
+	m_balance->setLabel( tr( "BAL." ) );
+	//m_balance->move( 100, 5 );
+	m_balance->setGeometry( 127,5,36,36 );
+	m_balance->setEnabled( isEnabled );
+	m_balance->setHintText( tr( "Balance:" ), "" );
+	m_balance->setWhatsThis( tr(
+"The Balance knob controls how ..." ) );
 
 
 	setModel( _model );
@@ -106,11 +117,14 @@ EffectView::EffectView( Effect * _model, QWidget * _parent ) :
         else
                 //if( effect()->controls()->controlCount() > 0 )
 	{
-		QPushButton * ctls_btn = new QPushButton( tr( "Controls" ),this );
+		//QPushButton * ctls_btn = new QPushButton( tr( "Controls" ),this );
+                QPushButton * ctls_btn = new QPushButton
+                        ( embed::getIconPixmap( "trackop" ),"",this );
 		QFont f = ctls_btn->font();
 		ctls_btn->setFont( pointSize<8>( f ) );
 		//ctls_btn->setGeometry( 140, 14, 50, 20 );
-		ctls_btn->setGeometry( 136, 4, 70, 35 );//41
+		//ctls_btn->setGeometry( 136, 4, 70, 35 );//41
+                ctls_btn->setGeometry( 163+5, 5, 36, 36 );//41
 		connect( ctls_btn, SIGNAL( clicked() ), this, SLOT( editControls() ) );
 	}
 
@@ -304,4 +318,5 @@ void EffectView::modelChanged()
 	m_wetDry->setModel( &effect()->m_wetDryModel );
 	m_autoQuit->setModel( &effect()->m_autoQuitModel );
 	m_gate->setModel( &effect()->m_gateModel );
+	m_balance->setModel( &effect()->m_balanceModel );
 }

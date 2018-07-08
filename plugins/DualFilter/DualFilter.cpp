@@ -75,21 +75,16 @@ DualFilterEffect::~DualFilterEffect()
 
 bool DualFilterEffect::processAudioBuffer( sampleFrame* buf, const fpp_t frames )
 {
-	if( !isEnabled() || !isRunning () )
-	{
-		return( false );
-	}
+        bool smoothBegin, smoothEnd;
+        if(!shouldProcessAudioBuffer(buf, frames, smoothBegin, smoothEnd))
+                return false;
 
-	double outSum = 0.0;
-	const float d = dryLevel();
-	const float w = wetLevel();
-
-    if( m_dfControls.m_filter1Model.isValueChanged() || m_filter1changed )
+        if( m_dfControls.m_filter1Model.isValueChanged() || m_filter1changed )
 	{
 		m_filter1->setFilterType( m_dfControls.m_filter1Model.value() );
 		m_filter1changed = true;
 	}
-    if( m_dfControls.m_filter2Model.isValueChanged() || m_filter2changed )
+        if( m_dfControls.m_filter2Model.isValueChanged() || m_filter2changed )
 	{
 		m_filter2->setFilterType( m_dfControls.m_filter2Model.value() );
 		m_filter2changed = true;
@@ -130,12 +125,13 @@ bool DualFilterEffect::processAudioBuffer( sampleFrame* buf, const fpp_t frames 
 	const bool enabled1 = m_dfControls.m_enabled1Model.value();
 	const bool enabled2 = m_dfControls.m_enabled2Model.value();
 
-	
-	
-
 	// buffer processing loop
 	for( fpp_t f = 0; f < frames; ++f )
 	{
+                float w0, d0, w1, d1;
+                computeWetDryLevels(f, frames, smoothBegin, smoothEnd,
+                                    w0, d0, w1, d1);
+
 		// get mix amounts for wet signals of both filters
 		const float mix2 = ( ( *mixPtr + 1.0f ) * 0.5f );
 		const float mix1 = 1.0f - mix2;
@@ -193,11 +189,10 @@ bool DualFilterEffect::processAudioBuffer( sampleFrame* buf, const fpp_t frames 
 			s[0] += ( s2[0] * mix2 );
 			s[1] += ( s2[1] * mix2 );
 		}
-		outSum += buf[f][0]*buf[f][0] + buf[f][1]*buf[f][1];
 
 		// do another mix with dry signal
-		buf[f][0] = d * buf[f][0] + w * s[0];
-		buf[f][1] = d * buf[f][1] + w * s[1];
+		buf[f][0] = d0 * buf[f][0] + w0 * s[0];
+		buf[f][1] = d1 * buf[f][1] + w1 * s[1];
 
 		//increment pointers
 		cut1Ptr += cut1Inc;
@@ -209,9 +204,7 @@ bool DualFilterEffect::processAudioBuffer( sampleFrame* buf, const fpp_t frames 
 		mixPtr += mixInc;
 	}
 
-	checkGate( outSum / frames );
-
-	return isRunning();
+	return true;
 }
 
 
