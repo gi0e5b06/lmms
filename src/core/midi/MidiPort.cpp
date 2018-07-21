@@ -27,9 +27,12 @@
 
 #include "MidiPort.h"
 #include "MidiClient.h"
+#include "MidiDummy.h"
 #include "Note.h"
 #include "Song.h"
 
+
+static MidiDummy s_dummyClient;
 
 
 MidiPort::MidiPort( const QString& name,
@@ -461,4 +464,7 @@ void MidiPort::updateOutputProgram()
 
 
 
-
+void MidiPort::invalidateClient()
+{
+	m_midiClient = &s_dummyClient;
+}

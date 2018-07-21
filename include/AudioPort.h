@@ -44,7 +44,8 @@ class AudioPort : public ThreadableJob
 public:
 	AudioPort( const QString & _name, bool _has_effect_chain = true,
                    FloatModel * volumeModel = NULL, FloatModel * panningModel = NULL,
-                   BoolModel * mutedModel = NULL, BoolModel * frozenModel = NULL );
+                   BoolModel * mutedModel = NULL, BoolModel * frozenModel = NULL,
+                   BoolModel * clippingModel = NULL );
 	virtual ~AudioPort();
 
 	inline sampleFrame * buffer()
@@ -136,6 +137,7 @@ private:
 	FloatModel * m_panningModel;
 	BoolModel * m_mutedModel;
 	BoolModel * m_frozenModel;
+	BoolModel * m_clippingModel;
 
         SampleBuffer*  m_frozenBuf;
         //sampleFrame* m_frozenBuf;

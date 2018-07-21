@@ -76,6 +76,7 @@
 #include "StringPairDrag.h"
 #include "TrackContainerView.h"
 #include "TrackLabelButton.h"
+#include "lmms_math.h"
 
 
 const char* ITVOLHELP = QT_TRANSLATE_NOOP( "InstrumentTrack",
@@ -106,7 +107,7 @@ InstrumentTrack::InstrumentTrack( TrackContainer* tc ) :
 	m_panningModel( DefaultPanning, PanningLeft, PanningRight, 0.1f, this,
 			tr( "Panning" ) ),
 	m_audioPort( tr( "unnamed_track" ), true, &m_volumeModel,
-		     &m_panningModel, &m_mutedModel, &m_frozenModel ),
+		     &m_panningModel, &m_mutedModel, &m_frozenModel, &m_clippingModel ),
 	m_pitchModel( 0, MinPitchDefault, MaxPitchDefault, 1, this,
 		      tr( "Pitch" ) ),
 	m_pitchRangeModel( 1, 1, 60, this, tr( "Pitch range" ) ),
@@ -232,6 +233,7 @@ void InstrumentTrack::processAudioBuffer( sampleFrame* buf, const fpp_t frames, 
 		const float vol = ( (float) n->getVolume() * DefaultVolumeRatio );
 		const panning_t pan = qBound( PanningLeft, n->getPanning(), PanningRight );
 		stereoVolumeVector vv = panningToVolumeVector( pan, vol );
+                bool clipping=false;
 		for( f_cnt_t f = offset; f < frames; ++f )
 		{
 			for( int c = 0; c < 2; ++c )
@@ -240,6 +242,11 @@ void InstrumentTrack::processAudioBuffer( sampleFrame* buf, const fpp_t frames, 
 			}
 		}
 	}
+
+        if(MixHelpers::sanitize(buf,frames))
+                qInfo("InstrumentTrack: sanitize done!!!");
+        //if(MixHelpers::isClipping(buf,frames))
+        //        setClipping(true);
 }
 
 

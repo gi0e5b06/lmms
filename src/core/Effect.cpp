@@ -24,6 +24,8 @@
  *
  */
 
+#include <cmath>
+
 #include <QDomElement>
 
 #include "Effect.h"
@@ -53,6 +55,8 @@ Effect::Effect( const Plugin::Descriptor * _desc,
     m_autoQuitModel( 0.0f, 0.0f, 8000.0f, 1.0f, 1.0f, this, tr( "Decay" ) ),
     m_autoQuitDisabled( false )
 {
+        m_gateModel.setScaleLogarithmic(true);
+
 	m_srcState[0] = m_srcState[1] = NULL;
 	reinitSRC();
 
@@ -124,6 +128,11 @@ void Effect::loadSettings( const QDomElement & _this )
 	{
 		m_wetDryModel.setValue(-m_wetDryModel.value());
 	}
+
+        if(!isBalanceable())
+                m_balanceModel.setValue(0.f);
+
+        m_gateModel.setScaleLogarithmic(true);
 }
 
 
@@ -155,47 +164,54 @@ Effect * Effect::instantiate( const QString& pluginName,
 
 
 
-bool Effect::gateHasClosed(float _rms)
+bool Effect::gateHasClosed(float& _rms, sampleFrame* _buf, const fpp_t _frames)
 {
 	if(!isAutoQuitEnabled()) return false;
         if(!isRunning()) return false;
 
+        float g=gate();
 	// Check whether we need to continue processing input.  Restart the
 	// counter if the threshold has been exceeded.
-	if( _rms <= gate() ) // <= typeInfo<float>::minEps() )
+	if( g>0.f )
 	{
-		incrementBufferCount();
-		if( !m_gateClosed && (bufferCount() > timeout() ))
-		{
-                        m_gateClosed=true;
-			stopRunning();
-			resetBufferCount();
-                        return true;
-		}
-	}
-	else
-	{
-		resetBufferCount();
+                if(_rms<0.f) _rms=computeRMS(_buf,_frames);
+                if(_rms < g)
+                {
+                        incrementBufferCount();
+                        if( !m_gateClosed && (bufferCount() > timeout() ))
+                        {
+                                m_gateClosed=true;
+                                stopRunning();
+                                resetBufferCount();
+                                return true;
+                        }
+                        else return false;
+                }
 	}
 
+        resetBufferCount();
         return false;
 }
 
 
-bool Effect::gateHasOpen(float _rms)
+bool Effect::gateHasOpen(float& _rms, sampleFrame* _buf, const fpp_t _frames)
 {
 	if(!isAutoQuitEnabled()) return false;
         //if(isRunning()) return false;
 
+        float g=gate();
 	// Check whether we need to continue processing input.  Restart the
 	// counter if the threshold has been exceeded.
-	if( m_gateClosed &&
-            (_rms > qMin(1.2f*gate(),(1.0f+gate())/2.f) )) // <= typeInfo<float>::minEps() )
+	if( m_gateClosed && g<1.f)
 	{
-                m_gateClosed=false;
-                if(!isRunning()) startRunning();
-                resetBufferCount();
-                return true;
+                if(_rms<0.f) _rms=computeRMS(_buf,_frames);
+                if(_rms >= gate())
+                {
+                        m_gateClosed=false;
+                        if(!isRunning()) startRunning();
+                        resetBufferCount();
+                        return true;
+                }
         }
 
         return false;
@@ -211,7 +227,7 @@ float Effect::computeRMS(sampleFrame* _buf, const fpp_t _frames)
         for( fpp_t f = 0; f < _frames; ++f )
                 rms+=_buf[f][0]*_buf[f][0]+_buf[f][1]*_buf[f][1];
         rms/=_frames;
-        return rms;
+        return sqrtf(rms);
 }
 
 
@@ -225,16 +241,16 @@ bool Effect::shouldProcessAudioBuffer(sampleFrame* _buf, const fpp_t _frames,
 
 	if(isAutoQuitEnabled())
         {
-                float rms=computeRMS(_buf,_frames);
-                if(gateHasOpen(rms))
+                float rms=-1.f;
+                if(gateHasOpen(rms,_buf,_frames))
                 {
-                        qInfo("%s: gate open",qPrintable(nodeName()));
+                        //qInfo("%s: gate open",qPrintable(nodeName()));
                         _smoothBegin=true;
                 }
                 else
-                if(gateHasClosed(rms))
+                if(gateHasClosed(rms,_buf,_frames))
                 {
-                        qInfo("%s: gate closed",qPrintable(nodeName()));
+                        //qInfo("%s: gate closed",qPrintable(nodeName()));
                         _smoothEnd=true;
                 }
         }
@@ -266,19 +282,19 @@ void Effect::computeWetDryLevels(fpp_t _f, fpp_t _frames,
 {
         const ValueBuffer* wetDryBuf = m_wetDryModel.valueBuffer();
 
-        float w = (wetDryBuf ? wetDryBuf->value(_f)
-                   : m_wetDryModel.value());
+        float w=(wetDryBuf ? wetDryBuf->value(_f)
+                 : m_wetDryModel.value());
+        float d=1.0f-w;
 
-        //int nsb=_frames;
-        //if(nsb>128) nsb=128;
-        //if(_smoothBegin && _f<nsb)
-        //        w*=1.f*_f/nsb;
+        int nsb=_frames;
+        if(nsb>128) nsb=128;
+        if(_smoothBegin && _f<nsb)
+                w*=1.f*_f/nsb;
         int nse=_frames;
         if(nse>128) nse=128;
         if(_smoothEnd && _f>=_frames-nse)
                 w*=1.f*(_frames-1-_f)/nse;
 
-        float d=1.0f-w;
         if(isGateClosed() &&!_smoothEnd)
         {
                 //w=0.f;

@@ -63,7 +63,7 @@ PeakControllerEffect::PeakControllerEffect(
 	Effect( &peakcontrollereffect_plugin_descriptor, _parent, _key ),
 	m_effectId( rand() ),
 	m_peakControls( this ),
-	m_lastSample( 0 ),
+	m_lastSample( m_peakControls.m_baseModel.value() ),
 	m_autoController( NULL )
 {
 	m_autoController = new PeakController( Engine::getSong(), this );

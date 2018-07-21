@@ -26,15 +26,19 @@
 #include <QFontMetrics>
 #include <QInputDialog>
 #include <QPainter>
+#include <QTime>
 
 #include "LedCheckbox.h"
 #include "embed.h"
 #include "gui_templates.h"
+#include "GuiApplication.h"
+#include "MainWindow.h"
 
 
 static const QString names[LedCheckBox::NumColors] =
 {
-	"led_yellow", "led_green", "led_red", "led_blue"
+	"led_yellow", "led_green", "led_red",
+        "led_blue", "led_magenta", "led_white"
 } ;
 
 
@@ -42,8 +46,9 @@ static const QString names[LedCheckBox::NumColors] =
 
 //! @todo: in C++11, we can use delegating ctors
 #define DEFAULT_LEDCHECKBOX_INITIALIZER_LIST \
-	AutomatableButton( _parent, _name )
-
+	AutomatableButton( _parent, _name ), \
+        m_blinkingState( true ), \
+        m_blinking( false )
 
 LedCheckBox::LedCheckBox( const QString & _text, QWidget * _parent,
 				const QString & _name, LedColors _color ) :
@@ -101,8 +106,18 @@ void LedCheckBox::setTextAnchorPoint(Qt::AnchorPoint _a)
 }
 
 
+
+void LedCheckBox::update()
+{
+        AutomatableButton::update();
+}
+
+
 void LedCheckBox::paintEvent( QPaintEvent * )
 {
+        BoolModel* m=model();
+        if(!m) return;
+
 	QPainter p( this );
 
         QFont ft=pointSize<7>(font());
@@ -154,10 +169,13 @@ void LedCheckBox::paintEvent( QPaintEvent * )
                 p.drawText(xt,yt,text());
         }
 
+        m_blinkingState=(QTime::currentTime().msec()*6/1000)%2==0;
+
         p.drawPixmap(xl,yl,
-                     model()->value()
+                     m && m->value() && (!m_blinking || m_blinkingState)
                      ? *m_ledOnPixmap
                      : *m_ledOffPixmap);
+        //m_blinkingState=!m_blinkingState;
 
         //p.setPen(Qt::red);
         //p.drawRect(0,0,width()-1,height()-1);
@@ -238,4 +256,22 @@ void LedCheckBox::enterValue()
 }
 
 
+bool LedCheckBox::blinking() const
+{
+        return m_blinking;
+}
 
+
+void LedCheckBox::setBlinking(bool _b)
+{
+        if(m_blinking!=_b)
+        {
+                m_blinking=_b;
+                if(_b)
+                        connect(gui->mainWindow(),SIGNAL(periodicUpdate()),
+                                this,SLOT(update()));
+                else
+                        disconnect(gui->mainWindow(),SIGNAL(periodicUpdate()),
+                                   this,SLOT(update()));
+        }
+}

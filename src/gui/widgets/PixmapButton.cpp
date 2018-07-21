@@ -27,18 +27,23 @@
 #include <QInputDialog>
 #include <QMouseEvent>
 #include <QPainter>
+#include <QTime>
 
 #include "PixmapButton.h"
-#include "MainWindow.h"
+//#include "MainWindow.h"
 #include "embed.h"
 #include "Backtrace.h"
+#include "GuiApplication.h"
+#include "MainWindow.h"
 
 
 PixmapButton::PixmapButton( QWidget * _parent, const QString & _name ) :
 	AutomatableButton( _parent, _name ),
 	m_activePixmap(),
 	m_inactivePixmap(),
-	m_pressed( false )
+	m_pressed( false ),
+        m_blinkingState( true ),
+        m_blinking( false )
 {
 	setActiveGraphic  ( embed::getIconPixmap("led_yellow"));
 	setInactiveGraphic( embed::getIconPixmap("led_off"   ),false );
@@ -52,13 +57,21 @@ PixmapButton::~PixmapButton()
 }
 
 
+void PixmapButton::update()
+{
+        AutomatableButton::update();
+}
 
 
 void PixmapButton::paintEvent( QPaintEvent * )
 {
 	QPainter p( this );
 
-	if( ( model() != NULL && model()->value() ) || m_pressed )
+        m_blinkingState=(QTime::currentTime().msec()*6/1000)%2==0;
+
+	if( ( model() != NULL && model()->value()
+              && (!m_blinking || m_blinkingState || (isCheckable() && m_pressed)) )
+            || (!isCheckable() && m_pressed ) )
 	{
 		if( !m_activePixmap.isNull() )
 		{
@@ -73,6 +86,8 @@ void PixmapButton::paintEvent( QPaintEvent * )
 		//	      (size().boundedTo(m_activePixmap.size())));
                 p.drawPixmap(0,0,m_inactivePixmap.scaled(size()));
 	}
+
+        //m_blinkingState=!m_blinkingState;
 
         //p.setPen(Qt::red);
         //p.drawRect(0,0,width()-1,height()-1);
@@ -96,30 +111,18 @@ void PixmapButton::resizeEvent(QResizeEvent * _re)
 void PixmapButton::mousePressEvent( QMouseEvent * _me )
 {
 	// Show pressing graphics if this isn't checkable
-	if( !isCheckable() )
-	{
-		m_pressed = true;
-		update();
-	}
-
+        m_pressed = true;
+	if( !isCheckable() ) update();
 	AutomatableButton::mousePressEvent( _me );
 }
-
-
 
 
 void PixmapButton::mouseReleaseEvent( QMouseEvent * _me )
 {
 	AutomatableButton::mouseReleaseEvent( _me );
-
-	if( !isCheckable() )
-	{
-		m_pressed = false;
-		update();
-	}
+        m_pressed = false;
+	if( !isCheckable() ) update();
 }
-
-
 
 
 void PixmapButton::mouseDoubleClickEvent( QMouseEvent * _me )
@@ -127,8 +130,6 @@ void PixmapButton::mouseDoubleClickEvent( QMouseEvent * _me )
 	emit doubleClicked();
 	_me->accept();
 }
-
-
 
 
 void PixmapButton::setActiveGraphic( const QPixmap & _pm, bool _update )
@@ -139,14 +140,13 @@ void PixmapButton::setActiveGraphic( const QPixmap & _pm, bool _update )
 }
 
 
-
-
 void PixmapButton::setInactiveGraphic( const QPixmap & _pm, bool _update )
 {
 	m_inactivePixmap = _pm;
 	setFixedSize(sizeHint());//resize( sizeHint() );
 	if( _update ) update();
 }
+
 
 QSize PixmapButton::sizeHint() const
 {
@@ -168,7 +168,6 @@ QSize PixmapButton::sizeHint() const
         if(!m_inactivePixmap.isNull()) r=r.expandedTo(m_inactivePixmap.size());
         return r;
 }
-
 
 
 void PixmapButton::enterValue()
@@ -194,4 +193,25 @@ void PixmapButton::enterValue()
 	{
 		m->setValue( new_val );
 	}
+}
+
+
+bool PixmapButton::blinking() const
+{
+        return m_blinking;
+}
+
+
+void PixmapButton::setBlinking(bool _b)
+{
+        if(m_blinking!=_b)
+        {
+                m_blinking=_b;
+                if(_b)
+                        connect(gui->mainWindow(),SIGNAL(periodicUpdate()),
+                                this,SLOT(update()));
+                else
+                        disconnect(gui->mainWindow(),SIGNAL(periodicUpdate()),
+                                   this,SLOT(update()));
+        }
 }

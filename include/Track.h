@@ -497,6 +497,7 @@ private:
 	QPushButton*  m_trackOps;
 	PixmapButton* m_muteBtn;
 	PixmapButton* m_soloBtn;
+	PixmapButton* m_clippingBtn;
 	PixmapButton* m_frozenBtn;
 
 
@@ -516,9 +517,12 @@ class EXPORT Track : public Model, public JournallingObject
 {
 	Q_OBJECT
 	MM_OPERATORS
-	mapPropertyFromModel(bool,isMuted,setMuted,m_mutedModel);
+
+        mapPropertyFromModel(bool,isMuted,setMuted,m_mutedModel);
 	mapPropertyFromModel(bool,isSolo,setSolo,m_soloModel);
         mapPropertyFromModel(bool,isFrozen,setFrozen,m_frozenModel);
+        mapPropertyFromModel(bool,isClipping,setClipping,m_clippingModel);
+
 public:
 	typedef QVector<TrackContentObject *> tcoVector;
 
@@ -650,6 +654,9 @@ public:
         virtual void readFrozenBuffer();
         virtual void writeFrozenBuffer();
 
+        inline const BoolModel* clippingModel() const
+        { return &m_clippingModel; }
+
 
 public slots:
 	virtual void setName( const QString & newName )
@@ -664,6 +671,7 @@ public slots:
 
  protected:
         BoolModel m_frozenModel;
+        BoolModel m_clippingModel;
 	BoolModel m_mutedModel;
 	BoolModel m_soloModel;
 

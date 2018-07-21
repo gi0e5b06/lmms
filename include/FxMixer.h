@@ -47,7 +47,10 @@ class FxChannel : public ThreadableJob
 	// set to true if any effect in the channel is enabled and running
 	bool m_stillRunning;
 
-	Effect* m_eqDJ;
+        BoolModel m_frozenModel;
+        BoolModel m_clippingModel;
+
+        Effect* m_eqDJ;
 	BoolModel m_eqDJEnableModel;
 	//FloatModel m_eqDJHighModel;
 	//FloatModel m_eqDJMediumModel;

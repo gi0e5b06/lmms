@@ -135,6 +135,8 @@ class MidiPort final : public Model, public SerializingObject
 		return m_writablePorts;
 	}
 
+        void invalidateClient();
+
 	MidiPortMenu* m_readablePortsMenu;
 	MidiPortMenu* m_writablePortsMenu;
 

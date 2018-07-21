@@ -191,7 +191,7 @@ MainWindow::MainWindow() :
 	vbox->addWidget( w );
 	setCentralWidget( main_widget );
 
-	m_updateTimer.start( 1000 / 6, this );  // 60 fps
+	m_updateTimer.start( 1000 / 6, this );  // 6 fps
 
 	if( ConfigManager::inst()->value( "ui", "enableautosave" ).toInt() )
 	{
@@ -979,17 +979,19 @@ bool MainWindow::saveProject()
 {
 	if( Engine::getSong()->projectFileName() == "" )
 	{
-		return( saveProjectAs() );
+		return saveProjectAs();
 	}
 	else
+	if( Engine::getSong()->guiSaveProject() )
 	{
-		Engine::getSong()->guiSaveProject();
 		if( getSession() == Recover )
 		{
 			sessionCleanup();
+                        return true;
 		}
 	}
-	return( true );
+
+	return false;
 }
 
 
@@ -1035,14 +1037,16 @@ bool MainWindow::saveProjectAs()
 				}
 			}
 		}
-		Engine::getSong()->guiSaveProjectAs( fname );
-		if( getSession() == Recover )
-		{
-			sessionCleanup();
-		}
-		return( true );
-	}
-	return( false );
+		if( Engine::getSong()->guiSaveProjectAs( fname ) )
+                {
+                        if( getSession() == Recover )
+                        {
+                                sessionCleanup();
+                        }
+                        return true;
+                }
+        }
+        return false;
 }
 
 
@@ -1057,11 +1061,10 @@ bool MainWindow::saveProjectAsNewVersion()
 	}
 	else
 	{
-		do 		VersionedSaveDialog::changeFileNameVersion( fileName, true );
-		while 	( QFile( fileName ).exists() );
+		do VersionedSaveDialog::changeFileNameVersion( fileName, true );
+		while ( QFile( fileName ).exists() );
 
-		Engine::getSong()->guiSaveProjectAs( fileName );
-		return true;
+		return Engine::getSong()->guiSaveProjectAs( fileName );
 	}
 }
 

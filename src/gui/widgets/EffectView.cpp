@@ -105,7 +105,7 @@ EffectView::EffectView( Effect * _model, QWidget * _parent ) :
 	m_balance->setWhatsThis( tr(
 "The Balance knob controls how ..." ) );
 
-
+        m_balance->setVisible(_model->isBalanceable());
 	setModel( _model );
 
         if(!effect())
@@ -314,9 +314,11 @@ void EffectView::paintEvent( QPaintEvent * )
 
 void EffectView::modelChanged()
 {
-	m_bypass->setModel( &effect()->m_enabledModel );
-	m_wetDry->setModel( &effect()->m_wetDryModel );
-	m_autoQuit->setModel( &effect()->m_autoQuitModel );
-	m_gate->setModel( &effect()->m_gateModel );
-	m_balance->setModel( &effect()->m_balanceModel );
+        Effect* e=effect();
+	m_bypass->setModel( &e->m_enabledModel );
+	m_wetDry->setModel( &e->m_wetDryModel );
+	m_autoQuit->setModel( &e->m_autoQuitModel );
+	m_gate->setModel( &e->m_gateModel );
+	m_balance->setModel( &e->m_balanceModel );
+        m_balance->setVisible( e->isBalanceable() );
 }

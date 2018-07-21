@@ -121,8 +121,10 @@ PresetPreviewPlayHandle::PresetPreviewPlayHandle( const QString & _preset_file, 
 	if( s_previewTC->previewNote() != NULL )
 	{
 		s_previewTC->previewNote()->mute();
+                s_previewTC->previewNote()->noteOff();
+                Engine::mixer()->removePlayHandle( s_previewTC->previewNote() );
+		s_previewTC->setPreviewNote( NULL );
 	}
-
 
 	const bool j = Engine::projectJournal()->isJournalling();
 	Engine::projectJournal()->setJournalling( false );

@@ -49,7 +49,7 @@ CPULoadWidget::CPULoadWidget( QWidget * _parent ) :
 	connect( &m_updateTimer, SIGNAL( timeout() ),
                  this, SLOT( updateCpuLoad() ) );
 
-	m_updateTimer.start( 1000 / 6 ); // update cpu-load at 60 fps
+	m_updateTimer.start( 1000 / 6 ); // update cpu-load at 6 fps
 }
 
 

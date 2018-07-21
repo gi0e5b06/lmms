@@ -43,7 +43,14 @@ public:
 
 	QSize sizeHint() const;
 
+        bool blinking() const;
+        void setBlinking(bool _b);
+
         virtual void enterValue();
+
+public slots:
+        virtual void update();
+
 
 signals:
 	void doubleClicked();
@@ -62,6 +69,8 @@ private:
 	QPixmap m_inactivePixmap;
 	bool	m_pressed;
 
+        bool    m_blinkingState;
+        bool    m_blinking;
 } ;
 
 #endif

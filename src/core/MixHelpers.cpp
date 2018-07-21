@@ -23,249 +23,360 @@
  */
 
 #include "MixHelpers.h"
-#include "lmms_math.h"
-#include "ValueBuffer.h"
 
+#include "ValueBuffer.h"
+#include "lmms_math.h"
 
 namespace MixHelpers
 {
 
 /*! \brief Function for applying MIXOP on all sample frames */
-template<typename MIXOP>
-static inline void run( sampleFrame* dst, const sampleFrame* src, int frames, const MIXOP& OP )
+template <typename MIXOP>
+static inline void run(sampleFrame*       dst,
+                       const sampleFrame* src,
+                       int                frames,
+                       const MIXOP&       OP)
 {
-	for( int i = 0; i < frames; ++i )
-	{
-		OP( dst[i], src[i] );
-	}
+    for(int i = 0; i < frames; ++i)
+    {
+        OP(dst[i], src[i]);
+    }
 }
 
 /*! \brief Function for applying MIXOP on all sample frames - split source */
-template<typename MIXOP>
-static inline void run( sampleFrame* dst, const sample_t* srcLeft, const sample_t* srcRight, int frames, const MIXOP& OP )
+template <typename MIXOP>
+static inline void run(sampleFrame*    dst,
+                       const sample_t* srcLeft,
+                       const sample_t* srcRight,
+                       int             frames,
+                       const MIXOP&    OP)
 {
-	for( int i = 0; i < frames; ++i )
-	{
-		const sampleFrame src = { srcLeft[i], srcRight[i] };
-		OP( dst[i], src );
-	}
+    for(int i = 0; i < frames; ++i)
+    {
+        const sampleFrame src = {srcLeft[i], srcRight[i]};
+        OP(dst[i], src);
+    }
 }
 
-
-
-bool isSilent( const sampleFrame* src, int frames )
+/*! \brief Function for detecting silence - returns true if found */
+bool isSilent(const sampleFrame* _src, const f_cnt_t _frames)
 {
-	const float silenceThreshold = 0.0000001f;
+    const sample_t silenceThreshold = 0.0000001f;
 
-	for( int i = 0; i < frames; ++i )
-	{
-		if( fabsf( src[i][0] ) >= silenceThreshold || fabsf( src[i][1] ) >= silenceThreshold )
-		{
-			return false;
-		}
-	}
+    for(f_cnt_t f = 0; f < _frames; ++f)
+    {
+        if(fabsf(_src[f][0]) >= silenceThreshold
+           || fabsf(_src[f][1]) >= silenceThreshold)
+        {
+            return false;
+        }
+    }
 
-	return true;
+    return true;
 }
 
-
-/*! \brief Function for sanitizing a buffer of infs/nans - returns true if those are found */
-bool sanitize( sampleFrame * src, int frames )
+/*! \brief Function for detecting clipping - returns true if found */
+bool isClipping(const sampleFrame* _src, const f_cnt_t _frames)
 {
-	bool found = false;
-	for( int f = 0; f < frames; ++f )
-	{
-		for( int c = 0; c < 2; ++c )
-		{
-			if( isinf( src[f][c] ) || isnan( src[f][c] ) )
-			{
-				src[f][c] = 0.0f;
-				found = true;
-			}
-		}
-	}
-	return found;
+    for(f_cnt_t f = 0; f < _frames; ++f)
+    {
+        if(fabsf(_src[f][0]) > 1.f || fabsf(_src[f][1]) > 1.f)
+        {
+            return true;
+        }
+    }
+    return false;
 }
 
+/*! \brief Function for sanitizing a buffer of infs/nans - returns true if
+ * modified */
+bool sanitize(sampleFrame* _src, const f_cnt_t _frames)
+{
+    bool found = false;
+    for(f_cnt_t f = 0; f < _frames; ++f)
+    {
+        if(isinf(_src[f][0]) || isnan(_src[f][0]))
+        {
+            _src[f][0] = 0.0f;
+            found      = true;
+        }
+        if(isinf(_src[f][1]) || isnan(_src[f][1]))
+        {
+            _src[f][1] = 0.0f;
+            found      = true;
+        }
+    }
+    return found;
+}
+
+/*! \brief Function for unclipping a buffer - returns true if modified */
+bool unclip(sampleFrame* _src, const f_cnt_t _frames)
+{
+    bool found = false;
+    for(f_cnt_t f = 0; f < _frames; ++f)
+    {
+        if(_src[f][0] < -1.f)
+        {
+            _src[f][0] = -1.f;
+            found      = true;
+        }
+        else if(_src[f][0] > 1.f)
+        {
+            _src[f][0] = 1.f;
+            found      = true;
+        }
+        else if(_src[f][1] < -1.f)
+        {
+            _src[f][1] = -1.f;
+            found      = true;
+        }
+        else if(_src[f][1] > 1.f)
+        {
+            _src[f][1] = 1.f;
+            found      = true;
+        }
+    }
+    return found;
+}
+
+void addMultiplied(sampleFrame*       _dst,
+                   const sampleFrame* _src,
+                   const ValueBuffer* _coeffSrcBuf,
+                   const f_cnt_t      _frames)
+{
+    const float* values = _coeffSrcBuf->values();
+    for(f_cnt_t f = 0; f < _frames; ++f)
+    {
+        _dst[f][0] += _src[f][0] * values[f];
+        _dst[f][1] += _src[f][1] * values[f];
+    }
+}
 
 struct AddOp
 {
-	void operator()( sampleFrame& dst, const sampleFrame& src ) const
-	{
-		dst[0] += src[0];
-		dst[1] += src[1];
-	}
-} ;
+    void operator()(sampleFrame& dst, const sampleFrame& src) const
+    {
+        dst[0] += src[0];
+        dst[1] += src[1];
+    }
+};
 
-void add( sampleFrame* dst, const sampleFrame* src, int frames )
+void add(sampleFrame* dst, const sampleFrame* src, int frames)
 {
-	run<>( dst, src, frames, AddOp() );
+    run<>(dst, src, frames, AddOp());
 }
-
-
 
 struct AddMultipliedOp
 {
-	AddMultipliedOp( float coeff ) : m_coeff( coeff ) { }
+    AddMultipliedOp(float coeff) : m_coeff(coeff)
+    {
+    }
 
-	void operator()( sampleFrame& dst, const sampleFrame& src ) const
-	{
-		dst[0] += src[0] * m_coeff;
-		dst[1] += src[1] * m_coeff;
-	}
+    void operator()(sampleFrame& dst, const sampleFrame& src) const
+    {
+        dst[0] += src[0] * m_coeff;
+        dst[1] += src[1] * m_coeff;
+    }
 
-	const float m_coeff;
-} ;
+    const float m_coeff;
+};
 
-
-void addMultiplied( sampleFrame* dst, const sampleFrame* src, float coeffSrc, int frames )
+void addMultiplied(sampleFrame*       dst,
+                   const sampleFrame* src,
+                   float              coeffSrc,
+                   int                frames)
 {
-	run<>( dst, src, frames, AddMultipliedOp(coeffSrc) );
+    run<>(dst, src, frames, AddMultipliedOp(coeffSrc));
 }
-
 
 struct AddSwappedMultipliedOp
 {
-	AddSwappedMultipliedOp( float coeff ) : m_coeff( coeff ) { }
+    AddSwappedMultipliedOp(float coeff) : m_coeff(coeff)
+    {
+    }
 
-	void operator()( sampleFrame& dst, const sampleFrame& src ) const
-	{
-		dst[0] += src[1] * m_coeff;
-		dst[1] += src[0] * m_coeff;
-	}
+    void operator()(sampleFrame& dst, const sampleFrame& src) const
+    {
+        dst[0] += src[1] * m_coeff;
+        dst[1] += src[0] * m_coeff;
+    }
 
-	const float m_coeff;
+    const float m_coeff;
 };
 
-void addSwappedMultiplied( sampleFrame* dst, const sampleFrame* src, float coeffSrc, int frames )
+void addSwappedMultiplied(sampleFrame*       dst,
+                          const sampleFrame* src,
+                          float              coeffSrc,
+                          int                frames)
 {
-	run<>( dst, src, frames, AddSwappedMultipliedOp(coeffSrc) );
+    run<>(dst, src, frames, AddSwappedMultipliedOp(coeffSrc));
 }
 
-
-void addMultipliedByBuffer( sampleFrame* dst, const sampleFrame* src, float coeffSrc, ValueBuffer * coeffSrcBuf, int frames )
+void addMultipliedByBuffer(sampleFrame*       dst,
+                           const sampleFrame* src,
+                           float              coeffSrc,
+                           ValueBuffer*       coeffSrcBuf,
+                           int                frames)
 {
-	for( int f = 0; f < frames; ++f )
-	{
-		dst[f][0] += src[f][0] * coeffSrc * coeffSrcBuf->values()[f];
-		dst[f][1] += src[f][1] * coeffSrc * coeffSrcBuf->values()[f];
-	}
+    for(int f = 0; f < frames; ++f)
+    {
+        dst[f][0] += src[f][0] * coeffSrc * coeffSrcBuf->values()[f];
+        dst[f][1] += src[f][1] * coeffSrc * coeffSrcBuf->values()[f];
+    }
 }
 
-void addMultipliedByBuffers( sampleFrame* dst, const sampleFrame* src, ValueBuffer * coeffSrcBuf1, ValueBuffer * coeffSrcBuf2, int frames )
+void addMultipliedByBuffers(sampleFrame*       dst,
+                            const sampleFrame* src,
+                            ValueBuffer*       coeffSrcBuf1,
+                            ValueBuffer*       coeffSrcBuf2,
+                            int                frames)
 {
-	for( int f = 0; f < frames; ++f )
-	{
-		dst[f][0] += src[f][0] * coeffSrcBuf1->values()[f] * coeffSrcBuf2->values()[f];
-		dst[f][1] += src[f][1] * coeffSrcBuf1->values()[f] * coeffSrcBuf2->values()[f];
-	}
-
+    for(int f = 0; f < frames; ++f)
+    {
+        dst[f][0] += src[f][0] * coeffSrcBuf1->values()[f]
+                     * coeffSrcBuf2->values()[f];
+        dst[f][1] += src[f][1] * coeffSrcBuf1->values()[f]
+                     * coeffSrcBuf2->values()[f];
+    }
 }
 
-void addSanitizedMultipliedByBuffer( sampleFrame* dst, const sampleFrame* src, float coeffSrc, ValueBuffer * coeffSrcBuf, int frames )
+void addSanitized(sampleFrame*       _dst,
+                  const sampleFrame* _src,
+                  const f_cnt_t      _frames)
 {
-	for( int f = 0; f < frames; ++f )
-	{
-		dst[f][0] += ( isinf( src[f][0] ) || isnan( src[f][0] ) ) ? 0.0f : src[f][0] * coeffSrc * coeffSrcBuf->values()[f];
-		dst[f][1] += ( isinf( src[f][1] ) || isnan( src[f][1] ) ) ? 0.0f : src[f][1] * coeffSrc * coeffSrcBuf->values()[f];
-	}
+    for(f_cnt_t f = 0; f < _frames; ++f)
+    {
+        _dst[f][0]
+                += (isinf(_src[f][0]) || isnan(_src[f][0])) ? 0.0f : _src[f][0];
+        _dst[f][1]
+                += (isinf(_src[f][1]) || isnan(_src[f][1])) ? 0.0f : _src[f][1];
+    }
 }
 
-void addSanitizedMultipliedByBuffers( sampleFrame* dst, const sampleFrame* src, ValueBuffer * coeffSrcBuf1, ValueBuffer * coeffSrcBuf2, int frames )
+void addSanitizedMultipliedByBuffer(sampleFrame*       dst,
+                                    const sampleFrame* src,
+                                    float              coeffSrc,
+                                    ValueBuffer*       coeffSrcBuf,
+                                    int                frames)
 {
-	for( int f = 0; f < frames; ++f )
-	{
-		dst[f][0] += ( isinf( src[f][0] ) || isnan( src[f][0] ) )
-			? 0.0f
-			: src[f][0] * coeffSrcBuf1->values()[f] * coeffSrcBuf2->values()[f];
-		dst[f][1] += ( isinf( src[f][1] ) || isnan( src[f][1] ) )
-			? 0.0f
-			: src[f][1] * coeffSrcBuf1->values()[f] * coeffSrcBuf2->values()[f];
-	}
-
+    for(int f = 0; f < frames; ++f)
+    {
+        dst[f][0]
+                += (isinf(src[f][0]) || isnan(src[f][0]))
+                           ? 0.0f
+                           : src[f][0] * coeffSrc * coeffSrcBuf->values()[f];
+        dst[f][1]
+                += (isinf(src[f][1]) || isnan(src[f][1]))
+                           ? 0.0f
+                           : src[f][1] * coeffSrc * coeffSrcBuf->values()[f];
+    }
 }
 
+void addSanitizedMultipliedByBuffers(sampleFrame*       dst,
+                                     const sampleFrame* src,
+                                     ValueBuffer*       coeffSrcBuf1,
+                                     ValueBuffer*       coeffSrcBuf2,
+                                     int                frames)
+{
+    for(int f = 0; f < frames; ++f)
+    {
+        dst[f][0] += (isinf(src[f][0]) || isnan(src[f][0]))
+                             ? 0.0f
+                             : src[f][0] * coeffSrcBuf1->values()[f]
+                                       * coeffSrcBuf2->values()[f];
+        dst[f][1] += (isinf(src[f][1]) || isnan(src[f][1]))
+                             ? 0.0f
+                             : src[f][1] * coeffSrcBuf1->values()[f]
+                                       * coeffSrcBuf2->values()[f];
+    }
+}
 
 struct AddSanitizedMultipliedOp
 {
-	AddSanitizedMultipliedOp( float coeff ) : m_coeff( coeff ) { }
+    AddSanitizedMultipliedOp(float coeff) : m_coeff(coeff)
+    {
+    }
 
-	void operator()( sampleFrame& dst, const sampleFrame& src ) const
-	{
-		dst[0] += ( isinf( src[0] ) || isnan( src[0] ) ) ? 0.0f : src[0] * m_coeff;
-		dst[1] += ( isinf( src[1] ) || isnan( src[1] ) ) ? 0.0f : src[1] * m_coeff;
-	}
+    void operator()(sampleFrame& dst, const sampleFrame& src) const
+    {
+        dst[0] += (isinf(src[0]) || isnan(src[0])) ? 0.0f : src[0] * m_coeff;
+        dst[1] += (isinf(src[1]) || isnan(src[1])) ? 0.0f : src[1] * m_coeff;
+    }
 
-	const float m_coeff;
+    const float m_coeff;
 };
 
-void addSanitizedMultiplied( sampleFrame* dst, const sampleFrame* src, float coeffSrc, int frames )
+void addSanitizedMultiplied(sampleFrame*       dst,
+                            const sampleFrame* src,
+                            float              coeffSrc,
+                            int                frames)
 {
-	run<>( dst, src, frames, AddSanitizedMultipliedOp(coeffSrc) );
+    run<>(dst, src, frames, AddSanitizedMultipliedOp(coeffSrc));
 }
-
-
 
 struct AddMultipliedStereoOp
 {
-	AddMultipliedStereoOp( float coeffLeft, float coeffRight )
-	{
-		m_coeffs[0] = coeffLeft;
-		m_coeffs[1] = coeffRight;
-	}
+    AddMultipliedStereoOp(float coeffLeft, float coeffRight)
+    {
+        m_coeffs[0] = coeffLeft;
+        m_coeffs[1] = coeffRight;
+    }
 
-	void operator()( sampleFrame& dst, const sampleFrame& src ) const
-	{
-		dst[0] += src[0] * m_coeffs[0];
-		dst[1] += src[1] * m_coeffs[1];
-	}
+    void operator()(sampleFrame& dst, const sampleFrame& src) const
+    {
+        dst[0] += src[0] * m_coeffs[0];
+        dst[1] += src[1] * m_coeffs[1];
+    }
 
-	float m_coeffs[2];
-} ;
+    float m_coeffs[2];
+};
 
-
-void addMultipliedStereo( sampleFrame* dst, const sampleFrame* src, float coeffSrcLeft, float coeffSrcRight, int frames )
+void addMultipliedStereo(sampleFrame*       dst,
+                         const sampleFrame* src,
+                         float              coeffSrcLeft,
+                         float              coeffSrcRight,
+                         int                frames)
 {
 
-	run<>( dst, src, frames, AddMultipliedStereoOp(coeffSrcLeft, coeffSrcRight) );
+    run<>(dst, src, frames,
+          AddMultipliedStereoOp(coeffSrcLeft, coeffSrcRight));
 }
-
-
-
-
 
 struct MultiplyAndAddMultipliedOp
 {
-	MultiplyAndAddMultipliedOp( float coeffDst, float coeffSrc )
-	{
-		m_coeffs[0] = coeffDst;
-		m_coeffs[1] = coeffSrc;
-	}
+    MultiplyAndAddMultipliedOp(float coeffDst, float coeffSrc)
+    {
+        m_coeffs[0] = coeffDst;
+        m_coeffs[1] = coeffSrc;
+    }
 
-	void operator()( sampleFrame& dst, const sampleFrame& src ) const
-	{
-		dst[0] = dst[0]*m_coeffs[0] + src[0]*m_coeffs[1];
-		dst[1] = dst[1]*m_coeffs[0] + src[1]*m_coeffs[1];
-	}
+    void operator()(sampleFrame& dst, const sampleFrame& src) const
+    {
+        dst[0] = dst[0] * m_coeffs[0] + src[0] * m_coeffs[1];
+        dst[1] = dst[1] * m_coeffs[0] + src[1] * m_coeffs[1];
+    }
 
-	float m_coeffs[2];
-} ;
+    float m_coeffs[2];
+};
 
-
-void multiplyAndAddMultiplied( sampleFrame* dst, const sampleFrame* src, float coeffDst, float coeffSrc, int frames )
+void multiplyAndAddMultiplied(sampleFrame*       dst,
+                              const sampleFrame* src,
+                              float              coeffDst,
+                              float              coeffSrc,
+                              int                frames)
 {
-	run<>( dst, src, frames, MultiplyAndAddMultipliedOp(coeffDst, coeffSrc) );
+    run<>(dst, src, frames, MultiplyAndAddMultipliedOp(coeffDst, coeffSrc));
 }
 
-
-
-void multiplyAndAddMultipliedJoined( sampleFrame* dst,
-										const sample_t* srcLeft,
-										const sample_t* srcRight,
-										float coeffDst, float coeffSrc, int frames )
+void multiplyAndAddMultipliedJoined(sampleFrame*    dst,
+                                    const sample_t* srcLeft,
+                                    const sample_t* srcRight,
+                                    float           coeffDst,
+                                    float           coeffSrc,
+                                    int             frames)
 {
-	run<>( dst, srcLeft, srcRight, frames, MultiplyAndAddMultipliedOp(coeffDst, coeffSrc) );
+    run<>(dst, srcLeft, srcRight, frames,
+          MultiplyAndAddMultipliedOp(coeffDst, coeffSrc));
 }
 
-}
-
+}  // namespace MixHelpers

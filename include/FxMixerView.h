@@ -55,7 +55,9 @@ public:
 
 		void setChannelIndex( int index );
 
-		//Effect*       m_eq;
+                PixmapButton* m_frozenBtn;
+                PixmapButton* m_clippingBtn;
+
 		PixmapButton* m_eqEnableBtn;
 		Knob*         m_eqHighKnob;
 		Knob*         m_eqMediumKnob;

@@ -35,7 +35,7 @@
 #include "Song.h"
 
 
-const int FxLine::FxLineHeight    =427;//287
+const int FxLine::FxLineHeight    =457;//287
 QPixmap*  FxLine::s_sendBgArrow   =NULL;
 QPixmap*  FxLine::s_receiveBgArrow=NULL;
 

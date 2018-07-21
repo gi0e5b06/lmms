@@ -472,12 +472,12 @@ void Knob::drawKnob(QPainter* _p)
         FloatModel* m=model();
         if(!m)
         {
-                qInfo("Knob::drawKnob NO MODEL p=%p",this);
+                //qInfo("Knob::drawKnob NO MODEL p=%p",this);
                 return;
         }
         if(!isVisible())
         {
-                qInfo("Knob::drawKnob NOT VISIBLE p=%p",this);
+                //qInfo("Knob::drawKnob NOT VISIBLE p=%p",this);
                 clearCache();
                 return;
         }

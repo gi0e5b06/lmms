@@ -151,10 +151,6 @@ public:
 
 
 protected:
-	bool gateHasClosed(float _rms);
-	bool gateHasOpen(float _rms);
-        float computeRMS(sampleFrame* _buf, const fpp_t _frames);
-
 	inline bool isAutoQuitEnabled() const
         {
                 return !m_autoQuitDisabled;
@@ -225,6 +221,10 @@ protected:
 
 
  private:
+	bool gateHasClosed(float& _rms, sampleFrame* _buf, const fpp_t _frames);
+	bool gateHasOpen(float& _rms, sampleFrame* _buf, const fpp_t _frames);
+        float computeRMS(sampleFrame* _buf, const fpp_t _frames);
+
         bool m_gateClosed;
 	EffectChain * m_parent;
 	void resample( int _i, const sampleFrame * _src_buf,

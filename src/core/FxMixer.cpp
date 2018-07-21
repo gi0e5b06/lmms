@@ -70,6 +70,8 @@ FxChannel::FxChannel( int idx, Model * _parent ) :
 	m_fxChain( NULL ),
 	m_hasInput( false ),
 	m_stillRunning( false ),
+	m_frozenModel( false, _parent ),
+	m_clippingModel( false, _parent ),
 	m_eqDJ( NULL ),
 	m_eqDJEnableModel( false, _parent ),
 	//m_eqDJHighModel  ( 0.f, -70.f, 0.f, 1.f, _parent ),
@@ -232,6 +234,8 @@ void FxChannel::doProcessing()
 
                 m_stillRunning = m_fxChain.processAudioBuffer( m_buffer, fpp, m_hasInput );
 
+                // should freeze here
+
                 if(m_eqDJ && /*m_stillRunning && m_hasInput &&*/ m_eqDJEnableModel.value())
                 {
                         m_eqDJ->startRunning();
@@ -249,8 +253,15 @@ void FxChannel::doProcessing()
                         Engine::mixer()->getPeakValues( m_buffer, fpp, peakLeft, peakRight );
                         m_peakLeft =qMax(m_peakLeft ,peakLeft *v);
                         m_peakRight=qMax(m_peakRight,peakRight*v);
+
                         //if(m_channelIndex==1)
                         //      qInfo("ch1 peaks=%f,%f",m_peakLeft,m_peakRight);
+
+                        if(m_peakLeft>1.f || m_peakRight>1.f)
+                        {
+                                qInfo("ch #%d clipping",m_channelIndex);
+                                m_clippingModel.setValue(true);
+                        }
                 }
         }
         else
@@ -711,6 +722,7 @@ void FxMixer::masterMix( sampleFrame * _buf )
 		MixerWorkerThread::startAndWaitForJobs();
 	}
 
+        /*
 	// handle sample-exact data in master volume fader
 	ValueBuffer * volBuf = m_fxChannels[0]->m_volumeModel.valueBuffer();
 
@@ -727,6 +739,33 @@ void FxMixer::masterMix( sampleFrame * _buf )
 		? 1.0f
 		: m_fxChannels[0]->m_volumeModel.value();
 	MixHelpers::addSanitizedMultiplied( _buf, m_fxChannels[0]->m_buffer, v, fpp );
+        */
+
+        if(MixHelpers::sanitize(m_fxChannels[0]->m_buffer,fpp))
+                qWarning("FxMixer: sanitize #1: inf/nan found");
+
+	ValueBuffer* volBuf=m_fxChannels[0]->m_volumeModel.valueBuffer();
+        if(volBuf)
+        {
+                MixHelpers::addMultiplied(_buf, m_fxChannels[0]->m_buffer, volBuf, fpp);
+        }
+        else
+        {
+                const float volVal=m_fxChannels[0]->m_volumeModel.value();
+                if(volVal==0.f)
+                        ;
+                else
+                if(volVal==1.f)
+                        MixHelpers::add(_buf, m_fxChannels[0]->m_buffer, fpp);
+                else
+                        MixHelpers::addMultiplied(_buf, m_fxChannels[0]->m_buffer, volVal, fpp);
+        }
+
+        if(MixHelpers::sanitize(_buf,fpp))
+                qWarning("FxMixer: sanitize #2: inf/nan found");
+
+        if(MixHelpers::isClipping(_buf,fpp))
+                m_fxChannels[0]->m_clippingModel.setValue(true);
 
 	// clear all channel buffers and
 	// reset channel process state

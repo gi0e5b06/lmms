@@ -1144,13 +1144,9 @@ void TrackContentObjectView::contextMenuEvent( QContextMenuEvent * cme )
 					tr( "Paste" ), m_tco, SLOT( paste() ) );
 	contextMenu.addSeparator();
 	contextMenu.addAction( embed::getIconPixmap( "muted" ),
-			       tr( "Mute/unmute (<%1> + middle click)" ).arg(
-#ifdef LMMS_BUILD_APPLE
-									     "⌘"),
-#else
-			       "Ctrl"),
-#endif
-		m_tco, SLOT( toggleMute() ) );
+			       tr( "Mute/unmute (<%1> + middle click)" )
+                               .arg(UI_CTRL_KEY),
+                               m_tco, SLOT( toggleMute() ) );
 	constructContextMenu( &contextMenu );
 
 	contextMenu.exec( QCursor::pos() );
@@ -1927,7 +1923,7 @@ TrackOperationsWidget::TrackOperationsWidget( TrackView * parent ) :
 	ToolTip::add( m_muteBtn, tr( "Mute this track" ) );
 
 	m_soloBtn = new PixmapButton( this, tr( "Solo" ) );
-	m_soloBtn->setActiveGraphic( embed::getIconPixmap( "led_red" ) );
+	m_soloBtn->setActiveGraphic( embed::getIconPixmap( "led_magenta" ) );
 	m_soloBtn->setInactiveGraphic( embed::getIconPixmap( "led_off" ) );
         m_soloBtn->setCheckable( true );
 	ToolTip::add( m_soloBtn, tr( "Solo" ) );
@@ -1938,17 +1934,26 @@ TrackOperationsWidget::TrackOperationsWidget( TrackView * parent ) :
         m_frozenBtn->setCheckable( true );
 	ToolTip::add( m_frozenBtn, tr( "Frozen" ) );
 
+	m_clippingBtn = new PixmapButton( this, tr( "Clipping" ) );
+	m_clippingBtn->setActiveGraphic( embed::getIconPixmap( "led_red" ) );
+	m_clippingBtn->setInactiveGraphic( embed::getIconPixmap( "led_off" ) );
+        m_clippingBtn->setCheckable( true );
+        m_clippingBtn->setBlinking( true );
+	ToolTip::add( m_clippingBtn, tr( "Clipping" ) );
+
 	if(ConfigManager::inst()->value("ui","compacttrackbuttons").toInt())
 	{
-		m_muteBtn  ->setGeometry(45, 0,16,14);
-		m_soloBtn  ->setGeometry(45,16,16,14);
-		m_frozenBtn->setGeometry(45,32,16,14);
+		m_muteBtn    ->setGeometry(45, 0,10,14);
+		m_soloBtn    ->setGeometry(45,16,10,14);
+		m_frozenBtn  ->setGeometry(55, 0,10,14);
+		m_clippingBtn->setGeometry(55,16,10,14);
 	}
 	else
 	{
-		m_muteBtn  ->move(45,4);//setGeometry(45, 4,16,14);
-		m_soloBtn  ->move(62,4);//setGeometry(62, 4,16,14);
-		m_frozenBtn->move(62,18);//setGeometry(62,18,16,14);
+		m_muteBtn    ->move(45, 4);//setGeometry(45, 4,16,14);
+		m_soloBtn    ->move(45,18);//setGeometry(62, 4,16,14);
+		m_clippingBtn->move(62, 4);//setGeometry(62,18,16,14);
+		m_frozenBtn  ->move(62,18);//setGeometry(62,18,16,14);
 	}
 
         //(m_trackView->getTrack()->type()!=Track::InstrumentTrack)||
@@ -2090,6 +2095,7 @@ void TrackOperationsWidget::cloneTrack()
 
         if(newTrack->isSolo()) newTrack->setSolo(false);
         if(newTrack->isFrozen()) newTrack->setFrozen(false);
+        if(newTrack->isClipping()) newTrack->setClipping(false);
 }
 
 
@@ -2332,6 +2338,8 @@ Track::Track( TrackTypes type, TrackContainer * tc ) :
 	Model( tc ),                   /*!< The track Model */
 	m_frozenModel( false, this, tr( "Frozen" ) ),
 					/*!< For controlling track freezing */
+	m_clippingModel( false, this, tr( "Clipping" ) ),
+					/*!< For showing track clipping alerts */
 	m_mutedModel( false, this, tr( "Mute" ) ),
 					 /*!< For controlling track muting */
 	m_soloModel( false, this, tr( "Solo" ) ),
@@ -3013,6 +3021,9 @@ TrackView::TrackView( Track * track, TrackContainerView * tcv ) :
 	connect( &m_track->m_frozenModel, SIGNAL( dataChanged() ),
 		 &m_trackContentWidget, SLOT( update() ) );
 
+	connect( &m_track->m_clippingModel, SIGNAL( dataChanged() ),
+		 &m_trackContentWidget, SLOT( update() ) );
+
 	// create views for already existing TCOs
 	for( Track::tcoVector::iterator it =
 					m_track->m_trackContentObjects.begin();
@@ -3099,6 +3110,7 @@ void TrackView::modelChanged()
 	m_trackOperationsWidget.m_muteBtn->setModel( &m_track->m_mutedModel );
 	m_trackOperationsWidget.m_soloBtn->setModel( &m_track->m_soloModel );
 	m_trackOperationsWidget.m_frozenBtn->setModel( &m_track->m_frozenModel );
+	m_trackOperationsWidget.m_clippingBtn->setModel( &m_track->m_clippingModel );
 	ModelView::modelChanged();
 	setFixedHeight( m_track->getHeight() );
 }

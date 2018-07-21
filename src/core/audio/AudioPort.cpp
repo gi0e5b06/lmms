@@ -35,11 +35,13 @@
 #include "Song.h"
 #include "BufferManager.h"
 #include "SampleBuffer.h"
+#include "NotePlayHandle.h"
 
 
 AudioPort::AudioPort( const QString & _name, bool _has_effect_chain,
 		FloatModel * volumeModel, FloatModel * panningModel,
-                      BoolModel * mutedModel, BoolModel * frozenModel ) :
+                      BoolModel * mutedModel, BoolModel * frozenModel,
+                      BoolModel * clippingModel) :
 	m_bufferUsage( false ),
 	m_portBuffer( BufferManager::acquire() ),
 	m_extOutputEnabled( false ),
@@ -50,6 +52,7 @@ AudioPort::AudioPort( const QString & _name, bool _has_effect_chain,
 	m_panningModel( panningModel ),
 	m_mutedModel( mutedModel ),
 	m_frozenModel( frozenModel ),
+	m_clippingModel( clippingModel ),
         m_frozenBuf( NULL )
 {
 	Engine::mixer()->addAudioPort( this );
@@ -328,6 +331,11 @@ void AudioPort::doProcessing()
                         }
                 }
 
+                if(MixHelpers::sanitize(m_portBuffer,fpp))
+                        qInfo("AudioPort: sanitize done!!!");
+                if(m_clippingModel && MixHelpers::isClipping(m_portBuffer,fpp))
+                        m_clippingModel->setValue(true);
+
                 // send output to fx mixer
 		Engine::fxMixer()->mixToChannel( m_portBuffer, m_nextFxChannel );
                 // TODO: improve the flow here - convert to pull model
@@ -348,10 +356,12 @@ void AudioPort::removePlayHandle( PlayHandle * handle )
 {
 	m_playHandleLock.lock();
         PlayHandleList::Iterator it =	qFind( m_playHandles.begin(), m_playHandles.end(), handle );
-		if( it != m_playHandles.end() )
-		{
-			m_playHandles.erase( it );
-		}
+        if( it != m_playHandles.end() )
+	{
+                NotePlayHandle* nph=dynamic_cast<NotePlayHandle*>(*it);
+                if(nph && !nph->isReleased()) nph->noteOff(0);
+                m_playHandles.erase( it );
+        }
 	m_playHandleLock.unlock();
 }
 

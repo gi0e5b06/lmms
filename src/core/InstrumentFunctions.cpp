@@ -478,10 +478,11 @@ bool InstrumentFunctionArpeggio::processNote(NotePlayHandle* _n)
     if(!shouldProcessNote(_n))
         return true;
 
-    if(  //_n->origin() == NotePlayHandle::OriginArpeggio ||
-         //_n->origin() == NotePlayHandle::OriginNoteStacking ||
-            (_n->isReleased()
-             && _n->releaseFramesDone() >= _n->actualReleaseFramesToDo()))
+    //if( _n->origin() == NotePlayHandle::OriginArpeggio ||
+    //    _n->origin() == NotePlayHandle::OriginNoteStacking ||
+    //    (_n->isReleased()
+    //     && _n->releaseFramesDone() >= _n->actualReleaseFramesToDo()))
+    if(_n->isReleased())
     {
         return true;
     }
@@ -568,7 +569,6 @@ bool InstrumentFunctionArpeggio::processNote(NotePlayHandle* _n)
         // Skip notes randomly
         if(m_arpSkipModel.value())
         {
-
             if(100 * ((float)rand() / (float)(RAND_MAX + 1.0f))
                < m_arpSkipModel.value())
             {
@@ -661,12 +661,6 @@ bool InstrumentFunctionArpeggio::processNote(NotePlayHandle* _n)
             continue;
         }
 
-        float vol_level = 1.0f;
-        if(_n->isReleased())
-        {
-            vol_level = _n->volumeLevel(cur_frame + gated_frames);
-        }
-
         // create new arp-note
 
         // if(MM_SAFE(NotePlayHandle,1))
@@ -674,8 +668,7 @@ bool InstrumentFunctionArpeggio::processNote(NotePlayHandle* _n)
             // Note subnote( _n->length(), 0, subnote_key, _n->getVolume(),
             // _n->getPanning(), _n->detuning() );
             Note subnote(/*MidiTime( 0 ), MidiTime( 0 ),*/
-                         _n->length(), 0, subnote_key,
-                         (volume_t)qRound(_n->getVolume() * vol_level),
+                         _n->length(), 0, subnote_key, _n->getVolume(),
                          _n->getPanning(), _n->detuning());
 
             // create sub-note-play-handle, only ptr to note is different
