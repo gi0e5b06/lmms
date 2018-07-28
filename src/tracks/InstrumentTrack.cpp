@@ -113,6 +113,7 @@ InstrumentTrack::InstrumentTrack( TrackContainer* tc ) :
 	m_pitchRangeModel( 1, 1, 60, this, tr( "Pitch range" ) ),
 	m_effectChannelModel( 0, 0, 0, this, tr( "FX channel" ) ),
 	m_useMasterPitchModel( true, this, tr( "Master Pitch") ),
+	m_noteDetuneModel( 0.f, -48.f, 48.f, 0.5f, this, tr( "Detune" ) ),
 	m_instrument( NULL ),
 	m_soundShaping( this ),
         /*
@@ -154,6 +155,8 @@ InstrumentTrack::InstrumentTrack( TrackContainer* tc ) :
 		 this, SLOT( updatePitchRange() ) );
 	connect( &m_effectChannelModel, SIGNAL( dataChanged() ),
 		 this, SLOT( updateEffectChannel() ) );
+	connect( &m_noteDetuneModel, SIGNAL( dataChanged() ),
+		 this, SLOT( updatePitch() ) );
 }
 
 
@@ -212,7 +215,7 @@ void InstrumentTrack::processAudioBuffer( sampleFrame* buf, const fpp_t frames, 
 		m_silentBuffersProcessed = false;
 	}
 
-	// if effects "went to sleep" because there was no input, wake them up
+        // if effects "went to sleep" because there was no input, wake them up
 	// now
 	m_audioPort.effects()->startRunning();
 
@@ -450,6 +453,7 @@ void InstrumentTrack::processOutEvent( const MidiEvent& event, const MidiTime& t
 		if( key >= 0 && key < NumKeys && --m_runningMidiNotes[key] <= 0 )
 		{
 			m_instrument->handleMidiEvent( MidiEvent( MidiNoteOff, midiPort()->outputChannel()-1, key, 0 ), time, offset );
+                        m_noteDetuneModel.setValue(0);
 		}
 		m_midiNotesMutex.unlock();
 		break;
@@ -627,8 +631,10 @@ void InstrumentTrack::updateBaseNote()
 void InstrumentTrack::updatePitch()
 {
 	updateBaseNote();
-
-	processOutEvent( MidiEvent( MidiPitchBend, midiPort()->outputChannel()-1, midiPitch() ) );
+        const int p=midiPitch();
+        //qInfo("InstrumentTrack::updatePitch %d",p);
+	processOutEvent( MidiEvent( MidiPitchBend, midiPort()->outputChannel()-1,
+                                    p&0x7F, (p>>7)&0x7F ) );
 }
 
 
@@ -672,6 +678,17 @@ void InstrumentTrack::removeMidiPortNode( DataFile & _dataFile )
 {
 	QDomNodeList n = _dataFile.elementsByTagName( "midiport" );
 	n.item( 0 ).parentNode().removeChild( n.item( 0 ) );
+}
+
+
+
+
+int InstrumentTrack::midiPitch() const
+{
+        const float r=( ( m_pitchModel.value() + m_pitchModel.range()/2 )
+                        + 100.f * m_noteDetuneModel.value() ) / m_pitchModel.range();
+        //qInfo("InstrumentTrack::midiPitch %d",r);
+        return MidiMaxPitchBend * qBound(0.f,r,1.f);
 }
 
 

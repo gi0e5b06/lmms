@@ -22,13 +22,59 @@
  *
  */
 
-
 #include "InstrumentPlayHandle.h"
+
 #include "InstrumentTrack.h"
 
-InstrumentPlayHandle::InstrumentPlayHandle( Instrument * instrument, InstrumentTrack* instrumentTrack ) :
-		PlayHandle( TypeInstrumentPlayHandle ),
-		m_instrument( instrument )
+InstrumentPlayHandle::InstrumentPlayHandle(Instrument*      instrument,
+                                           InstrumentTrack* instrumentTrack) :
+      PlayHandle(TypeInstrumentPlayHandle),
+      m_instrument(instrument)
 {
-	setAudioPort( instrumentTrack->audioPort() );
+    setAudioPort(instrumentTrack->audioPort());
+}
+
+void InstrumentPlayHandle::play(sampleFrame* _working_buffer)
+{
+    // if the instrument is midi-based, we can safely render right away
+    /*
+    if( m_instrument->flags() & Instrument::IsMidiBased )
+    {
+            m_instrument->play( _working_buffer );
+            return;
+    }
+    */
+
+    // if not, we need to ensure that all our nph's have been processed first
+    ConstNotePlayHandleList nphv = NotePlayHandle::nphsOfInstrumentTrack(
+            m_instrument->instrumentTrack(), true);
+
+    float ndm = m_instrument->instrumentTrack()->noteDetuneModel()->value();
+
+    bool nphsLeft;
+    do
+    {
+        nphsLeft = false;
+        for(const NotePlayHandle* constNotePlayHandle : nphv)
+        {
+            NotePlayHandle* notePlayHandle
+                    = const_cast<NotePlayHandle*>(constNotePlayHandle);
+            if(notePlayHandle->state() != ThreadableJob::Done
+               && !notePlayHandle->isFinished())
+            {
+                nphsLeft = true;
+                notePlayHandle->process();
+                ndm = notePlayHandle->baseDetune();
+            }
+        }
+    } while(nphsLeft);
+
+    if(m_instrument->flags().testFlag(Instrument::IsMidiBased) == true)
+    {
+        // qInfo("InstrumentPlayHandle::processAudioBuffer
+        // baseDetune=%f",ndm);
+        m_instrument->instrumentTrack()->noteDetuneModel()->setValue(ndm);
+    }
+
+    m_instrument->play(_working_buffer);
 }

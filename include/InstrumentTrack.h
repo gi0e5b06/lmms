@@ -119,10 +119,7 @@ public:
 	int masterKey( int _midi_key ) const;
 
 	// translate pitch to midi-pitch [0,16383]
-	int midiPitch() const
-	{
-		return static_cast<int>( ( ( m_pitchModel.value() + m_pitchModel.range()/2 ) * MidiMaxPitchBend ) / m_pitchModel.range() );
-	}
+	int midiPitch() const;
 
 	/*! \brief Returns current range for pitch bend in semitones */
 	int midiPitchRange() const
@@ -223,6 +220,11 @@ public:
 		return &m_effectChannelModel;
 	}
 
+	FloatModel * noteDetuneModel()
+	{
+		return &m_noteDetuneModel;
+	}
+
 	void setPreviewMode( const bool );
 
         virtual void cleanFrozenBuffer();
@@ -282,7 +284,7 @@ private:
 	IntModel m_pitchRangeModel;
 	IntModel m_effectChannelModel;
 	BoolModel m_useMasterPitchModel;
-
+        FloatModel m_noteDetuneModel; // for midi instr.
 
 	Instrument * m_instrument;
 	InstrumentSoundShaping m_soundShaping;
