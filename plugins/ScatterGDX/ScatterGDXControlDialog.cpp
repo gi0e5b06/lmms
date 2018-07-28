@@ -22,52 +22,53 @@
  *
  */
 
+#include "ScatterGDXControlDialog.h"
+
 #include <QGridLayout>
 #include <QGroupBox>
 #include <QLayout>
 
-#include "ScatterGDXControlDialog.h"
 #include "ScatterGDXControls.h"
 #include "embed.h"
 
-
-
-ScatterGDXControlDialog::ScatterGDXControlDialog( ScatterGDXControls* controls ) :
-	EffectControlDialog( controls )
+ScatterGDXControlDialog::ScatterGDXControlDialog(
+        ScatterGDXControls* controls) :
+      EffectControlDialog(controls)
 {
-	setAutoFillBackground( true );
-	QPalette pal;
-	pal.setBrush( backgroundRole(), PLUGIN_NAME::getIconPixmap( "artwork" ) );
-	setPalette( pal );
-	setFixedSize( 150, 170 );
+    setAutoFillBackground(true);
+    QPalette pal;
+    pal.setBrush(backgroundRole(), embed::getIconPixmap("plugin_bg"));
+    //pal.setBrush(backgroundRole(), PLUGIN_NAME::getIconPixmap("artwork"));
+    setPalette(pal);
+    setFixedSize(150, 170);
 
-        Knob* pwrKnob = new Knob( knobBright_26, this );
-	pwrKnob -> move( 10, 10 );
-	pwrKnob->setModel( &controls->m_pwrModel );
-	pwrKnob->setLabel( tr( "Power" ) );
-	pwrKnob->setHintText( tr( "Power:" ) , "/bar" );
+    Knob* pwrKnob = new Knob(knobBright_26, this);
+    pwrKnob->move(10, 10);
+    pwrKnob->setModel(&controls->m_pwrModel);
+    pwrKnob->setLabel(tr("Power"));
+    pwrKnob->setHintText(tr("Power:"), "/bar");
 
-        Knob* spdKnob = new Knob( knobBright_26, this );
-	spdKnob -> move( 80, 10 );
-	spdKnob->setModel( &controls->m_spdModel );
-	spdKnob->setLabel( tr( "Speed" ) );
-	spdKnob->setHintText( tr( "Speed:" ) , "" );
+    Knob* spdKnob = new Knob(knobBright_26, this);
+    spdKnob->move(80, 10);
+    spdKnob->setModel(&controls->m_spdModel);
+    spdKnob->setLabel(tr("Speed"));
+    spdKnob->setHintText(tr("Speed:"), "");
 
-        Knob* frcKnob = new Knob( knobBright_26, this );
-	frcKnob -> move( 10, 60 );
-	frcKnob->setModel( &controls->m_frcModel );
-	frcKnob->setLabel( tr( "Fraction" ) );
-	frcKnob->setHintText( tr( "Fraction:" ) , "" );
+    Knob* frcKnob = new Knob(knobBright_26, this);
+    frcKnob->move(10, 60);
+    frcKnob->setModel(&controls->m_frcModel);
+    frcKnob->setLabel(tr("Fraction"));
+    frcKnob->setHintText(tr("Fraction:"), "");
 
-        Knob* ovrKnob = new Knob( knobBright_26, this );
-	ovrKnob -> move( 80, 60 );
-	ovrKnob->setModel( &controls->m_ovrModel );
-	ovrKnob->setLabel( tr( "Override" ) );
-	ovrKnob->setHintText( tr( "Override:" ) , "" );
+    Knob* ovrKnob = new Knob(knobBright_26, this);
+    ovrKnob->move(80, 60);
+    ovrKnob->setModel(&controls->m_ovrModel);
+    ovrKnob->setLabel(tr("Override"));
+    ovrKnob->setHintText(tr("Override:"), "");
 
-        Knob* strKnob = new Knob( knobBright_26, this );
-	strKnob -> move( 80, 120 );
-	strKnob->setModel( &controls->m_strModel );
-	strKnob->setLabel( tr( "Start" ) );
-	strKnob->setHintText( tr( "Start:" ) , "" );
+    Knob* strKnob = new Knob(knobBright_26, this);
+    strKnob->move(80, 120);
+    strKnob->setModel(&controls->m_strModel);
+    strKnob->setLabel(tr("Start"));
+    strKnob->setHintText(tr("Start:"), "");
 }

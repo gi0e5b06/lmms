@@ -1,5 +1,5 @@
 /*
- * ChainGDXControlDialog.cpp - control dialog for chaining effect
+ * SplitGDXControlDialog.h - control dialog for chaining effect
  *
  * Copyright (c) 2018 gi0e5b06 (on github.com)
  *
@@ -22,30 +22,21 @@
  *
  */
 
-#include "ChainGDXControlDialog.h"
+#ifndef SPLITGDX_CONTROL_DIALOG_H
+#define SPLITGDX_CONTROL_DIALOG_H
 
-#include <QGridLayout>
-#include <QGroupBox>
-#include <QLayout>
+#include "EffectControlDialog.h"
 
-#include "ChainGDX.h"
-#include "ChainGDXControls.h"
-#include "EffectRackView.h"
-#include "embed.h"
+class SplitGDXControls;
 
-ChainGDXControlDialog::ChainGDXControlDialog(ChainGDXControls* controls) :
-      EffectControlDialog(controls)
+class SplitGDXControlDialog : public EffectControlDialog
 {
-    setAutoFillBackground(true);
-    QPalette pal;
-    pal.setBrush(backgroundRole(), embed::getIconPixmap("plugin_bg"));
-    //pal.setBrush(backgroundRole(), PLUGIN_NAME::getIconPixmap("artwork"));
-    setPalette(pal);
-    setContentsMargins(0, 0, 0, 0);
-    setFixedWidth(246);
-    setMinimumHeight(200);
+    Q_OBJECT
+  public:
+    SplitGDXControlDialog(SplitGDXControls* controls);
+    virtual ~SplitGDXControlDialog()
+    {
+    }
+};
 
-    EffectRackView* erv
-            = new EffectRackView(controls->m_effect->m_chain, this);
-    erv->setFixedSize(245, 200);
-}
+#endif

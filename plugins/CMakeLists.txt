@@ -95,6 +95,7 @@ IF("${PLUGIN_LIST}" STREQUAL "")
 		sfxr
 		sid
 		SpectrumAnalyzer
+                SplitGDX
 		stereo_enhancer
 		stereo_matrix
 		stk

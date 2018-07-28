@@ -22,51 +22,52 @@
  *
  */
 
+#include "CompressorGDXControlDialog.h"
+
 #include <QGridLayout>
 #include <QGroupBox>
 #include <QLayout>
 
-#include "CompressorGDXControlDialog.h"
 #include "CompressorGDXControls.h"
 #include "embed.h"
 
-
-
-CompressorGDXControlDialog::CompressorGDXControlDialog( CompressorGDXControls* controls ) :
-	EffectControlDialog( controls )
+CompressorGDXControlDialog::CompressorGDXControlDialog(
+        CompressorGDXControls* controls) :
+      EffectControlDialog(controls)
 {
-	setAutoFillBackground( true );
-	QPalette pal;
-	pal.setBrush( backgroundRole(), PLUGIN_NAME::getIconPixmap( "artwork" ) );
-	setPalette( pal );
-	setFixedSize( 150, 160 );
+    setAutoFillBackground(true);
+    QPalette pal;
+    pal.setBrush(backgroundRole(), embed::getIconPixmap("plugin_bg"));
+    //pal.setBrush(backgroundRole(),PLUGIN_NAME::getIconPixmap("artwork"));
+    setPalette(pal);
+    setFixedSize(150, 160);
 
-	QGroupBox* ctlGB=new QGroupBox(tr ( "Controls" ), this);
-	ctlGB->setGeometry(10,10,130,140);
+    QGroupBox* ctlGB = new QGroupBox(tr("Controls"), this);
+    ctlGB->setGeometry(10, 10, 130, 140);
 
-	Knob * rndAmpKnob = new Knob( knobBright_26, ctlGB);
-	rndAmpKnob -> move( 17, 35 );
-	rndAmpKnob->setModel( &controls->m_rndAmpModel );
-	rndAmpKnob->setLabel( tr( "Treshold" ) );
-	rndAmpKnob->setHintText( tr( "Treshold:" ) , "" );
+    Knob* rndAmpKnob = new Knob(knobBright_26, ctlGB);
+    rndAmpKnob->move(17, 35);
+    rndAmpKnob->setModel(&controls->m_rndAmpModel);
+    rndAmpKnob->setLabel(tr("Treshold"));
+    rndAmpKnob->setHintText(tr("Treshold:"), "");
 
-	Knob * fixAmpKnob = new Knob( knobBright_26, ctlGB);
-	fixAmpKnob -> move( 67, 35 );
-	fixAmpKnob->setModel( &controls->m_fixAmpModel );
-	fixAmpKnob->setLabel( tr( "Ratio" ) );
-	fixAmpKnob->setHintText( tr( "Ratio:" ) , "" );
+    Knob* fixAmpKnob = new Knob(knobBright_26, ctlGB);
+    fixAmpKnob->move(67, 35);
+    fixAmpKnob->setModel(&controls->m_fixAmpModel);
+    fixAmpKnob->setLabel(tr("Ratio"));
+    fixAmpKnob->setHintText(tr("Ratio:"), "");
 
-	Knob * sngPosKnob = new Knob( knobBright_26, ctlGB);
-	sngPosKnob -> move( 17, 85 );
-	sngPosKnob->setModel( &controls->m_sngPosModel );
-	sngPosKnob->setLabel( tr( "Out" ) );
-	sngPosKnob->setHintText( tr( "Out gain:" ) , "" );
+    Knob* sngPosKnob = new Knob(knobBright_26, ctlGB);
+    sngPosKnob->move(17, 85);
+    sngPosKnob->setModel(&controls->m_sngPosModel);
+    sngPosKnob->setLabel(tr("Out"));
+    sngPosKnob->setHintText(tr("Out gain:"), "");
 
-        /*
-	Knob * delPosKnob = new Knob( knobBright_26, ctlGB);
-	delPosKnob -> move( 67, 85 );
-	delPosKnob->setModel( &controls->m_delPosModel );
-	delPosKnob->setLabel( tr( "Delay" ) );
-	delPosKnob->setHintText( tr( "Delay:" ) , "" );
-        */
+    /*
+    Knob * delPosKnob = new Knob( knobBright_26, ctlGB);
+    delPosKnob -> move( 67, 85 );
+    delPosKnob->setModel( &controls->m_delPosModel );
+    delPosKnob->setLabel( tr( "Delay" ) );
+    delPosKnob->setHintText( tr( "Delay:" ) , "" );
+    */
 }

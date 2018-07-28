@@ -1,5 +1,5 @@
 /*
- * ChainGDXControlDialog.cpp - control dialog for chaining effect
+ * SplitGDX.h - A splitting effect (tree node)
  *
  * Copyright (c) 2018 gi0e5b06 (on github.com)
  *
@@ -22,30 +22,37 @@
  *
  */
 
-#include "ChainGDXControlDialog.h"
+#ifndef SPLITGDX_H
+#define SPLITGDX_H
 
-#include <QGridLayout>
-#include <QGroupBox>
-#include <QLayout>
+#include "SplitGDXControls.h"
+#include "Effect.h"
+#include "EffectChain.h"
+//#include "ValueBuffer.h"
+//#include "lmms_math.h"
 
-#include "ChainGDX.h"
-#include "ChainGDXControls.h"
-#include "EffectRackView.h"
-#include "embed.h"
-
-ChainGDXControlDialog::ChainGDXControlDialog(ChainGDXControls* controls) :
-      EffectControlDialog(controls)
+class PLUGIN_EXPORT SplitGDXEffect : public Effect
 {
-    setAutoFillBackground(true);
-    QPalette pal;
-    pal.setBrush(backgroundRole(), embed::getIconPixmap("plugin_bg"));
-    //pal.setBrush(backgroundRole(), PLUGIN_NAME::getIconPixmap("artwork"));
-    setPalette(pal);
-    setContentsMargins(0, 0, 0, 0);
-    setFixedWidth(246);
-    setMinimumHeight(200);
+  public:
+    SplitGDXEffect(Model*                                    parent,
+                   const Descriptor::SubPluginFeatures::Key* key);
+    virtual ~SplitGDXEffect();
+    virtual bool processAudioBuffer(sampleFrame* buf, const fpp_t frames);
 
-    EffectRackView* erv
-            = new EffectRackView(controls->m_effect->m_chain, this);
-    erv->setFixedSize(245, 200);
-}
+    virtual EffectControls* controls()
+    {
+        return &m_gdxControls;
+    }
+
+  private:
+    SplitGDXControls m_gdxControls;
+
+    EffectChain*     m_splitChain;
+    EffectChain*     m_wetChain;
+    EffectChain*     m_remChain;
+
+    friend class SplitGDXControlDialog;
+    friend class SplitGDXControls;
+};
+
+#endif
