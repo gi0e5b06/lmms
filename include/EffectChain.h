@@ -57,6 +57,11 @@ public:
 
 	void clear();
 
+        bool isEnabled()
+        {
+                return m_enabledModel.value();
+        }
+
 	void setEnabled( bool _on )
 	{
 		m_enabledModel.setValue( _on );

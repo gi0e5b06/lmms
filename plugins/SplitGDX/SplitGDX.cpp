@@ -69,19 +69,30 @@ bool SplitGDXEffect::processAudioBuffer(sampleFrame* _buf,
     if(!shouldProcessAudioBuffer(_buf, _frames, smoothBegin, smoothEnd))
         return false;
 
+    bool r = false;
+
     sampleFrame* splitb = MM_ALLOC(sampleFrame, _frames);
-    memcpy(splitb, _buf, sizeof(sampleFrame) * _frames);
-    m_splitChain->startRunning();
-    bool r = m_splitChain->processAudioBuffer(splitb, _frames, true);
-
     sampleFrame* wetb = MM_ALLOC(sampleFrame, _frames);
-    memcpy(wetb, splitb, sizeof(sampleFrame) * _frames);
-
     sampleFrame* remb = MM_ALLOC(sampleFrame, _frames);
-    for(fpp_t f = 0; f < _frames; ++f)
+
+    memcpy(splitb, _buf, sizeof(sampleFrame) * _frames);
+    if(m_splitChain->isEnabled())
     {
-        remb[f][0] = _buf[f][0] - splitb[f][0];
-        remb[f][1] = _buf[f][1] - splitb[f][1];
+        m_splitChain->startRunning();
+        r |= m_splitChain->processAudioBuffer(splitb, _frames, true);
+
+        memcpy(wetb, splitb, sizeof(sampleFrame) * _frames);
+
+        for(fpp_t f = 0; f < _frames; ++f)
+        {
+                remb[f][0] = _buf[f][0] - splitb[f][0];
+                remb[f][1] = _buf[f][1] - splitb[f][1];
+        }
+    }
+    else
+    {
+        memcpy(wetb, splitb, sizeof(sampleFrame) * _frames);
+        memcpy(remb, splitb, sizeof(sampleFrame) * _frames);
     }
 
     m_wetChain->startRunning();

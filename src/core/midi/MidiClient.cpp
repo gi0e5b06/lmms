@@ -243,6 +243,9 @@ void MidiClientRaw::parseData( const unsigned char c )
 			// but might be faster
 			//m_midiParseData.m_midiEvent.setMidiPitchBend( ( m_midiParseData.m_buffer[1] * 128 ) | m_midiParseData.m_buffer[0] );
                         m_midiParseData.m_midiEvent.setMidiPitchBendLE(m_midiParseData.m_buffer[0],m_midiParseData.m_buffer[1]);
+                        //qInfo("MidiClient::parseDara %d %d pitchbend=%d",
+                        //    m_midiParseData.m_buffer[0],m_midiParseData.m_buffer[1],
+                        //    m_midiParseData.m_midiEvent.midiPitchBend());
 			break;
 
 		default: 

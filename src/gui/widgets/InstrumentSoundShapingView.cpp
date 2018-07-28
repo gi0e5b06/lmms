@@ -125,9 +125,9 @@ InstrumentSoundShapingView::InstrumentSoundShapingView( QWidget * _parent ) :
 	m_singleStreamInfoLabel->setFont( pointSize<8>( m_singleStreamInfoLabel->font() ) );
 
 	m_singleStreamInfoLabel->setGeometry( TARGETS_TABWIDGET_X,
-						TARGETS_TABWIDGET_Y,
-						TARGETS_TABWIDGET_WIDTH,
-						TARGETS_TABWIDGET_HEIGTH );
+                                              TARGETS_TABWIDGET_Y,
+                                              TARGETS_TABWIDGET_WIDTH,
+                                              TARGETS_TABWIDGET_HEIGTH );
 }
 
 
@@ -161,8 +161,3 @@ void InstrumentSoundShapingView::modelChanged()
 		m_envLfoViews[i]->setModel( m_ss->m_envLfoParameters[i] );
 	}
 }
-
-
-
-
-	

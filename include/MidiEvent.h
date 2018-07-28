@@ -200,24 +200,6 @@ public:
 		return param( 0 );
 	}
 
-        // -100..+100 center 0.
-	float lmmsPitchBend() const
-	{
-                float r=midiPitchBend()-8192;
-                     if(r<0) r=r/-8192.f*MinPitchDefault;
-                else if(r>0) r=r/8191.f*MaxPitchDefault;
-                return r;
-	}
-
-	void setLmmsPitchBend( float pitchBend )
-	{
-                uint16_t r=pitchBend-DefaultPitch;
-                     if(r<0) r=r*-8192.f/MinPitchDefault;
-                else if(r>0) r=r/8191.f*MaxPitchDefault;
-                r=r+8192;
-		setMidiPitchBend(r);
-	}
-
         // 0..16383 center 8192
 	uint16_t midiPitchBend() const
 	{
@@ -228,7 +210,6 @@ public:
 	{
                 if(pitchBend<0||pitchBend>16383)
                         qWarning("MidiEvent::setMidiPitchBend invalid pitchBend: %d",pitchBend);
-                //( m_midiParseData.m_buffer[1] * 128 ) | m_midiParseData.m_buffer[0]
                 if(pitchBend<    0) pitchBend=0;
                 if(pitchBend>16383) pitchBend=16383;
                 setParam(0,(pitchBend   )&0x7F);

@@ -35,7 +35,6 @@
 #include "zynaddsubfx/src/Misc/Part.h"
 #include "zynaddsubfx/src/Misc/Dump.h"
 
-
 SYNTH_T* synth = NULL;
 
 int LocalZynAddSubFx::s_instanceCount = 0;
@@ -208,6 +207,7 @@ void LocalZynAddSubFx::setLmmsWorkingDir( const std::string & _dir )
 
 void LocalZynAddSubFx::setPitchWheelBendRange( int semitones )
 {
+        qInfo("LocalZynAddSubFx::setPitchWheelBendRange semitones=%d",semitones);
 	for( int i = 0; i < NUM_MIDI_PARTS; ++i )
 	{
 		m_master->part[i]->ctl.setpitchwheelbendrange( semitones * 100 );
@@ -246,7 +246,8 @@ void LocalZynAddSubFx::processMidiEvent( const MidiEvent& event )
 			}
 			break;
 		case MidiPitchBend:
-			m_master->setController( event.channel(), C_pitchwheel, event.midiPitchBend() );
+                        //qInfo("LocalZynAddSubFx::processMidiEvent %d",event.midiPitchBend());
+                        m_master->setController( event.channel(), C_pitchwheel, event.midiPitchBend() );
                                                  //event.pitchBend()-8192 );
 			break;
 		case MidiControlChange:
