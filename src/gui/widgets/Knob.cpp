@@ -383,7 +383,11 @@ QColor Knob::pointColor() const
 
 void Knob::setPointColor( const QColor & c )
 {
-	m_pointColor = c;
+        if(m_pointColor!=c)
+        {
+                m_pointColor = c;
+                update();
+        }
 }
 
 
@@ -395,7 +399,11 @@ QColor Knob::textColor() const
 
 void Knob::setTextColor( const QColor & c )
 {
-	m_textColor = c;
+        if(m_textColor!=c)
+        {
+                m_textColor = c;
+                update();
+        }
 }
 
 

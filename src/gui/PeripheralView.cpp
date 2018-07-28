@@ -229,7 +229,7 @@ int PeripheralView::getKeyFromKeyEvent( QKeyEvent * _ke )
 void PeripheralView::modelChanged()
 {
 	m_piano = castModel<Piano>();
-        qInfo("PeripheralView::modelChanged piano=%p",m_piano);
+        //qInfo("PeripheralView::modelChanged piano=%p",m_piano);
 	if( m_piano != NULL )
         {
                 connect( m_piano->instrumentTrack()->baseNoteModel(),

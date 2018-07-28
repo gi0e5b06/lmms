@@ -73,7 +73,8 @@ public:
 
 	static inline float expKnobVal( float _val )
 	{
-		return ( ( _val < 0 ) ? -_val : _val ) * _val;
+		//return fabsf(_val);
+                return ( ( _val < 0 ) ? -_val : _val ) * _val;
 	}
 
 	static LfoInstances * instances()
@@ -123,13 +124,13 @@ private:
 
 	QMutex m_paramMutex;
 
-	FloatModel m_predelayModel;
-	FloatModel m_attackModel;
-	FloatModel m_holdModel;
-	FloatModel m_decayModel;
-	FloatModel m_sustainModel;
-	FloatModel m_releaseModel;
-	FloatModel m_amountModel;
+	TempoSyncKnobModel m_predelayModel;
+	TempoSyncKnobModel m_attackModel;
+	TempoSyncKnobModel m_holdModel;
+	TempoSyncKnobModel m_decayModel;
+	FloatModel         m_sustainModel;
+	TempoSyncKnobModel m_releaseModel;
+	FloatModel         m_amountModel;
 
 	float  m_sustainLevel;
 	float  m_amount;

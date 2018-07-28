@@ -44,6 +44,8 @@ MidiSndio::MidiSndio( void ) :
 	MidiClientRaw(),
 	m_quit( false )
 {
+        setObjectName("midi sndio");
+
 	QString dev = probeDevice();
 
 	if (dev == "")

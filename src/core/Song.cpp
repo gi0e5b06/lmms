@@ -101,15 +101,14 @@ Song::Song() :
 	m_elapsedTacts( 0 )
 {
 	connect( &m_tempoModel, SIGNAL( dataChanged() ),
-						this, SLOT( setTempo() ) );
+                 this, SLOT( setTempo() ) );
 	connect( &m_tempoModel, SIGNAL( dataUnchanged() ),
-						this, SLOT( setTempo() ) );
+                 this, SLOT( setTempo() ) );
 	connect( &m_timeSigModel, SIGNAL( dataChanged() ),
-					this, SLOT( setTimeSignature() ) );
-
+                 this, SLOT( setTimeSignature() ) );
 
 	connect( Engine::mixer(), SIGNAL( sampleRateChanged() ), this,
-						SLOT( updateFramesPerTick() ) );
+                 SLOT( updateFramesPerTick() ) );
 
 	connect( &m_masterVolumeModel, SIGNAL( dataChanged() ),
 			this, SLOT( masterVolumeChanged() ) );
@@ -1497,15 +1496,23 @@ void Song::freezeTracks()
         epd.renderMarkersCB->setChecked(false);
         epd.peakNormalizeCB->setChecked(false);
 
-        qInfo("Song::freezeTracks before exec");
-        epd.exec();
-        qInfo("Song::freezeTracks after exec");
+        switch(Engine::mixer()->baseSampleRate())
+        {
+        case  48000: epd.samplerateCB->setCurrentIndex(1); break;
+        case  88200: epd.samplerateCB->setCurrentIndex(2); break;
+        case  96000: epd.samplerateCB->setCurrentIndex(3); break;
+        case 192000: epd.samplerateCB->setCurrentIndex(4); break;
+        default:     epd.samplerateCB->setCurrentIndex(0); break;
+        }
 
-	for(Track* t: tracks())
-	{
-		t->setFrozen(true);
-                t->writeFrozenBuffer();
-	}
+        if( epd.exec() == QDialog::Accepted )
+        {
+                for(Track* t: tracks())
+                {
+                        t->setFrozen(true);
+                        t->writeFrozenBuffer();
+                }
+        }
 }
 
 

@@ -331,8 +331,9 @@ void AudioPort::doProcessing()
                         }
                 }
 
-                if(MixHelpers::sanitize(m_portBuffer,fpp))
-                        qInfo("AudioPort: sanitize done!!!");
+                //if(MixHelpers::sanitize(m_portBuffer,fpp))
+                //        qInfo("AudioPort: sanitize done!!!");
+
                 if(m_clippingModel && MixHelpers::isClipping(m_portBuffer,fpp))
                         m_clippingModel->setValue(true);
 

@@ -11,6 +11,7 @@ ENDIF(WANT_LV2)
 SET(LMMS_SRCS
 	${LMMS_SRCS}
 	${LMMS_LV2_SRCS}
+
 	core/AutomatableModel.cpp
 	core/AutomationPattern.cpp
 	core/BandLimitedWave.cpp
@@ -43,7 +44,8 @@ SET(LMMS_SRCS
 	core/LadspaManager.cpp
 	core/LfoController.cpp
 	core/LocklessAllocator.cpp
-	core/MemoryHelper.cpp
+	core/lmms_math.cpp
+        core/MemoryHelper.cpp
 	core/MemoryManager.cpp
 	core/MemoryManagerArray.cpp
 	core/MemoryManagerLegacy.cpp
@@ -57,6 +59,7 @@ SET(LMMS_SRCS
 	core/Model.cpp
 	core/Note.cpp
 	core/NotePlayHandle.cpp
+        core/ObjectManager.cpp
 	core/Oscillator.cpp
 	core/PeakController.cpp
 	core/PerfLog.cpp

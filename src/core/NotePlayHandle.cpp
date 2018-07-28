@@ -581,10 +581,6 @@ void NotePlayHandle::resize( const bpm_t _new_tempo )
 }
 
 
-void NotePlayHandleManager::init()
-{
-}
-
 NotePlayHandle * NotePlayHandleManager::acquire(InstrumentTrack* instrumentTrack,
 						const f_cnt_t offset,
 						const f_cnt_t frames,
@@ -595,6 +591,7 @@ NotePlayHandle * NotePlayHandleManager::acquire(InstrumentTrack* instrumentTrack
 						const int generation)
 {
 	NotePlayHandle* nph=MM_ALLOC(NotePlayHandle,1);
+        //NotePlayHandle* nph=s_singleton->allocate();
 	new( (void*)nph ) NotePlayHandle( instrumentTrack, offset, frames, noteToPlay, parent, midiEventChannel, origin, generation );
 	return nph;
 }
@@ -602,8 +599,10 @@ NotePlayHandle * NotePlayHandleManager::acquire(InstrumentTrack* instrumentTrack
 void NotePlayHandleManager::release( NotePlayHandle * _nph )
 {
 	_nph->done();
+        //_nph->~NotePlayHandle();
+        //s_singleton->deallocate(_nph);
+        //NotePlayHandleManager::free(_nph);
 	MM_FREE(_nph);
-	//delete nph;
 }
 
 

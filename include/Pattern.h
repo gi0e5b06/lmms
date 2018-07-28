@@ -147,7 +147,8 @@ private:
 	PatternTypes m_patternType;
 
 	// data-stuff
-	NoteVector m_notes;
+	//NoteVector m_notes;
+        QVector<Note*> m_notes;
 	int m_steps;
         int m_stepResolution;
 
@@ -207,6 +208,7 @@ protected:
 	virtual void mouseDoubleClickEvent( QMouseEvent * _me );
 	virtual void paintEvent( QPaintEvent * pe );
 	virtual void wheelEvent( QWheelEvent * _we );
+        virtual int mouseToStep(int _x,int _y);
 
 private:
 	static QPixmap * s_stepBtnOn0;

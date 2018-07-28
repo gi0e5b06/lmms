@@ -170,9 +170,10 @@ public:
 
 	void setInitValue( const float value );
 
-	void setAutomatedValue( const float value );
 	void setValue( const float value );
+	void setAutomatedValue( const float value );
         void propagateValue();
+        void propagateAutomatedValue();
 
 	void decrValue( int steps = 1)
 	{

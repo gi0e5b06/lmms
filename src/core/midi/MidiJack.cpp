@@ -65,6 +65,8 @@ MidiJack::MidiJack() :
 	m_output_port( NULL ),
 	m_quit( false )
 {
+        setObjectName("midi jack");
+
 	// if jack is currently used for audio then we share the connection
 	// AudioJack creates and maintains the jack connection
 	// and also handles the callback, we pass it our address

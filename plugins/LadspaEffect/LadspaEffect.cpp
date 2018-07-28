@@ -252,7 +252,7 @@ bool LadspaEffect::processAudioBuffer(sampleFrame* _buf, const fpp_t _frames)
     }
 
     m_pluginMutex.unlock();
-    return true;
+    return shouldKeepRunning(_buf,_frames);
 }
 
 void LadspaEffect::setControl(int _control, LADSPA_Data _value)

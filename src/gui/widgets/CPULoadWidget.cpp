@@ -95,8 +95,10 @@ void CPULoadWidget::updateCpuLoad()
 	// smooth load-values a bit
 	//int new_load = ( m_currentLoad + Engine::mixer()->cpuLoad() ) / 2;
 
-        int new_load = qMax<int>((m_currentLoad*9)/10,
-                                 Engine::mixer()->cpuLoad());
+        //int new_load = qMax<int>((m_currentLoad*9)/10,
+        //                         Engine::mixer()->cpuLoad());
+
+        int new_load = Engine::mixer()->cpuLoad();
 	if( new_load != m_currentLoad )
 	{
 		m_currentLoad = new_load;

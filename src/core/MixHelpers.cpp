@@ -63,7 +63,7 @@ bool isSilent(const sampleFrame* _src, const f_cnt_t _frames)
 {
     const sample_t silenceThreshold = 0.0000001f;
 
-    for(f_cnt_t f = 0; f < _frames; ++f)
+    for(f_cnt_t f = _frames - 1; f >= 0; f-=5) //--f
     {
         if(fabsf(_src[f][0]) >= silenceThreshold
            || fabsf(_src[f][1]) >= silenceThreshold)
@@ -78,7 +78,7 @@ bool isSilent(const sampleFrame* _src, const f_cnt_t _frames)
 /*! \brief Function for detecting clipping - returns true if found */
 bool isClipping(const sampleFrame* _src, const f_cnt_t _frames)
 {
-    for(f_cnt_t f = 0; f < _frames; ++f)
+    for(f_cnt_t f = _frames - 1; f >= 0; --f)
     {
         if(fabsf(_src[f][0]) > 1.f || fabsf(_src[f][1]) > 1.f)
         {
@@ -93,16 +93,16 @@ bool isClipping(const sampleFrame* _src, const f_cnt_t _frames)
 bool sanitize(sampleFrame* _src, const f_cnt_t _frames)
 {
     bool found = false;
-    for(f_cnt_t f = 0; f < _frames; ++f)
+    for(f_cnt_t f = _frames - 1; f >= 0; --f)
     {
         if(isinf(_src[f][0]) || isnan(_src[f][0]))
         {
-            _src[f][0] = 0.0f;
+            _src[f][0] = 0.f;
             found      = true;
         }
         if(isinf(_src[f][1]) || isnan(_src[f][1]))
         {
-            _src[f][1] = 0.0f;
+            _src[f][1] = 0.f;
             found      = true;
         }
     }
@@ -113,7 +113,7 @@ bool sanitize(sampleFrame* _src, const f_cnt_t _frames)
 bool unclip(sampleFrame* _src, const f_cnt_t _frames)
 {
     bool found = false;
-    for(f_cnt_t f = 0; f < _frames; ++f)
+    for(f_cnt_t f = _frames - 1; f >= 0; --f)
     {
         if(_src[f][0] < -1.f)
         {
@@ -125,7 +125,8 @@ bool unclip(sampleFrame* _src, const f_cnt_t _frames)
             _src[f][0] = 1.f;
             found      = true;
         }
-        else if(_src[f][1] < -1.f)
+
+        if(_src[f][1] < -1.f)
         {
             _src[f][1] = -1.f;
             found      = true;
@@ -145,7 +146,7 @@ void addMultiplied(sampleFrame*       _dst,
                    const f_cnt_t      _frames)
 {
     const float* values = _coeffSrcBuf->values();
-    for(f_cnt_t f = 0; f < _frames; ++f)
+    for(f_cnt_t f = _frames - 1; f >= 0; --f)
     {
         _dst[f][0] += _src[f][0] * values[f];
         _dst[f][1] += _src[f][1] * values[f];
@@ -246,10 +247,10 @@ void addSanitized(sampleFrame*       _dst,
 {
     for(f_cnt_t f = 0; f < _frames; ++f)
     {
-        _dst[f][0]
-                += (isinf(_src[f][0]) || isnan(_src[f][0])) ? 0.0f : _src[f][0];
-        _dst[f][1]
-                += (isinf(_src[f][1]) || isnan(_src[f][1])) ? 0.0f : _src[f][1];
+        _dst[f][0] += (isinf(_src[f][0]) || isnan(_src[f][0])) ? 0.0f
+                                                               : _src[f][0];
+        _dst[f][1] += (isinf(_src[f][1]) || isnan(_src[f][1])) ? 0.0f
+                                                               : _src[f][1];
     }
 }
 

@@ -78,6 +78,7 @@ void LmmsCore::init( bool renderOnly )
         LmmsCore *engine = inst();
 
         QFuture<void> t1  = QtConcurrent::run(init1);
+        QFuture<void> t1b = QtConcurrent::run(init1b);
         QFuture<void> t2  = QtConcurrent::run(init2);
         QFuture<void> t3  = QtConcurrent::run(init3);
         QFuture<void> t3b = QtConcurrent::run(init3b);
@@ -85,6 +86,8 @@ void LmmsCore::init( bool renderOnly )
 
 	emit engine->initProgress(tr("Generating wavetables"));
         t1.waitForFinished();
+	emit engine->initProgress(tr("Generating math functions"));
+        t1b.waitForFinished();
         emit engine->initProgress(tr("Initializing data structures"));
         t2.waitForFinished();
 	emit engine->initProgress(tr("Initializing Ladspa effects"));
@@ -128,6 +131,18 @@ void LmmsCore::init1()
 {
 	// generate (load from file) bandlimited wavetables
 	BandLimitedWave::generateWaves();
+}
+
+void LmmsCore::init1b()
+{
+	init_fastsqrtf01();
+        init_fastnormsinf01();
+        init_fasttrianglef01();
+        init_fastsawf01();
+        init_fastsquaref01();
+        init_fastmoogsawf01();
+        init_fastnormexpf01();
+        //init_fastsin02PI();
 }
 
 void LmmsCore::init2()

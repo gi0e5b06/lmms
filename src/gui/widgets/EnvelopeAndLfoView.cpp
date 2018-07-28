@@ -94,7 +94,7 @@ EnvelopeAndLfoView::EnvelopeAndLfoView( QWidget * _parent ) :
 		s_lfoGraph = new QPixmap( embed::getIconPixmap( "lfo_graph" ) );
 	}
 
-	m_predelayKnob = new Knob( knobBright_26, this );
+	m_predelayKnob = new TempoSyncKnob( knobBright_26, this );
 	m_predelayKnob->setLabel( tr( "DEL" ) );
 	m_predelayKnob->move( PREDELAY_KNOB_X, ENV_KNOBS_Y );
 	m_predelayKnob->setHintText( tr( "Predelay:" ), "" );
@@ -104,7 +104,7 @@ EnvelopeAndLfoView::EnvelopeAndLfoView( QWidget * _parent ) :
 			"before start of actual envelope." ) );
 
 
-	m_attackKnob = new Knob( knobBright_26, this );
+	m_attackKnob = new TempoSyncKnob( knobBright_26, this );
 	m_attackKnob->setLabel( tr( "ATT" ) );
 	m_attackKnob->move( ATTACK_KNOB_X, ENV_KNOBS_Y );
 	m_attackKnob->setHintText( tr( "Attack:" ), "" );
@@ -115,7 +115,7 @@ EnvelopeAndLfoView::EnvelopeAndLfoView( QWidget * _parent ) :
 			"Choose a small value for instruments like pianos "
 			"and a big value for strings." ) );
 
-	m_holdKnob = new Knob( knobBright_26, this );
+	m_holdKnob = new TempoSyncKnob( knobBright_26, this );
 	m_holdKnob->setLabel( tr( "HOLD" ) );
 	m_holdKnob->move( HOLD_KNOB_X, ENV_KNOBS_Y );
 	m_holdKnob->setHintText( tr( "Hold:" ), "" );
@@ -125,7 +125,7 @@ EnvelopeAndLfoView::EnvelopeAndLfoView( QWidget * _parent ) :
 			"envelope holds attack-level before it begins to "
 			"decrease to sustain-level." ) );
 
-	m_decayKnob = new Knob( knobBright_26, this );
+	m_decayKnob = new TempoSyncKnob( knobBright_26, this );
 	m_decayKnob->setLabel( tr( "DEC" ) );
 	m_decayKnob->move( DECAY_KNOB_X, ENV_KNOBS_Y );
 	m_decayKnob->setHintText( tr( "Decay:" ), "" );
@@ -148,7 +148,7 @@ EnvelopeAndLfoView::EnvelopeAndLfoView( QWidget * _parent ) :
 			"zero." ) );
 
 
-	m_releaseKnob = new Knob( knobBright_26, this );
+	m_releaseKnob = new TempoSyncKnob( knobBright_26, this );
 	m_releaseKnob->setLabel( tr( "REL" ) );
 	m_releaseKnob->move( RELEASE_KNOB_X, ENV_KNOBS_Y );
     m_releaseKnob->setHintText( tr( "Release:" ), "" );
@@ -333,8 +333,18 @@ void EnvelopeAndLfoView::modelChanged()
 	m_lfoWaveBtnGrp->setModel( &m_params->m_lfoWaveModel );
 	m_x100Cb->setModel( &m_params->m_x100Model );
 	m_controlEnvAmountCb->setModel( &m_params->m_controlEnvAmountModel );
+
+        connect(m_params, SIGNAL(dataChanged()), this, SLOT(update()));
 }
 
+
+
+
+void EnvelopeAndLfoView::update()
+{
+        //qInfo("EnvelopeAndLfoView::update");
+        QWidget::update();
+}
 
 
 

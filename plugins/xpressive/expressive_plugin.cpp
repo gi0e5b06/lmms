@@ -35,7 +35,7 @@
 #include "MainWindow.h"
 #include "Mixer.h"
 #include "NotePlayHandle.h"
-#include "Oscillator.h"
+//#include "Oscillator.h"
 #include "PixmapButton.h"
 #include "Song.h"
 #include "SubWindow.h"
@@ -450,6 +450,8 @@ expressiveView::expressiveView(Instrument * _instrument, QWidget * _parent) :
 
 
 	m_smoothKnob=new Knob(this,"Smoothness");
+        m_smoothKnob->setModel(new FloatModel(0.f,0.f,1.f,0.001f,
+                                              NULL, "smooth", true ), m_smoothKnob ),
 	m_smoothKnob->setHintText(tr("Smoothness"), "");
 	m_smoothKnob->move(80, 220);
 
@@ -515,8 +517,11 @@ void expressiveView::expressionChanged() {
 		e->outputExpression(1) = text;
 		break;
 	}
+
 	if (m_wave_expr)
-		m_graph->setEnabled(m_smoothKnob->model()->value() == 0 && text.size() == 0);
+                m_graph->setEnabled(m_smoothKnob->model() &&
+                                    m_smoothKnob->model()->value() == 0 &&
+                                    text.size() == 0);
 
 	if (text.size()>0)
 	{

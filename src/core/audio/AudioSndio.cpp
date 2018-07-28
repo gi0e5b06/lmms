@@ -55,6 +55,8 @@ AudioSndio::AudioSndio(bool & _success_ful, Mixer * _mixer) :
 	    DEFAULT_CHANNELS, SURROUND_CHANNELS ), _mixer ),
             m_convertEndian ( false )
 {
+        setObjectName("audio sndio");
+
 	_success_ful = false;
 
 	QString dev = ConfigManager::inst()->value( "audiosndio", "device" );

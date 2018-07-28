@@ -74,4 +74,5 @@ void RandomGDXControls::saveSettings( QDomDocument& doc, QDomElement& _this )
 	m_rndAmpModel.saveSettings( doc, _this, "rnd_amp" );
 	m_fixAmpModel.saveSettings( doc, _this, "fix_amp" );
 	m_sngPosModel.saveSettings( doc, _this, "sng_pos" );
+	m_delPosModel.saveSettings( doc, _this, "del_pos" );
 }

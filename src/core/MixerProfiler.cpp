@@ -45,6 +45,9 @@ void MixerProfiler::finishPeriod( sample_rate_t sampleRate, fpp_t framesPerPerio
 
 	const float newCpuLoad = periodElapsed / 10000.0f * sampleRate / framesPerPeriod;
 	m_cpuLoad = qBound<int>( 0, ( newCpuLoad * 0.1f + m_cpuLoad * 0.9f ), 100 );
+        //m_cpuLoad = qBound<int>( 0, int(newCpuLoad) , 100 );
+        //const float d=float(framesPerPeriod)/float(sampleRate);
+        //m_cpuLoad = qBound<int>( 0, int( newCpuLoad * d + m_cpuLoad * (1.f-d) ), 100 );
 
 	if( m_outputFile.isOpen() )
 	{

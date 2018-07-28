@@ -47,6 +47,8 @@ AudioAlsaGdx::AudioAlsaGdx( bool & _success_ful, Mixer*  _mixer ) :
 	m_swParams( NULL ),
 	m_convertEndian( false )
 {
+        setObjectName("audio alsa gdx");
+
 	_success_ful = false;
 
 	if( setenv( "PULSE_ALSA_HOOK_CONF", "/dev/null", 0 ) )

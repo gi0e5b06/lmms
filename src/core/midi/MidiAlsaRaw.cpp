@@ -36,6 +36,8 @@ MidiAlsaRaw::MidiAlsaRaw() :
 	m_outputp( &m_output ),
 	m_quit( false )
 {
+        setObjectName("midi alsa raw");
+
 	int err;
 	if( ( err = snd_rawmidi_open( m_inputp, m_outputp,
 					probeDevice().toLatin1().constData(),

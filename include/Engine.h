@@ -130,6 +130,7 @@ signals:
 
 private:
         static void init1();
+        static void init1b();
         static void init2();
         static void init3();
         static void init3b();

@@ -53,7 +53,9 @@ AudioPulseAudio::AudioPulseAudio( bool & _success_ful, Mixer*  _mixer ) :
 	m_quit( false ),
 	m_convertEndian( false )
 {
-	_success_ful = false;
+        setObjectName("audio pulse audio");
+
+        _success_ful = false;
 
 	m_sampleSpec.format = PA_SAMPLE_S16LE;
 	m_sampleSpec.rate = sampleRate();

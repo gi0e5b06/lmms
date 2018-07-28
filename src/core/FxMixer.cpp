@@ -259,7 +259,7 @@ void FxChannel::doProcessing()
 
                         if(m_peakLeft>1.f || m_peakRight>1.f)
                         {
-                                qInfo("ch #%d clipping",m_channelIndex);
+                                //qInfo("ch #%d clipping",m_channelIndex);
                                 m_clippingModel.setValue(true);
                         }
                 }
@@ -741,8 +741,8 @@ void FxMixer::masterMix( sampleFrame * _buf )
 	MixHelpers::addSanitizedMultiplied( _buf, m_fxChannels[0]->m_buffer, v, fpp );
         */
 
-        if(MixHelpers::sanitize(m_fxChannels[0]->m_buffer,fpp))
-                qWarning("FxMixer: sanitize #1: inf/nan found");
+        //if(MixHelpers::sanitize(m_fxChannels[0]->m_buffer,fpp))
+        //        qInfo("FxMixer: sanitize #1: inf/nan found");
 
 	ValueBuffer* volBuf=m_fxChannels[0]->m_volumeModel.valueBuffer();
         if(volBuf)
@@ -761,8 +761,8 @@ void FxMixer::masterMix( sampleFrame * _buf )
                         MixHelpers::addMultiplied(_buf, m_fxChannels[0]->m_buffer, volVal, fpp);
         }
 
-        if(MixHelpers::sanitize(_buf,fpp))
-                qWarning("FxMixer: sanitize #2: inf/nan found");
+        //if(MixHelpers::sanitize(_buf,fpp))
+        //        qInfo("FxMixer: sanitize #2: inf/nan found");
 
         if(MixHelpers::isClipping(_buf,fpp))
                 m_fxChannels[0]->m_clippingModel.setValue(true);

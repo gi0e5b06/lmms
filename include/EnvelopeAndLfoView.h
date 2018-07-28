@@ -50,6 +50,8 @@ public:
 	EnvelopeAndLfoView( QWidget * _parent );
 	virtual ~EnvelopeAndLfoView();
 
+public slots:
+        virtual void update();
 
 protected:
 	virtual void modelChanged();
@@ -72,13 +74,13 @@ private:
 
 
 	// envelope stuff
-	Knob * m_predelayKnob;
-	Knob * m_attackKnob;
-	Knob * m_holdKnob;
-	Knob * m_decayKnob;
-	Knob * m_sustainKnob;
-	Knob * m_releaseKnob;
-	Knob * m_amountKnob;
+	TempoSyncKnob * m_predelayKnob;
+	TempoSyncKnob * m_attackKnob;
+	TempoSyncKnob * m_holdKnob;
+	TempoSyncKnob * m_decayKnob;
+	Knob *          m_sustainKnob;
+	TempoSyncKnob * m_releaseKnob;
+	Knob *          m_amountKnob;
 
 	// LFO stuff
 	Knob * m_lfoPredelayKnob;

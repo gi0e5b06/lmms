@@ -34,6 +34,7 @@
 #include "EffectView.h"
 
 #include "ConfigManager.h"
+#include "lmms_math.h"
 
 
 Effect::Effect( const Plugin::Descriptor * _desc,
@@ -169,12 +170,12 @@ bool Effect::gateHasClosed(float& _rms, sampleFrame* _buf, const fpp_t _frames)
 	if(!isAutoQuitEnabled()) return false;
         if(!isRunning()) return false;
 
-        float g=gate();
+        const float g=gate();
 	// Check whether we need to continue processing input.  Restart the
 	// counter if the threshold has been exceeded.
 	if( g>0.f )
 	{
-                if(_rms<0.f) _rms=computeRMS(_buf,_frames);
+                if(g<1.f && _rms<0.f) _rms=computeRMS(_buf,_frames);
                 if(_rms < g)
                 {
                         incrementBufferCount();
@@ -199,13 +200,13 @@ bool Effect::gateHasOpen(float& _rms, sampleFrame* _buf, const fpp_t _frames)
 	if(!isAutoQuitEnabled()) return false;
         //if(isRunning()) return false;
 
-        float g=gate();
+        const float g=gate();
 	// Check whether we need to continue processing input.  Restart the
 	// counter if the threshold has been exceeded.
 	if( m_gateClosed && g<1.f)
 	{
-                if(_rms<0.f) _rms=computeRMS(_buf,_frames);
-                if(_rms >= gate())
+                if(g>0.f && _rms<0.f) _rms=computeRMS(_buf,_frames);
+                if(g==0.f || _rms >= g)
                 {
                         m_gateClosed=false;
                         if(!isRunning()) startRunning();
@@ -224,10 +225,12 @@ float Effect::computeRMS(sampleFrame* _buf, const fpp_t _frames)
 	//if(!isAutoQuitEnabled()) return 1.f;
 
         float rms = 0.0f;
-        for( fpp_t f = 0; f < _frames; ++f )
+        fpp_t step= qMax(1,_frames>>5);
+        for( fpp_t f = 0; f < _frames; f+=step )
                 rms+=_buf[f][0]*_buf[f][0]+_buf[f][1]*_buf[f][1];
-        rms/=_frames;
-        return sqrtf(rms);
+        //rms/=_frames;
+        rms/= (_frames/step);
+        return fastsqrtf01(qBound(0.f,rms,1.f));
 }
 
 
@@ -272,6 +275,25 @@ bool Effect::shouldProcessAudioBuffer(sampleFrame* _buf, const fpp_t _frames,
         }
 
         return true;
+}
+
+
+bool Effect::shouldKeepRunning(sampleFrame* _buf, const fpp_t _frames)
+{
+	if(!isRunning()) return false;
+	if(!isAutoQuitEnabled()) return true;
+
+        float rms=computeRMS(_buf,_frames);
+        if(rms>0.0000001f) return true;
+
+        incrementBufferCount();
+        if(bufferCount() > qMax<int>(176,timeout()))
+        {
+                stopRunning();
+                resetBufferCount();
+                return false;
+        }
+	return true;
 }
 
 

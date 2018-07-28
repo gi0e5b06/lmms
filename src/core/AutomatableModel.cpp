@@ -220,8 +220,9 @@ void AutomatableModel::setValue( const float value )
 	{
                 m_oldValue = m_value;
                 m_value    = newval; 
-                propagateValue();
+                m_valueChanged = true;
 		emit dataChanged();
+                propagateValue();
 	}
 	else
 	{
@@ -246,7 +247,65 @@ void AutomatableModel::propagateValue()
                         (*it)->setJournalling( journalling );
                 }
         }
-        m_valueChanged = true;
+        //m_valueChanged = true;
+        --m_setValueDepth;
+}
+
+
+void AutomatableModel::setAutomatedValue( const float value )
+{
+	const float oldval = m_value;
+        const float newval = fittedValue(scaledValue( value ));
+
+	if( oldval != newval )
+	{
+                m_oldValue = m_value;
+                m_value    = newval;
+                //m_valueChanged = true;
+                propagateAutomatedValue();
+		//emit dataChanged();
+	}
+        /*
+	else
+	{
+		emit dataUnchanged();
+	}
+
+	m_oldValue = m_value;
+	++m_setValueDepth;
+
+	const float newValue=fittedValue(scaledValue( value ));
+	if( m_value != newvalue )
+	{
+		// notify linked models
+		for( QVector<AutomatableModel *>::Iterator it = m_linkedModels.begin();
+									it != m_linkedModels.end(); ++it )
+		{
+			if( (*it)->m_setValueDepth < 1 &&
+				(*it)->fittedValue( m_value ) != (*it)->m_value )
+			{
+				(*it)->setAutomatedValue( value );
+			}
+		}
+		//m_valueChanged = true;
+		emit dataChanged();
+	}
+	--m_setValueDepth;
+        */
+}
+
+
+void AutomatableModel::propagateAutomatedValue()
+{
+        ++m_setValueDepth;
+        // notify linked models
+        for( QVector<AutomatableModel *>::Iterator it = m_linkedModels.begin(); it != m_linkedModels.end(); ++it )
+	{
+                if( (*it)->m_setValueDepth < 1 && (*it)->fittedValue( m_value ) != (*it)->m_value )
+		{
+                        (*it)->setAutomatedValue( m_value );
+                }
+        }
         --m_setValueDepth;
 }
 
@@ -304,46 +363,11 @@ void roundAt( T& value, const T& where, const T& step_size )
 }
 
 
-
-
 template<class T>
 void AutomatableModel::roundAt( T& value, const T& where ) const
 {
 	::roundAt(value, where, m_step);
 }
-
-
-
-
-void AutomatableModel::setAutomatedValue( const float value )
-{
-	m_oldValue = m_value;
-	++m_setValueDepth;
-	const float oldValue = m_value;
-
-	const float scaled_value = scaledValue( value );
-
-	m_value = fittedValue( scaled_value );
-
-	if( oldValue != m_value )
-	{
-		// notify linked models
-		for( QVector<AutomatableModel *>::Iterator it = m_linkedModels.begin();
-									it != m_linkedModels.end(); ++it )
-		{
-			if( (*it)->m_setValueDepth < 1 &&
-				(*it)->fittedValue( m_value ) != (*it)->m_value )
-			{
-				(*it)->setAutomatedValue( value );
-			}
-		}
-		m_valueChanged = true;
-		emit dataChanged();
-	}
-	--m_setValueDepth;
-}
-
-
 
 
 void AutomatableModel::setRange( const float min, const float max,
@@ -368,8 +392,6 @@ void AutomatableModel::setRange( const float min, const float max,
 }
 
 
-
-
 void AutomatableModel::setStep( const float step )
 {
 	if( m_step != step )
@@ -378,8 +400,6 @@ void AutomatableModel::setStep( const float step )
 		emit propertiesChanged();
 	}
 }
-
-
 
 
 float AutomatableModel::fittedValue( float value ) const
@@ -498,6 +518,7 @@ void AutomatableModel::onControllerValueChanged()
 {
         //qInfo("AutomatableModel::onControllerValueChanged");
         emit controllerValueChanged();
+        //emit dataChanged();
 
         //if( m_controllerConnection &&
         //    m_controllerConnection->getController() )
@@ -566,18 +587,29 @@ ValueBuffer * AutomatableModel::valueBuffer()
 		{
 			float * values = vb->values();
 			float * nvalues = m_valueBuffer.values();
+                        bool changed=false;
 			switch( m_scaleType )
 			{
 			case Linear:
 				for( int i = 0; i < m_valueBuffer.length(); i++ )
 				{
-					nvalues[i] = minValue<float>() + ( range() * values[i] );
+                                        float newval=minValue<float>() + ( range() * values[i] );
+					if(nvalues[i] != newval)
+                                        {
+                                                nvalues[i] = newval;
+                                                changed=true;
+                                        }
 				}
 				break;
 			case Logarithmic:
 				for( int i = 0; i < m_valueBuffer.length(); i++ )
 				{
-					nvalues[i] = logToLinearScale( values[i] );
+					float newval=logToLinearScale( values[i] );
+					if(nvalues[i] != newval)
+                                        {
+                                                nvalues[i] = newval;
+                                                changed=true;
+                                        }
 				}
 				break;
 			default:
@@ -587,6 +619,7 @@ ValueBuffer * AutomatableModel::valueBuffer()
 			}
 			m_lastUpdatedPeriod = s_periodCounter;
 			m_hasSampleExactData = true;
+                        //if(changed) emit dataChanged();
 			return &m_valueBuffer;
 		}
 	}
@@ -600,12 +633,19 @@ ValueBuffer * AutomatableModel::valueBuffer()
 		vb = lm->valueBuffer();
 		float * values = vb->values();
 		float * nvalues = m_valueBuffer.values();
+                bool changed=false;
 		for( int i = 0; i < vb->length(); i++ )
 		{
-			nvalues[i] = fittedValue( values[i] );
+                        float newval=fittedValue( values[i] );
+                        if(nvalues[i] != newval)
+                        {
+                                nvalues[i] = newval;
+                                changed=true;
+                        }
 		}
 		m_lastUpdatedPeriod = s_periodCounter;
 		m_hasSampleExactData = true;
+                //if(changed) emit dataChanged();
 		return &m_valueBuffer;
 	}
 
@@ -615,6 +655,7 @@ ValueBuffer * AutomatableModel::valueBuffer()
 		m_oldValue = val;
 		m_lastUpdatedPeriod = s_periodCounter;
 		m_hasSampleExactData = true;
+                //emit dataChanged();
 		return &m_valueBuffer;
 	}
 

@@ -210,6 +210,8 @@ protected:
         bool shouldProcessAudioBuffer(sampleFrame* _buf, const fpp_t _frames,
                                       bool& _smoothBegin, bool& _smoothEnd);
 
+        bool shouldKeepRunning(sampleFrame* _buf, const fpp_t _frames);
+
         void computeWetDryLevels(fpp_t _f, fpp_t _frames,
                                  bool _smoothBegin, bool _smoothEnd,
                                  float& _w0,float &_d0,

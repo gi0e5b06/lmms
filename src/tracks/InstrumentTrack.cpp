@@ -233,7 +233,7 @@ void InstrumentTrack::processAudioBuffer( sampleFrame* buf, const fpp_t frames, 
 		const float vol = ( (float) n->getVolume() * DefaultVolumeRatio );
 		const panning_t pan = qBound( PanningLeft, n->getPanning(), PanningRight );
 		stereoVolumeVector vv = panningToVolumeVector( pan, vol );
-                bool clipping=false;
+
 		for( f_cnt_t f = offset; f < frames; ++f )
 		{
 			for( int c = 0; c < 2; ++c )
@@ -243,8 +243,8 @@ void InstrumentTrack::processAudioBuffer( sampleFrame* buf, const fpp_t frames, 
 		}
 	}
 
-        if(MixHelpers::sanitize(buf,frames))
-                qInfo("InstrumentTrack: sanitize done!!!");
+        //if(MixHelpers::sanitize(buf,frames))
+        //        qInfo("InstrumentTrack: sanitize done!!!");
         //if(MixHelpers::isClipping(buf,frames))
         //        setClipping(true);
 }
@@ -950,6 +950,7 @@ void InstrumentTrack::loadTrackSpecificSettings( const QDomElement & thisElement
 		}
 		node = node.nextSibling();
 	}
+
 	updatePitchRange();
 	unlock();
 }

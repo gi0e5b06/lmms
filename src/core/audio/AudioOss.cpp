@@ -75,6 +75,8 @@ AudioOss::AudioOss( bool & _success_ful, Mixer*  _mixer ) :
 								_mixer ),
 	m_convertEndian( false )
 {
+        setObjectName("audio oss");
+
 	_success_ful = false;
 
 	m_audioFD = open( probeDevice().toLatin1().constData(), O_WRONLY, 0 );

@@ -2096,6 +2096,7 @@ void TrackOperationsWidget::cloneTrack()
         if(newTrack->isSolo()) newTrack->setSolo(false);
         if(newTrack->isFrozen()) newTrack->setFrozen(false);
         if(newTrack->isClipping()) newTrack->setClipping(false);
+        newTrack->cleanFrozenBuffer();
 }
 
 
@@ -2474,7 +2475,9 @@ Track * Track::clone()
 	QDomDocument doc;
 	QDomElement parent = doc.createElement( "clone" );
 	saveState( doc, parent );
-	return create( parent.firstChild().toElement(), m_trackContainer );
+	Track* r=create( parent.firstChild().toElement(), m_trackContainer );
+        r->m_uuid="";
+        return r;
 }
 
 
@@ -2618,8 +2621,10 @@ void Track::loadSettings( const QDomElement & element )
                 if(!m_uuid.isEmpty())
                         qWarning("Track::loadSettings this track already has an UUID");
                 m_uuid=element.attribute( "uuid" );
-                readFrozenBuffer();
+                if(isFrozen()) readFrozenBuffer();
         }
+
+        //if(!isFrozen()) cleanFrozenBuffer();
 }
 
 

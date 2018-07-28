@@ -231,6 +231,8 @@ void fileCheck( QString &file )
 
 int main( int argc, char * * argv )
 {
+        QThread::currentThread()->setObjectName("main thread");
+
 #ifdef LMMS_DEBUG_FPE
 	// Enable exceptions for certain floating point results
 	feenableexcept( FE_INVALID   |
@@ -251,7 +253,7 @@ int main( int argc, char * * argv )
 	// initialize memory managers
 	MM_INIT //MemoryManager::init();
         ConfigManager::init(argv[0]);
-	NotePlayHandleManager::init();
+	//NotePlayHandleManager::init();
 
 	// intialize RNG
 	srand( getpid() + time( 0 ) );

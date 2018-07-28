@@ -883,6 +883,23 @@ void PatternView::constructContextMenu( QMenu * _cm )
 }
 
 
+int PatternView::mouseToStep(int _x,int _y)
+{
+        const int sr=m_pat->m_stepResolution;
+        const float ws= 16.f*16.f/sr;
+        const float w1= qMin(12,int(ws>=16.f ? ws-4.f : ws-1.f));
+        const int h1= 24;
+
+        float tmp = ( float(_x) - TCO_BORDER_WIDTH - 2 ) / ws ;
+        int step = int( tmp );
+        if((tmp-step)*ws>=w1) return -1;
+
+        const int hw=height();
+        if(_y<(hw-h1)/2) return -1;
+        if(_y>(hw+h1)/2) return -1;
+
+        return step;
+}
 
 
 void PatternView::mousePressEvent( QMouseEvent * _me )
@@ -890,41 +907,16 @@ void PatternView::mousePressEvent( QMouseEvent * _me )
         if(m_pat->getTrack()->isFrozen())
                 _me->ignore();
 
+	// when mouse button is pressed in beat/bassline -mode
         if( _me->button() == Qt::LeftButton &&
             m_pat->m_patternType == Pattern::BeatPattern &&
             _me->y() > height() - s_stepBtnOff->height() )
                 //fixedTCOs() )
                 //|| pixelsPerTact() >= 96 ||
                 //m_pat->m_steps != m_pat->stepsPerTact() ) &&
-
-
-	// when mouse button is pressed in beat/bassline -mode
-
 	{
-                //	get the step number that was clicked on and
-                //	do calculations in floats to prevent rounding errors...
-		//float tmp = ( ( float(_me->x()) - TCO_BORDER_WIDTH ) *
-                //              float( m_pat -> m_steps ) ) / float(width() - TCO_BORDER_WIDTH*2);
-		//const int steps = qMax( 1, m_pat->m_steps );
-                const int sr=m_pat->m_stepResolution;
-                const float ws= 16.f*16.f/sr;
-                const float w1= qMin(12,int(ws>=16.f ? ws-4.f : ws-1.f));
-                const int h1= 24;
-
-		float tmp = ( float(_me->x()) - TCO_BORDER_WIDTH - 2 ) / ws ;
-		int step = int( tmp );
-                if((tmp-step)*ws>=w1) return;
-                if(_me->y()<(height()-h1)/2) return;
-                if(_me->y()>(height()+h1)/2) return;
-
-                //	debugging to ensure we get the correct step...
-                //		qDebug( "Step (%f) %d", tmp, step );
-
-		if( step >= m_pat->m_steps )
-		{
-			qDebug( "Something went wrong in pattern.cpp: step %d doesn't exist in pattern!", step );
-			return;
-		}
+                int step=mouseToStep(_me->x(),_me->y());
+                if( step < 0 || step >= m_pat->m_steps ) return;
 
 		Note * n = m_pat->noteAtStep( step );
 
@@ -985,24 +977,17 @@ void PatternView::wheelEvent( QWheelEvent * _we )
                 //|| pixelsPerTact() >= 96 ||
                 //m_pat->m_steps != m_pat->stepsPerTact() )
         {
-                // get the step number that was wheeled on and
-                // do calculations in floats to prevent rounding errors...
-		float tmp = ( ( float(_we->x()) - TCO_BORDER_WIDTH ) *
-				float( m_pat -> m_steps ) ) / float(width() - TCO_BORDER_WIDTH*2);
-
-		int step = int( tmp );
-
-		if( step >= m_pat->m_steps )
-		{
-			return;
-		}
+                int step=mouseToStep(_we->x(),_we->y());
+                if( step < 0 || step >= m_pat->m_steps ) return;
 
 		Note * n = m_pat->noteAtStep( step );
+
 		if( !n && _we->delta() > 0 )
 		{
 			n = m_pat->addStepNote( step );
 			n->setVolume( 0 );
 		}
+
 		if( n != NULL )
 		{
 			int vol = n->getVolume();

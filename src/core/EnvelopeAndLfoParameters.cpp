@@ -93,12 +93,12 @@ EnvelopeAndLfoParameters::EnvelopeAndLfoParameters(
 							Model * _parent ) :
 	Model( _parent ),
 	m_used( false ),
-	m_predelayModel( 0.0, 0.0, 2.0, 0.001, this, tr( "Predelay" ) ),
-	m_attackModel( 0.0, 0.0, 2.0, 0.001, this, tr( "Attack" ) ),
-	m_holdModel( 0.5, 0.0, 2.0, 0.001, this, tr( "Hold" ) ),
-	m_decayModel( 0.5, 0.0, 2.0, 0.001, this, tr( "Decay" ) ),
+	m_predelayModel( 0.0, 0.0, 2.0, 0.001, SECS_PER_ENV_SEGMENT * 1000.0, this, tr( "Predelay" ) ),
+	m_attackModel( 0.04, 0.0, 2.0, 0.001, SECS_PER_ENV_SEGMENT * 1000.0, this, tr( "Attack" ) ),
+	m_holdModel( 0.25, 0.0, 2.0, 0.001, SECS_PER_ENV_SEGMENT * 1000.0, this, tr( "Hold" ) ),
+	m_decayModel( 0.5, 0.0, 2.0, 0.001, SECS_PER_ENV_SEGMENT * 1000.0, this, tr( "Decay" ) ),
 	m_sustainModel( 0.5, 0.0, 1.0, 0.001, this, tr( "Sustain" ) ),
-	m_releaseModel( 0.1, 0.0, 2.0, 0.001, this, tr( "Release" ) ),
+	m_releaseModel( 0.1, 0.0, 2.0, 0.001, SECS_PER_ENV_SEGMENT * 1000.0, this, tr( "Release" ) ),
 	m_amountModel( 0.0, -1.0, 1.0, 0.005, this, tr( "Modulation" ) ),
 	m_valueForZeroAmount( _value_for_zero_amount ),
 	m_pahdFrames( 0 ),
@@ -406,6 +406,8 @@ void EnvelopeAndLfoParameters::loadSettings( const QDomElement & _this )
 
 void EnvelopeAndLfoParameters::updateSampleVars()
 {
+        //qInfo("EnvelopeAndLfoParameters::updateSampleVars");
+
 	QMutexLocker m(&m_paramMutex);
 
 	const float frames_per_env_seg = SECS_PER_ENV_SEGMENT *

@@ -37,6 +37,8 @@ MidiOss::MidiOss() :
 	m_midiDev( probeDevice() ),
 	m_quit( false )
 {
+        setObjectName("midi oss");
+
 	// only start thread, if opening of MIDI-device is successful,
 	// otherwise isRunning()==false indicates error
 	if( m_midiDev.open( QIODevice::ReadWrite ) ||
