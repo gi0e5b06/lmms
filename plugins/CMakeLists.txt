@@ -62,7 +62,9 @@ IF("${PLUGIN_LIST}" STREQUAL "")
                 carlaeffectrack
 		carlapatchbay
 		carlarack
+                ChainGDX
 		ClickGDX
+                CompressorGDX
 		CrossoverEQ
 		# csound_instr - not ready
 		Delay

@@ -1,0 +1,3 @@
+INCLUDE(BuildPlugin)
+
+BUILD_PLUGIN(compressorgdx CompressorGDX.cpp CompressorGDXControls.cpp CompressorGDXControlDialog.cpp MOCFILES CompressorGDXControls.h CompressorGDXControlDialog.h EMBEDDED_RESOURCES artwork.png logo.png)
