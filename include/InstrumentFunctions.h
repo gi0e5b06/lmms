@@ -65,8 +65,9 @@ class InstrumentFunction
         return &m_maxNoteGenerationModel;
     }
     // inline int minNoteGeneration() const { return
-    // m_minNoteGenerationModel.value(); } inline void setMinNoteGeneration(int
-    // _min) { m_minNoteGenerationModel.setValue(_min); } inline int
+    // m_minNoteGenerationModel.value(); } inline void
+    // setMinNoteGeneration(int _min) {
+    // m_minNoteGenerationModel.setValue(_min); } inline int
     // maxNoteGeneration() const { return m_maxNoteGenerationModel.value(); }
     // inline void setMaxNoteGeneration(int _max) {
     // m_maxNoteGenerationModel.setValue(_max); }
@@ -294,7 +295,7 @@ class InstrumentFunctionNoteDuplicatesRemoving : public InstrumentFunction
     virtual InstrumentFunctionView* createView();
 
   private:
-    QMultiHash<int, int> m_cache;
+    QMultiHash<int64_t, int> m_cache;
 
     friend class InstrumentFunctionNoteDuplicatesRemovingView;
 };
@@ -389,6 +390,42 @@ class InstrumentFunctionNoteOutting : public InstrumentFunction
     // FloatModel m_detuneModel;
 
     friend class InstrumentFunctionNoteOuttingView;
+};
+
+class InstrumentFunctionGlissando : public InstrumentFunction
+{
+    Q_OBJECT
+
+  public:
+    InstrumentFunctionGlissando(Model* _parent);
+    virtual ~InstrumentFunctionGlissando();
+
+    virtual bool processNote(NotePlayHandle* n);
+    virtual void saveSettings(QDomDocument& _doc, QDomElement& _parent);
+    virtual void loadSettings(const QDomElement& _this);
+
+    inline virtual QString nodeName() const
+    {
+        return "glissando";
+    }
+
+    virtual InstrumentFunctionView* createView();
+
+  public slots:
+    void reset();
+
+  private:
+    TempoSyncKnobModel m_gliTimeModel;
+    FloatModel         m_gliGateModel;
+    FloatModel         m_gliAttenuationModel;
+    ComboBoxModel      m_gliUpModeModel;
+    ComboBoxModel      m_gliDownModeModel;
+
+    int     m_lastKey;
+    int64_t m_lastTime;
+
+    friend class InstrumentTrack;
+    friend class InstrumentFunctionGlissandoView;
 };
 
 #endif

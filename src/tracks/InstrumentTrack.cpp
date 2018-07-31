@@ -2,6 +2,7 @@
  * InstrumentTrack.cpp - implementation of instrument-track-class
  *                        (window + data-structures)
  *
+ * Copyright (c) 2017-2018 gi0e5b06 (on github.com)
  * Copyright (c) 2004-2014 Tobias Doerffel <tobydox/at/users.sourceforge.net>
  *
  * This file is part of LMMS - https://lmms.io
@@ -116,19 +117,13 @@ InstrumentTrack::InstrumentTrack( TrackContainer* tc ) :
 	m_noteDetuneModel( 0.f, -48.f, 48.f, 0.5f, this, tr( "Detune" ) ),
 	m_instrument( NULL ),
 	m_soundShaping( this ),
-        /*
-	m_noteFiltering( this ),
-	m_noteHumanizing( this ),
-	m_noteStacking( this ),
-	m_arpeggio( this ),
-	m_noteDuplicatesRemoving( this ),
-        */
 	m_piano( this )
 {
         m_noteFunctions.append(new InstrumentFunctionNoteFiltering(this));
 	m_noteFunctions.append(new InstrumentFunctionNoteDuplicatesRemoving(this));
 	m_noteFunctions.append(new InstrumentFunctionNoteKeying(this));
 	m_noteFunctions.append(new InstrumentFunctionNoteHumanizing(this));
+        m_noteFunctions.append(new InstrumentFunctionGlissando(this));
 	m_noteFunctions.append(new InstrumentFunctionNoteStacking(this));
 	m_noteFunctions.append(new InstrumentFunctionArpeggio(this));
 	m_noteFunctions.append(new InstrumentFunctionNoteOutting(this));

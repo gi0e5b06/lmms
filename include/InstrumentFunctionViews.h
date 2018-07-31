@@ -200,4 +200,25 @@ class InstrumentFunctionNoteOuttingView : public InstrumentFunctionView
     Knob*                          m_panKnob;
 };
 
+class InstrumentFunctionGlissandoView : public InstrumentFunctionView
+{
+    Q_OBJECT
+
+  public:
+    InstrumentFunctionGlissandoView(InstrumentFunctionGlissando* arp,
+                                    QWidget* parent = NULL);
+    virtual ~InstrumentFunctionGlissandoView();
+
+  public slots:
+    virtual void modelChanged();
+
+  private:
+    InstrumentFunctionGlissando* m_cc;
+    TempoSyncKnob*               m_gliTimeKnob;
+    Knob*                        m_gliGateKnob;
+    Knob*                        m_gliAttenuationKnob;
+    ComboBox*                    m_gliUpModeComboBox;
+    ComboBox*                    m_gliDownModeComboBox;
+};
+
 #endif

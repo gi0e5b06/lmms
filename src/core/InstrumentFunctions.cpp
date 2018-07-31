@@ -1,6 +1,7 @@
 /*
  * InstrumentFunctions.cpp - models for instrument-function-tab
  *
+ * Copyright (c) 2017-2018 gi0e5b06 (on github.com)
  * Copyright (c) 2004-2014 Tobias Doerffel <tobydox/at/users.sourceforge.net>
  *
  * This file is part of LMMS - https://lmms.io
@@ -32,6 +33,7 @@
 #include "InstrumentFunctionViews.h"
 #include "InstrumentTrack.h"
 #include "Mixer.h"
+#include "Piano.h"
 #include "PresetPreviewPlayHandle.h"
 #include "Song.h"
 #include "embed.h"
@@ -349,6 +351,8 @@ bool InstrumentFunctionNoteStacking::processNote(NotePlayHandle* _n)
         return true;
     // qInfo("InstrumentFunctionNoteStacking::processNote n.key=%d OK
     // g=%d",_n->key(),_n->generation());
+    if(_n->generation() >= 9)
+        return true;
 
     const int         base_note_key = _n->key();
     const ChordTable& chord_table   = ChordTable::getInstance();
@@ -478,14 +482,16 @@ bool InstrumentFunctionArpeggio::processNote(NotePlayHandle* _n)
     if(!shouldProcessNote(_n))
         return true;
 
-    //if( _n->origin() == NotePlayHandle::OriginArpeggio ||
+    // if( _n->origin() == NotePlayHandle::OriginArpeggio ||
     //    _n->origin() == NotePlayHandle::OriginNoteStacking ||
     //    (_n->isReleased()
     //     && _n->releaseFramesDone() >= _n->actualReleaseFramesToDo()))
+
     if(_n->isReleased())
-    {
         return true;
-    }
+
+    if(_n->generation() >= 9)
+        return true;
 
     // qInfo("InstrumentFunctionArpeggio::processNote n.key=%d in
     // g=%d",_n->key(),_n->generation()); if(_n->totalFramesPlayed()!=0 /*||
@@ -893,16 +899,16 @@ bool InstrumentFunctionNoteDuplicatesRemoving::processNote(NotePlayHandle* _n)
     static QMutex mtx;
     mtx.lock();
     // const float k=Engine::getSong()->getPlayPos().absoluteFrame();
-    const int k = (1000 * clock() / CLOCKS_PER_SEC);  // ms
+    const int64_t k = (1000 * clock() / CLOCKS_PER_SEC);  // ms
     // qInfo("InstrumentFunctionNoteDuplicatesRemoving: cache k=%d v=%d
     // in=%d",
     //  k,_n->key(),m_cache.contains(k,_n->key()));
 
     // const float fpt=Engine::framesPerTick();
     int i = 0;
-    foreach(const int ck, m_cache)
+    foreach(const int64_t ck, m_cache)
     {
-        if(ck < k - 150)  // || ck>=k+150)
+        if(ck + 150 < k)  // || ck>=k+150)
         {
             m_cache.remove(ck);
             i++;
@@ -1074,7 +1080,8 @@ InstrumentFunctionNoteKeying::InstrumentFunctionNoteKeying(Model* _parent) :
       // m_enabledModel( false, this ),
       m_volumeRangeModel(
               0.0f, -500.0f, 500.0f, 1.0f, this, tr("Volume change")),
-      m_volumeBaseModel(0.0f, 0.0f, 127.0f, 1.0f, this, tr("Volume base key")),
+      m_volumeBaseModel(
+              0.0f, 0.0f, 127.0f, 1.0f, this, tr("Volume base key")),
       m_volumeMinModel(0.0f, 0.0f, 200.0f, 0.1f, this, tr("Volume min")),
       m_volumeMaxModel(100.0f, 0.0f, 200.0f, 0.1f, this, tr("Volume max")),
       m_panRangeModel(0.0f, -500.0f, 500.0f, 1.0f, this, tr("Pan change")),
@@ -1215,4 +1222,332 @@ void InstrumentFunctionNoteOutting::loadSettings(const QDomElement& _this)
 InstrumentFunctionView* InstrumentFunctionNoteOutting::createView()
 {
     return new InstrumentFunctionNoteOuttingView(this);
+}
+
+InstrumentFunctionGlissando::InstrumentFunctionGlissando(Model* _parent) :
+      InstrumentFunction(_parent, tr("Glissando")),
+      m_gliTimeModel(
+              75.f, 5.f, 500.0f, 0.1f, 500.f, this, tr("Glissando time")),
+      m_gliGateModel(100.f, 1.0f, 100.0f, 1.0f, this, tr("Glissando gate")),
+      m_gliAttenuationModel(
+              30.f, 0.0f, 99.f, 1.0f, this, tr("Glissando attenuation")),
+      m_gliUpModeModel(this, tr("Glissando Up Mode")),
+      m_gliDownModeModel(this, tr("Glissando Down Mode")), m_lastKey(-1),
+      m_lastTime(-1)
+{
+    m_gliUpModeModel.addItem(tr("As previous key"));
+    m_gliUpModeModel.addItem(tr("As next key"));
+    m_gliUpModeModel.addItem(tr("As both or black"));
+    m_gliUpModeModel.addItem(tr("As both or white"));
+    m_gliUpModeModel.addItem(tr("All keys"));
+    m_gliUpModeModel.addItem(tr("None"));
+    m_gliUpModeModel.addItem(tr("Black keys"));
+    m_gliUpModeModel.addItem(tr("White keys"));
+
+    m_gliDownModeModel.addItem(tr("As previous key"));
+    m_gliDownModeModel.addItem(tr("As next key"));
+    m_gliDownModeModel.addItem(tr("As both or black"));
+    m_gliDownModeModel.addItem(tr("As both or white"));
+    m_gliDownModeModel.addItem(tr("All keys"));
+    m_gliDownModeModel.addItem(tr("None"));
+    m_gliDownModeModel.addItem(tr("Black keys"));
+    m_gliDownModeModel.addItem(tr("White keys"));
+
+    connect(Engine::getSong(), SIGNAL(playbackStateChanged()), this,
+            SLOT(reset()));
+}
+
+InstrumentFunctionGlissando::~InstrumentFunctionGlissando()
+{
+}
+
+void InstrumentFunctionGlissando::reset()
+{
+    if(!Engine::getSong()->isPlaying())
+    {
+        qInfo("Glissando: reset()");
+        m_lastKey  = -1;
+        m_lastTime = -1;
+    }
+}
+
+// static std::chrono::steady_clock::time_point s_startTime
+//        = std::chrono::steady_clock::now();
+
+bool InstrumentFunctionGlissando::processNote(NotePlayHandle* _n)
+{
+    if(!shouldProcessNote(_n))
+        return true;
+
+    if(_n->generation() >= 1)
+        return true;
+
+    if(_n->totalFramesPlayed() != 0)
+    {
+        // qInfo("Glissando: TFP>0 last=%ld cur=%ld\r", m_lastTime, curTime);
+        // m_lastKey  = newKey;
+        // m_lastTime = qMax(m_lastTime,curTime);
+        return true;
+    }
+
+    if(_n->isReleased())
+    {
+        qInfo("Glissando: RELEASED");
+        // m_lastKey  = newKey;
+        // m_lastTime = qMax(m_lastTime,curTime);
+        return true;
+    }
+
+    const int newKey = _n->key();
+
+    static QMutex mtx;
+    QMutexLocker  locker(&mtx);
+
+    qInfo("\nNEW KEY IS %d", newKey);
+    /*
+    const int64_t curTime
+            = std::chrono::duration_cast<std::chrono::milliseconds>(
+                      std::chrono::steady_clock::now() - s_startTime)
+                      .count();
+    */
+    const int64_t perTime
+            = static_cast<int64_t>(Engine::mixer()->framesPerPeriod() * 1000.f
+                                   / Engine::mixer()->processingSampleRate());
+
+    const int64_t curTime = Engine::getSong()->getMilliseconds();
+
+    const int64_t frmTime = static_cast<int64_t>(
+            _n->length() * Engine::framesPerTick() * 1000.f
+            / Engine::mixer()->processingSampleRate());
+    const int64_t offTime = static_cast<int64_t>(
+            _n->offset() * 1000.f / Engine::mixer()->processingSampleRate());
+    qInfo("Glissando: INFO lk=%d nk=%d last=%ld cur=%ld frm=%ld off=%ld "
+          "per=%ld",
+          m_lastKey, newKey, m_lastTime, curTime, frmTime, offTime, perTime);
+
+    if(m_lastKey < 0 || m_lastKey > 127)
+    {
+        m_lastKey  = newKey;
+        m_lastTime = curTime + frmTime + offTime;
+        qInfo("Glissando: KEY==%d last=%ld thread=%p", m_lastKey, m_lastTime,
+              QThread::currentThread());
+        return true;
+    }
+
+    if(curTime + offTime + perTime + 10 < m_lastTime)
+    {
+        qInfo("Glissando: SKIPPED cur=%ld last=%ld", curTime, m_lastTime);
+        return true;
+    }
+
+    if(curTime - m_lastTime >= 150)
+    {
+        m_lastKey  = newKey;
+        m_lastTime = curTime + frmTime + offTime;
+        qInfo("Glissando: GAP600 last=%ld", m_lastTime);
+        return true;
+    }
+
+    if(m_lastKey == newKey)
+    {
+        // m_lastTime = qMax(m_lastTime, curTime + frmTime + offTime);
+        qInfo("Glissando: LAST==NEW last=%ld", m_lastTime);
+        return true;
+    }
+
+    if(Engine::mixer()->criticalXRuns())
+    {
+        m_lastKey  = newKey;
+        m_lastTime = curTime + frmTime + offTime;
+        qInfo("Glissando: CRITICAL XRUNS last=%ld", m_lastTime);
+        return true;
+    }
+
+    const int step = (newKey < m_lastKey ? -1 : 1);
+
+    int mode = (step >= 0 ? m_gliUpModeModel.value()
+                          : m_gliDownModeModel.value());
+
+    if(mode == 5)
+    {
+        m_lastKey  = newKey;
+        m_lastTime = curTime + frmTime + offTime;
+        qInfo("Glissando: NONE MODE last=%ld", m_lastTime);
+        return true;
+    }
+
+    bool allowBlack  = true;
+    bool allowWhite  = true;
+    bool lastIsBlack = Piano::isBlackKey(m_lastKey);
+    bool lastIsWhite = !lastIsBlack;
+    bool nextIsBlack = Piano::isBlackKey(newKey);
+    bool nextIsWhite = !nextIsBlack;
+
+    switch(mode)
+    {
+        case 0:
+            allowBlack = lastIsBlack;
+            allowWhite = !allowBlack;
+            break;
+        case 1:
+            allowBlack = nextIsBlack;
+            allowWhite = !allowBlack;
+            break;
+        case 2:
+            allowWhite = lastIsWhite && nextIsWhite;
+            allowBlack = !allowWhite;
+            break;
+        case 3:
+            allowBlack = lastIsBlack && nextIsBlack;
+            allowWhite = !allowBlack;
+            break;
+        case 6:
+            allowBlack = true;
+            allowWhite = false;
+            break;
+        case 7:
+            allowBlack = false;
+            allowWhite = true;
+            break;
+    }
+
+    // const int howmany = abs(m_lastKey - newKey);
+    int howmany = 0;
+    for(int key = m_lastKey + step; key != newKey; key += step)
+    {
+        if(key >= NumKeys || key < 0)
+            continue;
+
+        if(!allowBlack && Piano::isBlackKey(key))
+            continue;
+        if(!allowWhite && Piano::isWhiteKey(key))
+            continue;
+
+        howmany++;
+    }
+
+    if(howmany <= 1)
+    {
+        qInfo("Glissando: HOWMANY<=1 (%d) lk=%d nk=%d step=%d last=%ld",
+              howmany, m_lastKey, newKey, step, m_lastTime);
+        m_lastKey  = newKey;
+        m_lastTime = curTime + frmTime + offTime;
+        qInfo("         : HOWMANY<=1 (%d) lk=%d nk=%d step=%d last=%ld",
+              howmany, m_lastKey, newKey, step, m_lastTime);
+        return true;
+    }
+
+    qInfo("Glissando: PROCEED many=%d", howmany);
+
+    // number of frames that every note should be played
+    f_cnt_t note_frames
+            = (f_cnt_t)(m_gliTimeModel.value() / 1000.0f
+                        * Engine::mixer()->processingSampleRate());
+
+    if(howmany * note_frames > _n->length() * Engine::framesPerTick())
+        note_frames = _n->length() * Engine::framesPerTick() / howmany;
+
+    const f_cnt_t gated_frames
+            = (f_cnt_t)(m_gliGateModel.value() * note_frames / 100.0f);
+
+    if(gated_frames <= 6)
+    {
+        qInfo("Glissando: GATED<=6");
+        m_lastKey  = newKey;
+        m_lastTime = curTime + frmTime + offTime;
+        return true;
+    }
+
+    int pos_frame = _n->totalFramesPlayed() + note_frames - 1;
+
+    f_cnt_t frames_processed = _n->noteOffset();
+
+    for(int key = m_lastKey + step; key != newKey; key += step)
+    {
+        if(key >= NumKeys || key < 0)
+            continue;
+
+        if(!allowBlack && Piano::isBlackKey(key))
+            continue;
+        if(!allowWhite && Piano::isWhiteKey(key))
+            continue;
+
+        float a = m_gliAttenuationModel.value() / 100.f;
+        if(Piano::isBlackKey(key))
+            a *= 1.05f;
+        a = qBound(0.f, a, 0.99f);
+
+        Note subnote(_n->length(), 0, key, _n->getVolume() * (1.f - a),
+                     _n->getPanning(), _n->detuning());
+
+        // create sub-note-play-handle, only ptr to note is different
+        // and is_gli_note=true
+        Engine::mixer()->addPlayHandle(NotePlayHandleManager::acquire(
+                _n->instrumentTrack(), frames_processed, gated_frames,
+                subnote, _n, -1, NotePlayHandle::OriginGlissando,
+                _n->generation() + 1));
+
+        // update counters
+        frames_processed += note_frames;
+        pos_frame += note_frames;
+    }
+
+    m_lastKey = newKey;
+
+    const f_cnt_t total_frames = frames_processed - _n->offset();
+
+    const int64_t totTime = static_cast<int64_t>(
+            total_frames * 1000.f / Engine::mixer()->processingSampleRate());
+
+    const int64_t posTime = static_cast<int64_t>(
+            pos_frame * 1000.f / Engine::mixer()->processingSampleRate());
+
+    qInfo("Glissando : ++++++++> frm=%ld off=%ld pos=%ld tot=%ld", frmTime,
+          offTime, posTime, totTime);
+
+    const int64_t endTime = curTime + frmTime + offTime;
+    qInfo("Glissando: NEW prev=%ld cur=%ld end=%ld", m_lastTime, curTime,
+          endTime);
+    m_lastTime = endTime;
+
+    // recreate the note
+    Note note(_n->length(), _n->pos(), _n->key(), _n->getVolume(),
+              _n->getPanning(), _n->detuning());
+
+    Engine::mixer()->addPlayHandle(NotePlayHandleManager::acquire(
+            _n->instrumentTrack(), frames_processed,
+            _n->frames() - total_frames, note, NULL, -1,
+            NotePlayHandle::OriginGlissando, _n->generation()));
+
+    return false;
+}
+
+void InstrumentFunctionGlissando::saveSettings(QDomDocument& _doc,
+                                               QDomElement&  _this)
+{
+    m_enabledModel.saveSettings(_doc, _this, "enabled");
+    m_minNoteGenerationModel.saveSettings(_doc, _this, "mingen");
+    m_maxNoteGenerationModel.saveSettings(_doc, _this, "maxgen");
+    m_gliTimeModel.saveSettings(_doc, _this, "time");
+    m_gliGateModel.saveSettings(_doc, _this, "gate");
+    m_gliAttenuationModel.saveSettings(_doc, _this, "attenuation");
+    m_gliUpModeModel.saveSettings(_doc, _this, "up_mode");
+    m_gliDownModeModel.saveSettings(_doc, _this, "down_mode");
+}
+
+void InstrumentFunctionGlissando::loadSettings(const QDomElement& _this)
+{
+    m_enabledModel.loadSettings(_this, "enabled");
+    m_minNoteGenerationModel.loadSettings(_this, "mingen");
+    m_maxNoteGenerationModel.loadSettings(_this, "maxgen");
+    m_gliTimeModel.loadSettings(_this, "time");
+    m_gliGateModel.loadSettings(_this, "gate");
+    m_gliAttenuationModel.loadSettings(_this, "attenuation");
+    m_gliUpModeModel.loadSettings(_this, "up_mode");
+    m_gliDownModeModel.loadSettings(_this, "down_mode");
+}
+
+InstrumentFunctionView* InstrumentFunctionGlissando::createView()
+{
+    return new InstrumentFunctionGlissandoView(this);
 }

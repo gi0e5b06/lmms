@@ -470,3 +470,77 @@ void InstrumentFunctionNoteOuttingView::modelChanged()
     m_volumeKnob->setModel(&m_cc->m_volumeModel);
     m_panKnob->setModel(&m_cc->m_panModel);
 }
+
+InstrumentFunctionGlissandoView::InstrumentFunctionGlissandoView(
+        InstrumentFunctionGlissando* cc, QWidget* parent) :
+      InstrumentFunctionView(cc, tr("GLISSANDO"), parent),
+      m_cc(cc), m_gliTimeKnob(new TempoSyncKnob(knobBright_26)),
+      m_gliGateKnob(new Knob(knobBright_26)),
+      m_gliAttenuationKnob(new Knob(knobBright_26)),
+      m_gliUpModeComboBox(new ComboBox()),
+      m_gliDownModeComboBox(new ComboBox())
+{
+    QGridLayout* mainLayout = new QGridLayout(m_groupBox);
+    mainLayout->setContentsMargins(6, 16, 6, 6);
+    mainLayout->setColumnStretch(3, 1);
+    mainLayout->setHorizontalSpacing(6);
+    mainLayout->setVerticalSpacing(1);
+
+    m_groupBox->setWhatsThis(
+            tr("A glissando is a method playing all, only black or only "
+               "white keys between two notes."));
+
+    m_gliTimeKnob->setLabel(tr("TIME"));
+    m_gliTimeKnob->setHintText(tr("Glissando time:"), " " + tr("ms"));
+    m_gliTimeKnob->setWhatsThis(
+            tr("Use this knob for setting the glissando time in "
+               "milliseconds. The glissando time specifies how long "
+               "each glissando note should be played."));
+
+    m_gliGateKnob->setLabel(tr("GATE"));
+    m_gliGateKnob->setHintText(tr("Glissando gate:"), tr("%"));
+    m_gliGateKnob->setWhatsThis(
+            tr("Use this knob for setting the glissando gate. The "
+               "glissando gate specifies the percent of a whole "
+               "glissando note that should be played. With this you "
+               "can make cool staccato glissandos."));
+
+    m_gliAttenuationKnob->setLabel(tr("MUT%"));
+    m_gliAttenuationKnob->setHintText(tr("Attenuation:"), tr("%"));
+    m_gliAttenuationKnob->setWhatsThis(
+            tr("Use this knob for setting the volume reduction. The "
+               "glissando gate specifies the percent of a whole "
+               "glissando note that should be played. With this you "
+               "can make cool staccato glissandos."));
+
+    QLabel* upModeLabel = new QLabel(tr("Up mode:"));
+    QLabel* downModeLabel = new QLabel(tr("Down mode:"));
+    upModeLabel->setFont(pointSize<8>(upModeLabel->font()));
+    downModeLabel->setFont(pointSize<8>(downModeLabel->font()));
+
+    mainLayout->addWidget(m_gliGateKnob, 0, 0, 4, 1, Qt::AlignHCenter);
+    mainLayout->addWidget(m_gliTimeKnob, 0, 1, 4, 1, Qt::AlignHCenter);
+    mainLayout->addWidget(m_gliAttenuationKnob, 0, 2, 4, 1, Qt::AlignHCenter);
+    mainLayout->addWidget(upModeLabel, 0, 3);
+    mainLayout->addWidget(m_gliUpModeComboBox, 1, 3);
+    mainLayout->addWidget(downModeLabel, 2, 3);
+    mainLayout->addWidget(m_gliDownModeComboBox, 3, 3);
+
+    //mainLayout->setRowMinimumHeight(2, 3);
+    //mainLayout->setRowMinimumHeight(5, 3);
+}
+
+InstrumentFunctionGlissandoView::~InstrumentFunctionGlissandoView()
+{
+}
+
+void InstrumentFunctionGlissandoView::modelChanged()
+{
+    m_cc = castModel<InstrumentFunctionGlissando>();
+    m_groupBox->setModel(&m_cc->m_enabledModel);
+    m_gliTimeKnob->setModel(&m_cc->m_gliTimeModel);
+    m_gliGateKnob->setModel(&m_cc->m_gliGateModel);
+    m_gliAttenuationKnob->setModel(&m_cc->m_gliAttenuationModel);
+    m_gliUpModeComboBox->setModel(&m_cc->m_gliUpModeModel);
+    m_gliDownModeComboBox->setModel(&m_cc->m_gliDownModeModel);
+}

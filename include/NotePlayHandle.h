@@ -59,8 +59,8 @@ class EXPORT NotePlayHandle /*final*/
         OriginNoteStacking
         = 4, /*! created by note stacking instrument function */
         OriginArpeggio = 8, /*! created by arpeggio instrument function */
-        // OriginNoteHumanizing=16, /*! created by note humanizing instrument
-        // function */ OriginCount //not used
+        OriginGlissando=16, /*! created by glissando instrument function */
+        //OriginCount //not used
     };
     // typedef Origins Origin;
     typedef int Origin;
