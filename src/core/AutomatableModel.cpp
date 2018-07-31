@@ -263,7 +263,7 @@ void AutomatableModel::setAutomatedValue( const float value )
                 m_value    = newval;
                 //m_valueChanged = true;
                 propagateAutomatedValue();
-		//emit dataChanged();
+		emit dataChanged();
 	}
         /*
 	else
@@ -587,17 +587,17 @@ ValueBuffer * AutomatableModel::valueBuffer()
 		{
 			float * values = vb->values();
 			float * nvalues = m_valueBuffer.values();
-                        bool changed=false;
+                        //bool changed=false;
 			switch( m_scaleType )
 			{
 			case Linear:
 				for( int i = 0; i < m_valueBuffer.length(); i++ )
 				{
                                         float newval=minValue<float>() + ( range() * values[i] );
-					if(nvalues[i] != newval)
+					//if(nvalues[i] != newval)
                                         {
                                                 nvalues[i] = newval;
-                                                changed=true;
+                                                //changed=true;
                                         }
 				}
 				break;
@@ -605,10 +605,10 @@ ValueBuffer * AutomatableModel::valueBuffer()
 				for( int i = 0; i < m_valueBuffer.length(); i++ )
 				{
 					float newval=logToLinearScale( values[i] );
-					if(nvalues[i] != newval)
+					//if(nvalues[i] != newval)
                                         {
                                                 nvalues[i] = newval;
-                                                changed=true;
+                                                //changed=true;
                                         }
 				}
 				break;
@@ -633,14 +633,14 @@ ValueBuffer * AutomatableModel::valueBuffer()
 		vb = lm->valueBuffer();
 		float * values = vb->values();
 		float * nvalues = m_valueBuffer.values();
-                bool changed=false;
+                //bool changed=false;
 		for( int i = 0; i < vb->length(); i++ )
 		{
                         float newval=fittedValue( values[i] );
-                        if(nvalues[i] != newval)
+                        //if(nvalues[i] != newval)
                         {
                                 nvalues[i] = newval;
-                                changed=true;
+                                //changed=true;
                         }
 		}
 		m_lastUpdatedPeriod = s_periodCounter;

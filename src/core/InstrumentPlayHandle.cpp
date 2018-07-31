@@ -24,6 +24,7 @@
 
 #include "InstrumentPlayHandle.h"
 
+#include <cmath>
 #include "InstrumentTrack.h"
 
 InstrumentPlayHandle::InstrumentPlayHandle(Instrument*      instrument,
@@ -49,7 +50,9 @@ void InstrumentPlayHandle::play(sampleFrame* _working_buffer)
     ConstNotePlayHandleList nphv = NotePlayHandle::nphsOfInstrumentTrack(
             m_instrument->instrumentTrack(), true);
 
-    float ndm = m_instrument->instrumentTrack()->noteDetuneModel()->value();
+    float ndm = m_instrument->instrumentTrack()->noteDetuneModel()->value()
+            *(1.f-0.05f*Engine::mixer()->baseSampleRate() / Engine::mixer()->processingSampleRate());
+    if(fabsf(ndm)<0.001f) ndm=0.f;
 
     bool nphsLeft;
     do
@@ -69,11 +72,12 @@ void InstrumentPlayHandle::play(sampleFrame* _working_buffer)
         }
     } while(nphsLeft);
 
-    if(m_instrument->flags().testFlag(Instrument::IsMidiBased) == true)
+    // if(m_instrument->flags().testFlag(Instrument::IsMidiBased) == true)
     {
         // qInfo("InstrumentPlayHandle::processAudioBuffer
         // baseDetune=%f",ndm);
-        m_instrument->instrumentTrack()->noteDetuneModel()->setValue(ndm);
+        m_instrument->instrumentTrack()->noteDetuneModel()->setAutomatedValue(
+                ndm);
     }
 
     m_instrument->play(_working_buffer);

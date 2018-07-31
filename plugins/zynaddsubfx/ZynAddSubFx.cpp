@@ -392,13 +392,13 @@ void ZynAddSubFxInstrument::updatePitchRange()
 	m_pluginMutex.lock();
 	if( m_remotePlugin )
 	{
-                qInfo("ZynAddSubFxInstrument::updatePitchRange #1 %d",instrumentTrack()->midiPitchRange());
+                //qInfo("ZynAddSubFxInstrument::updatePitchRange #1 %d",instrumentTrack()->midiPitchRange());
 		m_remotePlugin->sendMessage( RemotePlugin::message( IdZasfSetPitchWheelBendRange ).
                                              addInt( instrumentTrack()->midiPitchRange() ) );
 	}
 	else
 	{
-                qInfo("ZynAddSubFxInstrument::updatePitchRange #2 %d",instrumentTrack()->midiPitchRange());
+                //qInfo("ZynAddSubFxInstrument::updatePitchRange #2 %d",instrumentTrack()->midiPitchRange());
 		m_plugin->setPitchWheelBendRange( instrumentTrack()->midiPitchRange() );
 	}
 	m_pluginMutex.unlock();
