@@ -37,7 +37,7 @@
 
 #include "debug.h"
 #include "lmms_math.h"
-#include "PerfLog.h"
+//#include "PerfLog.h"
 
 #include "Knob.h"
 #include "CaptionMenu.h"
@@ -58,35 +58,27 @@ TextFloat * Knob::s_textFloat = NULL;
 
 //new FloatModel(0.7f,0.f,1.f,0.01f, NULL, _name, true ), this ),
 
-//! @todo: in C++11, we can use delegating ctors
-#define DEFAULT_KNOB_INITIALIZER_LIST \
-	QWidget( _parent ), \
-        FloatModelView( NULL, this ), \
-	m_pressLeft( false ), \
-	m_label( "" ), \
-	m_knobPixmap( NULL ), \
-	m_volumeKnob( false ), \
-	m_volumeRatio( 100.0, 0.0, 1000000.0 ), \
-	m_angle( -1000.f ), \
-        m_cache( NULL ), \
-	m_lineWidth( 0.f ), \
-	m_textColor( 255, 255, 255 )
+Knob::Knob( QWidget * _parent, const QString & _name ) :
+	Knob( knobBright_26, _parent, _name)
+{
+}
 
 Knob::Knob( knobTypes _knob_num, QWidget * _parent, const QString & _name ) :
-	DEFAULT_KNOB_INITIALIZER_LIST,
+	QWidget( _parent ),
+        FloatModelView( NULL, this ),
+	m_pressLeft( false ),
+	m_label( "" ),
+	m_knobPixmap( NULL ),
+	m_volumeKnob( false ),
+	m_volumeRatio( 100.0, 0.0, 1000000.0 ), \
+	m_angle( -1000.f ),
+        m_cache( NULL ),
+	m_lineWidth( 0.f ),
+	m_textColor( 255, 255, 255 ),
 	m_knobNum( _knob_num )
 {
 	initUi( _name );
 }
-
-Knob::Knob( QWidget * _parent, const QString & _name ) :
-	DEFAULT_KNOB_INITIALIZER_LIST,
-	m_knobNum( knobBright_26 )
-{
-	initUi( _name );
-}
-
-#undef DEFAULT_KNOB_INITIALIZER_LIST
 
 
 
@@ -428,9 +420,12 @@ bool Knob::updateAngle()
 	if( m )//&& m->maxValue() != m->minValue() )
 	{
 		//angle = angleFromValue( m->inverseScaledValue( m->value() ), m->minValue(), m->maxValue(), m_totalAngle );
-                float v=m->minValue()+qRound( (m->value()-m->minValue()) /
-                                              m->step<float>() ) * m->step<float>();
-                v=m->normalizedValue(v);
+                //float v=m->minValue()+qRound( (m->value()-m->minValue()) /
+                //                              m->step<float>() ) * m->step<float>();
+                //v=m->normalizedValue(v);
+                float v=m->value();
+                if(m->isScaleLogarithmic()) v=::linearToLogScale(m->minValue(),m->maxValue(),v);
+                v=(v-m->minValue())/m->range();
                 angle=m_totalAngle*(v-0.5f);
 	}
 	if( qAbs( angle - m_angle ) > 3.f )
@@ -721,8 +716,15 @@ void Knob::setPosition( const QPoint & _p, bool _shift )
 			m_leftOver = value;
 		}
 		*/
-
-	m->setValue( m->inverseNormalizedValue( dist*value + (1.f-dist)*m_pressValue ));
+        /*                float v=m->value();
+                if(m->isScaleLogarithmic()) v=::linearToLogScale(m->minValue(),m->maxValue(),v);
+                v=(v-m->minValue())/m->range();
+                angle=m_totalAngle*(v-0.5f);
+        */
+        float v=dist*value + (1.f-dist)*m_pressValue;
+        if(m->isScaleLogarithmic()) v=::logToLinearScale(0.f,1.f,v);
+        v=m->minValue()+m->range()*v;
+        m->setValue(v);
 		//m_leftOver = 0.0f;
 		//	}
 

@@ -63,10 +63,14 @@ void TempoSyncKnobModel::setTempoSync( QAction * _item )
 
 
 
-void TempoSyncKnobModel::setTempoSync( int _note_type )
+void TempoSyncKnobModel::setTempoSync( int _noteType )
 {
-	setSyncMode( ( TempoSyncMode ) _note_type );
-	Engine::getSong()->setModified();
+        TempoSyncMode newVal= ( TempoSyncMode ) _noteType;
+	if( m_tempoSyncMode != newVal)
+        {
+                setSyncMode(newVal);
+                Engine::getSong()->setModified();
+        }
 }
 
 

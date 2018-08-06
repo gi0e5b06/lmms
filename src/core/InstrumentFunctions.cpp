@@ -1265,7 +1265,7 @@ void InstrumentFunctionGlissando::reset()
 {
     if(!Engine::getSong()->isPlaying())
     {
-        qInfo("Glissando: reset()");
+        // qInfo("Glissando: reset()");
         m_lastKey  = -1;
         m_lastTime = -1;
     }
@@ -1292,7 +1292,7 @@ bool InstrumentFunctionGlissando::processNote(NotePlayHandle* _n)
 
     if(_n->isReleased())
     {
-        qInfo("Glissando: RELEASED");
+        // qInfo("Glissando: RELEASED");
         // m_lastKey  = newKey;
         // m_lastTime = qMax(m_lastTime,curTime);
         return true;

@@ -142,7 +142,7 @@ void LmmsCore::init1b()
         init_fastsquaref01();
         init_fastmoogsawf01();
         init_fastnormexpf01();
-        //init_fastsin02PI();
+        init_fastrandf01();
 }
 
 void LmmsCore::init2()

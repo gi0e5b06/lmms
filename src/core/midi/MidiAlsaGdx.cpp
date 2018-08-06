@@ -30,7 +30,7 @@
 
 #include "debug.h"
 #include "Backtrace.h"
-#include "PerfLog.h"
+//#include "PerfLog.h"
 
 #include "ConfigManager.h"
 #include "Engine.h"

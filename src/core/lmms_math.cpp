@@ -81,9 +81,16 @@ static inline float normexpf(const float x)
         return -1.f + 8.f * (1.f - x) * (1.f - x);
 }
 
-#define FFSZ1M 1048576
-#define FFSZ100K 131072
-#define FFSZ10K 16384
+static inline float randf(const float)
+{
+        return 2.f*fastrandf01inc()-1.f;
+}
+
+
+#define _QFAST 16
+#define FFSZ1M 1048576*_QFAST/16
+#define FFSZ100K 131072*_QFAST/16
+#define FFSZ10K 16384*_QFAST/16
 #define FFSZ1K 1024
 
 FASTFUNC01_BODY(sqrtf, FFSZ10K)
@@ -93,3 +100,4 @@ FASTFUNC01_BODY(sawf, FFSZ1K)
 FASTFUNC01_BODY(squaref, FFSZ1K)
 FASTFUNC01_BODY(moogsawf, FFSZ1K)
 FASTFUNC01_BODY(normexpf, FFSZ100K)
+FASTFUNC01_BODY(randf, FFSZ100K)

@@ -28,8 +28,8 @@
 #include "lmmsconfig.h"
 
 #ifdef LMMS_BUILD_LINUX
-#include <unistd.h>
 #include <sys/times.h>
+#include <unistd.h>
 #endif
 
 #ifdef LMMS_DEBUG_PERFLOG
@@ -39,42 +39,44 @@
 
 class PerfLog
 {
- public:
-	static void begin(const QString& what);
-	static void end(const QString& what);
+  public:
+    static void begin(const QString& what);
+    static void end(const QString& what, const uint32_t milliseconds = 0);
 
- private:
-	class Entry
-	{
-	public:
+  private:
+    class Entry
+    {
+      public:
 #ifdef LMMS_BUILD_LINUX
-		clock_t c;
-		tms     t;
+        clock_t c;
+        tms     t;
 #endif
-		Entry();
-	};
+        Entry();
+    };
 
-	class Cumul
-	{
-	public:
-		float ctreal;
-		float ctuser;
-		float ctsyst;
+    class Cumul
+    {
+      public:
+        float   ctreal;
+        float   ctuser;
+        float   ctsyst;
+        clock_t lastprint;
+        Cumul();
+    };
 
-		Cumul();
-	};
-
-	static QHash< QString,PerfLog::Entry> s_running;
-	static QHash< QString,PerfLog::Cumul> s_cumulated;
+    static QHash<QString, PerfLog::Entry> s_running;
+    static QHash<QString, PerfLog::Cumul> s_cumulated;
 };
 
 #define PL_BEGIN(w) PerfLog::begin(w);
 #define PL_END(w) PerfLog::end(w);
+#define qTrace(...) qInfo( __VA_ARGS__ )
 
 #else
 
 #define PL_BEGIN(w)
 #define PL_END(w)
+#define qTrace(...)
 
 #endif
 

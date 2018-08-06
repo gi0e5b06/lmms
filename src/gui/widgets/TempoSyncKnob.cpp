@@ -37,17 +37,20 @@
 
 
 
+TempoSyncKnob::TempoSyncKnob( QWidget * _parent,
+                              const QString & _name ) :
+	TempoSyncKnob( knobBright_26 , _parent, _name )
+{
+}
+
 TempoSyncKnob::TempoSyncKnob( knobTypes _knob_num, QWidget * _parent,
-						const QString & _name ) :
+                              const QString & _name ) :
 	Knob( _knob_num, _parent, _name ),
 	m_tempoSyncIcon( embed::getIconPixmap( "tempo_sync" ) ),
 	m_tempoSyncDescription( tr( "Tempo Sync" ) ),
 	m_custom( NULL )
 {
 }
-
-
-
 
 TempoSyncKnob::~TempoSyncKnob()
 {

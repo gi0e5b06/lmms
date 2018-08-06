@@ -345,8 +345,8 @@ float AutomatableModel::normalizedValue( float value ) const
 float AutomatableModel::inverseNormalizedValue( float value ) const
 {
 	float r=value;
-	if( m_scaleType != Linear ) r = ::linearToLogScale( minValue<float>(), maxValue<float>(), r );
 	r = ( value * m_range ) + minValue<float>();
+	if( m_scaleType != Linear ) r = ::linearToLogScale( minValue<float>(), maxValue<float>(), r );
 	return r;
 }
 

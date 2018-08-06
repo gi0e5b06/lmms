@@ -32,11 +32,11 @@
 
 
 Oscillator::Oscillator( const IntModel * _wave_shape_model,
-				const IntModel * _mod_algo_model,
-				const float & _freq,
-				const float & _detuning,
-				const float & _phase_offset,
-				const float & _volume,
+                        const IntModel * _mod_algo_model,
+                        const float & _freq,
+                        const float & _detuning,
+                        const float & _phase_offset,
+                        const float & _volume,
 			Oscillator * _sub_osc ) :
 	m_waveShapeModel( _wave_shape_model ),
 	m_modulationAlgoModel( _mod_algo_model ),

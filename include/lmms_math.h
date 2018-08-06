@@ -327,6 +327,7 @@ FASTFUNC01_HEADER(sawf)
 FASTFUNC01_HEADER(squaref)
 FASTFUNC01_HEADER(moogsawf)
 FASTFUNC01_HEADER(normexpf)
+FASTFUNC01_HEADER(randf)
 
 // fast approximation of square root (not used)
 /*

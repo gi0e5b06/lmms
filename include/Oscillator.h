@@ -54,6 +54,9 @@ public:
 		ExponentialWave,
 		WhiteNoise,
 		UserDefinedWave,
+                ZeroWave,
+                OneWave,
+                MinusOneWave,
 		NumWaveShapes
 	} ;
 
@@ -64,6 +67,8 @@ public:
 		SignalMix,
 		SynchronizedBySubOsc,
 		FrequencyModulation,
+		PulseModulation,
+                OutputModulation,
 		NumModulationAlgos
 	} ;
 
@@ -75,6 +80,7 @@ public:
                     const float & _phase_offset,
                     const float & _volume,
                     Oscillator * _m_subOsc = NULL );
+
 	virtual ~Oscillator()
 	{
 		delete m_subOsc;

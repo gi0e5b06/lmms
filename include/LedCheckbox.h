@@ -22,74 +22,68 @@
  *
  */
 
-
 #ifndef LED_CHECKBOX_H
 #define LED_CHECKBOX_H
 
 #include "AutomatableButton.h"
 
-
 class QPixmap;
-
 
 class EXPORT LedCheckBox : public AutomatableButton
 {
-	Q_OBJECT
-public:
-	enum LedColors
-	{
-		Yellow,
-		Green,      //param / mute
-		Red,        //alert / clipping
-		Blue,       //freeze
-		Magenta,    //solo
-		White,
-		NumColors
-	} ;
+    Q_OBJECT
+  public:
+    enum LedColors
+    {
+        Yellow,
+        Green,    // param / mute
+        Red,      // alert / clipping
+        Blue,     // freeze
+        Magenta,  // solo
+        White,
+        NumColors
+    };
 
-	LedCheckBox( const QString & _txt, QWidget * _parent,
-				const QString & _name = QString::null,
-						LedColors _color = Yellow );
-	LedCheckBox( QWidget * _parent,
-				const QString & _name = QString::null,
-						LedColors _color = Yellow );
+    LedCheckBox(const QString& _txt,
+                QWidget*       _parent,
+                const QString& _name  = QString::null,
+                LedColors      _color = Yellow);
+    LedCheckBox(QWidget*       _parent,
+                const QString& _name  = QString::null,
+                LedColors      _color = Yellow);
+    LedCheckBox(QWidget* _parent, LedColors _color);
 
-	virtual ~LedCheckBox();
+    virtual ~LedCheckBox();
 
+    QString text() const;
+    void    setText(const QString& _s);
+    // Q_PROPERTY( QString text READ text WRITE setText )
+    Qt::AnchorPoint textAnchorPoint() const;
+    void            setTextAnchorPoint(Qt::AnchorPoint _a);
 
-	QString text() const;
-	void setText(const QString& _s);
-	//Q_PROPERTY( QString text READ text WRITE setText )
-        Qt::AnchorPoint textAnchorPoint() const;
-        void setTextAnchorPoint(Qt::AnchorPoint _a);
+    bool blinking() const;
+    void setBlinking(bool _b);
 
-        bool blinking() const;
-        void setBlinking(bool _b);
+    virtual void enterValue();
 
-        virtual void enterValue();
+  public slots:
+    virtual void update();
 
+  protected:
+    virtual void paintEvent(QPaintEvent* _pe);
 
-public slots:
-        virtual void update();
+  private:
+    bool m_blinkingState;
+    bool m_blinking;
 
+    QPixmap* m_ledOnPixmap;
+    QPixmap* m_ledOffPixmap;
 
-protected:
-	virtual void paintEvent( QPaintEvent * _pe );
+    QString         m_text;
+    Qt::AnchorPoint m_textAnchor;
 
-
-private:
-        bool        m_blinkingState;
-        bool        m_blinking;
-
-	QPixmap * m_ledOnPixmap;
-	QPixmap * m_ledOffPixmap;
-
-	QString m_text;
-        Qt::AnchorPoint m_textAnchor;
-
-	void initUi( LedColors _color ); //!< to be called by ctors
-	void onTextUpdated(); //!< to be called when you updated @a m_text
-
-} ;
+    void initUi(LedColors _color);  //!< to be called by ctors
+    void onTextUpdated();  //!< to be called when you updated @a m_text
+};
 
 #endif
