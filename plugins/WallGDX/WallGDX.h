@@ -1,5 +1,5 @@
 /*
- * ScatterGDX.h - scatter effect
+ * WallGDX.h - wall effect
  *
  * Copyright (c) 2018 gi0e5b06 (on github.com)
  *
@@ -22,38 +22,35 @@
  *
  */
 
+#ifndef WALLGDX_H
+#define WALLGDX_H
 
-#ifndef SCATTERGDX_H
-#define SCATTERGDX_H
-
-#include "lmms_math.h"
 #include "Effect.h"
-#include "ScatterGDXControls.h"
 #include "ValueBuffer.h"
+#include "WallGDXControls.h"
+#include "lmms_math.h"
 
-class ScatterGDXEffect : public Effect
+class WallGDXEffect : public Effect
 {
- public:
-	ScatterGDXEffect( Model* parent, const Descriptor::SubPluginFeatures::Key* key );
-	virtual ~ScatterGDXEffect();
-	virtual bool processAudioBuffer( sampleFrame* buf, const fpp_t frames );
+  public:
+    WallGDXEffect(Model*                                    parent,
+                  const Descriptor::SubPluginFeatures::Key* key);
+    virtual ~WallGDXEffect();
+    virtual bool processAudioBuffer(sampleFrame* buf, const fpp_t frames);
 
-	virtual EffectControls* controls()
-	{
-		return &m_gdxControls;
-	}
+    virtual EffectControls* controls()
+    {
+        return &m_gdxControls;
+    }
 
- protected:
+  protected:
+  private:
+    WallGDXControls m_gdxControls;
+    sampleFrame*    m_buffer;
+    uint32_t        m_len;
+    int32_t         m_idx;
 
- private:
-	ScatterGDXControls m_gdxControls;
-        sampleFrame*       m_buffer;
-        uint32_t           m_len,m_prev;
-        int32_t            m_pos,m_time;
-        int32_t            m_start,m_end;
-
-	friend class ScatterGDXControls;
-
-} ;
+    friend class WallGDXControls;
+};
 
 #endif
