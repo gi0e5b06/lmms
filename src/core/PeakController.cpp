@@ -47,6 +47,7 @@ PeakController::PeakController( Model * _parent,
 	m_peakEffect( _peak_effect ),
 	m_currentSample( 0.0f )
 {
+        setFrequentlyUpdated(true);
 	setSampleExact( true );
 	if( m_peakEffect )
 	{

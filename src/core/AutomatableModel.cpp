@@ -219,7 +219,7 @@ void AutomatableModel::setValue( const float value )
 	if( oldval != newval )
 	{
                 m_oldValue = m_value;
-                m_value    = newval; 
+                m_value    = newval;
                 m_valueChanged = true;
 		emit dataChanged();
                 propagateValue();
@@ -667,6 +667,23 @@ ValueBuffer * AutomatableModel::valueBuffer()
 }
 
 
+void AutomatableModel::copyFrom(const ValueBuffer* _vb)
+{
+        const fpp_t FPP=Engine::mixer()->framesPerPeriod();
+        if(_vb==NULL || _vb->length()!=FPP || m_valueBuffer.length()!=FPP)
+        {
+                qWarning("AutomatableModel::copyFrom");
+                return;
+        }
+
+	QMutexLocker m( &m_valueBufferMutex );
+        m_valueBuffer.copyFrom(_vb);
+	m_lastUpdatedPeriod = s_periodCounter;
+	m_hasSampleExactData = true;
+        setAutomatedValue(m_valueBuffer.value(0));
+}
+
+
 void AutomatableModel::unlinkControllerConnection()
 {
 	if( m_controllerConnection )
@@ -785,7 +802,8 @@ int FloatModel::getDigitCount() const
 
 QString FloatModel::displayValue( const float val ) const
 {
-	return QString::number( castValue<float>( scaledValue( val ) ) );
+	return QString::number( castValue<float>( scaledValue( val ) ),
+                                'f', getDigitCount() );
 }
 
 

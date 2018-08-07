@@ -1,6 +1,8 @@
 /*
- * ValueBuffer.h - a container class for passing buffers of model values around
+ * ValueBuffer.h - a container class for passing buffers of model values
+ * around
  *
+ * Copyright (c) 2018 gi0e5b06 (on github.com)
  * Copyright (c) 2014 Vesa Kivimäki <contact/dot/diizy/at/nbl/dot/fi>
  * Copyright (c) 2008-2014 Tobias Doerffel <tobydox/at/users.sourceforge.net>
  *
@@ -30,50 +32,52 @@
 #include "MemoryManager.h"
 #include "export.h"
 
-class EXPORT ValueBuffer //: public std::vector<float>
+class EXPORT ValueBuffer  //: public std::vector<float>
 {
-	MM_OPERATORS
-public:
-        //ValueBuffer();
-	ValueBuffer(int _length);
-        ~ValueBuffer();
+    MM_OPERATORS
 
-	inline float value(int _offset) const
-        {
-                return m_data[_offset % m_len];
-        }
+  public:
+    ValueBuffer(const ValueBuffer* _vb);
+    ValueBuffer(int _length);
+    ~ValueBuffer();
 
-	inline const float* values() const
-        {
-                return m_data;
-        }
+    inline float value(int _offset) const
+    {
+        return m_data[_offset % m_len];
+    }
 
-	inline float* values()
-        {
-                return m_data;
-        }
+    inline const float* values() const
+    {
+        return m_data;
+    }
 
-	inline int length() const
-        {
-                return m_len;
-        }
+    inline float* values()
+    {
+        return m_data;
+    }
 
-        inline void set(int _i, float _v)
-        {
-                m_data[_i]=_v;
-        }
+    inline int length() const
+    {
+        return m_len;
+    }
 
-        inline void clear()
-        {
-                memset(m_data,0,sizeof(float)*m_len);
-        }
+    inline void set(int _i, float _v)
+    {
+        m_data[_i] = _v;
+    }
 
-	void fill(float _value);
-	void interpolate(float _start, float _end);
+    inline void clear()
+    {
+        memset(m_data, 0, sizeof(float) * m_len);
+    }
 
- private:
-        int    m_len;
-        float* m_data;
+    void copyFrom(const ValueBuffer* _vb);
+    void fill(float _value);
+    void interpolate(float _start, float _end);
+
+  private:
+    int    m_len;
+    float* m_data;
 };
 
 #endif

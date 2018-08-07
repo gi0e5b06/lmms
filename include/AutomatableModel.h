@@ -127,7 +127,7 @@ public:
 
 	//! @brief Function that returns sample-exact data as a ValueBuffer
 	//! @return pointer to model's valueBuffer when s.ex.data exists, NULL otherwise
-	ValueBuffer * valueBuffer();
+	ValueBuffer* valueBuffer();
 
 	template<class T>
 	T initValue() const
@@ -169,11 +169,6 @@ public:
 	float inverseNormalizedValue( float value ) const;
 
 	void setInitValue( const float value );
-
-	void setValue( const float value );
-	void setAutomatedValue( const float value );
-        void propagateValue();
-        void propagateAutomatedValue();
 
 	void decrValue( int steps = 1)
 	{
@@ -240,15 +235,18 @@ public:
 	}
 
 	virtual QString displayValue( const float val ) const = 0;
+	virtual inline QString displayValue() const final { return displayValue(m_value); }
 
 	bool hasLinkedModels() const
 	{
 		return !m_linkedModels.empty();
 	}
 
-	// a way to track changed values in the model and avoid using signals/slots - useful for speed-critical code.
-	// note that this method should only be called once per period since it resets the state of the variable - so if your model
-	// has to be accessed by more than one object, then this function shouldn't be used.
+	// a way to track changed values in the model and avoid using signals/slots.
+        // useful for speed-critical code.
+	// note that this method should only be called once per period since it resets the
+        // state of the variable - so if your model has to be accessed by more than one
+        // object, then this function shouldn't be used.
 	bool isValueChanged()
 	{
 		if( m_valueChanged || valueBuffer() )
@@ -292,8 +290,11 @@ signals:
 
 
 public slots:
+	void setValue( const float value );
+	void setAutomatedValue( const float value );
+        void copyFrom(const ValueBuffer* _vb);
 	virtual void reset();
-	void unlinkControllerConnection();
+	virtual void unlinkControllerConnection();
         virtual void onControllerValueChanged();
 
 
@@ -311,6 +312,9 @@ public slots:
 	//! 0.12345 becomes 0.10 etc.). You should always call it at the end after
 	//! doing your own calculations.
 	float fittedValue( float value ) const;
+
+        void propagateValue();
+        void propagateAutomatedValue();
 
 
 private:
@@ -412,7 +416,7 @@ public:
 	}
 	float getRoundedValue() const;
 	int getDigitCount() const;
-	QString displayValue( const float val ) const override;
+	virtual QString displayValue( const float val ) const override;
 };
 
 
@@ -425,8 +429,9 @@ public:
                   bool defaultConstructed = false ) :
         TypedAutomatableModel( val, min, max, 1, parent, displayName, defaultConstructed )
 	{
+                setStrictStepSize( true );
 	}
-	QString displayValue( const float val ) const override;
+	virtual QString displayValue( const float val ) const override;
 };
 
 
@@ -439,8 +444,9 @@ public:
                    bool defaultConstructed = false ) :
         TypedAutomatableModel( val, false, true, 1, parent, displayName, defaultConstructed )
         {
+                setStrictStepSize( true );
 	}
-	QString displayValue( const float val ) const override;
+	virtual QString displayValue( const float val ) const override;
 };
 
 typedef QMap<AutomatableModel*, float> AutomatedValueMap;

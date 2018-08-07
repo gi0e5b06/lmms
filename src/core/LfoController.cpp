@@ -47,6 +47,7 @@ LfoController::LfoController( Model * _parent ) :
 	m_sampleFunction( &Oscillator::sinSample ),
 	m_userDefSampleBuffer( new SampleBuffer )
 {
+        setFrequentlyUpdated(true);
 	setSampleExact( true );
 	connect( &m_waveModel, SIGNAL( dataChanged() ),
 			this, SLOT( updateSampleFunction() ) );

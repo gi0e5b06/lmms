@@ -2,8 +2,13 @@
 
 #include "interpolation.h"
 
-//ValueBuffer::ValueBuffer()
-//{}
+ValueBuffer::ValueBuffer(const ValueBuffer* _vb)
+{
+        m_len=_vb->length();
+        m_data=new float[m_len];
+        copyFrom(_vb);
+}
+
 
 ValueBuffer::ValueBuffer(int _length)
 //: std::vector<float>(_length)
@@ -11,7 +16,6 @@ ValueBuffer::ValueBuffer(int _length)
         Q_ASSERT(_length>2);
         m_len=_length;
         m_data=new float[m_len];
-
 }
 
 
@@ -59,6 +63,13 @@ void ValueBuffer::clear()
         memset(m_data,0,sizeof(float)*m_len);
 }
 */
+
+void ValueBuffer::copyFrom(const ValueBuffer* _vb)
+{
+        const float* v=_vb->values();
+        for(int i=m_len-1; i>=0; --i)
+                m_data[i]=v[i];
+}
 
 void ValueBuffer::fill(float _value)
 {

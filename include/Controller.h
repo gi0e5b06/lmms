@@ -82,14 +82,6 @@ public:
 		return( m_type );
 	}
 
-	// return whether this controller updates models frequently - used for
-	// determining when to update GUI
-	virtual bool frequentUpdates() const
-	{
-                return false;
-                //return  (m_type==LfoController)||(m_type==PeakController);
-	}
-
 	virtual const QString & name() const
 	{
 		return( m_name );

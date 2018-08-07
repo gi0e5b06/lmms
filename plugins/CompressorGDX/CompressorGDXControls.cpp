@@ -31,13 +31,13 @@
 #include "Song.h"
 
 
-CompressorGDXControls::CompressorGDXControls( CompressorGDXEffect* effect ) :
+CompressorGDXControls::CompressorGDXControls( CompressorGDX* effect ) :
 	EffectControls( effect ),
 	m_effect( effect ),
-	m_rndAmpModel( 0.0f, 0.0f, 1.0f, 0.001f, this, tr( "Treshold" ) ),
-	m_fixAmpModel( 1.0f, 0.0f, 1.0f, 0.001f, this, tr( "Ratio" ) ),
-	m_sngPosModel( 1.0f, 0.0f, 5.0f,  0.01f, this, tr( "Out gain" ) ),
-	m_delPosModel( 0.0f, 0.0f, 1.0f, 0.001f, this, tr( "Delay" ) )
+	m_thresholdModel( 0.0f, 0.0f, 1.0f, 0.001f, this, tr( "Threshold" ) ),
+	m_ratioModel( 1.0f, 0.0f, 1.0f, 0.001f, this, tr( "Ratio" ) ),
+	m_outGainModel( 1.0f, 0.0f, 5.0f,  0.01f, this, tr( "Out gain" ) ),
+	m_modeModel( 1.0f, 0.0f, 1.0f, 0.001f, this, tr( "Mode" ) )
 {
 /*
 	connect( &m_volumeModel, SIGNAL( dataChanged() ), this, SLOT( changeControl() ) );
@@ -60,10 +60,10 @@ void CompressorGDXControls::changeControl()
 
 void CompressorGDXControls::loadSettings( const QDomElement& _this )
 {
-	m_rndAmpModel.loadSettings( _this, "treshold" );
-	m_fixAmpModel.loadSettings( _this, "ratio" );
-	m_sngPosModel.loadSettings( _this, "out_gain" );
-	//m_delPosModel.loadSettings( _this, "del_pos" );
+	m_thresholdModel.loadSettings( _this, "treshold" );
+	m_ratioModel.loadSettings( _this, "ratio" );
+	m_outGainModel.loadSettings( _this, "out_gain" );
+	//m_modeModel.loadSettings( _this, "del_pos" );
 }
 
 
@@ -71,8 +71,8 @@ void CompressorGDXControls::loadSettings( const QDomElement& _this )
 
 void CompressorGDXControls::saveSettings( QDomDocument& doc, QDomElement& _this )
 {
-	m_rndAmpModel.saveSettings( doc, _this, "treshold" );
-	m_fixAmpModel.saveSettings( doc, _this, "ratio" );
-	m_sngPosModel.saveSettings( doc, _this, "out_gain" );
-	//m_delPosModel.saveSettings( doc, _this, "del_pos" );
+	m_thresholdModel.saveSettings( doc, _this, "treshold" );
+	m_ratioModel.saveSettings( doc, _this, "ratio" );
+	m_outGainModel.saveSettings( doc, _this, "out_gain" );
+	//m_modeModel.saveSettings( doc, _this, "del_pos" );
 }

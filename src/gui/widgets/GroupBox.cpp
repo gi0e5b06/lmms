@@ -120,10 +120,10 @@ void GroupBox::enterValue()
                                            "%1 and %2:" ).
                                        arg( m->minValue() ).
                                        arg( m->maxValue() ),
-                                       m->value(),//getRoundedValue(),
+                                       m->value(),
                                        m->minValue(),
                                        m->maxValue(),
-                                       0,//m->getDigitCount(),
+                                       0,
                                        &ok );
 
 	if( ok )

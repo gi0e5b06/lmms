@@ -44,28 +44,30 @@ extern "C"
                NULL};
 }
 
-CompressorGDXEffect::CompressorGDXEffect(
+CompressorGDX::CompressorGDX(
         Model* parent, const Descriptor::SubPluginFeatures::Key* key) :
       Effect(&compressorgdx_plugin_descriptor, parent, key),
       m_gdxControls(this), m_fact0(0.0f), m_sact0(0.0f)
 {
 }
 
-CompressorGDXEffect::~CompressorGDXEffect()
+CompressorGDX::~CompressorGDX()
 {
 }
 
-bool CompressorGDXEffect::processAudioBuffer(sampleFrame* _buf,
-                                         const fpp_t  _frames)
+bool CompressorGDX::processAudioBuffer(sampleFrame* _buf,
+                                             const fpp_t  _frames)
 {
     bool smoothBegin, smoothEnd;
     if(!shouldProcessAudioBuffer(_buf, _frames, smoothBegin, smoothEnd))
         return false;
 
-    const ValueBuffer* rndAmpBuf = m_gdxControls.m_rndAmpModel.valueBuffer();
-    const ValueBuffer* fixAmpBuf = m_gdxControls.m_fixAmpModel.valueBuffer();
-    const ValueBuffer* sngPosBuf = m_gdxControls.m_sngPosModel.valueBuffer();
-    const ValueBuffer* delPosBuf = m_gdxControls.m_delPosModel.valueBuffer();
+    const ValueBuffer* thresholdBuf
+            = m_gdxControls.m_thresholdModel.valueBuffer();
+    const ValueBuffer* ratioBuf = m_gdxControls.m_ratioModel.valueBuffer();
+    const ValueBuffer* outGainBuf
+            = m_gdxControls.m_outGainModel.valueBuffer();
+    const ValueBuffer* modeBuf = m_gdxControls.m_modeModel.valueBuffer();
 
     for(fpp_t f = 0; f < _frames; ++f)
     {
@@ -73,35 +75,40 @@ bool CompressorGDXEffect::processAudioBuffer(sampleFrame* _buf,
         computeWetDryLevels(f, _frames, smoothBegin, smoothEnd, w0, d0, w1,
                             d1);
 
-        float ramp = (float)(rndAmpBuf ? rndAmpBuf->value(f)
-                                       : m_gdxControls.m_rndAmpModel.value());
-        float famp = (float)(fixAmpBuf ? fixAmpBuf->value(f)
-                                       : m_gdxControls.m_fixAmpModel.value());
-        float oamp = (float)(sngPosBuf ? sngPosBuf->value(f)
-                                       : m_gdxControls.m_sngPosModel.value());
-        /*
-        float dpos = (float)(delPosBuf ? delPosBuf->value(f)
-                                       : m_gdxControls.m_delPosModel.value());
-        */
+        float threshold
+                = (float)(thresholdBuf
+                                  ? thresholdBuf->value(f)
+                                  : m_gdxControls.m_thresholdModel.value());
+        float ratio = (float)(ratioBuf ? ratioBuf->value(f)
+                                       : m_gdxControls.m_ratioModel.value());
+        float outGain
+                = (float)(outGainBuf ? outGainBuf->value(f)
+                                     : m_gdxControls.m_outGainModel.value());
+        float mode = (float)(modeBuf ? modeBuf->value(f)
+                                     : m_gdxControls.m_modeModel.value());
+
+        Q_UNUSED(mode);
 
         float curVal0 = _buf[f][0];
         float curVal1 = _buf[f][1];
 
         {
-                if(fabs(curVal0)>=ramp)
-                        curVal0=sign(curVal0)*(ramp+(fabs(curVal0)-ramp)*famp);
+            if(fabs(curVal0) >= threshold)
+                curVal0 = sign(curVal0)
+                          * (threshold + (fabs(curVal0) - threshold) * ratio);
         }
 
         {
-                if(fabs(curVal1)>=ramp)
-                        curVal1=sign(curVal1)*(ramp+(fabs(curVal1)-ramp)*famp);
+            if(fabs(curVal1) >= threshold)
+                curVal1 = sign(curVal1)
+                          * (threshold + (fabs(curVal1) - threshold) * ratio);
         }
 
-        _buf[f][0] = d0 * _buf[f][0] + w0 * curVal0 * oamp;
-        _buf[f][1] = d1 * _buf[f][1] + w1 * curVal1 * oamp;
+        _buf[f][0] = d0 * _buf[f][0] + w0 * curVal0 * outGain;
+        _buf[f][1] = d1 * _buf[f][1] + w1 * curVal1 * outGain;
     }
 
-    return shouldKeepRunning(_buf,_frames);
+    return shouldKeepRunning(_buf, _frames);
 }
 
 extern "C"
@@ -110,7 +117,7 @@ extern "C"
     // necessary for getting instance out of shared lib
     Plugin* PLUGIN_EXPORT lmms_plugin_main(Model* parent, void* data)
     {
-        return new CompressorGDXEffect(
+        return new CompressorGDX(
                 parent,
                 static_cast<
                         const Plugin::Descriptor::SubPluginFeatures::Key*>(

@@ -26,18 +26,18 @@
 #define RANDOMGDX_CONTROLS_H
 
 #include "EffectControls.h"
-#include "CompressorGDXControlDialog.h"
+#include "CompressorGDXDialog.h"
 #include "Knob.h"
 
 
-class CompressorGDXEffect;
+class CompressorGDX;
 
 
 class CompressorGDXControls : public EffectControls
 {
 	Q_OBJECT
 public:
-	CompressorGDXControls( CompressorGDXEffect* effect );
+	CompressorGDXControls( CompressorGDX* effect );
 	virtual ~CompressorGDXControls()
 	{
 	}
@@ -56,7 +56,7 @@ public:
 
 	virtual EffectControlDialog* createView()
 	{
-		return new CompressorGDXControlDialog( this );
+		return new CompressorGDXDialog( this );
 	}
 
 
@@ -64,15 +64,15 @@ private slots:
 	void changeControl();
 
 private:
-	CompressorGDXEffect* m_effect;
+	CompressorGDX* m_effect;
 
-	FloatModel m_rndAmpModel;
-	FloatModel m_fixAmpModel;
-	FloatModel m_sngPosModel;
-	FloatModel m_delPosModel;
+	FloatModel m_thresholdModel;
+	FloatModel m_ratioModel;
+	FloatModel m_outGainModel;
+	FloatModel m_modeModel;
 
-	friend class CompressorGDXControlDialog;
-	friend class CompressorGDXEffect;
+	friend class CompressorGDXDialog;
+	friend class CompressorGDX;
 
 } ;
 

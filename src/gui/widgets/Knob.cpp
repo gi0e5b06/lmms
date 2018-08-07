@@ -637,6 +637,7 @@ void Knob::resizeEvent(QResizeEvent * _re)
 
 void Knob::setModel(Model* _m, bool isOldModelValid)
 {
+        //qInfo("Knob::setModel p=%p",this);
         FloatModelView::setModel(_m,isOldModelValid);
         //mandatoryUpdate();
 }
@@ -1063,9 +1064,10 @@ void Knob::friendlyUpdate()
         //qInfo("Knob::friendlyUpdate 1");
 	if( !m ||
             !m->isAutomated() ||
-            m->isControlled() ||
+            !m->isControlled() || //????
+	    !m->frequentlyUpdated() ||
             m->controllerConnection() == NULL ||
-	    m->controllerConnection()->getController()->frequentUpdates() == false ||
+	    m->controllerConnection()->getController()->frequentlyUpdated() == false ||
 	    //m->hasLinkedModels() ||
 	    Controller::runningFrames() % (256*4) == 0 )
 	{
@@ -1074,7 +1076,7 @@ void Knob::friendlyUpdate()
 	}
         else
         {
-                //qInfo("Knob::friendlyUpdate skipped");
+                qInfo("Knob::friendlyUpdate skipped");
                 //update();
         }
 }
@@ -1096,12 +1098,15 @@ QString Knob::displayValue() const
         if( isVolumeKnob() &&
             ConfigManager::inst()->value( "app", "displaydbfs" ).toInt() )
 	{
-		return m_description.trimmed() + QString( " %1 dBFS" ).
-                        arg( ampToDbfs( m->getRoundedValue() / volumeRatio() ),
-                             3, 'f', 2 );
+		return m_description.trimmed() + " "
+                        + QString::number( ampToDbfs( m->getRoundedValue() / volumeRatio() ),
+                                         'f', 2 )
+                        + " dBFS";
 	}
-	return m_description.trimmed() + QString( " %1" ).
-                arg( m->getRoundedValue() ) + m_unit;
+	return m_description.trimmed() + " "
+                //+ QString( " %1" ).arg( m->getRoundedValue(), 0, 'f', m->getDigitCount() )
+                + m->displayValue(m->value())
+                + " " + m_unit;
 }
 
 
@@ -1110,9 +1115,9 @@ QString Knob::displayValue() const
 void Knob::doConnections()
 {
         FloatModel* m=model();
-        //qInfo("Knob::doConnections p=%p model()=%p",this,m);
 	if(m)
 	{
+                //qInfo("Knob::doConnections p=%p model()=%p",this,m);
                 m->disconnect(this);
 		QObject::connect( m, SIGNAL( dataChanged() ),
                                   this, SLOT( friendlyUpdate() ) );

@@ -72,6 +72,7 @@ IF("${PLUGIN_LIST}" STREQUAL "")
 		dynamics_processor
 		Eq
 		Flanger
+		GigPlayer
 		HydrogenImport
 		# ladspa_browser
 		LadspaEffect
@@ -83,11 +84,11 @@ IF("${PLUGIN_LIST}" STREQUAL "")
 		nes
 		opl2
 		organic
+                OutputGDX
                 PadsGDX
 		papu
 		patman
 		peak_controller_effect
-		GigPlayer
                 RandomGDX
 		ReverbSC
 		ScatterGDX
@@ -107,6 +108,7 @@ IF("${PLUGIN_LIST}" STREQUAL "")
 		waveshaper
 		vibed
                 VideoLineExport
+                WallGDX
 		xpressive
 		zynaddsubfx
 	)

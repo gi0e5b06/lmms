@@ -70,6 +70,9 @@ class EXPORT Model : public QObject
 
 	virtual QString fullDisplayName() const;
 
+	virtual bool frequentlyUpdated() const;
+	virtual void setFrequentlyUpdated(const bool _b);
+
  signals:
 	// emitted if actual data of the model (e.g. values) have changed
 	void dataChanged();
@@ -83,6 +86,7 @@ class EXPORT Model : public QObject
  private:
 	QString m_displayName;
 	bool m_defaultConstructed;
+        bool m_frequentlyUpdated;
 } ;
 
 

@@ -258,17 +258,14 @@ void LadspaControl::linkControls( LadspaControl * _ctrl )
 	{
 		case TOGGLED:
 			BoolModel::linkModels( &m_toggledModel, _ctrl->toggledModel() );
-                        //m_toggledModel.propagateValue();
 			break;
 		case INTEGER:
 		case FLOATING:
 			FloatModel::linkModels( &m_knobModel, _ctrl->knobModel() );
-                        //m_knobModel.propagateValue();
                         break;
 		case TIME:
 			TempoSyncKnobModel::linkModels( &m_tempoSyncKnobModel,
                                                         _ctrl->tempoSyncKnobModel() );
-                        //m_tempoSyncKnobModel.propagateValue();
                         break;
 		default:
 			break;

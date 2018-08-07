@@ -53,11 +53,6 @@ public:
 	virtual void loadSettings( const QDomElement & _this );
 	virtual QString nodeName() const;
 
-	virtual bool frequentUpdates() const
-	{
-                return true;
-	}
-
 public slots:
 	virtual ControllerDialog * createDialog( QWidget * _parent );
 

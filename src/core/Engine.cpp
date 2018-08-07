@@ -74,6 +74,7 @@ void LmmsCore::init( bool renderOnly )
         qRegisterMetaType<const sampleFrame*>("const sampleFrame*");
         qRegisterMetaType<const surroundSampleFrame*>("const surroundSampleFrame*");
         qRegisterMetaType<MidiTime>("MidiTime");
+        qRegisterMetaType<const ValueBuffer*>("const ValueBuffer*");
 
         LmmsCore *engine = inst();
 

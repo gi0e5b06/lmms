@@ -235,10 +235,8 @@ void LedCheckBox::enterValue()
                                       "%1 and %2:")
                                            .arg(m->minValue())
                                            .arg(m->maxValue()),
-                                   m->value(),  // m->getRoundedValue(),
-                                   m->minValue(), m->maxValue(),
-                                   0,  // m->getDigitCount(),
-                                   &ok);
+                                   m->value(), m->minValue(), m->maxValue(),
+                                   0, &ok);
 
     if(ok)
     {

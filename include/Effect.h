@@ -217,6 +217,8 @@ protected:
                                  float& _w0,float &_d0,
                                  float& _w1,float &_d1);
 
+        float computeRMS(sampleFrame* _buf, const fpp_t _frames);
+
         //should be private
 	FloatModel m_wetDryModel;
 	FloatModel m_balanceModel;
@@ -225,7 +227,6 @@ protected:
  private:
 	bool gateHasClosed(float& _rms, sampleFrame* _buf, const fpp_t _frames);
 	bool gateHasOpen(float& _rms, sampleFrame* _buf, const fpp_t _frames);
-        float computeRMS(sampleFrame* _buf, const fpp_t _frames);
 
         bool m_gateClosed;
 	EffectChain * m_parent;

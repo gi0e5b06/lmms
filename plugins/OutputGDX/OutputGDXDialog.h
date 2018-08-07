@@ -1,5 +1,5 @@
 /*
- * CompressorGDX.h - randomizing effect
+ * OutputGDXDialog.h - control dialog for audio output properties
  *
  * Copyright (c) 2018 gi0e5b06 (on github.com)
  *
@@ -22,33 +22,23 @@
  *
  */
 
+#ifndef OUTPUTGDX_DIALOG_H
+#define OUTPUTGDX_DIALOG_H
 
-#ifndef RANDOMGDX_H
-#define RANDOMGDX_H
+#include "EffectControlDialog.h"
 
-#include "lmms_math.h"
-#include "Effect.h"
-#include "CompressorGDXControls.h"
-#include "ValueBuffer.h"
 
-class PLUGIN_EXPORT CompressorGDX : public Effect
+class OutputGDXControls;
+
+
+class OutputGDXDialog : public EffectControlDialog
 {
- public:
-	CompressorGDX( Model* parent, const Descriptor::SubPluginFeatures::Key* key );
-	virtual ~CompressorGDX();
-	virtual bool processAudioBuffer( sampleFrame* buf, const fpp_t frames );
-
-	virtual EffectControls* controls()
+	Q_OBJECT
+public:
+	OutputGDXDialog( OutputGDXControls* controls );
+	virtual ~OutputGDXDialog()
 	{
-		return &m_gdxControls;
 	}
-
- private:
-	CompressorGDXControls m_gdxControls;
-        float             m_fact0,m_fact1;
-        float             m_sact0,m_sact1;
-
-	friend class CompressorGDXControls;
 
 } ;
 

@@ -1,5 +1,5 @@
 /*
- * CompressorGDX.h - randomizing effect
+ * OutputGDX.h - audio output properties
  *
  * Copyright (c) 2018 gi0e5b06 (on github.com)
  *
@@ -22,34 +22,43 @@
  *
  */
 
+#ifndef OUTPUTGDX_H
+#define OUTPUTGDX_H
 
-#ifndef RANDOMGDX_H
-#define RANDOMGDX_H
-
-#include "lmms_math.h"
 #include "Effect.h"
-#include "CompressorGDXControls.h"
+#include "OutputGDXControls.h"
 #include "ValueBuffer.h"
+#include "lmms_math.h"
 
-class PLUGIN_EXPORT CompressorGDX : public Effect
+class OutputGDX : public Effect
 {
- public:
-	CompressorGDX( Model* parent, const Descriptor::SubPluginFeatures::Key* key );
-	virtual ~CompressorGDX();
-	virtual bool processAudioBuffer( sampleFrame* buf, const fpp_t frames );
+    MM_OPERATORS
+    Q_OBJECT
 
-	virtual EffectControls* controls()
-	{
-		return &m_gdxControls;
-	}
+  public:
+    OutputGDX(Model* parent, const Descriptor::SubPluginFeatures::Key* key);
+    virtual ~OutputGDX();
+    virtual bool processAudioBuffer(sampleFrame* buf, const fpp_t frames);
 
- private:
-	CompressorGDXControls m_gdxControls;
-        float             m_fact0,m_fact1;
-        float             m_sact0,m_sact1;
+    virtual EffectControls* controls()
+    {
+        return &m_gdxControls;
+    }
 
-	friend class CompressorGDXControls;
+  signals:
+    void sendRms(const float _v);
+    void sendVol(const float _v);
+    void sendPan(const float _v);
+    void sendLeft(const ValueBuffer* _v);
+    void sendRight(const ValueBuffer* _v);
+    void sendFrequency(const float _v);
 
-} ;
+  private:
+    OutputGDXControls m_gdxControls;
+    ValueBuffer       m_left;
+    ValueBuffer       m_right;
+
+    friend class OutputGDXControls;
+};
 
 #endif

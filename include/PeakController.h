@@ -50,11 +50,6 @@ public:
 	virtual void loadSettings( const QDomElement & _this );
 	virtual QString nodeName() const;
 
-	virtual bool frequentUpdates() const
-	{
-                return true;
-	}
-
 	static void initGetControllerBySetting();
 	static PeakController * getControllerBySetting( const QDomElement & _this );
 

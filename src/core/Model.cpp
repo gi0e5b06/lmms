@@ -44,7 +44,14 @@ QString Model::fullDisplayName() const
 	return n;
 }
 
+bool Model::frequentlyUpdated() const
+{
+        return m_frequentlyUpdated;
+}
 
-
+void Model::setFrequentlyUpdated(const bool _b)
+{
+        m_frequentlyUpdated=_b;
+}
 
 

@@ -1,5 +1,5 @@
 /*
- * CompressorGDXControlDialog.h - control dialog for click remover effect
+ * CompressorGDXDialog.h - control dialog for click remover effect
  *
  * Copyright (c) 2017
  *
@@ -31,12 +31,12 @@
 class CompressorGDXControls;
 
 
-class CompressorGDXControlDialog : public EffectControlDialog
+class CompressorGDXDialog : public EffectControlDialog
 {
 	Q_OBJECT
 public:
-	CompressorGDXControlDialog( CompressorGDXControls* controls );
-	virtual ~CompressorGDXControlDialog() { }
+	CompressorGDXDialog( CompressorGDXControls* controls );
+	virtual ~CompressorGDXDialog() { }
 
 } ;
 

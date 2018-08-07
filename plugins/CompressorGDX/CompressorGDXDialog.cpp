@@ -1,5 +1,5 @@
 /*
- * CompressorGDXControlDialog.cpp - control dialog for click remover effect
+ * CompressorGDXDialog.cpp - control dialog for click remover effect
  *
  * Copyright (c) 2018 gi0e5b06 (on github.com)
  *
@@ -22,7 +22,7 @@
  *
  */
 
-#include "CompressorGDXControlDialog.h"
+#include "CompressorGDXDialog.h"
 
 #include <QGridLayout>
 #include <QGroupBox>
@@ -31,7 +31,7 @@
 #include "CompressorGDXControls.h"
 #include "embed.h"
 
-CompressorGDXControlDialog::CompressorGDXControlDialog(
+CompressorGDXDialog::CompressorGDXDialog(
         CompressorGDXControls* controls) :
       EffectControlDialog(controls)
 {
@@ -45,29 +45,29 @@ CompressorGDXControlDialog::CompressorGDXControlDialog(
     QGroupBox* ctlGB = new QGroupBox(tr("Controls"), this);
     ctlGB->setGeometry(10, 10, 130, 140);
 
-    Knob* rndAmpKnob = new Knob(knobBright_26, ctlGB);
-    rndAmpKnob->move(17, 35);
-    rndAmpKnob->setModel(&controls->m_rndAmpModel);
-    rndAmpKnob->setLabel(tr("Treshold"));
-    rndAmpKnob->setHintText(tr("Treshold:"), "");
+    Knob* thresholdKnob = new Knob(knobBright_26, ctlGB);
+    thresholdKnob->move(17, 35);
+    thresholdKnob->setModel(&controls->m_thresholdModel);
+    thresholdKnob->setLabel(tr("Treshold"));
+    thresholdKnob->setHintText(tr("Treshold:"), "");
 
-    Knob* fixAmpKnob = new Knob(knobBright_26, ctlGB);
-    fixAmpKnob->move(67, 35);
-    fixAmpKnob->setModel(&controls->m_fixAmpModel);
-    fixAmpKnob->setLabel(tr("Ratio"));
-    fixAmpKnob->setHintText(tr("Ratio:"), "");
+    Knob* ratioKnob = new Knob(knobBright_26, ctlGB);
+    ratioKnob->move(67, 35);
+    ratioKnob->setModel(&controls->m_ratioModel);
+    ratioKnob->setLabel(tr("Ratio"));
+    ratioKnob->setHintText(tr("Ratio:"), "");
 
-    Knob* sngPosKnob = new Knob(knobBright_26, ctlGB);
-    sngPosKnob->move(17, 85);
-    sngPosKnob->setModel(&controls->m_sngPosModel);
-    sngPosKnob->setLabel(tr("Out"));
-    sngPosKnob->setHintText(tr("Out gain:"), "");
+    Knob* outGainKnob = new Knob(knobBright_26, ctlGB);
+    outGainKnob->move(17, 85);
+    outGainKnob->setModel(&controls->m_outGainModel);
+    outGainKnob->setLabel(tr("Out"));
+    outGainKnob->setHintText(tr("Out gain:"), "");
 
     /*
-    Knob * delPosKnob = new Knob( knobBright_26, ctlGB);
-    delPosKnob -> move( 67, 85 );
-    delPosKnob->setModel( &controls->m_delPosModel );
-    delPosKnob->setLabel( tr( "Delay" ) );
-    delPosKnob->setHintText( tr( "Delay:" ) , "" );
+    Knob * modeKnob = new Knob( knobBright_26, ctlGB);
+    modeKnob -> move( 67, 85 );
+    modeKnob->setModel( &controls->m_modeModel );
+    modeKnob->setLabel( tr( "Delay" ) );
+    modeKnob->setHintText( tr( "Delay:" ) , "" );
     */
 }
