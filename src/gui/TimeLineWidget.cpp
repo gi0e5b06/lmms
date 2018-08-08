@@ -35,12 +35,13 @@
 
 #include "TimeLineWidget.h"
 #include "embed.h"
-#include "NStateButton.h"
-#include "GuiApplication.h"
-#include "TextFloat.h"
-#include "SongEditor.h"
 #include "AutomatableActionGroup.h"
 #include "AutomatableToolButton.h"
+#include "CaptionMenu.h"
+#include "GuiApplication.h"
+#include "NStateButton.h"
+#include "TextFloat.h"
+#include "SongEditor.h"
 
 #if QT_VERSION < 0x040800
 #define MiddleButton MidButton
@@ -405,6 +406,48 @@ void TimeLineWidget::resizeLoop(QAction * _a)
 }
 
 
+void TimeLineWidget::setLoopStart(int _n, int _x)
+{
+	if((_n<0) || (_n>=NB_LOOPS)) return;
+
+        if( m_loopPos[2*_n+0] > m_loopPos[2*_n+1]  )
+	{
+                qSwap( m_loopPos[2*_n+0], m_loopPos[2*_n+1] );
+        }
+
+        MidiTime t = m_begin + static_cast<int>( _x * MidiTime::ticksPerTact() / m_ppt );
+        t = t.toNearestTact();
+        const tick_t d = qMax(m_loopPos[2*_n+1]-m_loopPos[2*_n+0],
+                          MidiTime::ticksPerTact()/32);
+        m_loopPos[2*_n+0] = t;
+        m_loopPos[2*_n+1] = t+d;
+
+	update();
+}
+
+
+void TimeLineWidget::setLoopEnd(int _n, int _x)
+{
+	if((_n<0) || (_n>=NB_LOOPS)) return;
+
+        if( m_loopPos[2*_n+0] > m_loopPos[2*_n+1]  )
+	{
+                qSwap( m_loopPos[2*_n+0], m_loopPos[2*_n+1] );
+        }
+
+        MidiTime t = m_begin + static_cast<int>( _x * MidiTime::ticksPerTact() / m_ppt );
+        t = t.toNearestTact();
+        const tick_t d=MidiTime::ticksPerTact();
+        m_loopPos[2*_n+1] = t;
+        // Catch begin == end
+        if( m_loopPos[2*_n+1]<m_loopPos[2*_n+0]+d )
+        {
+                m_loopPos[2*_n+1] = m_loopPos[2*_n+0]+d;
+        }
+        update();
+}
+
+
 void TimeLineWidget::updateLoopButtons()
 {
 	//qWarning("TimeLineWidget::updateLoopButtons()");
@@ -702,6 +745,7 @@ void TimeLineWidget::mousePressEvent( QMouseEvent* event )
         if( /*event->button() == Qt::RightButton ||*/ event->button() == Qt::MiddleButton )
 	{
         	m_moveXOff = s_posMarkerPixmap->width() / 2;
+
 		const MidiTime t = m_begin + static_cast<int>( event->x() * MidiTime::ticksPerTact() / m_ppt );
 		const int n=m_currentLoop;
 
@@ -838,4 +882,39 @@ void TimeLineWidget::mouseReleaseEvent( QMouseEvent* event )
 	m_hint = NULL;
 	if ( m_action == SelectSongTCO ) { emit selectionFinished(); }
 	m_action = NoAction;
+}
+
+
+
+
+void TimeLineWidget::contextMenuEvent( QContextMenuEvent* _cme )
+{
+        CaptionMenu cm( tr( "Time line" ), this );
+
+	const int x0=m_xOffset + s_posMarkerPixmap->width() / 2;
+        const int x =_cme->x()-x0;
+
+        QAction* scls=cm.addAction(tr("Set Current Loop Start"));
+        scls->setData( QVariant(QPoint(x,0)) );
+        QAction* scle=cm.addAction(tr("Set Current Loop End"));
+        scle->setData( QVariant(QPoint(x,1)) );
+
+        //cm->addSeparator();
+        connect(&cm, SIGNAL(triggered(QAction*)), this, SLOT(handleContextMenuAction(QAction*)));
+        cm.exec( QCursor::pos() );
+}
+
+void TimeLineWidget::handleContextMenuAction( QAction* _a )
+{
+        const int    n=m_currentLoop;
+	const QPoint p=_a->data().toPoint();
+        const int    x=p.x();
+        const int    a=p.y();
+        qInfo("TimeLineWidget::handleContextMenuAction %d %d",x,a);
+
+        switch(a)
+        {
+        case 0: setLoopStart(n,x); break;
+        case 1: setLoopEnd(n,x); break;
+        }
 }

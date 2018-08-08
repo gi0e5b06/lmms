@@ -194,6 +194,9 @@ public:
 			: m_loopPos[2*n+1];
 	}
 
+        void setLoopStart(int _n,int _x);
+        void setLoopEnd(int _n,int _x);
+
 	inline void savePos( const MidiTime & _pos )
 	{
 		m_savedPos = _pos;
@@ -248,8 +251,10 @@ public slots:
 	void selectLoop(QAction * _a);
 	void selectLoop(const MidiTime & t);
 	void resizeLoop(QAction * _a);
+        void handleContextMenuAction(QAction* _a);
 
 protected:
+        virtual void contextMenuEvent(QContextMenuEvent*);
 	virtual void paintEvent( QPaintEvent * _pe );
 	virtual void paintLoop(const int num, QPainter& p, const int cy);
 	virtual void mousePressEvent( QMouseEvent * _me );
