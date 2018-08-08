@@ -293,7 +293,8 @@ TrackContentObjectView::TrackContentObjectView( TrackContentObject * tco,
 
 	connect( m_tco, SIGNAL( lengthChanged() ),
 			this, SLOT( updateLength() ) );
-	connect( gui->songEditor()->m_editor->zoomingModel(), SIGNAL( dataChanged() ), this, SLOT( updateLength() ) );
+	connect( gui->songEditor()->m_editor->zoomingXModel(),
+                 SIGNAL( dataChanged() ), this, SLOT( updateLength() ) );
 	connect( m_tco, SIGNAL( positionChanged() ),
 			this, SLOT( updatePosition() ) );
 	connect( m_tco, SIGNAL( destroyedTCO() ), this, SLOT( close() ) );
@@ -840,9 +841,10 @@ void TrackContentObjectView::mousePressEvent( QMouseEvent * me )
                                 delete m_hint;
                                 m_hint = TextFloat::displayMessage
                                         ( tr( "Hint" ),
-                                          tr( "Press <%1> and drag to make "
-                                              "a copy." ).arg(UI_CTRL_KEY),
+                                          tr( "Press <%1> to disable the magnetic grid." ).
+                                          arg(UI_CTRL_KEY),
                                           embed::getIconPixmap( "hint" ), 0 );
+
                                 s_textFloat->setTitle( tr( "Current position" ) );
                                 s_textFloat->setText( QString( "%1:%2" ).
                                                       arg( m_tco->startPosition().getTact() + 1 ).

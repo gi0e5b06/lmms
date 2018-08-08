@@ -46,7 +46,8 @@ public:
 	{
 		DiscreteProgression,
 		LinearProgression,
-		CubicHermiteProgression
+		CubicHermiteProgression,
+		PolynomialProgression
 	} ;
 
 	typedef QMap<int, float> timeMap;
@@ -72,7 +73,8 @@ public:
 	{
 		return m_tension;
 	}
-	void setTension( QString _new_tension );
+
+	void setTension( const float _tension );
 
 	MidiTime timeMapLength() const;
 	void updateLength();

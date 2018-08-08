@@ -337,7 +337,8 @@ void MainWindow::finalize()
 					tr( "Redo" ),
 					this, SLOT( redo() ),
 					QKeySequence::Redo );
-	// Ensure that both (Ctrl+Y) and (Ctrl+Shift+Z) activate redo shortcut regardless of OS defaults
+	// Ensure that both Ctrl+Y and Ctrl+Shift+Z activate redo shortcut
+        // regardless of OS defaults
 	if (QKeySequence(QKeySequence::Redo) != QKeySequence(Qt::CTRL + Qt::Key_Y))
 	{
 		new QShortcut( QKeySequence( Qt::CTRL + Qt::Key_Y ), this, SLOT(redo()) );
@@ -349,12 +350,13 @@ void MainWindow::finalize()
 
 	edit_menu->addSeparator();
 	edit_menu->addAction( embed::getIconPixmap( "setup_general" ),
-					tr( "Settings" ),
-					this, SLOT( showSettingsDialog() ) );
+                              tr( "Settings" ),
+                              this, SLOT( showSettingsDialog() ) );
 
 	edit_menu->addAction( embed::getIconPixmap( "text_block" ),
-					tr( "Song Properties" ),
-					this, SLOT( showSongMetaDataDialog() ) );
+                              tr( "Song Properties" ),
+                              this, SLOT( showSongMetaDataDialog() ) )
+                ->setShortcut( QKeySequence( Qt::CTRL + Qt::Key_Comma ) );
 
 	connect( edit_menu, SIGNAL(aboutToShow()), this, SLOT(updateUndoRedoButtons()) );
 

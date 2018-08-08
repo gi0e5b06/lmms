@@ -24,8 +24,9 @@
  *
  */
 
-#include "AutomationPattern.h"
+#include <cmath>
 
+#include "AutomationPattern.h"
 #include "AutomationPatternView.h"
 #include "AutomationTrack.h"
 #include "Note.h"
@@ -33,7 +34,8 @@
 #include "BBTrackContainer.h"
 #include "Song.h"
 
-#include <cmath>
+#include "lmms_math.h"
+
 
 int AutomationPattern::s_quantization = 1;
 const float AutomationPattern::DEFAULT_MIN_VALUE = 0;
@@ -137,13 +139,14 @@ bool AutomationPattern::addObject( AutomatableModel* _obj, bool _search_dup )
 
 
 
-void AutomationPattern::setProgressionType(ProgressionTypes _new_progression_type)
+void AutomationPattern::setProgressionType(ProgressionTypes _progressionType)
 {
-	if ( _new_progression_type == DiscreteProgression ||
-             _new_progression_type == LinearProgression ||
-             _new_progression_type == CubicHermiteProgression )
+	if ( _progressionType == DiscreteProgression ||
+             _progressionType == LinearProgression ||
+             _progressionType == CubicHermiteProgression ||
+             _progressionType == PolynomialProgression )
 	{
-		m_progressionType = _new_progression_type;
+		m_progressionType = _progressionType;
 		emit dataChanged();
 	}
 }
@@ -151,14 +154,14 @@ void AutomationPattern::setProgressionType(ProgressionTypes _new_progression_typ
 
 
 
-void AutomationPattern::setTension( QString _new_tension )
+void AutomationPattern::setTension( const float _tension )
 {
-	bool ok;
-	float nt = _new_tension.toFloat( & ok );
-
-	if( ok && nt > -0.01 && nt < 1.01 )
+        qInfo("AutomationPattern::setTension tension=%f",_tension);
+	if( _tension>=-10.f && _tension<=10.f )//nt > -0.01 && nt < 1.01 )
 	{
-		m_tension = _new_tension.toFloat();
+		m_tension = _tension;
+                generateTangents();
+                emit dataChanged();
 	}
 }
 
@@ -354,7 +357,7 @@ float AutomationPattern::valueAt( const MidiTime & _time ) const
 
 	if( v == m_timeMap.begin() )
 	{
-		return 0;
+		return 0.f;
 	}
 	if( v == m_timeMap.end() )
 	{
@@ -369,18 +372,24 @@ float AutomationPattern::valueAt( const MidiTime & _time ) const
 
 float AutomationPattern::valueAt( timeMap::const_iterator v, int offset ) const
 {
-	if( m_progressionType == DiscreteProgression || v == m_timeMap.end() )
+        float r;
+
+        if( v == m_timeMap.end() || offset == 0 )
+		r = v.value();
+        else
+        switch( m_progressionType )
 	{
-		return v.value();
-	}
-	else if( m_progressionType == LinearProgression )
-	{
-		float slope = ((v+1).value() - v.value()) /
-							((v+1).key() - v.key());
-		return v.value() + offset * slope;
-	}
-	else /* CubicHermiteProgression */
-	{
+        case DiscreteProgression:
+                r = v.value();
+                break;
+        case LinearProgression:
+		{
+                        float slope = ((v+1).value() - v.value()) /
+                                ((v+1).key() - v.key());
+                        r = v.value() + offset * slope;
+                }
+                break;
+	case CubicHermiteProgression:
 		// Implements a Cubic Hermite spline as explained at:
 		// http://en.wikipedia.org/wiki/Cubic_Hermite_spline#Unit_interval_.280.2C_1.29
 		//
@@ -389,16 +398,76 @@ float AutomationPattern::valueAt( timeMap::const_iterator v, int offset ) const
 		// value: y.  To make this work we map the values of x that this
 		// segment spans to values of t for t = 0.0 -> 1.0 and scale the
 		// tangents _m1 and _m2
-		int numValues = ((v+1).key() - v.key());
-		float t = (float) offset / (float) numValues;
-		float m1 = (m_tangents[v.key()]) * numValues * m_tension;
-		float m2 = (m_tangents[(v+1).key()]) * numValues * m_tension;
+		{
+                        int numValues = ((v+1).key() - v.key());
+                        float t = (float) offset / (float) numValues;
+                        float m1 = (m_tangents[v.key()]) * numValues * m_tension;
+                        float m2 = (m_tangents[(v+1).key()]) * numValues * m_tension;
 
-		return ( 2*pow(t,3) - 3*pow(t,2) + 1 ) * v.value()
-				+ ( pow(t,3) - 2*pow(t,2) + t) * m1
-				+ ( -2*pow(t,3) + 3*pow(t,2) ) * (v+1).value()
-				+ ( pow(t,3) - pow(t,2) ) * m2;
-	}
+                        r = ( 2*pow(t,3) - 3*pow(t,2) + 1 ) * v.value()
+                                + ( pow(t,3) - 2*pow(t,2) + t) * m1
+                                + ( -2*pow(t,3) + 3*pow(t,2) ) * (v+1).value()
+                                + ( pow(t,3) - pow(t,2) ) * m2;
+                }
+                break;
+        case PolynomialProgression:
+                {
+                        // v1=v
+                        timeMap::const_iterator v2=v+1;
+                        float x0,x1,x2,x3;
+                        float y0,y1,y2,y3;
+                        x1=v.key();
+                        x2=v2.key();
+                        y1=v.value();
+                        y2=v2.value();
+                        if( v == m_timeMap.begin() )
+                        {
+                                x0=2*x1-x2;
+                                y0=2*y1-y2;
+                        }
+                        else
+                        {
+                                timeMap::const_iterator v0=v-1;
+                                x0=v0.key();
+                                y0=v0.value();
+                        }
+                        if( v2 == m_timeMap.end() )
+                        {
+                                x3=2*x2-x1;
+                                y3=2*y2-y1;
+                        }
+                        else
+                        {
+                                timeMap::const_iterator v3=v+2;
+                                x3=v3.key();
+                                y3=v3.value();
+                        }
+                        float x=x1+float(offset);
+                        //if(offset==0) qInfo("X %f %f %f %f X=%f",x0,x1,x2,x3,x);
+                        //if(offset==0) qInfo("Y %f %f %f %f",y0,y1,y2,y3);
+                        float a0 = ((x-x1)*(x-x2)*(x-x3))/((x0-x1)*(x0-x2)*(x0-x3));
+                        float a1 = ((x-x0)*(x-x2)*(x-x3))/((x1-x0)*(x1-x2)*(x1-x3));
+                        float a2 = ((x-x0)*(x-x1)*(x-x3))/((x2-x0)*(x2-x1)*(x2-x3));
+                        float a3 = ((x-x0)*(x-x1)*(x-x2))/((x3-x0)*(x3-x1)*(x3-x2));
+                        //if(offset==0) qInfo("A %f %f %f %f",a0,a1,a2,a3);
+                        r = a0*y0+a1*y1+a2*y2+a3*y3;
+                        //if(offset==0) qInfo("R=%f",r);
+                }
+                break;
+        }
+
+        /*
+        if( v != m_timeMap.end() )
+        {
+                float x = float(offset)/((v+1).key()-v.key());
+                float dy = (v+1).value()-v.value();
+                float w0=fastmoogsawf01(0.f);
+                float w1=fastmoogsawf01(1.f);
+                r+=dy*(fastmoogsawf01(x)-w0-x*(w1-w0)); // *m_waveAmp
+        }
+        */
+
+        return r;
 }
 
 
@@ -581,7 +650,7 @@ void AutomationPattern::loadSettings( const QDomElement & _this )
 	setName( _this.attribute( "name" ) );
 	setProgressionType( static_cast<ProgressionTypes>( _this.attribute(
 							"prog" ).toInt() ) );
-	setTension( _this.attribute( "tens" ) );
+	setTension( _this.attribute( "tens" ).toFloat() );
 	setMuted(_this.attribute( "mute", QString::number( false ) ).toInt() );
 
 	for( QDomNode node = _this.firstChild(); !node.isNull();
@@ -859,36 +928,36 @@ void AutomationPattern::generateTangents()
 void AutomationPattern::generateTangents( timeMap::const_iterator it,
 							int numToGenerate )
 {
-	if( m_timeMap.size() < 2 && numToGenerate > 0 )
+        if(numToGenerate<=0) return;
+
+        if( m_timeMap.size() < 2 )
 	{
-		m_tangents[it.key()] = 0;
-		return;
+                m_tangents[it.key()] = 0.f;
+                return;
 	}
 
 	for( int i = 0; i < numToGenerate; i++ )
 	{
 		if( it == m_timeMap.begin() )
 		{
-			m_tangents[it.key()] =
-					( (it+1).value() - (it).value() ) /
-						( (it+1).key() - (it).key() );
+			m_tangents[it.key()] = 0.f;
+                        // ( (it+1).value() - (it).value() ) /
+			//   ( (it+1).key() - (it).key() );
 		}
 		else if( it+1 == m_timeMap.end() )
 		{
-			m_tangents[it.key()] = 0;
+			m_tangents[it.key()] = 0.f;
 			return;
 		}
 		else
 		{
-			m_tangents[it.key()] =
-					( (it+1).value() - (it-1).value() ) /
-						( (it+1).key() - (it-1).key() );
+                        if(m_progressionType == CubicHermiteProgression)
+                                m_tangents[it.key()] =
+                                        ( (it+1).value() - (it-1).value() ) /
+                                        ( (it+1).key() - (it-1).key() );
+                        else
+                                m_tangents[it.key()] = 0.f;
 		}
 		it++;
 	}
 }
-
-
-
-
-

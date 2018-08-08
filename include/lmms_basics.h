@@ -127,11 +127,19 @@ const ch_cnt_t SURROUND_CHANNELS=2;
 #endif
 
 #ifdef LMMS_BUILD_APPLE
+#define UI_ALT_KEY "⌥"
 #define UI_CTRL_KEY "⌘"
+#define UI_SHIFT_KEY "shift"
 #else
+#define UI_ALT_KEY "Alt"
 #define UI_CTRL_KEY "Ctrl"
+#define UI_SHIFT_KEY "⇧"
 #endif
 
+#define TR(a) tr(a)                            \
+        .replace("Alt+",UI_ALT_KEY "+")        \
+        .replace("Ctrl+",UI_CTRL_KEY "+")      \
+        .replace("Shift+",UI_SHIFT_KEY "+")
 
 typedef sample_t sampleFrame[DEFAULT_CHANNELS];
 typedef sample_t surroundSampleFrame[SURROUND_CHANNELS];

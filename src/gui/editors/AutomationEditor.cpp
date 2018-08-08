@@ -74,7 +74,6 @@ QPixmap * AutomationEditor::s_toolXFlip = NULL;
 //{ 0.125f, 0.25f, 0.5f, 1.0f, 2.0f, 4.0f, 8.0f };
 
 
-
 AutomationEditor::AutomationEditor() :
 	QWidget(),
 	m_zoomingXModel(),
@@ -120,9 +119,9 @@ AutomationEditor::AutomationEditor() :
 	//keeps the direction of the widget, undepended on the locale
 	setLayoutDirection( Qt::LeftToRight );
 
-	m_tensionModel = new FloatModel(1.0, 0.0, 1.0, 0.01);
+	m_tensionModel = new FloatModel(0.f, -10.f, 10.f, 0.01f);
 	connect( m_tensionModel, SIGNAL( dataChanged() ),
-				this, SLOT( setTension() ) );
+                 this, SLOT( setTension() ) );
 
 	for( int i = 0; i < 7; ++i )
 	{
@@ -1846,7 +1845,7 @@ void AutomationEditor::setTension()
 {
 	if ( m_pattern )
 	{
-		m_pattern->setTension( QString::number( m_tensionModel->value() ) );
+		m_pattern->setTension( m_tensionModel->value() );
 		update();
 	}
 }
@@ -2208,11 +2207,11 @@ AutomationEditorWindow::AutomationEditorWindow() :
 	DropToolBar *editActionsToolBar = addDropToolBarToTop(tr("Edit actions"));
 
 	ActionGroup* editModeGroup = new ActionGroup(this);
-	QAction* drawAction = editModeGroup->addAction(embed::getIconPixmap("edit_draw"), tr("Draw mode (Shift+D)"));
+	QAction* drawAction = editModeGroup->addAction(embed::getIconPixmap("edit_draw"), TR("Draw mode (Shift+D)"));
 	drawAction->setShortcut(Qt::SHIFT | Qt::Key_D);
 	drawAction->setChecked(true);
 
-	QAction* eraseAction = editModeGroup->addAction(embed::getIconPixmap("edit_erase"), tr("Erase mode (Shift+E)"));
+	QAction* eraseAction = editModeGroup->addAction(embed::getIconPixmap("edit_erase"), TR("Erase mode (Shift+E)"));
 	eraseAction->setShortcut(Qt::SHIFT | Qt::Key_E);
 
 	m_flipYAction = new QAction(embed::getIconPixmap("flip_y"), tr("Flip vertically"), this);
@@ -2226,8 +2225,8 @@ AutomationEditorWindow::AutomationEditorWindow() :
 					"The points are flipped in the x direction." ) );
 
 //	TODO: m_selectButton and m_moveButton are broken.
-//	m_selectButton = new QAction(embed::getIconPixmap("edit_select"), tr("Select mode (Shift+S)"), editModeGroup);
-//	m_moveButton = new QAction(embed::getIconPixmap("edit_move"), tr("Move selection mode (Shift+M)"), editModeGroup);
+//	m_selectButton = new QAction(embed::getIconPixmap("edit_select"), TR("Select mode (Shift+S)", editModeGroup);
+//	m_moveButton = new QAction(embed::getIconPixmap("edit_move"), TR("Move selection mode (Shift+M)", editModeGroup);
 
 	drawAction->setWhatsThis(
 		tr( "Click here and draw-mode will be activated. In this "
@@ -2274,6 +2273,8 @@ AutomationEditorWindow::AutomationEditorWindow() :
 				embed::getIconPixmap("progression_linear"), tr("Linear progression"));
 	m_cubicHermiteAction = progression_type_group->addAction(
 				embed::getIconPixmap("progression_cubic_hermite"), tr( "Cubic Hermite progression"));
+	m_polynomialAction = progression_type_group->addAction(
+				embed::getIconPixmap("progression_polynomial"), tr( "Polynomial progression"));
 
 	connect(progression_type_group, SIGNAL(triggered(int)), m_editor, SLOT(setProgressionType(int)));
 
@@ -2284,6 +2285,7 @@ AutomationEditorWindow::AutomationEditorWindow() :
         m_tensionKnob->setPointColor(QColor(146,74,255));
 	m_tensionKnob->setModel(m_editor->m_tensionModel);
 	ToolTip::add(m_tensionKnob, tr("Tension value for spline"));
+        m_tensionKnob->setHintText(tr("Tension:"),"");
 	m_tensionKnob->setWhatsThis(
 				tr("A higher tension value may make a smoother curve "
 				   "but overshoot some values. A low tension "
@@ -2314,9 +2316,10 @@ AutomationEditorWindow::AutomationEditorWindow() :
 	interpolationActionsToolBar->addAction(m_discreteAction);
 	interpolationActionsToolBar->addAction(m_linearAction);
 	interpolationActionsToolBar->addAction(m_cubicHermiteAction);
+	interpolationActionsToolBar->addAction(m_polynomialAction);
 	interpolationActionsToolBar->addSeparator();
-	interpolationActionsToolBar->addWidget( new QLabel( tr("Tension: "),
-                                                            interpolationActionsToolBar ));
+	//interpolationActionsToolBar->addWidget( new QLabel( tr("Tension: "),
+        //                                      interpolationActionsToolBar ));
 	interpolationActionsToolBar->addWidget( m_tensionKnob );
 
 
@@ -2490,6 +2493,10 @@ void AutomationEditorWindow::setCurrentPattern(AutomationPattern* pattern)
 	case AutomationPattern::CubicHermiteProgression:
 		m_cubicHermiteAction->setChecked(true);
 		m_tensionKnob->setEnabled(true);
+		break;
+	case AutomationPattern::PolynomialProgression:
+		m_polynomialAction->setChecked(true);
+		m_tensionKnob->setEnabled(false);
 		break;
 	}
 

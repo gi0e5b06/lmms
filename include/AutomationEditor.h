@@ -307,6 +307,7 @@ private:
 	QAction* m_discreteAction;
 	QAction* m_linearAction;
 	QAction* m_cubicHermiteAction;
+	QAction* m_polynomialAction;
 
 	QAction* m_flipYAction;
 	QAction* m_flipXAction;

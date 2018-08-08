@@ -79,12 +79,14 @@ void positionLine::paintEvent( QPaintEvent * pe )
 SongEditor::SongEditor( Song * song ) :
 	TrackContainerView( song ),
 	m_song( song ),
-	m_zoomingModel(new ComboBoxModel()),
+	m_zoomingXModel(new ComboBoxModel()),
+	m_zoomingYModel(new ComboBoxModel()),
 	m_scrollBack( false ),
 	m_smoothScroll( ConfigManager::inst()->value( "ui", "smoothscroll" ).toInt() ),
 	m_mode(DrawMode)
 {
-	m_zoomingModel->setParent(this);
+	m_zoomingXModel->setParent(this);
+	m_zoomingYModel->setParent(this);
 	// create time-line
 	int widgetTotal = ConfigManager::inst()->value( "ui",
 							"compacttrackbuttons" ).toInt()==1 ?
@@ -252,14 +254,23 @@ SongEditor::SongEditor( Song * song ) :
 	connect( m_song, SIGNAL( lengthChanged( int ) ),
                  this, SLOT( updateScrollBar( int ) ) );
 
-	// Set up zooming model
+	// Set up zooming x model
 	for(const float& zoomLevel : Editor::ZOOM_LEVELS )
 	{
-		m_zoomingModel->addItem( QString( "%1\%" ).arg( zoomLevel * 100 ) );
+		m_zoomingXModel->addItem( QString( "%1%" ).arg( zoomLevel * 100 ) );
 	}
-	m_zoomingModel->setInitValue(m_zoomingModel->findText( "100%" ));
-	connect( m_zoomingModel, SIGNAL( dataChanged() ),
-                 this, SLOT( zoomingChanged() ) );
+	m_zoomingXModel->setInitValue(m_zoomingXModel->findText( "100%" ));
+	connect( m_zoomingXModel, SIGNAL( dataChanged() ),
+                 this, SLOT( zoomingXChanged() ) );
+
+	// Set up zooming y model
+	for(const float& zoomLevel : Editor::ZOOM_LEVELS )
+	{
+		m_zoomingYModel->addItem( QString( "%1%" ).arg( zoomLevel * 100 ) );
+	}
+	m_zoomingYModel->setInitValue(m_zoomingYModel->findText( "100%" ));
+	connect( m_zoomingYModel, SIGNAL( dataChanged() ),
+                 this, SLOT( zoomingYChanged() ) );
 
 	setFocusPolicy( Qt::StrongFocus );
 	setFocus();
@@ -811,9 +822,10 @@ void SongEditor::dividePatterns()
 
 void SongEditor::wheelEvent( QWheelEvent * we )
 {
+        /*
 	if( we->modifiers() & Qt::ControlModifier )
 	{
-		int z = m_zoomingModel->value();
+		int z = m_zoomingXModel->value();
 
 		if( we->delta() > 0 )
 		{
@@ -823,9 +835,9 @@ void SongEditor::wheelEvent( QWheelEvent * we )
 		{
 			z--;
 		}
-		z = qBound( 0, z, m_zoomingModel->size() - 1 );
+		z = qBound( 0, z, m_zoomingXModel->size() - 1 );
 		// update combobox with zooming-factor
-		m_zoomingModel->setValue( z );
+		m_zoomingXModel->setValue( z );
 
 		// update timeline
 		m_song->m_playPos[Song::Mode_PlaySong].m_timeLine->
@@ -833,7 +845,10 @@ void SongEditor::wheelEvent( QWheelEvent * we )
 		// and make sure, all TCO's are resized and relocated
 		realignTracks();
 	}
-	else if( we->modifiers() & Qt::ShiftModifier || we->orientation() == Qt::Horizontal )
+	else
+        */
+        if( we->modifiers() & Qt::ShiftModifier ||
+            we->orientation() == Qt::Horizontal )
 	{
 		m_leftRightScroll->setValue( m_leftRightScroll->value() -
 							we->delta() / 30 );
@@ -1050,14 +1065,32 @@ void SongEditor::updatePositionLine()
 
 
 
-void SongEditor::zoomingChanged()
+void SongEditor::zoomingXChanged()
 {
-	setPixelsPerTact( Editor::ZOOM_LEVELS[m_zoomingModel->value()]
+	setPixelsPerTact( Editor::ZOOM_LEVELS[m_zoomingXModel->value()]
                           * DEFAULT_PIXELS_PER_TACT );
 
 	m_song->m_playPos[Song::Mode_PlaySong].m_timeLine->
                 setPixelsPerTact( pixelsPerTact() );
 	realignTracks();
+}
+
+
+
+
+void SongEditor::zoomingYChanged()
+{
+        const float f=Editor::ZOOM_LEVELS[m_zoomingYModel->value()];
+
+        for(TrackView* tv: trackViews())
+        {
+                const int ht=qMax<int>(qRound(f*DEFAULT_TRACK_HEIGHT),
+                                       MINIMAL_TRACK_HEIGHT);
+                tv->setFixedHeight( ht );
+        }
+        realignTracks();
+        for(TrackView* tv: trackViews())
+                tv->getTrack()->setHeight( height() );
 }
 
 
@@ -1083,9 +1116,17 @@ bool SongEditor::allowRubberband() const
 
 
 
-ComboBoxModel *SongEditor::zoomingModel() const
+ComboBoxModel *SongEditor::zoomingXModel() const
 {
-	return m_zoomingModel;
+	return m_zoomingXModel;
+}
+
+
+
+
+ComboBoxModel *SongEditor::zoomingYModel() const
+{
+	return m_zoomingYModel;
 }
 
 
@@ -1170,8 +1211,10 @@ SongEditorWindow::SongEditorWindow(Song* song) :
 	m_editModeGroup = new ActionGroup(this);
 	m_drawModeAction = m_editModeGroup->addAction(embed::getIconPixmap("edit_draw"),
                                                       tr("Draw mode"));
+        m_drawModeAction->setShortcut( QKeySequence( Qt::SHIFT + Qt::Key_D ) );
 	m_selectModeAction = m_editModeGroup->addAction(embed::getIconPixmap("edit_select"),
                                                         tr("Edit mode (select and move)"));
+        m_drawModeAction->setShortcut( QKeySequence( Qt::SHIFT + Qt::Key_S ) );
 
 	editActionsToolBar->addSeparator();
 	editActionsToolBar->addAction( m_drawModeAction );
@@ -1183,6 +1226,7 @@ SongEditorWindow::SongEditorWindow(Song* song) :
 
         // Loop mark actions
 	DropToolBar *loopMarkToolBar = addDropToolBarToTop(tr("Loop marks"));
+        loopMarkToolBar->addBlank();
         loopMarkToolBar->addSeparator();
 	m_editor->m_timeLine->addLoopMarkButtons(loopMarkToolBar);
 
@@ -1193,33 +1237,50 @@ SongEditorWindow::SongEditorWindow(Song* song) :
         // Zoom actions
 	DropToolBar* zoomToolBar = addDropToolBarToTop(tr("Zoom controls"));
 
-	QLabel* zoom_lbl = new QLabel( m_toolBar );
-	zoom_lbl->setPixmap( embed::getIconPixmap( "zoom_x" ) );
-        zoom_lbl->setFixedSize( 32, 32 );
-        zoom_lbl->setAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
+	QLabel* zoomXLBL = new QLabel( m_toolBar );
+	zoomXLBL->setPixmap( embed::getIconPixmap( "zoom_x" ) );
+        zoomXLBL->setFixedSize( 32, 32 );
+        zoomXLBL->setAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
 
-	// setup zooming-stuff
-	m_zoomingComboBox = new ComboBox( m_toolBar );
-	m_zoomingComboBox->setFixedSize( 70, 32 );
-	//m_zoomingComboBox->move( 580, 4 );
-	m_zoomingComboBox->setModel(m_editor->m_zoomingModel);
+	m_zoomingXComboBox = new ComboBox( m_toolBar );
+	m_zoomingXComboBox->setFixedSize( 70, 32 );
+	//m_zoomingXComboBox->move( 580, 4 );
+	m_zoomingXComboBox->setModel(m_editor->m_zoomingXModel);
 
-	zoomToolBar->addWidget( zoom_lbl );
-	zoomToolBar->addWidget( m_zoomingComboBox );
+	zoomToolBar->addWidget( zoomXLBL );
+	zoomToolBar->addWidget( m_zoomingXComboBox );
 
-	new QShortcut(Qt::Key_Minus, m_zoomingComboBox, SLOT(selectPrevious()));
-	new QShortcut(Qt::Key_Plus, m_zoomingComboBox, SLOT(selectNext()));
+	new QShortcut(Qt::Key_Minus, m_zoomingXComboBox,
+                      SLOT(selectPrevious()));
+	new QShortcut(Qt::Key_Plus, m_zoomingXComboBox,
+                      SLOT(selectNext()));
+
+	QLabel* zoomYLBL = new QLabel( m_toolBar );
+	zoomYLBL->setPixmap( embed::getIconPixmap( "zoom_y" ) );
+        zoomYLBL->setFixedSize( 32, 32 );
+        zoomYLBL->setAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
+
+	m_zoomingYComboBox = new ComboBox( m_toolBar );
+	m_zoomingYComboBox->setFixedSize( 70, 32 );
+	//m_zoomingXComboBox->move( 580, 4 );
+	m_zoomingYComboBox->setModel(m_editor->m_zoomingYModel);
+
+	zoomToolBar->addWidget( zoomYLBL );
+	zoomToolBar->addWidget( m_zoomingYComboBox );
+
+	new QShortcut(Qt::SHIFT | Qt::Key_Minus, m_zoomingYComboBox,
+                      SLOT(selectPrevious()));
+	new QShortcut(Qt::SHIFT | Qt::Key_Plus, m_zoomingYComboBox,
+                      SLOT(selectNext()));
 
 
         // Timeline actions
 	DropToolBar *timeLineToolBar = addDropToolBarToTop(tr("Timeline controls"));
+        timeLineToolBar->addSeparator();
 	m_editor->m_timeLine->addToolButtons(timeLineToolBar);
 
         // Loop size actions
 	DropToolBar *loopSizeToolBar = addDropToolBarToTop(tr("Loop sizes"));
-        loopSizeToolBar->addSeparator();
-        loopSizeToolBar->addBlank();
-        loopSizeToolBar->addBlank();
         loopSizeToolBar->addSeparator();
 	m_editor->m_timeLine->addLoopSizeButtons(loopSizeToolBar);
 

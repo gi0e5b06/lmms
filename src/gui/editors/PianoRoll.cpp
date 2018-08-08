@@ -1168,12 +1168,12 @@ void PianoRoll::keyPressEvent(QKeyEvent* ke )
 				ke->accept();
 				if (ke->modifiers() & Qt::ShiftModifier)
 				{
-					// Ctrl + Shift + A = deselect all notes
+					// Ctrl+Shift+A = deselect all notes
 					clearSelectedNotes();
 				}
 				else
 				{
-					// Ctrl + A = select all notes
+					// Ctrl+A = select all notes
 					selectAll();
 				}
 				update();
@@ -1181,7 +1181,7 @@ void PianoRoll::keyPressEvent(QKeyEvent* ke )
 			break;
 
 		case Qt::Key_Escape:
-			// Same as Ctrl + Shift + A
+			// Same as Ctrl+Shift+A
 			clearSelectedNotes();
 			break;
 
@@ -4106,13 +4106,13 @@ PianoRollWindow::PianoRollWindow() :
 	// init edit-buttons at the top
 	ActionGroup* editModeGroup = new ActionGroup( this );
 	QAction* drawAction = editModeGroup->addAction(embed::getIconPixmap( "edit_draw" ),
-                                                       tr( "Draw mode (Shift+D)" ) );
+                                                       TR( "Draw mode (Shift+D)" ) );
 	QAction* eraseAction = editModeGroup->addAction(embed::getIconPixmap( "edit_erase" ),
-                                                        tr("Erase mode (Shift+E)" ) );
+                                                        TR("Erase mode (Shift+E)" ) );
 	QAction* selectAction = editModeGroup->addAction(embed::getIconPixmap( "edit_select" ),
-                                                         tr( "Select mode (Shift+S)" ) );
+                                                         TR( "Select mode (Shift+S)" ) );
 	QAction* detuneAction = editModeGroup->addAction(embed::getIconPixmap( "automation" ),
-                                                         tr("Detune mode (Shift+T)" ) );
+                                                         TR("Detune mode (Shift+T)" ) );
 
 	drawAction->setChecked( true );
 
@@ -4135,7 +4135,7 @@ PianoRollWindow::PianoRollWindow() :
 	selectAction->setWhatsThis
                 (tr( "Click here and select mode will be activated. "
                      "In this mode you can select notes. Alternatively, "
-                     "you can hold %1 in draw mode to temporarily use "
+                     "you can hold '%1' in draw mode to temporarily use "
                      "select mode." ).arg(UI_CTRL_KEY));
 	detuneAction->setWhatsThis
 		(tr( "Click here and detune mode will be activated. "

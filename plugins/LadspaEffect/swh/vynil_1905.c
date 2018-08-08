@@ -1,4 +1,5 @@
 #pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+#pragma GCC diagnostic ignored "-Wuninitialized"
 
 #include <stdlib.h>
 #include <string.h>

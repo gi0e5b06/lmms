@@ -319,7 +319,7 @@ int TimeLineWidget::findLoop(const MidiTime& t)
 void TimeLineWidget::selectLoop(QAction * _a)
 {
 	int const n=_a->data().toInt();
-	qWarning("TimeLineWidget::selectLoop(QAction*) n=%d checked=%d",n,_a->isChecked());
+	//qInfo("TimeLineWidget::selectLoop(QAction*) n=%d checked=%d",n,_a->isChecked());
 	if((n<0) || (n>=NB_LOOPS)) return;
 
 	/*
@@ -371,7 +371,7 @@ void TimeLineWidget::selectLoop(const MidiTime& t)
 void TimeLineWidget::resizeLoop(QAction * _a)
 {
 	const float s=_a->data().toFloat();
-	qWarning("TimeLineWidget::resizeLoop(QAction*) s=%f",s);
+	//qInfo("TimeLineWidget::resizeLoop(QAction*) s=%f",s);
 
 	if(!Engine::getSong()->isPlaying())
         {
@@ -450,7 +450,7 @@ void TimeLineWidget::setLoopEnd(int _n, int _x)
 
 void TimeLineWidget::updateLoopButtons()
 {
-	//qWarning("TimeLineWidget::updateLoopButtons()");
+	//qInfo("TimeLineWidget::updateLoopButtons()");
 
 	const int n =m_currentLoop;
 	const int nn=m_nextLoop;
@@ -475,7 +475,7 @@ void TimeLineWidget::updateResizeButtons()
 	const MidiTime& te=loopEnd();
 
 	float s=((float)(te-tb))/MidiTime::ticksPerTact();
-	qWarning("TimeLineWidget::resizeLoopButtons() s=%f",s);
+	//qInfo("TimeLineWidget::resizeLoopButtons() s=%f",s);
 	int   imin=-1;
 	//float smin=0.0f;
 	for(int i=0;i<NB_LOOP_SIZES;i++)
@@ -773,7 +773,7 @@ void TimeLineWidget::mousePressEvent( QMouseEvent* event )
 		delete m_hint;
 		m_hint = TextFloat::displayMessage
                         ( tr( "Hint" ),
-                          tr( "Press <%1> to disable magnetic loop points." ).arg(UI_CTRL_KEY),
+                          tr( "Press <%1> to disable the magnetic grid." ).arg(UI_CTRL_KEY),
                           embed::getIconPixmap( "hint" ), 0 );
 	}
 	else if( m_action == MoveLoopBegin )
@@ -781,8 +781,8 @@ void TimeLineWidget::mousePressEvent( QMouseEvent* event )
 		delete m_hint;
 		m_hint = TextFloat::displayMessage
                         ( tr( "Hint" ),
-                          tr( "Hold <Shift> to move the end loop point; "
-                              "Press <%1> to disable magnetic loop points." ).arg(UI_CTRL_KEY),
+                          tr( //"Hold <Shift> to move the end loop point; "
+                              "Press <%1> to disable the magnetic grid." ).arg(UI_CTRL_KEY),
                           embed::getIconPixmap( "hint" ), 0 );
 	}
 
@@ -899,22 +899,42 @@ void TimeLineWidget::contextMenuEvent( QContextMenuEvent* _cme )
         QAction* scle=cm.addAction(tr("Set Current Loop End"));
         scle->setData( QVariant(QPoint(x,1)) );
 
-        //cm->addSeparator();
+        cm.addSeparator();
+        QAction* snls=cm.addAction(tr("Set Next Loop Start"));
+        snls->setData( QVariant(QPoint(x,2)) );
+        QAction* snle=cm.addAction(tr("Set Next Loop End"));
+        snle->setData( QVariant(QPoint(x,3)) );
+
+        for(int i=0;i<NB_LOOPS;i++)
+        {
+                cm.addSeparator();
+                QAction* sxls=cm.addAction(tr("Set Loop %1 Start").arg((char)(65+i)));
+                sxls->setData( QVariant(QPoint(x,4+2*i)) );
+                QAction* sxle=cm.addAction(tr("Set Loop %1 End").arg((char)(65+i)));
+                sxle->setData( QVariant(QPoint(x,4+2*i+1)) );
+        }
+
         connect(&cm, SIGNAL(triggered(QAction*)), this, SLOT(handleContextMenuAction(QAction*)));
         cm.exec( QCursor::pos() );
 }
 
 void TimeLineWidget::handleContextMenuAction( QAction* _a )
 {
-        const int    n=m_currentLoop;
 	const QPoint p=_a->data().toPoint();
         const int    x=p.x();
         const int    a=p.y();
-        qInfo("TimeLineWidget::handleContextMenuAction %d %d",x,a);
+        //qInfo("TimeLineWidget::handleContextMenuAction %d %d",x,a);
 
         switch(a)
         {
-        case 0: setLoopStart(n,x); break;
-        case 1: setLoopEnd(n,x); break;
+        case 0: setLoopStart(m_currentLoop,x); break;
+        case 1: setLoopEnd(m_currentLoop,x); break;
+        case 2: setLoopStart(m_nextLoop,x); break;
+        case 3: setLoopEnd(m_nextLoop,x); break;
+        default:
+                int n=(a-4)/2;
+                if(a%2==0) setLoopStart(n,x);
+                else setLoopEnd(n,x);
+                break;
         }
 }

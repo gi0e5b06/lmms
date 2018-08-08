@@ -76,7 +76,8 @@ public:
 	void saveSettings( QDomDocument& doc, QDomElement& element );
 	void loadSettings( const QDomElement& element );
 
-	ComboBoxModel *zoomingModel() const;
+	ComboBoxModel *zoomingXModel() const;
+	ComboBoxModel *zoomingYModel() const;
 
         const TimeLineWidget* timeLineWidget() { return m_timeLine; }
 
@@ -109,7 +110,8 @@ private slots:
 
 	void updateScrollBar(int len);
 
-	void zoomingChanged();
+	void zoomingXChanged();
+	void zoomingYChanged();
 
 private:
 	virtual void keyPressEvent( QKeyEvent * ke );
@@ -137,7 +139,8 @@ private:
 
 	positionLine * m_positionLine;
 
-	ComboBoxModel* m_zoomingModel;
+	ComboBoxModel* m_zoomingXModel;
+	ComboBoxModel* m_zoomingYModel;
 
 	bool m_scrollBack;
 	bool m_smoothScroll;
@@ -190,7 +193,8 @@ private:
 	QAction* m_selectModeAction;
 	QAction* m_crtlAction;
 
-	ComboBox * m_zoomingComboBox;
+	ComboBox * m_zoomingXComboBox;
+	ComboBox * m_zoomingYComboBox;
 };
 
 #endif
