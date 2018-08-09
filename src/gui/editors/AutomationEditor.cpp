@@ -1,7 +1,7 @@
 /*
- * AutomationEditor.cpp - implementation of AutomationEditor which is used for
- *						actual setting of dynamic values
+ * AutomationEditor.cpp - used for actual setting of dynamic values
  *
+ * Copyright (c) 2018      gi0e5b06 (on github.com)
  * Copyright (c) 2008-2014 Tobias Doerffel <tobydox/at/users.sourceforge.net>
  * Copyright (c) 2008-2013 Paul Giblock <pgib/at/users.sourceforge.net>
  * Copyright (c) 2006-2008 Javier Serrano Polo <jasp00/at/users.sourceforge.net>
@@ -119,9 +119,22 @@ AutomationEditor::AutomationEditor() :
 	//keeps the direction of the widget, undepended on the locale
 	setLayoutDirection( Qt::LeftToRight );
 
-	m_tensionModel = new FloatModel(0.f, -10.f, 10.f, 0.01f);
+	m_tensionModel       = new FloatModel(0.f, -10.f, 10.f, 0.01f);
+	m_waveRatioModel     = new FloatModel(0.f, 0.f, 1.f, 0.01f);
+	m_waveSkewModel      = new FloatModel(0.f, 0.f, 1.f, 0.01f);
+	m_waveAmplitudeModel = new FloatModel(0.f, -10.f, 10.f, 0.01f);
+	m_waveRepeatModel    = new FloatModel(0.f, 0.f, 15.f, 0.01f);
+
 	connect( m_tensionModel, SIGNAL( dataChanged() ),
                  this, SLOT( setTension() ) );
+	connect( m_waveRatioModel, SIGNAL( dataChanged() ),
+                 this, SLOT( setWaveRatio() ) );
+	connect( m_waveSkewModel, SIGNAL( dataChanged() ),
+                 this, SLOT( setWaveSkew() ) );
+	connect( m_waveAmplitudeModel, SIGNAL( dataChanged() ),
+                 this, SLOT( setWaveAmplitude() ) );
+	connect( m_waveRepeatModel, SIGNAL( dataChanged() ),
+                 this, SLOT( setWaveRepeat() ) );
 
 	for( int i = 0; i < 7; ++i )
 	{
@@ -209,8 +222,16 @@ AutomationEditor::~AutomationEditor()
 	m_zoomingYModel.disconnect();
 	m_quantizeModel.disconnect();
 	m_tensionModel->disconnect();
+	m_waveRatioModel->disconnect();
+	m_waveSkewModel->disconnect();
+	m_waveAmplitudeModel->disconnect();
+	m_waveRepeatModel->disconnect();
 
 	delete m_tensionModel;
+	delete m_waveRatioModel;
+	delete m_waveSkewModel;
+	delete m_waveAmplitudeModel;
+	delete m_waveRepeatModel;
 }
 
 
@@ -325,7 +346,11 @@ void AutomationEditor::updateAfterPatternChange()
 	m_step = m_pattern->firstObject()->step<float>();
 	m_scrollLevel = ( m_minLevel + m_maxLevel ) / 2;
 
-	m_tensionModel->setValue( m_pattern->getTension() );
+	m_tensionModel->setValue( m_pattern->tension() );
+	m_waveRatioModel->setValue( m_pattern->waveRatio() );
+	m_waveSkewModel->setValue( m_pattern->waveSkew() );
+	m_waveAmplitudeModel->setValue( m_pattern->waveAmplitude() );
+	m_waveRepeatModel->setValue( m_pattern->waveRepeat() );
 
 	// resizeEvent() does the rest for us (scrolling, range-checking
 	// of levels and so on...)
@@ -1850,6 +1875,44 @@ void AutomationEditor::setTension()
 	}
 }
 
+void AutomationEditor::setWaveRatio()
+{
+	if ( m_pattern )
+	{
+		m_pattern->setWaveRatio( m_waveRatioModel->value() );
+		update();
+	}
+}
+
+void AutomationEditor::setWaveSkew()
+{
+	if ( m_pattern )
+	{
+		m_pattern->setWaveSkew( m_waveSkewModel->value() );
+		update();
+	}
+}
+
+void AutomationEditor::setWaveAmplitude()
+{
+	if ( m_pattern )
+	{
+		m_pattern->setWaveAmplitude( m_waveAmplitudeModel->value() );
+		update();
+	}
+}
+
+
+
+void AutomationEditor::setWaveRepeat()
+{
+	if ( m_pattern )
+	{
+		m_pattern->setWaveRepeat( m_waveRepeatModel->value() );
+		update();
+	}
+}
+
 
 
 void AutomationEditor::selectAll()
@@ -2294,6 +2357,30 @@ AutomationEditorWindow::AutomationEditorWindow() :
 
 	connect(m_cubicHermiteAction, SIGNAL(toggled(bool)), m_tensionKnob, SLOT(setEnabled(bool)));
 
+        m_waveRatioKnob = new Knob( this, "Wave Ratio" );
+        m_waveRatioKnob->setFixedSize(32,32);
+        m_waveRatioKnob->setPointColor(Qt::white);
+	m_waveRatioKnob->setModel(m_editor->m_waveRatioModel);
+        m_waveRatioKnob->setHintText(tr("Wave ratio:"),"");
+
+        m_waveSkewKnob = new Knob( this, "Wave Skew" );
+        m_waveSkewKnob->setFixedSize(32,32);
+        m_waveSkewKnob->setPointColor(Qt::white);
+	m_waveSkewKnob->setModel(m_editor->m_waveSkewModel);
+        m_waveSkewKnob->setHintText(tr("Wave skew:"),"");
+
+        m_waveAmplitudeKnob = new Knob( this, "Wave Amplitude" );
+        m_waveAmplitudeKnob->setFixedSize(32,32);
+        m_waveAmplitudeKnob->setPointColor(Qt::white);
+	m_waveAmplitudeKnob->setModel(m_editor->m_waveAmplitudeModel);
+        m_waveAmplitudeKnob->setHintText(tr("Wave amplitude:"),"");
+
+        m_waveRepeatKnob = new Knob( this, "Wave Repeat" );
+        m_waveRepeatKnob->setFixedSize(32,32);
+        m_waveRepeatKnob->setPointColor(Qt::white);
+	m_waveRepeatKnob->setModel(m_editor->m_waveRepeatModel);
+        m_waveRepeatKnob->setHintText(tr("Wave repeat:"),"");
+
 	m_discreteAction->setWhatsThis(
 		tr( "Click here to choose discrete progressions for this "
 			"automation pattern.  The value of the connected "
@@ -2321,7 +2408,10 @@ AutomationEditorWindow::AutomationEditorWindow() :
 	//interpolationActionsToolBar->addWidget( new QLabel( tr("Tension: "),
         //                                      interpolationActionsToolBar ));
 	interpolationActionsToolBar->addWidget( m_tensionKnob );
-
+	interpolationActionsToolBar->addWidget( m_waveRatioKnob );
+	interpolationActionsToolBar->addWidget( m_waveSkewKnob );
+	interpolationActionsToolBar->addWidget( m_waveAmplitudeKnob );
+	interpolationActionsToolBar->addWidget( m_waveRepeatKnob );
 
 
 	// Copy paste buttons

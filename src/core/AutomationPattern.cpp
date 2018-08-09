@@ -2,6 +2,7 @@
  * AutomationPattern.cpp - implementation of class AutomationPattern which
  *                         holds dynamic values
  *
+ * Copyright (c) 2018      gi0e5b06 (on github.com)
  * Copyright (c) 2008-2014 Tobias Doerffel <tobydox/at/users.sourceforge.net>
  * Copyright (c) 2006-2008 Javier Serrano Polo <jasp00/at/users.sourceforge.net>
  *
@@ -46,7 +47,11 @@ AutomationPattern::AutomationPattern( AutomationTrack * _auto_track ) :
 	TrackContentObject( _auto_track ),
 	m_autoTrack( _auto_track ),
 	m_objects(),
-	m_tension( 1.0 ),
+	m_tension( 1.f ),
+        m_waveRatio( 0.5f ),
+        m_waveSkew( 0.f ),
+        m_waveAmplitude ( 0.10f ),
+        m_waveRepeat( 0.f ),
 	m_progressionType( DiscreteProgression ),
 	m_dragging( false ),
 	m_isRecording( false ),
@@ -156,7 +161,7 @@ void AutomationPattern::setProgressionType(ProgressionTypes _progressionType)
 
 void AutomationPattern::setTension( const float _tension )
 {
-        qInfo("AutomationPattern::setTension tension=%f",_tension);
+        //qInfo("AutomationPattern::setTension tension=%f",_tension);
 	if( _tension>=-10.f && _tension<=10.f )//nt > -0.01 && nt < 1.01 )
 	{
 		m_tension = _tension;
@@ -165,8 +170,45 @@ void AutomationPattern::setTension( const float _tension )
 	}
 }
 
+void AutomationPattern::setWaveRatio( const float _waveRatio )
+{
+        //qInfo("AutomationPattern::setWaveRatio waveRatio=%f",_waveRatio);
+	if( _waveRatio>=0.f && _waveRatio<=1.f )
+	{
+		m_waveRatio = _waveRatio;
+                emit dataChanged();
+	}
+}
 
+void AutomationPattern::setWaveSkew( const float _waveSkew )
+{
+        //qInfo("AutomationPattern::setWaveSkew waveSkew=%f",_waveSkew);
+	if( _waveSkew>=0.f && _waveSkew<=1.f )
+	{
+		m_waveSkew = _waveSkew;
+                emit dataChanged();
+	}
+}
 
+void AutomationPattern::setWaveAmplitude( const float _waveAmplitude )
+{
+        //qInfo("AutomationPattern::setWaveAmplitude waveAmplitude=%f",_waveAmplitude);
+	if( _waveAmplitude>=-10.f && _waveAmplitude<=10.f )
+	{
+		m_waveAmplitude = _waveAmplitude;
+                emit dataChanged();
+	}
+}
+
+void AutomationPattern::setWaveRepeat( const float _waveRepeat )
+{
+        //qInfo("AutomationPattern::setWaveRepeat waveRepeat=%f",_waveRepeat);
+	if( _waveRepeat>=0.f && _waveRepeat<=15.f )
+	{
+		m_waveRepeat = _waveRepeat;
+                emit dataChanged();
+	}
+}
 
 const AutomatableModel * AutomationPattern::firstObject() const
 {
@@ -346,35 +388,40 @@ float AutomationPattern::valueAt( const MidiTime & _time ) const
 		return 0;
 	}
 
+        /*
 	if( m_timeMap.contains( _time ) )
 	{
 		return m_timeMap[_time];
 	}
+        */
 
-	// lowerBound returns next value with greater key, therefore we take
-	// the previous element to get the current value
-	timeMap::ConstIterator v = m_timeMap.lowerBound( _time );
+	timeMap::ConstIterator v = m_timeMap.upperBound( _time );
 
 	if( v == m_timeMap.begin() )
 	{
 		return 0.f;
 	}
+
 	if( v == m_timeMap.end() )
 	{
-		return (v-1).value();
+                return (v-1).value();
 	}
 
-	return valueAt( v-1, _time - (v-1).key() );
+	return valueAt( v-1, _time - (v-1).key(), Engine::mixer()->criticalXRuns() );
 }
 
 
 
 
-float AutomationPattern::valueAt( timeMap::const_iterator v, int offset ) const
+float AutomationPattern::valueAt( timeMap::const_iterator v, int offset, bool xruns ) const
 {
         float r;
 
-        if( v == m_timeMap.end() || offset == 0 )
+        ProgressionTypes pt=m_progressionType;
+        if(xruns && pt!=DiscreteProgression)
+                pt=LinearProgression;
+
+        if( v == m_timeMap.end() )//|| offset == 0 )
 		r = v.value();
         else
         switch( m_progressionType )
@@ -456,18 +503,39 @@ float AutomationPattern::valueAt( timeMap::const_iterator v, int offset ) const
                 break;
         }
 
-        /*
+        if(xruns) return r;
+
+        const AutomatableModel* m=firstObject();
+
+        if(offset==0)
+        {
+                //float x  = 0.f;
+                float dy = (v+1).value()-v.value();
+                float my = m->range();
+                float w0 = fastmoogsawf01(0.f);
+                //float w1 = fastmoogsawf01(1.f);
+                r += fabsf((1.f-m_waveRatio)*dy+m_waveRatio*my)
+                        * m_waveSkew*w0
+                        * m_waveAmplitude;
+        }
+        else
         if( v != m_timeMap.end() )
         {
-                float x = float(offset)/((v+1).key()-v.key());
+                float rx=((v+1).key()-v.key());
+                float x = float(offset)/rx;
                 float dy = (v+1).value()-v.value();
+                float my = m->range();
                 float w0=fastmoogsawf01(0.f);
                 float w1=fastmoogsawf01(1.f);
-                r+=dy*(fastmoogsawf01(x)-w0-x*(w1-w0)); // *m_waveAmp
+                float nw = qMax(1.f,round(rx*powf(2.f,m_waveRepeat)
+                                          /4.f/192.f));
+                float ph = fmodf(x*nw,1.f);
+                r += fabsf((1.f-m_waveRatio)*dy+m_waveRatio*my)
+                        * (fastmoogsawf01(ph)+(1.f-m_waveSkew)*(-w0-x*(w1-w0)))
+                        * m_waveAmplitude;
         }
-        */
 
-        return r;
+        return qBound(m->minValue<float>(),r,m->maxValue<float>());
 }
 
 
@@ -613,9 +681,14 @@ void AutomationPattern::saveSettings( QDomDocument & _doc, QDomElement & _this )
 	_this.setAttribute( "pos", startPosition() );
 	_this.setAttribute( "len", length() );
 	_this.setAttribute( "name", name() );
-	_this.setAttribute( "prog", QString::number( progressionType() ) );
-	_this.setAttribute( "tens", QString::number( getTension() ) );
 	_this.setAttribute( "mute", QString::number( isMuted() ) );
+	_this.setAttribute( "prog", QString::number( progressionType() ) );
+	_this.setAttribute( "tens", QString::number( tension() ) ); //obsolete
+	_this.setAttribute( "tension", QString::number( tension() ) );
+	_this.setAttribute( "wave_ratio", QString::number( waveRatio() ) );
+	_this.setAttribute( "wave_skew", QString::number( waveSkew() ) );
+	_this.setAttribute( "wave_amplitude", QString::number( waveAmplitude() ) );
+	_this.setAttribute( "wave_repeat", QString::number( waveRepeat() ) );
 
 	for( timeMap::const_iterator it = m_timeMap.begin();
 						it != m_timeMap.end(); ++it )
@@ -648,10 +721,16 @@ void AutomationPattern::loadSettings( const QDomElement & _this )
 
 	movePosition( _this.attribute( "pos" ).toInt() );
 	setName( _this.attribute( "name" ) );
+	setMuted(_this.attribute( "mute", QString::number( false ) ).toInt() );
+
 	setProgressionType( static_cast<ProgressionTypes>( _this.attribute(
 							"prog" ).toInt() ) );
-	setTension( _this.attribute( "tens" ).toFloat() );
-	setMuted(_this.attribute( "mute", QString::number( false ) ).toInt() );
+	setTension( _this.attribute( "tens" ).toFloat() ); //obsolete
+	setTension( _this.attribute( "tension" ).toFloat() );
+	setWaveRatio( _this.attribute( "wave_ratio" ).toFloat() );
+	setWaveSkew( _this.attribute( "wave_skew" ).toFloat() );
+	setWaveAmplitude( _this.attribute( "wave_amplitude" ).toFloat() );
+	setWaveRepeat( _this.attribute( "wave_repeat" ).toFloat() );
 
 	for( QDomNode node = _this.firstChild(); !node.isNull();
 						node = node.nextSibling() )

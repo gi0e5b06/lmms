@@ -1,7 +1,8 @@
 /*
- * AutomationEditor.h - declaration of class AutomationEditor which is a window
- *					  where you can edit dynamic values in an easy way
+ * AutomationEditor.h - a window where you can edit dynamic values in an easy
+ *                      way
  *
+ * Copyright (c) 2018      gi0e5b06 (on github.com)
  * Copyright (c) 2006-2008 Javier Serrano Polo <jasp00/at/users.sourceforge.net>
  *
  * This file is part of LMMS - https://lmms.io
@@ -146,6 +147,10 @@ protected slots:
 	void setProgressionType(AutomationPattern::ProgressionTypes type);
 	void setProgressionType(int type);
 	void setTension();
+	void setWaveRatio();
+	void setWaveSkew();
+	void setWaveAmplitude();
+	void setWaveRepeat();
 
 	void copySelectedValues();
 	void cutSelectedValues();
@@ -198,6 +203,10 @@ private:
 	//static const QVector<double> m_zoomXLevels;
 
 	FloatModel * m_tensionModel;
+	FloatModel * m_waveRatioModel;
+	FloatModel * m_waveSkewModel;
+	FloatModel * m_waveAmplitudeModel;
+	FloatModel * m_waveRepeatModel;
 
 	QMutex m_patternMutex;
 	AutomationPattern * m_pattern;
@@ -313,6 +322,10 @@ private:
 	QAction* m_flipXAction;
 
 	Knob * m_tensionKnob;
+	Knob * m_waveRatioKnob;
+	Knob * m_waveSkewKnob;
+	Knob * m_waveAmplitudeKnob;
+	Knob * m_waveRepeatKnob;
 
 	ComboBox * m_zoomingXComboBox;
 	ComboBox * m_zoomingYComboBox;

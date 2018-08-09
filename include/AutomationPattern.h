@@ -2,6 +2,7 @@
  * AutomationPattern.h - declaration of class AutomationPattern, which contains
  *                       all information about an automation pattern
  *
+ * Copyright (c) 2018      gi0e5b06 (on github.com)
  * Copyright (c) 2008-2014 Tobias Doerffel <tobydox/at/users.sourceforge.net>
  * Copyright (c) 2006-2008 Javier Serrano Polo <jasp00/at/users.sourceforge.net>
  *
@@ -69,12 +70,35 @@ public:
 	}
 	void setProgressionType( ProgressionTypes _new_progression_type );
 
-	inline float getTension() const
+	inline float tension() const
 	{
 		return m_tension;
 	}
-
 	void setTension( const float _tension );
+
+	inline float waveRatio() const
+	{
+		return m_waveRatio;
+	}
+	void setWaveRatio( const float _waveRatio );
+
+	inline float waveSkew() const
+	{
+		return m_waveSkew;
+	}
+	void setWaveSkew( const float _waveSkew );
+
+	inline float waveAmplitude() const
+	{
+		return m_waveAmplitude;
+	}
+	void setWaveAmplitude( const float _waveAmplitude );
+
+	inline float waveRepeat() const
+	{
+		return m_waveRepeat;
+	}
+	void setWaveRepeat( const float _waveRepeat );
 
 	MidiTime timeMapLength() const;
 	void updateLength();
@@ -173,7 +197,8 @@ private:
 	void cleanObjects();
 	void generateTangents();
 	void generateTangents( timeMap::const_iterator it, int numToGenerate );
-	float valueAt( timeMap::const_iterator v, int offset ) const;
+	float valueAt( timeMap::const_iterator v, int offset,
+                       bool xruns=false ) const;
 
 	AutomationTrack * m_autoTrack;
 	QVector<jo_id_t> m_idsToResolve;
@@ -181,12 +206,18 @@ private:
 	timeMap m_timeMap;	// actual values
 	timeMap m_oldTimeMap;	// old values for storing the values before setDragValue() is called.
 	timeMap m_tangents;	// slope at each point for calculating spline
+
 	float m_tension;
+	float m_waveRatio;
+	float m_waveSkew;
+	float m_waveAmplitude;
+	float m_waveRepeat;
+
 	bool m_hasAutomation;
 	ProgressionTypes m_progressionType;
 
 	bool m_dragging;
-	
+
 	bool m_isRecording;
 	float m_lastRecordedValue;
 
