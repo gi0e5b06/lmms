@@ -32,6 +32,7 @@
 #include <QFontDatabase>
 #include <QLineEdit>
 #include <QMdiArea>
+#include <QShortcut>
 #include <QTextEdit>
 #include <QToolBar>
 #include <QDomCDATASection>
@@ -117,33 +118,46 @@ void ProjectNotes::setupActions()
 	QToolBar * tb = addToolBar( tr( "Edit Actions" ) );
 	QAction * a;
 
-	a = new QAction( embed::getIconPixmap( "edit_undo" ), tr( "&Undo" ),
-									this );
-	a->setShortcut( tr( "%1+Z" ).arg(UI_CTRL_KEY));
+	a = new QAction( embed::getIconPixmap( "edit_undo" ),
+                         tr( "&Undo" ), this );
+	a->setShortcut( QKeySequence::Undo );
 	connect( a, SIGNAL( triggered() ), m_edit, SLOT( undo() ) );
 	tb->addAction( a );
 
-	a = new QAction( embed::getIconPixmap( "edit_redo" ), tr( "&Redo" ),
-									this );
-	a->setShortcut( tr( "%1+Y" ).arg(UI_CTRL_KEY));
+	a = new QAction( embed::getIconPixmap( "edit_redo" ),
+                         tr( "&Redo" ), this );
+	a->setShortcut( QKeySequence::Redo );
 	connect( a, SIGNAL( triggered() ), m_edit, SLOT( redo() ) );
 	tb->addAction( a );
 
-	a = new QAction( embed::getIconPixmap( "edit_copy" ), tr( "&Copy" ),
-									this );
-	a->setShortcut( tr( "%1+C" ).arg(UI_CTRL_KEY));
+	if(QKeySequence(QKeySequence::Redo)
+           != QKeySequence(Qt::CTRL + Qt::Key_Y))
+	{
+		new QShortcut( QKeySequence( Qt::CTRL + Qt::Key_Y ),
+                               m_edit, SLOT(redo()) );
+	}
+	if(QKeySequence(QKeySequence::Redo)
+           != QKeySequence(Qt::CTRL + Qt::SHIFT + Qt::Key_Z ))
+	{
+		new QShortcut( QKeySequence( Qt::CTRL + Qt::SHIFT + Qt::Key_Z ),
+                               m_edit, SLOT(redo()) );
+	}
+
+	a = new QAction( embed::getIconPixmap( "edit_copy" ),
+                         tr( "&Copy" ), this );
+	a->setShortcut( QKeySequence::Copy );
 	connect( a, SIGNAL( triggered() ), m_edit, SLOT( copy() ) );
 	tb->addAction( a );
 
-	a = new QAction( embed::getIconPixmap( "edit_cut" ), tr( "Cu&t" ),
-									this );
-	a->setShortcut( tr( "%1+X" ).arg(UI_CTRL_KEY));
+	a = new QAction( embed::getIconPixmap( "edit_cut" ),
+                         tr( "Cu&t" ), this );
+	a->setShortcut( QKeySequence::Cut );
 	connect( a, SIGNAL( triggered() ), m_edit, SLOT( cut() ) );
 	tb->addAction( a );
 
 	a = new QAction( embed::getIconPixmap( "edit_paste" ), tr( "&Paste" ),
 									this );
-	a->setShortcut( tr( "%1+V" ).arg(UI_CTRL_KEY));
+	a->setShortcut( QKeySequence::Paste );
 	connect( a, SIGNAL( triggered() ), m_edit, SLOT( paste() ) );
 	tb->addAction( a );
 
@@ -172,23 +186,22 @@ void ProjectNotes::setupActions()
 					QApplication::font().pointSize() ) );
 
 	m_actionTextBold = new QAction( embed::getIconPixmap( "text_bold" ),
-							tr( "&Bold" ), this );
-	m_actionTextBold->setShortcut( tr( "%1+B" ).arg(UI_CTRL_KEY));
+                                        tr( "&Bold" ), this );
+	m_actionTextBold->setShortcut( QKeySequence::Bold );
 	m_actionTextBold->setCheckable( true );
 	connect( m_actionTextBold, SIGNAL( triggered() ), this,
 							SLOT( textBold() ) );
 
 	m_actionTextItalic = new QAction( embed::getIconPixmap( "text_italic" ),
 							tr( "&Italic" ), this );
-	m_actionTextItalic->setShortcut( tr( "%1+I" ).arg(UI_CTRL_KEY));
+	m_actionTextItalic->setShortcut( QKeySequence::Italic );
 	m_actionTextItalic->setCheckable( true );
 	connect( m_actionTextItalic, SIGNAL( triggered() ), this,
 							SLOT( textItalic() ) );
 
-	m_actionTextUnderline = new QAction( embed::getIconPixmap(
-								"text_under" ),
-						tr( "&Underline" ), this );
-	m_actionTextUnderline->setShortcut( tr( "%1+U" ).arg(UI_CTRL_KEY));
+	m_actionTextUnderline = new QAction( embed::getIconPixmap( "text_under" ),
+                                             tr( "&Underline" ), this );
+	m_actionTextUnderline->setShortcut( QKeySequence::Underline );
 	m_actionTextUnderline->setCheckable( true );
 	connect( m_actionTextUnderline, SIGNAL( triggered() ), this,
 						SLOT( textUnderline() ) );
@@ -199,30 +212,29 @@ void ProjectNotes::setupActions()
 					SLOT( textAlign( QAction * ) ) );
 
 	m_actionAlignLeft = new QAction( embed::getIconPixmap( "text_left" ),
-						tr( "&Left" ), m_edit );
-	m_actionAlignLeft->setShortcut( tr( "%1+L" ).arg(UI_CTRL_KEY));
+                                         tr( "&Left" ), m_edit );
+	m_actionAlignLeft->setShortcutContext( Qt::WidgetShortcut );
+	m_actionAlignLeft->setShortcut( QKeySequence( Qt::CTRL + Qt::Key_L ) );
 	m_actionAlignLeft->setCheckable( true );
 	grp->addAction( m_actionAlignLeft );
 
-	m_actionAlignCenter = new QAction( embed::getIconPixmap(
-								"text_center" ),
-						tr( "C&enter" ), m_edit );
+	m_actionAlignCenter = new QAction( embed::getIconPixmap( "text_center" ),
+                                           tr( "C&enter" ), m_edit );
 	m_actionAlignCenter->setShortcutContext( Qt::WidgetShortcut );
-	m_actionAlignCenter->setShortcut( tr( "%1+E" ).arg(UI_CTRL_KEY));
+	m_actionAlignCenter->setShortcut( QKeySequence( Qt::CTRL + Qt::Key_E ) );
 	m_actionAlignCenter->setCheckable( true );
 	grp->addAction( m_actionAlignCenter );
 
 	m_actionAlignRight = new QAction( embed::getIconPixmap( "text_right" ),
-						tr( "&Right" ), m_edit );
+                                          tr( "&Right" ), m_edit );
 	m_actionAlignRight->setShortcutContext( Qt::WidgetShortcut );
-	m_actionAlignRight->setShortcut( tr( "%1+R" ).arg(UI_CTRL_KEY));
+	m_actionAlignRight->setShortcut( QKeySequence( Qt::CTRL + Qt::Key_R ) );
 	m_actionAlignRight->setCheckable( true );
 	grp->addAction( m_actionAlignRight );
 
-	m_actionAlignJustify = new QAction( embed::getIconPixmap(
-								"text_block" ),
-						tr( "&Justify" ), m_edit );
-	m_actionAlignJustify->setShortcut( tr( "%1+J" ).arg(UI_CTRL_KEY));
+	m_actionAlignJustify = new QAction( embed::getIconPixmap( "text_block" ),
+                                            tr( "&Justify" ), m_edit );
+	m_actionAlignJustify->setShortcut( QKeySequence( Qt::CTRL + Qt::Key_J ) );
 	m_actionAlignJustify->setCheckable( true );
 	grp->addAction( m_actionAlignJustify );
 
@@ -230,8 +242,8 @@ void ProjectNotes::setupActions()
 	QPixmap pix( 16, 16 );
 	pix.fill( Qt::black );
 	m_actionTextColor = new QAction( pix, tr( "&Color..." ), this );
-	connect( m_actionTextColor, SIGNAL( triggered() ), this,
-							SLOT( textColor() ) );
+	connect( m_actionTextColor, SIGNAL( triggered() ),
+                 this, SLOT( textColor() ) );
 
 	tb->addWidget( m_comboFont );
 	tb->addWidget( m_comboSize );
@@ -252,8 +264,9 @@ void ProjectNotes::setupActions()
 
 void ProjectNotes::textBold()
 {
-	m_edit->setFontWeight( m_actionTextBold->isChecked() ? QFont::Bold :
-								QFont::Normal );
+	m_edit->setFontWeight( m_actionTextBold->isChecked()
+                               ? QFont::Bold
+                               : QFont::Normal );
 	Engine::getSong()->setModified();
 }
 
@@ -411,4 +424,4 @@ void ProjectNotes::closeEvent( QCloseEvent * _ce )
 		hide();
 	}
 	_ce->ignore();
- }
+}
