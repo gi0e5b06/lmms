@@ -45,6 +45,7 @@ SET(LMMS_SRCS
 	core/LfoController.cpp
 	core/LocklessAllocator.cpp
 	core/lmms_math.cpp
+	core/lmms_qt.cpp
         core/MemoryHelper.cpp
 	core/MemoryManager.cpp
 	core/MemoryManagerArray.cpp

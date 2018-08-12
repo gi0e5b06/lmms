@@ -50,9 +50,7 @@
 #include "BBTrackContainer.h"
 #include "Clipboard.h"
 #include "ComboBox.h"
-#include "debug.h"
 #include "DetuningHelper.h"
-#include "embed.h"
 #include "GuiApplication.h"
 #include "gui_templates.h"
 #include "InstrumentTrack.h"
@@ -61,6 +59,10 @@
 #include "SongEditor.h"
 #include "TextFloat.h"
 #include "TimeLineWidget.h"
+
+#include "debug.h"
+#include "embed.h"
+#include "lmms_qt.h"
 
 
 #if QT_VERSION < 0x040800

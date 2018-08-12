@@ -25,10 +25,15 @@
 #ifndef LMMS_MATH_H
 #define LMMS_MATH_H
 
+/*
 #include <cmath>
 #include <cstdint>
 
 #include <QtCore/QtGlobal>
+*/
+
+#include <math.h>
+#include <QtGlobal>
 
 #include "lmms_constants.h"
 #include "lmmsconfig.h"
@@ -61,7 +66,7 @@ using namespace std;
 
 static inline float absFraction(const float _x)
 {
-    return (_x - (_x >= 0.0f ? floorf(_x) : floorf(_x) - 1));
+    return (_x - (_x >= 0.f ? floorf(_x) : floorf(_x) - 1.f));
 }
 
 static inline float fraction(const float _x)
@@ -74,7 +79,7 @@ static inline float fraction(const float _x)
 static inline float absFraction(const float _x)
 {
     return (_x
-            - (_x >= 0.0f ? static_cast<int>(_x) : static_cast<int>(_x) - 1));
+            - (_x >= 0.f ? static_cast<int>(_x) : static_cast<int>(_x) - 1.f));
 }
 
 static inline float fraction(const float _x)

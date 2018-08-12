@@ -1,5 +1,5 @@
 /*
- * lmms_math.h - defines basic utility functions
+ * lmms_qt.cpp - generic Qt-related stuff
  *
  * Copyright (c) 2018 gi0e5b06 (on github.com)
  *
@@ -22,28 +22,21 @@
  *
  */
 
-#include "lmms_basics.h"
+#include "lmms_qt.h"
 
-/*
-QString ::operator +(const char* a,const char* b)
-{
-        return QString(a)+b;
-}
-*/
-
-QString& ::fixTranslation(QString _s)
+QString TR_lmms_fix(QString _s)
 {
         // doc: t.replace(QRegExp("<i>([^<]*)</i>"), "\\emph{\\1}");
         // ‎Typing "«" and "»" on ...
-        _s.replace("<Alt>","«"+UI_ALT_KEY+"»");
-        _s.replace("<Ctrl>","«"+UI_CTRL_KEY+"»");
-        _s.replace("<Shift>","«"+UI_SHIFT_KEY+"»");
-        _s.replace("<"+UI_CTRL_KEY+">","«"+UI_CTRL_KEY+"»");
-        _s.replace("[(]Alt+(.)[)]","«"+UI_ALT_KEY+"+\\1»");
-        _s.replace("[(]Ctrl+(.)[)]","«"+UI_CTRL_KEY+"+\\1»");
-        _s.replace("[(]Shift+(.)[)]","«"+UI_SHIFT_KEY+"+\\1»");
-        _s.replace("'Alt+(.)'","«"+UI_ALT_KEY+"+\\1»");
-        _s.replace("'Ctrl+(.)'","«"+UI_CTRL_KEY+"+\\1»");
-        _s.replace("'Shift+(.)'","«"+UI_SHIFT_KEY+"+\\1»");
+        _s.replace("<Alt>","«" UI_ALT_KEY "»");
+        _s.replace("<Ctrl>","«" UI_CTRL_KEY "»");
+        _s.replace("<Shift>","«" UI_SHIFT_KEY "»");
+        _s.replace("<" UI_CTRL_KEY ">","«" UI_CTRL_KEY "»");
+        _s.replace("[(]Alt (.)[)]","«" UI_ALT_KEY " \\1»");
+        _s.replace("[(]Ctrl (.)[)]","«" UI_CTRL_KEY " \\1»");
+        _s.replace("[(]Shift (.)[)]","«" UI_SHIFT_KEY " \\1»");
+        _s.replace("'Alt (.)'","«" UI_ALT_KEY " \\1»");
+        _s.replace("'Ctrl (.)'","«" UI_CTRL_KEY " \\1»");
+        _s.replace("'Shift (.)'","«" UI_SHIFT_KEY " \\1»");
         return _s;
 }

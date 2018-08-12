@@ -62,6 +62,8 @@
 #include "debug.h"
 #include "embed.h"
 #include "gui_templates.h"
+#include "lmms_qt.h"
+
 
 QPixmap* AutomationEditor::s_toolDraw   = NULL;
 QPixmap* AutomationEditor::s_toolErase  = NULL;
