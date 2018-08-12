@@ -30,6 +30,7 @@
 #include "Instrument.h"
 #include "NotePlayHandle.h"
 #include "TempoSyncKnobModel.h"
+#include "WaveForm.h"
 //#include "Graph.h"
 
 // class NotePlayHandle;
@@ -61,6 +62,8 @@ class OscillatorObject : public Model
 
         float m_frequency;
         float m_velocity;
+        // const WaveForm* m_wave1;
+        // const WaveForm* m_wave2;
         float m_phase[2];
         float m_phaseOffset[2];
         float m_currentOutput[2];
@@ -81,17 +84,19 @@ class OscillatorObject : public Model
   private:
     // from user ui
     BoolModel          m_enabledModel;
-    FloatModel         m_waveMixModel;
     BoolModel          m_wave1ReverseModel;
-    ComboBoxModel      m_wave1ShapeModel;
+    ComboBoxModel      m_wave1BankModel;
+    ComboBoxModel      m_wave1IndexModel;
     BoolModel          m_wave1AbsoluteModel;
     BoolModel          m_wave1OppositeModel;
     BoolModel          m_wave1ComplementModel;
     BoolModel          m_wave2ReverseModel;
-    ComboBoxModel      m_wave2ShapeModel;
+    ComboBoxModel      m_wave2BankModel;
+    ComboBoxModel      m_wave2IndexModel;
     BoolModel          m_wave2AbsoluteModel;
     BoolModel          m_wave2OppositeModel;
     BoolModel          m_wave2ComplementModel;
+    FloatModel         m_waveMixModel;
     FloatModel         m_volumeModel;
     FloatModel         m_panModel;
     FloatModel         m_coarseModel;
@@ -104,6 +109,12 @@ class OscillatorObject : public Model
     BoolModel          m_lfoEnabledModel;
     TempoSyncKnobModel m_lfoTimeModel;
     FloatModel         m_velocityAmountModel;
+    FloatModel         m_harm2Model;
+    FloatModel         m_harm3Model;
+    FloatModel         m_harm4Model;
+    FloatModel         m_harm5Model;
+    FloatModel         m_harm6Model;
+    FloatModel         m_harm7Model;
     FloatModel         m_skewModel;
     FloatModel         m_smoothModel;
     FloatModel         m_portamentoModel;
@@ -112,32 +123,38 @@ class OscillatorObject : public Model
     FloatModel         m_wallModel;
 
     // transient state values
-    FloatModel m_frequencyModel;
-    FloatModel m_velocityModel;
-    float      m_phase[2];
-    float      m_phaseOffset[2];
-    float      m_currentOutput[2];
-    float      m_previousOutput[2];
-    float      m_averageOutput[2];
-    float      m_currentInput1[2];
-    float      m_previousInput1[2];
-    float      m_currentInput2[2];
-    float      m_previousInput2[2];
-    float      m_buffer[SZ_BUFFER][2];
+    const WaveForm* m_wave1;
+    const WaveForm* m_wave2;
+    FloatModel      m_frequencyModel;
+    FloatModel      m_velocityModel;
+    float           m_phase[2];
+    float           m_phaseOffset[2];
+    float           m_currentOutput[2];
+    float           m_previousOutput[2];
+    float           m_averageOutput[2];
+    float           m_currentInput1[2];
+    float           m_previousInput1[2];
+    float           m_currentInput2[2];
+    float           m_previousInput2[2];
+    float           m_buffer[SZ_BUFFER][2];
 
     // transient frame values
-    int   m_wave1;
     bool  m_reverse1;
     bool  m_absolute1;
     bool  m_opposite1;
     bool  m_complement1;
-    int   m_wave2;
     bool  m_reverse2;
     bool  m_absolute2;
     bool  m_opposite2;
     bool  m_complement2;
     bool  m_updated;
     float m_stereoPhase;
+    float m_harm2;
+    float m_harm3;
+    float m_harm4;
+    float m_harm5;
+    float m_harm6;
+    float m_harm7;
     float m_skew;
     float m_smooth;
     float m_lowPass;
@@ -285,6 +302,8 @@ class SynthGDX : public Instrument
     ModulatorObject*  m_mod[NB_MODULATORS];
     OscillatorObject* m_osc[NB_OSCILLATORS];
     // graphModel* m_graphModel;
+
+    QMutex m_mtx;
 
     friend class SynthGDXView;
 };

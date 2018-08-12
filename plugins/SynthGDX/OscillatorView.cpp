@@ -53,10 +53,10 @@ OscillatorView::OscillatorView(OscillatorObject* _osc,
     // numLBL->setPalette(pal);
 
     LedCheckBox* enabledLCB = new LedCheckBox(this, LedCheckBox::Green);
-    enabledLCB->setModel(&_osc->m_enabledModel);
+    enabledLCB->setModel(&m_osc->m_enabledModel);
     enabledLCB->setText(QString("O%1").arg(_idx + 1));
     enabledLCB->setTextAnchorPoint(Qt::AnchorBottom);
-    enabledLCB->setContentsMargins(0,4,0,0);
+    enabledLCB->setContentsMargins(0, 4, 0, 0);
     /*
     QPalette pal=enabledLCB->palette();
     pal.setColor(QPalette::Background, QColor(128, 96, 96));
@@ -64,68 +64,80 @@ OscillatorView::OscillatorView(OscillatorObject* _osc,
     enabledLCB->setPalette(pal);
     */
     enabledLCB->setStyleSheet("background-color:#806060;");
-    enabledLCB->setMinimumSize(10, 20 + 4 * (2 + 36));
+    enabledLCB->setMinimumSize(14, 249);
 
     Knob* waveMixKNB = new Knob(this);
-    waveMixKNB->setModel(&_osc->m_waveMixModel);
+    waveMixKNB->setModel(&m_osc->m_waveMixModel);
     waveMixKNB->setPointColor(Qt::white);
-    waveMixKNB->setText("WAVE");
+    waveMixKNB->setText("WMIX");
 
     // wave 1
 
     LedCheckBox* reverse1LCB = new LedCheckBox(this, LedCheckBox::White);
-    reverse1LCB->setModel(&_osc->m_wave1ReverseModel);
+    reverse1LCB->setModel(&m_osc->m_wave1ReverseModel);
     reverse1LCB->setText("REV");
     reverse1LCB->setTextAnchorPoint(Qt::AnchorBottom);
 
-    ComboBox* wave1CBX = new ComboBox(this);
-    wave1CBX->setModel(&_osc->m_wave1ShapeModel);
-    wave1CBX->setMinimumWidth(3 * 27 + 4);
+    ComboBox* bank1CBX = new ComboBox(this);
+    bank1CBX->setModel(&m_osc->m_wave1BankModel);
+    bank1CBX->setMinimumWidth(3 * 27 + 4);
+    connect(&m_osc->m_wave1BankModel, SIGNAL(dataChanged()), this,
+            SLOT(updateWave1IndexModel()));
+
+    ComboBox* index1CBX = new ComboBox(this);
+    index1CBX->setModel(&m_osc->m_wave1IndexModel);
+    index1CBX->setMinimumWidth(7 * 27 + 12);
 
     LedCheckBox* absolute1LCB = new LedCheckBox(this, LedCheckBox::White);
-    // absolute1LCB->setModel(&_osc->m_wave1AbsoluteModel);
+    absolute1LCB->setModel(&m_osc->m_wave1AbsoluteModel);
     absolute1LCB->setText("ABS");
     absolute1LCB->setTextAnchorPoint(Qt::AnchorBottom);
 
     LedCheckBox* opposite1LCB = new LedCheckBox(this, LedCheckBox::White);
-    opposite1LCB->setModel(&_osc->m_wave1OppositeModel);
+    opposite1LCB->setModel(&m_osc->m_wave1OppositeModel);
     opposite1LCB->setText("OPP");
     opposite1LCB->setTextAnchorPoint(Qt::AnchorBottom);
 
     LedCheckBox* complement1LCB = new LedCheckBox(this, LedCheckBox::White);
-    complement1LCB->setModel(&_osc->m_wave1ComplementModel);
+    complement1LCB->setModel(&m_osc->m_wave1ComplementModel);
     complement1LCB->setText("CPL");
     complement1LCB->setTextAnchorPoint(Qt::AnchorBottom);
 
     // wave 2
 
     LedCheckBox* reverse2LCB = new LedCheckBox(this, LedCheckBox::White);
-    reverse2LCB->setModel(&_osc->m_wave2ReverseModel);
+    reverse2LCB->setModel(&m_osc->m_wave2ReverseModel);
     reverse2LCB->setText("REV");
     reverse2LCB->setTextAnchorPoint(Qt::AnchorBottom);
 
-    ComboBox* wave2CBX = new ComboBox(this);
-    wave2CBX->setModel(&_osc->m_wave2ShapeModel);
-    wave2CBX->setMinimumWidth(3 * 27 + 4);
+    ComboBox* bank2CBX = new ComboBox(this);
+    bank2CBX->setModel(&m_osc->m_wave2BankModel);
+    bank2CBX->setMinimumWidth(3 * 27 + 4);
+    connect(&m_osc->m_wave2BankModel, SIGNAL(dataChanged()), this,
+            SLOT(updateWave2IndexModel()));
+
+    ComboBox* index2CBX = new ComboBox(this);
+    index2CBX->setModel(&m_osc->m_wave2IndexModel);
+    index2CBX->setMinimumWidth(7 * 27 + 12);
 
     LedCheckBox* absolute2LCB = new LedCheckBox(this, LedCheckBox::White);
-    // absolute2LCB->setModel(&_osc->m_wave2AbsoluteModel);
+    absolute2LCB->setModel(&m_osc->m_wave2AbsoluteModel);
     absolute2LCB->setText("ABS");
     absolute2LCB->setTextAnchorPoint(Qt::AnchorBottom);
 
     LedCheckBox* opposite2LCB = new LedCheckBox(this, LedCheckBox::White);
-    opposite2LCB->setModel(&_osc->m_wave2OppositeModel);
+    opposite2LCB->setModel(&m_osc->m_wave2OppositeModel);
     opposite2LCB->setText("OPP");
     opposite2LCB->setTextAnchorPoint(Qt::AnchorBottom);
 
     LedCheckBox* complement2LCB = new LedCheckBox(this, LedCheckBox::White);
-    complement2LCB->setModel(&_osc->m_wave2ComplementModel);
+    complement2LCB->setModel(&m_osc->m_wave2ComplementModel);
     complement2LCB->setText("CPL");
     complement2LCB->setTextAnchorPoint(Qt::AnchorBottom);
 
     // setup volume-knob
     Knob* volumeKNB = new Knob(this);
-    volumeKNB->setModel(&_osc->m_volumeModel);
+    volumeKNB->setModel(&m_osc->m_volumeModel);
     volumeKNB->setText("VOL");
     volumeKNB->setVolumeKnob(true);
     volumeKNB->setHintText(tr("Osc %1 volume:").arg(_idx + 1), "%");
@@ -138,7 +150,7 @@ OscillatorView::OscillatorView(OscillatorObject* _osc,
 
     // setup panning-knob
     Knob* panKNB = new Knob(this);
-    panKNB->setModel(&_osc->m_panModel);
+    panKNB->setModel(&m_osc->m_panModel);
     panKNB->setPointColor(Qt::magenta);
     panKNB->setText("PAN");
     panKNB->setHintText(tr("Osc %1 panning:").arg(_idx + 1), "");
@@ -150,7 +162,7 @@ OscillatorView::OscillatorView(OscillatorObject* _osc,
 
     // setup coarse-knob
     Knob* coarseKNB = new Knob(this);
-    coarseKNB->setModel(&_osc->m_coarseModel);
+    coarseKNB->setModel(&m_osc->m_coarseModel);
     coarseKNB->setPointColor(Qt::cyan);
     coarseKNB->setText("DET");
     coarseKNB->setHintText(tr("Osc %1 coarse detuning:").arg(_idx + 1),
@@ -164,7 +176,7 @@ OscillatorView::OscillatorView(OscillatorObject* _osc,
 
     // setup knob for left fine-detuning
     Knob* fineLeftKNB = new Knob(this);
-    fineLeftKNB->setModel(&_osc->m_fineLeftModel);
+    fineLeftKNB->setModel(&m_osc->m_fineLeftModel);
     fineLeftKNB->setPointColor(Qt::cyan);
     fineLeftKNB->setText("FLT");
     fineLeftKNB->setHintText(tr("Osc %1 fine detuning left:").arg(_idx + 1),
@@ -179,7 +191,7 @@ OscillatorView::OscillatorView(OscillatorObject* _osc,
 
     // setup knob for right fine-detuning
     Knob* fineRightKNB = new Knob(this);
-    fineRightKNB->setModel(&_osc->m_fineRightModel);
+    fineRightKNB->setModel(&m_osc->m_fineRightModel);
     fineRightKNB->setPointColor(Qt::cyan);
     fineRightKNB->setText("FRT");
     fineRightKNB->setHintText(tr("Osc %1 fine detuning right:").arg(_idx + 1),
@@ -194,7 +206,7 @@ OscillatorView::OscillatorView(OscillatorObject* _osc,
 
     // setup phase-offset-knob
     Knob* phaseOffset = new Knob(this);
-    phaseOffset->setModel(&_osc->m_phaseOffsetModel);
+    phaseOffset->setModel(&m_osc->m_phaseOffsetModel);
     phaseOffset->setPointColor(QColor("orange"));
     phaseOffset->setText("PHS");
     phaseOffset->setHintText(tr("Osc %1 phase-offset:").arg(_idx + 1),
@@ -211,7 +223,7 @@ OscillatorView::OscillatorView(OscillatorObject* _osc,
 
     // setup stereo-phase-detuning-knob
     Knob* stereoPhaseDetuningKNB = new Knob(this);
-    stereoPhaseDetuningKNB->setModel(&_osc->m_stereoPhaseDetuningModel);
+    stereoPhaseDetuningKNB->setModel(&m_osc->m_stereoPhaseDetuningModel);
     stereoPhaseDetuningKNB->setPointColor(QColor("orange"));
     stereoPhaseDetuningKNB->setText("SPD");
     stereoPhaseDetuningKNB->setHintText(
@@ -228,96 +240,138 @@ OscillatorView::OscillatorView(OscillatorObject* _osc,
 
     // wave pulse center
     Knob* pulseCenterKNB = new Knob(this);
-    pulseCenterKNB->setModel(&_osc->m_pulseCenterModel);
+    pulseCenterKNB->setModel(&m_osc->m_pulseCenterModel);
     pulseCenterKNB->setPointColor(QColor("orange"));
     pulseCenterKNB->setText("PC");
 
     // wave pulse width
     Knob* pulseWidthKNB = new Knob(this);
-    pulseWidthKNB->setModel(&_osc->m_pulseWidthModel);
+    pulseWidthKNB->setModel(&m_osc->m_pulseWidthModel);
     pulseWidthKNB->setPointColor(QColor("orange"));
     pulseWidthKNB->setText("PW");
 
     // lfo active
     LedCheckBox* lfoEnabledLCB = new LedCheckBox(this);
-    lfoEnabledLCB->setModel(&_osc->m_lfoEnabledModel);
+    lfoEnabledLCB->setModel(&m_osc->m_lfoEnabledModel);
     lfoEnabledLCB->setText("LFO");
     lfoEnabledLCB->setTextAnchorPoint(Qt::AnchorBottom);
 
     // lfo time
     TempoSyncKnob* lfoTimeKNB = new TempoSyncKnob(this);
-    lfoTimeKNB->setModel(&_osc->m_lfoTimeModel);
+    lfoTimeKNB->setModel(&m_osc->m_lfoTimeModel);
     lfoTimeKNB->setPointColor(QColor("green"));
     lfoTimeKNB->setText("TIME");
     lfoTimeKNB->setHintText(tr("O%1 LFO time:").arg(_idx + 1), "ms");
 
     // velocity amount
     Knob* velocityKNB = new Knob(this);
-    velocityKNB->setModel(&_osc->m_velocityAmountModel);
+    velocityKNB->setModel(&m_osc->m_velocityAmountModel);
     velocityKNB->setPointColor(Qt::red);
     velocityKNB->setText("VEL");
 
+    // harmonics
+    Knob* harm2KNB = new Knob(this);
+    harm2KNB->setModel(&m_osc->m_harm2Model);
+    harm2KNB->setPointColor(QColor(0, 218, 36));
+    harm2KNB->setText("H2");
+
+    Knob* harm3KNB = new Knob(this);
+    harm3KNB->setModel(&m_osc->m_harm3Model);
+    harm3KNB->setPointColor(QColor(0, 182, 72));
+    harm3KNB->setText("H3");
+
+    Knob* harm4KNB = new Knob(this);
+    harm4KNB->setModel(&m_osc->m_harm4Model);
+    harm4KNB->setPointColor(QColor(0, 145, 109));
+    harm4KNB->setText("H4");
+
+    Knob* harm5KNB = new Knob(this);
+    harm5KNB->setModel(&m_osc->m_harm5Model);
+    harm5KNB->setPointColor(QColor(0, 109, 145));
+    harm5KNB->setText("H5");
+
+    Knob* harm6KNB = new Knob(this);
+    harm6KNB->setModel(&m_osc->m_harm6Model);
+    harm6KNB->setPointColor(QColor(0, 72, 182));
+    harm6KNB->setText("H6");
+
+    Knob* harm7KNB = new Knob(this);
+    harm7KNB->setModel(&m_osc->m_harm7Model);
+    harm7KNB->setPointColor(QColor(0, 36, 218));
+    harm7KNB->setText("H7");
+
     // low pass
     Knob* lowPassKNB = new Knob(this);
-    lowPassKNB->setModel(&_osc->m_lowPassModel);
+    lowPassKNB->setModel(&m_osc->m_lowPassModel);
     lowPassKNB->setPointColor(Qt::yellow);
     lowPassKNB->setText("LOW");
 
     // high pass
     Knob* highPassKNB = new Knob(this);
-    highPassKNB->setModel(&_osc->m_highPassModel);
+    highPassKNB->setModel(&m_osc->m_highPassModel);
     highPassKNB->setPointColor(Qt::yellow);
     highPassKNB->setText("HIGH");
 
     // wall
     Knob* wallKNB = new Knob(this);
-    wallKNB->setModel(&_osc->m_wallModel);
+    wallKNB->setModel(&m_osc->m_wallModel);
     wallKNB->setPointColor(Qt::yellow);
     wallKNB->setText("WALL");
 
     // skew
     Knob* skewKNB = new Knob(this);
-    skewKNB->setModel(&_osc->m_skewModel);
+    skewKNB->setModel(&m_osc->m_skewModel);
     skewKNB->setPointColor(Qt::yellow);
     skewKNB->setText("SKEW");
 
     // smooth
     Knob* smoothKNB = new Knob(this);
-    smoothKNB->setModel(&_osc->m_smoothModel);
+    smoothKNB->setModel(&m_osc->m_smoothModel);
     smoothKNB->setPointColor(Qt::yellow);
     smoothKNB->setText("SMTH");
 
     // portamento
     Knob* portamentoKNB = new Knob(this);
-    portamentoKNB->setModel(&_osc->m_portamentoModel);
+    portamentoKNB->setModel(&m_osc->m_portamentoModel);
     portamentoKNB->setPointColor(QColor("green"));
     portamentoKNB->setText("PRTM");
 
-    mainLayout->addWidget(enabledLCB, 0, 0, 5, 1,
+    mainLayout->addWidget(enabledLCB, 0, 0, 9, 1,
                           Qt::AlignTop | Qt::AlignHCenter);
+
     int col = 0, row = 0;  // first row
-    mainLayout->addWidget(reverse1LCB, row, ++col, 1, 1,
+    mainLayout->addWidget(bank1CBX, row, ++col, 1, 3,
                           Qt::AlignBottom | Qt::AlignHCenter);
-    mainLayout->addWidget(wave1CBX, row, ++col, 1, 3,
+    mainLayout->addWidget(reverse1LCB, row, col = 4, 1, 1,
                           Qt::AlignBottom | Qt::AlignHCenter);
-    mainLayout->addWidget(absolute1LCB, row, col = 5, 1, 1,
+    mainLayout->addWidget(absolute1LCB, row, ++col, 1, 1,
                           Qt::AlignBottom | Qt::AlignHCenter);
     mainLayout->addWidget(opposite1LCB, row, ++col, 1, 1,
                           Qt::AlignBottom | Qt::AlignHCenter);
     mainLayout->addWidget(complement1LCB, row, ++col, 1, 1,
                           Qt::AlignBottom | Qt::AlignHCenter);
     col = 0;
+    row++;
+    mainLayout->addWidget(index1CBX, row, ++col, 1, 7,
+                          Qt::AlignBottom | Qt::AlignHCenter);
+
+    col = 0;
     row++;  // second row
-    mainLayout->addWidget(reverse2LCB, row, ++col, 1, 1,
+    mainLayout->addWidget(bank2CBX, row, ++col, 1, 3,
                           Qt::AlignBottom | Qt::AlignHCenter);
-    mainLayout->addWidget(wave2CBX, row, ++col, 1, 3,
+    mainLayout->addWidget(reverse2LCB, row, col = 4, 1, 1,
                           Qt::AlignBottom | Qt::AlignHCenter);
-    mainLayout->addWidget(absolute2LCB, row, col = 5, 1, 1,
+    mainLayout->addWidget(absolute2LCB, row, ++col, 1, 1,
                           Qt::AlignBottom | Qt::AlignHCenter);
     mainLayout->addWidget(opposite2LCB, row, ++col, 1, 1,
                           Qt::AlignBottom | Qt::AlignHCenter);
     mainLayout->addWidget(complement2LCB, row, ++col, 1, 1,
                           Qt::AlignBottom | Qt::AlignHCenter);
+    col = 0;
+    row++;
+    mainLayout->addWidget(index2CBX, row, ++col, 1, 7,
+                          Qt::AlignBottom | Qt::AlignHCenter);
+
     col = 0;
     row++;  // third row
     mainLayout->addWidget(volumeKNB, row, ++col, 1, 1,
@@ -351,6 +405,21 @@ OscillatorView::OscillatorView(OscillatorObject* _osc,
                           Qt::AlignBottom | Qt::AlignHCenter);
     col = 0;
     row++;  // fifth row
+    mainLayout->addWidget(harm2KNB, row, ++col, 1, 1,
+                          Qt::AlignBottom | Qt::AlignHCenter);
+    mainLayout->addWidget(harm3KNB, row, ++col, 1, 1,
+                          Qt::AlignBottom | Qt::AlignHCenter);
+    mainLayout->addWidget(harm4KNB, row, ++col, 1, 1,
+                          Qt::AlignBottom | Qt::AlignHCenter);
+    mainLayout->addWidget(harm5KNB, row, ++col, 1, 1,
+                          Qt::AlignBottom | Qt::AlignHCenter);
+    mainLayout->addWidget(harm6KNB, row, ++col, 1, 1,
+                          Qt::AlignBottom | Qt::AlignHCenter);
+    mainLayout->addWidget(harm7KNB, row, ++col, 1, 1,
+                          Qt::AlignBottom | Qt::AlignHCenter);
+
+    col = 0;
+    row++;  // sixth row
     mainLayout->addWidget(wallKNB, row, ++col, 1, 1,
                           Qt::AlignBottom | Qt::AlignHCenter);
     mainLayout->addWidget(lowPassKNB, row, ++col, 1, 1,
@@ -370,6 +439,29 @@ OscillatorView::OscillatorView(OscillatorObject* _osc,
 
 OscillatorView::~OscillatorView()
 {
+    /*
+disconnect(&m_osc->m_wave1BankModel, SIGNAL(dataChanged()), this,
+           SLOT(updateWave1IndexModel()));
+disconnect(&m_osc->m_wave2BankModel, SIGNAL(dataChanged()), this,
+           SLOT(updateWave2IndexModel()));
+m_osc = NULL;
+    */
+}
+
+void OscillatorView::updateWave1IndexModel()
+{
+    int bank1 = m_osc->m_wave1BankModel.value();
+    int old   = m_osc->m_wave1IndexModel.value();
+    WaveForm::fillIndexModel(m_osc->m_wave1IndexModel, bank1);
+    m_osc->m_wave1IndexModel.setValue(old);
+}
+
+void OscillatorView::updateWave2IndexModel()
+{
+    int bank2 = m_osc->m_wave2BankModel.value();
+    int old   = m_osc->m_wave2IndexModel.value();
+    WaveForm::fillIndexModel(m_osc->m_wave2IndexModel, bank2);
+    m_osc->m_wave2IndexModel.setValue(old);
 }
 
 /*

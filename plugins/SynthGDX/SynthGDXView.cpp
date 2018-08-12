@@ -29,10 +29,9 @@
 //#include <QPainter>
 #include <QScrollArea>
 
+#include "Knob.h"
 #include "ModulatorView.h"
 #include "OscillatorView.h"
-
-#include "Knob.h"
 #include "ToolTip.h"
 #include "debug.h"
 #include "embed.h"
@@ -89,7 +88,7 @@ SynthGDXView::SynthGDXView(Instrument* _instrument, QWidget* _parent) :
     g->setModel(m_graphModel);
     mainLayout->addWidget(NB_OSCILLATORS + NB_MODULATORS);
     */
-    
+
     panel->setFixedSize(panel->sizeHint());
 }
 
@@ -99,5 +98,5 @@ SynthGDXView::~SynthGDXView()
 
 void SynthGDXView::modelChanged()
 {
-        //update();
+    // update();
 }

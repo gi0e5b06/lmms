@@ -40,6 +40,10 @@ class OscillatorView : public QWidget
     OscillatorView(OscillatorObject* _osc, const int _idx, QWidget* _parent);
     ~OscillatorView();
 
+  public slots:
+    void updateWave1IndexModel();
+    void updateWave2IndexModel();
+
   private:
     OscillatorObject* m_osc;
 };
