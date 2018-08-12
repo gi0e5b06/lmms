@@ -48,7 +48,7 @@ public:
 		DiscreteProgression,
 		LinearProgression,
 		CubicHermiteProgression,
-		PolynomialProgression
+		ParabolicProgression
 	} ;
 
 	typedef QMap<int, float> timeMap;
@@ -68,13 +68,25 @@ public:
 	{
 		return m_progressionType;
 	}
-	void setProgressionType( ProgressionTypes _new_progression_type );
+	void setProgressionType( ProgressionTypes _progressionType );
 
 	inline float tension() const
 	{
 		return m_tension;
 	}
 	void setTension( const float _tension );
+
+	inline int waveBank() const
+	{
+		return m_waveBank;
+	}
+	void setWaveBank( const int _waveBank );
+
+	inline int waveIndex() const
+	{
+		return m_waveIndex;
+	}
+	void setWaveIndex( const int _waveIndex );
 
 	inline float waveRatio() const
 	{
@@ -208,6 +220,8 @@ private:
 	timeMap m_tangents;	// slope at each point for calculating spline
 
 	float m_tension;
+        int   m_waveBank;
+        int   m_waveIndex;
 	float m_waveRatio;
 	float m_waveSkew;
 	float m_waveAmplitude;

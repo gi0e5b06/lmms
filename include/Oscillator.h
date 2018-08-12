@@ -34,8 +34,10 @@
 #endif
 
 #include "SampleBuffer.h"
+#include "WaveForm.h"
+
 #include "lmms_constants.h"
-#include "lmms_math.h"
+//#include "lmms_math.h"
 
 class IntModel;
 
@@ -100,7 +102,8 @@ public:
 	static inline sample_t sinSample( float _sample )
 	{
                 //return sinf( _sample * F_2PI );
-                return fastnormsinf01(fraction(_sample));
+                //return fastnormsinf01(fraction(_sample));
+                return WaveForm::sine(fraction(_sample));
 	}
 
 	static inline sample_t triangleSample( const float _sample )
@@ -117,19 +120,22 @@ public:
 		}
 		return ph * 4.0f - 4.0f;
                 */
-                return fasttrianglef01(fraction(_sample));
+                //return fasttrianglef01(fraction(_sample));
+                return WaveForm::triangle(fraction(_sample));
 	}
 
 	static inline sample_t sawSample( const float _sample )
 	{
 		//return -1.0f + fraction( _sample ) * 2.0f;
-                return fastsawf01(fraction(_sample));
+                //return fastsawf01(fraction(_sample));
+                return WaveForm::sawtooth(fraction(_sample));
 	}
 
 	static inline sample_t squareSample( const float _sample )
 	{
 		//return ( fraction( _sample ) > 0.5f ) ? -1.0f : 1.0f;
-                return fastsquaref01(fraction(_sample));
+                //return fastsquaref01(fraction(_sample));
+                return WaveForm::square(fraction(_sample));
 	}
 
 	static inline sample_t moogSawSample( const float _sample )
@@ -142,7 +148,8 @@ public:
 		}
 		return 1.0f - 2.0f * ph;
                 */
-                return fastmoogsawf01(fraction(_sample));
+                //return fastmoogsawf01(fraction(_sample));
+                return WaveForm::harshsaw(fraction(_sample));
 	}
 
 	static inline sample_t expSample( const float _sample )
@@ -155,16 +162,18 @@ public:
 		}
 		return -1.0f + 8.0f * ph * ph;
                 */
-                return fastnormexpf01(fraction(_sample));
+                //return fastnormexpf01(fraction(_sample));
+                return WaveForm::sqpeak(fraction(_sample));
 	}
 
-	static inline sample_t noiseSample( const float )
+	static inline sample_t noiseSample( const float _sample )
 	{
 		// Precise implementation
                 //return 1.0f - rand() * 2.0f / RAND_MAX;
 
 		// Fast implementation
-		return 1.0f - fast_rand() * 2.0f / FAST_RAND_MAX;
+		//return 1.0f - fast_rand() * 2.0f / FAST_RAND_MAX;
+                return WaveForm::whitenoise(fraction(_sample));
 	}
 
 	inline sample_t userWaveSample( const float _sample ) const

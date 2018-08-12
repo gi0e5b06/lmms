@@ -25,68 +25,76 @@
 #ifndef COMBOBOX_MODEL_H
 #define COMBOBOX_MODEL_H
 
-#include <QtCore/QVector>
-#include <QtCore/QPair>
+#include <QVariant>
+#include <QVector>
 
 #include "AutomatableModel.h"
 
 class PixmapLoader;
 
-
 class EXPORT ComboBoxModel : public IntModel
 {
-	Q_OBJECT
-public:
-	ComboBoxModel( Model* parent = NULL,
-					const QString& displayName = QString(),
-					bool isDefaultConstructed = false ) :
-		IntModel( 0, 0, 0, parent, displayName, isDefaultConstructed )
-	{
-	}
+    Q_OBJECT
+  public:
+    ComboBoxModel(Model*         parent               = NULL,
+                  const QString& displayName          = QString(),
+                  bool           isDefaultConstructed = false) :
+          IntModel(0, 0, 0, parent, displayName, isDefaultConstructed)
+    {
+    }
 
-	virtual ~ComboBoxModel()
-	{
-		clear();
-	}
+    virtual ~ComboBoxModel()
+    {
+        clear();
+    }
 
-	void addItem( const QString& item, PixmapLoader* loader = NULL );
+    void addItem(const QString&  _text,
+                 PixmapLoader*   _icon = NULL,
+                 const QVariant& _data = QVariant());
 
-	void clear();
+    void clear();
 
-	int findText( const QString& txt ) const;
+    int findText(const QString& _what) const;
 
-	QString currentText() const
-	{
-		return ( size() > 0 && value() < size() ) ? m_items[value()].first : QString();
-	}
+    const QString currentText() const
+    {
+        return m_texts[value()];
+    }
 
-	const PixmapLoader* currentData() const
-	{
-		return m_items[value()].second;
-	}
+    const PixmapLoader* currentIcon() const
+    {
+        return m_icons[value()];
+    }
 
-	const QString & itemText( int i ) const
-	{
-		return m_items[qBound<int>( minValue(), i,  maxValue() )].first;
-	}
+    const QVariant currentData() const
+    {
+        return m_datas[value()];
+    }
 
-	const PixmapLoader* itemPixmap( int i ) const
-	{
-		return m_items[qBound<int>( minValue(), i, maxValue() )].second;
-	}
+    const QString itemText(int _i) const
+    {
+        return m_texts[_i];
+    }
 
-	int size() const
-	{
-		return m_items.size();
-	}
+    const PixmapLoader* itemIcon(int _i) const
+    {
+        return m_icons[_i];
+    }
 
+    const QVariant itemData(int _i) const
+    {
+        return m_texts[_i];
+    }
 
-private:
-	typedef QPair<QString, PixmapLoader *> Item;
+    int size() const
+    {
+        return m_texts.size();
+    }
 
-	QVector<Item> m_items;
-
-} ;
-
+  protected:
+    QVector<QString>       m_texts;
+    QVector<PixmapLoader*> m_icons;
+    QVector<QVariant>      m_datas;
+};
 
 #endif

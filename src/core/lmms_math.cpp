@@ -24,6 +24,8 @@
 
 #include "lmms_math.h"
 
+/*
+
 #define FASTFUNC01_BODY(name, FFSZ)                           \
     float name##01_DATA [FFSZ + 1];                           \
     void  init_fast##name##01()                               \
@@ -45,47 +47,6 @@
         return r0 + d * (r1 - r0);                            \
     }
 
-static inline float trianglef(const float x)
-{
-    if(x < 0.25f)
-        return x * 4.f;
-    else if(x < 0.75f)
-        return 2.f - x * 4.f;
-    else
-        return x * 4.f - 4.f;
-}
-
-static inline float sawf(const float x)
-{
-    return -1.f + x * 2.f;
-}
-
-static inline float squaref(const float x)
-{
-    return (x > 0.5f) ? -1.f : 1.f;
-}
-
-static inline float moogsawf(const float x)
-{
-    if(x < 0.5f)
-        return -1.f + x * 4.f;
-    else
-        return 1.f - 2.f * x;
-}
-
-static inline float normexpf(const float x)
-{
-    if(x < 0.5f)
-        return -1.f + 8.f * x * x;
-    else
-        return -1.f + 8.f * (1.f - x) * (1.f - x);
-}
-
-static inline float randf(const float)
-{
-        return 2.f*fastrandf01inc()-1.f;
-}
-
 
 #define _QFAST 16
 #define FFSZ1M 1048576*_QFAST/16
@@ -94,10 +55,12 @@ static inline float randf(const float)
 #define FFSZ1K 1024
 
 FASTFUNC01_BODY(sqrtf, FFSZ10K)
-FASTFUNC01_BODY(normsinf, FFSZ100K)
+FASTFUNC01_BODY(nsinf, FFSZ100K)
 FASTFUNC01_BODY(trianglef, FFSZ1K)
-FASTFUNC01_BODY(sawf, FFSZ1K)
+FASTFUNC01_BODY(sawtoothf, FFSZ1K)
 FASTFUNC01_BODY(squaref, FFSZ1K)
-FASTFUNC01_BODY(moogsawf, FFSZ1K)
-FASTFUNC01_BODY(normexpf, FFSZ100K)
+FASTFUNC01_BODY(harshsawf, FFSZ1K)
+FASTFUNC01_BODY(peakexpf, FFSZ100K)
 FASTFUNC01_BODY(randf, FFSZ100K)
+
+*/

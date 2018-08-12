@@ -34,7 +34,8 @@
 #include "EffectView.h"
 
 #include "ConfigManager.h"
-#include "lmms_math.h"
+#include "WaveForm.h"
+//#include "lmms_math.h"
 
 
 Effect::Effect( const Plugin::Descriptor * _desc,
@@ -230,7 +231,8 @@ float Effect::computeRMS(sampleFrame* _buf, const fpp_t _frames)
                 rms+=_buf[f][0]*_buf[f][0]+_buf[f][1]*_buf[f][1];
         //rms/=_frames;
         rms/= (_frames/step);
-        return fastsqrtf01(qBound(0.f,rms,1.f));
+        //return fastsqrtf01(qBound(0.f,rms,1.f));
+        return WaveForm::sqrt(qBound(0.f,rms,1.f));
 }
 
 

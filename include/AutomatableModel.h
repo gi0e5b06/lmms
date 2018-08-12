@@ -185,7 +185,10 @@ public:
 		return m_range;
 	}
 
-	void setRange( const float min, const float max, const float step = 1 );
+	virtual void setRange( const float min, const float max, const float step = 1.f );
+
+	virtual void setStep( const float step );
+
 	void setScaleType( ScaleType sc ) {
 		m_scaleType = sc;
 	}
@@ -197,8 +200,6 @@ public:
 	{
 		return m_scaleType == Logarithmic;
 	}
-
-	void setStep( const float step );
 
 	float centerValue() const
 	{
@@ -227,7 +228,9 @@ public:
 
 	/*! \brief Loads settings (value, automation links and controller connections) of AutomatableModel from
 				specified DOM element using <name> as attribute/node name */
-	virtual void loadSettings( const QDomElement& element, const QString& name );
+	virtual void loadSettings( const QDomElement& element,
+                                   const QString& name,
+                                   const bool required = true);
 
 	virtual QString nodeName() const
 	{
@@ -407,16 +410,23 @@ public AutomatableModel
 class FloatModel : public TypedAutomatableModel<float>
 {
 public:
-	FloatModel( float val = 0, float min = 0, float max = 0, float step = 0,
+	FloatModel( float val = 0.f, float min = 0.f, float max = 0.f,
+                    float step = 0.f,
                     Model * parent = NULL,
                     const QString& displayName = QString(),
-                    bool defaultConstructed = false ) :
-        TypedAutomatableModel( val, min, max, step, parent, displayName, defaultConstructed )
-	{
-	}
+                    bool defaultConstructed = false );
 	float getRoundedValue() const;
 	int getDigitCount() const;
+
+	virtual void setRange( const float min, const float max,
+                               const float step = 1.f ) override;
+	virtual void setStep( const float step ) override;
 	virtual QString displayValue( const float val ) const override;
+
+ protected:
+        void setDigitCount();
+
+        int m_digitCount;
 };
 
 

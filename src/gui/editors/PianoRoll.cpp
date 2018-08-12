@@ -909,6 +909,7 @@ void PianoRoll::drawDetuningInfo( QPainter & _p, const Note * _n, int _x,
 				_p.drawLine( pos_x, old_y, pos_x, pos_y );
 				break;
 			case AutomationPattern::CubicHermiteProgression: /* TODO */
+			case AutomationPattern::ParabolicProgression: /* TODO */
 			case AutomationPattern::LinearProgression:
 				_p.drawLine( old_x, old_y, pos_x, pos_y );
 				break;

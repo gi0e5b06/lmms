@@ -27,8 +27,9 @@
 #include <math.h>
 
 #include "ValueBuffer.h"
+#include "WaveForm.h"
 #include "embed.h"
-#include "lmms_math.h"
+//#include "lmms_math.h"
 
 extern "C"
 {
@@ -49,8 +50,7 @@ extern "C"
 OutputGDX::OutputGDX(Model*                                    parent,
                      const Descriptor::SubPluginFeatures::Key* key) :
       Effect(&outputgdx_plugin_descriptor, parent, key),
-      m_gdxControls(this),
-      m_left(Engine::mixer()->framesPerPeriod()),
+      m_gdxControls(this), m_left(Engine::mixer()->framesPerPeriod()),
       m_right(Engine::mixer()->framesPerPeriod())
 {
     const fpp_t FPP = Engine::mixer()->framesPerPeriod();
@@ -74,8 +74,8 @@ OutputGDX::OutputGDX(Model*                                    parent,
 
 OutputGDX::~OutputGDX()
 {
-        //delete m_left;
-        //delete m_right;
+    // delete m_left;
+    // delete m_right;
 }
 
 bool OutputGDX::processAudioBuffer(sampleFrame* _buf, const fpp_t _frames)
@@ -84,19 +84,18 @@ bool OutputGDX::processAudioBuffer(sampleFrame* _buf, const fpp_t _frames)
     if(!shouldProcessAudioBuffer(_buf, _frames, smoothBegin, smoothEnd))
         return false;
 
-    if(m_left.length()<_frames ||
-       m_right.length()<_frames )
+    if(m_left.length() < _frames || m_right.length() < _frames)
     {
-            qWarning("OutputGDX::processAudioBuffer");
-            return false;
+        qWarning("OutputGDX::processAudioBuffer");
+        return false;
     }
-            // float rms = computeRMS(_buf, _frames);
+    // float rms = computeRMS(_buf, _frames);
     // sendRms(rms);
 
     // qInfo("OutputGDX::processAudioBuffer rms=%f scl=%f val=%f", rms,
     //      m_rmsModel.scaledValue(rms), m_rmsModel.value());
-    float       rms[2] = {0.f, 0.f};
-    float       max[2] = {0.f, 0.f};
+    float rms[2] = {0.f, 0.f};
+    float max[2] = {0.f, 0.f};
 
     for(fpp_t f = 0; f < _frames; ++f)
     {
@@ -113,10 +112,10 @@ bool OutputGDX::processAudioBuffer(sampleFrame* _buf, const fpp_t _frames)
 
     sendLeft(&m_left);
     sendRight(&m_right);
-    sendRms(fastsqrtf01(qBound(0.f, rms[0] + rms[1], 1.f)));
+    sendRms(WaveForm::sqrt(qBound(0.f, rms[0] + rms[1], 1.f)));
     sendVol(qMax(max[0], max[1]));
-    sendPan(fastsqrtf01(qBound(0.f, rms[1], 1.f))
-            - fastsqrtf01(qBound(0.f, rms[0], 1.f)));
+    sendPan(WaveForm::sqrt(qBound(0.f, rms[1], 1.f))
+            - WaveForm::sqrt(qBound(0.f, rms[0], 1.f)));
 
     // sendFrequency(440.f);
     // qInfo("OutputGDX::processAudioBuffer rms=%f",rms);

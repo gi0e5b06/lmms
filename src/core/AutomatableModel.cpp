@@ -133,7 +133,7 @@ void AutomatableModel::saveSettings( QDomDocument& doc, QDomElement& element, co
 
 
 
-void AutomatableModel::loadSettings( const QDomElement& element, const QString& name )
+void AutomatableModel::loadSettings( const QDomElement& element, const QString& name, const bool required )
 {
 	// compat code
 	QDomNode node = element.namedItem( AutomationPattern::classNodeName() );
@@ -203,6 +203,11 @@ void AutomatableModel::loadSettings( const QDomElement& element, const QString& 
 		}
 		else
 		{
+                        if(required)
+                                qWarning("AutomatableModel: missing value for "
+                                         "attribute '%s' in element '%s'",
+                                         qPrintable(name),
+                                         qPrintable(element.tagName()));
 			reset();
 		}
 	}
@@ -406,14 +411,14 @@ float AutomatableModel::fittedValue( float value ) const
 {
 	value = tLimit<float>( value, m_minValue, m_maxValue );
 
-	if( m_step != 0 && m_hasStrictStepSize )
+	if( m_step != 0.f && m_hasStrictStepSize )
 	{
 		value = nearbyintf( value / m_step ) * m_step;
 	}
 
 	roundAt( value, m_maxValue );
 	roundAt( value, m_minValue );
-	roundAt( value, 0.0f );
+	roundAt( value, 0.f );
 
 	if( value < m_minValue )
 	{
@@ -777,6 +782,17 @@ float AutomatableModel::globalAutomationValueAt( const MidiTime& time )
 	}
 }
 
+FloatModel::FloatModel( float val, float min, float max, float step,
+                        Model * parent,
+                        const QString& displayName,
+                        bool defaultConstructed) :
+        TypedAutomatableModel( val, min, max, step, parent, displayName,
+                               defaultConstructed ),
+        m_digitCount(6)
+	{
+                setDigitCount();
+	}
+
 float FloatModel::getRoundedValue() const
 {
 	//return qRound( value() / step<float>() ) * step<float>();
@@ -785,18 +801,51 @@ float FloatModel::getRoundedValue() const
 }
 
 
+void FloatModel::setRange( const float min, const float max,
+                           const float step)
+{
+        AutomatableModel::setRange(min,max,step);
+        setDigitCount();
+}
+
+
+void FloatModel::setStep( const float step )
+{
+        AutomatableModel::setStep(step);
+        setDigitCount();
+}
 
 
 int FloatModel::getDigitCount() const
 {
-	float steptemp = step<float>();
-	int digits = 0;
-	while ( steptemp < 1 )
-	{
-		steptemp = steptemp * 10.0f;
-		digits++;
-	}
-	return digits;
+        return m_digitCount;
+}
+
+
+void FloatModel::setDigitCount()
+{
+	float t = fabsf(step<float>());
+        bool  b=false;
+        if(t>=1.f)
+        {
+                b=true;
+                t=fmodf(t,1.f);
+        }
+        if(t<=0.000001f)
+        {
+                m_digitCount=(b ? 0 : 6);
+        }
+        else
+        {
+                int v=int(floorf(1000000.f*t));
+                int digits = 6;
+                while ( v%10==0 )
+                {
+                        v/=10;
+                        digits--;
+                }
+                m_digitCount=digits;
+        }
 }
 
 

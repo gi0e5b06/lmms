@@ -91,9 +91,10 @@ SampleBuffer::SampleBuffer( const SampleBuffer& _other ) :
 
 
 
-SampleBuffer::SampleBuffer( const QString & _audio_file,
-				    bool _is_base64_data ) :
-	m_audioFile( ( _is_base64_data == true ) ? "" : _audio_file ),
+SampleBuffer::SampleBuffer( const QString & _audioFile,
+                            bool _isBase64Data,
+                            bool _sampleRateDependent) :
+	m_audioFile( ( _isBase64Data == true ) ? "" : _audioFile ),
 	m_origData( NULL ),
 	m_origFrames( 0 ),
 	m_mmapped( false ),
@@ -108,18 +109,24 @@ SampleBuffer::SampleBuffer( const QString & _audio_file,
 	m_frequency( BaseFreq ),
 	m_sampleRate( Engine::mixer()->baseSampleRate() )
 {
-	if( _is_base64_data == true )
+	if( _isBase64Data == true )
 	{
-		loadFromBase64( _audio_file );
+		loadFromBase64( _audioFile );
 	}
-	connect( Engine::mixer(), SIGNAL( sampleRateChanged() ), this, SLOT( sampleRateChanged() ) );
+        if(_sampleRateDependent)
+        {
+                connect( Engine::mixer(), SIGNAL( sampleRateChanged() ),
+                         this, SLOT( sampleRateChanged() ) );
+        }
 	update();
 }
 
 
 
 
-SampleBuffer::SampleBuffer( const sampleFrame * _data, const f_cnt_t _frames ) :
+SampleBuffer::SampleBuffer( const sampleFrame * _data,
+                            const f_cnt_t _frames,
+                            bool _sampleRateDependent ) :
 	m_audioFile( "" ),
 	m_origData( NULL ),
 	m_origFrames( 0 ),
@@ -141,14 +148,19 @@ SampleBuffer::SampleBuffer( const sampleFrame * _data, const f_cnt_t _frames ) :
 		memcpy( m_origData, _data, _frames * BYTES_PER_FRAME );
 		m_origFrames = _frames;
 	}
-	connect( Engine::mixer(), SIGNAL( sampleRateChanged() ), this, SLOT( sampleRateChanged() ) );
+        if(_sampleRateDependent)
+        {
+                connect( Engine::mixer(), SIGNAL( sampleRateChanged() ),
+                         this, SLOT( sampleRateChanged() ) );
+        }
 	update();
 }
 
 
 
 
-SampleBuffer::SampleBuffer( const f_cnt_t _frames ) :
+SampleBuffer::SampleBuffer( const f_cnt_t _frames,
+                            bool _sampleRateDependent ) :
 	m_audioFile( "" ),
 	m_origData( NULL ),
 	m_origFrames( 0 ),
@@ -170,7 +182,11 @@ SampleBuffer::SampleBuffer( const f_cnt_t _frames ) :
 		memset( m_origData, 0, _frames * BYTES_PER_FRAME );
 		m_origFrames = _frames;
 	}
-        connect( Engine::mixer(), SIGNAL( sampleRateChanged() ), this, SLOT( sampleRateChanged() ) );
+        if(_sampleRateDependent)
+        {
+                connect( Engine::mixer(), SIGNAL( sampleRateChanged() ),
+                         this, SLOT( sampleRateChanged() ) );
+        }
 	update();
 }
 
@@ -1680,9 +1696,9 @@ void SampleBuffer::retune( //const sample_rate_t _srcSR,
 
 
 
-void SampleBuffer::setAudioFile( const QString & _audio_file )
+void SampleBuffer::setAudioFile( const QString & _audioFile )
 {
-	m_audioFile = tryToMakeRelative( _audio_file );
+	m_audioFile = tryToMakeRelative( _audioFile );
 	update();
 }
 

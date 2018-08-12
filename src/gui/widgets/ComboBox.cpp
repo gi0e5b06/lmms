@@ -134,8 +134,8 @@ void ComboBox::mousePressEvent( QMouseEvent* event )
 			m_menu.clear();
 			for( int i = 0; i < model()->size(); ++i )
 			{
-				QAction * a = m_menu.addAction( model()->itemPixmap( i )
-                                                                ? model()->itemPixmap( i )->pixmap()
+				QAction * a = m_menu.addAction( model()->itemIcon( i )
+                                                                ? model()->itemIcon( i )->pixmap()
                                                                 : QPixmap(),
                                                                 model()->itemText( i ) );
 				a->setData( i );
@@ -153,7 +153,7 @@ void ComboBox::mousePressEvent( QMouseEvent* event )
 			m_pressed = false;
 			update();
 		}
-		else if( event->button() == Qt::LeftButton )
+		else //if( event->button() == Qt::LeftButton )
 		{
 			selectNext();
 			update();
@@ -161,8 +161,11 @@ void ComboBox::mousePressEvent( QMouseEvent* event )
 	}
 	else if( event->button() == Qt::RightButton )
 	{
-		selectPrevious();
-		update();
+		if( event->x() <= width() - CB_ARROW_BTN_WIDTH )
+		{
+                        selectPrevious();
+                        update();
+                }
 	}
 	else
 	{
@@ -209,7 +212,7 @@ void ComboBox::paintEvent( QPaintEvent * _pe )
 	{
 		p.setFont( font() );
 		p.setClipRect( QRect( 4, 2, width() - CB_ARROW_BTN_WIDTH - 8, height() - 2 ) );
-		QPixmap pm = model()->currentData() ?  model()->currentData()->pixmap() : QPixmap();
+		QPixmap pm = model()->currentIcon() ?  model()->currentIcon()->pixmap() : QPixmap();
 		int tx = 5;
 		if( !pm.isNull() )
 		{

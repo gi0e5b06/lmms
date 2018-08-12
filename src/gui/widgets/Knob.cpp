@@ -194,7 +194,7 @@ void Knob::setText( const QString & txt )
 		int h=m_knobPixmap->height();
 		if(!txt.isEmpty())
 		{
-                        QFontMetrics mx( pointSizeF( font(), 7) ); //6.5
+                        QFontMetrics mx( pointSizeF( font(), 6.5) );
 			w=qMax<int>(w,qMin<int>(2*w,mx.width(txt)));
                         h+=10;
 		}
@@ -964,17 +964,19 @@ void Knob::paintEvent(QPaintEvent* _pe)
 	if( !m_label.isEmpty() )
 	{
 		p.setFont( pointSizeF( p.font(), 6.5 ) );
-/*		p.setPen( QColor( 64, 64, 64 ) );
+                /*
+		p.setPen( QColor( 64, 64, 64 ) );
 		p.drawText( width() / 2 -
 			p.fontMetrics().width( m_label ) / 2 + 1,
-				height() - 1, m_label );*/
+				height() - 1, m_label );
+                */
 		p.setPen( textColor() );
 		QFontMetrics metrix=p.fontMetrics();
 		QString text=metrix.elidedText(m_label,Qt::ElideRight,width());
                 int x=width()/2-metrix.width(text)/2;
                 int y=height()-2;
                 if(m_knobPixmap)
-                        y=m_knobPixmap->height()+7;
+                        y=qMin(y,m_knobPixmap->height()+7);
                 p.drawText(x,y,text);
 	}
 

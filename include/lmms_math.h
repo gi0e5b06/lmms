@@ -310,24 +310,204 @@ static inline T absMin(T a, T b)
     return qAbs<T>(a) < qAbs<T>(b) ? a : b;
 }
 
-static inline float normsinf(const float _x)
+static inline float phasef(const float _x)
+{
+    float i;
+    return modf(_x, &i);
+}
+
+static inline float sqf(const float _x)
+{
+    return _x * _x;
+}
+
+static inline float cbf(const float _x)
+{
+    return _x * _x * _x;
+}
+
+static inline float nsinf(const float _x)
 {
     return sinf(_x * F_2PI);
 }
 
+static inline float trianglef(const float x)
+{
+    if(x < 0.25f)
+        return x * 4.f;
+    else if(x < 0.75f)
+        return 2.f - x * 4.f;
+    else
+        return x * 4.f - 4.f;
+}
+
+static inline float sawtoothf(const float x)
+{
+    return -1.f + x * 2.f;
+}
+
+static inline float sawtooth0pf(const float x)
+{
+    if(x < 0.5f)
+        return 2.f * x;
+    else
+        return -1.f + 2.f * (x - 0.5f);
+}
+
+static inline float squaref(const float x)
+{
+    return (x < 0.5f) ? 1.f : -1.f;
+}
+
+static inline float harshsawf(const float x)
+{
+    if(x < 0.5f)
+        return -1.f + x * 4.f;
+    else
+        return 1.f - 2.f * x;
+}
+
+static inline float harshsaw0pf(const float x)
+{
+    if(x < 0.25f)
+        return 4.f * x;
+    else if(x < 0.75f)
+        return 0.50f - 2.f * x;
+    else
+        return 4.f * x - 4.f;
+}
+
+static inline float sqpeakf(const float x)
+{
+    float p = x;
+    if(p > 0.5f)
+        p = 1.0f - p;
+    return -1.0f + 8.0f * p * p;
+}
+
+static inline float sqpeak0pf(const float x)
+{
+    return sqpeakf(phasef(x + 0.353553f));
+}
+
+static inline float cbpeakf(const float x)
+{
+    float p = x;
+    if(p > 0.5f)
+        p = 1.0f - p;
+    return -1.0f + 16.0f * p * p * p;
+}
+
+static inline float cbpeak0pf(const float x)
+{
+    return cbpeakf(phasef(x + 0.603150f));
+}
+
+static inline float randf(const float)
+{
+    return 2.f * fastrandf01inc() - 1.f;
+}
+
+static inline float pulsef(const float x)
+{
+    return x < 0.5f ? 1.f : 0.f;
+}
+
+static inline float pulse0pf(const float x)
+{
+    if(x < 0.25f)
+        return 0.f;
+    else if(x < 0.75f)
+        return 1.f;
+    else
+        return 0.f;
+}
+
+static inline float moogsawf(const float x)
+{
+    return 3.41333f * x * x * x - 7.36 * x * x + 5.22667 * x - 1.f;
+}
+
+static inline float moogsaw0pf(const float x)
+{
+    const float p = phasef(x + 0.301297f);
+    return 3.41333f * p * p * p - 7.36 * p * p + 5.22667 * p - 1.f;
+}
+
+static inline float moogsquaref(const float x)
+{
+    if(x < 0.5f)
+        return 1.f / exp(2.5f * x);
+    else
+        return - (1.f / exp(2.5f * (x - 0.5f)));
+}
+
+static inline float expsawf(const float x)
+{
+    if(x < 0.25f)
+        return expm1(8.f * x) * 0.15651764274967f;
+    else if(x < 0.50f)
+        return expm1(4.f - 8.f * x) * 0.15651764274967f;
+    else if(x < 0.75f)
+        return -expm1(8.f * x - 4.f) * 0.15651764274967f;
+    else
+        return -expm1(8.f - 8.f * x) * 0.15651764274967f;
+}
+
+static inline float minus1f(const float x)
+{
+    return -1.f;
+}
+
+static inline float minus05f(const float x)
+{
+    return -0.5f;
+}
+
+static inline float zerof(const float x)
+{
+    return 0.f;
+}
+
+static inline float plus05f(const float x)
+{
+    return 0.5f;
+}
+
+static inline float plus1f(const float x)
+{
+    return 1.f;
+}
+
+static inline float nexpf(const float x)
+{
+    return expm1(x) /*(exp(x) - 1.f)*/
+           / 1.718281828459f;
+}
+
+static inline float nlogf(const float x)
+{
+    return log(x * 1.718281828459f + 1.f);
+}
+
+// nerf erf()
+// nexp2 exp2()
+
+/*
 #define FASTFUNC01_HEADER(name)          \
     void  init_fast##name##01();         \
     float fast##name##01(const float x); \
     float linear##name##01(const float x);
 
 FASTFUNC01_HEADER(sqrtf)
-FASTFUNC01_HEADER(normsinf)
+FASTFUNC01_HEADER(nsinf)
 FASTFUNC01_HEADER(trianglef)
-FASTFUNC01_HEADER(sawf)
+FASTFUNC01_HEADER(sawtoothf)
 FASTFUNC01_HEADER(squaref)
-FASTFUNC01_HEADER(moogsawf)
-FASTFUNC01_HEADER(normexpf)
+FASTFUNC01_HEADER(harshsawf)
+FASTFUNC01_HEADER(peakexpf)
 FASTFUNC01_HEADER(randf)
+*/
 
 // fast approximation of square root (not used)
 /*

@@ -23,48 +23,40 @@
  */
 
 #include "ComboBoxModel.h"
+
 #include "embed.h"
 
-
-
-void ComboBoxModel::addItem( const QString& item, PixmapLoader* loader )
+void ComboBoxModel::addItem(const QString&  _text,
+                            PixmapLoader*   _icon,
+                            const QVariant& _data)
 {
-	m_items.push_back( qMakePair( item, loader ) );
-	setRange( 0, m_items.size() - 1 );
+    m_texts.push_back(_text);
+    m_icons.push_back(_icon);
+    m_datas.push_back(_data);
+    setRange(0, m_texts.size() - 1);
 }
-
-
-
 
 void ComboBoxModel::clear()
 {
-	setRange( 0, 0 );
-	for( const Item& i : m_items )
-	{
-		delete i.second;
-	}
+    //setRange(0, 0);
+    for(const PixmapLoader* i : m_icons)
+        delete i;
+    m_texts.clear();
+    m_icons.clear();
+    m_datas.clear();
 
-	m_items.clear();
-
-	emit propertiesChanged();
+    emit propertiesChanged();
 }
 
-
-
-
-int ComboBoxModel::findText( const QString& txt ) const
+int ComboBoxModel::findText(const QString& _what) const
 {
-	for( QVector<Item>::ConstIterator it = m_items.begin(); it != m_items.end(); ++it )
-	{
-		if( ( *it ).first == txt )
-		{
-			return it - m_items.begin();
-		}
-	}
-	return -1; 
+    for(QVector<QString>::ConstIterator it = m_texts.begin();
+        it != m_texts.end(); ++it)
+    {
+        if((*it) == _what)
+        {
+            return it - m_texts.begin();
+        }
+    }
+    return -1;
 }
-
-
-
-
-

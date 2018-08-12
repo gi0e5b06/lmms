@@ -136,14 +136,16 @@ void LmmsCore::init1()
 
 void LmmsCore::init1b()
 {
+        /*
 	init_fastsqrtf01();
-        init_fastnormsinf01();
+        init_fastnsinf01();
         init_fasttrianglef01();
-        init_fastsawf01();
+        init_fastsawtoothf01();
         init_fastsquaref01();
-        init_fastmoogsawf01();
-        init_fastnormexpf01();
+        init_fastharshsawf01();
+        init_fastpeakexpf01();
         init_fastrandf01();
+        */
 }
 
 void LmmsCore::init2()

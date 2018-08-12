@@ -109,13 +109,17 @@ public:
 	} ;
 
 
-	// constructor which either loads sample _audio_file or decodes
+	// constructor which either loads sample _audioFile or decodes
 	// base64-data out of string
         SampleBuffer( const SampleBuffer& _other );
-	SampleBuffer( const QString & _audio_file,
-                      bool _is_base64_data = false );
-	SampleBuffer( const sampleFrame * _data, const f_cnt_t _frames );
-	SampleBuffer( const f_cnt_t _frames = 0);
+	SampleBuffer( const QString & _audioFile,
+                      bool _isBase64Data = false,
+                      bool _sampleRateDependent = true);
+	SampleBuffer( const sampleFrame * _data,
+                      const f_cnt_t _frames,
+                      bool _sampleRateDependent = true );
+	SampleBuffer( const f_cnt_t _frames = 0,
+                      bool _sampleRateDependent = true);
 
 	virtual ~SampleBuffer();
 

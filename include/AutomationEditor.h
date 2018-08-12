@@ -147,6 +147,8 @@ protected slots:
 	void setProgressionType(AutomationPattern::ProgressionTypes type);
 	void setProgressionType(int type);
 	void setTension();
+	void setWaveBank();
+	void setWaveIndex();
 	void setWaveRatio();
 	void setWaveSkew();
 	void setWaveAmplitude();
@@ -203,6 +205,8 @@ private:
 	//static const QVector<double> m_zoomXLevels;
 
 	FloatModel * m_tensionModel;
+	ComboBoxModel * m_waveBankModel;
+	ComboBoxModel * m_waveIndexModel;
 	FloatModel * m_waveRatioModel;
 	FloatModel * m_waveSkewModel;
 	FloatModel * m_waveAmplitudeModel;
@@ -316,12 +320,15 @@ private:
 	QAction* m_discreteAction;
 	QAction* m_linearAction;
 	QAction* m_cubicHermiteAction;
-	QAction* m_polynomialAction;
+	QAction* m_parabolicAction;
 
 	QAction* m_flipYAction;
 	QAction* m_flipXAction;
 
 	Knob * m_tensionKnob;
+
+        ComboBox * m_waveBankComboBox;
+        ComboBox * m_waveIndexComboBox;
 	Knob * m_waveRatioKnob;
 	Knob * m_waveSkewKnob;
 	Knob * m_waveAmplitudeKnob;
