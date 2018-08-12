@@ -22,24 +22,26 @@
  *
  */
 
-#include <QMenu>
+#include "InstrumentMidiIOView.h"
+
+//#include <QMenu>
 #include <QToolButton>
 #include <QLabel>
-#include <QLayout>
+#include <QHBoxLayout>
+#include <QVBoxLayout>
 
-#include "InstrumentMidiIOView.h"
+#include "embed.h"
+#include "gui_templates.h"
+
 #include "MidiPortMenu.h"
 #include "Engine.h"
-#include "embed.h"
 #include "GroupBox.h"
-#include "gui_templates.h"
+#include "InstrumentTrack.h"
 #include "LcdSpinBox.h"
+//#include "LedCheckBox.h"
 #include "MidiClient.h"
 #include "Mixer.h"
-#include "ToolTip.h"
-#include "InstrumentTrack.h"
-#include "LedCheckbox.h"
-
+//#include "ToolTip.h"
 
 InstrumentMidiIOView::InstrumentMidiIOView( QWidget* parent ) :
 	QWidget( parent ),

@@ -1,5 +1,5 @@
 /*
- * InstrumentFunctions.cpp - models for instrument-function-tab
+ * InstrumentFunction.cpp - models for instrument-function-tab
  *
  * Copyright (c) 2017-2018 gi0e5b06 (on github.com)
  * Copyright (c) 2004-2014 Tobias Doerffel <tobydox/at/users.sourceforge.net>
@@ -23,14 +23,14 @@
  *
  */
 
-#include "InstrumentFunctions.h"
+#include "InstrumentFunction.h"
 
 #include <time.h>
 
 #include <QDomElement>
 
 #include "Engine.h"
-#include "InstrumentFunctionViews.h"
+#include "InstrumentFunctionView.h"
 #include "InstrumentTrack.h"
 #include "Mixer.h"
 #include "Piano.h"

@@ -26,12 +26,8 @@
 #ifndef MEMORY_MANAGER_H
 #define MEMORY_MANAGER_H
 
-//#include <QtCore/QVector>
-//#include <QtCore/QMutex>
-//#include <QtCore/QHash>
-//#include "MemoryHelper.h"
-#include <string.h>
-#include "export.h"
+//#include <cstddef>
+//#include "export.h"
 
 #include "MemoryManagerArray.h"
 //#include "MemoryManagerLegacy.h"

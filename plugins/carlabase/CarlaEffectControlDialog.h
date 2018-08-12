@@ -32,7 +32,7 @@
 #include "CarlaEffectControls.h"
 #include "EffectControlDialog.h"
 #include "Knob.h"
-#include "LedCheckbox.h"
+#include "LedCheckBox.h"
 #include "LcdSpinBox.h"
 
 class CarlaEffectControlDialog : public EffectControlDialog

@@ -24,7 +24,7 @@
 
 #include "LocklessAllocator.h"
 
-#include <stdio.h>
+#include <cstdio>
 #include <strings.h>
 
 #include "lmmsconfig.h"
@@ -67,7 +67,7 @@ LocklessAllocator::~LocklessAllocator()
 	if( available != m_capacity )
 	{
 		fprintf( stderr, "LocklessAllocator: "
-				"Destroying with elements still allocated\n" );
+                         "Destroying with elements still allocated\n" );
 	}
 
 	delete[] m_pool;

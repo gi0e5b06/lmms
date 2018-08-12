@@ -25,7 +25,7 @@
 #ifndef MIDISETUPWIDGET_H
 #define MIDISETUPWIDGET_H
 
-#include <QLabel>
+//#include <QLabel>
 
 #include "TabWidget.h"
 

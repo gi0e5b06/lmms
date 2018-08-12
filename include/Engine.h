@@ -26,9 +26,8 @@
 #ifndef ENGINE_H
 #define ENGINE_H
 
-#include <QtCore/QString>
-#include <QtCore/QObject>
-
+#include <QObject>
+#include <QString>
 
 #include "export.h"
 

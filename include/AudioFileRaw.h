@@ -28,7 +28,7 @@
 #ifndef AUDIO_FILE_RAW_H
 #define AUDIO_FILE_RAW_H
 
-#include <stdio.h>
+#include <cstdio>
 
 #include "AudioFileDevice.h"
 #include "lmmsconfig.h"

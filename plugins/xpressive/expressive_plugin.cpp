@@ -31,7 +31,7 @@
 #include "GuiApplication.h"
 #include "InstrumentTrack.h"
 #include "Knob.h"
-#include "LedCheckbox.h"
+#include "LedCheckBox.h"
 #include "MainWindow.h"
 #include "Mixer.h"
 #include "NotePlayHandle.h"

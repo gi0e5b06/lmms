@@ -27,7 +27,7 @@
 
 #include "PixmapButton.h"
 
-#include <QLayout>
+#include <QHBoxLayout>
 
 class LeftRightNav : public QWidget
 {

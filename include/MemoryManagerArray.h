@@ -2,13 +2,16 @@
 #ifndef MEMORY_MANAGER_ARRAY_H
 #define MEMORY_MANAGER_ARRAY_H
 
-#include <stdlib.h>
-#include <string.h>
+//#include <stdlib.h>
+//#include <string.h>
+
 #include <QHash>
 #include <QMutex>
 
 #include "Bitset.h"
 #include "MemoryManager.h"
+
+#include "export.h"
 
 #ifndef MEMORY_MANAGER_CLASS
 #define MEMORY_MANAGER_CLASS MemoryManagerArray

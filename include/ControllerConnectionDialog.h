@@ -28,8 +28,8 @@
 #define CONTROLLER_CONNECTION_DIALOG_H
 
 #include <QDialog>
-#include <QSortFilterProxyModel>
-#include <QStandardItemModel>
+//#include <QSortFilterProxyModel>
+//#include <QStandardItemModel>
 
 #include "Controller.h"
 #include "AutomatableModel.h"

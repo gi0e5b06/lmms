@@ -26,9 +26,13 @@
 #ifndef EFFECT_CHAIN_H
 #define EFFECT_CHAIN_H
 
-#include "Model.h"
-#include "SerializingObject.h"
+#include <QVector>
+
 #include "AutomatableModel.h"
+//#include "Model.h"
+#include "SerializingObject.h"
+
+#include "lmms_basics.h"
 
 class Effect;
 

@@ -30,7 +30,7 @@
 
 #include "Midi.h"
 #include "panning_constants.h"
-#include "Pitch.h"
+//#include "Pitch.h"
 #include "volume.h"
 
 #ifndef qWarning

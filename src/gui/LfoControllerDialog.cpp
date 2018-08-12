@@ -31,7 +31,7 @@
 #include "CaptionMenu.h"
 #include "gui_templates.h"
 #include "embed.h"
-#include "LedCheckbox.h"
+#include "LedCheckBox.h"
 #include "MainWindow.h"
 #include "ToolTip.h"
 

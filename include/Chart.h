@@ -26,7 +26,7 @@
 #define CHART_H
 
 #include <QColor>
-#include <QPoint>
+#include <QPointF>
 #include <QVector>
 #include <QWidget>
 

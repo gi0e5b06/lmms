@@ -78,7 +78,7 @@ SET(LMMS_SRCS
 	gui/widgets/Graph.cpp
 	gui/widgets/GroupBox.cpp
 	#gui/widgets/HwScreenWidget.cpp
-	gui/widgets/InstrumentFunctionViews.cpp
+	gui/widgets/InstrumentFunctionView.cpp
 	gui/widgets/InstrumentMidiIOView.cpp
 	gui/widgets/InstrumentSoundShapingView.cpp
 	gui/widgets/LeftRightNav.cpp
@@ -86,7 +86,7 @@ SET(LMMS_SRCS
 	gui/widgets/LadspaControlView.cpp
 	gui/widgets/LcdSpinBox.cpp
 	gui/widgets/LcdWidget.cpp
-	gui/widgets/LedCheckbox.cpp
+	gui/widgets/LedCheckBox.cpp
 	gui/widgets/MeterDialog.cpp
 	gui/widgets/MidiEffectView.cpp
 	gui/widgets/MidiEffectRackView.cpp

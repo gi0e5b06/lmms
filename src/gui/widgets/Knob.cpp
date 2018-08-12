@@ -24,7 +24,7 @@
  */
 
 #include <QApplication>
-#include <QBitmap>
+//#include <QBitmap>
 #include <QFontMetrics>
 #include <QInputDialog>
 #include <QMouseEvent>
@@ -48,7 +48,7 @@
 #include "GuiApplication.h"
 #include "MainWindow.h"
 #include "ProjectJournal.h"
-#include "Song.h"
+//#include "Song.h"
 #include "StringPairDrag.h"
 #include "TextFloat.h"
 

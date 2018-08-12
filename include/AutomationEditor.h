@@ -27,7 +27,7 @@
 #ifndef AUTOMATION_EDITOR_H
 #define AUTOMATION_EDITOR_H
 
-#include <QtCore/QMutex>
+#include <QMutex>
 #include <QVector>
 #include <QWidget>
 

@@ -1,7 +1,8 @@
 
-#include <assert.h>
-#include <string.h>
 #include "Bitset.h"
+
+#include <cassert>
+#include <cstring>
 
 Bitset::Bitset(unsigned int size)
 {

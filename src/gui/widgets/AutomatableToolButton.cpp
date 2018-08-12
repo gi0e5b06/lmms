@@ -30,7 +30,7 @@
 
 #include "CaptionMenu.h"
 #include "Engine.h"
-#include "MainWindow.h"
+//#include "MainWindow.h"
 #include "ProjectJournal.h"
 #include "StringPairDrag.h"
 

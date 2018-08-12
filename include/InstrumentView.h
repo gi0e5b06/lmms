@@ -26,7 +26,6 @@
 #ifndef INSTRUMENT_VIEW_H
 #define INSTRUMENT_VIEW_H
 
-#include "AutomatableModel.h"
 #include "PluginView.h"
 #include "Instrument.h"
 

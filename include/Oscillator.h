@@ -27,17 +27,16 @@
 
 #include "lmmsconfig.h"
 
-#include <math.h>
-
-#ifdef LMMS_HAVE_STDLIB_H
-#include <stdlib.h>
-#endif
+//#include <math.h>
+//#ifdef LMMS_HAVE_STDLIB_H
+//#include <stdlib.h>
+//#endif
 
 #include "SampleBuffer.h"
 #include "WaveForm.h"
 
 #include "lmms_constants.h"
-//#include "lmms_math.h"
+#include "lmms_math.h"
 
 class IntModel;
 

@@ -27,7 +27,7 @@
 #ifndef PROJECT_VERSION_H
 #define PROJECT_VERSION_H
 
-#include <QtCore/QString>
+#include <QString>
 
 /*! \brief Version number parsing and comparison
  *

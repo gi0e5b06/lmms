@@ -28,7 +28,7 @@
 #include <QMouseEvent>
 
 #include "CaptionMenu.h"
-#include "MainWindow.h"
+//#include "MainWindow.h"
 
 
 

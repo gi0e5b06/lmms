@@ -34,10 +34,10 @@
 
 //#include <lv2.h>
 
-#include <QtCore/QMap>
-#include <QtCore/QPair>
-#include <QtCore/QString>
-#include <QtCore/QStringList>
+#include <QMap>
+#include <QPair>
+#include <QString>
+//#include <QStringList>
 
 //#include <lilv/lilv.h>
 #include <lilv/lilvmm.hpp>

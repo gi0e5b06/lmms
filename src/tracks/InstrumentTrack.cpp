@@ -24,6 +24,8 @@
  *
  */
 
+#include "InstrumentTrack.h"
+
 #include <QDir>
 #include <QQueue>
 #include <QApplication>
@@ -36,9 +38,9 @@
 #include <QMessageBox>
 #include <QMdiSubWindow>
 #include <QPainter>
+#include <QSignalMapper>
 
 #include "FileDialog.h"
-#include "InstrumentTrack.h"
 #include "AutomationPattern.h"
 #include "BBTrack.h"
 #include "CaptionMenu.h"
@@ -55,11 +57,11 @@
 #include "FadeButton.h"
 #include "gui_templates.h"
 #include "Instrument.h"
-#include "InstrumentFunctionViews.h"
+#include "InstrumentFunctionView.h"
 #include "InstrumentMidiIOView.h"
 #include "Knob.h"
 #include "LcdSpinBox.h"
-#include "LedCheckbox.h"
+#include "LedCheckBox.h"
 #include "LeftRightNav.h"
 #include "MainWindow.h"
 #include "MidiClient.h"

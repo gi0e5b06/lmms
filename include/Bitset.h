@@ -2,10 +2,6 @@
 #ifndef BITSET_H
 #define BITSET_H
 
-#include <stdlib.h>
-//#include <string.h>
-//#include <QtCore/QMutex>
-
 class Bitset /*final*/
 {
  public:

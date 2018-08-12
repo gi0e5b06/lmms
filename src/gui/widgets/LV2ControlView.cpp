@@ -22,12 +22,13 @@
  *
  */
 
-#include <QLayout>
+#include "LV2ControlView.h"
+
+#include <QHBoxLayout>
 
 #include "LV2Control.h"
-#include "LV2ControlView.h"
-#include "LV2Base.h"
-#include "LedCheckbox.h"
+//#include "LV2Base.h"
+#include "LedCheckBox.h"
 #include "TempoSyncKnob.h"
 #include "ToolTip.h"
 

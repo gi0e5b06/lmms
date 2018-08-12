@@ -35,7 +35,7 @@
 #include "DspEffectLibrary.h"
 #include "Instrument.h"
 #include "InstrumentView.h"
-#include "LedCheckbox.h"
+#include "LedCheckBox.h"
 #include "Knob.h"
 #include "NotePlayHandle.h"
 #include <QMutex>

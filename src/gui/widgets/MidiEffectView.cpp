@@ -37,7 +37,7 @@
 #include "GuiApplication.h"
 #include "gui_templates.h"
 #include "Knob.h"
-#include "LedCheckbox.h"
+#include "LedCheckBox.h"
 #include "MainWindow.h"
 #include "TempoSyncKnob.h"
 #include "ToolTip.h"

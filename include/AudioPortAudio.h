@@ -25,7 +25,7 @@
 #ifndef AUDIO_PORTAUDIO_H
 #define AUDIO_PORTAUDIO_H
 
-#include <QtCore/QObject>
+#include <QObject>
 
 #include "lmmsconfig.h"
 #include "ComboBoxModel.h"
@@ -47,7 +47,7 @@ public:
 
 #include <portaudio.h>
 
-#include <QtCore/QSemaphore>
+#include <QSemaphore>
 
 #include "AudioDevice.h"
 #include "AudioDeviceSetupWidget.h"

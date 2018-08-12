@@ -4,8 +4,9 @@
 #ifndef BACKTRACE_H
 #define BACKTRACE_H
 
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstdlib>
+
 #include "lmmsconfig.h"
 
 #ifdef LMMS_BUILD_LINUX

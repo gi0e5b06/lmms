@@ -33,9 +33,9 @@
 #include "lmms_basics.h"
 
 #include "Plugin.h"
-#include "Engine.h"
-#include "Mixer.h"
-#include "AutomatableModel.h"
+//#include "Engine.h"
+//#include "Mixer.h"
+//#include "AutomatableModel.h"
 #include "TempoSyncKnobModel.h"
 #include "MemoryManager.h"
 #include "MidiTime.h"

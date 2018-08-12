@@ -29,7 +29,7 @@
 
 #include "ComboBox.h"
 #include "Knob.h"
-#include "LedCheckbox.h"
+#include "LedCheckBox.h"
 #include "SynthGDX.h"
 
 ModulatorView::ModulatorView(ModulatorObject* _mod,

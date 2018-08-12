@@ -27,8 +27,8 @@
 
 #include <utility>
 
-#include <QSharedMemory>
-#include <QVector>
+//#include <QSharedMemory>
+//#include <QVector>
 
 #include "TrackContainer.h"
 #include "Controller.h"

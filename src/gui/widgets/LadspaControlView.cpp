@@ -23,12 +23,13 @@
  *
  */
 
-#include <QLayout>
+#include "LadspaControlView.h"
+
+#include <QHBoxLayout>
 
 #include "LadspaControl.h"
-#include "LadspaControlView.h"
 #include "LadspaBase.h"
-#include "LedCheckbox.h"
+#include "LedCheckBox.h"
 #include "TempoSyncKnob.h"
 #include "ToolTip.h"
 

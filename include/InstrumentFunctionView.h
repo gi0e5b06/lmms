@@ -1,5 +1,5 @@
 /*
- * InstrumentFunctionViews.h - views for instrument-functions-tab
+ * InstrumentFunctionView.h - views for instrument-functions-tab
  *
  * Copyright (c) 2017-2018 gi0e5b06
  * Copyright (c) 2004-2014 Tobias Doerffel <tobydox/at/users.sourceforge.net>
@@ -23,12 +23,12 @@
  *
  */
 
-#ifndef INSTRUMENT_FUNCTION_VIEWS_H
-#define INSTRUMENT_FUNCTION_VIEWS_H
+#ifndef INSTRUMENT_FUNCTION_VIEW_H
+#define INSTRUMENT_FUNCTION_VIEW_H
 
 #include <QWidget>
 
-#include "InstrumentFunctions.h"
+#include "InstrumentFunction.h"
 #include "ModelView.h"
 
 class QLabel;

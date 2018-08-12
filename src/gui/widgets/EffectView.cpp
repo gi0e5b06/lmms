@@ -24,10 +24,10 @@
  *
  */
 
-#include <QLabel>
+//#include <QLabel>
 #include <QPushButton>
-#include <QMdiArea>
-#include <QMdiSubWindow>
+//#include <QMdiArea>
+//#include <QMdiSubWindow>
 #include <QPainter>
 #include <QWhatsThis>
 
@@ -38,7 +38,7 @@
 #include "GuiApplication.h"
 #include "gui_templates.h"
 #include "Knob.h"
-#include "LedCheckbox.h"
+#include "LedCheckBox.h"
 #include "MainWindow.h"
 #include "TempoSyncKnob.h"
 #include "ToolTip.h"

@@ -1,4 +1,3 @@
-
 /*
  * SetupDialog.h - dialog for setting up LMMS
  *
@@ -27,9 +26,9 @@
 #define SETUP_DIALOG_H
 
 #include <QDialog>
-#include <QtCore/QMap>
+#include <QMap>
 
-#include "LedCheckbox.h"
+#include "LedCheckBox.h"
 #include "lmmsconfig.h"
 #include "AudioDevice.h"
 #include "MidiClient.h"

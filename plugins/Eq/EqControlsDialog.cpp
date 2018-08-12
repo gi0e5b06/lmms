@@ -34,7 +34,7 @@
 #include "Engine.h"
 #include "Knob.h"
 #include "Fader.h"
-#include "LedCheckbox.h"
+#include "LedCheckBox.h"
 #include "PixmapButton.h"
 
 #include "EqControls.h"

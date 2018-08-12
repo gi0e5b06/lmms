@@ -25,16 +25,18 @@
 
 
 
-#include <QApplication>
-#include <QLabel>
-#include <QMouseEvent>
+#include "LcdWidget.h"
+
+//#include <QApplication>
+//#include <QLabel>
+//#include <QMouseEvent>
 #include <QPainter>
 #include <QStyleOptionFrameV2>
 
-#include "LcdWidget.h"
 #include "embed.h"
 #include "gui_templates.h"
-#include "MainWindow.h"
+
+//#include "MainWindow.h"
 
 
 

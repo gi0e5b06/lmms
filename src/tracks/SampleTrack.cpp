@@ -31,6 +31,7 @@
 #include <QMdiSubWindow>
 #include <QPainter>
 #include <QPushButton>
+#include <QSignalMapper>
 
 //#include "FileDialog.h"
 #include "SampleTrack.h"
@@ -54,7 +55,7 @@
 //#include "InstrumentMidiIOView.h"
 #include "Knob.h"
 #include "LcdSpinBox.h"
-#include "LedCheckbox.h"
+#include "LedCheckBox.h"
 #include "LeftRightNav.h"
 #include "MainWindow.h"
 //#include "MidiClient.h"

@@ -27,6 +27,8 @@
 #include <QDomElement>
 
 #include "MidiEffectChain.h"
+
+#include "AutomatableModel.h"
 #include "MidiEffect.h"
 #include "DummyMidiEffect.h"
 #include "MixHelpers.h"

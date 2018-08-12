@@ -36,7 +36,7 @@
 
 #include "export.h"
 #include "MemoryManager.h"
-#include "Backtrace.h"
+//#include "Backtrace.h"
 
 
 //class LmmsCore;

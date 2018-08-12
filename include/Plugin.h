@@ -25,10 +25,10 @@
 #ifndef PLUGIN_H
 #define PLUGIN_H
 
+#include <QDomDocument>
+#include <QMap>
 #include <QObject>
-#include <QtCore/QStringList>
-#include <QtCore/QMap>
-#include <QtXml/QDomDocument>
+//#include <QStringList>
 
 #include "JournallingObject.h"
 #include "Model.h"

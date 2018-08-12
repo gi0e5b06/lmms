@@ -28,7 +28,7 @@
 #ifdef WANT_LV2
 
 
-#include "LV2Manager.h"
+//#include "LV2Manager.h"
 #include "Plugin.h"
 
 class LV2Control;

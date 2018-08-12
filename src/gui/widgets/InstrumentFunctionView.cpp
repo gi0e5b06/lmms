@@ -23,20 +23,20 @@
  *
  */
 
-#include "InstrumentFunctionViews.h"
+#include "InstrumentFunctionView.h"
 
 #include <QLabel>
-#include <QLayout>
+#include <QHBoxLayout>
 
 #include "ComboBox.h"
 #include "GroupBox.h"
-#include "InstrumentFunctions.h"
+#include "InstrumentFunction.h"
 #include "Knob.h"
 #include "LcdSpinBox.h"
-#include "LedCheckbox.h"
+#include "LedCheckBox.h"
 #include "Note.h"
 #include "TempoSyncKnob.h"
-#include "ToolTip.h"
+//#include "ToolTip.h"
 #include "gui_templates.h"
 
 InstrumentFunctionView::InstrumentFunctionView(InstrumentFunction* cc,

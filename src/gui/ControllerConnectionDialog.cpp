@@ -23,10 +23,10 @@
  *
  */
 
-#include <QLayout>
+#include <QHBoxLayout>
 #include <QLineEdit>
 #include <QPushButton>
-#include <QScrollArea>
+//#include <QScrollArea>
 #include <QMessageBox>
 
 #include "debug.h"
@@ -39,7 +39,7 @@
 #include "MidiPortMenu.h"
 #include "Mixer.h"
 #include "LcdSpinBox.h"
-#include "LedCheckbox.h"
+#include "LedCheckBox.h"
 #include "ComboBox.h"
 #include "GroupBox.h"
 #include "Song.h"

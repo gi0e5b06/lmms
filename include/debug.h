@@ -26,9 +26,10 @@
 #ifndef DEBUG_H
 #define DEBUG_H
 
-#include <cstdio>
+//#include <cstdio>
 #include <QObject>
 #include <QThread>
+
 #include "lmmsconfig.h"
 
 #ifndef qInfo
@@ -44,7 +45,7 @@
 
 #ifdef LMMS_DEBUG
 
-#include <assert.h>
+#include <cassert>
 
 #define DEBUG_THREAD_PRINT					     \
 	qInfo("THREAD: CT=%s P=%d %s#%d",			     \

@@ -24,10 +24,10 @@
  */
 
 
-#ifndef _DRUMSYNTH_H__
-#define _DRUMSYNTH_H__
+#ifndef DRUM_SYNTH_H
+#define DRUM_SYNTH_H
 
-#include <stdint.h>
+//#include <cstdint>
 #include "lmms_basics.h"
 
 class DrumSynth {

@@ -1,5 +1,5 @@
 /*
- * InstrumentFunctions.h - models for instrument-functions-tab
+ * InstrumentFunction.h - models for instrument-functions-tab
  *
  * Copyright (c) 2017-2018 gi0e5b06
  * Copyright (c) 2004-2014 Tobias Doerffel <tobydox/at/users.sourceforge.net>
@@ -23,8 +23,8 @@
  *
  */
 
-#ifndef INSTRUMENT_FUNCTIONS_H
-#define INSTRUMENT_FUNCTIONS_H
+#ifndef INSTRUMENT_FUNCTION_H
+#define INSTRUMENT_FUNCTION_H
 
 #include <QMultiHash>
 

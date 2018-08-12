@@ -26,9 +26,10 @@
 #ifndef MIDI_EFFECT_CHAIN_H
 #define MIDI_EFFECT_CHAIN_H
 
+#include "MidiEffect.h"
+#include "MidiTime.h"
 #include "Model.h"
 #include "SerializingObject.h"
-#include "AutomatableModel.h"
 
 class MidiEffect;
 class MidiEvent;

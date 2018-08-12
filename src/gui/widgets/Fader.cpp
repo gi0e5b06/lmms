@@ -56,8 +56,8 @@
 #include "CaptionMenu.h"
 #include "ConfigManager.h"
 #include "TextFloat.h"
-#include "MainWindow.h"
-#include "GuiApplication.h"
+//#include "MainWindow.h"
+//#include "GuiApplication.h"
 
 
 TextFloat * Fader::s_textFloat = NULL;
@@ -378,7 +378,7 @@ inline int Fader::calculateDisplayPeak( float fPeak )
 
 void Fader::paintEvent( QPaintEvent * ev)
 {
-	PAINT_THREAD_CHECK
+	//PAINT_THREAD_CHECK
 	//DEBUG_THREAD_PRINT
 
         QPainter painter(this);

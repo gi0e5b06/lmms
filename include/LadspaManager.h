@@ -30,11 +30,10 @@
 
 #include <ladspa.h>
 
-#include <QtCore/QMap>
-#include <QtCore/QPair>
-#include <QtCore/QString>
-#include <QtCore/QStringList>
-
+#include <QMap>
+#include <QPair>
+#include <QString>
+//#include <QStringList>
 
 #include "export.h"
 #include "lmms_basics.h"

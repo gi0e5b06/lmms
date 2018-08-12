@@ -25,6 +25,9 @@
 #include "InstrumentPlayHandle.h"
 
 #include <cmath>
+
+#include "Engine.h"
+#include "Mixer.h"
 #include "InstrumentTrack.h"
 
 InstrumentPlayHandle::InstrumentPlayHandle(Instrument*      instrument,

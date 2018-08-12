@@ -30,7 +30,6 @@
 #define __USE_XOPEN
 #endif
 
-#include <math.h>
 #include "lmms_constants.h"
 #include "lmms_math.h"
 

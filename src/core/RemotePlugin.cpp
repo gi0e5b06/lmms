@@ -36,7 +36,7 @@
 #include <QDir>
 
 #ifndef SYNC_WITH_SHM_FIFO
-#include <QtCore/QUuid>
+#include <QUuid>
 #include <sys/socket.h>
 #include <sys/un.h>
 #endif

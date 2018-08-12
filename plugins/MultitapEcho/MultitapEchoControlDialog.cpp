@@ -31,7 +31,7 @@
 #include "Graph.h"
 #include "PixmapButton.h"
 #include "ToolTip.h"
-#include "LedCheckbox.h"
+#include "LedCheckBox.h"
 #include "Knob.h"
 #include "TempoSyncKnob.h"
 #include "LcdSpinBox.h"

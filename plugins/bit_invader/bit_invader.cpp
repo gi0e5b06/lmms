@@ -31,7 +31,6 @@
 #include "Graph.h"
 #include "InstrumentTrack.h"
 #include "Knob.h"
-#include "LedCheckbox.h"
 #include "Mixer.h"
 #include "NotePlayHandle.h"
 #include "Oscillator.h"

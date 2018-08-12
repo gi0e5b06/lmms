@@ -31,7 +31,7 @@
 #include "LV2EffectGDX.h"
 #include "LV2EffectGDXControlDialog.h"
 #include "LV2ControlView.h"
-#include "LedCheckbox.h"
+#include "LedCheckBox.h"
 
 
 

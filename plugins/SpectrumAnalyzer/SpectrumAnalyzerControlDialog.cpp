@@ -30,7 +30,7 @@
 #include "SpectrumAnalyzer.h"
 #include "MainWindow.h"
 #include "GuiApplication.h"
-#include "LedCheckbox.h"
+#include "LedCheckBox.h"
 #include "embed.h"
 
 

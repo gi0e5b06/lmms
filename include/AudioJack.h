@@ -30,7 +30,7 @@
 #ifdef LMMS_HAVE_JACK
 #include <jack/jack.h>
 
-#include <QList>
+//#include <QList>
 #include <QMap>
 #include <QString>
 #include <QVector>

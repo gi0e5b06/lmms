@@ -25,11 +25,11 @@
 #ifndef MAIN_WINDOW_H
 #define MAIN_WINDOW_H
 
-#include <QtCore/QBasicTimer>
-#include <QtCore/QTimer>
-#include <QtCore/QList>
+#include <QBasicTimer>
+#include <QTimer>
+#include <QList>
 #include <QMainWindow>
-#include <QThread>
+//#include <QThread>
 
 #include "ConfigManager.h"
 #include "SubWindow.h"

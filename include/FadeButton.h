@@ -26,9 +26,9 @@
 #ifndef FADE_BUTTON_H
 #define FADE_BUTTON_H
 
-#include <QtCore/QTime>
 #include <QAbstractButton>
 #include <QColor>
+#include <QTime>
 
 
 class FadeButton : public QAbstractButton

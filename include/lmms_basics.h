@@ -30,7 +30,7 @@
 #include "lmmsconfig.h"
 
 #ifdef LMMS_HAVE_STDINT_H
-#include <stdint.h>
+#include <cstdint>
 #endif
 
 

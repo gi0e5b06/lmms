@@ -31,7 +31,7 @@
 #include "Instrument.h"
 #include "InstrumentView.h"
 #include "Knob.h"
-#include "LedCheckbox.h"
+#include "LedCheckBox.h"
 #include "TempoSyncKnob.h"
 
 

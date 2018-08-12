@@ -26,9 +26,9 @@
 #ifndef NSTATE_BUTTON_H
 #define NSTATE_BUTTON_H
 
+#include <QPair>
 #include <QPixmap>
-#include <QtCore/QVector>
-#include <QtCore/QPair>
+#include <QVector>
 
 #include "ToolButton.h"
 

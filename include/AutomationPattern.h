@@ -28,8 +28,8 @@
 #ifndef AUTOMATION_PATTERN_H
 #define AUTOMATION_PATTERN_H
 
-#include <QtCore/QMap>
-#include <QtCore/QPointer>
+#include <QMap>
+#include <QPointer>
 
 #include "Track.h"
 

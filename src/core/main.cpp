@@ -54,13 +54,12 @@
 #include <unistd.h>
 #endif
 
-#include <signal.h>
+#include <csignal>
 
 #include "MainApplication.h"
 #include "MemoryManager.h"
 #include "ConfigManager.h"
 #include "NotePlayHandle.h"
-#include "embed.h"
 #include "Engine.h"
 #include "GuiApplication.h"
 #include "ImportFilter.h"
@@ -70,8 +69,11 @@
 #include "RenderManager.h"
 #include "Song.h"
 #include "SetupDialog.h"
+
 #include "PerfLog.h"
+
 #include "debug.h"
+#include "embed.h"
 
 #ifdef LMMS_DEBUG_FPE
 #include <fenv.h> // For feenableexcept

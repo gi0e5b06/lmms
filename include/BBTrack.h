@@ -27,8 +27,8 @@
 #ifndef BB_TRACK_H
 #define BB_TRACK_H
 
-#include <QtCore/QObject>
-#include <QtCore/QMap>
+#include <QObject>
+#include <QMap>
 #include <QStaticText>
 
 #include "Track.h"

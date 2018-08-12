@@ -23,16 +23,17 @@
  *
  */
 
+#include "LcdSpinBox.h"
+
 #include <QApplication>
-#include <QLabel>
+//#include <QLabel>
 #include <QMouseEvent>
-#include <QPainter>
-#include <QStyleOptionFrameV2>
+//#include <QPainter>
+//#include <QStyleOptionFrameV2>
 #include <QInputDialog>
 
 #include "debug.h"
 
-#include "LcdSpinBox.h"
 #include "CaptionMenu.h"
 #include "GuiApplication.h"
 #include "MainWindow.h"

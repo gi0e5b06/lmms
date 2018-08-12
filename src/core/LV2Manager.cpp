@@ -24,15 +24,16 @@
  *
  */
 
+#include "LV2Manager.h"
+
+#include <cmath>
+
 #include <QCoreApplication>
 #include <QDebug>
 #include <QDir>
 #include <QLibrary>
 
-#include <math.h>
-
 #include "ConfigManager.h"
-#include "LV2Manager.h"
 #include "PluginFactory.h"
 
 

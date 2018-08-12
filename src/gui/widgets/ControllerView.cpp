@@ -27,11 +27,10 @@
 #include <QLabel>
 #include <QPushButton>
 #include <QMdiArea>
-#include <QMdiSubWindow>
+//#include <QMdiSubWindow>
 #include <QPainter>
 #include <QWhatsThis>
-
-#include <QLayout>
+//#include <QLayout>
 #include <QInputDialog>
 
 #include "ControllerView.h"
@@ -41,7 +40,7 @@
 #include "gui_templates.h"
 #include "embed.h"
 #include "GuiApplication.h"
-#include "LedCheckbox.h"
+#include "LedCheckBox.h"
 #include "MainWindow.h"
 #include "ToolTip.h"
 

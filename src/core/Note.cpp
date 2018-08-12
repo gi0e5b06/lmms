@@ -23,9 +23,9 @@
  */
 
 
-#include <QDomElement>
+#include <cmath>
 
-#include <math.h>
+#include <QDomElement>
 
 #include "Note.h"
 #include "DetuningHelper.h"

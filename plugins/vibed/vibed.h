@@ -29,7 +29,7 @@
 #include "Graph.h"
 #include "Knob.h"
 #include "PixmapButton.h"
-#include "LedCheckbox.h"
+#include "LedCheckBox.h"
 #include "nine_button_selector.h"
 
 class vibedView;

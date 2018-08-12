@@ -27,7 +27,7 @@
 #define CUSTOM_EVENTS_H
 
 
-#include <QtCore/QEvent>
+#include <QEvent>
 
 
 namespace customEvents

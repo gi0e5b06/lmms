@@ -26,9 +26,9 @@
 #ifndef MIDI_PORT_H
 #define MIDI_PORT_H
 
-#include <QtCore/QString>
-#include <QtCore/QList>
-#include <QtCore/QMap>
+#include <QList>
+#include <QMap>
+#include <QString>
 
 #include "Midi.h"
 #include "MidiTime.h"

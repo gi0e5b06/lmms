@@ -27,9 +27,9 @@
 #define TRACK_H
 
 #include <QVector>
-#include <QList>
+//#include <QList>
 #include <QWidget>
-#include <QSignalMapper>
+//#include <QSignalMapper>
 #include <QColor>
 #include <QMimeData>
 

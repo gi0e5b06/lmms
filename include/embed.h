@@ -26,7 +26,7 @@
 #define EMBED_H
 
 #include <QPixmap>
-#include <QtCore/QString>
+#include <QString>
 
 #include "export.h"
 #include "lmms_basics.h"

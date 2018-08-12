@@ -27,8 +27,8 @@
 #ifndef CPULOAD_WIDGET_H
 #define CPULOAD_WIDGET_H
 
-#include <QtCore/QTimer>
 #include <QPixmap>
+#include <QTimer>
 #include <QWidget>
 
 #include "lmms_basics.h"

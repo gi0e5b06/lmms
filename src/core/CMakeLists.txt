@@ -35,7 +35,7 @@ SET(LMMS_SRCS
 	core/ImportFilter.cpp
 	core/InlineAutomation.cpp
 	core/Instrument.cpp
-	core/InstrumentFunctions.cpp
+	core/InstrumentFunction.cpp
 	core/InstrumentPlayHandle.cpp
 	core/InstrumentSoundShaping.cpp
 	core/JournallingObject.cpp

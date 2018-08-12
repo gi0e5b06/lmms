@@ -2,8 +2,8 @@
 #ifndef OBJECT_MANAGER_H
 #define OBJECT_MANAGER_H
 
-#include <stdlib.h>
-#include <string.h>
+//#include <cstdlib>
+//#include <cstring>
 #include <typeinfo>
 
 //#include <QHash>
@@ -11,7 +11,9 @@
 
 #include "Bitset.h"
 #include "ObjectManager.h"
+
 #include "export.h"
+
 
 template <class T>
 class EXPORT ObjectManager

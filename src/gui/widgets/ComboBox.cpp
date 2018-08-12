@@ -27,7 +27,7 @@
 #include "ComboBox.h"
 
 #include <QApplication>
-#include <QDesktopWidget>
+//#include <QDesktopWidget>
 #include <QInputDialog>
 #include <QMouseEvent>
 #include <QPainter>
@@ -36,7 +36,7 @@
 #include "CaptionMenu.h"
 #include "embed.h"
 #include "gui_templates.h"
-#include "MainWindow.h"
+//#include "MainWindow.h"
 
 
 QPixmap * ComboBox::s_background = NULL;

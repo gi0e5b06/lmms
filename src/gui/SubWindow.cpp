@@ -28,6 +28,7 @@
 #include <QMdiArea>
 #include <QMenu>
 #include <QMoveEvent>
+#include <QPainter>
 #include <QScrollBar>
 #include <QMdiSubWindow>
 

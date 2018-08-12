@@ -33,7 +33,7 @@
 #include "Knob.h"
 #include "Graph.h"
 #include "PixmapButton.h"
-#include "LedCheckbox.h"
+#include "LedCheckBox.h"
 #include "MemoryManager.h"
 
 

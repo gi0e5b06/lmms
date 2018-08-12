@@ -26,8 +26,8 @@
 #define MIXER_WORKER_THREAD_H
 
 #include <AtomicInt.h>
-#include <QtCore/QAtomicPointer>
-#include <QtCore/QThread>
+#include <QAtomicPointer>
+#include <QThread>
 
 class QWaitCondition;
 class Mixer;

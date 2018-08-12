@@ -35,7 +35,9 @@
  * \todo fill this out
  */
 
-#include <assert.h>
+#include "Track.h"
+
+#include <cassert>
 #include <cmath>
 
 #include <QLayout>
@@ -47,8 +49,6 @@
 
 #include "debug.h"
 #include "Backtrace.h"
-
-#include "Track.h"
 
 #include "AutomationPattern.h"
 #include "AutomationTrack.h"

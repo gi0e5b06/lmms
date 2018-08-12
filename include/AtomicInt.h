@@ -4,7 +4,7 @@
 #ifndef LMMS_ATOMIC_H
 #define LMMS_ATOMIC_H
 
-#include <QtCore/QAtomicInt>
+#include <QAtomicInt>
 
 #if QT_VERSION < 0x050300
 

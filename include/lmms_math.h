@@ -25,18 +25,12 @@
 #ifndef LMMS_MATH_H
 #define LMMS_MATH_H
 
-/*
 #include <cmath>
-#include <cstdint>
-
-#include <QtCore/QtGlobal>
-*/
-
-#include <math.h>
 #include <QtGlobal>
 
 #include "lmms_constants.h"
 #include "lmmsconfig.h"
+
 using namespace std;
 
 #if defined(LMMS_BUILD_WIN32) || defined(LMMS_BUILD_APPLE)   \

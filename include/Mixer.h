@@ -25,11 +25,12 @@
 #ifndef MIXER_H
 #define MIXER_H
 
-#include <QtCore/QMutex>
-#include <QtCore/QThread>
-#include <QtCore/QVector>
-#include <QtCore/QWaitCondition>
-#include <samplerate.h> //libsamplerate
+#include <QMutex>
+#include <QThread>
+#include <QVector>
+#include <QWaitCondition>
+
+#include <samplerate.h>
 
 
 #include "lmms_basics.h"

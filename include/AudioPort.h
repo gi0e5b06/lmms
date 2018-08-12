@@ -27,7 +27,7 @@
 
 #include <QString>
 #include <QMutex>
-#include <QMutexLocker>
+//#include <QMutexLocker>
 
 #include "MemoryManager.h"
 #include "PlayHandle.h"

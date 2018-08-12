@@ -24,7 +24,7 @@
  */
 
 #include <QPaintEvent>
-#include <QFontMetrics>
+//#include <QFontMetrics>
 #include <QPainter>
 
 #include "Graph.h"

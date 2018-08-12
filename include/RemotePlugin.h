@@ -81,9 +81,9 @@ typedef int32_t key_t;
 #endif
 
 #else
-#include <QtCore/QMutex>
-#include <QtCore/QProcess>
-#include <QtCore/QThread>
+#include <QMutex>
+#include <QProcess>
+#include <QThread>
 
 #ifndef SYNC_WITH_SHM_FIFO
 #include <poll.h>
@@ -985,7 +985,7 @@ private:
 #ifdef COMPILE_REMOTE_PLUGIN_BASE
 
 #ifndef BUILD_REMOTE_PLUGIN_CLIENT
-#include <QtCore/QCoreApplication>
+#include <QCoreApplication>
 #endif
 
 

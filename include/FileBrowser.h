@@ -26,8 +26,8 @@
 #ifndef FILE_BROWSER_H
 #define FILE_BROWSER_H
 
-#include <QtCore/QDir>
-#include <QtCore/QMutex>
+#include <QDir>
+#include <QMutex>
 #include <QTreeWidget>
 
 

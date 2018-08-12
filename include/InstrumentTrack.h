@@ -28,7 +28,7 @@
 
 #include "AudioPort.h"
 #include "GroupBox.h"
-#include "InstrumentFunctions.h"
+#include "InstrumentFunction.h"
 #include "InstrumentSoundShaping.h"
 #include "MidiEventProcessor.h"
 #include "MidiPort.h"
