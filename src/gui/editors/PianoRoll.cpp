@@ -33,8 +33,8 @@
 #include <QInputDialog>
 #include <QKeyEvent>
 #include <QLabel>
-#include <QLayout>
-#include <QMdiArea>
+//#include <QLayout>
+//#include <QMdiArea>
 #include <QPainter>
 #include <QPointer>
 #include <QScrollBar>
@@ -57,7 +57,7 @@
 #include "BBTrackContainer.h"
 #include "Clipboard.h"
 #include "ComboBox.h"
-#include "DetuningHelper.h"
+#include "DetuningHelper.h" // REQUIRED
 #include "GuiApplication.h"
 #include "InstrumentTrack.h"
 #include "MainWindow.h"

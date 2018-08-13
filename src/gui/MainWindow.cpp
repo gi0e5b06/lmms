@@ -34,13 +34,13 @@
 #include <QMessageBox>
 #include <QShortcut>
 #include <QSplitter>
-#include <QUrl>
+//#include <QUrl>
 #include <QWhatsThis>
 
 #include "AboutDialog.h"
 #include "AudioDummy.h"
-#include "AutomationEditor.h"
-#include "BBEditor.h"
+#include "AutomationEditor.h" // REQUIRED
+#include "BBEditor.h" // REQUIRED
 #include "ControllerRackView.h"
 #include "embed.h"
 #include "Engine.h"
@@ -48,16 +48,16 @@
 #include "FileDialog.h"
 #include "FxMixerView.h"
 #include "GuiApplication.h"
-#include "PianoRoll.h"
+#include "PianoRoll.h" // REQUIRED
 #include "PluginBrowser.h"
 #include "PluginFactory.h"
 #include "PluginView.h"
 #include "ProjectJournal.h"
-#include "ProjectNotes.h"
+#include "ProjectNotes.h" // REQUIRED
 #include "RemotePlugin.h"
 #include "SetupDialog.h"
 #include "SideBar.h"
-#include "SongEditor.h"
+#include "SongEditor.h" // REQUIRED
 #include "SongMetaDataDialog.h"
 #include "ToolButton.h"
 #include "ToolPlugin.h"

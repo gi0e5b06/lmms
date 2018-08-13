@@ -23,10 +23,11 @@
  *
  */
 
-#include <QMessageBox>
+#include "EffectControlDialog.h"
+
+//#include <QMessageBox>
 #include <QCloseEvent>
 
-#include "EffectControlDialog.h"
 #include "EffectControls.h"
 
 

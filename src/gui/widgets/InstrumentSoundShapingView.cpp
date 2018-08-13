@@ -22,17 +22,18 @@
  *
  */
 
-#include <QLabel>
-
 #include "InstrumentSoundShapingView.h"
-#include "EnvelopeAndLfoParameters.h"
-#include "EnvelopeAndLfoView.h"
+
 #include "ComboBox.h"
+#include "EnvelopeAndLfoParameters.h" // REQUIRED
+#include "EnvelopeAndLfoView.h"
 #include "GroupBox.h"
-#include "gui_templates.h"
 #include "Knob.h"
 #include "TabWidget.h"
 
+#include "gui_templates.h"
+
+#include <QLabel>
 
 
 const int TARGETS_TABWIDGET_X = 4;

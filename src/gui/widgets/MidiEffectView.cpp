@@ -23,24 +23,26 @@
  *
  */
 
-#include <QLabel>
-#include <QPushButton>
-#include <QMdiArea>
-#include <QMdiSubWindow>
-#include <QPainter>
-#include <QWhatsThis>
-
 #include "MidiEffectView.h"
-#include "DummyMidiEffect.h"
+
 #include "CaptionMenu.h"
-#include "embed.h"
+#include "DummyMidiEffect.h"
 #include "GuiApplication.h"
-#include "gui_templates.h"
 #include "Knob.h"
 #include "LedCheckBox.h"
 #include "MainWindow.h"
 #include "TempoSyncKnob.h"
 #include "ToolTip.h"
+
+#include "embed.h"
+#include "gui_templates.h"
+
+//#include <QLabel>
+#include <QPushButton>
+//#include <QMdiArea>
+//#include <QMdiSubWindow>
+#include <QPainter>
+#include <QWhatsThis>
 
 
 MidiEffectView::MidiEffectView( MidiEffect * _model, QWidget * _parent ) :

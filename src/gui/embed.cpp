@@ -22,11 +22,12 @@
  *
  */
 
-#include <QDebug>
+#include "embed.h"
+
+//#include <QDebug>
 #include <QImageReader>
 #include <QPixmapCache>
 #include <QResource>
-#include "embed.h"
 
 namespace embed
 {
@@ -60,8 +61,9 @@ QPixmap getIconPixmap(const QString& pixmapName, int width, int height )
 	pixmap = QPixmap::fromImageReader(&reader);
 	if (pixmap.isNull())
 	{
-		qWarning().nospace() << "Error loading icon pixmap " << pixmapName << ": " <<
-								reader.errorString().toLocal8Bit().data();
+		qWarning("Warning: Fail to load icon pixmap %s: %s",
+                         qPrintable(pixmapName),
+                         qPrintable(reader.errorString()));
 		return QPixmap(1,1);
 	}
 

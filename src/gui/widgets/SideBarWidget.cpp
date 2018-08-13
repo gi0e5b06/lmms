@@ -22,12 +22,11 @@
  *
  */
 
-#include <QApplication>
-#include <QFontMetrics>
-#include <QPainter>
-
 #include "SideBarWidget.h"
 
+//#include <QApplication>
+#include <QFontMetrics>
+#include <QPainter>
 
 SideBarWidget::SideBarWidget( const QString & _title, const QPixmap & _icon,
 							QWidget * _parent ) :

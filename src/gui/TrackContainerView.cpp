@@ -26,9 +26,10 @@
 
 #include <cmath>
 
-#include <QApplication>
+//#include <QApplication>
 #include <QLayout>
-#include <QMdiArea>
+#include <QVBoxLayout>
+//#include <QMdiArea>
 #include <QWheelEvent>
 
 #include "TrackContainer.h"

@@ -23,7 +23,7 @@
  */
 #include "MainApplication.h"
 
-#include <QDebug>
+//#include <QDebug>
 #include <QFileOpenEvent>
 
 #include "Engine.h"
@@ -48,13 +48,14 @@ bool MainApplication::event(QEvent* event)
 			{
 				if(gui->mainWindow()->mayChangeProject(true))
 				{
-					qDebug() << "Loading file " << m_queuedFile;
+					qInfo("Notice: Loading file: %s",
+                                              qPrintable(m_queuedFile));
 					Engine::getSong()->loadProject(m_queuedFile);
 				}
 			}
 			else
 			{
-				qDebug() << "Queuing file " << m_queuedFile;
+				qInfo("Queuing file: %s",qPrintable(m_queuedFile));
 			}
 			return true;
 		}

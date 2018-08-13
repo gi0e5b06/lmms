@@ -23,23 +23,23 @@
  *
  */
 
-#include <QLabel>
-#include <QPushButton>
-#include <QMdiArea>
-#include <QPainter>
+#include "LfoController.h"
 
-#include "CaptionMenu.h"
-#include "gui_templates.h"
-#include "embed.h"
-#include "LedCheckBox.h"
-#include "MainWindow.h"
+//#include <QLabel>
+//#include <QPushButton>
+//#include <QMdiArea>
+//#include <QPainter>
+
+//#include "CaptionMenu.h"
+//#include "LedCheckBox.h"
+//#include "MainWindow.h"
+#include "Knob.h"
+#include "PixmapButton.h"
+#include "TempoSyncKnob.h"
 #include "ToolTip.h"
 
-
-#include "LfoController.h"
-#include "Knob.h"
-#include "TempoSyncKnob.h"
-#include "PixmapButton.h"
+#include "gui_templates.h"
+#include "embed.h"
 
 const int CD_ENV_KNOBS_LBL_Y = 11;
 const int CD_KNOB_X_SPACING = 32;

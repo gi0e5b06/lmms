@@ -24,13 +24,13 @@
 
 #include "FxMixerView.h"
 
-#include <QButtonGroup>
-#include <QDebug>
-#include <QInputDialog>
+//#include <QButtonGroup>
+//#include <QDebug>
+//#include <QInputDialog>
 #include <QKeyEvent>
 #include <QLayout>
-#include <QMdiArea>
-#include <QPainter>
+//#include <QMdiArea>
+//#include <QPainter>
 #include <QPushButton>
 #include <QScrollArea>
 #include <QStyle>

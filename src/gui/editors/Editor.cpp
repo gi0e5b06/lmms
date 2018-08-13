@@ -24,15 +24,15 @@
 
 #include "Editor.h"
 
+//#include "MainWindow.h"
 #include "Song.h"
 
-#include "MainWindow.h"
 #include "embed.h"
 
 #include <QAction>
-#include <QMdiArea>
+#include <QLabel>
+//#include <QMdiArea>
 #include <QShortcut>
-
 
 const QVector<float> Editor::ZOOM_LEVELS =
         { 0.10f, 0.20f, 0.50f, 1.0f, 2.0f, 5.0f, 10.0f, 20.0f };

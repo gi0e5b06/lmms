@@ -24,14 +24,15 @@
  */
 
 
-#include <QLayout>
-#include <QPushButton>
-#include <QLabel>
-
 #include "MeterDialog.h"
 #include "MeterModel.h"
-#include "gui_templates.h"
 #include "LcdSpinBox.h"
+
+#include "gui_templates.h"
+
+#include <QLayout>
+//#include <QPushButton>
+#include <QLabel>
 
 
 MeterDialog::MeterDialog( QWidget * _parent, bool _simple ) :

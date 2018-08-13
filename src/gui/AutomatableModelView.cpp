@@ -24,7 +24,7 @@
 
 #include <QApplication>
 #include <QClipboard>
-#include <QInputDialog>
+//#include <QInputDialog>
 #include <QMenu>
 #include <QMouseEvent>
 

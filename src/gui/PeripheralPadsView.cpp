@@ -41,15 +41,15 @@
 
 #include <cmath>
 
-#include <QCursor>
+//#include <QCursor>
 #include <QKeyEvent>
 #include <QPainter>
 #include <QVBoxLayout>
 
-#include "CaptionMenu.h"
+//#include "CaptionMenu.h"
 #include "InstrumentTrack.h"
-#include "Knob.h"
-#include "MainWindow.h"
+//#include "Knob.h"
+//#include "MainWindow.h"
 #include "Piano.h"
 #include "StringPairDrag.h"
 #include "embed.h"

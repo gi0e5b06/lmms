@@ -22,6 +22,8 @@
  *
  */
 
+#include "SetupDialog.h"
+
 #include <QComboBox>
 #include <QImageReader>
 #include <QLabel>
@@ -31,9 +33,8 @@
 #include <QWhatsThis>
 #include <QScrollArea>
 
-#include "SetupDialog.h"
 #include "TabBar.h"
-#include "TabButton.h"
+#include "TabButton.h" // REQUIRED
 #include "gui_templates.h"
 #include "Mixer.h"
 #include "MainWindow.h"

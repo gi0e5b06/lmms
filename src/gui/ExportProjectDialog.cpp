@@ -24,8 +24,8 @@
 
 #include "ExportProjectDialog.h"
 
-#include <QDebug>
-#include <QDir>
+//#include <QDebug>
+//#include <QDir>
 #include <QFileInfo>
 #include <QMessageBox>
 

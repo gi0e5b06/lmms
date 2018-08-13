@@ -25,8 +25,8 @@
 
 #include <QDomElement>
 #include <QTimer>
-#include <QApplication>
-#include <QLayout>
+//#include <QApplication>
+//#include <QLayout>
 #include <QMenu>
 #include <QMouseEvent>
 #include <QPainter>

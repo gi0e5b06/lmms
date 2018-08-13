@@ -25,13 +25,13 @@
 
 #include "LadspaControlView.h"
 
-#include <QHBoxLayout>
-
 #include "LadspaControl.h"
-#include "LadspaBase.h"
+#include "LadspaBase.h" // REQUIRED
 #include "LedCheckBox.h"
 #include "TempoSyncKnob.h"
 #include "ToolTip.h"
+
+#include <QHBoxLayout>
 
 
 LadspaControlView::LadspaControlView( QWidget * _parent,

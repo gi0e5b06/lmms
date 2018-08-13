@@ -22,11 +22,11 @@
  *
  */
 
-#include <QWidget>
-
 #include "ModelView.h"
 
-#include "Backtrace.h"
+#include <QWidget>
+
+//#include "Backtrace.h"
 
 ModelView::ModelView( Model* model, QWidget* widget ) :
 	m_widget( widget ),

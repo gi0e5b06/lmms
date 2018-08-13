@@ -33,8 +33,8 @@
 #include <QApplication>
 #include <QKeyEvent>
 #include <QLabel>
-#include <QLayout>
-#include <QMdiArea>
+#include <QLayout> // REQUIRED
+//#include <QMdiArea>
 #include <QPainter>
 #include <QScrollBar>
 #include <QShortcut>

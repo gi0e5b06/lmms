@@ -24,12 +24,12 @@
  *
  */
 
-#include <QDebug>
+//#include <QDebug>
 #include <QMdiArea>
 #include <QMenu>
 #include <QMoveEvent>
 #include <QPainter>
-#include <QScrollBar>
+//#include <QScrollBar>
 #include <QMdiSubWindow>
 
 #include "embed.h"

@@ -26,11 +26,7 @@
 
 #include "TrackLabelButton.h"
 
-#include <QApplication>
-#include <QMouseEvent>
-
 #include "ConfigManager.h"
-#include "embed.h"
 #include "Engine.h"
 #include "Instrument.h"
 #include "InstrumentTrack.h"
@@ -38,6 +34,10 @@
 #include "Song.h"
 #include "TrackRenameLineEdit.h"
 
+#include "embed.h"
+
+//#include <QApplication>
+#include <QMouseEvent>
 
 
 TrackLabelButton::TrackLabelButton( TrackView * _tv, QWidget * _parent ) :

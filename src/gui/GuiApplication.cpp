@@ -24,25 +24,27 @@
 
 #include "GuiApplication.h"
 
+#include <QApplication>
+#include <QDir>
+#include <QMessageBox>
+#include <QSplashScreen>
+
 #include "lmmsversion.h"
 
 #include "LmmsStyle.h"
 #include "LmmsPalette.h"
 
-#include "AutomationEditor.h"
-#include "BBEditor.h"
 #include "ConfigManager.h"
 #include "ControllerRackView.h"
 #include "FxMixerView.h"
 #include "MainWindow.h"
-#include "PianoRoll.h"
-#include "ProjectNotes.h"
-#include "SongEditor.h"
+#include "Song.h"
 
-#include <QApplication>
-#include <QDir>
-#include <QMessageBox>
-#include <QSplashScreen>
+#include "AutomationEditor.h" // REQUIRED
+#include "BBEditor.h" // REQUIRED
+#include "PianoRoll.h" // REQUIRED
+#include "ProjectNotes.h" // REQUIRED
+#include "SongEditor.h" // REQUIRED
 
 GuiApplication* GuiApplication::s_instance = nullptr;
 

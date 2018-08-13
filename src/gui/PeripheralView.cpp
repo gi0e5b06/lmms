@@ -36,26 +36,21 @@
  * \todo write isWhite inline function and replace throughout
  */
 
+#include "PeripheralView.h"
+
 #include <cmath>
 
 #include <QCursor>
 #include <QKeyEvent>
-#include <QPainter>
-#include <QVBoxLayout>
+//#include <QPainter>
+//#include <QVBoxLayout>
 
-#include "PeripheralView.h"
-#include "Piano.h"
+#include "CaptionMenu.h"
 #include "InstrumentTrack.h"
+#include "Piano.h"
 
 #include "embed.h"
 #include "gui_templates.h"
-#include "CaptionMenu.h"
-
-/*
-#include "Knob.h"
-#include "StringPairDrag.h"
-#include "MainWindow.h"
-*/
 
 /*! \brief Create a new peripheral display view
  *

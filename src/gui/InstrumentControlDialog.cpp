@@ -23,10 +23,11 @@
  *
  */
 
-#include <QMessageBox>
+#include "InstrumentControlDialog.h"
+
+//#include <QMessageBox>
 #include <QCloseEvent>
 
-#include "InstrumentControlDialog.h"
 #include "InstrumentControls.h"
 
 

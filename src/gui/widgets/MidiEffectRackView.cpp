@@ -23,15 +23,16 @@
  *
  */
 
-#include <QApplication>
-#include <QLayout>
-#include <QPushButton>
-#include <QScrollArea>
-
 #include "MidiEffectRackView.h"
+
 #include "MidiEffectSelectDialog.h"
 #include "MidiEffectView.h"
 #include "GroupBox.h"
+
+#include <QApplication>
+#include <QVBoxLayout>
+#include <QPushButton>
+#include <QScrollArea>
 
 
 MidiEffectRackView::MidiEffectRackView( MidiEffectChain* model, QWidget* parent ) :

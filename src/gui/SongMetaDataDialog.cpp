@@ -22,17 +22,18 @@
  *
  */
 
-#include <QFileInfo>
-#include <QDir>
-#include <QMessageBox>
-#include <QDebug>
+#include "SongMetaDataDialog.h"
+
+//#include <QFileInfo>
+//#include <QDir>
+//#include <QMessageBox>
+//#include <QDebug>
 
 #include "lmmsversion.h"
-#include "SongMetaDataDialog.h"
 #include "Song.h"
-#include "GuiApplication.h"
-#include "MainWindow.h"
-#include "OutputSettings.h"
+//#include "GuiApplication.h"
+//#include "MainWindow.h"
+//#include "OutputSettings.h"
 
 
 SongMetaDataDialog::SongMetaDataDialog(QWidget * _parent) :

@@ -22,11 +22,11 @@
  *
  */
 
-
-#include <QToolTip>
-
 #include "ToolTip.h"
+
 #include "ConfigManager.h"
+
+#include <QToolTip> // REQUIRED
 
 
 void ToolTip::add( QWidget * _w, const QString & _txt )

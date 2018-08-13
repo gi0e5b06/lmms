@@ -25,19 +25,20 @@
 
 
 #include <QLabel>
-#include <QPushButton>
-#include <QMdiArea>
+//#include <QPushButton>
+#include <QMdiArea> // REQUIRED
 #include <QPainter>
 
-#include "CaptionMenu.h"
-#include "gui_templates.h"
-#include "embed.h"
-#include "MainWindow.h"
+//#include "CaptionMenu.h"
+//#include "MainWindow.h"
 #include "ToolTip.h"
 
 #include "PeakController.h"
-#include "Knob.h"
-#include "TempoSyncKnob.h"
+//#include "Knob.h"
+//#include "TempoSyncKnob.h"
+
+#include "gui_templates.h"
+#include "embed.h"
 
 
 PeakControllerDialog::PeakControllerDialog( Controller * _model, QWidget * _parent ) :
