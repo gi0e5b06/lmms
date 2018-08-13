@@ -28,8 +28,8 @@
 
 #include <cmath>
 
-#include <QCoreApplication>
-#include <QDebug>
+//#include <QCoreApplication>
+//#include <QDebug>
 #include <QDir>
 #include <QLibrary>
 

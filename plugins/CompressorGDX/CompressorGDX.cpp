@@ -44,10 +44,10 @@ extern "C"
                NULL};
 }
 
-CompressorGDX::CompressorGDX(
-        Model* parent, const Descriptor::SubPluginFeatures::Key* key) :
+CompressorGDX::CompressorGDX(Model*                                    parent,
+                             const Descriptor::SubPluginFeatures::Key* key) :
       Effect(&compressorgdx_plugin_descriptor, parent, key),
-      m_gdxControls(this), m_fact0(0.0f), m_sact0(0.0f)
+      m_gdxControls(this)//, m_fact0(0.0f), m_sact0(0.0f)
 {
 }
 
@@ -55,8 +55,7 @@ CompressorGDX::~CompressorGDX()
 {
 }
 
-bool CompressorGDX::processAudioBuffer(sampleFrame* _buf,
-                                             const fpp_t  _frames)
+bool CompressorGDX::processAudioBuffer(sampleFrame* _buf, const fpp_t _frames)
 {
     bool smoothBegin, smoothEnd;
     if(!shouldProcessAudioBuffer(_buf, _frames, smoothBegin, smoothEnd))
@@ -92,20 +91,25 @@ bool CompressorGDX::processAudioBuffer(sampleFrame* _buf,
         float curVal0 = _buf[f][0];
         float curVal1 = _buf[f][1];
 
+        float exp = (1.f - threshold) * (1.f - ratio);
+        outGain *= (1.f + exp);
+
         {
             if(fabs(curVal0) >= threshold)
                 curVal0 = sign(curVal0)
                           * (threshold + (fabs(curVal0) - threshold) * ratio);
+            curVal0 = qBound(0.f, curVal0 * outGain, 1.f);
         }
 
         {
             if(fabs(curVal1) >= threshold)
                 curVal1 = sign(curVal1)
                           * (threshold + (fabs(curVal1) - threshold) * ratio);
+            curVal1 = qBound(0.f, curVal1 * outGain, 1.f);
         }
 
-        _buf[f][0] = d0 * _buf[f][0] + w0 * curVal0 * outGain;
-        _buf[f][1] = d1 * _buf[f][1] + w1 * curVal1 * outGain;
+        _buf[f][0] = d0 * _buf[f][0] + w0 * curVal0;
+        _buf[f][1] = d1 * _buf[f][1] + w1 * curVal1;
     }
 
     return shouldKeepRunning(_buf, _frames);

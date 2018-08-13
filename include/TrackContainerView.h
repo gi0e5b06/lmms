@@ -31,7 +31,7 @@
 #include <QWidget>
 #include <QThread>
 
-#include "Track.h"
+//#include "Track.h"
 #include "JournallingObject.h"
 #include "InstrumentTrack.h"
 

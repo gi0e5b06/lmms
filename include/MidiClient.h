@@ -29,8 +29,9 @@
 #include <QVector>
 
 #include "MidiEvent.h"
-#include "MidiEventProcessor.h"
-#include "TabWidget.h"
+//#include "MidiEventProcessor.h"
+#include "MidiTime.h"
+//#include "TabWidget.h"
 
 
 class MidiPort;

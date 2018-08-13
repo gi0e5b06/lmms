@@ -28,7 +28,7 @@
 //#include <QFrame>
 #include <QWidget>
 
-#include "AutomatableModel.h"
+//#include "AutomatableModel.h"
 #include "Controller.h"
 #include "ModelView.h"
 

@@ -35,7 +35,7 @@
 #include "ProjectJournal.h"
 #include "Song.h"
 #include "BandLimitedWave.h"
-#include "Backtrace.h"
+//#include "Backtrace.h"
 
 
 float                LmmsCore::s_framesPerTick;

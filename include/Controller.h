@@ -27,12 +27,12 @@
 #ifndef CONTROLLER_H
 #define CONTROLLER_H
 
-#include "Engine.h"
-#include "Model.h"
+//#include "Engine.h"
+//#include "Model.h"
 #include "AutomatableModel.h"
-#include "JournallingObject.h"
+//#include "JournallingObject.h"
 #include "templates.h"
-#include "ValueBuffer.h"
+//#include "ValueBuffer.h"
 
 class ControllerDialog;
 class Controller;

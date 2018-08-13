@@ -36,7 +36,7 @@ CompressorGDXControls::CompressorGDXControls( CompressorGDX* effect ) :
 	m_effect( effect ),
 	m_thresholdModel( 0.0f, 0.0f, 1.0f, 0.001f, this, tr( "Threshold" ) ),
 	m_ratioModel( 1.0f, 0.0f, 1.0f, 0.001f, this, tr( "Ratio" ) ),
-	m_outGainModel( 1.0f, 0.0f, 5.0f,  0.01f, this, tr( "Out gain" ) ),
+	m_outGainModel( 1.0f, 0.0f, 1.0f,  0.001f, this, tr( "Out gain" ) ),
 	m_modeModel( 1.0f, 0.0f, 1.0f, 0.001f, this, tr( "Mode" ) )
 {
 /*

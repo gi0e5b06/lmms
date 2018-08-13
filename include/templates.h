@@ -26,7 +26,8 @@
 #ifndef TEMPLATES_H
 #define TEMPLATES_H
 
-#include <QtAlgorithms>
+#include <QtGlobal>
+//#include <QtAlgorithms>
 
 
 template<class T>

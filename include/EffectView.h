@@ -27,9 +27,9 @@
 #ifndef EFFECT_VIEW_H
 #define EFFECT_VIEW_H
 
-#include "AutomatableModel.h"
-#include "PluginView.h"
+//#include "AutomatableModel.h"
 #include "Effect.h"
+#include "PluginView.h"
 
 class QGroupBox;
 class QLabel;

@@ -23,7 +23,7 @@
  */
 
 #include <QDomElement>
-#include <QLayout>
+//#include <QLayout>
 
 #include "debug.h"
 
@@ -33,14 +33,14 @@
 #include "Mixer.h"
 #include "MixerWorkerThread.h"
 #include "MixHelpers.h"
-#include "PluginFactory.h"
+//#include "PluginFactory.h"
 #include "Song.h"
 #include "InstrumentTrack.h"
 #include "BBTrackContainer.h"
 
 #include "EffectControlDialog.h"
 #include "EffectControls.h"
-#include "LadspaControlView.h"
+//#include "LadspaControlView.h"
 #include "Knob.h"
 
 FxRoute::FxRoute( FxChannel * from, FxChannel * to, float amount ) :

@@ -28,9 +28,9 @@
 
 #include <QMultiHash>
 
-#include "AutomatableModel.h"
+//#include "AutomatableModel.h"
 #include "ComboBoxModel.h"
-#include "JournallingObject.h"
+//#include "JournallingObject.h"
 #include "TempoSyncKnobModel.h"
 #include "lmms_basics.h"
 

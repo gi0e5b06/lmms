@@ -23,20 +23,7 @@
  *
  */
 
-#include "lmmsconfig.h"
-#include "lmmsversion.h"
-#include "versioninfo.h"
-
-#include "denormals.h"
-
-#include <QFileInfo>
-#include <QLocale>
-#include <QTimer>
-#include <QTranslator>
-#include <QApplication>
-#include <QMessageBox>
-#include <QPushButton>
-#include <QTextStream>
+#include <csignal>
 
 #ifdef LMMS_BUILD_WIN32
 #include <windows.h>
@@ -54,12 +41,26 @@
 #include <unistd.h>
 #endif
 
-#include <csignal>
+#ifdef LMMS_DEBUG_FPE
+#include <fenv.h> // For feenableexcept
+#include <execinfo.h> // For backtrace and backtrace_symbols_fd
+#include <unistd.h> // For STDERR_FILENO
+//#include <csignal> // To register the signal handler
+#endif
+
+#include <QFileInfo>
+#include <QLocale>
+#include <QTimer>
+#include <QTranslator>
+//#include <QApplication>
+#include <QMessageBox>
+#include <QPushButton>
+#include <QTextStream>
 
 #include "MainApplication.h"
 #include "MemoryManager.h"
 #include "ConfigManager.h"
-#include "NotePlayHandle.h"
+//#include "NotePlayHandle.h"
 #include "Engine.h"
 #include "GuiApplication.h"
 #include "ImportFilter.h"
@@ -68,19 +69,16 @@
 #include "ProjectRenderer.h"
 #include "RenderManager.h"
 #include "Song.h"
-#include "SetupDialog.h"
-
-#include "PerfLog.h"
+//#include "SetupDialog.h"
 
 #include "debug.h"
 #include "embed.h"
+#include "lmmsconfig.h"
+#include "lmmsversion.h"
+#include "versioninfo.h"
+#include "denormals.h"
+#include "PerfLog.h"
 
-#ifdef LMMS_DEBUG_FPE
-#include <fenv.h> // For feenableexcept
-#include <execinfo.h> // For backtrace and backtrace_symbols_fd
-#include <unistd.h> // For STDERR_FILENO
-#include <csignal> // To register the signal handler
-#endif
 
 #ifdef LMMS_DEBUG_FPE
 void signalHandler( int signum ) {

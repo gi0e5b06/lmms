@@ -44,9 +44,9 @@
 #include "interpolation.h"
 #include "MemoryManager.h"
 
-template<ch_cnt_t CHANNELS> class BasicFilters;
+template<ch_cnt_t CHANNELS = DEFAULT_CHANNELS> class BasicFilters;
 
-template<ch_cnt_t CHANNELS>
+template<ch_cnt_t CHANNELS = DEFAULT_CHANNELS>
 class LinkwitzRiley
 {
 	MM_OPERATORS
@@ -141,7 +141,7 @@ private:
 };
 typedef LinkwitzRiley<2> StereoLinkwitzRiley;
 
-template<ch_cnt_t CHANNELS>
+template<ch_cnt_t CHANNELS = DEFAULT_CHANNELS>
 class BiQuad
 {
 	MM_OPERATORS
@@ -184,7 +184,7 @@ private:
 };
 typedef BiQuad<2> StereoBiQuad;
 
-template<ch_cnt_t CHANNELS>
+template<ch_cnt_t CHANNELS = DEFAULT_CHANNELS>
 class OnePole
 {
 	MM_OPERATORS

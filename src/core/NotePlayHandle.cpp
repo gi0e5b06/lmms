@@ -24,9 +24,8 @@
  */
 
 #include "NotePlayHandle.h"
-#include "BasicFilters.h"
 #include "DetuningHelper.h"
-#include "InstrumentSoundShaping.h"
+//#include "InstrumentSoundShaping.h"
 #include "InstrumentTrack.h"
 #include "Instrument.h"
 #include "Mixer.h"

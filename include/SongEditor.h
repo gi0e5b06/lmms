@@ -27,7 +27,7 @@
 #ifndef SONG_EDITOR_H
 #define SONG_EDITOR_H
 
-#include <QVector>
+//#include <QVector>
 
 #include "ActionGroup.h"
 #include "Editor.h"

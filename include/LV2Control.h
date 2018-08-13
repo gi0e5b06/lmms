@@ -33,7 +33,7 @@
 
 #include "AutomatableModel.h"
 #include "TempoSyncKnobModel.h"
-#include "ValueBuffer.h"
+//#include "ValueBuffer.h"
 #include "LV2Base.h"
 
 typedef struct LV2PortDescription lv2_port_desc_t;

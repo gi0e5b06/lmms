@@ -29,7 +29,7 @@
 
 #include <QWidget>
 #include <QPixmap>
-#include <QCursor>
+//#include <QCursor>
 
 #include "Model.h"
 #include "ModelView.h"

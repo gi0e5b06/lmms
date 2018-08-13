@@ -31,6 +31,7 @@
 #include <alsa/asoundlib.h>
 
 #include <QMutex>
+#include <QMap>
 #include <QThread>
 #include <QTimer>
 

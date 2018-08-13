@@ -28,7 +28,7 @@
 
 #include <vector>
 
-#include "OutputSettings.h"
+//#include "OutputSettings.h"
 #include "ProjectRenderer.h"
 
 class RenderManager : public QObject

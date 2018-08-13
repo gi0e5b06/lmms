@@ -23,11 +23,13 @@
  *
  */
 
+#include "MidiPort.h"
+
 #include <QDomElement>
 
-#include "MidiPort.h"
 #include "MidiClient.h"
 #include "MidiDummy.h"
+#include "MidiEventProcessor.h"
 #include "Note.h"
 #include "Song.h"
 

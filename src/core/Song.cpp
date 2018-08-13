@@ -26,7 +26,7 @@
 
 #include <QTextStream>
 #include <QCoreApplication>
-#include <QDebug>
+//#include <QDebug>
 #include <QFile>
 #include <QFileInfo>
 #include <QMessageBox>
@@ -60,7 +60,7 @@
 #include "TimeLineWidget.h"
 #include "PeakController.h"
 #include "VersionedSaveDialog.h"
-#include "MemoryManagerArray.h"
+//#include "MemoryManagerArray.h"
 
 
 tick_t MidiTime::s_ticksPerTact = DefaultTicksPerTact;
@@ -1681,7 +1681,7 @@ void Song::exportProjectMidi()
                 */
 		ExportFilter *exf = dynamic_cast<ExportFilter *> (Plugin::instantiate("midiexport", NULL, NULL));
 		if (exf==NULL) {
-			qDebug() << "failed to load midi export filter!";
+			qWarning("Warning: Failed to load midi export filter");
 			return;
 		}
                 //exf->tryExport(tracks, tracks_BB, getTempo(), m_masterPitchModel.value(), export_filename);
@@ -1757,7 +1757,7 @@ void Song::exportProjectVideoLine()
                 */
 		ExportFilter *exf = dynamic_cast<ExportFilter *> (Plugin::instantiate("videolineexport", NULL, NULL));
 		if (exf==NULL) {
-			qCritical("Song::exportProjectVideoLine: Failed to load videoline export filter");
+			qWarning("Warning: Failed to load videoline export filter");
 			return;
 		}
 		//exf->tryExport(tracks, tracks_BB, getTempo(), loops, export_filename);

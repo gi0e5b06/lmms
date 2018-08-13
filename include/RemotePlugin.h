@@ -25,6 +25,11 @@
 #ifndef REMOTE_PLUGIN_H
 #define REMOTE_PLUGIN_H
 
+// bad but should be on top:
+#include "export.h"
+#include "MidiEvent.h"
+#include "VstSyncData.h"
+
 #include <vector>
 #include <cstdio>
 #include <cstdlib>
@@ -92,11 +97,6 @@ typedef int32_t key_t;
 
 #endif
 
-//#include <QtGlobal>
-
-#include "export.h"
-#include "MidiEvent.h"
-#include "VstSyncData.h"
 
 #ifdef SYNC_WITH_SHM_FIFO
 // sometimes we need to exchange bigger messages (e.g. for VST parameter dumps)

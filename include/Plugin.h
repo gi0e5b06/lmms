@@ -27,7 +27,7 @@
 
 #include <QDomDocument>
 #include <QMap>
-#include <QObject>
+//#include <QObject>
 //#include <QStringList>
 
 #include "JournallingObject.h"

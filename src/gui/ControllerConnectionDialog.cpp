@@ -43,6 +43,7 @@
 #include "ComboBox.h"
 #include "GroupBox.h"
 #include "Song.h"
+#include "TabWidget.h"
 #include "ToolButton.h"
 
 #include "gui_templates.h"

@@ -25,10 +25,10 @@
 #ifndef LFO_CONTROLLER_H
 #define LFO_CONTROLLER_H
 
-#include <QWidget>
+//#include <QWidget>
 
-#include "Model.h"
-#include "AutomatableModel.h"
+//#include "Model.h"
+//#include "AutomatableModel.h"
 #include "Controller.h"
 #include "ControllerDialog.h"
 #include "TempoSyncKnobModel.h"

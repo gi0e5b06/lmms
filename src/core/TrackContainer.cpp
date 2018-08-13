@@ -24,7 +24,7 @@
  */
 
 
-#include <QApplication>
+#include <QCoreApplication>
 #include <QProgressDialog>
 #include <QDomElement>
 #include <QWriteLocker>

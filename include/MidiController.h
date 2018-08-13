@@ -27,8 +27,8 @@
 
 #include <QWidget>
 
-#include "AutomatableModel.h"
-#include "ComboBoxModel.h"
+//#include "AutomatableModel.h"
+//#include "ComboBoxModel.h"
 #include "Controller.h"
 #include "MidiEventProcessor.h"
 #include "MidiPort.h"

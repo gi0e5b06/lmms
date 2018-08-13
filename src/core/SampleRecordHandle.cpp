@@ -24,12 +24,14 @@
 
 
 #include "SampleRecordHandle.h"
+
 #include "BBTrack.h"
 #include "Engine.h"
-#include "InstrumentTrack.h"
+//#include "InstrumentTrack.h"
 #include "Mixer.h"
 #include "SampleBuffer.h"
 #include "SampleTrack.h"
+
 #include "debug.h"
 
 
@@ -94,7 +96,7 @@ bool SampleRecordHandle::isFinished() const
 
 bool SampleRecordHandle::isFromTrack( const Track * _track ) const
 {
-	return( m_track == _track || m_bbTrack == _track );
+	return m_track == _track || m_bbTrack == _track;
 }
 
 

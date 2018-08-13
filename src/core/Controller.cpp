@@ -29,7 +29,8 @@
 #include <QVector>
 
 
-#include "Song.h"
+//#include "Song.h"
+#include "Engine.h"
 #include "Mixer.h"
 #include "ControllerConnection.h"
 #include "ControllerDialog.h"

@@ -33,12 +33,16 @@
 #include "PlayHandle.h"
 #include "Track.h"
 
-class QReadWriteLock;
+#include "BasicFilters.h"
+//#include "InstrumentTrack.h"
+
+//class QReadWriteLock;
+
+//template <ch_cnt_t = DEFAULT_CHANNELS> class BasicFilters;
+
+
 class InstrumentTrack;
 class NotePlayHandle;
-
-template <ch_cnt_t = DEFAULT_CHANNELS>
-class BasicFilters;
 typedef QList<NotePlayHandle*>       NotePlayHandleList;
 typedef QList<const NotePlayHandle*> ConstNotePlayHandleList;
 

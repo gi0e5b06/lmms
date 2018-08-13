@@ -27,17 +27,16 @@
 #ifndef PIANO_ROLL_H
 #define PIANO_ROLL_H
 
-#include <QVector>
+//#include <QVector>
 #include <QWidget>
-#include <QInputDialog>
 
 #include "Editor.h"
 #include "ComboBoxModel.h"
-#include "SerializingObject.h"
+//#include "SerializingObject.h"
 #include "Note.h"
 #include "lmms_basics.h"
 #include "Song.h"
-#include "ToolTip.h"
+//#include "ToolTip.h"
 
 class QPainter;
 class QPixmap;

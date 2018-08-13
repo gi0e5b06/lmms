@@ -25,9 +25,9 @@
 #ifndef ENVELOPE_AND_LFO_PARAMETERS_H
 #define ENVELOPE_AND_LFO_PARAMETERS_H
 
-#include <QVector>
+//#include <QVector>
 
-#include "JournallingObject.h"
+//#include "JournallingObject.h"
 #include "AutomatableModel.h"
 #include "SampleBuffer.h"
 #include "TempoSyncKnobModel.h"

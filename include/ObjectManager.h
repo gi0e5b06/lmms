@@ -10,7 +10,6 @@
 #include <QMutex>
 
 #include "Bitset.h"
-#include "ObjectManager.h"
 
 #include "export.h"
 

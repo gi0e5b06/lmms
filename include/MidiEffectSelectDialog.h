@@ -30,7 +30,7 @@
 #include <QStandardItemModel>
 
 #include "MidiEffectChain.h"
-#include "MidiEffect.h"
+//#include "MidiEffect.h"
 
 
 namespace Ui { class MidiEffectSelectDialog; }

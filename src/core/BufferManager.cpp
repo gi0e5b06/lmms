@@ -26,8 +26,8 @@
 
 #include "BufferManager.h"
 
-#include "Engine.h"
-#include "Mixer.h"
+//#include "Engine.h"
+//#include "Mixer.h"
 #include "MemoryManager.h"
 
 fpp_t BufferManager::s_framesPerPeriod = 0;

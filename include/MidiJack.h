@@ -31,8 +31,8 @@
 #include <jack/jack.h>
 #include <jack/midiport.h>
 
-#include <QFile>
-#include <QMutex>
+//#include <QFile>
+//#include <QMutex>
 #include <QThread>
 
 #include "MidiClient.h"

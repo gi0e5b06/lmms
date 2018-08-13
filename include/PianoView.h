@@ -25,8 +25,8 @@
 #ifndef PIANO_VIEW_H
 #define PIANO_VIEW_H
 
-#include <QPixmap>
-#include <QScrollBar>
+//#include <QPixmap>
+//#include <QScrollBar>
 
 //#include "ModelView.h"
 #include "PeripheralView.h"

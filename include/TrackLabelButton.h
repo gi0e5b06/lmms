@@ -27,7 +27,7 @@
 #define TRACK_LABEL_BUTTON_H
 
 #include <QToolButton>
-#include <QLineEdit>
+//#include <QLineEdit>
 
 class TrackView;
 

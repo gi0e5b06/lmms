@@ -24,8 +24,13 @@
  *
  */
 
+#include "PianoRoll.h"
+
+#include <math.h>
+
 #include <QApplication>
 #include <QClipboard>
+#include <QInputDialog>
 #include <QKeyEvent>
 #include <QLabel>
 #include <QLayout>
@@ -41,28 +46,25 @@
 #define __USE_XOPEN
 #endif
 
-#include <math.h>
+#include "debug.h"
+#include "embed.h"
+#include "lmms_qt.h"
+#include "gui_templates.h"
 
 #include "AutomationEditor.h"
 #include "ActionGroup.h"
 #include "ConfigManager.h"
-#include "PianoRoll.h"
 #include "BBTrackContainer.h"
 #include "Clipboard.h"
 #include "ComboBox.h"
 #include "DetuningHelper.h"
 #include "GuiApplication.h"
-#include "gui_templates.h"
 #include "InstrumentTrack.h"
 #include "MainWindow.h"
 #include "Pattern.h"
 #include "SongEditor.h"
 #include "TextFloat.h"
 #include "TimeLineWidget.h"
-
-#include "debug.h"
-#include "embed.h"
-#include "lmms_qt.h"
 
 
 #if QT_VERSION < 0x040800

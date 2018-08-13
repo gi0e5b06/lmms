@@ -32,7 +32,7 @@
 #include "Mixer.h"
 #include "AutomatableModel.h"
 #include "TempoSyncKnobModel.h"
-#include "MemoryManager.h"
+//#include "MemoryManager.h"
 
 class EffectChain;
 class EffectControls;

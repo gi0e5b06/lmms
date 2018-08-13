@@ -23,6 +23,8 @@
  *
  */
 
+#include <QObject>
+
 #include "MidiClient.h"
 #include "MidiPort.h"
 #include "Note.h"

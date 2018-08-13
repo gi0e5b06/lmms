@@ -24,6 +24,9 @@
  */
 #include "Pattern.h"
 
+#include <limits>
+#include <cmath>
+
 #include <QTimer>
 #include <QMenu>
 #include <QMouseEvent>
@@ -31,10 +34,10 @@
 #include <QPushButton>
 
 #include "Backtrace.h"
+#include "embed.h"
 
 #include "InstrumentTrack.h"
 #include "gui_templates.h"
-#include "embed.h"
 #include "GuiApplication.h"
 #include "PianoRoll.h"
 #include "RenameDialog.h"
@@ -43,9 +46,7 @@
 #include "BBTrackContainer.h"
 #include "StringPairDrag.h"
 #include "MainWindow.h"
-
-#include <limits>
-#include <cmath>
+#include "ToolTip.h"
 
 QPixmap * PatternView::s_stepBtnOn0 = NULL;
 QPixmap * PatternView::s_stepBtnOn200 = NULL;

@@ -23,13 +23,13 @@
  *
  */
 
-#include <QDebug>
+//#include <QDebug>
 
 #include "ConfigManager.h"
 #include "Engine.h"
 #include "Mixer.h"
 #include "VstSyncController.h"
-#include "RemotePlugin.h"
+//#include "RemotePlugin.h"
 
 #ifndef USE_QT_SHMEM
 #include <stdio.h>
@@ -57,7 +57,8 @@ VstSyncController::VstSyncController() :
 		}
 		else
 		{
-			qWarning() << QString( "Failed to allocate shared memory for VST sync: %1" ).arg( m_shm.errorString() );
+			qWarning("Warning: Failed to allocate shared memory for VST sync: %s",
+                                 qPrintable(m_shm.errorString()));
 		}
 #else
 		key_t key; // make the key:
@@ -69,7 +70,7 @@ VstSyncController::VstSyncController() :
 		{	// connect to shared memory segment
 			if( ( m_shmID = shmget( key, sizeof( VstSyncData ), 0644 | IPC_CREAT ) ) == -1 )
 			{
-				qWarning( "VstSyncController: shmget() failed" );
+				qWarning( "Warning: VstSyncController: shmget() failed" );
 			}
 			else
 			{		// attach segment
@@ -84,7 +85,7 @@ VstSyncController::VstSyncController() :
 	}
 	else
 	{
-		qWarning( "VST sync support disabled in your configuration" );
+		qWarning( "Warning: VST sync support disabled in your configuration" );
 	}
 
 	if( m_syncData == NULL )

@@ -26,7 +26,7 @@
 #ifndef TRACK_H
 #define TRACK_H
 
-#include <QVector>
+//#include <QVector>
 //#include <QList>
 #include <QWidget>
 //#include <QSignalMapper>
@@ -34,9 +34,9 @@
 #include <QMimeData>
 
 #include "lmms_basics.h"
-#include "MidiTime.h"
+//#include "MidiTime.h"
 #include "Rubberband.h"
-#include "JournallingObject.h"
+//#include "JournallingObject.h"
 #include "AutomatableModel.h"
 #include "ModelView.h"
 #include "DataFile.h"

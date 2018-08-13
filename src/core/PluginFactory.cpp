@@ -24,9 +24,11 @@
 
 #include "PluginFactory.h"
 
-#include <QCoreApplication>
-#include <QDebug>
+#include <QApplication>
+//#include <QCoreApplication>
+//#include <QDebug>
 #include <QDir>
+#include <QSet>
 #include <QLibrary>
 
 #include "ConfigManager.h"
@@ -153,7 +155,7 @@ void PluginFactory::discoverPlugins()
 
 		if (! library->load()) {
 			m_errors[file.baseName()] = library->errorString();
-			qWarning("%s", library->errorString().toLocal8Bit().data());
+			qWarning("Warning: %s", qPrintable(library->errorString()));
 			continue;
 		}
 		if (library->resolve("lmms_plugin_main") == nullptr) {
@@ -169,8 +171,11 @@ void PluginFactory::discoverPlugins()
 		Plugin::Descriptor* pluginDescriptor = reinterpret_cast<Plugin::Descriptor*>(library->resolve(descriptorName.toUtf8().constData()));
 		if(pluginDescriptor == nullptr)
 		{
-			qWarning() << qApp->translate("PluginFactory", "LMMS plugin %1 does not have a plugin descriptor named %2!").
-						  arg(file.absoluteFilePath()).arg(descriptorName);
+			qWarning("Warning: %s",
+                                 qPrintable(QString
+                                            ("LMMS plugin %1 does not have a plugin descriptor named %2")
+                                            .arg(file.absoluteFilePath())
+                                            .arg(descriptorName)));
 			continue;
 		}
 

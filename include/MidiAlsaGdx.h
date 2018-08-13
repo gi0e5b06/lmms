@@ -35,7 +35,7 @@
 #include <QTimer>
 
 #include "MidiClient.h"
-
+#include "MidiEventProcessor.h"
 
 struct pollfd;
 //class QLineEdit;

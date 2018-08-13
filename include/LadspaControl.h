@@ -26,11 +26,11 @@
 #ifndef LADSPA_CONTROL_H
 #define LADSPA_CONTROL_H
 
-#include <ladspa.h>
+#include "ladspa.h"
 
 #include "AutomatableModel.h"
 #include "TempoSyncKnobModel.h"
-#include "ValueBuffer.h"
+//#include "ValueBuffer.h"
 
 
 typedef struct PortDescription port_desc_t;

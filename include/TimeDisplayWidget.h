@@ -26,7 +26,7 @@
 #ifndef _TIME_DISPLAY_WIDGET
 #define _TIME_DISPLAY_WIDGET
 
-#include <QWidget>
+//#include <QWidget>
 #include <QHBoxLayout>
 
 #include "LcdWidget.h"

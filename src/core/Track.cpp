@@ -40,15 +40,17 @@
 #include <cassert>
 #include <cmath>
 
-#include <QLayout>
+#include <QHBoxLayout>
 #include <QMenu>
 #include <QMouseEvent>
 #include <QPainter>
 #include <QStyleOption>
 #include <QUuid>
 
-#include "debug.h"
 #include "Backtrace.h"
+#include "debug.h"
+#include "embed.h"
+#include "gui_templates.h"
 
 #include "AutomationPattern.h"
 #include "AutomationTrack.h"
@@ -58,20 +60,19 @@
 #include "BBTrackContainer.h"
 #include "ConfigManager.h"
 #include "Clipboard.h"
-#include "embed.h"
 #include "Engine.h"
 #include "GuiApplication.h"
-#include "FxMixerView.h"
-#include "gui_templates.h"
-#include "MainWindow.h"
+//#include "FxMixerView.h"
+//#include "MainWindow.h"
 #include "Mixer.h"
 #include "Pattern.h"
-#include "ProjectJournal.h"
+//#include "ProjectJournal.h"
 #include "SampleTrack.h"
 #include "Song.h"
 #include "SongEditor.h"
 #include "StringPairDrag.h"
 #include "TextFloat.h"
+#include "ToolTip.h"
 
 
 /*! The width of the resize grip in pixels

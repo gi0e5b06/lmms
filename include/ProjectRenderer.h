@@ -28,7 +28,7 @@
 #include "AudioFileDevice.h"
 #include "lmmsconfig.h"
 #include "Mixer.h"
-#include "OutputSettings.h"
+//#include "OutputSettings.h"
 
 class RenderManager;
 

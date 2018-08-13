@@ -27,7 +27,7 @@
 #define TAB_BAR_H
 
 #include <QMap>
-#include <QLayout>
+#include <QBoxLayout>
 #include <QWidget>
 
 #include "export.h"

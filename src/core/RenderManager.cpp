@@ -24,12 +24,12 @@
 
 #include "RenderManager.h"
 
-#include <QDebug>
+//#include <QDebug>
 #include <QDir>
 #include <QFile>
 #include <QProcess>
 
-#include "BBTrack.h"
+//#include "BBTrack.h"
 #include "BBTrackContainer.h"
 #include "Song.h"
 

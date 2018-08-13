@@ -24,8 +24,8 @@
 
 #include "ProjectRenderer.h"
 
-#include <QFile>
-#include <QProcess>
+//#include <QFile>
+//#include <QProcess>
 
 #include "AudioFileAU.h"
 #include "AudioFileFlac.h"

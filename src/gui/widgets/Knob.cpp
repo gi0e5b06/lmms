@@ -23,6 +23,8 @@
  *
  */
 
+#include "Knob.h"
+
 #include <QApplication>
 //#include <QBitmap>
 #include <QFontMetrics>
@@ -35,22 +37,22 @@
 #define __USE_XOPEN
 #endif
 
-#include "debug.h"
-#include "lmms_math.h"
-//#include "PerfLog.h"
-
-#include "Knob.h"
 #include "CaptionMenu.h"
 #include "ConfigManager.h"
 #include "ControllerConnection.h"
-#include "embed.h"
-#include "gui_templates.h"
+#include "Engine.h"
 #include "GuiApplication.h"
 #include "MainWindow.h"
 #include "ProjectJournal.h"
 //#include "Song.h"
 #include "StringPairDrag.h"
 #include "TextFloat.h"
+
+#include "embed.h"
+#include "gui_templates.h"
+#include "debug.h"
+#include "lmms_math.h"
+//#include "PerfLog.h"
 
 
 TextFloat * Knob::s_textFloat = NULL;

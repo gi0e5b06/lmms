@@ -22,8 +22,8 @@
  *
  */
 
-#include <QDebug>
-#include <QDir>
+//#include <QDebug>
+//#include <QDir>
 #include <QLibrary>
 #include <QMessageBox>
 

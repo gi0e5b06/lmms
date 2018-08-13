@@ -27,7 +27,7 @@
 #include <QDir>
 
 #include "Backtrace.h"
-#include "ConfigManager.h"
+//#include "ConfigManager.h"
 #include "SampleBuffer.h"
 
 WaveForm::Set::Set()

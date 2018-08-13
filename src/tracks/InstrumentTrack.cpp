@@ -48,14 +48,12 @@
 #include "ControllerConnection.h"
 #include "EffectChain.h"
 #include "EffectRackView.h"
-#include "embed.h"
 #include "FileBrowser.h"
 #include "FxMixer.h"
 #include "FxMixerView.h"
 #include "GuiApplication.h"
 #include "InstrumentSoundShapingView.h"
 #include "FadeButton.h"
-#include "gui_templates.h"
 #include "Instrument.h"
 #include "InstrumentFunctionView.h"
 #include "InstrumentMidiIOView.h"
@@ -77,8 +75,12 @@
 //#include "SamplePlayHandle.h"
 #include "Song.h"
 #include "StringPairDrag.h"
+#include "TabWidget.h"
 #include "TrackContainerView.h"
 #include "TrackLabelButton.h"
+
+#include "embed.h"
+#include "gui_templates.h"
 #include "lmms_math.h"
 
 

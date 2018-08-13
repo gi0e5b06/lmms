@@ -25,14 +25,14 @@
 #ifndef FX_MIXER_VIEW_H
 #define FX_MIXER_VIEW_H
 
-#include <QWidget>
+//#include <QWidget>
 #include <QHBoxLayout>
 #include <QStackedLayout>
 #include <QScrollArea>
 
-#include "ModelView.h"
+//#include "ModelView.h"
 //#include "Engine.h"
-#include "Effect.h"
+//#include "Effect.h"
 #include "Fader.h"
 #include "Knob.h"
 #include "PixmapButton.h"

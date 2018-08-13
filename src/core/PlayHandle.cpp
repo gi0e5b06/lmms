@@ -24,11 +24,11 @@
 
 #include "PlayHandle.h"
 #include "BufferManager.h"
-#include "Engine.h"
-#include "Mixer.h"
+//#include "Engine.h"
+//#include "Mixer.h"
 
 #include <QThread>
-#include <QDebug>
+//#include <QDebug>
 
 #include <iterator>
 

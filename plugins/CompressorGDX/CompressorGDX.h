@@ -45,8 +45,8 @@ class PLUGIN_EXPORT CompressorGDX : public Effect
 
  private:
 	CompressorGDXControls m_gdxControls;
-        float             m_fact0,m_fact1;
-        float             m_sact0,m_sact1;
+        //float             m_fact0,m_fact1;
+        //float             m_sact0,m_sact1;
 
 	friend class CompressorGDXControls;
 

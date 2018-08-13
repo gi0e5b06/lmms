@@ -24,8 +24,9 @@
  *
  */
 
-#include <QCoreApplication>
-#include <QDebug>
+#include <QApplication>
+//#include <QCoreApplication>
+//#include <QDebug>
 #include <QDir>
 #include <QLibrary>
 
@@ -92,7 +93,7 @@ LadspaManager::LadspaManager()
 			}
 			else
 			{
-				qWarning() << plugin_lib.errorString();
+				qWarning("Warning: %s",qPrintable(plugin_lib.errorString()));
 			}
 		}
 	}

@@ -24,23 +24,24 @@
 
 #define COMPILE_REMOTE_PLUGIN_BASE
 //#define DEBUG_REMOTE_PLUGIN
-#ifdef DEBUG_REMOTE_PLUGIN
-#include <QDebug>
-#endif
 
-#include "BufferManager.h"
-#include "RemotePlugin.h"
-#include "Mixer.h"
-#include "Engine.h"
+//#ifdef DEBUG_REMOTE_PLUGIN
+//#include <QDebug>
+//#endif
 
 #include <QDir>
+
+#include "RemotePlugin.h"
+
+#include "BufferManager.h"
+#include "Mixer.h"
+#include "Engine.h"
 
 #ifndef SYNC_WITH_SHM_FIFO
 #include <QUuid>
 #include <sys/socket.h>
 #include <sys/un.h>
 #endif
-
 
 // simple helper thread monitoring our RemotePlugin - if process terminates
 // unexpectedly invalidate plugin so LMMS doesn't lock up
@@ -61,8 +62,7 @@ void ProcessWatcher::run()
 	}
 	if( !m_quit )
 	{
-		fprintf( stderr,
-				"remote plugin died! invalidating now.\n" );
+                qWarning("Warning: RemotePlugin died, invalidating now" );
 		m_plugin->invalidate();
 	}
 }
@@ -104,7 +104,7 @@ RemotePlugin::RemotePlugin() :
 	if ( length >= sizeof sa.sun_path )
 	{
 		length = sizeof sa.sun_path - 1;
-		qWarning( "Socket path too long." );
+		qWarning( "Warning: RemotePlugin: Socket path too long." );
 	}
 	memcpy( sa.sun_path, path, length );
 	sa.sun_path[length] = '\0';
@@ -112,13 +112,13 @@ RemotePlugin::RemotePlugin() :
 	m_server = socket( PF_LOCAL, SOCK_STREAM, 0 );
 	if ( m_server == -1 )
 	{
-		qWarning( "Unable to start the server." );
+		qWarning( "Warning: RemotePlugin: Unable to start the server." );
 	}
 	remove( path );
 	int ret = bind( m_server, (struct sockaddr *) &sa, sizeof sa );
 	if ( ret == -1 || listen( m_server, 1 ) == -1 )
 	{
-		qWarning( "Unable to start the server." );
+		qWarning( "Warning: RemotePlugin: Unable to bind the server." );
 	}
 #endif
 }
@@ -156,7 +156,7 @@ RemotePlugin::~RemotePlugin()
 #ifndef SYNC_WITH_SHM_FIFO
 	if ( close( m_server ) == -1)
 	{
-		qWarning( "Error freeing resources." );
+		qWarning( "Warning: RemotePlugin: Error freeing resources" );
 	}
 	remove( m_socketFile.toUtf8().constData() );
 #endif
@@ -195,7 +195,7 @@ bool RemotePlugin::init( const QString &pluginExecutable,
 	if( ! QFile( exec ).exists() )
 	{
 		qWarning( "Remote plugin '%s' not found.",
-						exec.toUtf8().constData() );
+                          qPrintable(exec));
 		m_failed = true;
 		invalidate();
 		unlock();
@@ -230,18 +230,18 @@ bool RemotePlugin::init( const QString &pluginExecutable,
 	switch ( poll( &pollin, 1, 30000 ) )
 	{
 		case -1:
-			qWarning( "Unexpected poll error." );
+			qWarning( "Warning: RemotePlugin: Unexpected poll error" );
 			break;
 
 		case 0:
-			qWarning( "Remote plugin did not connect." );
+			qWarning( "Warning: RemotePlugin: Did not connect" );
 			break;
 
 		default:
 			m_socket = accept( m_server, NULL, NULL );
 			if ( m_socket == -1 )
 			{
-				qWarning( "Unexpected socket error." );
+				qWarning( "Warning: RemotePlugin: Unexpected socket error" );
 			}
 	}
 #endif
@@ -494,8 +494,8 @@ bool RemotePlugin::processMessage( const message & _m )
 			break;
 
 		case IdDebugMessage:
-			fprintf( stderr, "RemotePlugin::DebugMessage: %s",
-						_m.getString( 0 ).c_str() );
+			qDebug( "Notice: RemotePlugin: DebugMessage: %s",
+                                _m.getString( 0 ).c_str() );
 			break;
 
 		case IdProcessingDone:

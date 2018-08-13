@@ -28,10 +28,12 @@
 
 #include <cmath>
 
-#include <QDebug>
+//#include <QDebug>
 #include <QFile>
 #include <QFileInfo>
+#include <QLocale>
 #include <QMessageBox>
+#include <QTextStream>
 
 #include "base64.h"
 #include "ConfigManager.h"
@@ -1109,7 +1111,9 @@ void DataFile::loadData( const QByteArray & _data, const QString & _sourceFile )
 		}
 		if( line >= 0 && col >= 0 )
 		{
-			qWarning() << "at line" << line << "column" << errorMsg;
+			qWarning("Warning: %s#%d:%d: %s",
+                                 qPrintable(_sourceFile), line, col,
+                                 qPrintable(errorMsg));
 			if( gui )
 			{
 				QMessageBox::critical( NULL,

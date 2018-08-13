@@ -27,12 +27,12 @@
 #define MIDI_PORT_H
 
 #include <QList>
-#include <QMap>
+//#include <QMap>
 #include <QString>
 
-#include "Midi.h"
-#include "MidiTime.h"
-#include "AutomatableModel.h"
+//#include "Midi.h"
+//#include "MidiTime.h"
+//#include "AutomatableModel.h"
 #include "ComboBoxModel.h"
 
 class MidiClient;

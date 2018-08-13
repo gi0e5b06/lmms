@@ -26,9 +26,9 @@
 #ifndef PATTERN_H
 #define PATTERN_H
 
-#include <QVector>
-#include <QWidget>
-#include <QDialog>
+//#include <QVector>
+//#include <QWidget>
+//#include <QDialog>
 //#include <QThread>
 #include <QPixmap>
 #include <QStaticText>

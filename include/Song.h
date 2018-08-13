@@ -30,8 +30,9 @@
 //#include <QSharedMemory>
 //#include <QVector>
 
-#include "TrackContainer.h"
+//#include "TrackContainer.h"
 #include "Controller.h"
+#include "Engine.h"
 #include "MeterModel.h"
 #include "Mixer.h"
 #include "VstSyncController.h"
