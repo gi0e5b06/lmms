@@ -22,8 +22,8 @@
  *
  */
 
-#include <QComboBox>
-#include <QLineEdit>
+//#include <QComboBox>
+//#include <QLineEdit>
 
 #include "AudioAlsa.h"
 

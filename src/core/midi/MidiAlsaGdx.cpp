@@ -24,7 +24,7 @@
 
 #include "MidiAlsaGdx.h"
 
-#include <QRegExp>
+//#include <QRegExp>
 #include <QQueue>
 #include <QMultiHash>
 
@@ -34,11 +34,11 @@
 
 #include "ConfigManager.h"
 #include "Engine.h"
-#include "Mixer.h"
+//#include "Mixer.h"
 #include "gui_templates.h"
 #include "Song.h"
 #include "MidiPort.h"
-#include "Note.h"
+//#include "Note.h"
 
 #ifdef LMMS_HAVE_ALSA
 

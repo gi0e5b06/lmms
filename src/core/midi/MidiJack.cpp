@@ -26,7 +26,7 @@
 
 #ifdef LMMS_HAVE_JACK
 
-#include <QCompleter>
+//#include <QCompleter>
 #include <QMessageBox>
 
 #include "ConfigManager.h"

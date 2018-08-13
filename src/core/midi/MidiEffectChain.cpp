@@ -28,11 +28,11 @@
 
 #include "MidiEffectChain.h"
 
-#include "AutomatableModel.h"
+//#include "AutomatableModel.h"
 #include "MidiEffect.h"
 #include "DummyMidiEffect.h"
-#include "MixHelpers.h"
-#include "Song.h"
+//#include "MixHelpers.h"
+//#include "Song.h"
 
 
 MidiEffectChain::MidiEffectChain( Model * _parent ) :

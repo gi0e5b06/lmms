@@ -27,12 +27,12 @@
 
 #ifdef LMMS_BUILD_APPLE
 
-#include <QtAlgorithms>
+//#include <QtAlgorithms>
 #include <algorithm>
 
-#include "ConfigManager.h"
+//#include "ConfigManager.h"
 #include "MidiPort.h"
-#include "Note.h"
+//#include "Note.h"
 
 #include <CoreMIDI/CoreMIDI.h>
 

@@ -27,7 +27,7 @@
 
 #ifdef LMMS_HAVE_SNDIO
 
-#include <QFileInfo>
+//#include <QFileInfo>
 #include <QLabel>
 #include <QLineEdit>
 

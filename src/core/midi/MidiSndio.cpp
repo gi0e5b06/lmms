@@ -27,8 +27,8 @@
 
 #ifdef LMMS_HAVE_SNDIO
 
-#include <QLabel>
-#include <QLineEdit>
+//#include <QLabel>
+//#include <QLineEdit>
 
 #ifdef LMMS_HAVE_STDLIB_H
 #include <stdlib.h>

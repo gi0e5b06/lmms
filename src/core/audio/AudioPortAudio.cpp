@@ -39,7 +39,7 @@ void AudioPortAudioSetupUtil::updateChannels()
 #ifdef LMMS_HAVE_PORTAUDIO
 
 #include <QLabel>
-#include <QLineEdit>
+//#include <QLineEdit>
 
 #include "Engine.h"
 #include "ConfigManager.h"

@@ -23,7 +23,7 @@
  */
 
 #include "MidiWinMM.h"
-#include "Note.h"
+//#include "Note.h"
 
 #ifdef LMMS_BUILD_WIN32
 

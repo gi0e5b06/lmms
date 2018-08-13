@@ -25,6 +25,7 @@
 #ifndef MIDI_CLIENT_H
 #define MIDI_CLIENT_H
 
+#include <QObject>
 #include <QStringList>
 #include <QVector>
 

@@ -28,7 +28,7 @@
 #include "gui_templates.h"
 #include "Song.h"
 #include "MidiPort.h"
-#include "Note.h"
+//#include "Note.h"
 
 
 #ifdef LMMS_HAVE_ALSA

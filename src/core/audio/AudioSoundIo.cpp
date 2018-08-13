@@ -27,9 +27,9 @@
 #ifdef LMMS_HAVE_SOUNDIO
 
 #include <QLabel>
-#include <QLineEdit>
+//#include <QLineEdit>
 
-#include "Engine.h"
+//#include "Engine.h"
 #include "debug.h"
 #include "ConfigManager.h"
 #include "gui_templates.h"
