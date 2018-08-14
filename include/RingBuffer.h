@@ -27,10 +27,14 @@
 #ifndef RINGBUFFER_H
 #define RINGBUFFER_H
 
-#include <QObject>
-#include "lmms_basics.h"
-#include "lmms_math.h"
 #include "MemoryManager.h"
+
+#include "lmms_basics.h"
+//#include "lmms_math.h"
+
+#include <QObject>
+
+#include <cmath>
 
 class EXPORT RingBuffer : public QObject
 {

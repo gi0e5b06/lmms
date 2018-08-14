@@ -39,8 +39,6 @@
 
 #include "PeripheralLaunchpadView.h"
 
-#include <cmath>
-
 //#include <QCursor>
 #include <QKeyEvent>
 #include <QPainter>
@@ -52,8 +50,11 @@
 //#include "MainWindow.h"
 #include "Piano.h"
 #include "StringPairDrag.h"
-#include "embed.h"
-#include "gui_templates.h"
+
+//#include "embed.h"
+//#include "gui_templates.h"
+
+#include <cmath>
 
 // QPixmap * PeripheralLaunchpadView::s_padPm = NULL;           /*!< A pad
 // released

@@ -26,7 +26,7 @@
 
 #include "ui_MidiEffectSelectDialog.h"
 
-#include "gui_templates.h"
+//#include "gui_templates.h"
 #include "embed.h"
 #include "PluginFactory.h"
 

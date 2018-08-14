@@ -24,6 +24,8 @@
 
 #include "lmms_qt.h"
 
+#include "lmms_basics.h" // REQUIRED
+
 QString TR_lmms_fix(QString _s)
 {
         // doc: t.replace(QRegExp("<i>([^<]*)</i>"), "\\emph{\\1}");

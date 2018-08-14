@@ -28,7 +28,7 @@
 #include "ComboBoxModel.h"
 #include "MemoryManager.h"
 #include "lmms_basics.h"
-#include "lmms_math.h"
+//#include "lmms_math.h"
 
 // fastnormsinf01 -> WaveForm::sin::f(x)
 

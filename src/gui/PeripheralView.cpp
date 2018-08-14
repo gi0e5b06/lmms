@@ -38,19 +38,20 @@
 
 #include "PeripheralView.h"
 
-#include <cmath>
+#include "AutomatableModelView.h"
+#include "CaptionMenu.h"
+#include "InstrumentTrack.h"
+#include "Piano.h"
+
+#include "embed.h"
+//#include "gui_templates.h"
 
 #include <QCursor>
 #include <QKeyEvent>
 //#include <QPainter>
 //#include <QVBoxLayout>
 
-#include "CaptionMenu.h"
-#include "InstrumentTrack.h"
-#include "Piano.h"
-
-#include "embed.h"
-#include "gui_templates.h"
+#include <cmath>
 
 /*! \brief Create a new peripheral display view
  *

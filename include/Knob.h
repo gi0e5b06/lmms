@@ -26,12 +26,11 @@
 #ifndef KNOB_H
 #define KNOB_H
 
+#include "AutomatableModelView.h"
+//#include "templates.h"
+
 #include <QWidget>
 #include <QPoint>
-
-#include "AutomatableModelView.h"
-#include "templates.h"
-
 
 class QPixmap;
 class TextFloat;

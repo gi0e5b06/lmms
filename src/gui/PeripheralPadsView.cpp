@@ -39,21 +39,22 @@
 
 #include "PeripheralPadsView.h"
 
-#include <cmath>
-
-//#include <QCursor>
-#include <QKeyEvent>
-#include <QPainter>
-#include <QVBoxLayout>
-
 //#include "CaptionMenu.h"
 #include "InstrumentTrack.h"
 //#include "Knob.h"
 //#include "MainWindow.h"
 #include "Piano.h"
 #include "StringPairDrag.h"
-#include "embed.h"
+
+//#include "embed.h"
 #include "gui_templates.h"
+
+//#include <QCursor>
+#include <QKeyEvent>
+#include <QPainter>
+#include <QVBoxLayout>
+
+#include <cmath>
 
 // QPixmap * PeripheralPadsView::s_padPm = NULL;           /*!< A pad released
 // */ QPixmap * PeripheralPadsView::s_padPressedPm = NULL;    /*!< A pad

@@ -26,12 +26,14 @@
 #include <QDomElement>
 //#include <QObject>
 
-#include "lmms_math.h"
 #include "Engine.h"
 #include "Mixer.h"
 #include "MidiClient.h"
 #include "MidiController.h"
 //#include "Song.h"
+
+#include "lmms_math.h" // REQUIRED
+
 
 MidiController::MidiController( Model * _parent ) :
 	Controller( Controller::MidiController, _parent, tr( "MIDI Controller" ) ),

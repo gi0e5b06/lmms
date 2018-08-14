@@ -39,7 +39,7 @@
 #include <cmath>
 
 #include "lmms_basics.h"
-#include "templates.h"
+//#include "templates.h"
 #include "lmms_constants.h"
 #include "interpolation.h"
 #include "MemoryManager.h"

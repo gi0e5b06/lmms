@@ -47,8 +47,11 @@
 #include "Mixer.h"
 #include "Song.h"
 #include "SubWindow.h"
-#include "gui_templates.h"
-#include "lmms_math.h"
+#include "ToolTip.h"
+
+#include "embed.h"
+//#include "gui_templates.h"
+//#include "lmms_math.h"
 
 FxMixerView::FxMixerView() :
       QWidget(), ModelView(NULL, this), SerializingObjectHook()

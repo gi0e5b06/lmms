@@ -24,11 +24,12 @@
 
 #include "EffectSelectDialog.h"
 
-#include "ui_EffectSelectDialog.h"
+#include "ui_EffectSelectDialog.h" // REQUIRED
 
-#include "gui_templates.h"
-#include "embed.h"
 #include "PluginFactory.h"
+
+#include "embed.h"
+//#include "gui_templates.h"
 
 #include <QLabel>
 

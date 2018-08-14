@@ -24,27 +24,18 @@
 
 #include "SetupDialog.h"
 
-#include <QComboBox>
-#include <QImageReader>
-#include <QLabel>
-#include <QLayout>
-#include <QLineEdit>
-#include <QMessageBox>
-#include <QWhatsThis>
-#include <QScrollArea>
-
 #include "TabBar.h"
 #include "TabButton.h" // REQUIRED
 #include "gui_templates.h"
 #include "Mixer.h"
 #include "MainWindow.h"
 #include "ProjectJournal.h"
-#include "embed.h"
 #include "Engine.h"
-#include "debug.h"
 #include "ToolTip.h"
 #include "FileDialog.h"
 
+//#include "debug.h"
+#include "embed.h"
 
 // platform-specific audio-interface-classes
 #include "AudioAlsa.h"
@@ -69,6 +60,15 @@
 #include "MidiApple.h"
 #include "MidiDummy.h"
 
+// Qt
+#include <QComboBox>
+#include <QImageReader>
+#include <QLabel>
+#include <QLayout>
+#include <QLineEdit>
+#include <QMessageBox>
+#include <QWhatsThis>
+#include <QScrollArea>
 
 
 inline void labelWidget( QWidget * _w, const QString & _txt )

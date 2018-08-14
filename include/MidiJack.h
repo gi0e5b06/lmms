@@ -28,15 +28,16 @@
 #include "lmmsconfig.h"
 
 #ifdef LMMS_HAVE_JACK
-#include <jack/jack.h>
-#include <jack/midiport.h>
+
+#include "AudioJack.h"
+#include "MidiClient.h"
 
 //#include <QFile>
 //#include <QMutex>
 #include <QThread>
 
-#include "MidiClient.h"
-#include "AudioJack.h"
+//#include <jack/jack.h>
+#include <jack/midiport.h>
 
 #define	JACK_MIDI_BUFFER_MAX 64 /* events */
 

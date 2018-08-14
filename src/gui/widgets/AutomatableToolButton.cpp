@@ -22,10 +22,6 @@
  *
  */
 
-#include <QMouseEvent>
-
-#include "debug.h"
-
 #include "AutomatableToolButton.h"
 
 #include "CaptionMenu.h"
@@ -33,6 +29,10 @@
 //#include "MainWindow.h"
 #include "ProjectJournal.h"
 #include "StringPairDrag.h"
+
+#include <QMouseEvent>
+
+//#include "debug.h"
 
 
 

@@ -27,13 +27,14 @@
 #ifndef GRAPH_H
 #define GRAPH_H
 
+#include "Model.h"
+#include "ModelView.h"
+
+//#include "lmms_basics.h"
+
 #include <QWidget>
 #include <QPixmap>
 //#include <QCursor>
-
-#include "Model.h"
-#include "ModelView.h"
-#include "lmms_basics.h"
 
 class graphModel;
 

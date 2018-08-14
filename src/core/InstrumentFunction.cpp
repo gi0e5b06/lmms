@@ -25,10 +25,6 @@
 
 #include "InstrumentFunction.h"
 
-#include <time.h>
-
-#include <QDomElement>
-
 #include "Engine.h"
 #include "InstrumentFunctionView.h"
 #include "InstrumentTrack.h"
@@ -36,8 +32,14 @@
 #include "Piano.h"
 #include "PresetPreviewPlayHandle.h"
 #include "Song.h"
+
+#include <QDomElement>
+
 #include "embed.h"
-#include "lmms_math.h"
+//#include "lmms_math.h"
+
+#include <time.h>
+
 
 InstrumentFunction::InstrumentFunction(Model* _parent, QString _name) :
       Model(_parent, _name), m_enabledModel(false, this),

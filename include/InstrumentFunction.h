@@ -32,7 +32,8 @@
 #include "ComboBoxModel.h"
 //#include "JournallingObject.h"
 #include "TempoSyncKnobModel.h"
-#include "lmms_basics.h"
+
+//#include "lmms_basics.h"
 
 class InstrumentTrack;
 class NotePlayHandle;

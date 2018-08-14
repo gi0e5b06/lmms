@@ -22,18 +22,21 @@
  *
  */
 
-//#include <QComboBox>
-//#include <QLineEdit>
-
 #include "AudioAlsa.h"
 
 #ifdef LMMS_HAVE_ALSA
 
-#include "endian_handling.h"
 #include "ConfigManager.h"
 #include "Engine.h"
 #include "Mixer.h"
-#include "gui_templates.h"
+
+#include "endian_handling.h"
+//#include "gui_templates.h"
+#include "lmms_basics.h"
+#include "templates.h"
+
+//#include <QComboBox>
+//#include <QLineEdit>
 
 
 AudioAlsa::AudioAlsa( bool & _success_ful, Mixer*  _mixer ) :

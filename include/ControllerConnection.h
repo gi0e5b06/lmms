@@ -30,12 +30,12 @@
 #ifndef CONTROLLER_CONNECTION_H
 #define CONTROLLER_CONNECTION_H
 
-//#include <QObject>
-#include <QVector>
-
 #include "Controller.h"
 #include "JournallingObject.h"
 #include "ValueBuffer.h"
+
+//#include <QObject>
+#include <QVector>
 
 class ControllerConnection;
 

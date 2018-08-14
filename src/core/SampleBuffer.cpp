@@ -23,18 +23,17 @@
  *
  */
 
+#include "lmmsconfig.h"
+#include "base64.h"
+//#include "debug.h"
+#include "Backtrace.h"
+
 #include <QBuffer>
 #include <QFile>
 #include <QFileInfo>
 #include <QHash>
 #include <QMessageBox>
 #include <QPainter>
-
-#include "lmmsconfig.h"
-#include "base64.h"
-
-#include "debug.h"
-#include "Backtrace.h"
 
 #include <sndfile.h>
 
@@ -55,7 +54,7 @@
 
 #include "ConfigManager.h"
 #include "DrumSynth.h"
-#include "endian_handling.h"
+#include "endian_handling.h" // REQUIRED
 #include "Engine.h"
 #include "GuiApplication.h"
 #include "Mixer.h"

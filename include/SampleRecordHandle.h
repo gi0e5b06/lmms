@@ -26,11 +26,11 @@
 #ifndef SAMPLE_RECORD_HANDLE_H
 #define SAMPLE_RECORD_HANDLE_H
 
-//#include <QList>
-#include <QPair>
-
 #include "MidiTime.h"
 #include "PlayHandle.h"
+
+//#include <QList>
+#include <QPair>
 
 class BBTrack;
 class SampleBuffer;

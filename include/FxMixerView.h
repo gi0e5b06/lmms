@@ -36,8 +36,8 @@
 #include "Fader.h"
 #include "Knob.h"
 #include "PixmapButton.h"
-#include "ToolTip.h"
-#include "embed.h"
+//#include "ToolTip.h"
+//#include "embed.h"
 #include "EffectRackView.h"
 
 class QButtonGroup;

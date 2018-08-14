@@ -27,20 +27,18 @@
 
 #include <utility>
 
-//#include <QSharedMemory>
-//#include <QVector>
-
-//#include "TrackContainer.h"
 #include "Controller.h"
 #include "Engine.h"
 #include "MeterModel.h"
 #include "Mixer.h"
+#include "TrackContainer.h"
 #include "VstSyncController.h"
-#include "ExportFilter.h"
-
+//#include "ExportFilter.h"
 #include "ITransport.h"
 #include "MetaData.h"
 
+//#include <QSharedMemory>
+//#include <QVector>
 
 class AutomationTrack;
 class Pattern;

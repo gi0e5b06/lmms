@@ -48,15 +48,6 @@
 //#include <csignal> // To register the signal handler
 #endif
 
-#include <QFileInfo>
-#include <QLocale>
-#include <QTimer>
-#include <QTranslator>
-//#include <QApplication>
-#include <QMessageBox>
-#include <QPushButton>
-#include <QTextStream>
-
 #include "MainApplication.h"
 #include "MemoryManager.h"
 #include "ConfigManager.h"
@@ -78,6 +69,15 @@
 #include "versioninfo.h"
 #include "denormals.h"
 #include "PerfLog.h"
+
+#include <QFileInfo>
+#include <QLocale>
+#include <QTimer>
+#include <QTranslator>
+//#include <QApplication>
+#include <QMessageBox>
+#include <QPushButton>
+#include <QTextStream>
 
 
 #ifdef LMMS_DEBUG_FPE

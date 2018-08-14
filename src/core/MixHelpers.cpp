@@ -25,7 +25,8 @@
 #include "MixHelpers.h"
 
 #include "ValueBuffer.h"
-#include "lmms_math.h"
+
+#include "lmms_math.h" // REQUIRED
 
 namespace MixHelpers
 {
@@ -61,12 +62,10 @@ static inline void run(sampleFrame*    dst,
 /*! \brief Function for detecting silence - returns true if found */
 bool isSilent(const sampleFrame* _src, const f_cnt_t _frames)
 {
-    const sample_t silenceThreshold = 0.0000001f;
-
-    for(f_cnt_t f = _frames - 1; f >= 0; f-=5) //--f
+    for(f_cnt_t f = _frames - 1; f >= 0; f-=4) //--f
     {
-        if(fabsf(_src[f][0]) >= silenceThreshold
-           || fabsf(_src[f][1]) >= silenceThreshold)
+        if(fabsf(_src[f][0]) >= SILENCE
+           || fabsf(_src[f][1]) >= SILENCE)
         {
             return false;
         }
@@ -95,12 +94,14 @@ bool sanitize(sampleFrame* _src, const f_cnt_t _frames)
     bool found = false;
     for(f_cnt_t f = _frames - 1; f >= 0; --f)
     {
-        if(isinf(_src[f][0]) || isnan(_src[f][0]))
+        const sample_t s0=_src[f][0];
+        if(isinf(s0) || isnan(s0) || fabsf(s0)<SILENCE)
         {
             _src[f][0] = 0.f;
             found      = true;
         }
-        if(isinf(_src[f][1]) || isnan(_src[f][1]))
+        const sample_t s1=_src[f][1];
+        if(isinf(s1) || isnan(s1) || fabsf(s1)<SILENCE)
         {
             _src[f][1] = 0.f;
             found      = true;

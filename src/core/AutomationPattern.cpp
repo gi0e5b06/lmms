@@ -28,8 +28,6 @@
 
 #include "AutomationPattern.h"
 
-#include <cmath>
-
 #include "AutomationPatternView.h"
 #include "AutomationTrack.h"
 #include "BBTrackContainer.h"
@@ -37,6 +35,8 @@
 #include "ProjectJournal.h"
 #include "Song.h"
 #include "WaveForm.h"
+
+#include <cmath>
 
 int         AutomationPattern::s_quantization    = 1;
 const float AutomationPattern::DEFAULT_MIN_VALUE = 0;
@@ -510,7 +510,7 @@ float AutomationPattern::valueAt(timeMap::const_iterator v,
             float w0 = wf->f(0.f);
             float w1 = wf->f(1.f);
             float nw = qMax(
-                    1.f, round(rx * powf(2.f, m_waveRepeat) / 4.f / 192.f));
+                    1.f, roundf(rx * powf(2.f, m_waveRepeat) / 4.f / 192.f));
             float ph = fmodf(x * nw, 1.f);
             r += fabsf((1.f - m_waveRatio) * dy + m_waveRatio * my)
                  * (wf->f(ph) + (1.f - m_waveSkew) * (-w0 - x * (w1 - w0)))

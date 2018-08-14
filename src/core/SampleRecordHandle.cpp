@@ -32,7 +32,7 @@
 #include "SampleBuffer.h"
 #include "SampleTrack.h"
 
-#include "debug.h"
+#include "debug.h" // REQUIRED
 
 
 SampleRecordHandle::SampleRecordHandle( SampleTCO* tco ) :
@@ -56,7 +56,7 @@ SampleRecordHandle::~SampleRecordHandle()
 		createSampleBuffer( &sb );
 		m_tco->setSampleBuffer( sb );
 	}
-	
+
 	while( !m_buffers.empty() )
 	{
 		delete[] m_buffers.front().first;
@@ -104,7 +104,7 @@ bool SampleRecordHandle::isFromTrack( const Track * _track ) const
 
 f_cnt_t SampleRecordHandle::framesRecorded() const
 {
-	return( m_framesRecorded );
+	return m_framesRecorded;
 }
 
 

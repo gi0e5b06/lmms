@@ -25,14 +25,6 @@
 
 #include "Knob.h"
 
-#include <QApplication>
-//#include <QBitmap>
-#include <QFontMetrics>
-#include <QInputDialog>
-#include <QMouseEvent>
-#include <QPainter>
-#include <QWhatsThis>
-
 #ifndef __USE_XOPEN
 #define __USE_XOPEN
 #endif
@@ -50,9 +42,17 @@
 
 #include "embed.h"
 #include "gui_templates.h"
-#include "debug.h"
+//#include "debug.h"
 #include "lmms_math.h"
 //#include "PerfLog.h"
+
+#include <QApplication>
+//#include <QBitmap>
+#include <QFontMetrics>
+#include <QInputDialog>
+#include <QMouseEvent>
+#include <QPainter>
+#include <QWhatsThis>
 
 
 TextFloat * Knob::s_textFloat = NULL;

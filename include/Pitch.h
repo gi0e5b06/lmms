@@ -25,7 +25,7 @@
 #ifndef PITCH_H
 #define PITCH_H
 
-#include "lmms_basics.h"
+//#include "lmms_basics.h"
 //#include "Midi.h"
 
 typedef float pitch_t; //int16_t

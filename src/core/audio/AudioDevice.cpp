@@ -25,10 +25,10 @@
 #include <cstring>
 
 #include "AudioDevice.h"
-#include "ConfigManager.h"
-#include "debug.h"
-#include "Mixer.h"
 
+#include "ConfigManager.h"
+#include "debug.h" // REQUIRED
+#include "Mixer.h"
 
 
 AudioDevice::AudioDevice( const ch_cnt_t _channels, Mixer*  _mixer ) :

@@ -26,7 +26,8 @@
 #include <unistd.h>
 
 #include "AudioFileAU.h"
-#include "endian_handling.h"
+
+#include "endian_handling.h" // REQUIRED
 #include "Mixer.h"
 
 

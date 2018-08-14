@@ -26,9 +26,9 @@
 #define INSTRUMENT_PLAY_HANDLE_H
 
 #include "Instrument.h"
-#include "NotePlayHandle.h"
+//#include "NotePlayHandle.h"
 #include "PlayHandle.h"
-#include "export.h"
+//#include "export.h"
 
 class EXPORT InstrumentPlayHandle : public PlayHandle
 {

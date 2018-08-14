@@ -27,10 +27,12 @@
 #ifndef DELAY_H
 #define DELAY_H
 
-#include "lmms_basics.h"
-#include "lmms_math.h"
-#include "interpolation.h"
 #include "MemoryManager.h"
+
+#include "lmms_basics.h"
+//#include "lmms_math.h"
+#include "interpolation.h"
+
 
 // brief usage 
 

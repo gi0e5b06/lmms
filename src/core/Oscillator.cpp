@@ -328,7 +328,7 @@ inline bool Oscillator::syncOk( float _osc_coeff )
 	const float v1 = m_phase;
 	m_phase += _osc_coeff;
 	// check whether m_phase is in next period
-	return( floorf( m_phase ) > floorf( v1 ) );
+	return floorf( m_phase ) > floorf( v1 );
 }
 
 
@@ -342,7 +342,7 @@ float Oscillator::syncInit( sampleFrame * _ab, const fpp_t _frames,
 		m_subOsc->update( _ab, _frames, _chnl );
 	}
 	recalcPhase();
-	return( m_freq * m_detuning );
+	return m_freq * m_detuning;
 }
 
 
@@ -475,7 +475,7 @@ template<>
 inline sample_t Oscillator::getSample<Oscillator::SineWave>(
 							const float _sample )
 {
-	return( sinSample( _sample ) );
+	return sinSample( _sample );
 }
 
 
@@ -485,7 +485,7 @@ template<>
 inline sample_t Oscillator::getSample<Oscillator::TriangleWave>(
 							const float _sample )
 {
-	return( triangleSample( _sample ) );
+	return triangleSample( _sample );
 }
 
 
@@ -495,7 +495,7 @@ template<>
 inline sample_t Oscillator::getSample<Oscillator::SawWave>(
 							const float _sample )
 {
-	return( sawSample( _sample ) );
+	return sawSample( _sample );
 }
 
 
@@ -505,7 +505,7 @@ template<>
 inline sample_t Oscillator::getSample<Oscillator::SquareWave>(
 							const float _sample )
 {
-	return( squareSample( _sample ) );
+	return squareSample( _sample );
 }
 
 
@@ -515,7 +515,7 @@ template<>
 inline sample_t Oscillator::getSample<Oscillator::MoogSawWave>(
 							const float _sample )
 {
-	return( moogSawSample( _sample ) );
+	return moogSawSample( _sample );
 }
 
 
@@ -525,7 +525,7 @@ template<>
 inline sample_t Oscillator::getSample<Oscillator::ExponentialWave>(
 							const float _sample )
 {
-	return( expSample( _sample ) );
+	return expSample( _sample );
 }
 
 
@@ -535,7 +535,7 @@ template<>
 inline sample_t Oscillator::getSample<Oscillator::WhiteNoise>(
 							const float _sample )
 {
-	return( noiseSample( _sample ) );
+	return noiseSample( _sample );
 }
 
 
@@ -545,7 +545,7 @@ template<>
 inline sample_t Oscillator::getSample<Oscillator::UserDefinedWave>(
 							const float _sample )
 {
-	return( userWaveSample( _sample ) );
+	return userWaveSample( _sample );
 }
 
 

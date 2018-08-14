@@ -21,22 +21,19 @@
  *
  */
 
-
 #ifndef MEMORY_HELPER_H
 #define MEMORY_HELPER_H
+
+#include <cstdlib>
 
 /**
  * Helper class to alocate aligned memory and free it.
  */
-class MemoryHelper {
-public:
-
-	static void* alignedMalloc( size_t );
-
-	static void alignedFree( void* );
-
-private:
+class MemoryHelper
+{
+  public:
+    static void* alignedMalloc(size_t);
+    static void alignedFree(void*);
 };
 
 #endif
-

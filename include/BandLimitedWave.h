@@ -29,6 +29,8 @@
 class QDataStream;
 class QString;
 
+#include <cmath>
+
 #include "export.h"
 #include "interpolation.h"
 #include "lmms_basics.h"

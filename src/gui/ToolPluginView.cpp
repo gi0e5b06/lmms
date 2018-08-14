@@ -25,12 +25,13 @@
 
 #include "ToolPluginView.h"
 
-//#include <QIcon>
-
-#include "embed.h"
 #include "GuiApplication.h"
 #include "MainWindow.h"
 #include "ToolPlugin.h"
+
+#include "embed.h" // REQUIRED
+
+//#include <QIcon>
 
 
 ToolPluginView::ToolPluginView( ToolPlugin * _toolPlugin ) :

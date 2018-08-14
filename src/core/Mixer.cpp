@@ -24,8 +24,6 @@
 
 #include "Mixer.h"
 
-#include "denormals.h"
-
 #include "lmmsconfig.h"
 
 #include "AudioPort.h"
@@ -61,6 +59,8 @@
 
 #include "MemoryHelper.h"
 #include "BufferManager.h"
+
+#include "denormals.h"
 
 //typedef LocklessList<PlayHandle *>::Element LocklessListElement;
 

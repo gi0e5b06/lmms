@@ -25,14 +25,16 @@
 
 #include "FxLine.h"
 
-#include <QGraphicsProxyWidget>
-#include <QWhatsThis>
-
 #include "CaptionMenu.h"
 #include "FxMixer.h"
-#include "gui_templates.h"
 #include "GuiApplication.h"
 #include "Song.h"
+
+#include "embed.h"
+//#include "gui_templates.h"
+
+#include <QGraphicsProxyWidget>
+#include <QWhatsThis>
 
 
 const int FxLine::FxLineHeight    =457;//287

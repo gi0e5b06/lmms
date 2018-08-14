@@ -46,18 +46,19 @@
 
 #include "Fader.h"
 
-#include <QInputDialog>
-#include <QMouseEvent>
-#include <QPainter>
-
-#include "debug.h"
-#include "lmms_math.h"
-#include "embed.h"
 #include "CaptionMenu.h"
 #include "ConfigManager.h"
 #include "TextFloat.h"
 //#include "MainWindow.h"
 //#include "GuiApplication.h"
+
+//#include "debug.h"
+#include "lmms_math.h"
+#include "embed.h"
+
+#include <QInputDialog>
+#include <QMouseEvent>
+#include <QPainter>
 
 
 TextFloat * Fader::s_textFloat = NULL;

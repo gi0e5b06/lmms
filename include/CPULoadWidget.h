@@ -27,11 +27,11 @@
 #ifndef CPULOAD_WIDGET_H
 #define CPULOAD_WIDGET_H
 
+//#include "lmms_basics.h"
+
 #include <QPixmap>
 #include <QTimer>
 #include <QWidget>
-
-#include "lmms_basics.h"
 
 
 class CPULoadWidget : public QWidget

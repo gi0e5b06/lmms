@@ -25,18 +25,18 @@
 
 #include "LcdSpinBox.h"
 
+#include "CaptionMenu.h"
+#include "GuiApplication.h"
+#include "MainWindow.h"
+
+//#include "debug.h"
+
 #include <QApplication>
 //#include <QLabel>
 #include <QMouseEvent>
 //#include <QPainter>
 //#include <QStyleOptionFrameV2>
 #include <QInputDialog>
-
-#include "debug.h"
-
-#include "CaptionMenu.h"
-#include "GuiApplication.h"
-#include "MainWindow.h"
 
 
 

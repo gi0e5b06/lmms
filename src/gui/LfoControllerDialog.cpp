@@ -38,7 +38,7 @@
 #include "TempoSyncKnob.h"
 #include "ToolTip.h"
 
-#include "gui_templates.h"
+//#include "gui_templates.h"
 #include "embed.h"
 
 const int CD_ENV_KNOBS_LBL_Y = 11;

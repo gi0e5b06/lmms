@@ -62,7 +62,7 @@ void Instrument::deleteNotePluginData( NotePlayHandle * )
 
 f_cnt_t Instrument::beatLen( NotePlayHandle * ) const
 {
-	return( 0 );
+	return 0;
 }
 
 
@@ -82,7 +82,7 @@ Instrument * Instrument::instantiate( const QString & _plugin_name,
 
 	// not quite... so delete plugin and return dummy instrument
 	delete p;
-	return( new DummyInstrument( _instrument_track ) );
+	return new DummyInstrument( _instrument_track );
 }
 
 
@@ -90,7 +90,7 @@ Instrument * Instrument::instantiate( const QString & _plugin_name,
 
 bool Instrument::isFromTrack( const Track * _track ) const
 {
-	return( m_instrumentTrack == _track );
+	return (m_instrumentTrack == _track);
 }
 
 

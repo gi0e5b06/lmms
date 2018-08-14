@@ -24,17 +24,19 @@
 
 #include "PluginBrowser.h"
 
+#include "StringPairDrag.h"
+#include "PluginFactory.h"
+
+#include "embed.h"
+#include "templates.h"
+//#include "gui_templates.h"
+
+#include <QApplication>
 #include <QLabel>
 #include <QPainter>
 #include <QMouseEvent>
 #include <QScrollArea>
 #include <QStyleOption>
-
-#include "embed.h"
-#include "templates.h"
-#include "gui_templates.h"
-#include "StringPairDrag.h"
-#include "PluginFactory.h"
 
 
 static bool pluginBefore( const Plugin::Descriptor* d1, const Plugin::Descriptor* d2 )

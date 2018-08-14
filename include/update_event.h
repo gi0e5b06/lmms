@@ -26,8 +26,7 @@
 #ifndef UPDATE_EVENT_H
 #define UPDATE_EVENT_H
 
-#include "custom_events.h"
-
+#include "custom_events.h" // REQUIRED
 
 
 class updateEvent : public QEvent

@@ -39,7 +39,7 @@
 #include "export.h"
 #include "interpolation.h"
 #include "lmms_basics.h"
-#include "lmms_math.h"
+//#include "lmms_math.h"
 #include "shared_object.h"
 #include "MemoryManager.h"
 

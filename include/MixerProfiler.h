@@ -25,9 +25,9 @@
 #ifndef MIXER_PROFILER_H
 #define MIXER_PROFILER_H
 
-#include <QFile>
-
 #include "MicroTimer.h"
+#include "lmms_basics.h"
+#include <QFile>
 
 class MixerProfiler
 {

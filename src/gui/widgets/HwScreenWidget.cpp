@@ -22,15 +22,17 @@
  *
  */
 
+#include "HwScreenWidget.h"
+
+#include "embed.h"
+#include "gui_templates.h"
+
 //#include <QApplication>
 //#include <QLabel>
 //#include <QMouseEvent>
 #include <QPainter>
 #include <QStyleOptionFrameV2>
 
-#include "HwScreenWidget.h"
-#include "embed.h"
-#include "gui_templates.h"
 
 HwScreenWidget::HwScreenWidget(QWidget* parent, int columns, int rows,
 			       const QString & label, const QString & colorSet) :

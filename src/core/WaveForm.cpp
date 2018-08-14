@@ -24,11 +24,13 @@
 
 #include "WaveForm.h"
 
-#include <QDir>
-
 #include "Backtrace.h"
-//#include "ConfigManager.h"
 #include "SampleBuffer.h"
+//#include "ConfigManager.h"
+
+#include "lmms_math.h"  // REQUIRED
+
+#include <QDir>
 
 WaveForm::Set::Set()
 {
@@ -40,88 +42,92 @@ WaveForm::Set::Set()
 
     // Basic #0
     // 107 is reserved
-    BANK = 0;
+    BANK              = 0;
     m_bankNames[BANK] = "Basic";
     new WaveForm /*PULSE*/ ("Pulse", BANK, 8, pulsef, Exact);
     new WaveForm /*CBPEAK*/ ("Cb peak", BANK, 15, cbpeakf, Linear);
-    new WaveForm /*MOOGSAW*/ ("Moog saw", BANK, 52, moogsawf,
-                              Linear);
-    new WaveForm /*MOOGSQUARE*/ ("Moog square", BANK, 53, moogsquaref, Linear);
+    new WaveForm /*MOOGSAW*/ ("Moog saw", BANK, 52, moogsawf, Linear);
+    new WaveForm /*MOOGSQUARE*/ ("Moog square", BANK, 53, moogsquaref,
+                                 Linear);
     new WaveForm /*EXPSAW*/ ("Exponential saw", BANK, 80, expsawf, Linear);
 
     // Adjusted
     // 0a/0p versions (minimize the volume at the end and the beginning.
     // 107 is reserved
-    BANK = 1;
+    BANK              = 1;
     m_bankNames[BANK] = "Adjusted";
-    new WaveForm /*SAWTOOTH0P*/ ("Saw tooth 0p", BANK, 2, sawtooth0pf,
-                                 Exact);
-    new WaveForm /*HARSHSAW0P*/ ("Harsh saw 0p", BANK, 4, harshsaw0pf,
-                                 Exact);
-    new WaveForm /*SQPEAK0P*/ ("Sq peak 0p", BANK, 5, sqpeak0pf,
-                               Linear);
+    new WaveForm /*SAWTOOTH0P*/ ("Saw tooth 0p", BANK, 2, sawtooth0pf, Exact);
+    new WaveForm /*HARSHSAW0P*/ ("Harsh saw 0p", BANK, 4, harshsaw0pf, Exact);
+    new WaveForm /*SQPEAK0P*/ ("Sq peak 0p", BANK, 5, sqpeak0pf, Linear);
     new WaveForm /*PULSE0P*/ ("Pulse 0p", BANK, 8, pulse0pf, Exact);
-    new WaveForm /*CBPEAK0P*/ ("Cb peak 0p", BANK, 15, cbpeak0pf,
-                               Linear);
-    new WaveForm /*MOOGSAW0P*/ ("Moog saw 0p", BANK, 50, moogsaw0pf,
-                                Linear);
+    new WaveForm /*CBPEAK0P*/ ("Cb peak 0p", BANK, 15, cbpeak0pf, Linear);
+    new WaveForm /*MOOGSAW0P*/ ("Moog saw 0p", BANK, 50, moogsaw0pf, Linear);
 
     // Centered
     // Max energy at the center
 
     // Degraded Q1
-    BANK = 11;
+    BANK              = 11;
     m_bankNames[BANK] = "Degraded Q1";
     new WaveForm /*SINEQ1*/ ("Sine Q1", BANK, 0, nsinf, Linear, 1);
-    new WaveForm /*TRIANGLEQ1*/ ("Triangle Q1", BANK, 1, trianglef, Linear, 1);
-    new WaveForm /*SAWTOOTHQ1*/ ("Saw tooth Q1", BANK, 2, sawtoothf, Linear, 1);
+    new WaveForm /*TRIANGLEQ1*/ ("Triangle Q1", BANK, 1, trianglef, Linear,
+                                 1);
+    new WaveForm /*SAWTOOTHQ1*/ ("Saw tooth Q1", BANK, 2, sawtoothf, Linear,
+                                 1);
     new WaveForm /*SQUAREQ1*/ ("Square Q1", BANK, 3, squaref, Linear, 1);
-    new WaveForm /*HARSHSAWQ1*/ ("Harsh saw Q1", BANK, 4, harshsawf, Linear, 1);
+    new WaveForm /*HARSHSAWQ1*/ ("Harsh saw Q1", BANK, 4, harshsawf, Linear,
+                                 1);
     new WaveForm /*SQPEAKQ1*/ ("Sq peak Q1", BANK, 5, sqpeakf, Linear, 1);
     new WaveForm /*WHITENOISEQ1*/ ("White noise Q1", BANK, 6, randf, Discrete,
-                                 1);
+                                   1);
     new WaveForm /*PULSEQ1*/ ("Pulse Q1", BANK, 8, pulsef, Linear, 1);
     new WaveForm /*CBPEAKQ1*/ ("Cb peak Q1", BANK, 15, cbpeakf, Linear, 1);
     new WaveForm /*MOOGSAWQ1*/ ("Moog saw Q1", BANK, 50, moogsawf, Linear, 1);
-    new WaveForm /*EXPSAWQ1*/ ("Exponential saw Q1", BANK, 80, expsawf, Linear,
-                             1);
+    new WaveForm /*EXPSAWQ1*/ ("Exponential saw Q1", BANK, 80, expsawf,
+                               Linear, 1);
 
     // Degraded Q2
-    BANK = 12;
+    BANK              = 12;
     m_bankNames[BANK] = "Degraded Q2";
     new WaveForm /*SINEQ2*/ ("Sine Q2", BANK, 0, nsinf, Linear, 2);
-    new WaveForm /*TRIANGLEQ2*/ ("Triangle Q2", BANK, 1, trianglef, Linear, 2);
-    new WaveForm /*SAWTOOTHQ2*/ ("Saw tooth Q2", BANK, 2, sawtoothf, Linear, 2);
+    new WaveForm /*TRIANGLEQ2*/ ("Triangle Q2", BANK, 1, trianglef, Linear,
+                                 2);
+    new WaveForm /*SAWTOOTHQ2*/ ("Saw tooth Q2", BANK, 2, sawtoothf, Linear,
+                                 2);
     new WaveForm /*SQUAREQ2*/ ("Square Q2", BANK, 3, squaref, Linear, 2);
-    new WaveForm /*HARSHSAWQ2*/ ("Harsh saw Q2", BANK, 4, harshsawf, Linear, 2);
+    new WaveForm /*HARSHSAWQ2*/ ("Harsh saw Q2", BANK, 4, harshsawf, Linear,
+                                 2);
     new WaveForm /*SQPEAKQ2*/ ("Sq peak Q2", BANK, 5, sqpeakf, Linear, 2);
     new WaveForm /*WHITENOISEQ2*/ ("White noise Q2", BANK, 6, randf, Discrete,
-                                 2);
+                                   2);
     new WaveForm /*PULSEQ2*/ ("Pulse Q2", BANK, 8, pulsef, Linear, 2);
     new WaveForm /*CBPEAKQ2*/ ("Cb peak Q2", BANK, 15, cbpeakf, Linear, 2);
     new WaveForm /*MOOGSAWQ2*/ ("Moog saw Q2", BANK, 50, moogsawf, Linear, 2);
-    new WaveForm /*EXPSAWQ2*/ ("Exponential saw Q2", BANK, 80, expsawf, Linear,
-                             2);
+    new WaveForm /*EXPSAWQ2*/ ("Exponential saw Q2", BANK, 80, expsawf,
+                               Linear, 2);
 
     // Degraded Q3
-    BANK = 13;
+    BANK              = 13;
     m_bankNames[BANK] = "Degraded Q3";
     new WaveForm /*SINEQ3*/ ("Sine Q3", BANK, 0, nsinf, Linear, 3);
-    new WaveForm /*TRIANGLEQ3*/ ("Triangle Q3", BANK, 1, trianglef, Linear, 3);
-    new WaveForm /*SAWTOOTHQ3*/ ("Saw tooth Q3", BANK, 2, sawtoothf, Linear, 3);
+    new WaveForm /*TRIANGLEQ3*/ ("Triangle Q3", BANK, 1, trianglef, Linear,
+                                 3);
+    new WaveForm /*SAWTOOTHQ3*/ ("Saw tooth Q3", BANK, 2, sawtoothf, Linear,
+                                 3);
     new WaveForm /*SQUAREQ3*/ ("Square Q3", BANK, 3, squaref, Linear, 3);
-    new WaveForm /*HARSHSAWQ3*/ ("Harsh saw Q3", BANK, 4, harshsawf, Linear, 3);
+    new WaveForm /*HARSHSAWQ3*/ ("Harsh saw Q3", BANK, 4, harshsawf, Linear,
+                                 3);
     new WaveForm /*SQPEAKQ3*/ ("Sq peak Q3", BANK, 5, sqpeakf, Linear, 3);
     new WaveForm /*WHITENOISEQ3*/ ("White noise Q3", BANK, 6, randf, Discrete,
-                                 3);
+                                   3);
     new WaveForm /*PULSEQ3*/ ("Pulse Q3", BANK, 8, pulsef, Linear, 3);
     new WaveForm /*CBPEAKQ3*/ ("Cb peak Q3", BANK, 15, cbpeakf, Linear, 3);
     new WaveForm /*MOOGSAWQ3*/ ("Moog saw Q3", BANK, 50, moogsawf, Linear, 3);
-    new WaveForm /*EXPSAWQ3*/ ("Exponential saw Q3", BANK, 80, expsawf, Linear,
-                             3);
+    new WaveForm /*EXPSAWQ3*/ ("Exponential saw Q3", BANK, 80, expsawf,
+                               Linear, 3);
 
     // Constant
-    BANK = 19;
+    BANK              = 19;
     m_bankNames[BANK] = "Constant";
     new WaveForm /*MINUS1*/ ("-1.0", BANK, 0, minus1f, Exact);
     new WaveForm /*MINUS05*/ ("-0.5", BANK, 20, minus05f, Exact);
@@ -129,7 +135,7 @@ WaveForm::Set::Set()
     new WaveForm /*PLUS1*/ ("+1.0", BANK, 80, plus1f, Exact);
 
     // Mathematical
-    BANK = 20;
+    BANK              = 20;
     m_bankNames[BANK] = "Mathematical";
     new WaveForm /*SQ*/ ("sq ()", BANK, 0, sqf, Exact);
     new WaveForm /*CB*/ ("cb()", BANK, 1, cbf, Exact);

@@ -25,8 +25,9 @@
 
 
 #include "AudioSampleRecorder.h"
+
 #include "SampleBuffer.h"
-#include "debug.h"
+#include "debug.h" // REQUIRED
 
 
 

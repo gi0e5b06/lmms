@@ -2,6 +2,9 @@
 
 #include "FxMixer.h"
 
+#include "embed.h"
+
+
 QPixmap * SendButtonIndicator::s_qpmOff = NULL;
 QPixmap * SendButtonIndicator::s_qpmOn = NULL;
 

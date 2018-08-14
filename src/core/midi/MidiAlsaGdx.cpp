@@ -24,21 +24,22 @@
 
 #include "MidiAlsaGdx.h"
 
+#include "ConfigManager.h"
+#include "Engine.h"
+//#include "Mixer.h"
+//#include "gui_templates.h"
+#include "Song.h"
+#include "MidiPort.h"
+//#include "Note.h"
+
+//#include "debug.h"
+//#include "Backtrace.h"
+//#include "PerfLog.h"
+
 //#include <QRegExp>
 #include <QQueue>
 #include <QMultiHash>
 
-#include "debug.h"
-#include "Backtrace.h"
-//#include "PerfLog.h"
-
-#include "ConfigManager.h"
-#include "Engine.h"
-//#include "Mixer.h"
-#include "gui_templates.h"
-#include "Song.h"
-#include "MidiPort.h"
-//#include "Note.h"
 
 #ifdef LMMS_HAVE_ALSA
 

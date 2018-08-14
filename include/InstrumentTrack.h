@@ -27,7 +27,7 @@
 #define INSTRUMENT_TRACK_H
 
 #include "AudioPort.h"
-#include "GroupBox.h"
+//#include "GroupBox.h"
 #include "InstrumentFunction.h"
 #include "InstrumentSoundShaping.h"
 #include "MidiEventProcessor.h"
@@ -35,7 +35,7 @@
 #include "NotePlayHandle.h"
 #include "Piano.h"
 #include "PeripheralView.h"
-#include "Pitch.h"
+//#include "Pitch.h"
 #include "Track.h"
 
 

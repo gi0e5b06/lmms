@@ -24,23 +24,11 @@
  */
 
 
-#include <QHBoxLayout>
-#include <QKeyEvent>
-#include <QLineEdit>
-#include <QMenu>
-#include <QPushButton>
-#include <QMdiArea>
-#include <QMdiSubWindow>
-#include <QMessageBox>
-#include <QShortcut>
-
 #include "FileBrowser.h"
 #include "BBTrackContainer.h"
 #include "ConfigManager.h"
-#include "embed.h"
 #include "Engine.h"
 #include "GuiApplication.h"
-#include "gui_templates.h"
 #include "ImportFilter.h"
 #include "Instrument.h"
 #include "InstrumentTrack.h"
@@ -54,6 +42,20 @@
 #include "TextFloat.h"
 
 #include "Backtrace.h"
+#include "embed.h"
+//#include "gui_templates.h"
+
+#include <QApplication>
+#include <QEventLoop>
+#include <QHBoxLayout>
+#include <QKeyEvent>
+#include <QLineEdit>
+#include <QMenu>
+#include <QPushButton>
+#include <QMdiArea>
+#include <QMdiSubWindow>
+#include <QMessageBox>
+#include <QShortcut>
 
 
 enum TreeWidgetItemTypes

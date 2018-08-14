@@ -29,14 +29,13 @@
 #define LADSPA_MANAGER_H
 
 #include <ladspa.h>
+#include "export.h"
+//#include "lmms_basics.h"
 
 #include <QMap>
 #include <QPair>
 #include <QString>
 //#include <QStringList>
-
-#include "export.h"
-#include "lmms_basics.h"
 
 
 const float NOHINT = -99342.2243f;

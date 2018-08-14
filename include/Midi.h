@@ -25,7 +25,7 @@
 #ifndef MIDI_H
 #define MIDI_H
 
-#include "lmms_basics.h"
+//#include "lmms_basics.h"
 
 
 enum MidiEventTypes

@@ -28,19 +28,6 @@
 
 #include "AutomationEditor.h"
 
-#include <cmath>
-
-#include <QApplication>
-#include <QKeyEvent>
-#include <QLabel>
-#include <QLayout> // REQUIRED
-//#include <QMdiArea>
-#include <QPainter>
-#include <QScrollBar>
-#include <QShortcut>
-#include <QStyleOption>
-#include <QToolTip>
-
 #ifndef __USE_XOPEN
 #define __USE_XOPEN
 #endif
@@ -59,10 +46,24 @@
 #include "TimeLineWidget.h"
 #include "ToolTip.h"
 #include "WaveForm.h"
-#include "debug.h"
+
+//#include "debug.h"
 #include "embed.h"
 #include "gui_templates.h"
 #include "lmms_qt.h"
+
+#include <QApplication>
+#include <QKeyEvent>
+#include <QLabel>
+#include <QLayout> // REQUIRED
+//#include <QMdiArea>
+#include <QPainter>
+#include <QScrollBar>
+#include <QShortcut>
+#include <QStyleOption>
+#include <QToolTip>
+
+#include <cmath>
 
 
 QPixmap* AutomationEditor::s_toolDraw   = NULL;

@@ -248,7 +248,7 @@ PeakController * PeakController::getControllerBySetting(const QDomElement & _thi
 
 QString PeakController::nodeName() const
 {
-	return( "Peakcontroller" );
+	return "Peakcontroller";
 }
 
 

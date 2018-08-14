@@ -37,7 +37,7 @@
 #include <poll.h>
 
 #include "ConfigManager.h"
-#include "gui_templates.h"
+//#include "gui_templates.h"
 
 
 MidiSndio::MidiSndio( void ) :

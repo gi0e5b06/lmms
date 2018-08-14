@@ -28,8 +28,6 @@
 
 #include <QString>
 
-#include "lmms_basics.h"
-
 QString TR_lmms_fix(QString _s);
 
 #define TR(a) ::TR_lmms_fix(a)

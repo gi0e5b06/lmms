@@ -66,6 +66,7 @@
 //#include "MainWindow.h"
 #include "Mixer.h"
 #include "Pattern.h"
+#include "PixmapButton.h"
 //#include "ProjectJournal.h"
 #include "SampleTrack.h"
 #include "Song.h"

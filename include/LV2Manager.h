@@ -31,23 +31,22 @@
 
 #ifdef WANT_LV2
 
+#include "Plugin.h"
 
-//#include <lv2.h>
+#include "export.h"
+//#include "lmms_basics.h"
 
 #include <QMap>
 #include <QPair>
 #include <QString>
 //#include <QStringList>
 
+//#include <lv2.h>
 //#include <lilv/lilv.h>
 #include <lilv/lilvmm.hpp>
 #include "lv2/lv2plug.in/ns/ext/event/event.h"
 #include "lv2/lv2plug.in/ns/ext/uri-map/uri-map.h"
 #include "lv2/lv2plug.in/ns/ext/event/event-helpers.h"
-
-#include "export.h"
-#include "lmms_basics.h"
-#include "Plugin.h"
 
 //const float NOHINT = -99342.2243f;
 

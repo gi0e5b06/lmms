@@ -166,7 +166,7 @@ int TrackContainer::countTracks( Track::TrackTypes _tt ) const
 		}
 	}
 	m_tracksMutex.unlock();
-	return( cnt );
+	return cnt;
 }
 
 

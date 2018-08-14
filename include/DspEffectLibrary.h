@@ -26,11 +26,14 @@
 #ifndef DSP_EFFECT_LIBRARY_H
 #define DSP_EFFECT_LIBRARY_H
 
-#include "lmms_math.h"
-#include "templates.h"
+//#include "lmms_math.h"
+//#include "templates.h"
 #include "lmms_constants.h"
 #include "lmms_basics.h"
 
+#include <QtGlobal>
+
+#include <cmath>
 
 namespace DspEffectLibrary
 {
@@ -90,12 +93,12 @@ namespace DspEffectLibrary
 
 		FXL& leftFX()
 		{
-			return( m_leftFX );
+			return m_leftFX;
 		}
 
 		FXR& rightFX()
 		{
-			return( m_rightFX );
+			return m_rightFX;
 		}
 
 	private:
@@ -212,7 +215,7 @@ namespace DspEffectLibrary
 		{
 			// TODO: somehow remove these horrible aliases...
 			m_cap = ( _in + m_cap*m_frequency ) * m_gain1;
-			return( ( _in + m_cap*m_ratio ) * m_gain2 );
+			return ( _in + m_cap*m_ratio ) * m_gain2;
 		}
 
 		void setFrequency( const sample_t _frequency )

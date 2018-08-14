@@ -24,16 +24,16 @@
 
 #include "AutomatableModel.h"
 
-#include "lmms_math.h"
-
 #include "AutomationPattern.h"
 #include "ControllerConnection.h"
 #include "Engine.h"
 #include "Mixer.h"
 #include "ProjectJournal.h"
 
-long AutomatableModel::s_periodCounter = 0;
+#include "lmms_math.h" // REQUIRED
 
+
+long AutomatableModel::s_periodCounter = 0;
 
 
 AutomatableModel::AutomatableModel( const float val, const float min,

@@ -27,14 +27,13 @@
 #define NOTE_PLAY_HANDLE_H
 
 #include "AtomicInt.h"
-#include "MemoryManager.h"
 #include "Note.h"
 #include "ObjectManager.h"
 #include "PlayHandle.h"
 #include "Track.h"
-
 #include "BasicFilters.h"
 //#include "InstrumentTrack.h"
+//#include "MemoryManager.h"
 
 //class QReadWriteLock;
 

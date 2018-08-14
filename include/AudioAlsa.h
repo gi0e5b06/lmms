@@ -32,10 +32,11 @@
 // older ALSA-versions might require this
 #define ALSA_PCM_NEW_HW_PARAMS_API
 
-#include <alsa/asoundlib.h>
+#include "AudioDevice.h"
+
 #include <QThread>
 
-#include "AudioDevice.h"
+#include <alsa/asoundlib.h>
 
 
 class AudioAlsa : public AudioDevice, public QThread

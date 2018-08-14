@@ -26,20 +26,6 @@
 
 #include "InstrumentTrack.h"
 
-#include <QDir>
-#include <QQueue>
-#include <QApplication>
-#include <QCloseEvent>
-#include <QLabel>
-#include <QLayout>
-#include <QLineEdit>
-#include <QMdiArea>
-#include <QMenu>
-#include <QMessageBox>
-#include <QMdiSubWindow>
-#include <QPainter>
-#include <QSignalMapper>
-
 #include "FileDialog.h"
 #include "AutomationPattern.h"
 #include "BBTrack.h"
@@ -51,6 +37,7 @@
 #include "FileBrowser.h"
 #include "FxMixer.h"
 #include "FxMixerView.h"
+#include "GroupBox.h"
 #include "GuiApplication.h"
 #include "InstrumentSoundShapingView.h"
 #include "FadeButton.h"
@@ -76,12 +63,28 @@
 #include "Song.h"
 #include "StringPairDrag.h"
 #include "TabWidget.h"
+#include "ToolTip.h"
 #include "TrackContainerView.h"
 #include "TrackLabelButton.h"
 
 #include "embed.h"
 #include "gui_templates.h"
 #include "lmms_math.h"
+#include "Pitch.h"
+
+#include <QDir>
+#include <QQueue>
+#include <QApplication>
+#include <QCloseEvent>
+#include <QLabel>
+#include <QLayout>
+#include <QLineEdit>
+#include <QMdiArea>
+#include <QMenu>
+#include <QMessageBox>
+#include <QMdiSubWindow>
+#include <QPainter>
+#include <QSignalMapper>
 
 
 const char* ITVOLHELP = QT_TRANSLATE_NOOP( "InstrumentTrack",

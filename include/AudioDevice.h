@@ -25,11 +25,11 @@
 #ifndef AUDIO_DEVICE_H
 #define AUDIO_DEVICE_H
 
-#include <QMutex>
-#include <samplerate.h>
-
 #include "lmms_basics.h"
 
+#include <QMutex>
+
+#include <samplerate.h>
 
 class AudioPort;
 class Mixer;

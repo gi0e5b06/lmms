@@ -26,11 +26,12 @@
 #ifndef MIDI_EFFECT_RACK_VIEW_H
 #define MIDI_EFFECT_RACK_VIEW_H
 
-#include <QWidget>
-
 #include "MidiEffectChain.h"
 #include "ModelView.h"
-#include "lmms_basics.h"
+
+//#include "lmms_basics.h"
+
+#include <QWidget>
 
 class QScrollArea;
 class QVBoxLayout;

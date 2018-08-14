@@ -23,24 +23,26 @@
  */
 #include "AutomationPatternView.h"
 
-#include <QMouseEvent>
-#include <QPainter>
-#include <QMenu>
-
 #include "AutomationEditor.h"
-#include "embed.h"
+#include "Engine.h"
 #include "GuiApplication.h"
-#include "gui_templates.h"
 #include "ProjectJournal.h"
 #include "RenameDialog.h"
 #include "StringPairDrag.h"
 #include "TextFloat.h"
 #include "ToolTip.h"
 
-#include "Engine.h"
+#include "embed.h"
+//#include "gui_templates.h"
+
+#include <QApplication>
+#include <QMouseEvent>
+#include <QPainter>
+#include <QMenu>
 
 
 QPixmap * AutomationPatternView::s_pat_rec = NULL;
+
 
 AutomationPatternView::AutomationPatternView( AutomationPattern * _pattern,
 						TrackView * _parent ) :

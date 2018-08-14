@@ -26,15 +26,17 @@
 
 #ifdef LMMS_HAVE_JACK
 
-//#include <QCompleter>
-#include <QMessageBox>
-
 #include "ConfigManager.h"
-#include "gui_templates.h"
 #include "GuiApplication.h"
 #include "Engine.h"
 #include "Mixer.h"
 #include "MainWindow.h"
+
+//#include "gui_templates.h"
+
+//#include <QCompleter>
+#include <QMessageBox>
+
 
 /* callback functions for jack */
 static int JackMidiProcessCallback(jack_nframes_t nframes, void *arg)

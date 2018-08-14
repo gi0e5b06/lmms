@@ -33,7 +33,8 @@
 #include "ConfigManager.h"
 #include "Engine.h"
 #include "Mixer.h"
-#include "gui_templates.h"
+//#include "gui_templates.h"
+#include "templates.h"
 
 
 AudioAlsaGdx::AudioAlsaGdx( bool & _success_ful, Mixer*  _mixer ) :

@@ -38,13 +38,7 @@
 
 #include "PianoView.h"
 
-#include <cmath>
-
-#include <QCursor>
-#include <QKeyEvent>
-#include <QPainter>
-#include <QVBoxLayout>
-
+#include "AutomatableModelView.h"
 #include "Piano.h"
 #include "CaptionMenu.h"
 #include "InstrumentTrack.h"
@@ -54,6 +48,14 @@
 
 #include "embed.h"
 #include "gui_templates.h"
+#include "templates.h"
+
+#include <QCursor>
+#include <QKeyEvent>
+#include <QPainter>
+#include <QVBoxLayout>
+
+#include <cmath>
 
 
 /*! The scale of C Major - white keys only.

@@ -23,14 +23,14 @@
  *
  */
 
-#include <QDomElement>
-//#include <QObject>
-
-
-#include "Song.h"
-#include "Mixer.h"
 #include "LfoController.h"
 
+#include "Mixer.h"
+#include "Oscillator.h"
+#include "Song.h"
+
+#include <QDomElement>
+//#include <QObject>
 
 LfoController::LfoController( Model * _parent ) :
 	Controller( Controller::LfoController, _parent, tr( "LFO" ) ),
@@ -222,7 +222,7 @@ void LfoController::loadSettings( const QDomElement & _this )
 
 QString LfoController::nodeName() const
 {
-	return( "lfocontroller" );
+	return "lfocontroller";
 }
 
 

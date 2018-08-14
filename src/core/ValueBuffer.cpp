@@ -1,6 +1,6 @@
 #include "ValueBuffer.h"
 
-#include "interpolation.h"
+//#include "interpolation.h"
 
 ValueBuffer::ValueBuffer(const ValueBuffer* _vb)
 {

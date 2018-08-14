@@ -89,10 +89,12 @@ struct typeInfo
 } ;
 
 
+#define SILENCE (1.E-10)
+
 template<>
 inline float typeInfo<float>::minEps()
 {
-	return 1.0e-10;
+	return SILENCE;
 }
 
 template<>

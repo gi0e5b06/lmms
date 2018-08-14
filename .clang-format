@@ -61,14 +61,16 @@ ForEachMacros:
   - BOOST_FOREACH
 IncludeBlocks:   Regroup
 IncludeCategories:
-  - Regex:           '^<[^Q].*>'
+  - Regex:           '^"[A-Z].*"'
     Priority:        1
-  - Regex:           '^<.*/Q.*>'
-    Priority:        2
-  - Regex:           '^<.*>'
-    Priority:        3
   - Regex:           '^".*"'
+    Priority:        2
+  - Regex:           '^<Q.*>'
+    Priority:        3
+  - Regex:           '^<[A-Z].*>'
     Priority:        4
+  - Regex:           '^<.*>'
+    Priority:        5
 IncludeIsMainRegex: '(Test)?$'
 IndentCaseLabels: true
 IndentPPDirectives: None

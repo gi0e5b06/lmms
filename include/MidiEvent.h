@@ -25,17 +25,18 @@
 #ifndef MIDI_EVENT_H
 #define MIDI_EVENT_H
 
-#include <cstdlib>
 //#include <QMessageLogger>
 
 #include "Midi.h"
-#include "panning_constants.h"
+#include "panning_constants.h" // REQUIRED
 //#include "Pitch.h"
 #include "volume.h"
 
 #ifndef qWarning
 #define qWarning printf
 #endif
+
+#include <cstdlib>
 
 class MidiEvent final
 {

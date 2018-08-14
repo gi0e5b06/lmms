@@ -24,18 +24,9 @@
 
 #include "Song.h"
 
-#include <QTextStream>
-#include <QCoreApplication>
-//#include <QDebug>
-#include <QFile>
-#include <QFileInfo>
-#include <QMessageBox>
-
-#include <functional>
-
 #include "AutomationTrack.h"
 #include "AutomationEditor.h"
-#include "BBEditor.h"
+#include "BBEditor.h" // REQUIRED
 #include "BBTrack.h"
 #include "BBTrackContainer.h"
 #include "ConfigManager.h"
@@ -54,13 +45,22 @@
 #include "Pattern.h"
 #include "PianoRoll.h"
 #include "ProjectJournal.h"
-#include "ProjectNotes.h"
+#include "ProjectNotes.h" // REQUIRED
 #include "SongEditor.h"
 #include "TextFloat.h"
 #include "TimeLineWidget.h"
 #include "PeakController.h"
 #include "VersionedSaveDialog.h"
 //#include "MemoryManagerArray.h"
+
+#include <QTextStream>
+#include <QCoreApplication>
+//#include <QDebug>
+#include <QFile>
+#include <QFileInfo>
+#include <QMessageBox>
+
+#include <functional>
 
 
 tick_t MidiTime::s_ticksPerTact = DefaultTicksPerTact;

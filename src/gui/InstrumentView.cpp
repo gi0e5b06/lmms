@@ -24,12 +24,13 @@
 
 #include "InstrumentView.h"
 
-//#include <QIcon>
-
 #include "InstrumentTrack.h" // REQUIRED
 //#include "StringPairDrag.h"
 
-#include "embed.h"
+#include "embed.h" // REQUIRED
+
+#include <QIcon> // REQUIRED
+
 
 InstrumentView::InstrumentView( Instrument * _Instrument, QWidget * _parent ) :
 	PluginView( _Instrument, _parent )

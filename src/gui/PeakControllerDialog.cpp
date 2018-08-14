@@ -37,7 +37,7 @@
 //#include "Knob.h"
 //#include "TempoSyncKnob.h"
 
-#include "gui_templates.h"
+//#include "gui_templates.h"
 #include "embed.h"
 
 

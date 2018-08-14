@@ -29,7 +29,7 @@
 #include <QString>
 
 #include "export.h"
-#include "lmms_basics.h"
+#include "lmms_basics.h" // REQUIRED
 
 
 namespace embed

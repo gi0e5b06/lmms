@@ -26,7 +26,9 @@
 #ifndef RMS_HELPER_H
 #define RMS_HELPER_H
 
-#include "lmms_math.h"
+//#include "lmms_math.h"
+
+#include <cmath>
 
 class RmsHelper
 {

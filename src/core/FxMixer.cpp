@@ -25,7 +25,7 @@
 #include <QDomElement>
 //#include <QLayout>
 
-#include "debug.h"
+//#include "debug.h"
 
 #include "FxMixer.h"
 

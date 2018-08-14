@@ -1,6 +1,7 @@
 
-#include "lmms_basics.h"
 #include "MemoryManagerArray.h"
+
+#include "lmms_basics.h" // REQUIRED
 #include "Backtrace.h"
 
 bool MemoryManagerArray::s_active=false;

@@ -23,14 +23,6 @@
  *
  */
 
-#include <QHBoxLayout>
-#include <QLineEdit>
-#include <QPushButton>
-//#include <QScrollArea>
-#include <QMessageBox>
-
-#include "debug.h"
-
 #include "ControllerConnectionDialog.h"
 #include "ControllerConnection.h"
 //#include "HwScreenWidget.h"
@@ -46,8 +38,15 @@
 #include "TabWidget.h"
 #include "ToolButton.h"
 
-#include "gui_templates.h"
+//#include "gui_templates.h"
+//#include "debug.h"
 #include "embed.h"
+
+#include <QHBoxLayout>
+#include <QLineEdit>
+#include <QPushButton>
+//#include <QScrollArea>
+#include <QMessageBox>
 
 
 class AutoDetectMidiController : public MidiController

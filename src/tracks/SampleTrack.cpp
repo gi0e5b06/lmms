@@ -23,18 +23,9 @@
  *
  */
 
-#include <QDropEvent>
-#include <QFileInfo>
-#include <QMenu>
-#include <QLayout>
-#include <QMdiArea>
-#include <QMdiSubWindow>
-#include <QPainter>
-#include <QPushButton>
-#include <QSignalMapper>
+#include "SampleTrack.h"
 
 //#include "FileDialog.h"
-#include "SampleTrack.h"
 //#include "AutomationPattern.h"
 #include "BBTrack.h"
 //#include "CaptionMenu.h"
@@ -70,27 +61,20 @@
 #include "Song.h"
 #include "StringPairDrag.h"
 #include "TimeLineWidget.h"
+#include "ToolTip.h"
 //#include "TrackContainerView.h"
 #include "TrackLabelButton.h"
 
-/*
-#include "gui_templates.h"
-#include "GuiApplication.h"
-#include "Song.h"
-#include "embed.h"
-#include "ToolTip.h"
-#include "BBTrack.h"
-#include "SamplePlayHandle.h"
-#include "SampleRecordHandle.h"
-#include "SongEditor.h"
-#include "StringPairDrag.h"
-#include "TimeLineWidget.h"
-#include "Knob.h"
-#include "MainWindow.h"
-#include "Mixer.h"
-#include "EffectRackView.h"
-#include "TrackLabelButton.h"
-*/
+#include <QDropEvent>
+#include <QFileInfo>
+#include <QMenu>
+#include <QLayout>
+#include <QMdiArea>
+#include <QMdiSubWindow>
+#include <QPainter>
+#include <QPushButton>
+#include <QSignalMapper>
+
 
 const char* STVOLHELP = QT_TRANSLATE_NOOP( "SampleTrack",
 					   "With this knob you can set "

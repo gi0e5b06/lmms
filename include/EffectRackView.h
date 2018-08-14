@@ -26,11 +26,12 @@
 #ifndef EFFECT_RACK_VIEW_H
 #define EFFECT_RACK_VIEW_H
 
-#include <QWidget>
-
 #include "EffectChain.h"
 #include "ModelView.h"
-#include "lmms_basics.h"
+
+#include <QWidget>
+
+//#include "lmms_basics.h"
 
 class QScrollArea;
 class QVBoxLayout;

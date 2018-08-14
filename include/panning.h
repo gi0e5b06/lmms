@@ -26,11 +26,12 @@
 #ifndef PANNING_H
 #define PANNING_H
 
-#include "lmms_basics.h"
-#include "volume.h"
-#include "templates.h"
-#include "panning_constants.h"
 #include "Midi.h"
+
+//#include "lmms_basics.h"
+#include "volume.h" //REQUIRED
+//#include "templates.h"
+#include "panning_constants.h"
 
 inline stereoVolumeVector panningToVolumeVector( panning_t _p,
 							float _scale = 1.0f )
