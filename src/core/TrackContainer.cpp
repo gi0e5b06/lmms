@@ -301,9 +301,16 @@ AutomatedValueMap TrackContainer::automatedValuesFromTracks(const TrackList &tra
 				continue;
 			}
 			MidiTime relTime = time - p->startPosition();
+                        /*
                         if (! p->getAutoResize()) {
 				relTime = qMin(relTime, p->length());
 			}
+                        */
+                        if(p->isFixed())
+                        {
+                                relTime = relTime % p->length();
+                        }
+
                         float value = p->valueAt(relTime);
 
 			for (AutomatableModel* model : p->objects())
@@ -315,9 +322,9 @@ AutomatedValueMap TrackContainer::automatedValuesFromTracks(const TrackList &tra
 		{
 			auto bbIndex = dynamic_cast<class BBTrack*>(bb->getTrack())->index();
 			auto bbContainer = Engine::getBBTrackContainer();
-
 			MidiTime bbTime = time - tco->startPosition();
-			bbTime = std::min(bbTime, tco->length());
+			//bbTime = std::min(bbTime, tco->length());
+                        bbTime = bbTime % tco->length();
 			bbTime = bbTime % (bbContainer->lengthOfBB(bbIndex) * MidiTime::ticksPerTact());
 
 			auto bbValues = bbContainer->automatedValuesAt(bbTime, bbIndex);

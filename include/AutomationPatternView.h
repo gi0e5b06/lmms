@@ -48,15 +48,16 @@ public slots:
 
 
 protected slots:
-	void resetName();
-	void changeName();
+	//void resetName();
+	//void changeName();
 	void disconnectObject( QAction * _a );
 	void toggleRecording();
 	void flipY();
 	void flipX();
 
 protected:
-	virtual void constructContextMenu( QMenu * );
+	virtual QMenu* buildContextMenu();
+
 	virtual void mouseDoubleClickEvent(QMouseEvent * me );
 	virtual void paintEvent( QPaintEvent * pe );
 	virtual void dragEnterEvent( QDragEnterEvent * _dee );

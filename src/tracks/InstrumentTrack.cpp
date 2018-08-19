@@ -126,6 +126,9 @@ InstrumentTrack::InstrumentTrack( TrackContainer* tc ) :
 	m_soundShaping( this ),
 	m_piano( this )
 {
+        setColor(QColor("#2BB34E"));
+        setUseStyleColor(true);
+
         m_noteFunctions.append(new InstrumentFunctionNoteFiltering(this));
 	m_noteFunctions.append(new InstrumentFunctionNoteDuplicatesRemoving(this));
 	m_noteFunctions.append(new InstrumentFunctionNoteKeying(this));
@@ -1378,9 +1381,10 @@ void InstrumentTrackView::muteChanged()
 
 QMenu* InstrumentTrackView::createAudioInputMenu()
 {
-        QString title=tr( "Audio Input (N/A)" );
+        QString title=tr( "Audio Input (not implemented)" );
         //.arg( channelIndex ).arg( fxChannel->m_name );
 	QMenu* fxMenu = new QMenu( title );
+        fxMenu->setEnabled(false);
 	return fxMenu;
 }
 

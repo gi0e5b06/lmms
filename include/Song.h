@@ -25,8 +25,6 @@
 #ifndef SONG_H
 #define SONG_H
 
-#include <utility>
-
 #include "Controller.h"
 #include "Engine.h"
 #include "MeterModel.h"
@@ -39,6 +37,9 @@
 
 //#include <QSharedMemory>
 //#include <QVector>
+
+#include <cmath>
+#include <utility>
 
 class AutomationTrack;
 class Pattern;
@@ -97,6 +98,12 @@ public:
                 inline float absoluteFrame() const
                 {
                         return getTicks()*Engine::framesPerTick()+m_currentFrame;
+                }
+
+                inline void setAbsoluteFrame(float _f)
+                {
+                        setTicks(_f/Engine::framesPerTick());
+                        setCurrentFrame(fmodf(_f,Engine::framesPerTick()));
                 }
 
                 TimeLineWidget * m_timeLine;
@@ -293,7 +300,7 @@ public:
 		return "song";
 	}
 
-	virtual bool fixedTCOs() const
+	virtual bool isFixed() const //fixedTCOs()
 	{
 		return false;
 	}

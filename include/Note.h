@@ -114,11 +114,15 @@ public:
 	void quantizeLength( const int qGrid );
 	void quantizePos( const int qGrid );
 
-	static inline bool lessThan( Note * &lhs, Note * &rhs )
+	static inline bool lessThan(Note*& a, Note*& b)
 	{
 		// function to compare two notes - must be called explictly when
 		// using qSort
-		return (bool) ((int) ( *lhs ).pos() < (int) ( *rhs ).pos());
+		//return (bool) ((int) ( *a ).pos() < (int) ( *b ).pos());
+                return a->pos() < b->pos() ||
+                       (a->pos() == b->pos() &&
+                         (a->length() < b->length() ||
+                          (a->length() == b->length() && a->key() < b->key())));
 	}
 
 	inline bool selected() const

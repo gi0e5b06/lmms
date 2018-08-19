@@ -24,14 +24,6 @@
 
 #include "TrackContainerView.h"
 
-#include <cmath>
-
-//#include <QApplication>
-#include <QLayout>
-#include <QVBoxLayout>
-//#include <QMdiArea>
-#include <QWheelEvent>
-
 #include "TrackContainer.h"
 #include "BBTrack.h"
 #include "MainWindow.h"
@@ -43,6 +35,15 @@
 #include "StringPairDrag.h"
 #include "GuiApplication.h"
 #include "PluginFactory.h"
+#include "Clipboard.h"
+
+//#include <QApplication>
+#include <QLayout>
+#include <QVBoxLayout>
+//#include <QMdiArea>
+#include <QWheelEvent>
+
+#include <cmath>
 
 using namespace std;
 
@@ -52,10 +53,10 @@ TrackContainerView::TrackContainerView( TrackContainer * _tc ) :
 	JournallingObject(),
 	SerializingObjectHook(),
 	m_currentPosition( 0, 0 ),
+	m_ppt( -1 ),
 	m_tc( _tc ),
 	m_trackViews(),
 	m_scrollArea( new scrollArea( this ) ),
-	m_ppt( DEFAULT_PIXELS_PER_TACT ),
 	m_rubberBand( new RubberBand( m_scrollArea ) ),
 	m_origin()
 {
@@ -104,16 +105,11 @@ TrackContainerView::~TrackContainerView()
 }
 
 
-
-
-
 void TrackContainerView::saveSettings( QDomDocument & _doc,
-							QDomElement & _this )
+                                       QDomElement & _this )
 {
 	MainWindow::saveWidgetState( this, _this );
 }
-
-
 
 
 void TrackContainerView::loadSettings( const QDomElement & _this )
@@ -132,7 +128,8 @@ TrackView * TrackContainerView::addTrackView( TrackView * _tv )
 				_tv->getTrackContentWidget(),
 				SLOT( changePosition( const MidiTime & ) ) );
 	realignTracks();
-	return( _tv );
+        requireActionUpdate();
+	return _tv;
 }
 
 
@@ -152,6 +149,7 @@ void TrackContainerView::removeTrackView( TrackView * _tv )
 		if( Engine::getSong() )
 		{
 			Engine::getSong()->setModified();
+                        requireActionUpdate();
 		}
 	}
 }
@@ -259,7 +257,9 @@ TrackView * TrackContainerView::createTrackView( Track * _t )
 		if ( ( *it )->getTrack() == _t ) { return ( *it ); }
 	}
 
-	return _t->createView( this );
+	TrackView* r=_t->createView( this );
+        requireActionUpdate();
+        return r;
 }
 
 
@@ -276,6 +276,7 @@ void TrackContainerView::deleteTrackView( TrackView * _tv )
 	Engine::mixer()->requestChangeInModel();
 	delete t;
 	Engine::mixer()->doneChangeInModel();
+        requireActionUpdate();
 }
 
 
@@ -307,11 +308,15 @@ const TrackView * TrackContainerView::trackViewAt( const int _y ) const
 
 bool TrackContainerView::allowRubberband() const
 {
-	return( false );
+	return false;
 }
 
 
 
+float TrackContainerView::pixelsPerTact() const
+{
+        return m_ppt>0.f ? m_ppt : 16.f;
+}
 
 void TrackContainerView::setPixelsPerTact(float _ppt )
 {
@@ -464,6 +469,8 @@ void TrackContainerView::clearAllTracks()
 		delete tv;
 		delete t;
 	}
+
+        requireActionUpdate();
 }
 
 
@@ -490,6 +497,8 @@ void TrackContainerView::stopRubberBand()
 {
 	m_rubberBand->hide();
 	m_rubberBand->setEnabled( false );
+        qInfo("TrackContainerView::stopRubberBand");
+        requireActionUpdate();
 }
 
 
@@ -552,6 +561,8 @@ void TrackContainerView::dropEvent( QDropEvent * _de )
 		Track::create( dataFile.content().firstChild().toElement(), m_tc );
 		_de->accept();
 	}
+
+        requireActionUpdate();
 }
 
 
@@ -576,9 +587,11 @@ void TrackContainerView::mouseMoveEvent( QMouseEvent * _me )
 {
 	if( rubberBandActive() == true )
 	{
-		m_rubberBand->setGeometry( QRect( m_origin,
-				m_scrollArea->mapFromParent( _me->pos() ) ).
-								normalized() );
+		m_rubberBand->setGeometry
+                        ( QRect( m_origin,
+                                 m_scrollArea->mapFromParent
+                                 ( _me->pos() ) ).
+                          normalized() );
 	}
 	QWidget::mouseMoveEvent( _me );
 }
@@ -588,9 +601,15 @@ void TrackContainerView::mouseMoveEvent( QMouseEvent * _me )
 
 void TrackContainerView::mouseReleaseEvent( QMouseEvent * _me )
 {
+        QVector<TrackContentObject*> so=selectedTCOs();
+        if(so.length()>0)
+                Selection::select(so.at(0));
+
 	m_rubberBand->hide();
 	m_rubberBand->setEnabled( false );
+
 	QWidget::mouseReleaseEvent( _me );
+        requireActionUpdate();
 }
 
 
@@ -608,7 +627,40 @@ RubberBand *TrackContainerView::rubberBand() const
     return m_rubberBand;
 }
 
+QVector<TrackContentObject*> TrackContainerView::selectedTCOs()
+{
+        QVector<SelectableObject*> s1 = selectedObjects();
+        QVector<TrackContentObject*> s2;
+        for( QVector<SelectableObject *>::iterator o1 = s1.begin();
+             o1 != s1.end(); ++o1 )
+	{
+                TrackContentObjectView* tcov=
+                        dynamic_cast<TrackContentObjectView*>(*o1);
+                if(tcov==NULL) continue;
 
+                TrackContentObject* tco=tcov->getTrackContentObject();
+
+                s2.push_back(tco);
+        }
+        return s2;
+}
+
+
+QVector<TrackContentObjectView*> TrackContainerView::selectedTCOViews()
+{
+        QVector<SelectableObject*> s1 = selectedObjects();
+        QVector<TrackContentObjectView*> s2;
+        for( QVector<SelectableObject *>::iterator o1 = s1.begin();
+             o1 != s1.end(); ++o1 )
+	{
+                TrackContentObjectView* tcov=
+                        dynamic_cast<TrackContentObjectView*>(*o1);
+                if(tcov==NULL) continue;
+
+                s2.push_back(tcov);
+        }
+        return s2;
+}
 
 
 TrackContainerView::scrollArea::scrollArea( TrackContainerView * _parent ) :

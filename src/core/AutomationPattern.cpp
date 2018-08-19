@@ -36,6 +36,9 @@
 #include "Song.h"
 #include "WaveForm.h"
 
+#include "GuiApplication.h"
+#include "AutomationEditor.h"
+
 #include <cmath>
 
 int         AutomationPattern::s_quantization    = 1;
@@ -51,21 +54,7 @@ AutomationPattern::AutomationPattern(AutomationTrack* _auto_track) :
       m_isRecording(false), m_lastRecordedValue(0)
 {
     changeLength(MidiTime(1, 0));
-    if(getTrack())
-    {
-        switch(getTrack()->trackContainer()->type())
-        {
-            case TrackContainer::BBContainer:
-                setAutoResize(true);
-                break;
-
-            case TrackContainer::SongContainer:
-                // move down
-            default:
-                setAutoResize(false);
-                break;
-        }
-    }
+    setAutoResize( false );
 }
 
 AutomationPattern::AutomationPattern(const AutomationPattern& _pat_to_copy) :
@@ -233,10 +222,44 @@ MidiTime AutomationPattern::timeMapLength() const
     return MidiTime(MidiTime((it - 1).key()).nextFullTact(), 0);
 }
 
+/*
+MidiTime AutomationPattern::beatLength() const
+{
+        Track* t=getTrack();
+        BBTrackContainer* c=dynamic_cast<BBTrackContainer*>
+                (t->trackContainer());
+        return c ? c->beatLengthOfBB(startPosition()
+                                     / DefaultTicksPerTact) : 0;
+}
+*/
+
 void AutomationPattern::updateLength()
 {
-    changeLength(timeMapLength());
+        tick_t len;
+        if(getAutoResize())
+                len=timeMapLength();
+        else
+                len=length();
+
+        TrackContentObject::updateLength(len);
 }
+
+/*
+void AutomationPattern::updateBBTrack()
+{
+	if( getTrack()->trackContainer() == Engine::getBBTrackContainer() )
+	{
+		Engine::getBBTrackContainer()->updateBBTrack( this );
+	}
+
+	if( gui &&
+            gui->automationEditor() &&
+            gui->automationEditor()->currentPattern() == this )
+	{
+		gui->automationEditor()->update();
+	}
+}
+*/
 
 MidiTime AutomationPattern::putValue(const MidiTime& time,
                                      const float     value,

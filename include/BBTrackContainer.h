@@ -38,6 +38,11 @@ public:
 	BBTrackContainer();
 	virtual ~BBTrackContainer();
 
+        virtual bool isFixed() const
+        {
+                return true;
+        }
+
 	virtual bool play( MidiTime _start, const fpp_t _frames,
 						const f_cnt_t _frame_base, int _tco_num = -1 );
 

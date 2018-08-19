@@ -199,8 +199,10 @@ BBTrackContainerView::BBTrackContainerView(BBTrackContainer* tc) :
 	setModel( tc );
 }
 
-
-
+float BBTrackContainerView::pixelsPerTact() const
+{
+        return m_ppt>0.f ? m_ppt : 256.f;
+}
 
 void BBTrackContainerView::addSteps()
 {

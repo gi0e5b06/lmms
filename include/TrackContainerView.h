@@ -23,17 +23,17 @@
  */
 
 
-#ifndef TRACK_CONTAINER_VIEW_H
-#define TRACK_CONTAINER_VIEW_H
+#ifndef TRACK_CONTAINER_VIEW_H_
+#define TRACK_CONTAINER_VIEW_H_
 
-#include <QVector>
+#include "ActionUpdatable.h"
+#include "JournallingObject.h"
+#include "InstrumentTrack.h"
+
+//#include <QVector>
 #include <QScrollArea>
 #include <QWidget>
 #include <QThread>
-
-//#include "Track.h"
-#include "JournallingObject.h"
-#include "InstrumentTrack.h"
 
 
 class QVBoxLayout;
@@ -41,8 +41,9 @@ class TrackContainer;
 
 
 class TrackContainerView : public QWidget, public ModelView,
-						public JournallingObject,
-						public SerializingObjectHook
+        public JournallingObject,
+        public SerializingObjectHook,
+        public virtual ActionUpdatable
 {
 	Q_OBJECT
 public:
@@ -67,11 +68,7 @@ public:
 		return( false );
 	}
 
-	inline float pixelsPerTact() const
-	{
-		return m_ppt;
-	}
-
+	virtual float pixelsPerTact() const;
 	virtual void setPixelsPerTact(float _ppt);
 
 	const TrackView * trackViewAt( const int _y ) const;
@@ -80,14 +77,17 @@ public:
 
 	inline bool rubberBandActive() const
 	{
-		return( m_rubberBand->isEnabled() && m_rubberBand->isVisible() );
+		return  m_rubberBand->isEnabled() &&
+                        m_rubberBand->isVisible();
 	}
 
-	inline QVector<selectableObject *> selectedObjects()
+	inline QVector<SelectableObject *> selectedObjects() const
 	{
-		return( m_rubberBand->selectedObjects() );
+		return m_rubberBand->selectedObjects();
 	}
 
+        QVector<TrackContentObject*> selectedTCOs();
+        QVector<TrackContentObjectView*> selectedTCOViews();
 
 	TrackContainer* model()
 	{
@@ -126,7 +126,7 @@ public:
 
 	RubberBand *rubberBand() const;
 
-public slots:
+ public slots:
 	virtual void realignTracks();
 	virtual void updateBackgrounds();
 
@@ -148,8 +148,6 @@ public slots:
 	void stopRubberBand();
 
 protected:
-	static const int DEFAULT_PIXELS_PER_TACT = 16;
-
 	virtual void mousePressEvent( QMouseEvent * _me );
 	virtual void mouseMoveEvent( QMouseEvent * _me );
 	virtual void mouseReleaseEvent( QMouseEvent * _me );
@@ -159,7 +157,7 @@ protected:
 	virtual void computeBarViews();
 
 	MidiTime m_currentPosition;
-
+	float m_ppt;
 
 private:
 	enum Actions
@@ -189,18 +187,14 @@ private:
 	scrollArea * m_scrollArea;
 	QVBoxLayout * m_scrollLayout;
 
-	float m_ppt;
-
 	RubberBand * m_rubberBand;
 	QPoint m_origin;
 
 	QVector<QPointer<HyperBarView> > m_hyperBarViews;
 	QVector<QPointer<BarView> > m_barViews;
 
-signals:
+ signals:
 	void positionChanged( const MidiTime & _pos );
-
-
 } ;
 
 class InstrumentLoaderThread : public QThread

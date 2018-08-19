@@ -425,8 +425,9 @@ void Song::processNextBuffer()
 
 		// update frame-counters
 		framesPlayed += framesToPlay;
-		m_playPos[m_playMode].setCurrentFrame( framesToPlay +
-								currentFrame );
+
+		m_playPos[m_playMode].setCurrentFrame( framesToPlay + currentFrame );
+
 		m_elapsedMilliSeconds += MidiTime::ticksToMilliseconds( framesToPlay / framesPerTick, getTempo());
 		m_elapsedTacts = m_playPos[Mode_PlaySong].getTact();
 		m_elapsedTicks = ( m_playPos[Mode_PlaySong].getTicks() % ticksPerTact() ) / 48;
@@ -812,7 +813,8 @@ void Song::removeBar()
 	for( TrackList::const_iterator it = tracks().begin();
 					it != tracks().end(); ++it )
 	{
-		( *it )->removeTact( m_playPos[Mode_PlaySong] );
+		( *it )->removeTact( m_playPos[Mode_PlaySong]
+                                     + MidiTime::ticksPerTact() );
 	}
 	m_tracksMutex.unlock();
 }

@@ -25,17 +25,8 @@
 
 #include "SongEditor.h"
 
-#include <QTimeLine>
-#include <QAction>
-#include <QKeyEvent>
-#include <QLabel>
-#include <QLayout>
-#include <QMdiArea>
-#include <QMdiSubWindow>
-#include <QPainter>
-#include <QShortcut>
-
 #include "AutomatableSlider.h"
+#include "AutomatableToolButton.h"
 #include "ComboBox.h"
 #include "ConfigManager.h"
 #include "CPULoadWidget.h"
@@ -57,8 +48,20 @@
 #include "Pattern.h"
 #include "BBTrack.h"
 #include "SampleTrack.h"
+#include "Clipboard.h"
 
+#include <QTimeLine>
+#include <QAction>
+#include <QKeyEvent>
+#include <QLabel>
+#include <QHBoxLayout>
+#include <QVBoxLayout>
+#include <QMdiArea>
+#include <QMdiSubWindow>
+#include <QPainter>
+#include <QShortcut>
 
+/*
 positionLine::positionLine( QWidget * parent ) :
 	QWidget( parent )
 {
@@ -74,7 +77,7 @@ void positionLine::paintEvent( QPaintEvent * pe )
 	QPainter p( this );
 	p.fillRect( rect(), QColor( 255, 255, 255, 153 ) );
 }
-
+*/
 
 SongEditor::SongEditor( Song * song ) :
 	TrackContainerView( song ),
@@ -106,10 +109,11 @@ SongEditor::SongEditor( Song * song ) :
 	connect( m_timeLine, SIGNAL( selectionFinished() ),
 			 this, SLOT( stopRubberBand() ) );
 
-	m_positionLine = new positionLine( this );
+	//GDX m_positionLine = new positionLine( this );
 	static_cast<QVBoxLayout *>( layout() )->insertWidget( 1, m_timeLine );
 
-
+        // start of global toolbar
+        // this part should be moved out
 	// add some essential widgets to global tool-bar
 	QWidget * tb = gui->mainWindow()->toolBar();
 
@@ -222,24 +226,116 @@ SongEditor::SongEditor( Song * song ) :
 
 	gui->mainWindow()->addSpacingToToolBar( 12,col+5 );
 
-	gui->mainWindow()->addWidgetToToolBar( new TimeDisplayWidget, 0, col+6 );
+        if(false)
+        {
+                // create widget for visualization- and cpu-load-widget
+                QWidget * vc_w = new QWidget( tb );
+                QVBoxLayout * vcw_layout = new QVBoxLayout( vc_w );
+                vcw_layout->setContentsMargins( 0,0,0,0 );
+                vcw_layout->setSpacing( 0 );
+
+                //vcw_layout->addStretch();
+                vcw_layout->addWidget
+                        ( new VisualizationWidget
+                          ( embed::getIconPixmap( "output_graph" ), vc_w ) );
+
+                vcw_layout->addWidget( new CPULoadWidget( vc_w, true ) );
+                vcw_layout->addStretch();
+
+                gui->mainWindow()->addWidgetToToolBar( vc_w,-1,col+6 );
+        }
+        else
+        {
+                gui->mainWindow()->addWidgetToToolBar
+                        ( new VisualizationWidget
+                          ( embed::getIconPixmap( "output_bigger_graph" ), tb), -1, col+6 );
+        }
 
 	gui->mainWindow()->addSpacingToToolBar( 12,col+7 );
 
-	// create widget for visualization- and cpu-load-widget
-	QWidget * vc_w = new QWidget( tb );
-	QVBoxLayout * vcw_layout = new QVBoxLayout( vc_w );
-	vcw_layout->setMargin( 0 );
-	vcw_layout->setSpacing( 0 );
+	gui->mainWindow()->addWidgetToToolBar( new TimeDisplayWidget, 0, col+8 );
 
-	//vcw_layout->addStretch();
-	vcw_layout->addWidget( new VisualizationWidget(
-			embed::getIconPixmap( "output_graph" ), vc_w ) );
+        if( true )
+        {
+                gui->mainWindow()->addWidgetToToolBar( new CPULoadWidget( tb, true ),
+                                                       1, col+8);
+        }
 
-	vcw_layout->addWidget( new CPULoadWidget( vc_w ) );
-	vcw_layout->addStretch();
+        // navigator
+        {
+                gui->mainWindow()->addSpacingToToolBar( 12,col+9 );
 
-	gui->mainWindow()->addWidgetToToolBar( vc_w,-1,col+8 );
+                const char* NAV_ICONS_1[6]=
+                        { "play",
+                          "pause",
+                          "forward",
+                          "",
+                          "stop",
+                          "rewind" };
+
+                for(int i=0; i<6; i++)
+                {
+                        if(QString("")!=NAV_ICONS_1[i])
+                        {
+                                AutomatableToolButton* b=new AutomatableToolButton(tb);
+                                QAction* a=new QAction(embed::getIcon(NAV_ICONS_1[i]),
+                                                       NAV_ICONS_1[i],b);
+                                b->setDefaultAction(a);
+                                a->setData( QVariant(i) );
+                                //a->setCheckable(false);
+                                //a->setShortcut((char)(65+i));
+                                gui->mainWindow()->addWidgetToToolBar( b,i/3,col+10+i%3);
+                        }
+                }
+
+                gui->mainWindow()->addSpacingToToolBar( 12,col+13 );
+
+                const char* NAV_ICONS_2[2]=
+                        { "record",
+                          "record_accompany" };
+
+                for(int i=0; i<2; i++)
+                {
+                        AutomatableToolButton* b=new AutomatableToolButton(tb);
+                        QAction* a=new QAction(embed::getIcon(NAV_ICONS_2[i]),
+                                               NAV_ICONS_2[i],b);
+                                b->setDefaultAction(a);
+                                a->setData( QVariant(i) );
+                                //a->setCheckable(false);
+                                //a->setShortcut((char)(65+i));
+                                gui->mainWindow()->addWidgetToToolBar( b,i/1,col+14+i%1);
+                }
+
+                gui->mainWindow()->addSpacingToToolBar( 12,col+15 );
+
+                const char* NAV_ICONS_3[12]=
+                        { "playpos_songstart",
+                          "playpos_laststart",
+                          "playpos_hyperbarstart",
+                          "playpos_loopstart",
+                          "playpos_barstart",
+                          "playpos_beatstart",
+
+                          "playpos_songend",
+                          "playpos_lastend",
+                          "playpos_hyperbarend",
+                          "playpos_loopend",
+                          "playpos_barend",
+                          "playpos_beatend" };
+
+                for(int i=0; i<12; i++)
+                {
+                        AutomatableToolButton* b=new AutomatableToolButton(tb);
+                        QAction* a=new QAction(embed::getIcon(NAV_ICONS_3[i]),NAV_ICONS_3[i],b);
+                        b->setDefaultAction(a);
+                        a->setData( QVariant(i) );
+                        //a->setCheckable(false);
+                        //a->setShortcut((char)(65+i));
+                        gui->mainWindow()->addWidgetToToolBar( b,i/6,col+16+i%6);
+                }
+        }
+
+        // end of global toolbar
 
 	static_cast<QVBoxLayout *>( layout() )->insertWidget( 0, m_timeLine );
 
@@ -283,10 +379,17 @@ SongEditor::~SongEditor()
 {
 }
 
+
+
+
+
 void SongEditor::saveSettings( QDomDocument& doc, QDomElement& element )
 {
 	MainWindow::saveWidgetState( parentWidget(), element );
 }
+
+
+
 
 void SongEditor::loadSettings( const QDomElement& element )
 {
@@ -369,15 +472,18 @@ void SongEditor::keyPressEvent( QKeyEvent * ke )
 	}
 	else if( ke->key() == Qt::Key_Delete )
 	{
+                deleteSelection();
+                /*
 		QVector<TrackContentObjectView *> tcoViews;
-		QVector<selectableObject *> so = selectedObjects();
-		for( QVector<selectableObject *>::iterator it = so.begin();
+		QVector<SelectableObject *> so = selectedObjects();
+		for( QVector<SelectableObject *>::iterator it = so.begin();
 				it != so.end(); ++it )
 		{
 			TrackContentObjectView * tcov =
 				dynamic_cast<TrackContentObjectView *>( *it );
 			tcov->remove();
 		}
+                */
 	}
 	else if( ke->modifiers() & Qt::ControlModifier &&
                  ke->key() == Qt::Key_A )
@@ -402,21 +508,23 @@ void SongEditor::keyPressEvent( QKeyEvent * ke )
 	{
 		QWidget::keyPressEvent( ke );
 	}
+
+        requireActionUpdate();
 }
 
 
 void SongEditor::unitePatterns()
 {
         //Unite multiple selected patterns horizontally
-        QVector<selectableObject*> so=selectedObjects();
-        qSort(so.begin(),so.end(),selectableObject::lessThan);
+        QVector<SelectableObject*> so=selectedObjects();
+        qSort(so.begin(),so.end(),SelectableObject::lessThan);
         for(Track* t: model()->tracks())
         {
                 if(t->type()==Track::InstrumentTrack)
                 {
                         //qInfo("Unite: instrument track %p",t);
                         Pattern* newp=NULL;
-                        for( QVector<selectableObject *>::iterator
+                        for( QVector<SelectableObject *>::iterator
                                      it = so.begin();
                              it != so.end(); ++it )
                         {
@@ -462,7 +570,7 @@ void SongEditor::unitePatterns()
                         //qInfo("Unite: automation track %p",t);
                         AutomationPattern* newp=NULL;
                         MidiTime endPos;
-                        for( QVector<selectableObject *>::iterator
+                        for( QVector<SelectableObject *>::iterator
                                      it = so.begin();
                              it != so.end(); ++it )
                         {
@@ -515,7 +623,7 @@ void SongEditor::unitePatterns()
                         //qInfo("Unite: bb track %p",t);
                         BBTCO* newp=NULL;
                         MidiTime endPos;
-                        for( QVector<selectableObject *>::iterator
+                        for( QVector<SelectableObject *>::iterator
                                      it = so.begin();
                              it != so.end(); ++it )
                         {
@@ -564,8 +672,8 @@ void SongEditor::dividePatterns()
 {
         //qInfo("SongEditor::dividePatterns");
         //Split multiple selected patterns at the current position
-        QVector<selectableObject*> so=selectedObjects();
-        qSort(so.begin(),so.end(),selectableObject::lessThan);
+        QVector<SelectableObject*> so=selectedObjects();
+        qSort(so.begin(),so.end(),SelectableObject::lessThan);
         Song* song=Engine::getSong();
         if(song->isPlaying()) return;
 
@@ -576,7 +684,7 @@ void SongEditor::dividePatterns()
                 if(t->type()==Track::InstrumentTrack)
                 {
                         //qInfo("Divide: instrument track %p",t);
-                        for( QVector<selectableObject *>::iterator
+                        for( QVector<SelectableObject *>::iterator
                                      it = so.begin();
                              it != so.end(); ++it )
                         {
@@ -642,7 +750,7 @@ void SongEditor::dividePatterns()
                 if(t->type()==Track::AutomationTrack)
                 {
                         //qInfo("Divide: automation track %p",t);
-                        for( QVector<selectableObject *>::iterator
+                        for( QVector<SelectableObject *>::iterator
                                      it = so.begin();
                              it != so.end(); ++it )
                         {
@@ -718,7 +826,7 @@ void SongEditor::dividePatterns()
                 if(t->type()==Track::BBTrack)
                 {
                         //qInfo("Divide: bb track %p",t);
-                        for( QVector<selectableObject *>::iterator
+                        for( QVector<SelectableObject *>::iterator
                                      it = so.begin();
                              it != so.end(); ++it )
                         {
@@ -768,7 +876,7 @@ void SongEditor::dividePatterns()
                 if(t->type()==Track::SampleTrack)
                 {
                         qInfo("Divide: sample track %p",t);
-                        for( QVector<selectableObject *>::iterator
+                        for( QVector<SelectableObject *>::iterator
                                      it = so.begin();
                              it != so.end(); ++it )
                         {
@@ -981,12 +1089,13 @@ static inline void animateScroll( QScrollBar *scrollBar, int newVal, bool smooth
 		scrollBar->setValue( newVal );
 	}
 	else
+        if(scrollBar->value() != newVal)
 	{
 		// do smooth scroll animation using QTimeLine
 		QTimeLine *t = scrollBar->findChild<QTimeLine *>();
 		if( t == NULL )
 		{
-			t = new QTimeLine( 600, scrollBar );
+			t = new QTimeLine( 500, scrollBar );
 			t->setFrameRange( scrollBar->value(), newVal );
 			t->connect( t, SIGNAL( finished() ), SLOT( deleteLater() ) );
 
@@ -1019,16 +1128,19 @@ void SongEditor::updatePosition( const MidiTime & t )
 		trackOpWidth = TRACK_OP_WIDTH;
 	}
 
-	if( ( m_song->isPlaying() && m_song->m_playMode == Song::Mode_PlaySong
-		  && m_timeLine->autoScroll() == TimeLineWidget::AutoScrollEnabled) ||
+        if( ( m_song->isPlaying() && m_song->m_playMode == Song::Mode_PlaySong
+              && m_timeLine->autoScroll() == TimeLineWidget::AutoScrollEnabled) ||
 							m_scrollBack == true )
 	{
 		m_smoothScroll = ConfigManager::inst()->value( "ui", "smoothscroll" ).toInt();
-		const int w = width() - widgetWidth
-							- trackOpWidth
-							- contentWidget()->verticalScrollBar()->width(); // width of right scrollbar
-		if( t > m_currentPosition + w * MidiTime::ticksPerTact() /
-							pixelsPerTact() )
+
+                const int w = width() - 1
+                        - widgetWidth
+                        - trackOpWidth
+                        - contentWidget()->verticalScrollBar()->width(); // width of right scrollbar
+                const MidiTime e=m_currentPosition + w * MidiTime::ticksPerTact() /
+                        pixelsPerTact();
+		if( t >= e - 2 )
 		{
 			animateScroll( m_leftRightScroll, t.getTact(), m_smoothScroll );
 		}
@@ -1041,17 +1153,24 @@ void SongEditor::updatePosition( const MidiTime & t )
 
 	const int x = m_song->m_playPos[Song::Mode_PlaySong].m_timeLine->
 							markerX( t ) + 8;
-	if( x >= trackOpWidth + widgetWidth -1 )
+	if( x >= trackOpWidth + widgetWidth &&
+            x < width() - contentWidget()->verticalScrollBar()->width())
 	{
-		m_positionLine->show();
-		m_positionLine->move( x, m_timeLine->height() );
+		//GDX m_positionLine->show();
+		//GDX m_positionLine->move( x, m_timeLine->height() );
 	}
 	else
 	{
-		m_positionLine->hide();
+		//GDX m_positionLine->hide();
 	}
 
-	m_positionLine->setFixedHeight( height() );
+        /*
+          GDX
+          m_positionLine->setFixedHeight
+                ( height()
+                  - m_timeLine->height()
+                  - contentWidget()->horizontalScrollBar()->height() );
+        */
 }
 
 
@@ -1059,7 +1178,7 @@ void SongEditor::updatePosition( const MidiTime & t )
 
 void SongEditor::updatePositionLine()
 {
-	m_positionLine->setFixedHeight( height() );
+	//m_positionLine->setFixedHeight( height() );
 }
 
 
@@ -1068,7 +1187,7 @@ void SongEditor::updatePositionLine()
 void SongEditor::zoomingXChanged()
 {
 	setPixelsPerTact( Editor::ZOOM_LEVELS[m_zoomingXModel->value()]
-                          * DEFAULT_PIXELS_PER_TACT );
+                          * 16.f );
 
 	m_song->m_playPos[Song::Mode_PlaySong].m_timeLine->
                 setPixelsPerTact( pixelsPerTact() );
@@ -1098,11 +1217,13 @@ void SongEditor::zoomingYChanged()
 
 void SongEditor::selectAllTcos( bool select )
 {
-	QVector<selectableObject *> so = select ? rubberBand()->selectableObjects() : rubberBand()->selectedObjects();
+	QVector<SelectableObject *> so = select ? rubberBand()->selectableObjects() : rubberBand()->selectedObjects();
 	for( int i = 0; i < so.count(); ++i )
 	{
 		so.at(i)->setSelected( select );
 	}
+        qInfo("SongEditor::selectAllTcos");
+        requireActionUpdate();
 }
 
 
@@ -1284,11 +1405,10 @@ SongEditorWindow::SongEditorWindow(Song* song) :
         loopSizeToolBar->addSeparator();
 	m_editor->m_timeLine->addLoopSizeButtons(loopSizeToolBar);
 
-
-
 	connect(song, SIGNAL(projectLoaded()), this, SLOT(adjustUiAfterProjectLoad()));
 	connect(this, SIGNAL(resized()), m_editor, SLOT(updatePositionLine()));
 }
+
 
 QSize SongEditorWindow::sizeHint() const
 {
@@ -1323,12 +1443,14 @@ void SongEditorWindow::play()
 		Engine::getSong()->togglePause();
 	}
 	*/
+        requireActionUpdate();
 }
 
 
 void SongEditorWindow::record()
 {
 	m_editor->m_song->record();
+        requireActionUpdate();
 }
 
 
@@ -1337,6 +1459,7 @@ void SongEditorWindow::record()
 void SongEditorWindow::recordAccompany()
 {
 	m_editor->m_song->playAndRecord();
+        requireActionUpdate();
 }
 
 
@@ -1347,6 +1470,7 @@ void SongEditorWindow::stop()
 	Engine::transport()->transportStop();
 	m_editor->m_song->stop();
 	gui->pianoRoll()->stopRecording();
+        requireActionUpdate();
 }
 
 
@@ -1359,6 +1483,7 @@ void SongEditorWindow::lostFocus()
 		m_crtlAction->setChecked( true );
 		m_crtlAction->trigger();
 	}
+        requireActionUpdate();
 }
 
 
@@ -1373,6 +1498,7 @@ void SongEditorWindow::adjustUiAfterProjectLoad()
 			qobject_cast<QMdiSubWindow *>( parentWidget() ) );
 	connect( qobject_cast<SubWindow *>( parentWidget() ), SIGNAL( focusLost() ), this, SLOT( lostFocus() ) );
 	m_editor->scrolled(0);
+        requireActionUpdate();
 }
 
 
@@ -1401,4 +1527,76 @@ void SongEditorWindow::keyReleaseEvent( QKeyEvent *ke )
 			m_crtlAction->trigger();
 		}
 	}
+}
+
+
+// ActionUpdatable //
+
+void SongEditorWindow::updateActions(const bool _active, QHash<QString,bool>& _table) const
+{
+        //qInfo("SongEditorWindow::updateActions() active=%d",_active);
+        m_editor->updateActions(_active,_table);
+}
+
+
+void SongEditorWindow::actionTriggered(QString _name)
+{
+        m_editor->actionTriggered(_name);
+}
+
+void SongEditor::updateActions(const bool _active, QHash<QString,bool>& _table) const
+{
+        //qInfo("SongEditor::updateActions() active=%d",_active);
+        bool hasSelection=_active && selectedObjects().size()>0;
+        //qInfo("SongEditorWindow::updateActions() active=%d selection=%d",
+        //      _active,hasSelection);
+        _table.insert("edit_cut",hasSelection);
+        _table.insert("edit_copy",hasSelection);
+        _table.insert("edit_paste",_active);
+}
+
+
+void SongEditor::actionTriggered(QString _name)
+{
+        qInfo("SongEditor::actionTriggered() name=%s", qPrintable(_name));
+        if(_name=="edit_cut")
+                cutSelection();
+        else
+        if(_name=="edit_copy")
+                copySelection();
+        else
+        if(_name=="edit_paste")
+                pasteSelection();
+}
+
+// Selection //
+
+void SongEditor::deleteSelection()
+{
+        QVector<SelectableObject *> so = selectedObjects();
+        for( QVector<SelectableObject *>::iterator it = so.begin();
+             it != so.end(); ++it )
+		{
+			TrackContentObjectView * tcov =
+				dynamic_cast<TrackContentObjectView *>( *it );
+			tcov->remove();
+		}
+}
+
+void SongEditor::cutSelection()
+{
+        copySelection();
+        deleteSelection();
+}
+
+void SongEditor::copySelection()
+{
+        QVector<TrackContentObject*> so=selectedTCOs();
+        if(so.length()>0)
+                Clipboard::copy(so.at(0));
+}
+
+void SongEditor::pasteSelection()
+{
+        //Clipboard::paste(vso)
 }

@@ -25,7 +25,10 @@
 #ifndef EDITOR_COMMON_H
 #define EDITOR_COMMON_H
 
+#include "ActionUpdatable.h"
+
 #include <QMainWindow>
+#include <QHash>
 #include <QToolBar>
 
 class QAction;
@@ -36,7 +39,7 @@ class DropToolBar;
 ///
 /// Those editors include the Song Editor, the Automation Editor, B&B Editor,
 /// and the Piano Roll.
-class Editor : public QMainWindow
+class Editor : public QMainWindow, public virtual ActionUpdatable
 {
 	Q_OBJECT
 
@@ -71,9 +74,7 @@ class Editor : public QMainWindow
 	/// Called by pressing the space key. Plays or stops.
 	void togglePlayStop();
 
-signals:
-
-protected:
+ protected:
 	DropToolBar* m_toolBar;
 
 	QAction* m_playAction;

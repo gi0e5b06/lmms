@@ -22,13 +22,13 @@
  *
  */
 
-#ifndef SAMPLE_TRACK_H
-#define SAMPLE_TRACK_H
-
-//#include <QDialog>
+#ifndef SAMPLE_TRACK_H_
+#define SAMPLE_TRACK_H_
 
 #include "AudioPort.h"
 #include "Track.h"
+
+//#include <QDialog>
 
 class QLineEdit;
 class QLabel;
@@ -45,20 +45,23 @@ class SampleTCO : public TrackContentObject
 {
 	Q_OBJECT
 	mapPropertyFromModel(bool,isRecord,setRecord,m_recordModel);
+
 public:
 	SampleTCO( Track * _track );
         SampleTCO( const SampleTCO& _other );
 	virtual ~SampleTCO();
 
-	virtual void changeLength( const MidiTime & _length );
-	const QString & sampleFile() const;
+	//virtual void changeLength( const MidiTime & _length );
 
+	// settings-management
 	virtual void saveSettings( QDomDocument & _doc, QDomElement & _parent );
 	virtual void loadSettings( const QDomElement & _this );
 	inline virtual QString nodeName() const
 	{
 		return "sampletco";
 	}
+
+	const QString & sampleFile() const;
 
 	SampleBuffer* sampleBuffer()
 	{
@@ -121,11 +124,13 @@ public slots:
 	void loadSample();
 	void reloadSample();
 	void updateSample();
-
+        void openInAudacity();
 
 
 protected:
-	virtual void contextMenuEvent( QContextMenuEvent * _cme );
+	virtual QMenu* buildContextMenu();
+
+	//virtual void contextMenuEvent( QContextMenuEvent * _cme );
 	virtual void mousePressEvent( QMouseEvent * _me );
 	virtual void mouseReleaseEvent( QMouseEvent * _me );
 	virtual void dragEnterEvent( QDragEnterEvent * _dee );

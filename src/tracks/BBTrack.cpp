@@ -47,9 +47,12 @@ BBTrack::infoMap BBTrack::s_infoMap;
 
 
 BBTCO::BBTCO( Track * _track ) :
-	TrackContentObject( _track ),
-	m_color( 128, 128, 128 ),
-	m_useStyleColor( true )
+	TrackContentObject( _track )
+        /*
+          ,
+          m_color( 128, 128, 128 ),
+          m_useStyleColor( true )
+        */
 {
 	tact_t t = Engine::getBBTrackContainer()->lengthOfBB( bbTrackIndex() );
 	if( t > 0 )
@@ -63,10 +66,12 @@ BBTCO::BBTCO( Track * _track ) :
 
 
 BBTCO::BBTCO( const BBTCO& _other ) :
-	TrackContentObject( _other.getTrack() ),
-	//m_patternType( _other.m_patternType ),
-        m_color( _other.m_color ),
-	m_useStyleColor( _other.m_useStyleColor )
+	TrackContentObject( _other.getTrack() )
+        /*
+          ,
+          m_color( _other.m_color ),
+          m_useStyleColor( _other.m_useStyleColor )
+        */
 {
         changeLength( _other.length() );
         setAutoResize( _other.getAutoResize() );
@@ -82,12 +87,14 @@ BBTCO::~BBTCO()
 
 void BBTCO::saveSettings( QDomDocument & doc, QDomElement & element )
 {
+        TrackContentObject::saveSettings(doc,element);
+        /*
 	element.setAttribute( "name", name() );
-	if( element.parentNode().nodeName() == "clipboard" )
-	{
-		element.setAttribute( "pos", -1 );
-	}
-	else
+	//if( element.parentNode().nodeName() == "clipboarddata" )
+	//{
+	//	element.setAttribute( "pos", -1 );
+	//}
+	//else
 	{
 		element.setAttribute( "pos", startPosition() );
 	}
@@ -103,6 +110,7 @@ void BBTCO::saveSettings( QDomDocument & doc, QDomElement & element )
 	{
 		element.setAttribute( "usestyle", 0 );
 	}
+        */
 }
 
 
@@ -110,7 +118,10 @@ void BBTCO::saveSettings( QDomDocument & doc, QDomElement & element )
 
 void BBTCO::loadSettings( const QDomElement & element )
 {
-	setName( element.attribute( "name" ) );
+        TrackContentObject::loadSettings(element);
+
+        /*
+        setName( element.attribute( "name" ) );
 	if( element.attribute( "pos" ).toInt() >= 0 )
 	{
 		movePosition( element.attribute( "pos" ).toInt() );
@@ -148,6 +159,7 @@ void BBTCO::loadSettings( const QDomElement & element )
 			m_useStyleColor = false;
 		}
 	}
+        */
 }
 
 
@@ -187,25 +199,27 @@ BBTCOView::~BBTCOView()
 
 
 
-void BBTCOView::constructContextMenu( QMenu * _cm )
+QMenu* BBTCOView::buildContextMenu()
 {
-	QAction * a = new QAction( embed::getIconPixmap( "bb_track" ),
-					tr( "Open in Beat+Bassline-Editor" ),
-					_cm );
-	_cm->insertAction( _cm->actions()[0], a );
-	connect( a, SIGNAL( triggered( bool ) ),
-			this, SLOT( openInBBEditor() ) );
-	_cm->insertSeparator( _cm->actions()[1] );
-	_cm->addSeparator();
-	_cm->addAction( embed::getIconPixmap( "reload" ), tr( "Reset name" ),
-						this, SLOT( resetName() ) );
-	_cm->addAction( embed::getIconPixmap( "edit_rename" ),
-						tr( "Change name" ),
-						this, SLOT( changeName() ) );
-	_cm->addAction( embed::getIconPixmap( "colorize" ),
-			tr( "Change color" ), this, SLOT( changeColor() ) );
-	_cm->addAction( embed::getIconPixmap( "colorize" ),
-			tr( "Reset color to default" ), this, SLOT( resetColor() ) );
+        QMenu* cm=new QMenu(this);
+        /*
+	QAction* a;
+
+        a=
+        */
+        cm->addAction( embed::getIconPixmap( "bb_track" ),
+                       tr( "Open in Beat+Bassline-Editor" ),
+                       this, SLOT( openInBBEditor() ) );
+        addRemoveMuteClearMenu(cm,true,false,false);
+        cm->addSeparator();
+        addCutCopyPasteMenu(cm,true,true,true);
+
+        cm->addSeparator();
+        addNameMenu(cm,true);
+        cm->addSeparator();
+        addColorMenu(cm,true);
+
+        return cm;
 }
 
 
@@ -239,13 +253,19 @@ void BBTCOView::paintEvent( QPaintEvent * )
 	QPainter p( &m_paintPixmap );
 
 	//QLinearGradient lingrad( 0, 0, 0, height() );
-	QColor c;
+
 	bool muted = m_bbTCO->getTrack()->isMuted() || m_bbTCO->isMuted();
 
 	// state: selected, muted, default, user selected
-	c = isSelected() ? selectedColor() : ( muted ? mutedBackgroundColor()
-		: ( m_bbTCO->m_useStyleColor ? painter.background().color()
-		: m_bbTCO->colorObj() ) );
+	QColor bgcolor = isSelected()
+                ? selectedColor()
+                : ( muted
+                    ? mutedBackgroundColor()
+                    : ( useStyleColor()
+                        ? ( m_bbTCO->getTrack()->useStyleColor()
+                            ? painter.background().color()
+                            : m_bbTCO->getTrack()->color() )
+                        : color() ) );
 
 	/*
         lingrad.setColorAt( 0, c.light( 130 ) );
@@ -261,7 +281,7 @@ void BBTCOView::paintEvent( QPaintEvent * )
 	else
         */
 	{
-		p.fillRect( rect(), c );
+		p.fillRect( rect(), bgcolor );
 	}
 
 	/*
@@ -283,25 +303,18 @@ void BBTCOView::paintEvent( QPaintEvent * )
 	}
         */
 
-        if(m_bbTCO->getTrack()->isFrozen())
-        {
-                p.fillRect(0,height()-9,width()-1,height()-1,
-                           QBrush(Qt::cyan,Qt::BDiagPattern));
-                p.fillRect(0,0,width()-1,height()-1,
-                           QBrush(QColor(0,160,160,48),Qt::SolidPattern));
-        }
-        else
-        {
-                //float  ppt=(width()-2*TCO_BORDER_WIDTH)/(float)m_bbTCO->length().getTact();
-                //tact_t tpg=Engine::getBBTrackContainer()->...lengthOfBB( m_bbTCO->bbTrackIndex() );
-                tick_t tpg=Engine::getBBTrackContainer()->
-                        beatLengthOfBB( m_bbTCO->bbTrackIndex() );
-                paintTileTacts(false,m_bbTCO->length().nextFullTact(),tpg,
-                               c,width(),height(),p);
-        }
+        bool frozen=m_bbTCO->getTrack()->isFrozen();
+        paintFrozenIcon(frozen,p);
+
+        //float  ppt=(width()-2*TCO_BORDER_WIDTH)/(float)m_bbTCO->length().getTact();
+        //tact_t tpg=Engine::getBBTrackContainer()->...lengthOfBB( m_bbTCO->bbTrackIndex() );
+        tick_t tpg=Engine::getBBTrackContainer()->
+                beatLengthOfBB( m_bbTCO->bbTrackIndex() );
+        paintTileTacts(false,m_bbTCO->length().nextFullTact(),tpg,
+                       bgcolor,p);
 
 	// pattern name
-	paintTextLabel(m_bbTCO->name(), p);
+	paintTextLabel(m_bbTCO->name(), bgcolor, p);
 
         /*
 	// inner border
@@ -313,7 +326,7 @@ void BBTCOView::paintEvent( QPaintEvent * )
 	p.setPen( c.darker( 300 ) );
 	p.drawRect( 0, 0, rect().right(), rect().bottom() );
         */
-        paintTileBorder(false,c,width(),height(),p);
+        paintTileBorder(false,bgcolor,p);
 
         /*
 	// draw the 'muted' pixmap only if the pattern was manualy muted
@@ -345,6 +358,7 @@ void BBTCOView::openInBBEditor()
 
 
 
+/*
 void BBTCOView::resetName()
 {
 	m_bbTCO->setName( m_bbTCO->getTrack()->name() );
@@ -373,9 +387,9 @@ void BBTCOView::changeColor()
 	}
 	if( isSelected() )
 	{
-		QVector<selectableObject *> selected =
+		QVector<SelectableObject *> selected =
 				gui->songEditor()->m_editor->selectedObjects();
-		for( QVector<selectableObject *>::iterator it =
+		for( QVector<SelectableObject *>::iterator it =
 							selected.begin();
 						it != selected.end(); ++it )
 		{
@@ -391,9 +405,10 @@ void BBTCOView::changeColor()
 		setColor( new_color );
 	}
 }
-
+*/
 
 /** \brief Makes the BB pattern use the colour defined in the stylesheet */
+/*
 void BBTCOView::resetColor()
 {
 	if( ! m_bbTCO->m_useStyleColor )
@@ -404,7 +419,6 @@ void BBTCOView::resetColor()
 	}
 	BBTrack::clearLastTCOColor();
 }
-
 
 
 void BBTCOView::setColor( QColor new_color )
@@ -418,6 +432,7 @@ void BBTCOView::setColor( QColor new_color )
 	}
 	BBTrack::setLastTCOColor( new_color );
 }
+*/
 
 
 void BBTCOView::update()
@@ -429,7 +444,7 @@ void BBTCOView::update()
 
 
 
-QColor * BBTrack::s_lastTCOColor = NULL;
+//QColor * BBTrack::s_lastTCOColor = NULL;
 
 BBTrack::BBTrack( TrackContainer* tc ) :
 	Track( Track::BBTrack, tc )
@@ -535,11 +550,13 @@ TrackView * BBTrack::createView( TrackContainerView* tcv )
 TrackContentObject * BBTrack::createTCO( const MidiTime & _pos )
 {
 	BBTCO * bbtco = new BBTCO( this );
+        /*
 	if( s_lastTCOColor )
 	{
 		bbtco->setColor( *s_lastTCOColor );
 		bbtco->setUseStyleColor( false );
 	}
+        */
 	return bbtco;
 }
 

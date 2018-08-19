@@ -24,14 +24,14 @@
  */
 
 
-#ifndef BB_TRACK_H
-#define BB_TRACK_H
+#ifndef BB_TRACK_H_
+#define BB_TRACK_H_
+
+#include "Track.h"
 
 #include <QObject>
 #include <QMap>
 #include <QStaticText>
-
-#include "Track.h"
 
 class TrackLabelButton;
 class TrackContainer;
@@ -46,14 +46,16 @@ public:
 
 	virtual void saveSettings( QDomDocument & _doc, QDomElement & _parent );
 	virtual void loadSettings( const QDomElement & _this );
+
 	inline virtual QString nodeName() const
 	{
-		return( "bbtco" );
+		return "bbtco";
 	}
 
+        /*
 	unsigned int color() const
 	{
-		return( m_color.rgb() );
+		return m_color.rgb();
 	}
 
 	QColor colorObj() const
@@ -70,15 +72,17 @@ public:
 	{
 		m_useStyleColor = b;
 	}
+        */
 
 	int bbTrackIndex();
 
 	virtual TrackContentObjectView * createView( TrackView * _tv );
 
 private:
+        /*
 	QColor m_color;
 	bool m_useStyleColor;
-
+        */
 
 	friend class BBTCOView;
 
@@ -93,33 +97,34 @@ public:
 	BBTCOView( TrackContentObject * _tco, TrackView * _tv );
 	virtual ~BBTCOView();
 
+        /*
 	QColor color() const
 	{
 		return( m_bbTCO->m_color );
 	}
 	void setColor( QColor _new_color );
+        */
 
 public slots:
 	virtual void update();
 
 protected slots:
 	void openInBBEditor();
-	void resetName();
-	void changeName();
-	void changeColor();
-	void resetColor();
-
+	//void resetName();
+	//void changeName();
+	//void changeColor();
+	//void resetColor();
 
 protected:
-	virtual void paintEvent( QPaintEvent * pe );
-	virtual void mouseDoubleClickEvent( QMouseEvent * _me );
-	virtual void constructContextMenu( QMenu * );
+	virtual QMenu* buildContextMenu();
 
+        virtual void paintEvent( QPaintEvent * pe );
+	virtual void mouseDoubleClickEvent( QMouseEvent * _me );
 
 private:
 	BBTCO * m_bbTCO;
 	QPixmap m_paintPixmap;
-	
+
 	QStaticText m_staticTextName;
 } ;
 
@@ -163,6 +168,7 @@ public:
 		m_disabledTracks.removeAll( _track );
 	}
 
+        /*
 	static void setLastTCOColor( const QColor & c )
 	{
 		if( ! s_lastTCOColor )
@@ -174,7 +180,7 @@ public:
 			*s_lastTCOColor = QColor( c );
 		}
 	}
-	
+
 	static void clearLastTCOColor()
 	{
 		if( s_lastTCOColor )
@@ -183,6 +189,7 @@ public:
 		}
 		s_lastTCOColor = NULL;
 	}
+        */
 
 protected:
 	inline virtual QString nodeName() const
@@ -197,7 +204,7 @@ private:
 	typedef QMap<BBTrack *, int> infoMap;
 	static infoMap s_infoMap;
 
-	static QColor * s_lastTCOColor;
+	//static QColor * s_lastTCOColor;
 
 	friend class BBTrackView;
 

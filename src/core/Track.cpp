@@ -37,21 +37,6 @@
 
 #include "Track.h"
 
-#include <cassert>
-#include <cmath>
-
-#include <QHBoxLayout>
-#include <QMenu>
-#include <QMouseEvent>
-#include <QPainter>
-#include <QStyleOption>
-#include <QUuid>
-
-#include "Backtrace.h"
-#include "debug.h"
-#include "embed.h"
-#include "gui_templates.h"
-
 #include "AutomationPattern.h"
 #include "AutomationTrack.h"
 #include "AutomationEditor.h"
@@ -68,12 +53,29 @@
 #include "Pattern.h"
 #include "PixmapButton.h"
 //#include "ProjectJournal.h"
+#include "RenameDialog.h"
 #include "SampleTrack.h"
 #include "Song.h"
 #include "SongEditor.h"
 #include "StringPairDrag.h"
 #include "TextFloat.h"
 #include "ToolTip.h"
+
+#include "Backtrace.h"
+#include "debug.h"
+#include "embed.h"
+#include "gui_templates.h"
+
+#include <QColorDialog>
+#include <QHBoxLayout>
+#include <QMenu>
+#include <QMouseEvent>
+#include <QPainter>
+#include <QStyleOption>
+#include <QUuid>
+
+#include <cassert>
+#include <cmath>
 
 
 /*! The width of the resize grip in pixels
@@ -101,13 +103,18 @@ TextFloat * TrackContentObjectView::s_textFloat = NULL;
  */
 TrackContentObject::TrackContentObject( Track * track ) :
 	Model( track ),
+	m_steps( DefaultStepsPerTact ),
+        m_stepResolution( DefaultStepsPerTact ),
 	m_track( track ),
 	m_name( QString::null ),
 	m_startPosition(),
 	m_length(),
 	m_mutedModel( false, this, tr( "Mute" ) ),
+	m_color( 128, 128, 128 ),
+	m_useStyleColor( true ),
 	m_selectViewOnCreate( false )
 {
+        /*
         if(Engine::getSong()&&Engine::getSong()->isPlaying())
         {
                 static bool s_once=false;
@@ -118,17 +125,34 @@ TrackContentObject::TrackContentObject( Track * track ) :
                         qWarning("TrackContentObject::TrackContentObject alloc...");
                 }
         }
+        */
 
-        if( getTrack() )
-	{
-		getTrack()->addTCO( this );
-	}
+        if(track)
+                track->addTCO( this );
+        //else
+        //qWarning("TrackContentObject::TrackContentObject no track???");
+
 	setJournalling( false );
 	movePosition( 0 );
 	changeLength( 0 );
 	setJournalling( true );
 }
 
+TrackContentObject::TrackContentObject( const TrackContentObject& _other ) :
+	Model( _other.m_track ),
+	m_steps( _other.m_steps ),
+        m_stepResolution( _other.m_stepResolution ),
+	m_track( _other.m_track ),
+	m_name( _other.m_name ),
+	m_startPosition( _other.m_startPosition ),
+	m_length( _other.m_length ),
+	m_mutedModel( _other.m_mutedModel.value(), this, tr( "Mute" ) ),
+        m_autoResize( _other.m_autoResize ),
+	m_color( _other.m_color ),
+	m_useStyleColor( _other.m_useStyleColor ),
+	m_selectViewOnCreate( false )
+{
+}
 
 
 
@@ -141,14 +165,70 @@ TrackContentObject::~TrackContentObject()
 {
 	emit destroyedTCO();
 
-	if( getTrack() )
-	{
-		getTrack()->removeTCO( this );
-	}
+        Track* t=getTrack();
+	if(t) t->removeTCO(this);
 }
 
 
+void TrackContentObject::saveSettings( QDomDocument & doc, QDomElement & element )
+{
+	element.setAttribute( "name", name() );
+        element.setAttribute( "pos", startPosition() );
+	element.setAttribute( "len", length() );
+	element.setAttribute( "muted", isMuted() );
+	element.setAttribute( "color", color().rgb() );
+        element.setAttribute( "usestyle", useStyleColor() ? 1 : 0 );
+}
 
+
+void TrackContentObject::loadSettings( const QDomElement & element )
+{
+        if( element.hasAttribute( "name" ) )
+                setName( element.attribute( "name" ) );
+
+        if( element.hasAttribute( "pos" ) )
+                if( element.attribute( "pos" ).toInt() >= 0 )
+                        movePosition( element.attribute( "pos" ).toInt() );
+
+        if( element.hasAttribute( "len" ) )
+                changeLength( element.attribute( "len" ).toInt() );
+
+        if( element.hasAttribute( "muted" ) )
+                if( element.attribute( "muted" ).toInt() != isMuted() )
+                        toggleMute();
+
+	if( element.hasAttribute( "color" ) )
+		setColor( QColor( element.attribute( "color" ).toUInt() ) );
+
+	if( element.hasAttribute( "usestyle" ) )
+		setUseStyleColor( element.attribute( "usestyle" ).toUInt() == 1 );
+}
+
+
+bool TrackContentObject::isFixed() const
+{
+        return getTrack()->isFixed();
+}
+
+QColor TrackContentObject::color() const
+{
+        return m_color;
+}
+
+void TrackContentObject::setColor(const QColor& _c)
+{
+        m_color=_c;
+}
+
+bool TrackContentObject::useStyleColor() const
+{
+        return m_useStyleColor;
+}
+
+void TrackContentObject::setUseStyleColor(bool _b)
+{
+        m_useStyleColor=_b;
+}
 
 /*! \brief Move this TrackContentObject's position in time
  *
@@ -177,17 +257,160 @@ void TrackContentObject::movePosition( const MidiTime & pos )
  *
  * \param _length The new length of the track content object.
  */
-void TrackContentObject::changeLength( const MidiTime & length )
+void TrackContentObject::changeLength( const MidiTime & _length )
 {
-	m_length = length;
-	Engine::getSong()->updateLength();
-	emit lengthChanged();
+	float nom = Engine::getSong()->getTimeSigModel().getNumerator();
+	float den = Engine::getSong()->getTimeSigModel().getDenominator();
+	int ticksPerTact = DefaultTicksPerTact * ( nom / den );
+
+	tick_t len=qMax( static_cast<tick_t>( _length ), ticksPerTact/32 );
+
+        if(m_length!=len)
+        {
+                m_length = len;
+                m_steps  = len
+                        * m_stepResolution * stepsPerTact()
+                        / MidiTime::ticksPerTact() / 16;
+                Engine::getSong()->updateLength();
+                emit lengthChanged();
+        }
 }
+
+
+void TrackContentObject::updateLength()
+{
+        updateLength(length());
+}
+
+void TrackContentObject::updateLength(tick_t _len)
+{
+        if(isFixed())
+        {
+                _len = m_steps * MidiTime::ticksPerTact()
+                        * 16 / m_stepResolution / stepsPerTact();
+        }
+
+        changeLength(_len);
+	//updateBBTrack();
+}
+
+
+int TrackContentObject::stepsPerTact() const
+{
+	int steps = MidiTime::ticksPerTact() / DefaultBeatsPerTact;
+	return qMax( 1, steps );
+}
+
+
+MidiTime TrackContentObject::stepPosition(int _step) const
+{
+	return _step * 16.f / m_stepResolution *
+                MidiTime::ticksPerTact() / stepsPerTact();
+}
+void TrackContentObject::setStepResolution(int _res)
+{
+        if(_res>0)
+        {
+                int old=m_stepResolution;
+                if(_res!=old)
+                {
+                        m_steps=qMax(1,(m_steps*_res/old));
+                        m_stepResolution=_res;
+                        updateLength();
+                        emit dataChanged();
+                }
+        }
+}
+
+
+void TrackContentObject::addBarSteps()
+{
+	m_steps += stepsPerTact();
+	updateLength();
+	emit dataChanged();
+}
+
+void TrackContentObject::addBeatSteps()
+{
+	m_steps += stepsPerTact() /
+                Engine::getSong()->getTimeSigModel().getNumerator();
+	updateLength();
+	emit dataChanged();
+}
+
+void TrackContentObject::addOneStep()
+{
+	m_steps ++; //= stepsPerTact();
+	updateLength();
+	emit dataChanged();
+}
+
+void TrackContentObject::removeBarSteps()
+{
+	int n = stepsPerTact();
+	if( n < m_steps )
+	{
+                /*
+		for( int i = m_steps - n; i < m_steps; ++i )
+		{
+			setStep( i, false );
+		}
+                */
+		m_steps -= n;
+		updateLength();
+		emit dataChanged();
+	}
+}
+
+void TrackContentObject::removeBeatSteps()
+{
+	int n = stepsPerTact() /
+                Engine::getSong()->getTimeSigModel().getNumerator();
+	if( n < m_steps )
+	{
+                /*
+		for( int i = m_steps - n; i < m_steps; ++i )
+		{
+			setStep( i, false );
+		}
+                */
+		m_steps -= n;
+		updateLength();
+		emit dataChanged();
+	}
+}
+
+void TrackContentObject::removeOneStep()
+{
+        int n = 1;
+	if( n < m_steps )
+	{
+                /*
+		for( int i = m_steps - n; i < m_steps; ++i )
+		{
+			setStep( i, false );
+		}
+                */
+		m_steps -= n;
+		updateLength();
+		emit dataChanged();
+	}
+}
+
+
+
 
 bool TrackContentObject::comparePosition(const TrackContentObject *a,
                                          const TrackContentObject *b)
 {
 	return a->startPosition() < b->startPosition();
+}
+
+
+
+
+void TrackContentObject::clear()
+{
 }
 
 
@@ -213,12 +436,20 @@ void TrackContentObject::copy()
  */
 void TrackContentObject::paste()
 {
+        if(Clipboard::has(nodeName()))
+        {
+		const MidiTime pos = startPosition();
+                Clipboard::paste(this);
+		movePosition( pos );
+        }
+        /*
 	if( Clipboard::getContent( nodeName() ) != NULL )
 	{
 		const MidiTime pos = startPosition();
 		restoreState( *( Clipboard::getContent( nodeName() ) ) );
 		movePosition( pos );
 	}
+        */
 	AutomationPattern::resolveAllIDs();
 	GuiApplication::instance()->automationEditor()->m_editor->updateAfterPatternChange();
 }
@@ -259,7 +490,7 @@ void TrackContentObject::toggleMute()
  */
 TrackContentObjectView::TrackContentObjectView( TrackContentObject * tco,
 							TrackView * tv ) :
-	selectableObject( tv->getTrackContentWidget() ),
+	SelectableObject( tv->getTrackContentWidget() ),
 	ModelView( NULL, this ),
 	m_tco( tco ),
 	m_trackView( tv ),
@@ -289,7 +520,7 @@ TrackContentObjectView::TrackContentObjectView( TrackContentObject * tco,
 	move( 0, 0 );
 	show();
 
-	setFixedHeight( tv->getTrackContentWidget()->height() - 1 );
+	setFixedHeight( tv->getTrackContentWidget()->height() ); // GDX -1
 	setAcceptDrops( true );
 	setMouseTracking( true );
 
@@ -335,12 +566,12 @@ TrackContentObjectView::~TrackContentObjectView()
  */
 void TrackContentObjectView::update()
 {
-	if( fixedTCOs() )
+	if( isFixed() )//fixedTCOs() )
 	{
-		updateLength();
+		//updateLength(); GDX
 	}
 	m_needsUpdate = true;
-	selectableObject::update();
+	SelectableObject::update();
 }
 
 
@@ -353,11 +584,12 @@ void TrackContentObjectView::update()
  * \todo What the hell is a TCO here - track content object?  And in
  *  what circumstance are they fixed?
  */
+/*
 bool TrackContentObjectView::fixedTCOs()
 {
 	return m_trackView->trackContainerView()->fixedTCOs();
 }
-
+*/
 
 
 // qproperty access functions, to be inherited & used by TCOviews
@@ -435,8 +667,6 @@ bool TrackContentObjectView::close()
 }
 
 
-
-
 /*! \brief Removes a trackContentObjectView from its track view.
  *
  *  Like the close() method, this asks the track view to remove this
@@ -453,8 +683,15 @@ void TrackContentObjectView::remove()
 	m_tco->deleteLater();
 }
 
+void TrackContentObjectView::mute()
+{
+        m_tco->toggleMute();
+}
 
-
+void TrackContentObjectView::clear()
+{
+        m_tco->clear();
+}
 
 /*! \brief Cut this trackContentObjectView from its track to the clipboard.
  *
@@ -467,8 +704,121 @@ void TrackContentObjectView::cut()
 	remove();
 }
 
+void TrackContentObjectView::copy()
+{
+	m_tco->copy();
+}
 
+void TrackContentObjectView::paste()
+{
+	m_tco->paste();
+}
 
+void TrackContentObjectView::changeName()
+{
+	QString s = m_tco->name();
+	RenameDialog rename_dlg( s );
+	rename_dlg.exec();
+	m_tco->setName( s );
+}
+
+void TrackContentObjectView::resetName()
+{
+	m_tco->setName( m_tco->getTrack()->name() );
+}
+
+void TrackContentObjectView::changeColor()
+{
+	QColor new_color = QColorDialog::getColor( color() );
+
+	if( ! new_color.isValid() )
+	{
+		return;
+	}
+
+	if( isSelected() )
+	{
+		QVector<SelectableObject*> selected =
+                        gui->songEditor()->m_editor->selectedObjects();
+		for( QVector<SelectableObject *>::iterator it =
+                             selected.begin();
+                     it != selected.end(); ++it )
+		{
+			TrackContentObjectView* tcov=
+                                dynamic_cast<TrackContentObjectView*>( *it );
+			if( tcov )
+				tcov->setColor( new_color );
+		}
+	}
+	else setColor( new_color );
+}
+
+void TrackContentObjectView::resetColor()
+{
+	if( isSelected() )
+	{
+		QVector<SelectableObject*> selected =
+                        gui->songEditor()->m_editor->selectedObjects();
+		for( QVector<SelectableObject *>::iterator it =
+                             selected.begin();
+                     it != selected.end(); ++it )
+		{
+			TrackContentObjectView* tcov=
+                                dynamic_cast<TrackContentObjectView*>( *it );
+			if( tcov )
+				tcov->setUseStyleColor(true);
+		}
+	}
+	else setUseStyleColor(true);
+
+        //BBTrack::clearLastTCOColor();
+}
+
+bool TrackContentObjectView::isFixed() const
+{
+        return m_tco->isFixed();
+}
+
+/*! \brief How many pixels a tact (bar) takes for this trackContentObjectView.
+ *
+ * \return the number of pixels per tact (bar).
+ */
+float TrackContentObjectView::pixelsPerTact()
+{
+	return m_trackView->pixelsPerTact();
+}
+
+bool TrackContentObjectView::useStyleColor() const
+{
+        return m_tco->useStyleColor();
+}
+
+void TrackContentObjectView::setUseStyleColor( bool _use )
+{
+        if(_use != m_tco->useStyleColor())
+        {
+                m_tco->setUseStyleColor(_use);
+		Engine::getSong()->setModified();
+		update();
+        }
+}
+
+QColor TrackContentObjectView::color() const
+{
+        return m_tco->color();
+}
+
+void TrackContentObjectView::setColor(const QColor& new_color )
+{
+	if( new_color != m_tco->color() )
+	{
+		m_tco->setColor(new_color);
+		m_tco->setUseStyleColor(false);
+		Engine::getSong()->setModified();
+		update();
+	}
+	//BBTrack::setLastTCOColor( new_color );
+}
 
 /*! \brief Updates a trackContentObjectView's length
  *
@@ -479,16 +829,18 @@ void TrackContentObjectView::cut()
  */
 void TrackContentObjectView::updateLength()
 {
-	if( fixedTCOs() )
+	//if( fixedTCOs() )
+	//{
+	//	setFixedWidth( parentWidget()->width() );
+	//}
+	//else
 	{
-		setFixedWidth( parentWidget()->width() );
-	}
-	else
-	{
-		setFixedWidth
-                        (static_cast<int>( round(pixelsPerTact() * m_tco->length() /
-                                                 MidiTime::ticksPerTact() )));
-                         //+ 1 + TCO_BORDER_WIDTH * 2-1 );
+		float w=pixelsPerTact()
+                        * m_tco->length()
+                        / MidiTime::ticksPerTact();
+                //if( isFixed() ) w*=16.f;
+                //+ 1 + TCO_BORDER_WIDTH * 2-1 );
+                setFixedWidth(static_cast<int>( roundf(w)) );
 	}
 	m_trackView->trackContainerView()->update();
 }
@@ -675,18 +1027,20 @@ DataFile TrackContentObjectView::createTCODataFiles(
 	return dataFile;
 }
 
-void TrackContentObjectView::paintTextLabel(QString const & text, QPainter & painter)
+void TrackContentObjectView::paintTextLabel(QString const& text,
+                                            const QColor& c,
+                                            QPainter& p)
 {
 	if (text.trimmed() == "")
 	{
 		return;
 	}
 
-	painter.setRenderHint( QPainter::TextAntialiasing );
+	p.setRenderHint( QPainter::TextAntialiasing, true );
 
 	QFont labelFont = this->font();
 	labelFont.setHintingPreference( QFont::PreferFullHinting );
-	painter.setFont( labelFont );
+	p.setFont( labelFont );
 
 	const int textTop = TCO_BORDER_WIDTH + 1;
 	const int textLeft = TCO_BORDER_WIDTH + 3;
@@ -699,21 +1053,26 @@ void TrackContentObjectView::paintTextLabel(QString const & text, QPainter & pai
 		elidedPatternName = text.trimmed();
 	}
 
-	//painter.fillRect(QRect(0, 0, width(), fontMetrics.height() + 2 * textTop), textBackgroundColor());
+	//p.fillRect(QRect(0, 0, width(), fontMetrics.height() + 2 * textTop), textBackgroundColor());
 
 	int const finalTextTop = textTop + fontMetrics.ascent();
-	painter.setPen(textShadowColor());
-	painter.drawText( textLeft + 1, finalTextTop + 1, elidedPatternName );
-	painter.setPen( textColor() );
-	painter.drawText( textLeft, finalTextTop, elidedPatternName );
+	p.setPen(textShadowColor());
+	p.drawText( textLeft + 1, finalTextTop + 1, elidedPatternName );
+	p.setPen( textColor() );
+	p.drawText( textLeft, finalTextTop, elidedPatternName );
+
+	p.setRenderHints( QPainter::Antialiasing, false );
 }
 
 
 void TrackContentObjectView::paintTileBorder(const bool current, const QColor& c,
-                                             const int w, const int h, QPainter& p)
+                                             QPainter& p)
 {
         if(TCO_BORDER_WIDTH>0)
         {
+                const int w=width();
+                const int h=height();
+
                 p.setPen(current ? c.lighter(150) : c.lighter(200));
                 p.drawLine(0,0,w-1,0);
                 p.drawLine(0,1,0,h-1);
@@ -730,9 +1089,13 @@ void TrackContentObjectView::paintTileBorder(const bool current, const QColor& c
 
 
 void TrackContentObjectView::paintTileTacts(const bool current, tact_t nbt, tick_t tpg,
-                                            const QColor& c,
-                                            const int w, const int h, QPainter& p)
+                                            const QColor& c, QPainter& p)
 {
+        p.setRenderHints(QPainter::Antialiasing,true);
+
+        //const int w=width();
+        const int h=height();
+
         float ppt=pixelsPerTact();
         const QPen pen1(QPen(current
                              ? Qt::yellow
@@ -742,7 +1105,7 @@ void TrackContentObjectView::paintTileTacts(const bool current, tact_t nbt, tick
         for(tact_t t=1; t<=nbt; t++)
         {
                 float x=ppt * t;
-                p.drawLine(x,1,x,height()-2);
+                p.drawLine(x,1,x,h-2);
         }
 
         int tpt=MidiTime::ticksPerTact();
@@ -756,9 +1119,11 @@ void TrackContentObjectView::paintTileTacts(const bool current, tact_t nbt, tick
                 for(tick_t t=tpg; t<=nbt*tpt; t+=tpg)
                 {
                         float x=ppt * t / tpt;
-                        p.drawLine(x,1,x,height()-2);
+                        p.drawLine(x,1,x,h-2);
                 }
         }
+
+        p.setRenderHints(QPainter::Antialiasing,false);
 }
 
 
@@ -770,6 +1135,21 @@ void TrackContentObjectView::paintMutedIcon(const bool muted, QPainter& p)
                 const int size = 14;
                 p.drawPixmap( spacing, height() - ( size + spacing ),
                               embed::getIconPixmap( "muted", size, size ) );
+        }
+}
+
+
+void TrackContentObjectView::paintFrozenIcon(const bool frozen, QPainter& p)
+{
+        if(frozen)
+        {
+                p.setRenderHints(QPainter::Antialiasing,true);
+
+                const int w=width();
+                const int h=height();
+                p.fillRect(0,h-8,w-1,7,QBrush(Qt::cyan,Qt::BDiagPattern));
+
+                p.setRenderHints(QPainter::Antialiasing,false);
         }
 }
 
@@ -798,7 +1178,7 @@ void TrackContentObjectView::mousePressEvent( QMouseEvent * me )
         }
 
 	setInitialMousePos( me->pos() );
-	if( !fixedTCOs() && me->button() == Qt::LeftButton )
+	if( !isFixed() && me->button() == Qt::LeftButton )
 	{
 		if( me->modifiers() & Qt::ControlModifier )
 		{
@@ -886,14 +1266,14 @@ void TrackContentObjectView::mousePressEvent( QMouseEvent * me )
         {
                 if( me->modifiers() & Qt::ControlModifier )
                         m_tco->toggleMute();
-                else if( me->modifiers() & Qt::ShiftModifier && !fixedTCOs() )
+                else if( me->modifiers() & Qt::ShiftModifier && !isFixed() )
                         remove();
         }
         else if( me->button() == Qt::MidButton )
 	{
                 if( me->modifiers() & Qt::ControlModifier )
                         m_tco->toggleMute();
-                else if( !fixedTCOs() )
+                else if( !isFixed() )
                         remove();
         }
 }
@@ -931,9 +1311,9 @@ void TrackContentObjectView::mouseMoveEvent( QMouseEvent * me )
 
 			// Collect all selected TCOs
 			QVector<TrackContentObjectView *> tcoViews;
-			QVector<selectableObject *> so =
+			QVector<SelectableObject *> so =
 				m_trackView->trackContainerView()->selectedObjects();
-			for( QVector<selectableObject *>::iterator it = so.begin();
+			for( QVector<SelectableObject *>::iterator it = so.begin();
 					it != so.end(); ++it )
 			{
 				TrackContentObjectView * tcov =
@@ -965,7 +1345,7 @@ void TrackContentObjectView::mouseMoveEvent( QMouseEvent * me )
 		m_hint = NULL;
 	}
 
-	const float ppt = m_trackView->trackContainerView()->pixelsPerTact();
+	const float ppt = pixelsPerTact();
 	if( m_action == Move )
 	{
 		const int x = mapToParent( me->pos() ).x() - m_initialMousePos.x();
@@ -989,13 +1369,13 @@ void TrackContentObjectView::mouseMoveEvent( QMouseEvent * me )
 	else if( m_action == MoveSelection )
 	{
 		const int dx = me->x() - m_initialMousePos.x();
-		QVector<selectableObject *> so =
+		QVector<SelectableObject *> so =
 			m_trackView->trackContainerView()->selectedObjects();
 		QVector<TrackContentObject *> tcos;
 		MidiTime smallest_pos, t;
 		// find out smallest position of all selected objects for not
 		// moving an object before zero
-		for( QVector<selectableObject *>::iterator it = so.begin();
+		for( QVector<SelectableObject *>::iterator it = so.begin();
 							it != so.end(); ++it )
 		{
 			TrackContentObjectView * tcov =
@@ -1099,13 +1479,14 @@ void TrackContentObjectView::mouseReleaseEvent( QMouseEvent * me )
 	if( m_action == Move || m_action == Resize )
 	{
 		m_tco->setJournalling( true );
+                Selection::select(m_tco);
 	}
 	m_action = NoAction;
 	delete m_hint;
 	m_hint = NULL;
 	s_textFloat->hide();
 	leaveEvent( NULL );
-	selectableObject::mouseReleaseEvent( me );
+	SelectableObject::mouseReleaseEvent( me );
 }
 
 
@@ -1118,25 +1499,29 @@ void TrackContentObjectView::mouseReleaseEvent( QMouseEvent * me )
  *
  * \param cme The QContextMenuEvent to add the actions to.
  */
-void TrackContentObjectView::contextMenuEvent( QContextMenuEvent * cme )
+void TrackContentObjectView::contextMenuEvent(QContextMenuEvent* _cme )
 {
         if(m_tco->getTrack()->isFrozen())
         {
-                cme->ignore();
+                _cme->ignore();
                 return;
         }
 
-	if( cme->modifiers() )
+	if( _cme->modifiers() )
 	{
-                cme->ignore();
+                _cme->ignore();
 		return;
 	}
 
+        QMenu* cm=buildContextMenu();
+	cm->exec( QCursor::pos() );
+
+        /*
 	QMenu contextMenu( this );
 	if( fixedTCOs() == false )
 	{
 		contextMenu.addAction( embed::getIconPixmap( "cancel" ),
-					tr( "Delete (middle mousebutton)" ),
+					tr( "Delete (middle click)" ),
 						this, SLOT( remove() ) );
 		contextMenu.addSeparator();
 		contextMenu.addAction( embed::getIconPixmap( "edit_cut" ),
@@ -1151,24 +1536,123 @@ void TrackContentObjectView::contextMenuEvent( QContextMenuEvent * cme )
 			       tr( "Mute/unmute (<%1> + middle click)" )
                                .arg(UI_CTRL_KEY),
                                m_tco, SLOT( toggleMute() ) );
-	constructContextMenu( &contextMenu );
+	build...ContextMenu( &contextMenu );
 
 	contextMenu.exec( QCursor::pos() );
+        */
 }
 
 
-
-
-
-/*! \brief How many pixels a tact (bar) takes for this trackContentObjectView.
- *
- * \return the number of pixels per tact (bar).
- */
-float TrackContentObjectView::pixelsPerTact()
+void TrackContentObjectView::addRemoveMuteClearMenu(QMenu* _cm,
+                                                    bool _remove, bool _mute, bool _clear)
 {
-	return m_trackView->trackContainerView()->pixelsPerTact();
+        QAction* a;
+        a=_cm->addAction( embed::getIconPixmap( "cancel" ),
+                          tr( "Delete (<%1>+middle click)" )
+                          .arg(UI_SHIFT_KEY),
+                          this, SLOT( remove() ) );
+        a->setEnabled(_remove);
+        a=_cm->addAction( embed::getIconPixmap( "muted" ),
+                          tr( "Mute/unmute (<%1>+middle click)" )
+                          .arg(UI_CTRL_KEY),
+                          this, SLOT( mute() ) );
+        a->setEnabled(_mute);
+	a=_cm->addAction( embed::getIconPixmap( "edit_erase" ),
+                          tr( "Clear" ),
+                          this, SLOT( clear() ) );
+        a->setEnabled(_clear);
 }
 
+void TrackContentObjectView::addCutCopyPasteMenu(QMenu* _cm,
+                                                 bool _cut,bool _copy, bool _paste)
+{
+        QAction* a;
+        a=_cm->addAction( embed::getIconPixmap( "edit_cut" ),
+                         tr( "Cut" ), this, SLOT( cut() ) );
+        a->setEnabled(_cut);
+	a=_cm->addAction( embed::getIconPixmap( "edit_copy" ),
+                          tr( "Copy" ), this, SLOT( copy() ) );
+        a->setEnabled(_copy);
+	a=_cm->addAction( embed::getIconPixmap( "edit_paste" ),
+                          tr( "Paste" ), this, SLOT( paste() ) );
+        a->setEnabled(_paste);
+}
+
+void TrackContentObjectView::addStepMenu(QMenu* _cm, bool _enabled)
+{
+        Q_UNUSED(_enabled)
+
+        QMenu* sma=new QMenu(tr("Add steps"));
+        QMenu* smr=new QMenu(tr("Remove steps"));
+        sma->addAction( embed::getIconPixmap( "step_btn_add" ),
+                        tr( "One bar" ), m_tco, SLOT( addBarSteps() ) );
+        smr->addAction( embed::getIconPixmap( "step_btn_remove" ),
+                        tr( "One bar" ), m_tco, SLOT( removeBarSteps() ) );
+        sma->addAction( embed::getIconPixmap( "step_btn_add" ),
+                        tr( "One beat" ), m_tco, SLOT( addBeatSteps() ) );
+        smr->addAction( embed::getIconPixmap( "step_btn_remove" ),
+                        tr( "One beat" ), m_tco, SLOT( removeBeatSteps() ) );
+        sma->addAction( embed::getIconPixmap( "step_btn_add" ),
+                        tr( "One step" ), m_tco, SLOT( addOneStep() ) );
+        smr->addAction( embed::getIconPixmap( "step_btn_remove" ),
+                        tr( "One step" ), m_tco, SLOT( removeOneStep() ) );
+
+        //_cm->addSeparator();
+        _cm->addMenu(sma);
+        _cm->addMenu(smr);
+        //_cm->addAction( embed::getIconPixmap( "step_btn_duplicate" ),
+        //                tr( "Clone Steps" ), m_tco, SLOT( cloneSteps() ) );
+
+        QMenu* sme=new QMenu(tr("Step resolution"));
+        connect(sme,SIGNAL( triggered(QAction*) ),
+                this, SLOT( changeStepResolution(QAction*)));
+
+        static const int labels[]={
+                2,4,8,16,32,64,128,
+                3,6,12,24,48};
+        static const QString icons[]={
+                "note_whole",
+                "note_half",
+                "note_quarter",
+                "note_eighth",
+                "note_sixteenth",
+                "note_thirtysecond",
+                "note_sixtyfourth",
+                "note_onehundredtwentyeighth",
+                "note_triplethalf",
+                "note_tripletquarter",
+                "note_tripleteighth",
+                "note_tripletsixteenth",
+                "note_tripletthirtysecond"};
+        for(int i=0;i<11;i++)
+                sme->addAction(embed::getIconPixmap(icons[i]),
+                               QString::number(labels[i]))
+                        ->setData(labels[i]);
+        //_cm->addSeparator();
+        _cm->addMenu(sme);
+}
+
+void TrackContentObjectView::addNameMenu(QMenu* _cm, bool _enabled)
+{
+        QAction* a;
+	a=_cm->addAction( embed::getIconPixmap( "edit_rename" ),
+                          tr( "Change name" ), this, SLOT( changeName() ) );
+        a->setEnabled(_enabled);
+        a=_cm->addAction( embed::getIconPixmap( "reload" ),
+                          tr( "Reset name" ), this, SLOT( resetName() ) );
+        a->setEnabled(_enabled);
+}
+
+void TrackContentObjectView::addColorMenu(QMenu* _cm, bool _enabled)
+{
+        QAction* a;
+	a=_cm->addAction( embed::getIconPixmap( "colorize" ),
+			tr( "Change color" ), this, SLOT( changeColor() ) );
+        a->setEnabled(_enabled);
+	a=_cm->addAction( embed::getIconPixmap( "colorize" ),
+			tr( "Reset color" ), this, SLOT( resetColor() ) );
+        a->setEnabled(_enabled);
+}
 
 
 
@@ -1230,7 +1714,15 @@ TrackContentWidget::~TrackContentWidget()
 }
 
 
+bool TrackContentWidget::isFixed() const
+{
+        return m_trackView->isFixed();
+}
 
+float TrackContentWidget::pixelsPerTact()
+{
+	return m_trackView->pixelsPerTact();
+}
 
 void TrackContentWidget::updateBackground()
 {
@@ -1388,7 +1880,7 @@ void TrackContentWidget::changePosition( const MidiTime & newPos )
 
 	const int begin = pos;
 	const int end = endPosition( pos );
-	const float ppt = m_trackView->trackContainerView()->pixelsPerTact();
+	const float ppt = pixelsPerTact();
 
 	setUpdatesEnabled( false );
 	for( tcoViewVector::iterator it = m_tcoViews.begin();
@@ -1437,7 +1929,7 @@ MidiTime TrackContentWidget::getPosition( int mouseX )
 	return MidiTime( tv->currentPosition() +
 					 mouseX *
 					 MidiTime::ticksPerTact() /
-					 static_cast<int>( tv->pixelsPerTact() ) );
+					 static_cast<int>( pixelsPerTact() ) );
 }
 
 
@@ -1462,7 +1954,7 @@ bool TrackContentWidget::canPasteSelection( MidiTime tcoPos, const QMimeData * m
 
 	// We can only paste into tracks of the same type
 	if( type != ( "tco_" + QString::number( t->type() ) ) ||
-		m_trackView->trackContainerView()->fixedTCOs() == true )
+            isFixed() )//trackContainerView()->fixedTCOs() == true )
 	{
 		return false;
 	}
@@ -1558,9 +2050,9 @@ bool TrackContentWidget::pasteSelection( MidiTime tcoPos, QDropEvent * de )
 	bool wasSelection = m_trackView->trackContainerView()->rubberBand()->selectedObjects().count();
 
 	// Unselect the old group
-		const QVector<selectableObject *> so =
+		const QVector<SelectableObject *> so =
 			m_trackView->trackContainerView()->selectedObjects();
-		for( QVector<selectableObject *>::const_iterator it = so.begin();
+		for( QVector<SelectableObject *>::const_iterator it = so.begin();
 		    	it != so.end(); ++it )
 		{
 			( *it )->setSelected( false );
@@ -1667,7 +2159,44 @@ void TrackContentWidget::mousePressEvent( QMouseEvent * me )
                 return;
         }
 
-	if( m_trackView->trackContainerView()->allowRubberband() == true )
+	if( me->button() == Qt::MiddleButton &&
+            !m_trackView->trackContainerView()->fixedTCOs() )
+	{
+                // inject from system selection
+                Track* t=getTrack();
+                t->saveJournallingState(false);
+
+                MidiTime pos = MidiTime( getPosition( me->pos().x() ).getTact(), 0 );
+		TrackContentObject * tco = t->createTCO( pos );
+                QString nn=tco->nodeName();
+
+                tco->saveJournallingState(false);
+                bool ok=Selection::has(nn);
+                if(ok)
+                {
+                        ok=Selection::inject(tco);
+                }
+
+                if(!ok)
+                {
+                        qWarning("Warning: invalid pattern type for this track");
+                        tco->restoreJournallingState();
+                        tco->deleteLater();
+                }
+                else
+                {
+                        //tco->updateLength();
+                        tco->movePosition( pos );
+                        //tco->selectViewOnCreate( true );
+                        //if(t->name()==tco->name()) tco->setName( "" );
+                        AutomationPattern::resolveAllIDs();
+                        tco->restoreJournallingState();
+                }
+
+                t->restoreJournallingState();
+        }
+	else
+        if( m_trackView->trackContainerView()->allowRubberband() == true )
 	{
 		QWidget::mousePressEvent( me );
 	}
@@ -1678,7 +2207,7 @@ void TrackContentWidget::mousePressEvent( QMouseEvent * me )
 	else if( me->button() == Qt::LeftButton &&
 			!m_trackView->trackContainerView()->fixedTCOs() )
 	{
-		QVector<selectableObject*> so =  m_trackView->trackContainerView()->rubberBand()->selectedObjects();
+		QVector<SelectableObject*> so =  m_trackView->trackContainerView()->rubberBand()->selectedObjects();
 		for( int i = 0; i < so.count(); ++i )
 		{
 			so.at( i )->setSelected( false);
@@ -1703,24 +2232,26 @@ void TrackContentWidget::mousePressEvent( QMouseEvent * me )
  */
 void TrackContentWidget::paintEvent( QPaintEvent * pe )
 {
+        QPainter p(this);
+
 	// Assume even-pixels-per-tact. Makes sense, should be like this anyways
 	/*const*/ TrackContainerView * tcv = m_trackView->trackContainerView();
-	int ppt = static_cast<int>( tcv->pixelsPerTact() );
 
 	// Don't draw background on BB-Editor
-	if( m_trackView->trackContainerView() != gui->getBBEditor()->trackContainerView() )
+	//if( tcv != gui->getBBEditor()->trackContainerView() )
+        if(!isFixed())
 	{
-                QPainter p( this );
                 /*
 		p.drawTiledPixmap( rect(), m_background, QPoint(
 				tcv->currentPosition().getTact() * ppt, 0 ) );
 		*/
-		paintGrid(p,tcv->currentPosition().getTact(),ppt,tcv->barViews());
+		paintGrid(p,tcv->currentPosition().getTact(),
+                          pixelsPerTact(),
+                          tcv->barViews());
         }
 
         if(getTrack()->isFrozen())
         {
-                QPainter p(this);
                 p.fillRect(0,height()-9,width()-1,7,
                            QBrush(Qt::cyan,Qt::BDiagPattern));
                 //p.fillRect(0,0,width()-1,height()-1,
@@ -1731,7 +2262,8 @@ void TrackContentWidget::paintEvent( QPaintEvent * pe )
 
 
 
-void TrackContentWidget::paintGrid(QPainter& p,int tact,int ppt,QVector<QPointer<BarView> >& barViews)
+void TrackContentWidget::paintGrid(QPainter& p,int tact,float ppt,
+                                   QVector<QPointer<BarView> >& barViews)
 {
 	//int x0=tact*ppt;
 	//int y0=0;
@@ -1836,7 +2368,7 @@ Track * TrackContentWidget::getTrack()
  */
 MidiTime TrackContentWidget::endPosition( const MidiTime & posStart )
 {
-	const float ppt = m_trackView->trackContainerView()->pixelsPerTact();
+	const float ppt = pixelsPerTact();
 	const int w = width();
 	return posStart + static_cast<int>( w * MidiTime::ticksPerTact() / ppt );
 }
@@ -2210,6 +2742,89 @@ void TrackOperationsWidget::clearTrack()
 }
 
 
+void TrackOperationsWidget::changeName()
+{
+	Track * t = m_trackView->getTrack();
+	QString s = t->name();
+	RenameDialog rename_dlg( s );
+	rename_dlg.exec();
+	t->setName( s );
+}
+
+void TrackOperationsWidget::resetName()
+{
+	qWarning("TrackOperationsWidget::resetName not implemented");
+        //Track * t = m_trackView->getTrack();
+	//t->setName( m_tco->getTrack()->name() );
+}
+
+void TrackOperationsWidget::changeColor()
+{
+	Track * t = m_trackView->getTrack();
+
+	QColor new_color = QColorDialog::getColor( t->color() );
+
+	if( ! new_color.isValid() )
+	{
+		return;
+	}
+        /*
+	if( isSelected() )
+	{
+		QVector<SelectableObject*> selected =
+                        gui->songEditor()->m_editor->selectedObjects();
+		for( QVector<SelectableObject *>::iterator it =
+                             selected.begin();
+                     it != selected.end(); ++it )
+		{
+			TrackContentObjectView* tcov=
+                                dynamic_cast<TrackContentObjectView*>( *it );
+			if( tcov )
+				tcov->setColor( new_color );
+		}
+	}
+	else
+        */
+	if( new_color != t->color() )
+	{
+                t->setColor( new_color );
+		t->setUseStyleColor(false);
+		Engine::getSong()->setModified();
+		m_trackView->update();
+	}
+}
+
+void TrackOperationsWidget::resetColor()
+{
+	Track * t = m_trackView->getTrack();
+
+        /*
+	if( isSelected() )
+	{
+		QVector<SelectableObject*> selected =
+                        gui->songEditor()->m_editor->selectedObjects();
+		for( QVector<SelectableObject *>::iterator it =
+                             selected.begin();
+                     it != selected.end(); ++it )
+		{
+			TrackContentObjectView* tcov=
+                                dynamic_cast<TrackContentObjectView*>( *it );
+			if( tcov )
+				tcov->setUseStyleColor(true);
+		}
+	}
+	else
+        */
+
+        if( !t->useStyleColor() )
+        {
+                t-> setUseStyleColor(true);
+		Engine::getSong()->setModified();
+		m_trackView->update();
+        }
+
+        //BBTrack::clearLastTCOColor();
+}
 
 /*! \brief Remove this track from the track list
  *
@@ -2221,6 +2836,28 @@ void TrackOperationsWidget::removeTrack()
 
 
 
+
+void TrackOperationsWidget::addNameMenu(QMenu* _cm, bool _enabled)
+{
+        QAction* a;
+	a=_cm->addAction( embed::getIconPixmap( "edit_rename" ),
+                          tr( "Change name" ), this, SLOT( changeName() ) );
+        a->setEnabled(_enabled);
+        a=_cm->addAction( embed::getIconPixmap( "reload" ),
+                          tr( "Reset name" ), this, SLOT( resetName() ) );
+        a->setEnabled(_enabled);
+}
+
+void TrackOperationsWidget::addColorMenu(QMenu* _cm, bool _enabled)
+{
+        QAction* a;
+	a=_cm->addAction( embed::getIconPixmap( "colorize" ),
+			tr( "Change color" ), this, SLOT( changeColor() ) );
+        a->setEnabled(_enabled);
+	a=_cm->addAction( embed::getIconPixmap( "colorize" ),
+			tr( "Reset color" ), this, SLOT( resetColor() ) );
+        a->setEnabled(_enabled);
+}
 
 /*! \brief Update the trackOperationsWidget context menu
  *
@@ -2290,6 +2927,11 @@ void TrackOperationsWidget::updateMenu()
 		toMenu->addAction( tr( "Turn all recording on" ), this, SLOT( recordingOn() ) );
 		toMenu->addAction( tr( "Turn all recording off" ), this, SLOT( recordingOff() ) );
 	}
+
+        toMenu->addSeparator();
+        addNameMenu(toMenu,true);
+        toMenu->addSeparator();
+        addColorMenu(toMenu,true);
 }
 
 
@@ -2353,6 +2995,8 @@ Track::Track( TrackTypes type, TrackContainer * tc ) :
 	m_type( type ),                /*!< The track type */
 	m_name(),                       /*!< The track's name */
         m_uuid(""),
+	m_color( Qt::white ),
+	m_useStyleColor( true ),
 	m_simpleSerializingMode( false ),
 	m_trackContentObjects()         /*!< The track content objects (segments) */
 {
@@ -2404,6 +3048,30 @@ Track::~Track()
 }
 
 
+bool Track::isFixed() const
+{
+        return m_trackContainer->isFixed();
+}
+
+QColor Track::color() const
+{
+        return m_color;
+}
+
+void Track::setColor(const QColor& _c)
+{
+        m_color = _c;
+}
+
+bool Track::useStyleColor() const
+{
+        return m_useStyleColor;
+}
+
+void Track::setUseStyleColor( bool b )
+{
+        m_useStyleColor = b;
+}
 
 
 /*! \brief Create a track based on the given track type and container.
@@ -2511,6 +3179,8 @@ void Track::saveSettings( QDomDocument & doc, QDomElement & element )
 	element.setAttribute( "muted", isMuted() );
 	element.setAttribute( "solo", isSolo() );
 	element.setAttribute( "frozen", isFrozen() );
+	element.setAttribute( "color", color().rgb() );
+        element.setAttribute( "usestyle", useStyleColor() ? 1 : 0 );
 
 	if( m_height >= MINIMAL_TRACK_HEIGHT )
 	{
@@ -2569,6 +3239,12 @@ void Track::loadSettings( const QDomElement & element )
 	setMuted( element.attribute( "muted" ).toInt() );
 	setSolo( element.attribute( "solo" ).toInt() );
 	setFrozen( element.attribute( "frozen" ).toInt() );
+
+	if( element.hasAttribute( "color" ) )
+		setColor( QColor( element.attribute( "color" ).toUInt() ) );
+
+	if( element.hasAttribute( "usestyle" ) )
+		setUseStyleColor( element.attribute( "usestyle" ).toUInt() == 1 );
 
 	if( m_simpleSerializingMode )
 	{
@@ -3001,7 +3677,7 @@ TrackView::TrackView( Track * track, TrackContainerView * tcv ) :
 	layout->setSpacing( 0 );
 	layout->addWidget( &m_trackOperationsWidget );
 	layout->addWidget( &m_trackSettingsWidget );
-	layout->addWidget( &m_trackContentWidget, 1 );
+	layout->addWidget( &m_trackContentWidget , 1);
 	setFixedHeight( m_track->getHeight() );
 
 	resizeEvent( NULL );
@@ -3052,6 +3728,19 @@ TrackView::TrackView( Track * track, TrackContainerView * tcv ) :
  */
 TrackView::~TrackView()
 {
+}
+
+
+
+
+bool TrackView::isFixed() const
+{
+        return m_track->isFixed();
+}
+
+float TrackView::pixelsPerTact()
+{
+	return m_trackContainerView->pixelsPerTact();
 }
 
 

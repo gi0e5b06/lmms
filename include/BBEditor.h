@@ -70,10 +70,12 @@ class BBTrackContainerView : public TrackContainerView
 public:
 	BBTrackContainerView(BBTrackContainer* tc);
 
-	bool fixedTCOs() const
+	virtual bool isFixed() const //fixedTCOs() 
 	{
 		return true;
 	}
+
+        float pixelsPerTact() const;
 
 	void removeBBView(int bb);
 

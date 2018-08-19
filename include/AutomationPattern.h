@@ -113,7 +113,11 @@ public:
 	void setWaveRepeat( const float _waveRepeat );
 
 	MidiTime timeMapLength() const;
-	void updateLength();
+
+	//virtual MidiTime beatLength() const;
+	//virtual void changeLength( const MidiTime & _length );
+	virtual void updateLength();
+        //virtual void updateBBTrack();
 
 	MidiTime putValue( const MidiTime & time,
 				const float value,
@@ -199,7 +203,8 @@ public:
 	static void setQuantization(int q) { s_quantization = q; }
 
 public slots:
-	void clear();
+	virtual void clear();
+
 	void objectDestroyed( jo_id_t );
 	void flipY( int min, int max );
 	void flipY();

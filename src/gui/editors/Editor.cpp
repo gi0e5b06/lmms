@@ -32,6 +32,7 @@
 #include <QAction>
 #include <QLabel>
 //#include <QMdiArea>
+#include <QMdiSubWindow>
 #include <QShortcut>
 
 const QVector<float> Editor::ZOOM_LEVELS =
@@ -75,6 +76,7 @@ void Editor::togglePlayStop()
 		stop();
 	else
 		play();
+        requireActionUpdate();
 }
 
 Editor::Editor(bool record) :
@@ -124,9 +126,6 @@ QAction *Editor::playAction() const
 {
 	return m_playAction;
 }
-
-
-
 
 DropToolBar::DropToolBar(QWidget* parent) : QToolBar(parent)
 {

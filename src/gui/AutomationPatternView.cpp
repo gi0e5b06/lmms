@@ -91,13 +91,11 @@ void AutomationPatternView::update()
 
 
 
+/*
 void AutomationPatternView::resetName()
 {
 	m_pat->setName( QString::null );
 }
-
-
-
 
 void AutomationPatternView::changeName()
 {
@@ -107,7 +105,7 @@ void AutomationPatternView::changeName()
 	m_pat->setName( s );
 	update();
 }
-
+*/
 
 
 
@@ -168,57 +166,69 @@ void AutomationPatternView::flipX()
 
 
 
-void AutomationPatternView::constructContextMenu( QMenu * _cm )
+QMenu* AutomationPatternView::buildContextMenu()
 {
-	QAction * a = new QAction( embed::getIconPixmap( "automation" ),
-				tr( "Open in Automation editor" ), _cm );
-	_cm->insertAction( _cm->actions()[0], a );
-	connect(a, SIGNAL(triggered()), this, SLOT(openInAutomationEditor()));
-	_cm->insertSeparator( _cm->actions()[1] );
+        QMenu* cm=new QMenu(this);
+	QAction* a;
 
-	_cm->addSeparator();
+        a=cm->addAction( embed::getIconPixmap( "automation" ),
+                         tr( "Open in Automation editor" ),
+                         this, SLOT( openInAutomationEditor()) );
 
-	_cm->addAction( embed::getIconPixmap( "edit_erase" ),
-			tr( "Clear" ), m_pat, SLOT( clear() ) );
-	_cm->addSeparator();
+        addRemoveMuteClearMenu(cm,true,true,m_pat->hasAutomation());
+	cm->addSeparator();
+        addCutCopyPasteMenu(cm,true,true,true);
 
-	_cm->addAction( embed::getIconPixmap( "reload" ), tr( "Reset name" ),
-						this, SLOT( resetName() ) );
-	_cm->addAction( embed::getIconPixmap( "edit_rename" ),
-						tr( "Change name" ),
-						this, SLOT( changeName() ) );
-	_cm->addAction( embed::getIconPixmap( "record" ),
-						tr( "Set/clear record" ),
-						this, SLOT( toggleRecording() ) );
-	_cm->addAction( embed::getIconPixmap( "flip_y" ),
-						tr( "Flip Vertically (Visible)" ),
-						this, SLOT( flipY() ) );
-	_cm->addAction( embed::getIconPixmap( "flip_x" ),
-						tr( "Flip Horizontally (Visible)" ),
-						this, SLOT( flipX() ) );
-	if( !m_pat->m_objects.isEmpty() )
+	if(isFixed())
+        {
+                cm->addSeparator();
+                addStepMenu(cm,true);
+        }
+
+        cm->addSeparator();
+	cm->addAction( embed::getIconPixmap( "record" ),
+                       tr( "Set/clear record" ),
+                       this, SLOT( toggleRecording() ) );
+	cm->addAction( embed::getIconPixmap( "flip_y" ),
+                       tr( "Flip Vertically (Visible)" ),
+                       this, SLOT( flipY() ) );
+	cm->addAction( embed::getIconPixmap( "flip_x" ),
+                       tr( "Flip Horizontally (Visible)" ),
+                       this, SLOT( flipX() ) );
+	//if( !m_pat->m_objects.isEmpty() )
 	{
-		_cm->addSeparator();
-		QMenu * m = new QMenu( tr( "%1 Connections" ).
-				arg( m_pat->m_objects.count() ), _cm );
+                bool smce=( !m_pat->m_objects.isEmpty() );
+
+		//cm->addSeparator();
+                int n=m_pat->m_objects.count();
+                QString t=(n<=1 ? tr( "%1 connection" ) : tr( "%1 connections" ));
+		QMenu* smc = new QMenu( t.arg( n ), cm );
 		for( AutomationPattern::objectVector::iterator it =
-						m_pat->m_objects.begin();
-					it != m_pat->m_objects.end(); ++it )
+                             m_pat->m_objects.begin();
+                     it != m_pat->m_objects.end(); ++it )
 		{
 			if( *it )
 			{
 				a = new QAction( tr( "Disconnect \"%1\"" ).
-					arg( ( *it )->fullDisplayName() ), m );
+					arg( ( *it )->fullDisplayName() ), smc );
 				a->setData( ( *it )->id() );
-				m->addAction( a );
+                                a->setEnabled(smce);
+				smc->addAction( a );
 			}
 		}
-		connect( m, SIGNAL( triggered( QAction * ) ),
+		connect( smc, SIGNAL( triggered( QAction * ) ),
 				this, SLOT( disconnectObject( QAction * ) ) );
-		_cm->addMenu( m );
+		cm->addMenu( smc );
+                smc->setEnabled(smce);
 	}
 
-	_cm->addSeparator();
+        cm->addSeparator();
+        addNameMenu(cm,true);
+        cm->addSeparator();
+        addColorMenu(cm,true);
+
+	//cm->addSeparator();
+        return cm;
 }
 
 
@@ -257,14 +267,19 @@ void AutomationPatternView::paintEvent( QPaintEvent * )
 	QPainter p( &m_paintPixmap );
 
 	//QLinearGradient lingrad( 0, 0, 0, height() );
-	QColor c;
 	bool muted = m_pat->getTrack()->isMuted() || m_pat->isMuted();
 	bool current = gui->automationEditor()->currentPattern() == m_pat;
 
-	// state: selected, muted, normal
-	c = isSelected() ? selectedColor() : ( muted ? mutedBackgroundColor() 
-		:	painter.background().color() );
-
+	// state: selected, muted, default, user
+	QColor bgcolor = isSelected()
+                ? selectedColor()
+                : ( muted
+                    ? mutedBackgroundColor()
+                    : ( useStyleColor()
+                        ? ( m_pat->getTrack()->useStyleColor()
+                            ? painter.background().color()
+                            : m_pat->getTrack()->color() )
+                        : color() ));
         /*
 	lingrad.setColorAt( 1, c.darker( 300 ) );
 	lingrad.setColorAt( 0, c );
@@ -279,13 +294,16 @@ void AutomationPatternView::paintEvent( QPaintEvent * )
 	else
         */
 	{
-		p.fillRect( rect(), c );
+		p.fillRect( rect(), bgcolor );
 	}
 
+        /*
 	const float ppt = fixedTCOs() ?
 			( parentWidget()->width() - 2 * TCO_BORDER_WIDTH )
 				/ (float) m_pat->timeMapLength().getTact() :
 								pixelsPerTact();
+        */
+        const float ppt = pixelsPerTact();
 
 	const int x_base = TCO_BORDER_WIDTH;
 
@@ -300,9 +318,15 @@ void AutomationPatternView::paintEvent( QPaintEvent * )
 	p.scale( 1.0f, -h );
 
 	//QLinearGradient lin2grad( 0, min, 0, max );
-	QColor col;
-
-	col = !muted ? painter.pen().brush().color() : mutedColor();
+	QColor fgcolor = muted
+                ? mutedColor()
+                : ( useStyleColor()
+                        ? ( m_pat->getTrack()->useStyleColor()
+                            ? painter.pen().brush().color()
+                            : m_pat->getTrack()->color().lighter() )
+                    : color().lighter() );
+        if(bgcolor.value()>=192)
+                fgcolor=bgcolor.darker();
 
         /*
 	lin2grad.setColorAt( 1, col.lighter( 150 ) );
@@ -328,7 +352,7 @@ void AutomationPatternView::paintEvent( QPaintEvent * )
 			else
                         */
 			{
-				p.fillRect( QRectF( x1, 0.0f, x2 - x1, it.value() ), col );
+				p.fillRect( QRectF( x1, 0.0f, x2 - x1, it.value() ), fgcolor );
 			}
 			break;
 		}
@@ -370,7 +394,7 @@ void AutomationPatternView::paintEvent( QPaintEvent * )
 		else
                 */
 		{
-			p.fillPath( path, col );
+			p.fillPath( path, fgcolor );
 		}
 		delete [] values;
 	}
@@ -399,21 +423,14 @@ void AutomationPatternView::paintEvent( QPaintEvent * )
 		 	*s_pat_rec );
 	}
 
-        if(m_pat->getTrack()->isFrozen())
-        {
-                p.fillRect(0,height()-9,width()-1,height()-1,
-                           QBrush(Qt::cyan,Qt::BDiagPattern));
-                p.fillRect(0,0,width()-1,height()-1,
-                           QBrush(QColor(0,160,160,48),Qt::SolidPattern));
-        }
-        else
-        {
-                paintTileTacts(false,m_pat->length().nextFullTact(),1,
-                               c,width(),height(),p);
-        }
+        bool frozen=m_pat->getTrack()->isFrozen();
+        paintFrozenIcon(frozen,p);
+
+        paintTileTacts(false,m_pat->length().nextFullTact(),1,
+                       bgcolor,p);
 
 	// pattern name
-	paintTextLabel(m_pat->name(), p);
+	paintTextLabel(m_pat->name(), bgcolor, p);
 
         /*
 	// inner border
@@ -425,7 +442,7 @@ void AutomationPatternView::paintEvent( QPaintEvent * )
 	p.setPen( current? c.lighter( 130 ) : c.darker( 300 ) );
 	p.drawRect( 0, 0, rect().right(), rect().bottom() );
         */
-        paintTileBorder(current,c,width(),height(),p);
+        paintTileBorder(current,bgcolor,p);
 
 	// draw the 'muted' pixmap only if the pattern was manualy muted
         /*

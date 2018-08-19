@@ -58,19 +58,18 @@ QPixmap * PatternView::s_stepBtnOffLight = NULL;
 Pattern::Pattern( InstrumentTrack * _instrument_track ) :
 	TrackContentObject( _instrument_track ),
 	m_instrumentTrack( _instrument_track ),
-	m_patternType( MelodyPattern ),
-	m_steps( DefaultStepsPerTact ), //stepsPerTact
-        m_stepResolution( DefaultStepsPerTact )
+	m_patternType( MelodyPattern )
 {
 	setName( _instrument_track->name() );
-	if( _instrument_track->trackContainer()
-            == Engine::getBBTrackContainer() )
+	if(isFixed())
 	{
                 m_patternType = BeatPattern;
-		resizeToFirstTrack();
+		//resizeToFirstTrack();
 	}
 	init();
-	setAutoResize( true );
+
+        changeLength(MidiTime(1, 0));
+	setAutoResize( !isFixed() );
 }
 
 
@@ -79,9 +78,7 @@ Pattern::Pattern( InstrumentTrack * _instrument_track ) :
 Pattern::Pattern( const Pattern& other ) :
 	TrackContentObject( other.m_instrumentTrack ),
 	m_instrumentTrack( other.m_instrumentTrack ),
-	m_patternType( other.m_patternType ),
-	m_steps( other.m_steps ),
-        m_stepResolution( other.m_stepResolution )
+	m_patternType( other.m_patternType )
 {
 	for( NoteVector::ConstIterator it = other.m_notes.begin(); it != other.m_notes.end(); ++it )
 	{
@@ -89,18 +86,7 @@ Pattern::Pattern( const Pattern& other ) :
 	}
 
 	init();
-	switch( getTrack()->trackContainer()->type() )
-	{
-		case TrackContainer::BBContainer:
-			setAutoResize( true );
-			break;
-
-		case TrackContainer::SongContainer:
-			// move down
-		default:
-			setAutoResize( false );
-			break;
-	}
+        setAutoResize( other.getAutoResize() && !isFixed() );
 }
 
 
@@ -150,12 +136,12 @@ void Pattern::init()
 	connect( Engine::getSong(), SIGNAL( timeSignatureChanged( int, int ) ),
 				this, SLOT( changeTimeSignature() ) );
 	saveJournallingState( false );
-
 	updateLength();
 	restoreJournallingState();
 }
 
 
+/*
 int Pattern::stepsPerTact() const
 {
 	int steps = MidiTime::ticksPerTact() / DefaultBeatsPerTact;
@@ -168,70 +154,7 @@ MidiTime Pattern::stepPosition(int _step) const
 	return _step * 16.f / m_stepResolution *
                 MidiTime::ticksPerTact() / stepsPerTact();
 }
-
-
-void Pattern::updateLength()
-{
-	if( m_patternType == BeatPattern )
-	{
-		changeLength( beatPatternLength() );
-		updateBBTrack();
-		return;
-	}
-
-	tick_t max_length = MidiTime::ticksPerTact();
-
-	for( NoteVector::ConstIterator it = m_notes.begin();
-						it != m_notes.end(); ++it )
-	{
-		if( ( *it )->length() > 0 )
-		{
-			max_length = qMax<tick_t>( max_length,
-							( *it )->endPos() );
-		}
-	}
-	changeLength( MidiTime( max_length ).nextFullTact() *
-						MidiTime::ticksPerTact() );
-	updateBBTrack();
-}
-
-
-
-
-MidiTime Pattern::beatPatternLength() const
-{
-	tick_t max_length;
-
-        /*
-	if( m_steps != stepsPerTact() )
-	{
-        */
-        max_length = m_steps * MidiTime::ticksPerTact()
-                * 16 / m_stepResolution / stepsPerTact();
-        /*
-	}
-        else
-        {
-                max_length = MidiTime::ticksPerTact();
-
-                for( NoteVector::ConstIterator it = m_notes.begin();
-                     it != m_notes.end(); ++it )
-                {
-                        if( ( *it )->length() < 0 )
-                        {
-                                max_length = qMax<tick_t>( max_length,
-                                                           ( *it )->pos() + 1 );
-                        }
-                }
-        }
-        */
-
-	return MidiTime( max_length );
-        //.nextFullTact() * MidiTime::ticksPerTact();
-}
-
-
-
+*/
 
 Note * Pattern::addNote( const Note & _new_note, const bool _quant_pos )
 {
@@ -418,12 +341,14 @@ void Pattern::saveSettings( QDomDocument & _doc, QDomElement & _this )
 	// as the target of copied/dragged pattern is always an existing
 	// pattern, we must not store actual position, instead we store -1
 	// which tells loadSettings() not to mess around with position
-	if( _this.parentNode().nodeName() == "clipboard" ||
+        /*
+	if( _this.parentNode().nodeName() == "clipboarddata" ||
             _this.parentNode().nodeName() == "dnddata" )
 	{
 		_this.setAttribute( "pos", -1 );
 	}
 	else
+        */
 	{
 		_this.setAttribute( "pos", startPosition() );
 	}
@@ -466,7 +391,7 @@ void Pattern::loadSettings( const QDomElement & _this )
 	while( !node.isNull() )
 	{
 		if( node.isElement() &&
-			!node.toElement().attribute( "metadata" ).toInt() )
+                    !node.toElement().attribute( "metadata" ).toInt() )
 		{
 			Note * n = new Note;
 			n->restoreState( node.toElement() );
@@ -552,77 +477,6 @@ void Pattern::cloneSteps()
 	emit dataChanged();
 }
 
-void Pattern::addBarSteps()
-{
-	m_steps += stepsPerTact();
-	updateLength();
-	emit dataChanged();
-}
-
-void Pattern::addBeatSteps()
-{
-	m_steps += stepsPerTact() /
-                Engine::getSong()->getTimeSigModel().getNumerator();
-	updateLength();
-	emit dataChanged();
-}
-
-void Pattern::addOneStep()
-{
-	m_steps ++; //= stepsPerTact();
-	updateLength();
-	emit dataChanged();
-}
-
-void Pattern::removeBarSteps()
-{
-	int n = stepsPerTact();
-	if( n < m_steps )
-	{
-		for( int i = m_steps - n; i < m_steps; ++i )
-		{
-			setStep( i, false );
-		}
-		m_steps -= n;
-		updateLength();
-		emit dataChanged();
-	}
-}
-
-void Pattern::removeBeatSteps()
-{
-	int n = stepsPerTact() /
-                Engine::getSong()->getTimeSigModel().getNumerator();
-	if( n < m_steps )
-	{
-		for( int i = m_steps - n; i < m_steps; ++i )
-		{
-			setStep( i, false );
-		}
-		m_steps -= n;
-		updateLength();
-		emit dataChanged();
-	}
-}
-
-void Pattern::removeOneStep()
-{
-        int n = 1;
-	if( n < m_steps )
-	{
-		for( int i = m_steps - n; i < m_steps; ++i )
-		{
-			setStep( i, false );
-		}
-		m_steps -= n;
-		updateLength();
-		emit dataChanged();
-	}
-}
-
-
-
-
 TrackContentObjectView * Pattern::createView( TrackView * _tv )
 {
 	return new PatternView( this, _tv );
@@ -630,7 +484,7 @@ TrackContentObjectView * Pattern::createView( TrackView * _tv )
 
 
 
-
+/*
 void Pattern::updateBBTrack()
 {
 	if( getTrack()->trackContainer() == Engine::getBBTrackContainer() )
@@ -643,7 +497,7 @@ void Pattern::updateBBTrack()
 		gui->pianoRoll()->update();
 	}
 }
-
+*/
 
 
 
@@ -663,6 +517,32 @@ bool Pattern::empty()
 
 
 
+void Pattern::updateLength()
+{
+        checkType();
+
+        tick_t len;
+        if(getAutoResize())
+        {
+                len = MidiTime::ticksPerTact();
+
+                for( NoteVector::ConstIterator it = m_notes.begin();
+                     it != m_notes.end(); ++it )
+                {
+                        if( ( *it )->length() > 0 )
+                        {
+                                len = qMax<tick_t>
+                                        ( len, ( *it )->endPos() );
+                        }
+                }
+                len = MidiTime( len ).nextFullTact() *
+                        MidiTime::ticksPerTact();
+        }
+        else len=length();
+
+        TrackContentObject::updateLength(len);
+}
+
 void Pattern::changeTimeSignature()
 {
 	MidiTime last_pos = MidiTime::ticksPerTact() - 1;
@@ -680,25 +560,6 @@ void Pattern::changeTimeSignature()
 				last_pos.getTact() * stepsPerTact() );
 	updateLength();
 }
-
-
-
-void Pattern::setStepResolution(int _res)
-{
-        if(_res>0)
-        {
-                int old=m_stepResolution;
-                if(_res!=old)
-                {
-                        m_steps=qMax(1,(m_steps*_res/old));
-                        m_stepResolution=_res;
-                        checkType();
-                        updateLength();
-                        emit dataChanged();
-                }
-        }
-}
-
 
 
 
@@ -774,17 +635,7 @@ void PatternView::openInPianoRoll()
 	gui->pianoRoll()->setFocus();
 }
 
-
-
-
-void PatternView::resetName()
-{
-	m_pat->setName( m_pat->m_instrumentTrack->name() );
-}
-
-
-
-
+/*
 void PatternView::changeName()
 {
 	QString s = m_pat->name();
@@ -793,8 +644,11 @@ void PatternView::changeName()
 	m_pat->setName( s );
 }
 
-
-
+void PatternView::resetName()
+{
+	m_pat->setName( m_pat->m_instrumentTrack->name() );
+}
+*/
 
 void PatternView::changeStepResolution(QAction* _a)
 {
@@ -806,83 +660,100 @@ void PatternView::changeStepResolution(QAction* _a)
         }
 }
 
-
-
-
-void PatternView::constructContextMenu( QMenu * _cm )
+QMenu* PatternView::buildContextMenu()
 {
-	QAction * a = new QAction( embed::getIconPixmap( "piano" ),
-					tr( "Open in piano-roll" ), _cm );
-	_cm->insertAction( _cm->actions()[0], a );
-	connect( a, SIGNAL( triggered( bool ) ),
-					this, SLOT( openInPianoRoll() ) );
-	_cm->insertSeparator( _cm->actions()[1] );
+        QMenu* cm=new QMenu(this);
+        /*
+          QAction* a;
+          a=
+        */
+        cm->addAction( embed::getIconPixmap( "piano" ),
+                       tr( "Open in piano-roll" ),
+                       this, SLOT( openInPianoRoll() ) );
+        addRemoveMuteClearMenu(cm,true,true,!m_pat->m_notes.empty());
+	cm->addSeparator();
+        addCutCopyPasteMenu(cm,true,true,true);
 
-	_cm->addSeparator();
-
-	_cm->addAction( embed::getIconPixmap( "edit_erase" ),
+        /*
+        cm->addSeparator();
+	cm->addAction( embed::getIconPixmap( "edit_erase" ),
 			tr( "Clear all notes" ), m_pat, SLOT( clear() ) );
-	_cm->addSeparator();
+        */
 
-	_cm->addAction( embed::getIconPixmap( "reload" ), tr( "Reset name" ),
-						this, SLOT( resetName() ) );
-	_cm->addAction( embed::getIconPixmap( "edit_rename" ),
-						tr( "Change name" ),
-						this, SLOT( changeName() ) );
+	if(isFixed())
+        {
+                cm->addSeparator();
+                addStepMenu(cm,true);
+                if(m_pat->type() == Pattern::BeatPattern)
+                        cm->addAction( embed::getIconPixmap
+                                       ( "step_btn_duplicate" ),
+                                       tr( "Clone Steps" ),
+                                       m_pat, SLOT( cloneSteps() ) );
+        }
 
-	if ( m_pat->type() == Pattern::BeatPattern )
-	{
-                QMenu* sma=new QMenu(tr("Add steps"));
-                QMenu* smr=new QMenu(tr("Remove steps"));
-		sma->addAction( embed::getIconPixmap( "step_btn_add" ),
-                                tr( "One bar" ), m_pat, SLOT( addBarSteps() ) );
-		smr->addAction( embed::getIconPixmap( "step_btn_remove" ),
-                                tr( "One bar" ), m_pat, SLOT( removeBarSteps() ) );
-		sma->addAction( embed::getIconPixmap( "step_btn_add" ),
-                                tr( "One beat" ), m_pat, SLOT( addBeatSteps() ) );
-		smr->addAction( embed::getIconPixmap( "step_btn_remove" ),
-                                tr( "One beat" ), m_pat, SLOT( removeBeatSteps() ) );
-		sma->addAction( embed::getIconPixmap( "step_btn_add" ),
-                                tr( "One step" ), m_pat, SLOT( addOneStep() ) );
-		smr->addAction( embed::getIconPixmap( "step_btn_remove" ),
-                                tr( "One step" ), m_pat, SLOT( removeOneStep() ) );
+        cm->addSeparator();
+        addNameMenu(cm,true);
+        cm->addSeparator();
+        addColorMenu(cm,true);
 
-		_cm->addSeparator();
-                _cm->addMenu(sma);
-                _cm->addMenu(smr);
-		_cm->addAction( embed::getIconPixmap( "step_btn_duplicate" ),
-                                tr( "Clone Steps" ), m_pat, SLOT( cloneSteps() ) );
-
-                QMenu* sme=new QMenu(tr("Step resolution"));
-                connect(sme,SIGNAL( triggered(QAction*) ),
-                        this, SLOT( changeStepResolution(QAction*)));
-
-                static const int labels[]={
-                        2,4,8,16,32,64,128,
-                        3,6,12,24,48};
-                static const QString icons[]={
-                        "note_whole",
-                        "note_half",
-                        "note_quarter",
-                        "note_eighth",
-                        "note_sixteenth",
-                        "note_thirtysecond",
-                        "note_sixtyfourth",
-                        "note_onehundredtwentyeighth",
-                        "note_triplethalf",
-                        "note_tripletquarter",
-                        "note_tripleteighth",
-                        "note_tripletsixteenth",
-                        "note_tripletthirtysecond"};
-                for(int i=0;i<11;i++)
-                        sme->addAction(embed::getIconPixmap(icons[i]),
-                                       QString::number(labels[i]))
-                                ->setData(labels[i]);
-		_cm->addSeparator();
-                _cm->addMenu(sme);
-	}
+        return cm;
 }
 
+/*
+void PatternView::addStepMenu(QMenu* _cm, bool _enabled)
+{
+        Q_UNUSED(_enabled)
+
+        QMenu* sma=new QMenu(tr("Add steps"));
+        QMenu* smr=new QMenu(tr("Remove steps"));
+        sma->addAction( embed::getIconPixmap( "step_btn_add" ),
+                        tr( "One bar" ), m_pat, SLOT( addBarSteps() ) );
+        smr->addAction( embed::getIconPixmap( "step_btn_remove" ),
+                        tr( "One bar" ), m_pat, SLOT( removeBarSteps() ) );
+        sma->addAction( embed::getIconPixmap( "step_btn_add" ),
+                        tr( "One beat" ), m_pat, SLOT( addBeatSteps() ) );
+        smr->addAction( embed::getIconPixmap( "step_btn_remove" ),
+                        tr( "One beat" ), m_pat, SLOT( removeBeatSteps() ) );
+        sma->addAction( embed::getIconPixmap( "step_btn_add" ),
+                        tr( "One step" ), m_pat, SLOT( addOneStep() ) );
+        smr->addAction( embed::getIconPixmap( "step_btn_remove" ),
+                        tr( "One step" ), m_pat, SLOT( removeOneStep() ) );
+
+        _cm->addSeparator();
+        _cm->addMenu(sma);
+        _cm->addMenu(smr);
+        _cm->addAction( embed::getIconPixmap( "step_btn_duplicate" ),
+                        tr( "Clone Steps" ), m_pat, SLOT( cloneSteps() ) );
+
+        QMenu* sme=new QMenu(tr("Step resolution"));
+        connect(sme,SIGNAL( triggered(QAction*) ),
+                this, SLOT( changeStepResolution(QAction*)));
+
+        static const int labels[]={
+                2,4,8,16,32,64,128,
+                3,6,12,24,48};
+        static const QString icons[]={
+                "note_whole",
+                "note_half",
+                "note_quarter",
+                "note_eighth",
+                "note_sixteenth",
+                "note_thirtysecond",
+                "note_sixtyfourth",
+                "note_onehundredtwentyeighth",
+                "note_triplethalf",
+                "note_tripletquarter",
+                "note_tripleteighth",
+                "note_tripletsixteenth",
+                "note_tripletthirtysecond"};
+        for(int i=0;i<11;i++)
+                sme->addAction(embed::getIconPixmap(icons[i]),
+                               QString::number(labels[i]))
+                        ->setData(labels[i]);
+        _cm->addSeparator();
+        _cm->addMenu(sme);
+}
+*/
 
 int PatternView::mouseToStep(int _x,int _y)
 {
@@ -907,6 +778,14 @@ void PatternView::mousePressEvent( QMouseEvent * _me )
 {
         if(m_pat->getTrack()->isFrozen())
                 _me->ignore();
+
+        if( (_me->button() == Qt::MiddleButton) &&
+            (_me->modifiers() & Qt::ShiftModifier) &&
+            (m_pat->m_patternType == Pattern::MelodyPattern ||
+             !isFixed()))
+	{
+		openInPianoRoll();
+	}
 
 	// when mouse button is pressed in beat/bassline -mode
         if( _me->button() == Qt::LeftButton &&
@@ -958,7 +837,7 @@ void PatternView::mouseDoubleClickEvent(QMouseEvent *_me)
 		_me->ignore();
 		return;
 	}
-	if( m_pat->m_patternType == Pattern::MelodyPattern || !fixedTCOs() )
+	if( m_pat->m_patternType == Pattern::MelodyPattern || !isFixed() )
 	{
 		openInPianoRoll();
 	}
@@ -1046,11 +925,15 @@ void PatternView::paintEvent( QPaintEvent * )
 	bool current = gui->pianoRoll()->currentPattern() == m_pat;
 	bool beatPattern = m_pat->m_patternType == Pattern::BeatPattern;
 
-	// state: selected, normal, beat pattern, muted
-	QColor c = isSelected()
+	// state: selected, normal, user, beat pattern, muted
+	QColor bgcolor = isSelected()
                 ? selectedColor()
                 : ( ( !muted && !beatPattern )
-                    ? painter.background().color()
+                    ? ( useStyleColor()
+                        ? ( m_pat->getTrack()->useStyleColor()
+                            ? painter.background().color()
+                            : m_pat->getTrack()->color() )
+                        : color() )
                     : ( beatPattern
                         ? BBPatternBackground()
                         : mutedBackgroundColor() ) );
@@ -1071,7 +954,7 @@ void PatternView::paintEvent( QPaintEvent * )
 	else
         */
 	{
-		p.fillRect( rect(), c );
+		p.fillRect( rect(), bgcolor );
 	}
 
 	// Check whether we will paint a text box and compute its potential height
@@ -1175,7 +1058,7 @@ void PatternView::paintEvent( QPaintEvent * )
 		else
 		{
 			p.setPen(noteBorderColor);
-			p.setRenderHint(QPainter::Antialiasing);
+			//p.setRenderHint(QPainter::Antialiasing); ??? GDX
 		}
 
 		// Needed for Qt5 although the documentation for QPainter::setPen(QColor) as it's used above
@@ -1290,24 +1173,19 @@ void PatternView::paintEvent( QPaintEvent * )
 		}
 	}
 
-        if(m_pat->getTrack()->isFrozen())
-        {
-                p.fillRect(0,height()-8,width()-1,7,
-                           QBrush(Qt::cyan,Qt::BDiagPattern));
-                //p.fillRect(0,0,width()-1,height()-1,
-                //           QBrush(QColor(0,160,160,48),Qt::SolidPattern));
-        }
-        else
+        bool frozen=m_pat->getTrack()->isFrozen();
+        paintFrozenIcon(frozen,p);
+
         if(!beatPattern)
         {
                 paintTileTacts(current,m_pat->length().nextFullTact(),1,
-                               c,width(),height(),p);
+                               bgcolor,p);
         }
 
 	// pattern name
 	if (drawTextBox)
 	{
-		paintTextLabel(m_pat->name(), p);
+		paintTextLabel(m_pat->name(), bgcolor, p);
 	}
 
 	if( !beatPattern )//&& fixedTCOs() ) )
@@ -1330,7 +1208,7 @@ void PatternView::paintEvent( QPaintEvent * )
                 p.drawLine(0,height()-1,width()-1,height()-1);
                 p.drawLine(width()-1,1,width()-1,height()-2);
                 */
-                paintTileBorder(current,c,width(),height(),p);
+                paintTileBorder(current,bgcolor,p);
 	}
 
         /*

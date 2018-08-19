@@ -77,11 +77,17 @@ class TrackContentObject : public Model, public JournallingObject
 {
 	Q_OBJECT
 	MM_OPERATORS
+
 	mapPropertyFromModel(bool,isMuted,setMuted,m_mutedModel);
 	mapPropertyFromModel(bool,isSolo,setSolo,m_soloModel);
-public:
+
+ public:
 	TrackContentObject( Track * track );
+        TrackContentObject( const TrackContentObject& _other );
 	virtual ~TrackContentObject();
+
+	virtual void saveSettings( QDomDocument& doc, QDomElement& element );
+	virtual void loadSettings( const QDomElement& element );
 
 	inline Track * getTrack() const
 	{
@@ -133,6 +139,20 @@ public:
 
 	virtual void movePosition( const MidiTime & pos );
 	virtual void changeLength( const MidiTime & length );
+        virtual void updateLength();
+
+        /*
+	unsigned int colorRGB() const
+	{
+		return m_color.rgb();
+	}
+        */
+
+        bool isFixed() const;
+        bool useStyleColor() const;
+	void setUseStyleColor(bool _b);
+	QColor color() const;
+	void setColor(const QColor& _c);
 
 	virtual TrackContentObjectView * createView( TrackView * tv ) = 0;
 
@@ -150,18 +170,36 @@ public:
 	static bool comparePosition(const TrackContentObject* a, const TrackContentObject* b);
 
 public slots:
-	void copy();
-	void paste();
-	void toggleMute();
+	virtual void clear();
+        virtual void copy();
+	virtual void paste();
+	virtual void toggleMute() final;
 
 
-signals:
+ signals:
 	void lengthChanged();
 	void positionChanged();
 	void destroyedTCO();
 
+ protected:
+	void updateBBTrack();
+        void setStepResolution(int _res);
+	int  stepsPerTact() const;
+	MidiTime stepPosition(int _step) const;
+        void updateLength(tick_t _len);
 
-private:
+	int m_steps;
+        int m_stepResolution;
+
+ protected slots:
+	void addBarSteps();
+	void addBeatSteps();
+	void addOneStep();
+	void removeBarSteps();
+	void removeBeatSteps();
+	void removeOneStep();
+
+ private:
 	enum Actions
 	{
 		NoAction,
@@ -177,7 +215,10 @@ private:
 
 	BoolModel m_mutedModel;
 	BoolModel m_soloModel;
+
 	bool m_autoResize;
+	QColor m_color;
+	bool m_useStyleColor;
 
 	bool m_selectViewOnCreate;
 
@@ -187,7 +228,7 @@ private:
 
 
 
-class TrackContentObjectView : public selectableObject, public ModelView
+class TrackContentObjectView : public SelectableObject, public ModelView
 {
 	Q_OBJECT
 
@@ -205,12 +246,20 @@ public:
 	TrackContentObjectView( TrackContentObject * tco, TrackView * tv );
 	virtual ~TrackContentObjectView();
 
-	bool fixedTCOs();
+	//bool fixedTCOs();
 
 	inline TrackContentObject * getTrackContentObject()
 	{
 		return m_tco;
 	}
+
+        bool isFixed() const;
+	float pixelsPerTact();
+        bool useStyleColor() const;
+	void setUseStyleColor(bool _use);
+        QColor color() const;
+	void setColor(const QColor& _newColor);
+
 	// qproperty access func
 	QColor mutedColor() const;
 	QColor mutedBackgroundColor() const;
@@ -242,16 +291,28 @@ public:
 
 public slots:
 	virtual bool close();
-	void cut();
-	void remove();
 	virtual void update();
 
-protected:
-	virtual void constructContextMenu( QMenu * )
-	{
-	}
+	virtual void remove() final;
+        virtual void mute() final;
+        virtual void clear() final;
+	virtual void cut() final;
+	virtual void copy() final;
+	virtual void paste() final;
+        virtual void changeName() final;
+        virtual void resetName() final;
+        virtual void changeColor();
+        virtual void resetColor();
 
-	virtual void contextMenuEvent( QContextMenuEvent * cme );
+protected:
+	virtual QMenu* buildContextMenu() = 0;
+        virtual void addRemoveMuteClearMenu(QMenu* _cm, bool _remove, bool _mute, bool _clear) final;
+        virtual void addCutCopyPasteMenu(QMenu* _cm, bool _cut,bool _copy, bool _paste) final;
+        virtual void addStepMenu(QMenu* _cm, bool _enabled) final;
+        virtual void addNameMenu(QMenu* _cm, bool _enabled) final;
+        virtual void addColorMenu(QMenu* _cm, bool _enabled) final;
+	virtual void contextMenuEvent(QContextMenuEvent* _cme ) final;
+
 	virtual void dragEnterEvent( QDragEnterEvent * dee );
 	virtual void dropEvent( QDropEvent * de );
 	virtual void leaveEvent( QEvent * e );
@@ -261,10 +322,8 @@ protected:
 	virtual void resizeEvent( QResizeEvent * re )
 	{
 		m_needsUpdate = true;
-		selectableObject::resizeEvent( re );
+		SelectableObject::resizeEvent( re );
 	}
-
-	float pixelsPerTact();
 
 	inline TrackView * getTrackView()
 	{
@@ -273,10 +332,11 @@ protected:
 
 	DataFile createTCODataFiles(const QVector<TrackContentObjectView *> & tcos) const;
 
-	virtual void paintTextLabel(const QString& text, QPainter& painter);
-	virtual void paintTileBorder(const bool current, const QColor& bg, const int w, const int h, QPainter& painter);
-        virtual void paintTileTacts(const bool current, tact_t nbt, tact_t tpg, const QColor& bg, const int w, const int h, QPainter& painter);
-        virtual void paintMutedIcon(const bool muted, QPainter& painter);
+	virtual void paintTextLabel(const QString& text, const QColor& bg, QPainter& painter) final;
+	virtual void paintTileBorder(const bool current, const QColor& bg, QPainter& painter) final;
+        virtual void paintTileTacts(const bool current, tact_t nbt, tact_t tpg, const QColor& bg, QPainter& painter) final;
+        virtual void paintMutedIcon(const bool muted, QPainter& painter) final;
+        virtual void paintFrozenIcon(const bool frozen, QPainter& painter) final;
 
 
 protected slots:
@@ -383,6 +443,9 @@ public:
 	TrackContentWidget( TrackView * parent );
 	virtual ~TrackContentWidget();
 
+        bool isFixed() const;
+	float pixelsPerTact();
+
 	/*! \brief Updates the background tile pixmap. */
 	void updateBackground();
 
@@ -424,8 +487,10 @@ protected:
 	virtual void paintEvent( QPaintEvent * pe );
 	virtual void resizeEvent( QResizeEvent * re );
 
-	virtual void paintGrid(QPainter& p,int tact,int ppt,QVector<QPointer<BarView> >& barViews);
-	virtual void paintCell(QPainter& p,int xc,int yc,int wc,int hc,const QPointer<BarView>& barView,bool sign);
+	virtual void paintGrid(QPainter& p,int tact,float ppt,
+                               QVector<QPointer<BarView> >& barViews);
+	virtual void paintCell(QPainter& p,int xc,int yc,int wc,int hc,
+                               const QPointer<BarView>& barView,bool sign);
 
 	virtual QString nodeName() const
 	{
@@ -475,9 +540,11 @@ public:
 
 
 protected:
+        virtual void addNameMenu(QMenu* _cm, bool _enabled) final;
+        virtual void addColorMenu(QMenu* _cm, bool _enabled) final;
+
 	virtual void mousePressEvent( QMouseEvent * me );
 	virtual void paintEvent( QPaintEvent * pe );
-
 
 private slots:
 	void cloneTrack();
@@ -488,6 +555,10 @@ private slots:
 	void recordingOn();
 	void recordingOff();
 	void clearTrack();
+        void changeName();
+        void resetName();
+        void changeColor();
+        void resetColor();
 
 private:
 	static QPixmap * s_grip;
@@ -540,6 +611,12 @@ public:
 
 	Track( TrackTypes type, TrackContainer * tc );
 	virtual ~Track();
+
+        bool isFixed() const;
+        bool useStyleColor() const;
+	void setUseStyleColor(bool _b);
+        QColor color() const;
+	void setColor(const QColor& _newColor);
 
 	static Track * create( TrackTypes tt, TrackContainer * tc );
 	static Track * create( const QDomElement & element,
@@ -682,6 +759,9 @@ public slots:
 	QString    m_name;
 	QString    m_uuid;
 	int        m_height;
+	QColor     m_color;
+	bool       m_useStyleColor;
+
 
 	bool m_mutedBeforeSolo;
 	bool m_simpleSerializingMode;
@@ -709,6 +789,9 @@ class TrackView : public QWidget, public ModelView, public JournallingObject
 public:
 	TrackView( Track * _track, TrackContainerView* tcv );
 	virtual ~TrackView();
+
+        bool isFixed() const;
+	float pixelsPerTact();
 
 	inline const Track * getTrack() const
 	{

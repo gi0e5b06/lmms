@@ -23,8 +23,11 @@
  *
  */
 
-#ifndef PATTERN_H
-#define PATTERN_H
+#ifndef PATTERN_H_
+#define PATTERN_H_
+
+#include "Note.h"
+#include "Track.h"
 
 //#include <QVector>
 //#include <QWidget>
@@ -32,11 +35,6 @@
 //#include <QThread>
 #include <QPixmap>
 #include <QStaticText>
-
-
-#include "Note.h"
-#include "Track.h"
-
 
 class QAction;
 class QProgressBar;
@@ -46,10 +44,10 @@ class InstrumentTrack;
 class SampleBuffer;
 
 
-
 class EXPORT Pattern : public TrackContentObject
 {
 	Q_OBJECT
+
 public:
 	enum PatternTypes
 	{
@@ -63,8 +61,8 @@ public:
 
 	void init();
 
-	void updateLength();
-	MidiTime beatPatternLength() const;
+	virtual void updateLength();
+	//MidiTime beatPatternLength() const;
 
 	// note management
 	Note * addNote( const Note & _new_note, const bool _quant_pos = true );
@@ -117,24 +115,26 @@ public:
 	using Model::dataChanged;
 
 
-protected:
-	void updateBBTrack();
+public slots:
+	virtual void clear();
 
+protected:
+        //void updateBBTrack();
 
 protected slots:
+	void changeTimeSignature();
 	void cloneSteps();
+        /*
 	void addBarSteps();
 	void addBeatSteps();
 	void addOneStep();
 	void removeBarSteps();
 	void removeBeatSteps();
 	void removeOneStep();
-	void clear();
-	void changeTimeSignature();
         void setStepResolution(int _res);
 	int      stepsPerTact() const;
 	MidiTime stepPosition(int _step) const;
-
+        */
 
 private:
 	void setType( PatternTypes _new_pattern_type );
@@ -149,8 +149,6 @@ private:
 	// data-stuff
 	//NoteVector m_notes;
         QVector<Note*> m_notes;
-	int m_steps;
-        int m_stepResolution;
 
 	Pattern * adjacentPatternByOffset(int offset) const;
 
@@ -169,7 +167,7 @@ class PatternView : public TrackContentObjectView
 {
 	Q_OBJECT
 
-public:
+ public:
 	PatternView( Pattern* pattern, TrackView* parent );
 	virtual ~PatternView();
 
@@ -190,20 +188,27 @@ public:
 	QColor const & getMutedNoteBorderColor() const { return m_mutedNoteBorderColor; }
 	void setMutedNoteBorderColor(QColor const & color) { m_mutedNoteBorderColor = color; }
 
-public slots:
-	virtual void update();
+ public slots:
+        virtual void update();
 
+        //virtual void remove();
+        //virtual void cut();
+	//virtual void copy();
+	//virtual void paste();
+        //virtual void changeName();
+        //virtual void resetName();
+        //virtual void changeColor();
+        //virtual void resetColor();
 
-protected slots:
 	void openInPianoRoll();
 
-	void resetName();
-	void changeName();
 
         void changeStepResolution(QAction* _a);
 
 protected:
-	virtual void constructContextMenu( QMenu * );
+	virtual QMenu* buildContextMenu();
+        //virtual void addStepMenu(QMenu* _cm, bool _enabled) final;
+
 	virtual void mousePressEvent( QMouseEvent * _me );
 	virtual void mouseDoubleClickEvent( QMouseEvent * _me );
 	virtual void paintEvent( QPaintEvent * pe );

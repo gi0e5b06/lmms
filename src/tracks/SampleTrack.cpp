@@ -91,25 +91,10 @@ SampleTCO::SampleTCO( Track * _track ) :
 	setSampleFile( "" );
 	restoreJournallingState();
 
-	float nom = Engine::getSong()->getTimeSigModel().getNumerator();
-	float den = Engine::getSong()->getTimeSigModel().getDenominator();
-	int ticksPerTact = DefaultTicksPerTact * ( nom / den );
-	TrackContentObject::changeLength( ticksPerTact );
+        changeLength(MidiTime(1, 0));
+        setAutoResize( false );
 
         doConnections();
-
-	switch( getTrack()->trackContainer()->type() )
-	{
-		case TrackContainer::BBContainer:
-			setAutoResize( true );
-			break;
-
-		case TrackContainer::SongContainer:
-			// move down
-		default:
-			setAutoResize( false );
-			break;
-	}
 	updateTrackTcos();
 }
 
@@ -175,16 +160,16 @@ void SampleTCO::doConnections()
 }
 
 
+/*
 void SampleTCO::changeLength( const MidiTime & _length )
 {
 	float nom = Engine::getSong()->getTimeSigModel().getNumerator();
 	float den = Engine::getSong()->getTimeSigModel().getDenominator();
 	int ticksPerTact = DefaultTicksPerTact * ( nom / den );
 	TrackContentObject::changeLength( qMax( static_cast<int>( _length ), ticksPerTact/32 ) );
-
         //TrackContentObject::changeLength( qMax( static_cast<int>( _length ), 1 ) );
 }
-
+*/
 
 
 
@@ -261,7 +246,14 @@ void SampleTCO::setIsPlaying(bool isPlaying)
 
 void SampleTCO::updateLength()
 {
-	emit sampleChanged();
+	//emit sampleChanged();
+        tick_t len;
+        if(getAutoResize())
+                len=sampleLength();
+        else
+                len=length();
+
+        TrackContentObject::updateLength(len);
 }
 
 
@@ -287,16 +279,19 @@ void SampleTCO::setInitialPlayTick(tick_t _t)
 
 void SampleTCO::saveSettings( QDomDocument & _doc, QDomElement & _this )
 {
-	if( _this.parentNode().nodeName() == "clipboard" )
-	{
-		_this.setAttribute( "pos", -1 );
-	}
-	else
+        /*
+          //if( _this.parentNode().nodeName() == "clipboarddata" )
+          //{
+          //	_this.setAttribute( "pos", -1 );
+          //}
+          //else
 	{
 		_this.setAttribute( "pos", startPosition() );
 	}
 	_this.setAttribute( "len", length() );
 	_this.setAttribute( "muted", isMuted() );
+        */
+        TrackContentObject::saveSettings(_doc,_this);
 	_this.setAttribute( "initial", initialPlayTick() );
 	_this.setAttribute( "src", sampleFile() );
 	if( sampleFile() == "" )
@@ -312,18 +307,20 @@ void SampleTCO::saveSettings( QDomDocument & _doc, QDomElement & _this )
 
 void SampleTCO::loadSettings( const QDomElement & _this )
 {
+        TrackContentObject::loadSettings(_this);
+	setSampleFile( _this.attribute( "src" ) );
+	if( sampleFile().isEmpty() && _this.hasAttribute( "data" ) )
+		m_sampleBuffer->loadFromBase64( _this.attribute( "data" ) );
+        setInitialPlayTick( _this.attribute( "initial" ).toInt() );
+
+        /*
 	if( _this.attribute( "pos" ).toInt() >= 0 )
 	{
 		movePosition( _this.attribute( "pos" ).toInt() );
 	}
-	setSampleFile( _this.attribute( "src" ) );
-	if( sampleFile().isEmpty() && _this.hasAttribute( "data" ) )
-	{
-		m_sampleBuffer->loadFromBase64( _this.attribute( "data" ) );
-	}
-	changeLength( _this.attribute( "len" ).toInt() );
+        changeLength( _this.attribute( "len" ).toInt() );
 	setMuted( _this.attribute( "muted" ).toInt() );
-        setInitialPlayTick( _this.attribute( "initial" ).toInt() );
+        */
 }
 
 
@@ -378,7 +375,7 @@ void SampleTCOView::loadSample()
 void SampleTCOView::reloadSample()
 {
 	m_tco->setSampleFile( m_tco->m_sampleBuffer->audioFile() );
-	Engine::getSong()->setModified();
+	//Engine::getSong()->setModified();
 }
 
 
@@ -394,48 +391,49 @@ void SampleTCOView::updateSample()
 					tr( "double-click to select sample" ) );
 }
 
-
-
-
-void SampleTCOView::contextMenuEvent( QContextMenuEvent * _cme )
+void SampleTCOView::openInAudacity()
 {
-	if( _cme->modifiers() )
-	{
-		return;
-	}
+        qWarning("SampleTCOView::openInAudacity not implemented");
+}
 
-	QMenu contextMenu( this );
 
-	contextMenu.addAction( embed::getIconPixmap( "sample_file" ),
-			       tr( "Load sample" ),
-			       this, SLOT( loadSample() ) );
-	contextMenu.addAction( embed::getIconPixmap( "reload" ),
-			       tr( "Reload" ),
-			       this, SLOT( reloadSample() ) );
-	contextMenu.addSeparator();
-	if( fixedTCOs() == false )
-	{
-		contextMenu.addAction( embed::getIconPixmap( "cancel" ),
-					tr( "Delete (middle mousebutton)" ),
-						this, SLOT( remove() ) );
-		contextMenu.addSeparator();
-		contextMenu.addAction( embed::getIconPixmap( "edit_cut" ),
-					tr( "Cut" ), this, SLOT( cut() ) );
-	}
-	contextMenu.addAction( embed::getIconPixmap( "edit_copy" ),
-					tr( "Copy" ), m_tco, SLOT( copy() ) );
-	contextMenu.addAction( embed::getIconPixmap( "edit_paste" ),
-					tr( "Paste" ), m_tco, SLOT( paste() ) );
-	contextMenu.addSeparator();
-	contextMenu.addAction( embed::getIconPixmap( "muted" ),
-                               tr( "Mute/unmute (<%1> + middle click)" ).arg(UI_CTRL_KEY),
-                               m_tco, SLOT( toggleMute() ) );
-	/*contextMenu.addAction( embed::getIconPixmap( "record" ),
-				tr( "Set/clear record" ),
-						m_tco, SLOT( toggleRecord() ) );*/
-	constructContextMenu( &contextMenu );
+QMenu* SampleTCOView::buildContextMenu()
+{
+        QMenu* cm=new QMenu(this);
+	QAction* a;
 
-	contextMenu.exec( QCursor::pos() );
+        bool normal =!isFixed();//(fixedTCOs() == false);
+        bool hasFile=(m_tco->sampleFile() != "");
+
+	a=cm->addAction( embed::getIconPixmap( "sample_file" ),
+                         tr( "Open in audacity" ),
+                         this, SLOT( openInAudacity() ));
+        a->setEnabled(hasFile);
+        addRemoveMuteClearMenu(cm,normal,normal,true);
+	cm->addSeparator();
+        addCutCopyPasteMenu(cm,normal,true,normal);
+
+	if(isFixed())
+        {
+                cm->addSeparator();
+                addStepMenu(cm,true);
+        }
+
+        cm->addSeparator();
+        a=cm->addAction( embed::getIconPixmap( "sample_file" ),
+                         tr( "Load sample" ),
+                         this, SLOT( loadSample() ) );
+	a=cm->addAction( embed::getIconPixmap( "reload" ),
+                         tr( "Reload" ),
+                         this, SLOT( reloadSample() ) );
+        a->setEnabled(hasFile);
+
+        cm->addSeparator();
+        addNameMenu(cm,true);
+        cm->addSeparator();
+        addColorMenu(cm,true);
+
+        return cm;
 }
 
 
@@ -556,10 +554,16 @@ void SampleTCOView::paintEvent( QPaintEvent * pe )
 
 	bool muted = m_tco->getTrack()->isMuted() || m_tco->isMuted();
 
-	// state: selected, muted, normal
-	QColor c= isSelected()
+	// state: selected, muted, default, user
+	QColor bgcolor = isSelected()
                 ? selectedColor()
-                : ( muted ? mutedBackgroundColor() : painter.background().color() );
+                : ( muted
+                    ? mutedBackgroundColor()
+                    : ( useStyleColor()
+                        ? ( m_tco->getTrack()->useStyleColor()
+                            ? painter.background().color()
+                            : m_tco->getTrack()->color() )
+                        : color() ));
 
         /*
 	// paint a black rectangle under the pattern to prevent glitches with transparent backgrounds
@@ -575,17 +579,19 @@ void SampleTCOView::paintEvent( QPaintEvent * pe )
 	else
         */
 	{
-		p.fillRect( rect(), c );
+		p.fillRect( rect(), bgcolor );
 	}
 
 	p.setPen( !muted ? painter.pen().brush().color() : mutedColor() );
 
 	const int spacing = TCO_BORDER_WIDTH + 1;
+        /*
 	const float ppt = fixedTCOs() ?
 			( parentWidget()->width() - 2 * TCO_BORDER_WIDTH )
 					/ (float) m_tco->length().getTact() :
 								pixelsPerTact();
-
+        */
+        const float ppt = pixelsPerTact();
 	float nom = Engine::getSong()->getTimeSigModel().getNumerator();
 	float den = Engine::getSong()->getTimeSigModel().getDenominator();
 	float ticksPerTact = DefaultTicksPerTact * nom / den;
@@ -595,25 +601,19 @@ void SampleTCOView::paintEvent( QPaintEvent * pe )
 	m_tco->m_sampleBuffer->visualize(p,r);//, pe->rect() );
 
 
-        if(m_tco->getTrack()->isFrozen())
-        {
-                p.fillRect(0,height()-8,width()-1,height()-1,
-                           QBrush(Qt::cyan,Qt::BDiagPattern));
-                p.fillRect(0,0,width()-1,height()-1,
-                           QBrush(QColor(0,160,160,48),Qt::SolidPattern));
-        }
-        else
-        {
-                paintTileTacts(false,m_tco->length().nextFullTact(),1,
-                               c,width(),height(),p);
-        }
+        bool frozen=m_tco->getTrack()->isFrozen();
+        paintFrozenIcon(frozen,p);
 
+        paintTileTacts(false,m_tco->length().nextFullTact(),1,
+                       bgcolor,p);
+
+        // TODO: use m_name
 	QFileInfo fileInfo(m_tco->m_sampleBuffer->audioFile());
 	QString filename = fileInfo.fileName();
-	paintTextLabel(filename, p);
+	paintTextLabel(filename, bgcolor, p);
 
 	// disable antialiasing for borders, since its not needed
-	p.setRenderHint( QPainter::Antialiasing, false );
+        //p.setRenderHint( QPainter::Antialiasing, false );
 
         /*
 	// inner border
@@ -625,7 +625,7 @@ void SampleTCOView::paintEvent( QPaintEvent * pe )
 	p.setPen( c.darker( 300 ) );
 	p.drawRect( 0, 0, rect().right(), rect().bottom() );
         */
-        paintTileBorder(false,c,width(),height(),p);
+        paintTileBorder(false,bgcolor,p);
 
         /*
 	// draw the 'muted' pixmap only if the pattern was manualy muted
@@ -639,7 +639,7 @@ void SampleTCOView::paintEvent( QPaintEvent * pe )
         */
         paintMutedIcon(m_tco->isMuted(),p);
 
-	// recording sample tracks is not possible at the moment 
+	// recording sample tracks is not possible at the moment
 
 	/* if( m_tco->isRecord() )
 	{

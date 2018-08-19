@@ -52,9 +52,12 @@ public:
 	virtual ~TrackContainer();
 
 	virtual void saveSettings( QDomDocument & _doc, QDomElement & _parent );
-
 	virtual void loadSettings( const QDomElement & _this );
 
+        virtual bool isFixed() const
+        {
+                return false;
+        }
 
 	virtual AutomationPattern * tempoAutomationPattern()
 	{

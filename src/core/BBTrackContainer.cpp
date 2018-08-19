@@ -69,10 +69,11 @@ bool BBTrackContainer::play( MidiTime _start, fpp_t _frames,
 	for( TrackList::iterator it = tl.begin(); it != tl.end(); ++it )
 	{
                 f_cnt_t realstart = _start;
-                Pattern* p=dynamic_cast<Pattern*>((*it)->getTCO( _tco_num ));
-                if(p)
+                TrackContentObject* p=(*it)->getTCO( _tco_num );
+                //Pattern* p=dynamic_cast<Pattern*>((*it)->getTCO( _tco_num ));
+                //if(p)
                 {
-                        tick_t tlen=p->beatPatternLength();
+                        tick_t tlen=p->length();
                         if(tlen <= 0) continue;
                         realstart = _start % tlen;//GDX
                         //qInfo("realstart=%d tlen=%d",realstart,tlen);
@@ -124,7 +125,7 @@ tick_t BBTrackContainer::beatLengthOfBB( int _bb ) const
                 Pattern* p=dynamic_cast<Pattern*>((*it)->getTCO( _bb ));
                 if(p)
                 {
-                        tick_t plen=p->beatPatternLength();
+                        tick_t plen=p->length();//beatPatternLength();
                         max_length = qMax( max_length, plen);
                 }
         }
@@ -266,21 +267,17 @@ void BBTrackContainer::createTCOsForBB( int _bb )
 	}
 }
 
-AutomatedValueMap BBTrackContainer::automatedValuesAt(MidiTime time, int tcoNum) const
+AutomatedValueMap BBTrackContainer::automatedValuesAt(MidiTime _start, int _tcoNum) const
 {
-	Q_ASSERT(tcoNum >= 0);
-	Q_ASSERT(time.getTicks() >= 0);
+        /*
+	Q_ASSERT(_tcoNum >= 0);
+	Q_ASSERT(_start.getTicks() >= 0);
 
-	auto length_tacts = lengthOfBB(tcoNum);
+	auto length_tacts = lengthOfBB(_tcoNum);
 	auto length_ticks = length_tacts * MidiTime::ticksPerTact();
-	if (time > length_ticks) {
-		time = length_ticks;
+	if (_start > length_ticks) {
+		_start = length_ticks;
 	}
-
-	return TrackContainer::automatedValuesAt(time + (MidiTime::ticksPerTact() * tcoNum), tcoNum);
+        */
+	return TrackContainer::automatedValuesAt(_start + (MidiTime::ticksPerTact() * _tcoNum), _tcoNum);
 }
-
-
-
-
-
