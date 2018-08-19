@@ -2,7 +2,7 @@
  * VisualizationWidget.cpp - widget for visualization of sound-data
  *
  * Copyright (c) 2005-2009 Tobias Doerffel <tobydox/at/users.sourceforge.net>
- * 
+ *
  * This file is part of LMMS - https://lmms.io
  *
  * This program is free software; you can redistribute it and/or
@@ -22,203 +22,246 @@
  *
  */
 
+#include "VisualizationWidget.h"
+
+#include "BufferManager.h"
+#include "Engine.h"
+#include "GuiApplication.h"
+#include "MainWindow.h"
+#include "Mixer.h"
+#include "Song.h"
+#include "ToolTip.h"
+#include "gui_templates.h"
 
 #include <QMouseEvent>
 #include <QPainter>
 
-#include "VisualizationWidget.h"
-#include "GuiApplication.h"
-#include "gui_templates.h"
-#include "MainWindow.h"
-#include "Mixer.h"
-#include "Engine.h"
-#include "ToolTip.h"
-#include "Song.h"
+#include <cmath>
 
-#include "BufferManager.h"
-
-
-VisualizationWidget::VisualizationWidget( const QPixmap & _bg, QWidget * _p,
-						visualizationTypes _vtype ) :
-	QWidget( _p ),
-	s_background( _bg ),
-	m_points( new QPointF[256] ),//Engine::mixer()->framesPerPeriod()] ),
-	m_active( false )
+VisualizationWidget::VisualizationWidget(const QPixmap&     _bg,
+                                         QWidget*           _p,
+                                         visualizationTypes _vtype) :
+      QWidget(_p),
+      m_active(false), m_frozen(false), m_stabilized(false), s_background(_bg)
 {
-	setFixedSize( s_background.width(), s_background.height() );
-	setAttribute( Qt::WA_OpaquePaintEvent, true );
-	setActive( ConfigManager::inst()->value( "ui", "displaywaveform").toInt() );
+    const int w  = s_background.width();
+    const int h  = s_background.height();
 
-	//const fpp_t frames = Engine::mixer()->framesPerPeriod();
-	//m_buffer = new sampleFrame[frames];
-	//BufferManager::clear( m_buffer, frames );
+    m_pointCount = w;
+    m_points=new QPointF[m_pointCount];
 
-	m_buffer = BufferManager::acquire();
+    setFixedSize(w, h);
+    setAttribute(Qt::WA_OpaquePaintEvent, true);
+    setActive(ConfigManager::inst()->value("ui", "displaywaveform").toInt());
 
-	ToolTip::add( this, tr( "click to enable/disable visualization of "
-							"master-output" ) );
+    // const fpp_t frames = Engine::mixer()->framesPerPeriod();
+    // m_buffer = new sampleFrame[frames];
+    // BufferManager::clear( m_buffer, frames );
+
+    m_buffer = BufferManager::acquire();
+
+    ToolTip::add(this, tr("Left-click to enable/disable visualization of "
+                          "master-output")
+                               + tr(", middle-click to freeze, right-click "
+                                    "to stabilize."));
 }
-
-
-
 
 VisualizationWidget::~VisualizationWidget()
 {
-	BufferManager::release(m_buffer);
-	//delete[] m_buffer;
-	delete[] m_points;
+    BufferManager::release(m_buffer);
+    // delete[] m_buffer;
+    delete[] m_points;
 }
 
-
-
-
-void VisualizationWidget::updateAudioBuffer( const surroundSampleFrame * buffer )
+void VisualizationWidget::updateAudioBuffer(
+        const surroundSampleFrame* _buffer)
 {
-	if( !Engine::getSong()->isExporting() )
-	{
-		//qWarning("VisualizationWidget::updateAudioBuffer");
-		const fpp_t fpp = Engine::mixer()->framesPerPeriod();
-		//memcpy( m_buffer, buffer, sizeof( surroundSampleFrame ) * fpp );
-		for( ch_cnt_t ch = 0; ch < DEFAULT_CHANNELS; ++ch )
-			for(fpp_t i=0;i<fpp;i++)
-			 {
-				m_buffer[i][ch]=buffer[i][ch];
-				//if(buffer[i][ch] != 0.) qWarning("%f",buffer[i][ch]);
-			 }
-	}
+    if(m_active && !m_frozen && !Engine::getSong()->isExporting())
+    {
+        // qWarning("VisualizationWidget::updateAudioBuffer");
+        const fpp_t fpp = Engine::mixer()->framesPerPeriod();
+        // memcpy( m_buffer, _buffer, sizeof( surroundSampleFrame ) * fpp );
+        for(ch_cnt_t ch = 0; ch < DEFAULT_CHANNELS; ++ch)
+            for(fpp_t i = 0; i < fpp; i++)
+            {
+                m_buffer[i][ch] = _buffer[i][ch];
+                // if(_buffer[i][ch] != 0.) qWarning("%f",_buffer[i][ch]);
+            }
+    }
 }
 
-
-
-
-void VisualizationWidget::setActive( bool _active )
+void VisualizationWidget::setActive(bool _active)
 {
-	m_active = _active;
-	if( m_active )
-	{
-		connect( gui->mainWindow(), SIGNAL( periodicUpdate() ),
-                         this, SLOT( update() ) );
-		connect( Engine::mixer(),
-                         SIGNAL( nextAudioBuffer( const surroundSampleFrame* ) ),
-                         this, SLOT( updateAudioBuffer( const surroundSampleFrame* ) ) );
-	}
-	else
-	{
-		disconnect( gui->mainWindow(), SIGNAL( periodicUpdate() ),
-                            this, SLOT( update() ) );
-		disconnect( Engine::mixer(),
-                            SIGNAL( nextAudioBuffer( const surroundSampleFrame* ) ),
-                            this, SLOT( updateAudioBuffer( const surroundSampleFrame* ) ) );
-		// we have to update (remove last waves),
-		// because timer doesn't do that anymore
-		update();
-	}
+    m_active = _active;
+    if(m_active)
+    {
+        connect(gui->mainWindow(), SIGNAL(periodicUpdate()), this,
+                SLOT(update()));
+        connect(Engine::mixer(),
+                SIGNAL(nextAudioBuffer(const surroundSampleFrame*)), this,
+                SLOT(updateAudioBuffer(const surroundSampleFrame*)));
+    }
+    else
+    {
+        disconnect(gui->mainWindow(), SIGNAL(periodicUpdate()), this,
+                   SLOT(update()));
+        disconnect(Engine::mixer(),
+                   SIGNAL(nextAudioBuffer(const surroundSampleFrame*)), this,
+                   SLOT(updateAudioBuffer(const surroundSampleFrame*)));
+        // we have to update (remove last waves),
+        // because timer doesn't do that anymore
+        update();
+    }
 }
 
-
-
-
-void VisualizationWidget::paintEvent( QPaintEvent * )
+void VisualizationWidget::setFrozen(bool _frozen)
 {
-	QPainter p( this );
+    m_frozen = _frozen;
+}
 
-	p.drawPixmap( 0, 0, s_background );
+void VisualizationWidget::setStabilized(bool _stabilized)
+{
+    m_stabilized = _stabilized;
+}
 
-	if( m_active && !Engine::getSong()->isExporting() )
-	{
-		Mixer const * mixer = Engine::mixer();
+void VisualizationWidget::paintEvent(QPaintEvent*)
+{
+    QPainter p(this);
 
-		float master_output = mixer->masterGain();
-		//qWarning("VisualizationWidget::masterGain %f",master_output);
-		int w = width()-4;
-		const float half_h = -( height() - 6 ) / 2.0 * master_output - 1; //3.0
-		int x_base = 2;
-		const float y_base = height()/2 - 0.5f;
+    p.drawPixmap(0, 0, s_background);
 
-//		p.setClipRect( 2, 2, w, height()-4 );
+    if(m_active && !Engine::getSong()->isExporting())
+    {
+        Mixer const* mixer = Engine::mixer();
 
+        float master_output = mixer->masterGain();
+        // qWarning("VisualizationWidget::masterGain %f",master_output);
+        int         w      = width() - 4;
+        const float half_h = -(height() - 11 - 6) / 2.0 * master_output - 1;
+        int         x_base = 2;
+        const float y_base = (height() - 11) / 2 - 0.5f;
 
-		const fpp_t frames = mixer->framesPerPeriod();
-		float peakLeft;
-		float peakRight;
-		mixer->getPeakValues( m_buffer, frames, peakLeft, peakRight );
-		const float max_level=
-                        qMax<float>( peakLeft, peakRight ) * master_output;
+        //		p.setClipRect( 2, 2, w, height()-4 );
 
-		// and set color according to that...
-		if( max_level < 0.9 )
-		{
-			p.setPen( QColor( 71, 253, 133 ) );
-		}
-		else if( max_level < 1.0 )
-		{
-			p.setPen( QColor( 255, 192, 64 ) );
-		}
-		else
-		{
-			p.setPen( QColor( 255, 64, 64 ) );
-		}
+        const fpp_t frames = mixer->framesPerPeriod();
+        float       peakLeft;
+        float       peakRight;
+        mixer->getPeakValues(m_buffer, frames, peakLeft, peakRight);
+        const float max_level
+                = qMax<float>(peakLeft, peakRight) * master_output;
 
-		//p.setPen( QPen( p.pen().color(), 0.7 ) );
-		//p.setRenderHint( QPainter::Antialiasing );
+        // p.setRenderHint( QPainter::Antialiasing );
 
-                //if(max_level>0.0001f)
+        // if(max_level>0.0001f)
+        {
+            int nbp = qMin<int>(w, frames);
+            if(nbp <= 1)
+                return;
+            if(nbp > m_pointCount)
+                nbp = m_pointCount;
+
+            const fpp_t fpp   = Engine::mixer()->framesPerPeriod();
+            int         fzero = 0;
+            for(fpp_t f = 1; f < fpp - 1; f++)
+            {
+                float v0 = m_buffer[f][0];
+                float v1 = m_buffer[f - 1][0];
+                if(v1 <= 0.f && v0 >= 0.f)
                 {
-                        int nbp=qMin<int>(w,frames);
-                        if(nbp<=1) return;
-                        if(nbp>256) nbp=256;
-
-                        for( ch_cnt_t ch = 0; ch < DEFAULT_CHANNELS; ++ch )
-                        {
-                                for(int i=0;i<nbp;i++)
-                                {
-                                        float tp=(float)i/(float)nbp;
-                                        f_cnt_t frame=frames*tp;
-                                        float xp=x_base+(w-1.f)/(nbp-1.f)*i;
-                                        float yp=y_base+half_h*Mixer::clip( m_buffer[frame][ch] );
-                                        m_points[i]=QPointF(xp,yp);
-                                }
-                                p.drawPolyline( m_points, nbp );
-                        }
-
-                        /*
-                        const float xd = (float) w / frames;
-                        // now draw all that stuff
-                        for( ch_cnt_t ch = 0; ch < DEFAULT_CHANNELS; ++ch )
-                        {
-                                for( int frame = 0; frame < frames; frame+=qMax(1,frames/w) )//++frame )
-                                {
-                                        m_points[frame]=
-                                                QPointF(x_base + (float) frame * xd,
-                                                        y_base + Mixer::clip( m_buffer[frame][ch] ) * half_h );
-                                }
-                                p.drawPolyline( m_points, frames );
-                        }
-                        */
+                    if(fabsf(v1) < fabsf(v0))
+                        fzero = f - 1;
+                    else
+                        fzero = f;
+                    break;
                 }
-                //else draw an horizontal line (TODO)
-	}
-	else
-	{
-		p.setPen( QColor( 192, 192, 192 ) );
-		p.setFont( pointSize<7>( p.font() ) );
-		p.drawText( 6, height()-5, tr( "Click to enable" ) );
-	}
+            }
+
+            int izero = (int)floorf(1.f * (nbp - 1) * fzero / (fpp - 1));
+            for(ch_cnt_t ch = DEFAULT_CHANNELS - 1; ch >= 0; --ch)
+            {
+                QColor c;
+                if(max_level > 1.f)
+                    c = QColor(255, 64, 64);
+                else if(max_level > 0.9f)
+                    c = QColor(255, 192, 64);
+                else if(ch == 0)
+                    c = QColor(71, 253, 133);
+                else
+                    c = QColor(71, 133, 253);
+                p.setPen(c);
+                // p.setPen( QPen( p.pen().color(), 0.7 ) );
+
+                for(int i = 0; i < nbp; i++)
+                {
+                    const float   tp    = (float)i / (float)nbp;
+                    const f_cnt_t frame = frames * tp;
+                    const float   xp = x_base + (w - 1.f) / (nbp - 1.f) * i;
+                    const float   yp
+                            = y_base
+                              + half_h * Mixer::clip(m_buffer[frame][ch]);
+                    m_points[i] = QPointF(xp, yp);
+                }
+                if(!m_stabilized || izero == 0)
+                {
+                    p.drawPolyline(m_points, nbp);
+                }
+                else
+                {
+                    p.translate(x_base - m_points[izero].x(), 0.f);
+                    p.drawPolyline(m_points + izero, nbp - 1 - izero);
+                    p.translate(-x_base + m_points[izero].x(), 0.f);
+
+                    /*
+                    p.translate(-x_base + m_points[nbp - izero].x(), 0.f);
+                    p.drawPolyline(m_points, izero + 1);
+                    p.translate(x_base - m_points[nbp - izero].x(), 0.f);
+                    */
+                }
+            }
+
+            /*
+            const float xd = (float) w / frames;
+            // now draw all that stuff
+            for( ch_cnt_t ch = 0; ch < DEFAULT_CHANNELS; ++ch )
+            {
+                    for( int frame = 0; frame < frames;
+            frame+=qMax(1,frames/w) )//++frame )
+                    {
+                            m_points[frame]=
+                                    QPointF(x_base + (float) frame * xd,
+                                            y_base + Mixer::clip(
+            m_buffer[frame][ch] ) * half_h );
+                    }
+                    p.drawPolyline( m_points, frames );
+            }
+            */
+        }
+        // else draw an horizontal line (TODO)
+    }
+    else
+    {
+        p.setPen(QColor(192, 192, 192));
+        p.setFont(pointSize<7>(p.font()));
+        p.drawText(6, height() - 5, tr("Click to enable"));
+    }
 }
 
-
-
-
-void VisualizationWidget::mousePressEvent( QMouseEvent * _me )
+void VisualizationWidget::mousePressEvent(QMouseEvent* _me)
 {
-	if( _me->button() == Qt::LeftButton )
-	{
-		setActive( !m_active );
-	}
+    if(_me->button() == Qt::LeftButton)
+    {
+        setActive(!m_active);
+        if(m_active)
+            m_frozen = false;
+    }
+    if(_me->button() == Qt::MiddleButton)
+    {
+        if(m_active)
+            setFrozen(!m_frozen);
+    }
+    if(_me->button() == Qt::RightButton)
+    {
+        if(m_active)
+            setStabilized(!m_stabilized);
+    }
 }
-
-
-
-
-
-

@@ -2,7 +2,7 @@
  * VisualizationWidget.h - widget for visualization of sound-data
  *
  * Copyright (c) 2005-2008 Tobias Doerffel <tobydox/at/users.sourceforge.net>
- * 
+ *
  * This file is part of LMMS - https://lmms.io
  *
  * This program is free software; you can redistribute it and/or
@@ -22,48 +22,47 @@
  *
  */
 
-
 #ifndef _VISUALIZATION_WIDGET
 #define _VISUALIZATION_WIDGET
 
-#include <QWidget>
-#include <QPixmap>
-
 #include "lmms_basics.h"
 
+#include <QPixmap>
+#include <QWidget>
 
 class VisualizationWidget : public QWidget
 {
-	Q_OBJECT
-public:
-	enum visualizationTypes
-	{
-		Simple		// add more here
-	} ;
+    Q_OBJECT
+  public:
+    enum visualizationTypes
+    {
+        Simple  // add more here
+    };
 
-	VisualizationWidget( const QPixmap & _bg, QWidget * _parent,
-					visualizationTypes _vtype = Simple );
-	virtual ~VisualizationWidget();
+    VisualizationWidget(const QPixmap&     _bg,
+                        QWidget*           _parent,
+                        visualizationTypes _vtype = Simple);
+    virtual ~VisualizationWidget();
 
-	void setActive( bool _active );
+    void setActive(bool _active);
+    void setFrozen(bool _frozen);
+    void setStabilized(bool _stabilized);
 
+  protected:
+    virtual void paintEvent(QPaintEvent* _pe);
+    virtual void mousePressEvent(QMouseEvent* _me);
 
-protected:
-	virtual void paintEvent( QPaintEvent * _pe );
-	virtual void mousePressEvent( QMouseEvent * _me );
+  protected slots:
+    void updateAudioBuffer(const surroundSampleFrame* _buffer);
 
-
-protected slots:
-	void updateAudioBuffer( const surroundSampleFrame * buffer );
-
-
-private:
-	QPixmap s_background;
-	QPointF * m_points;
-
-	sampleFrame * m_buffer;
-	bool m_active;
-
-} ;
+  private:
+    bool         m_active;
+    bool         m_frozen;
+    bool         m_stabilized;
+    sampleFrame* m_buffer;
+    int          m_pointCount;
+    QPointF*     m_points;
+    QPixmap      s_background;
+};
 
 #endif

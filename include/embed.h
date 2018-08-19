@@ -25,6 +25,7 @@
 #ifndef EMBED_H
 #define EMBED_H
 
+#include <QIcon>
 #include <QPixmap>
 #include <QString>
 
@@ -35,8 +36,12 @@
 namespace embed
 {
 
-QPixmap EXPORT getIconPixmap( const QString&  _name, int _w = -1, int _h = -1 );
+QIcon   EXPORT getIcon( const QString&  _name, int _w = -1, int _h = -1 );
+QPixmap EXPORT getPixmap( const QString&  _name, int _w = -1, int _h = -1 );
 QString EXPORT getText( const char * _name );
+
+//obsolete
+QPixmap EXPORT getIconPixmap( const QString&  _name, int _w = -1, int _h = -1 );
 
 }
 
