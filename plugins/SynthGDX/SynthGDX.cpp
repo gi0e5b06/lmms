@@ -526,7 +526,7 @@ void OscillatorObject::update()
         // a=qBound(0.f,a,1.f);
 
         float x = m_phase[ch];
-        x += 44100.0f / Engine::mixer()->processingSampleRate();
+        //x += 44100.0f / Engine::mixer()->processingSampleRate();
         x -= m_phaseOffset[ch];
         m_phaseOffset[ch]
                 = m_phaseOffsetBase[ch]
@@ -536,6 +536,8 @@ void OscillatorObject::update()
         if(x < 0.f)
             x = fraction(x + 2.f);
         m_phase[ch] = x;
+        x *= 44100.0f / Engine::mixer()->processingSampleRate();
+        x = fraction(x);
 
         float y = waveAt(ch, x);
 
@@ -1029,9 +1031,9 @@ void SynthGDX::loadSettings(const QDomElement& _this)
     for(int i = 0; i < NB_OSCILLATORS; ++i)
     {
         const QString is = QString::number(i);
-        m_osc[i]->m_enabledModel.loadSettings(_this, "enabled" + is);
 
         // tmp compat
+        m_osc[i]->m_enabledModel.loadSettings(_this, "enabled" + is);
         m_osc[i]->m_wave1IndexModel.loadSettings(_this, "wave1type" + is, false);
         m_osc[i]->m_wave2IndexModel.loadSettings(_this, "wave2type" + is, false);
         m_osc[i]->m_wave1ReverseModel.loadSettings(_this,
@@ -1046,6 +1048,8 @@ void SynthGDX::loadSettings(const QDomElement& _this)
         m_osc[i]->m_wave2IndexModel.loadSettings(_this, "wave2_shape" + is, false);
 
         // correct
+        m_osc[i]->m_enabledModel.loadSettings(_this, "osc_enabled" + is);
+
         m_osc[i]->m_waveMixModel.loadSettings(_this, "wave_mix" + is);
 
         m_osc[i]->m_wave1ReverseModel.loadSettings(_this,
@@ -1092,7 +1096,7 @@ void SynthGDX::loadSettings(const QDomElement& _this)
     for(int i = 0; i < NB_MODULATORS; ++i)
     {
         const QString is = QString::number(i);
-        m_mod[i]->m_enabledModel.loadSettings(_this, "enabled" + is);
+        m_mod[i]->m_enabledModel.loadSettings(_this, "mod_enabled" + is);
         m_mod[i]->m_algoModel.loadSettings(_this, "algo" + is);
         m_mod[i]->m_modulatedModel.loadSettings(_this, "modulated" + is);
         m_mod[i]->m_modulatorModel.loadSettings(_this, "modulator" + is);

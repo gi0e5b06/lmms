@@ -78,15 +78,16 @@ OscillatorView::OscillatorView(OscillatorObject* _osc,
     reverse1LCB->setText("REV");
     reverse1LCB->setTextAnchorPoint(Qt::AnchorBottom);
 
-    ComboBox* bank1CBX = new ComboBox(this);
-    bank1CBX->setModel(&m_osc->m_wave1BankModel);
-    bank1CBX->setMinimumWidth(3 * 27 + 4);
+    ComboBox* bank1CMB = new ComboBox(this);
+    bank1CMB->setModel(&m_osc->m_wave1BankModel);
+    bank1CMB->setMinimumWidth(3 * 27 + 4);
     connect(&m_osc->m_wave1BankModel, SIGNAL(dataChanged()), this,
             SLOT(updateWave1IndexModel()));
 
-    ComboBox* index1CBX = new ComboBox(this);
-    index1CBX->setModel(&m_osc->m_wave1IndexModel);
-    index1CBX->setMinimumWidth(7 * 27 + 12);
+    ComboBox* index1CMB = new ComboBox(this);
+    index1CMB->setModel(&m_osc->m_wave1IndexModel);
+    index1CMB->setMinimumWidth(7 * 27 + 12);
+    updateWave1IndexModel();
 
     LedCheckBox* absolute1LCB = new LedCheckBox(this, LedCheckBox::White);
     absolute1LCB->setModel(&m_osc->m_wave1AbsoluteModel);
@@ -110,15 +111,16 @@ OscillatorView::OscillatorView(OscillatorObject* _osc,
     reverse2LCB->setText("REV");
     reverse2LCB->setTextAnchorPoint(Qt::AnchorBottom);
 
-    ComboBox* bank2CBX = new ComboBox(this);
-    bank2CBX->setModel(&m_osc->m_wave2BankModel);
-    bank2CBX->setMinimumWidth(3 * 27 + 4);
+    ComboBox* bank2CMB = new ComboBox(this);
+    bank2CMB->setModel(&m_osc->m_wave2BankModel);
+    bank2CMB->setMinimumWidth(3 * 27 + 4);
     connect(&m_osc->m_wave2BankModel, SIGNAL(dataChanged()), this,
             SLOT(updateWave2IndexModel()));
 
-    ComboBox* index2CBX = new ComboBox(this);
-    index2CBX->setModel(&m_osc->m_wave2IndexModel);
-    index2CBX->setMinimumWidth(7 * 27 + 12);
+    ComboBox* index2CMB = new ComboBox(this);
+    index2CMB->setModel(&m_osc->m_wave2IndexModel);
+    index2CMB->setMinimumWidth(7 * 27 + 12);
+    updateWave2IndexModel();
 
     LedCheckBox* absolute2LCB = new LedCheckBox(this, LedCheckBox::White);
     absolute2LCB->setModel(&m_osc->m_wave2AbsoluteModel);
@@ -340,7 +342,7 @@ OscillatorView::OscillatorView(OscillatorObject* _osc,
                           Qt::AlignTop | Qt::AlignHCenter);
 
     int col = 0, row = 0;  // first row
-    mainLayout->addWidget(bank1CBX, row, ++col, 1, 3,
+    mainLayout->addWidget(bank1CMB, row, ++col, 1, 3,
                           Qt::AlignBottom | Qt::AlignHCenter);
     mainLayout->addWidget(reverse1LCB, row, col = 4, 1, 1,
                           Qt::AlignBottom | Qt::AlignHCenter);
@@ -352,12 +354,12 @@ OscillatorView::OscillatorView(OscillatorObject* _osc,
                           Qt::AlignBottom | Qt::AlignHCenter);
     col = 0;
     row++;
-    mainLayout->addWidget(index1CBX, row, ++col, 1, 7,
+    mainLayout->addWidget(index1CMB, row, ++col, 1, 7,
                           Qt::AlignBottom | Qt::AlignHCenter);
 
     col = 0;
     row++;  // second row
-    mainLayout->addWidget(bank2CBX, row, ++col, 1, 3,
+    mainLayout->addWidget(bank2CMB, row, ++col, 1, 3,
                           Qt::AlignBottom | Qt::AlignHCenter);
     mainLayout->addWidget(reverse2LCB, row, col = 4, 1, 1,
                           Qt::AlignBottom | Qt::AlignHCenter);
@@ -369,7 +371,7 @@ OscillatorView::OscillatorView(OscillatorObject* _osc,
                           Qt::AlignBottom | Qt::AlignHCenter);
     col = 0;
     row++;
-    mainLayout->addWidget(index2CBX, row, ++col, 1, 7,
+    mainLayout->addWidget(index2CMB, row, ++col, 1, 7,
                           Qt::AlignBottom | Qt::AlignHCenter);
 
     col = 0;
