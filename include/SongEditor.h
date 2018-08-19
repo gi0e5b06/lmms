@@ -29,6 +29,7 @@
 
 //#include <QVector>
 
+#include "ActionUpdatable.h"
 #include "ActionGroup.h"
 #include "Editor.h"
 #include "TrackContainerView.h"
@@ -46,6 +47,7 @@ class Song;
 class TextFloat;
 class TimeLineWidget;
 
+/*
 class positionLine : public QWidget
 {
 public:
@@ -54,10 +56,10 @@ public:
 private:
 	virtual void paintEvent( QPaintEvent * pe );
 
-} ;
+};
+*/
 
-
-class SongEditor : public TrackContainerView
+class SongEditor : public TrackContainerView, public virtual ActionUpdatable
 {
 	Q_OBJECT
 public:
@@ -76,7 +78,10 @@ public:
 	void saveSettings( QDomDocument& doc, QDomElement& element );
 	void loadSettings( const QDomElement& element );
 
-	ComboBoxModel *zoomingXModel() const;
+        virtual void updateActions(const bool _active, QHash<QString,bool>& _table) const; // = 0;
+        virtual void actionTriggered(QString _name);
+
+        ComboBoxModel *zoomingXModel() const;
 	ComboBoxModel *zoomingYModel() const;
 
         const TimeLineWidget* timeLineWidget() { return m_timeLine; }
@@ -91,6 +96,11 @@ public slots:
 	void updatePosition( const MidiTime & t );
 	void updatePositionLine();
 	void selectAllTcos( bool select );
+
+        void deleteSelection();
+        void cutSelection();
+        void copySelection();
+        void pasteSelection();
 
 protected:
 	virtual void closeEvent( QCloseEvent * ce );
@@ -137,7 +147,7 @@ private:
 	TextFloat * m_mvsStatus;
 	TextFloat * m_mpsStatus;
 
-	positionLine * m_positionLine;
+	//positionLine * m_positionLine;
 
 	ComboBoxModel* m_zoomingXModel;
 	ComboBoxModel* m_zoomingYModel;
@@ -154,11 +164,14 @@ private:
 
 
 
-class SongEditorWindow : public Editor
+class SongEditorWindow : public Editor, public virtual ActionUpdatable
 {
 	Q_OBJECT
 public:
 	SongEditorWindow( Song* song );
+
+        virtual void updateActions(const bool _active, QHash<QString,bool>& _table) const; // = 0;
+        virtual void actionTriggered(QString _name);
 
 	QSize sizeHint() const;
 

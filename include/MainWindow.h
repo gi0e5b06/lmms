@@ -25,14 +25,18 @@
 #ifndef MAIN_WINDOW_H
 #define MAIN_WINDOW_H
 
+#include "ActionUpdatable.h"
+#include "ConfigManager.h"
+#include "SubWindow.h"
+
+//#include <QAction>
 #include <QBasicTimer>
-#include <QTimer>
+#include <QHash>
+#include <QIcon>
 #include <QList>
 #include <QMainWindow>
 //#include <QThread>
-
-#include "ConfigManager.h"
-#include "SubWindow.h"
+#include <QTimer>
 
 class QAction;
 class QDomElement;
@@ -44,7 +48,9 @@ class PluginView;
 class ToolButton;
 
 
-class MainWindow : public QMainWindow
+class MainWindow : public QMainWindow,
+        public virtual ActionUpdatable
+
 {
 	Q_OBJECT
 public:
@@ -58,7 +64,8 @@ public:
 		return m_toolBar;
 	}
 
-	int addWidgetToToolBar( QWidget * _w, int _row = -1, int _col = -1 );
+	int addWidgetToToolBar( QWidget * _w, int _row = -1, int _col = -1,
+                                int _rowSpan = -1, int _colSpan = -1);
 	int addSpacingToToolBar( int _size, int _col = -1 );
 
 	// wrap the widget with a window decoration and add it to the workspace
@@ -141,12 +148,25 @@ public:
 		return m_keyMods.m_alt;
 	}
 
+        // ActionUpdatable
+        void updateActions(const bool _active, QHash<QString,bool>& _table);
+        void actionTriggered(QString _name);
+        void requireActionUpdate();
+
+        // ActionManager
+        void registerAction(QString _name, QAction* _action);
+        QAction* registerAction(QString _name, const QString &text);
+        QAction* registerAction(QString _name, const QIcon& _icon, const QString& _text);
+        QAction* registerAction(QString _name, const QIcon& _icon, const QString& _text, const QKeySequence& _ks);
+        QAction* action(QString _name);
+        void enableAction(QString _name);
+        void disableAction(QString _name);
+        void setActionEnabled(QString _name,bool _enabled);
+
 	static void saveWidgetState( QWidget * _w, QDomElement & _de );
 	static void restoreWidgetState( QWidget * _w, const QDomElement & _de );
 
 public slots:
-	void resetWindowTitle();
-
 	void emptySlot();
 	void enterWhatsThisMode();
 	void createNewProject();
@@ -168,12 +188,16 @@ public slots:
 	void togglePianoRollWin();
 	void toggleControllerRack();
 	void reorganizeWindows();
+	void resetWindowTitle();
 
 	void updatePlayPauseIcons();
-
 	void updateUndoRedoButtons();
 	void undo();
 	void redo();
+
+        void onActionTriggered(bool _checked);
+        void onWindowStateChanged(Qt::WindowStates,Qt::WindowStates);
+        //void onActionUpdateRequired();
 
 	void autoSave();
 
@@ -194,6 +218,9 @@ private:
 
 	void toggleWindow( QWidget *window, bool forceShow = false );
 	void refocus();
+
+        QHash<QString,QAction*> m_actions;
+        QHash<QAction*,QString> m_actionNames;
 
 	QMdiArea * m_workspace;
 
@@ -218,8 +245,8 @@ private:
 	} m_keyMods;
 
 	QMenu * m_toolsMenu;
-	QAction * m_undoAction;
-	QAction * m_redoAction;
+	//QAction * m_undoAction;
+	//QAction * m_redoAction;
 	QList<PluginView *> m_tools;
 
 	QBasicTimer m_updateTimer;
@@ -243,7 +270,6 @@ private slots:
 	void updateViewMenu( void );
 	void updateConfig( QAction * _who );
 	void onToggleMetronome();
-
 
 signals:
 	void periodicUpdate();
