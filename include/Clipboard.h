@@ -25,29 +25,24 @@
 #ifndef CLIPBOARD_H
 #define CLIPBOARD_H
 
-#include <QMap>
-#include <QDomElement>
+#include "SerializingObject.h"
 
+#include <QString>
 
-class JournallingObject;
+class Selection
+{
+ public:
+    static void select(SerializingObject* _obj);
+    static bool inject(SerializingObject* _obj);
+    static bool has(const QString& _nodeName);
+};
 
 class Clipboard
 {
-public:
-	typedef QMap<QString, QDomElement> Map;
-
-	static void copy( JournallingObject * _object );
-	static const QDomElement * getContent( const QString & _node_name );
-
-	static const char * mimeType()
-	{
-		return( "application/x-lmms-clipboard" );
-	}
-
-
-private:
-	static Map content;
-
-} ;
+  public:
+    static void copy(SerializingObject* _obj);
+    static bool paste(SerializingObject* _obj);
+    static bool has(const QString& _nodeName);
+};
 
 #endif

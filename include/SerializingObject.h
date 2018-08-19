@@ -22,8 +22,8 @@
  *
  */
 
-#ifndef SERIALIZING_OBJECT_H
-#define SERIALIZING_OBJECT_H
+#ifndef SERIALIZING_OBJECT_H_
+#define SERIALIZING_OBJECT_H_
 
 #include <QString>
 
