@@ -32,8 +32,17 @@
 namespace embed
 {
 
+QPixmap getIconPixmap(const QString& _name, int _width, int _height )
+{
+        return getPixmap(_name,_width,_height);
+}
 
-QPixmap getIconPixmap(const QString& pixmapName, int width, int height )
+QIcon getIcon(const QString& _name, int _width, int _height)
+{
+        return QIcon(getPixmap(_name,_width,_height));
+}
+
+QPixmap getPixmap(const QString& pixmapName, int width, int height )
 {
 	QString cacheName;
 	if (width > 0 && height > 0)
@@ -61,7 +70,7 @@ QPixmap getIconPixmap(const QString& pixmapName, int width, int height )
 	pixmap = QPixmap::fromImageReader(&reader);
 	if (pixmap.isNull())
 	{
-		qWarning("Warning: Fail to load icon pixmap %s: %s",
+		qWarning("Warning: Fail to load pixmap %s: %s",
                          qPrintable(pixmapName),
                          qPrintable(reader.errorString()));
 		return QPixmap(1,1);

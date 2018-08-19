@@ -1,6 +1,6 @@
 /*
- * Rubberband.h - rubberband - either own implementation for Qt3 or wrapper for
- *                             Qt4
+ * Rubberband.h - rubberband - either own implementation for Qt3 or wrapper
+ * for Qt4
  *
  * Copyright (c) 2006 Tobias Doerffel <tobydox/at/users.sourceforge.net>
  *
@@ -23,77 +23,68 @@
  *
  */
 
-
-#ifndef RUBBERBAND_H
-#define RUBBERBAND_H
+#ifndef RUBBERBAND_H_
+#define RUBBERBAND_H_
 
 #include <QRubberBand>
 #include <QVector>
 
-
-class selectableObject : public QWidget
+class SelectableObject : public QWidget
 {
-	Q_OBJECT
-public:
-	selectableObject( QWidget * _parent ) :
-		QWidget( _parent ),
-		m_selected( false )
-	{
-	}
+    Q_OBJECT
 
-	virtual ~selectableObject()
-	{
-	}
+  public:
+    SelectableObject(QWidget* _parent) : QWidget(_parent), m_selected(false)
+    {
+    }
 
-	inline void setSelected( bool _selected )
-	{
-		m_selected = _selected;
-		update();
-	}
+    virtual ~SelectableObject()
+    {
+    }
 
-	inline bool isSelected() const
-	{
-		return( m_selected );
-	}
+    inline void setSelected(bool _selected)
+    {
+        if(m_selected != _selected)
+        {
+            m_selected = _selected;
+            update();
+        }
+    }
 
-        static inline bool lessThan( selectableObject* &a, selectableObject* &b )
-	{
-		return ( a->x()<b->x() ) ||
-                        (( a->x()==b->x() )&&( a->y()==b->y() ));
-	}
+    inline bool isSelected() const
+    {
+        return m_selected;
+    }
 
-public slots:
-	virtual void update()
-	{
-		QWidget::update();
-	}
+    static inline bool lessThan(SelectableObject*& a, SelectableObject*& b)
+    {
+        return (a->x() < b->x())
+               || ((a->x() == b->x()) && (a->y() < b->y()));
+    }
 
+  public slots:
+    virtual void update()
+    {
+        QWidget::update();
+    }
 
-private:
-	bool m_selected;
-
-} ;
-
-
-
+  private:
+    bool m_selected;
+};
 
 class RubberBand : public QRubberBand
 {
-public:
-	RubberBand( QWidget * _parent );
-	virtual ~RubberBand();
+  public:
+    RubberBand(QWidget* _parent);
+    virtual ~RubberBand();
 
-	QVector<selectableObject *> selectedObjects() const;
-	QVector<selectableObject *> selectableObjects() const;
+    QVector<SelectableObject*> selectedObjects() const;
+    QVector<SelectableObject*> selectableObjects() const;
 
+  protected:
+    virtual void resizeEvent(QResizeEvent* _re);
 
-protected:
-	virtual void resizeEvent( QResizeEvent * _re );
-
-private:
-
+  private:
 };
 
-
 #endif
-

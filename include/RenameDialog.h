@@ -23,39 +23,31 @@
  *
  */
 
-
-#ifndef RENAME_DIALOG_H
-#define RENAME_DIALOG_H
+#ifndef RENAME_DIALOG_H_
+#define RENAME_DIALOG_H_
 
 #include <QDialog>
 
-
 class QLineEdit;
-
 
 class RenameDialog : public QDialog
 {
-	Q_OBJECT
-public:
-	RenameDialog( QString & _string );
-	~RenameDialog();
+    Q_OBJECT
+  public:
+    RenameDialog(QString& _string);
+    ~RenameDialog();
 
+  protected:
+    void keyPressEvent(QKeyEvent* _ke);
+    // virtual void resizeEvent(QResizeEvent* event);
 
-protected:
-	void keyPressEvent( QKeyEvent * _ke );
-	virtual void resizeEvent(QResizeEvent * event);
+  protected slots:
+    void textChanged(const QString& _newString);
 
-
-protected slots:
-	void textChanged( const QString & _new_string );
-
-
-private:
-	QString & m_stringToEdit;
-	QString m_originalString;
-	QLineEdit * m_stringLE;
-
-} ;
-
+  private:
+    QString&   m_stringToEdit;
+    QString    m_originalString;
+    QLineEdit* m_stringLE;
+};
 
 #endif

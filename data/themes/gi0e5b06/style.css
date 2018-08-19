@@ -116,17 +116,17 @@ QMenu::item {
 }
 
 QMenu::item:selected {
-	color: #d1d8e4;
-	font-weight: normal;
-	background-color: #21272b;
+	/* color: #d1d8e4; */
+	/* font-weight: normal; */
+	background-color: #005A00; /*#21272b;*/
 }
 
 QMenu::item:disabled {
 	color: #515459;
-	background-color: #262b30;
-	font-size: 12px;
-	font-weight: normal;
-	padding: 4px 32px 4px 20px;
+	/* background-color: #262b30; */
+	/* font-size: 12px; */
+	/* font-weight: normal; */
+	/* padding: 4px 32px 4px 20px; */
 }
 
 QMenu::icon {

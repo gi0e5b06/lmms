@@ -325,9 +325,14 @@ static inline float cbf(const float _x)
     return _x * _x * _x;
 }
 
-static inline float nsinf(const float _x)
+static inline float identityf(const float x)
 {
-    return sinf(_x * F_2PI);
+        return x;
+}
+
+static inline float nsinf(const float x)
+{
+    return sinf(x * F_2PI);
 }
 
 static inline float trianglef(const float x)

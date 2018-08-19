@@ -191,7 +191,9 @@ MainWindow::MainWindow() :
 	vbox->addWidget( w );
 	setCentralWidget( main_widget );
 
-	m_updateTimer.start( 1000 / 6, this );  // 6 fps
+        requireActionUpdate();
+
+        m_updateTimer.start( 1000 / 8, this );  // 8 fps
 
 	if( ConfigManager::inst()->value( "ui", "enableautosave" ).toInt() )
 	{
@@ -329,14 +331,16 @@ void MainWindow::finalize()
 
 	QMenu * edit_menu = new QMenu( this );
 	menuBar()->addMenu( edit_menu )->setText( tr( "&Edit" ) );
-	m_undoAction = edit_menu->addAction( embed::getIconPixmap( "edit_undo" ),
-					tr( "Undo" ),
-					this, SLOT( undo() ),
-					QKeySequence::Undo );
-	m_redoAction = edit_menu->addAction( embed::getIconPixmap( "edit_redo" ),
-					tr( "Redo" ),
-					this, SLOT( redo() ),
-					QKeySequence::Redo );
+	registerAction("edit_undo",
+                       edit_menu->addAction( embed::getIconPixmap( "edit_undo" ),
+                                             tr( "Undo" ),
+                                             this, SLOT( undo() ),
+                                             QKeySequence::Undo ));
+	registerAction("edit_redo",
+                       edit_menu->addAction( embed::getIconPixmap( "edit_redo" ),
+                                             tr( "Redo" ),
+                                             this, SLOT( redo() ),
+                                             QKeySequence::Redo ));
 	// Ensure that both Ctrl+Y and Ctrl+Shift+Z activate redo shortcut
         // regardless of OS defaults
 	if (QKeySequence(QKeySequence::Redo) != QKeySequence(Qt::CTRL + Qt::Key_Y))
@@ -347,6 +351,17 @@ void MainWindow::finalize()
 	{
 		new QShortcut( QKeySequence( Qt::CTRL + Qt::SHIFT + Qt::Key_Z ), this, SLOT(redo()) );
 	}
+
+	edit_menu->addSeparator();
+        edit_menu->addAction
+                (registerAction("edit_cut",embed::getIconPixmap( "edit_cut" ),
+                                tr( "Cut" ), QKeySequence::Cut));
+        edit_menu->addAction
+                (registerAction("edit_copy", embed::getIconPixmap( "edit_copy" ),
+                                tr( "Copy" ), QKeySequence::Copy));
+        edit_menu->addAction
+                (registerAction("edit_paste", embed::getIconPixmap( "edit_paste" ),
+                                tr( "Paste" ), QKeySequence::Paste));
 
 	edit_menu->addSeparator();
 	edit_menu->addAction( embed::getIconPixmap( "setup_general" ),
@@ -605,7 +620,7 @@ void MainWindow::finalize()
 	}
 
 	// Add editor subwindows
-	for (QWidget* widget :  std::list<QWidget*>{
+	for (Editor* editor :  std::list<Editor*>{
 			gui->automationEditor(),
 			gui->getBBEditor(),
 			gui->pianoRoll(),
@@ -615,8 +630,8 @@ void MainWindow::finalize()
 		//QMdiSubWindow* window = addWindowedWidget(widget);
 		//window->setAttribute(Qt::WA_DeleteOnClose, false);
 		//window->resize(widget->sizeHint());
-		SubWindow* win=SubWindow::putWidgetOnWorkspace(widget,false,false,true);
-		win->setWindowIcon(widget->windowIcon());
+		SubWindow* win=SubWindow::putWidgetOnWorkspace(editor,false,false,true);
+		win->setWindowIcon(editor->windowIcon());
 	}
 
         //gui->fxMixerView()->parentWidget()->move(5,290);
@@ -641,28 +656,43 @@ void MainWindow::finalize()
         gui->getControllerRackView()->parentWidget()->hide();
 
 	// reset window title every time we change the state of a subwindow to show the correct title
-	for( const QMdiSubWindow * subWindow : workspace()->subWindowList() )
+	for(const QMdiSubWindow* subWindow: workspace()->subWindowList())
 	{
-		connect( subWindow, SIGNAL( windowStateChanged(Qt::WindowStates,Qt::WindowStates) ),
-			 this, SLOT( resetWindowTitle() ) );
+		connect(subWindow, SIGNAL( windowStateChanged(Qt::WindowStates,Qt::WindowStates) ),
+                         this, SLOT( onWindowStateChanged(Qt::WindowStates,Qt::WindowStates)));
 	}
 }
 
-
-
-
-int MainWindow::addWidgetToToolBar( QWidget * _w, int _row, int _col )
+void MainWindow::onWindowStateChanged(Qt::WindowStates _old, Qt::WindowStates _new)
 {
-	int col = ( _col == -1 ) ? m_toolBarLayout->columnCount() + 8 : _col;
-	if( _w->height() > 32 || _row == -1 )
-	{
-		m_toolBarLayout->addWidget( _w, 0, col, 2, 1 );
-	}
-	else
-	{
-		m_toolBarLayout->addWidget( _w, _row, col );
-	}
-	return col;
+        resetWindowTitle();
+
+        //if((_old & Qt::WindowActive)==(_new & Qt::WindowActive))
+        requireActionUpdate();
+}
+
+int MainWindow::addWidgetToToolBar( QWidget * _w, int _row, int _col,
+                                    int _rowSpan, int _colSpan )
+{
+        if( _row == -1 ) _row = 0;
+	if( _col == -1 ) _col = m_toolBarLayout->columnCount() + 8;
+
+	if( _rowSpan == -1)
+        {
+                _rowSpan = 1;
+                if( _w->height() > 32 )
+                {
+                        _rowSpan = 2;
+                        _row = 0;
+                }
+        }
+        if( _colSpan == -1)
+        {
+                _colSpan = 1;
+        }
+
+        m_toolBarLayout->addWidget( _w, _row, _col, _rowSpan, _colSpan );
+	return _col;
 }
 
 
@@ -670,12 +700,12 @@ int MainWindow::addWidgetToToolBar( QWidget * _w, int _row, int _col )
 
 int MainWindow::addSpacingToToolBar( int _size, int _col )
 {
-	//m_toolBarLayout->setColumnMinimumWidth( m_toolBarLayout->columnCount()+7,_size );
-	int col = ( _col == -1 ) ? m_toolBarLayout->columnCount() + 8 : _col;
+	if( _col == -1 ) _col = m_toolBarLayout->columnCount() + 8;
+
         QWidget* w=new QWidget(m_toolBar);
         w->setFixedWidth(_size);
-        m_toolBarLayout->addWidget( w, 0, col, 2, 1 );
-	return col;
+        m_toolBarLayout->addWidget( w, 0, _col, 2, 1 );
+	return _col;
 }
 
 /*
@@ -869,6 +899,7 @@ void MainWindow::createNewProject()
 	if( mayChangeProject(true) )
 	{
 		Engine::getSong()->createNewProject();
+                requireActionUpdate();
 	}
 }
 
@@ -887,6 +918,7 @@ void MainWindow::createNewProjectFromTemplate( QAction * _idx )
 
 		Engine::getSong()->createNewProjectFromTemplate(
 			dirBase + _idx->text().replace("&&", "&") + ".mpt" );
+                requireActionUpdate();
 	}
 }
 
@@ -910,6 +942,7 @@ void MainWindow::openProject()
 			setCursor( Qt::WaitCursor );
 			song->loadProject( ofd.selectedFiles()[0] );
 			setCursor( Qt::ArrowCursor );
+                        requireActionUpdate();
 		}
 	}
 }
@@ -1474,8 +1507,10 @@ void MainWindow::updateUndoRedoButtons()
 {
 	// when the edit menu is shown, grey out the undo/redo buttons if there's nothing to undo/redo
 	// else, un-grey them
-	m_undoAction->setEnabled(Engine::projectJournal()->canUndo());
-	m_redoAction->setEnabled(Engine::projectJournal()->canRedo());
+	//m_undoAction->setEnabled(Engine::projectJournal()->canUndo());
+	//m_redoAction->setEnabled(Engine::projectJournal()->canRedo());
+        setActionEnabled("edit_undo",Engine::projectJournal()->canUndo());
+        setActionEnabled("edit_redo",Engine::projectJournal()->canRedo());
 }
 
 
@@ -1483,6 +1518,7 @@ void MainWindow::updateUndoRedoButtons()
 void MainWindow::undo()
 {
 	Engine::projectJournal()->undo();
+        requireActionUpdate();
 }
 
 
@@ -1491,6 +1527,7 @@ void MainWindow::undo()
 void MainWindow::redo()
 {
 	Engine::projectJournal()->redo();
+        requireActionUpdate();
 }
 
 
@@ -1684,4 +1721,150 @@ void MainWindow::autoSave()
 			autoSaveTimerReset( m_autoSaveShortTime );
 		}
 	}
+}
+
+
+
+
+QAction* MainWindow::registerAction(QString _name, const QString &_text)
+{
+        QAction* a=new QAction(_text,this);
+        registerAction(_name,a);
+        return a;
+}
+
+QAction* MainWindow::registerAction(QString _name, const QIcon& _icon,
+                                    const QString& _text)
+{
+        QAction* a=new QAction(_icon,_text,this);
+        registerAction(_name,a);
+        return a;
+}
+
+QAction* MainWindow::registerAction(QString _name, const QIcon& _icon,
+                                    const QString& _text, const QKeySequence& _ks)
+{
+        QAction* a=new QAction(_icon,_text,this);
+        a->setShortcut(_ks);
+        registerAction(_name,a);
+        return a;
+}
+
+void MainWindow::registerAction(QString _name, QAction* _action)
+{
+        if(m_actions.contains(_name))
+        {
+                qWarning("Warning: action name '%s' is already registered",qPrintable(_name));
+                return;
+        }
+
+        if(m_actionNames.contains(_action))
+        {
+                qWarning("Warning: action '%s' is already registered with '%s'",
+                         qPrintable(_name),qPrintable(m_actionNames.value(_action)));
+                return;
+        }
+
+        m_actions.insert(_name,_action);
+        m_actionNames.insert(_action,_name);
+
+        connect(_action,SIGNAL(triggered(bool)),
+                this,SLOT( onActionTriggered(bool)));
+}
+
+QAction* MainWindow::action(QString _name)
+{
+        return m_actions.value(_name,NULL);
+}
+
+void MainWindow::enableAction(QString _name)
+{
+        QAction* a=action(_name);
+        if(a) a->setEnabled(true);
+}
+
+void MainWindow::disableAction(QString _name)
+{
+        QAction* a=action(_name);
+        if(a) a->setEnabled(false);
+}
+
+void MainWindow::setActionEnabled(QString _name,bool _enabled)
+{
+        QAction* a=action(_name);
+        if(a) a->setEnabled(_enabled);
+}
+
+void MainWindow::onActionTriggered(bool _checked)
+{
+        QAction* a=dynamic_cast<QAction*>(QObject::sender());
+        if(a==NULL)
+        {
+                qCritical("MainWindow: null action triggered");
+                return;
+        }
+
+        QString  n=m_actionNames.value(a,"<unknown>");
+        qInfo("MainWindow: action triggered: %s",
+              qPrintable(n));
+
+        QMdiSubWindow* asw=workspace()->currentSubWindow();
+        if(asw==NULL)
+        {
+                qCritical("MainWindow: no active subwindow");
+                return;
+        }
+        Editor* aed=dynamic_cast<Editor*>(asw->widget());
+        if(aed==NULL)
+        {
+                qCritical("MainWindow: no active editor");
+                return;
+        }
+        aed->actionTriggered(n);
+        requireActionUpdate();
+}
+
+// ActionUpdatable //
+
+void MainWindow::updateActions(const bool _active, QHash<QString,bool>& _table)
+{
+        QMdiSubWindow* asw=workspace()->currentSubWindow();
+	for(const QMdiSubWindow* subWindow : workspace()->subWindowList())
+	{
+                if(asw==subWindow) continue;
+                QWidget* w=subWindow->widget();
+                Editor*  e=dynamic_cast<Editor*>(w);
+                //qInfo("e1=%p (%s)",e,qPrintable(subWindow->windowTitle()));
+                if(e) e->updateActions(false,_table);
+        }
+        if(asw)
+        {
+                QWidget* w=asw->widget();
+                Editor*  e=dynamic_cast<Editor*>(w);
+                //qInfo("e2=%p (%s)",e,qPrintable(asw->windowTitle()));
+                if(e) e->updateActions(_active,_table);
+        }
+        for(const QString& s: _table.keys())
+        {
+                QAction* a=action(s);
+                if(a)
+                {
+                        bool e=_table.value(s);
+                        if(e!=a->isEnabled()) a->setEnabled(e);
+                }
+                else qWarning("Warning: action '%s' not registered",
+                              qPrintable(s));
+        }
+}
+
+void MainWindow::actionTriggered(QString _name)
+{
+    qInfo("MainWindow::actionTriggered() name=%s", qPrintable(_name));
+}
+
+void MainWindow::requireActionUpdate()
+{
+        //qInfo("MainWindow::requireActionUpdate");
+        QHash<QString,bool> table;
+        updateActions(true,table);
 }

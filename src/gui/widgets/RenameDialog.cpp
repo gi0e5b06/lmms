@@ -2,7 +2,7 @@
  * RenameDialog.cpp - implementation of dialog for renaming something
  *
  * Copyright (c) 2004-2008 Tobias Doerffel <tobydox/at/users.sourceforge.net>
- * 
+ *
  * This file is part of LMMS - https://lmms.io
  *
  * This program is free software; you can redistribute it and/or
@@ -22,61 +22,57 @@
  *
  */
 
+#include "RenameDialog.h"
 
+#include <QGridLayout>
 #include <QKeyEvent>
 #include <QLineEdit>
 
-#include "RenameDialog.h"
-
-
-
-RenameDialog::RenameDialog( QString & _string ) :
-	QDialog(),
-	m_stringToEdit( _string ),
-	m_originalString( _string )
+RenameDialog::RenameDialog(QString& _string) :
+      QDialog(), m_stringToEdit(_string), m_originalString(_string)
 {
-	setWindowTitle( tr("Rename...") );
-	setFixedHeight( 30 );
-	m_stringLE = new QLineEdit( this );
-	m_stringLE->setText( _string );
-	m_stringLE->setGeometry ( 10, 5, 220, 20 );
-	m_stringLE->selectAll();
-	connect( m_stringLE, SIGNAL( textChanged( const QString & ) ), this,
-				SLOT( textChanged( const QString & ) ) );
-	connect( m_stringLE, SIGNAL( returnPressed() ), this,
-							SLOT( accept() ) );
+    setWindowTitle(tr("Rename..."));
+
+    QGridLayout* mainLayout = new QGridLayout(this);
+    mainLayout->setContentsMargins(6, 6, 6, 6);
+    mainLayout->setColumnStretch(0, 1);
+    mainLayout->setHorizontalSpacing(6);
+    mainLayout->setVerticalSpacing(6);
+
+    m_stringLE = new QLineEdit(this);
+    m_stringLE->setText(_string);
+    // m_stringLE->setGeometry ( 10, 5, 220, 20 );
+    m_stringLE->selectAll();
+    mainLayout->addWidget(m_stringLE, 0, 0);
+
+    setMinimumWidth(300);
+    // setFixedHeight( 30 );
+
+    connect(m_stringLE, SIGNAL(textChanged(const QString&)), this,
+            SLOT(textChanged(const QString&)));
+    connect(m_stringLE, SIGNAL(returnPressed()), this, SLOT(accept()));
 }
-
-
-
 
 RenameDialog::~RenameDialog()
 {
 }
 
-
-
-
+/*
 void RenameDialog::resizeEvent (QResizeEvent * event) {
-	m_stringLE->setGeometry ( 10, 5, width() - 20, 20 );	
+        m_stringLE->setGeometry ( 10, 5, width() - 20, 20 );
+}
+*/
+
+void RenameDialog::keyPressEvent(QKeyEvent* _ke)
+{
+    if(_ke->key() == Qt::Key_Escape)
+    {
+        m_stringLE->setText(m_originalString);
+        accept();
+    }
 }
 
-
-
-
-void RenameDialog::keyPressEvent( QKeyEvent * _ke )
+void RenameDialog::textChanged(const QString& _newString)
 {
-	if( _ke->key() == Qt::Key_Escape )
-	{
-		m_stringLE->setText( m_originalString );
-		accept();
-	}
-}
-
-
-
-
-void RenameDialog::textChanged( const QString & _new_string )
-{
-	m_stringToEdit = _new_string;
+    m_stringToEdit = _newString;
 }

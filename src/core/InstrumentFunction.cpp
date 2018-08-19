@@ -32,14 +32,12 @@
 #include "Piano.h"
 #include "PresetPreviewPlayHandle.h"
 #include "Song.h"
+#include "embed.h"
 
 #include <QDomElement>
-
-#include "embed.h"
 //#include "lmms_math.h"
 
 #include <time.h>
-
 
 InstrumentFunction::InstrumentFunction(Model* _parent, QString _name) :
       Model(_parent, _name), m_enabledModel(false, this),
@@ -1305,7 +1303,7 @@ bool InstrumentFunctionGlissando::processNote(NotePlayHandle* _n)
     static QMutex mtx;
     QMutexLocker  locker(&mtx);
 
-    qInfo("\nNEW KEY IS %d", newKey);
+    // qInfo("\nNEW KEY IS %d", newKey);
     /*
     const int64_t curTime
             = std::chrono::duration_cast<std::chrono::milliseconds>(
@@ -1323,22 +1321,24 @@ bool InstrumentFunctionGlissando::processNote(NotePlayHandle* _n)
             / Engine::mixer()->processingSampleRate());
     const int64_t offTime = static_cast<int64_t>(
             _n->offset() * 1000.f / Engine::mixer()->processingSampleRate());
-    qInfo("Glissando: INFO lk=%d nk=%d last=%ld cur=%ld frm=%ld off=%ld "
-          "per=%ld",
-          m_lastKey, newKey, m_lastTime, curTime, frmTime, offTime, perTime);
+    // qInfo("Glissando: INFO lk=%d nk=%d last=%ld cur=%ld frm=%ld off=%ld "
+    //      "per=%ld",
+    //      m_lastKey, newKey, m_lastTime, curTime, frmTime, offTime,
+    //      perTime);
 
     if(m_lastKey < 0 || m_lastKey > 127)
     {
         m_lastKey  = newKey;
         m_lastTime = curTime + frmTime + offTime;
-        qInfo("Glissando: KEY==%d last=%ld thread=%p", m_lastKey, m_lastTime,
-              QThread::currentThread());
+        // qInfo("Glissando: KEY==%d last=%ld thread=%p", m_lastKey,
+        // m_lastTime,
+        //      QThread::currentThread());
         return true;
     }
 
     if(curTime + offTime + perTime + 10 < m_lastTime)
     {
-        qInfo("Glissando: SKIPPED cur=%ld last=%ld", curTime, m_lastTime);
+        // qInfo("Glissando: SKIPPED cur=%ld last=%ld", curTime, m_lastTime);
         return true;
     }
 
@@ -1346,14 +1346,14 @@ bool InstrumentFunctionGlissando::processNote(NotePlayHandle* _n)
     {
         m_lastKey  = newKey;
         m_lastTime = curTime + frmTime + offTime;
-        qInfo("Glissando: GAP600 last=%ld", m_lastTime);
+        // qInfo("Glissando: GAP600 last=%ld", m_lastTime);
         return true;
     }
 
     if(m_lastKey == newKey)
     {
         // m_lastTime = qMax(m_lastTime, curTime + frmTime + offTime);
-        qInfo("Glissando: LAST==NEW last=%ld", m_lastTime);
+        // qInfo("Glissando: LAST==NEW last=%ld", m_lastTime);
         return true;
     }
 
@@ -1361,7 +1361,7 @@ bool InstrumentFunctionGlissando::processNote(NotePlayHandle* _n)
     {
         m_lastKey  = newKey;
         m_lastTime = curTime + frmTime + offTime;
-        qInfo("Glissando: CRITICAL XRUNS last=%ld", m_lastTime);
+        // qInfo("Glissando: CRITICAL XRUNS last=%ld", m_lastTime);
         return true;
     }
 
@@ -1374,7 +1374,7 @@ bool InstrumentFunctionGlissando::processNote(NotePlayHandle* _n)
     {
         m_lastKey  = newKey;
         m_lastTime = curTime + frmTime + offTime;
-        qInfo("Glissando: NONE MODE last=%ld", m_lastTime);
+        // qInfo("Glissando: NONE MODE last=%ld", m_lastTime);
         return true;
     }
 
@@ -1430,16 +1430,16 @@ bool InstrumentFunctionGlissando::processNote(NotePlayHandle* _n)
 
     if(howmany <= 1)
     {
-        qInfo("Glissando: HOWMANY<=1 (%d) lk=%d nk=%d step=%d last=%ld",
-              howmany, m_lastKey, newKey, step, m_lastTime);
+        // qInfo("Glissando: HOWMANY<=1 (%d) lk=%d nk=%d step=%d last=%ld",
+        //       howmany, m_lastKey, newKey, step, m_lastTime);
         m_lastKey  = newKey;
         m_lastTime = curTime + frmTime + offTime;
-        qInfo("         : HOWMANY<=1 (%d) lk=%d nk=%d step=%d last=%ld",
-              howmany, m_lastKey, newKey, step, m_lastTime);
+        // qInfo("         : HOWMANY<=1 (%d) lk=%d nk=%d step=%d last=%ld",
+        //      howmany, m_lastKey, newKey, step, m_lastTime);
         return true;
     }
 
-    qInfo("Glissando: PROCEED many=%d", howmany);
+    // qInfo("Glissando: PROCEED many=%d", howmany);
 
     // number of frames that every note should be played
     f_cnt_t note_frames
@@ -1454,7 +1454,7 @@ bool InstrumentFunctionGlissando::processNote(NotePlayHandle* _n)
 
     if(gated_frames <= 6)
     {
-        qInfo("Glissando: GATED<=6");
+        // qInfo("Glissando: GATED<=6");
         m_lastKey  = newKey;
         m_lastTime = curTime + frmTime + offTime;
         return true;
@@ -1498,18 +1498,19 @@ bool InstrumentFunctionGlissando::processNote(NotePlayHandle* _n)
 
     const f_cnt_t total_frames = frames_processed - _n->offset();
 
-    const int64_t totTime = static_cast<int64_t>(
-            total_frames * 1000.f / Engine::mixer()->processingSampleRate());
+    // const int64_t totTime = static_cast<int64_t>(
+    //        total_frames * 1000.f /
+    //        Engine::mixer()->processingSampleRate());
 
-    const int64_t posTime = static_cast<int64_t>(
-            pos_frame * 1000.f / Engine::mixer()->processingSampleRate());
+    // const int64_t posTime = static_cast<int64_t>(
+    //        pos_frame * 1000.f / Engine::mixer()->processingSampleRate());
 
-    qInfo("Glissando : ++++++++> frm=%ld off=%ld pos=%ld tot=%ld", frmTime,
-          offTime, posTime, totTime);
+    // qInfo("Glissando : ++++++++> frm=%ld off=%ld pos=%ld tot=%ld", frmTime,
+    //      offTime, posTime, totTime);
 
     const int64_t endTime = curTime + frmTime + offTime;
-    qInfo("Glissando: NEW prev=%ld cur=%ld end=%ld", m_lastTime, curTime,
-          endTime);
+    // qInfo("Glissando: NEW prev=%ld cur=%ld end=%ld", m_lastTime, curTime,
+    //      endTime);
     m_lastTime = endTime;
 
     // recreate the note

@@ -137,9 +137,10 @@ WaveForm::Set::Set()
     // Mathematical
     BANK              = 20;
     m_bankNames[BANK] = "Mathematical";
-    new WaveForm /*SQ*/ ("sq ()", BANK, 0, sqf, Exact);
-    new WaveForm /*CB*/ ("cb()", BANK, 1, cbf, Exact);
-    new WaveForm /*CBRT*/ ("cbrt()", BANK, 11, cbrtf, Linear);
+    new WaveForm /*ID*/ ("id()", BANK, 1, identityf, Exact);
+    new WaveForm /*SQ*/ ("sq()", BANK, 2, sqf, Exact);
+    new WaveForm /*CB*/ ("cb()", BANK, 3, cbf, Exact);
+    new WaveForm /*CBRT*/ ("cbrt()", BANK, 13, cbrtf, Linear);
     new WaveForm /*NEXP*/ ("n_exp()", BANK, 20, nexpf, Linear);
     new WaveForm /*NLOG*/ ("n_log()", BANK, 30, nlogf, Linear);
 
@@ -151,8 +152,13 @@ WaveForm::Set::Set()
         QDir wfbd(wfrd.absolutePath() + "/" + wfb, "*.wav",
                   QDir::Name | QDir::IgnoreCase,
                   QDir::Files | QDir::NoDotAndDotDot);
-        m_bankNames[sbank - MIN_BANK] = wfb;
-        int sindex                    = MIN_INDEX;
+
+        QString bankname = wfb;
+        bankname.replace(QRegExp("^AKWF_"), "");
+        bankname.replace('_', ' ');
+        m_bankNames[sbank - MIN_BANK] = bankname.trimmed();
+
+        int sindex = MIN_INDEX;
         for(QString& wff : wfbd.entryList())
         {
             if(sindex > MAX_INDEX)
@@ -161,8 +167,14 @@ WaveForm::Set::Set()
                   qPrintable(wfbd.absolutePath() + "/" + wff));
             SampleBuffer* sb = new SampleBuffer(
                     wfbd.absolutePath() + "/" + wff, false, false);
-            new WaveForm(qPrintable(wff), sbank, sindex, sb->data(),
-                         sb->frames(), Linear);
+
+            QString wavename = wff;
+            wavename.replace(QRegExp("^AKWF_"), "");
+            wavename.replace(QRegExp("[.]wav$",Qt::CaseInsensitive), "");
+            wavename.replace('_', ' ');
+
+            new WaveForm(qPrintable(wavename.trimmed()), sbank, sindex,
+                         sb->data(), sb->frames(), Linear);
             delete sb;
             sindex++;
         }
@@ -182,7 +194,7 @@ const WaveForm WaveForm::SQPEAK("Sq peak", 0, 5, sqpeakf, Linear, 10);
 const WaveForm WaveForm::WHITENOISE("White noise", 0, 6, randf, Discrete, 10);
 // 7 is reserved
 const WaveForm WaveForm::ZERO(" 0.0", ZERO_BANK, ZERO_INDEX, zerof, Exact);
-const WaveForm WaveForm::SQRT("sqrt()", 20, 10, sqrtf, Linear, 10);
+const WaveForm WaveForm::SQRT("sqrt()", 20, 12, sqrtf, Linear, 10);
 
 const wavefunction_t WaveForm::sine
         = [](const float _x) { return WaveForm::SINE.f(_x); };

@@ -23,31 +23,171 @@
  */
 
 #include "Clipboard.h"
-#include "JournallingObject.h"
 
+#include "DataFile.h"
 
-Clipboard::Map Clipboard::content;
+#include <QApplication>
+#include <QClipboard>
+#include <QMimeData>
+#include <QTextStream>
 
+#define CSI_ d659c5b8_eba9_4c5b_a5c6_ec77836bdc7c
 
-void Clipboard::copy( JournallingObject * _obj )
+class CSI_
 {
-	QDomDocument doc;
-	QDomElement parent = doc.createElement( "Clipboard" );
-	_obj->saveState( doc, parent );
-	content[_obj->nodeName()] = parent.firstChild().toElement();
+  protected:
+    static const QString MIMETYPE_OBJECT;
+    // static const QString MIMETYPE_OBJECTS;
+
+    static const QString type(SerializingObject* _obj);
+    static const QString type(const QString& _nodeName);
+
+    static void set(SerializingObject* _obj, QClipboard::Mode _mode);
+    static bool get(SerializingObject* _obj, QClipboard::Mode _mode);
+    static bool has(const QString& _nodeName, QClipboard::Mode _mode);
+
+    friend class Clipboard;
+    friend class Selection;
+};
+
+const QString CSI_::MIMETYPE_OBJECT("text/x-lmms-object");
+// const QString CSI_::MIMETYPE_OBJECTS("text/x-lmms-objects");
+
+const QString CSI_::type(SerializingObject* _obj)
+{
+    QString r = MIMETYPE_OBJECT;
+    r.append(";value=\"" + _obj->nodeName() + "\"");
+    return r;
 }
 
-
-
-
-const QDomElement * Clipboard::getContent( const QString & _node_name )
+const QString CSI_::type(const QString& _nodeName)
 {
-	if( content.find( _node_name ) != content.end() )
-	{
-		return &content[_node_name];
-	}
-	return NULL;
+    QString r = MIMETYPE_OBJECT;
+    r.append(";value=\"" + _nodeName + "\"");
+    return r;
 }
 
+void CSI_::set(SerializingObject* _obj, QClipboard::Mode _mode)
+{
+    if(_obj == NULL)
+    {
+        qWarning("Warning: tried to copy null object to clipboard");
+        return;
+    }
 
+    DataFile doc(DataFile::ClipboardData);
+    _obj->saveState(doc, doc.content());
+    QMimeData* clip = new QMimeData;
+    QByteArray data = doc.toString().toUtf8();
 
+    // clip->setData(MIMETYPE_OBJECT, data);
+    clip->setData(type(_obj), data);
+    clip->setData("text/plain", data);
+    clip->setData("text/xml", data);
+
+    QApplication::clipboard()->setMimeData(clip, _mode);
+}
+
+bool CSI_::has(const QString& _nodeName, QClipboard::Mode _mode)
+{
+    const QMimeData* clip = QApplication::clipboard()->mimeData(_mode);
+
+    const QString type = CSI_::type(_nodeName);
+
+    if(clip->hasFormat(type))
+        return true;
+
+    // if(xml)...
+
+    return false;
+}
+
+bool CSI_::get(SerializingObject* _obj, QClipboard::Mode _mode)
+{
+    if(_obj == NULL)
+    {
+        qWarning("Warning: tried to get null object to clipboard");
+        return false;
+    }
+
+    const QMimeData* clip = QApplication::clipboard()->mimeData(_mode);
+
+    const QString type = CSI_::type(_obj);
+    QByteArray    data = clip->data(type);
+
+    if(clip->hasFormat(type))
+    {
+        // OK
+    }
+    else
+    {
+        qWarning("Clipboard: invalid data (not %s)",
+                 qPrintable(_obj->nodeName()));
+        return false;
+    }
+
+    DataFile    doc(QString(data).toUtf8());
+    QDomElement e = doc.content();
+    if(e.nodeName() != "clipboarddata")
+    {
+        qWarning("Warning: strange top node: %s", qPrintable(e.nodeName()));
+    }
+    else
+    {
+        e = e.firstChild().toElement();
+    }
+
+    if(e.nodeName() != _obj->nodeName())
+    {
+        qWarning("Warning: strange content node: %s (not %s)",
+                 qPrintable(e.nodeName()), qPrintable(_obj->nodeName()));
+        e = e.firstChildElement(_obj->nodeName());
+    }
+
+    if(e.isNull())
+    {
+        qWarning("Warning: no valid xml data...");
+        QString     txt;
+        QTextStream xml(&txt);
+        doc.write(xml);
+        qWarning("XML: %s", qPrintable(txt));
+        return false;
+    }
+
+    _obj->restoreState(e);
+    return true;
+}
+
+// Clipboard //
+
+void Clipboard::copy(SerializingObject* _obj)
+{
+    CSI_::set(_obj, QClipboard::Clipboard);
+}
+
+bool Clipboard::has(const QString& _nodeName)
+{
+    return CSI_::has(_nodeName, QClipboard::Clipboard);
+}
+
+bool Clipboard::paste(SerializingObject* _obj)
+{
+    return CSI_::get(_obj, QClipboard::Clipboard);
+}
+
+// Selection //
+
+void Selection::select(SerializingObject* _obj)
+{
+    CSI_::set(_obj, QClipboard::Selection);
+}
+
+bool Selection::has(const QString& _nodeName)
+{
+    return CSI_::has(_nodeName, QClipboard::Selection);
+}
+
+bool Selection::inject(SerializingObject* _obj)
+{
+    return CSI_::get(_obj, QClipboard::Selection);
+}

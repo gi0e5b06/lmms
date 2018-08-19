@@ -60,7 +60,7 @@ DataFile::typeDescStruct
 	{ DataFile::SongProjectTemplate, "songtemplate" },
 	{ DataFile::InstrumentTrackSettings, "instrumenttracksettings" },
 	{ DataFile::DragNDropData, "dnddata" },
-	{ DataFile::ClipboardData, "clipboard-data" },
+	{ DataFile::ClipboardData, "clipboarddata" },
 	{ DataFile::JournalData, "journaldata" },
 	{ DataFile::EffectSettings, "effectsettings" }
 } ;

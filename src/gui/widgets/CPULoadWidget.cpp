@@ -3,7 +3,7 @@
  *                      Hydrogen's CPU-load-widget)
  *
  * Copyright (c) 2005-2014 Tobias Doerffel <tobydox/at/users.sourceforge.net>
- * 
+ *
  * This file is part of LMMS - https://lmms.io
  *
  * This program is free software; you can redistribute it and/or
@@ -23,86 +23,93 @@
  *
  */
 
+#include "CPULoadWidget.h"
+
+#include "Engine.h"
+#include "Mixer.h"
+#include "embed.h"
 
 #include <QPainter>
 
-#include "CPULoadWidget.h"
-#include "embed.h"
-#include "Engine.h"
-#include "Mixer.h"
-
-
-CPULoadWidget::CPULoadWidget( QWidget * _parent ) :
-	QWidget( _parent ),
-	m_currentLoad( 0 ),
-	m_temp(),
-	m_background( embed::getIconPixmap( "cpuload_bg" ) ),
-	m_leds( embed::getIconPixmap( "cpuload_leds" ) ),
-	m_changed( true ),
-	m_updateTimer()
+CPULoadWidget::CPULoadWidget(QWidget* _parent, const bool _bigger) :
+      QWidget(_parent), m_bigger(_bigger), m_currentLoad(0), m_changed(true),
+      m_updateTimer()
 {
-	setAttribute( Qt::WA_OpaquePaintEvent, true );
-	setFixedSize( m_background.width(), m_background.height() );
+    if(m_bigger)
+    {
+        m_background = embed::getIconPixmap("cpuload_bigger_bg");
+        m_foreground = embed::getIconPixmap("cpuload_bigger_fg");
+        m_leds       = embed::getIconPixmap("cpuload_bigger_leds");
+    }
+    else
+    {
+        m_background = embed::getIconPixmap("cpuload_bg");
+        m_leds       = embed::getIconPixmap("cpuload_leds");
+    }
 
-	m_temp = QPixmap( width(), height() );
+    const int w = m_background.width();
+    const int h = m_background.height();
 
-	connect( &m_updateTimer, SIGNAL( timeout() ),
-                 this, SLOT( updateCpuLoad() ) );
+    m_cache = QPixmap(w, h);
+    setFixedSize(w, h);
+    setAttribute(Qt::WA_OpaquePaintEvent, true);
 
-	m_updateTimer.start( 1000 / 6 ); // update cpu-load at 6 fps
+    connect(&m_updateTimer, SIGNAL(timeout()), this, SLOT(updateCpuLoad()));
+    m_updateTimer.start(1000 / 8);  // update cpu-load at 8 fps
 }
-
-
-
 
 CPULoadWidget::~CPULoadWidget()
 {
 }
 
-
-
-
-void CPULoadWidget::paintEvent( QPaintEvent *  )
+void CPULoadWidget::paintEvent(QPaintEvent*)
 {
-	if( m_changed == true )
-	{
-		m_changed = false;
+    if(m_changed == true)
+    {
+        m_changed = false;
 
-		m_temp.fill( QColor(0,0,0,0) );
-		QPainter p( &m_temp );
-		p.drawPixmap( 0, 0, m_background );
+        m_cache.fill(QColor(0, 0, 0, 0));
+        QPainter p(&m_cache);
 
-		// as load-indicator consists of small 2-pixel wide leds with
-		// 1 pixel spacing, we have to make sure, only whole leds are
-		// shown which we achieve by the following formula
-		int w = ( m_leds.width() * m_currentLoad / 300 ) * 3;
-		if( w > 0 )
-		{
-			p.drawPixmap( 23, 3, m_leds, 0, 0, w,
-                                      m_leds.height() );
-		}
-	}
+        p.drawPixmap(0, 0, m_background);
 
-	QPainter p( this );
-	p.drawPixmap( 0, 0, m_temp );
+        if(m_bigger)
+        {
+            int w = (m_leds.width() * m_currentLoad / 300) * 3;
+            if(w > 0)
+                p.drawPixmap(0, 0, m_leds, 0, 0, w, m_leds.height());
+        }
+        else
+        {
+            // as load-indicator consists of small 2-pixel wide leds with
+            // 1 pixel spacing, we have to make sure, only whole leds are
+            // shown which we achieve by the following formula
+            int w = (m_leds.width() * m_currentLoad / 300) * 3;
+            if(w > 0)
+                p.drawPixmap(23, 3, m_leds, 0, 0, w, m_leds.height());
+        }
+
+        if(m_bigger)
+            p.drawPixmap(0, 0, m_foreground);
+    }
+
+    QPainter p(this);
+    p.drawPixmap(0, 0, m_cache);
 }
-
-
-
 
 void CPULoadWidget::updateCpuLoad()
 {
-	// smooth load-values a bit
-	//int new_load = ( m_currentLoad + Engine::mixer()->cpuLoad() ) / 2;
+    // smooth load-values a bit
+    // int new_load = ( m_currentLoad + Engine::mixer()->cpuLoad() ) / 2;
 
-        //int new_load = qMax<int>((m_currentLoad*9)/10,
-        //                         Engine::mixer()->cpuLoad());
+    // int new_load = qMax<int>((m_currentLoad*9)/10,
+    //                         Engine::mixer()->cpuLoad());
 
-        int new_load = Engine::mixer()->cpuLoad();
-	if( new_load != m_currentLoad )
-	{
-		m_currentLoad = new_load;
-		m_changed = true;
-		update();
-	}
+    int new_load = Engine::mixer()->cpuLoad();
+    if(new_load != m_currentLoad)
+    {
+        m_currentLoad = new_load;
+        m_changed     = true;
+        update();
+    }
 }

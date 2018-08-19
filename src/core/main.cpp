@@ -391,6 +391,7 @@ int main( int argc, char * * argv )
 		}
 		else if( arg == "--play" || arg == "-p" )
 		{
+                        /*
 			++i;
 
 			if( i == argc )
@@ -400,12 +401,13 @@ int main( int argc, char * * argv )
 				return EXIT_FAILURE;
 			}
 
-
 			fileToLoad = QString::fromLocal8Bit( argv[i] );
+                        */
 			playOut = "yes";
 		}
 		else if( arg == "--render" || arg == "-r" )
 		{
+                        /*
 			++i;
 
 			if( i == argc )
@@ -414,10 +416,9 @@ int main( int argc, char * * argv )
                                          "     : Try \"%s --help\" for more information.",argv[0]);
 				return EXIT_FAILURE;
 			}
-
-
 			fileToLoad = QString::fromLocal8Bit( argv[i] );
-			renderOut = fileToLoad;
+                        */
+			renderOut = "yes";//fileToLoad;
 		}
 		else if( arg == "--loop" || arg == "-l" )
 		{
@@ -714,6 +715,15 @@ int main( int argc, char * * argv )
 			fileToLoad = QString::fromLocal8Bit( argv[i] );
 		}
 	}
+
+        if(playOut=="yes")
+        {
+                playOut=fileToLoad;
+        }
+        if(renderOut=="yes")
+        {
+                renderOut=fileToLoad;
+        }
 
 	// Test file argument before continuing
 	if( !fileToLoad.isEmpty() )
