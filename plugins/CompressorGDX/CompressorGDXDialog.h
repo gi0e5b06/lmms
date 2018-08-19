@@ -1,5 +1,5 @@
 /*
- * CompressorGDXDialog.h - control dialog for click remover effect
+ * CompressorGDXDialog.h - 
  *
  * Copyright (c) 2017
  *
@@ -22,8 +22,8 @@
  *
  */
 
-#ifndef RANDOMGDX_CONTROL_DIALOG_H
-#define RANDOMGDX_CONTROL_DIALOG_H
+#ifndef COMPRESSORGDX_CONTROL_DIALOG_H
+#define COMPRESSORGDX_CONTROL_DIALOG_H
 
 #include "EffectControlDialog.h"
 

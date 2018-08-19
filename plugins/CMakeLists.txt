@@ -74,7 +74,7 @@ IF("${PLUGIN_LIST}" STREQUAL "")
 		Flanger
 		GigPlayer
 		HydrogenImport
-		# ladspa_browser
+		# ladspa_browser - not needed
 		LadspaEffect
 		lb302
 		MidiImport
@@ -94,6 +94,7 @@ IF("${PLUGIN_LIST}" STREQUAL "")
 		ScatterGDX
 		sf2_player
 		sfxr
+                ShaperGDX
 		sid
 		SpectrumAnalyzer
                 SplitGDX
@@ -101,9 +102,9 @@ IF("${PLUGIN_LIST}" STREQUAL "")
 		stereo_matrix
 		stk
                 SynthGDX
-		vestige
-		vst_base
-		VstEffect
+		#vestige
+		#vst_base
+		#VstEffect
 		watsyn
 		waveshaper
 		vibed

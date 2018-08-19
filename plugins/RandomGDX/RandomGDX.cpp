@@ -1,7 +1,7 @@
 /*
- * RandomGDX.cpp - A click remover
+ * RandomGDX.cpp -
  *
- * Copyright (c) 2018 gi0e5b06 (on github.com)
+ * Copyright (c) 2017-2018 gi0e5b06 (on github.com)
  *
  * This file is part of LMMS - https://lmms.io
  *
@@ -24,10 +24,10 @@
 
 #include "RandomGDX.h"
 
-#include <math.h>
-
 #include "embed.h"
 #include "lmms_math.h"
+
+#include <math.h>
 
 extern "C"
 {

@@ -1,5 +1,5 @@
 /*
- * CompressorGDX.cpp - A click remover
+ * CompressorGDX.cpp -
  *
  * Copyright (c) 2018 gi0e5b06 (on github.com)
  *
@@ -24,8 +24,7 @@
 
 #include "CompressorGDX.h"
 
-#include <math.h>
-
+#include "WaveForm.h"
 #include "embed.h"
 #include "lmms_math.h"
 
@@ -47,7 +46,7 @@ extern "C"
 CompressorGDX::CompressorGDX(Model*                                    parent,
                              const Descriptor::SubPluginFeatures::Key* key) :
       Effect(&compressorgdx_plugin_descriptor, parent, key),
-      m_gdxControls(this)//, m_fact0(0.0f), m_sact0(0.0f)
+      m_gdxControls(this)  //, m_fact0(0.0f), m_sact0(0.0f)
 {
 }
 
@@ -83,29 +82,85 @@ bool CompressorGDX::processAudioBuffer(sampleFrame* _buf, const fpp_t _frames)
         float outGain
                 = (float)(outGainBuf ? outGainBuf->value(f)
                                      : m_gdxControls.m_outGainModel.value());
-        float mode = (float)(modeBuf ? modeBuf->value(f)
-                                     : m_gdxControls.m_modeModel.value());
-
-        Q_UNUSED(mode);
+        int mode = (int)(modeBuf ? modeBuf->value(f)
+                                 : m_gdxControls.m_modeModel.value());
 
         float curVal0 = _buf[f][0];
         float curVal1 = _buf[f][1];
 
-        float exp = (1.f - threshold) * (1.f - ratio);
-        outGain *= (1.f + exp);
+        if(threshold > 0.f || ratio > 0.f)
+            outGain /= (threshold + ratio * (1.f - threshold));
 
         {
-            if(fabs(curVal0) >= threshold)
-                curVal0 = sign(curVal0)
-                          * (threshold + (fabs(curVal0) - threshold) * ratio);
-            curVal0 = qBound(0.f, curVal0 * outGain, 1.f);
+            float y0 = qBound(0.f, fabs(curVal0) - threshold, 1.f);
+            if(y0 > 0.f)
+            {
+                float s0 = sign(curVal0);
+                switch(mode)
+                {
+                    case 0:
+                        // clip
+                        if(y0 > ratio)
+                            y0 = ratio;
+                        break;
+                    case 2:
+                        y0 *= (2 - y0) * ratio;
+                        break;
+                    case 3:
+                        y0 *= WaveForm::sine(y0 / 4.f) * ratio;
+                        break;
+                    case 4:
+                        y0 *= (1.f + erf(2.f * y0) / 2.f) * ratio;
+                        break;
+                    case 1:
+                    default:
+                        y0 *= ratio;
+                        break;
+                }
+                curVal0 = s0 * (threshold + y0) * outGain;
+                // curVal0 = qBound(-1.f, curVal0, 1.f);
+            }
+            else
+            {
+                curVal0 *= outGain;
+                // curVal0 = qBound(-1.f, curVal0, 1.f);
+            }
         }
 
         {
-            if(fabs(curVal1) >= threshold)
-                curVal1 = sign(curVal1)
-                          * (threshold + (fabs(curVal1) - threshold) * ratio);
-            curVal1 = qBound(0.f, curVal1 * outGain, 1.f);
+            float y1 = qBound(0.f, fabs(curVal1) - threshold, 1.f);
+            if(y1 > 0.f)
+            {
+                float s1 = sign(curVal1);
+                switch(mode)
+                {
+                    case 0:
+                        // clip
+                        if(y1 > ratio)
+                            y1 = ratio;
+                        break;
+                    case 2:
+                        y1 *= (2 - y1) * ratio;
+                        break;
+                    case 3:
+                        y1 *= WaveForm::sine(y1 / 4.f) * ratio;
+                        break;
+                    case 4:
+                        y1 *= (1.f + erf(2.f * y1) / 2.f) * ratio;
+                        break;
+                    case 1:
+                    default:
+                        y1 *= ratio;
+                        break;
+                }
+                curVal1 = s1 * (threshold + y1) * outGain;
+                //curVal1 = qBound(-1.f, curVal1, 1.f);
+            }
+            else
+            {
+                    curVal1 *= outGain;
+                    //curVal1 = qBound(-1.f, curVal1, 1.f);
+            }
         }
 
         _buf[f][0] = d0 * _buf[f][0] + w0 * curVal0;

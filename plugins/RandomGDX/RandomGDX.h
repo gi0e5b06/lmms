@@ -1,7 +1,7 @@
 /*
- * RandomGDX.h - randomizing effect
+ * RandomGDX.h -
  *
- * Copyright (c) 2018 gi0e5b06 (on github.com)
+ * Copyright (c) 2017-2018 gi0e5b06 (on github.com)
  *
  * This file is part of LMMS - https://lmms.io
  *
@@ -22,34 +22,33 @@
  *
  */
 
-
 #ifndef RANDOMGDX_H
 #define RANDOMGDX_H
 
-#include "lmms_math.h"
 #include "Effect.h"
 #include "RandomGDXControls.h"
 #include "ValueBuffer.h"
+#include "lmms_math.h"
 
 class PLUGIN_EXPORT RandomGDXEffect : public Effect
 {
- public:
-	RandomGDXEffect( Model* parent, const Descriptor::SubPluginFeatures::Key* key );
-	virtual ~RandomGDXEffect();
-	virtual bool processAudioBuffer( sampleFrame* buf, const fpp_t frames );
+  public:
+    RandomGDXEffect(Model*                                    parent,
+                    const Descriptor::SubPluginFeatures::Key* key);
+    virtual ~RandomGDXEffect();
+    virtual bool processAudioBuffer(sampleFrame* buf, const fpp_t frames);
 
-	virtual EffectControls* controls()
-	{
-		return &m_gdxControls;
-	}
+    virtual EffectControls* controls()
+    {
+        return &m_gdxControls;
+    }
 
- private:
-	RandomGDXControls m_gdxControls;
-        float             m_fact0,m_fact1;
-        float             m_sact0,m_sact1;
+  private:
+    RandomGDXControls m_gdxControls;
+    float             m_fact0, m_fact1;
+    float             m_sact0, m_sact1;
 
-	friend class RandomGDXControls;
-
-} ;
+    friend class RandomGDXControls;
+};
 
 #endif

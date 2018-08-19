@@ -1,7 +1,7 @@
 /*
- * RandomGDXControls.cpp - controls for click remover effect
+ * RandomGDXControls.cpp -
  *
- * Copyright (c) 2018 gi0e5b06 (on github.com)
+ * Copyright (c) 2017-2018 gi0e5b06 (on github.com)
  *
  * This file is part of LMMS - https://lmms.io
  *
@@ -22,57 +22,48 @@
  *
  */
 
+#include "RandomGDXControls.h"
+
+#include "Engine.h"
+#include "RandomGDX.h"
+#include "Song.h"
 
 #include <QDomElement>
 
-#include "RandomGDXControls.h"
-#include "RandomGDX.h"
-#include "Engine.h"
-#include "Song.h"
-
-
-RandomGDXControls::RandomGDXControls( RandomGDXEffect* effect ) :
-	EffectControls( effect ),
-	m_effect( effect ),
-	m_rndAmpModel( 0.0f, 0.0f, 1.0f, 0.00001f, this, tr( "Random Amp" ) ),
-	m_fixAmpModel( 1.0f, 0.0f, 1.0f, 0.00001f, this, tr( "Fixed Amp" ) ),
-	m_sngPosModel( 0.0f, 0.0f, 1.0f, 0.00001f, this, tr( "Singularity" ) ),
-	m_delPosModel( 0.0f, 0.0f, 1.0f,   0.001f, this, tr( "Delay" ) )
+RandomGDXControls::RandomGDXControls(RandomGDXEffect* effect) :
+      EffectControls(effect), m_effect(effect),
+      m_rndAmpModel(0.0f, 0.0f, 1.0f, 0.00001f, this, tr("Random Amp")),
+      m_fixAmpModel(1.0f, 0.0f, 1.0f, 0.00001f, this, tr("Fixed Amp")),
+      m_sngPosModel(0.0f, 0.0f, 1.0f, 0.00001f, this, tr("Singularity")),
+      m_delPosModel(0.0f, 0.0f, 1.0f, 0.001f, this, tr("Delay"))
 {
-/*
-	connect( &m_volumeModel, SIGNAL( dataChanged() ), this, SLOT( changeControl() ) );
-	connect( &m_panModel, SIGNAL( dataChanged() ), this, SLOT( changeControl() ) );
-	connect( &m_leftModel, SIGNAL( dataChanged() ), this, SLOT( changeControl() ) );
-	connect( &m_rightModel, SIGNAL( dataChanged() ), this, SLOT( changeControl() ) );
-*/
+    /*
+            connect( &m_volumeModel, SIGNAL( dataChanged() ), this, SLOT(
+       changeControl() ) ); connect( &m_panModel, SIGNAL( dataChanged() ),
+       this, SLOT( changeControl() ) ); connect( &m_leftModel, SIGNAL(
+       dataChanged() ), this, SLOT( changeControl() ) ); connect(
+       &m_rightModel, SIGNAL( dataChanged() ), this, SLOT( changeControl() )
+       );
+    */
 }
-
-
-
 
 void RandomGDXControls::changeControl()
 {
-//	engine::getSong()->setModified();
+    //	engine::getSong()->setModified();
 }
 
-
-
-
-void RandomGDXControls::loadSettings( const QDomElement& _this )
+void RandomGDXControls::loadSettings(const QDomElement& _this)
 {
-	m_rndAmpModel.loadSettings( _this, "rnd_amp" );
-	m_fixAmpModel.loadSettings( _this, "fix_amp" );
-	m_sngPosModel.loadSettings( _this, "sng_pos" );
-	m_delPosModel.loadSettings( _this, "del_pos" );
+    m_rndAmpModel.loadSettings(_this, "rnd_amp");
+    m_fixAmpModel.loadSettings(_this, "fix_amp");
+    m_sngPosModel.loadSettings(_this, "sng_pos");
+    m_delPosModel.loadSettings(_this, "del_pos");
 }
 
-
-
-
-void RandomGDXControls::saveSettings( QDomDocument& doc, QDomElement& _this )
+void RandomGDXControls::saveSettings(QDomDocument& doc, QDomElement& _this)
 {
-	m_rndAmpModel.saveSettings( doc, _this, "rnd_amp" );
-	m_fixAmpModel.saveSettings( doc, _this, "fix_amp" );
-	m_sngPosModel.saveSettings( doc, _this, "sng_pos" );
-	m_delPosModel.saveSettings( doc, _this, "del_pos" );
+    m_rndAmpModel.saveSettings(doc, _this, "rnd_amp");
+    m_fixAmpModel.saveSettings(doc, _this, "fix_amp");
+    m_sngPosModel.saveSettings(doc, _this, "sng_pos");
+    m_delPosModel.saveSettings(doc, _this, "del_pos");
 }

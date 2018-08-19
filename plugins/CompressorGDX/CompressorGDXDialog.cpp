@@ -1,5 +1,5 @@
 /*
- * CompressorGDXDialog.cpp - control dialog for click remover effect
+ * CompressorGDXDialog.cpp - 
  *
  * Copyright (c) 2018 gi0e5b06 (on github.com)
  *
@@ -24,50 +24,47 @@
 
 #include "CompressorGDXDialog.h"
 
+#include "CompressorGDXControls.h"
+#include "embed.h"
+
 #include <QGridLayout>
 #include <QGroupBox>
 #include <QLayout>
 
-#include "CompressorGDXControls.h"
-#include "embed.h"
-
-CompressorGDXDialog::CompressorGDXDialog(
-        CompressorGDXControls* controls) :
+CompressorGDXDialog::CompressorGDXDialog(CompressorGDXControls* controls) :
       EffectControlDialog(controls)
 {
     setAutoFillBackground(true);
     QPalette pal;
     pal.setBrush(backgroundRole(), embed::getIconPixmap("plugin_bg"));
-    //pal.setBrush(backgroundRole(),PLUGIN_NAME::getIconPixmap("artwork"));
+    // pal.setBrush(backgroundRole(),PLUGIN_NAME::getIconPixmap("artwork"));
     setPalette(pal);
     setFixedSize(150, 160);
 
     QGroupBox* ctlGB = new QGroupBox(tr("Controls"), this);
     ctlGB->setGeometry(10, 10, 130, 140);
 
-    Knob* thresholdKnob = new Knob(knobBright_26, ctlGB);
-    thresholdKnob->move(17, 35);
-    thresholdKnob->setModel(&controls->m_thresholdModel);
-    thresholdKnob->setLabel(tr("Treshold"));
-    thresholdKnob->setHintText(tr("Treshold:"), "");
+    Knob* thresholdKNB = new Knob(knobBright_26, ctlGB);
+    thresholdKNB->move(17, 35);
+    thresholdKNB->setModel(&controls->m_thresholdModel);
+    thresholdKNB->setLabel(tr("TRHLD"));
+    thresholdKNB->setHintText(tr("Treshold:"), "");
 
-    Knob* ratioKnob = new Knob(knobBright_26, ctlGB);
-    ratioKnob->move(67, 35);
-    ratioKnob->setModel(&controls->m_ratioModel);
-    ratioKnob->setLabel(tr("Ratio"));
-    ratioKnob->setHintText(tr("Ratio:"), "");
+    Knob* ratioKNB = new Knob(knobBright_26, ctlGB);
+    ratioKNB->move(67, 35);
+    ratioKNB->setModel(&controls->m_ratioModel);
+    ratioKNB->setLabel(tr("RATIO"));
+    ratioKNB->setHintText(tr("Ratio:"), "");
 
-    Knob* outGainKnob = new Knob(knobBright_26, ctlGB);
-    outGainKnob->move(17, 85);
-    outGainKnob->setModel(&controls->m_outGainModel);
-    outGainKnob->setLabel(tr("Out"));
-    outGainKnob->setHintText(tr("Out gain:"), "");
+    Knob* outGainKNB = new Knob(knobBright_26, ctlGB);
+    outGainKNB->move(17, 85);
+    outGainKNB->setModel(&controls->m_outGainModel);
+    outGainKNB->setLabel(tr("OUT"));
+    outGainKNB->setHintText(tr("Out gain:"), "");
 
-    /*
-    Knob * modeKnob = new Knob( knobBright_26, ctlGB);
-    modeKnob -> move( 67, 85 );
-    modeKnob->setModel( &controls->m_modeModel );
-    modeKnob->setLabel( tr( "Delay" ) );
-    modeKnob->setHintText( tr( "Delay:" ) , "" );
-    */
+    Knob * modeKNB = new Knob( knobBright_26, ctlGB);
+    modeKNB -> move( 67, 85 );
+    modeKNB->setModel( &controls->m_modeModel );
+    modeKNB->setLabel( tr( "MODE" ) );
+    modeKNB->setHintText( tr( "Mode:" ) , "" );
 }

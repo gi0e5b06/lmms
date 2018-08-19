@@ -1,7 +1,7 @@
 /*
- * RandomGDXControlDialog.h - control dialog for click remover effect
+ * RandomGDXControlDialog.h -
  *
- * Copyright (c) 2017
+ * Copyright (c) 2017-2018 gi0e5b06 (on github.com)
  *
  * This file is part of LMMS - https://lmms.io
  *
@@ -27,17 +27,16 @@
 
 #include "EffectControlDialog.h"
 
-
 class RandomGDXControls;
-
 
 class RandomGDXControlDialog : public EffectControlDialog
 {
-	Q_OBJECT
-public:
-	RandomGDXControlDialog( RandomGDXControls* controls );
-	virtual ~RandomGDXControlDialog() { }
-
-} ;
+    Q_OBJECT
+  public:
+    RandomGDXControlDialog(RandomGDXControls* controls);
+    virtual ~RandomGDXControlDialog()
+    {
+    }
+};
 
 #endif

@@ -1,7 +1,7 @@
 /*
- * RandomGDXControls.h - controls for click remover effect
+ * RandomGDXControls.h -
  *
- * Copyright (c) 2017
+ * Copyright (c) 2017-2018 gi0e5b06 (on github.com)
  *
  * This file is part of LMMS - https://lmms.io
  *
@@ -26,54 +26,50 @@
 #define RANDOMGDX_CONTROLS_H
 
 #include "EffectControls.h"
-#include "RandomGDXControlDialog.h"
 #include "Knob.h"
-
+#include "RandomGDXControlDialog.h"
 
 class RandomGDXEffect;
 
-
 class RandomGDXControls : public EffectControls
 {
-	Q_OBJECT
-public:
-	RandomGDXControls( RandomGDXEffect* effect );
-	virtual ~RandomGDXControls()
-	{
-	}
+    Q_OBJECT
+  public:
+    RandomGDXControls(RandomGDXEffect* effect);
+    virtual ~RandomGDXControls()
+    {
+    }
 
-	virtual void saveSettings( QDomDocument & _doc, QDomElement & _parent );
-	virtual void loadSettings( const QDomElement & _this );
-	inline virtual QString nodeName() const
-	{
-		return "RandomGDXControls";
-	}
+    virtual void saveSettings(QDomDocument& _doc, QDomElement& _parent);
+    virtual void loadSettings(const QDomElement& _this);
+    inline virtual QString nodeName() const
+    {
+        return "RandomGDXControls";
+    }
 
-	virtual int controlCount()
-	{
-		return 4;
-	}
+    virtual int controlCount()
+    {
+        return 4;
+    }
 
-	virtual EffectControlDialog* createView()
-	{
-		return new RandomGDXControlDialog( this );
-	}
+    virtual EffectControlDialog* createView()
+    {
+        return new RandomGDXControlDialog(this);
+    }
 
+  private slots:
+    void changeControl();
 
-private slots:
-	void changeControl();
+  private:
+    RandomGDXEffect* m_effect;
 
-private:
-	RandomGDXEffect* m_effect;
+    FloatModel m_rndAmpModel;
+    FloatModel m_fixAmpModel;
+    FloatModel m_sngPosModel;
+    FloatModel m_delPosModel;
 
-	FloatModel m_rndAmpModel;
-	FloatModel m_fixAmpModel;
-	FloatModel m_sngPosModel;
-	FloatModel m_delPosModel;
-
-	friend class RandomGDXControlDialog;
-	friend class RandomGDXEffect;
-
-} ;
+    friend class RandomGDXControlDialog;
+    friend class RandomGDXEffect;
+};
 
 #endif

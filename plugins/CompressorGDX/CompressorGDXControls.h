@@ -1,5 +1,5 @@
 /*
- * CompressorGDXControls.h - controls for click remover effect
+ * CompressorGDXControls.h - 
  *
  * Copyright (c) 2017
  *
@@ -22,8 +22,8 @@
  *
  */
 
-#ifndef RANDOMGDX_CONTROLS_H
-#define RANDOMGDX_CONTROLS_H
+#ifndef COMPRESSORGDX_CONTROLS_H
+#define COMPRESSORGDX_CONTROLS_H
 
 #include "EffectControls.h"
 #include "CompressorGDXDialog.h"

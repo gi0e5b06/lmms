@@ -1,7 +1,7 @@
 /*
  * ScatterGDX.cpp - A scatter
  *
- * Copyright (c) 2018 gi0e5b06 (on github.com)
+ * Copyright (c) 2017-2018 gi0e5b06 (on github.com)
  *
  * This file is part of LMMS - https://lmms.io
  *

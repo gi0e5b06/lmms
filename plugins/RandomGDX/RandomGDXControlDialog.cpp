@@ -1,7 +1,7 @@
 /*
- * RandomGDXControlDialog.cpp - control dialog for randomizing effect
+ * RandomGDXControlDialog.cpp -
  *
- * Copyright (c) 2018 gi0e5b06 (on github.com)
+ * Copyright (c) 2017-2018 gi0e5b06 (on github.com)
  *
  * This file is part of LMMS - https://lmms.io
  *
@@ -24,12 +24,12 @@
 
 #include "RandomGDXControlDialog.h"
 
+#include "RandomGDXControls.h"
+#include "embed.h"
+
 #include <QGridLayout>
 #include <QGroupBox>
 #include <QLayout>
-
-#include "RandomGDXControls.h"
-#include "embed.h"
 
 RandomGDXControlDialog::RandomGDXControlDialog(RandomGDXControls* controls) :
       EffectControlDialog(controls)
@@ -37,7 +37,7 @@ RandomGDXControlDialog::RandomGDXControlDialog(RandomGDXControls* controls) :
     setAutoFillBackground(true);
     QPalette pal;
     pal.setBrush(backgroundRole(), embed::getIconPixmap("plugin_bg"));
-    //pal.setBrush(backgroundRole(),PLUGIN_NAME::getIconPixmap("artwork"));
+    // pal.setBrush(backgroundRole(),PLUGIN_NAME::getIconPixmap("artwork"));
     setPalette(pal);
     setFixedSize(150, 160);
 
