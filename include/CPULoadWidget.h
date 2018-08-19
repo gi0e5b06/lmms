@@ -23,7 +23,6 @@
  *
  */
 
-
 #ifndef CPULOAD_WIDGET_H
 #define CPULOAD_WIDGET_H
 
@@ -33,35 +32,29 @@
 #include <QTimer>
 #include <QWidget>
 
-
 class CPULoadWidget : public QWidget
 {
-	Q_OBJECT
-public:
-	CPULoadWidget( QWidget * _parent );
-	virtual ~CPULoadWidget();
+    Q_OBJECT
+  public:
+    CPULoadWidget(QWidget* _parent, const bool _bigger);
+    virtual ~CPULoadWidget();
 
+  protected:
+    virtual void paintEvent(QPaintEvent* _pe);
 
-protected:
-	virtual void paintEvent( QPaintEvent * _ev );
+  protected slots:
+    void updateCpuLoad();
 
+  private:
+    bool   m_bigger;
+    int    m_currentLoad;
+    bool   m_changed;
+    QTimer m_updateTimer;
 
-protected slots:
-	void updateCpuLoad();
-
-
-private:
-	int m_currentLoad;
-
-	QPixmap m_temp;
-	QPixmap m_background;
-	QPixmap m_leds;
-
-	bool m_changed;
-
-	QTimer m_updateTimer;
-
-} ;
-
+    QPixmap m_background;
+    QPixmap m_foreground;
+    QPixmap m_leds;
+    QPixmap m_cache;
+};
 
 #endif
