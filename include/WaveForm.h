@@ -83,10 +83,12 @@ class WaveForm
     {
         return m_name;
     }
+
     inline const int bank() const
     {
         return m_bank;
     }
+
     inline const int index() const
     {
         return m_index;
@@ -147,6 +149,9 @@ class WaveForm
              const interpolation_t _mode,
              const int             _quality);
 
+    void build();
+
+    bool            m_built;
     QString         m_name;
     int             m_bank;
     int             m_index;

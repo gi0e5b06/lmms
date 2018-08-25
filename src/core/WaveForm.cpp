@@ -31,6 +31,8 @@
 #include "lmms_math.h"  // REQUIRED
 
 #include <QDir>
+#include <QMutex>
+#include <QMutexLocker>
 
 WaveForm::Set::Set()
 {
@@ -163,19 +165,30 @@ WaveForm::Set::Set()
         {
             if(sindex > MAX_INDEX)
                 continue;
-            qInfo("%s : %s", qPrintable(wff),
-                  qPrintable(wfbd.absolutePath() + "/" + wff));
+            //qInfo("%s : %s", qPrintable(wff),
+            //      qPrintable(wfbd.absolutePath() + "/" + wff));
+            /*
             SampleBuffer* sb = new SampleBuffer(
                     wfbd.absolutePath() + "/" + wff, false, false);
 
             QString wavename = wff;
             wavename.replace(QRegExp("^AKWF_"), "");
-            wavename.replace(QRegExp("[.]wav$",Qt::CaseInsensitive), "");
+            wavename.replace(QRegExp("[.]wav$", Qt::CaseInsensitive), "");
             wavename.replace('_', ' ');
 
             new WaveForm(qPrintable(wavename.trimmed()), sbank, sindex,
                          sb->data(), sb->frames(), Linear);
             delete sb;
+            */
+            QString filename = wfbd.absolutePath() + "/" + wff;
+            QString wavename = wff;
+            wavename.replace(QRegExp("^AKWF_"), "");
+            wavename.replace(QRegExp("[.]wav$", Qt::CaseInsensitive), "");
+            wavename.replace('_', ' ');
+
+            new WaveForm(qPrintable(wavename.trimmed()), sbank, sindex,
+                         filename, Linear);
+
             sindex++;
         }
         sbank++;
@@ -291,8 +304,9 @@ WaveForm::WaveForm(const char*           _name,
                    const int             _index,
                    const interpolation_t _mode,
                    const int             _quality) :
-      m_name(_name),
-      m_bank(_bank), m_index(_index), m_mode(_mode), m_quality(_quality)
+      m_built(false),
+      m_name(_name), m_bank(_bank), m_index(_index), m_mode(_mode),
+      m_quality(_quality)
 {
     m_func = NULL;
     m_file = "";
@@ -311,13 +325,8 @@ WaveForm::WaveForm(const char*           _name,
       WaveForm(_name, _bank, _index, _mode, _quality)
 {
     m_func = _func;
-    if(m_mode != Exact)
-    {
-        m_size = 128 * pow(2, _quality) - 1;
-        m_data = MM_ALLOC(float, m_size + 1);
-        for(int i = m_size; i >= 0; --i)
-            m_data[i] = m_func(float(i) / float(m_size));
-    }
+    if(m_mode == Exact)
+        m_built = true;
 }
 
 WaveForm::WaveForm(const char*           _name,
@@ -330,7 +339,7 @@ WaveForm::WaveForm(const char*           _name,
 {
     m_file = _file;
     if(m_mode == Exact)
-        m_mode = Linear;
+            m_mode = Linear;
 }
 
 WaveForm::WaveForm(const char*           _name,
@@ -348,6 +357,7 @@ WaveForm::WaveForm(const char*           _name,
     m_size = _size - 1;
     if(m_mode == Exact)
         m_mode = Linear;
+    m_built = true;
 }
 
 WaveForm::WaveForm(const char*           _name,
@@ -365,6 +375,7 @@ WaveForm::WaveForm(const char*           _name,
     m_size = _size - 1;
     if(m_mode == Exact)
         m_mode = Linear;
+    m_built = true;
 }
 
 WaveForm::~WaveForm()
@@ -373,9 +384,48 @@ WaveForm::~WaveForm()
         MM_FREE(m_data);
 }
 
+void WaveForm::build()
+{
+    if(m_built)
+        return;
+    static QMutex s_building;
+    QMutexLocker  locker(&s_building);
+    if(m_built)
+        return;
+
+    if(m_func)
+    {
+        m_size = 128 * pow(2, m_quality) - 1;
+        m_data = MM_ALLOC(float, m_size + 1);
+        for(int i = m_size; i >= 0; --i)
+            m_data[i] = m_func(float(i) / float(m_size));
+        m_built = true;
+        return;
+    }
+    else if(m_file != "")
+    {
+        SampleBuffer*      sb   = new SampleBuffer(m_file, false, false);
+        int                size = sb->frames();
+        const sampleFrame* data = sb->data();
+
+        m_data = MM_ALLOC(float, size);
+        for(int f = 0; f < size; ++f)
+            m_data[f] = data[f][0];
+        m_size = size - 1;
+        delete sb;
+        m_built = true;
+        return;
+    }
+
+    qWarning("Error: waveform not built: %s", qPrintable(m_name));
+}
+
 // x must be between 0. and 1.
 float WaveForm::f(const float _x) const
 {
+    if(!m_built)
+            const_cast<WaveForm*>(this)->build();
+
     float r;
     switch(m_mode)
     {
