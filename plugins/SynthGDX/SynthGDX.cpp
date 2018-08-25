@@ -951,7 +951,7 @@ void SynthGDX::saveSettings(QDomDocument& _doc, QDomElement& _this)
     for(int i = 0; i < NB_OSCILLATORS; ++i)
     {
         QString is = QString::number(i);
-        m_osc[i]->m_enabledModel.saveSettings(_doc, _this, "enabled" + is);
+        m_osc[i]->m_enabledModel.saveSettings(_doc, _this, "osc_enabled" + is);
 
         m_osc[i]->m_waveMixModel.saveSettings(_doc, _this, "wave_mix" + is);
         m_osc[i]->m_wave1ReverseModel.saveSettings(_doc, _this,
@@ -1017,7 +1017,7 @@ void SynthGDX::saveSettings(QDomDocument& _doc, QDomElement& _this)
     for(int i = 0; i < NB_MODULATORS; ++i)
     {
         QString is = QString::number(i);
-        m_mod[i]->m_enabledModel.saveSettings(_doc, _this, "enabled" + is);
+        m_mod[i]->m_enabledModel.saveSettings(_doc, _this, "mod_enabled" + is);
         m_mod[i]->m_algoModel.saveSettings(_doc, _this, "algo" + is);
         m_mod[i]->m_modulatedModel.saveSettings(_doc, _this,
                                                 "modulated" + is);
