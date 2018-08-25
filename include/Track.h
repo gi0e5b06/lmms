@@ -656,16 +656,16 @@ public:
 	// -------------------------------------------------------
 	void deleteTCOs();
 
-	int numOfTCOs();
-	TrackContentObject * getTCO( int tcoNum );
-	int getTCONum(const TrackContentObject* tco );
+	int numOfTCOs() const;
+	TrackContentObject * getTCO( int tcoNum ) const;
+	int getTCONum(const TrackContentObject* tco ) const;
 
 	const tcoVector & getTCOs() const
 	{
 		return m_trackContentObjects;
 	}
 	void getTCOsInRange( tcoVector & tcoV, const MidiTime & start,
-							const MidiTime & end );
+                             const MidiTime & end ) const;
 	void swapPositionOfTCOs( int tcoNum1, int tcoNum2 );
 
 	void createTCOsForBB( int bb );

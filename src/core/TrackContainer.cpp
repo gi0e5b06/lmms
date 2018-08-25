@@ -315,7 +315,8 @@ AutomatedValueMap TrackContainer::automatedValuesFromTracks(const TrackList &tra
 
 			for (AutomatableModel* model : p->objects())
 			{
-				valueMap[model] = value;
+				//valueMap[model] = value;
+                                valueMap.insert(model,value);
 			}
 		}
 		else if (auto* bb = dynamic_cast<BBTCO *>(tco))
@@ -331,7 +332,8 @@ AutomatedValueMap TrackContainer::automatedValuesFromTracks(const TrackList &tra
 			for (auto it=bbValues.begin(); it != bbValues.end(); it++)
 			{
 				// override old values, bb track with the highest index takes precedence
-				valueMap[it.key()] = it.value();
+				//valueMap[it.key()] = it.value();
+                                valueMap.insert(it.key(),it.value());
 			}
 		}
 		else
@@ -341,7 +343,95 @@ AutomatedValueMap TrackContainer::automatedValuesFromTracks(const TrackList &tra
 	}
 
 	return valueMap;
-};
+}
+
+
+
+void TrackContainer::automatedValuesFromTrack(const Track* _track, MidiTime time, int tcoNum,
+                                               AutomatedValueMap& _map)
+{
+        if(_track->isMuted()) return;
+
+	Track::tcoVector tcos;
+
+        switch(_track->type())
+	{
+        case Track::AutomationTrack:
+        case Track::HiddenAutomationTrack:
+        case Track::BBTrack:
+                if (tcoNum < 0) {
+                        _track->getTCOsInRange(tcos, 0, time);
+                } else {
+                        Q_ASSERT(_track->numOfTCOs() > tcoNum);
+                        tcos << _track->getTCO(tcoNum);
+                }
+        default:
+                break;
+        }
+
+	//AutomatedValueMap valueMap;
+
+	//Q_ASSERT(std::is_sorted(tcos.begin(), tcos.end(), TrackContentObject::comparePosition));
+
+	if(!std::is_sorted(tcos.begin(), tcos.end(), TrackContentObject::comparePosition))
+	{
+		qCritical("Error: fail assert: is_sorted(tcos.begin(), tcos.end()) %s#%d",__FILE__,__LINE__);
+		return;
+	}
+
+	for(TrackContentObject* tco : tcos)
+	{
+		if (tco->isMuted() || tco->startPosition() > time) {
+			continue;
+		}
+
+                if (auto* p = dynamic_cast<AutomationPattern *>(tco))
+		{
+			if (! p->hasAutomation()) {
+				continue;
+			}
+			MidiTime relTime = time - p->startPosition();
+                        /*
+                        if (! p->getAutoResize()) {
+				relTime = qMin(relTime, p->length());
+			}
+                        */
+                        if(p->isFixed())
+                        {
+                                relTime = relTime % p->length();
+                        }
+
+                        float value = p->valueAt(relTime);
+
+			for (AutomatableModel* model : p->objects())
+			{
+				//valueMap[model] = value;
+                                _map.insert(model,value);
+			}
+		}
+		else if (auto* bb = dynamic_cast<BBTCO *>(tco))
+		{
+			auto bbIndex = dynamic_cast<class BBTrack*>(bb->getTrack())->index();
+			auto bbContainer = Engine::getBBTrackContainer();
+			MidiTime bbTime = time - tco->startPosition();
+			//bbTime = std::min(bbTime, tco->length());
+                        bbTime = bbTime % tco->length();
+			bbTime = bbTime % (bbContainer->lengthOfBB(bbIndex) * MidiTime::ticksPerTact());
+
+			auto bbValues = bbContainer->automatedValuesAt(bbTime, bbIndex);
+			for (auto it=bbValues.begin(); it != bbValues.end(); it++)
+			{
+				// override old values, bb track with the highest index takes precedence
+				//valueMap[it.key()] = it.value();
+                                _map.insert(it.key(),it.value());
+			}
+		}
+		else
+		{
+			continue;
+		}
+	}
+}
 
 
 

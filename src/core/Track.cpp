@@ -1013,7 +1013,8 @@ DataFile TrackContentObjectView::createTCODataFiles(
 	int initialTrackIndex = tc->tracks().indexOf( t );
 	if( initialTrackIndex < 0 )
 	{
-		printf("Failed to find selected track in the TrackContainer.\n");
+		qCritical("TrackContentObjectView::createTCODataFiles: "
+                          "Fail to find selected track in the TrackContainer");
 		return dataFile;
 	}
 	QDomElement metadata = dataFile.createElement( "copyMetadata" );
@@ -3361,7 +3362,7 @@ void Track::deleteTCOs()
  *
  *  \return the number of trackContentObjects we currently contain.
  */
-int Track::numOfTCOs()
+int Track::numOfTCOs() const
 {
 	return m_trackContentObjects.size();
 }
@@ -3381,15 +3382,15 @@ int Track::numOfTCOs()
  *  \todo if we create a TCO here, should we somehow attach it to the
  *     track?
  */
-TrackContentObject * Track::getTCO( int tcoNum )
+TrackContentObject * Track::getTCO( int tcoNum ) const
 {
 	if( tcoNum < m_trackContentObjects.size() )
 	{
 		return m_trackContentObjects[tcoNum];
 	}
-	printf( "called Track::getTCO( %d ), "
-			"but TCO %d doesn't exist\n", tcoNum, tcoNum );
-	return createTCO( tcoNum * MidiTime::ticksPerTact() );
+	qCritical( "Track::getTCO( %d ): "
+                   "TCO %d doesn't exist\n", tcoNum, tcoNum );
+	return NULL;//createTCO( tcoNum * MidiTime::ticksPerTact() );
 
 }
 
@@ -3401,12 +3402,14 @@ TrackContentObject * Track::getTCO( int tcoNum )
  *  \param tco The TrackContentObject to search for.
  *  \return its number in our array.
  */
-int Track::getTCONum( const TrackContentObject * tco )
+int Track::getTCONum( const TrackContentObject * tco ) const
 {
 //	for( int i = 0; i < getTrackContentWidget()->numOfTCOs(); ++i )
-	tcoVector::iterator it = qFind( m_trackContentObjects.begin(),
-					m_trackContentObjects.end(),
-					tco );
+	tcoVector::iterator it =
+                const_cast<tcoVector::iterator>
+                (qFind( m_trackContentObjects.begin(),
+                        m_trackContentObjects.end(),
+                        tco ));
 	if( it != m_trackContentObjects.end() )
 	{
                 /*
@@ -3417,7 +3420,7 @@ int Track::getTCONum( const TrackContentObject * tco )
                 */
 		return it - m_trackContentObjects.begin();
 	}
-	qWarning( "Track::getTCONum(...) -> _tco not found!\n" );
+	qCritical( "Track::getTCONum(...): TCO not found!\n" );
 	return 0;
 }
 
@@ -3436,7 +3439,7 @@ int Track::getTCONum( const TrackContentObject * tco )
  *  \param end   The MIDI endi time of the range.
  */
 void Track::getTCOsInRange( tcoVector & tcoV, const MidiTime & start,
-							const MidiTime & end )
+                            const MidiTime & end ) const
 {
 	for( TrackContentObject* tco : m_trackContentObjects )
 	{

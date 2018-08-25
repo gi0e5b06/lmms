@@ -1879,7 +1879,7 @@ void InstrumentTrackWindow::modelChanged()
 
 	m_midiView->setModel( &m_track->m_midiPort );
 	m_effectView->setModel( m_track->m_audioPort.effects() );
-	m_miscView->pitchGroupBox()->setModel(&m_track->m_useMasterPitchModel);
+	m_miscView->pitchGroupBox()->ledButton()->setModel(&m_track->m_useMasterPitchModel);
 	updateName();
 }
 

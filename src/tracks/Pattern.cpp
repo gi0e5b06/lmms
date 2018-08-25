@@ -61,11 +61,8 @@ Pattern::Pattern( InstrumentTrack * _instrument_track ) :
 	m_patternType( MelodyPattern )
 {
 	setName( _instrument_track->name() );
-	if(isFixed())
-	{
-                m_patternType = BeatPattern;
-		//resizeToFirstTrack();
-	}
+	//if(isFixed())
+        //  m_patternType = BeatPattern;
 	init();
 
         changeLength(MidiTime(1, 0));
@@ -85,6 +82,8 @@ Pattern::Pattern( const Pattern& other ) :
 		m_notes.push_back( new Note( **it ) );
 	}
 
+	//if(isFixed())
+        //        m_patternType = BeatPattern;
 	init();
         setAutoResize( other.getAutoResize() && !isFixed() );
 }
@@ -136,6 +135,7 @@ void Pattern::init()
 	connect( Engine::getSong(), SIGNAL( timeSignatureChanged( int, int ) ),
 				this, SLOT( changeTimeSignature() ) );
 	saveJournallingState( false );
+        checkType();
 	updateLength();
 	restoreJournallingState();
 }
@@ -328,7 +328,7 @@ void Pattern::checkType()
 		}
 		++it;
 	}
-	setType( BeatPattern );
+	setType( isFixed() ? BeatPattern : MelodyPattern );
 }
 
 

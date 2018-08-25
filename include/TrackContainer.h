@@ -103,6 +103,7 @@ signals:
 
 protected:
 	static AutomatedValueMap automatedValuesFromTracks(const TrackList &tracks, MidiTime timeStart, int tcoNum = -1);
+	static void automatedValuesFromTrack(const Track* _track, MidiTime timeStart, int tcoNum, AutomatedValueMap& _map);
 
 	mutable QReadWriteLock m_tracksMutex;
 

@@ -28,16 +28,15 @@
 
 #include "AutomationPattern.h"
 
+#include "AutomationEditor.h"
 #include "AutomationPatternView.h"
 #include "AutomationTrack.h"
 #include "BBTrackContainer.h"
+#include "GuiApplication.h"
 #include "Note.h"
 #include "ProjectJournal.h"
 #include "Song.h"
 #include "WaveForm.h"
-
-#include "GuiApplication.h"
-#include "AutomationEditor.h"
 
 #include <cmath>
 
@@ -54,7 +53,7 @@ AutomationPattern::AutomationPattern(AutomationTrack* _auto_track) :
       m_isRecording(false), m_lastRecordedValue(0)
 {
     changeLength(MidiTime(1, 0));
-    setAutoResize( false );
+    setAutoResize(false);
 }
 
 AutomationPattern::AutomationPattern(const AutomationPattern& _pat_to_copy) :
@@ -235,29 +234,29 @@ MidiTime AutomationPattern::beatLength() const
 
 void AutomationPattern::updateLength()
 {
-        tick_t len;
-        if(getAutoResize())
-                len=timeMapLength();
-        else
-                len=length();
+    tick_t len;
+    if(getAutoResize())
+        len = timeMapLength();
+    else
+        len = length();
 
-        TrackContentObject::updateLength(len);
+    TrackContentObject::updateLength(len);
 }
 
 /*
 void AutomationPattern::updateBBTrack()
 {
-	if( getTrack()->trackContainer() == Engine::getBBTrackContainer() )
-	{
-		Engine::getBBTrackContainer()->updateBBTrack( this );
-	}
+        if( getTrack()->trackContainer() == Engine::getBBTrackContainer() )
+        {
+                Engine::getBBTrackContainer()->updateBBTrack( this );
+        }
 
-	if( gui &&
+        if( gui &&
             gui->automationEditor() &&
             gui->automationEditor()->currentPattern() == this )
-	{
-		gui->automationEditor()->update();
-	}
+        {
+                gui->automationEditor()->update();
+        }
 }
 */
 
@@ -413,7 +412,7 @@ float AutomationPattern::valueAt(timeMap::const_iterator v,
                                  int                     offset,
                                  bool                    xruns) const
 {
-    float r;
+    float r = 0.f;
 
     ProgressionTypes pt = m_progressionType;
     if(xruns && pt != DiscreteProgression)

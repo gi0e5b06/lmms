@@ -38,6 +38,7 @@ AutomationTrack::AutomationTrack( TrackContainer* tc, bool _hidden ) :
 	Track( _hidden ? HiddenAutomationTrack : Track::AutomationTrack, tc )
 {
 	setName( tr( "Automation track" ) );
+        setColor(QColor("#5F30A4"));
 }
 
 

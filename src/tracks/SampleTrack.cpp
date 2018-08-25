@@ -673,7 +673,9 @@ SampleTrack::SampleTrack( TrackContainer* tc ) :
 	m_audioPort( tr( "Sample track" ), true, &m_volumeModel, &m_panningModel, &m_mutedModel ),
 	m_effectChannelModel( 0, 0, 0, this, tr( "FX channel" ) )
 {
-	m_panningModel.setCenterValue( DefaultPanning );
+        setColor(QColor("#D98F26"));
+
+        m_panningModel.setCenterValue( DefaultPanning );
 
 	m_effectChannelModel.setRange( 0, Engine::fxMixer()->numChannels()-1, 1);
 

@@ -449,6 +449,8 @@ void BBTCOView::update()
 BBTrack::BBTrack( TrackContainer* tc ) :
 	Track( Track::BBTrack, tc )
 {
+        setColor(QColor("#22BBBB"));
+
 	int bbNum = s_infoMap.size();
 	s_infoMap[this] = bbNum;
 
