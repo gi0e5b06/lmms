@@ -46,6 +46,12 @@ enum WINDOWS
  */
 float EXPORT maximum( float * _abs_spectrum, unsigned int _spec_size );
 
+/* returns index of the biggest value from abs_spectrum[spec_size] array
+ *
+ *    returns -1 on error or silence
+ */
+int EXPORT topband( float * _abs_spectrum, unsigned int _spec_size );
+
 /* apply hanning or hamming window to channel
  *
  *    returns -1 on error

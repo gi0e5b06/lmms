@@ -53,6 +53,27 @@ float maximum(float *abs_spectrum, unsigned int spec_size)
 }
 
 
+int topband(float *abs_spectrum, unsigned int spec_size)
+{
+	if(abs_spectrum==NULL || spec_size<=0)
+		return -1;
+
+	float vmax=0.f;
+        int   imax=-1;
+
+	for(int i=spec_size-1; i>=0; --i)
+	{
+		if(abs_spectrum[i]>=vmax)
+                {
+			vmax=abs_spectrum[i];
+                        imax=i;
+                }
+	}
+
+	return imax;
+}
+
+
 /* apply hanning or hamming window to channel
 
 	returns -1 on error */

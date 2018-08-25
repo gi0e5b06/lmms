@@ -72,6 +72,7 @@ IF("${PLUGIN_LIST}" STREQUAL "")
 		dynamics_processor
 		Eq
 		Flanger
+                FrequencyGDX
 		GigPlayer
 		HydrogenImport
 		# ladspa_browser - not needed

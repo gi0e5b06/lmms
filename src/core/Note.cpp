@@ -247,7 +247,7 @@ void Note::buildKeyTables()
                 {
                         int i=o*12+n;
                         if(i>127) continue;
-                        QString k=QString("%1%2").arg(NOK[n]).arg(o);
+                        QString k=QString("%1%2").arg(NOK[n]).arg(o-1);
                         MIDI_KEYS_N2I.insert(k,i);
                         MIDI_KEYS_I2N.insert(i,k);
                 }
