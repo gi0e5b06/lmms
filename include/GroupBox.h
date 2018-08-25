@@ -22,56 +22,76 @@
  *
  */
 
-
 #ifndef GROUP_BOX_H
 #define GROUP_BOX_H
-
-#include <QWidget>
 
 #include "AutomatableModelView.h"
 #include "PixmapButton.h"
 
+#include <QWidget>
 
+class QLabel;
 class QPixmap;
 
-
-class GroupBox : public QWidget, public BoolModelView
+class GroupBox : public QWidget
+//, public BoolModelView
 {
-	Q_OBJECT
-public:
-	GroupBox( const QString & _caption, QWidget * _parent = NULL );
-	virtual ~GroupBox();
+    class Top : public QWidget
+    {
+      public:
+        Top(const QString& _caption,
+            GroupBox*      _parent = NULL,
+            bool           _led    = true,
+            bool           _arrow  = true);
 
-	virtual void modelChanged();
+        QLabel*       m_title;
+        PixmapButton* m_led;
+        PixmapButton* m_arrow;
+    };
 
-	PixmapButton * ledButton()
-	{
-		return m_led;
-	}
+    Q_OBJECT
 
-	int titleBarHeight() const
-	{
-		return m_titleBarHeight;
-	}
+  public:
+    GroupBox(const QString& _caption,
+             QWidget*       _parent = NULL,
+             bool           _led    = true,
+             bool           _arrow  = true,
+             bool           _panel  = true);
+    virtual ~GroupBox();
 
-        virtual void enterValue();
+    virtual void addTopWidget(QWidget* _w, int _col);
+    // virtual BoolModel* model();
+    // virtual void setModel(BoolModel* _model);
 
-protected:
-	virtual void mousePressEvent( QMouseEvent * _me );
-	virtual void paintEvent( QPaintEvent * _pe );
+    virtual bool isEnabled();
+    virtual void setEnabled(bool _b);
 
+    QWidget*      contentWidget();
+    PixmapButton* ledButton();
+    int           titleBarHeight() const;
 
-private:
-	void updatePixmap();
+    virtual void enterValue();
 
-	PixmapButton * m_led;
-	QString m_caption;
-	const int m_titleBarHeight;
+  signals:
+    void enabledChanged();
 
-} ;
+  public slots:
+    void togglePanel();
 
+  protected:
+    // virtual void mousePressEvent(QMouseEvent* _me);
+    virtual void paintEvent(QPaintEvent* _pe);
+    virtual void resizeEvent(QResizeEvent* _re);
+
+    QWidget* m_panel;
+
+  private:
+    void updatePixmap();
+
+    Top*    m_top;
+    QString m_caption;
+};
 
 typedef BoolModel groupBoxModel;
-
 
 #endif

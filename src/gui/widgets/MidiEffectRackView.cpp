@@ -258,7 +258,7 @@ void MidiEffectRackView::addEffect()
 void MidiEffectRackView::modelChanged()
 {
 	//clearViews();
-	m_effectsGroupBox->setModel( &fxChain()->m_enabledModel );
+	m_effectsGroupBox->ledButton()->setModel( &fxChain()->m_enabledModel );
 	connect( fxChain(), SIGNAL( aboutToClear() ), this, SLOT( clearViews() ) );
 	update();
 }

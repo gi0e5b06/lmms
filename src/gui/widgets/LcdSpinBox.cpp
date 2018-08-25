@@ -41,15 +41,9 @@
 
 
 LcdSpinBox::LcdSpinBox( int numDigits, QWidget* parent, const QString& name ) :
-	LcdWidget( numDigits, parent, name ),
-	IntModelView( new IntModel( 0, 0, 0, NULL, name, true ), this ),
-	m_pressLeft( false )//,
-	//m_displayOffset( 0 )
+	LcdSpinBox( numDigits, "19green", parent, name )
 {
-        setCursor(Qt::PointingHandCursor);
 }
-
-
 
 
 LcdSpinBox::LcdSpinBox( int numDigits, const QString& style, QWidget* parent, const QString& name ) :
@@ -60,7 +54,6 @@ LcdSpinBox::LcdSpinBox( int numDigits, const QString& style, QWidget* parent, co
 {
         setCursor(Qt::PointingHandCursor);
 }
-
 
 
 LcdSpinBox::~LcdSpinBox()

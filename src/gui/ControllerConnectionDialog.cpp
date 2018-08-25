@@ -175,7 +175,7 @@ ControllerConnectionDialog::ControllerConnectionDialog( QWidget * _parent,
         int xg=8,yg=8;
 	m_midiGroupBox = new GroupBox( tr( "MIDI CONTROLLER" ), this );
 	m_midiGroupBox->setGeometry( xg, yg, 240, 108 );
-	connect( m_midiGroupBox->model(), SIGNAL( dataChanged() ),
+	connect( m_midiGroupBox, SIGNAL( enabledChanged() ),
 			this, SLOT( midiToggled() ) );
 
         int xw=8,yw=24;
@@ -284,7 +284,7 @@ ControllerConnectionDialog::ControllerConnectionDialog( QWidget * _parent,
 	m_userGroupBox = new GroupBox( tr( "USER CONTROLLER" ), this );
 	m_userGroupBox->setGeometry( xg, yg, 240, 60 );
         xg+=248;
-	connect( m_userGroupBox->model(), SIGNAL( dataChanged() ),
+	connect( m_userGroupBox, SIGNAL( enabledChanged() ),
 			this, SLOT( userToggled() ) );
 
 	m_userController = new ComboBox( m_userGroupBox, "Controller" );
@@ -346,7 +346,7 @@ ControllerConnectionDialog::ControllerConnectionDialog( QWidget * _parent,
 		{
 			if ( cc->getController()->type() == Controller::MidiController )
 			{
-				m_midiGroupBox->model()->setValue( true );
+				m_midiGroupBox->setEnabled(true);
 				// ensure controller is created
 				midiToggled();
 
@@ -370,7 +370,7 @@ ControllerConnectionDialog::ControllerConnectionDialog( QWidget * _parent,
 
 				if( idx >= 0 )
 				{
-					m_userGroupBox->model()->setValue( true );
+					m_userGroupBox->setEnabled(true);
 					m_userController->model()->setValue( idx );
 				}
 			}
@@ -379,7 +379,7 @@ ControllerConnectionDialog::ControllerConnectionDialog( QWidget * _parent,
 
 	if( !cc )
 	{
-		m_midiGroupBox->model()->setValue( true );
+		m_midiGroupBox->setEnabled(true);
 	}
 
 	show();
@@ -401,7 +401,7 @@ ControllerConnectionDialog::~ControllerConnectionDialog()
 void ControllerConnectionDialog::selectController()
 {
 	// Midi
-	if( m_midiGroupBox->model()->value() > 0 )
+	if( m_midiGroupBox->isEnabled() )
 	{
 		if( (m_midiControllerSpinBox->model()->value() >  0) ||
                     (m_midiController->m_midiPort.widgetType() == 6) )
@@ -431,7 +431,7 @@ void ControllerConnectionDialog::selectController()
 	// User
 	else
 	{
-		if( m_userGroupBox->model()->value() > 0 &&
+		if( m_userGroupBox->isEnabled() > 0 &&
 				Engine::getSong()->controllers().size() )
 		{
 			m_controller = Engine::getSong()->controllers().at(
@@ -454,12 +454,12 @@ void ControllerConnectionDialog::selectController()
 
 void ControllerConnectionDialog::midiToggled()
 {
-	int enabled = m_midiGroupBox->model()->value();
+	int enabled = m_midiGroupBox->isEnabled();
 	if( enabled != 0 )
 	{
-		if( m_userGroupBox->model()->value() != 0 )
+		if( m_userGroupBox->isEnabled() )
 		{
-			m_userGroupBox->model()->setValue( 0 );
+			m_userGroupBox->setEnabled(false);
 		}
 
 		if( !m_midiController )
@@ -512,10 +512,10 @@ void ControllerConnectionDialog::midiToggled()
 
 void ControllerConnectionDialog::userToggled()
 {
-	int enabled = m_userGroupBox->model()->value();
-	if( enabled != 0 && m_midiGroupBox->model()->value() != 0 )
+	int enabled = m_userGroupBox->isEnabled();
+	if( enabled != 0 && m_midiGroupBox->isEnabled() )
 	{
-		m_midiGroupBox->model()->setValue( 0 );
+		m_midiGroupBox->setEnabled(false);
 	}
 
 	m_userController->setEnabled( enabled );

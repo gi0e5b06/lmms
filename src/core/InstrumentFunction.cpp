@@ -1179,9 +1179,10 @@ InstrumentFunctionView* InstrumentFunctionNoteKeying::createView()
 InstrumentFunctionNoteOutting::InstrumentFunctionNoteOutting(Model* _parent) :
       InstrumentFunction(_parent, tr("NoteOutting")),
       // m_enabledModel( false, this ),
-      m_keyModel(DefaultKey, 0.0f, 127.0f, 1.0f, this, tr("Key")),
-      m_volumeModel(0.0f, 0.0f, 200.0f, 0.1f, this, tr("Volume")),
-      m_panModel(0.0f, -100.0f, 100.0f, 0.1f, this, tr("Pan"))
+      m_volumeModel(0.f, 0.f, 200.f, 0.1f, this, tr("Volume")),
+      m_panModel(0.f, -100.f, 100.f, 0.1f, this, tr("Pan")),
+      m_keyModel(DefaultKey, 0.f, 127.f, 1.0f, this, tr("Key")),
+      m_noteModel(DefaultKey % 12, 0.f, 11.f, 1.0f, this, tr("Note"))
 {
 }
 
@@ -1196,9 +1197,10 @@ bool InstrumentFunctionNoteOutting::processNote(NotePlayHandle* _n)
     if(_n->totalFramesPlayed() != 0 || _n->isReleased())
         return true;
 
-    m_keyModel.setValue(_n->key());
     m_volumeModel.setValue(_n->getVolume());
     m_panModel.setValue(_n->getPanning());
+    m_keyModel.setValue(_n->key());
+    m_noteModel.setValue(_n->key() % 12);
 
     // qInfo("InstrumentFunctionNoteOutting::process Note");
     return true;

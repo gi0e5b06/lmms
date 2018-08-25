@@ -180,11 +180,11 @@ void InstrumentMidiIOView::modelChanged()
 {
 	MidiPort * mp = castModel<MidiPort>();
 
-	m_midiInputGroupBox->setModel( &mp->m_readableModel );
+	m_midiInputGroupBox->ledButton()->setModel( &mp->m_readableModel );
 	m_inputChannelSpinBox->setModel( &mp->m_inputChannelModel );
 	m_fixedInputVelocitySpinBox->setModel( &mp->m_fixedInputVelocityModel );
 
-	m_midiOutputGroupBox->setModel( &mp->m_writableModel );
+	m_midiOutputGroupBox->ledButton()->setModel( &mp->m_writableModel );
 	m_outputChannelSpinBox->setModel( &mp->m_outputChannelModel );
 	m_fixedOutputVelocitySpinBox->setModel( &mp->m_fixedOutputVelocityModel );
 	m_fixedOutputNoteSpinBox->setModel( &mp->m_fixedOutputNoteModel );
@@ -216,7 +216,7 @@ InstrumentMiscView::InstrumentMiscView(InstrumentTrack *it, QWidget *parent) :
 	QHBoxLayout* masterPitchLayout = new QHBoxLayout( m_pitchGroupBox );
 	masterPitchLayout->setContentsMargins( 8, 18, 8, 8 );
 	QLabel *tlabel = new QLabel(tr( "Enables the use of Master Pitch" ) );
-	m_pitchGroupBox->setModel( &it->m_useMasterPitchModel );
+	m_pitchGroupBox->ledButton()->setModel( &it->m_useMasterPitchModel );
 	masterPitchLayout->addWidget( tlabel );
 	layout->addStretch();
 }

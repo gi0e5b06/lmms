@@ -381,14 +381,10 @@ class InstrumentFunctionNoteOutting : public InstrumentFunction
     virtual InstrumentFunctionView* createView();
 
   private:
-    FloatModel m_keyModel;
     FloatModel m_volumeModel;
     FloatModel m_panModel;
-    // FloatModel m_offsetModel;
-    // FloatModel m_frequencyModel;
-    // FloatModel m_framesLeftModel;
-    // FloatModel m_releaseModel;
-    // FloatModel m_detuneModel;
+    FloatModel m_keyModel;
+    FloatModel m_noteModel;
 
     friend class InstrumentFunctionNoteOuttingView;
 };

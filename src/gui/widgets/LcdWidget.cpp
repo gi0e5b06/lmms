@@ -41,43 +41,27 @@
 
 
 
-//! @todo: in C++11, we can use delegating ctors
-#define DEFAULT_LCDWIDGET_INITIALIZER_LIST \
-	QWidget( parent ), \
-	m_label(), \
-	m_textColor( 255, 255, 255 ), \
-	m_textShadowColor( 64, 64, 64 )
-
 LcdWidget::LcdWidget( QWidget* parent, const QString& name ) :
-	DEFAULT_LCDWIDGET_INITIALIZER_LIST,
-	m_numDigits( 1 )
+	LcdWidget(1,"19green",parent,name)
 {
-	initUi( name );
 }
-
-
 
 
 LcdWidget::LcdWidget( int numDigits, QWidget* parent, const QString& name ) :
-	DEFAULT_LCDWIDGET_INITIALIZER_LIST,
-	m_numDigits( numDigits )
+	LcdWidget(numDigits,"19green",parent,name)
 {
-	initUi( name );
 }
 
 
-
-
 LcdWidget::LcdWidget( int numDigits, const QString& style, QWidget* parent, const QString& name ) :
-	DEFAULT_LCDWIDGET_INITIALIZER_LIST,
+	QWidget( parent ),
+	m_label(),
+	m_textColor( 255, 255, 255 ),
+	m_textShadowColor( 64, 64, 64 ),
 	m_numDigits( numDigits )
 {
 	initUi( name, style );
 }
-
-#undef DEFAULT_LCDWIDGET_INITIALIZER_LIST
-
-
 
 
 LcdWidget::~LcdWidget()
@@ -300,8 +284,3 @@ void LcdWidget::initUi(const QString& name , const QString& style)
 
 	updateSize();
 }
-
-
-
-
-

@@ -150,11 +150,12 @@ void AutomatableModelView::addDefaultActions( QMenu* menu )
 
 
 
+/*
 void AutomatableModelView::setModel( Model* model, bool isOldModelValid )
 {
 	ModelView::setModel( model, isOldModelValid );
 }
-
+*/
 
 
 

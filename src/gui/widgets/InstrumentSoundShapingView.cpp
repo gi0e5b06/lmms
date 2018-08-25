@@ -153,7 +153,7 @@ void InstrumentSoundShapingView::setFunctionsHidden( bool hidden )
 void InstrumentSoundShapingView::modelChanged()
 {
 	m_ss = castModel<InstrumentSoundShaping>();
-	m_filterGroupBox->setModel( &m_ss->m_filterEnabledModel );
+	m_filterGroupBox->ledButton()->setModel( &m_ss->m_filterEnabledModel );
 	m_filterComboBox->setModel( &m_ss->m_filterModel );
 	m_filterCutKnob->setModel( &m_ss->m_filterCutModel );
 	m_filterResKnob->setModel( &m_ss->m_filterResModel );

@@ -25,9 +25,6 @@
 
 #include "InstrumentFunctionView.h"
 
-#include <QLabel>
-#include <QHBoxLayout>
-
 #include "ComboBox.h"
 #include "GroupBox.h"
 #include "InstrumentFunction.h"
@@ -36,34 +33,44 @@
 #include "LedCheckBox.h"
 #include "Note.h"
 #include "TempoSyncKnob.h"
+
+#include <QHBoxLayout>
+#include <QLabel>
 //#include "ToolTip.h"
 #include "gui_templates.h"
 
 InstrumentFunctionView::InstrumentFunctionView(InstrumentFunction* cc,
                                                const QString&      _caption,
-                                               QWidget*            _parent) :
-      QWidget(_parent),
-      ModelView(NULL, this), m_groupBox(new GroupBox(_caption))
+                                               QWidget*            _parent,
+                                               bool                _arrow,
+                                               bool                _panel) :
+      GroupBox(_caption, _parent, true, _arrow, _panel),
+      //      QWidget(_parent),
+      ModelView(NULL, this)
+//, m_groupBox(new GroupBox(_caption))
 {
-    m_groupBox->setContentsMargins(0, 6, 0, 0);
+    // m_groupBox->setContentsMargins(0, 6, 0, 0);
+    // m_panel = contentWidget();
 
-    QHBoxLayout* topLayout = new QHBoxLayout(this);
-    topLayout->setContentsMargins(0, 0, 0, 0);
-    topLayout->setSpacing(0);
-    topLayout->addWidget(m_groupBox);
+    // QHBoxLayout* topLayout = new QHBoxLayout(this);
+    // topLayout->setContentsMargins(0, 0, 0, 0);
+    // topLayout->setSpacing(0);
+    // topLayout->addWidget(m_groupBox);
 
-    LcdSpinBox* minLcd = new LcdSpinBox(1, m_groupBox, "19red");
-    LcdSpinBox* maxLcd = new LcdSpinBox(1, m_groupBox, "19red");
-    minLcd->move(186, 0);
-    maxLcd->move(210, 0);
+    LcdSpinBox* minLcd = new LcdSpinBox(1, "11blue", this, "min_gen");
+    LcdSpinBox* maxLcd = new LcdSpinBox(1, "11blue", this, "max_gen");
+    // minLcd->move(186, 0);
+    // maxLcd->move(210, 0);
+    addTopWidget(minLcd, 3);
+    addTopWidget(maxLcd, 4);
     minLcd->setModel(cc->minNoteGenerationModel());
     maxLcd->setModel(cc->maxNoteGenerationModel());
 }
 
 InstrumentFunctionView::~InstrumentFunctionView()
 {
-    delete m_groupBox;
-    m_groupBox = NULL;
+    // delete m_groupBox;
+    // m_groupBox = NULL;
 }
 
 InstrumentFunctionNoteStackingView::InstrumentFunctionNoteStackingView(
@@ -72,8 +79,8 @@ InstrumentFunctionNoteStackingView::InstrumentFunctionNoteStackingView(
       m_cc(cc), m_chordsComboBox(new ComboBox()),
       m_chordRangeKnob(new Knob(knobBright_26))
 {
-    QGridLayout* mainLayout = new QGridLayout(m_groupBox);
-    mainLayout->setContentsMargins(6, 16, 6, 6);
+    QGridLayout* mainLayout = new QGridLayout(m_panel);
+    mainLayout->setContentsMargins(6, 2, 2, 2);
     mainLayout->setColumnStretch(0, 1);
     mainLayout->setHorizontalSpacing(6);
     mainLayout->setVerticalSpacing(1);
@@ -100,7 +107,7 @@ InstrumentFunctionNoteStackingView::~InstrumentFunctionNoteStackingView()
 void InstrumentFunctionNoteStackingView::modelChanged()
 {
     m_cc = castModel<InstrumentFunctionNoteStacking>();
-    m_groupBox->setModel(&m_cc->m_enabledModel);
+    ledButton()->setModel(&m_cc->m_enabledModel);
     m_chordsComboBox->setModel(&m_cc->m_chordsModel);
     m_chordRangeKnob->setModel(&m_cc->m_chordRangeModel);
 }
@@ -118,13 +125,13 @@ InstrumentFunctionArpeggioView::InstrumentFunctionArpeggioView(
       m_arpDirectionComboBox(new ComboBox()),
       m_arpModeComboBox(new ComboBox())
 {
-    QGridLayout* mainLayout = new QGridLayout(m_groupBox);
-    mainLayout->setContentsMargins(6, 16, 6, 6);
+    QGridLayout* mainLayout = new QGridLayout(m_panel);
+    mainLayout->setContentsMargins(6, 2, 2, 2);
     mainLayout->setColumnStretch(0, 1);
     mainLayout->setHorizontalSpacing(6);
     mainLayout->setVerticalSpacing(1);
 
-    m_groupBox->setWhatsThis(
+    /*m_groupBox->*/ setWhatsThis(
             tr("An arpeggio is a method playing (especially plucked) "
                "instruments, which makes the music much livelier. "
                "The strings of such instruments (e.g. harps) are "
@@ -213,7 +220,7 @@ InstrumentFunctionArpeggioView::~InstrumentFunctionArpeggioView()
 void InstrumentFunctionArpeggioView::modelChanged()
 {
     m_cc = castModel<InstrumentFunctionArpeggio>();
-    m_groupBox->setModel(&m_cc->m_enabledModel);
+    ledButton()->setModel(&m_cc->m_enabledModel);
     m_arpComboBox->setModel(&m_cc->m_arpModel);
     m_arpRangeKnob->setModel(&m_cc->m_arpRangeModel);
     m_arpCycleKnob->setModel(&m_cc->m_arpCycleModel);
@@ -234,8 +241,8 @@ InstrumentFunctionNoteHumanizingView::InstrumentFunctionNoteHumanizingView(
       m_offsetRangeKnob(new Knob(knobBright_26)),
       m_shortenRangeKnob(new Knob(knobBright_26))
 {
-    QGridLayout* mainLayout = new QGridLayout(m_groupBox);
-    mainLayout->setContentsMargins(6, 16, 6, 6);
+    QGridLayout* mainLayout = new QGridLayout(m_panel);
+    mainLayout->setContentsMargins(6, 2, 2, 2);
     mainLayout->setColumnStretch(5, 1);
     mainLayout->setHorizontalSpacing(6);
     mainLayout->setVerticalSpacing(1);
@@ -278,7 +285,7 @@ InstrumentFunctionNoteHumanizingView::~InstrumentFunctionNoteHumanizingView()
 void InstrumentFunctionNoteHumanizingView::modelChanged()
 {
     m_cc = castModel<InstrumentFunctionNoteHumanizing>();
-    m_groupBox->setModel(&m_cc->m_enabledModel);
+    ledButton()->setModel(&m_cc->m_enabledModel);
     m_volumeRangeKnob->setModel(&m_cc->m_volumeRangeModel);
     m_panRangeKnob->setModel(&m_cc->m_panRangeModel);
     m_tuneRangeKnob->setModel(&m_cc->m_tuneRangeModel);
@@ -290,11 +297,12 @@ InstrumentFunctionNoteDuplicatesRemovingView::
         InstrumentFunctionNoteDuplicatesRemovingView(
                 InstrumentFunctionNoteDuplicatesRemoving* cc,
                 QWidget*                                  parent) :
-      InstrumentFunctionView(cc, tr("DUPLICATES REMOVING"), parent),
+      InstrumentFunctionView(
+              cc, tr("DUPLICATES REMOVING"), parent, false, false),
       m_cc(cc)
 {
-    QGridLayout* mainLayout = new QGridLayout(m_groupBox);
-    mainLayout->setContentsMargins(6, 16, 6, 6);
+    QGridLayout* mainLayout = new QGridLayout(m_panel);
+    mainLayout->setContentsMargins(6, 2, 2, 2);
     mainLayout->setColumnStretch(0, 1);
     mainLayout->setHorizontalSpacing(6);
     mainLayout->setVerticalSpacing(1);
@@ -308,7 +316,7 @@ InstrumentFunctionNoteDuplicatesRemovingView::
 void InstrumentFunctionNoteDuplicatesRemovingView::modelChanged()
 {
     m_cc = castModel<InstrumentFunctionNoteDuplicatesRemoving>();
-    m_groupBox->setModel(&m_cc->m_enabledModel);
+    ledButton()->setModel(&m_cc->m_enabledModel);
 }
 
 InstrumentFunctionNoteFilteringView::InstrumentFunctionNoteFilteringView(
@@ -317,8 +325,8 @@ InstrumentFunctionNoteFilteringView::InstrumentFunctionNoteFilteringView(
       m_cc(cc), m_configComboBox(new ComboBox()),
       m_actionComboBox(new ComboBox())
 {
-    QGridLayout* mainLayout = new QGridLayout(m_groupBox);
-    mainLayout->setContentsMargins(6, 16, 6, 6);
+    QGridLayout* mainLayout = new QGridLayout(m_panel);
+    mainLayout->setContentsMargins(6, 2, 2, 2);
     mainLayout->setColumnStretch(5, 1);
     mainLayout->setHorizontalSpacing(6);
     mainLayout->setVerticalSpacing(1);
@@ -329,7 +337,7 @@ InstrumentFunctionNoteFilteringView::InstrumentFunctionNoteFilteringView(
     for(int i = 0; i < 12; ++i)
     {
         m_noteSelectionLed[i] = new LedCheckBox(
-                Note::findKeyName(i).replace("0", ""), NULL, "");
+                Note::findKeyName(i).replace("-1", ""), NULL, "");
         mainLayout->addWidget(m_noteSelectionLed[i], i / 4 + 1, i % 4, 1, 1);
     }
 }
@@ -343,7 +351,7 @@ InstrumentFunctionNoteFilteringView::~InstrumentFunctionNoteFilteringView()
 void InstrumentFunctionNoteFilteringView::modelChanged()
 {
     m_cc = castModel<InstrumentFunctionNoteFiltering>();
-    m_groupBox->setModel(&m_cc->m_enabledModel);
+    ledButton()->setModel(&m_cc->m_enabledModel);
 
     ComboBoxModel* old_m = m_configComboBox->model();
     if(old_m != &m_cc->m_configModel)
@@ -374,8 +382,8 @@ InstrumentFunctionNoteKeyingView::InstrumentFunctionNoteKeyingView(
       m_panMinKnob(new Knob(knobBright_26)),
       m_panMaxKnob(new Knob(knobBright_26))
 {
-    QGridLayout* mainLayout = new QGridLayout(m_groupBox);
-    mainLayout->setContentsMargins(6, 16, 6, 6);
+    QGridLayout* mainLayout = new QGridLayout(m_panel);
+    mainLayout->setContentsMargins(6, 2, 2, 2);
     mainLayout->setColumnStretch(5, 1);
     mainLayout->setHorizontalSpacing(6);
     mainLayout->setVerticalSpacing(1);
@@ -418,7 +426,7 @@ InstrumentFunctionNoteKeyingView::~InstrumentFunctionNoteKeyingView()
 void InstrumentFunctionNoteKeyingView::modelChanged()
 {
     m_cc = castModel<InstrumentFunctionNoteKeying>();
-    m_groupBox->setModel(&m_cc->m_enabledModel);
+    ledButton()->setModel(&m_cc->m_enabledModel);
 
     m_volumeRangeKnob->setModel(&m_cc->m_volumeRangeModel);
     m_volumeBaseKnob->setModel(&m_cc->m_volumeBaseModel);
@@ -434,27 +442,30 @@ void InstrumentFunctionNoteKeyingView::modelChanged()
 InstrumentFunctionNoteOuttingView::InstrumentFunctionNoteOuttingView(
         InstrumentFunctionNoteOutting* cc, QWidget* parent) :
       InstrumentFunctionView(cc, tr("OUTTING"), parent),
-      m_cc(cc), m_keyKnob(new Knob(knobBright_26)),
-      m_volumeKnob(new Knob(knobBright_26)),
-      m_panKnob(new Knob(knobBright_26))
+      m_cc(cc), m_volumeKnob(new Knob(knobBright_26)),
+      m_panKnob(new Knob(knobBright_26)), m_keyKnob(new Knob(knobBright_26)),
+      m_noteKnob(new Knob(knobBright_26))
 {
-    QGridLayout* mainLayout = new QGridLayout(m_groupBox);
-    mainLayout->setContentsMargins(6, 16, 6, 6);
+    QGridLayout* mainLayout = new QGridLayout(m_panel);
+    mainLayout->setContentsMargins(6, 2, 2, 2);
     mainLayout->setColumnStretch(5, 1);
     mainLayout->setHorizontalSpacing(6);
     mainLayout->setVerticalSpacing(1);
 
-    m_keyKnob->setLabel(tr("KEY"));
     m_volumeKnob->setLabel(tr("VOL"));
     m_panKnob->setLabel(tr("PAN"));
+    m_keyKnob->setLabel(tr("KEY"));
+    m_noteKnob->setLabel(tr("NOTE"));
 
-    m_keyKnob->setPointColor(Qt::cyan);
     m_volumeKnob->setPointColor(Qt::red);
     m_panKnob->setPointColor(Qt::magenta);
+    m_keyKnob->setPointColor(Qt::cyan);
+    m_noteKnob->setPointColor(Qt::darkCyan);
 
     mainLayout->addWidget(m_volumeKnob, 0, 0, 1, 1, Qt::AlignHCenter);
     mainLayout->addWidget(m_panKnob, 0, 1, 1, 1, Qt::AlignHCenter);
     mainLayout->addWidget(m_keyKnob, 0, 2, 1, 1, Qt::AlignHCenter);
+    mainLayout->addWidget(m_noteKnob, 0, 3, 1, 1, Qt::AlignHCenter);
 }
 
 InstrumentFunctionNoteOuttingView::~InstrumentFunctionNoteOuttingView()
@@ -464,11 +475,12 @@ InstrumentFunctionNoteOuttingView::~InstrumentFunctionNoteOuttingView()
 void InstrumentFunctionNoteOuttingView::modelChanged()
 {
     m_cc = castModel<InstrumentFunctionNoteOutting>();
-    m_groupBox->setModel(&m_cc->m_enabledModel);
+    ledButton()->setModel(&m_cc->m_enabledModel);
 
-    m_keyKnob->setModel(&m_cc->m_keyModel);
     m_volumeKnob->setModel(&m_cc->m_volumeModel);
     m_panKnob->setModel(&m_cc->m_panModel);
+    m_keyKnob->setModel(&m_cc->m_keyModel);
+    m_noteKnob->setModel(&m_cc->m_noteModel);
 }
 
 InstrumentFunctionGlissandoView::InstrumentFunctionGlissandoView(
@@ -480,13 +492,13 @@ InstrumentFunctionGlissandoView::InstrumentFunctionGlissandoView(
       m_gliUpModeComboBox(new ComboBox()),
       m_gliDownModeComboBox(new ComboBox())
 {
-    QGridLayout* mainLayout = new QGridLayout(m_groupBox);
-    mainLayout->setContentsMargins(6, 16, 6, 6);
+    QGridLayout* mainLayout = new QGridLayout(m_panel);
+    mainLayout->setContentsMargins(6, 2, 2, 2);
     mainLayout->setColumnStretch(3, 1);
     mainLayout->setHorizontalSpacing(6);
     mainLayout->setVerticalSpacing(1);
 
-    m_groupBox->setWhatsThis(
+    /*m_groupBox->*/ setWhatsThis(
             tr("A glissando is a method playing all, only black or only "
                "white keys between two notes."));
 
@@ -513,7 +525,7 @@ InstrumentFunctionGlissandoView::InstrumentFunctionGlissandoView(
                "glissando note that should be played. With this you "
                "can make cool staccato glissandos."));
 
-    QLabel* upModeLabel = new QLabel(tr("Up mode:"));
+    QLabel* upModeLabel   = new QLabel(tr("Up mode:"));
     QLabel* downModeLabel = new QLabel(tr("Down mode:"));
     upModeLabel->setFont(pointSize<8>(upModeLabel->font()));
     downModeLabel->setFont(pointSize<8>(downModeLabel->font()));
@@ -526,8 +538,8 @@ InstrumentFunctionGlissandoView::InstrumentFunctionGlissandoView(
     mainLayout->addWidget(downModeLabel, 2, 3);
     mainLayout->addWidget(m_gliDownModeComboBox, 3, 3);
 
-    //mainLayout->setRowMinimumHeight(2, 3);
-    //mainLayout->setRowMinimumHeight(5, 3);
+    // mainLayout->setRowMinimumHeight(2, 3);
+    // mainLayout->setRowMinimumHeight(5, 3);
 }
 
 InstrumentFunctionGlissandoView::~InstrumentFunctionGlissandoView()
@@ -537,7 +549,7 @@ InstrumentFunctionGlissandoView::~InstrumentFunctionGlissandoView()
 void InstrumentFunctionGlissandoView::modelChanged()
 {
     m_cc = castModel<InstrumentFunctionGlissando>();
-    m_groupBox->setModel(&m_cc->m_enabledModel);
+    ledButton()->setModel(&m_cc->m_enabledModel);
     m_gliTimeKnob->setModel(&m_cc->m_gliTimeModel);
     m_gliGateKnob->setModel(&m_cc->m_gliGateModel);
     m_gliAttenuationKnob->setModel(&m_cc->m_gliAttenuationModel);

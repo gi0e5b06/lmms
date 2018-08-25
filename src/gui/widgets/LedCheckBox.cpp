@@ -26,14 +26,14 @@
 #include <QInputDialog>
 #include <QPainter>
 //#include <QStyle>
-#include <QStyleOption>
-#include <QTime>
-
 #include "GuiApplication.h"
 #include "LedCheckBox.h"
 #include "MainWindow.h"
 #include "embed.h"
 #include "gui_templates.h"
+
+#include <QStyleOption>
+#include <QTime>
 
 static const QString names[LedCheckBox::NumColors]
         = {"led_yellow", "led_green",   "led_red",
@@ -102,22 +102,21 @@ void LedCheckBox::paintEvent(QPaintEvent* _pe)
     QPainter p(this);
     style()->drawPrimitive(QStyle::PE_Widget, &opt, &p, this);
 
-    QWidget::paintEvent(_pe);
-
     BoolModel* m = model();
     if(!m)
         return;
 
     QMargins mw = contentsMargins();
     int      xl = 0;
-    int      yl = -3;
+    int      yl = 0;
 
     QString t = text();
     if(!t.isEmpty())
     {
-        QFont ft = pointSize<7>(font());
+            QFont ft = pointSizeF(font(),6.5);
         p.setFont(ft);
 
+        //const QFontMetrics mx(pointSizeF(p.font(), 6.5));
         const QFontMetrics mx = p.fontMetrics();
         // pointSizeF( font(), 7) ); //6.5
         int ww = width() - mw.left() - mw.right();
@@ -144,7 +143,7 @@ void LedCheckBox::paintEvent(QPaintEvent* _pe)
             xl = (ww - wl) / 2;
             xt = (ww - wt) / 2;
             yt += yl + hl;
-            yt -= 3;  // tmp
+            yt -= 6;  // tmp
         }
         else if(a == Qt::AnchorTop)
         {
@@ -189,29 +188,32 @@ void LedCheckBox::initUi(LedColors _color)
             embed::getIconPixmap(names[_color].toUtf8().constData()));
     m_ledOffPixmap = new QPixmap(embed::getIconPixmap("led_off"));
 
-    setFont(pointSize<7>(font()));
+    // setFont(pointSize<11>(font()));
     setText(m_text);
 }
 
 void LedCheckBox::onTextUpdated()
 {
+    QStyleOption opt;
+    opt.init(this);
+
     const QString& t = text();
     int            w = m_ledOffPixmap->width();
     int            h = m_ledOffPixmap->height() - 6;
     if(!t.isEmpty())
     {
-        Qt::AnchorPoint a  = textAnchorPoint();
-        QFont           ft = pointSize<7>(font());
-        QFontMetrics    mx(ft);
+        Qt::AnchorPoint a = textAnchorPoint();
+        //QFont ft = font();  // pointSize<11>(font());
+        const QFontMetrics mx(pointSizeF(font(), 6.5));
         if((a == Qt::AnchorLeft) || (a == Qt::AnchorRight))
         {
-            w += 2 + mx.width(t);  // 4
-            h = qMax<int>(h, mx.height() + 2);
+            w += mx.width(t);  // 4
+            h = qMax<int>(h, mx.height())+2;
         }
         if((a == Qt::AnchorTop) || (a == Qt::AnchorBottom))
         {
-            w = qMax<int>(w, qMin<int>(2 * w, mx.width(t)) + 2);
-            h += mx.height() + 2;
+            w = qMax<int>(w, qMin<int>(2 * w, mx.width(t)));
+            h += mx.height()+2;
         }
     }
 

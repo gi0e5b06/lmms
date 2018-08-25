@@ -26,20 +26,19 @@
 #ifndef INSTRUMENT_FUNCTION_VIEW_H
 #define INSTRUMENT_FUNCTION_VIEW_H
 
-#include <QWidget>
-
 #include "InstrumentFunction.h"
-#include "ModelView.h"
+//#include "ModelView.h"
+#include "GroupBox.h"
 
 class QLabel;
 class ComboBox;
-class GroupBox;
+// class GroupBox;
 class Knob;
 class TempoSyncKnob;
 class LedCheckBox;
 
 class InstrumentFunctionView
-      : public QWidget
+      : public GroupBox
       , public ModelView
 {
     Q_OBJECT
@@ -50,9 +49,11 @@ class InstrumentFunctionView
   protected:
     InstrumentFunctionView(InstrumentFunction* cc,
                            const QString&      _caption,
-                           QWidget*            _parent = NULL);
-
-    GroupBox* m_groupBox;
+                           QWidget*            _parent = NULL,
+                           bool                _arrow  = true,
+                           bool                _panel  = true);
+    // GroupBox* m_groupBox;
+    // QWidget*  m_panel;
 };
 
 class InstrumentFunctionNoteStackingView : public InstrumentFunctionView
@@ -195,9 +196,10 @@ class InstrumentFunctionNoteOuttingView : public InstrumentFunctionView
 
   private:
     InstrumentFunctionNoteOutting* m_cc;
-    Knob*                          m_keyKnob;
     Knob*                          m_volumeKnob;
     Knob*                          m_panKnob;
+    Knob*                          m_keyKnob;
+    Knob*                          m_noteKnob;
 };
 
 class InstrumentFunctionGlissandoView : public InstrumentFunctionView

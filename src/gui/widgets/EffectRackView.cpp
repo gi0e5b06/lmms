@@ -43,14 +43,14 @@ EffectRackView::EffectRackView( EffectChain* model, QWidget* parent ) :
 	QVBoxLayout* mainLayout = new QVBoxLayout( this );
 	mainLayout->setMargin( 0 );//5
 
-	m_effectsGroupBox = new GroupBox( tr( "AUDIO EFFECTS CHAIN" ) );
+	m_effectsGroupBox = new GroupBox( tr( "AUDIO EFFECTS CHAIN" ),
+                                          this, true, false );
 	mainLayout->addWidget( m_effectsGroupBox );
 
-	QVBoxLayout* effectsLayout = new QVBoxLayout( m_effectsGroupBox );
+	QVBoxLayout* effectsLayout = new QVBoxLayout( m_effectsGroupBox->contentWidget() );
 	effectsLayout->setSpacing( 0 );
-	//effectsLayout->setContentsMargins( 2, m_effectsGroupBox->titleBarHeight() + 4, 2, 2 );
-	//effectsLayout->setContentsMargins( 1, m_effectsGroupBox->titleBarHeight() + 4, 1, 1 );
-	effectsLayout->setContentsMargins(1,m_effectsGroupBox->titleBarHeight(),1,1);
+        effectsLayout->setContentsMargins(1,1,1,1);
+	//effectsLayout->setContentsMargins(1,m_effectsGroupBox->titleBarHeight(),1,1);
 
 	m_scrollArea = new QScrollArea();
 	m_scrollArea->setVerticalScrollBarPolicy( Qt::ScrollBarAlwaysOn );
@@ -273,7 +273,7 @@ void EffectRackView::addEffect()
 void EffectRackView::modelChanged()
 {
 	//clearViews();
-	m_effectsGroupBox->setModel( &fxChain()->m_enabledModel );
+	m_effectsGroupBox->ledButton()->setModel( &fxChain()->m_enabledModel );
 	connect( fxChain(), SIGNAL( aboutToClear() ), this, SLOT( clearViews() ) );
 	update();
 }
