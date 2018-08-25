@@ -37,7 +37,7 @@
 
 #include "AudioDevice.h"
 #include "AudioDeviceSetupWidget.h"
-#include "ITransport.h"
+#include "Transportable.h"
 
 class QComboBox;
 class QLineEdit;
@@ -45,7 +45,8 @@ class LcdSpinBox;
 class MidiJack;
 
 
-class AudioJack : public QObject, public AudioDevice, virtual public ITransport
+class AudioJack : public QObject, public AudioDevice,
+        virtual public Transportable
 {
 	Q_OBJECT
 public:

@@ -39,7 +39,7 @@ class Mixer;
 class Song;
 class Ladspa2LMMS;
 class LV22LMMS;
-class ITransport;
+class Transportable;
 
 // Note: This class is called 'LmmsCore' instead of 'Engine' because of naming
 // conflicts caused by ZynAddSubFX. See https://github.com/LMMS/lmms/issues/2269
@@ -76,7 +76,7 @@ public:
 		return s_song;
 	}
 
-	static ITransport * transport()
+	static Transportable * transport()
 	{
 		return s_transport;
 	}
@@ -154,7 +154,7 @@ private:
 	static Mixer *s_mixer;
 	static FxMixer * s_fxMixer;
 	static Song * s_song;
-	static ITransport * s_transport;
+	static Transportable * s_transport;
 	static BBTrackContainer * s_bbTrackContainer;
 	static ProjectJournal * s_projectJournal;
 	static DummyTrackContainer * s_dummyTC;

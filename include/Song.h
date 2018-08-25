@@ -32,7 +32,7 @@
 #include "TrackContainer.h"
 #include "VstSyncController.h"
 //#include "ExportFilter.h"
-#include "ITransport.h"
+#include "Transportable.h"
 #include "MetaData.h"
 
 //#include <QSharedMemory>
@@ -52,7 +52,7 @@ const bpm_t MaxTempo = 999;
 const tick_t MaxSongLength = 9999 * DefaultTicksPerTact;
 
 
-class EXPORT Song : public TrackContainer, public virtual ITransport
+class EXPORT Song : public TrackContainer, public virtual Transportable
 {
 	Q_OBJECT
 	mapPropertyFromModel( int,getTempo,setTempo,m_tempoModel );

@@ -410,7 +410,7 @@ void AudioJack::transportReposition()
 void AudioJack::transportQuery()
 {
 	const QString& mode=transportMode();
-	ITransport* song=Engine::getSong();
+	Transportable* song=Engine::getSong();
 
 	if((mode=="client")||(mode=="master"))
 		Engine::s_transport=this;

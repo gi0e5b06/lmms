@@ -42,7 +42,7 @@ float                LmmsCore::s_framesPerTick;
 Mixer*               LmmsCore::s_mixer = NULL;
 FxMixer*             LmmsCore::s_fxMixer = NULL;
 Song*                LmmsCore::s_song = NULL;
-ITransport*          LmmsCore::s_transport = NULL;
+Transportable*       LmmsCore::s_transport = NULL;
 BBTrackContainer*    LmmsCore::s_bbTrackContainer = NULL;
 ProjectJournal*      LmmsCore::s_projectJournal = NULL;
 Ladspa2LMMS*         LmmsCore::s_ladspaManager = NULL;

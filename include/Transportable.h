@@ -1,7 +1,7 @@
 /*
- * AudioJack.h - support for JACK-transport
+ * Transportable.h -
  *
- * Copyright (c) 2017 
+ * Copyright (c) 2017-2018 gi0e5b06 (on github.com)
  *
  * This file is part of LMMS - https://lmms.io
  *
@@ -22,19 +22,19 @@
  *
  */
 
-#ifndef I_TRANSPORT_H
-#define I_TRANSPORT_H
+#ifndef TRANSPORTABLE_H
+#define TRANSPORTABLE_H
 
 #include "lmms_basics.h"
 
 /* Interface for transport */
-class ITransport
+class Transportable
 {
- public:
-	virtual f_cnt_t transportPosition() =0;
-	virtual void transportStart() =0;
-	virtual void transportStop() =0;
-	virtual void transportLocate(f_cnt_t _frame) =0;
+  public:
+    virtual f_cnt_t transportPosition()             = 0;
+    virtual void    transportStart()                = 0;
+    virtual void    transportStop()                 = 0;
+    virtual void    transportLocate(f_cnt_t _frame) = 0;
 };
 
 #endif
