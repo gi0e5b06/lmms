@@ -38,21 +38,23 @@
 
 #include <cmath>
 
-VisualizationWidget::VisualizationWidget(const QPixmap&     _bg,
-                                         QWidget*           _p,
-                                         visualizationTypes _vtype) :
-      QWidget(_p),
-      m_active(false), m_frozen(false), m_stabilized(false), s_background(_bg)
+VisualizationWidget::VisualizationWidget(const QPixmap& _bg,
+                                         QWidget*       _parent,
+                                         Mode           _mode) :
+      QWidget(_parent),
+      m_mode(_mode), m_active(false), m_frozen(false), m_stabilized(false),
+      s_background(_bg)
 {
-    const int w  = s_background.width();
-    const int h  = s_background.height();
+    m_mode = _mode;
+
+    const int w = s_background.width();
+    const int h = s_background.height();
 
     m_pointCount = w;
-    m_points=new QPointF[m_pointCount];
+    m_points     = new QPointF[m_pointCount];
 
     setFixedSize(w, h);
     setAttribute(Qt::WA_OpaquePaintEvent, true);
-    setActive(ConfigManager::inst()->value("ui", "displaywaveform").toInt());
 
     // const fpp_t frames = Engine::mixer()->framesPerPeriod();
     // m_buffer = new sampleFrame[frames];
@@ -64,6 +66,13 @@ VisualizationWidget::VisualizationWidget(const QPixmap&     _bg,
                           "master-output")
                                + tr(", middle-click to freeze, right-click "
                                     "to stabilize."));
+
+    if(m_mode == Surround)
+        setActive(ConfigManager::inst()
+                          ->value("ui", "displaywaveform")
+                          .toInt());
+    else
+        setActive(true);
 }
 
 VisualizationWidget::~VisualizationWidget()
@@ -73,7 +82,7 @@ VisualizationWidget::~VisualizationWidget()
     delete[] m_points;
 }
 
-void VisualizationWidget::updateAudioBuffer(
+void VisualizationWidget::updateSurroundBuffer(
         const surroundSampleFrame* _buffer)
 {
     if(m_active && !m_frozen && !Engine::getSong()->isExporting())
@@ -90,6 +99,16 @@ void VisualizationWidget::updateAudioBuffer(
     }
 }
 
+void VisualizationWidget::updateStereoBuffer(const sampleFrame* _buffer)
+{
+    if(m_active && !m_frozen && !Engine::getSong()->isExporting())
+    {
+        // qWarning("VisualizationWidget::updateAudioBuffer");
+        const fpp_t fpp = Engine::mixer()->framesPerPeriod();
+        memcpy(m_buffer, _buffer, sizeof(sampleFrame) * fpp);
+    }
+}
+
 void VisualizationWidget::setActive(bool _active)
 {
     m_active = _active;
@@ -97,17 +116,24 @@ void VisualizationWidget::setActive(bool _active)
     {
         connect(gui->mainWindow(), SIGNAL(periodicUpdate()), this,
                 SLOT(update()));
-        connect(Engine::mixer(),
-                SIGNAL(nextAudioBuffer(const surroundSampleFrame*)), this,
-                SLOT(updateAudioBuffer(const surroundSampleFrame*)));
+        if(m_mode == Surround)
+        {
+            connect(Engine::mixer(),
+                    SIGNAL(nextAudioBuffer(const surroundSampleFrame*)), this,
+                    SLOT(updateSurroundBuffer(const surroundSampleFrame*)));
+        }
     }
     else
     {
         disconnect(gui->mainWindow(), SIGNAL(periodicUpdate()), this,
                    SLOT(update()));
-        disconnect(Engine::mixer(),
-                   SIGNAL(nextAudioBuffer(const surroundSampleFrame*)), this,
-                   SLOT(updateAudioBuffer(const surroundSampleFrame*)));
+        if(m_mode == Surround)
+        {
+            disconnect(
+                    Engine::mixer(),
+                    SIGNAL(nextAudioBuffer(const surroundSampleFrame*)), this,
+                    SLOT(updateSurroundBuffer(const surroundSampleFrame*)));
+        }
         // we have to update (remove last waves),
         // because timer doesn't do that anymore
         update();

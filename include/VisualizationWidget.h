@@ -22,8 +22,8 @@
  *
  */
 
-#ifndef _VISUALIZATION_WIDGET
-#define _VISUALIZATION_WIDGET
+#ifndef VISUALIZATION_WIDGET_H_
+#define VISUALIZATION_WIDGET_H_
 
 #include "lmms_basics.h"
 
@@ -33,15 +33,17 @@
 class VisualizationWidget : public QWidget
 {
     Q_OBJECT
-  public:
-    enum visualizationTypes
-    {
-        Simple  // add more here
-    };
 
-    VisualizationWidget(const QPixmap&     _bg,
-                        QWidget*           _parent,
-                        visualizationTypes _vtype = Simple);
+  public:
+    enum Mode
+    {
+        Surround,
+        Stereo,
+        Reference
+    };
+    VisualizationWidget(const QPixmap& _bg,
+                        QWidget*       _parent,
+                        Mode           _mode = Surround);
     virtual ~VisualizationWidget();
 
     void setActive(bool _active);
@@ -53,9 +55,11 @@ class VisualizationWidget : public QWidget
     virtual void mousePressEvent(QMouseEvent* _me);
 
   protected slots:
-    void updateAudioBuffer(const surroundSampleFrame* _buffer);
+    void updateSurroundBuffer(const surroundSampleFrame* _buffer);
+    void updateStereoBuffer(const sampleFrame* _buffer);
 
   private:
+    Mode         m_mode;
     bool         m_active;
     bool         m_frozen;
     bool         m_stabilized;
