@@ -29,6 +29,7 @@
 #include "WaveForm.h"
 //#include "Engine.h"
 //#include "Song.h"
+#include "BufferManager.h"
 
 #include <QDomElement>
 
@@ -46,6 +47,8 @@ ShaperGDXControls::ShaperGDXControls(ShaperGDX* effect) :
       m_outGainModel(1.0f, 0.0f, 1.0f, 0.001f, this, tr("Out gain")),
       m_modeModel(0.f, 0.f, 2.0f, 1.f, this, tr("Mode"))
 {
+    m_buffer = BufferManager::acquire();
+
     WaveForm::fillBankModel(m_waveBankModel);
     WaveForm::fillIndexModel(m_waveIndexModel, 0);
 
@@ -59,6 +62,11 @@ ShaperGDXControls::ShaperGDXControls(ShaperGDX* effect) :
     this, SLOT( changeControl() ) ); connect( &m_rightModel, SIGNAL(
     dataChanged() ), this, SLOT( changeControl() ) );
     */
+}
+
+ShaperGDXControls::~ShaperGDXControls()
+{
+        BufferManager::release(m_buffer);
 }
 
 void ShaperGDXControls::changeControl()

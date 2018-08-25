@@ -38,9 +38,7 @@ class ShaperGDXControls : public EffectControls
     Q_OBJECT
   public:
     ShaperGDXControls(ShaperGDX* effect);
-    virtual ~ShaperGDXControls()
-    {
-    }
+    virtual ~ShaperGDXControls();
 
     virtual void saveSettings(QDomDocument& _doc, QDomElement& _parent);
     virtual void loadSettings(const QDomElement& _this);
@@ -58,6 +56,8 @@ class ShaperGDXControls : public EffectControls
     {
         return new ShaperGDXDialog(this);
     }
+  signals:
+    void nextStereoBuffer(const sampleFrame* _buf);
 
   private slots:
     void changeControl();
@@ -73,6 +73,8 @@ class ShaperGDXControls : public EffectControls
     FloatModel         m_ratioModel;
     FloatModel         m_outGainModel;
     FloatModel         m_modeModel;
+
+    sampleFrame* m_buffer;
 
     friend class ShaperGDXDialog;
     friend class ShaperGDX;

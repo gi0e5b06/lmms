@@ -24,42 +24,41 @@
 
 #include "ShaperGDXDialog.h"
 
-#include "ShaperGDXControls.h"
 #include "ComboBox.h"
 #include "Knob.h"
-
+#include "ShaperGDXControls.h"
+#include "VisualizationWidget.h"
 #include "embed.h"
 
 #include <QGridLayout>
 #include <QGroupBox>
 #include <QLayout>
 
-ShaperGDXDialog::ShaperGDXDialog(
-        ShaperGDXControls* controls) :
+ShaperGDXDialog::ShaperGDXDialog(ShaperGDXControls* controls) :
       EffectControlDialog(controls)
 {
     setAutoFillBackground(true);
     QPalette pal;
     pal.setBrush(backgroundRole(), embed::getIconPixmap("plugin_bg"));
-    //pal.setBrush(backgroundRole(),PLUGIN_NAME::getIconPixmap("artwork"));
+    // pal.setBrush(backgroundRole(),PLUGIN_NAME::getIconPixmap("artwork"));
     setPalette(pal);
-    setFixedSize(234, 220);
+    setFixedSize(234, 220 + 72);
 
     QGroupBox* ctlGB = new QGroupBox(tr("Controls"), this);
-    ctlGB->setGeometry(10, 10, 214, 200);
+    ctlGB->setGeometry(10, 10, 214, 190);
 
-    ComboBox* bankCMB = new ComboBox( ctlGB);
+    ComboBox* bankCMB = new ComboBox(ctlGB);
     bankCMB->move(17, 35);
     bankCMB->setModel(&controls->m_waveBankModel);
-    //bankCMB->setLabel(tr("Treshold"));
-    //bankCMB->setHintText(tr("Treshold:"), "");
+    // bankCMB->setLabel(tr("Treshold"));
+    // bankCMB->setHintText(tr("Treshold:"), "");
     bankCMB->setMinimumWidth(3 * 27 + 4);
 
-    ComboBox* indexCMB = new ComboBox( ctlGB);
+    ComboBox* indexCMB = new ComboBox(ctlGB);
     indexCMB->move(17, 85);
     indexCMB->setModel(&controls->m_waveIndexModel);
-    //indexCMB->setLabel(tr("Treshold"));
-    //indexCMB->setHintText(tr("Treshold:"), "");
+    // indexCMB->setLabel(tr("Treshold"));
+    // indexCMB->setHintText(tr("Treshold:"), "");
     indexCMB->setMinimumWidth(6 * 27 + 12);
 
     Knob* timeKNB = new Knob(knobBright_26, ctlGB);
@@ -80,9 +79,23 @@ ShaperGDXDialog::ShaperGDXDialog(
     outGainKNB->setLabel(tr("OUT"));
     outGainKNB->setHintText(tr("Out gain:"), "");
 
-    Knob * modeKNB = new Knob( knobBright_26, ctlGB);
-    modeKNB -> move( 167, 135 );
-    modeKNB->setModel( &controls->m_modeModel );
-    modeKNB->setLabel( tr( "MODE" ) );
-    modeKNB->setHintText( tr( "Mode:" ) , "" );
+    Knob* modeKNB = new Knob(knobBright_26, ctlGB);
+    modeKNB->move(167, 135);
+    modeKNB->setModel(&controls->m_modeModel);
+    modeKNB->setLabel(tr("MODE"));
+    modeKNB->setHintText(tr("Mode:"), "");
+
+    m_showWVW = new VisualizationWidget(
+            embed::getIconPixmap("output_bigger_graph"), this,
+            VisualizationWidget::Stereo);
+    m_showWVW->move(23, 205);
+
+    connect(controls, SIGNAL(nextStereoBuffer(const sampleFrame*)), m_showWVW,
+            SLOT(updateStereoBuffer(const sampleFrame*)));
+}
+
+ShaperGDXDialog::~ShaperGDXDialog()
+{
+    disconnect(m_effectControls, SIGNAL(nextStereoBuffer(const sampleFrame*)),
+               m_showWVW, SLOT(updateStereoBuffer(const sampleFrame*)));
 }

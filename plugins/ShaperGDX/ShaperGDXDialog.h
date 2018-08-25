@@ -22,21 +22,24 @@
  *
  */
 
-#ifndef SHAPERGDX_CONTROL_DIALOG_H
-#define SHAPERGDX_CONTROL_DIALOG_H
+#ifndef SHAPERGDX_DIALOG_H
+#define SHAPERGDX_DIALOG_H
 
 #include "EffectControlDialog.h"
 
 class ShaperGDXControls;
+class VisualizationWidget;
 
 class ShaperGDXDialog : public EffectControlDialog
 {
     Q_OBJECT
+
   public:
     ShaperGDXDialog(ShaperGDXControls* controls);
-    virtual ~ShaperGDXDialog()
-    {
-    }
+    virtual ~ShaperGDXDialog();
+
+  protected:
+    VisualizationWidget* m_showWVW;
 };
 
 #endif

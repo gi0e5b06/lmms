@@ -92,30 +92,22 @@ bool ShaperGDX::processAudioBuffer(sampleFrame* _buf, const fpp_t _frames)
 
         m_phase = fraction(m_phase);
 
-        const float waveGain = wf->f(m_phase);
+        float waveGain = wf->f(m_phase);
+        waveGain=(ratio * waveGain + (1.f - ratio)) * outGain;
 
         m_phase += (1000.f / time / Engine::mixer()->processingSampleRate());
 
-        // float exp = (1.f - threshold) * (1.f - ratio);
-        // float exp = (1.f - ratio);
-        // outGain *= (1.f + exp);
+        curVal0 = qBound(-1.f, curVal0 * waveGain, 1.f);
+        curVal1 = qBound(-1.f, curVal1 * waveGain, 1.f);
 
-        {
-            curVal0 *= (ratio * waveGain + (1.f - ratio));
-            curVal0 = qBound(-1.f, curVal0 * outGain, 1.f);
-        }
-
-        {
-            // if(fabs(curVal1) >= threshold)
-            // curVal1 = sign(curVal1)
-            //          * (threshold + (fabs(curVal1) - threshold) * ratio);
-            curVal1 = qBound(-1.f, curVal1 * outGain, 1.f);
-        }
+        m_gdxControls.m_buffer[f][0]=waveGain;
+        m_gdxControls.m_buffer[f][1]=curVal0;
 
         _buf[f][0] = d0 * _buf[f][0] + w0 * curVal0;
         _buf[f][1] = d1 * _buf[f][1] + w1 * curVal1;
     }
 
+    m_gdxControls.emit nextStereoBuffer(_buf);
     return shouldKeepRunning(_buf, _frames);
 }
 
