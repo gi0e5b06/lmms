@@ -92,6 +92,7 @@ IF("${PLUGIN_LIST}" STREQUAL "")
 		peak_controller_effect
                 RandomGDX
 		ReverbSC
+                ScarifierGDX
 		ScatterGDX
 		sf2_player
 		sfxr
