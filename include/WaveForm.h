@@ -22,11 +22,12 @@
  *
  */
 
-#ifndef WAVEFORM_H_
-#define WAVEFORM_H_
+#ifndef WAVEFORM_H
+#define WAVEFORM_H
 
 #include "ComboBoxModel.h"
 #include "MemoryManager.h"
+#include "fft_helpers.h"
 #include "lmms_basics.h"
 //#include "lmms_math.h"
 
@@ -42,9 +43,14 @@ class WaveForm
     enum interpolation_t
     {
         Discrete,
+        Rounded,
         Linear,
-        // CubicHermite,
-        // Polynomial,
+        Cosinus,
+        Optimal2,
+        Cubic,
+        Hermite,
+        Lagrange,
+        Optimal4,
         Exact
     };
 
@@ -78,6 +84,11 @@ class WaveForm
 
     // x must be between 0. and 1.
     float f(const float _x) const;
+    float f(const float _x, const interpolation_t _m) const;
+    float f(const float _x, const float _antialias) const;
+    float f(const float           _x,
+            const float           _antialias,
+            const interpolation_t _m) const;
 
     inline const QString& name() const
     {
@@ -141,6 +152,26 @@ class WaveForm
     };
 
     static Set WAVEFORMS;
+
+    /*
+    class Plan
+    {
+      public:
+        Plan();
+        ~Plan();
+        void build(WaveForm& _wf);
+
+    private:
+        QMutex         m_mutex;
+        const int      FFT_BUFFER_SIZE = 22050;
+        fftwf_plan     m_r2cPlan;
+        fftwf_plan     m_c2rPlan;
+        fftwf_complex* m_specBuf;
+        float*         m_normBuf;
+    };
+
+    static Plan PLAN;
+    */
 
   protected:
     WaveForm(const char*           _name,

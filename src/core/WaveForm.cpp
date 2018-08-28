@@ -27,8 +27,11 @@
 #include "Backtrace.h"
 #include "SampleBuffer.h"
 //#include "ConfigManager.h"
+#include "Engine.h"
+#include "Mixer.h"
 
-#include "lmms_math.h"  // REQUIRED
+//#include "lmms_math.h"
+#include "interpolation.h"
 
 #include <QDir>
 #include <QMutex>
@@ -165,7 +168,7 @@ WaveForm::Set::Set()
         {
             if(sindex > MAX_INDEX)
                 continue;
-            //qInfo("%s : %s", qPrintable(wff),
+            // qInfo("%s : %s", qPrintable(wff),
             //      qPrintable(wfbd.absolutePath() + "/" + wff));
             /*
             SampleBuffer* sb = new SampleBuffer(
@@ -339,7 +342,7 @@ WaveForm::WaveForm(const char*           _name,
 {
     m_file = _file;
     if(m_mode == Exact)
-            m_mode = Linear;
+        m_mode = Linear;
 }
 
 WaveForm::WaveForm(const char*           _name,
@@ -423,8 +426,59 @@ void WaveForm::build()
 // x must be between 0. and 1.
 float WaveForm::f(const float _x) const
 {
+    return f(_x, m_mode);
+}
+
+float WaveForm::f(const float _x, const float _antialias) const
+{
+    return f(_x, _antialias, m_mode);
+}
+
+// x must be between 0. and 1.
+float WaveForm::f(const float           _x,
+                  const float           _antialias,
+                  const interpolation_t _m) const
+{
+    float r = 0.f;
+
+    if(_antialias > 0.f)
+    {
+        // qInfo("antialias f: %f", _antialias);
+        const int N = 13;
+        for(int i = -N; i <= N; i++)
+            r += f(fraction(_x + 1.f + _antialias * i / (N + 1)), _m);
+        r /= (2 * N + 1);
+        /*
+        const float d  = 2.f / Engine::mixer()->processingSampleRate();
+        const float r0 = f(fraction(_x + 1.f - 3.f * d), false, _m);
+        const float r1 = f(fraction(_x + 1.f - d), false, _m);
+        const float rx = f(fraction(_x), false, _m);
+        const float r2 = f(fraction(_x + d), false, _m);
+        const float r3 = f(fraction(_x + 3.f * d), false, _m);
+        return rx + (r2 - rx) * d / sqrtf(sqf(d) + sqf(r2 - rx))
+               + (rx - r1) * d / sqrtf(sqf(d) + sqf(rx - r1))
+               + (r3 - rx) * 3.f * d / sqrtf(sqf(3.f * d) + sqf(r3 - rx))
+               + (rx - r0) * 3.f * d / sqrtf(sqf(3.f * d) + sqf(rx - r1));
+        */
+        // optimal4pInterpolate(r0, r1, r2, r3, 0.5f);
+    }
+    else
+    {
+        r = f(_x, _m);
+    }
+
+    return r;
+}
+
+// x must be between 0. and 1.
+float WaveForm::f(const float _x, const interpolation_t _m) const
+{
     if(!m_built)
-            const_cast<WaveForm*>(this)->build();
+        const_cast<WaveForm*>(this)->build();
+
+    interpolation_t m = _m;
+    if((m != m_mode) && (m == Exact || m_mode == Exact))
+        m = m_mode;
 
     float r;
     switch(m_mode)
@@ -432,19 +486,122 @@ float WaveForm::f(const float _x) const
         case Discrete:
             r = m_data[int(_x * m_size)];
             break;
+        case Rounded:
+        {
+            int i = roundf(_x * m_size);
+            r     = m_data[i];
+        }
+        break;
         case Linear:
+        case Cosinus:
+        case Optimal2:
         {
             const float j  = _x * m_size;
             const int   i  = int(j);
             const float d  = j - i;
             const float r0 = m_data[i];
             const float r1 = m_data[i + 1];
-            r              = r0 + d * (r1 - r0);
-            break;
+            // r = r0 + d * (r1 - r0);
+            switch(m_mode)
+            {
+                case Linear:
+                    r = linearInterpolate(r0, r1, d);
+                    break;
+                case Cosinus:
+                    r = cosinusInterpolate(r0, r1, d);
+                    break;
+                case Optimal2:
+                    r = optimalInterpolate(r0, r1, d);
+                    break;
+                default:
+                    break;
+            }
         }
+        break;
         case Exact:
             r = m_func(_x);
             break;
+        default:
+        {
+            const float p  = _x * m_size;
+            const int   i1 = int(p);
+            const float d  = p - i1;
+            const int   i0 = (i1 == 0 ? m_size + 1 : i1 - 1);
+            const int   i2 = i1 + 1;
+            const int   i3 = (i2 == m_size + 1 ? 0 : i2 + 1);
+            const float r0 = m_data[i0];
+            const float r1 = m_data[i1];
+            const float r2 = m_data[i2];
+            const float r3 = m_data[i3];
+
+            switch(m_mode)
+            {
+                case Cubic:
+                    r = cubicInterpolate(r0, r1, r2, r3, d);
+                    break;
+                case Hermite:
+                    r = hermiteInterpolate(r0, r1, r2, r3, d);
+                    break;
+                case Lagrange:
+                    r = lagrangeInterpolate(r0, r1, r2, r3, d);
+                    break;
+                case Optimal4:
+                    r = optimal4pInterpolate(r0, r1, r2, r3, d);
+                    break;
+                default:
+                    break;
+            }
+        }
+        break;
     }
     return r;
 }
+
+/*
+WaveForm::Plan::Plan()
+{
+    m_normBuf = (float*)fftwf_malloc((FFT_BUFFER_SIZE * 2) * sizeof(float));
+    // memset(m_normBuf, 0, 2 * FFT_BUFFER_SIZE);
+
+    m_specBuf = (fftwf_complex*)fftwf_malloc((FFT_BUFFER_SIZE + 1)
+                                             * sizeof(fftwf_complex));
+
+    m_r2cPlan = fftwf_plan_dft_r2c_1d(FFT_BUFFER_SIZE * 2, m_normBuf,
+                                      m_specBuf, FFTW_MEASURE);
+
+    m_c2rPlan = fftwf_plan_dft_c2r_1d(FFT_BUFFER_SIZE * 2, m_normBuf,
+                                      m_specBuf, FFTW_MEASURE);
+}
+
+WaveForm::Plan::~Plan()
+{
+    fftwf_destroy_plan(m_c2rPlan);
+    fftwf_destroy_plan(m_r2cPlan);
+    fftwf_free(m_specBuf);
+    fftwf_free(m_normBuf);
+}
+
+WaveForm::Plan::build(WaveForm& _wf, const float _cut)
+{
+    QMutexLocker locker(m_mutex);
+
+    for(int i = FFT_BUFFER_SIZE * 2 - 1; i >= 0; --i)
+    {
+        float x      = float(i) / float(FFT_BUFFER_SIZE * 2);
+        float y      = _wf->f(x, false);
+        m_normBuf[i] = y;
+    }
+
+    fftwf_execute(m_r2cPlan);
+
+    for(int f = int(ceilf(_cut)); f <= FFT_BUFFER_SIZE; f++)
+    {
+        m_specBuf[f][0] = 0.f;
+        m_specBuf[f][1] = 0.f;
+    }
+
+    fftwf_execute(m_c2rPlan);
+}
+
+WaveForm::Plan WaveForm::PLAN;
+*/
