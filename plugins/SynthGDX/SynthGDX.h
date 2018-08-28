@@ -97,6 +97,7 @@ class OscillatorObject : public Model
     BoolModel          m_wave2OppositeModel;
     BoolModel          m_wave2ComplementModel;
     FloatModel         m_waveMixModel;
+    FloatModel         m_waveAntialiasModel;
     FloatModel         m_volumeModel;
     FloatModel         m_panModel;
     FloatModel         m_coarseModel;
@@ -147,6 +148,7 @@ class OscillatorObject : public Model
     bool  m_absolute2;
     bool  m_opposite2;
     bool  m_complement2;
+    float m_waveAntialias;
     bool  m_updated;
     float m_stereoPhase;
     float m_harm2;
@@ -193,7 +195,7 @@ class OscillatorObject : public Model
     void  reset(const fpp_t _f);
     bool  isUpdated();
     void  update();
-    float waveAt(ch_cnt_t ch, float x);
+    float waveAt(ch_cnt_t ch, float x, float w);
 
     // bool  syncOK(const float _coeff, const ch_cnt_t _ch);
     // float syncInit(const ch_cnt_t _ch);

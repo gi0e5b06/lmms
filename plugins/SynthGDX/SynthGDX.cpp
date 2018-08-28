@@ -24,8 +24,6 @@
 
 #include "SynthGDX.h"
 
-#include <QDomDocument>
-
 #include "BufferManager.h"
 #include "Engine.h"
 #include "InstrumentPlayHandle.h"
@@ -38,6 +36,8 @@
 #include "WaveForm.h"
 #include "debug.h"
 #include "embed.h"
+
+#include <QDomDocument>
 //#include "lmms_math.h"
 
 extern "C"
@@ -59,7 +59,7 @@ OscillatorObject::OscillatorObject(Model* _parent, int _idx) :
       Model(_parent),
       m_enabledModel(_idx == 0, this, tr("O%1 active").arg(_idx + 1)),
       m_wave1ReverseModel(false, this, tr("O%1 reverse wave").arg(_idx + 1)),
-      m_wave1BankModel(this, tr("O%1 bank").arg(_idx + 1)),
+      m_wave1BankModel(this, tr("O%1 wave bank").arg(_idx + 1)),
       m_wave1IndexModel(this, tr("O%1 wave index").arg(_idx + 1)),
       m_wave1AbsoluteModel(
               false, this, tr("O%1 absolute wave").arg(_idx + 1)),
@@ -68,7 +68,7 @@ OscillatorObject::OscillatorObject(Model* _parent, int _idx) :
       m_wave1ComplementModel(
               false, this, tr("O%1 complementary wave").arg(_idx + 1)),
       m_wave2ReverseModel(false, this, tr("O%1 reverse wave").arg(_idx + 1)),
-      m_wave2BankModel(this, tr("O%1 bank").arg(_idx + 1)),
+      m_wave2BankModel(this, tr("O%1 wave bank").arg(_idx + 1)),
       m_wave2IndexModel(this, tr("O%1 wave index").arg(_idx + 1)),
       m_wave2AbsoluteModel(
               false, this, tr("O%1 absolute wave").arg(_idx + 1)),
@@ -82,6 +82,12 @@ OscillatorObject::OscillatorObject(Model* _parent, int _idx) :
                      0.00001f,
                      this,
                      tr("O%1 wave mix").arg(_idx + 1)),
+      m_waveAntialiasModel(0.f,
+                           0.f,
+                           1.f,
+                           0.001f,
+                           this,
+                           tr("O%1 antialiassing").arg(_idx + 1)),
       m_volumeModel(DefaultVolume / NB_OSCILLATORS,
                     MinVolume,
                     DefaultVolume,
@@ -145,12 +151,8 @@ OscillatorObject::OscillatorObject(Model* _parent, int _idx) :
                      20000.0f,
                      this,
                      tr("O%1 LFO time").arg(_idx + 1)),
-      m_velocityAmountModel(0.f,
-                            -1.f,
-                            1.0f,
-                            0.01f,
-                            this,
-                            tr("O%1 velocity").arg(_idx + 1)),
+      m_velocityAmountModel(
+              0.f, -1.f, 1.0f, 0.01f, this, tr("O%1 velocity").arg(_idx + 1)),
       m_harm2Model(0.f,
                    -1.f,
                    1.f,
@@ -309,7 +311,7 @@ bool OscillatorObject::isUpdated()
     return m_updated;
 }
 
-float OscillatorObject::waveAt(ch_cnt_t ch, float x)
+float OscillatorObject::waveAt(ch_cnt_t ch, float x, float w)
 {
     // pulse 0--p1=pc-pw/2--p--p2=pc+pw/2--1
     float pc = m_pulseCenterBase[ch]
@@ -337,7 +339,7 @@ float OscillatorObject::waveAt(ch_cnt_t ch, float x)
     if(m_reverse1)
         x1 = 1.f - x1;
 
-    float y1 = m_wave1->f(x1);
+    float y1 = m_wave1->f(x1, m_waveAntialias * w);
     /*
     switch(m_wave1)
     {
@@ -425,7 +427,7 @@ float OscillatorObject::waveAt(ch_cnt_t ch, float x)
     if(m_reverse2)
         x2 = 1.f - x2;
 
-    float y2 = m_wave2->f(x2);
+    float y2 = m_wave2->f(x2, m_waveAntialias * w);
     /*
     switch(m_wave2)
     {
@@ -526,7 +528,7 @@ void OscillatorObject::update()
         // a=qBound(0.f,a,1.f);
 
         float x = m_phase[ch];
-        //x += 44100.0f / Engine::mixer()->processingSampleRate();
+        // x += 44100.0f / Engine::mixer()->processingSampleRate();
         x -= m_phaseOffset[ch];
         m_phaseOffset[ch]
                 = m_phaseOffsetBase[ch]
@@ -539,48 +541,48 @@ void OscillatorObject::update()
         x *= 44100.0f / Engine::mixer()->processingSampleRate();
         x = fraction(x);
 
-        float y = waveAt(ch, x);
+        float y = waveAt(ch, x, w);
 
         // harmonics
         if(m_harm2 != 0.f)
         {
             float xh2 = 2.f * (x - m_phaseOffset[ch]) + m_phaseOffset[ch];
-            float yh2 = m_harm2 * waveAt(ch, xh2);
+            float yh2 = m_harm2 * waveAt(ch, xh2, 2.f*w);
             y += yh2;
         }
         if(m_harm3 != 0.f)
         {
             float xh3 = 3.f * (x - m_phaseOffset[ch]) + m_phaseOffset[ch];
-            float yh3 = m_harm3 * waveAt(ch, xh3);
+            float yh3 = m_harm3 * waveAt(ch, xh3, 3.f*w);
             y += yh3;
         }
         if(m_harm4 != 0.f)
         {
             float xh4 = 4.f * (x - m_phaseOffset[ch]) + m_phaseOffset[ch];
-            float yh4 = m_harm4 * waveAt(ch, xh4);
+            float yh4 = m_harm4 * waveAt(ch, xh4, 4.f*w);
             y += yh4;
         }
         if(m_harm5 != 0.f)
         {
             float xh5 = 5.f * (x - m_phaseOffset[ch]) + m_phaseOffset[ch];
-            float yh5 = m_harm5 * waveAt(ch, xh5);
+            float yh5 = m_harm5 * waveAt(ch, xh5, 5.f*w);
             y += yh5;
         }
         if(m_harm6 != 0.f)
         {
             float xh6 = 6.f * (x - m_phaseOffset[ch]) + m_phaseOffset[ch];
-            float yh6 = m_harm6 * waveAt(ch, xh6);
+            float yh6 = m_harm6 * waveAt(ch, xh6, 6.f*w);
             y += yh6;
         }
         if(m_harm7 != 0.f)
         {
             float xh7 = 7.f * (x - m_phaseOffset[ch]) + m_phaseOffset[ch];
-            float yh7 = m_harm7 * waveAt(ch, xh7);
+            float yh7 = m_harm7 * waveAt(ch, xh7, 7.f*w);
             y += yh7;
         }
 
         if(m_wall > 0.f)
-            y = (y + waveAt(ch, fraction(x + 1.f - m_wall))) / 2.f;
+                y = (y + waveAt(ch, fraction(x + 1.f - m_wall), w)) / 2.f;
 
         y = a * y + m_addOutputModAmp[ch] * m_addOutputModVal[ch];
 
@@ -741,6 +743,8 @@ void OscillatorObject::updateWaves(const fpp_t _f)
 
     m_waveMixBase[0] = m_waveMixModel.value() * 2.f - 1;
     m_waveMixBase[1] = m_waveMixBase[0];
+
+    m_waveAntialias = m_waveAntialiasModel.value();
 
     m_harm2 = m_harm2Model.value();
     m_harm3 = m_harm3Model.value();
@@ -951,7 +955,8 @@ void SynthGDX::saveSettings(QDomDocument& _doc, QDomElement& _this)
     for(int i = 0; i < NB_OSCILLATORS; ++i)
     {
         QString is = QString::number(i);
-        m_osc[i]->m_enabledModel.saveSettings(_doc, _this, "osc_enabled" + is);
+        m_osc[i]->m_enabledModel.saveSettings(_doc, _this,
+                                              "osc_enabled" + is);
 
         m_osc[i]->m_waveMixModel.saveSettings(_doc, _this, "wave_mix" + is);
         m_osc[i]->m_wave1ReverseModel.saveSettings(_doc, _this,
@@ -1017,7 +1022,8 @@ void SynthGDX::saveSettings(QDomDocument& _doc, QDomElement& _this)
     for(int i = 0; i < NB_MODULATORS; ++i)
     {
         QString is = QString::number(i);
-        m_mod[i]->m_enabledModel.saveSettings(_doc, _this, "mod_enabled" + is);
+        m_mod[i]->m_enabledModel.saveSettings(_doc, _this,
+                                              "mod_enabled" + is);
         m_mod[i]->m_algoModel.saveSettings(_doc, _this, "algo" + is);
         m_mod[i]->m_modulatedModel.saveSettings(_doc, _this,
                                                 "modulated" + is);
@@ -1034,18 +1040,22 @@ void SynthGDX::loadSettings(const QDomElement& _this)
 
         // tmp compat
         m_osc[i]->m_enabledModel.loadSettings(_this, "enabled" + is);
-        m_osc[i]->m_wave1IndexModel.loadSettings(_this, "wave1type" + is, false);
-        m_osc[i]->m_wave2IndexModel.loadSettings(_this, "wave2type" + is, false);
-        m_osc[i]->m_wave1ReverseModel.loadSettings(_this,
-                                                   "wave_reverse" + is, false);
-        m_osc[i]->m_wave1AbsoluteModel.loadSettings(_this,
-                                                    "wave_absolute" + is, false);
-        m_osc[i]->m_wave1OppositeModel.loadSettings(_this,
-                                                    "wave_opposite" + is, false);
-        m_osc[i]->m_wave1ComplementModel.loadSettings(_this,
-                                                      "wave_complement" + is, false);
-        m_osc[i]->m_wave1IndexModel.loadSettings(_this, "wave1_shape" + is, false);
-        m_osc[i]->m_wave2IndexModel.loadSettings(_this, "wave2_shape" + is, false);
+        m_osc[i]->m_wave1IndexModel.loadSettings(_this, "wave1type" + is,
+                                                 false);
+        m_osc[i]->m_wave2IndexModel.loadSettings(_this, "wave2type" + is,
+                                                 false);
+        m_osc[i]->m_wave1ReverseModel.loadSettings(_this, "wave_reverse" + is,
+                                                   false);
+        m_osc[i]->m_wave1AbsoluteModel.loadSettings(
+                _this, "wave_absolute" + is, false);
+        m_osc[i]->m_wave1OppositeModel.loadSettings(
+                _this, "wave_opposite" + is, false);
+        m_osc[i]->m_wave1ComplementModel.loadSettings(
+                _this, "wave_complement" + is, false);
+        m_osc[i]->m_wave1IndexModel.loadSettings(_this, "wave1_shape" + is,
+                                                 false);
+        m_osc[i]->m_wave2IndexModel.loadSettings(_this, "wave2_shape" + is,
+                                                 false);
 
         // correct
         m_osc[i]->m_enabledModel.loadSettings(_this, "osc_enabled" + is);

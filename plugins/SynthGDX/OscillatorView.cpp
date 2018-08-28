@@ -71,6 +71,12 @@ OscillatorView::OscillatorView(OscillatorObject* _osc,
     waveMixKNB->setPointColor(Qt::white);
     waveMixKNB->setText("WMIX");
 
+    Knob* waveAntialiasKNB = new Knob(this);
+    waveAntialiasKNB->setModel(&m_osc->m_waveAntialiasModel);
+    waveAntialiasKNB->setPointColor(Qt::white);
+    waveAntialiasKNB->setText("AA");
+    //waveAntialiasKNB->setTextAnchorPoint(Qt::AnchorBottom);
+
     // wave 1
 
     LedCheckBox* reverse1LCB = new LedCheckBox(this, LedCheckBox::White);
@@ -394,7 +400,8 @@ OscillatorView::OscillatorView(OscillatorObject* _osc,
     row++;  // fourth row
     mainLayout->addWidget(waveMixKNB, row, ++col, 1, 1,
                           Qt::AlignBottom | Qt::AlignHCenter);
-    ++col;
+    mainLayout->addWidget(waveAntialiasKNB, row, ++col, 1, 1,
+                          Qt::AlignBottom | Qt::AlignHCenter);
     mainLayout->addWidget(phaseOffset, row, ++col, 1, 1,
                           Qt::AlignBottom | Qt::AlignHCenter);
     mainLayout->addWidget(stereoPhaseDetuningKNB, row, ++col, 1, 1,
