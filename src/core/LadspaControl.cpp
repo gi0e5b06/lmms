@@ -23,10 +23,11 @@
  *
  */
 
-#include <cstdio>
-
 #include "LadspaControl.h"
 #include "LadspaBase.h"
+
+#include <cmath>
+//#include <cstdio>
 
 
 LadspaControl::LadspaControl( Model * _parent, port_desc_t * _port,
@@ -51,19 +52,25 @@ LadspaControl::LadspaControl( Model * _parent, port_desc_t * _port,
 		case TOGGLED:
 			connect( &m_toggledModel, SIGNAL( dataChanged() ),
 					 this, SLOT( ledChanged() ) );
-			if( m_port->def == 1.0f )
-			{
-				m_toggledModel.setValue( true );
-			}
+			//if( m_port->def == 1.0f )
+			//{
+			//	m_toggledModel.setValue( true );
+			//}
+                        m_toggledModel.setValue( m_port->def >= 0.5f );
 			// TODO: careful: we must prevent saved scales
 			m_toggledModel.setScaleLogarithmic( m_port->suggests_logscale );
 			break;
 
 		case INTEGER:
+                        /*
 			m_knobModel.setRange( static_cast<int>( m_port->max ),
 					  static_cast<int>( m_port->min ),
 					  1 + static_cast<int>( m_port->max -
 							  m_port->min ) / 400 );
+                        */
+			m_knobModel.setRange( static_cast<int>( m_port->min ),
+                                              static_cast<int>( m_port->max ),
+                                              1);
 			m_knobModel.setInitValue(
 					static_cast<int>( m_port->def ) );
 			connect( &m_knobModel, SIGNAL( dataChanged() ),
@@ -73,11 +80,19 @@ LadspaControl::LadspaControl( Model * _parent, port_desc_t * _port,
 			break;
 
 		case FLOATING:
+                        /*
 			m_knobModel.setRange( m_port->min, m_port->max,
 				( m_port->max - m_port->min )
 				/ ( m_port->name.toUpper() == "GAIN"
 					&& m_port->max == 10.0f ? 4000.0f :
 								( m_port->suggests_logscale ? 8000.0f : 800.0f ) ) );
+                        */
+                        {
+                                float rng=fabsf( m_port->max - m_port->min );
+                                m_knobModel.setRange( m_port->min,
+                                                      m_port->max,
+                                                      rng<1E-32f ? rng : powf(10.f,ceilf(log10f(rng)-5)));
+                        }
 			m_knobModel.setInitValue( m_port->def );
 			connect( &m_knobModel, SIGNAL( dataChanged() ),
 						 this, SLOT( knobChanged() ) );
@@ -86,9 +101,15 @@ LadspaControl::LadspaControl( Model * _parent, port_desc_t * _port,
 			break;
 
 		case TIME:
-			m_tempoSyncKnobModel.setRange( m_port->min, m_port->max,
-					  ( m_port->max -
-						m_port->min ) / 800.0f );
+			//m_tempoSyncKnobModel.setRange( m_port->min, m_port->max,
+                        //( m_port->max -
+			//			m_port->min ) / 800.0f );
+                        {
+                                float rng=fabsf( m_port->max - m_port->min );
+                                m_knobModel.setRange( m_port->min,
+                                                      m_port->max,
+                                                      rng<1E-32f ? rng : powf(10.f,ceilf(log10f(rng)-5)));
+                        }
 			m_tempoSyncKnobModel.setInitValue( m_port->def );
 			connect( &m_tempoSyncKnobModel, SIGNAL( dataChanged() ),
 					 this, SLOT( tempoKnobChanged() ) );
