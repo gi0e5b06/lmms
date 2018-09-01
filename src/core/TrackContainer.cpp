@@ -236,7 +236,7 @@ void TrackContainer::clearAllTracks()
 
 bool TrackContainer::isEmpty() const
 {
-	for( TrackList::const_iterator it = m_tracks.begin();
+	for( Tracks::const_iterator it = m_tracks.begin();
 						it != m_tracks.end(); ++it )
 	{
 		if( !( *it )->getTCOs().isEmpty() )
@@ -249,13 +249,17 @@ bool TrackContainer::isEmpty() const
 
 
 
-AutomatedValueMap TrackContainer::automatedValuesAt(MidiTime time, int tcoNum) const
+//AutomatedValueMap
+void TrackContainer::automatedValuesAt(MidiTime time, int tcoNum, AutomatedValueMap& _map) const
 {
-	return automatedValuesFromTracks(tracks(), time, tcoNum);
+	//return
+        automatedValuesFromTracks(tracks(), time, tcoNum, _map);
 }
 
 
-AutomatedValueMap TrackContainer::automatedValuesFromTracks(const TrackList &tracks, MidiTime time, int tcoNum)
+//AutomatedValueMap
+void TrackContainer::automatedValuesFromTracks(const Tracks& tracks, MidiTime time,
+                                               int tcoNum, AutomatedValueMap& _map)
 {
 	Track::tcoVector tcos;
 
@@ -279,21 +283,20 @@ AutomatedValueMap TrackContainer::automatedValuesFromTracks(const TrackList &tra
 		}
 	}
 
-	AutomatedValueMap valueMap;
+	//AutomatedValueMap valueMap;
 
 	//Q_ASSERT(std::is_sorted(tcos.begin(), tcos.end(), TrackContentObject::comparePosition));
 
 	if(!std::is_sorted(tcos.begin(), tcos.end(), TrackContentObject::comparePosition))
 	{
 		qCritical("Error: fail assert: is_sorted(tcos.begin(), tcos.end()) %s#%d",__FILE__,__LINE__);
-		return valueMap;
+		return; //valueMap;
 	}
 
 	for(TrackContentObject* tco : tcos)
 	{
-		if (tco->isMuted() || tco->startPosition() > time) {
+		if (tco->isMuted() || tco->startPosition() > time || tco->endPosition() < time)
 			continue;
-		}
 
 		if (auto* p = dynamic_cast<AutomationPattern *>(tco))
 		{
@@ -307,16 +310,18 @@ AutomatedValueMap TrackContainer::automatedValuesFromTracks(const TrackList &tra
 			}
                         */
                         if(p->isFixed())
-                        {
                                 relTime = relTime % p->length();
-                        }
+                        else
+                        if(relTime>=p->length())
+                                continue;
 
                         float value = p->valueAt(relTime);
 
 			for (AutomatableModel* model : p->objects())
 			{
 				//valueMap[model] = value;
-                                valueMap.insert(model,value);
+                                //valueMap.insert(model,value);
+                                _map.insert(model,value);
 			}
 		}
 		else if (auto* bb = dynamic_cast<BBTCO *>(tco))
@@ -328,13 +333,17 @@ AutomatedValueMap TrackContainer::automatedValuesFromTracks(const TrackList &tra
                         bbTime = bbTime % tco->length();
 			bbTime = bbTime % (bbContainer->lengthOfBB(bbIndex) * MidiTime::ticksPerTact());
 
+                        bbContainer->automatedValuesAt(bbTime, bbIndex, _map);
+                        /*
 			auto bbValues = bbContainer->automatedValuesAt(bbTime, bbIndex);
 			for (auto it=bbValues.begin(); it != bbValues.end(); it++)
 			{
 				// override old values, bb track with the highest index takes precedence
 				//valueMap[it.key()] = it.value();
-                                valueMap.insert(it.key(),it.value());
+                                //valueMap.insert(it.key(),it.value());
+                                _map.insert(it.key(),it.value());
 			}
+                        */
 		}
 		else
 		{
@@ -342,7 +351,7 @@ AutomatedValueMap TrackContainer::automatedValuesFromTracks(const TrackList &tra
 		}
 	}
 
-	return valueMap;
+	return;//valueMap;
 }
 
 
@@ -418,6 +427,8 @@ void TrackContainer::automatedValuesFromTrack(const Track* _track, MidiTime time
                         bbTime = bbTime % tco->length();
 			bbTime = bbTime % (bbContainer->lengthOfBB(bbIndex) * MidiTime::ticksPerTact());
 
+                        bbContainer->automatedValuesAt(bbTime, bbIndex, _map);
+                        /*
 			auto bbValues = bbContainer->automatedValuesAt(bbTime, bbIndex);
 			for (auto it=bbValues.begin(); it != bbValues.end(); it++)
 			{
@@ -425,6 +436,7 @@ void TrackContainer::automatedValuesFromTrack(const Track* _track, MidiTime time
 				//valueMap[it.key()] = it.value();
                                 _map.insert(it.key(),it.value());
 			}
+                        */
 		}
 		else
 		{

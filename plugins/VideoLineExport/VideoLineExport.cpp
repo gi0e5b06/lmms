@@ -102,8 +102,8 @@ int VideoLineExport::imgToPos(int tempo,int img)
 }
 
 /*
-bool VideoLineExport::tryExport(const TrackContainer::TrackList &tracks,
-                                const TrackContainer::TrackList &tracks_BB,
+bool VideoLineExport::tryExport(const Tracks &tracks,
+                                const Tracks &tracks_BB,
                                 int tempo,
                                 QVector<QPair<tick_t,tick_t>> loops,
                                 const QString &filename)
@@ -111,8 +111,8 @@ bool VideoLineExport::tryExport(const TrackContainer::TrackList &tracks,
 
 bool VideoLineExport::proceed(const QString& _fileName)
 {
-        TrackContainer::TrackList tracks=Engine::getSong()->tracks();
-        //TrackContainer::TrackList tracks_BB=Engine::getBBTrackContainer()->tracks();
+        Tracks tracks=Engine::getSong()->tracks();
+        //Tracks tracks_BB=Engine::getBBTrackContainer()->tracks();
         int tempo=Engine::getSong()->getTempo();
         //int masterPitch=Engine::getSong()->m_masterPitchModel.value();
         const TimeLineWidget* tl = gui->songEditor()->m_editor->timeLineWidget();

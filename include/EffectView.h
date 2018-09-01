@@ -83,13 +83,16 @@ signals:
 
  private:
 	QPixmap m_bg;
-	LedCheckBox * m_bypass;
-	Knob * m_wetDry;
-	TempoSyncKnob * m_autoQuit;
-	Knob * m_gate;
-        Knob * m_balance;
-	QMdiSubWindow * m_subWindow;
-	EffectControlDialog * m_controlView;
+
+	LedCheckBox*   m_enabledLCB;
+	LedCheckBox*   m_clippingLCB;
+	Knob*          m_wetDryKNB;
+	TempoSyncKnob* m_autoQuitKNB;
+	Knob*          m_gateInKNB;
+        Knob*          m_balanceKNB;
+
+	QMdiSubWindow*       m_subWindow;
+	EffectControlDialog* m_controlView;
 
 } ;
 

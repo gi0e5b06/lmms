@@ -22,11 +22,6 @@
  *
  */
 
-#include <QDomElement>
-//#include <QLayout>
-
-//#include "debug.h"
-
 #include "FxMixer.h"
 
 #include "BufferManager.h"
@@ -37,11 +32,20 @@
 #include "Song.h"
 #include "InstrumentTrack.h"
 #include "BBTrackContainer.h"
-
 #include "EffectControlDialog.h"
 #include "EffectControls.h"
 //#include "LadspaControlView.h"
 #include "Knob.h"
+#include "SampleBuffer.h"
+
+//#include "debug.h"
+
+#include <QDir>
+#include <QDomElement>
+#include <QFileInfo>
+//#include <QLayout>
+#include <QUuid>
+
 
 FxRoute::FxRoute( FxChannel * from, FxChannel * to, float amount ) :
 	m_from( from ),
@@ -80,14 +84,16 @@ FxChannel::FxChannel( int idx, Model * _parent ) :
 	m_peakLeft( 0.0f ),
 	m_peakRight( 0.0f ),
 	m_buffer( BufferManager::acquire() ),//new sampleFrame[Engine::mixer()->framesPerPeriod()] ),
-	m_muteModel( false, _parent ),
+	m_mutedModel( false, _parent ),
 	m_soloModel( false, _parent ),
 	m_volumeModel( 1.0, 0.0, 1.0, 0.001, _parent ),//max=2.
 	m_name(),
-	m_lock(),
+        m_uuid(""),
 	m_channelIndex( idx ),
+	m_lock(),
 	m_queued( false ),
-	m_dependenciesMet( 0 )
+	m_dependenciesMet( 0 ),
+        m_frozenBuf( NULL )
 {
 	if(idx>0)
 	{
@@ -121,9 +127,10 @@ FxChannel::FxChannel( int idx, Model * _parent ) :
 	}
 
 	BufferManager::clear( m_buffer );
+
+	connect( &m_frozenModel, SIGNAL( dataChanged() ),
+		 this, SLOT( toggleFrozen() ) );
 }
-
-
 
 
 FxChannel::~FxChannel()
@@ -131,8 +138,122 @@ FxChannel::~FxChannel()
 	//delete[] m_buffer;
 	BufferManager::release(m_buffer);
 	//qInfo("FxChannel::~FxChannel idx=%d",m_channelIndex);
+
+        if(m_frozenBuf) delete m_frozenBuf;
 }
 
+
+const QString FxChannel::uuid()
+{
+        if(m_uuid.isEmpty())
+        {
+                m_uuid=QUuid::createUuid().toString()
+                        .replace("{","").replace("}","");
+		//if( Engine::getSong() )
+		//	Engine::getSong()->setModified();
+        }
+        return m_uuid;
+}
+
+
+void FxChannel::toggleFrozen()
+{
+        //qInfo("FxChannel::toggleFrozen");
+        updateFrozenBuffer();
+}
+
+void FxChannel::updateFrozenBuffer()
+{
+        //qInfo("FxChannel::updateFrozenBuffer");
+        //if(m_frozenModel)
+        {
+                const Song*   song=Engine::getSong();
+                const float   fpt =Engine::framesPerTick();
+                const f_cnt_t len =song->ticksPerTact()*song->length()*fpt;
+
+                if((m_frozenBuf==NULL)||
+                   (len!=m_frozenBuf->frames()))
+                {
+                        if(m_frozenBuf) delete m_frozenBuf;
+                        m_frozenBuf=new SampleBuffer(len);
+                        //qInfo("FxChannel::updateFrozenBuffer len=%d",len);
+                }
+        }
+}
+
+
+void FxChannel::cleanFrozenBuffer()
+{
+        //qInfo("FxChannel::cleanFrozenBuffer");
+        //if(m_frozenModel)
+        {
+                const Song*   song=Engine::getSong();
+                const float   fpt =Engine::framesPerTick();
+                const f_cnt_t len =song->ticksPerTact()*song->length()*fpt;
+
+                if((m_frozenBuf==NULL)||
+                   (len!=m_frozenBuf->frames())||
+                   m_frozenBuf->m_mmapped)
+                {
+                        if(m_frozenBuf) delete m_frozenBuf;
+                        m_frozenBuf=new SampleBuffer(len);
+                        //qInfo("FxChannel::cleanFrozenBuffer len=%d",len);
+                }
+        }
+}
+
+
+void FxChannel::readFrozenBuffer()
+{
+        //qInfo("InstrumentTrack::readFrozenBuffer");
+        if(//m_frozenModel&&
+           //m_frozenModel->value()&&
+           m_frozenBuf)
+        {
+                delete m_frozenBuf;
+                m_frozenBuf=NULL;
+                QString d=Engine::getSong()->projectDir()
+                        +QDir::separator()+"channels"
+                        +QDir::separator()+"frozen";
+                if(QFileInfo(d).exists())
+                {
+                        QString f=d+QDir::separator()+uuid()
+                                +"."+SampleBuffer::rawStereoSuffix();
+                        //qInfo("FxChannel::readFrozenBuffer f=%s",
+                        //      qPrintable(f));
+                        QFile fi(f);
+                        if(fi.exists())
+                        {
+                                if(fi.size()==0)
+                                        fi.remove();
+                                else
+                                        m_frozenBuf=new SampleBuffer(f);
+                        }
+                }
+        }
+}
+
+
+void FxChannel::writeFrozenBuffer()
+{
+        //qInfo("InstrumentTrack::writeFrozenBuffer");
+        if(//m_frozenModel&&
+           //m_frozenModel->value()&&
+           m_frozenBuf)
+        {
+                QString d=Engine::getSong()->projectDir()
+                        +QDir::separator()+"channels"
+                        +QDir::separator()+"frozen";
+                if(QFileInfo(d).exists())
+                {
+                        QString f=d+QDir::separator()+uuid()
+                                +"."+SampleBuffer::rawStereoSuffix();
+                        //qInfo("AudioPort::writeFrozenBuffer f=%s",
+                        //      qPrintable(f));
+                        m_frozenBuf->writeCacheData(f);
+                }
+        }
+}
 
 void FxChannel::processed()
 {
@@ -158,15 +279,77 @@ void FxChannel::incrementDeps()
 void FxChannel::unmuteForSolo()
 {
 	//TODO: Recursively activate every channel, this channel sends to
-	m_muteModel.setValue(false);
+	m_mutedModel.setValue(false);
 }
 
 
 
 void FxChannel::doProcessing()
 {
-	const fpp_t fpp = Engine::mixer()->framesPerPeriod();
-	const bool exporting = Engine::getSong()->isExporting();
+        const Song*   song      = Engine::getSong();
+        const Mixer*  mixer     = Engine::mixer();
+        //const float   fpt       = Engine::framesPerTick();
+	const fpp_t   fpp       = mixer->framesPerPeriod();
+	const bool    exporting = song->isExporting();
+        const f_cnt_t af        = song->getPlayPos().absoluteFrame();
+
+        //qInfo("InstrumentTrack::play exporting=%d",Engine::getSong()->isExporting());
+        if(isFrozen()&&
+           m_frozenBuf&&
+           !exporting&&
+           (song->playMode()==Song::Mode_PlaySong)&&
+           song->isPlaying())
+        {
+                //qInfo("FxChannel::doProcessing use frozen buffer"
+                //      " fx=%d fb=%p af=%d s=%p ap=%p",
+                //      m_channelIndex,m_frozenBuf,af,m_buffer,this);
+                for(f_cnt_t f=0;f<fpp;++f)
+                {
+                        sample_t vch0,vch1;
+                        m_frozenBuf->getDataFrame(af+f,vch0,vch1);
+                        m_buffer[f][0]=vch0;
+                        m_buffer[f][1]=vch1;
+
+                        /*
+                        if(af+f>=1000 && af+f<1005)
+                                qInfo("FxChannel::doProcessing use frozen buffer"
+                                      " fb=%p af=%d s=%p ap=%p vch0=%f vch1=%f",
+                                      m_frozenBuf,af+f,m_buffer,this,vch0,vch1);
+                        */
+                }
+
+                // We apply dj stuff
+                if(m_eqDJ && /*m_stillRunning && m_hasInput &&*/ m_eqDJEnableModel.value())
+                {
+                        m_eqDJ->startRunning();
+                        m_stillRunning=m_eqDJ->processAudioBuffer(m_buffer,fpp);
+                }
+                //else if(m_channelIndex)
+                //	qInfo("NOT processing... %p %d %d %d",m_eqDJ,m_stillRunning,
+                //	      m_hasInput,m_eqDJEnableModel.value());
+
+		const float v=m_volumeModel.value();
+                if(v>0.f)
+                {
+                        float peakLeft =0.f;
+                        float peakRight=0.f;
+                        mixer->getPeakValues( m_buffer, fpp, peakLeft, peakRight );
+                        m_peakLeft =qMax(m_peakLeft ,peakLeft *v);
+                        m_peakRight=qMax(m_peakRight,peakRight*v);
+
+                        //if(m_channelIndex==1)
+                        //      qInfo("ch1 peaks=%f,%f",m_peakLeft,m_peakRight);
+
+                        if(m_peakLeft>1.f || m_peakRight>1.f)
+                        {
+                                //qInfo("ch #%d clipping",m_channelIndex);
+                                m_clippingModel.setValue(true);
+                        }
+                }
+
+                processed();
+                return;
+        }
 
 	if(true)//tmp !m_muted)
 	{
@@ -174,7 +357,9 @@ void FxChannel::doProcessing()
 		{
 			FxChannel * sender = senderRoute->sender();
 			FloatModel * sendModel = senderRoute->amount();
-			if( ! sendModel ) qFatal( "Error: no send model found from %d to %d", senderRoute->senderIndex(), m_channelIndex );
+			if( ! sendModel )
+                                qFatal( "Error: no send model found from %d to %d",
+                                        senderRoute->senderIndex(), m_channelIndex );
 
 			if( sender->m_hasInput || sender->m_stillRunning )
 			{
@@ -234,7 +419,26 @@ void FxChannel::doProcessing()
 
                 m_stillRunning = m_fxChain.processAudioBuffer( m_buffer, fpp, m_hasInput );
 
-                // should freeze here
+                if(!isFrozen()&&
+                   m_frozenBuf&&
+                   (((song->playMode() == Song::Mode_PlaySong)&&song->isPlaying()) ||
+                    (exporting &&
+                     mixer->processingSampleRate()==mixer->baseSampleRate())))
+                {
+                        for(f_cnt_t f=0; f <fpp; ++f)
+                        {
+                                m_frozenBuf->setDataFrame(af+f,
+                                                          m_buffer[f][0],
+                                                          m_buffer[f][1]);
+                                /*
+                                if(af+f>=1000 && af+f<1004)
+                                        qInfo("FxChannel::doProcessing freeze to buffer"
+                                              " fxch=%d fb=%p af=%d s=%p ap=%p vch0=%f vch1=%f",
+                                              m_channelIndex,m_frozenBuf,af+f,m_buffer,this,
+                                              m_buffer[f][0],m_buffer[f][1]);
+                                */
+                        }
+                }
 
                 if(m_eqDJ && /*m_stillRunning && m_hasInput &&*/ m_eqDJEnableModel.value())
                 {
@@ -250,7 +454,7 @@ void FxChannel::doProcessing()
                 {
                         float peakLeft =0.f;
                         float peakRight=0.f;
-                        Engine::mixer()->getPeakValues( m_buffer, fpp, peakLeft, peakRight );
+                        mixer->getPeakValues( m_buffer, fpp, peakLeft, peakRight );
                         m_peakLeft =qMax(m_peakLeft ,peakLeft *v);
                         m_peakRight=qMax(m_peakRight,peakRight*v);
 
@@ -264,10 +468,10 @@ void FxChannel::doProcessing()
                         }
                 }
         }
-        else
-        {
-                m_peakRight=m_peakLeft=0.f;
-        }
+        //else
+        //{
+        //        m_peakRight=m_peakLeft=0.f;
+        //}
 
 	// increment dependency counter of all receivers
 	processed();
@@ -319,8 +523,8 @@ void FxMixer::activateSolo()
 {
 	for (int i = 1; i < m_fxChannels.size(); ++i)
 	{
-		m_fxChannels[i]->m_muteBeforeSolo = m_fxChannels[i]->m_muteModel.value();
-		m_fxChannels[i]->m_muteModel.setValue( true );
+		m_fxChannels[i]->m_muteBeforeSolo = m_fxChannels[i]->m_mutedModel.value();
+		m_fxChannels[i]->m_mutedModel.setValue( true );
 	}
 }
 
@@ -328,7 +532,7 @@ void FxMixer::deactivateSolo()
 {
 	for (int i = 1; i < m_fxChannels.size(); ++i)
 	{
-		m_fxChannels[i]->m_muteModel.setValue( m_fxChannels[i]->m_muteBeforeSolo );
+		m_fxChannels[i]->m_mutedModel.setValue( m_fxChannels[i]->m_muteBeforeSolo );
 	}
 }
 
@@ -374,7 +578,7 @@ void FxMixer::deleteChannel( int index )
 	Engine::mixer()->requestChangeInModel();
 
 	// go through every instrument and adjust for the channel index change
-	TrackContainer::TrackList tracks;
+	Tracks tracks;
 	tracks += Engine::getSong()->tracks();
 	tracks += Engine::getBBTrackContainer()->tracks();
 
@@ -457,13 +661,13 @@ void FxMixer::moveChannelLeft( int index )
 	int a = index - 1, b = index;
 
 	// go through every instrument and adjust for the channel index change
-	QVector<Track *> songTrackList = Engine::getSong()->tracks();
-	QVector<Track *> bbTrackList = Engine::getBBTrackContainer()->tracks();
+	Tracks songTracks = Engine::getSong()->tracks();
+	Tracks bbTracks = Engine::getBBTrackContainer()->tracks();
 
-	QVector<Track *> trackLists[] = {songTrackList, bbTrackList};
+	Tracks trackLists[] = {songTracks, bbTracks};
 	for(int tl=0; tl<2; ++tl)
 	{
-		QVector<Track *> trackList = trackLists[tl];
+		Tracks trackList = trackLists[tl];
 		for(int i=0; i<trackList.size(); ++i)
 		{
 			if( trackList[i]->type() == Track::InstrumentTrack )
@@ -647,7 +851,7 @@ FloatModel * FxMixer::channelSendModel( fx_ch_t fromChannel, fx_ch_t toChannel )
 void FxMixer::mixToChannel( const sampleFrame * _buf, fx_ch_t _ch )
 {
         FxChannel* ch=m_fxChannels[_ch];
-	if(!ch->m_muteModel.value())
+	if(!ch->m_mutedModel.value())
 	{
 		ch->m_lock.lock();
 		MixHelpers::add( ch->m_buffer, _buf, Engine::mixer()->framesPerPeriod() );
@@ -685,7 +889,7 @@ void FxMixer::masterMix( sampleFrame * _buf )
 	{
                 /*
                 bool old=ch->m_muted;
-		ch->m_muted = ch->m_muteModel.value();
+		ch->m_muted = ch->m_mutedModel.value();
                 if(old && (old!=ch->m_muted))
                         BufferManager::clear(ch->m_buffer);
                 */
@@ -800,11 +1004,11 @@ void FxMixer::clearChannel(fx_ch_t index)
 	FxChannel * ch = m_fxChannels[index];
 	ch->m_fxChain.clear();
 	ch->m_volumeModel.setValue( 1.0f );
-	ch->m_muteModel.setValue( false );
+	ch->m_mutedModel.setValue( false );
 	ch->m_soloModel.setValue( false );
 	ch->m_name = ( index == 0 ) ? tr( "Master" ) : tr( "FX %1" ).arg( index );
 	ch->m_volumeModel.setDisplayName( ch->m_name + ">" + tr( "Volume" ) );
-	ch->m_muteModel.setDisplayName( ch->m_name + ">" + tr( "Mute" ) );
+	ch->m_mutedModel.setDisplayName( ch->m_name + ">" + tr( "Mute" ) );
 	ch->m_soloModel.setDisplayName( ch->m_name + ">" + tr( "Solo" ) );
 
 	// send only to master
@@ -839,7 +1043,7 @@ void FxMixer::saveSettings( QDomDocument & _doc, QDomElement & _this )
 
 		ch->m_fxChain.saveState( _doc, fxch );
 		ch->m_volumeModel.saveSettings( _doc, fxch, "volume" );
-		ch->m_muteModel.saveSettings( _doc, fxch, "muted" );
+		ch->m_mutedModel.saveSettings( _doc, fxch, "muted" );
 		ch->m_soloModel.saveSettings( _doc, fxch, "soloed" );
 		fxch.setAttribute( "num", i );
 		fxch.setAttribute( "name", ch->m_name );
@@ -885,7 +1089,7 @@ void FxMixer::loadSettings( const QDomElement & _this )
 		allocateChannelsTo( num );
 
 		m_fxChannels[num]->m_volumeModel.loadSettings( fxch, "volume" );
-                m_fxChannels[num]->m_muteModel.loadSettings( fxch, "muted" );
+                m_fxChannels[num]->m_mutedModel.loadSettings( fxch, "muted" );
 		m_fxChannels[num]->m_soloModel.loadSettings( fxch, "soloed" );
 		m_fxChannels[num]->m_name = fxch.attribute( "name" );
 

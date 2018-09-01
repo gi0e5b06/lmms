@@ -290,15 +290,20 @@ void MainWindow::finalize()
 
 	project_menu->addSeparator();
 	project_menu->addAction( embed::getIconPixmap( "project_export" ),
-                                 tr( "&Freeze Tracks..." ),
+                                 tr( "&Freeze..." ),
                                  Engine::getSong(),
-                                 SLOT( freezeTracks() ) );
+                                 SLOT( freeze() ) );
 	project_menu->addSeparator();
 	project_menu->addAction( embed::getIconPixmap( "project_export" ),
                                  tr( "Render Son&g..." ),
                                  Engine::getSong(),
                                  SLOT( exportProject() ),
                                  Qt::CTRL + Qt::Key_Enter );
+	project_menu->addAction( embed::getIconPixmap( "project_export" ),
+                                 tr( "Render &Channels..." ),
+                                 Engine::getSong(),
+                                 SLOT( exportProjectChannels() ) );
+        //Qt::CTRL + Qt::SHIFT + Qt::Key_C );
 	project_menu->addAction( embed::getIconPixmap( "project_export" ),
                                  tr( "Render &Tracks..." ),
                                  Engine::getSong(),
@@ -758,7 +763,7 @@ bool MainWindow::mayChangeProject(bool stopPlayback)
 
 	if( !Engine::getSong()->isModified() && getSession() != Recover )
 	{
-		return( true );
+		return true;
 	}
 
 	// Separate message strings for modified and recovered files
@@ -770,8 +775,8 @@ bool MainWindow::mayChangeProject(bool stopPlayback)
 
 	QString messageTitleUnsaved = tr( "Project not saved" );
 	QString messageUnsaved = tr( "The current project was modified since "
-					"last saving. Do you want to save it "
-								"now?" );
+                                     "last saving. Do you want to save it "
+                                     "now?" );
 
 	QMessageBox mb( ( getSession() == Recover ?
 				messageTitleRecovered : messageTitleUnsaved ),
@@ -786,7 +791,7 @@ bool MainWindow::mayChangeProject(bool stopPlayback)
 
 	if( answer == QMessageBox::Save )
 	{
-		return( saveProject() );
+		return saveProject();
 	}
 	else if( answer == QMessageBox::Discard )
 	{
@@ -794,10 +799,10 @@ bool MainWindow::mayChangeProject(bool stopPlayback)
 		{
 			sessionCleanup();
 		}
-		return( true );
+		return true;
 	}
 
-	return( false );
+	return false;
 }
 
 
@@ -1020,10 +1025,9 @@ bool MainWindow::saveProject()
 	if( Engine::getSong()->guiSaveProject() )
 	{
 		if( getSession() == Recover )
-		{
 			sessionCleanup();
-                        return true;
-		}
+
+                return true;
 	}
 
 	return false;

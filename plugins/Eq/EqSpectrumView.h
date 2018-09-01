@@ -23,19 +23,23 @@
 #ifndef EQSPECTRUMVIEW_H
 #define EQSPECTRUMVIEW_H
 
-#include <QPainter>
-#include <QWidget>
+#define FFT_BUFFER_SIZE 22050
+#define MAX_BANDS 512
+
+//#include "EqControls.h"
+//#include "EqEffect.h"
 
 #include "fft_helpers.h"
 #include "lmms_basics.h"
 #include "lmms_math.h"
 
+#include <QPainter>
+#include <QWidget>
 
-const int MAX_BANDS = 2048;
 class EqAnalyser
 {
-public:
-	EqAnalyser();
+ public:
+        EqAnalyser();
 	virtual ~EqAnalyser();
 
 	float m_bands[MAX_BANDS];

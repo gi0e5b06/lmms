@@ -28,7 +28,7 @@
 #include <QDomDocument>
 #include <QMap>
 //#include <QObject>
-//#include <QStringList>
+#include <QStringList> // REQUIRED
 
 #include "JournallingObject.h"
 #include "Model.h"

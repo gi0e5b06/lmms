@@ -68,7 +68,7 @@ public slots:
 
 protected:
 	// The internal per-controller get-value function
-	virtual void updateValueBuffer();
+	virtual void fillValueBuffer();
 
 
 	MidiPort m_midiPort;

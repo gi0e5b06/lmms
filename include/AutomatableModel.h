@@ -25,14 +25,14 @@
 #ifndef AUTOMATABLE_MODEL_H
 #define AUTOMATABLE_MODEL_H
 
-#include <QMap>
-#include <QMutex>
-
 #include "JournallingObject.h"
 #include "Model.h"
 #include "MidiTime.h"
 #include "ValueBuffer.h"
 #include "MemoryManager.h"
+
+#include <QMap>
+#include <QMutex>
 
 // simple way to map a property of a view to a model
 #define mapPropertyFromModelPtr(type,getfunc,setfunc,modelname)	\
@@ -113,17 +113,19 @@ public:
 
 
 	template<class T>
-	inline T value( int frameOffset = 0 ) const
+        inline T value( int frameOffset = 0, bool recording = false ) const
 	{
-		if( unlikely( hasLinkedModels() || m_controllerConnection != NULL ) )
+                /*
+                if( unlikely( m_controllerConnection != NULL || hasLinkedModels() ) )
 		{
-			return castValue<T>( controllerValue( frameOffset ) );
+			return castValue<T>( controllerValue( frameOffset, recording ) );
 		}
+                */
 
 		return castValue<T>( m_value );
 	}
 
-	float controllerValue( int frameOffset ) const;
+	//float controllerValue( int frameOffset, bool recording ) const;
 
 	//! @brief Function that returns sample-exact data as a ValueBuffer
 	//! @return pointer to model's valueBuffer when s.ex.data exists, NULL otherwise
@@ -289,16 +291,19 @@ public:
 signals:
 	void initValueChanged( float val );
 	void destroyed( jo_id_t id );
-        void controllerValueChanged();
+        //void controllerValueChanged();
 
 
 public slots:
 	void setValue( const float value );
 	void setAutomatedValue( const float value );
-        void copyFrom(const ValueBuffer* _vb);
+	void setControlledValue( const float value );
+        //void setBuffer(const ValueBuffer* _vb);
+        void setAutomatedBuffer(const ValueBuffer* _vb);
+        void setControlledBuffer(const ValueBuffer* _vb);
 	virtual void reset();
 	virtual void unlinkControllerConnection();
-        virtual void onControllerValueChanged();
+        //virtual void onControllerValueChanged();
 
 
  protected:
@@ -373,7 +378,8 @@ private:
 
 	bool m_hasSampleExactData;
 
-	// prevent several threads from attempting to write the same vb at the same time
+	// prevent several threads from attempting to write the same vb at
+        // the same time. Still useful with signals?
 	QMutex m_valueBufferMutex;
 };
 

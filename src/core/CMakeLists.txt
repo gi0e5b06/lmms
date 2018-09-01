@@ -74,6 +74,7 @@ SET(LMMS_SRCS
 	core/ProjectVersion.cpp
 	core/RemotePlugin.cpp
 	core/RenderManager.cpp
+	core/Ring.cpp
 	core/RingBuffer.cpp
 	core/SampleBuffer.cpp
 	core/SamplePlayHandle.cpp

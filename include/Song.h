@@ -339,9 +339,10 @@ public slots:
 	void togglePause();
 	void stop();
 
-        void freezeTracks();
+        void freeze();
 	void importProject();
 	void exportProject( bool multiExport = false );
+	void exportProjectChannels();
 	void exportProjectTracks();
 	void exportProjectMidi();
         void exportProjectVideoLine();
@@ -444,6 +445,7 @@ private:
 
 	QStringList m_errors;
 
+        AutomatedValueMap m_automatedValues;
 	PlayModes m_playMode;
 	PlayPos m_playPos[Mode_Count];
 	tact_t m_length;

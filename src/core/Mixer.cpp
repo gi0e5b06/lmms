@@ -78,7 +78,7 @@ Mixer::Mixer( bool renderOnly ) :
 	m_readBuf( NULL ),
 	m_writeBuf( NULL ),
 	m_workers(),
-	m_numWorkers( QThread::idealThreadCount()-1 ),
+	m_numWorkers( QThread::idealThreadCount()*2-1 ), //tmp GDX
 	m_newPlayHandles(),// PlayHandle::MaxNumber ),
 	m_qualitySettings( qualitySettings::Mode_Draft ),
 	m_masterGain( 1.0f ),

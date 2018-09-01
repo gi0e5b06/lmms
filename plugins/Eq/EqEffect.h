@@ -26,11 +26,11 @@
 
 #include "BasicFilters.h"
 #include "Effect.h"
-#include "EqControls.h"
 #include "EqFilter.h"
+#include "EqControls.h"
 #include "lmms_math.h"
 
-
+class EqAnalyser;
 
 class EqEffect : public Effect
 {
@@ -39,9 +39,10 @@ public:
 	virtual ~EqEffect();
 	virtual bool processAudioBuffer( sampleFrame * buf, const fpp_t frames );
 	virtual EffectControls * controls()
-	{
-		return &m_eqControls;
-	}
+        {
+                return &m_eqControls;
+        }
+
 	inline void  gain( sampleFrame * buf, const fpp_t frames, float scale, sampleFrame * peak )
 	{
 		peak[0][0] = 0.0f; peak[0][1] = 0.0f;

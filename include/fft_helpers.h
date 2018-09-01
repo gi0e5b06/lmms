@@ -30,7 +30,7 @@
 
 #include <fftw3.h>
 
-const int FFT_BUFFER_SIZE = 2048;
+//const int FFT_BUFFER_SIZE = 2048;
 
 enum WINDOWS
 {
@@ -77,8 +77,9 @@ int EXPORT compressbands( float * _absspec_buffer, float * _compressedband,
 			int _num_old, int _num_new, int _bottom, int _top );
 
 
-int EXPORT calc13octaveband31( float * _absspec_buffer, float * _subbands,
-				int _num_spec, float _max_frequency );
+int EXPORT calc13octaveband31( float * _absspec_buffer, 
+                               float * _subbands,
+                               int _num_spec, float _max_frequency );
 
 /* compute power of finite time sequence
  * take care num_values is length of timesignal[]

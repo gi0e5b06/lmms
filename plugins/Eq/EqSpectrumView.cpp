@@ -72,7 +72,7 @@ void EqAnalyser::analyze( sampleFrame *buf, const fpp_t frames )
 	if ( m_active )
 	{
 		m_inProgress=true;
-		const int FFT_BUFFER_SIZE = 2048;
+
 		fpp_t f = 0;
 		if( frames > FFT_BUFFER_SIZE )
 		{

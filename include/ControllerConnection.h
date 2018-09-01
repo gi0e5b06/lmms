@@ -61,15 +61,15 @@ public:
 
 	inline void setController( int _controllerId );
 
+        /*
 	float currentValue( int _offset )
 	{
 		return m_controller->currentValue( _offset );
 	}
 
-	ValueBuffer * valueBuffer()
-	{
-		return m_controller->valueBuffer();
-	}
+        bool hasChanged();
+	ValueBuffer * valueBuffer();
+        */
 
 	inline void setTargetName( const QString & _name );
 
@@ -101,20 +101,25 @@ public:
 
 public slots:
 	void deleteConnection();
+        void onControlledValueChanged(float _v);
+        void onControlledBufferChanged(ValueBuffer* _vb);
+
+signals:
+	// The value changed while the mixer isn't running (i.e: MIDI CC)
+	//void valueChanged();
+        void controlledValueChanged(float _v);
+        void controlledBufferChanged(const ValueBuffer* _vb);
 
 protected:
 	//virtual controllerDialog * createDialog( QWidget * _parent );
 	Controller * m_controller;
 	QString m_targetName;
 	int m_controllerId;
-	
 	bool m_ownsController;
+        float m_previousValue;
+	long m_lastUpdatedPeriod;
 
 	static ControllerConnectionVector s_connections;
-
-signals:
-	// The value changed while the mixer isn't running (i.e: MIDI CC)
-	void valueChanged();
 
 	friend class ControllerConnectionDialog;
 };

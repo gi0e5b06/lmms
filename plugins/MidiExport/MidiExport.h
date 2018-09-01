@@ -66,8 +66,8 @@ public:
 	}
 
         /*
-	virtual bool tryExport(const TrackContainer::TrackList &tracks,
-				const TrackContainer::TrackList &tracks_BB,
+	virtual bool tryExport(const Tracks &tracks,
+				const Tracks &tracks_BB,
 				int tempo, int masterPitch, const QString &filename);
         */
         virtual bool proceed(const QString& _fileName);

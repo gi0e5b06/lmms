@@ -153,23 +153,32 @@ SpectrumAnalyzerControlDialog::SpectrumAnalyzerControlDialog( SpectrumAnalyzerCo
 {
 	setAutoFillBackground( true );
 	QPalette pal;
-	pal.setBrush( backgroundRole(), PLUGIN_NAME::getIconPixmap( "background" ) );
-	setFixedSize( 293, 205 );
+	pal.setBrush( backgroundRole(), Qt::black );//PLUGIN_NAME::getIconPixmap( "background" ) );
+	setFixedSize( 293, 229 );
 	setPalette( pal );
-/*	QVBoxLayout * l = new QVBoxLayout( this );*/
+
+        /*QVBoxLayout * l = new QVBoxLayout( this );*/
+
 	SpectrumView* v = new SpectrumView( controls->m_effect, this );
 	v->move( 34, 10 );
 
-	LedCheckBox * lin_spec = new LedCheckBox( tr( "Linear spectrum" ), this );
+	LedCheckBox * lin_spec = new LedCheckBox( tr( "Linear spectrum (X axis)" ), this );
 	lin_spec->move( 32, 182 );
 	lin_spec->setModel( &controls->m_linearSpec );
 
-	LedCheckBox * lin_y = new LedCheckBox( tr( "Linear Y axis" ), this );
-	lin_y->move( 137, 182 );
+	LedCheckBox * lin_y = new LedCheckBox( tr( "Linear power (Y axis)" ), this );
+	lin_y->move( 32, 200 );
 	lin_y->setModel( &controls->m_linearYAxis );
 
-	connect( &controls->m_linearSpec, SIGNAL( dataChanged() ), this, SLOT( update() ) );
-	connect( &controls->m_linearYAxis, SIGNAL( dataChanged() ), this, SLOT( update() ) );
+        Knob * channelKNB=new Knob(this);
+        channelKNB->setText("CH");
+        channelKNB->setModel(&controls->m_channelMode);
+        channelKNB->move(281-37,182);
+
+	//connect( &controls->m_linearSpec,  SIGNAL( dataChanged() ), this, SLOT( update() ) );
+	//connect( &controls->m_linearYAxis, SIGNAL( dataChanged() ), this, SLOT( update() ) );
+	//connect( &controls->m_channelMode, SIGNAL( dataChanged() ), this, SLOT( update() ) );
+
 	/*
 	l->addWidget( v );
 	l->addWidget( lin_spec );

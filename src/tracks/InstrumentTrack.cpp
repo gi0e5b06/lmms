@@ -114,7 +114,7 @@ InstrumentTrack::InstrumentTrack( TrackContainer* tc ) :
 		       tr( "Volume" ) ),
 	m_panningModel( DefaultPanning, PanningLeft, PanningRight, 0.1f, this,
 			tr( "Panning" ) ),
-	m_audioPort( tr( "unnamed_track" ), true, &m_volumeModel,
+	m_audioPort( tr( "unnamed_instrument_track" ), true, &m_volumeModel,
 		     &m_panningModel, &m_mutedModel, &m_frozenModel, &m_clippingModel ),
 	m_pitchModel( 0, MinPitchDefault, MaxPitchDefault, 1, this,
 		      tr( "Pitch" ) ),
@@ -142,7 +142,7 @@ InstrumentTrack::InstrumentTrack( TrackContainer* tc ) :
 	m_panningModel.setCenterValue( DefaultPanning );
 	m_baseNoteModel.setInitValue( DefaultKey );
 
-	m_effectChannelModel.setRange( 0, Engine::fxMixer()->numChannels()-1, 1);
+	m_effectChannelModel.setRange( 0, Engine::fxMixer()->numChannels()-1);
 
 	for( int i = 0; i < NumKeys; ++i )
 	{
@@ -589,7 +589,7 @@ void InstrumentTrack::setName( const QString & _new_name )
 
 void InstrumentTrack::toggleFrozen()
 {
-        qInfo("InstrumentTrack::updateFrozenBuffer ap=%p",&m_audioPort);
+        //qInfo("InstrumentTrack::updateFrozenBuffer ap=%p",&m_audioPort);
         const Song*   song=Engine::getSong();
         const float   fpt =Engine::framesPerTick();
         const f_cnt_t len =song->ticksPerTact()*song->length()*fpt;
@@ -599,7 +599,7 @@ void InstrumentTrack::toggleFrozen()
 
 void InstrumentTrack::cleanFrozenBuffer()
 {
-        qInfo("InstrumentTrack::cleanFrozenBuffer");
+        //qInfo("InstrumentTrack::cleanFrozenBuffer");
         const Song*   song=Engine::getSong();
         const float   fpt =Engine::framesPerTick();
         const f_cnt_t len =song->ticksPerTact()*song->length()*fpt;
@@ -609,14 +609,14 @@ void InstrumentTrack::cleanFrozenBuffer()
 
 void InstrumentTrack::readFrozenBuffer()
 {
-        qInfo("InstrumentTrack::readFrozenBuffer");
+        //qInfo("InstrumentTrack::readFrozenBuffer");
         m_audioPort.readFrozenBuffer(uuid());
 }
 
 
 void InstrumentTrack::writeFrozenBuffer()
 {
-        qInfo("InstrumentTrack::writeFrozenBuffer");
+        //qInfo("InstrumentTrack::writeFrozenBuffer");
         m_audioPort.writeFrozenBuffer(uuid());
 }
 
@@ -755,15 +755,14 @@ bool InstrumentTrack::play( const MidiTime & _start, const fpp_t _frames,
 
 	bool played_a_note = false;	// will be return variable
 
-	if(!isMuted() ) // test with isMuted GDX
+	if(!isMuted()) // test with isMuted GDX
 	for( tcoVector::Iterator it = tcos.begin(); it != tcos.end(); ++it )
 	{
 		Pattern* p = dynamic_cast<Pattern*>( *it );
 		// everything which is not a pattern or muted won't be played
-		if( p == NULL || ( *it )->isMuted() )
-		{
+		if( p == NULL || p->isMuted() )
 			continue;
-		}
+
 		MidiTime cur_start = _start;
 		if( _tco_num < 0 )
 		{
@@ -1157,9 +1156,7 @@ InstrumentTrackWindow * InstrumentTrackView::topLevelInstrumentTrackWindow()
 void InstrumentTrackView::createFxLine()
 {
 	int channelIndex = gui->fxMixerView()->addNewChannel();
-
 	Engine::fxMixer()->effectChannel( channelIndex )->m_name = getTrack()->name();
-
 	assignFxLine(channelIndex);
 }
 
@@ -1169,8 +1166,8 @@ void InstrumentTrackView::createFxLine()
 /*! \brief Assign a specific FX Channel for this track */
 void InstrumentTrackView::assignFxLine(int channelIndex)
 {
-        qInfo("InstrumentTrackView::assignFxLine %d",channelIndex);
-
+        //qInfo("InstrumentTrackView::assignFxLine %d",channelIndex);
+	model()->effectChannelModel()->setRange( 0, Engine::fxMixer()->numChannels()-1 );
 	model()->effectChannelModel()->setValue( channelIndex );
 	gui->fxMixerView()->setCurrentFxLine( channelIndex );
 }
@@ -1407,12 +1404,13 @@ QMenu* InstrumentTrackView::createAudioOutputMenu()
 	{
 		FxChannel* ch=Engine::fxMixer()->effectChannel(i);
 
-		if(ch!=fxChannel)
-		{
-			QString  label =tr( "Mixer %1:%2" ).arg( ch->m_channelIndex ).arg( ch->m_name );
-			QAction* action=fxMenu->addAction( label, fxMenuSignalMapper, SLOT( map() ) );
-			fxMenuSignalMapper->setMapping(action, ch->m_channelIndex);
-		}
+                QString  label =tr( "Mixer %1:%2" ).arg( ch->m_channelIndex ).arg( ch->m_name );
+                QAction* action=fxMenu->addAction( label, fxMenuSignalMapper, SLOT( map() ) );
+                action->setEnabled(ch!=fxChannel);
+                fxMenuSignalMapper->setMapping(action, ch->m_channelIndex);
+                if(ch->m_channelIndex!=i)
+                        qWarning("InstrumentTrackView::createAudioOutputMenu suspicious ch: %d %d",
+                                 ch->m_channelIndex,i);
 	}
 
 	connect(fxMenuSignalMapper, SIGNAL(mapped(int)), this, SLOT(assignFxLine(int)));

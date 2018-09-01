@@ -31,7 +31,7 @@
 #include "embed.h"
 #include "gui_templates.h"
 
-#include <QHBoxLayout>
+//#include <QHBoxLayout>
 #include <QInputDialog>
 #include <QLabel>
 #include <QMouseEvent>

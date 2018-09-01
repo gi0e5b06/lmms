@@ -26,6 +26,8 @@
 
 #include "embed.h"
 
+#include <cmath>
+
 
 extern "C"
 {
@@ -76,7 +78,10 @@ bool SpectrumAnalyzer::processAudioBuffer( sampleFrame* _buf, const fpp_t _frame
 {
         bool smoothBegin, smoothEnd;
         if(!shouldProcessAudioBuffer(_buf, _frames, smoothBegin, smoothEnd))
+        {
+                m_framesFilledUp = 0;
                 return false;
+        }
 
 	//tmp optimisation if the display is hidden, use dontRun
 	//if( !m_saControls.isViewVisible() )
@@ -95,18 +100,10 @@ bool SpectrumAnalyzer::processAudioBuffer( sampleFrame* _buf, const fpp_t _frame
 		f = _frames - FFT_BUFFER_SIZE;
 	}
 
-	const int cm = m_saControls.m_channelMode.value();
+	const int cm = int(roundf(m_saControls.m_channelMode.value()));
 
 	switch( cm )
 	{
-		case MergeChannels:
-			for( ; f < _frames; ++f )
-			{
-				m_buffer[m_framesFilledUp] =
-					( _buf[f][0] + _buf[f][1] ) * 0.5;
-				++m_framesFilledUp;
-			}
-			break;
 		case LeftChannel:
 			for( ; f < _frames; ++f )
 			{
@@ -118,6 +115,14 @@ bool SpectrumAnalyzer::processAudioBuffer( sampleFrame* _buf, const fpp_t _frame
 			for( ; f < _frames; ++f )
 			{
 				m_buffer[m_framesFilledUp] = _buf[f][1];
+				++m_framesFilledUp;
+			}
+			break;
+		case MergeChannels:
+			for( ; f < _frames; ++f )
+			{
+				m_buffer[m_framesFilledUp] =
+					( _buf[f][0] + _buf[f][1] ) * 0.5;
 				++m_framesFilledUp;
 			}
 			break;
@@ -147,6 +152,7 @@ bool SpectrumAnalyzer::processAudioBuffer( sampleFrame* _buf, const fpp_t _frame
 	}
 	else
 	{
+                //Q_ASSERT(MAX_BANDS >= 31);
 		calc13octaveband31( m_absSpecBuf, m_bands, FFT_BUFFER_SIZE+1, sr/2.0 );
 		m_energy = signalpower( m_buffer, FFT_BUFFER_SIZE ) / maximum( m_buffer, FFT_BUFFER_SIZE );
 	}

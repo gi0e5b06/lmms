@@ -26,8 +26,6 @@
 
 #include "LadspaEffect.h"
 
-#include <QMessageBox>
-
 #include "AudioDevice.h"
 #include "AutomationPattern.h"
 #include "ConfigManager.h"
@@ -41,8 +39,13 @@
 #include "Mixer.h"
 #include "Song.h"
 #include "ValueBuffer.h"
+
 #include "debug.h"
 #include "embed.h"
+#include "lmms_math.h"
+
+#include <QMessageBox>
+
 
 extern "C"
 {
@@ -229,6 +232,9 @@ bool LadspaEffect::processAudioBuffer(sampleFrame* _buf, const fpp_t _frames)
                                                 w0, d0, w1, d1);
 
                             float curVal = pp->buffer[f];
+                            if(isnan(curVal)||isinf(curVal)||(fabsf(curVal)<SILENCE))
+                                    curVal=0.f;
+
                             if(channel==0)
                                     _buf[f][0] = d0 * _buf[f][0] + w0 * curVal;
                             else

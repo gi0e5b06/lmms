@@ -30,6 +30,7 @@
 #include "Mixer.h"
 #include "ProjectJournal.h"
 
+#include "debug.h"
 #include "lmms_math.h" // REQUIRED
 
 
@@ -301,6 +302,12 @@ void AutomatableModel::setAutomatedValue( const float value )
 }
 
 
+void AutomatableModel::setControlledValue( const float value )
+{
+        setAutomatedValue(inverseNormalizedValue(value));
+}
+
+
 void AutomatableModel::propagateAutomatedValue()
 {
         ++m_setValueDepth;
@@ -445,8 +452,10 @@ void AutomatableModel::linkModel( AutomatableModel* model, bool propagate )
 
 		if( !model->hasLinkedModels() )
 		{
-			QObject::connect( this, SIGNAL( dataChanged() ), model, SIGNAL( dataChanged() ) );
-                        QObject::connect( this, SIGNAL( controllerValueChanged() ), model, SLOT( onControllerValueChanged() ) );
+			QObject::connect( this, SIGNAL( dataChanged() ),
+                                          model, SIGNAL( dataChanged() ) );
+                        QObject::connect( this, SIGNAL( controllerValueChanged(float) ),
+                                          model, SLOT( setControlledValue(float) ) );
 		}
 
                 if(propagate) propagateValue();
@@ -511,17 +520,22 @@ void AutomatableModel::setControllerConnection( ControllerConnection* c )
 	m_controllerConnection = c;
 	if( c )
 	{
-		QObject::connect( m_controllerConnection, SIGNAL( valueChanged() ), this, SLOT( onControllerValueChanged() ) );
-		QObject::connect( m_controllerConnection, SIGNAL( destroyed() ), this, SLOT( unlinkControllerConnection() ) );
+		connect( m_controllerConnection, SIGNAL( controlledValueChanged(float) ),
+                         this, SLOT( setControlledValue(float) ) );
+		connect( m_controllerConnection, SIGNAL( controlledBufferChanged(const ValueBuffer*) ),
+                         this, SLOT( setControlledBuffer(const ValueBuffer*) ) );
+		connect( m_controllerConnection, SIGNAL( destroyed() ),
+                         this, SLOT( unlinkControllerConnection() ) );
 		m_valueChanged = true;
                 emit propertiesChanged();
 		emit dataChanged();
 	}
 }
 
-
+/*
 void AutomatableModel::onControllerValueChanged()
 {
+        //setValue(controllerValue(0,false));
         //qInfo("AutomatableModel::onControllerValueChanged");
         emit controllerValueChanged();
         //emit dataChanged();
@@ -534,13 +548,16 @@ void AutomatableModel::onControllerValueChanged()
                         m->emit dataChanged();
         }
 }
+*/
 
-
-float AutomatableModel::controllerValue( int frameOffset ) const
+/*
+float AutomatableModel::controllerValue( int frameOffset, bool recording ) const
 {
-	if( m_controllerConnection )
+	if( m_controllerConnection &&
+            (recording || m_controllerConnection->hasChanged() ))
 	{
-		float v = 0;
+		float v = 0.f;
+
 		switch(m_scaleType)
 		{
 		case Linear:
@@ -555,23 +572,48 @@ float AutomatableModel::controllerValue( int frameOffset ) const
 				"lacks implementation for a scale type");
 			break;
 		}
+
 		if( typeInfo<float>::isEqual( m_step, 1 ) && m_hasStrictStepSize )
-		{
-			return qRound( v );
-		}
+			v=qRound( v );
+
 		return v;
 	}
 
-	AutomatableModel* lm = m_linkedModels.first();
-	if( lm->controllerConnection() )
+	AutomatableModel* lm = NULL;
+	if( hasLinkedModels() )
 	{
-		return fittedValue( lm->controllerValue( frameOffset ) );
+		lm = m_linkedModels.first();
 	}
+	if(lm)
+        {
+                float v=0.f;
 
-	return fittedValue( lm->m_value );
+                if( lm->controllerConnection() &&
+                    (recording || lm->controllerConnection()->hasChanged() ))
+                        v= fittedValue( lm->controllerValue( frameOffset, false ) );
+                else
+                        v=fittedValue( lm->m_value );
+
+                return v;
+        }
+
+        //if(recording) return 0.5f;
+        //qWarning("AutomatableModel::controllerValue should not reach");
+        return m_value;
+}
+*/
+
+
+ValueBuffer * AutomatableModel::valueBuffer()
+{
+	QMutexLocker m( &m_valueBufferMutex );
+        return m_hasSampleExactData
+                ? &m_valueBuffer
+                : NULL;
 }
 
 
+/*
 ValueBuffer * AutomatableModel::valueBuffer()
 {
 	QMutexLocker m( &m_valueBufferMutex );
@@ -583,10 +625,14 @@ ValueBuffer * AutomatableModel::valueBuffer()
 			: NULL;
 	}
 
-	float val = m_value; // make sure our m_value doesn't change midway
+        float oldval = m_value;
+	float newval = oldval; // make sure our m_value doesn't change midway
 
 	ValueBuffer * vb;
-	if( m_controllerConnection && m_controllerConnection->getController()->isSampleExact() )
+	if( m_controllerConnection &&
+            m_controllerConnection->getController()->isSampleExact() &&
+            m_controllerConnection->hasChanged() )
+
 	{
 		vb = m_controllerConnection->valueBuffer();
 		if( vb )
@@ -599,7 +645,8 @@ ValueBuffer * AutomatableModel::valueBuffer()
 			case Linear:
 				for( int i = 0; i < m_valueBuffer.length(); i++ )
 				{
-                                        float newval=minValue<float>() + ( range() * values[i] );
+                                        //float newval
+                                        newval=minValue<float>() + ( range() * values[i] );
 					//if(nvalues[i] != newval)
                                         {
                                                 nvalues[i] = newval;
@@ -610,7 +657,8 @@ ValueBuffer * AutomatableModel::valueBuffer()
 			case Logarithmic:
 				for( int i = 0; i < m_valueBuffer.length(); i++ )
 				{
-					float newval=logToLinearScale( values[i] );
+					//float newval
+                                        newval=logToLinearScale( values[i] );
 					//if(nvalues[i] != newval)
                                         {
                                                 nvalues[i] = newval;
@@ -623,6 +671,10 @@ ValueBuffer * AutomatableModel::valueBuffer()
 					"lacks implementation for a scale type");
 				break;
 			}
+
+                        m_value=fittedValue(nvalues[0]);
+                        //m_value=fittedValue(v);
+                        //m_value=fittedValue(newval);
 			m_lastUpdatedPeriod = s_periodCounter;
 			m_hasSampleExactData = true;
                         //if(changed) emit dataChanged();
@@ -634,31 +686,40 @@ ValueBuffer * AutomatableModel::valueBuffer()
 	{
 		lm = m_linkedModels.first();
 	}
-	if( lm && lm->controllerConnection() && lm->controllerConnection()->getController()->isSampleExact() )
-	{
+	if( lm &&
+            lm->controllerConnection() &&
+            lm->controllerConnection()->getController()->isSampleExact() &&
+            lm->controllerConnection()->hasChanged() )
+        {
 		vb = lm->valueBuffer();
-		float * values = vb->values();
-		float * nvalues = m_valueBuffer.values();
-                //bool changed=false;
-		for( int i = 0; i < vb->length(); i++ )
-		{
-                        float newval=fittedValue( values[i] );
-                        //if(nvalues[i] != newval)
+                if(vb)
+                {
+                        float * values = vb->values();
+                        float * nvalues = m_valueBuffer.values();
+                        //bool changed=false;
+                        for( int i = 0; i < vb->length(); i++ )
                         {
-                                nvalues[i] = newval;
-                                //changed=true;
+                                //float newval
+                                newval=fittedValue( values[i] );
+                                //if(nvalues[i] != newval)
+                                {
+                                        nvalues[i] = newval;
+                                        //changed=true;
+                                }
                         }
-		}
-		m_lastUpdatedPeriod = s_periodCounter;
-		m_hasSampleExactData = true;
-                //if(changed) emit dataChanged();
-		return &m_valueBuffer;
+
+                        m_value=fittedValue(nvalues[0]);
+                        m_lastUpdatedPeriod = s_periodCounter;
+                        m_hasSampleExactData = true;
+                        //if(changed) emit dataChanged();
+                        return &m_valueBuffer;
+                }
 	}
 
-	if( m_oldValue != val )
+	if( m_oldValue != newval )
 	{
-		m_valueBuffer.interpolate( m_oldValue, val );
-		m_oldValue = val;
+		m_valueBuffer.interpolate( m_oldValue, newval );
+		m_oldValue = newval;
 		m_lastUpdatedPeriod = s_periodCounter;
 		m_hasSampleExactData = true;
                 //emit dataChanged();
@@ -671,19 +732,68 @@ ValueBuffer * AutomatableModel::valueBuffer()
 	m_hasSampleExactData = false;
 	return NULL;
 }
+*/
 
 
-void AutomatableModel::copyFrom(const ValueBuffer* _vb)
+/*
+void AutomatableModel::setBuffer(const ValueBuffer* _vb)
 {
         const fpp_t FPP=Engine::mixer()->framesPerPeriod();
         if(_vb==NULL || _vb->length()!=FPP || m_valueBuffer.length()!=FPP)
         {
-                qWarning("AutomatableModel::copyFrom");
+                qWarning("AutomatableModel::setBuffer");
                 return;
         }
 
 	QMutexLocker m( &m_valueBufferMutex );
         m_valueBuffer.copyFrom(_vb);
+        float* v=m_valueBuffer.values();
+        for(int i=m_valueBuffer.length()-1;i>=0;--i)
+                v[i]=fittedValue(v[i]);
+	m_lastUpdatedPeriod = s_periodCounter;
+	m_hasSampleExactData = true;
+        setAutomatedValue(m_valueBuffer.value(0));
+}
+*/
+
+void AutomatableModel::setAutomatedBuffer(const ValueBuffer* _vb)
+{
+        const fpp_t FPP=Engine::mixer()->framesPerPeriod();
+        if(_vb==NULL || _vb->length()!=FPP || m_valueBuffer.length()!=FPP)
+        {
+                qWarning("AutomatableModel::setAutomatedBuffer");
+                return;
+        }
+
+        DEBUG_THREAD_CHECK
+        QMutexLocker m( &m_valueBufferMutex );
+
+        m_valueBuffer.copyFrom(_vb);
+        float* v=m_valueBuffer.values();
+        for(int i=m_valueBuffer.length()-1;i>=0;--i)
+                v[i]=fittedValue(scaledValue(v[i]));
+	m_lastUpdatedPeriod = s_periodCounter;
+	m_hasSampleExactData = true;
+        setAutomatedValue(m_valueBuffer.value(0));
+}
+
+
+void AutomatableModel::setControlledBuffer(const ValueBuffer* _vb)
+{
+        const fpp_t FPP=Engine::mixer()->framesPerPeriod();
+        if(_vb==NULL || _vb->length()!=FPP || m_valueBuffer.length()!=FPP)
+        {
+                qWarning("AutomatableModel::setAutomatedBuffer");
+                return;
+        }
+
+        DEBUG_THREAD_CHECK
+	QMutexLocker m( &m_valueBufferMutex );
+
+        m_valueBuffer.copyFrom(_vb);
+        float* v=m_valueBuffer.values();
+        for(int i=m_valueBuffer.length()-1;i>=0;--i)
+                v[i]=fittedValue(scaledValue(inverseNormalizedValue(v[i])));
 	m_lastUpdatedPeriod = s_periodCounter;
 	m_hasSampleExactData = true;
         setAutomatedValue(m_valueBuffer.value(0));

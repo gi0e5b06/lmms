@@ -54,6 +54,9 @@ class TrackContainerView;
 class TrackContentWidget;
 class TrackView;
 
+typedef QVector<Track *> TrackList;
+typedef QVector<Track *> Tracks;
+
 
 const int DEFAULT_SETTINGS_WIDGET_WIDTH = 224;
 const int TRACK_OP_WIDTH = 78;
@@ -721,18 +724,18 @@ public:
 		return m_processingLock.tryLock();
 	}
 
-        inline const BoolModel* mutedModel() const
-        { return &m_mutedModel; }
+        inline const BoolModel* clippingModel() const
+        { return &m_clippingModel; }
 
         inline const BoolModel* frozenModel() const
         { return &m_frozenModel; }
 
+        inline const BoolModel* mutedModel() const
+        { return &m_mutedModel; }
+
         virtual void cleanFrozenBuffer();
         virtual void readFrozenBuffer();
         virtual void writeFrozenBuffer();
-
-        inline const BoolModel* clippingModel() const
-        { return &m_clippingModel; }
 
 
 public slots:

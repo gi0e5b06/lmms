@@ -70,7 +70,8 @@ public:
 	void fixIncorrectPositions();
 	void createTCOsForBB( int _bb );
 
-	AutomatedValueMap automatedValuesAt(MidiTime time, int tcoNum) const /*override*/;
+	virtual //AutomatedValueMap
+          void automatedValuesAt(MidiTime time, int tcoNum, AutomatedValueMap& _map) const override;
 
 public slots:
 	void play();

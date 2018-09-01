@@ -66,8 +66,8 @@ public:
 	}
 
         /*
-	virtual bool tryExport(const TrackContainer::TrackList &tracks,
-                               const TrackContainer::TrackList &tracks_BB,
+	virtual bool tryExport(const Tracks &tracks,
+                               const Tracks &tracks_BB,
                                int tempo,
                                QVector<QPair<tick_t,tick_t>> loops,
                                const QString &filename);

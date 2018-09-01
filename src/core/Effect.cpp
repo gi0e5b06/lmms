@@ -34,6 +34,7 @@
 #include "EffectView.h"
 
 #include "ConfigManager.h"
+#include "MixHelpers.h"
 #include "WaveForm.h"
 //#include "lmms_math.h"
 
@@ -42,8 +43,6 @@ Effect::Effect( const Plugin::Descriptor * _desc,
                 Model * _parent,
                 const Descriptor::SubPluginFeatures::Key * _key ) :
     Plugin( _desc, _parent ),
-    m_wetDryModel  ( 1.0f, 0.0f, 1.0f, 0.01f, this, tr( "Wet/Dry mix" ) ), //min=-1
-    m_balanceModel ( 0.0f,-1.0f, 1.0f, 0.01f, this, tr( "Balance" ) ),
     m_gateClosed( false ),
     m_parent( NULL ),
     m_key( _key ? *_key : Descriptor::SubPluginFeatures::Key() ),
@@ -53,11 +52,14 @@ Effect::Effect( const Plugin::Descriptor * _desc,
     m_running( false ),
     m_bufferCount( 0 ),
     m_enabledModel( true, this, tr( "Effect enabled" ) ),
-    m_gateModel    ( 0.0f, 0.0f, 1.0f, 0.01f, this, tr( "Gate" ) ),
-    m_autoQuitModel( 0.0f, 0.0f, 8000.0f, 1.0f, 1.0f, this, tr( "Decay" ) ),
+    m_clippingModel(false, this,  tr( "Clipping alert" ) ),
+    m_wetDryModel  ( 1.f, 0.f, 1.f, 0.01f, this, tr( "Wet/Dry mix" ) ), //min=-1
+    m_autoQuitModel( 8000.f, 1.f, 8000.f, 1.0f, 8000.f, this, tr( "Decay" ) ),
+    m_gateModel    ( 0.0001f, 0.0001f, 1.0f, 0.0001f, this, tr( "Gate" ) ),
+    m_balanceModel ( 0.f,-1.f, 1.f, 0.01f, this, tr( "Balance" ) ),
     m_autoQuitDisabled( false )
 {
-        m_gateModel.setScaleLogarithmic(true);
+        //m_gateModel.setScaleLogarithmic(true);
 
 	m_srcState[0] = m_srcState[1] = NULL;
 	reinitSRC();
@@ -280,13 +282,25 @@ bool Effect::shouldProcessAudioBuffer(sampleFrame* _buf, const fpp_t _frames,
 }
 
 
-bool Effect::shouldKeepRunning(sampleFrame* _buf, const fpp_t _frames)
+bool Effect::shouldKeepRunning(sampleFrame* _buf, const fpp_t _frames, bool _unclip)
 {
 	if(!isRunning()) return false;
+
+        if(_unclip)
+        {
+                if(MixHelpers::unclip(_buf,_frames))
+                        m_clippingModel.setValue(true);
+        }
+        else
+        {
+                if(MixHelpers::isClipping(_buf,_frames))
+                        m_clippingModel.setValue(true);
+        }
+
 	if(!isAutoQuitEnabled()) return true;
 
         float rms=computeRMS(_buf,_frames);
-        if(rms>0.0000001f) return true;
+        if(rms>0.00001f) return true;
 
         incrementBufferCount();
         if(bufferCount() > qMax<int>(176,timeout()))
@@ -398,4 +412,3 @@ void Effect::resample( int _i, const sampleFrame * _src_buf, sample_rate_t _src_
 							src_strerror( error ) );
 	}
 }
-

@@ -670,14 +670,14 @@ SampleTrack::SampleTrack( TrackContainer* tc ) :
 							tr( "Volume" ) ),
 	m_panningModel( DefaultPanning, PanningLeft, PanningRight, 0.1f,
 					this, tr( "Panning" ) ),
-	m_audioPort( tr( "Sample track" ), true, &m_volumeModel, &m_panningModel, &m_mutedModel ),
+	m_audioPort( tr( "unnamed_sample_track" ), true, &m_volumeModel, &m_panningModel, &m_mutedModel),
 	m_effectChannelModel( 0, 0, 0, this, tr( "FX channel" ) )
 {
         setColor(QColor("#D98F26"));
 
         m_panningModel.setCenterValue( DefaultPanning );
 
-	m_effectChannelModel.setRange( 0, Engine::fxMixer()->numChannels()-1, 1);
+	m_effectChannelModel.setRange( 0, Engine::fxMixer()->numChannels()-1);
 
 	setName( tr( "Sample track" ) );
 
@@ -780,33 +780,34 @@ bool SampleTrack::play( const MidiTime & _start, const fpp_t _frames,
 		}
 	}
 
+        if(!isMuted()) // test with isMuted GDX
 	for( tcoVector::Iterator it = tcos.begin(); it != tcos.end(); ++it )
 	{
 		SampleTCO * st = dynamic_cast<SampleTCO *>( *it );
-		if( !st->isMuted() )
+		if( st==NULL || st->isMuted() )
+                        continue;
+
+                PlayHandle* handle;
+                if( st->isRecord() )
 		{
-			PlayHandle* handle;
-			if( st->isRecord() )
+                        if( !Engine::getSong()->isRecording() )
 			{
-				if( !Engine::getSong()->isRecording() )
-				{
-					return played_a_note;
-				}
-				SampleRecordHandle* smpHandle = new SampleRecordHandle( st );
-				handle = smpHandle;
-			}
-			else
-			{
-				SamplePlayHandle* smpHandle = new SamplePlayHandle( st );
-				smpHandle->setVolumeModel( &m_volumeModel );
-				smpHandle->setBBTrack( bb_track );
-				handle = smpHandle;
-			}
-			handle->setOffset( _offset );
-			// send it to the mixer
-			Engine::mixer()->addPlayHandle( handle );
-			played_a_note = true;
-		}
+                                return played_a_note;
+                        }
+                        SampleRecordHandle* smpHandle = new SampleRecordHandle( st );
+                        handle = smpHandle;
+                }
+                else
+		{
+                        SamplePlayHandle* smpHandle = new SamplePlayHandle( st );
+                        smpHandle->setVolumeModel( &m_volumeModel );
+                        smpHandle->setBBTrack( bb_track );
+                        handle = smpHandle;
+                }
+                handle->setOffset( _offset );
+                // send it to the mixer
+                Engine::mixer()->addPlayHandle( handle );
+                played_a_note = true;
 	}
 
 	return played_a_note;
@@ -1066,14 +1067,15 @@ QMenu* SampleTrackView::createAudioOutputMenu()
 	//fxMenu->addSeparator();
 	for (int i = 0; i < Engine::fxMixer()->numChannels(); ++i)
 	{
-		FxChannel* currentChannel = Engine::fxMixer()->effectChannel( i );
+		FxChannel* ch=Engine::fxMixer()->effectChannel(i);
 
-		if(currentChannel!=fxChannel)
-		{
-			QString label = tr( "Mixer %1:%2" ).arg( currentChannel->m_channelIndex ).arg( currentChannel->m_name );
-			QAction * action = fxMenu->addAction( label, fxMenuSignalMapper, SLOT( map() ) );
-			fxMenuSignalMapper->setMapping(action, currentChannel->m_channelIndex);
-		}
+                QString label =tr( "Mixer %1:%2" ).arg( ch->m_channelIndex ).arg( ch->m_name );
+                QAction * action = fxMenu->addAction( label, fxMenuSignalMapper, SLOT( map() ) );
+                action->setEnabled(ch!=fxChannel);
+                fxMenuSignalMapper->setMapping(action, ch->m_channelIndex);
+                if(ch->m_channelIndex!=i)
+                        qWarning("InstrumentTrackView::createAudioOutputMenu suspicious ch: %d %d",
+                                 ch->m_channelIndex,i);
 	}
 
 	connect(fxMenuSignalMapper, SIGNAL(mapped(int)), this, SLOT(assignFxLine(int)));
@@ -1127,9 +1129,7 @@ QMenu * SampleTrackView::createFxMenu(QString title, QString newFxLabel)
 void SampleTrackView::createFxLine()
 {
 	int channelIndex = gui->fxMixerView()->addNewChannel();
-
 	Engine::fxMixer()->effectChannel( channelIndex )->m_name = getTrack()->name();
-
 	assignFxLine(channelIndex);
 }
 
@@ -1139,8 +1139,9 @@ void SampleTrackView::createFxLine()
 /*! \brief Assign a specific FX Channel for this track */
 void SampleTrackView::assignFxLine(int channelIndex)
 {
+        qInfo("SampleTrackView::assignFxLine %d",channelIndex);
+	model()->effectChannelModel()->setRange( 0, Engine::fxMixer()->numChannels()-1 );
 	model()->effectChannelModel()->setValue( channelIndex );
-
 	gui->fxMixerView()->setCurrentFxLine( channelIndex );
 }
 

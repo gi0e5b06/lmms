@@ -39,8 +39,8 @@ public:
 	virtual ~ExportFilter() {}
 
         /*
-	virtual bool tryExport(const TrackContainer::TrackList &tracks,
-        const TrackContainer::TrackList &tracksBB,
+	virtual bool tryExport(const Tracks &tracks,
+        const Tracks &tracksBB,
         int tempo, int masterPitch, const QString &filename ) = 0;
         */
 

@@ -63,7 +63,7 @@ public slots:
 
 protected:
 	// The internal per-controller get-value function
-	virtual void updateValueBuffer();
+	virtual void fillValueBuffer();
 
 	PeakControllerEffect * m_peakEffect;
 

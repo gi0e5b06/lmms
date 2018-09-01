@@ -144,24 +144,24 @@ void printHelp()
 		"Copyright (c) %s\n\n"
 		"Usage: lmms [ -a ]\n"
 		"            [ -b <bitrate> ]\n"
-		"            [ -c <configfile> ]\n"
+		"            [ -c <configuration_file> ]\n"
 		"            [ -d <in> ]\n"
 		"            [ -f <format> ]\n"
 		"            [ --geometry <geometry> ]\n"
 		"            [ -h ]\n"
 		"            [ -i <method> ]\n"
-		"            [ --import <in> [-e]]\n"
+		"            [ --import <file> [-e]]\n"
 		"            [ -l ]\n"
 		"            [ -m <mode>]\n"
 		"            [ -o <path> ]\n"
 		"            [ -p ]\n"
 		"            [ --profile <out> ]\n"
-		"            [ -r <project file> ] [ options ]\n"
+		"            [ -r <project_file> ] [ options ]\n"
 		"            [ -s <samplerate> ]\n"
 		"            [ -u <in> <out> ]\n"
 		"            [ -v ]\n"
 		"            [ -x <value> ]\n"
-		"            [ <file to load> ]\n\n"
+		"            [ <project_file> ]\n\n"
 		"-a, --float                   32bit float bit depth\n"
 		"-b, --bitrate <bitrate>       Specify output bitrate in KBit/s\n"
 		"       Default: 160.\n"
@@ -188,14 +188,17 @@ void printHelp()
 		"         m: Mono\n"
 		"       Default: j\n"
 		"-o, --output <path>           Render into <path>\n"
-		"       For --render, provide a file path\n"
-		"       For --rendertracks, provide a directory path\n"
+		"       For rendering a song, provide a file path\n"
+		"       For rendering channels or tracks, provide a directory path\n"
 		"-p, --play                    Play given project file\n"
 		"    --profile <out>           Dump profiling information to file <out>\n"
-		"-r, --render <project file>   Render given project file\n"
-		"    --rendertracks <project>  Render each track to a different file\n"
+		"-r, --render (--song|--channels|--tracks) <project>\n"
+                "                              Render given project file\n"
 		"-s, --samplerate <samplerate> Specify output samplerate in Hz\n"
 		"       Range: 44100 (default) to 192000\n"
+                "--song\n"
+                "--channels\n"
+                "-t, --tracks\n"
 		"-u, --upgrade <in> [out]      Upgrade file <in> and save as <out>\n"
 		"       Standard out is used if no output file is specifed\n"
 		"-v, --version                 Show version information and exit.\n"
@@ -265,6 +268,7 @@ int main( int argc, char * * argv )
 	bool exitAfterImport = false;
 	bool allowRoot = false;
 	bool renderLoop = false;
+	bool renderChannels = false;
 	bool renderTracks = false;
 	QString fileToLoad, fileToImport, playOut, renderOut, profilerOutputFile, configFile;
 
@@ -424,12 +428,19 @@ int main( int argc, char * * argv )
 		{
 			renderLoop = true;
 		}
+		else if( arg == "--channels" )
+		{
+                        renderChannels = true;
+			renderTracks = false;
+		}
 		else if( arg == "--song" )
 		{
+                        renderChannels = false;
 			renderTracks = false;
 		}
 		else if( arg == "--tracks" || arg == "-t" )
 		{
+                        renderChannels = false;
 			renderTracks = true;
 		}
 		else if( arg == "--output" || arg == "-o" )
@@ -802,7 +813,7 @@ int main( int argc, char * * argv )
 	{
 		// when rendering multiple tracks, renderOut is a directory
 		// otherwise, it is a file, so we need to append the file extension
-		if ( !renderTracks )
+		if ( !renderChannels && !renderTracks )
 		{
 			if(renderOut != "-")
                         {
@@ -857,6 +868,13 @@ int main( int argc, char * * argv )
 		}
 
 		// start now!
+		if ( renderChannels )
+		{
+			PL_BEGIN("Channels Rendering")
+			r->renderChannels();
+			PL_END("Channels Rendering")
+		}
+		else
 		if ( renderTracks )
 		{
 			PL_BEGIN("Tracks Rendering")

@@ -87,6 +87,17 @@ AutomationPattern::~AutomationPattern()
 {
 }
 
+void AutomationPattern::setRecording(const bool b)
+{
+    m_isRecording = b;
+    if(b)
+        connect(this, SIGNAL(recordValue(MidiTime, float)), this,
+                SLOT(onRecordValue(MidiTime, float)));
+    else
+        disconnect(this, SIGNAL(recordValue(MidiTime, float)), this,
+                   SLOT(onRecordValue(MidiTime, float)));
+}
+
 bool AutomationPattern::addObject(AutomatableModel* _obj, bool _search_dup)
 {
     if(_search_dup && m_objects.contains(_obj))
@@ -267,25 +278,41 @@ MidiTime AutomationPattern::putValue(const MidiTime& time,
 {
     cleanObjects();
 
-    MidiTime newTime
-            = quantPos ? Note::quantized(time, quantization()) : time;
+    const int q = quantization();
+    const int t = quantPos ? Note::quantized(time, q) : time;
 
-    m_timeMap[newTime]         = value;
-    timeMap::const_iterator it = m_timeMap.find(newTime);
+    /*
+    if((t > 0) && !ignoreSurroundingPoints && (valueAt(t - 1) ==
+    value))
+    {
+        if(m_timeMap.contains(t))
+            removeValue(t);
+        return t;
+    }
+    */
 
     // Remove control points that are covered by the new points
     // quantization value. Control Key to override
-    if(!ignoreSurroundingPoints)
+    if(quantPos && !ignoreSurroundingPoints)
     {
-        for(int i = newTime + 1; i < newTime + quantization(); ++i)
+        // qInfo("putval q=%d t=%d", q, t);
+        for(int i = t - q + 1; i < t + q; ++i)
         {
-            AutomationPattern::removeValue(i);
+            // AutomationPattern::removeValue(i);
+            if(m_timeMap.contains(i))
+            {
+                m_timeMap.remove(i);
+                m_tangents.remove(i);
+            }
         }
     }
+
+    // m_timeMap[t] = value;
+    m_timeMap.insert(t, value);
+
+    timeMap::const_iterator it = m_timeMap.find(t);
     if(it != m_timeMap.begin())
-    {
         --it;
-    }
     generateTangents(it, 3);
 
     // we need to maximize our length in case we're part of a hidden
@@ -297,7 +324,7 @@ MidiTime AutomationPattern::putValue(const MidiTime& time,
 
     emit dataChanged();
 
-    return newTime;
+    return t;
 }
 
 void AutomationPattern::removeValue(const MidiTime& time)
@@ -321,17 +348,28 @@ void AutomationPattern::removeValue(const MidiTime& time)
     emit dataChanged();
 }
 
-void AutomationPattern::recordValue(MidiTime time, float value)
+void AutomationPattern::onRecordValue(MidiTime time, float value)
 {
-    if(value != m_lastRecordedValue)
-    {
-        putValue(time, value, true);
-        m_lastRecordedValue = value;
-    }
-    else if(valueAt(time) != value)
+    // removeValue(time);
+
+    /*
+    if((time > 0) && (valueAt(time - 1) == value))
     {
         removeValue(time);
+        return;
     }
+    */
+
+    // if(value != m_lastRecordedValue)
+    {
+        putValue(time, value, true, false);
+        m_lastRecordedValue = value;
+    }
+    // else
+    // if(valueAt(time) != value)
+    //{
+    //    removeValue(time);
+    //}
 }
 
 /**
@@ -382,7 +420,7 @@ float AutomationPattern::valueAt(const MidiTime& _time) const
 {
     if(m_timeMap.isEmpty())
     {
-        return 0;
+        return 0.f;
     }
 
     /*
@@ -525,18 +563,22 @@ float AutomationPattern::valueAt(timeMap::const_iterator v,
         }
         else if(v != m_timeMap.end())
         {
-            float rx = ((v + 1).key() - v.key());
-            float x  = float(offset) / rx;
-            float dy = (v + 1).value() - v.value();
-            float my = m->range();
-            float w0 = wf->f(0.f);
-            float w1 = wf->f(1.f);
-            float nw = qMax(
-                    1.f, roundf(rx * powf(2.f, m_waveRepeat) / 4.f / 192.f));
-            float ph = fmodf(x * nw, 1.f);
-            r += fabsf((1.f - m_waveRatio) * dy + m_waveRatio * my)
-                 * (wf->f(ph) + (1.f - m_waveSkew) * (-w0 - x * (w1 - w0)))
-                 * m_waveAmplitude;
+            float rx = (v + 1).key() - v.key();
+            if(rx > 0.f)
+            {
+                float x  = float(offset) / rx;
+                float dy = (v + 1).value() - v.value();
+                float my = m->range();
+                float w0 = wf->f(0.f);
+                float w1 = wf->f(1.f);
+                float nw = qMax(1.f, roundf(rx * powf(2.f, m_waveRepeat) / 4.f
+                                            / 192.f));
+                float ph = fmodf(x * nw, 1.f);
+                r += fabsf((1.f - m_waveRatio) * dy + m_waveRatio * my)
+                     * (wf->f(ph)
+                        + (1.f - m_waveSkew) * (-w0 - x * (w1 - w0)))
+                     * m_waveAmplitude;
+            }
         }
     }
 
@@ -779,13 +821,12 @@ TrackContentObjectView* AutomationPattern::createView(TrackView* _tv)
 
 bool AutomationPattern::isAutomated(const AutomatableModel* _m)
 {
-    TrackContainer::TrackList l;
+    Tracks l;
     l += Engine::getSong()->tracks();
     l += Engine::getBBTrackContainer()->tracks();
     l += Engine::getSong()->globalAutomationTrack();
 
-    for(TrackContainer::TrackList::ConstIterator it = l.begin();
-        it != l.end(); ++it)
+    for(Tracks::ConstIterator it = l.begin(); it != l.end(); ++it)
     {
         if((*it)->type() == Track::AutomationTrack
            || (*it)->type() == Track::HiddenAutomationTrack)
@@ -820,14 +861,13 @@ QVector<AutomationPattern*>
         AutomationPattern::patternsForModel(const AutomatableModel* _m)
 {
     QVector<AutomationPattern*> patterns;
-    TrackContainer::TrackList   l;
+    Tracks                      l;
     l += Engine::getSong()->tracks();
     l += Engine::getBBTrackContainer()->tracks();
     l += Engine::getSong()->globalAutomationTrack();
 
     // go through all tracks...
-    for(TrackContainer::TrackList::ConstIterator it = l.begin();
-        it != l.end(); ++it)
+    for(Tracks::ConstIterator it = l.begin(); it != l.end(); ++it)
     {
         // we want only automation tracks...
         if((*it)->type() == Track::AutomationTrack
@@ -896,11 +936,10 @@ AutomationPattern*
 
 void AutomationPattern::resolveAllIDs()
 {
-    TrackContainer::TrackList l = Engine::getSong()->tracks()
-                                  + Engine::getBBTrackContainer()->tracks();
+    Tracks l = Engine::getSong()->tracks()
+               + Engine::getBBTrackContainer()->tracks();
     l += Engine::getSong()->globalAutomationTrack();
-    for(TrackContainer::TrackList::iterator it = l.begin(); it != l.end();
-        ++it)
+    for(Tracks::iterator it = l.begin(); it != l.end(); ++it)
     {
         if((*it)->type() == Track::AutomationTrack
            || (*it)->type() == Track::HiddenAutomationTrack)

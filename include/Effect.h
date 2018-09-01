@@ -210,7 +210,7 @@ protected:
         bool shouldProcessAudioBuffer(sampleFrame* _buf, const fpp_t _frames,
                                       bool& _smoothBegin, bool& _smoothEnd);
 
-        bool shouldKeepRunning(sampleFrame* _buf, const fpp_t _frames);
+        bool shouldKeepRunning(sampleFrame* _buf, const fpp_t _frames, bool _unclip=false);
 
         void computeWetDryLevels(fpp_t _f, fpp_t _frames,
                                  bool _smoothBegin, bool _smoothEnd,
@@ -218,11 +218,6 @@ protected:
                                  float& _w1,float &_d1);
 
         float computeRMS(sampleFrame* _buf, const fpp_t _frames);
-
-        //should be private
-	FloatModel m_wetDryModel;
-	FloatModel m_balanceModel;
-
 
  private:
 	bool gateHasClosed(float& _rms, sampleFrame* _buf, const fpp_t _frames);
@@ -245,8 +240,11 @@ protected:
 	f_cnt_t m_bufferCount;
 
 	BoolModel m_enabledModel;
-	FloatModel m_gateModel;
+        BoolModel  m_clippingModel;
+	FloatModel m_wetDryModel;
 	TempoSyncKnobModel m_autoQuitModel;
+	FloatModel m_gateModel;
+	FloatModel m_balanceModel;
 
 	bool m_autoQuitDisabled;
 

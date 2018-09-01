@@ -39,7 +39,8 @@ ControllerConnectionVector ControllerConnection::s_connections;
 ControllerConnection::ControllerConnection( Controller * _controller ) :
 	m_controller( NULL ),
 	m_controllerId( -1 ),
-	m_ownsController( false )
+	m_ownsController( false ),
+	m_lastUpdatedPeriod( -1 )
 {
 	if( _controller != NULL )
 	{
@@ -48,7 +49,7 @@ ControllerConnection::ControllerConnection( Controller * _controller ) :
 	else
 	{
 		m_controller = Controller::create( Controller::DummyController,
-									NULL );
+                                                   NULL );
 	}
 	s_connections.append( this );
 }
@@ -59,7 +60,8 @@ ControllerConnection::ControllerConnection( Controller * _controller ) :
 ControllerConnection::ControllerConnection( int _controllerId ) :
 	m_controller( Controller::create( Controller::DummyController, NULL ) ),
 	m_controllerId( _controllerId ),
-	m_ownsController( false )
+	m_ownsController( false ),
+	m_lastUpdatedPeriod( -1 )
 {
 	s_connections.append( this );
 }
@@ -116,8 +118,10 @@ void ControllerConnection::setController( Controller * _controller )
 	if( _controller->type() != Controller::DummyController )
 	{
 		_controller->addConnection( this );
-		QObject::connect( _controller, SIGNAL( valueChanged() ),
-				this, SIGNAL( valueChanged() ) );
+		connect( _controller, SIGNAL( controlledValueChanged(float) ),
+                         this, SLOT( onControlledValueChanged(float) ) );
+		connect( _controller, SIGNAL( controlledBufferChanged(const ValueBuffer*) ),
+                         this, SLOT( onControlledBufferChanged(const ValueBuffer*) ) );
 	}
 
 	m_ownsController =
@@ -126,8 +130,8 @@ void ControllerConnection::setController( Controller * _controller )
 	// If we don't own the controller, allow deletion of controller
 	// to delete the connection
 	if( !m_ownsController ) {
-		QObject::connect( _controller, SIGNAL( destroyed() ),
-				this, SLOT( deleteConnection() ) );
+		connect( _controller, SIGNAL( destroyed() ),
+                         this, SLOT( deleteConnection() ) );
 	}
 }
 
@@ -223,6 +227,21 @@ void ControllerConnection::deleteConnection()
 	delete this;
 }
 
+void ControllerConnection::onControlledValueChanged(float v)
+{
+        //const float v=m_controller->m_currentValue;
+        if(v!=m_previousValue)
+        {
+                m_previousValue=v;
+                emit controlledValueChanged(v);
+        }
+}
 
-
-
+void ControllerConnection::onControlledBufferChanged(ValueBuffer* _vb)
+{
+        if(m_lastUpdatedPeriod != Controller::runningPeriods())
+        {
+                m_lastUpdatedPeriod=Controller::runningPeriods();
+                emit controlledBufferChanged(_vb);
+        }
+}

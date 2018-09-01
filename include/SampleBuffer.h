@@ -331,6 +331,7 @@ private:
 	QReadWriteLock m_varLock;
 
         friend class AudioPort;
+        friend class FxChannel;
 } ;
 
 

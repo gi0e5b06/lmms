@@ -61,7 +61,7 @@ public:
 	{
 		m_state = Queued;
 	}
-	
+
 	inline void done()
 	{
 		m_state = Done;

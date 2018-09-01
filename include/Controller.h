@@ -63,9 +63,10 @@ public:
 
 	virtual ~Controller();
 
-	virtual float currentValue( int _offset );
+	virtual float currentValue( int _offset = 0);
 	// The per-controller get-value-in-buffers function
-	virtual ValueBuffer * valueBuffer();
+	//virtual ValueBuffer * valueBuffer();
+        //virtual bool hasChanged() const;
 
 	inline bool isSampleExact() const
 	{
@@ -134,17 +135,18 @@ public slots:
 
 protected:
 	// The internal per-controller get-value function
-	virtual float value( int _offset );
+	virtual float value( int _offset ) final;
 
-	virtual void updateValueBuffer();
+	virtual void updateValueBuffer() final;
+	virtual void fillValueBuffer();
 
 	// buffer for storing sample-exact values in case there
 	// are more than one model wanting it, so we don't have to create it
 	// again every time
 	ValueBuffer m_valueBuffer;
 	// when we last updated the valuebuffer - so we know if we have to update it
-	long m_bufferLastUpdated;
-
+	long m_lastUpdatedPeriod;
+        //bool  m_hasChanged;
 	float m_currentValue;
 	bool  m_sampleExact;
 	int m_connectionCount;
@@ -161,12 +163,14 @@ protected:
 
 signals:
 	// The value changed while the mixer isn't running (i.e: MIDI CC)
-	void valueChanged();
+	//void valueChanged();
+        void controlledValueChanged(float _v);
+        void controlledBufferChanged(const ValueBuffer* _vb);
 
 	friend class ControllerView;
 	friend class ControllerDialog;
-
-} ;
+	friend class ControllerConnection;
+};
 
 #endif
 

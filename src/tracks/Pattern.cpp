@@ -108,7 +108,7 @@ Pattern::~Pattern()
 void Pattern::resizeToFirstTrack()
 {
 	// Resize this track to be the same as existing tracks in the BB
-	const TrackContainer::TrackList & tracks =
+	const Tracks& tracks =
 		m_instrumentTrack->trackContainer()->tracks();
 	for(unsigned int trackID = 0; trackID < tracks.size(); ++trackID)
 	{

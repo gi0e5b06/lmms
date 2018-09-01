@@ -28,7 +28,7 @@
 #include "ActionUpdatable.h"
 
 #include <QMainWindow>
-#include <QHash>
+//#include <QHash>
 #include <QToolBar>
 
 class QAction;

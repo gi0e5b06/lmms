@@ -169,10 +169,16 @@ void RenderManager::renderNextTrack()
     }
 }
 
+// Render the song into individual channels
+void RenderManager::renderChannels()
+{
+        qWarning("RenderManager::renderChannels not implemented");
+}
+
 // Render the song into individual tracks
 void RenderManager::renderTracks()
 {
-    const TrackContainer::TrackList& tl = Engine::getSong()->tracks();
+    const Tracks& tl = Engine::getSong()->tracks();
 
     // find all currently unnmuted tracks -- we want to render these.
     for(auto it = tl.begin(); it != tl.end(); ++it)
@@ -188,7 +194,7 @@ void RenderManager::renderTracks()
         }
     }
 
-    const TrackContainer::TrackList t2
+    const Tracks t2
             = Engine::getBBTrackContainer()->tracks();
     for(auto it = t2.begin(); it != t2.end(); ++it)
     {

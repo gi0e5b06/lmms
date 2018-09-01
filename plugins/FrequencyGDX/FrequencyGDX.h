@@ -31,9 +31,6 @@
 #include "fft_helpers.h"
 #include "lmms_math.h"
 
-#define FFT_BUFFER_SIZE 4096
-// 22050
-
 class PLUGIN_EXPORT FrequencyGDX : public Effect
 {
   public:
@@ -44,7 +41,8 @@ class PLUGIN_EXPORT FrequencyGDX : public Effect
         RightChannel
     };
 
-    static const int MAX_BANDS = 22050;
+    static const int FFT_BUFFER_SIZE = 4096; // 22050
+    static const int MAX_BANDS       = 22050;
 
     FrequencyGDX(Model*                                    parent,
                  const Descriptor::SubPluginFeatures::Key* key);

@@ -219,9 +219,9 @@ void BBTrackContainerView::cloneSteps()
 
 void BBTrackContainerView::removeSteps()
 {
-	TrackContainer::TrackList tl = model()->tracks();
+	Tracks tl = model()->tracks();
 
-	for( TrackContainer::TrackList::iterator it = tl.begin();
+	for( Tracks::iterator it = tl.begin();
 		it != tl.end(); ++it )
 	{
 		if( ( *it )->type() == Track::InstrumentTrack )
@@ -317,9 +317,9 @@ void BBTrackContainerView::updatePosition()
 
 void BBTrackContainerView::makeSteps( bool clone )
 {
-	TrackContainer::TrackList tl = model()->tracks();
+	Tracks tl = model()->tracks();
 
-	for( TrackContainer::TrackList::iterator it = tl.begin();
+	for( Tracks::iterator it = tl.begin();
 		it != tl.end(); ++it )
 	{
 		if( ( *it )->type() == Track::InstrumentTrack )

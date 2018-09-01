@@ -78,7 +78,7 @@ PeakController::~PeakController()
 }
 
 
-void PeakController::updateValueBuffer()
+void PeakController::fillValueBuffer()
 {
 	if( m_coeffNeedsUpdate )
 	{
@@ -119,7 +119,8 @@ void PeakController::updateValueBuffer()
 	{
 		m_valueBuffer.clear(); //GDX fill( 0 );
 	}
-	m_bufferLastUpdated = s_periods;
+
+	//m_lastUpdatedPeriod = s_periods;
 }
 
 

@@ -520,7 +520,7 @@ TrackContentObjectView::TrackContentObjectView( TrackContentObject * tco,
 	move( 0, 0 );
 	show();
 
-	setFixedHeight( tv->getTrackContentWidget()->height() ); // GDX -1
+	setFixedHeight( tv->getTrackContentWidget()->height() - 1);
 	setAcceptDrops( true );
 	setMouseTracking( true );
 
@@ -1974,7 +1974,7 @@ bool TrackContentWidget::canPasteSelection( MidiTime tcoPos, const QMimeData * m
 	const int initialTrackIndex = tiAttr.value().toInt();
 
 	// Get the current track's index
-	const TrackContainer::TrackList tracks = t->trackContainer()->tracks();
+	const Tracks tracks = t->trackContainer()->tracks();
 	const int currentTrackIndex = tracks.indexOf( t );
 
 	// Don't paste if we're on the same tact
@@ -2045,7 +2045,7 @@ bool TrackContentWidget::pasteSelection( MidiTime tcoPos, QDropEvent * de )
 	MidiTime grabbedTCOTact = MidiTime( grabbedTCOPos.getTact(), 0 );
 
 	// Snap the mouse position to the beginning of the dropped tact, in ticks
-	const TrackContainer::TrackList tracks = getTrack()->trackContainer()->tracks();
+	const Tracks tracks = getTrack()->trackContainer()->tracks();
 	const int currentTrackIndex = tracks.indexOf( getTrack() );
 
 	bool wasSelection = m_trackView->trackContainerView()->rubberBand()->selectedObjects().count();
@@ -3017,8 +3017,8 @@ const QString Track::uuid()
         {
                 m_uuid=QUuid::createUuid().toString()
                         .replace("{","").replace("}","");
-		if( Engine::getSong() )
-			Engine::getSong()->setModified();
+		//if( Engine::getSong() )
+		//	Engine::getSong()->setModified();
         }
         return m_uuid;
 }
@@ -3581,10 +3581,10 @@ tact_t Track::length() const
  */
 void Track::toggleSolo()
 {
-	const TrackContainer::TrackList & tl = m_trackContainer->tracks();
+	const Tracks & tl = m_trackContainer->tracks();
 
 	bool soloBefore = false;
-	for( TrackContainer::TrackList::const_iterator it = tl.begin();
+	for( Tracks::const_iterator it = tl.begin();
 							it != tl.end(); ++it )
 	{
 		if( *it != this )
@@ -3598,7 +3598,7 @@ void Track::toggleSolo()
 	}
 
 	const bool solo = m_soloModel.value();
-	for( TrackContainer::TrackList::const_iterator it = tl.begin();
+	for( Tracks::const_iterator it = tl.begin();
 							it != tl.end(); ++it )
 	{
 		if( solo )
@@ -3624,7 +3624,7 @@ void Track::toggleSolo()
 
 void Track::toggleFrozen()
 {
-        qInfo("Track::toggleFrozen");
+        //qInfo("Track::toggleFrozen");
 }
 
 

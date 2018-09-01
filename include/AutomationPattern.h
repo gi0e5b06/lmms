@@ -63,6 +63,13 @@ public:
 	const AutomatableModel * firstObject() const;
 	const objectVector& objects() const;
 
+	MidiTime putValue( const MidiTime & time,
+				const float value,
+				const bool quantPos = true,
+				const bool ignoreSurroundingPoints = true );
+
+	void removeValue( const MidiTime & time );
+
 	// progression-type stuff
 	inline ProgressionTypes progressionType() const
 	{
@@ -118,15 +125,6 @@ public:
 	//virtual void changeLength( const MidiTime & _length );
 	virtual void updateLength();
         //virtual void updateBBTrack();
-
-	MidiTime putValue( const MidiTime & time,
-				const float value,
-				const bool quantPos = true,
-				const bool ignoreSurroundingPoints = true );
-
-	void removeValue( const MidiTime & time );
-
-	void recordValue(MidiTime time, float value);
 
 	MidiTime setDragValue( const MidiTime & time,
 				const float value,
@@ -197,7 +195,7 @@ public:
 	static void resolveAllIDs();
 
 	bool isRecording() const { return m_isRecording; }
-	void setRecording( const bool b ) { m_isRecording = b; }
+	void setRecording( const bool b );
 
 	static int quantization() { return s_quantization; }
 	static void setQuantization(int q) { s_quantization = q; }
@@ -209,6 +207,11 @@ public slots:
 	void flipY( int min, int max );
 	void flipY();
 	void flipX( int length = -1 );
+
+	void onRecordValue(MidiTime time, float value);
+
+ signals:
+	void recordValue(MidiTime time, float value);
 
 private:
 	void cleanObjects();

@@ -46,6 +46,9 @@ class RenderManager : public QObject
     /// Export all unmuted tracks into a single file
     void renderProject();
 
+    /// Export all unmuted channels into individual file
+    void renderChannels();
+
     /// Export all unmuted tracks into individual file
     void renderTracks();
 

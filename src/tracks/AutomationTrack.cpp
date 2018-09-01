@@ -157,7 +157,7 @@ void AutomationTrackView::dropEvent( QDropEvent * _de )
 			pat->movePosition( pos );
 
                         //mod->emit propertiesChanged();
-                        mod->emit controllerValueChanged();
+                        mod->emit dataChanged();//controlledValueChanged(mod->currentValue(0));
 		}
 	}
 

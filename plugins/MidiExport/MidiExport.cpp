@@ -75,15 +75,15 @@ MidiExport::~MidiExport()
 
 
 /*
-bool MidiExport::tryExport(const TrackContainer::TrackList &tracks,
-			const TrackContainer::TrackList &tracks_BB,
+bool MidiExport::tryExport(const Tracks &tracks,
+			const Tracks &tracks_BB,
 			int tempo, int masterPitch, const QString &filename)
 */
 
 bool MidiExport::proceed(const QString& _fileName)
 {
-        TrackContainer::TrackList tracks=Engine::getSong()->tracks();
-        TrackContainer::TrackList tracks_BB=Engine::getBBTrackContainer()->tracks();
+        Tracks tracks=Engine::getSong()->tracks();
+        Tracks tracks_BB=Engine::getBBTrackContainer()->tracks();
         int tempo=Engine::getSong()->getTempo();
         int masterPitch=Engine::getSong()->masterPitch();
 

@@ -54,58 +54,65 @@ EffectView::EffectView( Effect * _model, QWidget * _parent ) :
 
 	// Disable effects that are of type "DummyEffect"
 	bool isEnabled = !dynamic_cast<DummyEffect *>( effect() );
-	m_bypass = new LedCheckBox( this, "", isEnabled ? LedCheckBox::Green : LedCheckBox::Red );
-	m_bypass->move( 3, 3 );
-	m_bypass->setEnabled( isEnabled );
-	m_bypass->setWhatsThis( tr( "Toggles the effect on or off." ) );
-
-	ToolTip::add( m_bypass, tr( "On/Off" ) );
-
-
-	m_wetDry = new Knob( knobBright_26, this );
-	m_wetDry->setLabel( tr( "D-WET" ) );
-	//m_autoQuit->move( 20, 5 );
-	m_wetDry->setGeometry( 19,5,36,36 );
-	m_wetDry->setEnabled( isEnabled );
-	m_wetDry->setHintText( tr( "Wet Level:" ), "" );
-	m_wetDry->setWhatsThis( tr( "The Wet/Dry knob sets the ratio between "
-					"the input signal and the effect signal that "
-					"forms the output." ) );
+	m_enabledLCB = new LedCheckBox( this, "", isEnabled ? LedCheckBox::Green : LedCheckBox::Red );
+        m_enabledLCB->move( 3, 3 );
+	//m_enabledLCB->setGeometry(0,0,19,19);
+        //m_enabledLCB->setText(tr("ON"));
+        //m_enabledLCB->setTextAnchorPoint(Qt::AnchorBottom);
+	m_enabledLCB->setEnabled( isEnabled );
+	m_enabledLCB->setWhatsThis( tr( "Toggles the effect on or off." ) );
+	ToolTip::add( m_enabledLCB, tr( "On/Off" ) );
 
 
-	m_autoQuit = new TempoSyncKnob( knobBright_26, this );
-	m_autoQuit->setLabel( tr( "DECAY" ) );
-	//m_autoQuit->move( 60, 5 );
-	m_autoQuit->setGeometry( 55,5,36,36 );
-	m_autoQuit->setEnabled( isEnabled );
-	m_autoQuit->setHintText( tr( "Time:" ), "ms" );
-	m_autoQuit->setWhatsThis( tr(
+	m_clippingLCB = new LedCheckBox( this, LedCheckBox::Red );
+	m_clippingLCB->move( 3, 19 );
+	//m_clippingLCB->setGeometry(0,30,19,19);
+        m_clippingLCB->setBlinking(true);
+        //m_clippingLCB->setText(tr("CLIP"));
+        //m_clippingLCB->setTextAnchorPoint(Qt::AnchorBottom);
+	//m_clippingLCB->setWhatsThis( tr( "Toggles the effect on or off." ) );
+
+
+        m_wetDryKNB = new Knob( knobBright_26, this );
+	m_wetDryKNB->setLabel( tr( "D-WET" ) );
+	m_wetDryKNB->setGeometry( 19,5,36,36 );
+	m_wetDryKNB->setEnabled( isEnabled );
+	m_wetDryKNB->setHintText( tr( "Wet Level:" ), "" );
+	m_wetDryKNB->setWhatsThis( tr( "The Wet/Dry knob sets the ratio between "
+                                       "the input signal and the effect signal that "
+                                       "forms the output." ) );
+
+
+	m_autoQuitKNB = new TempoSyncKnob( knobBright_26, this );
+	m_autoQuitKNB->setLabel( tr( "DECAY" ) );
+	m_autoQuitKNB->setGeometry( 55,5,36,36 );
+	m_autoQuitKNB->setEnabled( isEnabled );
+	m_autoQuitKNB->setHintText( tr( "Time:" ), "ms" );
+	m_autoQuitKNB->setWhatsThis( tr(
 "The Decay knob controls how many buffers of silence must pass before the "
 "plugin stops processing.  Smaller values will reduce the CPU overhead but "
 "run the risk of clipping the tail on delay and reverb effects." ) );
 
 
-	m_gate = new Knob( knobBright_26, this );
-	m_gate->setLabel( tr( "GATE" ) );
-	//m_gate->move( 100, 5 );
-	m_gate->setGeometry( 91,5,36,36 );
-	m_gate->setEnabled( isEnabled );
-	m_gate->setHintText( tr( "Gate:" ), "" );
-	m_gate->setWhatsThis( tr(
+	m_gateInKNB = new Knob( knobBright_26, this );
+	m_gateInKNB->setLabel( tr( "GATE" ) );
+	m_gateInKNB->setGeometry( 91,5,36,36 );
+	m_gateInKNB->setEnabled( isEnabled );
+	m_gateInKNB->setHintText( tr( "Gate:" ), "" );
+	m_gateInKNB->setWhatsThis( tr(
 "The Gate knob controls the signal level that is considered to be 'silence' "
 "while deciding when to stop processing signals." ) );
 
 
-	m_balance = new Knob( knobBright_26, this );
-	m_balance->setLabel( tr( "BAL." ) );
-	//m_balance->move( 100, 5 );
-	m_balance->setGeometry( 127,5,36,36 );
-	m_balance->setEnabled( isEnabled );
-	m_balance->setHintText( tr( "Balance:" ), "" );
-	m_balance->setWhatsThis( tr(
+	m_balanceKNB = new Knob( knobBright_26, this );
+	m_balanceKNB->setLabel( tr( "BAL." ) );
+	m_balanceKNB->setGeometry( 127,5,36,36 );
+	m_balanceKNB->setEnabled( isEnabled );
+	m_balanceKNB->setHintText( tr( "Balance:" ), "" );
+	m_balanceKNB->setWhatsThis( tr(
 "The Balance knob controls how ..." ) );
 
-        m_balance->setVisible(_model->isBalanceable());
+        m_balanceKNB->setVisible(_model->isBalanceable());
 	setModel( _model );
 
         if(!effect())
@@ -303,8 +310,8 @@ void EffectView::paintEvent( QPaintEvent * )
 	f.setBold( true );
 	p.setFont( f );
 
-	p.setPen( palette().shadow().color() );
-	p.drawText( 7, 54, model()->displayName() );
+	//p.setPen( palette().shadow().color() );
+	//p.drawText( 7, 54, model()->displayName() );
 	p.setPen( palette().text().color() );
 	p.drawText( 6, 53, model()->displayName() );
 }
@@ -315,10 +322,11 @@ void EffectView::paintEvent( QPaintEvent * )
 void EffectView::modelChanged()
 {
         Effect* e=effect();
-	m_bypass->setModel( &e->m_enabledModel );
-	m_wetDry->setModel( &e->m_wetDryModel );
-	m_autoQuit->setModel( &e->m_autoQuitModel );
-	m_gate->setModel( &e->m_gateModel );
-	m_balance->setModel( &e->m_balanceModel );
-        m_balance->setVisible( e->isBalanceable() );
+	m_enabledLCB->setModel( &e->m_enabledModel );
+	m_clippingLCB->setModel( &e->m_clippingModel );
+	m_wetDryKNB->setModel( &e->m_wetDryModel );
+	m_autoQuitKNB->setModel( &e->m_autoQuitModel );
+	m_gateInKNB->setModel( &e->m_gateModel );
+	m_balanceKNB->setModel( &e->m_balanceModel );
+        m_balanceKNB->setVisible( e->isBalanceable() );
 }

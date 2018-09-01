@@ -51,7 +51,7 @@ public:
 
 	virtual int controlCount()
 	{
-		return 1;
+		return 3;
 	}
 
 	virtual EffectControlDialog * createView()
@@ -64,7 +64,7 @@ private:
 	SpectrumAnalyzer* m_effect;
 	BoolModel m_linearSpec;
 	BoolModel m_linearYAxis;
-	IntModel m_channelMode;
+	FloatModel m_channelMode; //Int but knob
 
 	friend class SpectrumAnalyzer;
 	friend class SpectrumAnalyzerControlDialog;

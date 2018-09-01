@@ -87,7 +87,7 @@ public:
                                 qInfo("AutoDetectMidiController: detected '%s'",qPrintable(m_detectedMidiPort));
                                 qInfo("                        : ch=%d cc=%d",m_detectedMidiChannel,m_detectedMidiController);
                         }
-			emit valueChanged();
+			emit controlledValueChanged(currentValue(0));
 		}
 	}
 
@@ -489,7 +489,7 @@ void ControllerConnectionDialog::midiToggled()
 				m_readablePorts->setModel( &m_midiController->m_midiPort );
 			}
 
-			connect( m_midiController, SIGNAL( valueChanged() ), this, SLOT( midiValueChanged() ) );
+			connect( m_midiController, SIGNAL( controlledValueChanged(float) ), this, SLOT( midiValueChanged() ) );
 		}
 	}
 	m_midiAutoDetect.setValue( enabled );

@@ -437,7 +437,7 @@ void Song::processNextBuffer()
 
 void Song::processAutomations(const TrackList &tracklist, MidiTime timeStart, fpp_t)
 {
-	AutomatedValueMap values;
+	//AutomatedValueMap values;
 
 	QSet<const AutomatableModel*> recordedModels;
 
@@ -462,8 +462,12 @@ void Song::processAutomations(const TrackList &tracklist, MidiTime timeStart, fp
 		return;
 	}
 
-	values = container->automatedValuesAt(timeStart, tcoNum);
-	TrackList tracks = container->tracks();
+        //values = container->automatedValuesAt(timeStart, tcoNum);
+        m_automatedValues.clear();
+        container->automatedValuesAt(timeStart, tcoNum, m_automatedValues);
+        //qInfo("automated values: %d",m_automatedValues.size());
+
+	const Tracks& tracks = container->tracks();
 
 	Track::tcoVector tcos;
 	for (Track* track : tracks)
@@ -485,14 +489,18 @@ void Song::processAutomations(const TrackList &tracklist, MidiTime timeStart, fp
 		if (p->isRecording() && relTime >= 0 && relTime < p->length())
 		{
 			const AutomatableModel* recordedModel = p->firstObject();
-			p->recordValue(relTime, recordedModel->value<float>());
+                        //const float v1=recordedModel->controllerValue(0,true);
+                        const float v2=recordedModel->value<float>();
+                        //qInfo("Song record %f %f",v1,v2);
+                        p->emit recordValue(relTime, v2);
 
 			recordedModels << recordedModel;
 		}
 	}
 
 	// Apply values
-	for (auto it = values.begin(); it != values.end(); it++)
+	for (auto it = m_automatedValues.begin();
+             it != m_automatedValues.end(); it++) //values
 	{
                 auto m=it.key();
                 if(!m) continue;
@@ -1462,31 +1470,42 @@ bool Song::createProjectTree()
         QString r=projectDir();
         qInfo("Song::createProjectTree %s",qPrintable(r));
         QDir pdir(r);
-        pdir.mkpath("backup" );
-        pdir.mkpath("images" );
-        pdir.mkpath("midi"   );
-        pdir.mkpath("samples");
-        pdir.mkpath("song"   );
-        pdir.mkpath("tracks" );
-        pdir.mkpath("videos" );
+        pdir.mkpath("backup"  );
+        pdir.mkpath("channels");
+        pdir.mkpath("images"  );
+        pdir.mkpath("midi"    );
+        pdir.mkpath("samples" );
+        pdir.mkpath("song"    );
+        pdir.mkpath("tracks"  );
+        pdir.mkpath("videos"  );
 
-        pdir.mkpath(QString("midi"   )+QDir::separator()+"exported");
-        pdir.mkpath(QString("song"   )+QDir::separator()+"rendered");
-        pdir.mkpath(QString("tracks" )+QDir::separator()+"rendered");
-        pdir.mkpath(QString("tracks" )+QDir::separator()+"frozen");
-        pdir.mkpath(QString("videos" )+QDir::separator()+"rendered");
-        pdir.mkpath(QString("samples")+QDir::separator()+"used");
+        pdir.mkpath(QString("channels")+QDir::separator()+"frozen");
+        pdir.mkpath(QString("channels")+QDir::separator()+"rendered");
+        pdir.mkpath(QString("midi"    )+QDir::separator()+"exported");
+        pdir.mkpath(QString("song"    )+QDir::separator()+"rendered");
+        pdir.mkpath(QString("tracks"  )+QDir::separator()+"frozen");
+        pdir.mkpath(QString("tracks"  )+QDir::separator()+"rendered");
+        pdir.mkpath(QString("videos"  )+QDir::separator()+"rendered");
+        pdir.mkpath(QString("samples" )+QDir::separator()+"used");
 
         return true;
 }
 
 
-void Song::freezeTracks()
+void Song::freeze()
 {
+        FxMixer* fxMixer=Engine::fxMixer();
+
 	for(Track* t: tracks())
 	{
 		t->setFrozen(false);
 		t->cleanFrozenBuffer();
+	}
+
+	for(FxChannel* ch: fxMixer->channels())
+	{
+		ch->setFrozen(false);
+		ch->cleanFrozenBuffer();
 	}
 
         ExportProjectDialog epd( "/tmp/tmp."+SampleBuffer::rawStereoSuffix(),
@@ -1514,12 +1533,26 @@ void Song::freezeTracks()
 
         if( epd.exec() == QDialog::Accepted )
         {
+
+                for(FxChannel* ch: fxMixer->channels())
+                {
+                        ch->setFrozen(true);
+                        ch->cleanFrozenBuffer();
+                }
+
                 for(Track* t: tracks())
                 {
                         t->setFrozen(true);
                         t->writeFrozenBuffer();
                 }
         }
+}
+
+
+void Song::exportProjectChannels()
+{
+        qWarning("Song::exportProjectChannels not implemented yet");
+	//exportProject( true );
 }
 
 
@@ -1681,8 +1714,8 @@ void Song::exportProjectMidi()
 
 		// instantiate midi export plugin
 		/*
-                  TrackContainer::TrackList tracks;
-                  TrackContainer::TrackList tracks_BB;
+                  Tracks tracks;
+                  Tracks tracks_BB;
                   tracks = Engine::getSong()->tracks();
                   tracks_BB = Engine::getBBTrackContainer()->tracks();
                 */
@@ -1747,8 +1780,8 @@ void Song::exportProjectVideoLine()
 
 		// instantiate videoline export plugin
                 /*
-		TrackContainer::TrackList tracks;
-		TrackContainer::TrackList tracks_BB;
+		Tracks tracks;
+		Tracks tracks_BB;
                 QVector<QPair<tick_t,tick_t>> loops;
 
 		tracks = Engine::getSong()->tracks();

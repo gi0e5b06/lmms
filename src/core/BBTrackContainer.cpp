@@ -65,8 +65,8 @@ bool BBTrackContainer::play( MidiTime _start, fpp_t _frames,
 
 	_start = _start % ( beatlen * MidiTime::ticksPerTact() );
 
-	TrackList tl = tracks();
-	for( TrackList::iterator it = tl.begin(); it != tl.end(); ++it )
+	Tracks tl = tracks();
+	for( Tracks::iterator it = tl.begin(); it != tl.end(); ++it )
 	{
                 f_cnt_t realstart = _start;
                 TrackContentObject* p=(*it)->getTCO( _tco_num );
@@ -105,8 +105,8 @@ tact_t BBTrackContainer::lengthOfBB( int _bb ) const
 {
 	MidiTime max_length = MidiTime::ticksPerTact();
 
-	const TrackList & tl = tracks();
-	for( TrackList::const_iterator it = tl.begin(); it != tl.end(); ++it )
+	const Tracks& tl = tracks();
+	for( Tracks::const_iterator it = tl.begin(); it != tl.end(); ++it )
 	{
 		max_length = qMax( max_length,
                                    ( *it )->getTCO( _bb )->length() );
@@ -119,8 +119,8 @@ tact_t BBTrackContainer::lengthOfBB( int _bb ) const
 tick_t BBTrackContainer::beatLengthOfBB( int _bb ) const
 {
         tick_t max_length=0;
-        const TrackList& tl = tracks();
-	for( TrackList::const_iterator it = tl.begin(); it != tl.end(); ++it )
+        const Tracks& tl = tracks();
+	for( Tracks::const_iterator it = tl.begin(); it != tl.end(); ++it )
 	{
                 Pattern* p=dynamic_cast<Pattern*>((*it)->getTCO( _bb ));
                 if(p)
@@ -145,8 +145,8 @@ int BBTrackContainer::numOfBBs() const
 
 void BBTrackContainer::removeBB( int _bb )
 {
-	TrackList tl = tracks();
-	for( TrackList::iterator it = tl.begin(); it != tl.end(); ++it )
+	Tracks tl = tracks();
+	for( Tracks::iterator it = tl.begin(); it != tl.end(); ++it )
 	{
 		delete ( *it )->getTCO( _bb );
 		( *it )->removeTact( _bb * DefaultTicksPerTact );
@@ -162,8 +162,8 @@ void BBTrackContainer::removeBB( int _bb )
 
 void BBTrackContainer::swapBB( int _bb1, int _bb2 )
 {
-	TrackList tl = tracks();
-	for( TrackList::iterator it = tl.begin(); it != tl.end(); ++it )
+	Tracks tl = tracks();
+	for( Tracks::iterator it = tl.begin(); it != tl.end(); ++it )
 	{
 		( *it )->swapPositionOfTCOs( _bb1, _bb2 );
 	}
@@ -188,8 +188,8 @@ void BBTrackContainer::updateBBTrack( TrackContentObject * _tco )
 
 void BBTrackContainer::fixIncorrectPositions()
 {
-	TrackList tl = tracks();
-	for( TrackList::iterator it = tl.begin(); it != tl.end(); ++it )
+	Tracks tl = tracks();
+	for( Tracks::iterator it = tl.begin(); it != tl.end(); ++it )
 	{
 		for( int i = 0; i < numOfBBs(); ++i )
 		{
@@ -245,8 +245,8 @@ void BBTrackContainer::currentBBChanged()
 {
 	// now update all track-labels (the current one has to become white,
 	// the others gray)
-	TrackList tl = Engine::getSong()->tracks();
-	for( TrackList::iterator it = tl.begin(); it != tl.end(); ++it )
+	Tracks tl = Engine::getSong()->tracks();
+	for( Tracks::iterator it = tl.begin(); it != tl.end(); ++it )
 	{
 		if( ( *it )->type() == Track::BBTrack )
 		{
@@ -260,14 +260,15 @@ void BBTrackContainer::currentBBChanged()
 
 void BBTrackContainer::createTCOsForBB( int _bb )
 {
-	TrackList tl = tracks();
+	Tracks tl = tracks();
 	for( int i = 0; i < tl.size(); ++i )
 	{
 		tl[i]->createTCOsForBB( _bb );
 	}
 }
 
-AutomatedValueMap BBTrackContainer::automatedValuesAt(MidiTime _start, int _tcoNum) const
+//AutomatedValueMap
+void BBTrackContainer::automatedValuesAt(MidiTime _start, int _tcoNum, AutomatedValueMap& _map) const
 {
         /*
 	Q_ASSERT(_tcoNum >= 0);
@@ -279,5 +280,6 @@ AutomatedValueMap BBTrackContainer::automatedValuesAt(MidiTime _start, int _tcoN
 		_start = length_ticks;
 	}
         */
-	return TrackContainer::automatedValuesAt(_start + (MidiTime::ticksPerTact() * _tcoNum), _tcoNum);
+	//return
+        TrackContainer::automatedValuesAt(_start + (MidiTime::ticksPerTact() * _tcoNum), _tcoNum, _map);
 }

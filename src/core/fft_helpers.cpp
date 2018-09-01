@@ -25,8 +25,11 @@
 
 #include "fft_helpers.h"
 
-#include <cmath>
 #include "lmms_constants.h"
+
+//#include <QtGlobal>
+
+#include <cmath>
 
 /* returns biggest value from abs_spectrum[spec_size] array
 
@@ -179,11 +182,11 @@ int compressbands(float *absspec_buffer, float *compressedband, int num_old, int
 
 int calc13octaveband31(float *absspec_buffer, float *subbands, int num_spec, float max_frequency)
 {
-static const int onethirdoctavecenterfr[] = {20, 25, 31, 40, 50, 63, 80, 100, 125, 160, 200, 250, 315, 400, 500, 630, 800, 1000, 1250, 1600, 2000, 2500, 3150, 4000, 5000, 6300, 8000, 10000, 12500, 16000, 20000};
-	int i, j;
-	float f_min, f_max, frequency, bandwidth;
-	int j_min, j_max=0;
-	float fpower;
+        static const int onethirdoctavecenterfr[] = {20, 25, 31, 40, 50, 63, 80, 100, 125, 160, 200, 250, 315, 400, 500, 630, 800, 1000, 1250, 1600, 2000, 2500, 3150, 4000, 5000, 6300, 8000, 10000, 12500, 16000, 20000};
+        //int i, j;
+	//float f_min, f_max, frequency, bandwidth;
+	//int j_min, j_max=0;
+	//float fpower;
 
 
 	if ( (absspec_buffer==NULL)||(subbands==NULL) )
@@ -196,16 +199,17 @@ static const int onethirdoctavecenterfr[] = {20, 25, 31, 40, 50, 63, 80, 100, 12
 		return -1;
 
 	/*** energy ***/
-	fpower=0;
-	for ( i=0; i<num_spec; i++ )
+	float fpower=0;
+	for(int i=0; i<num_spec; i++)
 	{
-		absspec_buffer[i]=(absspec_buffer[i]*absspec_buffer[i])/FFT_BUFFER_SIZE;
+		absspec_buffer[i]=(absspec_buffer[i]*absspec_buffer[i])/num_spec;
 		fpower=fpower+(2*absspec_buffer[i]);
 	}
 	fpower=fpower-(absspec_buffer[0]); //dc not mirrored
 
 
 	/*** for each subband: sum up power ***/
+        /*
 	for ( i=0; i<31; i++ )
 	{
 		subbands[i]=0;
@@ -219,9 +223,9 @@ static const int onethirdoctavecenterfr[] = {20, 25, 31, 40, 50, 63, 80, 100, 12
 		f_max=frequency+bandwidth/2.0;
 
 		j_min=(int)(f_min/max_frequency*(float)num_spec);
-
 		j_max=(int)(f_max/max_frequency*(float)num_spec);
 
+                fprintf(stderr,"fmin=%f fmax=%f jmin=%d jmax=%d\n",f_min,f_max,j_min,j_max);
 
 		if ( (j_min<0)||(j_max<0) )
 		{
@@ -236,9 +240,18 @@ static const int onethirdoctavecenterfr[] = {20, 25, 31, 40, 50, 63, 80, 100, 12
 		}
 
 	} //for
+        */
 
+        for(int b=0; b<31; b++)
+        {
+		subbands[b]=0.f;
+                int jmin=(b==0  ? 5 : (onethirdoctavecenterfr[b-1]+onethirdoctavecenterfr[b])/2);
+                int jmax=(b==31 ? num_spec : (onethirdoctavecenterfr[b]+onethirdoctavecenterfr[b+1])/2);
+                for(int j=jmin;j<jmax;j++)
+                        subbands[b]+=absspec_buffer[j];
+        }
 
-	return 0;
+        return 0;
 }
 
 /* compute power of finite time sequence
@@ -261,4 +274,3 @@ float signalpower(float *timesignal, int num_values)
 
 	return power;
 }
-

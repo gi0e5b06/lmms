@@ -36,6 +36,7 @@ SET(LMMS_SRCS
 	gui/MidiEffectSelectDialog.cpp
 	gui/MidiSetupWidget.cpp
 	gui/ModelView.cpp
+        gui/PaintCacheable.cpp
 	gui/PeakControllerDialog.cpp
         gui/PeripheralView.cpp
         gui/PeripheralLaunchpadView.cpp

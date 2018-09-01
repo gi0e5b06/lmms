@@ -32,7 +32,7 @@
 #include <QAction>
 #include <QLabel>
 //#include <QMdiArea>
-#include <QMdiSubWindow>
+//#include <QMdiSubWindow>
 #include <QShortcut>
 
 const QVector<float> Editor::ZOOM_LEVELS =

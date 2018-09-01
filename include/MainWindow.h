@@ -31,7 +31,7 @@
 
 //#include <QAction>
 #include <QBasicTimer>
-#include <QHash>
+//#include <QHash>
 #include <QIcon>
 #include <QList>
 #include <QMainWindow>

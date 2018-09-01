@@ -36,12 +36,10 @@ class AutomationPattern;
 class InstrumentTrack;
 class TrackContainerView;
 
-
 class EXPORT TrackContainer : public Model, public JournallingObject
 {
 	Q_OBJECT
 public:
-	typedef QVector<Track *> TrackList;
 	enum TrackContainerTypes
 	{
 		BBContainer,
@@ -74,7 +72,7 @@ public:
 
 	void clearAllTracks();
 
-	const TrackList & tracks() const
+	const Tracks& tracks() const
 	{
 		return m_tracks;
 	}
@@ -96,19 +94,21 @@ public:
 		return m_TrackContainerType;
 	}
 
-	virtual AutomatedValueMap automatedValuesAt(MidiTime time, int tcoNum = -1) const;
+	virtual //AutomatedValueMap
+                void automatedValuesAt(MidiTime time, int tcoNum /*= -1*/, AutomatedValueMap& _map) const;
 
 signals:
 	void trackAdded( Track * _track );
 
 protected:
-	static AutomatedValueMap automatedValuesFromTracks(const TrackList &tracks, MidiTime timeStart, int tcoNum = -1);
+	static //AutomatedValueMap
+                void automatedValuesFromTracks(const Tracks &tracks, MidiTime timeStart, int tcoNum /*= -1*/, AutomatedValueMap& _map);
 	static void automatedValuesFromTrack(const Track* _track, MidiTime timeStart, int tcoNum, AutomatedValueMap& _map);
 
 	mutable QReadWriteLock m_tracksMutex;
 
 private:
-	TrackList m_tracks;
+	Tracks m_tracks;
 
 	TrackContainerTypes m_TrackContainerType;
 

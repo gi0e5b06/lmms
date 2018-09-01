@@ -22,15 +22,15 @@
  *
  */
 
-
 #ifndef DEBUG_H
 #define DEBUG_H
 
 //#include <cstdio>
+#include "lmmsconfig.h"
+
+#include <QDebug>
 #include <QObject>
 #include <QThread>
-
-#include "lmmsconfig.h"
 
 #ifndef qInfo
 #define qInfo qWarning
@@ -47,33 +47,32 @@
 
 #include <cassert>
 
-#define DEBUG_THREAD_PRINT					     \
-	qInfo("THREAD: CT=%s P=%d %s#%d",			     \
-              qPrintable(QThread::currentThread()->objectName()),    \
-              QThread::currentThread()->priority(),		     \
-              __FILE__,__LINE__);
+#define DEBUG_THREAD_CHECK                   \
+    if(QThread::currentThread() != thread()) \
+        qWarning("Warning: %s#%d: wrong thread", __FILE__, __LINE__);
 
-#define DEBUG_CONNECT(sender,signal,receiver,slot)                      \
-        {                                                               \
-                qInfo("DEBUG_CONNECT from %p '%s' to %p '%s'",          \
-                      sender,STRINGIFY(signal),                         \
-                      receiver,STRINGIFY(slot));                        \
-                QMetaObject::Connection c=                              \
-                        QObject::connect(sender, signal, receiver,      \
-                                         slot);   \
-                if(!c)                                                  \
-                        qt_assert_x(Q_FUNC_INFO,                        \
-                                    "CHECKED_CONNECT failed",           \
-                                    __FILE__, __LINE__);                \
-        }
+#define DEBUG_THREAD_PRINT                                    \
+    qInfo("THREAD: CT=%s P=%d %s#%d",                         \
+          qPrintable(QThread::currentThread()->objectName()), \
+          QThread::currentThread()->priority(), __FILE__, __LINE__);
 
-#define DEBUG_DISCONNECT(sender,signal,receiver,slot)                   \
-        {                                                               \
-                qInfo("DEBUG_DISCONNECT from %p '%s' to %p '%s'",       \
-                      sender, STRINGIFY(signal),                        \
-                      receiver,STRINGIFY(slot));                        \
-                QObject::disconnect(sender, signal, receiver, slot);    \
-        }
+#define DEBUG_CONNECT(sender, signal, receiver, slot)                    \
+    {                                                                    \
+        qInfo("DEBUG_CONNECT from %p '%s' to %p '%s'", sender,           \
+              STRINGIFY(signal), receiver, STRINGIFY(slot));             \
+        QMetaObject::Connection c                                        \
+                = QObject::connect(sender, signal, receiver, slot);      \
+        if(!c)                                                           \
+            qt_assert_x(Q_FUNC_INFO, "CHECKED_CONNECT failed", __FILE__, \
+                        __LINE__);                                       \
+    }
+
+#define DEBUG_DISCONNECT(sender, signal, receiver, slot)          \
+    {                                                             \
+        qInfo("DEBUG_DISCONNECT from %p '%s' to %p '%s'", sender, \
+              STRINGIFY(signal), receiver, STRINGIFY(slot));      \
+        QObject::disconnect(sender, signal, receiver, slot);      \
+    }
 
 #else
 
@@ -81,14 +80,16 @@
 #define assert(x) ((void)(x))
 #endif
 
-#define DEBUG_CONNECT(sender,signal,receiver,slot)      \
-        connect(sender,signal,receiver,slot);
-
-#define DEBUG_DISCONNECT(sender,signal,receiver,slot)   \
-        disconnect(sender,signal,receiver,slot);
+#define DEBUG_THREAD_CHECK
 
 #define DEBUG_THREAD_PRINT
 
-#endif // LMMS_DEBUG
+#define DEBUG_CONNECT(sender, signal, receiver, slot) \
+    connect(sender, signal, receiver, slot);
 
-#endif // DEBUG_H
+#define DEBUG_DISCONNECT(sender, signal, receiver, slot) \
+    disconnect(sender, signal, receiver, slot);
+
+#endif  // LMMS_DEBUG
+
+#endif  // DEBUG_H

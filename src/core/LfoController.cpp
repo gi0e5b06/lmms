@@ -82,18 +82,18 @@ LfoController::~LfoController()
 }
 
 
-void LfoController::updateValueBuffer()
+void LfoController::fillValueBuffer()
 {
 	m_phaseOffset = m_phaseModel.value() / 360.0;
 	float phase = m_currentPhase + m_phaseOffset;
 
 	// roll phase up until we're in sync with period counter
-	m_bufferLastUpdated++;
-	if( m_bufferLastUpdated < s_periods )
+	m_lastUpdatedPeriod++;
+	if( m_lastUpdatedPeriod < s_periods )
 	{
-		int diff = s_periods - m_bufferLastUpdated;
+		int diff = s_periods - m_lastUpdatedPeriod;
 		phase += static_cast<float>( Engine::mixer()->framesPerPeriod() * diff ) / m_duration;
-		m_bufferLastUpdated += diff;
+		m_lastUpdatedPeriod += diff;
 	}
 
 	float amount = m_amountModel.value();
@@ -119,13 +119,13 @@ void LfoController::updateValueBuffer()
 	}
 
 	m_currentPhase = absFraction( phase - m_phaseOffset );
-	m_bufferLastUpdated = s_periods;
+	//m_lastUpdatedPeriod = s_periods;
 }
 
 void LfoController::updatePhase()
 {
 	m_currentPhase = ( Engine::getSong()->getFrames() ) / m_duration;
-	m_bufferLastUpdated = s_periods - 1;
+	m_lastUpdatedPeriod = s_periods - 1;
 }
 
 

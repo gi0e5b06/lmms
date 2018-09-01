@@ -31,17 +31,17 @@
 #include "SpectrumAnalyzerControls.h"
 
 
-const int MAX_BANDS = 249;
-
+#define FFT_BUFFER_SIZE 22050
+#define MAX_BANDS 249
 
 class SpectrumAnalyzer : public Effect
 {
 public:
 	enum ChannelModes
 	{
-		MergeChannels,
 		LeftChannel,
-		RightChannel
+		RightChannel,
+		MergeChannels,
 	} ;
 
 	SpectrumAnalyzer( Model * _parent,

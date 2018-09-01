@@ -59,7 +59,7 @@ public slots:
 
 protected:
 	// The internal per-controller value updating function
-	virtual void updateValueBuffer();
+	virtual void fillValueBuffer();
 
 	FloatModel m_baseModel;
 	TempoSyncKnobModel m_speedModel;

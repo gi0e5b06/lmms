@@ -49,7 +49,8 @@ Controller::Controller( ControllerTypes _type, Model * _parent,
 	Model( _parent, _display_name ),
 	JournallingObject(),
 	m_valueBuffer( Engine::mixer()->framesPerPeriod() ),
-	m_bufferLastUpdated( -1 ),
+	m_lastUpdatedPeriod( -1 ),
+        //m_hasChanged( true ),
 	m_connectionCount( 0 ),
 	m_type( _type ),
 	m_enabledModel( true, this, tr( "Controller enabled" ) )
@@ -116,19 +117,18 @@ float Controller::value( int offset )
 {
 	if(isEnabled())
 	{
-		if( m_bufferLastUpdated != s_periods )
-		{
-			updateValueBuffer();
-		}
-		return m_valueBuffer.values()[ offset ];
+		//if( m_lastUpdatedPeriod != s_periods )
+                updateValueBuffer();
+
+		return m_valueBuffer.value(offset);
 	}
 	else return m_currentValue;
 }
 
-
+/*
 ValueBuffer * Controller::valueBuffer()
 {
-	if( m_bufferLastUpdated != s_periods )
+	if( m_lastUpdatedPeriod != s_periods )
 	{
 		updateValueBuffer();
 	}
@@ -136,10 +136,26 @@ ValueBuffer * Controller::valueBuffer()
 }
 
 
+bool Controller::hasChanged() const
+{
+        return m_hasChanged;
+}
+*/
+
 void Controller::updateValueBuffer()
 {
-	m_valueBuffer.fill(0.5f);
-	m_bufferLastUpdated = s_periods;
+	if( m_lastUpdatedPeriod != s_periods )
+        {
+                fillValueBuffer();
+                m_lastUpdatedPeriod = s_periods;
+                emit controlledBufferChanged(&m_valueBuffer);
+        }
+}
+
+
+void Controller::fillValueBuffer()
+{
+        m_valueBuffer.fill(0.5f);
 }
 
 
@@ -167,9 +183,8 @@ void Controller::triggerFrameCounter()
 		// painting.  If we ever get all the widgets to use or at least check
 		// currentValue() then we can throttle the signal and only use it for
 		// GUI.
-		emit controller->valueChanged();
+		emit controller->controlledValueChanged(controller->currentValue());
 	}
-
 	s_periods ++;
 	//emit s_signaler.triggerValueChanged();
 }
@@ -180,7 +195,7 @@ void Controller::resetFrameCounter()
 {
 	for (Controller * controller : s_controllers)
 	{
-		controller->m_bufferLastUpdated = 0;
+		controller->m_lastUpdatedPeriod = 0;
 	}
 	s_periods = 0;
 }

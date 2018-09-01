@@ -35,6 +35,7 @@
 #include "embed.h"
 
 #include <QDomElement>
+#include <QMutexLocker>
 //#include "lmms_math.h"
 
 #include <time.h>
@@ -896,8 +897,7 @@ bool InstrumentFunctionNoteDuplicatesRemoving::processNote(NotePlayHandle* _n)
     if(_n->totalFramesPlayed() != 0 || _n->isReleased())
         return true;
 
-    static QMutex mtx;
-    mtx.lock();
+    QMutexLocker locker(&m_mutex);
     // const float k=Engine::getSong()->getPlayPos().absoluteFrame();
     const int64_t k = (1000 * clock() / CLOCKS_PER_SEC);  // ms
     // qInfo("InstrumentFunctionNoteDuplicatesRemoving: cache k=%d v=%d
@@ -920,14 +920,12 @@ bool InstrumentFunctionNoteDuplicatesRemoving::processNote(NotePlayHandle* _n)
     if(m_cache.contains(k, _n->key()))
     {
         // qInfo("InstrumentFunctionNoteDuplicatesRemoving: HIT CACHE");
-        mtx.unlock();
         _n->noteOff();  //???? kicker
         return false;
     }
 
     // qInfo("NoteDuplicatesRemoving: cache size=%d",m_cache.size());
     m_cache.insert(k, _n->key());
-    mtx.unlock();
     return true;
 }
 
@@ -1302,8 +1300,7 @@ bool InstrumentFunctionGlissando::processNote(NotePlayHandle* _n)
 
     const int newKey = _n->key();
 
-    static QMutex mtx;
-    QMutexLocker  locker(&mtx);
+    QMutexLocker locker(&m_mutex);
 
     // qInfo("\nNEW KEY IS %d", newKey);
     /*

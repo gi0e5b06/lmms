@@ -31,15 +31,41 @@
 #include "JournallingObject.h"
 #include "ThreadableJob.h"
 
-
+class FxChannel;
 class FxRoute;
-typedef QVector<FxRoute *> FxRouteVector;
+class SampleBuffer;
 
-class FxChannel : public ThreadableJob
+typedef QVector<FxRoute *> FxRoutes;
+typedef QVector<FxChannel *> FxChannels;
+
+class FxChannel : public QObject, public virtual ThreadableJob
 {
+        Q_OBJECT
+
+        mapPropertyFromModel(bool,isMuted,setMuted,m_mutedModel);
+	mapPropertyFromModel(bool,isSolo,setSolo,m_soloModel);
+        mapPropertyFromModel(bool,isFrozen,setFrozen,m_frozenModel);
+        mapPropertyFromModel(bool,isClipping,setClipping,m_clippingModel);
+
  public:
 	FxChannel( int idx, Model * _parent );
 	virtual ~FxChannel();
+
+        inline const BoolModel* clippingModel() const
+        { return &m_clippingModel; }
+
+        inline const BoolModel* frozenModel() const
+        { return &m_frozenModel; }
+
+        inline const BoolModel* mutedModel() const
+        { return &m_mutedModel; }
+
+        virtual void updateFrozenBuffer();
+        virtual void cleanFrozenBuffer();
+        virtual void readFrozenBuffer();
+        virtual void writeFrozenBuffer();
+
+        const QString uuid();
 
 	EffectChain m_fxChain;
 	// set to true when input fed from mixToChannel or child channel
@@ -60,20 +86,22 @@ class FxChannel : public ThreadableJob
 	float m_peakRight;
 	sampleFrame * m_buffer;
 	bool m_muteBeforeSolo;
-	BoolModel m_muteModel;
+	BoolModel m_mutedModel;
 	BoolModel m_soloModel;
 	FloatModel m_volumeModel;
 	QString m_name;
-	QMutex m_lock;
+	QString m_uuid;
 	int m_channelIndex; // what channel index are we
+
+	QMutex m_lock;
 	bool m_queued; // are we queued up for rendering yet?
-	bool m_muted; // are we muted? updated per period so we don't have to call m_muteModel.value() twice
+	//bool m_muted; // are we muted? updated per period so we don't have to call m_muteModel.value() twice
 
 	// pointers to other channels that this one sends to
-	FxRouteVector m_sends;
+	FxRoutes m_sends;
 
 	// pointers to other channels that send to this one
-	FxRouteVector m_receives;
+	FxRoutes m_receives;
 
 	virtual bool requiresProcessing() const { return true; }
 	void unmuteForSolo();
@@ -81,6 +109,12 @@ class FxChannel : public ThreadableJob
 	QAtomicInt m_dependenciesMet;
 	void incrementDeps();
 	inline void processed();
+
+ public slots:
+         void toggleFrozen();
+
+ protected:
+         SampleBuffer* m_frozenBuf;
 
  private:
 	virtual void doProcessing();
@@ -150,6 +184,11 @@ class EXPORT FxMixer : public Model, public JournallingObject
 		return "fxmixer";
 	}
 
+        const FxChannels& channels() const
+        {
+                return m_fxChannels;
+        }
+
 	FxChannel * effectChannel( int _ch )
 	{
 		return m_fxChannels[_ch];
@@ -203,14 +242,14 @@ class EXPORT FxMixer : public Model, public JournallingObject
 		return m_fxChannels.size();
 	}
 
-	FxRouteVector m_fxRoutes;
-
 private:
 	// make sure we have at least num channels
 	void allocateChannelsTo(int num);
 
+	FxRoutes m_fxRoutes;
+
 	// the fx channels in the mixer. index 0 is always master.
-	QVector<FxChannel *> m_fxChannels;
+	FxChannels m_fxChannels;
 
 	int m_lastSoloed;
 } ;

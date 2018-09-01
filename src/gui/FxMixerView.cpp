@@ -246,21 +246,21 @@ void FxMixerView::refreshDisplay()
     updateMaxChannelSelector();
 }
 
-// update the and max. channel number for every instrument
+// update the max. channel number for every instrument
 void FxMixerView::updateMaxChannelSelector()
 {
-    QVector<Track*> songTrackList = Engine::getSong()->tracks();
-    QVector<Track*> bbTrackList   = Engine::getBBTrackContainer()->tracks();
+    Tracks songTracks = Engine::getSong()->tracks();
+    Tracks bbTracks   = Engine::getBBTrackContainer()->tracks();
 
-    QVector<Track*> trackLists[] = {songTrackList, bbTrackList};
+    Tracks trackLists[] = {songTracks, bbTracks};
     for(int tl = 0; tl < 2; ++tl)
     {
-        QVector<Track*> trackList = trackLists[tl];
-        for(int i = 0; i < trackList.size(); ++i)
+        Tracks tracks = trackLists[tl];
+        for(int i = 0; i < tracks.size(); ++i)
         {
-            if(trackList[i]->type() == Track::InstrumentTrack)
+            if(tracks[i]->type() == Track::InstrumentTrack)
             {
-                InstrumentTrack* inst = (InstrumentTrack*)trackList[i];
+                InstrumentTrack* inst = (InstrumentTrack*)tracks[i];
                 inst->effectChannelModel()->setRange(
                         0, m_fxChannelViews.size() - 1, 1);
             }
@@ -296,12 +296,12 @@ FxMixerView::FxChannelView::FxChannelView(QWidget*     _parent,
                   m_fxLine->height() - m_fader->height() - 5);
 
     m_muteBtn = new PixmapButton(m_fxLine, tr("Mute"));
-    m_muteBtn->setModel(&fxChannel->m_muteModel);
+    m_muteBtn->setModel(&fxChannel->m_mutedModel);
     m_muteBtn->setActiveGraphic(embed::getIconPixmap("led_off"));
     m_muteBtn->setInactiveGraphic(embed::getIconPixmap("led_green"));
     m_muteBtn->setCheckable(true);
     m_muteBtn->move(9, m_fader->y() - 30);
-    ToolTip::add(m_muteBtn, tr("Mute this FX channel"));
+    ToolTip::add(m_muteBtn, tr("Mute"));
 
     m_soloBtn = new PixmapButton(m_fxLine, tr("Solo"));
     m_soloBtn->setModel(&fxChannel->m_soloModel);
@@ -311,7 +311,7 @@ FxMixerView::FxChannelView::FxChannelView(QWidget*     _parent,
     m_soloBtn->move(9, m_fader->y() - 14);
     connect(&fxChannel->m_soloModel, SIGNAL(dataChanged()), _mv,
             SLOT(toggledSolo()));
-    ToolTip::add(m_soloBtn, tr("Solo FX channel"));
+    ToolTip::add(m_soloBtn, tr("Solo"));
 
     m_clippingBtn = new PixmapButton(m_fxLine, tr("Clipping"));
     m_clippingBtn->setModel(&fxChannel->m_clippingModel);
@@ -320,6 +320,7 @@ FxMixerView::FxChannelView::FxChannelView(QWidget*     _parent,
     m_clippingBtn->setCheckable(true);
     m_clippingBtn->setBlinking(true);
     m_clippingBtn->move(9, m_fader->y() - 178);
+    ToolTip::add(m_clippingBtn, tr("Clipping alert"));
 
     m_frozenBtn = new PixmapButton(m_fxLine, tr("Frozen"));
     m_frozenBtn->setModel(&fxChannel->m_frozenModel);
@@ -327,6 +328,7 @@ FxMixerView::FxChannelView::FxChannelView(QWidget*     _parent,
     m_frozenBtn->setInactiveGraphic(embed::getIconPixmap("led_off"));
     m_frozenBtn->setCheckable(true);
     m_frozenBtn->move(9, m_fader->y() - 162);
+    ToolTip::add(m_frozenBtn, tr("Frozen"));
 
     if(channelIndex == 0)
     {
@@ -424,7 +426,7 @@ void FxMixerView::FxChannelView::setChannelIndex(int index)
     m_clippingBtn->setModel(&fxChannel->m_clippingModel);
 
     m_fader->setModel(&fxChannel->m_volumeModel);
-    m_muteBtn->setModel(&fxChannel->m_muteModel);
+    m_muteBtn->setModel(&fxChannel->m_mutedModel);
     m_soloBtn->setModel(&fxChannel->m_soloModel);
     m_rackView->setModel(&fxChannel->m_fxChain);
 }
@@ -521,7 +523,7 @@ void FxMixerView::deleteChannel(int index)
 
 void FxMixerView::deleteUnusedChannels()
 {
-    TrackContainer::TrackList tracks;
+    Tracks tracks;
     tracks += Engine::getSong()->tracks();
     tracks += Engine::getBBTrackContainer()->tracks();
 

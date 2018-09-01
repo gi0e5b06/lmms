@@ -27,7 +27,7 @@
 
 #include "ComboBoxModel.h"
 #include "MemoryManager.h"
-#include "fft_helpers.h"
+//#include "fft_helpers.h"
 #include "lmms_basics.h"
 //#include "lmms_math.h"
 

@@ -54,7 +54,7 @@
 #include <QAction>
 #include <QKeyEvent>
 #include <QLabel>
-#include <QHBoxLayout>
+//#include <QHBoxLayout>
 #include <QVBoxLayout>
 #include <QMdiArea>
 #include <QMdiSubWindow>
@@ -543,6 +543,7 @@ void SongEditor::unitePatterns()
                                         newp=new Pattern(*p);
                                         newp->setJournalling(false);
                                         newp->movePosition(p->startPosition());
+                                        newp->changeLength(p->length());
                                 }
                                 else
                                 {
@@ -554,6 +555,8 @@ void SongEditor::unitePatterns()
                                                              -newp->startPosition());
                                                 newp->addNote(*newn,false);
                                         }
+                                        newp->changeLength(qMax<int>(newp->length(),-p->startPosition()
+                                                                     +newp->startPosition()+p->length()));
                                 }
                                 tcov->remove();
                         }
@@ -660,7 +663,7 @@ void SongEditor::unitePatterns()
                         //qInfo("  end of bb track");
                 }
                 else
-                if(t->type()==Track::BBTrack)
+                if(t->type()==Track::SampleTrack)
                 {
                         //Currently not imlementable without creating a new sample
                 }
@@ -718,6 +721,7 @@ void SongEditor::dividePatterns()
                                         //  (int)newp1->startPosition(),(int)n->pos(),splitPos);
                                         newp1->removeNote(n);
                                 }
+                                newp1->changeLength(splitPos-p->startPosition());
 
                                 Pattern* newp2=new Pattern(*p); // 2 right, after
                                 newp2->setJournalling(false);
@@ -734,6 +738,7 @@ void SongEditor::dividePatterns()
                                         newp2->removeNote(n);
                                 }
                                 newp2->movePosition(splitPos);
+                                newp2->changeLength(p->endPosition()-splitPos);
 
                                 tcov->remove();
 

@@ -161,11 +161,12 @@ void AudioPort::doProcessing()
                                 m_frozenBuf->getDataFrame(af+f,vch0,vch1);
                                 m_portBuffer[f][0]=vch0;
                                 m_portBuffer[f][1]=vch1;
-
+                                /*
                                 if(af+f>=1000 && af+f<1005)
                                         qInfo("AudioPort::doProcessing use frozen buffer"
                                               " fb=%p af=%d s=%p ap=%p vch0=%f vch1=%f",
                                               m_frozenBuf,af+f,m_portBuffer,this,vch0,vch1);
+                                */
                         }
 
                         // send output to fx mixer
@@ -323,11 +324,13 @@ void AudioPort::doProcessing()
                                 m_frozenBuf->setDataFrame(af+f,
                                                           m_portBuffer[f][0],
                                                           m_portBuffer[f][1]);
+                                /*
                                 if(af+f>=1000 && af+f<1005)
                                         qInfo("AudioPort::doProcessing freeze to buffer"
                                               " fb=%p af=%d s=%p ap=%p vch0=%f vch1=%f",
                                               m_frozenBuf,af+f,m_portBuffer,this,
                                               m_portBuffer[f][0],m_portBuffer[f][1]);
+                                */
                         }
                 }
 
@@ -376,7 +379,7 @@ void AudioPort::updateFrozenBuffer(f_cnt_t _len)
                 {
                         if(m_frozenBuf) delete m_frozenBuf;
                         m_frozenBuf=new SampleBuffer(_len);
-                        qInfo("AudioPort::updateFrozenBuffer len=%d",_len);
+                        //qInfo("AudioPort::updateFrozenBuffer len=%d",_len);
                 }
         }
 }
@@ -394,7 +397,7 @@ void AudioPort::cleanFrozenBuffer(f_cnt_t _len)
                 {
                         if(m_frozenBuf) delete m_frozenBuf;
                         m_frozenBuf=new SampleBuffer(_len);
-                        qInfo("AudioPort::cleanFrozenBuffer len=%d",_len);
+                        //qInfo("AudioPort::cleanFrozenBuffer len=%d",_len);
                 }
         }
 }
@@ -417,8 +420,8 @@ void AudioPort::readFrozenBuffer(QString _uuid)
                 {
                         QString f=d+QDir::separator()+_uuid
                                 +"."+SampleBuffer::rawStereoSuffix();
-                        qInfo("AudioPort::readFrozenBuffer f=%s",
-                              qPrintable(f));
+                        //qInfo("AudioPort::readFrozenBuffer f=%s",
+                        //      qPrintable(f));
                         QFile fi(f);
                         if(fi.exists())
                         {
@@ -447,8 +450,8 @@ void AudioPort::writeFrozenBuffer(QString _uuid)
                 {
                         QString f=d+QDir::separator()+_uuid
                                 +"."+SampleBuffer::rawStereoSuffix();
-                        qInfo("AudioPort::writeFrozenBuffer f=%s",
-                              qPrintable(f));
+                        //qInfo("AudioPort::writeFrozenBuffer f=%s",
+                        //      qPrintable(f));
                         m_frozenBuf->writeCacheData(f);
                 }
         }

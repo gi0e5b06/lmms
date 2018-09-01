@@ -163,6 +163,9 @@ bool CompressorGDX::processAudioBuffer(sampleFrame* _buf, const fpp_t _frames)
             }
         }
 
+        curVal0=qBound(-1.f,curVal0,1.f);
+        curVal1=qBound(-1.f,curVal1,1.f);
+
         _buf[f][0] = d0 * _buf[f][0] + w0 * curVal0;
         _buf[f][1] = d1 * _buf[f][1] + w1 * curVal1;
     }

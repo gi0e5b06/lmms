@@ -27,6 +27,7 @@
 #define INSTRUMENT_FUNCTION_H
 
 #include <QMultiHash>
+#include <QMutex>
 
 //#include "AutomatableModel.h"
 #include "ComboBoxModel.h"
@@ -297,6 +298,7 @@ class InstrumentFunctionNoteDuplicatesRemoving : public InstrumentFunction
 
   private:
     QMultiHash<int64_t, int> m_cache;
+    QMutex                   m_mutex;
 
     friend class InstrumentFunctionNoteDuplicatesRemovingView;
 };
@@ -420,6 +422,7 @@ class InstrumentFunctionGlissando : public InstrumentFunction
 
     int     m_lastKey;
     int64_t m_lastTime;
+    QMutex  m_mutex;
 
     friend class InstrumentTrack;
     friend class InstrumentFunctionGlissandoView;

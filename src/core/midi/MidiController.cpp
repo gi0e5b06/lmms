@@ -59,7 +59,7 @@ MidiController::~MidiController()
 
 
 
-void MidiController::updateValueBuffer()
+void MidiController::fillValueBuffer()
 {
 	if( m_previousValue != m_lastValue )
 	{
@@ -70,7 +70,6 @@ void MidiController::updateValueBuffer()
 	{
 		m_valueBuffer.fill( m_lastValue );
 	}
-	m_bufferLastUpdated = s_periods;
 }
 
 
@@ -167,7 +166,7 @@ void MidiController::processInEvent( const MidiEvent& event, const MidiTime& tim
 		{
 			if(type<=3) m_previousValue=m_lastValue;
 			updateValueBuffer();
-			emit valueChanged();
+			emit controlledValueChanged(m_lastValue);
 		}
 		else
 		{

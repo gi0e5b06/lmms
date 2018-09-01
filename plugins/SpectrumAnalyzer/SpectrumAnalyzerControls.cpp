@@ -34,10 +34,12 @@ SpectrumAnalyzerControls::SpectrumAnalyzerControls( SpectrumAnalyzer* effect ) :
 	m_linearSpec( false, this, tr( "Linear spectrum" ) ),
 	m_linearYAxis( false, this, tr( "Linear Y axis" ) ),
 	m_channelMode( SpectrumAnalyzer::MergeChannels,
-					SpectrumAnalyzer::MergeChannels,
-					SpectrumAnalyzer::RightChannel,
-						this, tr( "Channel mode" ) )
+                       SpectrumAnalyzer::LeftChannel,
+                       SpectrumAnalyzer::MergeChannels,
+                       1.f,
+                       this, tr( "Channel mode" ) )
 {
+        m_channelMode.setStrictStepSize(true);
 }
 
 
