@@ -26,15 +26,17 @@
 
 #ifdef LMMS_HAVE_OSS
 
-#include <QFileInfo>
-#include <QLabel>
-#include <QLineEdit>
-
-#include "endian_handling.h"
 #include "LcdSpinBox.h"
 #include "Mixer.h"
 #include "Engine.h"
+
+#include "endian_handling.h"
 #include "gui_templates.h"
+#include "templates.h"
+
+#include <QFileInfo>
+#include <QLabel>
+#include <QLineEdit>
 
 #ifdef LMMS_HAVE_UNISTD_H
 #include <unistd.h>

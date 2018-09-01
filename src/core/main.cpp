@@ -23,6 +23,8 @@
  *
  */
 
+#include "lmmsconfig.h"
+
 #include <csignal>
 
 #ifdef LMMS_BUILD_WIN32

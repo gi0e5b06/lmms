@@ -22,18 +22,20 @@
  *
  */
 
-#include <QLineEdit>
-#include <QLabel>
-
 #include "AudioPulseAudio.h"
 
 #ifdef LMMS_HAVE_PULSEAUDIO
 
 #include "ConfigManager.h"
 #include "LcdSpinBox.h"
-#include "Mixer.h"
-#include "gui_templates.h"
 #include "Engine.h"
+#include "Mixer.h"
+
+#include "gui_templates.h"
+#include "templates.h"
+
+#include <QLineEdit>
+#include <QLabel>
 
 
 static void stream_write_callback(pa_stream *s, size_t length, void *userdata)
