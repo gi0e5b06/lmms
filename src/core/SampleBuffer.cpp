@@ -263,11 +263,10 @@ void SampleBuffer::update( bool _keepSettings )
 			m_loopEndFrame = m_endFrame = m_frames;
 		}
 	}
-	else if( false &&
-                 !m_audioFile.isEmpty() &&
+	else if( !m_audioFile.isEmpty() &&
 		 ( (filename=tryToMakeAbsolute(m_audioFile)).endsWith(cchext) ||
-		   QFile(filename+cchext).exists() ) )
-                 //&& QFile(filename).size()>102400 )
+		   QFile(filename+cchext).exists() ) &&
+                 QFile(filename).size()>102400 )
 	{
 		if(QFile(filename+cchext).exists()) filename+=cchext;
 		qInfo("SampleBuffer: Trying cache %s",qPrintable(filename));
