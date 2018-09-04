@@ -71,7 +71,7 @@ DelayControlsDialog::DelayControlsDialog( DelayControls *controls ) :
 	lfoAmtKnob->setHintText( tr ( "Lfo Amt" ) + " " , " s" );
 
 	EqFader * outFader = new EqFader( &controls->m_outGainModel,tr( "Out Gain" ),
-									  this, &controls->m_outPeakL, &controls->m_outPeakR );
+                                          this, &controls->m_outPeakL, &controls->m_outPeakR );
 	outFader->setMaximumHeight( 196 );
 	outFader->move( 263, 45 );
 	outFader->setDisplayConversion( false );

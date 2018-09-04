@@ -54,7 +54,7 @@ Effect::Effect( const Plugin::Descriptor * _desc,
     m_enabledModel( true, this, tr( "Effect enabled" ) ),
     m_clippingModel(false, this,  tr( "Clipping alert" ) ),
     m_wetDryModel  ( 1.f, 0.f, 1.f, 0.01f, this, tr( "Wet/Dry mix" ) ), //min=-1
-    m_autoQuitModel( 8000.f, 1.f, 8000.f, 1.0f, 8000.f, this, tr( "Decay" ) ),
+    m_autoQuitModel( 1000.f, 1.f, 8000.f, 1.0f, 8000.f, this, tr( "Decay" ) ),
     m_gateModel    ( 0.0001f, 0.0001f, 1.0f, 0.0001f, this, tr( "Gate" ) ),
     m_balanceModel ( 0.f,-1.f, 1.f, 0.01f, this, tr( "Balance" ) ),
     m_autoQuitDisabled( false )

@@ -73,9 +73,9 @@ EqControlsDialog::EqControlsDialog( EqControls *controls ) :
 	setBand( 6, &controls->m_highShelfActiveModel, &controls->m_highShelfFreqModel, &controls->m_highShelfResModel, &controls->m_highShelfGainModel, QColor(255 ,255, 255), tr( "High Shelf" ), &controls->m_highShelfPeakL, &controls->m_highShelfPeakR,0,0,0,0,0,0 );
 	setBand( 7, &controls->m_lpActiveModel, &controls->m_lpFreqModel, &controls->m_lpResModel, 0, QColor(255 ,255, 255), tr( "LP" ) ,0,0,0,0,0, &controls->m_lp12Model, &controls->m_lp24Model, &controls->m_lp48Model);
 
-	QPixmap * faderBg = new QPixmap( PLUGIN_NAME::getIconPixmap( "faderback" ) );
-	QPixmap * faderLeds = new QPixmap( PLUGIN_NAME::getIconPixmap( "faderleds" ) );
-	QPixmap * faderKnob = new QPixmap( PLUGIN_NAME::getIconPixmap( "faderknob" ) );
+	QPixmap faderBg = PLUGIN_NAME::getIconPixmap( "faderback" );
+	QPixmap faderLeds = PLUGIN_NAME::getIconPixmap( "faderleds" );
+	QPixmap faderKnob = PLUGIN_NAME::getIconPixmap( "faderknob" );
 
 	EqFader * GainFaderIn = new EqFader( &controls->m_inGainModel, tr( "In Gain" ), this, faderBg, faderLeds, faderKnob, &controls->m_inPeakL, &controls->m_inPeakR );
 	GainFaderIn->move( 23, 295 );

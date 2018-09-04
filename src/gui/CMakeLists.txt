@@ -37,6 +37,7 @@ SET(LMMS_SRCS
 	gui/MidiSetupWidget.cpp
 	gui/ModelView.cpp
         gui/PaintCacheable.cpp
+        gui/PaintManager.cpp
 	gui/PeakControllerDialog.cpp
         gui/PeripheralView.cpp
         gui/PeripheralLaunchpadView.cpp
@@ -111,6 +112,7 @@ SET(LMMS_SRCS
 	gui/widgets/TrackLabelButton.cpp
 	gui/widgets/TrackRenameLineEdit.cpp
 	gui/widgets/VisualizationWidget.cpp
+	gui/widgets/Widget.cpp
 
 	PARENT_SCOPE
 )

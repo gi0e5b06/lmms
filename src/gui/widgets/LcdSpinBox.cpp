@@ -63,11 +63,11 @@ LcdSpinBox::~LcdSpinBox()
 
 
 
-void LcdSpinBox::update()
+void LcdSpinBox::updateNow()
 {
 	if(model())
                 LcdWidget::setValue( model()->value() );//+ m_displayOffset );
-	QWidget::update();
+	LcdWidget::updateNow();
 }
 
 

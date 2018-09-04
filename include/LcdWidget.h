@@ -22,91 +22,102 @@
  *
  */
 
-
 #ifndef LCD_WIDGET_H
 #define LCD_WIDGET_H
 
-#include <QMap>
-#include <QWidget>
-
+#include "Widget.h"
 #include "export.h"
 
-class EXPORT LcdWidget : public QWidget
+#include <QMap>
+//#include <QWidget>
+
+class EXPORT LcdWidget : public Widget
 {
-	Q_OBJECT
-	
-	// theming qproperties
-	Q_PROPERTY( QColor textColor READ textColor WRITE setTextColor )
-	Q_PROPERTY( QColor textShadowColor READ textShadowColor WRITE setTextShadowColor )
-	
-public:
-	LcdWidget( QWidget* parent, const QString& name = QString::null );
-	LcdWidget( int numDigits, QWidget* parent, const QString& name = QString::null );
-	LcdWidget( int numDigits, const QString& style, QWidget* parent, const QString& name = QString::null );
+    Q_OBJECT
 
-	virtual ~LcdWidget();
+    // theming qproperties
+    Q_PROPERTY(QColor textColor READ textColor WRITE setTextColor)
+    Q_PROPERTY(QColor textShadowColor READ textShadowColor WRITE
+                                                           setTextShadowColor)
 
-	void setValue( int value );
+  public:
+    LcdWidget(QWidget* parent, const QString& name = QString::null);
+    LcdWidget(int            numDigits,
+              QWidget*       parent,
+              const QString& name = QString::null);
+    LcdWidget(int            numDigits,
+              const QString& style,
+              QWidget*       parent,
+              const QString& name = QString::null);
 
-	void setLabel( const QString& label ); //deprecated
+    virtual ~LcdWidget();
 
-        QString text() const;
-        void setText(const QString& _s);
+    void setValue(int value);
 
+    void setLabel(const QString& label);  // deprecated
 
-	void addTextForValue( int value, const QString& text )
-	{
-		m_textForValue[value] = text;
-		update();
-	}
+    QString text() const;
+    void    setText(const QString& _s);
 
-	Q_PROPERTY( int numDigits READ numDigits WRITE setNumDigits )
+    void addTextForValue(int value, const QString& text)
+    {
+        m_textForValue[value] = text;
+        update();
+    }
 
-	inline int numDigits() const { return m_numDigits; }
-	inline void setNumDigits( int n ) { m_numDigits = n; updateSize(); }
+    Q_PROPERTY(int numDigits READ numDigits WRITE setNumDigits)
 
-	QColor textColor() const;
-	void setTextColor( const QColor & c );
+    inline int numDigits() const
+    {
+        return m_numDigits;
+    }
+    inline void setNumDigits(int n)
+    {
+        m_numDigits = n;
+        updateSize();
+    }
 
-	QColor textShadowColor() const;
-	void setTextShadowColor( const QColor & c );
+    QColor textColor() const;
+    void   setTextColor(const QColor& c);
 
-public slots:
-	virtual void setMarginWidth( int width );
+    QColor textShadowColor() const;
+    void   setTextShadowColor(const QColor& c);
 
+  public slots:
+    virtual void setMarginWidth(int width);
 
-protected:
-	virtual void paintEvent( QPaintEvent * pe );
+  protected:
+    virtual void drawWidget(QPainter& _p);
+    // virtual void paintEvent( QPaintEvent * pe );
 
-	virtual void updateSize();
-	virtual QRect displayRect();
-	/*
-	int cellHeight() const
-	{
-		return m_cellHeight;
-	}
-	*/
+    virtual void  updateSize();
+    virtual QRect displayRect();
+    /*
+    int cellHeight() const
+    {
+            return m_cellHeight;
+    }
+    */
 
-private:
+  private:
+    static const int charsPerPixmap = 12;
 
-	static const int charsPerPixmap = 12;
+    QMap<int, QString> m_textForValue;
 
-	QMap<int, QString> m_textForValue;
+    QString m_display;
 
-	QString m_display;
+    QString  m_label;
+    QPixmap* m_lcdPixmap;
 
-	QString m_label;
-	QPixmap* m_lcdPixmap;
+    QColor m_textColor;
+    QColor m_textShadowColor;
 
-	QColor m_textColor;
-	QColor m_textShadowColor;
+    int m_cellWidth;
+    int m_cellHeight;
+    int m_numDigits;
+    int m_marginWidth;
 
-	int m_cellWidth;
-	int m_cellHeight;
-	int m_numDigits;
-	int m_marginWidth;
-
-	void initUi( const QString& name, const QString &style);
+    void initUi(const QString& name, const QString& style);
 };
 
 #endif

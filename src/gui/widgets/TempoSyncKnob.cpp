@@ -68,6 +68,7 @@ void TempoSyncKnob::modelChanged()
 	if( model() == NULL )
 	{
 		qWarning( "no TempoSyncKnobModel has been set!" );
+                return;
 	}
 	if( m_custom != NULL )
 	{
@@ -78,6 +79,7 @@ void TempoSyncKnob::modelChanged()
 	connect( this, SIGNAL( sliderMoved( float ) ),
                  model(), SLOT( disableSync() ) );
 	updateDescAndIcon();
+        Knob::modelChanged();
 }
 
 

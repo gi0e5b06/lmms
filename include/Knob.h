@@ -26,11 +26,12 @@
 #define KNOB_H
 
 #include "AutomatableModelView.h"
-#include "PaintCacheable.h"
+#include "Widget.h"
+//#include "PaintCacheable.h"
 //#include "templates.h"
 
 #include <QPoint>
-#include <QWidget>
+//#include <QWidget>
 
 class QPixmap;
 class TextFloat;
@@ -45,9 +46,8 @@ enum knobTypes
 };
 
 class EXPORT Knob
-      : public QWidget
+      : public Widget
       , public FloatModelView
-      , virtual public PaintCacheable
 {
     Q_OBJECT
     Q_ENUMS(knobTypes)
@@ -138,10 +138,11 @@ class EXPORT Knob
   public slots:
     virtual void modelChanged();
     virtual void enterValue();
-    void         displayHelp();
-    void         friendlyUpdate();
-    void         mandatoryUpdate();
-    void         toggleScale();
+    virtual void update();
+    virtual void friendlyUpdate();
+
+    void displayHelp();
+    void toggleScale();
 
   protected:
     virtual void contextMenuEvent(QContextMenuEvent* _ce);
@@ -152,8 +153,6 @@ class EXPORT Knob
     virtual void mouseReleaseEvent(QMouseEvent* _me);
     virtual void mouseMoveEvent(QMouseEvent* _me);
     virtual void mouseDoubleClickEvent(QMouseEvent* _me);
-    virtual void paintEvent(QPaintEvent* _pe);
-    virtual void resizeEvent(QResizeEvent* _re);
     virtual void wheelEvent(QWheelEvent* _we);
 
     // virtual float getValue( const QPoint & _p );
@@ -171,8 +170,10 @@ class EXPORT Knob
 
     QColor statusColor();
 
-    void clearCache();
+    // void clearCache();
+    void drawWidget(QPainter& _p);
     void drawKnob(QPainter& _p);
+    void drawText(QPainter& _p);
     bool updateAngle();
 
     float angleFromValue(float value,
@@ -206,7 +207,7 @@ class EXPORT Knob
 
     float m_totalAngle;
     float m_angle;
-    //QPixmap* m_cache;
+    // QPixmap* m_cache;
 
     // Styled knob stuff, could break out
     QPointF m_centerPoint;

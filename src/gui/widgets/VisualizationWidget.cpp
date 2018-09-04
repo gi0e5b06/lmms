@@ -41,7 +41,7 @@
 VisualizationWidget::VisualizationWidget(const QPixmap& _bg,
                                          QWidget*       _parent,
                                          Mode           _mode) :
-      QWidget(_parent),
+      Widget(_parent),
       m_mode(_mode), m_active(false), m_frozen(false), m_stabilized(false),
       s_background(_bg)
 {
@@ -54,6 +54,7 @@ VisualizationWidget::VisualizationWidget(const QPixmap& _bg,
     m_points     = new QPointF[m_pointCount];
 
     setFixedSize(w, h);
+    //resizeCache(w, h);
     setAttribute(Qt::WA_OpaquePaintEvent, true);
 
     // const fpp_t frames = Engine::mixer()->framesPerPeriod();
@@ -96,6 +97,9 @@ void VisualizationWidget::updateSurroundBuffer(
                 m_buffer[i][ch] = _buffer[i][ch];
                 // if(_buffer[i][ch] != 0.) qWarning("%f",_buffer[i][ch]);
             }
+
+        invalidateCache();
+        // update();
     }
 }
 
@@ -106,12 +110,20 @@ void VisualizationWidget::updateStereoBuffer(const sampleFrame* _buffer)
         // qWarning("VisualizationWidget::updateAudioBuffer");
         const fpp_t fpp = Engine::mixer()->framesPerPeriod();
         memcpy(m_buffer, _buffer, sizeof(sampleFrame) * fpp);
+
+        invalidateCache();
+        // update();
     }
 }
 
 void VisualizationWidget::setActive(bool _active)
 {
+    if(m_active == _active)
+        return;
+
     m_active = _active;
+    invalidateCache();
+
     if(m_active)
     {
         connect(gui->mainWindow(), SIGNAL(periodicUpdate()), this,
@@ -134,27 +146,31 @@ void VisualizationWidget::setActive(bool _active)
                     SIGNAL(nextAudioBuffer(const surroundSampleFrame*)), this,
                     SLOT(updateSurroundBuffer(const surroundSampleFrame*)));
         }
-        // we have to update (remove last waves),
-        // because timer doesn't do that anymore
         update();
     }
 }
 
 void VisualizationWidget::setFrozen(bool _frozen)
 {
+    if(m_frozen == _frozen)
+        return;
+
     m_frozen = _frozen;
+    invalidateCache();
 }
 
 void VisualizationWidget::setStabilized(bool _stabilized)
 {
+    if(m_stabilized == _stabilized)
+        return;
+
     m_stabilized = _stabilized;
+    invalidateCache();
 }
 
-void VisualizationWidget::paintEvent(QPaintEvent*)
+void VisualizationWidget::drawWidget(QPainter& _p)
 {
-    QPainter p(this);
-
-    p.drawPixmap(0, 0, s_background);
+    _p.drawPixmap(0, 0, s_background);
 
     if(m_active && !Engine::getSong()->isExporting())
     {
@@ -167,7 +183,7 @@ void VisualizationWidget::paintEvent(QPaintEvent*)
         int         x_base = 2;
         const float y_base = (height() - 11) / 2 - 0.5f;
 
-        //		p.setClipRect( 2, 2, w, height()-4 );
+        //		_p.setClipRect( 2, 2, w, height()-4 );
 
         const fpp_t frames = mixer->framesPerPeriod();
         float       peakLeft;
@@ -176,7 +192,7 @@ void VisualizationWidget::paintEvent(QPaintEvent*)
         const float max_level
                 = qMax<float>(peakLeft, peakRight) * master_output;
 
-        // p.setRenderHint( QPainter::Antialiasing );
+        // _p.setRenderHint( QPainter::Antialiasing );
 
         // if(max_level>0.0001f)
         {
@@ -214,8 +230,8 @@ void VisualizationWidget::paintEvent(QPaintEvent*)
                     c = QColor(71, 253, 133);
                 else
                     c = QColor(71, 133, 253);
-                p.setPen(c);
-                // p.setPen( QPen( p.pen().color(), 0.7 ) );
+                _p.setPen(c);
+                // _p.setPen( QPen( _p.pen().color(), 0.7 ) );
 
                 for(int i = 0; i < nbp; i++)
                 {
@@ -229,18 +245,18 @@ void VisualizationWidget::paintEvent(QPaintEvent*)
                 }
                 if(!m_stabilized || izero == 0)
                 {
-                    p.drawPolyline(m_points, nbp);
+                    _p.drawPolyline(m_points, nbp);
                 }
                 else
                 {
-                    p.translate(x_base - m_points[izero].x(), 0.f);
-                    p.drawPolyline(m_points + izero, nbp - 1 - izero);
-                    p.translate(-x_base + m_points[izero].x(), 0.f);
+                    _p.translate(x_base - m_points[izero].x(), 0.f);
+                    _p.drawPolyline(m_points + izero, nbp - 1 - izero);
+                    _p.translate(-x_base + m_points[izero].x(), 0.f);
 
                     /*
-                    p.translate(-x_base + m_points[nbp - izero].x(), 0.f);
-                    p.drawPolyline(m_points, izero + 1);
-                    p.translate(x_base - m_points[nbp - izero].x(), 0.f);
+                    _p.translate(-x_base + m_points[nbp - izero].x(), 0.f);
+                    _p.drawPolyline(m_points, izero + 1);
+                    _p.translate(x_base - m_points[nbp - izero].x(), 0.f);
                     */
                 }
             }
@@ -258,7 +274,7 @@ void VisualizationWidget::paintEvent(QPaintEvent*)
                                             y_base + Mixer::clip(
             m_buffer[frame][ch] ) * half_h );
                     }
-                    p.drawPolyline( m_points, frames );
+                    _p.drawPolyline( m_points, frames );
             }
             */
         }
@@ -266,11 +282,26 @@ void VisualizationWidget::paintEvent(QPaintEvent*)
     }
     else
     {
-        p.setPen(QColor(192, 192, 192));
-        p.setFont(pointSize<7>(p.font()));
-        p.drawText(6, height() - 5, tr("Click to enable"));
+        _p.setPen(QColor(192, 192, 192));
+        _p.setFont(pointSize<7>(_p.font()));
+        _p.drawText(6, height() - 5, tr("Click to enable"));
     }
 }
+
+/*
+void VisualizationWidget::paintEvent(QPaintEvent*)
+{
+    QPainter p(this);
+    if(paintCache(p))
+        return;
+
+    QPainter& pc = beginCache();
+    drawWidget(pc);
+    endCache();
+
+    paintCache(p);
+}
+*/
 
 void VisualizationWidget::mousePressEvent(QMouseEvent* _me)
 {

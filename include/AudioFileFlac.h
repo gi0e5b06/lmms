@@ -30,7 +30,7 @@
 #include "AudioFileDevice.h"
 #include <sndfile.h>
 
-class AudioFileFlac: public AudioFileDevice
+class AudioFileFlac : public AudioFileDevice
 {
  public:
 	virtual ~AudioFileFlac();

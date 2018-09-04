@@ -1,12 +1,12 @@
 /*
- * PaintCacheable.h -
+ * Widget.h - base widget for new components
  *
  * Copyright (c) 2018 gi0e5b06
  *
  * This file is part of LMMS - https://lmms.io
  *
  * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public
+ * modify it under the terms of"the GNU General Public
  * License as published by the Free Software Foundation; either
  * version 2 of the License, or (at your option) any later version.
  *
@@ -22,38 +22,39 @@
  *
  */
 
-#ifndef PAINT_CACHEABLE_H
-#define PAINT_CACHEABLE_H
+#include "Widget.h"
 
-#include <QMutex>
-#include <QPainter>
-//#include <QSharedPointer>
-
-class QImage;
-
-class PaintCacheable
+Widget::Widget(QWidget* _parent) : QWidget(_parent)
 {
+}
 
-  public:
-    PaintCacheable();
-    virtual ~PaintCacheable();
+Widget::~Widget()
+{
+}
 
-    bool      paintCache(QPainter& _p);
-    bool      isCacheValid();
-    void      resizeCache(int _w, int _h);
-    QPainter& beginCache();
-    void      endCache();
+void Widget::paintEvent(QPaintEvent*)
+{
+    resizeCache(width(), height());
 
-  public slots:
-    void invalidateCache();
-    // virtual void refresh();
-    virtual void update();
-    virtual void updateNow() = 0;
+    QPainter p(this);
+    if(paintCache(p))
+        return;
 
-  private:
-    volatile bool m_valid;
-    QImage*       m_cache;
-    QPainter*     m_painter;
-};
+    QPainter& pc = beginCache();
+    drawWidget(pc);
+    endCache();
 
-#endif
+    paintCache(p);
+}
+
+void Widget::updateNow()
+{
+    QWidget::update();
+}
+
+void Widget::update()
+{
+    invalidateCache();
+    //if(isVisible())
+    PaintCacheable::update();
+}

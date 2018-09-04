@@ -29,13 +29,15 @@
 //#include <QDebug>
 //#endif
 
-#include <QDir>
-
 #include "RemotePlugin.h"
 
 #include "BufferManager.h"
 #include "Mixer.h"
 #include "Engine.h"
+
+#include "denormals.h"
+
+#include <QDir>
 
 #ifndef SYNC_WITH_SHM_FIFO
 #include <QUuid>
@@ -56,6 +58,8 @@ ProcessWatcher::ProcessWatcher( RemotePlugin * _p ) :
 
 void ProcessWatcher::run()
 {
+        disable_denormals();
+
 	while( !m_quit && m_plugin->isRunning() )
 	{
 		msleep( 200 );

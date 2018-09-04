@@ -78,7 +78,16 @@ LadspaManager::LadspaManager()
 				continue;
 			}
 
-			QLibrary plugin_lib( f.absoluteFilePath() );
+                        QString path=f.absoluteFilePath();
+                        if(path=="/usr/lib/ladspa/ZamGEQ31-ladspa.so" ||
+                           path=="/usr/lib/ladspa/ZamTube-ladspa.so")
+                        {
+                                qWarning("Warning: skipped because buggy: %s",
+                                         qPrintable(path));
+                                continue;
+                        }
+
+                        QLibrary plugin_lib(path);
 
 			if( plugin_lib.load() == true )
 			{
@@ -97,7 +106,7 @@ LadspaManager::LadspaManager()
 			}
 		}
 	}
-	
+
 	l_ladspa_key_t keys = m_ladspaManagerMap.keys();
 	for( l_ladspa_key_t::iterator it = keys.begin();
 			it != keys.end(); ++it )

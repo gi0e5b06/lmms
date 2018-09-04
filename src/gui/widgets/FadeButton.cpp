@@ -1,5 +1,5 @@
 /*
- * FadeButton.cpp - implementation of fade-button
+ * FadeButton.cpp -
  *
  * Copyright (c) 2005-2009 Tobias Doerffel <tobydox/at/users.sourceforge.net>
  * 
@@ -32,7 +32,7 @@
 #include "update_event.h"
 
 
-const float FadeDuration = 300;
+const float FadeDuration = 500;
 
 
 FadeButton::FadeButton( const QColor & _normal_color,
@@ -43,8 +43,7 @@ FadeButton::FadeButton( const QColor & _normal_color,
 	m_activatedColor( _activated_color )
 {
 	setAttribute( Qt::WA_OpaquePaintEvent, true );
-	setCursor(Qt::PointingHandCursor);
-	//setCursor( QCursor( embed::getIconPixmap( "hand" ), 3, 3 ) );
+	//setCursor(Qt::PointingHandCursor);
 	setFocusPolicy( Qt::NoFocus );
 }
 
@@ -66,21 +65,26 @@ void FadeButton::setActiveColor( const QColor & activated_color )
 void FadeButton::activate()
 {
 	m_stateTimer.restart();
-	signalUpdate();
+	//signalUpdate();
+        update();
 }
 
 
 
-
+/*
 void FadeButton::customEvent( QEvent * )
 {
 	update();
 }
+*/
 
+void FadeButton::paintEvent(QPaintEvent*)
+{
+        QPainter p(this);
+        drawWidget(p);
+}
 
-
-
-void FadeButton::paintEvent( QPaintEvent * _pe )
+void FadeButton::drawWidget(QPainter& _p)
 {
 	QColor col = m_normalColor;
 	if( ! m_stateTimer.isNull() && m_stateTimer.elapsed() < FadeDuration )
@@ -96,32 +100,36 @@ void FadeButton::paintEvent( QPaintEvent * _pe )
 					( 1.0f - state ) +
 			m_activatedColor.blue() * state );
 		col.setRgb( r, g, b );
-		QTimer::singleShot( 20, this, SLOT( update() ) );
+		QTimer::singleShot(1000 / 20, this, SLOT( update() ) );
+                // 8 fps, 60 fps
 	}
 
-	QPainter p( this );
-	p.fillRect( rect(), col );
+        int w=width()-1;
+        int h=height()-1;
+	//_p.fillRect(0,0,w,h,Qt::yellow);
+	_p.fillRect(1,1,w-1,h-1,col);
 
-	int w = rect().right();
-	int h = rect().bottom();
-	p.setPen( m_normalColor.darker(130) );
-	p.drawLine( w, 1, w, h );
-	p.drawLine( 1, h, w, h );
-	p.setPen( m_normalColor.lighter(130) );
-	p.drawLine( 0, 0, 0, h-1 );
-	p.drawLine( 0, 0, w, 0 );
+	_p.setPen( m_normalColor.darker(130) );
+	_p.drawLine( w, 1, w, h );
+	_p.drawLine( 1, h, w, h );
+	_p.setPen( m_normalColor.lighter(130) );
+	_p.drawLine( 0, 0, 0, h-1 );
+	_p.drawLine( 0, 0, w, 0 );
 }
 
 
 
-
+/*
 void FadeButton::signalUpdate()
 {
 	QApplication::postEvent( this, new updateEvent() );
 }
+*/
 
-
-
+void FadeButton::updateNow()
+{
+        QAbstractButton::update();
+}
 
 
 

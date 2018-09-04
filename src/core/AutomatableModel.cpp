@@ -48,7 +48,7 @@ AutomatableModel::AutomatableModel( const float val, const float min,
 	m_step( step ),
 	m_range( max - min ),
 	m_centerValue( m_minValue ),
-	m_valueChanged( false ),
+	//m_valueChanged( false ),
 	m_setValueDepth( 0 ),
 	m_hasStrictStepSize( false ),
 	m_controllerConnection( NULL ),
@@ -227,7 +227,7 @@ void AutomatableModel::setValue( const float value )
 	{
                 m_oldValue = m_value;
                 m_value    = newval;
-                m_valueChanged = true;
+                //m_valueChanged = true;
 		emit dataChanged();
                 propagateValue();
 	}
@@ -526,7 +526,7 @@ void AutomatableModel::setControllerConnection( ControllerConnection* c )
                          this, SLOT( setControlledBuffer(const ValueBuffer*) ) );
 		connect( m_controllerConnection, SIGNAL( destroyed() ),
                          this, SLOT( unlinkControllerConnection() ) );
-		m_valueChanged = true;
+		//m_valueChanged = true;
                 emit propertiesChanged();
 		emit dataChanged();
 	}

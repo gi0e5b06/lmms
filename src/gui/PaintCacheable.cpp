@@ -24,6 +24,8 @@
 
 #include "PaintCacheable.h"
 
+#include "PaintManager.h"
+
 #include <QWidget>
 
 PaintCacheable::PaintCacheable() :
@@ -33,6 +35,7 @@ PaintCacheable::PaintCacheable() :
 
 PaintCacheable::~PaintCacheable()
 {
+    PaintManager::removeLater(this);
     if(m_painter)
         delete m_painter;
     if(m_cache)
@@ -43,6 +46,12 @@ bool PaintCacheable::paintCache(QPainter& _p)
 {
     if(m_valid)
         _p.drawImage(0, 0, *m_cache);
+
+    return m_valid;
+}
+
+bool PaintCacheable::isCacheValid()
+{
     return m_valid;
 }
 
@@ -55,6 +64,8 @@ void PaintCacheable::resizeCache(int _w, int _h)
 {
     if(!m_cache || _w != m_cache->width() || _h != m_cache->height())
     {
+        m_valid = false;
+
         // qInfo("PaintCacheable::resizeCache");
         QImage*   oldc = m_cache;
         QPainter* oldp = m_painter;
@@ -67,12 +78,14 @@ void PaintCacheable::resizeCache(int _w, int _h)
         if(oldc)
             delete oldc;
 
-        m_valid = false;
+        if(m_valid)
+                qWarning("PaintCacheable::resizeCache");
     }
 }
 
 QPainter& PaintCacheable::beginCache()
 {
+    m_valid = false;
     m_cache->fill(qRgba(0, 0, 0, 0));
     m_painter->begin(m_cache);
     return *m_painter;
@@ -81,5 +94,25 @@ QPainter& PaintCacheable::beginCache()
 void PaintCacheable::endCache()
 {
     m_painter->end();
+    if(m_valid)
+            qWarning("PaintCacheable::endCache");
     m_valid = true;
 }
+
+void PaintCacheable::update()
+{
+    invalidateCache();
+    // qInfo("PaintCacheable::update");
+    if(m_cache && m_painter)
+        PaintManager::updateLater(this);
+    else
+        updateNow();
+}
+
+/*
+void PaintCacheable::refresh()
+{
+    invalidateCache();
+    update();
+}
+*/

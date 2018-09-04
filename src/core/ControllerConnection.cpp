@@ -237,7 +237,7 @@ void ControllerConnection::onControlledValueChanged(float v)
         }
 }
 
-void ControllerConnection::onControlledBufferChanged(ValueBuffer* _vb)
+void ControllerConnection::onControlledBufferChanged(const ValueBuffer* _vb)
 {
         if(m_lastUpdatedPeriod != Controller::runningPeriods())
         {

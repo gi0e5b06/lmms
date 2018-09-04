@@ -28,7 +28,7 @@
 //#include <cstdio>
 #include "lmmsconfig.h"
 
-#include <QDebug>
+#include <QDebug> // REQUIRED
 #include <QObject>
 #include <QThread>
 

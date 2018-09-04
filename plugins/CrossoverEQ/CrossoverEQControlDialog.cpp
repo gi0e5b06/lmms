@@ -63,31 +63,31 @@ CrossoverEQControlDialog::CrossoverEQControlDialog( CrossoverEQControls * contro
 	xover34->setLabel( "3/4" );
 	xover34->setHintText( tr( "Band 3/4 Crossover:" ), " Hz" );
 	
-	m_fader_bg = QPixmap( PLUGIN_NAME::getIconPixmap( "fader_bg" ) );
-	m_fader_empty = QPixmap( PLUGIN_NAME::getIconPixmap( "fader_empty" ) );
-	m_fader_knob = QPixmap( PLUGIN_NAME::getIconPixmap( "fader_knob2" ) );
+	m_fader_bg = PLUGIN_NAME::getIconPixmap( "fader_bg" );
+	m_fader_empty = PLUGIN_NAME::getIconPixmap( "fader_empty" );
+	m_fader_knob = PLUGIN_NAME::getIconPixmap( "fader_knob2" );
 	
 	// faders
 	Fader * gain1 = new Fader( &controls->m_gain1, "Band 1 Gain", this, 
-		&m_fader_bg, &m_fader_empty, &m_fader_knob );
+		m_fader_bg, m_fader_empty, m_fader_knob );
 	gain1->move( 7, 56 );
 	gain1->setDisplayConversion( false );
 	gain1->setHintText( tr( "Band 1 Gain:" ), " dBFS" );
 	
 	Fader * gain2 = new Fader( &controls->m_gain2, "Band 2 Gain", this, 
-		&m_fader_bg, &m_fader_empty, &m_fader_knob );
+		m_fader_bg, m_fader_empty, m_fader_knob );
 	gain2->move( 47, 56 );
 	gain2->setDisplayConversion( false );
 	gain2->setHintText( tr( "Band 2 Gain:" ), " dBFS" );
 	
 	Fader * gain3 = new Fader( &controls->m_gain3, "Band 3 Gain", this, 
-		&m_fader_bg, &m_fader_empty, &m_fader_knob );
+		m_fader_bg, m_fader_empty, m_fader_knob );
 	gain3->move( 87, 56 );
 	gain3->setDisplayConversion( false );
 	gain3->setHintText( tr( "Band 3 Gain:" ), " dBFS" );
 	
 	Fader * gain4 = new Fader( &controls->m_gain4, "Band 4 Gain", this, 
-		&m_fader_bg, &m_fader_empty, &m_fader_knob );
+		m_fader_bg, m_fader_empty, m_fader_knob );
 	gain4->move( 127, 56 );
 	gain4->setDisplayConversion( false );
 	gain4->setHintText( tr( "Band 4 Gain:" ), " dBFS" );

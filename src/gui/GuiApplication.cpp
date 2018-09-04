@@ -78,20 +78,19 @@ GuiApplication::GuiApplication(bool showSplashScreen)
 	QDir::addSearchPath("artwork", ConfigManager::inst()->defaultArtworkDir());
 	QDir::addSearchPath("artwork", ":/artwork");
 
-	LmmsStyle* lmmsstyle = new LmmsStyle();
-	QApplication::setStyle(lmmsstyle);
+        LmmsStyle* lmmsstyle = new LmmsStyle();
+        QApplication::setStyle(lmmsstyle);
 
-	LmmsPalette* lmmspal = new LmmsPalette(nullptr, lmmsstyle);
-	QPalette* lpal = new QPalette(lmmspal->palette());
-
-	QApplication::setPalette( *lpal );
-	LmmsStyle::s_palette = lpal;
+        LmmsPalette* lmmspal = new LmmsPalette(nullptr, lmmsstyle);
+        QPalette* lpal = new QPalette(lmmspal->palette());
+        QApplication::setPalette( *lpal );
+        LmmsStyle::s_palette = lpal;
 
 #ifdef LMMS_BUILD_APPLE
 	QApplication::setAttribute(Qt::AA_DontShowIconsInMenus, true);
 #endif
 
-	// Show splash screen
+        // Show splash screen
 	QSplashScreen splashScreen( embed::getIconPixmap( "splash" ) );
 	if( showSplashScreen ) splashScreen.show();
 

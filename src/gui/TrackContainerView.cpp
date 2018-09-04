@@ -37,6 +37,8 @@
 #include "PluginFactory.h"
 #include "Clipboard.h"
 
+#include "denormals.h"
+
 //#include <QApplication>
 #include <QLayout>
 #include <QVBoxLayout>
@@ -712,6 +714,8 @@ InstrumentLoaderThread::InstrumentLoaderThread( QObject *parent, InstrumentTrack
 
 void InstrumentLoaderThread::run()
 {
+        disable_denormals();
+
 	Instrument *i = m_it->loadInstrument( m_name );
 	QObject *parent = i->parent();
 	i->setParent( 0 );

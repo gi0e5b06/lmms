@@ -288,7 +288,7 @@ FxMixerView::FxChannelView::FxChannelView(QWidget*     _parent,
 
     m_fader = new Fader(&fxChannel->m_volumeModel,
                         tr("FX Fader %1").arg(channelIndex), m_fxLine);
-    m_fader->setLevelsDisplayedInDBFS();
+    m_fader->setLevelsDisplayedInDBFS(true);
     m_fader->setMinPeak(dbfsToAmp(-42));
     m_fader->setMaxPeak(dbfsToAmp(9));
 
@@ -684,7 +684,7 @@ void FxMixerView::updateFaders()
             m_fxChannelViews[i]->m_fader->setPeak_R(opr / fall_off);
         }
 
-        if(m_fxChannelViews[i]->m_fader->needsUpdate())
-            m_fxChannelViews[i]->m_fader->update();
+        //if(m_fxChannelViews[i]->m_fader->needsUpdate())
+        //    m_fxChannelViews[i]->m_fader->update();
     }
 }

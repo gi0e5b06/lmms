@@ -48,6 +48,7 @@
 #include "FileDialog.h"
 #include "FxMixerView.h"
 #include "GuiApplication.h"
+#include "PaintManager.h"
 #include "PianoRoll.h" // REQUIRED
 #include "PluginBrowser.h"
 #include "PluginFactory.h"
@@ -191,9 +192,10 @@ MainWindow::MainWindow() :
 	vbox->addWidget( w );
 	setCentralWidget( main_widget );
 
-        requireActionUpdate();
+        m_updateTimer.start( 1000 / 10, this );  // 8 fps, 60 fps
+        PaintManager::start(this);
 
-        m_updateTimer.start( 1000 / 8, this );  // 8 fps
+        requireActionUpdate();
 
 	if( ConfigManager::inst()->value( "ui", "enableautosave" ).toInt() )
 	{

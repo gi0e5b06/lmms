@@ -1,7 +1,7 @@
 /*
- * FadeButton.h -
+ * PaintCacheable.h -
  *
- * Copyright (c) 2005-2009 Tobias Doerffel <tobydox/at/users.sourceforge.net>
+ * Copyright (c) 2018 gi0e5b06
  *
  * This file is part of LMMS - https://lmms.io
  *
@@ -22,46 +22,46 @@
  *
  */
 
-#ifndef FADE_BUTTON_H
-#define FADE_BUTTON_H
+#ifndef PAINT_MANAGER_H
+#define PAINT_MANAGER_H
 
-#include "PaintCacheable.h"
+//#include "PaintCacheable.h"
 
-#include <QAbstractButton>
-#include <QColor>
-#include <QTime>
+//#include <QBasicTimer>
+#include <QHash>
+#include <QObject>
+#include <QQueue>
+//#include <QWeakPointer>
 
-class FadeButton
-      : public QAbstractButton
-      , virtual public PaintCacheable
+class PaintCacheable;
+class MainWindow;
+
+class PaintManager : public QObject
 {
     Q_OBJECT
 
   public:
-    FadeButton(const QColor& _normal_color,
-               const QColor& _activated_color,
-               QWidget*      _parent);
-
-    virtual ~FadeButton();
-    void setActiveColor(const QColor& activated_color);
-
-    using PaintCacheable::update;
-    virtual void updateNow();
+    static void updateNow();
+    static void updateLater(PaintCacheable* _w);
+    static void removeLater(PaintCacheable* _w);
 
   public slots:
-    void activate();
+    void runQueue();
 
-  protected:
-    // virtual void customEvent(QEvent*);
-    virtual void drawWidget(QPainter& _p);
-    virtual void paintEvent(QPaintEvent* _pe);
+  signals:
+    void periodicUpdate();
 
   private:
-    QTime  m_stateTimer;
-    QColor m_normalColor;
-    QColor m_activatedColor;
+    PaintManager();
+    virtual ~PaintManager();
 
-    // void signalUpdate();
+    QQueue<PaintCacheable*>      m_queue;
+    QHash<PaintCacheable*, bool> m_unique;
+
+    static PaintManager s_singleton;
+    static void         start(MainWindow* _mw);
+
+    friend class MainWindow;
 };
 
 #endif

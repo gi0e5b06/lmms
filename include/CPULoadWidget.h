@@ -28,33 +28,44 @@
 
 //#include "lmms_basics.h"
 
+//#include "PaintCacheable.h"
+#include "Widget.h"
+
 #include <QPixmap>
 #include <QTimer>
-#include <QWidget>
+//#include <QWidget>
 
-class CPULoadWidget : public QWidget
+class CPULoadWidget
+      : public Widget
+      , public virtual PaintCacheable
 {
     Q_OBJECT
+
   public:
     CPULoadWidget(QWidget* _parent, const bool _bigger);
     virtual ~CPULoadWidget();
 
   protected:
-    virtual void paintEvent(QPaintEvent* _pe);
+    virtual void drawWidget(QPainter& _p);
+    //virtual void paintEvent(QPaintEvent* _pe);
+
+    // interfaces
+    //using PaintCacheable::update;
+    //virtual void updateNow() { QWidget::update(); }
 
   protected slots:
-    void updateCpuLoad();
+    void refresh();
 
   private:
     bool   m_bigger;
     int    m_currentLoad;
-    bool   m_changed;
-    QTimer m_updateTimer;
+    //bool   m_changed;
+    //QTimer m_updateTimer;
 
     QPixmap m_background;
     QPixmap m_foreground;
     QPixmap m_leds;
-    QPixmap m_cache;
+    //QPixmap m_cache;
 };
 
 #endif

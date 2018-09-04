@@ -65,6 +65,7 @@
 //#include "SetupDialog.h"
 
 #include "debug.h"
+#include "denormals.h"
 #include "embed.h"
 #include "lmmsconfig.h"
 #include "lmmsversion.h"
@@ -79,25 +80,41 @@
 //#include <QApplication>
 #include <QMessageBox>
 #include <QPushButton>
+#include <QTemporaryFile>
 #include <QTextStream>
 
 
 #ifdef LMMS_DEBUG_FPE
-void signalHandler( int signum ) {
+void onSignalFPE(int signum)
+{
+        static void* s_previous=0;
 
-	// Get a back trace
-	void *array[10];
+        // Get a back trace
+	void *array[50];
 	size_t size;
 
 	// get void*'s for all entries on the stack
-	size = backtrace(array, 10);
+	size = backtrace(array, 50);
+
+        if(s_previous==array[2]) return;
+        s_previous=array[2];
+
+        //fprintf(stderr,"Critical: signal %d received\n",signum);
+        qCritical("Critical: signal %d received",signum);
+        // /usr/lib/x86_64-linux-gnu/libQt5Core.so.5(_Z9qIsFinited+0x10)[0x7f5a964eeed0]
+        //if(array[2]==(void*)0x7f5a964eeed0) return;
 
 	backtrace_symbols_fd(array, size, STDERR_FILENO);
 
 	// cleanup and close up stuff here
 	// terminate program
-
-	exit(signum);
+        /*
+	if(signum!=SIGFPE)
+        {
+                fprintf(stderr,"Fatal: exiting on signal %d",signum);
+                exit(signum);
+        }
+        */
 }
 #endif
 
@@ -238,6 +255,10 @@ int main( int argc, char * * argv )
 {
         QThread::currentThread()->setObjectName("main thread");
 
+// /lib/x86_64-linux-gnu/libc.so.6(+0x3ef20)[0x7f34e1286f20]
+// /usr/lib/x86_64-linux-gnu/libQt5Core.so.5(_Z9qIsFinited+0x10)[0x7f34e1a5bed0]
+#undef LMMS_DEBUG_FPE
+
 #ifdef LMMS_DEBUG_FPE
 	// Enable exceptions for certain floating point results
 	feenableexcept( FE_INVALID   |
@@ -247,7 +268,7 @@ int main( int argc, char * * argv )
 
 	// Install the trap handler
 	// register signal SIGFPE and signal handler
-	signal(SIGFPE, signalHandler);
+	signal(SIGFPE, onSignalFPE);
 #endif
 
 #ifdef LMMS_BUILD_WIN32

@@ -35,6 +35,7 @@
 #include "Engine.h"
 #include "GuiApplication.h"
 #include "MainWindow.h"
+#include "PaintManager.h"
 #include "ProjectJournal.h"
 //#include "Song.h"
 #include "StringPairDrag.h"
@@ -63,7 +64,7 @@ Knob::Knob(QWidget* _parent, const QString& _name) :
 }
 
 Knob::Knob(knobTypes _knob_num, QWidget* _parent, const QString& _name) :
-      QWidget(_parent), FloatModelView(NULL, this), m_pressLeft(false),
+      Widget(_parent), FloatModelView(NULL, this), m_pressLeft(false),
       m_label(""), m_knobPixmap(NULL), m_volumeKnob(false),
       m_volumeRatio(100.0, 0.0, 1000000.0), m_angle(-1000.f),
       // m_cache( NULL ),
@@ -83,7 +84,7 @@ void Knob::initUi(const QString& _name)
 
     setWindowTitle(_name);
     setCursor(Qt::PointingHandCursor);
-    //setAttribute(Qt::WA_OpaquePaintEvent);
+    // setAttribute(Qt::WA_OpaquePaintEvent);
 
     onKnobNumUpdated();
     setTotalAngle(270.0f);
@@ -153,6 +154,7 @@ void Knob::onKnobNumUpdated()
 
         setMinimumSize(m_knobPixmap->width(), m_knobPixmap->height());
         resize(m_knobPixmap->width(), m_knobPixmap->height());
+        update();
     }
 }
 
@@ -175,6 +177,9 @@ QString Knob::text() const
 
 void Knob::setText(const QString& txt)
 {
+    if(m_label == txt)
+        return;
+
     if(m_knobPixmap)
     {
         int w = m_knobPixmap->width();
@@ -195,15 +200,13 @@ void Knob::setText(const QString& txt)
 void Knob::setTotalAngle(float angle)
 {
     if(angle < 10.f)
-    {
-        m_totalAngle = 10.f;
-    }
-    else
+        angle = 10.f;
+
+    if(angle != m_totalAngle)
     {
         m_totalAngle = angle;
+        update();
     }
-
-    update();
 }
 
 float Knob::innerRadius() const
@@ -400,58 +403,17 @@ QColor Knob::statusColor()
     return r;
 }
 
-void Knob::clearCache()
+void Knob::drawWidget(QPainter& _p)
 {
-    // qInfo("Knob::clearCache()");
-    // QPixmap* old=m_cache;
-    // m_cache=NULL;
-    // if(old) delete old;
-    invalidateCache();
+    drawKnob(_p);
+    drawText(_p);
 }
 
 void Knob::drawKnob(QPainter& _p)
 {
     FloatModel* m = model();
     if(!m)
-    {
-        // qInfo("Knob::drawKnob NO MODEL p=%p",this);
         return;
-    }
-    if(!isVisible())
-    {
-        // qInfo("Knob::drawKnob NOT VISIBLE p=%p",this);
-        clearCache();
-        return;
-    }
-
-    // qInfo("Knob::drawKnob");
-    // PL_BEGIN("KnobCache");
-    if(updateAngle())
-        invalidateCache();
-
-    QColor newStatusColor = statusColor();
-    if(newStatusColor != m_statusColor)
-        invalidateCache();
-
-    // qInfo("Knob::drawKnob uses cache p=%p",this);
-    //_p->drawPixmap( 0, 0, *m_cache );
-    if(paintCache(_p))
-        return;
-    // PL_END("KnobCache");
-
-    // PL_END("KnobCache");
-    // PL_BEGIN("KnobDraw");
-    m_statusColor = newStatusColor;
-
-    // qInfo("Knob::drawKnob no cache p=%p val=%f min=%f max=%f cv=%f ta=%f
-    // a=%f",this,
-    //  m->value(),m->minValue(),m->maxValue(),m->centerValue(),m_totalAngle,m_angle);
-
-    // if(!m_cache) m_cache=new QPixmap( size() );
-    // m_cache->fill( qRgba( 0, 0, 0, 0 ) );
-    // QPainter p( m_cache );
-
-    QPainter& p = beginCache();
 
     QPointF mid;
     QColor  pc = pointColor();
@@ -463,7 +425,7 @@ void Knob::drawKnob(QPainter& _p)
     if(m_knobNum == knobStyled)
     {
         mid = centerPoint();
-        // p.setRenderHint( QPainter::Antialiasing );
+        // _p.setRenderHint( QPainter::Antialiasing );
 
         // Perhaps this can move to setOuterRadius()
         if(m_outerColor.isValid())
@@ -472,18 +434,18 @@ void Knob::drawKnob(QPainter& _p)
             gradient.setColorAt(0.4, _p.pen().brush().color());
             gradient.setColorAt(1, m_outerColor);
 
-            p.setPen(QPen(gradient, lw, Qt::SolidLine, Qt::RoundCap));
+            _p.setPen(QPen(gradient, lw, Qt::SolidLine, Qt::RoundCap));
         }
         else
         {
-            QPen pen = p.pen();
+            QPen pen = _p.pen();
             pen.setWidth(lw);
             pen.setCapStyle(Qt::RoundCap);
 
-            p.setPen(pen);
+            _p.setPen(pen);
         }
 
-        p.drawLine(calculateLine(mid, outerRadius(), innerRadius()));
+        _p.drawLine(calculateLine(mid, outerRadius(), innerRadius()));
     }
     else if(m)
     {
@@ -492,18 +454,19 @@ void Knob::drawKnob(QPainter& _p)
         mid = QPointF(width() / 2.f, m_knobPixmap->height() / 2.f);
 
         /*
-        p.drawPixmap( QPointF((width()-m_knobPixmap->width())/2.f,
+        _p.drawPixmap( QPointF((width()-m_knobPixmap->width())/2.f,
                               0.f),*m_knobPixmap );
         */
 
-        // p.setRenderHint( QPainter::Antialiasing );
+        // _p.setRenderHint( QPainter::Antialiasing );
 
         const float centerAngle
                 = angleFromValue(m->inverseScaledValue(m->centerValue()),
                                  m->minValue(), m->maxValue(), m_totalAngle);
 
-        const float arcLineWidth = 2.f;
-        const float arcRectSize  = m_knobPixmap->width() - arcLineWidth;
+        const float arcLineWidth = 3.f;
+        const float arcRectSize
+                = m_knobPixmap->width() - arcLineWidth - 2.f;  // 0
 
         /*
         QColor col;
@@ -541,65 +504,76 @@ void Knob::drawKnob(QPainter& _p)
         }
 
         QPen pen0(QColor(255, 255, 255, 192), 1, Qt::SolidLine, Qt::RoundCap);
-        p.setPen(pen0);
+        _p.setPen(pen0);
 
-        p.setBrush(m_statusColor);
-        float re = radius + 2.f;  //-2.f;
-        p.drawEllipse(mid.x() - re / 2.f, mid.y() - re / 2.f, re,
-                      re);  //+1.f,re+1.f);
+        _p.setBrush(m_statusColor);
+        float re = radius;  // + 2.f;
+        _p.drawEllipse(mid.x() - re / 2.f, mid.y() - re / 2.f, re,
+                       re);  //+1.f,re+1.f);
 
         QPen pen1(QColor(0, 0, 0, 96), 2, Qt::SolidLine, Qt::RoundCap);
-        p.setPen(pen1);
-        p.drawArc(mid.x() - arcRectSize / 2.f, 1.f, arcRectSize, arcRectSize,
-                  16.f * 315, 16.f * m_totalAngle);
+        _p.setPen(pen1);
+        _p.drawArc(mid.x() - arcRectSize / 2.f, 1.f, arcRectSize, arcRectSize,
+                   16.f * 315, 16.f * m_totalAngle);
 
         QPen pen2(QColor(0, 0, 0, 96), 4, Qt::SolidLine, Qt::RoundCap);
-        p.setPen(pen2);
-        p.drawLine(line);
-        p.drawArc(mid.x() - arcRectSize / 2.f, 1.f, arcRectSize, arcRectSize,
-                  16.f * (90.f - centerAngle),
-                  -16.f * (m_angle - centerAngle));
-        p.setBrush(QColor(0, 0, 0, 96));
-        // p.drawEllipse(mid.x()-2.f,mid.y()-2.f,5.f,5.f);
-        p.drawEllipse(mid.x() - 1.f, mid.y() - 1.f, 3.f, 3.f);
+        _p.setPen(pen2);
+        _p.drawLine(line);
+        _p.drawArc(mid.x() - arcRectSize / 2.f, 1.f, arcRectSize, arcRectSize,
+                   16.f * (90.f - centerAngle),
+                   -16.f * (m_angle - centerAngle));
+        _p.setBrush(QColor(0, 0, 0, 96));
+        // _p.drawEllipse(mid.x()-2.f,mid.y()-2.f,5.f,5.f);
+        _p.drawEllipse(mid.x() - 1.f, mid.y() - 1.f, 3.f, 3.f);
 
         QPen pen3(pc, 2, Qt::SolidLine, Qt::RoundCap);
-        p.setPen(pen3);
-        p.drawLine(line);
-        p.drawArc(mid.x() - arcRectSize / 2, 1, arcRectSize, arcRectSize,
-                  16.f * (90.f - centerAngle),
-                  -16.f * (m_angle - centerAngle));
-        p.setBrush(pc);
-        p.drawEllipse(mid.x() - 1.f, mid.y() - 1.f, 3.f, 3.f);
+        _p.setPen(pen3);
+        _p.drawLine(line);
+        _p.drawArc(mid.x() - arcRectSize / 2, 1, arcRectSize, arcRectSize,
+                   16.f * (90.f - centerAngle),
+                   -16.f * (m_angle - centerAngle));
+        _p.setBrush(pc);
+        _p.drawEllipse(mid.x() - 1.f, mid.y() - 1.f, 3.f, 3.f);
     }
-
-    // p.end();
-    endCache();
-    // PL_END("KnobDraw");
-    //_p->drawPixmap( 0, 0, *m_cache );
-    paintCache(_p);
 }
 
+void Knob::drawText(QPainter& _p)
+{
+    if(!m_label.isEmpty())
+    {
+        _p.setFont(pointSizeF(_p.font(), 6.5));
+        _p.setPen(textColor());
+        QFontMetrics metrix = _p.fontMetrics();
+        QString text = metrix.elidedText(m_label, Qt::ElideRight, width());
+        int     x    = width() / 2 - metrix.width(text) / 2;
+        int     y    = height() - 2;
+        if(m_knobPixmap)
+            y = qMin(y, m_knobPixmap->height() + 7);
+        _p.drawText(x, y, text);
+    }
+}
+
+/*
 void Knob::resizeEvent(QResizeEvent* _re)
 {
     resizeCache(width(), height());
     // qInfo("Knob::resizeEvent()");
-    // clearCache(); update();
-    mandatoryUpdate();
+    // invalidateCache(); update();
+    refresh();
 }
+*/
 
 void Knob::setModel(Model* _m, bool isOldModelValid)
 {
     // qInfo("Knob::setModel p=%p",this);
     FloatModelView::setModel(_m, isOldModelValid);
-    // mandatoryUpdate();
+    // update();
 }
 
 void Knob::modelChanged()
 {
-    // qInfo("Knob::modelChanged p=%p",this);
-    // clearCache();
-    mandatoryUpdate();
+    // qInfo("Knob::modelChanged p=%p", this);
+    update();  // refresh();
 }
 
 void Knob::convert(const QPoint& _p, float& value_, float& dist_)
@@ -766,6 +740,7 @@ void Knob::dropEvent(QDropEvent* _de)
     {
         m->setValue(val.toFloat());
         _de->accept();
+        update();
     }
     else if(type == "automatable_model")
     {
@@ -787,14 +762,13 @@ void Knob::dropEvent(QDropEvent* _de)
                     mod->setValue(m->value());
                     _de->accept();
                     mod->emit propertiesChanged();
+                    update();
                 }
             }
         }
         else
             qInfo("dst Knob has a controller Connection");
     }
-
-    mandatoryUpdate();
 }
 
 void Knob::mousePressEvent(QMouseEvent* _me)
@@ -897,36 +871,14 @@ void Knob::mouseDoubleClickEvent(QMouseEvent*)
     enterValue();
 }
 
+/*
 void Knob::paintEvent(QPaintEvent* _pe)
 {
     // PAINT_THREAD_CHECK
     // DEBUG_THREAD_PRINT
-
-    QPainter p(this);
-
-    drawKnob(p);
-    if(!m_label.isEmpty())
-    {
-        p.setFont(pointSizeF(p.font(), 6.5));
-        /*
-        p.setPen( QColor( 64, 64, 64 ) );
-        p.drawText( width() / 2 -
-                p.fontMetrics().width( m_label ) / 2 + 1,
-                        height() - 1, m_label );
-        */
-        p.setPen(textColor());
-        QFontMetrics metrix = p.fontMetrics();
-        QString text = metrix.elidedText(m_label, Qt::ElideRight, width());
-        int     x    = width() / 2 - metrix.width(text) / 2;
-        int     y    = height() - 2;
-        if(m_knobPixmap)
-            y = qMin(y, m_knobPixmap->height() + 7);
-        p.drawText(x, y, text);
-    }
-
-    // p.setPen(Qt::red);
-    // p.drawRect(0,0,width()-1,height()-1);
+    Widget::paintEvent(_pe);
 }
+*/
 
 void Knob::wheelEvent(QWheelEvent* _we)
 {
@@ -1001,34 +953,78 @@ void Knob::enterValue()
     }
 }
 
-void Knob::friendlyUpdate()
+/*
+void Knob::refresh()
 {
-    FloatModel* m = model();
-    // qInfo("Knob::friendlyUpdate 1");
-    if(!m || !m->isAutomated() || !m->isControlled() ||  //????
-       !m->frequentlyUpdated() || m->controllerConnection() == NULL
-       || m->controllerConnection()->getController()->frequentlyUpdated()
-                  == false
-       ||
-       // m->hasLinkedModels() ||
-       Controller::runningFrames() % (256 * 4) == 0)
-    {
-        // qInfo("Knob::friendlyUpdate 2 p=%p",this);
-        update();
-    }
-    else
-    {
-        qInfo("Knob::friendlyUpdate skipped");
-        // update();
-    }
+    Widget::refresh();
+}
+*/
+
+void Knob::update()
+{
+    // qInfo("Knob::update");
+    invalidateCache();
+    friendlyUpdate();
+    // Widget::update();
 }
 
-void Knob::mandatoryUpdate()
+void Knob::friendlyUpdate()
 {
-    // qInfo("Knob::mandatoryUpdate p=%p",this);
-    clearCache();
-    update();
+    /*
+    FloatModel* m = model();
+    if(!m)
+    {
+        // qInfo("Knob::drawKnob NO MODEL p=%p",this);
+        if(!isCacheValid())
+            update();
+        return;
+    }
+    */
+
+    if(updateAngle())
+        invalidateCache();
+
+    QColor newStatusColor = statusColor();
+    if(newStatusColor != m_statusColor)
+    {
+        m_statusColor = newStatusColor;
+        invalidateCache();
+    }
+
+    // qInfo("Knob::friendlyUpdate 1");
+    if(!isCacheValid())
+        Widget::update();  // PaintManager::updateLater(this);
+
+    /*
+        FloatModel* m = model();
+        // qInfo("Knob::friendlyRefresh 1");
+        if(!m->isAutomated() || !m->isControlled() ||  //????
+           !m->frequentlyUpdated() || m->controllerConnection() == NULL
+           || m->controllerConnection()->getController()->frequentlyUpdated()
+                      == false
+           ||
+           // m->hasLinkedModels() ||
+           Controller::runningFrames() % (256 * 4) == 0)
+        {
+            // qInfo("Knob::friendlyRefresh 2 p=%p",this);
+            update();
+        }
+        else
+        {
+            qInfo("Knob::friendlyRefresh skipped");
+            // update();
+        }
+    */
 }
+
+/*
+void Knob::refresh()
+{
+    // qInfo("Knob::refresh p=%p",this);
+    invalidateCache();
+    updateNow();
+}
+*/
 
 QString Knob::displayValue() const
 {
@@ -1060,10 +1056,9 @@ void Knob::doConnections()
         // qInfo("Knob::doConnections p=%p model()=%p",this,m);
         m->disconnect(this);
         connect(m, SIGNAL(dataChanged()), this, SLOT(friendlyUpdate()));
-        connect(m, SIGNAL(propertiesChanged()), this,
-                SLOT(mandatoryUpdate()));
+        connect(m, SIGNAL(propertiesChanged()), this, SLOT(update()));
         // QObject::connect( m, SIGNAL( controllerValueChanged() ),
-        //                  this, SLOT( mandatoryUpdate() ) );
+        //                  this, SLOT( refresh() ) );
     }
 }
 

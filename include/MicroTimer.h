@@ -38,16 +38,20 @@
 class MicroTimer
 {
 public:
-	inline MicroTimer()
+	//inline
+        MicroTimer()
 	{
 		reset();
 	}
 
-	inline ~MicroTimer()
+        /*
+	inline virtual ~MicroTimer()
 	{
 	}
+        */
 
-	inline void reset()
+	//inline
+        void reset()
 	{
 		gettimeofday( &begin, NULL );
 	}

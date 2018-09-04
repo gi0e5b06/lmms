@@ -32,11 +32,16 @@
 //#include "Pitch.h"
 #include "volume.h"
 
-#ifndef qWarning
-#define qWarning printf
-#endif
-
 #include <cstdlib>
+#include <cstdio>
+
+#ifdef qWarning
+#define WARNING1(f,v1)    qWarning(f,v1)
+#define WARNING2(f,v1,v2) qWarning(f,v1,v2)
+#else
+#define WARNING1(f,v1)    fprintf(stderr,f,v1);
+#define WARNING2(f,v1,v2) fprintf(stderr,f,v1,v2);
+#endif
 
 class MidiEvent final
 {
@@ -104,7 +109,7 @@ public:
 	void setChannel( int8_t channel )
 	{
                 if(channel<0||channel>15)
-                        qWarning("MidiEvent::setChannel invalid channel: %d",channel);
+                        WARNING1("MidiEvent::setChannel invalid channel: %d",channel);
 		m_channel = channel;
 	}
 
@@ -116,7 +121,7 @@ public:
 	void setParam( int i, uint16_t value )
 	{
                 if(value<0||value>127)
-                        qWarning("MidiEvent::setParam [%d] invalid value: %d",i,value);
+                        WARNING2("MidiEvent::setParam [%d] invalid value: %d",i,value);
 		m_data.m_param[i] = value;
 	}
 
@@ -128,7 +133,7 @@ public:
 	void setKey( int16_t key )
 	{
                 if(key<0||key>127)
-                        qWarning("MidiEvent::setKey invalid key: %d",key);
+                        WARNING1("MidiEvent::setKey invalid key: %d",key);
 		m_data.m_param[0] = key;
 	}
 
@@ -140,7 +145,7 @@ public:
 	void setVelocity( int16_t velocity )
 	{
                 if(velocity<0||velocity>127)
-                        qWarning("MidiEvent::setVelocity invalid velocity: %d",velocity);
+                        WARNING1("MidiEvent::setVelocity invalid velocity: %d",velocity);
 		m_data.m_param[1] = velocity;
 	}
 
@@ -210,7 +215,7 @@ public:
 	void setMidiPitchBend( uint16_t pitchBend )
 	{
                 if(pitchBend<0||pitchBend>16383)
-                        qWarning("MidiEvent::setMidiPitchBend invalid pitchBend: %d",pitchBend);
+                        WARNING1("MidiEvent::setMidiPitchBend invalid pitchBend: %d",pitchBend);
                 if(pitchBend<    0) pitchBend=0;
                 if(pitchBend>16383) pitchBend=16383;
                 setParam(0,(pitchBend   )&0x7F);

@@ -49,30 +49,32 @@
 #define FADER_H
 
 #include <QTime>
-#include <QWidget>
+//#include <QWidget>
 #include <QPixmap>
 
 #include "AutomatableModelView.h"
+#include "Widget.h"
 
 class TextFloat;
 
 
-class EXPORT Fader : public QWidget, public FloatModelView
+class EXPORT Fader : public Widget, public FloatModelView
 {
 	Q_OBJECT
+
  public:
 	Q_PROPERTY( QColor peakGreen READ peakGreen WRITE setPeakGreen )
 	Q_PROPERTY( QColor peakRed READ peakRed WRITE setPeakRed )
 	Q_PROPERTY( QColor peakYellow READ peakYellow WRITE setPeakYellow )
-	Q_PROPERTY( bool levelsDisplayedInDBFS READ getLevelsDisplayedInDBFS WRITE setLevelsDisplayedInDBFS )
+	Q_PROPERTY( bool levelsDisplayedInDBFS READ areLevelsDisplayedInDBFS WRITE setLevelsDisplayedInDBFS )
 
 	Fader( FloatModel * _model, const QString & _name, QWidget * _parent );
-	Fader( FloatModel * _model, const QString & _name, QWidget * _parent, QPixmap * back, QPixmap * leds, QPixmap * knob );
+	Fader( FloatModel * _model, const QString & _name, QWidget * _parent, const QPixmap& back, const QPixmap& leds, const QPixmap& knob );
 	virtual ~Fader();
 
 	void init(FloatModel * model, QString const & name);
 
-        inline bool needsUpdate() const { return m_needsUpdate; }
+        //inline bool needsUpdate() const { return m_needsUpdate; }
 
 	void setPeak_L( float fPeak );
 	inline float getPeak_L() const { return m_fPeakValue_L;	}
@@ -95,8 +97,9 @@ class EXPORT Fader : public QWidget, public FloatModelView
 	QColor const & peakYellow() const;
 	void setPeakYellow( const QColor & c );
 
-	inline bool getLevelsDisplayedInDBFS() const { return m_levelsDisplayedInDBFS; }
-	inline void setLevelsDisplayedInDBFS(bool value = true) { m_levelsDisplayedInDBFS = value; }
+	//inline bool getLevelsDisplayedInDBFS() const { return m_levelsDisplayedInDBFS; }
+        inline bool areLevelsDisplayedInDBFS() const { return m_levelsDisplayedInDBFS; }
+	void setLevelsDisplayedInDBFS(bool _b) { m_levelsDisplayedInDBFS = _b; }
 
 	void setDisplayConversion( bool b )
 	{
@@ -114,27 +117,31 @@ class EXPORT Fader : public QWidget, public FloatModelView
 
 
  protected:
+        virtual void drawWidget(QPainter& _p);
+	virtual void drawDBFSLevels(QPainter& painter);
+	virtual void drawLinearLevels(QPainter& painter);
+
 	virtual void contextMenuEvent( QContextMenuEvent * _me );
 	virtual void mousePressEvent( QMouseEvent *ev );
 	virtual void mouseDoubleClickEvent( QMouseEvent* mouseEvent );
 	virtual void mouseMoveEvent( QMouseEvent *ev );
 	virtual void mouseReleaseEvent( QMouseEvent * _me );
 	virtual void wheelEvent( QWheelEvent *ev );
-	virtual void paintEvent( QPaintEvent *ev );
+	//virtual void paintEvent( QPaintEvent *ev );
 
 
  private:
-	inline bool clips(float const & value) const { return value >= 1.0f; }
+	inline bool clips(const float& value) const { return value > 1.0f; }
 
-	void paintDBFSLevels(QPaintEvent *ev, QPainter & painter);
-	void paintLinearLevels(QPaintEvent *ev, QPainter & painter);
+	//void paintDBFSLevels(QPaintEvent *ev, QPainter & painter);
+	//void paintLinearLevels(QPaintEvent *ev, QPainter & painter);
 
 	int knobPosY() const
 	{
 		float fRange = model()->maxValue() - model()->minValue();
 		float realVal = model()->value() - model()->minValue();
 
-		return height() - ( ( height() - m_knob->height() ) * ( realVal / fRange ) );
+		return height() - ( ( height() - m_knob.height() ) * ( realVal / fRange ) );
 	}
 
 	void setPeak( float fPeak, float &targetPeak, float &persistentPeak, QTime &lastPeakTime );
@@ -142,7 +149,7 @@ class EXPORT Fader : public QWidget, public FloatModelView
 
 	void updateTextFloat();
 
-        bool  m_needsUpdate;
+        //bool  m_needsUpdate;
 
 	float m_fPeakValue_L;
 	float m_fPeakValue_R;
@@ -154,13 +161,9 @@ class EXPORT Fader : public QWidget, public FloatModelView
 	QTime m_lastPeakTime_L;
 	QTime m_lastPeakTime_R;
 
-	static QPixmap * s_back;
-	static QPixmap * s_leds;
-	static QPixmap * s_knob;
-
-	QPixmap * m_back;
-	QPixmap * m_leds;
-	QPixmap * m_knob;
+	QPixmap m_back;
+	QPixmap m_leds;
+	QPixmap m_knob;
 
 	bool m_displayConversion;
 	bool m_levelsDisplayedInDBFS;

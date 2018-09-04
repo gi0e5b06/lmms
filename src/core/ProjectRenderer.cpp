@@ -37,6 +37,8 @@
 #include "SampleBuffer.h"
 #include "Song.h"
 
+#include "denormals.h"
+
 #ifdef LMMS_HAVE_SCHED_H
 #include "sched.h"
 #endif
@@ -186,6 +188,7 @@ void ProjectRenderer::run()
 #endif
 #endif
 
+    disable_denormals();
     qInfo("ProjectRenderer::run #1");
 
     Engine::getSong()->startExport();

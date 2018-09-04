@@ -1,12 +1,12 @@
 /*
- * PaintCacheable.h -
+ * Widget.h - base widget for new components
  *
  * Copyright (c) 2018 gi0e5b06
  *
  * This file is part of LMMS - https://lmms.io
  *
  * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public
+ * modify it under the terms of"the GNU General Public
  * License as published by the Free Software Foundation; either
  * version 2 of the License, or (at your option) any later version.
  *
@@ -22,38 +22,34 @@
  *
  */
 
-#ifndef PAINT_CACHEABLE_H
-#define PAINT_CACHEABLE_H
+#ifndef WIDGET_H_
+#define WIDGET_H_
 
-#include <QMutex>
-#include <QPainter>
-//#include <QSharedPointer>
+#include "PaintCacheable.h"
 
-class QImage;
+//#include "lmms_basics.h"
 
-class PaintCacheable
+//#include <QPixmap>
+#include <QWidget>
+
+class Widget
+      : public QWidget
+      , public virtual PaintCacheable
 {
+    Q_OBJECT
 
   public:
-    PaintCacheable();
-    virtual ~PaintCacheable();
+    // interfaces
+    virtual void update(); // final;
+    virtual void updateNow();
+    //using PaintCacheable::refresh;
 
-    bool      paintCache(QPainter& _p);
-    bool      isCacheValid();
-    void      resizeCache(int _w, int _h);
-    QPainter& beginCache();
-    void      endCache();
+  protected:
+    Widget(QWidget* _parent);
+    virtual ~Widget();
 
-  public slots:
-    void invalidateCache();
-    // virtual void refresh();
-    virtual void update();
-    virtual void updateNow() = 0;
-
-  private:
-    volatile bool m_valid;
-    QImage*       m_cache;
-    QPainter*     m_painter;
+    virtual void drawWidget(QPainter& _p) = 0;
+    virtual void paintEvent(QPaintEvent* _pe);  // final;
 };
 
 #endif

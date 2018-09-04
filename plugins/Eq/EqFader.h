@@ -39,7 +39,7 @@ class EqFader : public Fader
 public:
 	Q_OBJECT
 public:
-	EqFader( FloatModel * model, const QString & name, QWidget * parent, QPixmap * backg, QPixmap * leds, QPixmap * knobpi,  float* lPeak, float* rPeak ) :
+	EqFader( FloatModel * model, const QString & name, QWidget * parent, QPixmap& backg, QPixmap& leds, QPixmap & knobpi,  float* lPeak, float* rPeak ) :
 		Fader( model, name, parent, backg, leds, knobpi )
 	{
 		setMinimumSize( 23, 80 );

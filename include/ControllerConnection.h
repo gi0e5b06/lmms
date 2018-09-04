@@ -102,7 +102,7 @@ public:
 public slots:
 	void deleteConnection();
         void onControlledValueChanged(float _v);
-        void onControlledBufferChanged(ValueBuffer* _vb);
+        void onControlledBufferChanged(const ValueBuffer* _vb);
 
 signals:
 	// The value changed while the mixer isn't running (i.e: MIDI CC)

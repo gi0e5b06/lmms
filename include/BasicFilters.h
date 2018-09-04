@@ -252,15 +252,15 @@ public:
 
 	static inline float minFreq()
 	{
-		return( 5.0f );
+		return 5.0f;
 	}
 
 	static inline float minQ()
 	{
-		return( 0.01f );
+		return 0.01f;
 	}
 
-	inline void setFilterType( const int _idx )
+	/*inline*/ void setFilterType( const int _idx )
 	{
 		m_doubleFilter = _idx == DoubleLowPass || _idx == DoubleMoog;
 		if( !m_doubleFilter )
@@ -283,7 +283,7 @@ public:
 		m_subFilter->m_type = m_type;
 	}
 
-	inline BasicFilters( const sample_rate_t _sample_rate ) :
+	/*inline*/ BasicFilters( const sample_rate_t _sample_rate ) :
 		m_doubleFilter( false ),
 		m_sampleRate( (float) _sample_rate ),
 		m_sampleRatio( 1.0f / m_sampleRate ),
@@ -292,12 +292,12 @@ public:
 		clearHistory();
 	}
 
-	inline ~BasicFilters()
+        /*inline*/ virtual ~BasicFilters()
 	{
 		delete m_subFilter;
 	}
 
-	inline void clearHistory()
+	/*inline*/ void clearHistory()
 	{
 		// reset in/out history for biquads
 		m_biQuad.clearHistory();
@@ -328,7 +328,7 @@ public:
 		}
 	}
 
-	inline sample_t update( sample_t _in0, ch_cnt_t _chnl )
+	/*inline*/ sample_t update( sample_t _in0, ch_cnt_t _chnl )
 	{
 		sample_t out;
 		switch( m_type )

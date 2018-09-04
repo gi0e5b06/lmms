@@ -257,8 +257,10 @@ SongEditor::SongEditor( Song * song ) :
 
         if( true )
         {
-                gui->mainWindow()->addWidgetToToolBar( new CPULoadWidget( tb, true ),
-                                                       1, col+8);
+                CPULoadWidget* clw=new CPULoadWidget( tb, true );
+                gui->mainWindow()->addWidgetToToolBar( clw, 1, col+8);
+                connect(gui->mainWindow(), SIGNAL(periodicUpdate()), clw,
+                        SLOT(refresh()));
         }
 
         // navigator

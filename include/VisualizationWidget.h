@@ -25,12 +25,17 @@
 #ifndef VISUALIZATION_WIDGET_H_
 #define VISUALIZATION_WIDGET_H_
 
+//#include "PaintCacheable.h"
+#include "Widget.h"
+
 #include "lmms_basics.h"
 
 #include <QPixmap>
-#include <QWidget>
+//#include <QWidget>
 
-class VisualizationWidget : public QWidget
+class VisualizationWidget
+      : public Widget
+      , public virtual PaintCacheable
 {
     Q_OBJECT
 
@@ -41,6 +46,7 @@ class VisualizationWidget : public QWidget
         Stereo,
         Reference
     };
+
     VisualizationWidget(const QPixmap& _bg,
                         QWidget*       _parent,
                         Mode           _mode = Surround);
@@ -51,8 +57,16 @@ class VisualizationWidget : public QWidget
     void setStabilized(bool _stabilized);
 
   protected:
-    virtual void paintEvent(QPaintEvent* _pe);
+    virtual void drawWidget(QPainter& _p);
+    //virtual void paintEvent(QPaintEvent* _pe);
     virtual void mousePressEvent(QMouseEvent* _me);
+
+    // interfaces
+    //using PaintCacheable::update;
+    //virtual void updateNow()
+    //{
+    //    QWidget::update();
+    //}
 
   protected slots:
     void updateSurroundBuffer(const surroundSampleFrame* _buffer);
