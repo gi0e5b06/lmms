@@ -1,5 +1,5 @@
 /*
- * LadspaControlDialog.h - dialog for displaying and editing control port
+ * LadspaDialog.h - dialog for displaying and editing control port
  *                         values for LADSPA plugins
  *
  * Copyright (c) 2006-2008 Danny McRae <khjklujn/at/users.sourceforge.net>
@@ -30,17 +30,18 @@
 #include "EffectControlDialog.h"
 
 
-class QHBoxLayout;
+//class QHBoxLayout;
+class QGridLayout;
 class LadspaControls;
 class LedCheckBox;
 
 
-class LadspaControlDialog : public EffectControlDialog
+class LadspaDialog : public EffectControlDialog
 {
 	Q_OBJECT
 public:
-	LadspaControlDialog( LadspaControls * _ctl );
-	~LadspaControlDialog();
+	LadspaDialog( LadspaControls * _ctl );
+	~LadspaDialog();
 
 
 private slots:
@@ -48,7 +49,9 @@ private slots:
 
 
 private:
-	QHBoxLayout * m_effectLayout;
+	//QHBoxLayout * m_effectLayout;
+        QWidget*     m_pane;
+        QGridLayout* m_effectLayout;
 	LedCheckBox * m_stereoLink;
 
 } ;

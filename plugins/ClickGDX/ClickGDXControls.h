@@ -26,7 +26,7 @@
 #define CLICKGDX_CONTROLS_H
 
 #include "EffectControls.h"
-#include "ClickGDXControlDialog.h"
+#include "ClickGDXDialog.h"
 #include "Knob.h"
 
 
@@ -56,7 +56,7 @@ public:
 
 	virtual EffectControlDialog* createView()
 	{
-		return new ClickGDXControlDialog( this );
+		return new ClickGDXDialog( this );
 	}
 
 
@@ -77,7 +77,7 @@ private:
 	FloatModel m_descentTempoModel;
 	FloatModel m_panTempoModel;
 
-	friend class ClickGDXControlDialog;
+	friend class ClickGDXDialog;
 	friend class ClickGDXEffect;
 
 } ;

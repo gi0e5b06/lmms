@@ -1,5 +1,5 @@
 /*
- * SplitGDXControlDialog.cpp - control dialog for chaining effect
+ * SplitGDXDialog.cpp - control dialog for chaining effect
  *
  * Copyright (c) 2018 gi0e5b06 (on github.com)
  *
@@ -22,76 +22,84 @@
  *
  */
 
-#include "SplitGDXControlDialog.h"
-
-#include <QGridLayout>
-#include <QGroupBox>
-#include <QHBoxLayout>
-#include <QLayout>
+#include "SplitGDXDialog.h"
 
 #include "EffectRackView.h"
+#include "GroupBox.h"
 #include "SplitGDX.h"
 #include "SplitGDXControls.h"
 #include "embed.h"
 
-SplitGDXControlDialog::SplitGDXControlDialog(SplitGDXControls* controls) :
+#include <QGridLayout>
+//#include <QGroupBox>
+#include <QHBoxLayout>
+//#include <QLayout>
+
+SplitGDXDialog::SplitGDXDialog(SplitGDXControls* controls) :
       EffectControlDialog(controls)
 {
+    setWindowIcon(PLUGIN_NAME::getIcon("logo"));
+
     setAutoFillBackground(true);
     QPalette pal;
     pal.setBrush(backgroundRole(), embed::getIconPixmap("plugin_bg"));
-    //pal.setBrush(backgroundRole(),PLUGIN_NAME::getIconPixmap("artwork"));
     setPalette(pal);
-    setContentsMargins(0, 0, 0, 0);
-    setMinimumWidth(265);
-    setMinimumHeight(632);
 
-    QVBoxLayout* vl = new QVBoxLayout(this);
+    QVBoxLayout* mainLOT = new QVBoxLayout(this);
+    mainLOT->setContentsMargins(0, 0, 0, 0);
+    mainLOT->setSpacing(0);
 
-    QGroupBox* splitGB = new QGroupBox(tr("Split"), this);
-    QGroupBox* wetGB   = new QGroupBox(tr("Wet"), this);
-    QGroupBox* remGB   = new QGroupBox(tr("Remainder"), this);
-    QGroupBox* mixGB   = new QGroupBox(tr("Mixing"), this);
+    EffectRackView* splitRV = new EffectRackView(
+            controls->m_effect->m_splitChain, this, tr("Split"));
+    EffectRackView* wetRV = new EffectRackView(controls->m_effect->m_wetChain,
+                                               this, tr("Wet"));
+    EffectRackView* remRV = new EffectRackView(controls->m_effect->m_remChain,
+                                               this, tr("Remainder"));
 
-    EffectRackView* splitRV
-            = new EffectRackView(controls->m_effect->m_splitChain, splitGB);
-    EffectRackView* wetRV
-            = new EffectRackView(controls->m_effect->m_wetChain, wetGB);
-    EffectRackView* remRV
-            = new EffectRackView(controls->m_effect->m_remChain, remGB);
+    // GroupBox* splitGB = new GroupBox(tr("Split"), this, false, true, true);
+    // GroupBox* wetGB   = new GroupBox(tr("Wet"), this, false, true, true);
+    // GroupBox* remGB   = new GroupBox(tr("Remainder"), this, false, true,
+    // true);
+    GroupBox* mixGB = new GroupBox(tr("Mixing"), this, false, false);
 
-    splitRV->setFixedSize(245, 152);
-    wetRV->setFixedSize(245, 152);
-    remRV->setFixedSize(245, 152);
+    // splitGB->setContentsMargins(5,5,5,5);
 
-    splitRV->move(1,21);
-    wetRV->move(1,21);
-    remRV->move(1,21);
+    QWidget*     mixPNL = new QWidget(mixGB);
+    QGridLayout* mixLOT = new QGridLayout(mixPNL);
+    mixLOT->setContentsMargins(3, 3, 3, 3);
+    mixLOT->setSpacing(3);
+    mixPNL->setLayout(mixLOT);
+    mixGB->setContentWidget(mixPNL);
 
-    splitGB->setContentsMargins(5,5,5,5);
+    Knob* splitKNB = new Knob(knobBright_26, mixPNL);
+    // splitKNB->move(7, 30);
+    splitKNB->setModel(&controls->m_splitModel);
+    splitKNB->setLabel(tr("SUBDRY"));
+    splitKNB->setHintText(tr("Sub dry:"), "");
 
-    Knob* splitKnob = new Knob(knobBright_26, mixGB);
-    splitKnob->move(7, 30);
-    splitKnob->setModel(&controls->m_splitModel);
-    splitKnob->setLabel(tr("SUBDRY"));
-    splitKnob->setHintText(tr("Sub dry:"), "");
+    Knob* wetKNB = new Knob(knobBright_26, mixPNL);
+    // wetKNB->move(47, 30);
+    wetKNB->setModel(&controls->m_wetModel);
+    wetKNB->setLabel(tr("SUBWET"));
+    wetKNB->setHintText(tr("Sub wet:"), "");
 
-    Knob* wetKnob = new Knob(knobBright_26, mixGB);
-    wetKnob->move(47, 30);
-    wetKnob->setModel(&controls->m_wetModel);
-    wetKnob->setLabel(tr("SUBWET"));
-    wetKnob->setHintText(tr("Sub wet:"), "");
+    Knob* remKNB = new Knob(knobBright_26, mixPNL);
+    // remKNB->move(87, 30);
+    remKNB->setModel(&controls->m_remModel);
+    remKNB->setLabel(tr("REMAIND"));
+    remKNB->setHintText(tr("Remainder:"), "");
 
-    Knob* remKnob = new Knob(knobBright_26, mixGB);
-    remKnob->move(87, 30);
-    remKnob->setModel(&controls->m_remModel);
-    remKnob->setLabel(tr("REMAIND"));
-    remKnob->setHintText(tr("Remainder:"), "");
+    mixLOT->addWidget(splitKNB, 0, 0, Qt::AlignHCenter | Qt::AlignTop);
+    mixLOT->addWidget(wetKNB, 0, 1, Qt::AlignHCenter | Qt::AlignTop);
+    mixLOT->addWidget(remKNB, 0, 2, Qt::AlignHCenter | Qt::AlignTop);
 
-    mixGB->setFixedHeight(75);
+    mixLOT->setColumnStretch(3, 1);
 
-    vl->addWidget(splitGB);
-    vl->addWidget(wetGB);
-    vl->addWidget(remGB);
-    vl->addWidget(mixGB);
+    mainLOT->addWidget(splitRV);
+    mainLOT->addWidget(wetRV);
+    mainLOT->addWidget(remRV);
+    mainLOT->addWidget(mixGB);
+
+    setFixedWidth(250);
+    setMinimumHeight(((sizeHint().height() - 1) / 50 + 1) * 50);
 }

@@ -247,7 +247,7 @@ InstrumentFunctionNoteStacking::ChordTable::Init
            {QT_TRANSLATE_NOOP("InstrumentFunctionNoteStacking", "Dorian"),
             {0, 2, 3, 5, 7, 9, 10, -1}},
            {QT_TRANSLATE_NOOP("InstrumentFunctionNoteStacking",
-                              "Phrygolydian"),
+                              "Phrygian"),
             {0, 1, 3, 5, 7, 8, 10, -1}},
            {QT_TRANSLATE_NOOP("InstrumentFunctionNoteStacking", "Lydian"),
             {0, 2, 4, 6, 7, 9, 11, -1}},

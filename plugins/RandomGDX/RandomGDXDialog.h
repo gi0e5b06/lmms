@@ -1,5 +1,5 @@
 /*
- * RandomGDXControlDialog.h -
+ * RandomGDXDialog.h -
  *
  * Copyright (c) 2017-2018 gi0e5b06 (on github.com)
  *
@@ -29,12 +29,12 @@
 
 class RandomGDXControls;
 
-class RandomGDXControlDialog : public EffectControlDialog
+class RandomGDXDialog : public EffectControlDialog
 {
     Q_OBJECT
   public:
-    RandomGDXControlDialog(RandomGDXControls* controls);
-    virtual ~RandomGDXControlDialog()
+    RandomGDXDialog(RandomGDXControls* controls);
+    virtual ~RandomGDXDialog()
     {
     }
 };

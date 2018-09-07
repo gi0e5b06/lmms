@@ -62,6 +62,7 @@
 
 // Qt
 #include <QComboBox>
+#include <QCheckBox>
 #include <QImageReader>
 #include <QLabel>
 #include <QLayout>
@@ -126,6 +127,7 @@ SetupDialog::SetupDialog( ConfigTabs _tab_to_open ) :
 	m_saveInterval(	ConfigManager::inst()->value( "ui", "saveinterval" ).toInt()<1 ?
                         MainWindow::DEFAULT_SAVE_INTERVAL_MINUTES :
 			ConfigManager::inst()->value( "ui", "saveinterval" ).toInt()),
+	m_mappedFiles( ConfigManager::inst()->value("disk","mappedfiles").toInt()),
 	m_oneInstrumentTrackWindow( ConfigManager::inst()->value
                                     ("ui","oneinstrumenttrackwindow" ).toInt()),
 	m_compactTrackButtons( ConfigManager::inst()->value
@@ -142,7 +144,7 @@ SetupDialog::SetupDialog( ConfigTabs _tab_to_open ) :
 	setWindowIcon( embed::getIconPixmap( "setup_general" ) );
 	setWindowTitle( tr( "Setup LMMS" ) );
 	setModal( true );
-	setFixedSize( 452, 520 );
+	setFixedSize( 452, 700 );//520 );
 
 	Engine::projectJournal()->setJournalling( false );
 
@@ -161,7 +163,7 @@ SetupDialog::SetupDialog( ConfigTabs _tab_to_open ) :
 	QWidget * ws = new QWidget( settings );
 	//ws->setAutoFillBackground(true);
 
-	int wsHeight = 370;
+	int wsHeight = 650; //370;
 #ifdef LMMS_HAVE_STK
 	wsHeight += 50;
 #endif
@@ -170,54 +172,61 @@ SetupDialog::SetupDialog( ConfigTabs _tab_to_open ) :
 #endif
 	ws->setFixedSize( 360, wsHeight );
 	QWidget * general = new QWidget( ws );
-	general->setFixedSize( 360, 240 );
+	//general->setFixedSize( 360, 240 );
 	QVBoxLayout * gen_layout = new QVBoxLayout( general );
 	gen_layout->setSpacing( 0 );
 	gen_layout->setMargin( 0 );
 	labelWidget( general, tr( "General settings" ) );
 
-	TabWidget * bufsize_tw = new TabWidget( tr( "BUFFER SIZE" ), general );
-	bufsize_tw->setFixedHeight( 80 );
+	const int XDelta = 10;
+	const int YDelta = 18;
+	const int HeaderSize = 10;
+	const int FooterSize = 0;
+	int labelNumber;
 
+        TabWidget * bufsize_tw = new TabWidget( tr( "BUFFER SIZE" ), general );
+	labelNumber=0;
+
+        labelNumber++;
+	m_bufSizeLbl = new QLabel( bufsize_tw );
+	m_bufSizeLbl->setGeometry( XDelta, YDelta*labelNumber, 350-XDelta, YDelta );
+
+        labelNumber++;
 	m_bufSizeSlider = new QSlider( Qt::Horizontal, bufsize_tw );
 	m_bufSizeSlider->setRange( 1, 256 );
 	m_bufSizeSlider->setTickPosition( QSlider::TicksBelow );
 	m_bufSizeSlider->setPageStep( 8 );
 	m_bufSizeSlider->setTickInterval( 8 );
-	m_bufSizeSlider->setGeometry( 10, 16, 340, 18 );
+	m_bufSizeSlider->setGeometry( XDelta, YDelta*labelNumber, 350-XDelta, YDelta );
 	m_bufSizeSlider->setValue( m_bufferSize / 64 );
-
 	connect( m_bufSizeSlider, SIGNAL( valueChanged( int ) ), this,
 						SLOT( setBufferSize( int ) ) );
-
-	m_bufSizeLbl = new QLabel( bufsize_tw );
-	m_bufSizeLbl->setGeometry( 10, 40, 200, 24 );
 	setBufferSize( m_bufSizeSlider->value() );
 
+        labelNumber++;
 	QPushButton * bufsize_reset_btn = new QPushButton(
 			embed::getIconPixmap( "reload" ), "", bufsize_tw );
-	bufsize_reset_btn->setGeometry( 290, 40, 28, 28 );
+	bufsize_reset_btn->setGeometry( 355-2*33, YDelta*labelNumber, 28, 28 );
 	connect( bufsize_reset_btn, SIGNAL( clicked() ), this,
 						SLOT( resetBufSize() ) );
 	ToolTip::add( bufsize_reset_btn, tr( "Reset to default-value" ) );
 
 	QPushButton * bufsize_help_btn = new QPushButton(
 			embed::getIconPixmap( "help" ), "", bufsize_tw );
-	bufsize_help_btn->setGeometry( 320, 40, 28, 28 );
+	bufsize_help_btn->setGeometry( 355-33, YDelta*labelNumber, 28, 28 );
 	connect( bufsize_help_btn, SIGNAL( clicked() ), this,
 						SLOT( displayBufSizeHelp() ) );
 
+        //labelNumber++;
+        bufsize_tw->setFixedHeight( YDelta*labelNumber + HeaderSize + FooterSize + 28);
 
-	TabWidget * misc_tw = new TabWidget( tr( "MISC" ), general );
-	const int XDelta = 10;
-	const int YDelta = 18;
-	const int HeaderSize = 30;
-	int labelNumber = 0;
+	TabWidget * ui_tw = new TabWidget( tr( "UI" ), general );
+        labelNumber = 0;
 
 
-	LedCheckBox * enable_tooltips = new LedCheckBox(
+	QCheckBox * enable_tooltips = new QCheckBox(
 							tr( "Enable tooltips" ),
-								misc_tw );
+								ui_tw );
 	labelNumber++;
 	enable_tooltips->move( XDelta, YDelta*labelNumber );
 	enable_tooltips->setChecked( m_toolTips );
@@ -225,18 +234,8 @@ SetupDialog::SetupDialog( ConfigTabs _tab_to_open ) :
 					this, SLOT( toggleToolTips( bool ) ) );
 
 
-	LedCheckBox * restart_msg = new LedCheckBox(
-			tr( "Show restart warning after changing settings" ),
-								misc_tw );
-	labelNumber++;
-	restart_msg->move( XDelta, YDelta*labelNumber );
-	restart_msg->setChecked( m_warnAfterSetup );
-	connect( restart_msg, SIGNAL( toggled( bool ) ),
-				this, SLOT( toggleWarnAfterSetup( bool ) ) );
-
-
-	LedCheckBox * dbfs = new LedCheckBox( tr( "Display volume as dBFS " ),
-								misc_tw );
+	QCheckBox * dbfs = new QCheckBox( tr( "Display volume as dBFS " ),
+								ui_tw );
 	labelNumber++;
 	dbfs->move( XDelta, YDelta*labelNumber );
 	dbfs->setChecked( m_displaydBFS );
@@ -244,103 +243,142 @@ SetupDialog::SetupDialog( ConfigTabs _tab_to_open ) :
 				this, SLOT( toggleDisplaydBFS( bool ) ) );
 
 
-	LedCheckBox * mmpz = new LedCheckBox(
-				tr( "Compress project files per default" ),
-								misc_tw );
-	labelNumber++;
-	mmpz->move( XDelta, YDelta*labelNumber );
-	mmpz->setChecked( m_MMPZ );
-	connect( mmpz, SIGNAL( toggled( bool ) ),
-					this, SLOT( toggleMMPZ( bool ) ) );
-
-	LedCheckBox * oneitw = new LedCheckBox(
-				tr( "One instrument track window mode" ),
-								misc_tw );
-	labelNumber++;
-	oneitw->move( XDelta, YDelta*labelNumber );
-	oneitw->setChecked( m_oneInstrumentTrackWindow );
-	connect( oneitw, SIGNAL( toggled( bool ) ),
-				this, SLOT( toggleOneInstrumentTrackWindow( bool ) ) );
-
-	LedCheckBox * hqaudio = new LedCheckBox(
-				tr( "HQ-mode for output audio-device" ),
-								misc_tw );
-	labelNumber++;
-	hqaudio->move( XDelta, YDelta*labelNumber );
-	hqaudio->setChecked( m_hqAudioDev );
-	connect( hqaudio, SIGNAL( toggled( bool ) ),
-				this, SLOT( toggleHQAudioDev( bool ) ) );
-
-	LedCheckBox * compacttracks = new LedCheckBox(
+	QCheckBox * compacttracks = new QCheckBox(
 				tr( "Compact track buttons" ),
-								misc_tw );
+								ui_tw );
 	labelNumber++;
 	compacttracks->move( XDelta, YDelta*labelNumber );
 	compacttracks->setChecked( m_compactTrackButtons );
 	connect( compacttracks, SIGNAL( toggled( bool ) ),
 				this, SLOT( toggleCompactTrackButtons( bool ) ) );
 
-
-	LedCheckBox * syncVST = new LedCheckBox(
-				tr( "Sync VST plugins to host playback" ),
-								misc_tw );
+	QCheckBox * oneitw = new QCheckBox(
+				tr( "One instrument track window mode" ),
+								ui_tw );
 	labelNumber++;
-	syncVST->move( XDelta, YDelta*labelNumber );
-	syncVST->setChecked( m_syncVSTPlugins );
-	connect( syncVST, SIGNAL( toggled( bool ) ),
-				this, SLOT( toggleSyncVSTPlugins( bool ) ) );
+	oneitw->move( XDelta, YDelta*labelNumber );
+	oneitw->setChecked( m_oneInstrumentTrackWindow );
+	connect( oneitw, SIGNAL( toggled( bool ) ),
+				this, SLOT( toggleOneInstrumentTrackWindow( bool ) ) );
 
-	LedCheckBox * noteLabels = new LedCheckBox(
+	QCheckBox * noteLabels = new QCheckBox(
 				tr( "Enable note labels in piano roll" ),
-								misc_tw );
+								ui_tw );
 	labelNumber++;
 	noteLabels->move( XDelta, YDelta*labelNumber );
 	noteLabels->setChecked( m_printNoteLabels );
 	connect( noteLabels, SIGNAL( toggled( bool ) ),
 				this, SLOT( toggleNoteLabels( bool ) ) );
 
-	LedCheckBox * displayWaveform = new LedCheckBox(
+	QCheckBox * displayWaveform = new QCheckBox(
 				tr( "Enable waveform display by default" ),
-								misc_tw );
+								ui_tw );
 	labelNumber++;
 	displayWaveform->move( XDelta, YDelta*labelNumber );
 	displayWaveform->setChecked( m_displayWaveform );
 	connect( displayWaveform, SIGNAL( toggled( bool ) ),
 				this, SLOT( toggleDisplayWaveform( bool ) ) );
 
-	LedCheckBox * disableAutoquit = new LedCheckBox(
+	QCheckBox * restart_msg = new QCheckBox(
+			tr( "Show restart warning after changing settings" ),
+								ui_tw );
+	labelNumber++;
+	restart_msg->move( XDelta, YDelta*labelNumber );
+	restart_msg->setChecked( m_warnAfterSetup );
+	connect( restart_msg, SIGNAL( toggled( bool ) ),
+				this, SLOT( toggleWarnAfterSetup( bool ) ) );
+
+	labelNumber++;
+	ui_tw->setFixedHeight( YDelta*labelNumber + HeaderSize + FooterSize );
+
+
+	TabWidget * audio_tw = new TabWidget( tr( "AUDIO" ), general );
+	//const int XDelta = 10;
+	//const int YDelta = 18;
+	//const int HeaderSize = 30;
+	//int
+        labelNumber = 0;
+
+
+	QCheckBox * hqaudio = new QCheckBox(
+				tr( "HQ-mode for output audio-device" ),
+								audio_tw );
+	labelNumber++;
+	hqaudio->move( XDelta, YDelta*labelNumber );
+	hqaudio->setChecked( m_hqAudioDev );
+	connect( hqaudio, SIGNAL( toggled( bool ) ),
+				this, SLOT( toggleHQAudioDev( bool ) ) );
+
+	QCheckBox * disableAutoquit = new QCheckBox(
 				tr( "Keep effects running even without input" ),
-								misc_tw );
+								audio_tw );
 	labelNumber++;
 	disableAutoquit->move( XDelta, YDelta*labelNumber );
 	disableAutoquit->setChecked( m_disableAutoQuit );
 	connect( disableAutoquit, SIGNAL( toggled( bool ) ),
 				this, SLOT( toggleDisableAutoquit( bool ) ) );
 
-	LedCheckBox * disableBackup = new LedCheckBox(
+	QCheckBox * syncVST = new QCheckBox(
+				tr( "Sync VST plugins to host playback" ),
+								audio_tw );
+	labelNumber++;
+	syncVST->move( XDelta, YDelta*labelNumber );
+	syncVST->setChecked( m_syncVSTPlugins );
+	connect( syncVST, SIGNAL( toggled( bool ) ),
+				this, SLOT( toggleSyncVSTPlugins( bool ) ) );
+
+	labelNumber++;
+	audio_tw->setFixedHeight( YDelta*labelNumber + HeaderSize + FooterSize );
+
+
+	TabWidget * disk_tw = new TabWidget( tr( "DISK" ), general );
+	//const int XDelta = 10;
+	//const int YDelta = 18;
+	//const int HeaderSize = 30;
+	//int
+        labelNumber = 0;
+
+
+	QCheckBox * disableBackup = new QCheckBox(
 				tr( "Create backup file when saving a project" ),
-								misc_tw );
+								disk_tw );
 	labelNumber++;
 	disableBackup->move( XDelta, YDelta*labelNumber );
 	disableBackup->setChecked( m_disableBackup );
 	connect( disableBackup, SIGNAL( toggled( bool ) ),
 				this, SLOT( toggleDisableBackup( bool ) ) );
 
-	LedCheckBox * openLastProject = new LedCheckBox(
+	QCheckBox * openLastProject = new QCheckBox(
 				tr( "Reopen last project on start" ),
-								misc_tw );
+								disk_tw );
 	labelNumber++;
 	openLastProject->move( XDelta, YDelta*labelNumber );
 	openLastProject->setChecked( m_openLastProject );
 	connect( openLastProject, SIGNAL( toggled( bool ) ),
 				this, SLOT( toggleOpenLastProject( bool ) ) );
 
-	misc_tw->setFixedHeight( YDelta*labelNumber + HeaderSize );
+	QCheckBox * mmpz = new QCheckBox(
+				tr( "Compress project files per default" ),
+								disk_tw );
+	labelNumber++;
+	mmpz->move( XDelta, YDelta*labelNumber );
+	mmpz->setChecked( m_MMPZ );
+	connect( mmpz, SIGNAL( toggled( bool ) ),
+					this, SLOT( toggleMMPZ( bool ) ) );
+
+	labelNumber++;
+	disk_tw->setFixedHeight( YDelta*labelNumber + HeaderSize + FooterSize );
+
 
 	TabWidget * lang_tw = new TabWidget( tr( "LANGUAGE" ), general );
-	lang_tw->setFixedHeight( 48 );
+        labelNumber = 0;
+
+        labelNumber++;
 	QComboBox * changeLang = new QComboBox( lang_tw );
-	changeLang->move( XDelta, YDelta );
+	changeLang->setGeometry( XDelta, YDelta, 250, YDelta );
+
+	labelNumber++;
+	lang_tw->setFixedHeight( YDelta*labelNumber + HeaderSize + FooterSize );
 
 	QDir dir( ConfigManager::inst()->localeDir() );
 	QStringList fileNames = dir.entryList( QStringList( "*.qm" ) );
@@ -380,7 +418,11 @@ SetupDialog::SetupDialog( ConfigTabs _tab_to_open ) :
 
 	gen_layout->addWidget( bufsize_tw );
 	gen_layout->addSpacing( 10 );
-	gen_layout->addWidget( misc_tw );
+	gen_layout->addWidget( ui_tw );
+	gen_layout->addSpacing( 10 );
+	gen_layout->addWidget( audio_tw );
+	gen_layout->addSpacing( 10 );
+	gen_layout->addWidget( disk_tw );
 	gen_layout->addSpacing( 10 );
 	gen_layout->addWidget( lang_tw );
 	gen_layout->addStretch();
@@ -390,25 +432,21 @@ SetupDialog::SetupDialog( ConfigTabs _tab_to_open ) :
 	QWidget * paths = new QWidget( ws );
 	//paths->setAutoFillBackground(true);
 
-	int pathsHeight = 370;
+	int pathsHeight = 14*YDelta;
 #ifdef LMMS_HAVE_STK
-	pathsHeight += 55;
+	pathsHeight += 3*YDelta;
 #endif
 #ifdef LMMS_HAVE_FLUIDSYNTH
-	pathsHeight += 55;
+	pathsHeight += 3*YDelta;
 #endif
 	paths->setFixedSize( 360, pathsHeight );
-	QVBoxLayout * dir_layout = new QVBoxLayout( paths );
+
+	/*
+        QVBoxLayout * dir_layout = new QVBoxLayout( paths );
 	dir_layout->setSpacing( 0 );
 	dir_layout->setMargin( 0 );
 	//labelWidget( paths, tr( "Paths" ) );
 	labelWidget( paths, tr( "Directories" ) );
-	/*
-	QLabel * title = new QLabel( tr( "Directories" ), paths );
-	QFont f = title->font();
-	f.setBold( true );
-	title->setFont( pointSize<12>( f ) );
-	*/
 
 	QScrollArea *pathScroll = new QScrollArea( paths );
 
@@ -419,191 +457,244 @@ SetupDialog::SetupDialog( ConfigTabs _tab_to_open ) :
 	pathScroll->resize( 360, pathsHeight - 50  );//362
 	pathScroll->move( 0, 30 );
 	//pathSelectors->resize( 360, pathsHeight - 50 );
+        */
 
-	const int txtLength = 285;//284;
-	const int btnStart = 297;
+	const int txtLength = 310;
+	const int btnStart = 330;
 
+        labelNumber=0;
 
 	// working-dir
+        /*
 	TabWidget * lmms_wd_tw = new TabWidget( tr(
 					"LMMS working directory" ).toUpper(),
 								pathSelectors );
 	lmms_wd_tw->setFixedHeight( 48 );
-
-	m_wdLineEdit = new QLineEdit( m_workingDir, lmms_wd_tw );
-	m_wdLineEdit->setGeometry( 10, 20, txtLength, 16 );
+        */
+        labelNumber++;
+        QLabel * lmms_wd_tw = new QLabel( tr( "LMMS working directory" ), paths );
+        lmms_wd_tw->setGeometry( XDelta, YDelta*labelNumber, txtLength, YDelta );
+        labelNumber++;
+	m_wdLineEdit = new QLineEdit( m_workingDir, paths );
+	m_wdLineEdit->setGeometry( XDelta, YDelta*labelNumber, txtLength, YDelta );
 	connect( m_wdLineEdit, SIGNAL( textChanged( const QString & ) ), this,
 				SLOT( setWorkingDir( const QString & ) ) );
 
 	QPushButton * workingdir_select_btn = new QPushButton(
 				embed::getIconPixmap( "project_open", 16, 16 ),
-							"", lmms_wd_tw );
-	workingdir_select_btn->setFixedSize( 24, 24 );
-	workingdir_select_btn->move( btnStart, 16 );
+							"", paths );
+	workingdir_select_btn->setFixedSize( 28, 28 );
+	workingdir_select_btn->move( btnStart, YDelta*labelNumber-YDelta );
 	connect( workingdir_select_btn, SIGNAL( clicked() ), this,
 						SLOT( openWorkingDir() ) );
 
 
 	// artwork-dir
+        /*
 	TabWidget * artwork_tw = new TabWidget( tr(
 					"Themes directory" ).toUpper(),
 								pathSelectors );
 	artwork_tw->setFixedHeight( 48 );
-
-	m_adLineEdit = new QLineEdit( m_artworkDir, artwork_tw );
-	m_adLineEdit->setGeometry( 10, 20, txtLength, 16 );
+        */
+        labelNumber++;
+        labelNumber++;
+	QLabel * artwork_tw = new QLabel( tr( "Themes directory" ), paths);
+	artwork_tw->setGeometry( XDelta, YDelta*labelNumber, txtLength, YDelta );
+        labelNumber++;
+	m_adLineEdit = new QLineEdit( m_artworkDir, paths );
+	m_adLineEdit->setGeometry( XDelta, YDelta*labelNumber, txtLength, YDelta );
 	connect( m_adLineEdit, SIGNAL( textChanged( const QString & ) ), this,
 				SLOT( setArtworkDir( const QString & ) ) );
 
 	QPushButton * artworkdir_select_btn = new QPushButton(
 				embed::getIconPixmap( "project_open", 16, 16 ),
-							"", artwork_tw );
-	artworkdir_select_btn->setFixedSize( 24, 24 );
-	artworkdir_select_btn->move( btnStart, 16 );
+							"", paths );
+	artworkdir_select_btn->setFixedSize( 28, 28 );
+	artworkdir_select_btn->move( btnStart, YDelta*labelNumber-YDelta );
 	connect( artworkdir_select_btn, SIGNAL( clicked() ), this,
 						SLOT( openArtworkDir() ) );
 
 
-
 	// background artwork file
+        /*
 	TabWidget * backgroundArtwork_tw = new TabWidget( tr(
 							     "Background artwork" ).toUpper(), pathSelectors );//paths
 	backgroundArtwork_tw->setFixedHeight( 48 );
-
-	m_baLineEdit = new QLineEdit( m_backgroundArtwork, 
-			backgroundArtwork_tw );
-	m_baLineEdit->setGeometry( 10, 20, txtLength, 16 );
+        */
+        labelNumber++;
+        labelNumber++;
+	QLabel * backgroundArtwork_tw = new QLabel( tr( "Background artwork" ), paths );
+	backgroundArtwork_tw->setGeometry( XDelta, YDelta*labelNumber, txtLength, YDelta );
+        labelNumber++;
+	m_baLineEdit = new QLineEdit( m_backgroundArtwork, paths);
+	m_baLineEdit->setGeometry( XDelta, YDelta*labelNumber, txtLength, YDelta );
 	connect( m_baLineEdit, SIGNAL( textChanged( const QString & ) ), this,
 			SLOT( setBackgroundArtwork( const QString & ) ) );
 
 	QPushButton * backgroundartworkdir_select_btn = new QPushButton(
 			embed::getIconPixmap( "project_open", 16, 16 ),
-			"", backgroundArtwork_tw );
-	backgroundartworkdir_select_btn->setFixedSize( 24, 24 );
-	backgroundartworkdir_select_btn->move( btnStart, 16 );
+			"", paths );
+	backgroundartworkdir_select_btn->setFixedSize( 28, 28 );
+	backgroundartworkdir_select_btn->move( btnStart, YDelta*labelNumber-YDelta );
 	connect( backgroundartworkdir_select_btn, SIGNAL( clicked() ), this,
 					SLOT( openBackgroundArtwork() ) );
 
 	// vst-dir
+        /*
 	TabWidget * vst_tw = new TabWidget( tr(
 					"VST-plugin directory" ).toUpper(),
 								pathSelectors );
 	vst_tw->setFixedHeight( 48 );
-
-	m_vdLineEdit = new QLineEdit( m_vstDir, vst_tw );
-	m_vdLineEdit->setGeometry( 10, 20, txtLength, 16 );
+        */
+        labelNumber++;
+        labelNumber++;
+	QLabel * vst_tw = new QLabel( tr("VST-plugin directory"),paths);
+	vst_tw->setGeometry( XDelta, YDelta*labelNumber, txtLength, YDelta );
+        labelNumber++;
+	m_vdLineEdit = new QLineEdit( m_vstDir, paths );
+	m_vdLineEdit->setGeometry( XDelta, YDelta*labelNumber, txtLength, YDelta );
 	connect( m_vdLineEdit, SIGNAL( textChanged( const QString & ) ), this,
 					SLOT( setVSTDir( const QString & ) ) );
 
 	QPushButton * vstdir_select_btn = new QPushButton(
 				embed::getIconPixmap( "project_open", 16, 16 ),
-								"", vst_tw );
-	vstdir_select_btn->setFixedSize( 24, 24 );
-	vstdir_select_btn->move( btnStart, 16 );
+								"", paths );
+	vstdir_select_btn->setFixedSize( 28, 28 );
+	vstdir_select_btn->move( btnStart, YDelta*labelNumber-YDelta );
 	connect( vstdir_select_btn, SIGNAL( clicked() ), this,
 						SLOT( openVSTDir() ) );
 
 	// gig-dir
+        /*
 	TabWidget * gig_tw = new TabWidget( tr(
 					"GIG directory" ).toUpper(),
 								pathSelectors );
 	gig_tw->setFixedHeight( 48 );
-
-	m_gigLineEdit = new QLineEdit( m_gigDir, gig_tw );
-	m_gigLineEdit->setGeometry( 10, 20, txtLength, 16 );
+        */
+        labelNumber++;
+        labelNumber++;
+	QLabel * gig_tw = new QLabel( tr("GIG directory"),paths);
+	gig_tw->setGeometry( XDelta, YDelta*labelNumber, txtLength, YDelta );
+        labelNumber++;
+	m_gigLineEdit = new QLineEdit( m_gigDir, paths);
+	m_gigLineEdit->setGeometry( XDelta, YDelta*labelNumber, txtLength, YDelta );
 	connect( m_gigLineEdit, SIGNAL( textChanged( const QString & ) ), this,
 					SLOT( setGIGDir( const QString & ) ) );
 
 	QPushButton * gigdir_select_btn = new QPushButton(
 				embed::getIconPixmap( "project_open", 16, 16 ),
-								"", gig_tw );
-	gigdir_select_btn->setFixedSize( 24, 24 );
-	gigdir_select_btn->move( btnStart, 16 );
+								"", paths );
+	gigdir_select_btn->setFixedSize( 28, 28 );
+	gigdir_select_btn->move( btnStart, YDelta*labelNumber-YDelta );
 	connect( gigdir_select_btn, SIGNAL( clicked() ), this,
 						SLOT( openGIGDir() ) );
 
 	// sf2-dir
+        /*
 	TabWidget * sf2_tw = new TabWidget( tr(
 					"SF2 directory" ).toUpper(),
 								pathSelectors );
 	sf2_tw->setFixedHeight( 48 );
-
-	m_sf2LineEdit = new QLineEdit( m_sf2Dir, sf2_tw );
-	m_sf2LineEdit->setGeometry( 10, 20, txtLength, 16 );
+        */
+        labelNumber++;
+	QLabel * sf2_tw = new QLabel( tr("SF2 directory"),paths);
+	sf2_tw->setGeometry( XDelta, YDelta*labelNumber, txtLength, YDelta );
+        labelNumber++;
+	m_sf2LineEdit = new QLineEdit( m_sf2Dir, paths );
+	m_sf2LineEdit->setGeometry( XDelta, YDelta*labelNumber, txtLength, YDelta );
 	connect( m_sf2LineEdit, SIGNAL( textChanged( const QString & ) ), this,
 					SLOT( setSF2Dir( const QString & ) ) );
 
 	QPushButton * sf2dir_select_btn = new QPushButton(
 				embed::getIconPixmap( "project_open", 16, 16 ),
-								"", sf2_tw );
-	sf2dir_select_btn->setFixedSize( 24, 24 );
-	sf2dir_select_btn->move( btnStart, 16 );
+								"", paths );
+	sf2dir_select_btn->setFixedSize( 28, 28 );
+	sf2dir_select_btn->move( btnStart, YDelta*labelNumber-YDelta );
 	connect( sf2dir_select_btn, SIGNAL( clicked() ), this,
 						SLOT( openSF2Dir() ) );
 
 
 
 	// LADSPA-dir
+        /*
 	TabWidget * lad_tw = new TabWidget( tr(
 			"LADSPA plugin directories" ).toUpper(),
 							pathSelectors );
 	lad_tw->setFixedHeight( 48 );
-
-	m_ladLineEdit = new QLineEdit( m_ladDir, lad_tw );
-	m_ladLineEdit->setGeometry( 10, 20, txtLength, 16 );
+        */
+        labelNumber++;
+        labelNumber++;
+	QLabel * lad_tw = new QLabel( tr("LADSPA plugin directories"),paths);
+	lad_tw->setGeometry( XDelta, YDelta*labelNumber, txtLength, YDelta );
+        labelNumber++;
+	m_ladLineEdit = new QLineEdit( m_ladDir, paths );
+	m_ladLineEdit->setGeometry( XDelta, YDelta*labelNumber, txtLength, YDelta );
 	connect( m_ladLineEdit, SIGNAL( textChanged( const QString & ) ), this,
 		 		SLOT( setLADSPADir( const QString & ) ) );
 
 	QPushButton * laddir_select_btn = new QPushButton(
 				embed::getIconPixmap( "add_folder", 16, 16 ),
-								"", lad_tw );
-	laddir_select_btn->setFixedSize( 24, 24 );
-	laddir_select_btn->move( btnStart, 16 );
+								"", paths );
+	laddir_select_btn->setFixedSize( 28, 28 );
+	laddir_select_btn->move( btnStart, YDelta*labelNumber-YDelta );
 	connect( laddir_select_btn, SIGNAL( clicked() ), this,
 				 		SLOT( openLADSPADir() ) );
 
 
 #ifdef LMMS_HAVE_STK
 	// STK-dir
+        /*
 	TabWidget * stk_tw = new TabWidget( tr(
 			"STK rawwave directory" ).toUpper(),
 							pathSelectors );
 	stk_tw->setFixedHeight( 48 );
-
-	m_stkLineEdit = new QLineEdit( m_stkDir, stk_tw );
-	m_stkLineEdit->setGeometry( 10, 20, txtLength, 16 );
+        */
+        labelNumber++;
+        labelNumber++;
+	QLabel * stk_tw = new QLabel( tr("STK rawwave directory"),paths);
+	stk_tw->setGeometry( XDelta, YDelta*labelNumber, txtLength, YDelta );
+        labelNumber++;
+	m_stkLineEdit = new QLineEdit( m_stkDir, paths );
+	m_stkLineEdit->setGeometry( XDelta, YDelta*labelNumber, txtLength, YDelta );
 	connect( m_stkLineEdit, SIGNAL( textChanged( const QString & ) ), this,
 		 SLOT( setSTKDir( const QString & ) ) );
 
 	QPushButton * stkdir_select_btn = new QPushButton(
 			embed::getIconPixmap( "project_open", 16, 16 ),
-								"", stk_tw );
-	stkdir_select_btn->setFixedSize( 24, 24 );
-	stkdir_select_btn->move( btnStart, 16 );
+								"", paths );
+	stkdir_select_btn->setFixedSize( 28, 28 );
+	stkdir_select_btn->move( btnStart, YDelta*labelNumber-YDelta );
 	connect( stkdir_select_btn, SIGNAL( clicked() ), this,
 		 SLOT( openSTKDir() ) );
 #endif
 
 #ifdef LMMS_HAVE_FLUIDSYNTH
 	// Soundfont
+        /*
 	TabWidget * sf_tw = new TabWidget( tr(
 			"Default Soundfont File" ).toUpper(), pathSelectors );
 	sf_tw->setFixedHeight( 48 );
-
-	m_sfLineEdit = new QLineEdit( m_defaultSoundfont, sf_tw );
-	m_sfLineEdit->setGeometry( 10, 20, txtLength, 16 );
+        */
+        labelNumber++;
+        labelNumber++;
+	QLabel * sf_tw = new QLabel( tr("Default Soundfont File"),paths);
+	sf_tw->setGeometry( XDelta, YDelta*labelNumber, txtLength, YDelta );
+        labelNumber++;
+	m_sfLineEdit = new QLineEdit( m_defaultSoundfont, paths );
+	m_sfLineEdit->setGeometry( XDelta, YDelta*labelNumber, txtLength, YDelta );
 	connect( m_sfLineEdit, SIGNAL( textChanged( const QString & ) ), this,
 		 		SLOT( setDefaultSoundfont( const QString & ) ) );
 
 	QPushButton * sf_select_btn = new QPushButton(
 				embed::getIconPixmap( "project_open", 16, 16 ),
-								"", sf_tw );
-	sf_select_btn->setFixedSize( 24, 24 );
-	sf_select_btn->move( btnStart, 16 );
+								"", paths );
+	sf_select_btn->setFixedSize( 28, 28 );
+	sf_select_btn->move( btnStart, YDelta*labelNumber-YDelta );
 	connect( sf_select_btn, SIGNAL( clicked() ), this,
 				 		SLOT( openDefaultSoundfont() ) );
 #endif
 
+        /*
 	pathSelectors->setLayout( pathSelectorLayout );
 
 	pathSelectorLayout->addWidget( lmms_wd_tw );
@@ -634,8 +725,7 @@ SetupDialog::SetupDialog( ConfigTabs _tab_to_open ) :
 
 	pathScroll->setWidget( pathSelectors );
 	pathScroll->setWidgetResizable( true );
-
-
+        */
 
 	QWidget * performance = new QWidget( ws );
 	performance->setFixedSize( 360, 200 );
@@ -647,110 +737,135 @@ SetupDialog::SetupDialog( ConfigTabs _tab_to_open ) :
 
 	TabWidget * auto_save_tw = new TabWidget(
 			tr( "Auto save" ).toUpper(), performance );
-	auto_save_tw->setFixedHeight( 110 );
+        labelNumber = 0;
 
+        labelNumber++;
+	m_saveIntervalLbl = new QLabel( auto_save_tw );
+	m_saveIntervalLbl->setGeometry( XDelta, YDelta*labelNumber, 350-XDelta, YDelta );
+
+        labelNumber++;
 	m_saveIntervalSlider = new QSlider( Qt::Horizontal, auto_save_tw );
 	m_saveIntervalSlider->setRange( 1, 20 );
 	m_saveIntervalSlider->setTickPosition( QSlider::TicksBelow );
 	m_saveIntervalSlider->setPageStep( 1 );
 	m_saveIntervalSlider->setTickInterval( 1 );
-	m_saveIntervalSlider->setGeometry( 10, 16, 340, 18 );
+	m_saveIntervalSlider->setGeometry( XDelta, YDelta*labelNumber, 350-XDelta, YDelta );
 	m_saveIntervalSlider->setValue( m_saveInterval );
-
 	connect( m_saveIntervalSlider, SIGNAL( valueChanged( int ) ), this,
 						SLOT( setAutoSaveInterval( int ) ) );
-
-	m_saveIntervalLbl = new QLabel( auto_save_tw );
-	m_saveIntervalLbl->setGeometry( 10, 40, 200, 24 );
 	setAutoSaveInterval( m_saveIntervalSlider->value() );
 
-	m_autoSave = new LedCheckBox(
+        labelNumber++;
+	m_autoSave = new QCheckBox(
 			tr( "Enable auto-save" ), auto_save_tw );
-	m_autoSave->move( 10, 70 );
+	m_autoSave->move( XDelta, YDelta*labelNumber );
 	m_autoSave->setChecked( m_enableAutoSave );
 	connect( m_autoSave, SIGNAL( toggled( bool ) ),
 				this, SLOT( toggleAutoSave( bool ) ) );
 
-	m_runningAutoSave = new LedCheckBox(
+        labelNumber++;
+	m_runningAutoSave = new QCheckBox(
 			tr( "Allow auto-save while playing" ), auto_save_tw );
-	m_runningAutoSave->move( 20, 90 );
+	m_runningAutoSave->move( 2*XDelta, YDelta*labelNumber );
 	m_runningAutoSave->setChecked( m_enableRunningAutoSave );
 	connect( m_runningAutoSave, SIGNAL( toggled( bool ) ),
 				this, SLOT( toggleRunningAutoSave( bool ) ) );
 
 	QPushButton * autoSaveResetBtn = new QPushButton(
 			embed::getIconPixmap( "reload" ), "", auto_save_tw );
-	autoSaveResetBtn->setGeometry( 290, 70, 28, 28 );
+	autoSaveResetBtn->setGeometry( 355-2*33, YDelta*labelNumber, 28, 28 );
 	connect( autoSaveResetBtn, SIGNAL( clicked() ), this,
 						SLOT( resetAutoSave() ) );
 	ToolTip::add( autoSaveResetBtn, tr( "Reset to default-value" ) );
 
 	QPushButton * saveIntervalBtn = new QPushButton(
 			embed::getIconPixmap( "help" ), "", auto_save_tw );
-	saveIntervalBtn->setGeometry( 320, 70, 28, 28 );
+	saveIntervalBtn->setGeometry( 355-33, YDelta*labelNumber, 28, 28 );
 	connect( saveIntervalBtn, SIGNAL( clicked() ), this,
 						SLOT( displaySaveIntervalHelp() ) );
 
 	m_saveIntervalSlider->setEnabled( m_enableAutoSave );
 	m_runningAutoSave->setVisible( m_enableAutoSave );
 
+        //labelNumber++;
+	auto_save_tw->setFixedHeight( YDelta*labelNumber + HeaderSize + FooterSize +28);
 
-	perf_layout->addWidget( auto_save_tw );
-	perf_layout->addSpacing( 10 );
 
+	TabWidget * ui_perf_tw = new TabWidget( tr("UI"), performance);
+        //tr( "UI effects vs. performance" ).toUpper(), performance );
+        labelNumber = 0;
 
-	TabWidget * ui_fx_tw = new TabWidget( tr( "UI effects vs. "
-						"performance" ).toUpper(),
-								performance );
-	ui_fx_tw->setFixedHeight( 70 );
-
-	LedCheckBox * smoothScroll = new LedCheckBox(
-			tr( "Smooth scroll in Song Editor" ), ui_fx_tw );
-	smoothScroll->move( 10, 20 );
+        labelNumber++;
+	QCheckBox * smoothScroll = new QCheckBox(
+			tr( "Smooth scroll in Song Editor" ), ui_perf_tw );
+	smoothScroll->move( XDelta, YDelta*labelNumber );
 	smoothScroll->setChecked( m_smoothScroll );
 	connect( smoothScroll, SIGNAL( toggled( bool ) ),
 				this, SLOT( toggleSmoothScroll( bool ) ) );
 
-	LedCheckBox * animAFP = new LedCheckBox(
+        labelNumber++;
+	QCheckBox * animAFP = new QCheckBox(
 				tr( "Show playback cursor in AudioFileProcessor" ),
-								ui_fx_tw );
-	animAFP->move( 10, 40 );
+								ui_perf_tw );
+	animAFP->move( XDelta, YDelta*labelNumber );
 	animAFP->setChecked( m_animateAFP );
 	connect( animAFP, SIGNAL( toggled( bool ) ),
 				this, SLOT( toggleAnimateAFP( bool ) ) );
 
+        labelNumber++;
+	ui_perf_tw->setFixedHeight( YDelta*labelNumber + HeaderSize  + FooterSize);
 
 
-	perf_layout->addWidget( ui_fx_tw );
+	TabWidget * disk_perf_tw = new TabWidget( tr("DISK"), performance);
+        //tr( "UI effects vs. performance" ).toUpper(), performance );
+        labelNumber = 0;
+
+        labelNumber++;
+	QCheckBox * mappedFiles = new QCheckBox(
+			tr( "Mapped sample files" ), disk_perf_tw );
+	mappedFiles->move( XDelta, YDelta*labelNumber );
+	mappedFiles->setChecked( m_mappedFiles );
+	connect( mappedFiles, SIGNAL( toggled( bool ) ),
+				this, SLOT( toggleMappedFiles( bool ) ) );
+
+        labelNumber++;
+	disk_perf_tw->setFixedHeight( YDelta*labelNumber + HeaderSize + FooterSize);
+
+
+	perf_layout->addWidget( auto_save_tw );
+	perf_layout->addSpacing( 10 );
+	perf_layout->addWidget( ui_perf_tw );
+	perf_layout->addSpacing( 10 );
+	perf_layout->addWidget( disk_perf_tw );
 	perf_layout->addStretch();
 
 
 
 	QWidget * audio = new QWidget( ws );
-	audio->setFixedSize( 360, 200 );
+	//audio->setFixedSize( 360, 200 );
+        audio->setFixedWidth( 360 );
 	QVBoxLayout * audio_layout = new QVBoxLayout( audio );
 	audio_layout->setSpacing( 0 );
 	audio_layout->setMargin( 0 );
 	labelWidget( audio, tr( "Audio settings" ) );
 
-	TabWidget * audioiface_tw = new TabWidget( tr( "AUDIO INTERFACE" ),
-									audio );
-	audioiface_tw->setFixedHeight( 60 );
+	TabWidget * audioiface_tw = new TabWidget( tr( "AUDIO INTERFACE" ), audio );
+	audioiface_tw->setFixedHeight( 3*YDelta + HeaderSize + FooterSize );
 
 	m_audioInterfaces = new QComboBox( audioiface_tw );
-	m_audioInterfaces->setGeometry( 10, 20, 240, 22 );
+	m_audioInterfaces->setGeometry( XDelta, YDelta, 305, YDelta );
 
 
 	QPushButton * audio_help_btn = new QPushButton(
 			embed::getIconPixmap( "help" ), "", audioiface_tw );
-	audio_help_btn->setGeometry( 320, 20, 28, 28 );
+	audio_help_btn->setGeometry( 325, YDelta, 28, 28 );
 	connect( audio_help_btn, SIGNAL( clicked() ), this,
 						SLOT( displayAudioHelp() ) );
 
 
 	// create ifaces-settings-widget
 	QWidget * asw = new QWidget( audio );
-	asw->setFixedHeight( 60 );
+	asw->setFixedHeight(3*YDelta + HeaderSize + FooterSize );
 
 	QHBoxLayout * asw_layout = new QHBoxLayout( asw );
 	asw_layout->setSpacing( 0 );
@@ -832,7 +947,7 @@ SetupDialog::SetupDialog( ConfigTabs _tab_to_open ) :
 
 
 	audio_layout->addWidget( audioiface_tw );
-	audio_layout->addSpacing( 20 );
+	audio_layout->addSpacing( 10 );
 	audio_layout->addWidget( asw );
 	audio_layout->addStretch();
 
@@ -844,24 +959,23 @@ SetupDialog::SetupDialog( ConfigTabs _tab_to_open ) :
 	midi_layout->setMargin( 0 );
 	labelWidget( midi, tr( "MIDI settings" ) );
 
-	TabWidget * midiiface_tw = new TabWidget( tr( "MIDI INTERFACE" ),
-									midi );
-	midiiface_tw->setFixedHeight( 60 );
+	TabWidget * midiiface_tw = new TabWidget( tr( "MIDI INTERFACE" ), midi );
+	midiiface_tw->setFixedHeight( 3*YDelta + HeaderSize + FooterSize );
 
 	m_midiInterfaces = new QComboBox( midiiface_tw );
-	m_midiInterfaces->setGeometry( 10, 20, 240, 22 );
+	m_midiInterfaces->setGeometry( XDelta, YDelta, 305, YDelta );
 
 
 	QPushButton * midi_help_btn = new QPushButton(
 			embed::getIconPixmap( "help" ), "", midiiface_tw );
-	midi_help_btn->setGeometry( 320, 20, 28, 28 );
+	midi_help_btn->setGeometry( 325, YDelta, 28, 28 );
 	connect( midi_help_btn, SIGNAL( clicked() ), this,
 						SLOT( displayMIDIHelp() ) );
 
 
 	// create ifaces-settings-widget
 	QWidget * msw = new QWidget( midi );
-	msw->setFixedHeight( 60 );
+	msw->setFixedHeight( 3*YDelta + HeaderSize + FooterSize );
 
 	QHBoxLayout * msw_layout = new QHBoxLayout( msw );
 	msw_layout->setSpacing( 0 );
@@ -1054,6 +1168,8 @@ void SetupDialog::accept()
 					QString::number( m_disableAutoQuit ) );
 	ConfigManager::inst()->setValue( "app", "language", m_lang );
 
+	ConfigManager::inst()->setValue( "disk", "mappedfiles",
+					QString::number( m_mappedFiles ) );
 
 	ConfigManager::inst()->setWorkingDir(QDir::fromNativeSeparators(m_workingDir));
 	ConfigManager::inst()->setVSTDir(QDir::fromNativeSeparators(m_vstDir));
@@ -1066,7 +1182,7 @@ void SetupDialog::accept()
 #endif
 #ifdef LMMS_HAVE_STK
 	ConfigManager::inst()->setSTKDir(QDir::fromNativeSeparators(m_stkDir));
-#endif	
+#endif
 	ConfigManager::inst()->setBackgroundArtwork( m_backgroundArtwork );
 
 	// tell all audio-settings-widget to save their settings
@@ -1280,9 +1396,16 @@ void SetupDialog::toggleOneInstrumentTrackWindow( bool _enabled )
 	m_oneInstrumentTrackWindow = _enabled;
 }
 
+
 void SetupDialog::setLanguage( int lang )
 {
 	m_lang = m_languages[lang];
+}
+
+
+void SetupDialog::toggleMappedFiles( bool _enabled )
+{
+	m_mappedFiles = _enabled;
 }
 
 

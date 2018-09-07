@@ -54,8 +54,10 @@ public:
 
 	void appendEffect( Effect * _effect );
 	void removeEffect( Effect * _effect );
-	void moveDown( Effect * _effect );
 	void moveUp( Effect * _effect );
+	void moveDown( Effect * _effect );
+	void moveTop( Effect * _effect );
+	void moveBottom( Effect * _effect );
 	bool processAudioBuffer( sampleFrame * _buf, const fpp_t _frames, bool hasInputNoise );
 	void startRunning();
 

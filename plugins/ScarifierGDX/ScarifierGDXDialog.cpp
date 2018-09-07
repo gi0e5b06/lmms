@@ -37,20 +37,21 @@
 ScarifierGDXDialog::ScarifierGDXDialog(ScarifierGDXControls* controls) :
       EffectControlDialog(controls)
 {
+    setWindowIcon(PLUGIN_NAME::getIcon("logo"));
+
     setAutoFillBackground(true);
     QPalette pal;
     pal.setBrush(backgroundRole(), embed::getIconPixmap("plugin_bg"));
-    // pal.setBrush(backgroundRole(),PLUGIN_NAME::getIconPixmap("artwork"));
     setPalette(pal);
 
     QGridLayout* mainLayout = new QGridLayout(this);
     mainLayout->setContentsMargins(6, 6, 6, 6);
-    mainLayout->setColumnStretch(3, 1);
     mainLayout->setHorizontalSpacing(6);
     mainLayout->setVerticalSpacing(6);
 
     ComboBox* modeCBX = new ComboBox(this);
     modeCBX->setModel(&controls->m_modeModel);
+    modeCBX->setMinimumSize(3 * 26 + 6, 26);
 
     Knob* widthKNB = new Knob(this);
     widthKNB->setModel(&controls->m_widthModel);
@@ -68,12 +69,16 @@ ScarifierGDXDialog::ScarifierGDXDialog(ScarifierGDXControls* controls) :
     ampKNB->setPointColor(Qt::red);
 
     mainLayout->addWidget(modeCBX, 0, 0, 1, 3,
-                          Qt::AlignBottom);// | Qt::AlignHCenter);
-    mainLayout->addWidget(widthKNB, 1, 0, Qt::AlignBottom | Qt::AlignHCenter);
-    mainLayout->addWidget(keyKNB, 1, 1, Qt::AlignBottom | Qt::AlignHCenter);
-    mainLayout->addWidget(ampKNB, 1, 2, Qt::AlignBottom | Qt::AlignHCenter);
+                          Qt::AlignTop);  // | Qt::AlignHCenter);
+    mainLayout->addWidget(widthKNB, 0, 3, Qt::AlignBottom | Qt::AlignHCenter);
+    mainLayout->addWidget(keyKNB, 0, 4, Qt::AlignBottom | Qt::AlignHCenter);
+    mainLayout->addWidget(ampKNB, 0, 5, Qt::AlignBottom | Qt::AlignHCenter);
 
-    setFixedWidth(234);
+    mainLayout->setColumnStretch(6, 1);
+    mainLayout->setRowStretch(1, 1);
+
+    setFixedWidth(250);
+    // setMinimumHeight(((sizeHint().height() - 1) / 50 + 1) * 50);
 }
 
 ScarifierGDXDialog::~ScarifierGDXDialog()

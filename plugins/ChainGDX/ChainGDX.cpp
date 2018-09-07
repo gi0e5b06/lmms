@@ -51,6 +51,7 @@ ChainGDXEffect::ChainGDXEffect(
       m_gdxControls(this)
 {
     m_chain = new EffectChain(this);
+    m_chain->setEnabled(true);
 }
 
 ChainGDXEffect::~ChainGDXEffect()

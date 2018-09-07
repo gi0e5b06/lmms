@@ -1,5 +1,5 @@
 /*
- * SplitGDXControlDialog.h - control dialog for chaining effect
+ * SplitGDXDialog.h - control dialog for chaining effect
  *
  * Copyright (c) 2018 gi0e5b06 (on github.com)
  *
@@ -29,12 +29,12 @@
 
 class SplitGDXControls;
 
-class SplitGDXControlDialog : public EffectControlDialog
+class SplitGDXDialog : public EffectControlDialog
 {
     Q_OBJECT
   public:
-    SplitGDXControlDialog(SplitGDXControls* controls);
-    virtual ~SplitGDXControlDialog()
+    SplitGDXDialog(SplitGDXControls* controls);
+    virtual ~SplitGDXDialog()
     {
     }
 };

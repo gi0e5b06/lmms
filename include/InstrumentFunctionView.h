@@ -50,10 +50,7 @@ class InstrumentFunctionView
     InstrumentFunctionView(InstrumentFunction* cc,
                            const QString&      _caption,
                            QWidget*            _parent = NULL,
-                           bool                _arrow  = true,
-                           bool                _panel  = true);
-    // GroupBox* m_groupBox;
-    // QWidget*  m_panel;
+                           bool                _arrow  = true);
 };
 
 class InstrumentFunctionNoteStackingView : public InstrumentFunctionView

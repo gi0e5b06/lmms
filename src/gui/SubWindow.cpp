@@ -110,15 +110,17 @@ SubWindow::SubWindow(QWidget* _child, bool _deleteOnClose, bool _ignoreCloseEven
 	}
 
 	// QLabel for the window title and the shadow effect
+        /*
 	m_shadow = new QGraphicsDropShadowEffect();
 	m_shadow->setColor( m_textShadowColor );
 	m_shadow->setXOffset( 1 );
 	m_shadow->setYOffset( 1 );
-
+        */
+        
 	m_windowTitle = new QLabel( this );
 	m_windowTitle->setFocusPolicy( Qt::NoFocus );
 	m_windowTitle->setAttribute( Qt::WA_TransparentForMouseEvents, true );
-	m_windowTitle->setGraphicsEffect( m_shadow );
+	//m_windowTitle->setGraphicsEffect( m_shadow );
 
 	// disable the minimize button
 	Qt::WindowFlags flags=Qt::SubWindow | Qt::CustomizeWindowHint;

@@ -182,7 +182,7 @@ int compressbands(float *absspec_buffer, float *compressedband, int num_old, int
 
 int calc13octaveband31(float *absspec_buffer, float *subbands, int num_spec, float max_frequency)
 {
-        static const int onethirdoctavecenterfr[] = {20, 25, 31, 40, 50, 63, 80, 100, 125, 160, 200, 250, 315, 400, 500, 630, 800, 1000, 1250, 1600, 2000, 2500, 3150, 4000, 5000, 6300, 8000, 10000, 12500, 16000, 20000};
+        static const int onethirdoctavecenterfr[31] = {20, 25, 31, 40, 50, 63, 80, 100, 125, 160, 200, 250, 315, 400, 500, 630, 800, 1000, 1250, 1600, 2000, 2500, 3150, 4000, 5000, 6300, 8000, 10000, 12500, 16000, 20000};
         //int i, j;
 	//float f_min, f_max, frequency, bandwidth;
 	//int j_min, j_max=0;
@@ -246,7 +246,7 @@ int calc13octaveband31(float *absspec_buffer, float *subbands, int num_spec, flo
         {
 		subbands[b]=0.f;
                 int jmin=(b==0  ? 5 : (onethirdoctavecenterfr[b-1]+onethirdoctavecenterfr[b])/2);
-                int jmax=(b==31 ? num_spec : (onethirdoctavecenterfr[b]+onethirdoctavecenterfr[b+1])/2);
+                int jmax=(b==30 ? num_spec : (onethirdoctavecenterfr[b]+onethirdoctavecenterfr[b+1])/2);
                 for(int j=jmin;j<jmax;j++)
                         subbands[b]+=absspec_buffer[j];
         }

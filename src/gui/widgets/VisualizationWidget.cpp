@@ -171,6 +171,7 @@ void VisualizationWidget::setStabilized(bool _stabilized)
 void VisualizationWidget::drawWidget(QPainter& _p)
 {
     _p.drawPixmap(0, 0, s_background);
+    _p.setRenderHints(QPainter::Antialiasing, true);
 
     if(m_active && !Engine::getSong()->isExporting())
     {
@@ -223,13 +224,13 @@ void VisualizationWidget::drawWidget(QPainter& _p)
             {
                 QColor c;
                 if(max_level > 1.f)
-                    c = QColor(255, 64, 64);
+                    c = QColor(255,0,0); //QColor(255, 64, 64);
                 else if(max_level > 0.9f)
-                    c = QColor(255, 192, 64);
+                    c = QColor(255,180,0); //QColor(255, 192, 64);
                 else if(ch == 0)
-                    c = QColor(71, 253, 133);
+                    c = QColor(0,180,255); //QColor(71, 253, 133);
                 else
-                    c = QColor(71, 133, 253);
+                    c = QColor(0,255,180); //QColor(71, 133, 253);
                 _p.setPen(c);
                 // _p.setPen( QPen( _p.pen().color(), 0.7 ) );
 

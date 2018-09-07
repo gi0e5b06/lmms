@@ -32,38 +32,43 @@
 WallGDXDialog::WallGDXDialog(WallGDXControls* controls) :
       EffectControlDialog(controls)
 {
+    setWindowIcon(PLUGIN_NAME::getIcon("logo"));
+
     setAutoFillBackground(true);
     QPalette pal;
     pal.setBrush(backgroundRole(), embed::getIconPixmap("plugin_bg"));
     setPalette(pal);
 
-    QGridLayout* mainLayout = new QGridLayout(this);
-    mainLayout->setContentsMargins(6, 6, 6, 6);
-    mainLayout->setHorizontalSpacing(6);
-    mainLayout->setVerticalSpacing(6);
+    QGridLayout* mainLOT = new QGridLayout(this);
+    mainLOT->setContentsMargins(6, 6, 6, 6);
+    mainLOT->setSpacing(6);
 
     Knob* distanceKNB = new Knob(this);
     distanceKNB->setModel(&controls->m_distanceModel);
-    distanceKNB->setLabel(tr("DIST"));
+    distanceKNB->setText(tr("DIST"));
     distanceKNB->setHintText(tr("Distance:"), "");
 
     Knob* dryKNB = new Knob(this);
     dryKNB->setModel(&controls->m_dryModel);
-    dryKNB->setLabel(tr("DRY"));
+    dryKNB->setText(tr("DRY"));
     dryKNB->setHintText(tr("Dry:"), "");
 
     Knob* wetKNB = new Knob(this);
     wetKNB->setModel(&controls->m_wetModel);
-    wetKNB->setLabel(tr("WET"));
+    wetKNB->setText(tr("WET"));
     wetKNB->setHintText(tr("Wet:"), "");
 
     int col = 0, row = 0;  // first row
-    mainLayout->addWidget(distanceKNB, row, ++col, 1, 1,
+    mainLOT->addWidget(distanceKNB, row, ++col, 1, 1,
                           Qt::AlignBottom | Qt::AlignHCenter);
-    mainLayout->addWidget(dryKNB, row, ++col, 1, 1,
+    mainLOT->addWidget(dryKNB, row, ++col, 1, 1,
                           Qt::AlignBottom | Qt::AlignHCenter);
-    mainLayout->addWidget(wetKNB, row, ++col, 1, 1,
+    mainLOT->addWidget(wetKNB, row, ++col, 1, 1,
                           Qt::AlignBottom | Qt::AlignHCenter);
 
-    setFixedWidth(234);
+    mainLOT->setColumnStretch(4, 1);
+    mainLOT->setRowStretch(1, 1);
+
+    setFixedWidth(250);
+    //setMinimumHeight(((sizeHint().height() - 1) / 50 + 1) * 50);
 }

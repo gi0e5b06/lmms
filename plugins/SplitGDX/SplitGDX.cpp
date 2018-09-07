@@ -53,6 +53,10 @@ SplitGDXEffect::SplitGDXEffect(
     m_splitChain = new EffectChain(this);
     m_wetChain   = new EffectChain(this);
     m_remChain   = new EffectChain(this);
+
+    m_splitChain->setEnabled(true);
+    m_wetChain->setEnabled(true);
+    m_remChain->setEnabled(true);
 }
 
 SplitGDXEffect::~SplitGDXEffect()
@@ -72,8 +76,8 @@ bool SplitGDXEffect::processAudioBuffer(sampleFrame* _buf,
     bool r = false;
 
     sampleFrame* splitb = MM_ALLOC(sampleFrame, _frames);
-    sampleFrame* wetb = MM_ALLOC(sampleFrame, _frames);
-    sampleFrame* remb = MM_ALLOC(sampleFrame, _frames);
+    sampleFrame* wetb   = MM_ALLOC(sampleFrame, _frames);
+    sampleFrame* remb   = MM_ALLOC(sampleFrame, _frames);
 
     memcpy(splitb, _buf, sizeof(sampleFrame) * _frames);
     if(m_splitChain->isEnabled())
@@ -85,8 +89,8 @@ bool SplitGDXEffect::processAudioBuffer(sampleFrame* _buf,
 
         for(fpp_t f = 0; f < _frames; ++f)
         {
-                remb[f][0] = _buf[f][0] - splitb[f][0];
-                remb[f][1] = _buf[f][1] - splitb[f][1];
+            remb[f][0] = _buf[f][0] - splitb[f][0];
+            remb[f][1] = _buf[f][1] - splitb[f][1];
         }
     }
     else

@@ -1,5 +1,6 @@
 /*
- * embed.h - misc. stuff for using embedded data (resources linked into binary)
+ * embed.h - misc. stuff for using embedded data (resources linked into
+ * binary)
  *
  * Copyright (c) 2004-2009 Tobias Doerffel <tobydox/at/users.sourceforge.net>
  *
@@ -25,105 +26,110 @@
 #ifndef EMBED_H
 #define EMBED_H
 
+#include "export.h"
+#include "lmms_basics.h"  // REQUIRED
+
 #include <QIcon>
 #include <QPixmap>
 #include <QString>
 
-#include "export.h"
-#include "lmms_basics.h" // REQUIRED
-
-
 namespace embed
 {
 
-QIcon   EXPORT getIcon( const QString&  _name, int _w = -1, int _h = -1 );
-QPixmap EXPORT getPixmap( const QString&  _name, int _w = -1, int _h = -1 );
-QString EXPORT getText( const char * _name );
+QIcon EXPORT getIcon(const QString& _name, int _w = -1, int _h = -1);
+QPixmap EXPORT getPixmap(const QString& _name, int _w = -1, int _h = -1);
+QString EXPORT getText(const char* _name);
 
-//obsolete
-QPixmap EXPORT getIconPixmap( const QString&  _name, int _w = -1, int _h = -1 );
+// obsolete
+QPixmap EXPORT getIconPixmap(const QString& _name, int _w = -1, int _h = -1);
 
-}
-
+}  // namespace embed
 
 #ifdef PLUGIN_NAME
 namespace PLUGIN_NAME
 {
 
-inline QPixmap getIconPixmap( const QString&  _name, int _w = -1, int _h = -1 )
+inline QIcon getIcon(const QString& _name, int _w = -1, int _h = -1)
 {
-	return embed::getIconPixmap(QString("%1/%2").arg(STRINGIFY(PLUGIN_NAME), _name), _w, _h);
+    return embed::getIcon(QString("%1/%2").arg(STRINGIFY(PLUGIN_NAME), _name),
+                          _w, _h);
 }
-//QString getText( const char * _name );
 
+inline QPixmap getPixmap(const QString& _name, int _w = -1, int _h = -1)
+{
+    return embed::getPixmap(
+            QString("%1/%2").arg(STRINGIFY(PLUGIN_NAME), _name), _w, _h);
 }
+
+// obsolete
+inline QPixmap getIconPixmap(const QString& _name, int _w = -1, int _h = -1)
+{
+    return embed::getIconPixmap(
+            QString("%1/%2").arg(STRINGIFY(PLUGIN_NAME), _name), _w, _h);
+}
+// QString getText( const char * _name );
+
+}  // namespace PLUGIN_NAME
 #endif
-
-
 
 class PixmapLoader
 {
-public:
-	PixmapLoader( const PixmapLoader * _ref ) :
-		m_name( _ref != NULL ? _ref->m_name : QString::null )
-	{
-	}
+  public:
+    PixmapLoader(const PixmapLoader* _ref) :
+          m_name(_ref != NULL ? _ref->m_name : QString::null)
+    {
+    }
 
-	PixmapLoader( const QString & _name = QString::null ) :
-		m_name( _name )
-	{
-	}
+    PixmapLoader(const QString& _name = QString::null) : m_name(_name)
+    {
+    }
 
-	virtual QPixmap pixmap() const
-	{
-		if( !m_name.isEmpty() )
-		{
-			return( embed::getIconPixmap( m_name.toLatin1().constData() ) );
-		}
-		return( QPixmap() );
-	}
+    virtual QPixmap pixmap() const
+    {
+        if(!m_name.isEmpty())
+        {
+            return embed::getPixmap(m_name.toLatin1().constData());
+        }
+        return QPixmap();
+    }
 
-	virtual ~PixmapLoader()
-	{
-	}
+    virtual ~PixmapLoader()
+    {
+    }
 
-	virtual QString pixmapName() const
-	{
-		return m_name;
-	}
+    virtual QString pixmapName() const
+    {
+        return m_name;
+    }
 
-protected:
-	QString m_name;
-} ;
-
+  protected:
+    QString m_name;
+};
 
 #ifdef PLUGIN_NAME
 class PluginPixmapLoader : public PixmapLoader
 {
-public:
-	PluginPixmapLoader( const QString & _name = QString::null ) :
-		PixmapLoader( _name )
-	{
-	}
+  public:
+    PluginPixmapLoader(const QString& _name = QString::null) :
+          PixmapLoader(_name)
+    {
+    }
 
-	virtual QPixmap pixmap() const
-	{
-		if( !m_name.isEmpty() )
-		{
-			return( PLUGIN_NAME::getIconPixmap(
-					m_name.toLatin1().constData() ) );
-		}
-		return( QPixmap() );
-	}
+    virtual QPixmap pixmap() const
+    {
+        if(!m_name.isEmpty())
+        {
+            return (PLUGIN_NAME::getIconPixmap(
+                    m_name.toLatin1().constData()));
+        }
+        return (QPixmap());
+    }
 
-	virtual QString pixmapName() const
-	{
-		return QString( STRINGIFY(PLUGIN_NAME) ) + "::" + m_name;
-	}
-
-} ;
+    virtual QString pixmapName() const
+    {
+        return QString(STRINGIFY(PLUGIN_NAME)) + "::" + m_name;
+    }
+};
 #endif
-
-
 
 #endif

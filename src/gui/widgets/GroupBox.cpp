@@ -1,6 +1,7 @@
 /*
  * GroupBox.cpp - groupbox for LMMS
  *
+ * Copyright (c) 2018 gi0e5b06 (on github.com)
  * Copyright (c) 2005-2009 Tobias Doerffel <tobydox/at/users.sourceforge.net>
  *
  * This file is part of LMMS - https://lmms.io
@@ -39,7 +40,7 @@
 #include <QStyleOption>
 #include <QVBoxLayout>
 
-GroupBox::Top::Top(const QString& _caption,
+GroupBox::Top::Top(const QString& _title,
                    GroupBox*      _parent,
                    bool           _led,
                    bool           _arrow) :
@@ -55,7 +56,7 @@ GroupBox::Top::Top(const QString& _caption,
 
     if(_led)
     {
-        m_led = new PixmapButton(this, _caption);
+        m_led = new PixmapButton(this, _title);
         m_led->setMinimumWidth(14);
         m_led->setCheckable(true);
         // m_led->move( 3, 0 );
@@ -66,19 +67,19 @@ GroupBox::Top::Top(const QString& _caption,
     else
         m_led = NULL;
 
-    m_title = new QLabel(_caption, this);
+    m_title = new QLabel(_title, this);
     m_title->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
     m_title->setFixedHeight(14);
     // m_title->setFont(pointSize<6>(m_title->font()));
     m_title->setStyleSheet(
             "font-size: 10px; font-weight: bold; padding-left: 2px; "
-            "background-color: #001f40;");
+            "background-color: #002040;");
     // m_title->setFixedHeight(14);
     gbl->addWidget(m_title, 0, 1);
 
     if(_arrow)
     {
-        m_arrow = new PixmapButton(this, _caption);
+        m_arrow = new PixmapButton(this, _title);
         m_arrow->setMinimumWidth(14);
         m_arrow->setCheckable(true);
         // m_arrow->move( 3, 0 );
@@ -91,36 +92,31 @@ GroupBox::Top::Top(const QString& _caption,
         m_arrow = NULL;
 }
 
-GroupBox::GroupBox(const QString& _caption,
+GroupBox::GroupBox(const QString& _title,
                    QWidget*       _parent,
                    bool           _led,
-                   bool           _arrow,
-                   bool           _panel) :
+                   bool           _arrow) :
       QWidget(_parent)
-// BoolModelView(new BoolModel(false, NULL, _caption, true),
-// m_caption(_caption)
+// BoolModelView(new BoolModel(false, NULL, _title, true),
+// m_title(_title)
 {
-    setObjectName(_caption);
-    // setStyleSheet("background-color:#ffff00;");
-    m_top   = new Top(_caption, this, _led, _arrow);
-    m_panel = new QWidget(this);
-    // m_panel->setContentsMargins(0, 0, 0, 0);
-    // m_panel->setStyleSheet("background-color:#ffffff;");
+    setObjectName(_title);
 
-    QVBoxLayout* vl = new QVBoxLayout(this);
+    m_top    = new Top(_title, this, _led, _arrow);
+    m_panel  = nullptr;
+    m_bottom = nullptr;
+
+    QGridLayout* vl = new QGridLayout(this);
     vl->setSpacing(0);
     vl->setContentsMargins(0, 0, 0, 0);
-    vl->addWidget(m_top, 0, Qt::AlignTop);
-    vl->setStretch(0, 0);
-    if(_panel)
-    {
-        vl->addWidget(m_panel, 1);
-        vl->setStretch(1, 1);
-    }
+    vl->setRowStretch(0, 0);
+    vl->setRowStretch(1, 1);
+    vl->setRowStretch(2, 0);
+    vl->setColumnStretch(0, 1);
+    setLayout(vl);
+    vl->addWidget(m_top, 0, 0, Qt::AlignTop);
 
-    setContentsMargins(0, 0, 0, 0);  // m_top->height(), 0, 0);
-
-    // setModel(new BoolModel(false, NULL, _caption, true));
+    // setModel(new BoolModel(false, NULL, _title, true));
     setAutoFillBackground(true);
     unsetCursor();
 
@@ -136,6 +132,9 @@ GroupBox::~GroupBox()
 
 void GroupBox::togglePanel()
 {
+    if(!m_panel)
+        return;
+
     m_panel->setVisible(!m_panel->isVisible());
     // update();
     // QSize sz = sizeHint();
@@ -162,9 +161,62 @@ QWidget* GroupBox::contentWidget()
     return m_panel;
 }
 
+void GroupBox::setContentWidget(QWidget* _w)
+{
+    if(m_panel == _w)
+        return;
+
+    bool visible = false;
+    if(m_panel && m_panel->isVisible())
+    {
+        togglePanel();
+        visible = true;
+    }
+    m_panel = _w;
+    if(m_panel)
+    {
+        QGridLayout* vl = dynamic_cast<QGridLayout*>(layout());
+        vl->addWidget(m_panel, 1, 0);
+
+        if(visible && m_panel->isVisible())
+        {
+            togglePanel();
+        }
+    }
+    adjustSize();
+    if(parentWidget())
+        parentWidget()->adjustSize();
+}
+
+QWidget* GroupBox::bottomWidget()
+{
+    return m_bottom;
+}
+
+void GroupBox::setBottomWidget(QWidget* _w)
+{
+    if(m_bottom == _w)
+        return;
+
+    m_bottom = _w;
+    if(m_bottom)
+    {
+            QGridLayout* vl = dynamic_cast<QGridLayout*>(layout());
+        vl->addWidget(m_bottom, 2, 0);
+    }
+    adjustSize();
+    if(parentWidget())
+        parentWidget()->adjustSize();
+}
+
 PixmapButton* GroupBox::ledButton()
 {
     return m_top->m_led;
+}
+
+PixmapButton* GroupBox::arrowButton()
+{
+    return m_top->m_arrow;
 }
 
 bool GroupBox::isEnabled()
@@ -243,7 +295,7 @@ void GroupBox::paintEvent(QPaintEvent* _pe)
     // draw text
     p.setPen( palette().color( QPalette::Active, QPalette::Text ) );
     p.setFont( pointSize<8>( font() ) );
-    p.drawText( 22, m_titleBarHeight-3, m_caption );
+    p.drawText( 22, m_titleBarHeight-3, m_title );
     */
 }
 

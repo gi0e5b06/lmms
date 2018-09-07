@@ -62,8 +62,8 @@ ControllerRackView::ControllerRackView( ) :
 
 	QWidget * scrollAreaWidget = new QWidget( m_scrollArea );
 	m_scrollAreaLayout = new QVBoxLayout( scrollAreaWidget );
-	m_scrollAreaLayout->setMargin(3);//GDX
-	m_scrollAreaLayout->setSpacing(0);//2
+	m_scrollAreaLayout->setContentsMargins(3,3,3,3);//GDX
+	m_scrollAreaLayout->setSpacing(3);//2
 	m_scrollAreaLayout->addStretch();
 	scrollAreaWidget->setLayout( m_scrollAreaLayout );
 
@@ -97,9 +97,9 @@ ControllerRackView::ControllerRackView( ) :
 	*/
 	SubWindow* win=SubWindow::putWidgetOnWorkspace(this,false,false,false);
 	win->move( 680, 310 );
-	win->resize( 250+9, 200+6 );
-	win->setFixedWidth( 250+9 );
-	win->setMinimumHeight( 200+6 );
+	win->resize( 254, 254 );
+	win->setFixedWidth( 254 );
+	win->setMinimumHeight( 254 );
 }
 
 

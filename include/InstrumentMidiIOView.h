@@ -26,10 +26,9 @@
 #ifndef INSTRUMENT_MIDI_IO_VIEW_H
 #define INSTRUMENT_MIDI_IO_VIEW_H
 
-#include <QWidget>
-
 #include "ModelView.h"
 
+#include <QWidget>
 
 class GroupBox;
 class LcdSpinBox;
@@ -37,50 +36,50 @@ class QToolButton;
 class LedCheckBox;
 class InstrumentTrack;
 
-
-class InstrumentMidiIOView : public QWidget, public ModelView
+class InstrumentMidiIOView
+      : public QWidget
+      , public ModelView
 {
-	Q_OBJECT
-public:
-	InstrumentMidiIOView( QWidget* parent );
-	virtual ~InstrumentMidiIOView();
+    Q_OBJECT
 
+  public:
+    InstrumentMidiIOView(QWidget* parent);
+    virtual ~InstrumentMidiIOView();
 
-private:
-	virtual void modelChanged();
+  private:
+    virtual void modelChanged();
 
-	GroupBox * m_midiInputGroupBox;
-	LcdSpinBox * m_inputChannelSpinBox;
-	LcdSpinBox * m_fixedInputVelocitySpinBox;
-	QToolButton * m_rpBtn;
+    GroupBox*    m_midiInputGBX;
+    LcdSpinBox*  m_inputChannelSpinBox;
+    LcdSpinBox*  m_fixedInputVelocitySpinBox;
+    QToolButton* m_rpBtn;
 
-	GroupBox * m_midiOutputGroupBox;
-	LcdSpinBox * m_outputChannelSpinBox;
-	LcdSpinBox * m_fixedOutputVelocitySpinBox;
-	LcdSpinBox * m_outputProgramSpinBox;
-	LcdSpinBox * m_fixedOutputNoteSpinBox;
-	QToolButton * m_wpBtn;
+    GroupBox*    m_midiOutputGBX;
+    LcdSpinBox*  m_outputChannelSpinBox;
+    LcdSpinBox*  m_fixedOutputVelocitySpinBox;
+    LcdSpinBox*  m_outputProgramSpinBox;
+    LcdSpinBox*  m_fixedOutputNoteSpinBox;
+    QToolButton* m_wpBtn;
 
-	LcdSpinBox* m_baseVelocitySpinBox;
-
-} ;
+    GroupBox*    m_baseVelocityGBX;
+    LcdSpinBox*  m_baseVelocitySpinBox;
+};
 
 class InstrumentMiscView : public QWidget
 {
-	Q_OBJECT
-public:
-	InstrumentMiscView( InstrumentTrack *it, QWidget* parent );
-	~InstrumentMiscView();
+    Q_OBJECT
 
-	GroupBox * pitchGroupBox()
-	{
-		return m_pitchGroupBox;
-	}
+  public:
+    InstrumentMiscView(InstrumentTrack* it, QWidget* parent);
+    ~InstrumentMiscView();
 
-private:
+    GroupBox* pitchGroupBox()
+    {
+        return m_pitchGBX;
+    }
 
-	GroupBox * m_pitchGroupBox;
-
+  private:
+    GroupBox* m_pitchGBX;
 };
 
 #endif

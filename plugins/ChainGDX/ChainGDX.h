@@ -48,7 +48,7 @@ class PLUGIN_EXPORT ChainGDXEffect : public Effect
     ChainGDXControls m_gdxControls;
     EffectChain*     m_chain;
 
-    friend class ChainGDXControlDialog;
+    friend class ChainGDXDialog;
     friend class ChainGDXControls;
 };
 

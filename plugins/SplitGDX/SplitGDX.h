@@ -51,7 +51,7 @@ class PLUGIN_EXPORT SplitGDXEffect : public Effect
     EffectChain*     m_wetChain;
     EffectChain*     m_remChain;
 
-    friend class SplitGDXControlDialog;
+    friend class SplitGDXDialog;
     friend class SplitGDXControls;
 };
 

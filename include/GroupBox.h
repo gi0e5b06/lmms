@@ -1,6 +1,7 @@
 /*
  * GroupBox.h - LMMS-groupbox
  *
+ * Copyright (c) 2018 gi0e5b06 (on github.com)
  * Copyright (c) 2005-2008 Tobias Doerffel <tobydox/at/users.sourceforge.net>
  *
  * This file is part of LMMS - https://lmms.io
@@ -39,7 +40,7 @@ class GroupBox : public QWidget
     class Top : public QWidget
     {
       public:
-        Top(const QString& _caption,
+        Top(const QString& _title,
             GroupBox*      _parent = NULL,
             bool           _led    = true,
             bool           _arrow  = true);
@@ -52,11 +53,10 @@ class GroupBox : public QWidget
     Q_OBJECT
 
   public:
-    GroupBox(const QString& _caption,
+    GroupBox(const QString& _title,
              QWidget*       _parent = NULL,
              bool           _led    = true,
-             bool           _arrow  = true,
-             bool           _panel  = true);
+             bool           _arrow  = true);
     virtual ~GroupBox();
 
     virtual void addTopWidget(QWidget* _w, int _col);
@@ -66,9 +66,19 @@ class GroupBox : public QWidget
     virtual bool isEnabled();
     virtual void setEnabled(bool _b);
 
-    QWidget*      contentWidget();
     PixmapButton* ledButton();
-    int           titleBarHeight() const;
+    PixmapButton* arrowButton();
+
+    QWidget*      contentWidget();
+    void          setContentWidget(QWidget* _w);
+
+    QWidget*      bottomWidget();
+    void          setBottomWidget(QWidget* _w);
+
+    //QString& title();
+    //void setTitle(const QString& _title);
+
+    int titleBarHeight() const;
 
     virtual void enterValue();
 
@@ -84,12 +94,13 @@ class GroupBox : public QWidget
     virtual void resizeEvent(QResizeEvent* _re);
 
     QWidget* m_panel;
+    QWidget* m_bottom;
 
   private:
     void updatePixmap();
 
     Top*    m_top;
-    QString m_caption;
+    QString m_title;
 };
 
 typedef BoolModel groupBoxModel;

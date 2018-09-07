@@ -88,6 +88,7 @@ QPainter& PaintCacheable::beginCache()
     m_valid = false;
     m_cache->fill(qRgba(0, 0, 0, 0));
     m_painter->begin(m_cache);
+    m_painter->setRenderHints(QPainter::Antialiasing, false);
     return *m_painter;
 }
 

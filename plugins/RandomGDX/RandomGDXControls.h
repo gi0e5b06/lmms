@@ -27,7 +27,7 @@
 
 #include "EffectControls.h"
 #include "Knob.h"
-#include "RandomGDXControlDialog.h"
+#include "RandomGDXDialog.h"
 
 class RandomGDXEffect;
 
@@ -54,7 +54,7 @@ class RandomGDXControls : public EffectControls
 
     virtual EffectControlDialog* createView()
     {
-        return new RandomGDXControlDialog(this);
+        return new RandomGDXDialog(this);
     }
 
   private slots:
@@ -68,7 +68,7 @@ class RandomGDXControls : public EffectControls
     FloatModel m_sngPosModel;
     FloatModel m_delPosModel;
 
-    friend class RandomGDXControlDialog;
+    friend class RandomGDXDialog;
     friend class RandomGDXEffect;
 };
 

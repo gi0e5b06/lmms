@@ -46,6 +46,9 @@
 
 #include "Backtrace.h"
 
+//const int CONTROLLER_WIDTH  = 228;
+//const int CONTROLLER_HEIGHT = 60;
+
 ControllerView::ControllerView( Controller * _model, QWidget * _parent ) :
 	QWidget(_parent),//QFrame( _parent ),
 	ModelView( _model, this ),
@@ -79,7 +82,8 @@ ControllerView::ControllerView( Controller * _model, QWidget * _parent ) :
 	  vBoxLayout->addWidget(m_nameLabel);
 	*/
 
-	setFixedSize( 230, 60 );
+	setFixedSize( m_bg.width(), m_bg.height() );
+	//setFixedSize( 230, 60 );
 
 	// Disable controllers that are of type "DummyController"
 	bool isEnabled = true;//!dynamic_cast<DummyController *>( controller() );
@@ -94,10 +98,12 @@ ControllerView::ControllerView( Controller * _model, QWidget * _parent ) :
 	//BACKTRACE
 	setModel( _model );
 
-	QPushButton * ctls_btn = new QPushButton( tr( "Controls" ), this );
+	//QPushButton * ctls_btn = new QPushButton( tr( "Controls" ), this );
+        QPushButton * ctls_btn = new QPushButton
+                ( embed::getIconPixmap( "trackop" ),"",this );
 	QFont f = ctls_btn->font();
 	ctls_btn->setFont( pointSize<8>( f ) );
-	ctls_btn->setGeometry( 136, 4, 70, 35 );//41
+	ctls_btn->setGeometry( 163+24, 5, 36, 36 );//41
 	connect( ctls_btn, SIGNAL( clicked() ),	this, SLOT( editControls() ) );
 
 	setWhatsThis( tr( "Controllers are able to automate the value of a knob, "
@@ -214,8 +220,8 @@ void ControllerView::paintEvent( QPaintEvent * )
 	f.setBold( true );
 	p.setFont( f );
 
-	p.setPen( palette().shadow().color() );
-	p.drawText( 7, 54, model()->displayName() );
+	//p.setPen( palette().shadow().color() );
+	//p.drawText( 7, 54, model()->displayName() );
 	p.setPen( palette().text().color() );
 	p.drawText( 6, 53, model()->displayName() );
 
@@ -224,9 +230,8 @@ void ControllerView::paintEvent( QPaintEvent * )
 	p.setFont( f );
 
 	Controller * c = controller();//castModel<Controller>();
-	p.setPen( palette().shadow().color() );
-	//p.drawText( 7, 29, c->name() );
-        p.drawText( 87, 54, c->name() );
+	//p.setPen( palette().shadow().color() );
+        //p.drawText( 87, 54, c->name() );
 	p.setPen( palette().text().color() );
 	p.drawText( 86, 53, c->name() );
 }

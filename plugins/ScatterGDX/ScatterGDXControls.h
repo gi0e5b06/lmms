@@ -26,7 +26,7 @@
 #define SCATTERGDX_CONTROLS_H
 
 #include "EffectControls.h"
-#include "ScatterGDXControlDialog.h"
+#include "ScatterGDXDialog.h"
 #include "Knob.h"
 
 
@@ -56,7 +56,7 @@ public:
 
 	virtual EffectControlDialog* createView()
 	{
-		return new ScatterGDXControlDialog( this );
+		return new ScatterGDXDialog( this );
 	}
 
 
@@ -72,7 +72,7 @@ private:
         FloatModel m_ovrModel; //override
         FloatModel m_strModel; //start
 
-	friend class ScatterGDXControlDialog;
+	friend class ScatterGDXDialog;
 	friend class ScatterGDXEffect;
 
 } ;

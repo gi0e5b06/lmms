@@ -65,6 +65,7 @@ CPULoadWidget::~CPULoadWidget()
 
 void CPULoadWidget::drawWidget(QPainter& _p)
 {
+    _p.setRenderHints(QPainter::Antialiasing, false);
     _p.drawPixmap(0, 0, m_background);
 
     if(m_bigger)

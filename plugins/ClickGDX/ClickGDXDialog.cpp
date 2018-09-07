@@ -1,7 +1,7 @@
 /*
- * ClickGDXControlDialog.cpp - control dialog for click remover effect
+ * ClickGDXDialog.cpp - control dialog for click remover effect
  *
- * Copyright (c) 2017
+ * Copyright (c) 2017-2018 gi0e5b06 (on github.com)
  *
  * This file is part of LMMS - https://lmms.io
  *
@@ -22,83 +22,102 @@
  *
  */
 
-#include "ClickGDXControlDialog.h"
+#include "ClickGDXDialog.h"
 
 #include <QGridLayout>
-#include <QGroupBox>
-#include <QLayout>
+//#include <QGroupBox>
+#include <QLabel>
 
 #include "ClickGDXControls.h"
 #include "embed.h"
 
-ClickGDXControlDialog::ClickGDXControlDialog(ClickGDXControls* controls) :
+ClickGDXDialog::ClickGDXDialog(ClickGDXControls* controls) :
       EffectControlDialog(controls)
 {
+    setWindowIcon(PLUGIN_NAME::getIcon("logo"));
+
     setAutoFillBackground(true);
     QPalette pal;
     pal.setBrush(backgroundRole(), embed::getIconPixmap("plugin_bg"));
-    //pal.setBrush(backgroundRole(),PLUGIN_NAME::getIconPixmap("artwork"));
+    // pal.setBrush(backgroundRole(),PLUGIN_NAME::getIconPixmap("artwork"));
     setPalette(pal);
-    setFixedSize(150, 400);
 
-    QGroupBox* attGB = new QGroupBox(tr("Attack"), this);
-    QGroupBox* desGB = new QGroupBox(tr("Descent"), this);
-    QGroupBox* panGB = new QGroupBox(tr("Pan"), this);
-    attGB->setGeometry(10, 10, 60, 185);
-    desGB->setGeometry(80, 10, 60, 185);
-    panGB->setGeometry(10, 205, 60, 185);
+    QGridLayout* m_mainLayout = new QGridLayout(this);
+    m_mainLayout->setContentsMargins(6, 6, 6, 6);
+    m_mainLayout->setSpacing(6);
 
-    Knob* attTimeKnob = new Knob(knobBright_26, attGB);
-    attTimeKnob->move(17, 35);
-    attTimeKnob->setModel(&controls->m_attackTimeModel);
-    attTimeKnob->setLabel(tr("Time"));
-    attTimeKnob->setHintText(tr("Attack Time:"), " beat");
+    m_mainLayout->addWidget(new QLabel(tr("Attack"), this), 1, 0);
+    m_mainLayout->addWidget(new QLabel(tr("Descent"), this), 2, 0);
+    m_mainLayout->addWidget(new QLabel(tr("Panning"), this), 3, 0);
 
-    Knob* desTimeKnob = new Knob(knobBright_26, desGB);
-    desTimeKnob->move(17, 35);
-    desTimeKnob->setModel(&controls->m_descentTimeModel);
-    desTimeKnob->setLabel(tr("Time"));
-    desTimeKnob->setHintText(tr("Descent Time:"), " beat");
+    m_mainLayout->addWidget(new QLabel(tr("Time"), this), 0, 1);
+    m_mainLayout->addWidget(new QLabel(tr("Type"), this), 0, 2);
+    m_mainLayout->addWidget(new QLabel(tr("Tempo"), this), 0, 3);
 
-    Knob* attTypeKnob = new Knob(knobBright_26, attGB);
-    attTypeKnob->move(17, 85);
-    attTypeKnob->setModel(&controls->m_attackTypeModel);
-    attTypeKnob->setLabel(tr("Type"));
-    attTypeKnob->setHintText(tr("Attack Type:"), "");
+    Knob* attTimeKNB = new Knob(this);
+    attTimeKNB->setModel(&controls->m_attackTimeModel);
+    attTimeKNB->setHintText(tr("Attack Time:"), " beat");
 
-    Knob* desTypeKnob = new Knob(knobBright_26, desGB);
-    desTypeKnob->move(17, 85);
-    desTypeKnob->setModel(&controls->m_descentTypeModel);
-    desTypeKnob->setLabel(tr("Type"));
-    desTypeKnob->setHintText(tr("Descent Type:"), "");
+    Knob* desTimeKNB = new Knob(this);
+    desTimeKNB->setModel(&controls->m_descentTimeModel);
+    desTimeKNB->setHintText(tr("Descent Time:"), " beat");
 
-    Knob* attTempoKnob = new Knob(knobBright_26, attGB);
-    attTempoKnob->move(17, 135);
-    attTempoKnob->setModel(&controls->m_attackTempoModel);
-    attTempoKnob->setLabel(tr("Tempo"));
-    attTempoKnob->setHintText(tr("Attack Tempo:"), "");
+    Knob* attTypeKNB = new Knob(this);
+    attTypeKNB->setModel(&controls->m_attackTypeModel);
+    attTypeKNB->setHintText(tr("Attack Type:"), "");
 
-    Knob* desTempoKnob = new Knob(knobBright_26, desGB);
-    desTempoKnob->move(17, 135);
-    desTempoKnob->setModel(&controls->m_descentTempoModel);
-    desTempoKnob->setLabel(tr("Tempo"));
-    desTempoKnob->setHintText(tr("Descent Tempo:"), "");
+    Knob* desTypeKNB = new Knob(this);
+    desTypeKNB->setModel(&controls->m_descentTypeModel);
+    desTypeKNB->setHintText(tr("Descent Type:"), "");
 
-    Knob* panTimeKnob = new Knob(knobBright_26, panGB);
-    panTimeKnob->move(17, 35);
-    panTimeKnob->setModel(&controls->m_panTimeModel);
-    panTimeKnob->setLabel(tr("Time"));
-    panTimeKnob->setHintText(tr("Pan Time:"), "");
+    Knob* attTempoKNB = new Knob(this);
+    attTempoKNB->setModel(&controls->m_attackTempoModel);
+    attTempoKNB->setHintText(tr("Attack Tempo:"), "");
 
-    Knob* panTypeKnob = new Knob(knobBright_26, panGB);
-    panTypeKnob->move(17, 85);
-    panTypeKnob->setModel(&controls->m_panTypeModel);
-    panTypeKnob->setLabel(tr("Type"));
-    panTypeKnob->setHintText(tr("Pan Type:"), "");
+    Knob* desTempoKNB = new Knob(this);
+    desTempoKNB->setModel(&controls->m_descentTempoModel);
+    desTempoKNB->setHintText(tr("Descent Tempo:"), "");
 
-    Knob* panTempoKnob = new Knob(knobBright_26, panGB);
-    panTempoKnob->move(17, 135);
-    panTempoKnob->setModel(&controls->m_panTempoModel);
-    panTempoKnob->setLabel(tr("Tempo"));
-    panTempoKnob->setHintText(tr("Pan Tempo:"), "");
+    Knob* panTimeKNB = new Knob(this);
+    panTimeKNB->setModel(&controls->m_panTimeModel);
+    panTimeKNB->setHintText(tr("Pan Time:"), "");
+
+    Knob* panTypeKNB = new Knob(this);
+    panTypeKNB->setModel(&controls->m_panTypeModel);
+    panTypeKNB->setHintText(tr("Pan Type:"), "");
+
+    Knob* panTempoKNB = new Knob(this);
+    panTempoKNB->setModel(&controls->m_panTempoModel);
+    panTempoKNB->setHintText(tr("Pan Tempo:"), "");
+
+    m_mainLayout->addWidget(attTimeKNB, 1, 1,
+                            Qt::AlignHCenter | Qt::AlignBottom);
+    m_mainLayout->addWidget(desTimeKNB, 1, 2,
+                            Qt::AlignHCenter | Qt::AlignBottom);
+    m_mainLayout->addWidget(panTimeKNB, 1, 3,
+                            Qt::AlignHCenter | Qt::AlignBottom);
+
+    m_mainLayout->addWidget(attTypeKNB, 2, 1,
+                            Qt::AlignHCenter | Qt::AlignBottom);
+    m_mainLayout->addWidget(desTypeKNB, 2, 2,
+                            Qt::AlignHCenter | Qt::AlignBottom);
+    m_mainLayout->addWidget(panTypeKNB, 2, 3,
+                            Qt::AlignHCenter | Qt::AlignBottom);
+
+    m_mainLayout->addWidget(attTempoKNB, 3, 1,
+                            Qt::AlignHCenter | Qt::AlignBottom);
+    m_mainLayout->addWidget(desTempoKNB, 3, 2,
+                            Qt::AlignHCenter | Qt::AlignBottom);
+    m_mainLayout->addWidget(panTempoKNB, 3, 3,
+                            Qt::AlignHCenter | Qt::AlignBottom);
+
+    m_mainLayout->setColumnStretch(5, 1);
+    m_mainLayout->setRowStretch(4, 1);
+
+    //int wc=m_mainLayout->columnWidth(3);
+    //m_mainLayout->setColumnWidth(1,wc);
+    //m_mainLayout->setColumnWidth(2,wc);
+
+    setFixedWidth(250);
+    setMinimumHeight(((sizeHint().height() - 1) / 50 + 1) * 50);
 }

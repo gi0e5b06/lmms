@@ -53,10 +53,6 @@ OutputGDX::OutputGDX(Model*                                    parent,
       m_gdxControls(this), m_left(Engine::mixer()->framesPerPeriod()),
       m_right(Engine::mixer()->framesPerPeriod())
 {
-    const fpp_t FPP = Engine::mixer()->framesPerPeriod();
-    m_left          = new ValueBuffer(FPP);
-    m_right         = new ValueBuffer(FPP);
-
     connect(this, SIGNAL(sendRms(const float)), &m_gdxControls.m_rmsModel,
             SLOT(setAutomatedValue(const float)));
     connect(this, SIGNAL(sendVol(const float)), &m_gdxControls.m_volModel,
@@ -74,8 +70,8 @@ OutputGDX::OutputGDX(Model*                                    parent,
 
 OutputGDX::~OutputGDX()
 {
-    // delete m_left;
-    // delete m_right;
+    disconnect(&m_gdxControls.m_rightModel);
+    disconnect(&m_gdxControls.m_leftModel);
 }
 
 bool OutputGDX::processAudioBuffer(sampleFrame* _buf, const fpp_t _frames)

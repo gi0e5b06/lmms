@@ -87,8 +87,8 @@ void TabWidget::addTab( QWidget * w, const QString & name, const char *pixmap, i
 	m_widgets[idx] = d;
 
 	// Position tab's window
-	w->setFixedSize( width() - 4, height() - m_tabbarHeight );
-	w->move( 2, m_tabbarHeight ); //-1
+	w->setFixedSize( width() /*- 4*/, height() - m_tabbarHeight );
+	w->move( 0/*2*/, m_tabbarHeight ); //-1
 	w->hide();
 
 	// Show tab's window if it's active
@@ -199,7 +199,7 @@ void TabWidget::resizeEvent( QResizeEvent * )
 	for( widgetStack::iterator it = m_widgets.begin();
 						it != m_widgets.end(); ++it )
 	{
-		( *it ).w->setFixedSize( width() - 4, height() - m_tabbarHeight );
+		( *it ).w->setFixedSize( width() /*- 4*/, height() - m_tabbarHeight );
 	}
         update();
 }

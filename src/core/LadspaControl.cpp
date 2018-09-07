@@ -106,7 +106,7 @@ LadspaControl::LadspaControl( Model * _parent, port_desc_t * _port,
 			//			m_port->min ) / 800.0f );
                         {
                                 float rng=fabsf( m_port->max - m_port->min );
-                                m_knobModel.setRange( m_port->min,
+                                m_tempoSyncKnobModel.setRange( m_port->min,
                                                       m_port->max,
                                                       rng<1E-32f ? rng : powf(10.f,ceilf(log10f(rng)-5)));
                         }
@@ -279,18 +279,58 @@ void LadspaControl::linkControls( LadspaControl * _ctrl )
 	{
 		case TOGGLED:
 			BoolModel::linkModels( &m_toggledModel, _ctrl->toggledModel() );
+                        ledChanged();
+                        _ctrl->ledChanged();
 			break;
 		case INTEGER:
 		case FLOATING:
 			FloatModel::linkModels( &m_knobModel, _ctrl->knobModel() );
+                        knobChanged();
+                        _ctrl->knobChanged();
                         break;
 		case TIME:
 			TempoSyncKnobModel::linkModels( &m_tempoSyncKnobModel,
                                                         _ctrl->tempoSyncKnobModel() );
+                        tempoKnobChanged();
+                        _ctrl->tempoKnobChanged();
                         break;
 		default:
 			break;
 	}
+
+        linkStateChanged();
+        _ctrl->linkStateChanged();
+}
+
+
+
+
+void LadspaControl::unlinkControls( LadspaControl * _ctrl )
+{
+	switch( m_port->data_type )
+	{
+		case TOGGLED:
+			BoolModel::unlinkModels( &m_toggledModel, _ctrl->toggledModel() );
+                        ledChanged();
+                        _ctrl->ledChanged();
+			break;
+		case INTEGER:
+		case FLOATING:
+			FloatModel::unlinkModels( &m_knobModel, _ctrl->knobModel() );
+                        knobChanged();
+                        _ctrl->knobChanged();
+			break;
+		case TIME:
+			TempoSyncKnobModel::unlinkModels( &m_tempoSyncKnobModel,
+                                                          _ctrl->tempoSyncKnobModel() );
+                        tempoKnobChanged();
+                        _ctrl->tempoKnobChanged();
+			break;
+		default:
+			break;
+	}
+        linkStateChanged();
+        _ctrl->linkStateChanged();
 }
 
 
@@ -323,31 +363,9 @@ void LadspaControl::tempoKnobChanged()
 
 
 
-void LadspaControl::unlinkControls( LadspaControl * _ctrl )
-{
-	switch( m_port->data_type )
-	{
-		case TOGGLED:
-			BoolModel::unlinkModels( &m_toggledModel, _ctrl->toggledModel() );
-			break;
-		case INTEGER:
-		case FLOATING:
-			FloatModel::unlinkModels( &m_knobModel, _ctrl->knobModel() );
-			break;
-		case TIME:
-			TempoSyncKnobModel::unlinkModels( &m_tempoSyncKnobModel,
-                                                          _ctrl->tempoSyncKnobModel() );
-			break;
-		default:
-			break;
-	}
-}
-
-
-
-
 void LadspaControl::linkStateChanged()
 {
+        //qInfo("LadspaControl::linkStateChanged() p=%p",this);
         if(m_linkDepth<1)
         {
                 m_linkDepth++;
@@ -361,6 +379,7 @@ void LadspaControl::linkStateChanged()
                 for( AutomatableModel* model : m_knobModel.m_linkedModels )
                 {
                         LadspaControl* ctrl=dynamic_cast<LadspaControl*>(model->parentModel());
+                        //qInfo("CTRL p=%p",ctrl);
                         if(ctrl) ctrl->linkStateChanged();
                 }
                 for( AutomatableModel* model : m_tempoSyncKnobModel.m_linkedModels )

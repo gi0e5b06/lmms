@@ -1,3 +1,3 @@
 INCLUDE(BuildPlugin)
 
-BUILD_PLUGIN(clickgdx ClickGDX.cpp ClickGDXControls.cpp ClickGDXControlDialog.cpp MOCFILES ClickGDXControls.h ClickGDXControlDialog.h EMBEDDED_RESOURCES logo.png)
+BUILD_PLUGIN(clickgdx ClickGDX.cpp ClickGDXControls.cpp ClickGDXDialog.cpp MOCFILES ClickGDXControls.h ClickGDXDialog.h EMBEDDED_RESOURCES logo.png)

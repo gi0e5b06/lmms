@@ -37,6 +37,8 @@
 FrequencyGDXDialog::FrequencyGDXDialog(FrequencyGDXControls* controls) :
       EffectControlDialog(controls)
 {
+    setWindowIcon(PLUGIN_NAME::getIcon("logo"));
+
     setAutoFillBackground(true);
     QPalette pal;
     pal.setBrush(backgroundRole(), embed::getIconPixmap("plugin_bg"));
@@ -45,9 +47,7 @@ FrequencyGDXDialog::FrequencyGDXDialog(FrequencyGDXControls* controls) :
 
     QGridLayout* mainLayout = new QGridLayout(this);
     mainLayout->setContentsMargins(6, 6, 6, 6);
-    // mainLayout->setColumnStretch(3, 1);
-    mainLayout->setHorizontalSpacing(6);
-    mainLayout->setVerticalSpacing(6);
+    mainLayout->setSpacing(6);
 
     m_topFrequencyLBL = new QLabel("------", this);
     m_topKeyLBL       = new QLabel("---", this);
@@ -160,7 +160,8 @@ FrequencyGDXDialog::FrequencyGDXDialog(FrequencyGDXControls* controls) :
     mainLayout->addWidget(m_mainNoteKNB, 5, 2,
                           Qt::AlignBottom | Qt::AlignHCenter);
 
-    setFixedWidth(234);
+    setFixedWidth(250);
+    setMinimumHeight(((sizeHint().height() - 1) / 50 + 1) * 50);
 
     connect(&controls->m_topFrequencyModel, SIGNAL(dataChanged()), this,
             SLOT(updateTopFrequency()));

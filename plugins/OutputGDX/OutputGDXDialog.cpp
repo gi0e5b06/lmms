@@ -32,6 +32,8 @@
 OutputGDXDialog::OutputGDXDialog(OutputGDXControls* controls) :
       EffectControlDialog(controls)
 {
+    setWindowIcon(PLUGIN_NAME::getIcon("logo"));
+
     setAutoFillBackground(true);
     QPalette pal;
     pal.setBrush(backgroundRole(), embed::getIconPixmap("plugin_bg"));
@@ -39,43 +41,42 @@ OutputGDXDialog::OutputGDXDialog(OutputGDXControls* controls) :
 
     QGridLayout* mainLayout = new QGridLayout(this);
     mainLayout->setContentsMargins(6, 6, 6, 6);
-    mainLayout->setHorizontalSpacing(6);
-    mainLayout->setVerticalSpacing(6);
+    mainLayout->setSpacing(6);
 
     Knob* leftKNB = new Knob(this);
     leftKNB->setModel(&controls->m_leftModel);
     leftKNB->setPointColor(Qt::white);
-    leftKNB->setLabel(tr("LEFT"));
+    leftKNB->setText(tr("LEFT"));
     leftKNB->setHintText(tr("Left:"), "");
 
     Knob* rightKNB = new Knob(this);
     rightKNB->setModel(&controls->m_rightModel);
     rightKNB->setPointColor(Qt::white);
-    rightKNB->setLabel(tr("RIGHT"));
+    rightKNB->setText(tr("RIGHT"));
     rightKNB->setHintText(tr("Right:"), "");
 
     Knob* rmsKNB = new Knob(this);
     rmsKNB->setModel(&controls->m_rmsModel);
     rmsKNB->setPointColor(Qt::red);
-    rmsKNB->setLabel(tr("RMS"));
+    rmsKNB->setText(tr("RMS"));
     rmsKNB->setHintText(tr("Rms:"), "");
 
     Knob* volKNB = new Knob(this);
     volKNB->setModel(&controls->m_volModel);
     volKNB->setPointColor(Qt::red);
-    volKNB->setLabel(tr("VOL"));
+    volKNB->setText(tr("VOL"));
     volKNB->setHintText(tr("Vol:"), "");
 
     Knob* panKNB = new Knob(this);
     panKNB->setModel(&controls->m_panModel);
     panKNB->setPointColor(Qt::magenta);
-    panKNB->setLabel(tr("PAN"));
+    panKNB->setText(tr("PAN"));
     panKNB->setHintText(tr("Pan:"), "");
 
     Knob* frequencyKNB = new Knob(this);
     frequencyKNB->setModel(&controls->m_frequencyModel);
     frequencyKNB->setPointColor(Qt::green);
-    frequencyKNB->setLabel(tr("FREQ"));
+    frequencyKNB->setText(tr("FREQ"));
     frequencyKNB->setHintText(tr("Frequency:"), "");
 
     int col = 0, row = 0;  // first row
@@ -92,5 +93,9 @@ OutputGDXDialog::OutputGDXDialog(OutputGDXControls* controls) :
     mainLayout->addWidget(frequencyKNB, row, ++col, 1, 1,
                           Qt::AlignBottom | Qt::AlignHCenter);
 
-    setFixedWidth(234);
+    mainLayout->setColumnStretch(7, 1);
+    mainLayout->setRowStretch(1, 1);
+
+    setFixedWidth(250);
+    setMinimumHeight(((sizeHint().height() - 1) / 50 + 1) * 50);
 }

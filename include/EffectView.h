@@ -72,6 +72,8 @@ class EffectView : public PluginView
 signals:
 	void moveUp( EffectView * _plugin );
 	void moveDown( EffectView * _plugin );
+	void moveTop( EffectView * _plugin );
+	void moveBottom( EffectView * _plugin );
 	void deletePlugin( EffectView * _plugin );
 
 

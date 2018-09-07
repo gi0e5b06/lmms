@@ -102,13 +102,13 @@ void LadspaControls::saveSettings( QDomDocument & _doc, QDomElement & _this )
 	{
 		_this.setAttribute( "link", m_stereoLinkModel.value() );
 	}
-	
+
 	multi_proc_t controls = m_effect->getPortControls();
 	_this.setAttribute( "ports", controls.count() );
-	for( multi_proc_t::Iterator it = controls.begin(); 
-						it != controls.end(); it++ )
+	for( multi_proc_t::Iterator it = controls.begin();
+             it != controls.end(); it++ )
 	{
-		QString n = "port" + QString::number( (*it)->proc ) + 
+		QString n = "port" + QString::number( (*it)->proc ) +
 					QString::number( (*it)->port_id );
 		(*it)->control->saveSettings( _doc, _this, n );
 	}
@@ -156,6 +156,8 @@ void LadspaControls::linkPort( int _port, bool _state )
 		m_noLink = true;
 		m_stereoLinkModel.setValue( false );
 	}
+
+        emit propertiesChanged();
 }
 
 
@@ -180,6 +182,8 @@ void LadspaControls::updateLinkStatesFromGlobal()
 	// if global channel link state has changed, always ignore link
 	// status of individual ports in the future
 	m_noLink = false;
+
+        emit propertiesChanged();
 }
 
 

@@ -1,5 +1,5 @@
 /*
- * ChainGDXControlDialog.cpp - control dialog for chaining effect
+ * ChainGDXDialog.cpp - control dialog for chaining effect
  *
  * Copyright (c) 2018 gi0e5b06 (on github.com)
  *
@@ -22,30 +22,36 @@
  *
  */
 
-#include "ChainGDXControlDialog.h"
-
-#include <QGridLayout>
-#include <QGroupBox>
-#include <QLayout>
+#include "ChainGDXDialog.h"
 
 #include "ChainGDX.h"
 #include "ChainGDXControls.h"
 #include "EffectRackView.h"
 #include "embed.h"
 
-ChainGDXControlDialog::ChainGDXControlDialog(ChainGDXControls* controls) :
+#include <QGridLayout>
+//#include <QGroupBox>
+//#include <QLayout>
+
+ChainGDXDialog::ChainGDXDialog(ChainGDXControls* controls) :
       EffectControlDialog(controls)
 {
+    setWindowIcon(PLUGIN_NAME::getIcon("logo"));
+
     setAutoFillBackground(true);
     QPalette pal;
     pal.setBrush(backgroundRole(), embed::getIconPixmap("plugin_bg"));
     //pal.setBrush(backgroundRole(), PLUGIN_NAME::getIconPixmap("artwork"));
     setPalette(pal);
-    setContentsMargins(0, 0, 0, 0);
-    setFixedWidth(246);
-    setMinimumHeight(200);
+
+    QGridLayout* mainLOT = new QGridLayout(this);
+    mainLOT->setContentsMargins(0,0,0,0);
+    mainLOT->setSpacing(0);
 
     EffectRackView* erv
             = new EffectRackView(controls->m_effect->m_chain, this);
-    erv->setFixedSize(245, 200);
+    mainLOT->addWidget(erv);//->setFixedSize(245, 200);
+
+    setFixedWidth(250);
+    setMinimumHeight(250);
 }

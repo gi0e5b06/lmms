@@ -186,9 +186,9 @@ void Knob::setText(const QString& txt)
         int h = m_knobPixmap->height();
         if(!txt.isEmpty())
         {
-            QFontMetrics mx(pointSizeF(font(), 6.5));
+            QFontMetrics mx(pointSizeF(font(), 7.f));  // 6.5));
             w = qMax<int>(w, qMin<int>(2 * w, mx.width(txt)));
-            h += 10;
+            h += 7; //10;
         }
         setMinimumSize(w, h);
         resize(w, h);
@@ -405,6 +405,7 @@ QColor Knob::statusColor()
 
 void Knob::drawWidget(QPainter& _p)
 {
+    _p.setRenderHints(QPainter::Antialiasing, true);
     drawKnob(_p);
     drawText(_p);
 }
@@ -450,7 +451,7 @@ void Knob::drawKnob(QPainter& _p)
     else if(m)
     {
         // Old-skool knobs
-        const float radius = m_knobPixmap->width() / 2.0f - 1.f;
+        const float radius = m_knobPixmap->width() / 2.0f - 3.f;
         mid = QPointF(width() / 2.f, m_knobPixmap->height() / 2.f);
 
         /*
@@ -466,7 +467,7 @@ void Knob::drawKnob(QPainter& _p)
 
         const float arcLineWidth = 3.f;
         const float arcRectSize
-                = m_knobPixmap->width() - arcLineWidth - 2.f;  // 0
+                = m_knobPixmap->width() - arcLineWidth; // - 2.f;  // 0
 
         /*
         QColor col;
@@ -489,10 +490,10 @@ void Knob::drawKnob(QPainter& _p)
                 */
             case knobDark_28:
             {
-                const float rb = qMax<float>((radius - 10) / 3.0, 0.0);
-                const float re = qMax<float>((radius - 4), 0.0);
+                const float rb = qMax<float>((radius - 8) / 3.0, 0.0);
+                const float re = qMax<float>((radius - 2), 0.0);
                 line           = calculateLine(mid, re, rb);
-                line.translate(1, 1);
+                //line.translate(1, 1);
             }
             break;
             case knobVintage_32:
@@ -508,32 +509,33 @@ void Knob::drawKnob(QPainter& _p)
 
         _p.setBrush(m_statusColor);
         float re = radius;  // + 2.f;
-        _p.drawEllipse(mid.x() - re / 2.f, mid.y() - re / 2.f, re,
-                       re);  //+1.f,re+1.f);
+        _p.drawEllipse(QRectF(mid.x() - re / 2.f, mid.y() - re / 2.f, re,
+                              re));  //+1.f,re+1.f);
 
         QPen pen1(QColor(0, 0, 0, 96), 2, Qt::SolidLine, Qt::RoundCap);
         _p.setPen(pen1);
-        _p.drawArc(mid.x() - arcRectSize / 2.f, 1.f, arcRectSize, arcRectSize,
+        _p.drawArc(QRectF(mid.x() - arcRectSize / 2.f, 1.f, arcRectSize,
+                          arcRectSize),
                    16.f * 315, 16.f * m_totalAngle);
 
         QPen pen2(QColor(0, 0, 0, 96), 4, Qt::SolidLine, Qt::RoundCap);
         _p.setPen(pen2);
         _p.drawLine(line);
-        _p.drawArc(mid.x() - arcRectSize / 2.f, 1.f, arcRectSize, arcRectSize,
+        _p.drawArc(QRectF(mid.x() - arcRectSize / 2.f, 1.f, arcRectSize, arcRectSize),
                    16.f * (90.f - centerAngle),
                    -16.f * (m_angle - centerAngle));
         _p.setBrush(QColor(0, 0, 0, 96));
         // _p.drawEllipse(mid.x()-2.f,mid.y()-2.f,5.f,5.f);
-        _p.drawEllipse(mid.x() - 1.f, mid.y() - 1.f, 3.f, 3.f);
+        _p.drawEllipse(QRectF(mid.x() - 1.f, mid.y() - 1.f, 3.f, 3.f));
 
         QPen pen3(pc, 2, Qt::SolidLine, Qt::RoundCap);
         _p.setPen(pen3);
         _p.drawLine(line);
-        _p.drawArc(mid.x() - arcRectSize / 2, 1, arcRectSize, arcRectSize,
+        _p.drawArc(QRectF(mid.x() - arcRectSize / 2, 1, arcRectSize, arcRectSize),
                    16.f * (90.f - centerAngle),
                    -16.f * (m_angle - centerAngle));
         _p.setBrush(pc);
-        _p.drawEllipse(mid.x() - 1.f, mid.y() - 1.f, 3.f, 3.f);
+        _p.drawEllipse(QRectF(mid.x() - 1.f, mid.y() - 1.f, 3.f, 3.f));
     }
 }
 
@@ -541,15 +543,16 @@ void Knob::drawText(QPainter& _p)
 {
     if(!m_label.isEmpty())
     {
-        _p.setFont(pointSizeF(_p.font(), 6.5));
+        _p.setFont(pointSizeF(font(), 7.f));
         _p.setPen(textColor());
         QFontMetrics metrix = _p.fontMetrics();
         QString text = metrix.elidedText(m_label, Qt::ElideRight, width());
         int     x    = width() / 2 - metrix.width(text) / 2;
-        int     y    = height() - 2;
-        if(m_knobPixmap)
-            y = qMin(y, m_knobPixmap->height() + 7);
+        int     y    = height() - 1;
+        //if(m_knobPixmap)
+        //    y = qMin(y, m_knobPixmap->height() + 7);
         _p.drawText(x, y, text);
+        _p.drawText(x, y, text);  // twice for aa
     }
 }
 

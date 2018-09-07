@@ -42,9 +42,8 @@
 InstrumentFunctionView::InstrumentFunctionView(InstrumentFunction* cc,
                                                const QString&      _caption,
                                                QWidget*            _parent,
-                                               bool                _arrow,
-                                               bool                _panel) :
-      GroupBox(_caption, _parent, true, _arrow, _panel),
+                                               bool                _arrow) :
+      GroupBox(_caption, _parent, true, _arrow),
       //      QWidget(_parent),
       ModelView(NULL, this)
 //, m_groupBox(new GroupBox(_caption))
@@ -65,6 +64,8 @@ InstrumentFunctionView::InstrumentFunctionView(InstrumentFunction* cc,
     addTopWidget(maxLcd, 4);
     minLcd->setModel(cc->minNoteGenerationModel());
     maxLcd->setModel(cc->maxNoteGenerationModel());
+
+    setContentWidget(new QWidget());
 }
 
 InstrumentFunctionView::~InstrumentFunctionView()
@@ -298,7 +299,7 @@ InstrumentFunctionNoteDuplicatesRemovingView::
                 InstrumentFunctionNoteDuplicatesRemoving* cc,
                 QWidget*                                  parent) :
       InstrumentFunctionView(
-              cc, tr("DUPLICATES REMOVING"), parent, false, false),
+              cc, tr("DUPLICATES REMOVING"), parent, false),
       m_cc(cc)
 {
     QGridLayout* mainLayout = new QGridLayout(m_panel);

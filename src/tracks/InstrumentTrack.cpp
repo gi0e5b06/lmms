@@ -92,7 +92,7 @@ const char* ITVOLHELP = QT_TRANSLATE_NOOP( "InstrumentTrack",
                                            "the volume of the opened "
                                            "channel.");
 
-const int INSTRUMENT_WIDTH	= 254;
+const int INSTRUMENT_WIDTH	= 250;
 const int INSTRUMENT_HEIGHT	= INSTRUMENT_WIDTH;
 const int PIANO_HEIGHT		= 80;
 const int INSTRUMENT_WINDOW_CACHE_SIZE = 8;
@@ -440,8 +440,9 @@ void InstrumentTrack::processOutEvent( const MidiEvent& event, const MidiTime& t
 
 		if( key >= 0 && key < NumKeys )
 		{
-			if( m_runningMidiNotes[key] > 0 )
+			while( m_runningMidiNotes[key] > 0 )
 			{
+                                --m_runningMidiNotes[key];
 				m_instrument->handleMidiEvent( MidiEvent( MidiNoteOff, midiPort()->outputChannel()-1, key, 0 ), time, offset );
 			}
 			++m_runningMidiNotes[key];
@@ -455,9 +456,13 @@ void InstrumentTrack::processOutEvent( const MidiEvent& event, const MidiTime& t
 		m_midiNotesMutex.lock();
 		m_piano.setKeyState( event.key(), false );	// event.key() = original key
 
-		if( key >= 0 && key < NumKeys && --m_runningMidiNotes[key] <= 0 )
+		if( key >= 0 && key < NumKeys )
 		{
-			m_instrument->handleMidiEvent( MidiEvent( MidiNoteOff, midiPort()->outputChannel()-1, key, 0 ), time, offset );
+                        while( m_runningMidiNotes[key] > 0 )
+                        {
+                                --m_runningMidiNotes[key];
+                                m_instrument->handleMidiEvent( MidiEvent( MidiNoteOff, midiPort()->outputChannel()-1, key, 0 ), time, offset );
+                        }
                         m_noteDetuneModel.setValue(0);
 		}
 		m_midiNotesMutex.unlock();
@@ -1052,7 +1057,6 @@ InstrumentTrackView::InstrumentTrackView( InstrumentTrack * _it, TrackContainerV
 	m_volumeKnob->setModel( &_it->m_volumeModel );
 	m_volumeKnob->setHintText( tr( "Volume:" ), "%" );
 	m_volumeKnob->move( widgetWidth-2*29, 3 );//24,2
-	//m_volumeKnob->setLabel( tr( "VOL" ) );
 	m_volumeKnob->show();
 	m_volumeKnob->setWhatsThis( tr( ITVOLHELP ) );
 
@@ -1062,7 +1066,6 @@ InstrumentTrackView::InstrumentTrackView( InstrumentTrack * _it, TrackContainerV
 	m_panningKnob->setModel( &_it->m_panningModel );
 	m_panningKnob->setHintText( tr( "Panning:" ), "%" );
 	m_panningKnob->move( widgetWidth-29, 3 );//24,2
-	//m_panningKnob->setLabel( tr( "PAN" ) );
 	m_panningKnob->setPointColor( Qt::magenta );
 	m_panningKnob->show();
 
@@ -1558,13 +1561,13 @@ InstrumentTrackWindow::InstrumentTrackWindow( InstrumentTrackView * _itv ) :
 
 	QVBoxLayout* generalSettingsLayout = new QVBoxLayout( generalSettingsWidget );
 
-	generalSettingsLayout->setContentsMargins( 6, 16, 6, 6 );
+	generalSettingsLayout->setContentsMargins( 6, 18, 6, 6 );
 	generalSettingsLayout->setSpacing( 6 );
 
 	QWidget* nameAndChangeTrackWidget = new QWidget( generalSettingsWidget );
 	QHBoxLayout* nameAndChangeTrackLayout = new QHBoxLayout( nameAndChangeTrackWidget );
 	nameAndChangeTrackLayout->setContentsMargins( 0, 0, 0, 0 );
-	nameAndChangeTrackLayout->setSpacing( 2 );
+	nameAndChangeTrackLayout->setSpacing( 6 );
 
 	// setup line edit for changing instrument track name
 	m_nameLineEdit = new QLineEdit;
@@ -1586,7 +1589,7 @@ InstrumentTrackWindow::InstrumentTrackWindow( InstrumentTrackView * _itv ) :
 		tr( "Use these controls to view and edit the next/previous track in the song editor." ) );
 	// m_leftRightNav->setShortcuts();
 	nameAndChangeTrackLayout->addWidget(m_leftRightNav);
-
+        nameAndChangeTrackLayout->setAlignment(m_leftRightNav,Qt::AlignTop);
 
 	generalSettingsLayout->addWidget( nameAndChangeTrackWidget );
 
@@ -1597,37 +1600,39 @@ InstrumentTrackWindow::InstrumentTrackWindow( InstrumentTrackView * _itv ) :
 	basicControlsLayout->setVerticalSpacing(0);
 	basicControlsLayout->setContentsMargins(0, 0, 0, 0);
 
-	QString labelStyleSheet = "font-size: 6pt;";
-	Qt::Alignment labelAlignment = Qt::AlignHCenter | Qt::AlignTop;
-	Qt::Alignment widgetAlignment = Qt::AlignHCenter | Qt::AlignCenter;
+	//QString labelStyleSheet = "font-size: 6pt;";
+	//Qt::Alignment labelAlignment = Qt::AlignHCenter | Qt::AlignTop;
+	Qt::Alignment widgetAlignment = Qt::AlignHCenter | Qt::AlignBottom;//Center;
 
 	// set up volume knob
 	m_volumeKnob = new Knob( knobBright_26, NULL, tr( "Instrument volume" ) );
 	m_volumeKnob->setVolumeKnob( true );
+	m_volumeKnob->setText( tr( "VOL" ) );
 	m_volumeKnob->setHintText( tr( "Volume:" ), "%" );
 	m_volumeKnob->setWhatsThis( tr( ITVOLHELP ) );
 
 	basicControlsLayout->addWidget( m_volumeKnob, 0, 0 );
 	basicControlsLayout->setAlignment( m_volumeKnob, widgetAlignment );
 
-	QLabel *label = new QLabel( tr( "VOL" ), this );
-	label->setStyleSheet( labelStyleSheet );
-	basicControlsLayout->addWidget( label, 1, 0);
-	basicControlsLayout->setAlignment( label, labelAlignment );
+	//QLabel *label = new QLabel( tr( "VOL" ), this );
+	//label->setStyleSheet( labelStyleSheet );
+	//basicControlsLayout->addWidget( label, 1, 0);
+	//basicControlsLayout->setAlignment( label, labelAlignment );
 
 
 	// set up panning knob
 	m_panningKnob = new Knob( knobBright_26, NULL, tr( "Panning" ) );
+	m_panningKnob->setText( tr( "PAN" ) );
 	m_panningKnob->setHintText( tr( "Panning:" ), "" );
 	m_panningKnob->setPointColor( Qt::magenta );
 
 	basicControlsLayout->addWidget( m_panningKnob, 0, 1 );
 	basicControlsLayout->setAlignment( m_panningKnob, widgetAlignment );
 
-	label = new QLabel( tr( "PAN" ), this );
-	label->setStyleSheet( labelStyleSheet );
-	basicControlsLayout->addWidget( label, 1, 1);
-	basicControlsLayout->setAlignment( label, labelAlignment );
+	//label = new QLabel( tr( "PAN" ), this );
+	//label->setStyleSheet( labelStyleSheet );
+	//basicControlsLayout->addWidget( label, 1, 1);
+	//basicControlsLayout->setAlignment( label, labelAlignment );
 
 
 	basicControlsLayout->setColumnStretch(2, 1);
@@ -1637,26 +1642,27 @@ InstrumentTrackWindow::InstrumentTrackWindow( InstrumentTrackView * _itv ) :
 	m_pitchKnob = new Knob( knobBright_26, NULL, tr( "Pitch" ) );
 	m_pitchKnob->setPointColor( Qt::cyan );
 	m_pitchKnob->setHintText( tr( "Pitch:" ), " " + tr( "cents" ) );
+        m_pitchKnob->setText(tr("PITCH"));
 
 	basicControlsLayout->addWidget( m_pitchKnob, 0, 3 );
 	basicControlsLayout->setAlignment( m_pitchKnob, widgetAlignment );
 
-	m_pitchLabel = new QLabel( tr( "PITCH" ), this );
-	m_pitchLabel->setStyleSheet( labelStyleSheet );
-	basicControlsLayout->addWidget( m_pitchLabel, 1, 3);
-	basicControlsLayout->setAlignment( m_pitchLabel, labelAlignment );
+	//m_pitchLabel = new QLabel( tr( "PITCH" ), this );
+	//m_pitchLabel->setStyleSheet( labelStyleSheet );
+	//basicControlsLayout->addWidget( m_pitchLabel, 1, 3);
+	//basicControlsLayout->setAlignment( m_pitchLabel, labelAlignment );
 
 
 	// set up pitch range knob
-	m_pitchRangeSpinBox= new LcdSpinBox( 2, NULL, tr( "Pitch range (semitones)" ) );
-
+	m_pitchRangeSpinBox= new LcdSpinBox( 2, "19cyan", NULL, tr( "Pitch range (semitones)" ) );
+        m_pitchRangeSpinBox->setText(tr("RANGE"));
 	basicControlsLayout->addWidget( m_pitchRangeSpinBox, 0, 4 );
 	basicControlsLayout->setAlignment( m_pitchRangeSpinBox, widgetAlignment );
 
-	m_pitchRangeLabel = new QLabel( tr( "RANGE" ), this );
-	m_pitchRangeLabel->setStyleSheet( labelStyleSheet );
-	basicControlsLayout->addWidget( m_pitchRangeLabel, 1, 4);
-	basicControlsLayout->setAlignment( m_pitchRangeLabel, labelAlignment );
+	//m_pitchRangeLabel = new QLabel( tr( "RANGE" ), this );
+	//m_pitchRangeLabel->setStyleSheet( labelStyleSheet );
+	//basicControlsLayout->addWidget( m_pitchRangeLabel, 1, 4);
+	//basicControlsLayout->setAlignment( m_pitchRangeLabel, labelAlignment );
 
 
 	basicControlsLayout->setColumnStretch(5, 1);
@@ -1664,17 +1670,18 @@ InstrumentTrackWindow::InstrumentTrackWindow( InstrumentTrackView * _itv ) :
 
 	// setup spinbox for selecting FX-channel
 	m_effectChannelNumber = new fxLineLcdSpinBox( 2, NULL, tr( "FX channel" ) );
-
+        m_effectChannelNumber->setText(tr("FX"));
+        
 	basicControlsLayout->addWidget( m_effectChannelNumber, 0, 6 );
 	basicControlsLayout->setAlignment( m_effectChannelNumber, widgetAlignment );
 
-	label = new QLabel( tr( "FX" ), this );
-	label->setStyleSheet( labelStyleSheet );
-	basicControlsLayout->addWidget( label, 1, 6);
-	basicControlsLayout->setAlignment( label, labelAlignment );
+	//label = new QLabel( tr( "FX" ), this );
+	//label->setStyleSheet( labelStyleSheet );
+	//basicControlsLayout->addWidget( label, 1, 6);
+	//basicControlsLayout->setAlignment( label, labelAlignment );
 
 	QPushButton* saveSettingsBtn = new QPushButton( embed::getIconPixmap( "project_save" ), QString() );
-	saveSettingsBtn->setMinimumSize( 32, 32 );
+	saveSettingsBtn->setMinimumSize( 30,30 );//32, 32 );
 
 	connect( saveSettingsBtn, SIGNAL( clicked() ), this, SLOT( saveSettingsBtnClicked() ) );
 
@@ -1684,11 +1691,12 @@ InstrumentTrackWindow::InstrumentTrackWindow( InstrumentTrackView * _itv ) :
 			"Later you can load this preset by double-clicking it in the preset-browser." ) );
 
 	basicControlsLayout->addWidget( saveSettingsBtn, 0, 7 );
+	basicControlsLayout->setAlignment( saveSettingsBtn, widgetAlignment );
 
-	label = new QLabel( tr( "SAVE" ), this );
-	label->setStyleSheet( labelStyleSheet );
-	basicControlsLayout->addWidget( label, 1, 7);
-	basicControlsLayout->setAlignment( label, labelAlignment );
+	//label = new QLabel( tr( "SAVE" ), this );
+	//label->setStyleSheet( labelStyleSheet );
+	//basicControlsLayout->addWidget( label, 1, 7);
+	//basicControlsLayout->setAlignment( label, labelAlignment );
 
 	generalSettingsLayout->addLayout( basicControlsLayout );
 
@@ -1848,17 +1856,17 @@ void InstrumentTrackWindow::modelChanged()
 		m_pitchKnob->setModel( &m_track->m_pitchModel );
 		m_pitchRangeSpinBox->setModel( &m_track->m_pitchRangeModel );
 		m_pitchKnob->show();
-		m_pitchLabel->show();
+		//m_pitchLabel->show();
 		m_pitchRangeSpinBox->show();
-		m_pitchRangeLabel->show();
+		//m_pitchRangeLabel->show();
 	}
 	else
 	{
 		m_pitchKnob->hide();
-		m_pitchLabel->hide();
+		//m_pitchLabel->hide();
 		m_pitchKnob->setModel( new FloatModel(0.f,0.f,0.f,0.01f,NULL,"",true)); //(NULL);
 		m_pitchRangeSpinBox->hide();
-		m_pitchRangeLabel->hide();
+		//m_pitchRangeLabel->hide();
 	}
 
 	m_ssView->setModel( &m_track->m_soundShaping );

@@ -150,29 +150,6 @@ void EffectChain::removeEffect( Effect * _effect )
 
 
 
-void EffectChain::moveDown( Effect * _effect )
-{
-	if( _effect != m_effects.last() )
-	{
-		int i = 0;
-		for( EffectList::Iterator it = m_effects.begin();
-					it != m_effects.end(); it++, i++ )
-		{
-			if( *it == _effect )
-			{
-				break;
-			}
-		}
-
-		Effect * temp = m_effects[i + 1];
-		m_effects[i + 1] = _effect;
-		m_effects[i] = temp;
-	}
-}
-
-
-
-
 void EffectChain::moveUp( Effect * _effect )
 {
 	if( _effect != m_effects.first() )
@@ -194,6 +171,47 @@ void EffectChain::moveUp( Effect * _effect )
 }
 
 
+
+
+void EffectChain::moveDown( Effect * _effect )
+{
+	if( _effect != m_effects.last() )
+	{
+		int i = 0;
+		for( EffectList::Iterator it = m_effects.begin();
+					it != m_effects.end(); it++, i++ )
+		{
+			if( *it == _effect )
+			{
+				break;
+			}
+		}
+
+		Effect * temp = m_effects[i + 1];
+		m_effects[i + 1] = _effect;
+		m_effects[i] = temp;
+	}
+}
+
+
+void EffectChain::moveTop(Effect* _effect)
+{
+	if( _effect != m_effects.first() )
+	{
+                m_effects.removeOne(_effect);
+                m_effects.prepend(_effect);
+	}
+}
+
+
+void EffectChain::moveBottom(Effect* _effect)
+{
+	if( _effect != m_effects.last() )
+	{
+                m_effects.removeOne(_effect);
+                m_effects.append(_effect);
+	}
+}
 
 
 bool EffectChain::processAudioBuffer( sampleFrame * _buf, const fpp_t _frames, bool hasInputNoise )

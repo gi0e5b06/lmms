@@ -113,10 +113,10 @@ void LedCheckBox::paintEvent(QPaintEvent* _pe)
     QString t = text();
     if(!t.isEmpty())
     {
-            QFont ft = pointSizeF(font(),6.5);
+        QFont ft = pointSizeF(font(), 6.5f);
         p.setFont(ft);
 
-        //const QFontMetrics mx(pointSizeF(p.font(), 6.5));
+        // const QFontMetrics mx(pointSizeF(p.font(), 6.5));
         const QFontMetrics mx = p.fontMetrics();
         // pointSizeF( font(), 7) ); //6.5
         int ww = width() - mw.left() - mw.right();
@@ -203,17 +203,17 @@ void LedCheckBox::onTextUpdated()
     if(!t.isEmpty())
     {
         Qt::AnchorPoint a = textAnchorPoint();
-        //QFont ft = font();  // pointSize<11>(font());
+        // QFont ft = font();  // pointSize<11>(font());
         const QFontMetrics mx(pointSizeF(font(), 6.5));
         if((a == Qt::AnchorLeft) || (a == Qt::AnchorRight))
         {
-            w += mx.width(t);  // 4
-            h = qMax<int>(h, mx.height())+2;
+            w += mx.width(t) + 3;
+            h = qMax<int>(h, mx.height()) + 2;
         }
         if((a == Qt::AnchorTop) || (a == Qt::AnchorBottom))
         {
             w = qMax<int>(w, qMin<int>(2 * w, mx.width(t)));
-            h += mx.height()+2;
+            h += mx.height() + 2;
         }
     }
 

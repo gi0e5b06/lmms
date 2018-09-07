@@ -450,15 +450,18 @@ void AutomatableModel::linkModel( AutomatableModel* model, bool propagate )
 	{
 		m_linkedModels.push_back( model );
 
-		if( !model->hasLinkedModels() )
+		if( !model->hasLinkedModels() ) // ???
 		{
-			QObject::connect( this, SIGNAL( dataChanged() ),
-                                          model, SIGNAL( dataChanged() ) );
-                        QObject::connect( this, SIGNAL( controllerValueChanged(float) ),
-                                          model, SLOT( setControlledValue(float) ) );
+			connect( this, SIGNAL( dataChanged() ),
+                                 model, SIGNAL( dataChanged() ) );
+                        //connect( this, SIGNAL( controllerValueChanged(float) ),
+                        //         model, SLOT( setControlledValue(float) ) );
 		}
 
                 if(propagate) propagateValue();
+
+                model->emit propertiesChanged();
+                emit propertiesChanged();
 	}
 }
 

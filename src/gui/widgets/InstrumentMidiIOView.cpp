@@ -30,198 +30,213 @@
 #include "LcdSpinBox.h"
 //#include "LedCheckBox.h"
 #include "MidiClient.h"
-#include "MidiPortMenu.h" // REQUIRED
+#include "MidiPortMenu.h"  // REQUIRED
 #include "Mixer.h"
 //#include "ToolTip.h"
 
 #include "embed.h"
 #include "gui_templates.h"
 
-#include <QLabel>
 #include <QHBoxLayout>
+#include <QLabel>
 //#include <QMenu>
-#include <QVBoxLayout>
 #include <QToolButton>
+#include <QVBoxLayout>
 
-InstrumentMidiIOView::InstrumentMidiIOView( QWidget* parent ) :
-	QWidget( parent ),
-	ModelView( NULL, this ),
-	m_rpBtn( NULL ),
-	m_wpBtn( NULL )
+InstrumentMidiIOView::InstrumentMidiIOView(QWidget* parent) :
+      QWidget(parent), ModelView(NULL, this), m_rpBtn(NULL), m_wpBtn(NULL)
 {
-	QVBoxLayout* layout = new QVBoxLayout( this );
-	layout->setMargin( 5 );
-	m_midiInputGroupBox = new GroupBox( tr( "ENABLE MIDI INPUT" ) );
-	layout->addWidget( m_midiInputGroupBox );
+    QVBoxLayout* layout = new QVBoxLayout(this);
+    layout->setContentsMargins(2, 3, 2, 5);
 
-	QHBoxLayout* midiInputLayout = new QHBoxLayout( m_midiInputGroupBox );
-	midiInputLayout->setContentsMargins( 8, 18, 8, 8 );
-	midiInputLayout->setSpacing( 6 );
+    /// Midi Input
 
-	m_inputChannelSpinBox = new LcdSpinBox( 2, m_midiInputGroupBox );
-	m_inputChannelSpinBox->addTextForValue( 0, "--" );
-	m_inputChannelSpinBox->setLabel( tr( "CHANNEL" ) );
-	m_inputChannelSpinBox->setEnabled( false );
-	midiInputLayout->addWidget( m_inputChannelSpinBox );
+    m_midiInputGBX = new GroupBox(tr("MIDI INPUT"), this, true, false);
+    QWidget*     midiInputPNL    = new QWidget(m_midiInputGBX);
+    QHBoxLayout* midiInputLayout = new QHBoxLayout(midiInputPNL);
+    midiInputLayout->setContentsMargins(6, 6, 6, 6);
+    midiInputLayout->setSpacing(6);
+    m_midiInputGBX->setContentWidget(midiInputPNL);
 
-	m_fixedInputVelocitySpinBox = new LcdSpinBox( 3, m_midiInputGroupBox );
-	//m_fixedInputVelocitySpinBox->setDisplayOffset( 1 );
-	m_fixedInputVelocitySpinBox->addTextForValue( -1, "---" );//0
-	m_fixedInputVelocitySpinBox->setLabel( tr( "VELOCITY" ) );
-	m_fixedInputVelocitySpinBox->setEnabled( false );
-	midiInputLayout->addWidget( m_fixedInputVelocitySpinBox );
-	midiInputLayout->addStretch();
+    if(!Engine::mixer()->midiClient()->isRaw())
+    {
+        m_rpBtn = new QToolButton;
+        m_rpBtn->setMinimumSize(32, 32);
+        m_rpBtn->setText(tr("MIDI devices to receive MIDI events from"));
+        m_rpBtn->setIcon(embed::getIconPixmap("piano"));
+        m_rpBtn->setPopupMode(QToolButton::InstantPopup);
+        midiInputLayout->addWidget(m_rpBtn);
+    }
 
-	connect( m_midiInputGroupBox->ledButton(), SIGNAL( toggled( bool ) ),
-			m_inputChannelSpinBox, SLOT( setEnabled( bool ) ) );
-	connect( m_midiInputGroupBox->ledButton(), SIGNAL( toggled( bool ) ),
-		m_fixedInputVelocitySpinBox, SLOT( setEnabled( bool ) ) );
+    m_inputChannelSpinBox = new LcdSpinBox(2, midiInputPNL);
+    m_inputChannelSpinBox->addTextForValue(0, "--");
+    m_inputChannelSpinBox->setLabel(tr("CHANNEL"));
+    m_inputChannelSpinBox->setEnabled(false);
+    midiInputLayout->addWidget(m_inputChannelSpinBox);
 
+    m_fixedInputVelocitySpinBox = new LcdSpinBox(3, midiInputPNL);
+    // m_fixedInputVelocitySpinBox->setDisplayOffset( 1 );
+    m_fixedInputVelocitySpinBox->addTextForValue(-1, "---");  // 0
+    m_fixedInputVelocitySpinBox->setLabel(tr("VELOCITY"));
+    m_fixedInputVelocitySpinBox->setEnabled(false);
+    midiInputLayout->addWidget(m_fixedInputVelocitySpinBox);
 
+    midiInputLayout->addStretch(1);
+    // m_midiInputGBX->setMinimumWidth(230);
+    layout->addWidget(m_midiInputGBX);
 
-	m_midiOutputGroupBox = new GroupBox( tr( "ENABLE MIDI OUTPUT" ) );
-	layout->addWidget( m_midiOutputGroupBox );
+    connect(m_midiInputGBX->ledButton(), SIGNAL(toggled(bool)),
+            m_inputChannelSpinBox, SLOT(setEnabled(bool)));
+    connect(m_midiInputGBX->ledButton(), SIGNAL(toggled(bool)),
+            m_fixedInputVelocitySpinBox, SLOT(setEnabled(bool)));
 
-	QHBoxLayout* midiOutputLayout = new QHBoxLayout( m_midiOutputGroupBox );
-	midiOutputLayout->setContentsMargins( 8, 18, 8, 8 );
-	midiOutputLayout->setSpacing( 6 );
+    /// Midi Output
 
-	m_outputChannelSpinBox = new LcdSpinBox( 2, m_midiOutputGroupBox );
-	m_outputChannelSpinBox->setLabel( tr( "CHANNEL" ) );
-	m_outputChannelSpinBox->setEnabled( false );
-	midiOutputLayout->addWidget( m_outputChannelSpinBox );
+    m_midiOutputGBX = new GroupBox(tr("MIDI OUTPUT"), this, true, false);
+    QWidget*     midiOutputPNL    = new QWidget(m_midiOutputGBX);
+    QHBoxLayout* midiOutputLayout = new QHBoxLayout(midiOutputPNL);
+    midiOutputLayout->setContentsMargins(6, 6, 6, 6);
+    midiOutputLayout->setSpacing(6);
+    m_midiOutputGBX->setContentWidget(midiOutputPNL);
 
-	m_fixedOutputVelocitySpinBox = new LcdSpinBox( 3, m_midiOutputGroupBox );
-	//m_fixedOutputVelocitySpinBox->setDisplayOffset( 1 );
-	m_fixedOutputVelocitySpinBox->addTextForValue( -1, "---" );//0
-	m_fixedOutputVelocitySpinBox->setLabel( tr( "VELOCITY" ) );
-	m_fixedOutputVelocitySpinBox->setEnabled( false );
-	midiOutputLayout->addWidget( m_fixedOutputVelocitySpinBox );
+    if(!Engine::mixer()->midiClient()->isRaw())
+    {
+        m_wpBtn = new QToolButton;
+        m_wpBtn->setMinimumSize(32, 32);
+        m_wpBtn->setText(tr("MIDI devices to send MIDI events to"));
+        m_wpBtn->setIcon(embed::getIconPixmap("piano"));
+        m_wpBtn->setPopupMode(QToolButton::InstantPopup);
+        midiOutputLayout->addWidget(m_wpBtn);
+    }
 
-	m_outputProgramSpinBox = new LcdSpinBox( 3, m_midiOutputGroupBox );
-	m_outputProgramSpinBox->setLabel( tr( "PROGRAM" ) );
-	m_outputProgramSpinBox->setEnabled( false );
-	midiOutputLayout->addWidget( m_outputProgramSpinBox );
+    m_outputChannelSpinBox = new LcdSpinBox(2, midiOutputPNL);
+    m_outputChannelSpinBox->setLabel(tr("CHANNEL"));
+    m_outputChannelSpinBox->setEnabled(false);
+    midiOutputLayout->addWidget(m_outputChannelSpinBox);
 
-	m_fixedOutputNoteSpinBox = new LcdSpinBox( 3, m_midiOutputGroupBox );
-	//m_fixedOutputNoteSpinBox->setDisplayOffset( 1 );
-	m_fixedOutputNoteSpinBox->addTextForValue(-1, "---" );//0
-	m_fixedOutputNoteSpinBox->setLabel( tr( "NOTE" ) );
-	m_fixedOutputNoteSpinBox->setEnabled( false );
-	midiOutputLayout->addWidget( m_fixedOutputNoteSpinBox );
-	midiOutputLayout->addStretch();
+    m_fixedOutputVelocitySpinBox = new LcdSpinBox(3, midiOutputPNL);
+    // m_fixedOutputVelocitySpinBox->setDisplayOffset( 1 );
+    m_fixedOutputVelocitySpinBox->addTextForValue(-1, "---");  // 0
+    m_fixedOutputVelocitySpinBox->setLabel(tr("VELOCITY"));
+    m_fixedOutputVelocitySpinBox->setEnabled(false);
+    midiOutputLayout->addWidget(m_fixedOutputVelocitySpinBox);
 
-	connect( m_midiOutputGroupBox->ledButton(), SIGNAL( toggled( bool ) ),
-			m_outputChannelSpinBox, SLOT( setEnabled( bool ) ) );
-	connect( m_midiOutputGroupBox->ledButton(), SIGNAL( toggled( bool ) ),
-		m_fixedOutputVelocitySpinBox, SLOT( setEnabled( bool ) ) );
-	connect( m_midiOutputGroupBox->ledButton(), SIGNAL( toggled( bool ) ),
-			m_outputProgramSpinBox, SLOT( setEnabled( bool ) ) );
-	connect( m_midiOutputGroupBox->ledButton(), SIGNAL( toggled( bool ) ),
-		m_fixedOutputNoteSpinBox, SLOT( setEnabled( bool ) ) );
+    m_outputProgramSpinBox = new LcdSpinBox(3, midiOutputPNL);
+    m_outputProgramSpinBox->setLabel(tr("PROGRAM"));
+    m_outputProgramSpinBox->setEnabled(false);
+    midiOutputLayout->addWidget(m_outputProgramSpinBox);
 
-	if( !Engine::mixer()->midiClient()->isRaw() )
-	{
-		m_rpBtn = new QToolButton;
-		m_rpBtn->setMinimumSize( 32, 32 );
-		m_rpBtn->setText( tr( "MIDI devices to receive MIDI events from" ) );
-		m_rpBtn->setIcon( embed::getIconPixmap( "piano" ) );
-		m_rpBtn->setPopupMode( QToolButton::InstantPopup );
-		midiInputLayout->insertSpacing( 0, 4 );
-		midiInputLayout->insertWidget( 0, m_rpBtn );
+    m_fixedOutputNoteSpinBox = new LcdSpinBox(3, midiOutputPNL);
+    // m_fixedOutputNoteSpinBox->setDisplayOffset( 1 );
+    m_fixedOutputNoteSpinBox->addTextForValue(-1, "---");  // 0
+    m_fixedOutputNoteSpinBox->setLabel(tr("NOTE"));
+    m_fixedOutputNoteSpinBox->setEnabled(false);
+    midiOutputLayout->addWidget(m_fixedOutputNoteSpinBox);
 
-		m_wpBtn = new QToolButton;
-		m_wpBtn->setMinimumSize( 32, 32 );
-		m_wpBtn->setText( tr( "MIDI devices to send MIDI events to" ) );
-		m_wpBtn->setIcon( embed::getIconPixmap( "piano" ) );
-		m_wpBtn->setPopupMode( QToolButton::InstantPopup );
-		midiOutputLayout->insertSpacing( 0, 4 );
-		midiOutputLayout->insertWidget( 0, m_wpBtn );
-	}
+    midiOutputLayout->addStretch(1);
+    // m_midiOutputGBX->setMinimumWidth(230);
+    layout->addWidget(m_midiOutputGBX);
 
-#define PROVIDE_CUSTOM_BASE_VELOCITY_UI
-#ifdef PROVIDE_CUSTOM_BASE_VELOCITY_UI
-	GroupBox* baseVelocityGroupBox = new GroupBox( tr( "CUSTOM BASE VELOCITY" ) );
-	layout->addWidget( baseVelocityGroupBox );
+    connect(m_midiOutputGBX->ledButton(), SIGNAL(toggled(bool)),
+            m_outputChannelSpinBox, SLOT(setEnabled(bool)));
+    connect(m_midiOutputGBX->ledButton(), SIGNAL(toggled(bool)),
+            m_fixedOutputVelocitySpinBox, SLOT(setEnabled(bool)));
+    connect(m_midiOutputGBX->ledButton(), SIGNAL(toggled(bool)),
+            m_outputProgramSpinBox, SLOT(setEnabled(bool)));
+    connect(m_midiOutputGBX->ledButton(), SIGNAL(toggled(bool)),
+            m_fixedOutputNoteSpinBox, SLOT(setEnabled(bool)));
 
-	QVBoxLayout* baseVelocityLayout = new QVBoxLayout( baseVelocityGroupBox );
-	baseVelocityLayout->setContentsMargins( 8, 18, 8, 8 );
-	baseVelocityLayout->setSpacing( 6 );
+    /// Base Velocity
 
-	QLabel* baseVelocityHelp = new QLabel( tr( "Specify the velocity normalization base for MIDI-based instruments at 100% note velocity" ) );
-	baseVelocityHelp->setWordWrap( true );
-    baseVelocityHelp->setFont( pointSize<8>( baseVelocityHelp->font() ) );
+    m_baseVelocityGBX
+            = new GroupBox(tr("CUSTOM BASE VELOCITY"), this, true, false);
+    QWidget*     baseVelocityPNL    = new QWidget(m_baseVelocityGBX);
+    QHBoxLayout* baseVelocityLayout = new QHBoxLayout(baseVelocityPNL);
+    midiOutputLayout->setContentsMargins(6, 6, 6, 6);
+    midiOutputLayout->setSpacing(6);
+    m_baseVelocityGBX->setContentWidget(baseVelocityPNL);
 
-	baseVelocityLayout->addWidget( baseVelocityHelp );
+    QLabel* baseVelocityHelp
+            = new QLabel(tr("Specify the velocity normalization base for "
+                            "MIDI-based instruments at 100% note velocity"));
+    baseVelocityHelp->setWordWrap(true);
+    baseVelocityHelp->setFont(pointSize<8>(baseVelocityHelp->font()));
+    baseVelocityLayout->addWidget(baseVelocityHelp);
 
-	m_baseVelocitySpinBox = new LcdSpinBox( 3, baseVelocityGroupBox );
-	m_baseVelocitySpinBox->setLabel( tr( "BASE VELOCITY" ) );
-	m_baseVelocitySpinBox->setEnabled( false );
-	baseVelocityLayout->addWidget( m_baseVelocitySpinBox );
+    m_baseVelocitySpinBox = new LcdSpinBox(3, baseVelocityPNL);
+    m_baseVelocitySpinBox->setLabel(tr("BASE VELOCITY"));
+    m_baseVelocitySpinBox->setEnabled(false);
+    baseVelocityLayout->addWidget(m_baseVelocitySpinBox);
 
-	connect( baseVelocityGroupBox->ledButton(), SIGNAL( toggled( bool ) ),
-			m_baseVelocitySpinBox, SLOT( setEnabled( bool ) ) );
-#endif
+    baseVelocityLayout->addStretch(1);
+    // m_baseVelocityGBX->setMinimumWidth(230);
+    layout->addWidget(m_baseVelocityGBX);
 
-	layout->addStretch();
+    connect(m_baseVelocityGBX->ledButton(), SIGNAL(toggled(bool)),
+            m_baseVelocitySpinBox, SLOT(setEnabled(bool)));
+
+    layout->addStretch(1);
+    setLayout(layout);
 }
-
-
-
 
 InstrumentMidiIOView::~InstrumentMidiIOView()
 {
 }
 
-
-
-
 void InstrumentMidiIOView::modelChanged()
 {
-	MidiPort * mp = castModel<MidiPort>();
+    MidiPort* mp = castModel<MidiPort>();
 
-	m_midiInputGroupBox->ledButton()->setModel( &mp->m_readableModel );
-	m_inputChannelSpinBox->setModel( &mp->m_inputChannelModel );
-	m_fixedInputVelocitySpinBox->setModel( &mp->m_fixedInputVelocityModel );
+    m_midiInputGBX->ledButton()->setModel(&mp->m_readableModel);
+    m_inputChannelSpinBox->setModel(&mp->m_inputChannelModel);
+    m_fixedInputVelocitySpinBox->setModel(&mp->m_fixedInputVelocityModel);
 
-	m_midiOutputGroupBox->ledButton()->setModel( &mp->m_writableModel );
-	m_outputChannelSpinBox->setModel( &mp->m_outputChannelModel );
-	m_fixedOutputVelocitySpinBox->setModel( &mp->m_fixedOutputVelocityModel );
-	m_fixedOutputNoteSpinBox->setModel( &mp->m_fixedOutputNoteModel );
-	m_outputProgramSpinBox->setModel( &mp->m_outputProgramModel );
+    m_midiOutputGBX->ledButton()->setModel(&mp->m_writableModel);
+    m_outputChannelSpinBox->setModel(&mp->m_outputChannelModel);
+    m_fixedOutputVelocitySpinBox->setModel(&mp->m_fixedOutputVelocityModel);
+    m_fixedOutputNoteSpinBox->setModel(&mp->m_fixedOutputNoteModel);
+    m_outputProgramSpinBox->setModel(&mp->m_outputProgramModel);
 
-#ifdef PROVIDE_CUSTOM_BASE_VELOCITY_UI
-	m_baseVelocitySpinBox->setModel( &mp->m_baseVelocityModel );
-#endif
+    //#ifdef PROVIDE_CUSTOM_BASE_VELOCITY_UI
+    m_baseVelocitySpinBox->setModel(&mp->m_baseVelocityModel);
+    //#endif
 
-	if( m_rpBtn )
-	{
-		m_rpBtn->setMenu( mp->m_readablePortsMenu );
-	}
-	if( m_wpBtn )
-	{
-		m_wpBtn->setMenu( mp->m_writablePortsMenu );
-	}
+    if(m_rpBtn)
+    {
+        m_rpBtn->setMenu(mp->m_readablePortsMenu);
+    }
+
+    if(m_wpBtn)
+    {
+        m_wpBtn->setMenu(mp->m_writablePortsMenu);
+    }
 }
 
-
-
-InstrumentMiscView::InstrumentMiscView(InstrumentTrack *it, QWidget *parent) :
-	QWidget( parent )
+InstrumentMiscView::InstrumentMiscView(InstrumentTrack* it, QWidget* parent) :
+      QWidget(parent)
 {
-	QVBoxLayout* layout = new QVBoxLayout( this );
-	layout->setMargin( 5 );
-	m_pitchGroupBox = new GroupBox( tr ( "MASTER PITCH" ) );
-	layout->addWidget( m_pitchGroupBox );
-	QHBoxLayout* masterPitchLayout = new QHBoxLayout( m_pitchGroupBox );
-	masterPitchLayout->setContentsMargins( 8, 18, 8, 8 );
-	QLabel *tlabel = new QLabel(tr( "Enables the use of Master Pitch" ) );
-	m_pitchGroupBox->ledButton()->setModel( &it->m_useMasterPitchModel );
-	masterPitchLayout->addWidget( tlabel );
-	layout->addStretch();
+    QVBoxLayout* layout = new QVBoxLayout(this);
+    layout->setMargin(5);
+
+    m_pitchGBX = new GroupBox(tr("MASTER PITCH"), this, true, false);
+    m_pitchGBX->ledButton()->setModel(&it->m_useMasterPitchModel);
+
+    QWidget*     masterPitchPNL    = new QWidget(m_pitchGBX);
+    QHBoxLayout* masterPitchLayout = new QHBoxLayout(masterPitchPNL);
+    masterPitchLayout->setContentsMargins(6, 6, 6, 6);
+    masterPitchLayout->setSpacing(6);
+    m_pitchGBX->setContentWidget(masterPitchPNL);
+
+    QLabel* masterPitchHelp
+            = new QLabel(tr("Enables the use of Master Pitch"));
+    masterPitchLayout->addWidget(masterPitchHelp);
+    masterPitchLayout->addStretch(1);
+
+    layout->addWidget(m_pitchGBX);
+    layout->addStretch(1);
+    setLayout(layout);
 }
 
 InstrumentMiscView::~InstrumentMiscView()
 {
-
 }

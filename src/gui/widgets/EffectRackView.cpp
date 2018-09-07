@@ -34,25 +34,15 @@
 #include "GroupBox.h"
 
 
-EffectRackView::EffectRackView( EffectChain* model, QWidget* parent ) :
-	QWidget( parent ),
+EffectRackView::EffectRackView( EffectChain* model, QWidget* parent,
+                                QString _title ) :
+	GroupBox( _title=="" ? tr( "AUDIO EFFECTS CHAIN") : _title, parent, true, false ),
 	ModelView( NULL, this )
 {
         qRegisterMetaType<EffectView*>("EffectView*");
 
-	QVBoxLayout* mainLayout = new QVBoxLayout( this );
-	mainLayout->setMargin( 0 );//5
-
-	m_effectsGroupBox = new GroupBox( tr( "AUDIO EFFECTS CHAIN" ),
-                                          this, true, false );
-	mainLayout->addWidget( m_effectsGroupBox );
-
-	QVBoxLayout* effectsLayout = new QVBoxLayout( m_effectsGroupBox->contentWidget() );
-	effectsLayout->setSpacing( 0 );
-        effectsLayout->setContentsMargins(1,1,1,1);
-	//effectsLayout->setContentsMargins(1,m_effectsGroupBox->titleBarHeight(),1,1);
-
-	m_scrollArea = new QScrollArea();
+        QWidget* effectsView = new QWidget();
+	m_scrollArea = new QScrollArea(this);
 	m_scrollArea->setVerticalScrollBarPolicy( Qt::ScrollBarAlwaysOn );
 	m_scrollArea->setHorizontalScrollBarPolicy( Qt::ScrollBarAlwaysOff );
 	m_scrollArea->setPalette( QApplication::palette( m_scrollArea ) );
@@ -60,20 +50,18 @@ EffectRackView::EffectRackView( EffectChain* model, QWidget* parent ) :
 	//m_scrollArea->setLineWidth( 1 );
 	m_scrollArea->setFrameStyle( QFrame::NoFrame );
 	m_scrollArea->setLineWidth( 1 );
-	m_scrollArea->setWidget( new QWidget );
+	m_scrollArea->setWidget( effectsView );
+        setContentWidget(m_scrollArea);
 
-	effectsLayout->addWidget( m_scrollArea );
-
-	QPushButton* addButton = new QPushButton;
-	addButton->setText( tr( "Add audio effect" ) );
-
-	effectsLayout->addWidget( addButton );
+	QPushButton* addButton = new QPushButton( tr( "Add audio effect" ), this );
+	setBottomWidget(addButton);
 
 	connect( addButton, SIGNAL( clicked() ), this, SLOT( addEffect() ) );
 
 	m_lastY = 0;
 
 	setModel( model );
+        setFixedWidth(250);
 }
 
 
@@ -96,8 +84,6 @@ void EffectRackView::clearViews()
 		delete e;
 	}
 }
-
-
 
 
 void EffectRackView::moveUp( EffectView* view )
@@ -125,8 +111,6 @@ void EffectRackView::moveUp( EffectView* view )
 }
 
 
-
-
 void EffectRackView::moveDown( EffectView* view )
 {
 	if( view != m_effectViews.last() )
@@ -137,6 +121,28 @@ void EffectRackView::moveDown( EffectView* view )
 }
 
 
+void EffectRackView::moveTop( EffectView* view )
+{
+	fxChain()->moveTop( view->effect() );
+	if( view != m_effectViews.first() )
+	{
+                m_effectViews.removeOne(view);
+                m_effectViews.prepend(view);
+		update();
+	}
+}
+
+
+void EffectRackView::moveBottom( EffectView* view )
+{
+	fxChain()->moveBottom( view->effect() );
+	if( view != m_effectViews.last() )
+	{
+                m_effectViews.removeOne(view);
+                m_effectViews.append(view);
+		update();
+	}
+}
 
 
 void EffectRackView::deletePlugin( EffectView* view )
@@ -178,6 +184,10 @@ void EffectRackView::update()
                                  this, SLOT( moveUp( EffectView * ) ) );
 			connect( view, SIGNAL( moveDown( EffectView * ) ),
                                  this, SLOT( moveDown( EffectView * ) ) );
+			connect( view, SIGNAL( moveTop( EffectView * ) ),
+                                 this, SLOT( moveTop( EffectView * ) ) );
+			connect( view, SIGNAL( moveBottom( EffectView * ) ),
+                                 this, SLOT( moveBottom( EffectView * ) ) );
 			connect( view, SIGNAL( deletePlugin( EffectView * ) ),
                                  this, SLOT( deletePlugin( EffectView * ) ),
                                  Qt::QueuedConnection );
@@ -212,12 +222,14 @@ void EffectRackView::update()
 		{
 			( *it )->move( EffectViewMargin, m_lastY );
 			m_lastY += ( *it )->height();
-			++nView;
+                        m_lastY += EffectViewMargin;
+                        ++nView;
 			++it;
 		}
 	}
 
-	w->setFixedSize( 210 + 2*EffectViewMargin, m_lastY );
+        //EFFECT_WIDTH
+	w->setFixedSize( 229+2*EffectViewMargin, m_lastY );
 
 	QWidget::update();
 }
@@ -273,7 +285,7 @@ void EffectRackView::addEffect()
 void EffectRackView::modelChanged()
 {
 	//clearViews();
-	m_effectsGroupBox->ledButton()->setModel( &fxChain()->m_enabledModel );
+	ledButton()->setModel( &fxChain()->m_enabledModel );
 	connect( fxChain(), SIGNAL( aboutToClear() ), this, SLOT( clearViews() ) );
 	update();
 }

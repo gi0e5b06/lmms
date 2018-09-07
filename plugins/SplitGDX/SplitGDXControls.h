@@ -25,7 +25,7 @@
 #ifndef SPLITGDX_CONTROLS_H
 #define SPLITGDX_CONTROLS_H
 
-#include "SplitGDXControlDialog.h"
+#include "SplitGDXDialog.h"
 #include "EffectControls.h"
 #include "Knob.h"
 
@@ -54,7 +54,7 @@ class SplitGDXControls : public EffectControls
 
     virtual EffectControlDialog* createView()
     {
-        return new SplitGDXControlDialog(this);
+        return new SplitGDXDialog(this);
     }
 
   private slots:
@@ -66,7 +66,7 @@ class SplitGDXControls : public EffectControls
     FloatModel m_wetModel;
     FloatModel m_remModel;
 
-    friend class SplitGDXControlDialog;
+    friend class SplitGDXDialog;
     friend class SplitGDXEffect;
 };
 

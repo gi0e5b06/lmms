@@ -1,7 +1,7 @@
 /*
- * ScatterGDXDialog.cpp - control dialog for scatter remover effect
+ * ScatterGDXDialog.cpp -
  *
- * Copyright (c) 2017
+ * Copyright (c) 2017 gi0e5b06 (on github.com)
  *
  * This file is part of LMMS - https://lmms.io
  *
@@ -35,40 +35,57 @@ ScatterGDXDialog::ScatterGDXDialog(
         ScatterGDXControls* controls) :
       EffectControlDialog(controls)
 {
+    setWindowIcon(PLUGIN_NAME::getIcon("logo"));
+
     setAutoFillBackground(true);
     QPalette pal;
     pal.setBrush(backgroundRole(), embed::getIconPixmap("plugin_bg"));
     //pal.setBrush(backgroundRole(), PLUGIN_NAME::getIconPixmap("artwork"));
     setPalette(pal);
-    setFixedSize(150, 170);
 
-    Knob* pwrKnob = new Knob(knobBright_26, this);
-    pwrKnob->move(10, 10);
-    pwrKnob->setModel(&controls->m_pwrModel);
-    pwrKnob->setLabel(tr("Power"));
-    pwrKnob->setHintText(tr("Power:"), "/bar");
+    QGridLayout* m_mainLayout = new QGridLayout(this);
+    m_mainLayout->setContentsMargins(6, 6, 6, 6);
+    m_mainLayout->setSpacing(6);
 
-    Knob* spdKnob = new Knob(knobBright_26, this);
-    spdKnob->move(80, 10);
-    spdKnob->setModel(&controls->m_spdModel);
-    spdKnob->setLabel(tr("Speed"));
-    spdKnob->setHintText(tr("Speed:"), "");
+    Knob* pwrKNB = new Knob(this);
+    //pwrKNB->move(10, 10);
+    pwrKNB->setModel(&controls->m_pwrModel);
+    pwrKNB->setText(tr("POWER"));
+    pwrKNB->setHintText(tr("Power:"), "/bar");
 
-    Knob* frcKnob = new Knob(knobBright_26, this);
-    frcKnob->move(10, 60);
-    frcKnob->setModel(&controls->m_frcModel);
-    frcKnob->setLabel(tr("Fraction"));
-    frcKnob->setHintText(tr("Fraction:"), "");
+    Knob* spdKNB = new Knob(this);
+    //spdKNB->move(80, 10);
+    spdKNB->setModel(&controls->m_spdModel);
+    spdKNB->setText(tr("SPEED"));
+    spdKNB->setHintText(tr("Speed:"), "");
 
-    Knob* ovrKnob = new Knob(knobBright_26, this);
-    ovrKnob->move(80, 60);
-    ovrKnob->setModel(&controls->m_ovrModel);
-    ovrKnob->setLabel(tr("Override"));
-    ovrKnob->setHintText(tr("Override:"), "");
+    Knob* frcKNB = new Knob(this);
+    //frcKNB->move(10, 60);
+    frcKNB->setModel(&controls->m_frcModel);
+    frcKNB->setText(tr("FRCTN"));
+    frcKNB->setHintText(tr("Fraction:"), "");
 
-    Knob* strKnob = new Knob(knobBright_26, this);
-    strKnob->move(80, 120);
-    strKnob->setModel(&controls->m_strModel);
-    strKnob->setLabel(tr("Start"));
-    strKnob->setHintText(tr("Start:"), "");
+    Knob* ovrKNB = new Knob(this);
+    //ovrKNB->move(80, 60);
+    ovrKNB->setModel(&controls->m_ovrModel);
+    ovrKNB->setText(tr("OVRRD"));
+    ovrKNB->setHintText(tr("Override:"), "");
+
+    Knob* strKNB = new Knob(this);
+    //strKNB->move(80, 120);
+    strKNB->setModel(&controls->m_strModel);
+    strKNB->setText(tr("START"));
+    strKNB->setHintText(tr("Start:"), "");
+
+    m_mainLayout->addWidget(pwrKNB, 0, 0, Qt::AlignHCenter | Qt::AlignTop);
+    m_mainLayout->addWidget(spdKNB, 0, 1, Qt::AlignHCenter | Qt::AlignTop);
+    m_mainLayout->addWidget(frcKNB, 0, 2, Qt::AlignHCenter | Qt::AlignTop);
+    m_mainLayout->addWidget(ovrKNB, 0, 3, Qt::AlignHCenter | Qt::AlignTop);
+    m_mainLayout->addWidget(strKNB, 0, 4, Qt::AlignHCenter | Qt::AlignTop);
+
+    m_mainLayout->setColumnStretch(5, 1);
+    m_mainLayout->setRowStretch(1, 1);
+
+    setFixedWidth(250);
+    setMinimumHeight(((sizeHint().height() - 1) / 50 + 1) * 50);
 }

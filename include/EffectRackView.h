@@ -27,6 +27,7 @@
 #define EFFECT_RACK_VIEW_H
 
 #include "EffectChain.h"
+#include "GroupBox.h"
 #include "ModelView.h"
 
 #include <QWidget>
@@ -39,48 +40,45 @@ class QVBoxLayout;
 class EffectView;
 class GroupBox;
 
-
-class EffectRackView : public QWidget, public ModelView
+class EffectRackView
+      : public GroupBox
+      , public ModelView
 {
-	Q_OBJECT
-public:
-	EffectRackView( EffectChain* model, QWidget* parent = NULL );
-	virtual ~EffectRackView();
+    Q_OBJECT
+  public:
+    EffectRackView(EffectChain* model,
+                   QWidget*     parent = NULL,
+                   QString      _title = "");
+    virtual ~EffectRackView();
 
+  public slots:
+    void clearViews();
+    void moveUp(EffectView* view);
+    void moveDown(EffectView* view);
+    void moveTop(EffectView* view);
+    void moveBottom(EffectView* view);
+    void deletePlugin(EffectView* view);
 
-public slots:
-	void clearViews();
-	void moveUp( EffectView* view );
-	void moveDown( EffectView* view );
-	void deletePlugin( EffectView* view );
+  private slots:
+    virtual void update();
+    void         addEffect();
 
+  private:
+    virtual void modelChanged();
 
-private slots:
-	virtual void update();
-	void addEffect();
+    inline EffectChain* fxChain()
+    {
+        return castModel<EffectChain>();
+    }
 
+    inline const EffectChain* fxChain() const
+    {
+        return castModel<EffectChain>();
+    }
 
-private:
-	virtual void modelChanged();
-
-	inline EffectChain* fxChain()
-	{
-		return castModel<EffectChain>();
-	}
-
-	inline const EffectChain* fxChain() const
-	{
-		return castModel<EffectChain>();
-	}
-
-
-	QVector<EffectView *> m_effectViews;
-
-	GroupBox* m_effectsGroupBox;
-	QScrollArea* m_scrollArea;
-
-	int m_lastY;
-
-} ;
+    QVector<EffectView*> m_effectViews;
+    QScrollArea*         m_scrollArea;
+    int                  m_lastY;
+};
 
 #endif

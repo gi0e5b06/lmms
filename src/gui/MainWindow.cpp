@@ -41,6 +41,7 @@
 #include "AudioDummy.h"
 #include "AutomationEditor.h" // REQUIRED
 #include "BBEditor.h" // REQUIRED
+#include "Configuration.h"
 #include "ControllerRackView.h"
 #include "embed.h"
 #include "Engine.h"
@@ -192,7 +193,8 @@ MainWindow::MainWindow() :
 	vbox->addWidget( w );
 	setCentralWidget( main_widget );
 
-        m_updateTimer.start( 1000 / 10, this );  // 8 fps, 60 fps
+        // fps
+        m_updateTimer.start( 1000 / CONFIG_GET_INT("ui.framespersecond"), this );
         PaintManager::start(this);
 
         requireActionUpdate();

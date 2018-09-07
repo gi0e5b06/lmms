@@ -415,7 +415,8 @@ FxMixerView::FxChannelView::FxChannelView(QWidget*     _parent,
     // Create EffectRack for the channel
     m_rackView
             = new EffectRackView(&fxChannel->m_fxChain, _mv->m_racksWidget);
-    m_rackView->setFixedSize(245, FxLine::FxLineHeight);
+    //m_rackView->setFixedSize(250, FxLine::FxLineHeight);
+    m_rackView->setFixedHeight(FxLine::FxLineHeight);
 }
 
 void FxMixerView::FxChannelView::setChannelIndex(int index)

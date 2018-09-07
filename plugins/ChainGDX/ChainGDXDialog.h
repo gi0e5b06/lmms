@@ -1,5 +1,5 @@
 /*
- * ChainGDXControlDialog.h - control dialog for chaining effect
+ * ChainGDXDialog.h - control dialog for chaining effect
  *
  * Copyright (c) 2018 gi0e5b06 (on github.com)
  *
@@ -29,12 +29,12 @@
 
 class ChainGDXControls;
 
-class ChainGDXControlDialog : public EffectControlDialog
+class ChainGDXDialog : public EffectControlDialog
 {
     Q_OBJECT
   public:
-    ChainGDXControlDialog(ChainGDXControls* controls);
-    virtual ~ChainGDXControlDialog()
+    ChainGDXDialog(ChainGDXControls* controls);
+    virtual ~ChainGDXDialog()
     {
     }
 };

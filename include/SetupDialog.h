@@ -31,13 +31,14 @@
 #include "lmmsconfig.h"
 
 //#include "AudioDevice.h"
-#include "LedCheckBox.h"
+//#include "LedCheckBox.h"
 //#include "MidiClient.h"
 #include "MidiSetupWidget.h"
 
 #include "AudioDeviceSetupWidget.h"
 
 
+class QCheckBox;
 class QComboBox;
 class QLabel;
 class QLineEdit;
@@ -125,6 +126,7 @@ private slots:
 	void toggleNoteLabels( bool en );
 	void toggleDisplayWaveform( bool en );
 	void toggleDisableAutoquit( bool en );
+	void toggleMappedFiles( bool _enabled );
 
 	void setLanguage( int lang );
 
@@ -181,8 +183,9 @@ private:
 	int m_saveInterval;
 	QSlider * m_saveIntervalSlider;
 	QLabel * m_saveIntervalLbl;
-	LedCheckBox * m_autoSave;
-	LedCheckBox * m_runningAutoSave;
+	QCheckBox * m_autoSave;
+	QCheckBox * m_runningAutoSave;
+	bool m_mappedFiles;
 
 	bool m_oneInstrumentTrackWindow;
 	bool m_compactTrackButtons;

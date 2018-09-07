@@ -47,7 +47,9 @@ public:
 	LADSPA_Data value();
 	ValueBuffer * valueBuffer();
 	void setValue( LADSPA_Data _value );
-	void setLink( bool _state );
+
+        bool isLink() { return m_link; }
+        void setLink( bool _state );
 
 	void linkControls( LadspaControl * _control );
 	void unlinkControls( LadspaControl * _control );

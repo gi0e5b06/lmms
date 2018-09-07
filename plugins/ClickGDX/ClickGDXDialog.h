@@ -1,5 +1,5 @@
 /*
- * ClickGDXControlDialog.h - control dialog for click remover effect
+ * ClickGDXDialog.h - control dialog for click remover effect
  *
  * Copyright (c) 2017
  *
@@ -31,12 +31,12 @@
 class ClickGDXControls;
 
 
-class ClickGDXControlDialog : public EffectControlDialog
+class ClickGDXDialog : public EffectControlDialog
 {
 	Q_OBJECT
 public:
-	ClickGDXControlDialog( ClickGDXControls* controls );
-	virtual ~ClickGDXControlDialog()
+	ClickGDXDialog( ClickGDXControls* controls );
+	virtual ~ClickGDXDialog()
 	{
 	}
 

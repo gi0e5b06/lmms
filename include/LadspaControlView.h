@@ -37,11 +37,11 @@ class EXPORT LadspaControlView : public QWidget, public ModelView
 {
 	Q_OBJECT
 public:
-	LadspaControlView( QWidget * _parent, LadspaControl * _ctl );
+	LadspaControlView( QWidget * _parent, LadspaControl * _ctl, bool _named );
 	virtual ~LadspaControlView();
 
 private slots:
-        void bigUpdate();
+        virtual void update();
 
  private:
         LadspaControl * m_ctl;

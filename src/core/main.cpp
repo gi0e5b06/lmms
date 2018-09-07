@@ -52,7 +52,8 @@
 
 #include "MainApplication.h"
 #include "MemoryManager.h"
-#include "ConfigManager.h"
+//#include "ConfigManager.h"
+#include "Configuration.h"
 //#include "NotePlayHandle.h"
 #include "Engine.h"
 #include "GuiApplication.h"
@@ -279,6 +280,7 @@ int main( int argc, char * * argv )
 	// initialize memory managers
 	MM_INIT //MemoryManager::init();
         ConfigManager::init(argv[0]);
+        lmms_default_configuration();
 	//NotePlayHandleManager::init();
 
 	// intialize RNG

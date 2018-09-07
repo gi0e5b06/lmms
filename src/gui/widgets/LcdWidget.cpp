@@ -37,12 +37,12 @@
 //#include "MainWindow.h"
 
 LcdWidget::LcdWidget(QWidget* parent, const QString& name) :
-      LcdWidget(1, "19green", parent, name)
+      LcdWidget(1, "19blue", parent, name)
 {
 }
 
 LcdWidget::LcdWidget(int numDigits, QWidget* parent, const QString& name) :
-      LcdWidget(numDigits, "19green", parent, name)
+      LcdWidget(numDigits, "19blue", parent, name)
 {
 }
 
@@ -187,7 +187,7 @@ void LcdWidget::drawWidget(QPainter& _p)
         _p.setRenderHints( QPainter::Antialiasing, true );
         //_p.setFont(pointSizeF(_p.font(), 7));  // 6.5 ) );
         _p.setFont(pointSizeF(font(),7.f));
-            /*
+        /*
         p.setPen( textShadowColor() );
         p.drawText( width() / 2 -
                         _p.fontMetrics().width( m_label ) / 2 + 1,

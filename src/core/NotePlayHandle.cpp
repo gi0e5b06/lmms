@@ -117,16 +117,7 @@ NotePlayHandle::NotePlayHandle( InstrumentTrack* instrumentTrack,
 		m_instrumentTrack->midiNoteOn( *this );
 	}
 
-	// if( hasParent() || ! m_instrumentTrack->isArpeggioEnabled() )
-	{
-		const int baseVelocity = m_instrumentTrack->midiPort()->baseVelocity();
-
-		// send MidiNoteOn event
-		m_instrumentTrack->processOutEvent(
-			MidiEvent( MidiNoteOn, midiChannel(), midiKey(), midiVelocity( baseVelocity ) ),
-			MidiTime::fromFrames( offset(), Engine::framesPerTick() ),
-			offset() );
-	}
+        //noteOn(0);
 
 	if( m_instrumentTrack->instrument()->flags() & Instrument::IsSingleStreamed )
 	{
@@ -251,6 +242,9 @@ void NotePlayHandle::play( sampleFrame * _working_buffer )
 		? Engine::mixer()->framesPerPeriod() - offset()
 		: Engine::mixer()->framesPerPeriod();
 
+        if( m_totalFramesPlayed == 0 )
+                noteOn(offset());
+
 	// check if we start release during this period
 	if( m_released == false &&
 		instrumentTrack()->isSustainPedalPressed() == false &&
@@ -261,7 +255,7 @@ void NotePlayHandle::play( sampleFrame * _working_buffer )
 			: ( m_frames - m_totalFramesPlayed ) ); // otherwise, the offset is already negated and can be ignored
 	}
 
-	// under some circumstances we're called even if there's nothing to play
+        // under some circumstances we're called even if there's nothing to play
 	// therefore do an additional check which fixes crash e.g. when
 	// decreasing release of an instrument-track while the note is active
 	if( framesLeft() > 0 )
@@ -378,6 +372,20 @@ bool NotePlayHandle::isFromTrack( const Track * _track ) const
 }
 
 
+
+void NotePlayHandle::noteOn( const f_cnt_t _s )
+{
+	// if( hasParent() || ! m_instrumentTrack->isArpeggioEnabled() )
+	{
+		const int baseVelocity = m_instrumentTrack->midiPort()->baseVelocity();
+
+		// send MidiNoteOn event
+		m_instrumentTrack->processOutEvent(
+			MidiEvent( MidiNoteOn, midiChannel(), midiKey(), midiVelocity( baseVelocity ) ),
+			MidiTime::fromFrames( _s, Engine::framesPerTick() ),
+			_s );
+	}
+}
 
 
 void NotePlayHandle::noteOff( const f_cnt_t _s )

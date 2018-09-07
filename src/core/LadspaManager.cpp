@@ -47,7 +47,6 @@ LadspaManager::LadspaManager()
                 split( LADSPA_PATH_SEPARATOR );
 	ladspaDirectories += ConfigManager::inst()->ladspaDir().split( ',' );
 
-	ladspaDirectories.push_back( "plugins:ladspa" );
 #ifndef LMMS_BUILD_WIN32
 	ladspaDirectories.push_back( qApp->applicationDirPath() + '/' + LIB_DIR + "ladspa" );
 	ladspaDirectories.push_back( "/usr/lib/ladspa" );
@@ -56,6 +55,7 @@ LadspaManager::LadspaManager()
 	ladspaDirectories.push_back( "/usr/local/lib64/ladspa" );
 	ladspaDirectories.push_back( "/Library/Audio/Plug-Ins/LADSPA" );
 #endif
+	ladspaDirectories.push_back( "plugins:ladspa" );
 
 	for( QStringList::iterator it = ladspaDirectories.begin(); 
 			 		   it != ladspaDirectories.end(); ++it )

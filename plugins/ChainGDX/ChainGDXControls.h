@@ -25,7 +25,7 @@
 #ifndef CHAINGDX_CONTROLS_H
 #define CHAINGDX_CONTROLS_H
 
-#include "ChainGDXControlDialog.h"
+#include "ChainGDXDialog.h"
 #include "EffectControls.h"
 #include "Knob.h"
 
@@ -54,7 +54,7 @@ class ChainGDXControls : public EffectControls
 
     virtual EffectControlDialog* createView()
     {
-        return new ChainGDXControlDialog(this);
+        return new ChainGDXDialog(this);
     }
 
   private slots:
@@ -63,7 +63,7 @@ class ChainGDXControls : public EffectControls
   private:
     ChainGDXEffect* m_effect;
 
-    friend class ChainGDXControlDialog;
+    friend class ChainGDXDialog;
     friend class ChainGDXEffect;
 };
 

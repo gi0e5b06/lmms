@@ -30,7 +30,7 @@
 #include "embed.h"
 #include "FadeButton.h"
 #include "update_event.h"
-
+#include "Configuration.h"
 
 const float FadeDuration = 500;
 
@@ -100,8 +100,9 @@ void FadeButton::drawWidget(QPainter& _p)
 					( 1.0f - state ) +
 			m_activatedColor.blue() * state );
 		col.setRgb( r, g, b );
-		QTimer::singleShot(1000 / 20, this, SLOT( update() ) );
-                // 8 fps, 60 fps
+		QTimer::singleShot(1000 / CONFIG_GET_INT("ui.framespersecond"),
+                                   this, SLOT( update() ) );
+                // fps
 	}
 
         int w=width()-1;

@@ -41,7 +41,7 @@
 
 
 LcdSpinBox::LcdSpinBox( int numDigits, QWidget* parent, const QString& name ) :
-	LcdSpinBox( numDigits, "19green", parent, name )
+	LcdSpinBox( numDigits, "19blue", parent, name )
 {
 }
 

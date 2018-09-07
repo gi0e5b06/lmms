@@ -43,6 +43,8 @@
 #include "TempoSyncKnob.h"
 #include "ToolTip.h"
 
+//const int EFFECT_WIDTH  = 228;
+//const int EFFECT_HEIGHT = 60;
 
 EffectView::EffectView( Effect * _model, QWidget * _parent ) :
 	PluginView( _model, _parent ),
@@ -50,7 +52,7 @@ EffectView::EffectView( Effect * _model, QWidget * _parent ) :
 	m_subWindow( NULL ),
 	m_controlView( NULL )
 {
-	setFixedSize( 230, 60 );
+	setFixedSize( m_bg.width(), m_bg.height() );
 
 	// Disable effects that are of type "DummyEffect"
 	bool isEnabled = !dynamic_cast<DummyEffect *>( effect() );
@@ -129,9 +131,7 @@ EffectView::EffectView( Effect * _model, QWidget * _parent ) :
                         ( embed::getIconPixmap( "trackop" ),"",this );
 		QFont f = ctls_btn->font();
 		ctls_btn->setFont( pointSize<8>( f ) );
-		//ctls_btn->setGeometry( 140, 14, 50, 20 );
-		//ctls_btn->setGeometry( 136, 4, 70, 35 );//41
-                ctls_btn->setGeometry( 163+5, 5, 36, 36 );//41
+                ctls_btn->setGeometry( 163+24, 5, 36, 36 );//41
 		connect( ctls_btn, SIGNAL( clicked() ), this, SLOT( editControls() ) );
 	}
 
@@ -288,6 +288,12 @@ void EffectView::contextMenuEvent( QContextMenuEvent * )
 	contextMenu->addAction( embed::getIconPixmap( "arp_down" ),
 						tr( "Move &down" ),
 						this, SLOT( moveDown() ) );
+	contextMenu->addAction( embed::getIconPixmap( "arp_up" ),
+						tr( "Move &top" ),
+						this, SLOT( moveTop() ) );
+	contextMenu->addAction( embed::getIconPixmap( "arp_down" ),
+						tr( "Move &bottom" ),
+						this, SLOT( moveBottom() ) );
 	contextMenu->addSeparator();
 	contextMenu->addAction( embed::getIconPixmap( "cancel" ),
 						tr( "&Remove this plugin" ),
