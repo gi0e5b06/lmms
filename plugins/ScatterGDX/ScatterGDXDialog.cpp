@@ -1,5 +1,5 @@
 /*
- * ScatterGDXControlDialog.cpp - control dialog for scatter remover effect
+ * ScatterGDXDialog.cpp - control dialog for scatter remover effect
  *
  * Copyright (c) 2017
  *
@@ -22,7 +22,7 @@
  *
  */
 
-#include "ScatterGDXControlDialog.h"
+#include "ScatterGDXDialog.h"
 
 #include <QGridLayout>
 #include <QGroupBox>
@@ -31,7 +31,7 @@
 #include "ScatterGDXControls.h"
 #include "embed.h"
 
-ScatterGDXControlDialog::ScatterGDXControlDialog(
+ScatterGDXDialog::ScatterGDXDialog(
         ScatterGDXControls* controls) :
       EffectControlDialog(controls)
 {

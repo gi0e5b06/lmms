@@ -1,5 +1,5 @@
 /*
- * ScatterGDXControlDialog.h - control dialog for scatter remover effect
+ * ScatterGDXDialog.h - control dialog for scatter remover effect
  *
  * Copyright (c) 2017
  *
@@ -31,12 +31,12 @@
 class ScatterGDXControls;
 
 
-class ScatterGDXControlDialog : public EffectControlDialog
+class ScatterGDXDialog : public EffectControlDialog
 {
 	Q_OBJECT
 public:
-	ScatterGDXControlDialog( ScatterGDXControls* controls );
-	virtual ~ScatterGDXControlDialog()
+	ScatterGDXDialog( ScatterGDXControls* controls );
+	virtual ~ScatterGDXDialog()
 	{
 	}
 
