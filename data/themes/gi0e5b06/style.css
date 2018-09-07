@@ -10,7 +10,14 @@ QWidget {
 
 QLabel {
     color: #d1d8e4;
-    font-size: 11px;
+    font-size: 13px;
+    margin: 0px 0px 0px 0px;
+}
+
+QCheckBox {
+    color: #d1d8e4;
+    font-size: 13px;
+    margin: 0px 0px 0px 0px;
 }
 
 LedCheckBox {
@@ -175,7 +182,7 @@ PianoRoll {
     qproperty-noteColor: #0bd556;
     qproperty-noteOpacity: 165;
     qproperty-noteBorders: false; /* boolean property, set false to have borderless notes */
-    qproperty-selectedNoteColor: #006b65;
+    qproperty-selectedNoteColor: #004080; /*#006b65;*/
     qproperty-barColor: #078f3a;
     qproperty-markedSemitoneColor: rgba(255,0,0,48);/*#06170E;*/
     /* Grid colors */
@@ -193,7 +200,7 @@ TabWidget {
     background-color: #3f4750;/*#262b30;*/
     qproperty-tabText: rgba(255, 255, 255, 180);
     qproperty-tabTitleText: #fff;
-    qproperty-tabSelected: #323940;
+    qproperty-tabSelected: #181b40; /*#323940;*/
     qproperty-tabBackground: #181b1f;
     qproperty-tabBorder: #181b1f;
 }
@@ -532,7 +539,7 @@ QToolButton:checked {
     border-bottom: 1px solid #4a515e;
     border-right: 1px solid #4a515e;
     border-radius: 4px;
-    background-color: #420000;
+    background-color: #004080; /*#420000;*/
 }
 
 QToolButton:checked:hover {
@@ -541,13 +548,13 @@ QToolButton:checked:hover {
     border-bottom: 1px solid #4a515e;
     border-right: 1px solid #4a515e;
     border-radius: 4px;
-    background-color: #5A0000;
+    background-color: #0060C0; /*#5A0000;*/
 }
 
 QToolButton:checked:pressed {
     border: 1px solid #000000;
     border-radius: 4px;
-    background-color: #390000;
+    background-color: #0050A0; /*#390000;*/
 }
 
 TrackLabelButton {
@@ -715,10 +722,10 @@ FxMixerView QPushButton, EffectRackView QPushButton, ControllerRackView QPushBut
 FxLine {
     background-color: #14161A; /*#3f4750;*/
     color: #d1d8e4;
-    qproperty-backgroundActive: #420000;
+    qproperty-backgroundActive: #003060;/*#420000;*/
     qproperty-strokeOuterActive: #000000; /*4a515e;*/
     qproperty-strokeOuterInactive: #000000; /*4a515e;*/
-    qproperty-strokeInnerActive: #840000;/*262B30; /*#0C0D0F;*/
+    qproperty-strokeInnerActive: #004080; /*#840000; #262B30; #0C0D0F;*/
     qproperty-strokeInnerInactive: #262B30; /*#0C0D0F;*/
 }
 
@@ -754,7 +761,7 @@ TrackContainerView QLabel
 TrackContentObjectView {
     qproperty-mutedColor: #788899; /*rgb(255,255,255,100);*/
     qproperty-mutedBackgroundColor: #3f4750; /*373d48;*/
-    qproperty-selectedColor: #006666; /*#006B65;*/
+    qproperty-selectedColor: #004080; /*#006666; #006B65;*/
     qproperty-BBPatternBackground: #3f4750; /*#373d48;*/
     qproperty-textColor: #FFFFFF;
     qproperty-textBackgroundColor: #FF0000; /*rgba(0, 0, 0, 75);*/
@@ -794,10 +801,10 @@ SubWindow {
       color: qlineargradient(spread:reflect, x1:0, y1:0, x2:0, y2:1, stop:0 #090909, s  top:0.05 #3D454F, stop:1 #262B30);
       qproperty-activeColor: qlineargradient(spread:reflect, x1:0, y1:0, x2:0, y2:1 st  op:0 #090909, stop:0.05 #636c7a, stop:1 #343840);
    */
-    color: #003980;
-    qproperty-activeColor: #0072ff;
-    qproperty-textShadowColor: #000000;
-    qproperty-borderColor: #003980;/*#5c6b7a;*/
+    color: #3f4750; /*#003980;*/
+    qproperty-activeColor: #00a0e0; /*#020910; #0072ff;*/
+    qproperty-textShadowColor: #3f4750;
+    qproperty-borderColor: #3f4750; /*#003980; #5c6b7a;*/
     border: 1px none;/*1px solid #003980;*/
     padding: 3px;
     background-color: #3f4750;/*#262b30;*/
@@ -805,7 +812,7 @@ SubWindow {
 }
 
 SubWindow > QLabel {
-    color: #d1d8e4;
+    color: #ffffff; /*#d1d8e4;*/
     font-size: 15px;
     font-style: normal;
     border-radius: 0px;
@@ -1027,7 +1034,7 @@ NesInstrumentView Knob {
 
 LmmsPalette {
     qproperty-background: #3f4750;/*262b30;*/
-    qproperty-windowText: #1de276;
+    qproperty-windowText: #00b4ff;
     qproperty-base: #101213;
     qproperty-text: #d1d8e4;
     qproperty-button: #3f4750;
