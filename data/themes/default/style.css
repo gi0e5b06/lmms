@@ -2,6 +2,10 @@
  * LMMS style sheet *
  ********************/
 
+* {
+        font-size: 12px;
+}
+
 /* most foreground text items */
 QLabel, QTreeWidget, QListWidget, QGroupBox, QMenuBar {
 	color: #d1d8e4;
@@ -81,10 +85,14 @@ TextFloat {
 }
 
 
+QMenuBar {
+    font-size: 12px;
+}
+
 QMenu {
 	border-top: 2px solid #08993E;
 	background-color: #15191c;
-	font-size: 11px;
+	font-size: 12px;
 }
 
 QMenu::separator {
@@ -165,6 +173,12 @@ TabWidget {
 	qproperty-tabSelected: #323940;
 	qproperty-tabBackground: #181b1f;
 	qproperty-tabBorder: #181b1f;
+}
+
+ComboBox {
+    color: #FFFFFF;
+    background-color: #181b1f;
+    font-size: 12px;
 }
 
 GroupBox {
@@ -337,6 +351,7 @@ TrackOperationsWidget > QPushButton {
 	border: none;
 }
 
+/*
 TrackOperationsWidget > QPushButton::menu-indicator {
 	image: url(resources:trackop.png);
 	subcontrol-origin: padding;
@@ -344,6 +359,7 @@ TrackOperationsWidget > QPushButton::menu-indicator {
 	position: relative;
 	top: 2px;
 }
+
 
 TrackOperationsWidget > QPushButton::menu-indicator:hover {
 	image: url(resources:trackop_h.png);
@@ -357,6 +373,7 @@ TrackOperationsWidget > QPushButton::menu-indicator:checked
 	position: relative;
 	top: 3px;
 }
+*/
 
 /* font sizes */
 

@@ -22,7 +22,7 @@ QCheckBox {
 
 LedCheckBox {
     color: #d1d8e4;
-    font-size: 11px;
+    font-size: 13px;
     margin: 0px 0px 0px 0px;
 }
 
@@ -385,14 +385,22 @@ TrackContentWidget {
 /* gear button in tracks */
 
 TrackOperationsWidget > QPushButton {
-    max-height: 26px;
-    max-width: 26px;
-    min-height: 26px;
-    min-width: 26px;
+    max-height: 20px;
+    max-width: 20px;
+    min-height: 20px;
+    min-width: 20px;
     background: none;
     border: none;
 }
 
+TrackOperationsWidget > QPushButton::menu-indicator {
+    image: none;
+    subcontrol-origin: padding;
+    subcontrol-position: bottom right;
+    position: relative;
+}
+
+/*
 TrackOperationsWidget > QPushButton::menu-indicator {
     image: url(resources:trackop.png);
     subcontrol-origin: padding;
@@ -413,6 +421,23 @@ TrackOperationsWidget > QPushButton::menu-indicator:checked
      position: relative;
      top: 3px;
  }
+*/
+
+EffectView > QPushButton {
+	max-height: 20px;
+	max-width: 20px;
+	min-height: 20px;
+	min-width: 20px;
+	background: none;
+	border:none;
+}
+
+EffectView > QPushButton::menu-indicator {
+    image: none;
+    subcontrol-origin: padding;
+    subcontrol-position: bottom right;
+    position: relative;
+}
 
 /* font sizes */
 
