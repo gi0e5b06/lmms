@@ -44,13 +44,14 @@ ShaperGDXControls::ShaperGDXControls(ShaperGDX* effect) :
                                                             this,
                                                             tr("Time")),
       m_ratioModel(1.0f, 0.0f, 1.0f, 0.001f, this, tr("Ratio")),
-      m_outGainModel(1.0f, 0.0f, 1.0f, 0.001f, this, tr("Out gain")),
-      m_modeModel(0.f, 0.f, 2.0f, 1.f, this, tr("Mode"))
+      m_outGainModel(1.0f, 0.0f, 10.0f, 0.001f, this, tr("Out gain")),
+      m_hardModel(0.f, 0.f, 1.f, 0.001f, this, tr("Mode")),
+      m_ring(600)
 {
-    m_buffer = BufferManager::acquire();
-
     WaveForm::fillBankModel(m_waveBankModel);
     WaveForm::fillIndexModel(m_waveIndexModel, 0);
+
+    m_timeModel.setScaleLogarithmic(true);
 
     connect(&m_waveBankModel, SIGNAL(dataChanged()), this,
             SLOT(updateWaveIndexModel()));
@@ -66,7 +67,11 @@ ShaperGDXControls::ShaperGDXControls(ShaperGDX* effect) :
 
 ShaperGDXControls::~ShaperGDXControls()
 {
-        BufferManager::release(m_buffer);
+}
+
+Ring* ShaperGDXControls::ring()
+{
+    return m_effect->m_ring;
 }
 
 void ShaperGDXControls::changeControl()
@@ -81,7 +86,7 @@ void ShaperGDXControls::loadSettings(const QDomElement& _this)
     m_timeModel.loadSettings(_this, "time");
     m_ratioModel.loadSettings(_this, "ratio");
     m_outGainModel.loadSettings(_this, "out_gain");
-    m_modeModel.loadSettings(_this, "mode");
+    m_hardModel.loadSettings(_this, "hard");
 }
 
 void ShaperGDXControls::saveSettings(QDomDocument& doc, QDomElement& _this)
@@ -91,7 +96,7 @@ void ShaperGDXControls::saveSettings(QDomDocument& doc, QDomElement& _this)
     m_timeModel.saveSettings(doc, _this, "time");
     m_ratioModel.saveSettings(doc, _this, "ratio");
     m_outGainModel.saveSettings(doc, _this, "out_gain");
-    m_modeModel.saveSettings(doc, _this, "mode");
+    m_hardModel.saveSettings(doc, _this, "hard");
 }
 
 void ShaperGDXControls::updateWaveIndexModel()

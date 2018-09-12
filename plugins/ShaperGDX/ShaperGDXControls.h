@@ -36,6 +36,7 @@ class ShaperGDX;
 class ShaperGDXControls : public EffectControls
 {
     Q_OBJECT
+
   public:
     ShaperGDXControls(ShaperGDX* effect);
     virtual ~ShaperGDXControls();
@@ -56,8 +57,11 @@ class ShaperGDXControls : public EffectControls
     {
         return new ShaperGDXDialog(this);
     }
-  signals:
-    void nextStereoBuffer(const sampleFrame* _buf);
+
+    Ring* ring();
+
+    // signals:
+    // void nextStereoBuffer(const sampleFrame* _buf);
 
   private slots:
     void changeControl();
@@ -72,9 +76,9 @@ class ShaperGDXControls : public EffectControls
     TempoSyncKnobModel m_timeModel;
     FloatModel         m_ratioModel;
     FloatModel         m_outGainModel;
-    FloatModel         m_modeModel;
+    FloatModel         m_hardModel;
 
-    sampleFrame* m_buffer;
+    Ring m_ring;
 
     friend class ShaperGDXDialog;
     friend class ShaperGDX;

@@ -27,12 +27,12 @@
 #include "ComboBox.h"
 #include "Knob.h"
 #include "ShaperGDXControls.h"
+#include "TempoSyncKnob.h"
 #include "VisualizationWidget.h"
 #include "embed.h"
 
 #include <QGridLayout>
 #include <QGroupBox>
-#include <QLayout>
 
 ShaperGDXDialog::ShaperGDXDialog(ShaperGDXControls* controls) :
       EffectControlDialog(controls)
@@ -54,16 +54,16 @@ ShaperGDXDialog::ShaperGDXDialog(ShaperGDXControls* controls) :
     bankCMB->setModel(&controls->m_waveBankModel);
     // bankCMB->setText(tr("Treshold"));
     // bankCMB->setHintText(tr("Treshold:"), "");
-    //bankCMB->setMinimumWidth(3 * 26 + 2*6);
+    // bankCMB->setMinimumWidth(3 * 26 + 2*6);
 
     ComboBox* indexCMB = new ComboBox(this);
     // indexCMB->move(17, 85);
     indexCMB->setModel(&controls->m_waveIndexModel);
     // indexCMB->setText(tr("Treshold"));
     // indexCMB->setHintText(tr("Treshold:"), "");
-    //indexCMB->setMinimumWidth(6 * 26 + 5*6);
+    // indexCMB->setMinimumWidth(6 * 26 + 5*6);
 
-    Knob* timeKNB = new Knob(this);
+    TempoSyncKnob* timeKNB = new TempoSyncKnob(this);
     // timeKNB->move(17, 135);
     timeKNB->setModel(&controls->m_timeModel);
     timeKNB->setText(tr("TIME"));
@@ -81,15 +81,14 @@ ShaperGDXDialog::ShaperGDXDialog(ShaperGDXControls* controls) :
     outGainKNB->setText(tr("OUT"));
     outGainKNB->setHintText(tr("Out gain:"), "");
 
-    Knob* modeKNB = new Knob(this);
-    // modeKNB->move(167, 135);
-    modeKNB->setModel(&controls->m_modeModel);
-    modeKNB->setText(tr("MODE"));
-    modeKNB->setHintText(tr("Mode:"), "");
+    Knob* hardKNB = new Knob(this);
+    // hardKNB->move(167, 135);
+    hardKNB->setModel(&controls->m_hardModel);
+    hardKNB->setText(tr("HARD"));
+    hardKNB->setHintText(tr("Hard:"), "");
 
-    m_showWVW = new VisualizationWidget(
-            embed::getIconPixmap("output_bigger_graph"), this,
-            VisualizationWidget::Stereo);
+    // embed::getIconPixmap("output_bigger_graph"),
+    m_showWVW = new VisualizationWidget(238, 119, this, controls->ring());
     // m_showWVW->move(23, 205);
 
     mainLayout->addWidget(bankCMB, 0, 0, 1, 3);
@@ -101,7 +100,7 @@ ShaperGDXDialog::ShaperGDXDialog(ShaperGDXControls* controls) :
                           Qt::AlignBottom | Qt::AlignHCenter);
     mainLayout->addWidget(outGainKNB, 2, 2, 1, 1,
                           Qt::AlignBottom | Qt::AlignHCenter);
-    mainLayout->addWidget(modeKNB, 2, 3, 1, 1,
+    mainLayout->addWidget(hardKNB, 2, 3, 1, 1,
                           Qt::AlignBottom | Qt::AlignHCenter);
     mainLayout->addWidget(m_showWVW, 3, 0, 1, 8,
                           Qt::AlignVCenter | Qt::AlignHCenter);
@@ -112,12 +111,14 @@ ShaperGDXDialog::ShaperGDXDialog(ShaperGDXControls* controls) :
     setFixedWidth(250);
     // setMinimumHeight(((sizeHint().height() - 1) / 50 + 1) * 50);
 
-    connect(controls, SIGNAL(nextStereoBuffer(const sampleFrame*)), m_showWVW,
-            SLOT(updateStereoBuffer(const sampleFrame*)));
+    // connect(controls, SIGNAL(nextStereoBuffer(const sampleFrame*)),
+    // m_showWVW,
+    //        SLOT(updateStereoBuffer(const sampleFrame*)));
 }
 
 ShaperGDXDialog::~ShaperGDXDialog()
 {
-    disconnect(m_effectControls, SIGNAL(nextStereoBuffer(const sampleFrame*)),
-               m_showWVW, SLOT(updateStereoBuffer(const sampleFrame*)));
+    // disconnect(m_effectControls, SIGNAL(nextStereoBuffer(const
+    // sampleFrame*)),
+    //     m_showWVW, SLOT(updateStereoBuffer(const sampleFrame*)));
 }

@@ -24,6 +24,7 @@
 
 #include "ShaperGDX.h"
 
+#include "Configuration.h"
 #include "WaveForm.h"
 #include "embed.h"
 //#include "lmms_math.h"
@@ -48,8 +49,13 @@ extern "C"
 ShaperGDX::ShaperGDX(Model*                                    parent,
                      const Descriptor::SubPluginFeatures::Key* key) :
       Effect(&shapergdx_plugin_descriptor, parent, key),
-      m_gdxControls(this), m_phase(0.f)
+      m_gdxControls(this), m_fpp(Engine::mixer()->framesPerPeriod()),
+      m_phase(0.f)
 {
+    int periodsPerDisplayRefresh = qMax(
+            1, int(ceilf(float(Engine::mixer()->processingSampleRate())
+                         / m_fpp / CONFIG_GET_INT("ui.framespersecond"))));
+    m_ring = new Ring(m_fpp * periodsPerDisplayRefresh);
 }
 
 ShaperGDX::~ShaperGDX()
@@ -66,6 +72,7 @@ bool ShaperGDX::processAudioBuffer(sampleFrame* _buf, const fpp_t _frames)
     const ValueBuffer* ratioBuf = m_gdxControls.m_ratioModel.valueBuffer();
     const ValueBuffer* outGainBuf
             = m_gdxControls.m_outGainModel.valueBuffer();
+    const ValueBuffer* hardBuf = m_gdxControls.m_hardModel.valueBuffer();
 
     const WaveForm* wf
             = WaveForm::get(m_gdxControls.m_waveBankModel.value(),
@@ -86,6 +93,9 @@ bool ShaperGDX::processAudioBuffer(sampleFrame* _buf, const fpp_t _frames)
         float outGain
                 = (float)(outGainBuf ? outGainBuf->value(f)
                                      : m_gdxControls.m_outGainModel.value());
+        const float hard
+                = (float)(hardBuf ? hardBuf->value(f)
+                                  : m_gdxControls.m_hardModel.value());
 
         float curVal0 = _buf[f][0];
         float curVal1 = _buf[f][1];
@@ -93,21 +103,25 @@ bool ShaperGDX::processAudioBuffer(sampleFrame* _buf, const fpp_t _frames)
         m_phase = fraction(m_phase);
 
         float waveGain = wf->f(m_phase);
-        waveGain=(ratio * waveGain + (1.f - ratio)) * outGain;
+        waveGain       = ratio * waveGain + (1.f - ratio);
 
         m_phase += (1000.f / time / Engine::mixer()->processingSampleRate());
 
-        curVal0 = qBound(-1.f, curVal0 * waveGain, 1.f);
-        curVal1 = qBound(-1.f, curVal1 * waveGain, 1.f);
+        curVal0 = (1.f - hard) * curVal0 + hard * fabsf(curVal0);
+        curVal1 = (1.f - hard) * curVal1 + hard * fabsf(curVal1);
 
-        m_gdxControls.m_buffer[f][0]=waveGain;
-        m_gdxControls.m_buffer[f][1]=curVal0;
+        curVal0 = qBound(-1.f, curVal0 * waveGain * outGain, 1.f);
+        curVal1 = qBound(-1.f, curVal1 * waveGain * outGain, 1.f);
+
+        sampleFrame s = {waveGain, curVal0};
+        m_ring->write(s);
 
         _buf[f][0] = d0 * _buf[f][0] + w0 * curVal0;
         _buf[f][1] = d1 * _buf[f][1] + w1 * curVal1;
     }
 
-    m_gdxControls.emit nextStereoBuffer(_buf);
+    // m_gdxControls.emit nextStereoBuffer(_buf);
+
     return shouldKeepRunning(_buf, _frames);
 }
 
