@@ -77,7 +77,7 @@ Song::Song() :
 	//m_masterVolumeModel( 100, 0, 200, this, tr( "Master volume" ) ),
         m_masterVolumeModel( 100.f, 0.f, 200.f, 0.1f, this, tr( "Master volume" ) ),
 	//m_masterPitchModel( 0, -12, 12, this, tr( "Master pitch" ) ),
-        m_masterPitchModel( 0.f, -12.f, 12.f, 1.f, this, tr( "Master pitch" ) ),
+        m_masterPitchModel( 0.f, -60.f, 60.f, 0.001f, this, tr( "Master pitch" ) ),
 	m_metaData(),
 	m_fileName(),
 	m_oldFileName(),

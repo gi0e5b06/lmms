@@ -71,68 +71,19 @@ WaveForm::Set::Set()
     // Centered
     // Max energy at the center
 
-    // Degraded Q1
-    BANK              = 11;
-    m_bankNames[BANK] = "Degraded Q1";
-    new WaveForm /*SINEQ1*/ ("Sine Q1", BANK, 0, nsinf, Linear, 1);
-    new WaveForm /*TRIANGLEQ1*/ ("Triangle Q1", BANK, 1, trianglef, Linear,
-                                 1);
-    new WaveForm /*SAWTOOTHQ1*/ ("Saw tooth Q1", BANK, 2, sawtoothf, Linear,
-                                 1);
-    new WaveForm /*SQUAREQ1*/ ("Square Q1", BANK, 3, squaref, Linear, 1);
-    new WaveForm /*HARSHSAWQ1*/ ("Harsh saw Q1", BANK, 4, harshsawf, Linear,
-                                 1);
-    new WaveForm /*SQPEAKQ1*/ ("Sq peak Q1", BANK, 5, sqpeakf, Linear, 1);
-    new WaveForm /*WHITENOISEQ1*/ ("White noise Q1", BANK, 6, randf, Discrete,
-                                   1);
-    new WaveForm /*PULSEQ1*/ ("Pulse Q1", BANK, 8, pulsef, Linear, 1);
-    new WaveForm /*CBPEAKQ1*/ ("Cb peak Q1", BANK, 15, cbpeakf, Linear, 1);
-    new WaveForm /*MOOGSAWQ1*/ ("Moog saw Q1", BANK, 50, moogsawf, Linear, 1);
-    new WaveForm /*EXPSAWQ1*/ ("Exponential saw Q1", BANK, 80, expsawf,
-                               Linear, 1);
-
-    // Degraded Q2
-    BANK              = 12;
-    m_bankNames[BANK] = "Degraded Q2";
-    new WaveForm /*SINEQ2*/ ("Sine Q2", BANK, 0, nsinf, Linear, 2);
-    new WaveForm /*TRIANGLEQ2*/ ("Triangle Q2", BANK, 1, trianglef, Linear,
-                                 2);
-    new WaveForm /*SAWTOOTHQ2*/ ("Saw tooth Q2", BANK, 2, sawtoothf, Linear,
-                                 2);
-    new WaveForm /*SQUAREQ2*/ ("Square Q2", BANK, 3, squaref, Linear, 2);
-    new WaveForm /*HARSHSAWQ2*/ ("Harsh saw Q2", BANK, 4, harshsawf, Linear,
-                                 2);
-    new WaveForm /*SQPEAKQ2*/ ("Sq peak Q2", BANK, 5, sqpeakf, Linear, 2);
-    new WaveForm /*WHITENOISEQ2*/ ("White noise Q2", BANK, 6, randf, Discrete,
-                                   2);
-    new WaveForm /*PULSEQ2*/ ("Pulse Q2", BANK, 8, pulsef, Linear, 2);
-    new WaveForm /*CBPEAKQ2*/ ("Cb peak Q2", BANK, 15, cbpeakf, Linear, 2);
-    new WaveForm /*MOOGSAWQ2*/ ("Moog saw Q2", BANK, 50, moogsawf, Linear, 2);
-    new WaveForm /*EXPSAWQ2*/ ("Exponential saw Q2", BANK, 80, expsawf,
-                               Linear, 2);
-
-    // Degraded Q3
-    BANK              = 13;
-    m_bankNames[BANK] = "Degraded Q3";
-    new WaveForm /*SINEQ3*/ ("Sine Q3", BANK, 0, nsinf, Linear, 3);
-    new WaveForm /*TRIANGLEQ3*/ ("Triangle Q3", BANK, 1, trianglef, Linear,
-                                 3);
-    new WaveForm /*SAWTOOTHQ3*/ ("Saw tooth Q3", BANK, 2, sawtoothf, Linear,
-                                 3);
-    new WaveForm /*SQUAREQ3*/ ("Square Q3", BANK, 3, squaref, Linear, 3);
-    new WaveForm /*HARSHSAWQ3*/ ("Harsh saw Q3", BANK, 4, harshsawf, Linear,
-                                 3);
-    new WaveForm /*SQPEAKQ3*/ ("Sq peak Q3", BANK, 5, sqpeakf, Linear, 3);
-    new WaveForm /*WHITENOISEQ3*/ ("White noise Q3", BANK, 6, randf, Discrete,
-                                   3);
-    new WaveForm /*PULSEQ3*/ ("Pulse Q3", BANK, 8, pulsef, Linear, 3);
-    new WaveForm /*CBPEAKQ3*/ ("Cb peak Q3", BANK, 15, cbpeakf, Linear, 3);
-    new WaveForm /*MOOGSAWQ3*/ ("Moog saw Q3", BANK, 50, moogsawf, Linear, 3);
-    new WaveForm /*EXPSAWQ3*/ ("Exponential saw Q3", BANK, 80, expsawf,
-                               Linear, 3);
+    createDegraded(10, false, 0);
+    createDegraded(11, false, 1);
+    createDegraded(12, false, 2);
+    createDegraded(13, false, 3);
+    createDegraded(14, false, 4);
+    createDegraded(15, true, 0);
+    createDegraded(16, true, 1);
+    createDegraded(17, true, 2);
+    createDegraded(18, true, 3);
+    createDegraded(19, true, 4);
 
     // Constant
-    BANK              = 19;
+    BANK              = 20;
     m_bankNames[BANK] = "Constant";
     new WaveForm /*MINUS1*/ ("-1.0", BANK, 0, minus1f, Exact);
     new WaveForm /*MINUS05*/ ("-0.5", BANK, 20, minus05f, Exact);
@@ -140,7 +91,7 @@ WaveForm::Set::Set()
     new WaveForm /*PLUS1*/ ("+1.0", BANK, 80, plus1f, Exact);
 
     // Mathematical
-    BANK              = 20;
+    BANK              = 21;
     m_bankNames[BANK] = "Mathematical";
     new WaveForm /*ID*/ ("id()", BANK, 1, identityf, Exact);
     new WaveForm /*SQ*/ ("sq()", BANK, 2, sqf, Exact);
@@ -196,6 +147,30 @@ WaveForm::Set::Set()
         }
         sbank++;
     }
+}
+
+void WaveForm::Set::createDegraded(int _bank, bool _linear, int _quality)
+{
+    // BANK        = 10 + (_linear ? 5 : 0) + _quality;
+    const int BANK = _bank;
+    QString   cat  = QString("%1%2").arg(_quality).arg(_linear ? "L" : "D");
+    interpolation_t i = (_linear ? Linear : Discrete);
+
+    m_bankNames[BANK] = QString("Q%1 Degraded").arg(cat);
+    new WaveForm(QString("Sine %1").arg(cat), BANK, 0, nsinf, i, _quality);
+    new WaveForm(QString("Triangle %1").arg(cat), BANK, 1, trianglef, i, _quality);
+    new WaveForm(QString("Saw tooth %1").arg(cat), BANK, 2, sawtoothf, i, _quality);
+    new WaveForm(QString("Square %1").arg(cat), BANK, 3, squaref, i, _quality);
+    new WaveForm(QString("Harsh saw %1").arg(cat), BANK, 4, harshsawf, i, _quality);
+    new WaveForm(QString("Sq peak %1").arg(cat), BANK, 5, sqpeakf, i, _quality);
+    new WaveForm(QString("White noise %1").arg(cat), BANK, 6, randf, i, _quality);
+    new WaveForm(QString("Pulse %1").arg(cat), BANK, 8, pulsef, i, _quality);
+    new WaveForm(QString("Cb peak %1").arg(cat), BANK, 15, cbpeakf, i, _quality);
+    new WaveForm(QString("Moog saw %1").arg(cat), BANK, 50, moogsawf, i, _quality);
+    new WaveForm(QString("Moog square %1").arg(cat), BANK, 51, moogsquaref, i,
+                 _quality);
+    new WaveForm(QString("Exponential saw %1").arg(cat), BANK, 80, expsawf, i,
+                 _quality);
 }
 
 WaveForm::Set WaveForm::WAVEFORMS;
@@ -302,7 +277,7 @@ void WaveForm::fillIndexModel(ComboBoxModel& _model, const int _bank)
     WAVEFORMS.fillIndexModel(_model, _bank);
 }
 
-WaveForm::WaveForm(const char*           _name,
+WaveForm::WaveForm(const QString&        _name,
                    const int             _bank,
                    const int             _index,
                    const interpolation_t _mode,
@@ -319,7 +294,7 @@ WaveForm::WaveForm(const char*           _name,
     WAVEFORMS.set(_bank, _index, static_cast<const WaveForm*>(this));
 }
 
-WaveForm::WaveForm(const char*           _name,
+WaveForm::WaveForm(const QString&        _name,
                    const int             _bank,
                    const int             _index,
                    const wavefunction_t  _func,
@@ -332,7 +307,7 @@ WaveForm::WaveForm(const char*           _name,
         m_built = true;
 }
 
-WaveForm::WaveForm(const char*           _name,
+WaveForm::WaveForm(const QString&        _name,
                    const int             _bank,
                    const int             _index,
                    const QString&        _file,
@@ -345,7 +320,7 @@ WaveForm::WaveForm(const char*           _name,
         m_mode = Linear;
 }
 
-WaveForm::WaveForm(const char*           _name,
+WaveForm::WaveForm(const QString&        _name,
                    const int             _bank,
                    const int             _index,
                    float*                _data,
@@ -363,7 +338,7 @@ WaveForm::WaveForm(const char*           _name,
     m_built = true;
 }
 
-WaveForm::WaveForm(const char*           _name,
+WaveForm::WaveForm(const QString&        _name,
                    const int             _bank,
                    const int             _index,
                    const sampleFrame*    _data,
@@ -398,7 +373,18 @@ void WaveForm::build()
 
     if(m_func)
     {
-        m_size = 128 * pow(2, m_quality) - 1;
+        // 10 -> 389711
+        // 9 -> 132427
+        // 8 -> 50000
+        // 7 -> 15291
+        // 6 -> 5196
+        // 5 -> 1766
+        // 4 -> 600 !
+        // 3 -> 204
+        // 2 -> 69
+        // 1 -> 24
+        // 0 -> 8 !
+        m_size = int(ceilf(8.f * pow(2.94283095638f, m_quality))) - 1;
         m_data = MM_ALLOC(float, m_size + 1);
         for(int i = m_size; i >= 0; --i)
             m_data[i] = m_func(float(i) / float(m_size));
@@ -560,7 +546,8 @@ float WaveForm::f(const float _x, const interpolation_t _m) const
 /*
 WaveForm::Plan::Plan()
 {
-    m_normBuf = (float*)fftwf_malloc((FFT_BUFFER_SIZE * 2) * sizeof(float));
+    m_normBuf = (float*)fftwf_malloc((FFT_BUFFER_SIZE * 2) *
+sizeof(float));
     // memset(m_normBuf, 0, 2 * FFT_BUFFER_SIZE);
 
     m_specBuf = (fftwf_complex*)fftwf_malloc((FFT_BUFFER_SIZE + 1)

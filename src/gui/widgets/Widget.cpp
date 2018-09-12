@@ -54,7 +54,7 @@ void Widget::updateNow()
 
 void Widget::update()
 {
-    invalidateCache();
-    //if(isVisible())
+    // invalidateCache();
+    // if(isVisible())
     PaintCacheable::update();
 }

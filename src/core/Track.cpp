@@ -1516,6 +1516,7 @@ void TrackContentObjectView::contextMenuEvent(QContextMenuEvent* _cme )
 
         QMenu* cm=buildContextMenu();
 	cm->exec( QCursor::pos() );
+        delete cm;
 
         /*
 	QMenu contextMenu( this );
@@ -2447,7 +2448,8 @@ TrackOperationsWidget::TrackOperationsWidget( TrackView * parent ) :
 
 
 	m_trackOps = new QPushButton( this );
-	m_trackOps->move( 12, 1 );
+	m_trackOps->move( 11, 6 );
+        m_trackOps->setIcon(embed::getIcon("menu"));
 	m_trackOps->setFocusPolicy( Qt::NoFocus );
 	m_trackOps->setMenu( toMenu );
 	ToolTip::add( m_trackOps, tr( "Actions for this track" ) );
@@ -2480,21 +2482,22 @@ TrackOperationsWidget::TrackOperationsWidget( TrackView * parent ) :
 
 	if(ConfigManager::inst()->value("ui","compacttrackbuttons").toInt())
 	{
-		m_muteBtn    ->setGeometry(45, 0,10,14);
-		m_soloBtn    ->setGeometry(45,16,10,14);
-		m_frozenBtn  ->setGeometry(55, 0,10,14);
-		m_clippingBtn->setGeometry(55,16,10,14);
+		m_muteBtn    ->setGeometry(39, 0,10,14);
+		m_soloBtn    ->setGeometry(39,16,10,14);
+		m_frozenBtn  ->setGeometry(52, 0,10,14);
+		m_clippingBtn->setGeometry(52,16,10,14);
 	}
 	else
 	{
-		m_muteBtn    ->move(45, 4);//setGeometry(45, 4,16,14);
-		m_soloBtn    ->move(45,18);//setGeometry(62, 4,16,14);
-		m_clippingBtn->move(62, 4);//setGeometry(62,18,16,14);
-		m_frozenBtn  ->move(62,18);//setGeometry(62,18,16,14);
+		m_muteBtn    ->move(39, 4);//setGeometry(45, 4,16,14);
+		m_soloBtn    ->move(39,18);//setGeometry(62, 4,16,14);
+		m_clippingBtn->move(54, 4);//setGeometry(62,18,16,14);
+		m_frozenBtn  ->move(54,18);//setGeometry(62,18,16,14);
 	}
 
         //(m_trackView->getTrack()->type()!=Track::InstrumentTrack)||
-        if((m_trackView->getTrack()->trackContainer()==(TrackContainer*)Engine::getBBTrackContainer()))
+        if((m_trackView->getTrack()->trackContainer()
+            ==(TrackContainer*)Engine::getBBTrackContainer()))
                 m_frozenBtn->setVisible(false);
 
 	connect( this, SIGNAL( trackRemovalScheduled( TrackView * ) ),
@@ -2995,7 +2998,6 @@ Track::Track( TrackTypes type, TrackContainer * tc ) :
 	m_trackContainer( tc ),        /*!< The track container object */
 	m_type( type ),                /*!< The track type */
 	m_name(),                       /*!< The track's name */
-        m_uuid(""),
 	m_color( Qt::white ),
 	m_useStyleColor( true ),
 	m_simpleSerializingMode( false ),
@@ -3009,18 +3011,6 @@ Track::Track( TrackTypes type, TrackContainer * tc ) :
 
 	connect( &m_frozenModel, SIGNAL( dataChanged() ),
 		 this, SLOT( toggleFrozen() ) );
-}
-
-const QString Track::uuid()
-{
-        if(m_uuid.isEmpty())
-        {
-                m_uuid=QUuid::createUuid().toString()
-                        .replace("{","").replace("}","");
-		//if( Engine::getSong() )
-		//	Engine::getSong()->setModified();
-        }
-        return m_uuid;
 }
 
 

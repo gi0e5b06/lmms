@@ -25,7 +25,7 @@
  */
 
 #include <QDomElement>
-#include <QObject>
+//#include <QObject>
 
 
 #include "Song.h"

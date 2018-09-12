@@ -25,7 +25,7 @@
 #ifndef PAINT_CACHEABLE_H
 #define PAINT_CACHEABLE_H
 
-#include <QMutex>
+//#include <QMutex>
 #include <QPainter>
 //#include <QSharedPointer>
 

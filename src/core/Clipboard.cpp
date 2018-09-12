@@ -46,6 +46,9 @@ class CSI_
     static bool get(SerializingObject* _obj, QClipboard::Mode _mode);
     static bool has(const QString& _nodeName, QClipboard::Mode _mode);
 
+    static QString     txt(QClipboard::Mode _mode);
+    static QDomElement dom(const QString& _nodeName, QClipboard::Mode _mode);
+
     friend class Clipboard;
     friend class Selection;
 };
@@ -158,6 +161,72 @@ bool CSI_::get(SerializingObject* _obj, QClipboard::Mode _mode)
     return true;
 }
 
+QString CSI_::txt(QClipboard::Mode _mode)
+{
+    const QMimeData* clip = QApplication::clipboard()->mimeData(_mode);
+
+    const QString type = "text/plain";
+    QByteArray    data = clip->data(type);
+
+    if(clip->hasFormat(type))
+    {
+        return QString(data).toUtf8();
+    }
+    else
+    {
+        qWarning("Clipboard: invalid data (not text/plain)");
+        return "";
+    }
+}
+
+QDomElement CSI_::dom(const QString& _nodeName, QClipboard::Mode _mode)
+{
+    const QMimeData* clip = QApplication::clipboard()->mimeData(_mode);
+
+    const QString type = CSI_::type(_nodeName);
+    QByteArray    data = clip->data(type);
+
+    if(clip->hasFormat(type))
+    {
+        // OK
+    }
+    else
+    {
+        qWarning("Clipboard: invalid data (not text/xml)");
+        return QDomElement();
+    }
+
+    DataFile    doc(QString(data).toUtf8());
+    QDomElement e = doc.content();
+    if(e.nodeName() != "clipboarddata")
+    {
+        qWarning("Warning: strange top node: %s", qPrintable(e.nodeName()));
+    }
+    else
+    {
+        e = e.firstChild().toElement();
+    }
+
+    if(e.nodeName() != _nodeName)
+    {
+        qWarning("Warning: strange content node: %s (not %s)",
+                 qPrintable(e.nodeName()), qPrintable(_nodeName));
+        e = e.firstChildElement(_nodeName);
+    }
+
+    if(e.isNull())
+    {
+        qWarning("Warning: no valid xml data...");
+        QString     txt;
+        QTextStream xml(&txt);
+        doc.write(xml);
+        qWarning("XML: %s", qPrintable(txt));
+        return e;
+    }
+
+    return e;
+}
+
 // Clipboard //
 
 void Clipboard::copy(SerializingObject* _obj)
@@ -190,4 +259,14 @@ bool Selection::has(const QString& _nodeName)
 bool Selection::inject(SerializingObject* _obj)
 {
     return CSI_::get(_obj, QClipboard::Selection);
+}
+
+QString Selection::txt()
+{
+    return CSI_::txt(QClipboard::Selection);
+}
+
+QDomElement Selection::dom(const QString& _nodeName)
+{
+    return CSI_::dom(_nodeName, QClipboard::Selection);
 }

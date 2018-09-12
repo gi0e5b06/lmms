@@ -24,14 +24,9 @@
  *
  */
 
-//#include <QLabel>
-#include <QPushButton>
-//#include <QMdiArea>
-//#include <QMdiSubWindow>
-#include <QPainter>
-#include <QWhatsThis>
-
 #include "EffectView.h"
+
+#include "Clipboard.h"
 #include "DummyEffect.h"
 #include "CaptionMenu.h"
 #include "embed.h"
@@ -42,6 +37,14 @@
 #include "MainWindow.h"
 #include "TempoSyncKnob.h"
 #include "ToolTip.h"
+
+//#include <QLabel>
+#include <QMouseEvent>
+#include <QPushButton>
+//#include <QMdiArea>
+//#include <QMdiSubWindow>
+#include <QPainter>
+#include <QWhatsThis>
 
 //const int EFFECT_WIDTH  = 228;
 //const int EFFECT_HEIGHT = 60;
@@ -73,7 +76,6 @@ EffectView::EffectView( Effect * _model, QWidget * _parent ) :
         //m_clippingLCB->setText(tr("CLIP"));
         //m_clippingLCB->setTextAnchorPoint(Qt::AnchorBottom);
 	//m_clippingLCB->setWhatsThis( tr( "Toggles the effect on or off." ) );
-
 
         m_wetDryKNB = new Knob( knobBright_26, this );
 	m_wetDryKNB->setLabel( tr( "D-WET" ) );
@@ -117,6 +119,11 @@ EffectView::EffectView( Effect * _model, QWidget * _parent ) :
         m_balanceKNB->setVisible(_model->isBalanceable());
 	setModel( _model );
 
+        QPushButton* menuBTN=new QPushButton(this);
+        menuBTN->setIcon(embed::getIcon("menu"));
+        menuBTN->setGeometry( 1, 35, 20,20 );
+        connect( menuBTN, SIGNAL( clicked() ), this, SLOT( showContextMenu() ) );
+
         if(!effect())
                 qWarning("EffectView: effect null");
         else if(!effect()->controls())
@@ -126,13 +133,14 @@ EffectView::EffectView( Effect * _model, QWidget * _parent ) :
         else
                 //if( effect()->controls()->controlCount() > 0 )
 	{
-		//QPushButton * ctls_btn = new QPushButton( tr( "Controls" ),this );
-                QPushButton * ctls_btn = new QPushButton
-                        ( embed::getIconPixmap( "trackop" ),"",this );
-		QFont f = ctls_btn->font();
-		ctls_btn->setFont( pointSize<8>( f ) );
-                ctls_btn->setGeometry( 163+24, 5, 36, 36 );//41
-		connect( ctls_btn, SIGNAL( clicked() ), this, SLOT( editControls() ) );
+		//QPushButton * ctrlBTN = new QPushButton( tr( "Controls" ),this );
+                QPushButton * ctrlBTN = new QPushButton
+                        ( embed::getIconPixmap( "configure" ),"",this );
+                ctrlBTN->setGeometry( 223-25, 5+3, 20,20 );
+		//QFont f = ctrlBTN->font();
+		//ctrlBTN->setFont( pointSize<8>( f ) );
+                //ctrlBTN->setGeometry( 163+24, 5, 36, 36 );//41
+		connect( ctrlBTN, SIGNAL( clicked() ), this, SLOT( editControls() ) );
 	}
 
 
@@ -242,21 +250,28 @@ void EffectView::moveUp()
 }
 
 
-
-
 void EffectView::moveDown()
 {
 	emit moveDown( this );
 }
 
 
+void EffectView::moveTop()
+{
+	emit moveTop( this );
+}
+
+
+void EffectView::moveBottom()
+{
+	emit moveBottom( this );
+}
+
 
 void EffectView::deletePlugin()
 {
 	emit deletePlugin( this );
 }
-
-
 
 
 void EffectView::displayHelp()
@@ -279,29 +294,71 @@ void EffectView::closeEffects()
 
 
 
-void EffectView::contextMenuEvent( QContextMenuEvent * )
+void EffectView::mousePressEvent(QMouseEvent* _me)
 {
-	QPointer<CaptionMenu> contextMenu = new CaptionMenu( model()->displayName(), this );
-	contextMenu->addAction( embed::getIconPixmap( "arp_up" ),
-						tr( "Move &up" ),
-						this, SLOT( moveUp() ) );
-	contextMenu->addAction( embed::getIconPixmap( "arp_down" ),
-						tr( "Move &down" ),
-						this, SLOT( moveDown() ) );
-	contextMenu->addAction( embed::getIconPixmap( "arp_up" ),
-						tr( "Move &top" ),
-						this, SLOT( moveTop() ) );
-	contextMenu->addAction( embed::getIconPixmap( "arp_down" ),
-						tr( "Move &bottom" ),
-						this, SLOT( moveBottom() ) );
-	contextMenu->addSeparator();
-	contextMenu->addAction( embed::getIconPixmap( "cancel" ),
-						tr( "&Remove this plugin" ),
-						this, SLOT( deletePlugin() ) );
-	contextMenu->addSeparator();
-	contextMenu->addHelpAction();
-	contextMenu->exec( QCursor::pos() );
-	delete contextMenu;
+    if(_me->button() == Qt::LeftButton)
+    {
+        _me->accept();
+    }
+}
+
+void EffectView::mouseReleaseEvent(QMouseEvent* _me)
+{
+    if(_me->button() == Qt::LeftButton)
+    {
+        _me->accept();
+        if(rect().contains(_me->pos()))
+                Selection::select(effect());
+    }
+}
+
+void EffectView::contextMenuEvent(QContextMenuEvent* _cme)
+{
+	if( _cme->modifiers() )
+	{
+                _cme->ignore();
+		return;
+	}
+
+        QMenu* cm=buildContextMenu();
+	cm->exec(QCursor::pos());
+        delete cm;
+}
+
+
+void EffectView::showContextMenu()
+{
+
+        QMenu* cm=buildContextMenu();
+        cm->exec(mapToGlobal(QPoint(0,55)));
+        delete cm;
+}
+
+
+QMenu* EffectView::buildContextMenu()
+{
+        QPointer<CaptionMenu> cm = new CaptionMenu( model()->displayName(), this );
+	cm->addAction( embed::getIconPixmap( "arp_up" ),
+                       tr( "Move &up" ),
+                       this, SLOT( moveUp() ) );
+	cm->addAction( embed::getIconPixmap( "arp_down" ),
+                       tr( "Move &down" ),
+                       this, SLOT( moveDown() ) );
+	cm->addAction( embed::getIconPixmap( "arp_up" ),
+                       tr( "Move to &top" ),
+                       this, SLOT( moveTop() ) );
+	cm->addAction( embed::getIconPixmap( "arp_down" ),
+                       tr( "Move to &bottom" ),
+                       this, SLOT( moveBottom() ) );
+	cm->addSeparator();
+	cm->addAction( embed::getIconPixmap( "cancel" ),
+                       tr( "&Remove this plugin" ),
+                       this, SLOT( deletePlugin() ) );
+	cm->addSeparator();
+	cm->addHelpAction();
+        return cm;
+	//contextMenu->exec(_xy);
+	//delete contextMenu;
 }
 
 
@@ -317,9 +374,9 @@ void EffectView::paintEvent( QPaintEvent * )
 	p.setFont( f );
 
 	//p.setPen( palette().shadow().color() );
-	//p.drawText( 7, 54, model()->displayName() );
+	//p.drawText( 25, 54, model()->displayName() );
 	p.setPen( palette().text().color() );
-	p.drawText( 6, 53, model()->displayName() );
+	p.drawText( 24, 53, model()->displayName() );
 }
 
 

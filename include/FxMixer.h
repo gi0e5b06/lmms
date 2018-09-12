@@ -38,7 +38,7 @@ class SampleBuffer;
 typedef QVector<FxRoute *> FxRoutes;
 typedef QVector<FxChannel *> FxChannels;
 
-class FxChannel : public QObject, public virtual ThreadableJob
+class FxChannel : public Model, public virtual ThreadableJob
 {
         Q_OBJECT
 
@@ -65,8 +65,6 @@ class FxChannel : public QObject, public virtual ThreadableJob
         virtual void readFrozenBuffer();
         virtual void writeFrozenBuffer();
 
-        const QString uuid();
-
 	EffectChain m_fxChain;
 	// set to true when input fed from mixToChannel or child channel
 	bool m_hasInput;
@@ -90,7 +88,6 @@ class FxChannel : public QObject, public virtual ThreadableJob
 	BoolModel m_soloModel;
 	FloatModel m_volumeModel;
 	QString m_name;
-	QString m_uuid;
 	int m_channelIndex; // what channel index are we
 
 	QMutex m_lock;

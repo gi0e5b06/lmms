@@ -35,6 +35,9 @@ class Selection
     static void select(SerializingObject* _obj);
     static bool inject(SerializingObject* _obj);
     static bool has(const QString& _nodeName);
+
+    static QString     txt();
+    static QDomElement dom(const QString& _nodeName);
 };
 
 class Clipboard

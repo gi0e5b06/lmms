@@ -85,6 +85,7 @@ IF("${PLUGIN_LIST}" STREQUAL "")
 		nes
 		opl2
 		organic
+                OscilloscopeGDX
                 OutputGDX
                 PadsGDX
 		papu
@@ -98,6 +99,7 @@ IF("${PLUGIN_LIST}" STREQUAL "")
 		sfxr
                 ShaperGDX
 		sid
+                SmashGDX
 		SpectrumAnalyzer
                 SplitGDX
 		stereo_enhancer

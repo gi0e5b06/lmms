@@ -81,7 +81,7 @@
 //#include <QApplication>
 #include <QMessageBox>
 #include <QPushButton>
-#include <QTemporaryFile>
+//#include <QTemporaryFile>
 #include <QTextStream>
 
 

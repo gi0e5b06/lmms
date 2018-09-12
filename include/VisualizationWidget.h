@@ -26,9 +26,10 @@
 #define VISUALIZATION_WIDGET_H_
 
 //#include "PaintCacheable.h"
+//#include "MemoryManager.h"
+#include "Ring.h"
 #include "Widget.h"
-
-#include "lmms_basics.h"
+//#include "lmms_basics.h"
 
 #include <QPixmap>
 //#include <QWidget>
@@ -38,49 +39,92 @@ class VisualizationWidget
       , public virtual PaintCacheable
 {
     Q_OBJECT
+    // MM_OPERATORS
 
   public:
-    enum Mode
+    static constexpr auto _CMSL_ = __LINE__;
+    enum ChannelMode
     {
-        Surround,
+        Left,
+        Right,
         Stereo,
-        Reference
+        Joint,
+        Average,
+        Difference,
+        MinMax,
+        RhoTan
     };
+    static constexpr auto ChannelModeCount = __LINE__ - _CMSL_ - 4;
 
+    static constexpr auto _DMSL_ = __LINE__;
+    enum DisplayMode
+    {
+        Off,
+        TimeLast,
+        Time,
+        XYLast,
+        XY
+    };
+    static constexpr auto DisplayModeCount = __LINE__ - _DMSL_ - 4;
+
+    VisualizationWidget(int         _width,
+                        int         _height,
+                        QWidget*    _parent,
+                        Ring*       _ring,
+                        ChannelMode _channelMode = Stereo,
+                        DisplayMode _displayMode = Time);
     VisualizationWidget(const QPixmap& _bg,
                         QWidget*       _parent,
-                        Mode           _mode = Surround);
+                        Ring*          _ring,
+                        ChannelMode    _channelMode = Stereo,
+                        DisplayMode    _displayMode = Time);
     virtual ~VisualizationWidget();
 
-    void setActive(bool _active);
+    void setDisplayMode(DisplayMode _mode);
+    void setChannelMode(ChannelMode _mode);
     void setFrozen(bool _frozen);
     void setStabilized(bool _stabilized);
 
+    virtual void invalidateCache();
+
+  public slots:
+    virtual void update();  // needed because of Qt slot
+
   protected:
     virtual void drawWidget(QPainter& _p);
-    //virtual void paintEvent(QPaintEvent* _pe);
+    // virtual void paintEvent(QPaintEvent* _pe);
     virtual void mousePressEvent(QMouseEvent* _me);
+    virtual void wheelEvent(QWheelEvent* _we);
 
     // interfaces
-    //using PaintCacheable::update;
-    //virtual void updateNow()
+    // using PaintCacheable::update;
+    // virtual void updateNow()
     //{
     //    QWidget::update();
     //}
 
-  protected slots:
-    void updateSurroundBuffer(const surroundSampleFrame* _buffer);
-    void updateStereoBuffer(const sampleFrame* _buffer);
+    // protected slots:
+    // void updateSurroundBuffer(const surroundSampleFrame* _buffer);
+    // void updateStereoBuffer(const sampleFrame* _buffer);
 
   private:
-    Mode         m_mode;
-    bool         m_active;
-    bool         m_frozen;
-    bool         m_stabilized;
-    sampleFrame* m_buffer;
-    int          m_pointCount;
-    QPointF*     m_points;
-    QPixmap      s_background;
+    void applyChannelMode(float& _v0, float& _v1) const;
+
+    ChannelMode m_channelMode;
+    DisplayMode m_displayMode;
+    bool        m_stabilized;
+    float       m_zoomX;
+    float       m_zoomY;
+    Ring*       m_ring;
+    // sampleFrame* m_buffer;
+    // int          m_len;
+    //float    m_masterOutput;
+    //float    m_peakLeft;
+    //float    m_peakRight;
+    //float    m_maxLevel;
+    int      m_pointCount;
+    QPointF* m_points;
+    QPixmap  m_background;
 };
 
 #endif

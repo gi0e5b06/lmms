@@ -47,25 +47,25 @@ class CPULoadWidget
 
   protected:
     virtual void drawWidget(QPainter& _p);
-    //virtual void paintEvent(QPaintEvent* _pe);
+    // virtual void paintEvent(QPaintEvent* _pe);
 
     // interfaces
-    //using PaintCacheable::update;
-    //virtual void updateNow() { QWidget::update(); }
+    // using PaintCacheable::update;
+    // virtual void updateNow() { QWidget::update(); }
 
-  protected slots:
-    void refresh();
+  public slots:
+    virtual void update();
 
   private:
-    bool   m_bigger;
-    int    m_currentLoad;
-    //bool   m_changed;
-    //QTimer m_updateTimer;
+    bool m_bigger;
+    int  m_currentLoad;
+    // bool   m_changed;
+    // QTimer m_updateTimer;
 
     QPixmap m_background;
     QPixmap m_foreground;
     QPixmap m_leds;
-    //QPixmap m_cache;
+    // QPixmap m_cache;
 };
 
 #endif

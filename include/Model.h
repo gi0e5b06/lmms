@@ -36,17 +36,9 @@ class EXPORT Model : public QObject
 	Q_OBJECT
 
  public:
-	Model( Model * _parent, QString _display_name = QString::null,
-					bool _default_constructed = false ) :
-		QObject( _parent ),
-		m_displayName( _display_name ),
-		m_defaultConstructed( _default_constructed )
-	{
-	}
-
-	virtual ~Model()
-	{
-	}
+	Model( Model * _parent, QString _displayName = QString::null,
+               bool _defaultConstructed = false );
+	virtual ~Model();
 
 	bool isDefaultConstructed()
 	{
@@ -57,6 +49,8 @@ class EXPORT Model : public QObject
 	{
 		return static_cast<Model *>( parent() );
 	}
+
+        virtual const QString uuid() final;
 
 	virtual QString displayName() const
 	{
@@ -81,12 +75,13 @@ class EXPORT Model : public QObject
 	// emitted if properties of the model (e.g. ranges) have changed
 	void propertiesChanged();
 
- public slots:
+ protected:
+        QString m_uuid;
 
  private:
 	QString m_displayName;
-	bool m_defaultConstructed;
-        bool m_frequentlyUpdated;
+	bool    m_defaultConstructed;
+        bool    m_frequentlyUpdated;
 } ;
 
 

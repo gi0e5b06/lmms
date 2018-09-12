@@ -123,10 +123,11 @@ private slots:
 	void toggleCompactTrackButtons( bool _enabled );
 	void toggleSyncVSTPlugins( bool _enabled );
 	void toggleAnimateAFP( bool _enabled );
-	void toggleNoteLabels( bool en );
-	void toggleDisplayWaveform( bool en );
-	void toggleDisableAutoquit( bool en );
+	void toggleNoteLabels( bool _enabled );
+	void toggleDisplayWaveform( bool _enabled );
+	void toggleDisableAutoquit( bool _enabled );
 	void toggleMappedFiles( bool _enabled );
+        void toggleLeftSideBar( bool _onLeft );
 
 	void setLanguage( int lang );
 
@@ -194,6 +195,9 @@ private:
 	bool m_printNoteLabels;
 	bool m_displayWaveform;
 	bool m_disableAutoQuit;
+
+        int  m_uiFramesPerSecond;
+        bool m_uiLeftSideBar;
 
 	typedef QMap<QString, AudioDeviceSetupWidget *> AswMap;
 	typedef QMap<QString, MidiSetupWidget *> MswMap;

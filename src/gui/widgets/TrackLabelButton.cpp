@@ -55,13 +55,13 @@ TrackLabelButton::TrackLabelButton( TrackView * _tv, QWidget * _parent ) :
 
 	if( ConfigManager::inst()->value( "ui", "compacttrackbuttons" ).toInt() )
 	{
-		setFixedSize( 33, 29 );//32
+		setFixedSize( 30, 29 );
 	}
 	else
 	{
 		setFixedSize( 148, 29 );//160
-		m_renameLineEdit->move( 31, ( height() / 2 ) - ( m_renameLineEdit->sizeHint().height() / 2 ) +2 );//+0
-		m_renameLineEdit->setFixedWidth( width() - 32 );//33
+		m_renameLineEdit->move( 29, ( height() / 2 ) - ( m_renameLineEdit->sizeHint().height() / 2 ) +2 );//+0
+		m_renameLineEdit->setFixedWidth( width() - 29 );//32
 		connect( m_renameLineEdit, SIGNAL( editingFinished() ), this, SLOT( renameFinished() ) );
 	}
 

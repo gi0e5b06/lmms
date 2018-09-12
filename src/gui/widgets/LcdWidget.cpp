@@ -37,12 +37,12 @@
 //#include "MainWindow.h"
 
 LcdWidget::LcdWidget(QWidget* parent, const QString& name) :
-      LcdWidget(1, "19blue", parent, name)
+      LcdWidget(1, "19default", parent, name)
 {
 }
 
 LcdWidget::LcdWidget(int numDigits, QWidget* parent, const QString& name) :
-      LcdWidget(numDigits, "19blue", parent, name)
+      LcdWidget(numDigits, "19default", parent, name)
 {
 }
 
@@ -79,7 +79,7 @@ void LcdWidget::setValue(int value)
     if(s != m_display)
     {
         m_display = s;
-        update();
+        LcdWidget::update();
     }
 }
 

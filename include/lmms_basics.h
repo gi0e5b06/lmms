@@ -111,15 +111,6 @@ inline bool typeInfo<float>::isEqual( float x, float y )
 
 const ch_cnt_t DEFAULT_CHANNELS = 2;
 
-#define LMMS_DISABLE_SURROUND
-
-#ifndef LMMS_DISABLE_SURROUND
-const ch_cnt_t SURROUND_CHANNELS=4;
-#else
-const ch_cnt_t SURROUND_CHANNELS=2;
-#endif
-
-
 #ifdef LMMS_BUILD_WIN32
 #define LADSPA_PATH_SEPARATOR ';'
 #define LV2_PATH_SEPARATOR ';'
@@ -139,10 +130,18 @@ const ch_cnt_t SURROUND_CHANNELS=2;
 #endif
 
 typedef sample_t sampleFrame[DEFAULT_CHANNELS];
-typedef sample_t surroundSampleFrame[SURROUND_CHANNELS];
 #define ALIGN_SIZE 16
 #if __GNUC__
 typedef sample_t sampleFrameA[DEFAULT_CHANNELS] __attribute__((__aligned__(ALIGN_SIZE)));
+#endif
+
+#define LMMS_DISABLE_SURROUND
+#ifndef LMMS_DISABLE_SURROUND
+const ch_cnt_t SURROUND_CHANNELS=4;
+typedef sample_t surroundSampleFrame[SURROUND_CHANNELS];
+#else
+const ch_cnt_t SURROUND_CHANNELS=DEFAULT_CHANNELS;
+typedef sampleFrame surroundSampleFrame;
 #endif
 
 

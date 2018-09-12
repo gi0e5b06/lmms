@@ -42,7 +42,7 @@ class Widget
     // interfaces
     virtual void update(); // final;
     virtual void updateNow();
-    //using PaintCacheable::refresh;
+    //using PaintCacheable::update();
 
   protected:
     Widget(QWidget* _parent);

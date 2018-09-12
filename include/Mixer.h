@@ -36,7 +36,9 @@
 #include "lmms_basics.h"
 //#include "LocklessList.h"
 #include "MemoryManager.h"
+#include "Configuration.h"
 #include "Note.h"
+#include "Ring.h"
 #include "fifo_buffer.h"
 #include "MixerProfiler.h"
 
@@ -275,8 +277,11 @@ public:
 	}
 
 
-	void getPeakValues( sampleFrame * _ab, const f_cnt_t _frames, float & peakLeft, float & peakRight ) const;
+	void getPeakValues(const sampleFrame * _ab, const f_cnt_t _frames, float & peakLeft, float & peakRight ) const;
 
+#ifndef LMMS_DISABLE_SURROUND
+	void getPeakValues(const surroundSampleFrame * _ab, const f_cnt_t _frames, float & peakLeft, float & peakRight ) const;
+#endif
 
 	bool criticalXRuns() const;
 
@@ -310,11 +315,12 @@ public:
 	void requestChangeInModel();
 	void doneChangeInModel();
 
+        Ring* displayRing() { return m_displayRing; }
 
 signals:
 	void qualitySettingsChanged();
 	void sampleRateChanged();
-	void nextAudioBuffer( const surroundSampleFrame * buffer );
+	//void nextDisplayBuffer( const surroundSampleFrame * buffer );
 
 
 private:
@@ -362,6 +368,7 @@ private:
 	QVector<AudioPort *> m_audioPorts;
 
 	fpp_t m_framesPerPeriod;
+        //long  m_periodCounter;
 
 	sampleFrame * m_inputBuffer[2];
 	f_cnt_t m_inputBufferFrames[2];
@@ -371,6 +378,9 @@ private:
 
 	surroundSampleFrame * m_readBuf;
 	surroundSampleFrame * m_writeBuf;
+
+        //int m_periodsPerDisplayRefresh;
+        Ring* m_displayRing;
 
 	QVector<surroundSampleFrame *> m_bufferPool;
 	int m_readBuffer;

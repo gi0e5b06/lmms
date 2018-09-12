@@ -24,6 +24,7 @@
 
 #include "SetupDialog.h"
 
+#include "Configuration.h"
 #include "TabBar.h"
 #include "TabButton.h" // REQUIRED
 #include "gui_templates.h"
@@ -139,7 +140,9 @@ SetupDialog::SetupDialog( ConfigTabs _tab_to_open ) :
 	m_displayWaveform(ConfigManager::inst()->value
                           ("ui","displaywaveform","1").toInt()),
 	m_disableAutoQuit(ConfigManager::inst()->value
-                          ("ui","disableautoquit").toInt())
+                          ("ui","disableautoquit").toInt()),
+        m_uiFramesPerSecond(CONFIG_GET_INT("ui.framespersecond")),
+        m_uiLeftSideBar(CONFIG_GET_BOOL("ui.leftsidebar"))
 {
 	setWindowIcon( embed::getIconPixmap( "setup_general" ) );
 	setWindowTitle( tr( "Setup LMMS" ) );
@@ -184,26 +187,13 @@ SetupDialog::SetupDialog( ConfigTabs _tab_to_open ) :
 	const int FooterSize = 0;
 	int labelNumber;
 
-        TabWidget * bufsize_tw = new TabWidget( tr( "BUFFER SIZE" ), general );
+        TabWidget * bufsize_tw = new TabWidget( tr( "AUDIO BUFFER SIZE" ), general );
 	labelNumber=0;
 
         labelNumber++;
 	m_bufSizeLbl = new QLabel( bufsize_tw );
-	m_bufSizeLbl->setGeometry( XDelta, YDelta*labelNumber, 350-XDelta, YDelta );
+	m_bufSizeLbl->setGeometry( XDelta, YDelta*labelNumber, 289-XDelta, YDelta );
 
-        labelNumber++;
-	m_bufSizeSlider = new QSlider( Qt::Horizontal, bufsize_tw );
-	m_bufSizeSlider->setRange( 1, 256 );
-	m_bufSizeSlider->setTickPosition( QSlider::TicksBelow );
-	m_bufSizeSlider->setPageStep( 8 );
-	m_bufSizeSlider->setTickInterval( 8 );
-	m_bufSizeSlider->setGeometry( XDelta, YDelta*labelNumber, 350-XDelta, YDelta );
-	m_bufSizeSlider->setValue( m_bufferSize / 64 );
-	connect( m_bufSizeSlider, SIGNAL( valueChanged( int ) ), this,
-						SLOT( setBufferSize( int ) ) );
-	setBufferSize( m_bufSizeSlider->value() );
-
-        labelNumber++;
 	QPushButton * bufsize_reset_btn = new QPushButton(
 			embed::getIconPixmap( "reload" ), "", bufsize_tw );
 	bufsize_reset_btn->setGeometry( 355-2*33, YDelta*labelNumber, 28, 28 );
@@ -217,7 +207,18 @@ SetupDialog::SetupDialog( ConfigTabs _tab_to_open ) :
 	connect( bufsize_help_btn, SIGNAL( clicked() ), this,
 						SLOT( displayBufSizeHelp() ) );
 
-        //labelNumber++;
+        labelNumber++;
+	m_bufSizeSlider = new QSlider( Qt::Horizontal, bufsize_tw );
+	m_bufSizeSlider->setRange( 1, 256 );
+	m_bufSizeSlider->setTickPosition( QSlider::TicksBelow );
+	m_bufSizeSlider->setPageStep( 8 );
+	m_bufSizeSlider->setTickInterval( 8 );
+	m_bufSizeSlider->setGeometry( XDelta, YDelta*labelNumber, 289-XDelta, YDelta );
+	m_bufSizeSlider->setValue( m_bufferSize / 64 );
+	connect( m_bufSizeSlider, SIGNAL( valueChanged( int ) ), this,
+						SLOT( setBufferSize( int ) ) );
+	setBufferSize( m_bufSizeSlider->value() );
+
         bufsize_tw->setFixedHeight( YDelta*labelNumber + HeaderSize + FooterSize + 28);
 
 	TabWidget * ui_tw = new TabWidget( tr( "UI" ), general );
@@ -251,6 +252,15 @@ SetupDialog::SetupDialog( ConfigTabs _tab_to_open ) :
 	compacttracks->setChecked( m_compactTrackButtons );
 	connect( compacttracks, SIGNAL( toggled( bool ) ),
 				this, SLOT( toggleCompactTrackButtons( bool ) ) );
+
+	QCheckBox * leftsidebar = new QCheckBox(
+				tr( "Side bar on left" ),
+								ui_tw );
+	labelNumber++;
+	leftsidebar->move( XDelta, YDelta*labelNumber );
+	leftsidebar->setChecked( m_uiLeftSideBar );
+	connect( leftsidebar, SIGNAL( toggled( bool ) ),
+				this, SLOT( toggleLeftSideBar( bool ) ) );
 
 	QCheckBox * oneitw = new QCheckBox(
 				tr( "One instrument track window mode" ),
@@ -1170,6 +1180,7 @@ void SetupDialog::accept()
 
 	ConfigManager::inst()->setValue( "disk", "mappedfiles",
 					QString::number( m_mappedFiles ) );
+	CONFIG_SET_BOOL("ui.leftsidebar",m_uiLeftSideBar);
 
 	ConfigManager::inst()->setWorkingDir(QDir::fromNativeSeparators(m_workingDir));
 	ConfigManager::inst()->setVSTDir(QDir::fromNativeSeparators(m_vstDir));
@@ -1359,7 +1370,10 @@ void SetupDialog::toggleCompactTrackButtons( bool _enabled )
 }
 
 
-
+void SetupDialog::toggleLeftSideBar( bool _onLeft )
+{
+	m_uiLeftSideBar = _onLeft;
+}
 
 
 void SetupDialog::toggleSyncVSTPlugins( bool _enabled )

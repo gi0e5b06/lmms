@@ -74,10 +74,12 @@ public:
 
 	virtual QString nodeName() const;
 
+        /* 0 is the default
 	virtual f_cnt_t desiredReleaseFrames() const
 	{
 		return 0;
 	}
+        */
 
 	virtual Flags flags() const
 	{
@@ -85,7 +87,7 @@ public:
 	}
 
 	virtual PluginView * instantiateView( QWidget * _parent );
-	
+
 	QString getCurrentPatchName();
 
 

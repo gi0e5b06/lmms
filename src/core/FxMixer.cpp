@@ -44,7 +44,7 @@
 #include <QDomElement>
 #include <QFileInfo>
 //#include <QLayout>
-#include <QUuid>
+//#include <QUuid>
 
 
 FxRoute::FxRoute( FxChannel * from, FxChannel * to, float amount ) :
@@ -71,6 +71,7 @@ void FxRoute::updateName()
 
 
 FxChannel::FxChannel( int idx, Model * _parent ) :
+        Model( _parent ),
 	m_fxChain( NULL ),
 	m_hasInput( false ),
 	m_stillRunning( false ),
@@ -88,7 +89,6 @@ FxChannel::FxChannel( int idx, Model * _parent ) :
 	m_soloModel( false, _parent ),
 	m_volumeModel( 1.0, 0.0, 1.0, 0.001, _parent ),//max=2.
 	m_name(),
-        m_uuid(""),
 	m_channelIndex( idx ),
 	m_lock(),
 	m_queued( false ),
@@ -140,19 +140,6 @@ FxChannel::~FxChannel()
 	//qInfo("FxChannel::~FxChannel idx=%d",m_channelIndex);
 
         if(m_frozenBuf) delete m_frozenBuf;
-}
-
-
-const QString FxChannel::uuid()
-{
-        if(m_uuid.isEmpty())
-        {
-                m_uuid=QUuid::createUuid().toString()
-                        .replace("{","").replace("}","");
-		//if( Engine::getSong() )
-		//	Engine::getSong()->setModified();
-        }
-        return m_uuid;
 }
 
 

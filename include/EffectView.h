@@ -31,6 +31,7 @@
 #include "Effect.h"
 #include "PluginView.h"
 
+class QMenu;
 class QGroupBox;
 class QLabel;
 class QPushButton;
@@ -64,10 +65,12 @@ class EffectView : public PluginView
 	void editControls();
 	void moveUp();
 	void moveDown();
+	void moveTop();
+	void moveBottom();
 	void deletePlugin();
 	void displayHelp();
 	void closeEffects();
-
+        void showContextMenu();
 
 signals:
 	void moveUp( EffectView * _plugin );
@@ -78,9 +81,13 @@ signals:
 
 
  protected:
+	virtual QMenu* buildContextMenu();
 	virtual void contextMenuEvent( QContextMenuEvent * _me );
+        virtual void mousePressEvent(QMouseEvent* _me);
+        virtual void mouseReleaseEvent(QMouseEvent* _me);
 	virtual void paintEvent( QPaintEvent * _pe );
 	virtual void modelChanged();
+
 
 
  private:

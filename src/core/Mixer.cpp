@@ -73,18 +73,20 @@ static __thread bool s_renderingThread;
 Mixer::Mixer( bool renderOnly ) :
 	m_renderOnly( renderOnly ),
 	m_framesPerPeriod( DEFAULT_BUFFER_SIZE ),
+        //m_periodCounter(0),
 	m_inputBufferRead( 0 ),
 	m_inputBufferWrite( 1 ),
-	m_readBuf( NULL ),
-	m_writeBuf( NULL ),
+	m_readBuf( nullptr ),
+	m_writeBuf( nullptr ),
+        m_displayRing( nullptr ),
 	m_workers(),
 	m_numWorkers( QThread::idealThreadCount()*2-1 ), //tmp GDX
 	m_newPlayHandles(),// PlayHandle::MaxNumber ),
 	m_qualitySettings( qualitySettings::Mode_Draft ),
 	m_masterGain( 1.0f ),
 	m_isProcessing( false ),
-	m_audioDev( NULL ),
-	m_oldAudioDev( NULL ),
+	m_audioDev( nullptr ),
+	m_oldAudioDev( nullptr ),
 	m_audioDevStartFailed( false ),
 	m_profiler(),
 	m_metronomeActive(false),
@@ -157,7 +159,7 @@ Mixer::Mixer( bool renderOnly ) :
 		m_workers.push_back( wt );
 	}
 
-	m_poolDepth = 2;
+	m_poolDepth = m_bufferPool.size()-1; //2;
 	m_readBuffer = 0;
 	m_writeBuffer = 1;
 }
@@ -201,6 +203,8 @@ Mixer::~Mixer()
 	{
 		delete[] m_inputBuffer[i];
 	}
+
+        if(m_displayRing!=nullptr) delete m_displayRing;
 }
 
 
@@ -218,6 +222,15 @@ void Mixer::initDevices()
 		m_audioDev = tryAudioDevices();
 		m_midiClient = tryMidiClients();
 	}
+
+        if(m_displayRing==nullptr)
+        {
+                //m_displayBuf=MM_ALLOC(surroundSampleFrame, m_framesPerPeriod);
+                //memset(m_displayBuf,0,sizeof(surroundSampleFrame)*m_framesPerPeriod);
+                int periodsPerDisplayRefresh=qMax(1,int(ceilf(float(processingSampleRate())
+                                                              /m_framesPerPeriod/CONFIG_GET_INT("ui.framespersecond"))));
+                m_displayRing=new Ring(m_framesPerPeriod*periodsPerDisplayRefresh);
+        }
 }
 
 
@@ -509,8 +522,15 @@ const surroundSampleFrame * Mixer::renderNextBuffer()
 	// STAGE 3: do master mix in FX mixer
 	fxMixer->masterMix( m_writeBuf );
 
-
-	emit nextAudioBuffer( m_readBuf );
+        /*
+        if(m_periodCounter%periodsPerDisplayRefresh==0)
+        {
+                memcpy(m_displayBuf,m_writeBuf,m_framesPerPeriod * sizeof(surroundSampleFrame));
+                emit nextSurroundDisplayBuffer(m_displayBuf);
+        }
+        */
+        //emit nextAudioBuffer( m_readBuf );
+        m_displayRing->write(m_readBuf,m_framesPerPeriod);
 
 	runChangesInModel();
 
@@ -581,28 +601,38 @@ void Mixer::clearInternal()
 
 
 
-void Mixer::getPeakValues( sampleFrame * _ab, const f_cnt_t _frames, float & peakLeft, float & peakRight ) const
+void Mixer::getPeakValues(const sampleFrame * _ab, const f_cnt_t _frames, float & peakLeft, float & peakRight ) const
 {
-	peakLeft = 0.0f;
-	peakRight = 0.0f;
-
-	for( f_cnt_t f = 0; f < _frames; ++f )
+	peakLeft = 0.f;
+	peakRight = 0.f;
+	for( f_cnt_t f = _frames-1; f>=0; --f)
 	{
-		float const absLeft = qAbs( _ab[f][0] );
-		float const absRight = qAbs( _ab[f][1] );
+		const float absLeft = qAbs( _ab[f][0] );
+		const float absRight = qAbs( _ab[f][1] );
 		if (absLeft > peakLeft)
-		{
 			peakLeft = absLeft;
-		}
-
 		if (absRight > peakRight)
-		{
 			peakRight = absRight;
-		}
 	}
 }
 
 
+#ifndef LMMS_DISABLE_SURROUND
+void Mixer::getPeakValues(const surroundSampleFrame * _ab, const f_cnt_t _frames, float & peakLeft, float & peakRight ) const
+{
+	peakLeft = 0.f;
+	peakRight = 0.f;
+	for( f_cnt_t f = _frames-1; f>=0; --f)
+	{
+		const float absLeft = qAbs( _ab[f][0] );
+		const float absRight = qAbs( _ab[f][1] );
+		if (absLeft > peakLeft)
+			peakLeft = absLeft;
+		if (absRight > peakRight)
+			peakRight = absRight;
+	}
+}
+#endif
 
 
 void Mixer::changeQuality( const struct qualitySettings & _qs )

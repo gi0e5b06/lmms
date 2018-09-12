@@ -157,10 +157,12 @@ public:
 		return IsSingleStreamed;
 	}
 
+        /* 0 is the default
 	virtual f_cnt_t desiredReleaseFrames() const
 	{
 		return 0; //4048;
 	}
+        */
 
 	virtual PluginView * instantiateView( QWidget * _parent );
 

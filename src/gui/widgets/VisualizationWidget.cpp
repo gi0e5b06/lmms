@@ -25,138 +25,218 @@
 #include "VisualizationWidget.h"
 
 #include "BufferManager.h"
+#include "Configuration.h"
 #include "Engine.h"
 #include "GuiApplication.h"
 #include "MainWindow.h"
 #include "Mixer.h"
+#include "PaintManager.h"
 #include "Song.h"
 #include "ToolTip.h"
 #include "gui_templates.h"
+#include "lmms_constants.h"
 
 #include <QMouseEvent>
 #include <QPainter>
+#include <QPainterPath>
 
 #include <cmath>
 
 VisualizationWidget::VisualizationWidget(const QPixmap& _bg,
                                          QWidget*       _parent,
-                                         Mode           _mode) :
-      Widget(_parent),
-      m_mode(_mode), m_active(false), m_frozen(false), m_stabilized(false),
-      s_background(_bg)
+                                         Ring*          _ring,
+                                         ChannelMode    _channelMode,
+                                         DisplayMode    _displayMode) :
+      VisualizationWidget(_bg.width(),
+                          _bg.height(),
+                          _parent,
+                          _ring,
+                          _channelMode,
+                          _displayMode)
 {
-    m_mode = _mode;
+    m_background = _bg;
+    // m_background.fill(Qt::black);
+}
 
-    const int w = s_background.width();
-    const int h = s_background.height();
-
-    m_pointCount = w;
+VisualizationWidget::VisualizationWidget(int         _width,
+                                         int         _height,
+                                         QWidget*    _parent,
+                                         Ring*       _ring,
+                                         ChannelMode _channelMode,
+                                         DisplayMode _displayMode) :
+      Widget(_parent),
+      m_channelMode(_channelMode), m_displayMode(Off), //m_frozen(false),
+      m_stabilized(false), m_zoomX(1.f), m_zoomY(1.f), m_ring(_ring)
+{
+    m_pointCount = _width;
     m_points     = new QPointF[m_pointCount];
 
-    setFixedSize(w, h);
-    //resizeCache(w, h);
+    setFixedSize(_width, _height);
+    // resizeCache(w, h);
     setAttribute(Qt::WA_OpaquePaintEvent, true);
 
     // const fpp_t frames = Engine::mixer()->framesPerPeriod();
     // m_buffer = new sampleFrame[frames];
     // BufferManager::clear( m_buffer, frames );
 
-    m_buffer = BufferManager::acquire();
+    // m_len    = qMax<int>(1024, Engine::mixer()->framesPerPeriod());
+    // m_buffer = MM_ALLOC(sampleFrame, m_len);  // BufferManager::acquire();
+    // memset(m_buffer, 0, sizeof(sampleFrame) * m_len);
 
-    ToolTip::add(this, tr("Left-click to enable/disable visualization of "
-                          "master-output")
-                               + tr(", middle-click to freeze, right-click "
-                                    "to stabilize."));
+    ToolTip::add(this, tr("Left-click to display, middle-click to freeze, "
+                          "right-click to stabilize."));
 
-    if(m_mode == Surround)
-        setActive(ConfigManager::inst()
-                          ->value("ui", "displaywaveform")
-                          .toInt());
+    if(!CONFIG_GET_BOOL("ui.displaywaveform"))
+        setDisplayMode(Off);
     else
-        setActive(true);
+        setDisplayMode(_displayMode);
 }
 
 VisualizationWidget::~VisualizationWidget()
 {
-    BufferManager::release(m_buffer);
-    // delete[] m_buffer;
+    // BufferManager::release(m_buffer);
+    // MM_FREE(m_buffer);  // delete[] m_buffer;
     delete[] m_points;
 }
 
+/*
 void VisualizationWidget::updateSurroundBuffer(
         const surroundSampleFrame* _buffer)
 {
-    if(m_active && !m_frozen && !Engine::getSong()->isExporting())
+    if(m_displayMode != Off && !m_frozen && !Engine::getSong()->isExporting())
     {
         // qWarning("VisualizationWidget::updateAudioBuffer");
-        const fpp_t fpp = Engine::mixer()->framesPerPeriod();
-        // memcpy( m_buffer, _buffer, sizeof( surroundSampleFrame ) * fpp );
-        for(ch_cnt_t ch = 0; ch < DEFAULT_CHANNELS; ++ch)
-            for(fpp_t i = 0; i < fpp; i++)
-            {
-                m_buffer[i][ch] = _buffer[i][ch];
-                // if(_buffer[i][ch] != 0.) qWarning("%f",_buffer[i][ch]);
-            }
+        const Mixer* mixer = Engine::mixer();
+        const fpp_t  fpp   = mixer->framesPerPeriod();
+        m_masterOutput     = mixer->masterGain();
 
+        mixer->getPeakValues(_buffer, fpp, m_peakLeft, m_peakRight);
+        m_maxLevel = qMax<float>(m_peakLeft, m_peakRight) * m_masterOutput;
+
+        if(sizeof(sampleFrame) == sizeof(surroundSampleFrame))
+            m_ring.write(static_cast<const sampleFrame*>(_buffer), fpp);
+        else
+            for(fpp_t i = 0; i < fpp; i++)
+                m_ring.write(static_cast<const sampleFrame&>(_buffer[i]));
         invalidateCache();
-        // update();
     }
 }
 
 void VisualizationWidget::updateStereoBuffer(const sampleFrame* _buffer)
 {
-    if(m_active && !m_frozen && !Engine::getSong()->isExporting())
+    if(m_displayMode != Off && !m_frozen && !Engine::getSong()->isExporting())
     {
         // qWarning("VisualizationWidget::updateAudioBuffer");
-        const fpp_t fpp = Engine::mixer()->framesPerPeriod();
-        memcpy(m_buffer, _buffer, sizeof(sampleFrame) * fpp);
+        const Mixer* mixer = Engine::mixer();
+        const fpp_t  fpp   = mixer->framesPerPeriod();
+        m_masterOutput     = mixer->masterGain();
 
+        mixer->getPeakValues(_buffer, fpp, m_peakLeft, m_peakRight);
+        m_maxLevel = qMax<float>(m_peakLeft, m_peakRight) * m_masterOutput;
+
+        m_ring.write(_buffer, fpp);
         invalidateCache();
-        // update();
+    }
+}
+*/
+
+void VisualizationWidget::applyChannelMode(float& _v0, float& _v1) const
+{
+    switch(m_channelMode)
+    {
+        case Left:
+            _v1 = 0.f;
+            break;
+        case Right:
+            _v0 = 0.f;
+            break;
+        case Stereo:
+            break;
+        case Joint:
+            _v1 -= _v0;
+            break;
+        case Average:
+        {
+            float a = (_v0 + _v1) / 2.f;
+            _v1     = (_v1 - _v0) / 2.f;
+            _v0     = a;
+        }
+        break;
+        case Difference:
+        {
+            float a = (_v0 + _v1) / 2.f;
+            _v0     = (_v0 - a) / 2.f;
+            _v1     = (_v1 - a) / 2.f;
+        }
+        break;
+        case MinMax:
+        {
+            float a = qMin(_v0, _v1);
+            float b = qMax(_v0, _v1);
+            _v0     = a;
+            _v1     = b;
+        }
+        case RhoTan:
+            // todo
+            break;
     }
 }
 
-void VisualizationWidget::setActive(bool _active)
+void VisualizationWidget::setDisplayMode(DisplayMode _mode)
 {
-    if(m_active == _active)
+    if(m_displayMode == _mode)
         return;
 
-    m_active = _active;
-    invalidateCache();
+    m_displayMode = _mode;
+    // invalidateCache();
 
-    if(m_active)
+    if(m_displayMode != Off)
     {
         connect(gui->mainWindow(), SIGNAL(periodicUpdate()), this,
-                SLOT(update()));
-        if(m_mode == Surround)
+                SLOT(update()), Qt::UniqueConnection);
+        /*
+        if(m_inputMode == Surround)
         {
             connect(Engine::mixer(),
                     SIGNAL(nextAudioBuffer(const surroundSampleFrame*)), this,
                     SLOT(updateSurroundBuffer(const surroundSampleFrame*)));
         }
+        */
     }
     else
     {
         disconnect(gui->mainWindow(), SIGNAL(periodicUpdate()), this,
                    SLOT(update()));
-        if(m_mode == Surround)
+        /*
+        if(m_inputMode == Surround)
         {
             disconnect(
                     Engine::mixer(),
                     SIGNAL(nextAudioBuffer(const surroundSampleFrame*)), this,
                     SLOT(updateSurroundBuffer(const surroundSampleFrame*)));
         }
-        update();
+        */
     }
+
+    update();
+}
+
+void VisualizationWidget::setChannelMode(ChannelMode _mode)
+{
+    if(m_channelMode == _mode)
+        return;
+
+    m_channelMode = _mode;
+    update();  // invalidateCache();
 }
 
 void VisualizationWidget::setFrozen(bool _frozen)
 {
-    if(m_frozen == _frozen)
+    if(m_ring->isFrozen() == _frozen)
         return;
 
-    m_frozen = _frozen;
-    invalidateCache();
+    m_ring->setFrozen(_frozen);
+    update(); //invalidateCache();
 }
 
 void VisualizationWidget::setStabilized(bool _stabilized)
@@ -165,161 +245,263 @@ void VisualizationWidget::setStabilized(bool _stabilized)
         return;
 
     m_stabilized = _stabilized;
-    invalidateCache();
+    update(); //invalidateCache();
 }
 
 void VisualizationWidget::drawWidget(QPainter& _p)
 {
-    _p.drawPixmap(0, 0, s_background);
+    if(m_background.isNull())
+        _p.fillRect(0, 0, width(), height(), Qt::black);
+    else
+        _p.drawPixmap(0, 0, m_background);
+
     _p.setRenderHints(QPainter::Antialiasing, true);
 
-    if(m_active && !Engine::getSong()->isExporting())
     {
-        Mixer const* mixer = Engine::mixer();
+        _p.setPen(Qt::white);  // Color(192, 192, 192));
+        _p.setFont(pointSize<7>(_p.font()));
+        //_p.drawText(6, height() - 5, tr("Click to enable"));
+        QString s("%1%2 %3%4 x%5y%6");
+        s = s.arg(m_displayMode)
+                    .arg(m_channelMode)
+                    .arg(m_ring->isFrozen() ? "F" : "-")
+                    .arg(m_stabilized ? "S" : "-")
+                    .arg(m_zoomX)
+                    .arg(m_zoomY);
+        _p.drawText(2, height() - 2, s);
+        _p.drawText(2, height() - 2, s);
+    }
 
-        float master_output = mixer->masterGain();
+    if(m_displayMode != Off && !Engine::getSong()->isExporting())
+    {
+        // Mixer const* mixer = Engine::mixer();
         // qWarning("VisualizationWidget::masterGain %f",master_output);
         int         w      = width() - 4;
-        const float half_h = -(height() - 11 - 6) / 2.0 * master_output - 1;
-        int         x_base = 2;
-        const float y_base = (height() - 11) / 2 - 0.5f;
+        int         h      = height() - 10 - 4;
+        const float half_h = -h / 2.f;  // - 1.f; //* master_output
+        const float x_base = 2.f;
+        const float y_base = 2.f - half_h;  // + 2.f;
 
-        //		_p.setClipRect( 2, 2, w, height()-4 );
-
-        const fpp_t frames = mixer->framesPerPeriod();
-        float       peakLeft;
-        float       peakRight;
-        mixer->getPeakValues(m_buffer, frames, peakLeft, peakRight);
-        const float max_level
-                = qMax<float>(peakLeft, peakRight) * master_output;
+        _p.setClipRegion(QRect(2, 2, w, h));
 
         // _p.setRenderHint( QPainter::Antialiasing );
 
         // if(max_level>0.0001f)
         {
-            int nbp = qMin<int>(w, frames);
+            const fpp_t fpp = Engine::mixer()->framesPerPeriod();
+
+            int size  = m_ring->size();
+            int fzero = 0;
+            // int izero = 0;
+            if(m_stabilized)
+            {
+                size = qMax<int>(fpp, size - fpp);
+                for(fpp_t f = 1; f < fpp - 1; f++)
+                {
+                    float v0 = m_ring->value(-f, 0);
+                    float v1 = m_ring->value(-f + 1, 0);
+                    if(v1 <= 0.f && v0 >= 0.f)
+                    {
+                        if(fabsf(v1) < fabsf(v0))
+                            fzero = -f + 1;
+                        else
+                            fzero = -f;
+                        break;
+                    }
+                }
+                // izero = (int)floorf(1.f * (nbp - 1) * fzero / (fpp - 1));
+            }
+
+            int nbp = 1;
+            switch(m_displayMode)
+            {
+                case Off:
+                    break;
+                case TimeLast:
+                    nbp = w / 2;
+                    break;
+                case Time:
+                    nbp = w;
+                    break;
+                case XYLast:
+                    nbp = qMax<int>(2, fpp / m_zoomX);
+                    break;
+                case XY:
+                    nbp = qMax<int>(2, size / m_zoomX);
+                    break;
+            }
             if(nbp <= 1)
                 return;
+            if(nbp > size)
+                nbp = size;
             if(nbp > m_pointCount)
                 nbp = m_pointCount;
 
-            const fpp_t fpp   = Engine::mixer()->framesPerPeriod();
-            int         fzero = 0;
-            for(fpp_t f = 1; f < fpp - 1; f++)
-            {
-                float v0 = m_buffer[f][0];
-                float v1 = m_buffer[f - 1][0];
-                if(v1 <= 0.f && v0 >= 0.f)
-                {
-                    if(fabsf(v1) < fabsf(v0))
-                        fzero = f - 1;
-                    else
-                        fzero = f;
-                    break;
-                }
-            }
-
-            int izero = (int)floorf(1.f * (nbp - 1) * fzero / (fpp - 1));
             for(ch_cnt_t ch = DEFAULT_CHANNELS - 1; ch >= 0; --ch)
             {
-                QColor c;
-                if(max_level > 1.f)
-                    c = QColor(255,0,0); //QColor(255, 64, 64);
-                else if(max_level > 0.9f)
-                    c = QColor(255,180,0); //QColor(255, 192, 64);
+                if((ch == 0 && m_channelMode == Right)
+                   || (ch == 1 && m_channelMode == Left))
+                    continue;
+
+                const float maxLevel = m_ring->maxLevel();
+                QColor      c;
+                if(maxLevel > 1.f)
+                    c = QColor(255, 0, 0);  // QColor(255, 64, 64);
+                else if(maxLevel > 0.9f)
+                    c = QColor(255, 180, 0);  // QColor(255, 192, 64);
                 else if(ch == 0)
-                    c = QColor(0,180,255); //QColor(71, 253, 133);
+                    c = QColor(0, 180, 255);  // QColor(71, 253, 133);
                 else
-                    c = QColor(0,255,180); //QColor(71, 133, 253);
+                    c = QColor(0, 255, 180);  // QColor(71, 133, 253);
                 _p.setPen(c);
-                // _p.setPen( QPen( _p.pen().color(), 0.7 ) );
 
                 for(int i = 0; i < nbp; i++)
                 {
-                    const float   tp    = (float)i / (float)nbp;
-                    const f_cnt_t frame = frames * tp;
-                    const float   xp = x_base + (w - 1.f) / (nbp - 1.f) * i;
-                    const float   yp
-                            = y_base
-                              + half_h * Mixer::clip(m_buffer[frame][ch]);
+                    const float tp    = (float)i / (float)nbp;
+                    f_cnt_t     frame = 0;
+                    float       xp    = 0.f;
+                    float       yp    = 0.f;
+
+                    switch(m_displayMode)
+                    {
+                        case Off:
+                            break;
+                        case TimeLast:
+                        case XYLast:
+                            frame = fpp * (1.f - tp) - 1;
+                            break;
+                        default:
+                            frame = size * (1.f - tp) - 1;
+                            break;
+                    }
+                    float v0 = m_ring->value(fzero - frame, 0) * m_zoomY;
+                    float v1 = m_ring->value(fzero - frame, 1) * m_zoomY;
+                    applyChannelMode(v0, v1);
+                    switch(m_displayMode)
+                    {
+                        case Off:
+                            break;
+                        case TimeLast:
+                        case Time:
+                            xp = 1.f / (nbp - 1.f) * i;
+                            yp = (ch == 0 ? v0 : v1);
+                            xp = x_base + (m_zoomX * (w - 1.f) * xp)
+                                 - (m_zoomX - 1.f) * (w - 1.f);
+                            yp = y_base + half_h * yp;
+                            break;
+                        case XYLast:
+                        case XY:
+                            if(ch == 0)
+                            {
+                                xp = v0;
+                                yp = v1;
+                            }
+                            else
+                            {
+                                xp = v1;
+                                yp = v0;
+                            }
+                            xp = x_base + (w - 1.f) * 0.5f + half_h * xp;
+                            yp = y_base + half_h * yp;
+                            break;
+                    }
                     m_points[i] = QPointF(xp, yp);
                 }
-                if(!m_stabilized || izero == 0)
+                // if(m_displayMode != Time || !m_stabilized || izero == 0)
                 {
-                    _p.drawPolyline(m_points, nbp);
+                    //_p.drawPolyline(m_points, nbp);
+
+                    QPainterPath path;
+                    path.moveTo(m_points[0]);
+                    // path.lineTo(m_points[1]);
+                    for(int i = 1; i < nbp; i++)
+                    {
+                        QPointF& a = (i >= 2 ? m_points[i - 2] : m_points[0]);
+                        QPointF& b = m_points[i - 1];
+                        QPointF& c = m_points[i];
+                        QPointF& d = (i < nbp - 1 ? m_points[i + 1]
+                                                  : m_points[nbp - 1]);
+                        QPointF  c1(b.x() + (c.x() - a.x()) / 4.f,
+                                   b.y() + (c.y() - a.y()) / 4.f);
+                        QPointF  c2(c.x() + (b.x() - d.x()) / 4.f,
+                                   c.y() + (b.y() - d.y()) / 4.f);
+                        path.cubicTo(c1, c2, c);
+                    }
+                    // path.lineTo(m_points[nbp - 1]);
+                    _p.drawPath(path);
                 }
+                /*
                 else
                 {
                     _p.translate(x_base - m_points[izero].x(), 0.f);
                     _p.drawPolyline(m_points + izero, nbp - 1 - izero);
                     _p.translate(-x_base + m_points[izero].x(), 0.f);
-
-                    /*
-                    _p.translate(-x_base + m_points[nbp - izero].x(), 0.f);
-                    _p.drawPolyline(m_points, izero + 1);
-                    _p.translate(x_base - m_points[nbp - izero].x(), 0.f);
-                    */
                 }
+                */
             }
-
-            /*
-            const float xd = (float) w / frames;
-            // now draw all that stuff
-            for( ch_cnt_t ch = 0; ch < DEFAULT_CHANNELS; ++ch )
-            {
-                    for( int frame = 0; frame < frames;
-            frame+=qMax(1,frames/w) )//++frame )
-                    {
-                            m_points[frame]=
-                                    QPointF(x_base + (float) frame * xd,
-                                            y_base + Mixer::clip(
-            m_buffer[frame][ch] ) * half_h );
-                    }
-                    _p.drawPolyline( m_points, frames );
-            }
-            */
         }
-        // else draw an horizontal line (TODO)
-    }
-    else
-    {
-        _p.setPen(QColor(192, 192, 192));
-        _p.setFont(pointSize<7>(_p.font()));
-        _p.drawText(6, height() - 5, tr("Click to enable"));
     }
 }
-
-/*
-void VisualizationWidget::paintEvent(QPaintEvent*)
-{
-    QPainter p(this);
-    if(paintCache(p))
-        return;
-
-    QPainter& pc = beginCache();
-    drawWidget(pc);
-    endCache();
-
-    paintCache(p);
-}
-*/
 
 void VisualizationWidget::mousePressEvent(QMouseEvent* _me)
 {
     if(_me->button() == Qt::LeftButton)
     {
-        setActive(!m_active);
-        if(m_active)
-            m_frozen = false;
+        if(_me->modifiers() & Qt::ShiftModifier)
+        {
+            setChannelMode(static_cast<ChannelMode>((m_channelMode + 1)
+                                                    % ChannelModeCount));
+        }
+        else
+        {
+            setDisplayMode(static_cast<DisplayMode>((m_displayMode + 1)
+                                                    % DisplayModeCount));
+            if(m_displayMode != Off)
+                setFrozen(false);
+        }
     }
     if(_me->button() == Qt::MiddleButton)
     {
-        if(m_active)
-            setFrozen(!m_frozen);
+        if(m_displayMode != Off)
+            setFrozen(!m_ring->isFrozen());
     }
     if(_me->button() == Qt::RightButton)
     {
-        if(m_active)
+        if(m_displayMode != Off)
             setStabilized(!m_stabilized);
     }
+}
+
+void VisualizationWidget::wheelEvent(QWheelEvent* _we)
+{
+    if(_we->modifiers() & Qt::ControlModifier)
+    {
+        _we->accept();
+        m_zoomY = qBound(
+                1.f, m_zoomY * ((_we->delta() > 0) ? F_2_SQRT : F_2_SQRT_R),
+                256.f);
+        update();
+    }
+    if(_we->modifiers() & Qt::ShiftModifier)
+    {
+        _we->accept();
+        m_zoomX = qBound(
+                1.f, m_zoomX * ((_we->delta() > 0) ? F_2_SQRT : F_2_SQRT_R),
+                256.f);
+        update();
+    }
+}
+
+void VisualizationWidget::invalidateCache()
+{
+    // if(!m_ring->isFrozen())
+    Widget::invalidateCache();
+}
+
+void VisualizationWidget::update()
+{
+    // if(!m_frozen)
+    Widget::update();
+    // else
+    // PaintManager::updateLater(this);
 }

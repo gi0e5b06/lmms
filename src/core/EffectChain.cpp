@@ -64,9 +64,12 @@ void EffectChain::saveSettings( QDomDocument & _doc, QDomElement & _this )
 		}
 		else
 		{
+                        effect->saveState( _doc, _this );
+                        /*
 			QDomElement ef = effect->saveState( _doc, _this );
 			ef.setAttribute( "name", QString::fromUtf8( effect->descriptor()->name ) );
 			ef.appendChild( effect->key().saveXML( _doc ) );
+                        */
 		}
 	}
 }
@@ -154,6 +157,7 @@ void EffectChain::moveUp( Effect * _effect )
 {
 	if( _effect != m_effects.first() )
 	{
+                /*
 		int i = 0;
 		for( EffectList::Iterator it = m_effects.begin();
 					it != m_effects.end(); it++, i++ )
@@ -167,6 +171,11 @@ void EffectChain::moveUp( Effect * _effect )
 		Effect * temp = m_effects[i - 1];
 		m_effects[i - 1] = _effect;
 		m_effects[i] = temp;
+                */
+                QVector<Effect*>::Iterator it =
+                        qFind( m_effects.begin(), m_effects.end(), _effect );
+                it = m_effects.erase(it);
+                m_effects.insert(it - 1,_effect);
 	}
 }
 
@@ -177,6 +186,7 @@ void EffectChain::moveDown( Effect * _effect )
 {
 	if( _effect != m_effects.last() )
 	{
+                /*
 		int i = 0;
 		for( EffectList::Iterator it = m_effects.begin();
 					it != m_effects.end(); it++, i++ )
@@ -190,6 +200,11 @@ void EffectChain::moveDown( Effect * _effect )
 		Effect * temp = m_effects[i + 1];
 		m_effects[i + 1] = _effect;
 		m_effects[i] = temp;
+                */
+                QVector<Effect*>::Iterator it =
+                        qFind( m_effects.begin(), m_effects.end(), _effect );
+                it = m_effects.erase(it);
+                m_effects.insert(it + 1,_effect);
 	}
 }
 

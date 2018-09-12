@@ -65,7 +65,7 @@ public:
 
 	virtual f_cnt_t desiredReleaseFrames() const
 	{
-		return( 512 );
+		return 512;
 	}
 
 	virtual PluginView * instantiateView( QWidget * _parent );

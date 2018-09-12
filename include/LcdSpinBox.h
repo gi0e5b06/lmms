@@ -22,81 +22,80 @@
  *
  */
 
-
 #ifndef LCD_SPINBOX_H
 #define LCD_SPINBOX_H
 
-#include "LcdWidget.h"
 #include "AutomatableModelView.h"
+#include "LcdWidget.h"
 
-
-class EXPORT LcdSpinBox : public LcdWidget, public IntModelView
+class EXPORT LcdSpinBox
+      : public LcdWidget
+      , public IntModelView
 {
-	Q_OBJECT
-public:
-	LcdSpinBox( int numDigits, QWidget* parent, const QString& name = QString::null );
+    Q_OBJECT
+  public:
+    LcdSpinBox(int            numDigits,
+               QWidget*       parent,
+               const QString& name = QString::null);
 
-	LcdSpinBox( int numDigits, const QString& style, QWidget* parent, const QString& name = QString::null );
+    LcdSpinBox(int            numDigits,
+               const QString& style,
+               QWidget*       parent,
+               const QString& name = QString::null);
 
-	virtual ~LcdSpinBox();
+    virtual ~LcdSpinBox();
 
-	virtual void modelChanged()
-	{
-		ModelView::modelChanged();
-		update();
-	}
+    virtual void modelChanged();
 
-	/*! Sets an offset which is always added to value of model so we can
-	    display values in a user-friendly way if they internally start at 0 */
-	/*
-	  void setDisplayOffset( int offset )
-	{
-		m_displayOffset = offset;
-	}
-	*/
+    /*! Sets an offset which is always added to value of model so we can
+        display values in a user-friendly way if they internally start at 0 */
+    /*
+      void setDisplayOffset( int offset )
+    {
+            m_displayOffset = offset;
+    }
+    */
 
-	/*! \brief Returns internal offset for displaying values */
-	/*
-	  int displayOffset() const
-	{
-		return m_displayOffset;
-	}
-	*/
+    /*! \brief Returns internal offset for displaying values */
+    /*
+      int displayOffset() const
+    {
+            return m_displayOffset;
+    }
+    */
+  public slots:
+    virtual void update();
 
-	virtual void updateNow();
+  protected:
+    virtual void contextMenuEvent(QContextMenuEvent* _me);
+    virtual void mousePressEvent(QMouseEvent* _me);
+    virtual void mouseMoveEvent(QMouseEvent* _me);
+    virtual void mouseReleaseEvent(QMouseEvent* _me);
+    virtual void wheelEvent(QWheelEvent* _we);
+    virtual void mouseDoubleClickEvent(QMouseEvent* _me);
 
+    virtual void convert(const QPoint& _p, float& value_, float& dist_);
+    virtual void setPosition(const QPoint& _p, bool _shift);
 
-protected:
-	virtual void contextMenuEvent( QContextMenuEvent * _me );
-	virtual void mousePressEvent( QMouseEvent * _me );
-	virtual void mouseMoveEvent( QMouseEvent * _me );
-	virtual void mouseReleaseEvent( QMouseEvent * _me );
-	virtual void wheelEvent( QWheelEvent * _we );
-	virtual void mouseDoubleClickEvent( QMouseEvent * _me );
+  private slots:
+    virtual void enterValue();
+    // void displayHelp();
+    // void friendlyUpdate();
+    // void toggleScale();
 
-	virtual void convert(const QPoint& _p, float& value_, float& dist_);
-	virtual void setPosition( const QPoint & _p, bool _shift );
+  private:
+    float  m_pressValue;  // model value when left button pressed
+    QPoint m_pressPos;    // mouse pos when left button pressed
+    bool   m_pressLeft;   // true when left button pressed
 
-private slots:
-	virtual void enterValue();
-        //void displayHelp();
-	//void friendlyUpdate();
-	//void toggleScale();
+    // bool m_mouseMoving;
+    // QPoint m_origMousePos;
+    // int m_displayOffset;
+    // void enterValue();
 
-private:
-	float m_pressValue; // model value when left button pressed
-	QPoint m_pressPos;  // mouse pos when left button pressed
-	bool m_pressLeft;   // true when left button pressed
-
-	//bool m_mouseMoving;
-	//QPoint m_origMousePos;
-	//int m_displayOffset;
-	//void enterValue();
-
-signals:
-	void manualChange();
-
-} ;
+  signals:
+    void manualChange();
+};
 
 typedef IntModel LcdSpinBoxModel;
 

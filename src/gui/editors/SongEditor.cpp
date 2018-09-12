@@ -237,7 +237,8 @@ SongEditor::SongEditor( Song * song ) :
                 //vcw_layout->addStretch();
                 vcw_layout->addWidget
                         ( new VisualizationWidget
-                          ( embed::getIconPixmap( "output_graph" ), vc_w ) );
+                          ( embed::getIconPixmap( "output_graph" ), vc_w,
+                            Engine::mixer()->displayRing()) );
 
                 vcw_layout->addWidget( new CPULoadWidget( vc_w, true ) );
                 vcw_layout->addStretch();
@@ -246,9 +247,10 @@ SongEditor::SongEditor( Song * song ) :
         }
         else
         {
-                gui->mainWindow()->addWidgetToToolBar
-                        ( new VisualizationWidget
-                          ( embed::getIconPixmap( "output_bigger_graph" ), tb), -1, col+6 );
+                VisualizationWidget* vw = new VisualizationWidget
+                        ( embed::getIconPixmap( "output_bigger_graph" ), tb,
+                          Engine::mixer()->displayRing());
+                gui->mainWindow()->addWidgetToToolBar(vw, -1, col+6);
         }
 
 	gui->mainWindow()->addSpacingToToolBar( 12,col+7 );
@@ -258,9 +260,7 @@ SongEditor::SongEditor( Song * song ) :
         if( true )
         {
                 CPULoadWidget* clw=new CPULoadWidget( tb, true );
-                gui->mainWindow()->addWidgetToToolBar( clw, 1, col+8);
-                connect(gui->mainWindow(), SIGNAL(periodicUpdate()), clw,
-                        SLOT(refresh()));
+                gui->mainWindow()->addWidgetToToolBar(clw, 1, col+8);
         }
 
         // navigator

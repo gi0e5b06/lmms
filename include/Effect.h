@@ -42,18 +42,26 @@ class EXPORT Effect : public Plugin
 {
 	MM_OPERATORS
 	Q_OBJECT
+
 public:
 	Effect( const Plugin::Descriptor * _desc,
                 Model * _parent,
                 const Descriptor::SubPluginFeatures::Key * _key );
 	virtual ~Effect();
 
+        virtual QDomElement saveState( QDomDocument & _doc, QDomElement & _parent );
+
 	virtual void saveSettings( QDomDocument & _doc, QDomElement & _parent );
 	virtual void loadSettings( const QDomElement & _this );
 
-	inline virtual QString nodeName() const
+	static QString classNodeName()
 	{
 		return "effect";
+	}
+
+	inline virtual QString nodeName() const
+	{
+		return classNodeName();
 	}
 
 	virtual bool processAudioBuffer( sampleFrame * _buf,

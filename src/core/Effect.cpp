@@ -86,11 +86,19 @@ Effect::~Effect()
 }
 
 
+QDomElement Effect::saveState( QDomDocument & _doc, QDomElement & _parent )
+{
+        //qInfo("Effect::saveState");
+        QDomElement  r=Plugin::saveState(_doc,_parent);
+        r.setAttribute( "name", QString::fromUtf8( descriptor()->name ) );
+        r.appendChild( key().saveXML( _doc ) );
+        return r;
 
+}
 
 void Effect::saveSettings( QDomDocument & _doc, QDomElement & _this )
 {
-	m_enabledModel.saveSettings( _doc, _this, "on" );
+        m_enabledModel.saveSettings( _doc, _this, "on" );
 	m_wetDryModel.saveSettings( _doc, _this, "wet" );
 	m_autoQuitModel.saveSettings( _doc, _this, "autoquit" );
 	m_gateModel.saveSettings( _doc, _this, "gate" );
@@ -322,7 +330,8 @@ void Effect::computeWetDryLevels(fpp_t _f, fpp_t _frames,
 
         float w=(wetDryBuf ? wetDryBuf->value(_f)
                  : m_wetDryModel.value());
-        float d=1.0f-w;
+        _d0=1.0f-w;
+        _d1=1.0f-w;
 
         int nsb=_frames;
         if(nsb>128) nsb=128;
@@ -347,8 +356,11 @@ void Effect::computeWetDryLevels(fpp_t _f, fpp_t _frames,
                                    : m_balanceModel.value());
                 const float bal0 = bal < 0.f ? 1.f : 1.f - bal;
                 const float bal1 = bal < 0.f ? 1.f + bal : 1.f;
-                _w0   = bal0 * w;
-                _w1   = bal1 * w;
+                _w0  = bal0 * w;
+                _w1  = bal1 * w;
+                const float df=(2.f+_d0+_d1)/4.f;
+                _d0 += (1.f-bal0)*w*df;
+                _d1 += (1.f-bal1)*w*df;
         }
         else
         {
@@ -356,8 +368,8 @@ void Effect::computeWetDryLevels(fpp_t _f, fpp_t _frames,
                 _w1=w;
         }
 
-        _d0   = d*(1.0f - _w0);
-        _d1   = d*(1.0f - _w1);
+        _d0*=(1.0f - _w0);
+        _d1*=(1.0f - _w1);
 }
 
 

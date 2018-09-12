@@ -97,9 +97,10 @@ MainWindow::MainWindow() :
 	QSplitter * splitter = new QSplitter( Qt::Horizontal, w );
 	splitter->setChildrenCollapsible( false );
 
-	m_workspace = new QMdiArea( splitter );
-
 	ConfigManager* confMgr = ConfigManager::inst();
+
+        if(!CONFIG_GET_BOOL("ui.leftsidebar"))
+                m_workspace = new QMdiArea( splitter );
 
 	emit initProgress(tr("Preparing plugin browser"));
 	sideBar->appendTab( new PluginBrowser( splitter ) );
@@ -154,6 +155,9 @@ MainWindow::MainWindow() :
 					embed::getIconPixmap( "computer" ).transformed( QTransform().rotate( 90 ) ),
 							splitter, dirs_as_items) );
 
+        if(CONFIG_GET_BOOL("ui.leftsidebar"))
+                m_workspace = new QMdiArea( splitter );
+
 	// Load background
 	emit initProgress(tr("Loading background artwork"));
 	QString bgArtwork = ConfigManager::inst()->backgroundArtwork();
@@ -175,8 +179,16 @@ MainWindow::MainWindow() :
 	m_workspace->setHorizontalScrollBarPolicy( Qt::ScrollBarAsNeeded );
 	m_workspace->setVerticalScrollBarPolicy( Qt::ScrollBarAsNeeded );
 
-	hbox->addWidget( splitter );
-	hbox->addWidget( sideBar );
+        if(CONFIG_GET_BOOL("ui.leftsidebar"))
+        {
+                hbox->addWidget( sideBar );
+                hbox->addWidget( splitter );
+        }
+        else
+        {
+                hbox->addWidget( splitter );
+                hbox->addWidget( sideBar );
+        }
 
 	// create global-toolbar at the top of our window
 	m_toolBar = new QWidget( main_widget );

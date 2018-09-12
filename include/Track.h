@@ -696,8 +696,6 @@ public:
 		return name();
 	}
 
-        const QString uuid();
-
 	using Model::dataChanged;
 
 	inline int getHeight() 
@@ -760,7 +758,6 @@ public slots:
 	TrackContainer* m_trackContainer;
 	TrackTypes m_type;
 	QString    m_name;
-	QString    m_uuid;
 	int        m_height;
 	QColor     m_color;
 	bool       m_useStyleColor;

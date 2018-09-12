@@ -30,6 +30,7 @@
 #include "GroupBox.h"
 #include "ModelView.h"
 
+#include <QMouseEvent>
 #include <QWidget>
 
 //#include "lmms_basics.h"
@@ -59,9 +60,14 @@ class EffectRackView
     void moveBottom(EffectView* view);
     void deletePlugin(EffectView* view);
 
+  protected:
+    virtual void mousePressEvent(QMouseEvent* _me);
+    virtual void mouseReleaseEvent(QMouseEvent* _me);
+    virtual void addEffect(Effect* _effect);
+
   private slots:
     virtual void update();
-    void         addEffect();
+    virtual void addEffect();
 
   private:
     virtual void modelChanged();

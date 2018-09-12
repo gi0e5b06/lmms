@@ -38,6 +38,7 @@ class EXPORT ValueBuffer  //: public std::vector<float>
 
   public:
     ValueBuffer(const ValueBuffer* _vb);
+    ValueBuffer(const ValueBuffer& _vb);
     ValueBuffer(int _length);
     ~ValueBuffer();
 

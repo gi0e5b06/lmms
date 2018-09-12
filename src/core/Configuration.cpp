@@ -47,6 +47,7 @@ void lmms_default_configuration()
     DEFAULT_BOOL("ui.printnotelabels", false);
     DEFAULT_BOOL("ui.displaywaveform", true);
     DEFAULT_INT("ui.framespersecond", 10);
+    DEFAULT_BOOL("ui.leftsidebar", false);
 
     DEFAULT_BOOL("tooltips.disabled", false);
 

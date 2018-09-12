@@ -41,7 +41,7 @@ class EXPORT Ring : public QObject
     MM_OPERATORS
 
   public:
-    enum Operation
+    enum OpMode
     {
         Nop,
         Put,
@@ -55,6 +55,33 @@ class EXPORT Ring : public QObject
     virtual ~Ring();
 
     void reset();
+
+    sample_t value(f_cnt_t _offset, ch_cnt_t _ch);
+    sample_t value(f_cnt_t _offset, ch_cnt_t _ch, f_cnt_t _pos);
+
+    const float maxLevel() const
+    {
+        return m_maxLevel;
+    }
+
+    const bool isFrozen() const
+    {
+        return m_frozen;
+    }
+
+    void setFrozen(bool _b)
+    {
+            m_frozen = _b;
+    }
+
+    const f_cnt_t size() const
+    {
+        return m_size;
+    }
+    const int duration() const
+    {
+        return m_duration;
+    }
     void changeSize(f_cnt_t _size);
     void changeDuration(float _duration);
 
@@ -66,28 +93,32 @@ class EXPORT Ring : public QObject
     bool isSampleRateAware();
     void setSampleRateAware(bool _b);
 
+    void read(sampleFrame& _dst) const;
     void read(sampleFrame* _dst, const f_cnt_t _length) const;
     void read(sampleFrame*  _dst,
               const f_cnt_t _length,
-              const f_cnt_t _offset) const;
+              const f_cnt_t _pos) const;
     void read(sampleFrame*  _dst,
               const f_cnt_t _length,
-              const float   _offset) const;
+              const float   _pos) const;
 
-    void write(const sampleFrame* src,
-               const f_cnt_t      length,
-               const Operation    op     = Put,
-               const float        factor = 1.f);
-    void write(const sampleFrame* src,
-               const f_cnt_t      length,
-               const f_cnt_t      offset,
-               const Operation    op     = Put,
-               const float        factor = 1.f);
-    void write(const sampleFrame* src,
-               const f_cnt_t      length,
-               const float        offset,
-               const Operation    op     = Put,
-               const float        factor = 1.f);
+    void write(const sampleFrame& _src,
+               const OpMode       _op     = Put,
+               const float        _factor = 1.f);
+    void write(const sampleFrame* _src,
+               const f_cnt_t      _length,
+               const OpMode       _op     = Put,
+               const float        _factor = 1.f);
+    void write(const sampleFrame* _src,
+               const f_cnt_t      _length,
+               const f_cnt_t      _offset,
+               const OpMode       _op     = Put,
+               const float        _factor = 1.f);
+    void write(const sampleFrame* _src,
+               const f_cnt_t      _length,
+               const float        _offset,
+               const OpMode       _op     = Put,
+               const float        _factor = 1.f);
 
   protected slots:
     void updateSamplerate();
@@ -129,6 +160,8 @@ class EXPORT Ring : public QObject
     }
 
     // const fpp_t m_fpp;
+    float            m_maxLevel;
+    volatile bool    m_frozen;
     bool             m_sampleRateAware;
     sample_rate_t    m_sampleRate;
     f_cnt_t          m_size;

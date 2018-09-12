@@ -27,12 +27,12 @@
 #include "Ring.h"
 
 #include "Engine.h"
-#include "MixHelpers.h"
+//#include "MixHelpers.h"
 #include "Mixer.h"
 
 Ring::Ring(f_cnt_t size) :
       // m_fpp( Engine::mixer()->framesPerPeriod() ),
-      m_sampleRateAware(false),
+      m_maxLevel(0.f), m_frozen(false), m_sampleRateAware(false),
       m_sampleRate(Engine::mixer()->processingSampleRate()),
       m_size(size)  // + m_fpp )
 {
@@ -44,6 +44,7 @@ Ring::Ring(f_cnt_t size) :
 
 Ring::Ring(float _duration) :
       // m_fpp( Engine::mixer()->framesPerPeriod() ),
+      m_maxLevel(0.f), m_frozen(false),
       m_sampleRateAware(false),  // changed below
       m_sampleRate(Engine::mixer()->processingSampleRate()),
       m_duration(_duration)
@@ -61,10 +62,21 @@ Ring::~Ring()
     delete[] m_buffer;
 }
 
+sample_t Ring::value(f_cnt_t _offset, ch_cnt_t _ch)
+{
+    return m_buffer[relpos(_offset - 1)][_ch];
+}
+
+sample_t Ring::value(f_cnt_t _offset, ch_cnt_t _ch, f_cnt_t _pos)
+{
+    return m_buffer[abspos(_pos + _offset)][_ch];
+}
+
 void Ring::reset()
 {
     memset(m_buffer, 0, m_size * sizeof(sampleFrame));
     m_position = 0;
+    m_maxLevel = 0.f;
 }
 
 void Ring::changeSize(f_cnt_t _size)
@@ -88,7 +100,7 @@ void Ring::changeDuration(float _duration)
 
 void Ring::rewind(f_cnt_t _amount)
 {
-    m_position = (m_position + m_size - _amount) % m_size;
+    m_position = relpos(-_amount);
 }
 
 void Ring::rewind(float _amount)
@@ -98,7 +110,7 @@ void Ring::rewind(float _amount)
 
 void Ring::forward(f_cnt_t _amount)
 {
-    m_position = (m_position + _amount) % m_size;
+    m_position = relpos(_amount);
 }
 
 void Ring::forward(float _amount)
@@ -113,47 +125,81 @@ bool Ring::isSampleRateAware()
 
 void Ring::setSampleRateAware(bool _b)
 {
+    Mixer* mixer = Engine::mixer();
+    if(!mixer)
+        return;
+
     if(_b)
     {
-        connect(Engine::mixer(), SIGNAL(sampleRateChanged()), this,
+        connect(mixer, SIGNAL(sampleRateChanged()), this,
                 SLOT(updateSamplerate()), Qt::UniqueConnection);
     }
     else
     {
-        disconnect(Engine::mixer(), SIGNAL(sampleRateChanged()), this,
+        disconnect(mixer, SIGNAL(sampleRateChanged()), this,
                    SLOT(updateSamplerate()));
     }
 }
 
+void Ring::read(sampleFrame& _dst) const
+{
+    read(&_dst, 1, m_position - 1);
+}
+
 void Ring::read(sampleFrame* _dst, const f_cnt_t _length) const
 {
-    for(f_cnt_t f = 0; f < _length; ++f)
-        for(ch_cnt_t ch = DEFAULT_CHANNELS - 1; ch >= 0; --ch)
-            _dst[f][ch] = m_buffer[relpos(f - _length)][ch];
+    read(_dst, _length, m_position - _length);
 }
 
 void Ring::read(sampleFrame*  _dst,
                 const f_cnt_t _length,
-                const f_cnt_t _offset) const
+                const f_cnt_t _pos) const
 {
     for(f_cnt_t f = 0; f < _length; ++f)
         for(ch_cnt_t ch = DEFAULT_CHANNELS - 1; ch >= 0; --ch)
-            _dst[f][ch] = m_buffer[abspos(_offset + f)][ch];
+            _dst[f][ch] = m_buffer[abspos(_pos + f)][ch];
 }
 
 void Ring::read(sampleFrame*  _dst,
                 const f_cnt_t _length,
-                const float   _offset) const
+                const float   _pos) const
 {
-    read(_dst, msToFrames(_offset), _length);
+    read(_dst, msToFrames(_pos), _length);
+}
+
+void Ring::write(const sampleFrame& _src,
+                 const OpMode       _op,
+                 const float        _factor)
+{
+    if(m_frozen)
+        return;
+
+    write(&_src, 1, m_position, _op, _factor);
+    forward(1);
 }
 
 void Ring::write(const sampleFrame* _src,
                  const f_cnt_t      _length,
-                 const Operation    _op,
+                 const OpMode       _op,
                  const float        _factor)
 {
-    Operation op = _op;
+    if(m_frozen)
+        return;
+
+    write(_src, _length, m_position, _op, _factor);
+    forward(_length);
+}
+
+void Ring::write(const sampleFrame* _src,
+                 const f_cnt_t      _length,
+                 const f_cnt_t      _pos,
+                 const OpMode       _op,
+                 const float        _factor)
+{
+    if(m_frozen)
+        return;
+
+    OpMode op = _op;
 
     if(op == PutMul)
     {
@@ -177,7 +223,7 @@ void Ring::write(const sampleFrame* _src,
     for(f_cnt_t f = 0; f < _length; ++f)
         for(ch_cnt_t ch = DEFAULT_CHANNELS - 1; ch >= 0; --ch)
         {
-            size_t p = relpos(f);
+            size_t p = abs(_pos + f);
             switch(op)
             {
                 case Put:
@@ -195,27 +241,23 @@ void Ring::write(const sampleFrame* _src,
                 default:
                     break;
             }
+            const float a = fabsf(m_buffer[p][ch]);
+            m_maxLevel *= 0.991;
+            if(a > m_maxLevel)
+                m_maxLevel = a;
         }
 }
 
 void Ring::write(const sampleFrame* _src,
                  const f_cnt_t      _length,
-                 const f_cnt_t      _offset,
-                 const Operation    _op,
+                 const float        _pos,
+                 const OpMode       _op,
                  const float        _factor)
 {
-    for(f_cnt_t f = 0; f < _length; ++f)
-        for(ch_cnt_t ch = DEFAULT_CHANNELS - 1; ch >= 0; --ch)
-            m_buffer[abspos(_offset + f)][ch] = _src[f][ch];
-}
+    if(m_frozen)
+        return;
 
-void Ring::write(const sampleFrame* _src,
-                 const f_cnt_t      _length,
-                 const float        _offset,
-                 const Operation    _op,
-                 const float        _factor)
-{
-    write(_src, _length, msToFrames(_offset));
+    write(_src, _length, msToFrames(_pos), _op, _factor);
 }
 
 void Ring::updateSamplerate()

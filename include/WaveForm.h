@@ -54,26 +54,26 @@ class WaveForm
         Exact
     };
 
-    WaveForm(const char*           _name,
+    WaveForm(const QString&        _name,
              const int             _bank,
              const int             _index,
              const wavefunction_t  _func,
              const interpolation_t _mode    = Exact,
              const int             _quality = 8);
-    WaveForm(const char*           _name,
+    WaveForm(const QString&        _name,
              const int             _bank,
              const int             _index,
              const QString&        _file,
              const interpolation_t _mode    = Linear,
              const int             _quality = 8);
-    WaveForm(const char*           _name,
+    WaveForm(const QString&        _name,
              const int             _bank,
              const int             _index,
              float*                _data,
              const int             _size,
              const interpolation_t _mode    = Linear,
              const int             _quality = 8);
-    WaveForm(const char*           _name,
+    WaveForm(const QString&        _name,
              const int             _bank,
              const int             _index,
              const sampleFrame*    _data,
@@ -110,7 +110,7 @@ class WaveForm
     static void fillIndexModel(ComboBoxModel& _model, const int _bank);
 
     // Standard waves
-    static const int ZERO_BANK  = 19;
+    static const int ZERO_BANK  = 20;
     static const int ZERO_INDEX = 40;
     static const int MIN_BANK   = 0;
     static const int MIN_INDEX  = 0;
@@ -146,6 +146,8 @@ class WaveForm
         void fillIndexModel(ComboBoxModel& _model, const int _bank);
 
       private:
+        void createDegraded(int _bank, bool _linear, int _quality);
+
         QString         m_bankNames[MAX_BANK - MIN_BANK + 1];
         const WaveForm* m_stock[MAX_BANK - MIN_BANK + 1]
                                [MAX_INDEX - MIN_INDEX + 1];
@@ -174,7 +176,7 @@ class WaveForm
     */
 
   protected:
-    WaveForm(const char*           _name,
+    WaveForm(const QString&        _name,
              const int             _bank,
              const int             _index,
              const interpolation_t _mode,

@@ -31,7 +31,7 @@
 #include "VstSyncData.h"
 
 #include <vector>
-#include <cstdio>
+//#include <cstdio>
 //#include <cstdlib>
 #include <cstring>
 #include <string>

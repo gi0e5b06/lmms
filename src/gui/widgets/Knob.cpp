@@ -454,10 +454,9 @@ void Knob::drawKnob(QPainter& _p)
         const float radius = m_knobPixmap->width() / 2.0f - 3.f;
         mid = QPointF(width() / 2.f, m_knobPixmap->height() / 2.f);
 
-        /*
         _p.drawPixmap( QPointF((width()-m_knobPixmap->width())/2.f,
-                              0.f),*m_knobPixmap );
-        */
+                               0.f), //(height()-m_knobPixmap->height())/2.f),
+                       *m_knobPixmap );
 
         // _p.setRenderHint( QPainter::Antialiasing );
 
@@ -508,7 +507,7 @@ void Knob::drawKnob(QPainter& _p)
         _p.setPen(pen0);
 
         _p.setBrush(m_statusColor);
-        float re = radius;  // + 2.f;
+        float re = 11.f; //radius;
         _p.drawEllipse(QRectF(mid.x() - re / 2.f, mid.y() - re / 2.f, re,
                               re));  //+1.f,re+1.f);
 

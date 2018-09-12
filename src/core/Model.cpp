@@ -24,6 +24,33 @@
 
 #include "Model.h"
 
+#include <QUuid>
+
+Model::Model( Model * _parent, QString _displayName,
+              bool _defaultConstructed) :
+        QObject( _parent ),
+        m_uuid(""),
+        m_displayName( _displayName ),
+        m_defaultConstructed( _defaultConstructed )
+{
+}
+
+
+Model::~Model()
+{
+}
+
+
+const QString Model::uuid()
+{
+        if(m_uuid.isEmpty())
+        {
+                m_uuid=QUuid::createUuid().toString()
+                        .replace("{","").replace("}","");
+        }
+        return m_uuid;
+}
+
 
 QString Model::fullDisplayName() const
 {

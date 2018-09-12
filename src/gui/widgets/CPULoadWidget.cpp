@@ -26,6 +26,8 @@
 #include "CPULoadWidget.h"
 
 #include "Engine.h"
+#include "GuiApplication.h"
+#include "MainWindow.h"
 #include "Mixer.h"
 #include "embed.h"
 
@@ -33,7 +35,7 @@
 
 CPULoadWidget::CPULoadWidget(QWidget* _parent, const bool _bigger) :
       Widget(_parent), m_bigger(_bigger), m_currentLoad(0)
-      //, m_changed(true), m_updateTimer()
+//, m_changed(true), m_updateTimer()
 {
     if(m_bigger)
     {
@@ -50,17 +52,19 @@ CPULoadWidget::CPULoadWidget(QWidget* _parent, const bool _bigger) :
     const int w = m_background.width();
     const int h = m_background.height();
 
-    //m_cache = QPixmap(w, h);
+    // m_cache = QPixmap(w, h);
     setFixedSize(w, h);
-    //resizeCache(w,h);
+    // resizeCache(w,h);
     setAttribute(Qt::WA_OpaquePaintEvent, true);
 
-    //connect(&m_updateTimer, SIGNAL(timeout()), this, SLOT(updateCpuLoad()));
-    //m_updateTimer.start(1000 / 8);
+    connect(gui->mainWindow(), SIGNAL(periodicUpdate()), this,
+            SLOT(update()), Qt::UniqueConnection);
 }
 
 CPULoadWidget::~CPULoadWidget()
 {
+    disconnect(gui->mainWindow(), SIGNAL(periodicUpdate()), this,
+               SLOT(update()));
 }
 
 void CPULoadWidget::drawWidget(QPainter& _p)
@@ -103,7 +107,7 @@ void CPULoadWidget::paintEvent(QPaintEvent*)
 }
 */
 
-void CPULoadWidget::refresh()
+void CPULoadWidget::update()
 {
     // smooth load-values a bit
     // int new_load = ( m_currentLoad + Engine::mixer()->cpuLoad() ) / 2;
@@ -111,11 +115,6 @@ void CPULoadWidget::refresh()
     // int new_load = qMax<int>((m_currentLoad*9)/10,
     //                         Engine::mixer()->cpuLoad());
 
-    int new_load = Engine::mixer()->cpuLoad();
-    if(new_load != m_currentLoad)
-    {
-        m_currentLoad = new_load;
-        invalidateCache();
-        update();
-    }
+    m_currentLoad = Engine::mixer()->cpuLoad();
+    Widget::update();
 }
