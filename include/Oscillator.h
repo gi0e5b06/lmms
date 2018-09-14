@@ -102,7 +102,7 @@ public:
 	{
                 //return sinf( _sample * F_2PI );
                 //return fastnormsinf01(fraction(_sample));
-                return WaveForm::sine(fraction(_sample));
+                return WaveForm::sine(absFraction(_sample));
 	}
 
 	static inline sample_t triangleSample( const float _sample )
@@ -120,21 +120,21 @@ public:
 		return ph * 4.0f - 4.0f;
                 */
                 //return fasttrianglef01(fraction(_sample));
-                return WaveForm::triangle(fraction(_sample));
+                return WaveForm::triangle(absFraction(_sample));
 	}
 
 	static inline sample_t sawSample( const float _sample )
 	{
 		//return -1.0f + fraction( _sample ) * 2.0f;
                 //return fastsawf01(fraction(_sample));
-                return WaveForm::sawtooth(fraction(_sample));
+                return WaveForm::sawtooth(absFraction(_sample));
 	}
 
 	static inline sample_t squareSample( const float _sample )
 	{
 		//return ( fraction( _sample ) > 0.5f ) ? -1.0f : 1.0f;
                 //return fastsquaref01(fraction(_sample));
-                return WaveForm::square(fraction(_sample));
+                return WaveForm::square(absFraction(_sample));
 	}
 
 	static inline sample_t moogSawSample( const float _sample )
@@ -148,7 +148,7 @@ public:
 		return 1.0f - 2.0f * ph;
                 */
                 //return fastmoogsawf01(fraction(_sample));
-                return WaveForm::harshsaw(fraction(_sample));
+                return WaveForm::harshsaw(absFraction(_sample));
 	}
 
 	static inline sample_t expSample( const float _sample )
@@ -162,7 +162,7 @@ public:
 		return -1.0f + 8.0f * ph * ph;
                 */
                 //return fastnormexpf01(fraction(_sample));
-                return WaveForm::sqpeak(fraction(_sample));
+                return WaveForm::sqpeak(absFraction(_sample));
 	}
 
 	static inline sample_t noiseSample( const float _sample )
@@ -172,12 +172,12 @@ public:
 
 		// Fast implementation
 		//return 1.0f - fast_rand() * 2.0f / FAST_RAND_MAX;
-                return WaveForm::whitenoise(fraction(_sample));
+                return WaveForm::whitenoise(absFraction(_sample));
 	}
 
 	inline sample_t userWaveSample( const float _sample ) const
 	{
-		return m_userWave->userWaveSample( _sample );
+		return m_userWave->userWaveSample(_sample);
 	}
 
 

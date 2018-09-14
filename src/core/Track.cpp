@@ -307,6 +307,14 @@ MidiTime TrackContentObject::stepPosition(int _step) const
 	return _step * 16.f / m_stepResolution *
                 MidiTime::ticksPerTact() / stepsPerTact();
 }
+
+
+int TrackContentObject::stepResolution() const
+{
+        return m_stepResolution;
+}
+
+
 void TrackContentObject::setStepResolution(int _res)
 {
         if(_res>0)
@@ -328,6 +336,7 @@ void TrackContentObject::addBarSteps()
 	m_steps += stepsPerTact();
 	updateLength();
 	emit dataChanged();
+        Engine::getSong()->setModified();
 }
 
 void TrackContentObject::addBeatSteps()
@@ -336,6 +345,7 @@ void TrackContentObject::addBeatSteps()
                 Engine::getSong()->getTimeSigModel().getNumerator();
 	updateLength();
 	emit dataChanged();
+        Engine::getSong()->setModified();
 }
 
 void TrackContentObject::addOneStep()
@@ -343,6 +353,7 @@ void TrackContentObject::addOneStep()
 	m_steps ++; //= stepsPerTact();
 	updateLength();
 	emit dataChanged();
+        Engine::getSong()->setModified();
 }
 
 void TrackContentObject::removeBarSteps()
@@ -359,6 +370,7 @@ void TrackContentObject::removeBarSteps()
 		m_steps -= n;
 		updateLength();
 		emit dataChanged();
+                Engine::getSong()->setModified();
 	}
 }
 
@@ -377,6 +389,7 @@ void TrackContentObject::removeBeatSteps()
 		m_steps -= n;
 		updateLength();
 		emit dataChanged();
+                Engine::getSong()->setModified();
 	}
 }
 
@@ -394,9 +407,41 @@ void TrackContentObject::removeOneStep()
 		m_steps -= n;
 		updateLength();
 		emit dataChanged();
+                Engine::getSong()->setModified();
 	}
 }
 
+void TrackContentObject::rotateOneStepLeft()
+{
+        rotate( -MidiTime::ticksPerTact() / stepsPerTact() );
+}
+
+void TrackContentObject::rotateOneStepRight()
+{
+        rotate( MidiTime::ticksPerTact() / stepsPerTact() );
+}
+
+void TrackContentObject::rotateOneBeatLeft()
+{
+        rotate( -MidiTime::ticksPerTact()
+                /Engine::getSong()->getTimeSigModel().getNumerator() );
+}
+
+void TrackContentObject::rotateOneBeatRight()
+{
+        rotate( MidiTime::ticksPerTact()
+                /Engine::getSong()->getTimeSigModel().getNumerator() );
+}
+
+void TrackContentObject::rotateOneBarLeft()
+{
+        rotate( -MidiTime::ticksPerTact() );
+}
+
+void TrackContentObject::rotateOneBarRight()
+{
+        rotate( MidiTime::ticksPerTact() );
+}
 
 
 
@@ -1580,24 +1625,63 @@ void TrackContentObjectView::addCutCopyPasteMenu(QMenu* _cm,
         a->setEnabled(_paste);
 }
 
-void TrackContentObjectView::addStepMenu(QMenu* _cm, bool _enabled)
+void TrackContentObjectView::addRotateMenu(QMenu* _cm, bool _bar, bool _beat, bool _step)
 {
-        Q_UNUSED(_enabled)
+        QMenu* smrl=new QMenu(tr("Rotate left"));
+        QMenu* smrr=new QMenu(tr("Rotate right"));
 
+        QAction* a;
+        a=smrl->addAction( embed::getIconPixmap( "arrow_first" ),
+                           tr( "One bar" ), m_tco, SLOT( rotateOneBarLeft() ) );
+        a->setEnabled(_bar);
+        a=smrr->addAction( embed::getIconPixmap( "arrow_last" ),
+                           tr( "One bar" ), m_tco, SLOT( rotateOneBarRight() ) );
+        a->setEnabled(_bar);
+
+        a=smrl->addAction( embed::getIconPixmap( "arrow_first" ),
+                           tr( "One beat" ), m_tco, SLOT( rotateOneBeatLeft() ) );
+        a->setEnabled(_beat);
+        a=smrr->addAction( embed::getIconPixmap( "arrow_last" ),
+                           tr( "One beat" ), m_tco, SLOT( rotateOneBeatRight() ) );
+        a->setEnabled(_beat);
+
+        a=smrl->addAction( embed::getIconPixmap( "arrow_left" ),
+                           tr( "One step" ), m_tco, SLOT( rotateOneStepLeft() ) );
+        a->setEnabled(_step);
+        a=smrr->addAction( embed::getIconPixmap( "arrow_right" ),
+                           tr( "One step" ), m_tco, SLOT( rotateOneStepRight() ) );
+        a->setEnabled(_step);
+
+        _cm->addMenu(smrl);
+        _cm->addMenu(smrr);
+}
+
+void TrackContentObjectView::addStepMenu(QMenu* _cm, bool _bar, bool _beat, bool _step)
+{
         QMenu* sma=new QMenu(tr("Add steps"));
         QMenu* smr=new QMenu(tr("Remove steps"));
-        sma->addAction( embed::getIconPixmap( "step_btn_add" ),
+
+        QAction* a;
+        a=sma->addAction( embed::getIconPixmap( "step_btn_add" ),
                         tr( "One bar" ), m_tco, SLOT( addBarSteps() ) );
+        a->setEnabled(_bar);
         smr->addAction( embed::getIconPixmap( "step_btn_remove" ),
                         tr( "One bar" ), m_tco, SLOT( removeBarSteps() ) );
+        a->setEnabled(_bar);
+
         sma->addAction( embed::getIconPixmap( "step_btn_add" ),
                         tr( "One beat" ), m_tco, SLOT( addBeatSteps() ) );
+        a->setEnabled(_beat);
         smr->addAction( embed::getIconPixmap( "step_btn_remove" ),
                         tr( "One beat" ), m_tco, SLOT( removeBeatSteps() ) );
+        a->setEnabled(_beat);
+
         sma->addAction( embed::getIconPixmap( "step_btn_add" ),
                         tr( "One step" ), m_tco, SLOT( addOneStep() ) );
+        a->setEnabled(_step);
         smr->addAction( embed::getIconPixmap( "step_btn_remove" ),
                         tr( "One step" ), m_tco, SLOT( removeOneStep() ) );
+        a->setEnabled(_step);
 
         //_cm->addSeparator();
         _cm->addMenu(sma);

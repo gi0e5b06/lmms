@@ -466,7 +466,7 @@ float WaveForm::f(const float _x, const interpolation_t _m) const
     if((m != m_mode) && (m == Exact || m_mode == Exact))
         m = m_mode;
 
-    float r;
+    float r=0.f;
     switch(m_mode)
     {
         case Discrete:

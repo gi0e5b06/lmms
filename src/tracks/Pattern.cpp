@@ -334,6 +334,32 @@ void Pattern::checkType()
 
 
 
+void Pattern::rotate(tick_t _ticks)
+{
+        if(_ticks==0) return;
+
+        instrumentTrack()->lock();
+        tick_t len=length();
+        bool modified=false;
+        for(Note* note: m_notes)
+        {
+                tick_t p=(note->pos()+_ticks)%len;
+                if(p<0) p+=len;
+                note->setPos(p);
+                modified=true;
+        }
+	instrumentTrack()->unlock();
+
+	checkType();
+	updateLength();
+
+	emit dataChanged();
+        if(modified) Engine::getSong()->setModified();
+}
+
+
+
+
 void Pattern::saveSettings( QDomDocument & _doc, QDomElement & _this )
 {
 	_this.setAttribute( "type", m_patternType );
@@ -680,10 +706,17 @@ QMenu* PatternView::buildContextMenu()
 			tr( "Clear all notes" ), m_pat, SLOT( clear() ) );
         */
 
-	if(isFixed())
+        cm->addSeparator();
+        addRotateMenu(cm,
+                      m_pat->length()>=MidiTime::ticksPerTact(),
+                      true,isFixed());
+
+        if(isFixed())
         {
                 cm->addSeparator();
-                addStepMenu(cm,true);
+                addStepMenu(cm,
+                            m_pat->length()>=MidiTime::ticksPerTact(),
+                            true,true);
                 if(m_pat->type() == Pattern::BeatPattern)
                         cm->addAction( embed::getIconPixmap
                                        ( "step_btn_duplicate" ),

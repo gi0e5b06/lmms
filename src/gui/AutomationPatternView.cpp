@@ -182,7 +182,9 @@ QMenu* AutomationPatternView::buildContextMenu()
 	if(isFixed())
         {
                 cm->addSeparator();
-                addStepMenu(cm,true);
+                addStepMenu(cm,
+                            m_pat->length()>=MidiTime::ticksPerTact(),
+                            true,true);
         }
 
         cm->addSeparator();

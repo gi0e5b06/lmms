@@ -120,6 +120,7 @@ public slots:
 
 protected:
         //void updateBBTrack();
+        virtual void rotate(tick_t _ticks);
 
 protected slots:
 	void changeTimeSignature();

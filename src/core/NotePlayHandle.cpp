@@ -263,7 +263,9 @@ void NotePlayHandle::play( sampleFrame * _working_buffer )
 		// clear offset frames if we're at the first period
 		// skip for single-streamed instruments, because in their case NPH::play() could be called from an IPH without a buffer argument
 		// ... also, they don't actually render the sound in NPH's, which is an even better reason to skip...
-		if( m_totalFramesPlayed == 0 && ! ( m_instrumentTrack->instrument()->flags() & Instrument::IsSingleStreamed ) )
+		if( m_totalFramesPlayed == 0 &&
+                    ! ( m_instrumentTrack->instrument() &&
+                        (m_instrumentTrack->instrument()->flags() & Instrument::IsSingleStreamed) ) )
 		{
 			memset( _working_buffer, 0, sizeof( sampleFrame ) * offset() );
 		}

@@ -416,7 +416,9 @@ QMenu* SampleTCOView::buildContextMenu()
 	if(isFixed())
         {
                 cm->addSeparator();
-                addStepMenu(cm,true);
+                addStepMenu(cm,
+                            m_tco->length()>=MidiTime::ticksPerTact(),
+                            true,true);
         }
 
         cm->addSeparator();

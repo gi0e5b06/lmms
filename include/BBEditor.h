@@ -67,7 +67,8 @@ private:
 class BBTrackContainerView : public TrackContainerView
 {
 	Q_OBJECT
-public:
+
+ public:
 	BBTrackContainerView(BBTrackContainer* tc);
 
 	virtual bool isFixed() const //fixedTCOs() 
@@ -82,19 +83,24 @@ public:
 	void saveSettings(QDomDocument& doc, QDomElement& element);
 	void loadSettings(const QDomElement& element);
 
-public slots:
+ public slots:
 	void addSteps();
 	void cloneSteps();
 	void removeSteps();
 	void addInstrumentTrack();
 	void addSampleTrack();
 	void addAutomationTrack();
+        void rotateOneStepLeft();
+        void rotateOneStepRight();
 
-protected slots:
+ protected slots:
 	void dropEvent(QDropEvent * de );
 	void updatePosition();
 
-private:
+ protected:
+        int highestStepResolution();
+
+ private:
 	BBTrackContainer * m_bbtc;
 	void makeSteps( bool clone );
 };

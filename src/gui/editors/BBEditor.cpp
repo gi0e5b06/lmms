@@ -138,6 +138,15 @@ BBEditor::BBEditor( BBTrackContainer* tc ) :
                                       m_trackContainerView,
                                       SLOT(cloneSteps()));
 
+	stepActionsToolBar->addAction(embed::getIconPixmap("arrow_left"),
+                                      tr( "Rotate one step left" ),
+                                      m_trackContainerView,
+                                      SLOT(rotateOneStepLeft()));
+	stepActionsToolBar->addAction(embed::getIconPixmap("arrow_right"),
+                                      tr( "Rotate one step right" ),
+                                      m_trackContainerView,
+                                      SLOT(rotateOneStepRight()));
+
 	connect( &tc->m_bbComboBoxModel, SIGNAL( dataChanged() ),
 			m_trackContainerView, SLOT( updatePosition() ) );
 
@@ -199,22 +208,23 @@ BBTrackContainerView::BBTrackContainerView(BBTrackContainer* tc) :
 	setModel( tc );
 }
 
+
 float BBTrackContainerView::pixelsPerTact() const
 {
         return m_ppt>0.f ? m_ppt : 256.f;
 }
 
+
 void BBTrackContainerView::addSteps()
 {
-	makeSteps( false );
+	makeSteps(false);
 }
+
 
 void BBTrackContainerView::cloneSteps()
 {
-	makeSteps( true );
+	makeSteps(true);
 }
-
-
 
 
 void BBTrackContainerView::removeSteps()
@@ -233,14 +243,10 @@ void BBTrackContainerView::removeSteps()
 }
 
 
-
-
 void BBTrackContainerView::addInstrumentTrack()
 {
 	(void) Track::create( Track::InstrumentTrack, model() );
 }
-
-
 
 
 void BBTrackContainerView::addSampleTrack()
@@ -249,11 +255,53 @@ void BBTrackContainerView::addSampleTrack()
 }
 
 
-
-
 void BBTrackContainerView::addAutomationTrack()
 {
 	(void) Track::create( Track::AutomationTrack, model() );
+}
+
+
+int BBTrackContainerView::highestStepResolution()
+{
+        int r=0;
+	for( const TrackView* view : trackViews() )
+        {
+                const Track* t=view->getTrack();
+                Track::tcoVector v = t->getTCOs();
+                for( const TrackContentObject* tco: v)
+                        r=qMax<int>(r,tco->stepResolution());
+                qInfo("BBTrackContainerView::highestStepResolution %s %d",
+                      qPrintable(view->getTrack()->name()),r);
+        }
+	return r;
+}
+
+
+void BBTrackContainerView::rotateOneStepLeft()
+{
+	int r=highestStepResolution();
+        if(r>0)
+        for( TrackView* view : trackViews() )
+        {
+                const Track* t=view->getTrack();
+                Track::tcoVector v = t->getTCOs();
+                for( TrackContentObject* tco: v)
+                        tco->rotate( -MidiTime::ticksPerTact() / r );
+        }
+}
+
+
+void BBTrackContainerView::rotateOneStepRight()
+{
+	int r=highestStepResolution();
+        if(r>0)
+        for( TrackView* view : trackViews() )
+        {
+                const Track* t=view->getTrack();
+                Track::tcoVector v = t->getTCOs();
+                for( TrackContentObject* tco: v)
+                        tco->rotate( MidiTime::ticksPerTact() / r );
+        }
 }
 
 

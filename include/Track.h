@@ -143,6 +143,7 @@ class TrackContentObject : public Model, public JournallingObject
 	virtual void movePosition( const MidiTime & pos );
 	virtual void changeLength( const MidiTime & length );
         virtual void updateLength();
+        virtual void rotate(tick_t _ticks) { } //= 0;
 
         /*
 	unsigned int colorRGB() const
@@ -150,6 +151,8 @@ class TrackContentObject : public Model, public JournallingObject
 		return m_color.rgb();
 	}
         */
+
+        virtual int stepResolution() const;
 
         bool isFixed() const;
         bool useStyleColor() const;
@@ -170,14 +173,14 @@ class TrackContentObject : public Model, public JournallingObject
 	}
 
 	/// Returns true if and only if a->startPosition() < b->startPosition()
-	static bool comparePosition(const TrackContentObject* a, const TrackContentObject* b);
+	static bool comparePosition(const TrackContentObject* a,
+                                    const TrackContentObject* b);
 
 public slots:
 	virtual void clear();
         virtual void copy();
 	virtual void paste();
 	virtual void toggleMute() final;
-
 
  signals:
 	void lengthChanged();
@@ -201,6 +204,12 @@ public slots:
 	void removeBarSteps();
 	void removeBeatSteps();
 	void removeOneStep();
+        void rotateOneBarLeft();
+        void rotateOneBeatLeft();
+        void rotateOneStepLeft();
+        void rotateOneBarRight();
+        void rotateOneBeatRight();
+        void rotateOneStepRight();
 
  private:
 	enum Actions
@@ -311,7 +320,8 @@ protected:
 	virtual QMenu* buildContextMenu() = 0;
         virtual void addRemoveMuteClearMenu(QMenu* _cm, bool _remove, bool _mute, bool _clear) final;
         virtual void addCutCopyPasteMenu(QMenu* _cm, bool _cut,bool _copy, bool _paste) final;
-        virtual void addStepMenu(QMenu* _cm, bool _enabled) final;
+        virtual void addRotateMenu(QMenu* _cm, bool _bar, bool _beat, bool _step) final;
+        virtual void addStepMenu(QMenu* _cm, bool _bar, bool _beat, bool _step) final;
         virtual void addNameMenu(QMenu* _cm, bool _enabled) final;
         virtual void addColorMenu(QMenu* _cm, bool _enabled) final;
 	virtual void contextMenuEvent(QContextMenuEvent* _cme ) final;
