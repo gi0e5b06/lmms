@@ -337,8 +337,8 @@ InstrumentFunctionNoteFilteringView::InstrumentFunctionNoteFilteringView(
 
     for(int i = 0; i < 12; ++i)
     {
-        m_noteSelectionLed[i] = new LedCheckBox(
-                Note::findKeyName(i).replace("-1", ""), NULL, "");
+        m_noteSelectionLed[i] = new LedCheckBox
+                (Note::findNoteName(i), NULL, "");
         mainLayout->addWidget(m_noteSelectionLed[i], i / 4 + 1, i % 4, 1, 1);
     }
 }

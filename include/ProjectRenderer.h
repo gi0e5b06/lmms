@@ -79,7 +79,7 @@ public:
 
 	static QString getFileExtensionFromFormat( ExportFileFormats fmt );
 
-	static const FileEncodeDevice fileEncodeDevices[];
+	static const FileEncodeDevice& fileEncodeDevices(int i);
 
 public slots:
 	void startProcessing();

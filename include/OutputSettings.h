@@ -35,10 +35,14 @@ class OutputSettings
 public:
 	enum BitDepth
 	{
-		Depth_16Bit,
-		Depth_24Bit,
-		Depth_32Bit,
-		NumDepths
+		Depth_S8,
+		Depth_S16,
+		Depth_S24,
+		Depth_S32,
+		Depth_F32,
+		Depth_F64
+                //,
+		//NumDepths
 	};
 
 	enum StereoMode

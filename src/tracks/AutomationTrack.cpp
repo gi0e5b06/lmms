@@ -51,6 +51,23 @@ AutomationTrack::~AutomationTrack()
 
 
 
+QString AutomationTrack::defaultName() const
+{
+        QString r="";
+	for(const TrackContentObject* tco: getTCOs())
+                if(!tco->isEmpty())
+                {
+                        r=tco->name();
+                        r=r.right(r.indexOf(QChar('>')));
+                        break;
+                }
+        if(r.isEmpty()) r=tr( "Automation track" );
+        return r;
+}
+
+
+
+
 bool AutomationTrack::play( const MidiTime & time_start, const fpp_t _frames,
 							const f_cnt_t _frame_base, int _tco_num )
 {

@@ -971,7 +971,7 @@ void PadsGDX::saveSFZ(const QString& _file)
                                   "\ntune=%4"
                                   "\n")
                                 .arg(f)
-                                .arg(Note::findKeyName(i))
+                                .arg(Note::findKeyName(i).toLower())
                                 .arg((int)(semitones))
                                 .arg((int)(100.*(semitones-(int)semitones)));
                         out.write(s.toUtf8());

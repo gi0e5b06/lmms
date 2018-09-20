@@ -122,6 +122,20 @@ SampleTCO::~SampleTCO()
 }
 
 
+bool SampleTCO::isEmpty() const
+{
+        return m_sampleBuffer->audioFile().isEmpty() ||
+                (m_sampleBuffer->frames()<=1);
+}
+
+
+QString SampleTCO::defaultName() const
+{
+        QString r=m_sampleBuffer->audioFile();
+        return r.isEmpty() ? getTrack()->name() : r;
+}
+
+
 void SampleTCO::doConnections()
 {
         Song* song=Engine::getSong();
@@ -672,7 +686,7 @@ SampleTrack::SampleTrack( TrackContainer* tc ) :
 							tr( "Volume" ) ),
 	m_panningModel( DefaultPanning, PanningLeft, PanningRight, 0.1f,
 					this, tr( "Panning" ) ),
-	m_audioPort( tr( "unnamed_sample_track" ), true, &m_volumeModel, &m_panningModel, &m_mutedModel),
+	m_audioPort( tr( "Sample track" ), true, &m_volumeModel, &m_panningModel, &m_mutedModel),
 	m_effectChannelModel( 0, 0, 0, this, tr( "FX channel" ) )
 {
         setColor(QColor("#D98F26"));
@@ -689,13 +703,20 @@ SampleTrack::SampleTrack( TrackContainer* tc ) :
 }
 
 
-
-
 SampleTrack::~SampleTrack()
 {
 	Engine::mixer()->removePlayHandlesOfTypes( this, PlayHandle::TypeSamplePlayHandle );
 }
 
+
+
+QString SampleTrack::defaultName() const
+{
+        QString r="";
+	if(numOfTCOs()>0) r=getTCO(0)->name();
+        if(r.isEmpty()) r=tr("Sample track");
+        return r;
+}
 
 
 /*
@@ -731,7 +752,7 @@ void SampleTrack::updateEffectChannel()
 bool SampleTrack::play( const MidiTime & _start, const fpp_t _frames,
                         const f_cnt_t _offset, int _tco_num )
 {
-	m_audioPort.effects()->startRunning();
+	//m_audioPort.effects()->startRunning();
 	bool played_a_note = false;	// will be return variable
 
 	tcoVector tcos;

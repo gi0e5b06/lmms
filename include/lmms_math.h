@@ -381,6 +381,37 @@ static inline float harshsaw0pf(const float x)
         return 4.f * x - 4.f;
 }
 
+/*
+static inline float octaviussawf(const float x)
+{
+        if(x < 0.225f)
+                return (4.f*x-0.45f)*(4.f*x-0.45f);
+        else
+                return 0.2f+(x-0.225f) * 1.02564102564f;
+}
+
+static inline float octaviussaw0pf(const float x)
+{
+    return octaviussawf(phasef(x + 0.2025f));
+}
+*/
+
+static inline float octaviussawf(float x)
+{
+  float x2 = x * x;
+  float x3 = x2 * x;
+  float y = (x < 0.225f) ? (-223.2124952380952f * x3 + 103.3947428571429f * x2 -
+                            12.99710476190476f * x + 0.5f)
+                         : (4.634282931882935f * x3 - 7.651001253561262f * x2 +
+                            4.391827775187776f * x - 0.37510945350945f);
+  return 2.f * y - 1.f;
+}
+
+static inline float octaviussaw0pf(const float x)
+{
+    return octaviussawf(phasef(x + 0.566454));
+}
+
 static inline float sqpeakf(const float x)
 {
     float p = x;

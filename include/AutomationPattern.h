@@ -58,6 +58,9 @@ public:
 	AutomationPattern( const AutomationPattern & _pat_to_copy );
 	virtual ~AutomationPattern();
 
+        virtual bool isEmpty() const;
+	virtual QString defaultName() const;
+
 	bool addObject( AutomatableModel * _obj, bool _search_dup = true );
 
 	const AutomatableModel * firstObject() const;

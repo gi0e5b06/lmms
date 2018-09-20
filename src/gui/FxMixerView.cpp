@@ -295,41 +295,30 @@ FxMixerView::FxChannelView::FxChannelView(QWidget*     _parent,
     m_fader->move(16 - m_fader->width() / 2,
                   m_fxLine->height() - m_fader->height() - 5);
 
-    m_muteBtn = new PixmapButton(m_fxLine, tr("Mute"));
-    m_muteBtn->setModel(&fxChannel->m_mutedModel);
-    m_muteBtn->setActiveGraphic(embed::getIconPixmap("led_off"));
-    m_muteBtn->setInactiveGraphic(embed::getIconPixmap("led_green"));
-    m_muteBtn->setCheckable(true);
-    m_muteBtn->move(9, m_fader->y() - 30);
-    ToolTip::add(m_muteBtn, tr("Mute"));
+    int XF=9;
+    int YF=m_fader->y();
 
+    YF-=16;
     m_soloBtn = new PixmapButton(m_fxLine, tr("Solo"));
     m_soloBtn->setModel(&fxChannel->m_soloModel);
     m_soloBtn->setActiveGraphic(embed::getIconPixmap("led_magenta"));
     m_soloBtn->setInactiveGraphic(embed::getIconPixmap("led_off"));
     m_soloBtn->setCheckable(true);
-    m_soloBtn->move(9, m_fader->y() - 14);
+    m_soloBtn->move(XF, YF);
     connect(&fxChannel->m_soloModel, SIGNAL(dataChanged()), _mv,
             SLOT(toggledSolo()));
     ToolTip::add(m_soloBtn, tr("Solo"));
 
-    m_clippingBtn = new PixmapButton(m_fxLine, tr("Clipping"));
-    m_clippingBtn->setModel(&fxChannel->m_clippingModel);
-    m_clippingBtn->setActiveGraphic(embed::getIconPixmap("led_red"));
-    m_clippingBtn->setInactiveGraphic(embed::getIconPixmap("led_off"));
-    m_clippingBtn->setCheckable(true);
-    m_clippingBtn->setBlinking(true);
-    m_clippingBtn->move(9, m_fader->y() - 178);
-    ToolTip::add(m_clippingBtn, tr("Clipping alert"));
+    YF-=14;
+    m_muteBtn = new PixmapButton(m_fxLine, tr("Mute"));
+    m_muteBtn->setModel(&fxChannel->m_mutedModel);
+    m_muteBtn->setActiveGraphic(embed::getIconPixmap("led_off"));
+    m_muteBtn->setInactiveGraphic(embed::getIconPixmap("led_green"));
+    m_muteBtn->setCheckable(true);
+    m_muteBtn->move(XF, YF);
+    ToolTip::add(m_muteBtn, tr("Mute"));
 
-    m_frozenBtn = new PixmapButton(m_fxLine, tr("Frozen"));
-    m_frozenBtn->setModel(&fxChannel->m_frozenModel);
-    m_frozenBtn->setActiveGraphic(embed::getIconPixmap("led_blue"));
-    m_frozenBtn->setInactiveGraphic(embed::getIconPixmap("led_off"));
-    m_frozenBtn->setCheckable(true);
-    m_frozenBtn->move(9, m_fader->y() - 162);
-    ToolTip::add(m_frozenBtn, tr("Frozen"));
-
+    YF-=116;
     if(channelIndex == 0)
     {
         m_eqEnableBtn  = NULL;
@@ -345,7 +334,7 @@ FxMixerView::FxChannelView::FxChannelView(QWidget*     _parent,
         m_eqEnableBtn->setCheckable(true);
         m_eqEnableBtn->setModel(&fxChannel->m_eqDJEnableModel);
         m_eqEnableBtn->setBlinking(true);
-        m_eqEnableBtn->move(9, m_fader->y() - 146);
+        m_eqEnableBtn->move(XF, YF);
 
         Effect*         eq = fxChannel->m_eqDJ;
         EffectControls* cq = eq->controls();
@@ -376,9 +365,9 @@ FxMixerView::FxChannelView::FxChannelView(QWidget*     _parent,
                     m_eqMediumKnob->setPointColor(Qt::yellow);
                     m_eqLowKnob->setPointColor(Qt::yellow);
 
-                    m_eqHighKnob->move(3, m_eqEnableBtn->y() + 17);
-                    m_eqMediumKnob->move(3, m_eqEnableBtn->y() + 47);
-                    m_eqLowKnob->move(3, m_eqEnableBtn->y() + 77);
+                    m_eqHighKnob->move(XF-6, m_eqEnableBtn->y() + 17);
+                    m_eqMediumKnob->move(XF-6, m_eqEnableBtn->y() + 47);
+                    m_eqLowKnob->move(XF-6, m_eqEnableBtn->y() + 77);
 
                     m_eqHighKnob->model()->setRange(-100.f, 0.f, 0.5f);
                     m_eqMediumKnob->model()->setRange(-100.f, 0.f, 0.5f);
@@ -411,6 +400,25 @@ FxMixerView::FxChannelView::FxChannelView(QWidget*     _parent,
         m_eqLowKnob   ->move(3, m_eqEnableBtn->y()+73);
         */
     }
+
+    YF-=14;
+    m_frozenBtn = new PixmapButton(m_fxLine, tr("Frozen"));
+    m_frozenBtn->setModel(&fxChannel->m_frozenModel);
+    m_frozenBtn->setActiveGraphic(embed::getIconPixmap("led_blue"));
+    m_frozenBtn->setInactiveGraphic(embed::getIconPixmap("led_off"));
+    m_frozenBtn->setCheckable(true);
+    m_frozenBtn->move(XF, YF);
+    ToolTip::add(m_frozenBtn, tr("Frozen"));
+
+    YF-=14;
+    m_clippingBtn = new PixmapButton(m_fxLine, tr("Clipping"));
+    m_clippingBtn->setModel(&fxChannel->m_clippingModel);
+    m_clippingBtn->setActiveGraphic(embed::getIconPixmap("led_red"));
+    m_clippingBtn->setInactiveGraphic(embed::getIconPixmap("led_off"));
+    m_clippingBtn->setCheckable(true);
+    m_clippingBtn->setBlinking(true);
+    m_clippingBtn->move(XF,YF);
+    ToolTip::add(m_clippingBtn, tr("Clipping alert"));
 
     // Create EffectRack for the channel
     m_rackView

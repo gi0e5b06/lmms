@@ -1,8 +1,7 @@
 /*
- * MidiEffectControlDialog.h - base-class for effect-dialogs for displaying and
- *                         editing control port values
+ * AudioAlsaGdxSetupWidget.h - Implements a setup widget for ALSA-PCM-output
  *
- * Copyright (c) 2006-2009 Tobias Doerffel <tobydox/at/users.sourceforge.net>
+ * Copyright (c) 2004-2015 Tobias Doerffel <tobydox/at/users.sourceforge.net>
  *
  * This file is part of LMMS - https://lmms.io
  *
@@ -23,33 +22,43 @@
  *
  */
 
-#ifndef MIDI_EFFECT_CONTROL_DIALOG_H
-#define MIDI_EFFECT_CONTROL_DIALOG_H
+#ifndef AUDIO_ALSA_GDX_SETUP_WIDGET_H
+#define AUDIO_ALSA_GDX_SETUP_WIDGET_H
 
-#include <QWidget>
+#include "lmmsconfig.h"
 
-#include "ModelView.h"
+#ifdef LMMS_HAVE_ALSA
 
-class MidiEffectControls;
+#include "AudioDeviceSetupWidget.h"
+
+#include "AudioAlsaGdx.h"
 
 
-class EXPORT MidiEffectControlDialog : public QWidget, public ModelView
+class QComboBox;
+class LcdSpinBox;
+
+
+class AudioAlsaGdxSetupWidget : public AudioDeviceSetupWidget
 {
 	Q_OBJECT
+
 public:
-	MidiEffectControlDialog( MidiEffectControls * _controls );
-	virtual ~MidiEffectControlDialog();
+	AudioAlsaGdxSetupWidget( QWidget * _parent );
+	virtual ~AudioAlsaGdxSetupWidget();
 
+	virtual void saveSettings();
 
-signals:
-	void closed();
+public slots:
+	void onCurrentIndexChanged(int index);
 
+private:
+	QComboBox * m_deviceComboBox;
+	LcdSpinBox * m_channels;
 
-protected:
-	virtual void closeEvent( QCloseEvent * _ce );
+	int m_selectedDevice;
+	AudioAlsaGdx::DeviceInfoCollection m_deviceInfos;
+};
 
-	MidiEffectControls * m_effectControls;
-
-} ;
+#endif
 
 #endif

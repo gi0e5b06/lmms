@@ -51,6 +51,9 @@ public:
         SampleTCO( const SampleTCO& _other );
 	virtual ~SampleTCO();
 
+        virtual bool isEmpty() const;
+	virtual QString defaultName() const;
+
 	//virtual void changeLength( const MidiTime & _length );
 
 	// settings-management
@@ -154,8 +157,11 @@ public:
 	SampleTrack( TrackContainer* tc );
 	virtual ~SampleTrack();
 
+	virtual QString defaultName() const;
+
 	virtual bool play( const MidiTime & _start, const fpp_t _frames,
-						const f_cnt_t _frame_base, int _tco_num = -1 );
+                           const f_cnt_t _frame_base, int _tco_num = -1 );
+
 	virtual TrackView * createView( TrackContainerView* tcv );
 	virtual TrackContentObject * createTCO( const MidiTime & _pos );
 

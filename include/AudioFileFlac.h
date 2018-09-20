@@ -55,7 +55,7 @@ class AudioFileFlac : public AudioFileDevice
 	bool startEncoding();
 	void finishEncoding();
 
-	SF_INFO  m_sfinfo;
+	SF_INFO  m_si;
 	SNDFILE* m_sf;
 };
 

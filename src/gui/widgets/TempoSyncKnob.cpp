@@ -108,42 +108,57 @@ void TempoSyncKnob::contextMenuEvent( QContextMenuEvent * )
 	if( limit / 0.125f <= model()->maxValue() )
 	{
 		syncMenu->addAction( embed::getIconPixmap( "note_double_whole" ),
-				tr( "Eight beats" ) )->setData(
-				(int) TempoSyncKnobModel::SyncDoubleWholeNote );
+				tr( "Eight beats" ) )->setData
+                        ( (int) TempoSyncKnobModel::SyncDoubleWholeNote );
 	}
 	if( limit / 0.25f <= model()->maxValue() )
 	{
 		syncMenu->addAction( embed::getIconPixmap( "note_whole" ),
-					tr( "Whole note" ) )->setData(
-					(int) TempoSyncKnobModel::SyncWholeNote );
+                                     tr( "Whole note" ) )->setData
+                        ( (int) TempoSyncKnobModel::SyncWholeNote );
 	}
 	if( limit / 0.5f <= model()->maxValue() )
 	{
 		syncMenu->addAction( embed::getIconPixmap( "note_half" ),
-					tr( "Half note" ) )->setData(
-					(int) TempoSyncKnobModel::SyncHalfNote );
+                                     tr( "Half note" ) )->setData
+                        ( (int) TempoSyncKnobModel::SyncHalfNote );
 	}
 	if( limit <= model()->maxValue() )
 	{
 		syncMenu->addAction( embed::getIconPixmap( "note_quarter" ),
-					tr( "Quarter note" ) )->setData(
-				(int) TempoSyncKnobModel::SyncQuarterNote );
+					tr( "Quarter note" ) )->setData
+                        ( (int) TempoSyncKnobModel::SyncQuarterNote );
 	}
 	if( limit / 2.0f <= model()->maxValue() )
 	{
 		syncMenu->addAction( embed::getIconPixmap( "note_eighth" ),
-					tr( "8th note" ) )->setData(
-				(int) TempoSyncKnobModel::SyncEighthNote );
+                                     tr( "8th note" ) )->setData
+                        ( (int) TempoSyncKnobModel::SyncEighthNote );
 	}
 	if( limit / 4.0f <= model()->maxValue() )
 	{
 		syncMenu->addAction( embed::getIconPixmap( "note_sixteenth" ),
-					tr( "16th note" ) )->setData(
-				(int) TempoSyncKnobModel::SyncSixteenthNote );
+                                     tr( "16th note" ) )->setData
+                        ( (int) TempoSyncKnobModel::SyncSixteenthNote );
 	}
-	syncMenu->addAction( embed::getIconPixmap( "note_thirtysecond" ),
-					tr( "32nd note" ) )->setData(
-				(int) TempoSyncKnobModel::SyncThirtysecondNote );
+	if( limit / 8.0f <= model()->maxValue() )
+	{
+                syncMenu->addAction( embed::getIconPixmap( "note_thirtysecond" ),
+                                     tr( "32nd note" ) )->setData
+                        ( (int) TempoSyncKnobModel::SyncThirtySecondNote );
+        }
+	if( limit / 16.0f <= model()->maxValue() )
+	{
+                syncMenu->addAction( embed::getIconPixmap( "note_sixtyfourth" ),
+                                     tr( "64th note" ) )->setData
+                        ( (int) TempoSyncKnobModel::SyncSixtyFourthNote );
+        }
+	if( limit / 32.0f <= model()->maxValue() )
+	{
+                syncMenu->addAction( embed::getIconPixmap( "note_onehundredtwentyeighth" ),
+                                     tr( "128th note" ) )->setData
+                        ( (int) TempoSyncKnobModel::SyncOneHundredTwentyEighthNote );
+        }
 	syncMenu->addAction( embed::getIconPixmap( "dont_know" ),
 				tr( "Custom..." ),
 				this, SLOT( showCustom() )
@@ -200,9 +215,17 @@ void TempoSyncKnob::updateDescAndIcon()
 				m_tempoSyncDescription = tr(
 							"Synced to 16th Note" );
 				break;
-			case TempoSyncKnobModel::SyncThirtysecondNote:
+			case TempoSyncKnobModel::SyncThirtySecondNote:
 				m_tempoSyncDescription = tr(
 							"Synced to 32nd Note" );
+				break;
+			case TempoSyncKnobModel::SyncSixtyFourthNote:
+				m_tempoSyncDescription = tr(
+							"Synced to 64th Note" );
+				break;
+			case TempoSyncKnobModel::SyncOneHundredTwentyEighthNote:
+				m_tempoSyncDescription = tr(
+							"Synced to 128th Note" );
 				break;
 			default: ;
 		}
@@ -243,7 +266,7 @@ void TempoSyncKnob::updateDescAndIcon()
 		case TempoSyncKnobModel::SyncSixteenthNote:
 			m_tempoSyncIcon = embed::getIconPixmap( "note_sixteenth" );
 			break;
-		case TempoSyncKnobModel::SyncThirtysecondNote:
+		case TempoSyncKnobModel::SyncThirtySecondNote:
 			m_tempoSyncIcon = embed::getIconPixmap( "note_thirtysecond" );
 			break;
 		default:

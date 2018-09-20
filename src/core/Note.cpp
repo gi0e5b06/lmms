@@ -241,7 +241,7 @@ void Note::buildKeyTables()
 {
         if(MIDI_KEYS_N2I.size()==0)
         {
-                const char* NOK[12]={ "c","c#","d","d#","e","f","f#","g","g#","a","a#","b" };
+                const char* NOK[12]={ "C","C#","D","D#","E","F","F#","G","G#","A","A#","B" };
                 for(int o=0; o<11; o++)
                 for(int n=0;n<12;n++)
                 {
@@ -258,7 +258,7 @@ void Note::buildKeyTables()
 int Note::findKeyNum(QString& _name)
 {
         buildKeyTables();
-        int r=MIDI_KEYS_N2I.value(_name.toLower(),-1);
+        int r=MIDI_KEYS_N2I.value(_name.toUpper(),-1);
         if((r>=0)||r<=127) return r;
         r=_name.toInt();
         if((r>0)||(r<=127)||(_name=="0")) return r;
@@ -271,4 +271,10 @@ QString Note::findKeyName(int _num)
         if((_num<0)||(_num>127)) return "";
         buildKeyTables();
         return MIDI_KEYS_I2N.value(_num,"");
+}
+
+
+QString Note::findNoteName(int _num)
+{
+        return Note::findKeyName(_num).replace("-1", "");
 }

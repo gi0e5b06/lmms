@@ -49,7 +49,7 @@ SongMetaDataDialog::SongMetaDataDialog(QWidget * _parent) :
 	value_TimeSignature->setText(QString("%1/%2")
 				     .arg(song->getTimeSigModel().getNumerator())
 				     .arg(song->getTimeSigModel().getDenominator()));
-	value_Software->setText(QString("LMMS %1").arg(LMMS_VERSION));
+	value_Software->setText(QString("LSMM %1").arg(LMMS_VERSION));
 	value_Structure->setText(song->songMetaData("Structure"));
 
 	// tab 2
@@ -71,7 +71,7 @@ SongMetaDataDialog::SongMetaDataDialog(QWidget * _parent) :
 	value_BandCamp->setText(song->songMetaData("BandCamp"));
 	value_Clyp->setText(song->songMetaData("Clyp"));
 	value_iTunes->setText(song->songMetaData("iTunes"));
-	value_LMMS->setText(song->songMetaData("LMMS"));
+	value_LMMS->setText(song->songMetaData("LSP"));
 	value_Orfium->setText(song->songMetaData("Orfium"));
 	value_SoundCloud->setText(song->songMetaData("SoundCloud"));
 	value_Spotify->setText(song->songMetaData("Spotify"));

@@ -57,10 +57,7 @@ class EXPORT Model : public QObject
 		return m_displayName;
 	}
 
-	virtual void setDisplayName( const QString& displayName )
-	{
-		m_displayName = displayName;
-	}
+	virtual void setDisplayName( const QString& displayName );
 
 	virtual QString fullDisplayName() const;
 

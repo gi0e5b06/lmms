@@ -97,6 +97,9 @@ class TrackContentObject : public Model, public JournallingObject
 		return m_track;
 	}
 
+        virtual bool isEmpty() const = 0;
+	virtual QString defaultName() const;
+
 	inline const QString & name() const
 	{
 		return m_name;
@@ -644,8 +647,7 @@ public:
 	}
 
 	virtual bool play( const MidiTime & start, const fpp_t frames,
-						const f_cnt_t frameBase, int tcoNum = -1 ) = 0;
-
+                           const f_cnt_t frameBase, int tcoNum = -1 ) = 0;
 
 	virtual TrackView * createView( TrackContainerView * view ) = 0;
 	virtual TrackContentObject * createTCO( const MidiTime & pos ) = 0;
@@ -705,6 +707,8 @@ public:
 	{
 		return name();
 	}
+
+	virtual QString defaultName() const = 0;
 
 	using Model::dataChanged;
 

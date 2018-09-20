@@ -1595,10 +1595,10 @@ void Song::exportProject( bool multiExport )
 		efd.setFileMode( FileDialog::AnyFile );
 		int idx = 0;
 		QStringList types;
-		while( ProjectRenderer::fileEncodeDevices[idx].m_fileFormat != ProjectRenderer::NumFileFormats)
+		while( ProjectRenderer::fileEncodeDevices(idx).m_fileFormat != ProjectRenderer::NumFileFormats)
 		{
-			if(ProjectRenderer::fileEncodeDevices[idx].isAvailable()) {
-				types << /*tr*/(ProjectRenderer::fileEncodeDevices[idx].m_description);
+			if(ProjectRenderer::fileEncodeDevices(idx).isAvailable()) {
+				types << /*tr*/(ProjectRenderer::fileEncodeDevices(idx).m_description);
 			}
 			++idx;
 		}
@@ -1617,7 +1617,7 @@ void Song::exportProject( bool multiExport )
 			efd.setDirectory( ConfigManager::inst()->userProjectsDir() );
 			baseFileName = tr( "untitled" );
 		}
-		efd.selectFile( baseFileName + ProjectRenderer::fileEncodeDevices[0].m_extension );
+		efd.selectFile( baseFileName + ProjectRenderer::fileEncodeDevices(0).m_extension );
 		efd.setWindowTitle( tr( "Select file for project-export..." ) );
 	}
 

@@ -55,7 +55,7 @@
 #include <QApplication>
 #include <QKeyEvent>
 #include <QLabel>
-#include <QLayout> // REQUIRED
+#include <QLayout>  // REQUIRED
 //#include <QMdiArea>
 #include <QPainter>
 #include <QScrollBar>
@@ -64,7 +64,6 @@
 #include <QToolTip>
 
 #include <cmath>
-
 
 QPixmap* AutomationEditor::s_toolDraw   = NULL;
 QPixmap* AutomationEditor::s_toolErase  = NULL;
@@ -79,7 +78,7 @@ QPixmap* AutomationEditor::s_toolXFlip  = NULL;
 
 AutomationEditor::AutomationEditor() :
       QWidget(), m_zoomingXModel(), m_zoomingYModel(), m_quantizeModel(),
-      m_patternMutex(QMutex::Recursive), m_pattern(NULL), m_minLevel(0),
+      m_patternMutex(QMutex::Recursive), m_pattern(nullptr), m_minLevel(0),
       m_maxLevel(0), m_step(1), m_scrollLevel(0), m_bottomLevel(0),
       m_topLevel(0), m_currentPosition(), m_action(NONE), m_moveStartLevel(0),
       m_moveStartTick(0), m_drawLastLevel(0.0f), m_drawLastTick(0),
@@ -1025,8 +1024,27 @@ inline void AutomationEditor::drawCross(QPainter& p)
     QPoint tt_pos = QCursor::pos();
     tt_pos.ry() -= 64;
     tt_pos.rx() += 32;
+
     float scaledLevel = m_pattern->firstObject()->scaledValue(level);
-    QToolTip::showText(tt_pos, QString::number(scaledLevel), this);
+
+    int tick = roundf((mouse_pos.x() - VALUES_WIDTH)
+                      * MidiTime::ticksPerTact() / m_ppt);
+
+    float x = float(mouse_pos.x() - VALUES_WIDTH)
+              //*Engine::getSong()->getTimeSigModel().getNumerator()
+              / m_ppt;
+
+    float current = m_pattern->valueAt(tick);
+
+    QToolTip::showText(tt_pos,
+                       QString("Tick: %1\nValue: %2\nCurrent: %3\n"
+                               "X: %4\nY: %5")
+                               .arg(tick)
+                               .arg(scaledLevel)
+                               .arg(current, 5, 'f', 3)
+                               .arg(x, 5, 'f', 3)
+                               .arg(level, 5, 'f', 3),
+                       this);
 }
 
 inline void AutomationEditor::drawAutomationPoint(QPainter&         p,
@@ -1662,7 +1680,7 @@ float AutomationEditor::getLevel(int y)
     // some range-checking-stuff
     level = qBound(m_bottomLevel, level, m_topLevel);
 
-    return (level);
+    return level;
 }
 
 inline bool AutomationEditor::inBBEditor()
@@ -2616,4 +2634,89 @@ void AutomationEditorWindow::updateWindowTitle()
 
     setWindowTitle(
             tr("Automation Editor - %1").arg(m_editor->m_pattern->name()));
+}
+
+// ActionUpdatable //
+
+void AutomationEditorWindow::updateActions(const bool            _active,
+                                           QHash<QString, bool>& _table) const
+{
+    // qInfo("AutomationEditorWindow::updateActions() active=%d",_active);
+    m_editor->updateActions(_active, _table);
+}
+
+void AutomationEditorWindow::actionTriggered(QString _name)
+{
+    m_editor->actionTriggered(_name);
+}
+
+void AutomationEditor::updateActions(const bool            _active,
+                                     QHash<QString, bool>& _table) const
+{
+    // qInfo("AutomationEditor::updateActions() active=%d",_active);
+    bool hasPoints = _active && m_pattern && (m_pattern->timeMapLength() > 0);
+    // qInfo("AutomationEditorWindow::updateActions() active=%d selection=%d",
+    //      _active,hasSelection);
+    _table.insert("edit_cut", false);
+    _table.insert("edit_copy", hasPoints);
+    _table.insert("edit_paste", false);
+}
+
+void AutomationEditor::actionTriggered(QString _name)
+{
+    qInfo("AutomationEditor::actionTriggered() name=%s", qPrintable(_name));
+    if(_name == "edit_cut")
+        cutSelection();
+    else if(_name == "edit_copy")
+        copySelection();
+    else if(_name == "edit_paste")
+        pasteSelection();
+}
+
+// Selection //
+
+void AutomationEditor::deleteSelection()
+{
+}
+
+void AutomationEditor::cutSelection()
+{
+    // copySelection();
+    // deleteSelection();
+}
+
+void AutomationEditor::copySelection()
+{
+    if(m_pattern == nullptr)
+        return;
+
+    QString r = "";
+    auto map=m_pattern->getTimeMap();
+    for(auto t : map.keys())
+    {
+        float x = float(t) / MidiTime::ticksPerTact();
+        float y = map.value(t);
+
+        r.append(QString::number(t));
+        r.append(QChar(','));
+        r.append(QString::number(x, 'f'));
+        r.append(QChar(','));
+        r.append(QString::number(y, 'f'));
+
+        for(auto m : m_pattern->objects())
+        {
+            float v = m->scaledValue(y);
+            r.append(QChar(','));
+            r.append(QString::number(v, 'f'));
+        }
+
+        r.append(QChar('\n'));
+    }
+
+    qInfo("Automation\n%s", qPrintable(r));
+}
+
+void AutomationEditor::pasteSelection()
+{
+    // Clipboard::paste(vso)
 }

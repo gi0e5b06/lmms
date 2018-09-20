@@ -308,7 +308,7 @@ void FxChannel::doProcessing()
                 // We apply dj stuff
                 if(m_eqDJ && /*m_stillRunning && m_hasInput &&*/ m_eqDJEnableModel.value())
                 {
-                        m_eqDJ->startRunning();
+                        //m_eqDJ->startRunning();
                         m_stillRunning=m_eqDJ->processAudioBuffer(m_buffer,fpp);
                 }
                 //else if(m_channelIndex)
@@ -401,7 +401,7 @@ void FxChannel::doProcessing()
                 if( m_hasInput )
                 {
                         // only start fxchain when we have input...
-                        m_fxChain.startRunning();
+                        // m_fxChain.startRunning();
                 }
 
                 m_stillRunning = m_fxChain.processAudioBuffer( m_buffer, fpp, m_hasInput );
@@ -429,7 +429,7 @@ void FxChannel::doProcessing()
 
                 if(m_eqDJ && /*m_stillRunning && m_hasInput &&*/ m_eqDJEnableModel.value())
                 {
-                        m_eqDJ->startRunning();
+                        //m_eqDJ->startRunning();
                         m_stillRunning=m_eqDJ->processAudioBuffer(m_buffer,fpp);
                 }
                 //else if(m_channelIndex)

@@ -37,6 +37,8 @@ public:
 	AutomationTrack( TrackContainer* tc, bool _hidden = false );
 	virtual ~AutomationTrack();
 
+	virtual QString defaultName() const;
+
 	virtual bool play( const MidiTime & _start, const fpp_t _frames,
 						const f_cnt_t _frame_base, int _tco_num = -1 );
 

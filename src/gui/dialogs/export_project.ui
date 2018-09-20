@@ -135,8 +135,13 @@
            <item>
             <widget class="QComboBox" name="depthCB">
              <property name="currentIndex">
-              <number>2</number>
+              <number>4</number>
              </property>
+             <item>
+              <property name="text">
+               <string>8 Bit Integer</string>
+              </property>
+             </item>
              <item>
               <property name="text">
                <string>16 Bit Integer</string>
@@ -149,7 +154,17 @@
              </item>
              <item>
               <property name="text">
+               <string>32 Bit Integer</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
                <string>32 Bit Float</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>64 Bit Float</string>
               </property>
              </item>
             </widget>

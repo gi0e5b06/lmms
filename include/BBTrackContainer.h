@@ -28,7 +28,7 @@
 
 #include "TrackContainer.h"
 #include "ComboBoxModel.h"
-
+#include "Bitset.h"
 
 class EXPORT BBTrackContainer : public TrackContainer
 {
@@ -43,8 +43,11 @@ public:
                 return true;
         }
 
+	//virtual bool play( MidiTime _start, const fpp_t _frames,
+        //                   const f_cnt_t _frame_base, int _tco_num = -1 );
 	virtual bool play( MidiTime _start, const fpp_t _frames,
-						const f_cnt_t _frame_base, int _tco_num = -1 );
+                           const f_cnt_t _frame_base,
+                           int _tco_num, const Bitset* _mask );
 
 	virtual void updateAfterTrackAdd() /*override*/;
 

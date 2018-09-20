@@ -51,10 +51,11 @@ void lmms_default_configuration()
 
     DEFAULT_BOOL("tooltips.disabled", false);
 
+    DEFAULT_INT("mixer.samplerate",44100);
     DEFAULT_INT("mixer.framesperaudiobuffer", 1024);
     DEFAULT_BOOL("mixer.hqaudio", false);
-    // DEFAULT_STRING("mixer.audiodev","...");
-    // DEFAULT_STRING("mixer.mididev","...");
+    DEFAULT_STRING("mixer.audiodev","");
+    DEFAULT_STRING("mixer.mididev","");
 }
 
 /*
@@ -71,7 +72,7 @@ float Configuration::toFloat(const QString& _s)
     if(p < 0)
         qWarning("Configuration: invalid float key: %s", qPrintable(s));
     const QString c = _s.left(p);
-    const QString k = _s.right(p);
+    const QString k = _s.mid(p+1);
     QString       v = ConfigManager::inst()->value(c, k, "");
     if(v != "")
     {
@@ -108,7 +109,7 @@ const QString& Configuration::toString(const QString& _s)
     if(p < 0)
         qWarning("Warning: invalid configuration key: %s", qPrintable(s));
     const QString c = _s.left(p);
-    const QString k = _s.right(p);
+    const QString k = _s.mid(p+1);
     return ConfigManager::inst()->value(c, k, d);
 }
 

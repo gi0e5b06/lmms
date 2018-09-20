@@ -38,6 +38,8 @@ AudioDevice::AudioDevice( const ch_cnt_t _channels, Mixer*  _mixer ) :
 	m_mixer( _mixer ),
 	m_buffer( new surroundSampleFrame[mixer()->framesPerPeriod()] )
 {
+        qWarning("AudioDevice::AudioDevice");
+        
 	int error;
 	if( ( m_srcState = src_new(
 		mixer()->currentQualitySettings().libsrcInterpolation(),
@@ -209,55 +211,138 @@ void AudioDevice::resample( const surroundSampleFrame * _src,
 }
 
 
+void AudioDevice::swapEndian(void* _buf, const fpp_t _frames, const int _frameSize)
+{
+        unsigned char* b=static_cast<unsigned char*>(_buf);
+        unsigned char tmp[_frameSize];
+        for( fpp_t f=0; f<_frames; ++f)
+	{
+                for(int i=0;i<_frameSize;i++)
+                        tmp[_frameSize-1-i]=b[i];
+                memcpy(b,tmp,_frameSize);
+                b+=_frameSize;
+        }
+}
+
+
+void AudioDevice::clearBuffer(void* _outbuf, const fpp_t _frames, const int _frameSize)
+{
+	assert( _outbuf != NULL );
+        int size=_frames * channels() * _frameSize;
+	memset( _outbuf, 0,  size );
+}
+
 
 int AudioDevice::convertToS16( const surroundSampleFrame * _ab,
-								const fpp_t _frames,
-								const float _master_gain,
-								int_sample_t * _output_buffer,
-								const bool _convert_endian )
+                               const fpp_t _frames,
+                               const float _master_gain,
+                               int_sample_t * _output_buffer,
+                               const bool _convert_endian )
 {
-	if( _convert_endian )
-	{
-		int_sample_t temp;
-		for( fpp_t frame = 0; frame < _frames; ++frame )
-		{
-			for( ch_cnt_t chnl = 0; chnl < channels(); ++chnl )
-			{
-				temp = static_cast<int_sample_t>( Mixer::clip( _ab[frame][chnl] * _master_gain ) * OUTPUT_SAMPLE_MULTIPLIER );
+	int size= _frames * channels() * sizeof(int_sample_t);
 
-				( _output_buffer + frame * channels() )[chnl] =
-						( temp & 0x00ff ) << 8 |
-						( temp & 0xff00 ) >> 8;
-			}
-		}
-	}
-	else
+        for( fpp_t frame = 0; frame < _frames; ++frame )
+	{
+                for( ch_cnt_t chnl = 0; chnl < channels(); ++chnl )
+		{
+                        ( _output_buffer + frame * channels() )[chnl] =
+                                static_cast<int_sample_t>(Mixer::clip( _ab[frame][chnl] *
+                                                                       _master_gain ) *
+                                                          S16_MULTIPLIER );
+                }
+        }
+
+        if( _convert_endian ) swapEndian(_output_buffer,size,sizeof(int_sample_t));
+
+        return size;
+}
+
+
+void AudioDevice::clearS16Buffer( int_sample_t * _outbuf, const fpp_t _frames )
+{
+	clearBuffer(_outbuf,_frames,sizeof(int_sample_t));
+        //assert( _outbuf != NULL );
+        //int size=_frames * channels() * sizeof(int_sample_t);
+	//memset( _outbuf, 0,  size );
+}
+
+
+int AudioDevice::convertToF32( const surroundSampleFrame * _ab,
+                               const fpp_t _frames,
+                               const float _master_gain,
+                               float* _output_buffer,
+                               const bool _convert_endian )
+{
+        int size=_frames * channels() * sizeof(float);
+
+        if(sizeof(float)==sizeof(sample_t))
+        {
+                memcpy(_output_buffer,_ab,size);
+        }
+        else
 	{
 		for( fpp_t frame = 0; frame < _frames; ++frame )
 		{
 			for( ch_cnt_t chnl = 0; chnl < channels(); ++chnl )
 			{
 				( _output_buffer + frame * channels() )[chnl] =
-						static_cast<int_sample_t>(
 						Mixer::clip( _ab[frame][chnl] *
-						_master_gain ) *
-						OUTPUT_SAMPLE_MULTIPLIER );
+                                                             _master_gain );
 			}
 		}
-	}
+        }
 
-	return _frames * channels() * BYTES_PER_INT_SAMPLE;
+        if( _convert_endian ) swapEndian(_output_buffer,size,sizeof(float));
+
+	return size;
 }
 
 
 
 
-void AudioDevice::clearS16Buffer( int_sample_t * _outbuf, const fpp_t _frames )
+void AudioDevice::clearF32Buffer( float* _outbuf, const fpp_t _frames )
 {
+        clearBuffer(_outbuf,_frames,sizeof(float));
+	//assert( _outbuf != NULL );
+        //int size=_frames * channels() * sizeof(float);
+	//memset( _outbuf, 0,  size );
+}
 
-	assert( _outbuf != NULL );
 
-	memset( _outbuf, 0,  _frames * channels() * BYTES_PER_INT_SAMPLE );
+
+
+int AudioDevice::convertToS32( const surroundSampleFrame * _ab,
+                               const fpp_t _frames,
+                               const float _master_gain,
+                               int32_t * _output_buffer,
+                               const bool _convert_endian )
+{
+        int size=_frames * channels() * sizeof(int32_t);
+
+        for( fpp_t frame = 0; frame < _frames; ++frame )
+	{
+                for( ch_cnt_t chnl = 0; chnl < channels(); ++chnl )
+		{
+                        ( _output_buffer + frame * channels() )[chnl] =
+                                static_cast<int32_t>( Mixer::clip( _ab[frame][chnl] *
+                                                                   _master_gain ) *
+                                                      S32_MULTIPLIER );
+                }
+        }
+
+        if( _convert_endian ) swapEndian(_output_buffer,size,sizeof(int32_t));
+
+	return _frames * channels() * sizeof(int32_t);
+}
+
+
+
+
+void AudioDevice::clearS32Buffer( int32_t * _outbuf, const fpp_t _frames )
+{
+        clearBuffer(_outbuf,_frames,sizeof(int32_t));
+	//assert( _outbuf != NULL );
+	//memset( _outbuf, 0,  _frames * channels() * sizeof(int32_t) );
 }
 
 

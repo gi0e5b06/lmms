@@ -84,6 +84,9 @@ private:
 	virtual void stopProcessing();
 	virtual void applyQualitySettings();
 	virtual void run();
+	virtual void runS16();
+	virtual void runFloat();
+	virtual void runS32();
 
 	int setHWParams( const ch_cnt_t _channels, snd_pcm_access_t _access );
 	int setSWParams();
@@ -98,8 +101,8 @@ private:
 	snd_pcm_hw_params_t * m_hwParams;
 	snd_pcm_sw_params_t * m_swParams;
 
+        QString m_pcmFormat;
 	bool m_convertEndian;
-
 } ;
 
 #endif

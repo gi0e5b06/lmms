@@ -103,6 +103,26 @@ Pattern::~Pattern()
 }
 
 
+bool Pattern::isEmpty() const
+{
+	for( NoteVector::ConstIterator it = m_notes.begin();
+             it != m_notes.end(); ++it )
+	{
+		if( ( *it )->length() != 0 )
+		{
+			return false;
+		}
+	}
+	return true;
+}
+
+
+/*
+QString Pattern::defaultName() const
+{
+        return instrumentTrack()->name();
+}
+*/
 
 
 void Pattern::resizeToFirstTrack()
@@ -524,22 +544,6 @@ void Pattern::updateBBTrack()
 	}
 }
 */
-
-
-
-bool Pattern::empty()
-{
-	for( NoteVector::ConstIterator it = m_notes.begin();
-						it != m_notes.end(); ++it )
-	{
-		if( ( *it )->length() != 0 )
-		{
-			return false;
-		}
-	}
-	return true;
-}
-
 
 
 
@@ -992,7 +996,7 @@ void PatternView::paintEvent( QPaintEvent * )
 
 	// Check whether we will paint a text box and compute its potential height
 	// This is needed so we can paint the notes underneath it.
-	bool const isDefaultName = m_pat->name() == m_pat->instrumentTrack()->name();
+	bool const isDefaultName = m_pat->name() == m_pat->defaultName();
 	bool const drawTextBox = !beatPattern && !isDefaultName;
 
 	// TODO Warning! This might cause problems if TrackContentObjectView::paintTextLabel changes

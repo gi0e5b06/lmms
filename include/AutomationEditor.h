@@ -50,7 +50,8 @@ class TimeLineWidget;
 
 
 
-class AutomationEditor : public QWidget, public JournallingObject
+class AutomationEditor : public QWidget, public JournallingObject,
+        public virtual ActionUpdatable
 {
 	Q_OBJECT
 	Q_PROPERTY(QColor barLineColor READ barLineColor WRITE setBarLineColor)
@@ -76,10 +77,14 @@ public:
 
 	virtual void saveSettings(QDomDocument & doc, QDomElement & parent);
 	virtual void loadSettings(const QDomElement & parent);
+
 	QString nodeName() const
 	{
 		return "automationeditor";
 	}
+
+        virtual void updateActions(const bool _active, QHash<QString,bool>& _table) const; // = 0;
+        virtual void actionTriggered(QString _name);
 
 	// qproperty access methods
 	QColor barLineColor() const;
@@ -111,6 +116,10 @@ public slots:
 	void update();
 	void updateAfterPatternChange();
 
+        void deleteSelection();
+        void cutSelection();
+        void copySelection();
+        void pasteSelection();
 
 protected:
 	typedef AutomationPattern::timeMap timeMap;
@@ -300,6 +309,9 @@ public:
 	void open(AutomationPattern* pattern);
 
 	AutomationEditor* m_editor;
+
+        virtual void updateActions(const bool _active, QHash<QString,bool>& _table) const; // = 0;
+        virtual void actionTriggered(QString _name);
 
 	QSize sizeHint() const;
 

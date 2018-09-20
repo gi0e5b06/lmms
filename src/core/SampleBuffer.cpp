@@ -538,7 +538,7 @@ void SampleBuffer::convertIntToFloat ( int_sample_t * & _ibuf, f_cnt_t _frames, 
 
 	// following code transforms int-samples into
 	// float-samples and does amplifying & reversing
-	const float fac = 1 / OUTPUT_SAMPLE_MULTIPLIER;
+	const float fac = 1 / S16_MULTIPLIER;
 	const int ch = ( _channels > 1 ) ? 1 : 0;
 
 	// if reversing is on, we also reverse when
@@ -1567,7 +1567,7 @@ QString & SampleBuffer::toBase64( QString & _dst ) const
 			{
 				buf[f*DEFAULT_CHANNELS+ch] = (FLAC__int32)(
 					Mixer::clip( m_data[f+frame_cnt][ch] ) *
-						OUTPUT_SAMPLE_MULTIPLIER );
+						S16_MULTIPLIER );
 			}
 		}
 		FLAC__stream_encoder_process_interleaved( flac_enc, buf,
@@ -1893,8 +1893,8 @@ FLAC__StreamDecoderWriteStatus flacStreamDecoderWriteCallback(
 	const f_cnt_t frames = _frame->header.blocksize;
 	for( f_cnt_t frame = 0; frame < frames; ++frame )
 	{
-		sampleFrame sframe = { _buffer[0][frame] / OUTPUT_SAMPLE_MULTIPLIER,
-					_buffer[1][frame] / OUTPUT_SAMPLE_MULTIPLIER } ;
+		sampleFrame sframe = { _buffer[0][frame] / S16_MULTIPLIER,
+					_buffer[1][frame] / S16_MULTIPLIER } ;
 		static_cast<flacStreamDecoderClientData *>
                         ( _client_data )->write_buffer->write
                         ( (const char *) sframe, sizeof( sframe ) );

@@ -40,7 +40,9 @@
 
 // platform-specific audio-interface-classes
 #include "AudioAlsa.h"
+#include "AudioAlsaGdx.h"
 #include "AudioAlsaSetupWidget.h"
+#include "AudioAlsaGdxSetupWidget.h"
 #include "AudioJack.h"
 #include "AudioOss.h"
 #include "AudioSndio.h"
@@ -890,6 +892,8 @@ SetupDialog::SetupDialog( ConfigTabs _tab_to_open ) :
 #ifdef LMMS_HAVE_ALSA
 	m_audioIfaceSetupWidgets[AudioAlsa::name()] =
 					new AudioAlsaSetupWidget( asw );
+	m_audioIfaceSetupWidgets[AudioAlsaGdx::name()] =
+					new AudioAlsaGdxSetupWidget( asw );
 #endif
 
 #ifdef LMMS_HAVE_PULSEAUDIO
@@ -1700,13 +1704,13 @@ void SetupDialog::displayAudioHelp()
 {
 	QWhatsThis::showText( QCursor::pos(),
 				tr( "Here you can select your preferred "
-					"audio-interface. Depending on the "
-					"configuration of your system during "
-					"compilation time you can choose "
-					"between ALSA, JACK, OSS and more. "
-					"Below you see a box which offers "
-					"controls to setup the selected "
-					"audio-interface." ) );
+                                    "audio-interface. Depending on the "
+                                    "configuration of your system during "
+                                    "compilation time you can choose "
+                                    "between ALSA, JACK, OSS and more. "
+                                    "Below you see a box which offers "
+                                    "controls to setup the selected "
+                                    "audio-interface." ) );
 }
 
 
@@ -1732,11 +1736,11 @@ void SetupDialog::displayMIDIHelp()
 {
 	QWhatsThis::showText( QCursor::pos(),
 				tr( "Here you can select your preferred "
-					"MIDI-interface. Depending on the "
-					"configuration of your system during "
-					"compilation time you can choose "
-					"between ALSA, OSS and more. "
-					"Below you see a box which offers "
-					"controls to setup the selected "
-					"MIDI-interface." ) );
+                                    "MIDI-interface. Depending on the "
+                                    "configuration of your system during "
+                                    "compilation time you can choose "
+                                    "between ALSA, OSS and more. "
+                                    "Below you see a box which offers "
+                                    "controls to setup the selected "
+                                    "MIDI-interface." ) );
 }

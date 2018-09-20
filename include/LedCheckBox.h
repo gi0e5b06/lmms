@@ -32,7 +32,9 @@ class QPixmap;
 class EXPORT LedCheckBox : public AutomatableButton
 {
     Q_OBJECT
+
   public:
+    static constexpr auto _LCSL_ = __LINE__;
     enum LedColors
     {
         Yellow,
@@ -43,6 +45,7 @@ class EXPORT LedCheckBox : public AutomatableButton
         White,
         NumColors
     };
+    static constexpr auto LedColorCount = __LINE__ - _LCSL_ - 4;
 
     LedCheckBox(const QString& _txt,
                 QWidget*       _parent,

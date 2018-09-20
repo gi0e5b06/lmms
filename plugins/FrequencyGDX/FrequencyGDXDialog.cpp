@@ -249,10 +249,7 @@ void FrequencyGDXDialog::updateTopNote()
                     ->m_topNoteModel.value();
     QString s = "-";
     if(v >= 0 && v < 12)
-    {
-        s = Note::findKeyName(v);
-        s = s.replace("-1", "");
-    }
+        s = Note::findNoteName(v);
     m_topNoteLBL->setText(s);
 }
 
@@ -262,10 +259,7 @@ void FrequencyGDXDialog::updateAvgNote()
                     ->m_avgNoteModel.value();
     QString s = "-";
     if(v >= 0 && v < 12)
-    {
-        s = Note::findKeyName(v);
-        s = s.replace("-1", "");
-    }
+        s = Note::findNoteName(v);
     m_avgNoteLBL->setText(s);
 }
 
@@ -275,9 +269,6 @@ void FrequencyGDXDialog::updateMainNote()
                     ->m_mainNoteModel.value();
     QString s = "-";
     if(v >= 0 && v < 12)
-    {
-        s = Note::findKeyName(v);
-        s = s.replace("-1", "");
-    }
+        s = Note::findNoteName(v);
     m_mainNoteLBL->setText(s);
 }

@@ -49,6 +49,8 @@ AudioAlsa::AudioAlsa( bool & _success_ful, Mixer*  _mixer ) :
 	m_swParams( NULL ),
 	m_convertEndian( false )
 {
+        qWarning("AudioAlsa::AudioAlsa");
+
         setObjectName("audio alsa");
 
 	_success_ful = false;

@@ -102,7 +102,7 @@ const int INSTRUMENT_WINDOW_CACHE_SIZE = 8;
 InstrumentTrack::InstrumentTrack( TrackContainer* tc ) :
 	Track( Track::InstrumentTrack, tc ),
 	MidiEventProcessor(),
-	m_midiPort( tr( "unnamed_track" ), Engine::mixer()->midiClient(),
+	m_midiPort( tr( "Instrument track" ), Engine::mixer()->midiClient(),
 		    this, this ),
 	m_notes(),
 	m_sustainPedalPressed( false ),
@@ -114,7 +114,7 @@ InstrumentTrack::InstrumentTrack( TrackContainer* tc ) :
 		       tr( "Volume" ) ),
 	m_panningModel( DefaultPanning, PanningLeft, PanningRight, 0.1f, this,
 			tr( "Panning" ) ),
-	m_audioPort( tr( "unnamed_instrument_track" ), true, &m_volumeModel,
+	m_audioPort( tr( "Instrument track" ), true, &m_volumeModel,
 		     &m_panningModel, &m_mutedModel, &m_frozenModel, &m_clippingModel ),
 	m_pitchModel( 0, MinPitchDefault, MaxPitchDefault, 1, this,
 		      tr( "Pitch" ) ),
@@ -150,7 +150,8 @@ InstrumentTrack::InstrumentTrack( TrackContainer* tc ) :
 		m_runningMidiNotes[i] = 0;
 	}
 
-	setName( tr( "Default preset" ) );
+	//setName( tr( "Default preset" ) );
+        setName( tr( "Instrument track" ) );
 
 	connect( &m_baseNoteModel, SIGNAL( dataChanged() ),
 		 this, SLOT( updateBaseNote() ) );
@@ -175,6 +176,12 @@ InstrumentTrack::~InstrumentTrack()
 }
 
 
+QString InstrumentTrack::defaultName() const
+{
+        QString r=instrumentName();
+        if(r.isEmpty()) r=tr("Instrument track");
+        return r;
+}
 
 
 int InstrumentTrack::baseNote() const
@@ -183,7 +190,6 @@ int InstrumentTrack::baseNote() const
 
 	return m_baseNoteModel.value() - mp;
 }
-
 
 
 void InstrumentTrack::processAudioBuffer( sampleFrame* buf, const fpp_t frames, NotePlayHandle* n )
@@ -222,7 +228,7 @@ void InstrumentTrack::processAudioBuffer( sampleFrame* buf, const fpp_t frames, 
 
         // if effects "went to sleep" because there was no input, wake them up
 	// now
-	m_audioPort.effects()->startRunning();
+	//m_audioPort.effects()->startRunning();
 
 	// get volume knob data
 	static const float DefaultVolumeRatio = 1.0f / DefaultVolume;
@@ -550,11 +556,9 @@ void InstrumentTrack::playNote( NotePlayHandle* _n, sampleFrame* _workingBuffer 
 
 QString InstrumentTrack::instrumentName() const
 {
-	if( m_instrument != NULL )
-	{
-		return m_instrument->displayName();
-	}
-	return QString::null;
+	return ( m_instrument != nullptr )
+		? m_instrument->displayName()
+                : QString::null;
 }
 
 
@@ -1000,7 +1004,8 @@ Instrument * InstrumentTrack::loadInstrument( const QString & _plugin_name )
 	delete m_instrument;
 	m_instrument = Instrument::instantiate( _plugin_name, this );
 	unlock();
-	setName( m_instrument->displayName() );
+        //setName( m_instrument->displayName() );
+	setName(defaultName());
 
 	emit instrumentChanged();
 

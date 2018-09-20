@@ -57,8 +57,8 @@ LadspaManager::LadspaManager()
 #endif
 	ladspaDirectories.push_back( "plugins:ladspa" );
 
-	for( QStringList::iterator it = ladspaDirectories.begin(); 
-			 		   it != ladspaDirectories.end(); ++it )
+	for( QStringList::iterator it = ladspaDirectories.begin();
+             it != ladspaDirectories.end(); ++it )
 	{
 		QDir directory( ( *it ) );
 		QFileInfoList list = directory.entryInfoList();
@@ -69,11 +69,11 @@ LadspaManager::LadspaManager()
 			if( !f.isFile() ||
 				 f.fileName().right( 3 ).toLower() !=
 #ifdef LMMS_BUILD_WIN32
-													"dll"
+                            "dll"
 #else
-				 									".so"
+                            ".so"
 #endif
-								)
+                            )
 			{
 				continue;
 			}

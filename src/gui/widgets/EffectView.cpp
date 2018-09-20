@@ -59,27 +59,38 @@ EffectView::EffectView( Effect * _model, QWidget * _parent ) :
 
 	// Disable effects that are of type "DummyEffect"
 	bool isEnabled = !dynamic_cast<DummyEffect *>( effect() );
-	m_enabledLCB = new LedCheckBox( this, "", isEnabled ? LedCheckBox::Green : LedCheckBox::Red );
-        m_enabledLCB->move( 3, 3 );
+	m_enabledLCB = new LedCheckBox( this, "", LedCheckBox::Green );
+        m_enabledLCB->move( 19+3, 3 );
 	//m_enabledLCB->setGeometry(0,0,19,19);
         //m_enabledLCB->setText(tr("ON"));
         //m_enabledLCB->setTextAnchorPoint(Qt::AnchorBottom);
 	m_enabledLCB->setEnabled( isEnabled );
+	m_enabledLCB->setBlinking( !isEnabled );
 	m_enabledLCB->setWhatsThis( tr( "Toggles the effect on or off." ) );
 	ToolTip::add( m_enabledLCB, tr( "On/Off" ) );
 
 
 	m_clippingLCB = new LedCheckBox( this, LedCheckBox::Red );
-	m_clippingLCB->move( 3, 19 );
+	m_clippingLCB->move( 19+3, 17 );
 	//m_clippingLCB->setGeometry(0,30,19,19);
         m_clippingLCB->setBlinking(true);
         //m_clippingLCB->setText(tr("CLIP"));
         //m_clippingLCB->setTextAnchorPoint(Qt::AnchorBottom);
 	//m_clippingLCB->setWhatsThis( tr( "Toggles the effect on or off." ) );
 
+
+	m_runningLCB = new LedCheckBox( this, "", LedCheckBox::Yellow );
+        m_runningLCB->move( 19+3, 31 );
+	//m_runningLCB->setGeometry(0,0,19,19);
+        //m_runningLCB->setText(tr("ON"));
+        //m_runningLCB->setTextAnchorPoint(Qt::AnchorBottom);
+	//m_runningLCB->setEnabled( isRunning );
+	//m_runningLCB->setWhatsThis( tr( "Toggles the effect on or off." ) );
+	//ToolTip::add( m_runningLCB, tr( "On/Off" ) );
+
         m_wetDryKNB = new Knob( knobBright_26, this );
 	m_wetDryKNB->setLabel( tr( "D-WET" ) );
-	m_wetDryKNB->setGeometry( 19,5,36,36 );
+	m_wetDryKNB->setGeometry( 19+19,5,36,36 );
 	m_wetDryKNB->setEnabled( isEnabled );
 	m_wetDryKNB->setHintText( tr( "Wet Level:" ), "" );
 	m_wetDryKNB->setWhatsThis( tr( "The Wet/Dry knob sets the ratio between "
@@ -89,7 +100,7 @@ EffectView::EffectView( Effect * _model, QWidget * _parent ) :
 
 	m_autoQuitKNB = new TempoSyncKnob( knobBright_26, this );
 	m_autoQuitKNB->setLabel( tr( "DECAY" ) );
-	m_autoQuitKNB->setGeometry( 55,5,36,36 );
+	m_autoQuitKNB->setGeometry( 19+55,5,36,36 );
 	m_autoQuitKNB->setEnabled( isEnabled );
 	m_autoQuitKNB->setHintText( tr( "Time:" ), "ms" );
 	m_autoQuitKNB->setWhatsThis( tr(
@@ -100,7 +111,7 @@ EffectView::EffectView( Effect * _model, QWidget * _parent ) :
 
 	m_gateInKNB = new Knob( knobBright_26, this );
 	m_gateInKNB->setLabel( tr( "GATE" ) );
-	m_gateInKNB->setGeometry( 91,5,36,36 );
+	m_gateInKNB->setGeometry( 19+91,5,36,36 );
 	m_gateInKNB->setEnabled( isEnabled );
 	m_gateInKNB->setHintText( tr( "Gate:" ), "" );
 	m_gateInKNB->setWhatsThis( tr(
@@ -110,7 +121,7 @@ EffectView::EffectView( Effect * _model, QWidget * _parent ) :
 
 	m_balanceKNB = new Knob( knobBright_26, this );
 	m_balanceKNB->setLabel( tr( "BAL." ) );
-	m_balanceKNB->setGeometry( 127,5,36,36 );
+	m_balanceKNB->setGeometry( 19+127,5,36,36 );
 	m_balanceKNB->setEnabled( isEnabled );
 	m_balanceKNB->setHintText( tr( "Balance:" ), "" );
 	m_balanceKNB->setWhatsThis( tr(
@@ -121,7 +132,7 @@ EffectView::EffectView( Effect * _model, QWidget * _parent ) :
 
         QPushButton* menuBTN=new QPushButton(this);
         menuBTN->setIcon(embed::getIcon("menu"));
-        menuBTN->setGeometry( 1, 35, 20,20 );
+        menuBTN->setGeometry( 1, 3, 20, 20 );
         connect( menuBTN, SIGNAL( clicked() ), this, SLOT( showContextMenu() ) );
 
         if(!effect())
@@ -374,9 +385,9 @@ void EffectView::paintEvent( QPaintEvent * )
 	p.setFont( f );
 
 	//p.setPen( palette().shadow().color() );
-	//p.drawText( 25, 54, model()->displayName() );
+	//p.drawText( 19+25, 54, model()->displayName() );
 	p.setPen( palette().text().color() );
-	p.drawText( 24, 53, model()->displayName() );
+	p.drawText( 19+24, 53, model()->displayName() );
 }
 
 
@@ -385,6 +396,7 @@ void EffectView::paintEvent( QPaintEvent * )
 void EffectView::modelChanged()
 {
         Effect* e=effect();
+	m_runningLCB->setModel( &e->m_runningModel );
 	m_enabledLCB->setModel( &e->m_enabledModel );
 	m_clippingLCB->setModel( &e->m_clippingModel );
 	m_wetDryKNB->setModel( &e->m_wetDryModel );

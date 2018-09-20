@@ -70,9 +70,10 @@ bool ShaperGDX::processAudioBuffer(sampleFrame* _buf, const fpp_t _frames)
 
     const ValueBuffer* timeBuf  = m_gdxControls.m_timeModel.valueBuffer();
     const ValueBuffer* ratioBuf = m_gdxControls.m_ratioModel.valueBuffer();
+    const ValueBuffer* fillBuf  = m_gdxControls.m_fillModel.valueBuffer();
+    const ValueBuffer* hardBuf  = m_gdxControls.m_hardModel.valueBuffer();
     const ValueBuffer* outGainBuf
             = m_gdxControls.m_outGainModel.valueBuffer();
-    const ValueBuffer* hardBuf = m_gdxControls.m_hardModel.valueBuffer();
 
     const WaveForm* wf
             = WaveForm::get(m_gdxControls.m_waveBankModel.value(),
@@ -90,6 +91,9 @@ bool ShaperGDX::processAudioBuffer(sampleFrame* _buf, const fpp_t _frames)
         const float ratio
                 = (float)(ratioBuf ? ratioBuf->value(f)
                                    : m_gdxControls.m_ratioModel.value());
+        const float fill
+                = (float)(fillBuf ? fillBuf->value(f)
+                                  : m_gdxControls.m_fillModel.value());
         float outGain
                 = (float)(outGainBuf ? outGainBuf->value(f)
                                      : m_gdxControls.m_outGainModel.value());
@@ -103,15 +107,28 @@ bool ShaperGDX::processAudioBuffer(sampleFrame* _buf, const fpp_t _frames)
         m_phase = fraction(m_phase);
 
         float waveGain = wf->f(m_phase);
-        waveGain       = ratio * waveGain + (1.f - ratio);
+        float waveAmpl = fabsf(waveGain);
+
+        if(ratio < 1.f)
+        {
+            waveGain = ratio * waveGain + (1.f - ratio);
+        }
 
         m_phase += (1000.f / time / Engine::mixer()->processingSampleRate());
 
-        curVal0 = (1.f - hard) * curVal0 + hard * fabsf(curVal0);
-        curVal1 = (1.f - hard) * curVal1 + hard * fabsf(curVal1);
+        curVal0 = ((1.f - hard) * curVal0 + hard * fabsf(curVal0)) * waveGain;
+        curVal1 = ((1.f - hard) * curVal1 + hard * fabsf(curVal1)) * waveGain;
 
-        curVal0 = qBound(-1.f, curVal0 * waveGain * outGain, 1.f);
-        curVal1 = qBound(-1.f, curVal1 * waveGain * outGain, 1.f);
+        if(fill > 0.f)
+        {
+                if(fabsf(curVal0)<waveAmpl)
+                        curVal0 = sign(curVal0) * qMin(waveAmpl,fabsf(curVal0)*(1.f+fill));
+                if(fabsf(curVal1)<waveAmpl)
+                        curVal1 = sign(curVal1) * qMin(waveAmpl,fabsf(curVal1)*(1.f+fill));
+        }
+
+        curVal0 = qBound(-1.f, curVal0 * outGain, 1.f);
+        curVal1 = qBound(-1.f, curVal1 * outGain, 1.f);
 
         sampleFrame s = {waveGain, curVal0};
         m_ring->write(s);

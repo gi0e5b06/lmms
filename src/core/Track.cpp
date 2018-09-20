@@ -170,6 +170,12 @@ TrackContentObject::~TrackContentObject()
 }
 
 
+QString TrackContentObject::defaultName() const
+{
+        return getTrack()->name();
+}
+
+
 void TrackContentObject::saveSettings( QDomDocument & doc, QDomElement & element )
 {
 	element.setAttribute( "name", name() );
@@ -2841,9 +2847,9 @@ void TrackOperationsWidget::changeName()
 
 void TrackOperationsWidget::resetName()
 {
-	qWarning("TrackOperationsWidget::resetName not implemented");
-        //Track * t = m_trackView->getTrack();
-	//t->setName( m_tco->getTrack()->name() );
+        Track * t = m_trackView->getTrack();
+	QString s = t->defaultName();
+        t->setName( s );
 }
 
 void TrackOperationsWidget::changeColor()

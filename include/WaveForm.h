@@ -147,6 +147,7 @@ class WaveForm
 
       private:
         void createDegraded(int _bank, bool _linear, int _quality);
+        void createSoften(int _bank, float _bandwidth);
 
         QString         m_bankNames[MAX_BANK - MIN_BANK + 1];
         const WaveForm* m_stock[MAX_BANK - MIN_BANK + 1]
@@ -182,9 +183,13 @@ class WaveForm
              const interpolation_t _mode,
              const int             _quality);
 
-    void build();
+    WaveForm* setSoftness(float _softness);
+    void      rebuild();
+    void      build();
+    void      soften();
 
     bool            m_built;
+    float           m_softness;
     QString         m_name;
     int             m_bank;
     int             m_index;

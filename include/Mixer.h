@@ -56,7 +56,8 @@ const int BYTES_PER_INT_SAMPLE = sizeof( int_sample_t );
 const int BYTES_PER_FRAME = sizeof( sampleFrame );
 const int BYTES_PER_SURROUND_FRAME = sizeof( surroundSampleFrame );
 
-const float OUTPUT_SAMPLE_MULTIPLIER = 32767.0f;
+const float S16_MULTIPLIER = powf(2,15);
+const float S32_MULTIPLIER = powf(2,31);
 
 
 const float BaseFreq = 440.0f;

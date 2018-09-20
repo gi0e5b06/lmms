@@ -41,18 +41,14 @@
 #include "ToolTip.h"
 #include "TrackLabelButton.h"
 
-
+#define MASKSZ 8*sizeof(qulonglong)
 
 BBTrack::infoMap BBTrack::s_infoMap;
 
 
 BBTCO::BBTCO( Track * _track ) :
-	TrackContentObject( _track )
-        /*
-          ,
-          m_color( 128, 128, 128 ),
-          m_useStyleColor( true )
-        */
+	TrackContentObject( _track ),
+        m_mask(nullptr)
 {
 	tact_t t = Engine::getBBTrackContainer()->lengthOfBB( bbTrackIndex() );
 	if( t > 0 )
@@ -66,13 +62,12 @@ BBTCO::BBTCO( Track * _track ) :
 
 
 BBTCO::BBTCO( const BBTCO& _other ) :
-	TrackContentObject( _other.getTrack() )
-        /*
-          ,
-          m_color( _other.m_color ),
-          m_useStyleColor( _other.m_useStyleColor )
-        */
+	TrackContentObject( _other.getTrack() ),
+        m_mask(nullptr)
 {
+        const Bitset* mask=_other.mask();
+        if(mask) m_mask=new Bitset(*mask);
+
         changeLength( _other.length() );
         setAutoResize( _other.getAutoResize() );
 }
@@ -80,14 +75,39 @@ BBTCO::BBTCO( const BBTCO& _other ) :
 
 BBTCO::~BBTCO()
 {
+        if(m_mask) delete m_mask;
 }
 
 
+int BBTCO::bbTrackIndex() const
+{
+	return dynamic_cast<BBTrack *>( getTrack() )->index();
+}
+
+
+bool BBTCO::isEmpty() const
+{
+        int index=bbTrackIndex();
+	for(const Track* t: Engine::getBBTrackContainer()->tracks())
+                if(!t->isMuted() && !t->getTCO(index)->isEmpty())
+                        return false;
+        return true;
+}
 
 
 void BBTCO::saveSettings( QDomDocument & doc, QDomElement & element )
 {
         TrackContentObject::saveSettings(doc,element);
+
+        if(m_mask!=nullptr)
+        {
+                qulonglong mask=0;
+                for(int i=qMin<int>(MASKSZ,m_mask->size())-1;i>=0;i--)
+                        if(m_mask->bit(i))
+                                mask|=1<<i;
+                element.setAttribute("mask",mask);
+        }
+
         /*
 	element.setAttribute( "name", name() );
 	//if( element.parentNode().nodeName() == "clipboarddata" )
@@ -119,6 +139,24 @@ void BBTCO::saveSettings( QDomDocument & doc, QDomElement & element )
 void BBTCO::loadSettings( const QDomElement & element )
 {
         TrackContentObject::loadSettings(element);
+
+        if(element.hasAttribute("mask"))
+        {
+                qulonglong mask=element.attribute("mask")
+                        .toULongLong(nullptr);
+                if(mask)
+                {
+                        if(m_mask==nullptr)
+                                m_mask=new Bitset(MASKSZ,false);
+                        int i=0;
+                        while(mask!=0)
+                        {
+                                if(mask&1) m_mask->set(i);
+                                mask=mask>>1;
+                                i++;
+                        }
+                }
+        }
 
         /*
         setName( element.attribute( "name" ) );
@@ -160,13 +198,6 @@ void BBTCO::loadSettings( const QDomElement & element )
 		}
 	}
         */
-}
-
-
-
-int BBTCO::bbTrackIndex()
-{
-	return dynamic_cast<BBTrack *>( getTrack() )->index();
 }
 
 
@@ -215,6 +246,9 @@ QMenu* BBTCOView::buildContextMenu()
         addCutCopyPasteMenu(cm,true,true,true);
 
         cm->addSeparator();
+        addMuteMenu(cm,!m_bbTCO->isMuted());
+
+        cm->addSeparator();
         addNameMenu(cm,true);
         cm->addSeparator();
         addColorMenu(cm,true);
@@ -223,6 +257,46 @@ QMenu* BBTCOView::buildContextMenu()
 }
 
 
+void BBTCOView::addMuteMenu(QMenu* _cm, bool _enabled)
+{
+        QMenu* smmi=new QMenu(tr("Muted Instruments"));
+
+        const Bitset* mask=m_bbTCO->mask();
+
+        QAction* a;
+        int index=0;
+        for(auto track: Engine::getBBTrackContainer()->tracks())
+        {
+                bool muted=(mask != nullptr &&
+                            index<mask->size() &&
+                            mask->bit(index));
+                a=smmi->addAction( track->name() );
+                // ,this , SLOT( setMask() ) );
+                a->setData(QVariant(index));
+                a->setCheckable(true);
+                a->setChecked(muted);
+                a->setEnabled(_enabled);
+                index++;
+        }
+
+        connect(smmi, SIGNAL(triggered(QAction*)), this, SLOT(toggleMask(QAction*)));
+        _cm->addMenu(smmi);
+}
+
+
+void BBTCOView::toggleMask(QAction* _a)
+{
+        const int index=_a->data().toInt();
+        qInfo("BBTCOView::setMask %d",index);
+        Bitset* mask=m_bbTCO->mask();
+        if(mask==nullptr)
+        {
+                mask=new Bitset(MASKSZ,false);
+                m_bbTCO->m_mask=mask;
+        }
+        mask->toggle(index);
+	setNeedsUpdate( true );
+}
 
 
 void BBTCOView::mouseDoubleClickEvent( QMouseEvent * )
@@ -302,6 +376,15 @@ void BBTCOView::paintEvent( QPaintEvent * )
 		}
 	}
         */
+
+        Bitset* mask=m_bbTCO->mask();
+        if(mask!=nullptr)
+        {
+                p.setPen(bgcolor.darker(200));
+                for(int y=qMin<int>(height()-5,mask->size()-1); y>=0; --y)
+                        if(mask->bit(y))
+                                p.drawLine(2,2+y,width()-4,2+y);
+        }
 
         bool frozen=m_bbTCO->getTrack()->isFrozen();
         paintFrozenIcon(frozen,p);
@@ -494,29 +577,39 @@ BBTrack::~BBTrack()
 
 
 
+QString BBTrack::defaultName() const
+{
+        const int i=index();
+	for(const Track* t: Engine::getBBTrackContainer()->tracks())
+                if(!t->isMuted())
+                {
+                        TrackContentObject* tco=t->getTCO(i);
+                        if(!tco->isEmpty()) return tco->name();
+                }
+        return tr( "Beat/Bassline %1" ).arg(i);
+}
+
+
+
+
 // play _frames frames of given TCO within starting with _start
 bool BBTrack::play( const MidiTime & _start, const fpp_t _frames,
                     const f_cnt_t _offset, int _tco_num )
 {
-	if( isMuted() )
-	{
-		return false;
-	}
+	if( isMuted() ) return false;
 
-	if( _tco_num >= 0 )
-	{
+        if(_tco_num>=0)
+        {
                 // playing in BB editor qInfo("tco_num=%d",_tco_num);
-		return Engine::getBBTrackContainer()->play( _start, _frames, _offset, s_infoMap[this] );
-	}
+                return Engine::getBBTrackContainer()->play( _start, _frames, _offset, s_infoMap[this], nullptr );
+        }
 
 	tcoVector tcos;
 	getTCOsInRange( tcos, _start, _start + static_cast<int>( _frames / Engine::framesPerTick() ) );
 
-	if( tcos.size() == 0 )
-	{
-		return false;
-	}
+	if( tcos.size() == 0 ) return false;
 
+        /*
 	MidiTime lastPosition;
 	MidiTime lastLen;
 	for( tcoVector::iterator it = tcos.begin(); it != tcos.end(); ++it )
@@ -536,6 +629,31 @@ bool BBTrack::play( const MidiTime & _start, const fpp_t _frames,
 		return Engine::getBBTrackContainer()->play( _start - lastPosition, _frames, _offset, s_infoMap[this] );
 	}
 	return false;
+        */
+
+	//MidiTime lastPosition;
+	//MidiTime lastLen;
+        bool played=false;
+	for( tcoVector::iterator it = tcos.begin(); it != tcos.end(); ++it )
+	{
+		if( ( *it )->isMuted() ) continue;
+
+                const MidiTime& stp=( *it )->startPosition();
+                const MidiTime& len=( *it )->length();
+                //qInfo("bbtrack sz=%d _start=%d lastPos=%d lastLen=%d",
+                //      tcos.size(),_start,lastPosition,lastLen);
+                if( _start < stp + len )
+	        {
+                        const BBTCO* tco=dynamic_cast<const BBTCO*>(*it);
+                        if(tco != nullptr)
+                        {
+                                fpp_t nbf=qMin<int>(_frames,(stp + len - _start) * Engine::framesPerTick());
+                                played|=Engine::getBBTrackContainer()->play
+                                        ( _start - stp, nbf, _offset, s_infoMap[this], tco->mask() );
+                        }
+                }
+        }
+	return played;
 }
 
 
@@ -633,17 +751,20 @@ void BBTrack::loadTrackSpecificSettings( const QDomElement & _this )
 
 
 // return pointer to BBTrack specified by _bb_num
-BBTrack * BBTrack::findBBTrack( int _bb_num )
+BBTrack* BBTrack::findBBTrack( int _bb_num )
 {
+        /*
 	for( infoMap::iterator it = s_infoMap.begin(); it != s_infoMap.end();
 									++it )
 	{
 		if( it.value() == _bb_num )
 		{
-			return it.key();
+			return const_cast<BBTrack*>(it.key());
 		}
 	}
 	return NULL;
+        */
+        return const_cast<BBTrack*>(s_infoMap.key(_bb_num,nullptr));
 }
 
 
@@ -661,11 +782,6 @@ void BBTrack::swapBBTracks( Track * _track1, Track * _track2 )
 		Engine::getBBTrackContainer()->setCurrentBB( s_infoMap[t1] );
 	}
 }
-
-
-
-
-
 
 
 

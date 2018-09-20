@@ -213,8 +213,9 @@ public:
 
 	void createDetuning();
 
-        static int findKeyNum(QString& _name);
-        static QString findKeyName(int _num);
+        static int findKeyNum(QString& _name); // ex. 70
+        static QString findKeyName(int _num);  // ex. A#4
+        static QString findNoteName(int _num); // ex. A#
 
 
 protected:

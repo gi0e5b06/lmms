@@ -93,6 +93,7 @@ signals:
  private:
 	QPixmap m_bg;
 
+	LedCheckBox*   m_runningLCB;
 	LedCheckBox*   m_enabledLCB;
 	LedCheckBox*   m_clippingLCB;
 	Knob*          m_wetDryKNB;

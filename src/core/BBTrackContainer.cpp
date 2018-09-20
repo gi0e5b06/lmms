@@ -54,20 +54,21 @@ BBTrackContainer::~BBTrackContainer()
 
 
 bool BBTrackContainer::play( MidiTime _start, fpp_t _frames,
-                             f_cnt_t _offset, int _tco_num )
+                             f_cnt_t _offset,
+                             int _tco_num, const Bitset* _mask )
 {
-	bool played_a_note = false;
         tact_t beatlen = lengthOfBB( _tco_num );
-	if( beatlen <= 0 )
-	{
-		return false;
-	}
+	if( beatlen <= 0 ) return false;
 
 	_start = _start % ( beatlen * MidiTime::ticksPerTact() );
 
+	bool played_a_note = false;
 	Tracks tl = tracks();
-	for( Tracks::iterator it = tl.begin(); it != tl.end(); ++it )
+        int index=0;
+	for( Tracks::iterator it = tl.begin(); it != tl.end(); ++it, ++index )
 	{
+                if(_mask != nullptr && index<_mask->size() && _mask->bit(index)) continue;
+
                 f_cnt_t realstart = _start;
                 TrackContentObject* p=(*it)->getTCO( _tco_num );
                 //Pattern* p=dynamic_cast<Pattern*>((*it)->getTCO( _tco_num ));

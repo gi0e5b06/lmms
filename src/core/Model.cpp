@@ -52,10 +52,20 @@ const QString Model::uuid()
 }
 
 
+void Model::setDisplayName(const QString& _displayName)
+{
+        if(m_displayName!=_displayName)
+        {
+                m_displayName = _displayName;
+                emit propertiesChanged();
+        }
+}
+
+
 QString Model::fullDisplayName() const
 {
 	const QString & n = displayName();
-	if( parentModel() ) 
+	if( parentModel() )
 	{
 		const QString p = parentModel()->fullDisplayName();
 		if( n.isEmpty() && p.isEmpty() )
@@ -78,7 +88,9 @@ bool Model::frequentlyUpdated() const
 
 void Model::setFrequentlyUpdated(const bool _b)
 {
-        m_frequentlyUpdated=_b;
+        if(m_frequentlyUpdated!=_b)
+        {
+                m_frequentlyUpdated=_b;
+                emit propertiesChanged();
+        }
 }
-
-

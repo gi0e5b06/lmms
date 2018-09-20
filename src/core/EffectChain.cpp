@@ -246,6 +246,9 @@ bool EffectChain::processAudioBuffer( sampleFrame * _buf, const fpp_t _frames, b
 	{
 		if( hasInputNoise || ( *it )->isRunning() )
 		{
+                        if( hasInputNoise && !( *it )->isRunning() )
+                                startRunning();
+
 			moreEffects |= ( *it )->processAudioBuffer( _buf, _frames );
 			if( exporting ) // strip infs/nans if exporting
 			{
@@ -266,12 +269,13 @@ void EffectChain::startRunning()
 	{
 		return;
 	}
-
+        /*
 	for( EffectList::Iterator it = m_effects.begin();
 						it != m_effects.end(); it++ )
 	{
 		( *it )->startRunning();
 	}
+        */
 }
 
 

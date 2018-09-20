@@ -87,6 +87,20 @@ AutomationPattern::~AutomationPattern()
 {
 }
 
+bool AutomationPattern::isEmpty() const
+{
+    return m_timeMap.isEmpty();
+}
+
+QString AutomationPattern::defaultName() const
+{
+    if(!m_objects.isEmpty() && m_objects.first() != nullptr)
+        return m_objects.first()->fullDisplayName();
+
+    return TrackContentObject::defaultName();
+}
+
+
 void AutomationPattern::setRecording(const bool b)
 {
     m_isRecording = b;

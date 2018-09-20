@@ -50,7 +50,7 @@ class ShaperGDXControls : public EffectControls
 
     virtual int controlCount()
     {
-        return 4;
+        return 5;
     }
 
     virtual EffectControlDialog* createView()
@@ -75,8 +75,9 @@ class ShaperGDXControls : public EffectControls
 
     TempoSyncKnobModel m_timeModel;
     FloatModel         m_ratioModel;
-    FloatModel         m_outGainModel;
+    FloatModel         m_fillModel;
     FloatModel         m_hardModel;
+    FloatModel         m_outGainModel;
 
     Ring m_ring;
 

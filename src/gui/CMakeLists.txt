@@ -13,6 +13,7 @@ SET(LMMS_SRCS
 	gui/ActionGroup.cpp
         gui/ActionUpdatable.cpp
 	gui/AudioAlsaSetupWidget.cpp
+	gui/AudioAlsaGdxSetupWidget.cpp
 	gui/AudioDeviceSetupWidget.cpp
 	gui/AutomatableModelView.cpp
 	gui/AutomationPatternView.cpp
@@ -32,8 +33,8 @@ SET(LMMS_SRCS
 	gui/LmmsStyle.cpp
 	gui/MainApplication.cpp
 	gui/MainWindow.cpp
-	gui/MidiEffectControlDialog.cpp
-	gui/MidiEffectSelectDialog.cpp
+	#gui/MidiEffectControlDialog.cpp
+	#gui/MidiEffectSelectDialog.cpp
 	gui/MidiSetupWidget.cpp
 	gui/ModelView.cpp
         gui/PaintCacheable.cpp
@@ -91,8 +92,8 @@ SET(LMMS_SRCS
 	gui/widgets/LcdWidget.cpp
 	gui/widgets/LedCheckBox.cpp
 	gui/widgets/MeterDialog.cpp
-	gui/widgets/MidiEffectView.cpp
-	gui/widgets/MidiEffectRackView.cpp
+	#gui/widgets/MidiEffectView.cpp
+	#gui/widgets/MidiEffectRackView.cpp
 	gui/widgets/MidiPortMenu.cpp
 	gui/widgets/NStateButton.cpp
 	gui/widgets/PixmapButton.cpp

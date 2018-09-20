@@ -94,7 +94,8 @@ T Configuration<T>::get(const QString& _s)
     else
     {
         const QString c = _s.left(p);
-        const QString k = _s.right(p);
+        const QString k = _s.mid(p+1);
+        qInfo("Configuration::get c='%s' k='%s'",qPrintable(c),qPrintable(k));
         QString       v = ConfigManager::inst()->value(c, k, "");
         if(v != "")
         {
@@ -130,7 +131,7 @@ void Configuration<T>::set(const QString& _s, T _v)
     else
     {
         const QString c = _s.left(p);
-        const QString k = _s.right(p);
+        const QString k = _s.mid(p+1);
         ConfigManager::inst()->setValue(c, k, QVariant(_v).toString());
     }
 }

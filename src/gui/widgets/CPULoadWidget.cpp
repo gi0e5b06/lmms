@@ -63,8 +63,8 @@ CPULoadWidget::CPULoadWidget(QWidget* _parent, const bool _bigger) :
 
 CPULoadWidget::~CPULoadWidget()
 {
-    disconnect(gui->mainWindow(), SIGNAL(periodicUpdate()), this,
-               SLOT(update()));
+        //disconnect(gui->mainWindow(), SIGNAL(periodicUpdate()), this,
+        //       SLOT(update()));
 }
 
 void CPULoadWidget::drawWidget(QPainter& _p)

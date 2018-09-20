@@ -33,6 +33,7 @@
 #include "AutomatableModel.h"
 #include "TempoSyncKnobModel.h"
 //#include "MemoryManager.h"
+#include "Configuration.h"
 
 class EffectChain;
 class EffectControls;
@@ -89,20 +90,12 @@ public:
 
 
 	inline bool isRunning() const
-	{
-		return m_running;
-	}
+        {
+		return m_runningModel.value();
+        }
 
-	inline void startRunning()
-	{
-		m_bufferCount = 0;
-		m_running = true;
-	}
-
-	inline void stopRunning()
-	{
-		m_running = false;
-	}
+	void startRunning();
+	void stopRunning();
 
 	inline bool isEnabled() const
 	{
@@ -114,6 +107,7 @@ public:
                 return true;
         }
 
+        /*
 	inline float wetLevel() const
 	{
 		return m_wetDryModel.value();
@@ -123,11 +117,13 @@ public:
 	{
 		return 1.0f - m_wetDryModel.value();
 	}
+        */
 
 	inline float gate() const
 	{
-		const float level = m_gateModel.value();
-		return level*level * m_processors;
+                return m_gateModel.value();
+                //const float level = m_gateModel.value();
+		//return level*level * m_processors;
 	}
 
 	// should be replaced by Runnable
@@ -161,28 +157,14 @@ public:
 protected:
 	inline bool isAutoQuitEnabled() const
         {
-                return !m_autoQuitDisabled;
+                return !CONFIG_GET_BOOL("ui.disableautoquit");
+                //!m_autoQuitDisabled;
         }
 
 	inline int timeout() const
 	{
 		const float samples = Engine::mixer()->processingSampleRate() * m_autoQuitModel.value() / 1000.0f;
 		return /*1+*/ static_cast<int>( samples / Engine::mixer()->framesPerPeriod() );
-	}
-
-	inline f_cnt_t bufferCount() const
-	{
-		return m_bufferCount;
-	}
-
-	inline void resetBufferCount()
-	{
-		m_bufferCount = 0;
-	}
-
-	inline void incrementBufferCount()
-	{
-		++m_bufferCount;
 	}
 
 	virtual PluginView * instantiateView( QWidget * );
@@ -244,7 +226,7 @@ protected:
 
 	bool m_okay;
 	bool m_noRun;
-	bool m_running;
+        BoolModel m_runningModel;
 	f_cnt_t m_bufferCount;
 
 	BoolModel m_enabledModel;
@@ -254,7 +236,7 @@ protected:
 	FloatModel m_gateModel;
 	FloatModel m_balanceModel;
 
-	bool m_autoQuitDisabled;
+	//bool m_autoQuitDisabled;
 
 	SRC_DATA m_srcData[2];
 	SRC_STATE * m_srcState[2];

@@ -75,17 +75,23 @@ ShaperGDXDialog::ShaperGDXDialog(ShaperGDXControls* controls) :
     ratioKNB->setText(tr("RATIO"));
     ratioKNB->setHintText(tr("Ratio:"), "");
 
-    Knob* outGainKNB = new Knob(this);
-    // outGainKNB->move(117, 135);
-    outGainKNB->setModel(&controls->m_outGainModel);
-    outGainKNB->setText(tr("OUT"));
-    outGainKNB->setHintText(tr("Out gain:"), "");
+    Knob* fillKNB = new Knob(this);
+    // fillKNB->move(67, 135);
+    fillKNB->setModel(&controls->m_fillModel);
+    fillKNB->setText(tr("FILL"));
+    fillKNB->setHintText(tr("Fill:"), "");
 
     Knob* hardKNB = new Knob(this);
     // hardKNB->move(167, 135);
     hardKNB->setModel(&controls->m_hardModel);
     hardKNB->setText(tr("HARD"));
     hardKNB->setHintText(tr("Hard:"), "");
+
+    Knob* outGainKNB = new Knob(this);
+    // outGainKNB->move(117, 135);
+    outGainKNB->setModel(&controls->m_outGainModel);
+    outGainKNB->setText(tr("OUT"));
+    outGainKNB->setHintText(tr("Out gain:"), "");
 
     // embed::getIconPixmap("output_bigger_graph"),
     m_showWVW = new VisualizationWidget(238, 119, this, controls->ring());
@@ -98,9 +104,11 @@ ShaperGDXDialog::ShaperGDXDialog(ShaperGDXControls* controls) :
                           Qt::AlignBottom | Qt::AlignHCenter);
     mainLayout->addWidget(ratioKNB, 2, 1, 1, 1,
                           Qt::AlignBottom | Qt::AlignHCenter);
-    mainLayout->addWidget(outGainKNB, 2, 2, 1, 1,
+    mainLayout->addWidget(fillKNB, 2, 2, 1, 1,
                           Qt::AlignBottom | Qt::AlignHCenter);
     mainLayout->addWidget(hardKNB, 2, 3, 1, 1,
+                          Qt::AlignBottom | Qt::AlignHCenter);
+    mainLayout->addWidget(outGainKNB, 2, 4, 1, 1,
                           Qt::AlignBottom | Qt::AlignHCenter);
     mainLayout->addWidget(m_showWVW, 3, 0, 1, 8,
                           Qt::AlignVCenter | Qt::AlignHCenter);

@@ -122,8 +122,5 @@ void Instrument::applyRelease( sampleFrame * buf, const NotePlayHandle * _n )
 
 QString Instrument::fullDisplayName() const
 {
-	return instrumentTrack()->displayName();
+	return instrumentTrack()->displayName()+">"+displayName();
 }
-
-
-

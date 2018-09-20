@@ -4,21 +4,28 @@
 #include <cassert>
 #include <cstring>
 
+/*
 Bitset::Bitset(unsigned int size)
+        : Bitset(size,false)
+{
+}
+*/
+
+Bitset::Bitset(unsigned int _size, bool _initial)
 {
 	assert(sizeof(unsigned int)>=4); //32 bits
-	m_size=size;
-	m_ints=size/sizeof(unsigned int)+1;
+	m_size=_size;
+	m_ints=_size/sizeof(unsigned int)+1;
 	m_data=new unsigned int[m_ints];
+	fill(_initial);
 }
 
-Bitset::Bitset(unsigned int size, bool initial)
+Bitset::Bitset(const Bitset& _other)
 {
-	assert(sizeof(unsigned int)>=4); //32 bits
-	m_size=size;
-	m_ints=size/sizeof(unsigned int)+1;
+	m_size=_other.m_size;
+	m_ints=_other.m_ints;
 	m_data=new unsigned int[m_ints];
-	fill(initial);
+	memcpy(m_data,_other.m_data,m_ints);
 }
 
 Bitset::~Bitset()
@@ -26,9 +33,14 @@ Bitset::~Bitset()
 	delete m_data;
 }
 
+unsigned int Bitset::size() const
+{
+        return m_size;
+}
+
 void Bitset::fill(bool b)
 {
-	memset(m_data,(b ? 0xFF : 0x00),m_ints);
+	memset(m_data,(b ? 0xFF : 0x00),m_ints*sizeof(unsigned int));
 }
 
 bool Bitset::bit(const unsigned int i) const
@@ -47,6 +59,12 @@ void Bitset::unset(const unsigned int i)
 {
 	assert(/*(i>=0)&&*/(i<m_size));
 	m_data[i>>5]&=~(1<<(i&0x1F));
+}
+
+void Bitset::toggle(const unsigned int i)
+{
+	if(bit(i)) unset(i);
+        else set(i);
 }
 
 int Bitset::nextSet(const unsigned int i0) const

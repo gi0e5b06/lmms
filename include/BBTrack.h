@@ -28,8 +28,10 @@
 #define BB_TRACK_H_
 
 #include "Track.h"
+#include "Bitset.h"
 
 #include <QObject>
+#include <QAction>
 #include <QMap>
 #include <QStaticText>
 
@@ -39,10 +41,13 @@ class TrackContainer;
 
 class BBTCO : public TrackContentObject
 {
-public:
+ public:
 	BBTCO( Track * _track );
 	BBTCO( const BBTCO& _other );
 	virtual ~BBTCO();
+
+	int bbTrackIndex() const;
+        virtual bool isEmpty() const;
 
 	virtual void saveSettings( QDomDocument & _doc, QDomElement & _parent );
 	virtual void loadSettings( const QDomElement & _this );
@@ -52,37 +57,21 @@ public:
 		return "bbtco";
 	}
 
-        /*
-	unsigned int color() const
-	{
-		return m_color.rgb();
-	}
-
-	QColor colorObj() const
-	{
-		return m_color;
-	}
-
-	void setColor( const QColor & c )
-	{
-		m_color = QColor( c );
-	}
-
-	void setUseStyleColor( bool b )
-	{
-		m_useStyleColor = b;
-	}
-        */
-
-	int bbTrackIndex();
+        virtual const Bitset* mask() const
+        {
+                return m_mask;
+        }
 
 	virtual TrackContentObjectView * createView( TrackView * _tv );
 
-private:
-        /*
-	QColor m_color;
-	bool m_useStyleColor;
-        */
+ protected:
+        virtual Bitset* mask()
+        {
+                return m_mask;
+        }
+
+ private:
+        Bitset* m_mask;
 
 	friend class BBTCOView;
 
@@ -114,9 +103,11 @@ protected slots:
 	//void changeName();
 	//void changeColor();
 	//void resetColor();
+        void toggleMask(QAction* _action);
 
 protected:
 	virtual QMenu* buildContextMenu();
+        virtual void addMuteMenu(QMenu* _cm, bool _enabled);
 
         virtual void paintEvent( QPaintEvent * pe );
 	virtual void mouseDoubleClickEvent( QMouseEvent * _me );
@@ -138,8 +129,11 @@ public:
 	BBTrack( TrackContainer* tc );
 	virtual ~BBTrack();
 
+	virtual QString defaultName() const;
+
 	virtual bool play( const MidiTime & _start, const fpp_t _frames,
-						const f_cnt_t _frame_base, int _tco_num = -1 );
+                           const f_cnt_t _frame_base, int _tco_num = -1 );
+
 	virtual TrackView * createView( TrackContainerView* tcv );
 	virtual TrackContentObject * createTCO( const MidiTime & _pos );
 
@@ -147,12 +141,9 @@ public:
 							QDomElement & _parent );
 	virtual void loadTrackSpecificSettings( const QDomElement & _this );
 
-	static BBTrack * findBBTrack( int _bb_num );
-	static void swapBBTracks( Track * _track1, Track * _track2 );
-
-	int index()
+	int index() const
 	{
-		return s_infoMap[this];
+		return s_infoMap.value(this);
 	}
 
 	bool automationDisabled( Track * _track )
@@ -191,17 +182,20 @@ public:
 	}
         */
 
+	static BBTrack * findBBTrack( int _bb_num );
+	static void swapBBTracks( Track * _track1, Track * _track2 );
+
 protected:
 	inline virtual QString nodeName() const
 	{
-		return( "bbtrack" );
+		return "bbtrack";
 	}
 
 
 private:
 	QList<Track *> m_disabledTracks;
 
-	typedef QMap<BBTrack *, int> infoMap;
+	typedef QMap<const BBTrack *, int> infoMap;
 	static infoMap s_infoMap;
 
 	//static QColor * s_lastTCOColor;

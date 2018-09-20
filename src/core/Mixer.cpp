@@ -32,11 +32,13 @@
 #include "Song.h"
 #include "EnvelopeAndLfoParameters.h"
 #include "NotePlayHandle.h"
-#include "ConfigManager.h"
+//#include "ConfigManager.h"
+#include "Configuration.h"
 #include "SamplePlayHandle.h"
 
 // platform-specific audio-interface-classes
 #include "AudioAlsa.h"
+#include "AudioAlsaGdx.h"
 #include "AudioJack.h"
 #include "AudioOss.h"
 #include "AudioSndio.h"
@@ -59,6 +61,7 @@
 
 #include "MemoryHelper.h"
 #include "BufferManager.h"
+#include "Backtrace.h"
 
 #include "denormals.h"
 
@@ -112,19 +115,19 @@ Mixer::Mixer( bool renderOnly ) :
 	// size from user configuration
 	if( renderOnly == false )
 	{
-		m_framesPerPeriod = 
-			( fpp_t ) ConfigManager::inst()->
-				value( "mixer", "framesperaudiobuffer" ).toInt();
+		m_framesPerPeriod = (fpp_t)CONFIG_GET_INT("mixer.framesperaudiobuffer");
+		//	( fpp_t ) ConfigManager::inst()->
+		//		value( "mixer", "framesperaudiobuffer" ).toInt();
 
 		// if the value read from user configuration is not set or
 		// lower than the minimum allowed, use the default value and
 		// save it to the configuration
 		if( m_framesPerPeriod < MINIMUM_BUFFER_SIZE )
 		{
-			ConfigManager::inst()->setValue( "mixer",
-						"framesperaudiobuffer",
-						QString::number( DEFAULT_BUFFER_SIZE ) );
-
+                        CONFIG_SET_INT("mixer.framesperaudiobuffer",DEFAULT_BUFFER_SIZE);
+			//ConfigManager::inst()->setValue( "mixer",
+			//			"framesperaudiobuffer",
+			//			QString::number( DEFAULT_BUFFER_SIZE ) );
 			m_framesPerPeriod = DEFAULT_BUFFER_SIZE;
 		}
 		else if( m_framesPerPeriod > DEFAULT_BUFFER_SIZE )
@@ -140,7 +143,7 @@ Mixer::Mixer( bool renderOnly ) :
 	// now that framesPerPeriod is fixed initialize global BufferManager
 	BufferManager::init( m_framesPerPeriod );
 
-	for( int i = 0; i < 3; i++ )
+	for( int i = 0; i < 4; i++ ) //3
 	{
 		//m_readBuf = (surroundSampleFrame*)
 		//MemoryHelper::alignedMalloc( m_framesPerPeriod * sizeof( surroundSampleFrame ) );
@@ -245,7 +248,7 @@ void Mixer::startProcessing( bool _needs_fifo )
 	}
 	else
 	{
-		m_fifoWriter = NULL;
+		m_fifoWriter = nullptr;
 	}
 
 	m_audioDev->startProcessing();
@@ -260,13 +263,13 @@ void Mixer::stopProcessing()
 {
 	m_isProcessing = false;
 
-	if( m_fifoWriter != NULL )
+	if( m_fifoWriter != nullptr )
 	{
 		m_fifoWriter->finish();
 		m_fifoWriter->wait();
 		m_audioDev->stopProcessing();
 		delete m_fifoWriter;
-		m_fifoWriter = NULL;
+		m_fifoWriter = nullptr;
 	}
 	else
 	{
@@ -279,16 +282,19 @@ void Mixer::stopProcessing()
 
 sample_rate_t Mixer::baseSampleRate() const
 {
+        return CONFIG_GET_INT("mixer.samplerate");
+        /*
         ConfigManager* cm=ConfigManager::inst();
 
-	sample_rate_t sr = cm!=NULL
+	sample_rate_t sr = cm!=nullptr
                 ? qMax(44100,cm->value( "mixer", "samplerate" ).toInt())
                 : 44100;
 
         // temporary reminder
-        if(cm==NULL) qWarning("       : in Mixer::baseSampleRate()");
+        if(cm==nullptr) qWarning("       : in Mixer::baseSampleRate()");
 
 	return sr;
+        */
 }
 
 
@@ -296,7 +302,7 @@ sample_rate_t Mixer::baseSampleRate() const
 
 sample_rate_t Mixer::outputSampleRate() const
 {
-	return m_audioDev != NULL ? m_audioDev->sampleRate() :
+	return m_audioDev != nullptr ? m_audioDev->sampleRate() :
 							baseSampleRate();
 }
 
@@ -305,7 +311,7 @@ sample_rate_t Mixer::outputSampleRate() const
 
 sample_rate_t Mixer::inputSampleRate() const
 {
-	return m_audioDev != NULL ? m_audioDev->sampleRate() :
+	return m_audioDev != nullptr ? m_audioDev->sampleRate() :
 							baseSampleRate();
 }
 
@@ -357,8 +363,8 @@ void Mixer::pushInputFrames( sampleFrame * _ab, const f_cnt_t _frames )
 }
 
 
-SampleBuffer* s_metronome1=NULL;
-SampleBuffer* s_metronome2=NULL;
+SampleBuffer* s_metronome1=nullptr;
+SampleBuffer* s_metronome2=nullptr;
 
 const surroundSampleFrame * Mixer::renderNextBuffer()
 {
@@ -656,10 +662,12 @@ void Mixer::setAudioDevice( AudioDevice * _dev )
 {
 	stopProcessing();
 
-	if( _dev == NULL )
+        qInfo("Mixer::setAudioDevice p=%p",_dev);
+
+	if( _dev == nullptr )
 	{
-		printf( "param _dev == NULL in Mixer::setAudioDevice(...). "
-					"Trying any working audio-device\n" );
+		qWarning("Warning: param _dev == nullptr in Mixer::setAudioDevice(...). "
+                         "Trying any working audio-device" );
 		m_audioDev = tryAudioDevices();
 	}
 	else
@@ -684,10 +692,12 @@ void Mixer::setAudioDevice( AudioDevice * _dev,
 
 	m_qualitySettings = _qs;
 
-	if( _dev == NULL )
+        qInfo("Mixer::setAudioDevice p=%p",_dev);
+
+	if( _dev == nullptr )
 	{
-		printf( "param _dev == NULL in Mixer::setAudioDevice(...). "
-					"Trying any working audio-device\n" );
+		qWarning( "Warning: param _dev == nullptr in Mixer::setAudioDevice(...). "
+                          "Trying any working audio-device" );
 		m_audioDev = tryAudioDevices();
 	}
 	else
@@ -717,7 +727,7 @@ void Mixer::storeAudioDevice()
 
 void Mixer::restoreAudioDevice()
 {
-	if( m_oldAudioDev != NULL )
+	if( m_oldAudioDev != nullptr )
 	{
 		stopProcessing();
 		delete m_audioDev;
@@ -725,7 +735,7 @@ void Mixer::restoreAudioDevice()
 		m_audioDev = m_oldAudioDev;
 		emit sampleRateChanged();
 
-		m_oldAudioDev = NULL;
+		m_oldAudioDev = nullptr;
 		startProcessing();
 	}
 }
@@ -785,7 +795,7 @@ void Mixer::removePlayHandle( PlayHandle * _ph )
 		// Check m_newPlayHandles first because doing it the other way around
 		// creates a race condition
 		for( LocklessListElement * e = m_newPlayHandles.first(),
-			     * ePrev = NULL; e; ePrev = e, e = e->next )
+			     * ePrev = nullptr; e; ePrev = e, e = e->next )
 		{
 			if( e->value == _ph )
 			{
@@ -926,10 +936,45 @@ void Mixer::runChangesInModel()
 AudioDevice * Mixer::tryAudioDevices()
 {
 	bool success_ful = false;
-	AudioDevice * dev = NULL;
-	QString dev_name = ConfigManager::inst()->value( "mixer", "audiodev" );
+	AudioDevice * dev = nullptr;
+	QString dev_name = CONFIG_GET_STRING("mixer.audiodev");
+        //ConfigManager::inst()->value( "mixer", "audiodev" );
 
 	m_audioDevStartFailed = false;
+        BACKTRACE
+                
+#ifdef LMMS_HAVE_ALSA
+        qInfo("Mixer::tryAudioDevices trying device '%s'",qPrintable(dev_name));
+
+	if( dev_name == AudioAlsaGdx::name() || dev_name == "" )
+	{
+                qInfo("Mixer::tryAudioDevices #2");
+
+		dev = new AudioAlsaGdx( success_ful, this );
+		if( success_ful )
+		{
+                        qInfo("Mixer::tryAudioDevices #3");
+
+			m_audioDevName = AudioAlsaGdx::name();
+			return dev;
+		}
+		delete dev;
+	}
+
+	if( dev_name == AudioAlsa::name() || dev_name == "" )
+	{
+		dev = new AudioAlsa( success_ful, this );
+		if( success_ful )
+		{
+                        qInfo("Mixer::tryAudioDevices #4");
+
+			m_audioDevName = AudioAlsa::name();
+			return dev;
+		}
+		delete dev;
+	}
+#endif
+
 
 #ifdef LMMS_HAVE_SDL
 	if( dev_name == AudioSdl::name() || dev_name == "" )
@@ -938,20 +983,6 @@ AudioDevice * Mixer::tryAudioDevices()
 		if( success_ful )
 		{
 			m_audioDevName = AudioSdl::name();
-			return dev;
-		}
-		delete dev;
-	}
-#endif
-
-
-#ifdef LMMS_HAVE_ALSA
-	if( dev_name == AudioAlsa::name() || dev_name == "" )
-	{
-		dev = new AudioAlsa( success_ful, this );
-		if( success_ful )
-		{
-			m_audioDevName = AudioAlsa::name();
 			return dev;
 		}
 		delete dev;
@@ -1052,7 +1083,7 @@ AudioDevice * Mixer::tryAudioDevices()
 
 	if( dev_name != AudioDummy::name() )
 	{
-		printf( "No audio-driver working - falling back to dummy-audio-"
+		qWarning( "Warning: No audio-driver working - falling back to dummy-audio-"
 			"driver\nYou can render your songs and listen to the output "
 			"files...\n" );
 
@@ -1069,8 +1100,8 @@ AudioDevice * Mixer::tryAudioDevices()
 
 MidiClient * Mixer::tryMidiClients()
 {
-	QString client_name = ConfigManager::inst()->value( "mixer",
-								"mididev" );
+	QString client_name = CONFIG_GET_STRING("mixer.mididev");
+        //ConfigManager::inst()->value( "mixer","mididev" );
 
 #ifdef LMMS_HAVE_ALSA
 	if( client_name == MidiAlsaGdx::name() || client_name == "" )
@@ -1231,7 +1262,7 @@ void Mixer::fifoWriter::run()
 		write( buffer );
 	}
 
-	write( NULL );
+	write( nullptr );
 }
 
 

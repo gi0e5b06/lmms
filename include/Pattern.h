@@ -59,6 +59,9 @@ public:
 	Pattern( const Pattern& other );
 	virtual ~Pattern();
 
+	bool empty() { return isEmpty(); } // obsolete
+        virtual bool isEmpty() const;
+
 	void init();
 
 	virtual void updateLength();
@@ -105,9 +108,6 @@ public:
 	{
 		return m_instrumentTrack;
 	}
-
-	bool empty();
-
 
 	virtual TrackContentObjectView * createView( TrackView * _tv );
 

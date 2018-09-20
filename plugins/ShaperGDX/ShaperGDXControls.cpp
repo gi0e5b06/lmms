@@ -44,8 +44,9 @@ ShaperGDXControls::ShaperGDXControls(ShaperGDX* effect) :
                                                             this,
                                                             tr("Time")),
       m_ratioModel(1.0f, 0.0f, 1.0f, 0.001f, this, tr("Ratio")),
-      m_outGainModel(1.0f, 0.0f, 10.0f, 0.001f, this, tr("Out gain")),
+      m_fillModel(0.0f, 0.0f, 1.0f, 0.001f, this, tr("Fill")),
       m_hardModel(0.f, 0.f, 1.f, 0.001f, this, tr("Mode")),
+      m_outGainModel(1.0f, 0.0f, 10.0f, 0.001f, this, tr("Out gain")),
       m_ring(600)
 {
     WaveForm::fillBankModel(m_waveBankModel);
@@ -85,8 +86,9 @@ void ShaperGDXControls::loadSettings(const QDomElement& _this)
     m_waveIndexModel.loadSettings(_this, "wave_index");
     m_timeModel.loadSettings(_this, "time");
     m_ratioModel.loadSettings(_this, "ratio");
-    m_outGainModel.loadSettings(_this, "out_gain");
+    m_fillModel.loadSettings(_this, "fill");
     m_hardModel.loadSettings(_this, "hard");
+    m_outGainModel.loadSettings(_this, "out_gain");
 }
 
 void ShaperGDXControls::saveSettings(QDomDocument& doc, QDomElement& _this)
@@ -95,8 +97,9 @@ void ShaperGDXControls::saveSettings(QDomDocument& doc, QDomElement& _this)
     m_waveIndexModel.saveSettings(doc, _this, "wave_index");
     m_timeModel.saveSettings(doc, _this, "time");
     m_ratioModel.saveSettings(doc, _this, "ratio");
-    m_outGainModel.saveSettings(doc, _this, "out_gain");
+    m_fillModel.saveSettings(doc, _this, "fill");
     m_hardModel.saveSettings(doc, _this, "hard");
+    m_outGainModel.saveSettings(doc, _this, "out_gain");
 }
 
 void ShaperGDXControls::updateWaveIndexModel()

@@ -33,7 +33,8 @@
 #include "EffectControls.h"
 #include "EffectView.h"
 
-#include "ConfigManager.h"
+#include "Configuration.h"
+//#include "ConfigManager.h"
 #include "MixHelpers.h"
 #include "WaveForm.h"
 //#include "lmms_math.h"
@@ -43,31 +44,31 @@ Effect::Effect( const Plugin::Descriptor * _desc,
                 Model * _parent,
                 const Descriptor::SubPluginFeatures::Key * _key ) :
     Plugin( _desc, _parent ),
-    m_gateClosed( false ),
+    m_gateClosed( true ),
     m_parent( NULL ),
     m_key( _key ? *_key : Descriptor::SubPluginFeatures::Key() ),
     m_processors( 1 ),
     m_okay( true ),
     m_noRun( false ),
-    m_running( false ),
+    m_runningModel( false, this, tr("Effect running") ),
     m_bufferCount( 0 ),
     m_enabledModel( true, this, tr( "Effect enabled" ) ),
     m_clippingModel(false, this,  tr( "Clipping alert" ) ),
     m_wetDryModel  ( 1.f, 0.f, 1.f, 0.01f, this, tr( "Wet/Dry mix" ) ), //min=-1
     m_autoQuitModel( 1000.f, 1.f, 8000.f, 1.0f, 8000.f, this, tr( "Decay" ) ),
     m_gateModel    ( 0.0001f, 0.0001f, 1.0f, 0.0001f, this, tr( "Gate" ) ),
-    m_balanceModel ( 0.f,-1.f, 1.f, 0.01f, this, tr( "Balance" ) ),
-    m_autoQuitDisabled( false )
+    m_balanceModel ( 0.f,-1.f, 1.f, 0.01f, this, tr( "Balance" ) )
+    //m_autoQuitDisabled( false )
 {
         //m_gateModel.setScaleLogarithmic(true);
 
 	m_srcState[0] = m_srcState[1] = NULL;
 	reinitSRC();
 
-	if( ConfigManager::inst()->value( "ui", "disableautoquit").toInt() )
-	{
-		m_autoQuitDisabled = true;
-	}
+	//if( ConfigManager::inst()->value( "ui", "disableautoquit").toInt() )
+	//{
+	//	m_autoQuitDisabled = true;
+	//}
         //qInfo("Effect::Effect end constructor");
 }
 
@@ -85,6 +86,23 @@ Effect::~Effect()
 	}
 }
 
+
+void Effect::startRunning()
+{
+        if(!isRunning())
+        {
+                //resetBufferCount();//m_bufferCount = 0;
+                m_runningModel.setAutomatedValue(true);
+        }
+}
+
+void Effect::stopRunning()
+{
+        if(isRunning())
+           m_runningModel.setAutomatedValue(false);
+        if(!m_gateClosed)
+                m_gateClosed=true;
+}
 
 QDomElement Effect::saveState( QDomDocument & _doc, QDomElement & _parent )
 {
@@ -179,7 +197,11 @@ Effect * Effect::instantiate( const QString& pluginName,
 bool Effect::gateHasClosed(float& _rms, sampleFrame* _buf, const fpp_t _frames)
 {
 	if(!isAutoQuitEnabled()) return false;
-        if(!isRunning()) return false;
+        if(!isRunning())
+        {
+                m_gateClosed=true;
+                return false;
+        }
 
         const float g=gate();
 	// Check whether we need to continue processing input.  Restart the
@@ -187,21 +209,25 @@ bool Effect::gateHasClosed(float& _rms, sampleFrame* _buf, const fpp_t _frames)
 	if( g>0.f )
 	{
                 if(g<1.f && _rms<0.f) _rms=computeRMS(_buf,_frames);
+                //qInfo("GHC g=%f rms=%f",g,_rms);
                 if(_rms < g)
                 {
-                        incrementBufferCount();
-                        if( !m_gateClosed && (bufferCount() > timeout() ))
+                        m_bufferCount++;//incrementBufferCount();
+                        //qInfo("GHC buffercount %d/%d",m_bufferCount,timeout());
+                        if( !m_gateClosed && (m_bufferCount > timeout() ))
                         {
+                                //qInfo("GHC STOP");
                                 m_gateClosed=true;
                                 stopRunning();
-                                resetBufferCount();
+                                //resetBufferCount();
                                 return true;
                         }
                         else return false;
                 }
 	}
 
-        resetBufferCount();
+        m_bufferCount=0;
+        //qInfo("GHC RESET"); // resetBufferCount();
         return false;
 }
 
@@ -221,7 +247,8 @@ bool Effect::gateHasOpen(float& _rms, sampleFrame* _buf, const fpp_t _frames)
                 {
                         m_gateClosed=false;
                         if(!isRunning()) startRunning();
-                        resetBufferCount();
+                        m_bufferCount=0;
+                        //qInfo("GHO RESET");//resetBufferCount();
                         return true;
                 }
         }
@@ -249,7 +276,11 @@ float Effect::computeRMS(sampleFrame* _buf, const fpp_t _frames)
 bool Effect::shouldProcessAudioBuffer(sampleFrame* _buf, const fpp_t _frames,
                                       bool& _smoothBegin, bool& _smoothEnd)
 {
-	if(!isOkay() || dontRun() || !isEnabled()) return false;
+	if(!isOkay() || dontRun() || !isEnabled())
+        {
+                if(isRunning()) stopRunning();
+                return false;
+        }
 
         _smoothBegin=false;
         _smoothEnd  =false;
@@ -292,6 +323,7 @@ bool Effect::shouldProcessAudioBuffer(sampleFrame* _buf, const fpp_t _frames,
 
 bool Effect::shouldKeepRunning(sampleFrame* _buf, const fpp_t _frames, bool _unclip)
 {
+	if(!isOkay() || dontRun() || !isEnabled()) return false;
 	if(!isRunning()) return false;
 
         if(_unclip)
@@ -310,13 +342,16 @@ bool Effect::shouldKeepRunning(sampleFrame* _buf, const fpp_t _frames, bool _unc
         float rms=computeRMS(_buf,_frames);
         if(rms>0.00001f) return true;
 
-        incrementBufferCount();
-        if(bufferCount() > qMax<int>(176,timeout()))
+        //qInfo("KR buffercount %d/%d",m_bufferCount,timeout());
+        if(m_bufferCount > timeout())//qMax<int>(176,timeout()))
         {
+                //qInfo("KR STOP");
                 stopRunning();
-                resetBufferCount();
+                //resetBufferCount();
                 return false;
         }
+        else m_bufferCount++;//incrementBufferCount();
+
 	return true;
 }
 

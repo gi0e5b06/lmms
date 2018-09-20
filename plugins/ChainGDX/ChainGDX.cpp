@@ -68,7 +68,7 @@ bool ChainGDXEffect::processAudioBuffer(sampleFrame* _buf,
 
     sampleFrame* ecb = MM_ALLOC(sampleFrame, _frames);
     memcpy(ecb, _buf, sizeof(sampleFrame) * _frames);
-    m_chain->startRunning();
+    //m_chain->startRunning();
     bool r = m_chain->processAudioBuffer(ecb, _frames, true);
 
     for(fpp_t f = 0; f < _frames; ++f)

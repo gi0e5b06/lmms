@@ -43,7 +43,9 @@ public:
 		SyncQuarterNote,
 		SyncEighthNote,
 		SyncSixteenthNote,
-		SyncThirtysecondNote,
+		SyncThirtySecondNote,
+		SyncSixtyFourthNote,
+                SyncOneHundredTwentyEighthNote,
 		SyncCustom
 	} ;
 

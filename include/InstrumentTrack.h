@@ -91,14 +91,17 @@ public:
 		return m_sustainPedalPressed;
 	}
 
-	f_cnt_t beatLen( NotePlayHandle * _n ) const;
 
+	virtual QString defaultName() const;
+
+	f_cnt_t beatLen( NotePlayHandle * _n ) const;
 
 	// for capturing note-play-events -> need that for arpeggio,
 	// filter and so on
 	void playNote( NotePlayHandle * _n, sampleFrame * _working_buffer );
 
 	QString instrumentName() const;
+
 	const Instrument *instrument() const
 	{
 		return m_instrument;
@@ -129,7 +132,8 @@ public:
 
 	// play everything in given frame-range - creates note-play-handles
 	virtual bool play( const MidiTime & _start, const fpp_t _frames,
-						const f_cnt_t _frame_base, int _tco_num = -1 );
+                           const f_cnt_t _frame_base, int _tco_num = -1 );
+
 	// create new view for me
 	virtual TrackView * createView( TrackContainerView* tcv );
 

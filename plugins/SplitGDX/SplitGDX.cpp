@@ -82,7 +82,7 @@ bool SplitGDXEffect::processAudioBuffer(sampleFrame* _buf,
     memcpy(splitb, _buf, sizeof(sampleFrame) * _frames);
     if(m_splitChain->isEnabled())
     {
-        m_splitChain->startRunning();
+        //m_splitChain->startRunning();
         r |= m_splitChain->processAudioBuffer(splitb, _frames, true);
 
         memcpy(wetb, splitb, sizeof(sampleFrame) * _frames);
@@ -99,10 +99,10 @@ bool SplitGDXEffect::processAudioBuffer(sampleFrame* _buf,
         memcpy(remb, splitb, sizeof(sampleFrame) * _frames);
     }
 
-    m_wetChain->startRunning();
+    //m_wetChain->startRunning();
     r |= m_wetChain->processAudioBuffer(wetb, _frames, true);
 
-    m_remChain->startRunning();
+    //m_remChain->startRunning();
     r |= m_remChain->processAudioBuffer(remb, _frames, true);
 
     const ValueBuffer* splitBuf = m_gdxControls.m_splitModel.valueBuffer();

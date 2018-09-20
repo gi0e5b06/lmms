@@ -43,9 +43,10 @@
 #include "sched.h"
 #endif
 
-// GDX This big constant is a problem...
-const ProjectRenderer::FileEncodeDevice ProjectRenderer::fileEncodeDevices[]
-        = {
+// GDX This big constant is/was a problem...
+const ProjectRenderer::FileEncodeDevice& ProjectRenderer::fileEncodeDevices(int i)
+{
+        static const FileEncodeDevice r[] = {
 
                 {ProjectRenderer::WaveFile,
                  QT_TRANSLATE_NOOP("ProjectRenderer", "WAV-File (*.wav)"),
@@ -95,7 +96,9 @@ const ProjectRenderer::FileEncodeDevice ProjectRenderer::fileEncodeDevices[]
 
                 {ProjectRenderer::NumFileFormats, NULL, NULL, NULL}
 
-};
+        };
+        return r[i];
+}
 
 ProjectRenderer::ProjectRenderer(
         const Mixer::qualitySettings& qualitySettings,
@@ -110,7 +113,7 @@ ProjectRenderer::ProjectRenderer(
 {
     setObjectName("project renderer " + outputFilename);
     AudioFileDeviceInstantiaton audioEncoderFactory
-            = fileEncodeDevices[exportFileFormat].m_getDevInst;
+            = fileEncodeDevices(exportFileFormat).m_getDevInst;
 
     if(audioEncoderFactory)
     {
@@ -137,11 +140,11 @@ ProjectRenderer::ExportFileFormats
         ProjectRenderer::getFileFormatFromExtension(const QString& _ext)
 {
     int idx = 0;
-    while(fileEncodeDevices[idx].m_fileFormat != NumFileFormats)
+    while(fileEncodeDevices(idx).m_fileFormat != NumFileFormats)
     {
-        if(QString(fileEncodeDevices[idx].m_extension) == _ext)
+            if(QString(fileEncodeDevices(idx).m_extension) == _ext)
         {
-            return (fileEncodeDevices[idx].m_fileFormat);
+                return (fileEncodeDevices(idx).m_fileFormat);
         }
         ++idx;
     }
@@ -151,7 +154,7 @@ ProjectRenderer::ExportFileFormats
 
 QString ProjectRenderer::getFileExtensionFromFormat(ExportFileFormats fmt)
 {
-    return fileEncodeDevices[fmt].m_extension;
+        return fileEncodeDevices(fmt).m_extension;
 }
 
 void ProjectRenderer::startProcessing()

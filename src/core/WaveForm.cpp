@@ -54,7 +54,9 @@ WaveForm::Set::Set()
     new WaveForm /*MOOGSAW*/ ("Moog saw", BANK, 52, moogsawf, Linear);
     new WaveForm /*MOOGSQUARE*/ ("Moog square", BANK, 53, moogsquaref,
                                  Linear);
-    new WaveForm /*EXPSAW*/ ("Exponential saw", BANK, 80, expsawf, Linear);
+    new WaveForm /*OCTAVIUSSAW*/ ("Octavius saw", BANK, 62, octaviussawf,
+                                  Linear);
+    new WaveForm /*EXPSAW*/ ("Exponential saw", BANK, 82, expsawf, Linear);
 
     // Adjusted
     // 0a/0p versions (minimize the volume at the end and the beginning.
@@ -66,11 +68,25 @@ WaveForm::Set::Set()
     new WaveForm /*SQPEAK0P*/ ("Sq peak 0p", BANK, 5, sqpeak0pf, Linear);
     new WaveForm /*PULSE0P*/ ("Pulse 0p", BANK, 8, pulse0pf, Exact);
     new WaveForm /*CBPEAK0P*/ ("Cb peak 0p", BANK, 15, cbpeak0pf, Linear);
-    new WaveForm /*MOOGSAW0P*/ ("Moog saw 0p", BANK, 50, moogsaw0pf, Linear);
+    new WaveForm /*MOOGSAW0P*/ ("Moog saw 0p", BANK, 52, moogsaw0pf, Linear);
+    new WaveForm /*OCTAVIUSSAW0P*/ ("Octavius saw 0p", BANK, 62,
+                                    octaviussaw0pf, Linear);
 
-    // Centered
+    // Centered (2)
     // Max energy at the center
+    BANK              = 2;
+    m_bankNames[BANK] = "Centered";
 
+    // Soften
+    BANK              = 5;
+    m_bankNames[BANK] = "Soften";
+    createSoften(5, 0.02);
+    createSoften(6, 0.05);
+    createSoften(7, 0.10);
+    createSoften(8, 0.20);
+    createSoften(9, 0.40);
+
+    // Degraded
     createDegraded(10, false, 0);
     createDegraded(11, false, 1);
     createDegraded(12, false, 2);
@@ -151,26 +167,74 @@ WaveForm::Set::Set()
 
 void WaveForm::Set::createDegraded(int _bank, bool _linear, int _quality)
 {
-    // BANK        = 10 + (_linear ? 5 : 0) + _quality;
     const int BANK = _bank;
-    QString   cat  = QString("%1%2").arg(_quality).arg(_linear ? "L" : "D");
+    QString   cat  = QString("Q%1%2").arg(_quality).arg(_linear ? "L" : "D");
     interpolation_t i = (_linear ? Linear : Discrete);
 
-    m_bankNames[BANK] = QString("Q%1 Degraded").arg(cat);
+    m_bankNames[BANK] = QString("%1 Degraded").arg(cat);
     new WaveForm(QString("Sine %1").arg(cat), BANK, 0, nsinf, i, _quality);
-    new WaveForm(QString("Triangle %1").arg(cat), BANK, 1, trianglef, i, _quality);
-    new WaveForm(QString("Saw tooth %1").arg(cat), BANK, 2, sawtoothf, i, _quality);
-    new WaveForm(QString("Square %1").arg(cat), BANK, 3, squaref, i, _quality);
-    new WaveForm(QString("Harsh saw %1").arg(cat), BANK, 4, harshsawf, i, _quality);
-    new WaveForm(QString("Sq peak %1").arg(cat), BANK, 5, sqpeakf, i, _quality);
-    new WaveForm(QString("White noise %1").arg(cat), BANK, 6, randf, i, _quality);
+    new WaveForm(QString("Triangle %1").arg(cat), BANK, 1, trianglef, i,
+                 _quality);
+    new WaveForm(QString("Saw tooth %1").arg(cat), BANK, 2, sawtoothf, i,
+                 _quality);
+    new WaveForm(QString("Square %1").arg(cat), BANK, 3, squaref, i,
+                 _quality);
+    new WaveForm(QString("Harsh saw %1").arg(cat), BANK, 4, harshsawf, i,
+                 _quality);
+    new WaveForm(QString("Sq peak %1").arg(cat), BANK, 5, sqpeakf, i,
+                 _quality);
+    new WaveForm(QString("White noise %1").arg(cat), BANK, 6, randf, i,
+                 _quality);
     new WaveForm(QString("Pulse %1").arg(cat), BANK, 8, pulsef, i, _quality);
-    new WaveForm(QString("Cb peak %1").arg(cat), BANK, 15, cbpeakf, i, _quality);
-    new WaveForm(QString("Moog saw %1").arg(cat), BANK, 50, moogsawf, i, _quality);
-    new WaveForm(QString("Moog square %1").arg(cat), BANK, 51, moogsquaref, i,
+    new WaveForm(QString("Cb peak %1").arg(cat), BANK, 15, cbpeakf, i,
                  _quality);
-    new WaveForm(QString("Exponential saw %1").arg(cat), BANK, 80, expsawf, i,
+    new WaveForm(QString("Moog saw %1").arg(cat), BANK, 52, moogsawf, i,
                  _quality);
+    new WaveForm(QString("Moog square %1").arg(cat), BANK, 53, moogsquaref, i,
+                 _quality);
+    new WaveForm(QString("Octavius saw %1").arg(cat), BANK, 62, octaviussawf,
+                 i, _quality);
+    new WaveForm(QString("Exponential saw %1").arg(cat), BANK, 82, expsawf, i,
+                 _quality);
+}
+
+void WaveForm::Set::createSoften(int _bank, float _softness)
+{
+    const int       BANK = _bank;
+    QString         cat  = QString("S%1").arg(int(_softness * 100));
+    interpolation_t i    = Linear;
+    int             q    = 7;
+
+    m_bankNames[BANK] = QString("%1 Soften").arg(cat);
+    (new WaveForm(QString("Sine %1").arg(cat), BANK, 0, nsinf, i, q))
+            ->setSoftness(_softness);
+    (new WaveForm(QString("Triangle %1").arg(cat), BANK, 1, trianglef, i, q))
+            ->setSoftness(_softness);
+    (new WaveForm(QString("Saw tooth %1").arg(cat), BANK, 2, sawtoothf, i, q))
+            ->setSoftness(_softness);
+    (new WaveForm(QString("Square %1").arg(cat), BANK, 3, squaref, i, q))
+            ->setSoftness(_softness);
+    (new WaveForm(QString("Harsh saw %1").arg(cat), BANK, 4, harshsawf, i, q))
+            ->setSoftness(_softness);
+    (new WaveForm(QString("Sq peak %1").arg(cat), BANK, 5, sqpeakf, i, q))
+            ->setSoftness(_softness);
+    (new WaveForm(QString("White noise %1").arg(cat), BANK, 6, randf, i, q))
+            ->setSoftness(_softness);
+    (new WaveForm(QString("Pulse %1").arg(cat), BANK, 8, pulsef, i, q))
+            ->setSoftness(_softness);
+    (new WaveForm(QString("Cb peak %1").arg(cat), BANK, 15, cbpeakf, i, q))
+            ->setSoftness(_softness);
+    (new WaveForm(QString("Moog saw %1").arg(cat), BANK, 52, moogsawf, i, q))
+            ->setSoftness(_softness);
+    (new WaveForm(QString("Moog square %1").arg(cat), BANK, 53, moogsquaref,
+                  i, q))
+            ->setSoftness(_softness);
+    (new WaveForm(QString("Octavius saw %1").arg(cat), BANK, 62, octaviussawf,
+                  i, q))
+            ->setSoftness(_softness);
+    (new WaveForm(QString("Exponential saw %1").arg(cat), BANK, 82, expsawf,
+                  i, q))
+            ->setSoftness(_softness);
 }
 
 WaveForm::Set WaveForm::WAVEFORMS;
@@ -236,8 +300,8 @@ void WaveForm::Set::fillBankModel(ComboBoxModel& _model)
     {
         QString text("--");
         if(m_bankNames[b - MIN_BANK] != "")
-            text = QString("%1 %2")
-                           .arg(b, 2, 16, QChar('0'))
+            text = QString("%1")  //("%1 %2")
+                                  //.arg(b, 2, 16, QChar('0'))
                            .arg(m_bankNames[b - MIN_BANK])
                            .trimmed();
         _model.addItem(text, NULL, b);
@@ -254,8 +318,8 @@ void WaveForm::Set::fillIndexModel(ComboBoxModel& _model, const int _bank)
         QString         text("--");
         const WaveForm* wf = get(_bank, i);
         if(wf != &ZERO || (_bank == ZERO_BANK && i == ZERO_INDEX))
-            text = QString("%1 %2")
-                           .arg(i, 2, 16, QChar('0'))
+            text = QString("%1")  //("%1 %2")
+                                  //.arg(i, 2, 16, QChar('0'))
                            .arg(wf->name())
                            .trimmed();
         _model.addItem(text, NULL, i);
@@ -362,6 +426,20 @@ WaveForm::~WaveForm()
         MM_FREE(m_data);
 }
 
+WaveForm* WaveForm::setSoftness(float _softness)
+{
+    m_softness = _softness;
+    if(m_built)
+        rebuild();
+    return this;
+}
+
+void WaveForm::rebuild()
+{
+    m_built = false;
+    build();
+}
+
 void WaveForm::build()
 {
     if(m_built)
@@ -385,11 +463,12 @@ void WaveForm::build()
         // 1 -> 24
         // 0 -> 8 !
         m_size = int(ceilf(8.f * pow(2.94283095638f, m_quality))) - 1;
+        if(m_data != nullptr)
+            MM_FREE(m_data);
         m_data = MM_ALLOC(float, m_size + 1);
         for(int i = m_size; i >= 0; --i)
             m_data[i] = m_func(float(i) / float(m_size));
         m_built = true;
-        return;
     }
     else if(m_file != "")
     {
@@ -397,16 +476,81 @@ void WaveForm::build()
         int                size = sb->frames();
         const sampleFrame* data = sb->data();
 
+        if(m_data != nullptr)
+            MM_FREE(m_data);
         m_data = MM_ALLOC(float, size);
         for(int f = 0; f < size; ++f)
             m_data[f] = data[f][0];
         m_size = size - 1;
         delete sb;
         m_built = true;
+    }
+    else
+    {
+        qWarning("Error: waveform not built: %s", qPrintable(m_name));
         return;
     }
 
-    qWarning("Error: waveform not built: %s", qPrintable(m_name));
+    if(m_softness != 0.f)
+        soften();
+}
+
+void WaveForm::soften()
+{
+    const int size = m_size + 1;
+    const int bw   = 0.5f * m_softness * m_size;
+    if(bw == 0)
+        return;
+
+    float v0 = 0.f;
+    for(int i = -bw; i <= bw; ++i)
+    {
+        const int f = (i + size) % size;
+        v0 += m_data[f];
+    }
+    const float n = 1.f / float(1 + 2 * bw);
+    v0 *= n;
+
+    float omin = m_data[0];
+    float omax = m_data[0];
+    float nmin = v0;
+    float nmax = v0;
+
+    float* data = MM_ALLOC(float, size);
+    data[0]     = v0;
+    for(int f = 1; f < size; ++f)
+    {
+        const float ov = m_data[f];
+        if(ov < omin)
+            omin = ov;
+        if(ov > omax)
+            omax = ov;
+
+        const float nv = data[f - 1]
+                         + (m_data[(f + bw) % size]
+                            - m_data[(f - bw - 1 + size) % size])
+                                   * n;
+        if(nv < nmin)
+            nmin = nv;
+        if(nv > nmax)
+            nmax = nv;
+
+        data[f] = nv;
+    }
+
+    float os = qMax(fabsf(omax), fabsf(omin));
+    float ns = qMax(fabsf(nmax), fabsf(nmin));
+    if(ns >= SILENCE)
+    {
+        const float k = os / ns;
+        if(k != 1.f)
+            for(int f = 0; f < size; ++f)
+                data[f] *= k;
+    }
+
+    float* old = m_data;
+    m_data     = data;
+    MM_FREE(old);
 }
 
 // x must be between 0. and 1.
@@ -466,7 +610,7 @@ float WaveForm::f(const float _x, const interpolation_t _m) const
     if((m != m_mode) && (m == Exact || m_mode == Exact))
         m = m_mode;
 
-    float r=0.f;
+    float r = 0.f;
     switch(m_mode)
     {
         case Discrete:

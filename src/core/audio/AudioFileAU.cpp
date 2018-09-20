@@ -30,7 +30,6 @@
 #include "endian_handling.h" // REQUIRED
 #include "Mixer.h"
 
-
 AudioFileDevice * AudioFileAU::getInst( const QString & outputFilename,
 					OutputSettings const & outputSettings,
 					const ch_cnt_t channels,
@@ -93,13 +92,22 @@ bool AudioFileAU::startEncoding()
 
 	switch( getOutputSettings().getBitDepth() )
 	{
-	case OutputSettings::Depth_32Bit:
+	case OutputSettings::Depth_F64:
+		m_si.format |= SF_FORMAT_DOUBLE;
+		break;
+	case OutputSettings::Depth_F32:
 		m_si.format |= SF_FORMAT_FLOAT;
 		break;
-	case OutputSettings::Depth_24Bit:
+	case OutputSettings::Depth_S32:
+		m_si.format |= SF_FORMAT_PCM_32;
+		break;
+	case OutputSettings::Depth_S24:
 		m_si.format |= SF_FORMAT_PCM_24;
 		break;
-	case OutputSettings::Depth_16Bit:
+	case OutputSettings::Depth_S8:
+		m_si.format |= SF_FORMAT_PCM_S8;
+		break;
+	case OutputSettings::Depth_S16:
 	default:
 		m_si.format |= SF_FORMAT_PCM_16;
 		break;
@@ -140,6 +148,11 @@ void AudioFileAU::writeBuffer( const surroundSampleFrame * _ab,
 			       const fpp_t _frames,
 			       const float _master_gain )
 {
+        Q_UNUSED(_master_gain);
+        Q_ASSERT(sizeof(sample_t)==sizeof(float));
+        sf_write_float(m_sf,(const float*)_ab,_frames*channels());
+
+        /*
 	OutputSettings::BitDepth bitDepth = getOutputSettings().getBitDepth();
 
 	if( bitDepth == OutputSettings::Depth_32Bit || bitDepth == OutputSettings::Depth_24Bit )
@@ -165,6 +178,7 @@ void AudioFileAU::writeBuffer( const surroundSampleFrame * _ab,
 		sf_writef_short( m_sf, buf, _frames );
 		delete[] buf;
 	}
+        */
 }
 
 

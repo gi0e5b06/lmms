@@ -107,8 +107,14 @@ void TempoSyncKnobModel::calculateTempoSyncTime( bpm_t _bpm )
 			case SyncSixteenthNote:
 				conversionFactor = 4.0;
 				break;
-			case SyncThirtysecondNote:
+			case SyncThirtySecondNote:
 				conversionFactor = 8.0;
+				break;
+			case SyncSixtyFourthNote:
+				conversionFactor = 16.0;
+				break;
+			case SyncOneHundredTwentyEighthNote:
+				conversionFactor = 32.0;
 				break;
 			default: ;
 		}

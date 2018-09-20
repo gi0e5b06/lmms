@@ -61,8 +61,7 @@ AudioFileRaw::~AudioFileRaw()
 
 bool AudioFileRaw::startEncoding()
 {
-    Q_ASSERT(getOutputSettings().getBitDepth()
-             == OutputSettings::Depth_32Bit);
+    Q_ASSERT(getOutputSettings().getBitDepth() == OutputSettings::Depth_F32);
 
     m_fh = fopen(
 #ifdef LMMS_BUILD_WIN32
@@ -76,12 +75,11 @@ bool AudioFileRaw::startEncoding()
 
 void AudioFileRaw::writeBuffer(const surroundSampleFrame* _ab,
                                const fpp_t                _frames,
-                               const float                _master_gain)
+                               const float                _masterGain)
 {
-    Q_ASSERT(getOutputSettings().getBitDepth()
-             == OutputSettings::Depth_32Bit);
+    Q_UNUSED(_masterGain);
+    Q_ASSERT(getOutputSettings().getBitDepth() == OutputSettings::Depth_F32);
 
-    // master gain is ignored
     fwrite(_ab, sizeof(surroundSampleFrame), _frames, m_fh);
 }
 
