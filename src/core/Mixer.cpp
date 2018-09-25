@@ -941,8 +941,8 @@ AudioDevice * Mixer::tryAudioDevices()
         //ConfigManager::inst()->value( "mixer", "audiodev" );
 
 	m_audioDevStartFailed = false;
-        BACKTRACE
-                
+        //BACKTRACE
+
 #ifdef LMMS_HAVE_ALSA
         qInfo("Mixer::tryAudioDevices trying device '%s'",qPrintable(dev_name));
 

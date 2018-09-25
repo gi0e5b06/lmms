@@ -96,6 +96,7 @@ inline void labelWidget( QWidget * _w, const QString & _txt )
 SetupDialog::SetupDialog( ConfigTabs _tab_to_open ) :
 	m_bufferSize( ConfigManager::inst()->value( "mixer",
 					"framesperaudiobuffer" ).toInt() ),
+        m_baseSampleRate(CONFIG_GET_INT("mixer.samplerate")),
 	m_toolTips( !ConfigManager::inst()->value( "tooltips",
 							"disabled" ).toInt() ),
 	m_warnAfterSetup( !ConfigManager::inst()->value( "app",
@@ -220,6 +221,16 @@ SetupDialog::SetupDialog( ConfigTabs _tab_to_open ) :
 	connect( m_bufSizeSlider, SIGNAL( valueChanged( int ) ), this,
 						SLOT( setBufferSize( int ) ) );
 	setBufferSize( m_bufSizeSlider->value() );
+
+        labelNumber++;
+	QComboBox * baseSRCMB = new QComboBox( bufsize_tw );
+	baseSRCMB->setGeometry( XDelta, YDelta*labelNumber, 250, YDelta );
+        for(int i=0;i<12;i++)
+                baseSRCMB->addItem(QString("%1 Hz").arg(FREQUENCIES[i]));
+        for(int i=0;i<12;i++)
+                if(m_baseSampleRate==FREQUENCIES[i])
+                        baseSRCMB->setCurrentIndex(i);
+        connect( baseSRCMB, SIGNAL( currentIndexChanged(int) ), this, SLOT( setBaseSampleRate(int) ));
 
         bufsize_tw->setFixedHeight( YDelta*labelNumber + HeaderSize + FooterSize + 28);
 
@@ -1140,6 +1151,7 @@ void SetupDialog::accept()
 {
 	ConfigManager::inst()->setValue( "mixer", "framesperaudiobuffer",
 					QString::number( m_bufferSize ) );
+        CONFIG_SET_INT("mixer.samplerate",m_baseSampleRate);
 	ConfigManager::inst()->setValue( "mixer", "audiodev",
 			m_audioIfaceNames[m_audioInterfaces->currentText()] );
 	ConfigManager::inst()->setValue( "mixer", "mididev",
@@ -1283,6 +1295,11 @@ void SetupDialog::displayBufSizeHelp()
 }
 
 
+void SetupDialog::setBaseSampleRate(int _index)
+{
+        if(_index<0 || _index>=12) _index=5; //44100
+        m_baseSampleRate=FREQUENCIES[_index];
+}
 
 
 void SetupDialog::toggleToolTips( bool _enabled )

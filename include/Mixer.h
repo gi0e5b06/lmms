@@ -56,9 +56,12 @@ const int BYTES_PER_INT_SAMPLE = sizeof( int_sample_t );
 const int BYTES_PER_FRAME = sizeof( sampleFrame );
 const int BYTES_PER_SURROUND_FRAME = sizeof( surroundSampleFrame );
 
-const float S16_MULTIPLIER = powf(2,15);
-const float S32_MULTIPLIER = powf(2,31);
+//const float S16_MULTIPLIER = powf(2,15)-1.f;
+//const float S32_MULTIPLIER = powf(2,31)-1.f;
+//const float S64_MULTIPLIER = powf(2,63)-1.f;
 
+const int32_t FREQUENCIES[12]={ 11025, 16000, 22050, 24000, 32000, 44100,
+                                48000, 64000, 88200, 96000, 176400, 192000 };
 
 const float BaseFreq = 440.0f;
 const Keys BaseKey = Key_A;

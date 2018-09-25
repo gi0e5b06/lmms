@@ -29,6 +29,7 @@
 #include "ConfigManager.h"
 #include "debug.h" // REQUIRED
 #include "Mixer.h"
+#include "MixHelpers.h"
 
 
 AudioDevice::AudioDevice( const ch_cnt_t _channels, Mixer*  _mixer ) :
@@ -246,9 +247,10 @@ int AudioDevice::convertToS16( const surroundSampleFrame * _ab,
                 for( ch_cnt_t chnl = 0; chnl < channels(); ++chnl )
 		{
                         ( _output_buffer + frame * channels() )[chnl] =
-                                static_cast<int_sample_t>(Mixer::clip( _ab[frame][chnl] *
-                                                                       _master_gain ) *
-                                                          S16_MULTIPLIER );
+                                MixHelpers::convertToS16(_ab[frame][chnl] * _master_gain);
+                                //static_cast<int_sample_t>(Mixer::clip( _ab[frame][chnl] *
+                                //                                       _master_gain ) *
+                                //                          S16_MULTIPLIER );
                 }
         }
 
@@ -324,9 +326,10 @@ int AudioDevice::convertToS32( const surroundSampleFrame * _ab,
                 for( ch_cnt_t chnl = 0; chnl < channels(); ++chnl )
 		{
                         ( _output_buffer + frame * channels() )[chnl] =
-                                static_cast<int32_t>( Mixer::clip( _ab[frame][chnl] *
-                                                                   _master_gain ) *
-                                                      S32_MULTIPLIER );
+                                MixHelpers::convertToS32(_ab[frame][chnl] * _master_gain);
+                        //static_cast<int32_t>( Mixer::clip( _ab[frame][chnl] *
+                        //                                           _master_gain ) *
+                        //                              S32_MULTIPLIER );
                 }
         }
 

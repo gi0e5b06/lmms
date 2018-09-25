@@ -25,8 +25,7 @@
 #include "MixHelpers.h"
 
 #include "ValueBuffer.h"
-
-#include "lmms_math.h" // REQUIRED
+#include "lmms_math.h"  // REQUIRED
 
 namespace MixHelpers
 {
@@ -59,13 +58,120 @@ static inline void run(sampleFrame*    dst,
     }
 }
 
+int16_t convertToS16(float _v)
+{
+    if(_v >= 1.f)
+        return I_S16_MULTIPLIER;
+    else if(_v <= -1.f)
+        return -I_S16_MULTIPLIER - 1;
+    else if(_v >= 0.f)
+        _v *= F_S16_MULTIPLIER;
+    else
+        _v *= F_S16_MULTIPLIER + 1.f;
+    return _v;
+}
+
+int32_t convertToS32(float _v)
+{
+    if(_v >= 1.f)
+        return I_S32_MULTIPLIER;
+    else if(_v <= -1.f)
+        return -I_S32_MULTIPLIER - 1;
+    else if(_v >= 0.f)
+        _v *= F_S32_MULTIPLIER;
+    else
+        _v *= F_S32_MULTIPLIER + 1.f;
+    return _v;
+}
+
+int64_t convertToS64(float _v)
+{
+    if(_v >= 1.f)
+        return I_S64_MULTIPLIER;
+    else if(_v <= -1.f)
+        return -I_S64_MULTIPLIER - 1;
+    else if(_v >= 0.f)
+        _v *= F_S64_MULTIPLIER;
+    else
+        _v *= F_S64_MULTIPLIER + 1.f;
+    return _v;
+}
+
+int16_t convertToS16(double _v)
+{
+    if(_v >= 1.f)
+        return I_S16_MULTIPLIER;
+    else if(_v <= -1.f)
+        return -I_S16_MULTIPLIER - 1;
+    else if(_v >= 0.f)
+        _v *= D_S16_MULTIPLIER;
+    else
+        _v *= D_S16_MULTIPLIER + 1.;
+    return _v;
+}
+
+int32_t convertToS32(double _v)
+{
+    if(_v >= 1.f)
+        return I_S32_MULTIPLIER;
+    else if(_v <= -1.f)
+        return -I_S32_MULTIPLIER - 1;
+    else if(_v >= 0.f)
+        _v *= D_S32_MULTIPLIER;
+    else
+        _v *= D_S32_MULTIPLIER + 1.;
+    return _v;
+}
+
+int64_t convertToS64(double _v)
+{
+    if(_v >= 1.f)
+        return I_S64_MULTIPLIER;
+    else if(_v <= -1.f)
+        return -I_S64_MULTIPLIER - 1;
+    else if(_v >= 0.f)
+        _v *= D_S64_MULTIPLIER;
+    else
+        _v *= D_S64_MULTIPLIER + 1.;
+    return _v;
+}
+
+sample_t convertFromS16(int16_t _v)
+{
+    if(sizeof(sample_t) == sizeof(float))
+        return sample_t(_v)
+               / (_v >= 0 ? F_S16_MULTIPLIER : F_S16_MULTIPLIER + 1.);
+    else
+        return sample_t(_v)
+               / (_v >= 0 ? D_S16_MULTIPLIER : D_S16_MULTIPLIER + 1.);
+}
+
+sample_t convertFromS32(int32_t _v)
+{
+    if(sizeof(sample_t) == sizeof(float))
+        return sample_t(_v)
+               / (_v >= 0 ? F_S32_MULTIPLIER : F_S32_MULTIPLIER + 1.);
+    else
+        return sample_t(_v)
+               / (_v >= 0 ? D_S32_MULTIPLIER : D_S32_MULTIPLIER + 1.);
+}
+
+sample_t convertFromS64(int64_t _v)
+{
+    if(sizeof(sample_t) == sizeof(float))
+        return sample_t(_v)
+               / (_v >= 0 ? F_S64_MULTIPLIER : F_S64_MULTIPLIER + 1.);
+    else
+        return sample_t(_v)
+               / (_v >= 0 ? D_S64_MULTIPLIER : D_S64_MULTIPLIER + 1.);
+}
+
 /*! \brief Function for detecting silence - returns true if found */
 bool isSilent(const sampleFrame* _src, const f_cnt_t _frames)
 {
-    for(f_cnt_t f = _frames - 1; f >= 0; f-=4) //--f
+    for(f_cnt_t f = _frames - 1; f >= 0; f -= 4)  //--f
     {
-        if(fabsf(_src[f][0]) >= SILENCE
-           || fabsf(_src[f][1]) >= SILENCE)
+        if(fabsf(_src[f][0]) >= SILENCE || fabsf(_src[f][1]) >= SILENCE)
         {
             return false;
         }
@@ -94,14 +200,14 @@ bool sanitize(sampleFrame* _src, const f_cnt_t _frames)
     bool found = false;
     for(f_cnt_t f = _frames - 1; f >= 0; --f)
     {
-        const sample_t s0=_src[f][0];
-        if(isinf(s0) || isnan(s0) || fabsf(s0)<SILENCE)
+        const sample_t s0 = _src[f][0];
+        if(isinf(s0) || isnan(s0) || fabsf(s0) < SILENCE)
         {
             _src[f][0] = 0.f;
             found      = true;
         }
-        const sample_t s1=_src[f][1];
-        if(isinf(s1) || isnan(s1) || fabsf(s1)<SILENCE)
+        const sample_t s1 = _src[f][1];
+        if(isinf(s1) || isnan(s1) || fabsf(s1) < SILENCE)
         {
             _src[f][1] = 0.f;
             found      = true;

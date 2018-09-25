@@ -51,7 +51,7 @@ void lmms_default_configuration()
 
     DEFAULT_BOOL("tooltips.disabled", false);
 
-    DEFAULT_INT("mixer.samplerate",44100);
+    DEFAULT_INT("mixer.samplerate",48000);//44100);
     DEFAULT_INT("mixer.framesperaudiobuffer", 1024);
     DEFAULT_BOOL("mixer.hqaudio", false);
     DEFAULT_STRING("mixer.audiodev","");

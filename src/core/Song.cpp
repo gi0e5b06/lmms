@@ -1513,8 +1513,8 @@ void Song::freeze()
         epd.setWindowTitle( tr("Freeze tracks") );
         epd.fileFormatCB->setCurrentIndex(5);
         epd.bitrateCB->setCurrentIndex(0);
-        epd.depthCB->setCurrentIndex(2);
-        epd.stereoModeComboBox->setCurrentIndex(0);
+        epd.depthCB->setCurrentIndex(OutputSettings::Depth_F32); //4
+        epd.stereoModeComboBox->setCurrentIndex(OutputSettings::StereoMode_Stereo); //0
         epd.interpolationCB->setCurrentIndex(2);
         epd.oversamplingCB->setCurrentIndex(0);
         epd.checkBoxVariableBitRate->setChecked(false);

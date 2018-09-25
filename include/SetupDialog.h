@@ -72,6 +72,7 @@ private slots:
 	void setBufferSize( int _value );
 	void resetBufSize();
 	void displayBufSizeHelp();
+        void setBaseSampleRate( int _value );
 
 	// path settings widget
 	void setWorkingDir( const QString & _wd );
@@ -138,6 +139,7 @@ private:
 	QSlider * m_bufSizeSlider;
 	QLabel * m_bufSizeLbl;
 	int m_bufferSize;
+        int m_baseSampleRate;
 
 	bool m_toolTips;
 	bool m_warnAfterSetup;

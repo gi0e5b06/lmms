@@ -287,7 +287,7 @@ void AudioAlsaGdx::run()
                 runS16();
         else
         if(m_pcmFormat=="FLOAT_LE" || m_pcmFormat=="FLOAT_BE")
-                runS16();
+                runF32();
         else
         if(m_pcmFormat=="S32_LE" || m_pcmFormat=="S32_BE")
                 runS32();
@@ -367,7 +367,7 @@ void AudioAlsaGdx::runS16()
     delete[] temp;
 }
 
-void AudioAlsaGdx::runFloat()
+void AudioAlsaGdx::runF32()
 {
 
     surroundSampleFrame* temp
@@ -556,6 +556,7 @@ int AudioAlsaGdx::setHWParams(const ch_cnt_t   _channels,
     }
 
     // set the sample format
+    /*
     for(int val = 0; val <= SND_PCM_FORMAT_LAST; val++)
     {
         if(0
@@ -566,25 +567,34 @@ int AudioAlsaGdx::setHWParams(const ch_cnt_t   _channels,
                          snd_pcm_format_name((snd_pcm_format_t)val),
                          snd_pcm_format_description((snd_pcm_format_t)val));
     }
+    */
 
-    /*
-    if((err = snd_pcm_hw_params_set_format(m_outHandle, m_hwParams,
+    if(snd_pcm_hw_params_test_format(m_outHandle, m_hwParams,
+                                     SND_PCM_FORMAT_FLOAT_LE)
+       == 0 &&
+       (err = snd_pcm_hw_params_set_format(m_outHandle, m_hwParams,
                                            SND_PCM_FORMAT_FLOAT_LE))
        == 0)
     {
         m_pcmFormat     = "FLOAT_LE";
         m_convertEndian = !isLittleEndian();
     }
-    else if((err = snd_pcm_hw_params_set_format(m_outHandle, m_hwParams,
-                                                SND_PCM_FORMAT_FLOAT_BE))
-            == 0)
+    else
+    if(snd_pcm_hw_params_test_format(m_outHandle, m_hwParams,
+                                     SND_PCM_FORMAT_FLOAT_BE)
+       == 0 &&
+       (err = snd_pcm_hw_params_set_format(m_outHandle, m_hwParams,
+                                           SND_PCM_FORMAT_FLOAT_BE))
+       == 0)
     {
         m_pcmFormat     = "FLOAT_BE";
         m_convertEndian = isLittleEndian();
     }
     else
-    */
-    if((err = snd_pcm_hw_params_set_format(m_outHandle, m_hwParams,
+    if(snd_pcm_hw_params_test_format(m_outHandle, m_hwParams,
+                                     SND_PCM_FORMAT_S32_LE)
+       == 0 &&
+       (err = snd_pcm_hw_params_set_format(m_outHandle, m_hwParams,
                                            SND_PCM_FORMAT_S32_LE))
        == 0)
     {
@@ -601,15 +611,22 @@ int AudioAlsaGdx::setHWParams(const ch_cnt_t   _channels,
     }
     */
     else
-    if((err = snd_pcm_hw_params_set_format(m_outHandle, m_hwParams,
+    if(snd_pcm_hw_params_test_format(m_outHandle, m_hwParams,
+                                     SND_PCM_FORMAT_S16_LE)
+       == 0 &&
+       (err = snd_pcm_hw_params_set_format(m_outHandle, m_hwParams,
                                            SND_PCM_FORMAT_S16_LE))
        == 0)
     {
         m_pcmFormat     = "S16_LE";
         m_convertEndian = !isLittleEndian();
     }
-    else if((err = snd_pcm_hw_params_set_format(m_outHandle, m_hwParams,
-                                                SND_PCM_FORMAT_S16_BE))
+    else
+    if(snd_pcm_hw_params_test_format(m_outHandle, m_hwParams,
+                                     SND_PCM_FORMAT_S16_BE)
+       == 0 &&
+       (err = snd_pcm_hw_params_set_format(m_outHandle, m_hwParams,
+                                           SND_PCM_FORMAT_S16_BE))
             == 0)
     {
         m_pcmFormat     = "S16_BE";

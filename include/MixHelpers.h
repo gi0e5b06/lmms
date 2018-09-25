@@ -31,6 +31,29 @@ class ValueBuffer;
 namespace MixHelpers
 {
 
+const int16_t I_S16_MULTIPLIER = 32767;
+const int32_t I_S32_MULTIPLIER = 2147483647;
+const int64_t I_S64_MULTIPLIER = 9223372036854775807;
+
+const float F_S16_MULTIPLIER = 32767.f;
+const float F_S32_MULTIPLIER = 2147483647.f;
+const float F_S64_MULTIPLIER = 9223372036854775807.f;
+
+const double D_S16_MULTIPLIER = 32767.;
+const double D_S32_MULTIPLIER = 2147483647.;
+const double D_S64_MULTIPLIER = 9223372036854775807.;
+
+int16_t convertToS16(float _v);
+int32_t convertToS32(float _v);
+int64_t convertToS64(float _v);
+int16_t convertToS16(double _v);
+int32_t convertToS32(double _v);
+int64_t convertToS64(double _v);
+
+sample_t convertFromS16(int16_t _v);
+sample_t convertFromS32(int32_t _v);
+sample_t convertFromS64(int64_t _v);
+
 bool isSilent(const sampleFrame* _src, const f_cnt_t _frames);
 bool isClipping(const sampleFrame* _src, const f_cnt_t _frames);
 

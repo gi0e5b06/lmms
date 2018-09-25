@@ -85,7 +85,7 @@ private:
 	virtual void applyQualitySettings();
 	virtual void run();
 	virtual void runS16();
-	virtual void runFloat();
+	virtual void runF32();
 	virtual void runS32();
 
 	int setHWParams( const ch_cnt_t _channels, snd_pcm_access_t _access );

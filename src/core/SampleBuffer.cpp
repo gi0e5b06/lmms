@@ -58,6 +58,7 @@
 #include "Engine.h"
 #include "GuiApplication.h"
 #include "Mixer.h"
+#include "MixHelpers.h"
 #include "FileDialog.h"
 
 
@@ -538,7 +539,7 @@ void SampleBuffer::convertIntToFloat ( int_sample_t * & _ibuf, f_cnt_t _frames, 
 
 	// following code transforms int-samples into
 	// float-samples and does amplifying & reversing
-	const float fac = 1 / S16_MULTIPLIER;
+	//const float fac = 1.f / MixHelpers::F_S16_MULTIPLIER; // 1 / S16_MULTIPLIER;
 	const int ch = ( _channels > 1 ) ? 1 : 0;
 
 	// if reversing is on, we also reverse when
@@ -546,11 +547,24 @@ void SampleBuffer::convertIntToFloat ( int_sample_t * & _ibuf, f_cnt_t _frames, 
 	if( m_reversed )
 	{
 		int idx = ( _frames - 1 ) * _channels;
-		for( f_cnt_t frame = 0; frame < _frames;
-						++frame )
+		for( f_cnt_t frame = 0; frame < _frames; ++frame )
 		{
-			m_data[frame][0] = _ibuf[idx+0] * fac;
-			m_data[frame][1] = _ibuf[idx+ch] * fac;
+                        if(ch==0)
+                        {
+                                const sample_t s0=MixHelpers::convertFromS16(_ibuf[idx]);
+                                //_ibuf[idx] * fac;
+                                m_data[frame][0] = s0;
+                                m_data[frame][1] = s0;
+                        }
+                        else
+                        {
+                                const sample_t s0=MixHelpers::convertFromS16(_ibuf[idx+0]);
+                                //_ibuf[idx  ] * fac;
+                                const sample_t s1=MixHelpers::convertFromS16(_ibuf[idx+1]);
+                                //_ibuf[idx+1] * fac;
+                                m_data[frame][0] = s0;
+                                m_data[frame][1] = s1;
+                        }
 			idx -= _channels;
 		}
 	}
@@ -560,8 +574,22 @@ void SampleBuffer::convertIntToFloat ( int_sample_t * & _ibuf, f_cnt_t _frames, 
 		for( f_cnt_t frame = 0; frame < _frames;
 						++frame )
 		{
-			m_data[frame][0] = _ibuf[idx+0] * fac;
-			m_data[frame][1] = _ibuf[idx+ch] * fac;
+                        if(ch==0)
+                        {
+                                const sample_t s0=MixHelpers::convertFromS16(_ibuf[idx]);
+                                //_ibuf[idx] * fac;
+                                m_data[frame][0] = s0;
+                                m_data[frame][1] = s0;
+                        }
+                        else
+                        {
+                                const sample_t s0=MixHelpers::convertFromS16(_ibuf[idx+0]);
+                                //_ibuf[idx  ] * fac;
+                                const sample_t s1=MixHelpers::convertFromS16(_ibuf[idx+1]);
+                                //_ibuf[idx+1] * fac;
+                                m_data[frame][0] = s0;
+                                m_data[frame][1] = s1;
+                        }
 			idx += _channels;
 		}
 	}
@@ -1565,9 +1593,10 @@ QString & SampleBuffer::toBase64( QString & _dst ) const
 		{
 			for( ch_cnt_t ch = 0; ch < DEFAULT_CHANNELS; ++ch )
 			{
-				buf[f*DEFAULT_CHANNELS+ch] = (FLAC__int32)(
-					Mixer::clip( m_data[f+frame_cnt][ch] ) *
-						S16_MULTIPLIER );
+				buf[f*DEFAULT_CHANNELS+ch] = (FLAC__int32)
+                                        //( Mixer::clip( m_data[f+frame_cnt][ch] ) *
+					//  S16_MULTIPLIER )
+                                        ( MixHelpers::convertToS16( m_data[f+frame_cnt][ch] ) );
 			}
 		}
 		FLAC__stream_encoder_process_interleaved( flac_enc, buf,
@@ -1893,8 +1922,10 @@ FLAC__StreamDecoderWriteStatus flacStreamDecoderWriteCallback(
 	const f_cnt_t frames = _frame->header.blocksize;
 	for( f_cnt_t frame = 0; frame < frames; ++frame )
 	{
-		sampleFrame sframe = { _buffer[0][frame] / S16_MULTIPLIER,
-					_buffer[1][frame] / S16_MULTIPLIER } ;
+		//sampleFrame sframe = { _buffer[0][frame] / MixHelpers::F_S16_MULTIPLIER,
+		//			_buffer[1][frame] / MixHelpers::F_S16_MULTIPLIER } ;
+		sampleFrame sframe = { MixHelpers::convertFromS16( _buffer[0][frame] ),
+                                       MixHelpers::convertFromS16( _buffer[1][frame] ) };
 		static_cast<flacStreamDecoderClientData *>
                         ( _client_data )->write_buffer->write
                         ( (const char *) sframe, sizeof( sframe ) );
