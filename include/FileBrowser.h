@@ -54,10 +54,10 @@ public:
 	virtual ~FileBrowser();
 
 private slots:
-	void reloadTree( void );
-	void expandItems( QTreeWidgetItem * item=NULL );
+	void reloadTree();
+	void expandItems(QTreeWidgetItem* _item=nullptr, bool _all=false);
 	// call with item=NULL to filter the entire tree
-	bool filterItems( const QString & filter, QTreeWidgetItem * item=NULL );
+	bool filterItems(const QString& _filter, QTreeWidgetItem* _item=nullptr );
 	void giveFocusToFilter();
 
 private:
