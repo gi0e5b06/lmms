@@ -27,6 +27,8 @@
 
 #include "ConfigManager.h"
 
+#include "debug.h"
+
 #include <QVariant>
 
 /*
