@@ -46,7 +46,7 @@ class SmashGDXEffect : public Effect
   protected:
   private:
     SmashGDXControls m_gdxControls;
-    int32_t          m_idx;
+    int32_t          m_idx0,m_idx1;
     sample_t         m_refVal0,m_refVal1;
 
     friend class SmashGDXControls;

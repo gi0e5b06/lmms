@@ -63,8 +63,9 @@ class SmashGDXControls : public EffectControls
   private:
     SmashGDXEffect* m_effect;
     FloatModel      m_rateModel;
+    FloatModel      m_phaseModel;
     FloatModel      m_levelModel;
-    //FloatModel      m_wetModel;
+    FloatModel      m_bitsModel;
 
     friend class SmashGDXDialog;
     friend class SmashGDXEffect;

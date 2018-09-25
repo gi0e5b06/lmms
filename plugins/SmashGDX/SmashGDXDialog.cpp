@@ -48,27 +48,32 @@ SmashGDXDialog::SmashGDXDialog(SmashGDXControls* controls) :
     rateKNB->setText(tr("RATE"));
     rateKNB->setHintText(tr("Rate:"), "");
 
+    Knob* phaseKNB = new Knob(this);
+    phaseKNB->setModel(&controls->m_phaseModel);
+    phaseKNB->setText(tr("PHASE"));
+    phaseKNB->setHintText(tr("Phase:"), "");
+
     Knob* levelKNB = new Knob(this);
     levelKNB->setModel(&controls->m_levelModel);
     levelKNB->setText(tr("LEVEL"));
     levelKNB->setHintText(tr("Level:"), "");
 
-    /*
-    Knob* wetKNB = new Knob(this);
-    wetKNB->setModel(&controls->m_wetModel);
-    wetKNB->setText(tr("WET"));
-    wetKNB->setHintText(tr("Wet:"), "");
-    */
+    Knob* bitsKNB = new Knob(this);
+    bitsKNB->setModel(&controls->m_bitsModel);
+    bitsKNB->setText(tr("BITS"));
+    bitsKNB->setHintText(tr("Bits:"), "");
 
     int col = 0, row = 0;  // first row
     mainLOT->addWidget(rateKNB, row, ++col, 1, 1,
                           Qt::AlignBottom | Qt::AlignHCenter);
+    mainLOT->addWidget(phaseKNB, row, ++col, 1, 1,
+                          Qt::AlignBottom | Qt::AlignHCenter);
     mainLOT->addWidget(levelKNB, row, ++col, 1, 1,
                           Qt::AlignBottom | Qt::AlignHCenter);
-    //mainLOT->addWidget(wetKNB, row, ++col, 1, 1,
-    //                   Qt::AlignBottom | Qt::AlignHCenter);
+    mainLOT->addWidget(bitsKNB, row, ++col, 1, 1,
+                       Qt::AlignBottom | Qt::AlignHCenter);
 
-    mainLOT->setColumnStretch(4, 1);
+    mainLOT->setColumnStretch(5, 1);
     mainLOT->setRowStretch(1, 1);
 
     setFixedWidth(250);

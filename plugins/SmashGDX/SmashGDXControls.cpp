@@ -32,10 +32,12 @@
 
 SmashGDXControls::SmashGDXControls(SmashGDXEffect* effect) :
       EffectControls(effect), m_effect(effect),
-      m_rateModel(0.f, 0.f, 0.005f, 0.00001f, this, tr("Rate")),
-      m_levelModel(0.f, 0.f, 1.f, 0.00001f, this, tr("Level"))  //,
-// m_wetModel(0.75f, 0.f, 1.f, 0.00001f, this, tr("Wet"))
+      m_rateModel(0.f, 0.f, 0.01f, 0.00001f, this, tr("Rate")),
+      m_phaseModel(0.f, -1.f, 1.f, 0.00001f, this, tr("Phase")),
+      m_levelModel(0.f, 0.f, 1.f, 0.00001f, this, tr("Level")),
+      m_bitsModel(64.f, 0.f, 64.f, 1.f, this, tr("Bits"))
 {
+        m_bitsModel.setStrictStepSize(true);
     /*
     connect( &m_rateModel, SIGNAL( dataChanged() ), this, SLOT(
       changeControl() ) );
@@ -53,12 +55,12 @@ void SmashGDXControls::loadSettings(const QDomElement& _this)
 {
     m_rateModel.loadSettings(_this, "rate");
     m_levelModel.loadSettings(_this, "level");
-    // m_wetModel.loadSettings(_this, "wet");
+    m_bitsModel.loadSettings(_this, "bits");
 }
 
 void SmashGDXControls::saveSettings(QDomDocument& doc, QDomElement& _this)
 {
     m_rateModel.saveSettings(doc, _this, "rate");
     m_levelModel.saveSettings(doc, _this, "level");
-    // m_wetModel.saveSettings(doc, _this, "wet");
+    m_bitsModel.saveSettings(doc, _this, "bits");
 }
