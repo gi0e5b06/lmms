@@ -26,6 +26,7 @@
 #ifndef INSTRUMENT_MIDI_IO_VIEW_H
 #define INSTRUMENT_MIDI_IO_VIEW_H
 
+#include "ComboBoxModel.h"
 #include "ModelView.h"
 
 #include <QWidget>
@@ -61,8 +62,8 @@ class InstrumentMidiIOView
     LcdSpinBox*  m_fixedOutputNoteSpinBox;
     QToolButton* m_wpBtn;
 
-    GroupBox*    m_baseVelocityGBX;
-    LcdSpinBox*  m_baseVelocitySpinBox;
+    GroupBox*   m_baseVelocityGBX;
+    LcdSpinBox* m_baseVelocitySpinBox;
 };
 
 class InstrumentMiscView : public QWidget
@@ -78,8 +79,19 @@ class InstrumentMiscView : public QWidget
         return m_pitchGBX;
     }
 
+  public slots:
+    // void updateScaleBankModel();
+    void updateScaleIndexModel();
+    void updateScale();
+
   private:
+    InstrumentTrack* m_track;
+
     GroupBox* m_pitchGBX;
+    GroupBox* m_scaleGBX;
+
+    ComboBoxModel m_scaleBankModel;
+    ComboBoxModel m_scaleIndexModel;
 };
 
 #endif

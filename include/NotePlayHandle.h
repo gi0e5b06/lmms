@@ -42,6 +42,8 @@
 
 class InstrumentTrack;
 class NotePlayHandle;
+class Scale;
+
 typedef QList<NotePlayHandle*>       NotePlayHandleList;
 typedef QList<const NotePlayHandle*> ConstNotePlayHandleList;
 
@@ -312,7 +314,12 @@ class EXPORT NotePlayHandle /*final*/
         m_baseDetune = _bdt;
     }
 
-  private:
+    const Scale* scale() const;
+    void setScale(const Scale* _scale);
+
+ private:
+    void updateFrequency();
+
     /*
     class BaseDetuning
     {
@@ -336,8 +343,6 @@ class EXPORT NotePlayHandle /*final*/
 
     } ;
     */
-
-    void updateFrequency();
 
     InstrumentTrack* m_instrumentTrack;  // needed for calling
                                          // InstrumentTrack::playNote
@@ -378,6 +383,8 @@ class EXPORT NotePlayHandle /*final*/
     int    m_generation;
 
     bool m_frequencyNeedsUpdate;  // used to update pitch
+
+    const Scale* m_scale;
 };
 
 // const int INITIAL_NPH_CACHE = 256;

@@ -60,6 +60,7 @@
 #include "PluginFactory.h"
 #include "PluginView.h"
 //#include "SamplePlayHandle.h"
+#include "Scale.h"
 #include "Song.h"
 #include "StringPairDrag.h"
 #include "TabWidget.h"
@@ -108,6 +109,7 @@ InstrumentTrack::InstrumentTrack( TrackContainer* tc ) :
 	m_sustainPedalPressed( false ),
 	m_silentBuffersProcessed( false ),
 	m_previewMode( false ),
+        m_scale( nullptr ),
 	m_baseNoteModel( 0, 0, KeysPerOctave * NumOctaves - 1, this,
 			 tr( "Base note" ) ),
 	m_volumeModel( DefaultVolume, MinVolume, MaxVolume, 0.1f, this,
@@ -122,7 +124,7 @@ InstrumentTrack::InstrumentTrack( TrackContainer* tc ) :
 	m_effectChannelModel( 0, 0, 0, this, tr( "FX channel" ) ),
 	m_useMasterPitchModel( true, this, tr( "Master Pitch") ),
 	m_noteDetuneModel( 0.f, -48.f, 48.f, 0.5f, this, tr( "Detune" ) ),
-	m_instrument( NULL ),
+	m_instrument( nullptr ),
 	m_soundShaping( this ),
 	m_piano( this )
 {
@@ -1013,7 +1015,17 @@ Instrument * InstrumentTrack::loadInstrument( const QString & _plugin_name )
 }
 
 
+const Scale* InstrumentTrack::scale() const
+{
+        return m_scale;
+}
 
+
+void InstrumentTrack::setScale(const Scale* _scale)
+{
+        if(m_scale!=_scale)
+                m_scale=_scale;
+}
 
 
 // #### ITV:

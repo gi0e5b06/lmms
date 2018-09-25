@@ -152,6 +152,9 @@ public:
 	// load instrument whose name matches given one
 	Instrument * loadInstrument( const QString & _instrument_name );
 
+        const Scale* scale() const;
+        void setScale(const Scale* _scale);
+
 	const AudioPort * audioPort() const
 	{
 		return &m_audioPort;
@@ -275,7 +278,8 @@ private:
 
 	bool m_previewMode;
 
-	IntModel m_baseNoteModel;
+        const Scale* m_scale;
+        IntModel m_baseNoteModel;
 
 	NotePlayHandleList m_processHandles;
 

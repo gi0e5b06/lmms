@@ -24,6 +24,7 @@
 
 #include "InstrumentMidiIOView.h"
 
+#include "ComboBox.h"
 #include "Engine.h"
 #include "GroupBox.h"
 #include "InstrumentTrack.h"
@@ -33,7 +34,7 @@
 #include "MidiPortMenu.h"  // REQUIRED
 #include "Mixer.h"
 //#include "ToolTip.h"
-
+#include "Scale.h"
 #include "embed.h"
 #include "gui_templates.h"
 
@@ -213,7 +214,7 @@ void InstrumentMidiIOView::modelChanged()
 }
 
 InstrumentMiscView::InstrumentMiscView(InstrumentTrack* it, QWidget* parent) :
-      QWidget(parent)
+      QWidget(parent), m_track(it)
 {
     QVBoxLayout* layout = new QVBoxLayout(this);
     layout->setMargin(5);
@@ -221,22 +222,77 @@ InstrumentMiscView::InstrumentMiscView(InstrumentTrack* it, QWidget* parent) :
     m_pitchGBX = new GroupBox(tr("MASTER PITCH"), this, true, false);
     m_pitchGBX->ledButton()->setModel(&it->m_useMasterPitchModel);
 
-    QWidget*     masterPitchPNL    = new QWidget(m_pitchGBX);
-    QHBoxLayout* masterPitchLayout = new QHBoxLayout(masterPitchPNL);
-    masterPitchLayout->setContentsMargins(6, 6, 6, 6);
-    masterPitchLayout->setSpacing(6);
+    QWidget*     masterPitchPNL = new QWidget(m_pitchGBX);
+    QHBoxLayout* masterPitchLOT = new QHBoxLayout(masterPitchPNL);
+    masterPitchLOT->setContentsMargins(6, 6, 6, 6);
+    masterPitchLOT->setSpacing(6);
     m_pitchGBX->setContentWidget(masterPitchPNL);
 
     QLabel* masterPitchHelp
             = new QLabel(tr("Enables the use of Master Pitch"));
-    masterPitchLayout->addWidget(masterPitchHelp);
-    masterPitchLayout->addStretch(1);
+    masterPitchLOT->addWidget(masterPitchHelp);
+    masterPitchLOT->addStretch(1);
+
+    m_scaleGBX = new GroupBox(tr("SCALE"), this, false, false);
+
+    QWidget*     ScalePNL = new QWidget(m_scaleGBX);
+    QGridLayout* scaleLOT = new QGridLayout(ScalePNL);
+    scaleLOT->setContentsMargins(6, 6, 6, 6);
+    scaleLOT->setSpacing(6);
+    m_scaleGBX->setContentWidget(ScalePNL);
+
+    // add scale combo boxes
+    ComboBox* bankCMB = new ComboBox(this);
+    bankCMB->setModel(&m_scaleBankModel);
+    bankCMB->setMinimumWidth(3 * 27 + 4);
+
+    ComboBox* indexCMB = new ComboBox(this);
+    indexCMB->setModel(&m_scaleIndexModel);
+    indexCMB->setMinimumWidth(7 * 27 + 12);
+
+    Scale::fillBankModel(m_scaleBankModel);
+    Scale::fillIndexModel(m_scaleIndexModel,0);
+    connect(&m_scaleBankModel, SIGNAL(dataChanged()), this,
+            SLOT(updateScaleIndexModel()));
+    connect(&m_scaleBankModel, SIGNAL(dataChanged()), this,
+            SLOT(updateScale()));
+    connect(&m_scaleIndexModel, SIGNAL(dataChanged()), this,
+            SLOT(updateScale()));
+    const Scale* scl = it->scale();
+    m_scaleBankModel.setValue(scl != nullptr ? scl->bank() : 0);
+    m_scaleIndexModel.setValue(scl != nullptr ? scl->index() : 0);
+
+    int col = 0, row = 0;  // first row
+    scaleLOT->addWidget(bankCMB, row, col++, 1, 3,
+                        Qt::AlignBottom | Qt::AlignHCenter);
+    col = 0;
+    row++;
+    scaleLOT->addWidget(indexCMB, row, col++, 1, 7,
+                        Qt::AlignBottom | Qt::AlignHCenter);
+
+    scaleLOT->setRowStretch(2, 1);
+    scaleLOT->setColumnStretch(7, 1);
 
     layout->addWidget(m_pitchGBX);
+    layout->addWidget(m_scaleGBX);
     layout->addStretch(1);
     setLayout(layout);
 }
 
 InstrumentMiscView::~InstrumentMiscView()
 {
+}
+
+void InstrumentMiscView::updateScaleIndexModel()
+{
+    int bank = m_scaleBankModel.value();
+    int old  = m_scaleIndexModel.value();
+    Scale::fillIndexModel(m_scaleIndexModel, bank);
+    m_scaleIndexModel.setValue(old);
+}
+
+void InstrumentMiscView::updateScale()
+{
+    m_track->setScale(
+            Scale::get(m_scaleBankModel.value(), m_scaleIndexModel.value()));
 }

@@ -29,6 +29,7 @@
 #include "InstrumentTrack.h"
 #include "Instrument.h"
 #include "Mixer.h"
+#include "Scale.h"
 #include "Song.h"
 
 
@@ -81,7 +82,8 @@ NotePlayHandle::NotePlayHandle( InstrumentTrack* instrumentTrack,
 		       : instrumentTrack->midiPort()->outputChannel()-1 ),
 	m_origin( origin ),
 	m_generation( generation ),
-	m_frequencyNeedsUpdate( false )
+	m_frequencyNeedsUpdate( false ),
+        m_scale( nullptr )
 {
 	lock();
 	if( hasParent() == false )
@@ -119,6 +121,16 @@ NotePlayHandle::NotePlayHandle( InstrumentTrack* instrumentTrack,
 
         //noteOn(0);
 
+        if(m_instrumentTrack == nullptr)
+        {
+                qWarning("NotePlayHandle::NotePlayHandle no track");
+        }
+        else
+        if(m_instrumentTrack->instrument() == nullptr)
+        {
+                qWarning("NotePlayHandle::NotePlayHandle no instrument");
+        }
+        else
 	if( m_instrumentTrack->instrument()->flags() & Instrument::IsSingleStreamed )
 	{
 		//setUsesBuffer( false );
@@ -537,19 +549,51 @@ bool NotePlayHandle::operator==( const NotePlayHandle & _nph ) const
 }
 
 
+const Scale* NotePlayHandle::scale() const
+{
+        const Scale* r=m_scale;
+        if(r==nullptr) r=m_instrumentTrack->scale();
+        if(r==nullptr) r=&Scale::ET12;
+        return r;
+}
+
+
+void NotePlayHandle::setScale(const Scale* _scale)
+{
+        m_scale=_scale;
+        updateFrequency();
+}
 
 
 void NotePlayHandle::updateFrequency()
 {
-	int mp = m_instrumentTrack->m_useMasterPitchModel.value() ? Engine::getSong()->masterPitch() : 0;
+        const Scale* scl=scale();
+
+	const int mp = m_instrumentTrack->m_useMasterPitchModel.value()
+                ? Engine::getSong()->masterPitch()
+                : 0;
+
+        /*
 	const float pitch =
 		( key() -
 		  m_instrumentTrack->baseNoteModel()->value() +
 		  mp +
-		  m_baseDetune /*m_baseDetuning->value()*/ )
+		  m_baseDetune )
 		/ 12.0f;
 	m_frequency = BaseFreq * powf( 2.0f, pitch + m_instrumentTrack->pitchModel()->value() / ( 100 * 12.0f ) );
 	m_unpitchedFrequency = BaseFreq * powf( 2.0f, pitch );
+        */
+
+        int k=key() + 69.f - m_instrumentTrack->baseNoteModel()->value();
+
+        m_frequency = scl->frequency
+                (k+mp+m_baseDetune,
+                 m_instrumentTrack->pitchModel()->value());
+
+        m_unpitchedFrequency = scl->frequency
+                (k+mp+m_baseDetune,0.f);
+
+        //qInfo("Scale: %s key %d (%d) %f Hz",qPrintable(scl->name()),key(),k,m_frequency);
 
 	for( NotePlayHandleList::Iterator it = m_subNotes.begin(); it != m_subNotes.end(); ++it )
 	{
