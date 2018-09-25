@@ -105,31 +105,30 @@ MainWindow::MainWindow() :
 	emit initProgress(tr("Preparing plugin browser"));
 	sideBar->appendTab( new PluginBrowser( splitter ) );
 	emit initProgress(tr("Preparing file browsers"));
-	sideBar->appendTab( new FileBrowser(
-				confMgr->userProjectsDir() + "*" +
-				confMgr->factoryProjectsDir(),
-					"*.mmp *.mmpz *.xml *.mid",
-							tr( "My Projects" ),
-					embed::getIconPixmap( "project_file" ).transformed( QTransform().rotate( 90 ) ),
-							splitter, false, true ) );
-	sideBar->appendTab( new FileBrowser(
-				confMgr->userSamplesDir() + "*" +
-				confMgr->factorySamplesDir(),
-					"*", tr( "My Samples" ),
-					embed::getIconPixmap( "sample_file" ).transformed( QTransform().rotate( 90 ) ),
-							splitter, false, true ) );
-	sideBar->appendTab( new FileBrowser(
-				confMgr->userPresetsDir() + "*" +
-				confMgr->factoryPresetsDir(),
-					"*.xpf *.cs.xml *.xiz",
-					tr( "My Presets" ),
-					embed::getIconPixmap( "preset_file" ).transformed( QTransform().rotate( 90 ) ),
-							splitter , false, true  ) );
+	sideBar->appendTab( new FileBrowser( confMgr->userProjectsDir() + "*" +
+                                             confMgr->factoryProjectsDir(),
+                                             "*.mmp *.mmpz *.xml *.mid",
+                                             tr( "My Projects" ),
+                                             embed::getIconPixmap( "project_file" )
+                                             .transformed( QTransform().rotate( 90 ) ),
+                                             splitter, false, true ) );
+	sideBar->appendTab( new FileBrowser( confMgr->userSamplesDir() + "*" +
+                                             confMgr->factorySamplesDir(),
+                                             "*", tr( "My Samples" ),
+                                             embed::getIconPixmap( "sample_file" )
+                                             .transformed( QTransform().rotate( 90 ) ),
+                                             splitter, false, true ) );
+	sideBar->appendTab( new FileBrowser( confMgr->userPresetsDir() + "*" +
+                                             confMgr->factoryPresetsDir(),
+                                             "*.xpf *.cs.xml *.xiz",
+                                             tr( "My Presets" ),
+                                             embed::getIconPixmap( "preset_file" )
+                                             .transformed( QTransform().rotate( 90 ) ),
+                                             splitter , false, true  ) );
 	sideBar->appendTab( new FileBrowser( QDir::homePath(), "*",
-							tr( "My Home" ),
-					embed::getIconPixmap( "home" ).transformed( QTransform().rotate( 90 ) ),
-							splitter, false, false ) );
-
+                                             tr( "My Home" ),
+                                             embed::getIconPixmap( "home" ).transformed( QTransform().rotate( 90 ) ),
+                                             splitter, false, false ) );
 
 	QStringList root_paths;
 	QString title = tr( "Root directory" );
@@ -1194,9 +1193,16 @@ void MainWindow::toggleWindow( QWidget *window, bool forceShow )
 	QWidget *parent = window->parentWidget();
 
 	if( forceShow ||
-		m_workspace->activeSubWindow() != parent ||
-		parent->isHidden() )
+            m_workspace->activeSubWindow() != parent ||
+            parent->isHidden() )
 	{
+                qInfo("parent %dx%d",parent->width(),parent->height());
+                qInfo("window %dx%d",window->width(),window->height());
+                if(parent->width()<50 || parent->height()<50)
+                {
+                        parent->resize(parent->sizeHint());
+                        qInfo("parent after: %dx%d",parent->width(),parent->height());
+                }
 		parent->show();
 		window->show();
 		window->setFocus();

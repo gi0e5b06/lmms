@@ -106,7 +106,8 @@ class WaveForm
     }
 
     static const WaveForm* get(const int _bank, const int _index);
-    static void            fillBankModel(ComboBoxModel& _model);
+
+    static void fillBankModel(ComboBoxModel& _model);
     static void fillIndexModel(ComboBoxModel& _model, const int _bank);
 
     // Standard waves

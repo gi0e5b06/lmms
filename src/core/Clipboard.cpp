@@ -100,7 +100,10 @@ bool CSI_::has(const QString& _nodeName, QClipboard::Mode _mode)
     if(clip->hasFormat(type))
         return true;
 
-    // if(xml)...
+    if(!dom(_nodeName,_mode).isNull())
+            return true;
+
+    qWarning("Warning: data type'%s' not found",qPrintable(type));
 
     return false;
 }
@@ -113,6 +116,7 @@ bool CSI_::get(SerializingObject* _obj, QClipboard::Mode _mode)
         return false;
     }
 
+    /*
     const QMimeData* clip = QApplication::clipboard()->mimeData(_mode);
 
     const QString type = CSI_::type(_obj);
@@ -139,6 +143,9 @@ bool CSI_::get(SerializingObject* _obj, QClipboard::Mode _mode)
     {
         e = e.firstChild().toElement();
     }
+    */
+
+    QDomElement e=dom(_obj->nodeName(),_mode);
 
     if(e.nodeName() != _obj->nodeName())
     {
@@ -150,10 +157,13 @@ bool CSI_::get(SerializingObject* _obj, QClipboard::Mode _mode)
     if(e.isNull())
     {
         qWarning("Warning: no valid xml data...");
+        /*
         QString     txt;
         QTextStream xml(&txt);
+        DataFile    doc(QString(data).toUtf8());
         doc.write(xml);
         qWarning("XML: %s", qPrintable(txt));
+        */
         return false;
     }
 
@@ -165,34 +175,58 @@ QString CSI_::txt(QClipboard::Mode _mode)
 {
     const QMimeData* clip = QApplication::clipboard()->mimeData(_mode);
 
-    const QString type = "text/plain";
-    QByteArray    data = clip->data(type);
+    QString type="";
+    QByteArray data;
 
-    if(clip->hasFormat(type))
+    /*
+    if((type=CSI_::type(_nodeName))&&clip->hasFormat(type))
     {
-        return QString(data).toUtf8();
+        data=clip->data(type);
+    }
+    else
+    if((type="text/xml")clip->hasFormat(type))
+    {
+        data=clip->data(type);
+    }
+    else
+    */
+    if(clip->hasFormat(type="text/plain"))
+    {
+        data=clip->data(type);
     }
     else
     {
-        qWarning("Clipboard: invalid data (not text/plain)");
+        qWarning("Clipboard: invalid data (txt)");
         return "";
     }
+
+    return QString(data).toUtf8();
 }
 
 QDomElement CSI_::dom(const QString& _nodeName, QClipboard::Mode _mode)
 {
     const QMimeData* clip = QApplication::clipboard()->mimeData(_mode);
 
-    const QString type = CSI_::type(_nodeName);
-    QByteArray    data = clip->data(type);
+    QString type="";
+    QByteArray data;
 
-    if(clip->hasFormat(type))
+    if(clip->hasFormat(type=CSI_::type(_nodeName)))
     {
-        // OK
+        data=clip->data(type);
+    }
+    else
+    if(clip->hasFormat(type="text/xml"))
+    {
+        data=clip->data(type);
+    }
+    else
+    if(clip->hasFormat(type="text/plain"))
+    {
+        data=clip->data(type);
     }
     else
     {
-        qWarning("Clipboard: invalid data (not text/xml)");
+        qWarning("Clipboard: invalid data (dom)");
         return QDomElement();
     }
 
