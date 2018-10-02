@@ -26,40 +26,38 @@
 #ifndef AUDIO_FILE_AU_H
 #define AUDIO_FILE_AU_H
 
-#include "lmmsconfig.h"
 #include "AudioFileDevice.h"
+#include "lmmsconfig.h"
 
 #include <sndfile.h>
 
-
 class AudioFileAU : public AudioFileDevice
 {
- public:
-	virtual ~AudioFileAU();
+  public:
+    virtual ~AudioFileAU();
 
-	static AudioFileDevice * getInst( const QString & outputFileName,
-					  const OutputSettings & outputSettings,
-					  const ch_cnt_t channels,
-					  Mixer * mixer,
-					  bool & successful );
+    static AudioFileDevice* getInst(const QString&        outputFileName,
+                                    const OutputSettings& outputSettings,
+                                    const ch_cnt_t        channels,
+                                    Mixer*                mixer,
+                                    bool&                 successful);
 
- protected:
-	AudioFileAU( const OutputSettings & outputSettings,
-		     const ch_cnt_t channels,
-		     bool & successful,
-		     const QString & file,
-		     Mixer * mixer );
-	virtual bool hasStreamSupport() const /*override*/;
-	virtual void writeBuffer( const surroundSampleFrame * _ab,
-				  const fpp_t _frames,
-				  float _master_gain ) /*override*/;
+  protected:
+    AudioFileAU(const OutputSettings& outputSettings,
+                const ch_cnt_t        channels,
+                bool&                 successful,
+                const QString&        file,
+                Mixer*                mixer);
+    virtual bool hasStreamSupport() const override;
+    virtual void writeBuffer(const surroundSampleFrame* _ab,
+                             const fpp_t                _frames) override;
 
- private:
-	bool startEncoding();
-	void finishEncoding();
+  private:
+    bool startEncoding();
+    void finishEncoding();
 
-	SF_INFO m_si;
-	SNDFILE * m_sf;
-} ;
+    SF_INFO  m_si;
+    SNDFILE* m_sf;
+};
 
 #endif

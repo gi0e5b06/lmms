@@ -74,7 +74,7 @@ const int WhiteKeysPerOctave = 7;
 const int BlackKeysPerOctave = 5;
 const int KeysPerOctave = WhiteKeysPerOctave + BlackKeysPerOctave;
 const int NumKeys = 128;//NumOctaves * KeysPerOctave;
-const int DefaultKey = 69;//DefaultOctave*KeysPerOctave + Key_A;
+const int DefaultKey = DefaultOctave*KeysPerOctave + Key_A; // A3???
 
 const float MaxDetuning = 4 * 12.0f;
 

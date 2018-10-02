@@ -30,7 +30,7 @@
 #include "SubWindow.h"
 
 //#include <QAction>
-#include <QBasicTimer>
+//#include <QBasicTimer>
 //#include <QHash>
 #include <QIcon>
 #include <QList>
@@ -169,6 +169,7 @@ public:
 
 public slots:
 	void emptySlot();
+        void onTimeout();
 	void enterWhatsThisMode();
 	void createNewProject();
 	void createNewProjectFromTemplate( QAction * _idx );
@@ -207,7 +208,7 @@ protected:
 	virtual void focusOutEvent( QFocusEvent * _fe );
 	virtual void keyPressEvent( QKeyEvent * _ke );
 	virtual void keyReleaseEvent( QKeyEvent * _ke );
-	virtual void timerEvent( QTimerEvent * _ev );
+	//virtual void timerEvent( QTimerEvent * _ev );
 
 
 private:
@@ -250,7 +251,8 @@ private:
 	//QAction * m_redoAction;
 	QList<PluginView *> m_tools;
 
-	QBasicTimer m_updateTimer;
+	//QBasicTimer m_updateTimer;
+        QTimer m_updateTimer;
 	QTimer m_autoSaveTimer;
 	int m_autoSaveInterval;
 

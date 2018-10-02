@@ -23,61 +23,61 @@
  *
  */
 
-
 #ifndef BITCRUSH_H
 #define BITCRUSH_H
 
-#include "Effect.h"
+#include "BasicFilters.h"
 #include "BitcrushControls.h"
+#include "Effect.h"
 #include "ValueBuffer.h"
 #include "lmms_math.h"
-#include "BasicFilters.h"
 
 class BitcrushEffect : public Effect
 {
-public:
-	BitcrushEffect( Model* parent, const Descriptor::SubPluginFeatures::Key* key );
-	virtual ~BitcrushEffect();
-	virtual bool processAudioBuffer( sampleFrame* buf, const fpp_t frames );
+  public:
+    BitcrushEffect(Model*                                    parent,
+                   const Descriptor::SubPluginFeatures::Key* key);
+    virtual ~BitcrushEffect();
+    virtual bool processAudioBuffer(sampleFrame* buf, const fpp_t frames);
 
-	virtual EffectControls* controls()
-	{
-		return &m_controls;
-	}
-	
-private:
-	void sampleRateChanged();
-	float depthCrush( float in );
-	float noise( float amt );
+    virtual EffectControls* controls()
+    {
+        return &m_controls;
+    }
 
-	BitcrushControls m_controls;
-	
-	sampleFrame * m_buffer;
-	float m_sampleRate;
-	StereoLinkwitzRiley m_filter;
-	
-	float m_bitCounterL;
-	float m_rateCoeffL;
-	float m_bitCounterR;
-	float m_rateCoeffR;
-	bool m_rateEnabled;
-	
-	float m_left;
-	float m_right;
+  private:
+    void   sampleRateChanged();
+    real_t depthCrush(real_t in);
+    real_t noise(real_t amt);
 
-	int m_levels;
-	float m_levelsRatio;
-	bool m_depthEnabled;
-	
-	float m_inGain;
-	float m_outGain;
-	float m_outClip;
+    BitcrushControls m_controls;
 
-	bool m_needsUpdate;
-	
-	int m_silenceCounter;
+    sampleFrame*        m_buffer;
+    real_t              m_sampleRate;
+    StereoLinkwitzRiley m_filter;
 
-	friend class BitcrushControls;
+    real_t m_bitCounterL;
+    real_t m_rateCoeffL;
+    real_t m_bitCounterR;
+    real_t m_rateCoeffR;
+    bool   m_rateEnabled;
+
+    real_t m_left;
+    real_t m_right;
+
+    int    m_levels;
+    real_t m_levelsRatio;
+    bool   m_depthEnabled;
+
+    real_t m_inGain;
+    real_t m_outGain;
+    real_t m_outClip;
+
+    bool m_needsUpdate;
+
+    int m_silenceCounter;
+
+    friend class BitcrushControls;
 };
 
 #endif

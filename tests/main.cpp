@@ -4,10 +4,16 @@
 
 #include <QDebug>
 
+#include "MemoryManager.h"
+#include "Configuration.h"
 #include "Engine.h"
 
 int main(int argc, char* argv[])
 {
+	MM_INIT //MemoryManager::init();
+        ConfigManager::init(argv[0]);
+        lmms_default_configuration();
+
 	new QCoreApplication(argc, argv);
 	Engine::init(true);
 

@@ -250,6 +250,8 @@ void VisualizationWidget::setStabilized(bool _stabilized)
 
 void VisualizationWidget::drawWidget(QPainter& _p)
 {
+    _p.setRenderHints(QPainter::Antialiasing, false);
+
     if(m_background.isNull())
         _p.fillRect(0, 0, width(), height(), Qt::black);
     else
@@ -259,15 +261,15 @@ void VisualizationWidget::drawWidget(QPainter& _p)
 
     {
         _p.setPen(Qt::white);  // Color(192, 192, 192));
-        _p.setFont(pointSize<7>(_p.font()));
+        _p.setFont(pointSizeF(font(), 7.f));
         //_p.drawText(6, height() - 5, tr("Click to enable"));
-        QString s("%1%2 %3%4 x%5y%6");
+        QString s("%1%2 %3%4 X%5 Y%6");
         s = s.arg(m_displayMode)
-                    .arg(m_channelMode)
-                    .arg(m_ring->isFrozen() ? "F" : "-")
-                    .arg(m_stabilized ? "S" : "-")
-                    .arg(m_zoomX)
-                    .arg(m_zoomY);
+                .arg(m_channelMode)
+                .arg(m_ring->isFrozen() ? "F" : "-")
+                .arg(m_stabilized ? "S" : "-")
+                .arg(m_zoomX,0,'f',0)
+                .arg(m_zoomY,0,'f',0);
         _p.drawText(2, height() - 2, s);
         _p.drawText(2, height() - 2, s);
     }
@@ -441,6 +443,8 @@ void VisualizationWidget::drawWidget(QPainter& _p)
             }
         }
     }
+
+    _p.setRenderHints(QPainter::Antialiasing, false);
 }
 
 void VisualizationWidget::mousePressEvent(QMouseEvent* _me)

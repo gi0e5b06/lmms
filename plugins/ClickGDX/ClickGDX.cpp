@@ -87,12 +87,12 @@ bool ClickGDXEffect::processAudioBuffer( sampleFrame* _buf, const fpp_t _frames 
 
 	for( fpp_t f = 0; f < _frames; ++f )
 	{
-                float w0, d0, w1, d1;
+                real_t w0, d0, w1, d1;
                 computeWetDryLevels(f, _frames, smoothBegin, smoothEnd, w0, d0, w1,
                                     d1);
 
-		float curVal0=_buf[f][0];
-		float curVal1=_buf[f][1];
+		real_t curVal0=_buf[f][0];
+		real_t curVal1=_buf[f][1];
 
 		uint32_t tempo1=(uint32_t)(attTempoBuf
 					   ? attTempoBuf->value( f )
@@ -103,13 +103,13 @@ bool ClickGDXEffect::processAudioBuffer( sampleFrame* _buf, const fpp_t _frames 
 		uint32_t tempo3=(uint32_t)(panTempoBuf
 					   ? panTempoBuf->value( f )
 					   : m_gdxControls.m_panTempoModel.value());
-		uint32_t step1=(uint32_t)(44100.f*60.f/tempo1*(attTimeBuf
+		uint32_t step1=(uint32_t)(44100.*60./tempo1*(attTimeBuf
                                            ? attTimeBuf->value( f )
 					   : m_gdxControls.m_attackTimeModel.value()));
-		uint32_t step2=(uint32_t)(44100.f*60.f/tempo2*(desTimeBuf
+		uint32_t step2=(uint32_t)(44100.*60./tempo2*(desTimeBuf
 					   ? desTimeBuf->value( f )
 					   : m_gdxControls.m_descentTimeModel.value()));
-		uint32_t step3=(uint32_t)(44100.f*60.f/tempo3*(panTimeBuf
+		uint32_t step3=(uint32_t)(44100.*60./tempo3*(panTimeBuf
 					   ? panTimeBuf->value( f )
 					   : m_gdxControls.m_panTimeModel.value()));
 		int type1=(int)(attTypeBuf
@@ -122,7 +122,7 @@ bool ClickGDXEffect::processAudioBuffer( sampleFrame* _buf, const fpp_t _frames 
 				? panTypeBuf->value( f )
 				: m_gdxControls.m_panTypeModel.value());
 
-		float volume,pan;
+		real_t volume,pan;
 
 		m_volCurrent++;
 		if(m_volCurrent>=step1+step2+1) m_volCurrent=0;
@@ -130,11 +130,11 @@ bool ClickGDXEffect::processAudioBuffer( sampleFrame* _buf, const fpp_t _frames 
 		if(m_volCurrent<=step1)
 		{
 			volume=1.f;
-			     if(type1==0) volume=0.f;
-			else if(type1==1) volume=1.f;
+			     if(type1==0) volume=0.;
+			else if(type1==1) volume=1.;
 			else if(step1>0)
 			{
-				float t=((float)m_volCurrent)/(float)step1;
+				real_t t=real_t(m_volCurrent)/real_t(step1);
 				switch(type1)
 				{
 				case 2:	volume=f2(t); break;
@@ -148,11 +148,11 @@ bool ClickGDXEffect::processAudioBuffer( sampleFrame* _buf, const fpp_t _frames 
 		else
 		{
 			volume=0.f;
-			     if(type2==0) volume=0.f;
-			else if(type2==1) volume=1.f;
+			     if(type2==0) volume=0.;
+			else if(type2==1) volume=1.;
 			else if(step2>0)
 			{
-				float t=1.f-((float)(m_volCurrent-step1))/(float)step2;
+				real_t t=1.-real_t(m_volCurrent-step1)/real_t(step2);
 				switch(type2)
 				{
 				case 2:	volume=f2(t); break;
@@ -178,13 +178,13 @@ bool ClickGDXEffect::processAudioBuffer( sampleFrame* _buf, const fpp_t _frames 
 			if(m_panCurrent<=step3)
 			{
 				pan=0.f;
-				     if(type3==0) pan=0.f;
-				else if(type3==1) pan=0.f;
-				else if(type3==2) pan=0.5f;
-				else if(type3==3) pan=1.0f;
+				     if(type3==0) pan=0.;
+				else if(type3==1) pan=0.;
+				else if(type3==2) pan=0.5;
+				else if(type3==3) pan=1.0;
 				else if(step3>0)
 				{
-					float t=((float)m_panCurrent)/(float)step3;
+					real_t t=real_t(m_panCurrent)/real_t(step3);
 					switch(type3)
 					{
 					case 4:	pan=f2(t); break;
@@ -198,13 +198,13 @@ bool ClickGDXEffect::processAudioBuffer( sampleFrame* _buf, const fpp_t _frames 
 			else
 			{
 				pan=0.f;
-				     if(type3==0) pan=0.f;
-				else if(type3==1) pan=1.f;
-				else if(type3==2) pan=0.5f;
-				else if(type3==3) pan=1.f;
+				     if(type3==0) pan=0.;
+				else if(type3==1) pan=1.;
+				else if(type3==2) pan=0.5;
+				else if(type3==3) pan=1.;
 				else if(step3>0)
 				{
-					float t=1.f-((float)(m_panCurrent-step3))/(float)step3;
+					real_t t=1.-real_t(m_panCurrent-step3)/real_t(step3);
 					switch(type3)
 					{
 					case 4:	pan=f2(t); break;
@@ -218,8 +218,8 @@ bool ClickGDXEffect::processAudioBuffer( sampleFrame* _buf, const fpp_t _frames 
 
 			if(pan<1.f)
 			{
-				float newVal0=(pan*curVal0)+(1.f-pan)*curVal1;
-				float newVal1=(pan*curVal1)+(1.f-pan)*curVal0;
+				real_t newVal0=(pan*curVal0)+(1.f-pan)*curVal1;
+				real_t newVal1=(pan*curVal1)+(1.f-pan)*curVal0;
 				curVal0=newVal0;
 				curVal1=newVal1;
 			}

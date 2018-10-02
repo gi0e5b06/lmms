@@ -71,7 +71,6 @@
 #include "embed.h"
 #include "gui_templates.h"
 #include "lmms_math.h"
-#include "Pitch.h"
 
 #include <QDir>
 #include <QQueue>
@@ -233,7 +232,7 @@ void InstrumentTrack::processAudioBuffer( sampleFrame* buf, const fpp_t frames, 
 	//m_audioPort.effects()->startRunning();
 
 	// get volume knob data
-	static const float DefaultVolumeRatio = 1.0f / DefaultVolume;
+	//static const float DefaultVolumeRatio = 1.0f / DefaultVolume;
 	/*ValueBuffer * volBuf = m_volumeModel.valueBuffer();
 	float v_scale = volBuf
 		? 1.0f
@@ -246,15 +245,16 @@ void InstrumentTrack::processAudioBuffer( sampleFrame* buf, const fpp_t frames, 
 	{
 		const f_cnt_t offset = n->noteOffset();
 		m_soundShaping.processAudioBuffer( buf + offset, frames - offset, n );
-		const float vol = ( (float) n->getVolume() * DefaultVolumeRatio );
+		//const volume_t vol = ( (float) n->getVolume() * DefaultVolumeRatio );
+                const volume_t vol = qBound( MinVolume, n->getVolume(), MaxVolume);
 		const panning_t pan = qBound( PanningLeft, n->getPanning(), PanningRight );
-		stereoVolumeVector vv = panningToVolumeVector( pan, vol );
+		StereoGain sg = toStereoGain( pan, vol );
 
 		for( f_cnt_t f = offset; f < frames; ++f )
 		{
 			for( int c = 0; c < 2; ++c )
 			{
-				buf[f][c] *= vv.vol[c];
+				buf[f][c] *= sg.gain[c];
 			}
 		}
 	}
@@ -309,8 +309,9 @@ void InstrumentTrack::processInEvent( const MidiEvent& event, const MidiTime& ti
 					NotePlayHandle* nph =
 						NotePlayHandleManager::acquire
 						(this, offset,
-						 typeInfo<f_cnt_t>::max() / 2,
-						 Note( MidiTime(), MidiTime(), event.key(), event.volume( midiPort()->baseVelocity() ) ),
+						 std::numeric_limits<f_cnt_t>::max()/2,
+						 Note( MidiTime(), MidiTime(), event.key(),
+                                                       event.volume( midiPort()->baseVelocity() ) ),
 						 NULL, event.channel(),
 						 NotePlayHandle::OriginMidiInput );
 					m_notes[event.key()] = nph;

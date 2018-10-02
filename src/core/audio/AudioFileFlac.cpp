@@ -2,6 +2,7 @@
  * AudioFileFlac.cpp - Audio device which encodes a wave stream into
  *                     a FLAC file (Implementation).
  *
+ * Copyright (c) 2018 gi0e5b06       <on github.com>
  * Copyright (c) 2017 Levin Oehlmann <irrenhaus3/at/gmail[dot]com> et al.
  *
  * This file is part of LMMS - https://lmms.io
@@ -23,186 +24,156 @@
  *
  */
 
-#include <memory>
-
 #include "AudioFileFlac.h"
 
 #include "Engine.h"
 #include "Mixer.h"
 #include "Song.h"
-
-#include "lmmsversion.h"
 #include "endian_handling.h"
+#include "lmmsversion.h"
 
-AudioFileDevice * AudioFileFlac::getInst( const QString & outputFilename,
-					  const OutputSettings & outputSettings,
-					  const ch_cnt_t channels,
-					  Mixer * mixer,
-					  bool & successful )
+#include <memory>
+
+AudioFileDevice* AudioFileFlac::getInst(const QString&        outputFilename,
+                                        const OutputSettings& outputSettings,
+                                        const ch_cnt_t        channels,
+                                        Mixer*                mixer,
+                                        bool&                 successful)
 {
-	AudioFileFlac * r=new AudioFileFlac( outputSettings, channels,
-					     successful, outputFilename,
-					     mixer );
-	r->initOutputFile();
-	r->openOutputFile();
+    AudioFileFlac* r = new AudioFileFlac(outputSettings, channels, successful,
+                                         outputFilename, mixer);
+    r->initOutputFile();
+    r->openOutputFile();
 
-	successful = r->outputFileOpened() && r->startEncoding();
+    successful = r->outputFileOpened() && r->startEncoding();
 
-	return r;
+    return r;
 }
 
-
-
-
-AudioFileFlac::AudioFileFlac( const OutputSettings & outputSettings,
-			      const ch_cnt_t channels, bool & successful,
-			      const QString & file,
-			      Mixer * mixer):
-	AudioFileDevice(outputSettings,channels,file,mixer),
-	m_sf( nullptr )
+AudioFileFlac::AudioFileFlac(const OutputSettings& outputSettings,
+                             const ch_cnt_t        channels,
+                             bool&                 successful,
+                             const QString&        file,
+                             Mixer*                mixer) :
+      AudioFileDevice(outputSettings, channels, file, mixer),
+      m_sf(nullptr)
 {
 }
 
 AudioFileFlac::~AudioFileFlac()
 {
-	finishEncoding();
+    finishEncoding();
 }
 
 bool AudioFileFlac::startEncoding()
 {
-	m_si.samplerate=sampleRate();
-	m_si.channels=channels();
-	m_si.frames = mixer()->framesPerPeriod();
-	m_si.sections=1;
-	m_si.seekable=0;
+    m_si.samplerate = sampleRate();
+    m_si.channels   = channels();
+    m_si.frames     = mixer()->framesPerPeriod();
+    m_si.sections   = 1;
+    m_si.seekable   = 0;
 
-	m_si.format = SF_FORMAT_FLAC;
+    m_si.format = SF_FORMAT_FLAC;
 
-	switch (getOutputSettings().getBitDepth())
-	{
-	case OutputSettings::Depth_F64:
-		m_si.format |= SF_FORMAT_DOUBLE;
-		break;
-	case OutputSettings::Depth_F32:
-		m_si.format |= SF_FORMAT_FLOAT;
-		break;
-	case OutputSettings::Depth_S32:
-		m_si.format |= SF_FORMAT_PCM_32;
-		break;
-	case OutputSettings::Depth_S24:
-		m_si.format |= SF_FORMAT_PCM_24;
-		break;
-	case OutputSettings::Depth_S8:
-		m_si.format |= SF_FORMAT_PCM_S8;
-		break;
-	case OutputSettings::Depth_S16:
-	default:
-		m_si.format |= SF_FORMAT_PCM_16;
-		break;
-                /*
-		case OutputSettings::Depth_S24:
-		case OutputSettings::Depth_S32:
-			// FLAC does not support 32bit sampling, so take it as 24.
-			m_si.format |= SF_FORMAT_PCM_24;
-			break;
-		default:
-			m_si.format |= SF_FORMAT_PCM_16;
-                */
-	}
+    switch(getOutputSettings().getBitDepth())
+    {
+        case OutputSettings::Depth_F64:
+            m_si.format |= SF_FORMAT_DOUBLE;
+            break;
+        case OutputSettings::Depth_F32:
+            m_si.format |= SF_FORMAT_FLOAT;
+            break;
+        case OutputSettings::Depth_S32:
+            m_si.format |= SF_FORMAT_PCM_32;
+            break;
+        case OutputSettings::Depth_S24:
+            m_si.format |= SF_FORMAT_PCM_24;
+            break;
+        case OutputSettings::Depth_S8:
+            m_si.format |= SF_FORMAT_PCM_S8;
+            break;
+        case OutputSettings::Depth_S16:
+        default:
+            m_si.format |= SF_FORMAT_PCM_16;
+            break;
+            /*
+            case OutputSettings::Depth_S24:
+            case OutputSettings::Depth_S32:
+                    // FLAC does not support 32bit sampling, so take it as 24.
+                    m_si.format |= SF_FORMAT_PCM_24;
+                    break;
+            default:
+                    m_si.format |= SF_FORMAT_PCM_16;
+            */
+    }
 
 #ifdef LMMS_HAVE_SF_COMPLEVEL
-	double compression = getOutputSettings().getCompressionLevel();
-	sf_command(m_sf, SFC_SET_COMPRESSION_LEVEL, &compression, sizeof(double));
+    double compression = getOutputSettings().getCompressionLevel();
+    sf_command(m_sf, SFC_SET_COMPRESSION_LEVEL, &compression, sizeof(double));
 #endif
 
-	m_sf = sf_open(
+    m_sf = sf_open(
 #ifdef LMMS_BUILD_WIN32
-		outputFile().toLocal8Bit().constData(),
+            outputFile().toLocal8Bit().constData(),
 #else
-		outputFile().toUtf8().constData(),
+            outputFile().toUtf8().constData(),
 #endif
-		SFM_WRITE,
-		&m_si
-	);
+            SFM_WRITE, &m_si);
 
-	sf_command(m_sf, SFC_SET_CLIPPING, nullptr, SF_TRUE);
+    sf_command(m_sf, SFC_SET_CLIPPING, nullptr, SF_TRUE);
 
-        Song* song=Engine::getSong();
+    Song* song = Engine::getSong();
 
-        sf_set_string ( m_sf, SF_STR_TITLE, song->songMetaData("SongTitle")
-                        .toUtf8().constData());
-        sf_set_string ( m_sf, SF_STR_COPYRIGHT, song->songMetaData("Copyright")
-                        .toUtf8().constData());
-        sf_set_string ( m_sf, SF_STR_SOFTWARE, QString("LSMM %1").arg(LMMS_VERSION)
-                        .toUtf8().constData() );
-        sf_set_string ( m_sf, SF_STR_ARTIST, song->songMetaData("Artist")
-                        .toUtf8().constData());
-        sf_set_string ( m_sf, SF_STR_DATE, song->songMetaData("ReleaseDate")
-                        .toUtf8().constData());
-        sf_set_string ( m_sf, SF_STR_ALBUM, song->songMetaData("AlbumTitle")
-                        .toUtf8().constData());
-        sf_set_string ( m_sf, SF_STR_LICENSE, song->songMetaData("License")
-                        .toUtf8().constData());
-        sf_set_string ( m_sf, SF_STR_TRACKNUMBER, song->songMetaData("TrackNumber")
-                        .toUtf8().constData());
-        sf_set_string ( m_sf, SF_STR_GENRE, song->songMetaData("Genre")
-                        .toUtf8().constData());
+    sf_set_string(m_sf, SF_STR_TITLE,
+                  song->songMetaData("SongTitle").toUtf8().constData());
+    sf_set_string(m_sf, SF_STR_COPYRIGHT,
+                  song->songMetaData("Copyright").toUtf8().constData());
+    sf_set_string(m_sf, SF_STR_SOFTWARE,
+                  QString("LSMM %1").arg(LMMS_VERSION).toUtf8().constData());
+    sf_set_string(m_sf, SF_STR_ARTIST,
+                  song->songMetaData("Artist").toUtf8().constData());
+    sf_set_string(m_sf, SF_STR_DATE,
+                  song->songMetaData("ReleaseDate").toUtf8().constData());
+    sf_set_string(m_sf, SF_STR_ALBUM,
+                  song->songMetaData("AlbumTitle").toUtf8().constData());
+    sf_set_string(m_sf, SF_STR_LICENSE,
+                  song->songMetaData("License").toUtf8().constData());
+    sf_set_string(m_sf, SF_STR_TRACKNUMBER,
+                  song->songMetaData("TrackNumber").toUtf8().constData());
+    sf_set_string(m_sf, SF_STR_GENRE,
+                  song->songMetaData("Genre").toUtf8().constData());
 
-        QString comment("BPM: %1\n"
-                        "IRCS: %2\n"
-                        "Subgenre: %3\n"
-                        "Website: %4\n"
-                        "Label: %5\n");
-        comment=comment
-                .arg(QString("%1/%2")
-                     .arg(song->getTimeSigModel().getNumerator())
-                     .arg(song->getTimeSigModel().getDenominator()))
-                .arg(song->songMetaData("IRCS"))
-                .arg(song->songMetaData("Subgenre"))
-                .arg(song->songMetaData("ArtistWebsite"))
-                .arg(song->songMetaData("LabelWebsite"));
-        sf_set_string ( m_sf, SF_STR_COMMENT, comment
-                        .toUtf8().constData());
+    QString comment(
+            "BPM: %1\n"
+            "IRCS: %2\n"
+            "Subgenre: %3\n"
+            "Website: %4\n"
+            "Label: %5\n");
+    comment = comment.arg(QString("%1/%2")
+                                  .arg(song->getTimeSigModel().getNumerator())
+                                  .arg(song->getTimeSigModel()
+                                               .getDenominator()))
+                      .arg(song->songMetaData("IRCS"))
+                      .arg(song->songMetaData("Subgenre"))
+                      .arg(song->songMetaData("ArtistWebsite"))
+                      .arg(song->songMetaData("LabelWebsite"));
+    sf_set_string(m_sf, SF_STR_COMMENT, comment.toUtf8().constData());
 
-	return true;
+    return true;
 }
 
-void AudioFileFlac::writeBuffer(surroundSampleFrame const* _ab, fpp_t const _frames, float _masterGain)
+void AudioFileFlac::writeBuffer(surroundSampleFrame const* _ab,
+                                fpp_t const                _frames)
 {
-        Q_UNUSED(_masterGain);
-        Q_ASSERT(sizeof(sample_t)==sizeof(float));
-        sf_write_float(m_sf,(const float*)_ab,_frames*channels());
-
-        /*
-	OutputSettings::BitDepth depth = getOutputSettings().getBitDepth();
-
-	if (depth == OutputSettings::Depth_24Bit || depth == OutputSettings::Depth_32Bit) // Float encoding
-	{
-		std::unique_ptr<sample_t[]> buf{ new sample_t[frames*channels()] };
-		for(fpp_t frame = 0; frame < frames; ++frame)
-		{
-			for(ch_cnt_t channel=0; channel<channels(); ++channel)
-			{
-				buf[frame*channels() + channel] = _ab[frame][channel] * master_gain;
-			}
-		}
-		sf_writef_float(m_sf,static_cast<float*>(buf.get()),frames);
-	}
-	else // integer PCM encoding
-	{
-		std::unique_ptr<int_sample_t[]> buf{ new int_sample_t[frames*channels()] };
-		convertToS16(_ab, frames, master_gain, buf.get(), !isLittleEndian());
-		sf_writef_short(m_sf, static_cast<short*>(buf.get()), frames);
-	}
-        */
+    Q_ASSERT(sizeof(sample_t) == sizeof(float));
+    sf_write_float(m_sf, (const float*)_ab, _frames * channels());
 }
-
 
 void AudioFileFlac::finishEncoding()
 {
-	if (m_sf)
-	{
-		sf_write_sync(m_sf);
-		sf_close(m_sf);
-	}
+    if(m_sf)
+    {
+        sf_write_sync(m_sf);
+        sf_close(m_sf);
+    }
 }

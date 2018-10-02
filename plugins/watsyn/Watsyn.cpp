@@ -180,12 +180,12 @@ void WatsynObject::renderOutput( fpp_t _frames )
 		switch( m_amod )
 		{
 			case MOD_MIX:
-				A1_L = ( A1_L + A2_L ) / 2.0;
-				A1_R = ( A1_R + A2_R ) / 2.0;
+				A1_L = ( A1_L + A2_L ) / 2.;
+				A1_R = ( A1_R + A2_R ) / 2.;
 				break;
 			case MOD_AM:
-				A1_L *= qMax( 0.0f, A2_L + 1.0f );
-				A1_R *= qMax( 0.0f, A2_R + 1.0f );
+				A1_L *= qMax( 0., A2_L + 1. );
+				A1_R *= qMax( 0., A2_R + 1. );
 				break;
 			case MOD_RM:
 				A1_L *= A2_L;
@@ -199,12 +199,12 @@ void WatsynObject::renderOutput( fpp_t _frames )
 		switch( m_bmod )
 		{
 			case MOD_MIX:
-				B1_L = ( B1_L + B2_L ) / 2.0;
-				B1_R = ( B1_R + B2_R ) / 2.0;
+				B1_L = ( B1_L + B2_L ) / 2.;
+				B1_R = ( B1_R + B2_R ) / 2.;
 				break;
 			case MOD_AM:
-				B1_L *= qMax( 0.0f, B2_L + 1.0f );
-				B1_R *= qMax( 0.0f, B2_R + 1.0f );
+				B1_L *= qMax( 0., B2_L + 1. );
+				B1_R *= qMax( 0., B2_R + 1. );
 				break;
 			case MOD_RM:
 				B1_L *= B2_L;

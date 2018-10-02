@@ -74,10 +74,9 @@ Song::Song() :
 	m_tempoModel( DefaultTempo, MinTempo, MaxTempo, this, tr( "Tempo" ) ),
 	m_timeSigModel( this ),
 	m_oldTicksPerTact( DefaultTicksPerTact ),
-	//m_masterVolumeModel( 100, 0, 200, this, tr( "Master volume" ) ),
-        m_masterVolumeModel( 100.f, 0.f, 200.f, 0.1f, this, tr( "Master volume" ) ),
-	//m_masterPitchModel( 0, -12, 12, this, tr( "Master pitch" ) ),
-        m_masterPitchModel( 0.f, -60.f, 60.f, 0.001f, this, tr( "Master pitch" ) ),
+        m_masterVolumeModel( 100., 0., 200., 0.1, this, tr( "Master volume" ) ),
+        m_masterPitchModel( 0., -60., 60., 0.01, this, tr( "Master pitch" ) ),
+        m_masterPanningModel( 0., -100., 100., 0.1, this, tr( "Master panning" ) ),
 	m_metaData(),
 	m_fileName(),
 	m_oldFileName(),
@@ -111,9 +110,9 @@ Song::Song() :
                  SLOT( updateFramesPerTick() ) );
 
 	connect( &m_masterVolumeModel, SIGNAL( dataChanged() ),
-			this, SLOT( masterVolumeChanged() ) );
-/*	connect( &m_masterPitchModel, SIGNAL( dataChanged() ),
-			this, SLOT( masterPitchChanged() ) );*/
+                 this, SLOT( masterVolumeChanged() ) );
+        connect( &m_masterPanningModel, SIGNAL( dataChanged() ),
+                 this, SLOT( masterPanningChanged() ) );
 
 	qRegisterMetaType<Note>("Note");
 	qRegisterMetaType<const Pattern*>("const Pattern*");
@@ -131,15 +130,16 @@ Song::~Song()
 }
 
 
-
-
 void Song::masterVolumeChanged()
 {
-	Engine::mixer()->setMasterGain( m_masterVolumeModel.value() /
-								100.0f );
+	Engine::mixer()->setMasterVolumeGain( m_masterVolumeModel.value() / 100. );
 }
 
 
+void Song::masterPanningChanged()
+{
+	Engine::mixer()->setMasterPanningGain( m_masterPanningModel.value() / 100. );
+}
 
 
 void Song::setTempo()
@@ -293,13 +293,13 @@ void Song::processNextBuffer()
 	}
 
 	f_cnt_t framesPlayed = 0;
-	const float framesPerTick = Engine::framesPerTick();
+	const real_t framesPerTick = Engine::framesPerTick();
 
 	while( framesPlayed < Engine::mixer()->framesPerPeriod() )
 	{
 		m_vstSyncController.update();
 
-		float currentFrame = m_playPos[m_playMode].currentFrame();
+		real_t currentFrame = m_playPos[m_playMode].currentFrame();
 		// did we play a tick?
 		if( currentFrame >= framesPerTick )
 		{
@@ -398,7 +398,7 @@ void Song::processNextBuffer()
 		{
 			++framesPlayed;
 			m_playPos[m_playMode].setCurrentFrame( currentFrame
-								+ 1.0f );
+								+ 1. );
 			continue;
 		}
 		// do we have samples left in this tick but these are less
@@ -659,7 +659,7 @@ void Song::setPlayPos( tick_t ticks, PlayModes playMode )
 	m_elapsedTicks += ticksFromPlayMode - ticks;
 	m_elapsedMilliSeconds += MidiTime::ticksToMilliseconds( ticks - ticksFromPlayMode, getTempo() );
 	m_playPos[playMode].setTicks( ticks );
-	m_playPos[playMode].setCurrentFrame( 0.0f );
+	m_playPos[playMode].setCurrentFrame( 0. );
 
 // send a signal if playposition changes during playback
 	if( isPlaying() )
@@ -939,13 +939,13 @@ void Song::clearProject()
 	m_tempoModel.reset();
 	m_masterVolumeModel.reset();
 	m_masterPitchModel.reset();
+	m_masterPanningModel.reset();
 	m_timeSigModel.reset();
 
 	AutomationPattern::globalAutomationPattern( &m_tempoModel )->clear();
-	AutomationPattern::globalAutomationPattern( &m_masterVolumeModel )->
-									clear();
-	AutomationPattern::globalAutomationPattern( &m_masterPitchModel )->
-									clear();
+	AutomationPattern::globalAutomationPattern( &m_masterVolumeModel )->clear();
+	AutomationPattern::globalAutomationPattern( &m_masterPitchModel )->clear();
+	AutomationPattern::globalAutomationPattern( &m_masterPanningModel )->clear();
 
 	Engine::mixer()->doneChangeInModel();
 
@@ -1016,6 +1016,7 @@ void Song::createNewProject()
 	m_timeSigModel.reset();
 	m_masterVolumeModel.setInitValue( 100 );
 	m_masterPitchModel.setInitValue( 0 );
+	m_masterPanningModel.setInitValue( 0 );
 
 	QCoreApplication::instance()->processEvents();
 
@@ -1106,6 +1107,7 @@ void Song::loadProject( const QString & fileName )
 	m_timeSigModel.loadSettings( dataFile.head(), "timesig" );
 	m_masterVolumeModel.loadSettings( dataFile.head(), "mastervol" );
 	m_masterPitchModel.loadSettings( dataFile.head(), "masterpitch" );
+	m_masterPanningModel.loadSettings( dataFile.head(), "masterpanning" );
 
 	if(m_metaData.load(dataFile,dataFile.head()))
 		emit metaDataChanged();
@@ -1277,6 +1279,7 @@ bool Song::saveProjectFile(const QString& _fileName)
 	m_timeSigModel.saveSettings( dataFile, dataFile.head(), "timesig" );
 	m_masterVolumeModel.saveSettings( dataFile, dataFile.head(), "mastervol" );
 	m_masterPitchModel.saveSettings( dataFile, dataFile.head(), "masterpitch" );
+	m_masterPanningModel.saveSettings( dataFile, dataFile.head(), "masterpanning" );
 
 	m_metaData.save(dataFile,dataFile.head());
 

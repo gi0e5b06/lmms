@@ -31,6 +31,8 @@
 #include "AutomatableModel.h"
 #include "SampleBuffer.h"
 #include "TempoSyncKnobModel.h"
+#include "ComboBoxModel.h"
+
 #include "lmms_basics.h"
 
 
@@ -148,7 +150,9 @@ private:
 	FloatModel m_lfoAttackModel;
 	TempoSyncKnobModel m_lfoSpeedModel;
 	FloatModel m_lfoAmountModel;
-	IntModel m_lfoWaveModel;
+	//IntModel m_lfoWaveModel;
+        ComboBoxModel m_lfoWaveBankModel;
+        ComboBoxModel m_lfoWaveIndexModel;
 
 	BoolModel m_x100Model;
 	BoolModel m_controlEnvAmountModel;

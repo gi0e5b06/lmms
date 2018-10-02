@@ -44,6 +44,7 @@
 #include "NotePlayHandle.h"
 #include "Knob.h"
 #include "SampleBuffer.h"
+#include "SampleRate.h"
 #include "Song.h"
 #include "ConfigManager.h"
 #include "endian_handling.h"
@@ -1156,7 +1157,8 @@ GigSample::~GigSample()
 GigSample::GigSample( const GigSample& g )
 	: sample( g.sample ), region( g.region ), attenuation( g.attenuation ),
 	  adsr( g.adsr ), pos( g.pos ), interpolation( g.interpolation ),
-	  srcState( NULL ), sampleFreq( g.sampleFreq ), freqFactor( g.freqFactor )
+	  srcState( NULL ),
+          sampleFreq( g.sampleFreq ), freqFactor( g.freqFactor )
 {
 	// On the copy, we want to create the object
 	updateSampleRate();
@@ -1173,10 +1175,10 @@ GigSample& GigSample::operator=( const GigSample& g )
 	adsr = g.adsr;
 	pos = g.pos;
 	interpolation = g.interpolation;
-	srcState = NULL;
 	sampleFreq = g.sampleFreq;
 	freqFactor = g.freqFactor;
 
+	srcState = NULL;
 	if( g.srcState != NULL )
 	{
 		updateSampleRate();
@@ -1210,6 +1212,9 @@ void GigSample::updateSampleRate()
 bool GigSample::convertSampleRate( sampleFrame & oldBuf, sampleFrame & newBuf,
 		f_cnt_t oldSize, f_cnt_t newSize, float freq_factor, f_cnt_t& used )
 {
+        /*
+#ifdef REAL_IS_FLOAT
+    {
 	if( srcState == NULL )
 	{
 		return false;
@@ -1247,6 +1252,21 @@ bool GigSample::convertSampleRate( sampleFrame & oldBuf, sampleFrame & newBuf,
 			<< newSize << "generated" << src_data.output_frames_gen;
 		return false;
 	}
+    }
+#endif
+#ifdef REAL_IS_DOUBLE
+        */
+        {
+            f_cnt_t generated=0;
+            return SampleRate::resample(&oldBuf,
+                                        &newBuf,
+                                        oldSize,
+                                        newSize,
+                                        freq_factor,
+                                        10,used,generated,
+                                        srcState);
+    }
+    //#endif
 
 	return true;
 }

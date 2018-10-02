@@ -28,9 +28,9 @@
 //#include <QMessageLogger>
 
 #include "Midi.h"
-#include "panning_constants.h" // REQUIRED
-//#include "Pitch.h"
 #include "volume.h"
+#include "pitch.h"
+#include "panning.h"
 
 #include <cstdlib>
 #include <cstdio>

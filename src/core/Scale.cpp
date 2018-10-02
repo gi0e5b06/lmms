@@ -40,12 +40,12 @@
 #include <QTextStream>
 
 /*
-float scale_et(const float _x,
-               const float _b             = 0.f,
-               const float _baseFrequency = 440.f,
-               const float _baseKey       = 57.f,
-               const float _octaveFactor  = 2.f,
-               const float _octaveKeys    = 12.f)
+real_t scale_et(const real_t _x,
+               const real_t _b             = 0.,
+               const real_t _baseFrequency = 440.,
+               const real_t _baseKey       = 57.,
+               const real_t _octaveFactor  = 2.,
+               const real_t _octaveKeys    = 12.)
 {
     return _baseFrequency
            * pow(_octaveFactor, (_key - _baseKey + _bending) / _octaveKeys);
@@ -205,11 +205,11 @@ void Scale::fillIndexModel(ComboBoxModel& _model, const int _bank)
 Scale::Scale(const QString& _name,
              const int      _bank,
              const int      _index,
-             const float    _baseFrequency,
-             const float    _baseKey,
-             const float    _octaveFactor,
-             const float    _octaveKeys,
-             const float    _bendingFactor) :
+             const real_t   _baseFrequency,
+             const real_t   _baseKey,
+             const real_t   _octaveFactor,
+             const real_t   _octaveKeys,
+             const real_t   _bendingFactor) :
       m_built(false),
       m_name(_name), m_bank(_bank), m_index(_index),
       m_baseFrequency(_baseFrequency), m_baseKey(_baseKey),
@@ -263,8 +263,8 @@ void Scale::build()
         }
         QTextStream in(&f);
 
-        QVector<float> degrees;
-        degrees.append(1.f);
+        QVector<real_t> degrees;
+        degrees.append(1.);
         bool    description = false;
         int     count       = -1;
         QString s;
@@ -303,7 +303,7 @@ void Scale::build()
 
             if(s.indexOf(QChar('.')) >= 0)
             {
-                    degrees.append((1200.+s.toDouble()) / 1200.);
+                degrees.append((1200. + s.toDouble()) / 1200.);
             }
             else
             {
@@ -326,12 +326,12 @@ void Scale::build()
         int size = degrees.size();
         if(m_data != nullptr)
             MM_FREE(m_data);
-        m_data = MM_ALLOC(float, size);
+        m_data = MM_ALLOC(real_t, size);
         for(int i = 0; i < size; i++)
         {
             m_data[i] = degrees.at(i);
             qInfo("Scale: degree n°%d is %f (%f Hz)", i, m_data[i],
-                  440.f * m_data[i]);
+                  440. * m_data[i]);
         }
         m_size         = size - 1;
         m_octaveKeys   = m_size;
@@ -346,27 +346,27 @@ void Scale::build()
 
 // convenient f() for later (curve, waveform)
 // x must be between 0. and 1.
-float Scale::f(const float _x) const
+real_t Scale::f(const real_t _x) const
 {
-    float k = qBound(0.f, roundf(127.f * _x), 127.f);
-    float b = 100.f * (127.f * _x - k);
-    return qBound(0.f, frequency(k, b) / 22050.f, 1.f);
+    real_t k = qBound(0., round(127. * _x), 127.);
+    real_t b = 100. * (127. * _x - k);
+    return qBound(0., frequency(k, b) / 22050., 1.);
 }
 
 // x must be between 0. and 1.
-float Scale::tune(const float _x) const
+real_t Scale::tune(const real_t _x) const
 {
     if(!m_built)
         const_cast<Scale*>(this)->build();
 
     if(m_data == nullptr)
         return m_baseFrequency
-               * powf(m_octaveFactor, _x * 127.f / m_octaveKeys);
+               * pow(m_octaveFactor, _x * 127. / m_octaveKeys);
 
-    const float x = _x * 127.f;
-    int         k = floorf(x);
-    const float b = x - k;
-    float       r = m_baseFrequency;
+    const real_t x = _x * 127.;
+    int          k = x; //floor(x);
+    const real_t b = x - k;
+    real_t       r = m_baseFrequency;
     while(k < 0)
     {
         r /= m_data[m_size];
@@ -383,27 +383,27 @@ float Scale::tune(const float _x) const
         k = 0;
     }
     if(m_size >= 1)
-            r *= (1.f+ b * (m_data[1] - 1.f));
+        r *= (1. + b * (m_data[1] - 1.));
     return r;
 }
 
-float Scale::bending(const float _x) const
+real_t Scale::bending(const real_t _x) const
 {
     if(!m_built)
         const_cast<Scale*>(this)->build();
 
-    return powf(m_bendingFactor, _x / m_octaveKeys);
+    return pow(m_bendingFactor, _x / m_octaveKeys);
 
     // TODO
-    //return powf(m_bendingFactor, sinf(_x) / m_octaveKeys);
+    // return pow(m_bendingFactor, sin(_x) / m_octaveKeys);
 }
 
 // k should be between 0. and 127.
-float Scale::frequency(const float _key, const float _cents) const
+real_t Scale::frequency(const real_t _key, const real_t _cents) const
 {
-    float x = (_key - m_baseKey + _cents / 100.f);
-    float k = roundf(x);
-    float b = x - k;
+    real_t x = (_key - m_baseKey + _cents / 100.);
+    real_t k = round(x);
+    real_t b = x - k;
     // qInfo("FREQ %f %f %f",x,k,b);
-    return tune(qBound(-1.f, k / 127.f, 1.f)) * bending(qBound(-1.f, b, 1.f));
+    return tune(bound(-1., k / 127., 1.)) * bending(bound(-1., b, 1.));
 }

@@ -35,7 +35,6 @@
 #include "NotePlayHandle.h"
 #include "Piano.h"
 #include "PeripheralView.h"
-//#include "Pitch.h"
 #include "Track.h"
 
 

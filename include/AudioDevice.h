@@ -35,156 +35,140 @@ class AudioPort;
 class Mixer;
 class QThread;
 
-
 class AudioDevice
 {
-public:
-	AudioDevice( const ch_cnt_t _channels, Mixer* mixer );
-	virtual ~AudioDevice();
+  public:
+    AudioDevice(const ch_cnt_t _channels, Mixer* mixer);
+    virtual ~AudioDevice();
 
-	inline void lock()
-	{
-		m_devMutex.lock();
-	}
+    inline void lock()
+    {
+        m_devMutex.lock();
+    }
 
-	inline void unlock()
-	{
-		m_devMutex.unlock();
-	}
+    inline void unlock()
+    {
+        m_devMutex.unlock();
+    }
 
+    // if audio-driver supports ports, classes inherting AudioPort
+    // (e.g. channel-tracks) can register themselves for making
+    // audio-driver able to collect their individual output and provide
+    // them at a specific port - currently only supported by JACK
+    virtual void registerPort(AudioPort* _port);
+    virtual void unregisterPort(AudioPort* _port);
+    virtual void renamePort(AudioPort* _port);
 
-	// if audio-driver supports ports, classes inherting AudioPort
-	// (e.g. channel-tracks) can register themselves for making
-	// audio-driver able to collect their individual output and provide
-	// them at a specific port - currently only supported by JACK
-	virtual void registerPort( AudioPort * _port );
-	virtual void unregisterPort( AudioPort * _port );
-	virtual void renamePort( AudioPort * _port );
+    inline bool supportsCapture() const
+    {
+        return m_supportsCapture;
+    }
 
+    inline sample_rate_t sampleRate() const
+    {
+        return m_sampleRate;
+    }
 
-	inline bool supportsCapture() const
-	{
-		return m_supportsCapture;
-	}
+    ch_cnt_t channels() const
+    {
+        return m_channels;
+    }
 
-	inline sample_rate_t sampleRate() const
-	{
-		return m_sampleRate;
-	}
+    void processNextBuffer();
 
-	ch_cnt_t channels() const
-	{
-		return m_channels;
-	}
+    virtual void startProcessing()
+    {
+        m_inProcess = true;
+    }
 
-	void processNextBuffer();
+    virtual void stopProcessing();
 
-	virtual void startProcessing()
-	{
-		m_inProcess = true;
-	}
+    virtual void applyQualitySettings();
 
-	virtual void stopProcessing();
+  protected:
+    // subclasses can re-implement this for being used in conjunction with
+    // processNextBuffer()
+    virtual void writeBuffer(const surroundSampleFrame* /*_buf*/,
+                             const fpp_t /*_frames*/)
+    {
+    }
 
-	virtual void applyQualitySettings();
+    // called by according driver for fetching new sound-data
+    fpp_t getNextBuffer(surroundSampleFrame* _ab);
 
+    void applyMasterAdjustments(surroundSampleFrame* _ab, fpp_t _frames);
 
+    void swapEndian(void* _buf, const fpp_t _frames, const int _frameSize);
+    void clearBuffer(void*       _outbuf,
+                     const fpp_t _frames,
+                     const int   _frameSize);
 
-protected:
-	// subclasses can re-implement this for being used in conjunction with
-	// processNextBuffer()
-	virtual void writeBuffer( const surroundSampleFrame * /* _buf*/,
-                                  const fpp_t /*_frames*/,
-                                  const float /*_master_gain*/ )
-	{
-	}
+    // convert a given audio-buffer to a buffer in signed 16-bit samples
+    // returns num of bytes in outbuf
+    int convertToS16(const surroundSampleFrame* _ab,
+                     const fpp_t                _frames,
+                     sampleS16_t*               _output_buffer,
+                     const bool                 _convert_endian = false);
 
-	// called by according driver for fetching new sound-data
-	fpp_t getNextBuffer( surroundSampleFrame * _ab );
+    // clear given signed-int-16-buffer
+    void clearS16Buffer(sampleS16_t* _outbuf, const fpp_t _frames);
 
-        void swapEndian(void* _buf,
-                        const fpp_t _frames,
-                        const int _frameSize);
-        void clearBuffer(void* _outbuf,
-                         const fpp_t _frames,
-                         const int _frameSize);
+    // convert a given audio-buffer to a buffer in signed 32-bit samples
+    // returns num of bytes in outbuf
+    int convertToS32(const surroundSampleFrame* _ab,
+                     const fpp_t                _frames,
+                     int32_t*                   _output_buffer,
+                     const bool                 _convert_endian = false);
 
- 	// convert a given audio-buffer to a buffer in signed 16-bit samples
-	// returns num of bytes in outbuf
-	int convertToS16( const surroundSampleFrame * _ab,
-                          const fpp_t _frames,
-                          const float _master_gain,
-                          int_sample_t * _output_buffer,
-                          const bool _convert_endian = false );
+    // clear given signed-int 32-bit buffer
+    void clearS32Buffer(int32_t* _outbuf, const fpp_t _frames);
 
-	// clear given signed-int-16-buffer
-	void clearS16Buffer( int_sample_t * _outbuf,
-                             const fpp_t _frames );
+    // convert a given audio-buffer to a buffer in signed 16-bit samples
+    // returns num of bytes in outbuf
+    int convertToF32(const surroundSampleFrame* _ab,
+                     const fpp_t                _frames,
+                     float*                     _output_buffer,
+                     const bool                 _convert_endian = false);
 
- 	// convert a given audio-buffer to a buffer in signed 32-bit samples
-	// returns num of bytes in outbuf
-	int convertToS32( const surroundSampleFrame * _ab,
-                          const fpp_t _frames,
-                          const float _master_gain,
-                          int32_t * _output_buffer,
-                          const bool _convert_endian = false );
+    // clear given signed-int-16-buffer
+    void clearF32Buffer(float* _outbuf, const fpp_t _frames);
 
-	// clear given signed-int 32-bit buffer
-	void clearS32Buffer( int32_t * _outbuf,
-                             const fpp_t _frames );
+    // resample given buffer from samplerate _src_sr to samplerate _dst_sr
+    void resample(const surroundSampleFrame* _src,
+                  const fpp_t                _frames,
+                  surroundSampleFrame*       _dst,
+                  const sample_rate_t        _src_sr,
+                  const sample_rate_t        _dst_sr);
 
-	// convert a given audio-buffer to a buffer in signed 16-bit samples
-	// returns num of bytes in outbuf
-	int convertToF32( const surroundSampleFrame * _ab,
-                          const fpp_t _frames,
-                          const float _master_gain,
-                          float* _output_buffer,
-                          const bool _convert_endian = false );
+    inline void setSampleRate(const sample_rate_t _new_sr)
+    {
+        m_sampleRate = _new_sr;
+    }
 
-	// clear given signed-int-16-buffer
-	void clearF32Buffer( float* _outbuf, const fpp_t _frames );
+    Mixer* mixer()
+    {
+        return m_mixer;
+    }
 
+    bool hqAudio() const;
 
-	// resample given buffer from samplerate _src_sr to samplerate _dst_sr
-	void resample( const surroundSampleFrame * _src,
-                       const fpp_t _frames,
-                       surroundSampleFrame * _dst,
-                       const sample_rate_t _src_sr,
-                       const sample_rate_t _dst_sr );
+    static void stopProcessingThread(QThread* thread);
 
-	inline void setSampleRate( const sample_rate_t _new_sr )
-	{
-		m_sampleRate = _new_sr;
-	}
+  protected:
+    bool m_supportsCapture;
 
-	Mixer* mixer()
-	{
-		return m_mixer;
-	}
+  private:
+    sample_rate_t m_sampleRate;
+    ch_cnt_t      m_channels;
+    Mixer*        m_mixer;
+    bool          m_inProcess;
 
-	bool hqAudio() const;
+    QMutex m_devMutex;
 
-	static void stopProcessingThread( QThread * thread );
+    SRC_DATA   m_srcData;
+    SRC_STATE* m_srcState;
 
-
-protected:
-	bool m_supportsCapture;
-
-
-private:
-	sample_rate_t m_sampleRate;
-	ch_cnt_t m_channels;
-	Mixer* m_mixer;
-	bool m_inProcess;
-
-	QMutex m_devMutex;
-
-	SRC_DATA m_srcData;
-	SRC_STATE * m_srcState;
-
-	surroundSampleFrame * m_buffer;
-
-} ;
-
+    surroundSampleFrame* m_buffer;
+};
 
 #endif

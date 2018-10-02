@@ -125,9 +125,11 @@ void SamplePlayHandle::play( sampleFrame * buffer )
 	if( !( m_track && m_track->isMuted() ) &&
 	    !( m_bbTrack && m_bbTrack->isMuted() ) )
 	{
-/*		stereoVolumeVector v =
-			{ { m_volumeModel->value() / DefaultVolume,
-				m_volumeModel->value() / DefaultVolume } };*/
+                /*
+                  StereoVolume vv =
+			{{ m_volumeModel->value() / DefaultVolume,
+                           m_volumeModel->value() / DefaultVolume }};
+                */
 		//qWarning("SamplePlayHandle::play workingBuffer=%p",workingBuffer);
 		if( ! m_sampleBuffer->play( workingBuffer, &m_state, frames,
 								BaseFreq ) )

@@ -44,7 +44,7 @@ AudioSdl::AudioSdl( bool & _success_ful, Mixer*  _mixer ) :
 	_success_ful = false;
 
 	m_convertedBufSize = mixer()->framesPerPeriod() * channels()
-						* sizeof( int_sample_t );
+						* sizeof( sampleS16_t );
 	m_convertedBuf = new Uint8[m_convertedBufSize];
 
 
@@ -172,12 +172,11 @@ void AudioSdl::sdlAudioCallback( Uint8 * _buf, int _len )
 				return;
 			}
 			m_convertedBufSize = frames * channels()
-						* sizeof( int_sample_t );
+						* sizeof( sampleS16_t );
 
 			convertToS16( m_outBuf, frames,
-						mixer()->masterGain(),
-						(int_sample_t *)m_convertedBuf,
-						m_convertEndian );
+                                      (sampleS16_t *)m_convertedBuf,
+                                      m_convertEndian );
 		}
 		const int min_len = qMin( _len, m_convertedBufSize
 							- m_convertedBufPos );

@@ -801,8 +801,9 @@ void Directory::update( void )
 			{
 				QTreeWidgetItem * sep = new QTreeWidgetItem;
 				sep->setText( 0,
-					FileBrowserTreeWidget::tr(
-						"--- Factory files ---" ) );
+					FileBrowserTreeWidget::tr
+                                              ( "--- Factory files ---" )
+                                              .replace("-","—"));
 				sep->setIcon( 0, embed::getIconPixmap(
 							"factory_files" ) );
 				insertChild(  m_dirCount + top_index, sep );

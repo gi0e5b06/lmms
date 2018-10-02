@@ -29,9 +29,8 @@
 //#include "ConfigManager.h"
 #include "Engine.h"
 #include "Mixer.h"
-
-//#include "lmms_math.h"
 #include "interpolation.h"
+#include "lmms_float.h"
 
 #include <QDir>
 #include <QMutex>
@@ -103,7 +102,7 @@ WaveForm::Set::Set()
     m_bankNames[BANK] = "Constant";
     new WaveForm /*MINUS1*/ ("-1.0", BANK, 0, minus1f, Exact);
     new WaveForm /*MINUS05*/ ("-0.5", BANK, 20, minus05f, Exact);
-    new WaveForm /*PLUS05*/ ("+0.5f", BANK, 60, plus05f, Exact);
+    new WaveForm /*PLUS05*/ ("+0.5", BANK, 60, plus05f, Exact);
     new WaveForm /*PLUS1*/ ("+1.0", BANK, 80, plus1f, Exact);
 
     // Mathematical
@@ -198,7 +197,7 @@ void WaveForm::Set::createDegraded(int _bank, bool _linear, int _quality)
                  _quality);
 }
 
-void WaveForm::Set::createSoften(int _bank, float _softness)
+void WaveForm::Set::createSoften(int _bank, real_t _softness)
 {
     const int       BANK = _bank;
     QString         cat  = QString("S%1").arg(int(_softness * 100));
@@ -252,21 +251,21 @@ const WaveForm WaveForm::ZERO(" 0.0", ZERO_BANK, ZERO_INDEX, zerof, Exact);
 const WaveForm WaveForm::SQRT("sqrt()", 20, 12, sqrtf, Linear, 10);
 
 const wavefunction_t WaveForm::sine
-        = [](const float _x) { return WaveForm::SINE.f(_x); };
+        = [](const real_t _x) { return WaveForm::SINE.f(_x); };
 const wavefunction_t WaveForm::triangle
-        = [](const float _x) { return WaveForm::TRIANGLE.f(_x); };
+        = [](const real_t _x) { return WaveForm::TRIANGLE.f(_x); };
 const wavefunction_t WaveForm::sawtooth
-        = [](const float _x) { return WaveForm::SAWTOOTH.f(_x); };
+        = [](const real_t _x) { return WaveForm::SAWTOOTH.f(_x); };
 const wavefunction_t WaveForm::square
-        = [](const float _x) { return WaveForm::SQUARE.f(_x); };
+        = [](const real_t _x) { return WaveForm::SQUARE.f(_x); };
 const wavefunction_t WaveForm::harshsaw
-        = [](const float _x) { return WaveForm::HARSHSAW.f(_x); };
+        = [](const real_t _x) { return WaveForm::HARSHSAW.f(_x); };
 const wavefunction_t WaveForm::sqpeak
-        = [](const float _x) { return WaveForm::SQPEAK.f(_x); };
+        = [](const real_t _x) { return WaveForm::SQPEAK.f(_x); };
 const wavefunction_t WaveForm::whitenoise
-        = [](const float _x) { return WaveForm::WHITENOISE.f(_x); };
+        = [](const real_t _x) { return WaveForm::WHITENOISE.f(_x); };
 const wavefunction_t WaveForm::sqrt
-        = [](const float _x) { return WaveForm::SQRT.f(_x); };
+        = [](const real_t _x) { return WaveForm::SQRT.f(_x); };
 
 const WaveForm* WaveForm::Set::get(const int _bank, const int _index)
 {
@@ -366,6 +365,12 @@ WaveForm::WaveForm(const QString&        _name,
                    const int             _quality) :
       WaveForm(_name, _bank, _index, _mode, _quality)
 {
+    if(_func == nullptr)
+    {
+        BACKTRACE
+        qFatal("WaveForm::WaveForm null function: %s", qPrintable(_name));
+    }
+
     m_func = _func;
     if(m_mode == Exact)
         m_built = true;
@@ -387,13 +392,13 @@ WaveForm::WaveForm(const QString&        _name,
 WaveForm::WaveForm(const QString&        _name,
                    const int             _bank,
                    const int             _index,
-                   float*                _data,
+                   real_t*               _data,
                    const int             _size,
                    const interpolation_t _mode,
                    const int             _quality) :
       WaveForm(_name, _bank, _index, _mode, _quality)
 {
-    m_data = MM_ALLOC(float, _size);
+    m_data = MM_ALLOC(real_t, _size);
     for(int f = 0; f < _size; ++f)
         m_data[f] = _data[f];
     m_size = _size - 1;
@@ -411,7 +416,7 @@ WaveForm::WaveForm(const QString&        _name,
                    const int             _quality) :
       WaveForm(_name, _bank, _index, _mode, _quality)
 {
-    m_data = MM_ALLOC(float, _size);
+    m_data = MM_ALLOC(real_t, _size);
     for(int f = 0; f < _size; ++f)
         m_data[f] = _data[f][0];
     m_size = _size - 1;
@@ -426,7 +431,7 @@ WaveForm::~WaveForm()
         MM_FREE(m_data);
 }
 
-WaveForm* WaveForm::setSoftness(float _softness)
+WaveForm* WaveForm::setSoftness(real_t _softness)
 {
     m_softness = _softness;
     if(m_built)
@@ -462,12 +467,12 @@ void WaveForm::build()
         // 2 -> 69
         // 1 -> 24
         // 0 -> 8 !
-        m_size = int(ceilf(8.f * pow(2.94283095638f, m_quality))) - 1;
+        m_size = int(ceil(8. * pow(2.94283095638, m_quality))) - 1;
         if(m_data != nullptr)
             MM_FREE(m_data);
-        m_data = MM_ALLOC(float, m_size + 1);
+        m_data = MM_ALLOC(real_t, m_size + 1);
         for(int i = m_size; i >= 0; --i)
-            m_data[i] = m_func(float(i) / float(m_size));
+            m_data[i] = m_func(real_t(i) / real_t(m_size));
         m_built = true;
     }
     else if(m_file != "")
@@ -478,7 +483,7 @@ void WaveForm::build()
 
         if(m_data != nullptr)
             MM_FREE(m_data);
-        m_data = MM_ALLOC(float, size);
+        m_data = MM_ALLOC(real_t, size);
         for(int f = 0; f < size; ++f)
             m_data[f] = data[f][0];
         m_size = size - 1;
@@ -488,48 +493,49 @@ void WaveForm::build()
     else
     {
         qWarning("Error: waveform not built: %s", qPrintable(m_name));
+        BACKTRACE
         return;
     }
 
-    if(m_softness != 0.f)
+    if(m_softness != 0.)
         soften();
 }
 
 void WaveForm::soften()
 {
     const int size = m_size + 1;
-    const int bw   = 0.5f * m_softness * m_size;
+    const int bw   = 0.5 * m_softness * m_size;
     if(bw == 0)
         return;
 
-    float v0 = 0.f;
+    real_t v0 = 0.;
     for(int i = -bw; i <= bw; ++i)
     {
         const int f = (i + size) % size;
         v0 += m_data[f];
     }
-    const float n = 1.f / float(1 + 2 * bw);
+    const real_t n = 1. / real_t(1 + 2 * bw);
     v0 *= n;
 
-    float omin = m_data[0];
-    float omax = m_data[0];
-    float nmin = v0;
-    float nmax = v0;
+    real_t omin = m_data[0];
+    real_t omax = m_data[0];
+    real_t nmin = v0;
+    real_t nmax = v0;
 
-    float* data = MM_ALLOC(float, size);
-    data[0]     = v0;
+    real_t* data = MM_ALLOC(real_t, size);
+    data[0]      = v0;
     for(int f = 1; f < size; ++f)
     {
-        const float ov = m_data[f];
+        const real_t ov = m_data[f];
         if(ov < omin)
             omin = ov;
         if(ov > omax)
             omax = ov;
 
-        const float nv = data[f - 1]
-                         + (m_data[(f + bw) % size]
-                            - m_data[(f - bw - 1 + size) % size])
-                                   * n;
+        const real_t nv = data[f - 1]
+                          + (m_data[(f + bw) % size]
+                             - m_data[(f - bw - 1 + size) % size])
+                                    * n;
         if(nv < nmin)
             nmin = nv;
         if(nv > nmax)
@@ -538,59 +544,59 @@ void WaveForm::soften()
         data[f] = nv;
     }
 
-    float os = qMax(fabsf(omax), fabsf(omin));
-    float ns = qMax(fabsf(nmax), fabsf(nmin));
+    real_t os = qMax(abs(omax), abs(omin));
+    real_t ns = qMax(abs(nmax), abs(nmin));
     if(ns >= SILENCE)
     {
-        const float k = os / ns;
-        if(k != 1.f)
+        const real_t k = os / ns;
+        if(k != 1.)
             for(int f = 0; f < size; ++f)
                 data[f] *= k;
     }
 
-    float* old = m_data;
-    m_data     = data;
+    real_t* old = m_data;
+    m_data      = data;
     MM_FREE(old);
 }
 
 // x must be between 0. and 1.
-float WaveForm::f(const float _x) const
+real_t WaveForm::f(const real_t _x) const
 {
     return f(_x, m_mode);
 }
 
-float WaveForm::f(const float _x, const float _antialias) const
+real_t WaveForm::f(const real_t _x, const real_t _antialias) const
 {
     return f(_x, _antialias, m_mode);
 }
 
 // x must be between 0. and 1.
-float WaveForm::f(const float           _x,
-                  const float           _antialias,
-                  const interpolation_t _m) const
+real_t WaveForm::f(const real_t          _x,
+                   const real_t          _antialias,
+                   const interpolation_t _m) const
 {
-    float r = 0.f;
+    real_t r = 0.;
 
-    if(_antialias > 0.f)
+    if(_antialias > 0.)
     {
         // qInfo("antialias f: %f", _antialias);
         const int N = 13;
         for(int i = -N; i <= N; i++)
-            r += f(fraction(_x + 1.f + _antialias * i / (N + 1)), _m);
+            r += f(fraction(_x + 1. + _antialias * i / (N + 1)), _m);
         r /= (2 * N + 1);
         /*
-        const float d  = 2.f / Engine::mixer()->processingSampleRate();
-        const float r0 = f(fraction(_x + 1.f - 3.f * d), false, _m);
-        const float r1 = f(fraction(_x + 1.f - d), false, _m);
-        const float rx = f(fraction(_x), false, _m);
-        const float r2 = f(fraction(_x + d), false, _m);
-        const float r3 = f(fraction(_x + 3.f * d), false, _m);
-        return rx + (r2 - rx) * d / sqrtf(sqf(d) + sqf(r2 - rx))
-               + (rx - r1) * d / sqrtf(sqf(d) + sqf(rx - r1))
-               + (r3 - rx) * 3.f * d / sqrtf(sqf(3.f * d) + sqf(r3 - rx))
-               + (rx - r0) * 3.f * d / sqrtf(sqf(3.f * d) + sqf(rx - r1));
+        const real_t d  = 2. / Engine::mixer()->processingSampleRate();
+        const real_t r0 = f(fraction(_x + 1. - 3. * d), false, _m);
+        const real_t r1 = f(fraction(_x + 1. - d), false, _m);
+        const real_t rx = f(fraction(_x), false, _m);
+        const real_t r2 = f(fraction(_x + d), false, _m);
+        const real_t r3 = f(fraction(_x + 3. * d), false, _m);
+        return rx + (r2 - rx) * d / sqrt(sqf(d) + sqf(r2 - rx))
+               + (rx - r1) * d / sqrt(sqf(d) + sqf(rx - r1))
+               + (r3 - rx) * 3. * d / sqrt(sqf(3. * d) + sqf(r3 - rx))
+               + (rx - r0) * 3. * d / sqrt(sqf(3. * d) + sqf(rx - r1));
         */
-        // optimal4pInterpolate(r0, r1, r2, r3, 0.5f);
+        // optimal4pInterpolate(r0, r1, r2, r3, 0.5);
     }
     else
     {
@@ -601,7 +607,7 @@ float WaveForm::f(const float           _x,
 }
 
 // x must be between 0. and 1.
-float WaveForm::f(const float _x, const interpolation_t _m) const
+real_t WaveForm::f(const real_t _x, const interpolation_t _m) const
 {
     if(!m_built)
         const_cast<WaveForm*>(this)->build();
@@ -610,15 +616,15 @@ float WaveForm::f(const float _x, const interpolation_t _m) const
     if((m != m_mode) && (m == Exact || m_mode == Exact))
         m = m_mode;
 
-    float r = 0.f;
-    switch(m_mode)
+    real_t r = 0.;
+    switch(m)
     {
         case Discrete:
             r = m_data[int(_x * m_size)];
             break;
         case Rounded:
         {
-            int i = roundf(_x * m_size);
+            int i = round(_x * m_size);
             r     = m_data[i];
         }
         break;
@@ -626,11 +632,11 @@ float WaveForm::f(const float _x, const interpolation_t _m) const
         case Cosinus:
         case Optimal2:
         {
-            const float j  = _x * m_size;
-            const int   i  = int(j);
-            const float d  = j - i;
-            const float r0 = m_data[i];
-            const float r1 = m_data[i + 1];
+            const real_t j  = _x * m_size;
+            const int    i  = int(j);
+            const real_t d  = j - i;
+            const real_t r0 = m_data[i];
+            const real_t r1 = m_data[i + 1];
             // r = r0 + d * (r1 - r0);
             switch(m_mode)
             {
@@ -653,18 +659,18 @@ float WaveForm::f(const float _x, const interpolation_t _m) const
             break;
         default:
         {
-            const float p  = _x * m_size;
-            const int   i1 = int(p);
-            const float d  = p - i1;
-            const int   i0 = (i1 == 0 ? m_size + 1 : i1 - 1);
-            const int   i2 = i1 + 1;
-            const int   i3 = (i2 == m_size + 1 ? 0 : i2 + 1);
-            const float r0 = m_data[i0];
-            const float r1 = m_data[i1];
-            const float r2 = m_data[i2];
-            const float r3 = m_data[i3];
+            const real_t p  = _x * m_size;
+            const int    i1 = int(p);
+            const real_t d  = p - i1;
+            const int    i0 = (i1 == 0 ? m_size + 1 : i1 - 1);
+            const int    i2 = i1 + 1;
+            const int    i3 = (i2 == m_size + 1 ? 0 : i2 + 1);
+            const real_t r0 = m_data[i0];
+            const real_t r1 = m_data[i1];
+            const real_t r2 = m_data[i2];
+            const real_t r3 = m_data[i3];
 
-            switch(m_mode)
+            switch(m)
             {
                 case Cubic:
                     r = cubicInterpolate(r0, r1, r2, r3, d);
@@ -690,8 +696,8 @@ float WaveForm::f(const float _x, const interpolation_t _m) const
 /*
 WaveForm::Plan::Plan()
 {
-    m_normBuf = (float*)fftwf_malloc((FFT_BUFFER_SIZE * 2) *
-sizeof(float));
+    m_normBuf = (real_t*)fftwf_malloc((FFT_BUFFER_SIZE * 2) *
+sizeof(real_t));
     // memset(m_normBuf, 0, 2 * FFT_BUFFER_SIZE);
 
     m_specBuf = (fftwf_complex*)fftwf_malloc((FFT_BUFFER_SIZE + 1)
@@ -712,23 +718,23 @@ WaveForm::Plan::~Plan()
     fftwf_free(m_normBuf);
 }
 
-WaveForm::Plan::build(WaveForm& _wf, const float _cut)
+WaveForm::Plan::build(WaveForm& _wf, const real_t _cut)
 {
     QMutexLocker locker(m_mutex);
 
     for(int i = FFT_BUFFER_SIZE * 2 - 1; i >= 0; --i)
     {
-        float x      = float(i) / float(FFT_BUFFER_SIZE * 2);
-        float y      = _wf->f(x, false);
+        real_t x      = real_t(i) / real_t(FFT_BUFFER_SIZE * 2);
+        real_t y      = _wf->f(x, false);
         m_normBuf[i] = y;
     }
 
     fftwf_execute(m_r2cPlan);
 
-    for(int f = int(ceilf(_cut)); f <= FFT_BUFFER_SIZE; f++)
+    for(int f = int(ceil(_cut)); f <= FFT_BUFFER_SIZE; f++)
     {
-        m_specBuf[f][0] = 0.f;
-        m_specBuf[f][1] = 0.f;
+        m_specBuf[f][0] = 0.;
+        m_specBuf[f][1] = 0.;
     }
 
     fftwf_execute(m_c2rPlan);

@@ -34,6 +34,7 @@
 #include "GuiApplication.h"
 
 #include "lmmsversion.h"
+#include "debug.h"
 #include "Backtrace.h"
 
 

@@ -72,48 +72,48 @@ void LcdSpinBox::update()
     LcdWidget::update();
 }
 
-void LcdSpinBox::convert(const QPoint& _p, float& value_, float& dist_)
+void LcdSpinBox::convert(const QPoint& _p, real_t& value_, real_t& dist_)
 {
-    // dist_ = (_p.x()*_p.x()+_p.y()*_p.y())/22500.f; //-100.f
-    dist_ = 1. + qAbs(_p.x() / 50.f);
-    // if(dist_<0.f) dist_=0.f;
-    // if(dist_>1.f) dist_=1.f;
+    // dist_ = (_p.x()*_p.x()+_p.y()*_p.y())/22500.; //-100.
+    dist_ = 1. + qAbs(_p.x() / 50.);
+    // if(dist_<0.) dist_=0.;
+    // if(dist_>1.) dist_=1.;
 
-    value_ = -_p.y() / 125.f;
-    if(value_ < -1.f)
-        value_ = -1.f;
-    if(value_ > 1.f)
-        value_ = 1.f;
-    value_ = 0.5f + value_ / 2.f;
+    value_ = -_p.y() / 125.;
+    if(value_ < -1.)
+        value_ = -1.;
+    if(value_ > 1.)
+        value_ = 1.;
+    value_ = 0.5 + value_ / 2.;
 
     // qInfo("x=%d y=%d d=%f v=%f",_p.x(),_p.y(),dist_,value_);
 }
 
 void LcdSpinBox::setPosition(const QPoint& _p, bool _shift)
 {
-    float value, dist;
+    real_t value, dist;
     convert(_p, value, dist);
 
     if(!model())
         return;
 
-    // const float oldValue = model()->value();
+    // const real_t oldValue = model()->value();
 
     if(_shift)
     {
         // m_pressValue=model()->value();
-        dist /= 5.f;
+        dist /= 5.;
         // qInfo("shift pv=%f dist=%f",m_pressValue,dist);
     }
 
-    const float step = model()->step<float>();
+    const real_t step = model()->step<real_t>();
 
     /*
     if( model()->isScaleLogarithmic() ) // logarithmic code
     {
-            float roundedValue = qRound(
+            real_t roundedValue = qRound(
     (dist*(value*model()->range()+model()->minValue())
-                                         +(1.f-dist)*m_pressValue) / step ) *
+                                         +(1.-dist)*m_pressValue) / step ) *
     step; model()->setValue( roundedValue );
     }
 
@@ -122,21 +122,21 @@ void LcdSpinBox::setPosition(const QPoint& _p, bool _shift)
     {
         /*
         // absolute
-        float roundedValue = model()->minValue()+
+        real_t roundedValue = model()->minValue()+
                 qRound( ( dist*value*model()->range()+
-                          (1.f-dist)*(m_pressValue-model()->minValue()) ) /
+                          (1.-dist)*(m_pressValue-model()->minValue()) ) /
         step ) * step;
         */
         // relative
-        float roundedValue
+        real_t roundedValue
                 = qRound(((m_pressValue - model()->minValue())
                           + dist * (value - 0.5)
-                                    * qMin(50.f * step, model()->range()))
+                                    * qMin<real_t>(50. * step, model()->range()))
                          / step)
                   * step;
         // model()->setValue( roundedValue );
-        float v = model()->minValue()
-                  + qMax(0.f, qMin(roundedValue, model()->range()));
+        real_t v = model()->minValue()
+                + qMax<real_t>(0., qMin<real_t>(roundedValue, model()->range()));
         model()->setValue(v);
         LcdWidget::setValue(v);
         // qInfo("       rv=%f dist=%f",roundedValue,dist);
@@ -176,7 +176,7 @@ void LcdSpinBox::mousePressEvent(QMouseEvent* _me)
         if(model())
             m_pressValue = model()->value();
         else
-            m_pressValue = 0.f;
+            m_pressValue = 0.;
 
         m_pressLeft = true;
         m_pressPos  = _me->pos();

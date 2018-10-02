@@ -85,34 +85,34 @@ LfoController::~LfoController()
 void LfoController::fillValueBuffer()
 {
 	m_phaseOffset = m_phaseModel.value() / 360.0;
-	float phase = m_currentPhase + m_phaseOffset;
+	real_t phase = m_currentPhase + m_phaseOffset;
 
 	// roll phase up until we're in sync with period counter
 	m_lastUpdatedPeriod++;
 	if( m_lastUpdatedPeriod < s_periods )
 	{
 		int diff = s_periods - m_lastUpdatedPeriod;
-		phase += static_cast<float>( Engine::mixer()->framesPerPeriod() * diff ) / m_duration;
+		phase += static_cast<real_t>( Engine::mixer()->framesPerPeriod() * diff ) / m_duration;
 		m_lastUpdatedPeriod += diff;
 	}
 
-	float amount = m_amountModel.value();
-	ValueBuffer *amountBuffer = m_amountModel.valueBuffer();
+	real_t amount = m_amountModel.value();
+	ValueBuffer* amountBuffer = m_amountModel.valueBuffer();
 	int amountInc = amountBuffer ? 1 : 0;
-	float *amountPtr = amountBuffer ? &(amountBuffer->values()[ 0 ] ) : &amount;
+	real_t* amountPtr = amountBuffer ? &(amountBuffer->values()[ 0 ] ) : &amount;
 
-	//for( float& f : m_valueBuffer )
-        int    len=m_valueBuffer.length();
-        float* val=m_valueBuffer.values();
+	//for( real_t& f : m_valueBuffer )
+        int     len=m_valueBuffer.length();
+        real_t* val=m_valueBuffer.values();
         for(int i=0;i<len;++i)
 	{
-		const float currentSample = m_sampleFunction != NULL
+		const real_t currentSample = m_sampleFunction != NULL
 			? m_sampleFunction( phase )
 			: m_userDefSampleBuffer->userWaveSample( phase );
 
 		//f
                 //m_valueBuffer.set(i,...);
-                val[i]=qBound( 0.0f, m_baseModel.value() + ( *amountPtr * currentSample / 2.0f ), 1.0f );
+                val[i]=qBound( 0., m_baseModel.value() + ( *amountPtr * currentSample / 2. ), 1. );
 
 		phase += 1.0 / m_duration;
 		amountPtr += amountInc;
@@ -131,7 +131,7 @@ void LfoController::updatePhase()
 
 void LfoController::updateDuration()
 {
-	float newDurationF = Engine::mixer()->processingSampleRate() *	m_speedModel.value();
+	real_t newDurationF = Engine::mixer()->processingSampleRate() *	m_speedModel.value();
 
 	switch(m_multiplierModel.value() )
 	{
@@ -178,7 +178,7 @@ void LfoController::updateSampleFunction()
 		case Oscillator::UserDefinedWave:
 			m_sampleFunction = NULL;
 			/*TODO: If C++11 is allowed, should change the type of
-			 m_sampleFunction be std::function<sample_t(const float)>
+			 m_sampleFunction be std::function<sample_t(const real_t)>
 			 and use the line below:
 			*/
 			//m_sampleFunction = &(m_userDefSampleBuffer->userWaveSample)

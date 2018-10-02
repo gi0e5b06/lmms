@@ -23,65 +23,75 @@
  *
  */
 
-#include <QLayout>
-
 #include "DualFilterControlDialog.h"
-#include "DualFilterControls.h"
-#include "embed.h"
-#include "LedCheckBox.h"
+
 #include "ComboBox.h"
+#include "DualFilterControls.h"
+#include "LedCheckBox.h"
 #include "ToolTip.h"
+#include "embed.h"
 #include "gui_templates.h"
 
-#define makeknob( name, x, y, model, label, hint, unit ) 	\
-	Knob * name = new Knob( knobBright_26, this); 			\
-	name -> move( x, y );									\
-	name ->setModel( &controls-> model );					\
-	name ->setLabel( label );							\
-	name ->setHintText( hint, unit );
+#include <QLayout>
 
+#define makeknob(name, x, y, model, label, hint, unit) \
+    Knob* name = new Knob(knobBright_26, this);        \
+    name->move(x, y);                                  \
+    name->setModel(&controls->model);                  \
+    name->setLabel(label);                             \
+    name->setHintText(hint, unit)
 
-
-DualFilterControlDialog::DualFilterControlDialog( DualFilterControls* controls ) :
-	EffectControlDialog( controls )
+DualFilterControlDialog::DualFilterControlDialog(
+        DualFilterControls* controls) :
+      EffectControlDialog(controls)
 {
-	setAutoFillBackground( true );
-	QPalette pal;
-	pal.setBrush( backgroundRole(), PLUGIN_NAME::getIconPixmap( "artwork" ) );
-	setPalette( pal );
-	setFixedSize( 373, 109 );
+    setWindowIcon(PLUGIN_NAME::getIcon("logo"));
 
-	makeknob( cut1Knob, 24, 26, m_cut1Model, tr( "FREQ" ), tr( "Cutoff frequency" ), "Hz" )
-	makeknob( res1Knob, 74, 26, m_res1Model, tr( "RESO" ), tr( "Resonance" ), "" )
-	makeknob( gain1Knob, 124, 26, m_gain1Model, tr( "GAIN" ), tr( "Gain" ), "%" )
-	makeknob( mixKnob, 173, 37, m_mixModel, tr( "MIX" ), tr( "Mix" ), "" )
-	makeknob( cut2Knob, 222, 26, m_cut2Model, tr( "FREQ" ), tr( "Cutoff frequency" ), "Hz" )
-	makeknob( res2Knob, 272, 26, m_res2Model, tr( "RESO" ), tr( "Resonance" ), "" )
-	makeknob( gain2Knob, 322, 26, m_gain2Model, tr( "GAIN" ), tr( "Gain" ), "%" )
+    setAutoFillBackground(true);
+    QPalette pal;
+    pal.setBrush(backgroundRole(), embed::getIconPixmap("plugin_bg"));
+    // pal.setBrush(backgroundRole(),PLUGIN_NAME::getIconPixmap("artwork"));
+    setPalette(pal);
 
-	gain1Knob-> setVolumeKnob( true );
-	gain2Knob-> setVolumeKnob( true );
+    setFixedWidth(250);
+    setMinimumHeight(109);
 
-	LedCheckBox * enabled1Toggle = new LedCheckBox( "", this,
-				tr( "Filter 1 enabled" ), LedCheckBox::Green );
-	LedCheckBox * enabled2Toggle = new LedCheckBox( "", this,
-				tr( "Filter 2 enabled" ), LedCheckBox::Green );
+    makeknob(cut1Knob, 6, 16, m_cut1Model, tr("FREQ"), tr("Cutoff frequency"),
+             "Hz");
+    makeknob(res1Knob, 36, 16, m_res1Model, tr("RESO"), tr("Resonance"), "");
+    makeknob(gain1Knob, 66, 16, m_gain1Model, tr("GAIN"), tr("Gain"), "%");
+    makeknob(mixKnob, 125 - 13, 16, m_mixModel, tr("MIX"), tr("Mix"), "");
+    makeknob(cut2Knob, 224 - 66, 16, m_cut2Model, tr("FREQ"),
+             tr("Cutoff frequency"), "Hz");
+    makeknob(res2Knob, 224 - 36, 16, m_res2Model, tr("RESO"), tr("Resonance"),
+             "");
+    makeknob(gain2Knob, 224 - 6, 16, m_gain2Model, tr("GAIN"), tr("Gain"),
+             "%");
 
-	enabled1Toggle -> move( 12, 11 );
-	enabled1Toggle -> setModel( &controls -> m_enabled1Model );
-	ToolTip::add( enabled1Toggle, tr( "Click to enable/disable Filter 1" ) );
-	enabled2Toggle -> move( 210, 11 );
-	enabled2Toggle -> setModel( &controls -> m_enabled2Model );
-	ToolTip::add( enabled2Toggle, tr( "Click to enable/disable Filter 2" ) );
+    cut1Knob->setPointColor(Qt::green);
+    cut2Knob->setPointColor(Qt::green);
+    gain1Knob->setVolumeKnob(true);
+    gain2Knob->setVolumeKnob(true);
 
-	ComboBox * m_filter1ComboBox = new ComboBox( this );
-	m_filter1ComboBox->setGeometry( 19, 70, 137, 22 );
-	m_filter1ComboBox->setFont( pointSize<8>( m_filter1ComboBox->font() ) );
-	m_filter1ComboBox->setModel( &controls->m_filter1Model );
+    LedCheckBox* enabled1Toggle = new LedCheckBox(
+            "", this, tr("Filter 1 enabled"), LedCheckBox::Green);
+    LedCheckBox* enabled2Toggle = new LedCheckBox(
+            "", this, tr("Filter 2 enabled"), LedCheckBox::Green);
 
-	ComboBox * m_filter2ComboBox = new ComboBox( this );
-	m_filter2ComboBox->setGeometry( 217, 70, 137, 22 );
-	m_filter2ComboBox->setFont( pointSize<8>( m_filter2ComboBox->font() ) );
-	m_filter2ComboBox->setModel( &controls->m_filter2Model );
+    enabled1Toggle->move(6, 0);
+    enabled1Toggle->setModel(&controls->m_enabled1Model);
+    ToolTip::add(enabled1Toggle, tr("Click to enable/disable Filter 1"));
+    enabled2Toggle->move(224 - 66, 0);
+    enabled2Toggle->setModel(&controls->m_enabled2Model);
+    ToolTip::add(enabled2Toggle, tr("Click to enable/disable Filter 2"));
+
+    ComboBox* m_filter1ComboBox = new ComboBox(this);
+    m_filter1ComboBox->setGeometry(6, 55, 180, 22);
+    m_filter1ComboBox->setFont(pointSize<8>(m_filter1ComboBox->font()));
+    m_filter1ComboBox->setModel(&controls->m_filter1Model);
+
+    ComboBox* m_filter2ComboBox = new ComboBox(this);
+    m_filter2ComboBox->setGeometry(64, 80, 180, 22);
+    m_filter2ComboBox->setFont(pointSize<8>(m_filter2ComboBox->font()));
+    m_filter2ComboBox->setModel(&controls->m_filter2Model);
 }
-

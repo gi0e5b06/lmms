@@ -25,10 +25,10 @@
 #ifndef INSTRUMENT_SOUND_SHAPING_VIEW_H
 #define INSTRUMENT_SOUND_SHAPING_VIEW_H
 
-#include <QWidget>
-
 #include "InstrumentSoundShaping.h"
 #include "ModelView.h"
+
+#include <QScrollArea>
 
 class QLabel;
 
@@ -39,7 +39,8 @@ class Knob;
 class TabWidget;
 
 
-class InstrumentSoundShapingView : public QWidget, public ModelView
+class InstrumentSoundShapingView : public QScrollArea /*QWidget*/,
+        public ModelView
 {
 	Q_OBJECT
 public:
@@ -54,7 +55,8 @@ private:
 
 
 	InstrumentSoundShaping * m_ss;
-	TabWidget * m_targetsTabWidget;
+
+	//TabWidget * m_targetsTabWidget;
 	EnvelopeAndLfoView * m_envLfoViews[InstrumentSoundShaping::NumTargets];
 
 	// filter-stuff

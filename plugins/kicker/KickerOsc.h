@@ -27,97 +27,134 @@
 #define KICKER_OSC_H
 
 #include "DspEffectLibrary.h"
-#include "Oscillator.h"
-
-#include "lmms_math.h"
-#include "interpolation.h"
+//#include "Oscillator.h"
 #include "MemoryManager.h"
+#include "WaveForm.h"
+#include "interpolation.h"
+#include "lmms_math.h"
 
-
-template<class FX = DspEffectLibrary::StereoBypass>
+template <class FX = DspEffectLibrary::StereoBypass>
 class KickerOsc
 {
-	MM_OPERATORS
-public:
-	KickerOsc( const FX & fx, const float start, const float end, const float noise, const float offset,
-		const float slope, const float env, const float diststart, const float distend, const float length ) :
-		m_phase( offset ),
-		m_startFreq( start ),
-		m_endFreq( end ),
-		m_noise( noise ),
-		m_slope( slope ),
-		m_env( env ),
-		m_distStart( diststart ),
-		m_distEnd( distend ),
-		m_hasDistEnv( diststart != distend ),
-		m_length( length ),
-		m_FX( fx ),
-		m_counter( 0 ),
-		m_freq( start )
-	{
-	}
+    MM_OPERATORS
 
-	virtual ~KickerOsc()
-	{
-	}
+  public:
+    KickerOsc(const FX&       fx,
+              const real_t    start,
+              const real_t    end,
+              const real_t    tail,
+              const real_t    noise,
+              const real_t    offset,
+              const real_t    slope,
+              const real_t    phaseFactor,
+              const real_t    env,
+              const real_t    diststart,
+              const real_t    distend,
+              const real_t    length,
+              const WaveForm* _sin,
+              const WaveForm* _whn) :
+          m_phase(offset),
+          m_startFreq(start), m_endFreq(end), m_tail(tail), m_noise(noise),
+          m_slope(slope), m_phaseFactor(phaseFactor), m_env(env),
+          m_distStart(diststart), m_distEnd(distend),
+          m_hasDistEnv(diststart != distend), m_length(length), m_sin(_sin),
+          m_whn(_whn), m_FX(fx), m_counter(0), m_freq(start)
+    {
+    }
 
-	void update( sampleFrame* buf, const fpp_t frames, const float sampleRate )
-	{
-		for( fpp_t frame = 0; frame < frames; ++frame )
-		{
-			//const double gain = ( 1 - fastPow( ( m_counter < m_length ) ? m_counter / m_length : 1, m_env ) );
-                        if(m_counter < m_length)
-                        {
-                                const float gain = 1.f - fastPow( m_counter / m_length, m_env );
-                                const sample_t s = ( Oscillator::sinSample( m_phase ) * ( 1 - m_noise ) ) +
-                                                   ( Oscillator::noiseSample( 0 ) * gain * gain * m_noise );
-                                buf[frame][0] = s * gain;
-                                buf[frame][1] = s * gain;
-                        }
-                        else
-                        {
-                                buf[frame][0] = 0.f;
-                                buf[frame][1] = 0.f;
-                        }
+    virtual ~KickerOsc()
+    {
+    }
 
-			// update distortion envelope if necessary
-			if( m_hasDistEnv && m_counter < m_length )
-			{
-				float thres = linearInterpolate( m_distStart, m_distEnd, m_counter / m_length );
-				m_FX.leftFX().setThreshold( thres );
-				m_FX.rightFX().setThreshold( thres );
-			}
+    void update(sampleFrame* buf, const fpp_t frames, const real_t sampleRate)
+    {
+        for(fpp_t frame = 0; frame < frames; ++frame)
+        {
+            // const double gain = ( 1 - fastPow( ( m_counter < m_length ) ?
+            // m_counter / m_length : 1, m_env ) );
+            if(m_counter < m_length)
+            {
+                /*
+                  m_versionModel
+                  const real_t gain = 1. - fastPow( m_counter / m_length,
+                  m_env ); const sample_t s = ( Oscillator::sinSample(
+                  m_phase ) * ( 1. - m_noise ) ) +
+                  ( Oscillator::noiseSample( 0. ) * gain *
+                  gain * m_noise );
+                */
+                /*
+                  const real_t gain
+                  = 1. - fastPowf(m_counter / m_length, m_env);
+                  const real_t    p = absFraction(m_phase);
+                  const sample_t s = (WaveForm::SINE.f(p) * (1. - m_noise))
+                  + (WaveForm::WHITENOISE.f(p) * gain * gain * m_noise);
+                */
 
-			m_FX.nextSample( buf[frame][0], buf[frame][1] );
-			m_phase += m_freq / sampleRate;
+                const real_t gain
+                        = 1.
+                          - fastPow(real_t(m_counter) / real_t(m_length),
+                                    m_env);
+                const real_t   p1 = absFraction(m_phase);
+                const real_t   p2 = absFraction(m_phaseFactor * m_phase);
+                const sample_t s
+                        = (m_sin->f(p1) * (1. - m_noise))
+                          + (m_whn->f(p2) * fastPow(gain, m_tail) * m_noise);
 
-                        if(m_counter < m_length)
-                        {
-                                const double change = ( ( m_startFreq - m_endFreq ) * ( 1 - fastPow( m_counter / m_length, m_slope ) ) );
-                                m_freq = m_endFreq + change;
-                        }
-			++m_counter;
-		}
-	}
+                // if( gain>1. || m_noise>1. || s>1. ) qInfo("Kicker g=%f
+                // n=%f s=%f",gain,m_noise,s);
+                buf[frame][0] = s * gain;
+                buf[frame][1] = s * gain;
+            }
+            else
+            {
+                buf[frame][0] = 0.;
+                buf[frame][1] = 0.;
+            }
 
+            // update distortion envelope if necessary
+            if(m_hasDistEnv && m_counter < m_length)
+            {
+                real_t thres = linearInterpolate(m_distStart, m_distEnd,
+                                                 m_counter / m_length);
+                m_FX.leftFX().setThreshold(thres);
+                m_FX.rightFX().setThreshold(thres);
+            }
 
-private:
-	float m_phase;
-	const float m_startFreq;
-	const float m_endFreq;
-	const float m_noise;
-	const float m_slope;
-	const float m_env;
-	const float m_distStart;
-	const float m_distEnd;
-	const bool m_hasDistEnv;
-	const float m_length;
-	FX m_FX;
+            m_FX.nextSample(buf[frame][0], buf[frame][1]);
+            m_phase += m_freq / double(sampleRate);
 
-	unsigned long m_counter;
-	double m_freq;
+            if(m_counter < m_length)
+            {
+                const double change
+                        = double(m_startFreq - m_endFreq)
+                          * (1.
+                             - fastPow(double(m_counter) / double(m_length),
+                                       double(m_slope)));
+                m_freq = m_endFreq + change;
+            }
+            ++m_counter;
+        }
+    }
 
+  private:
+    double          m_phase;
+    const real_t    m_startFreq;
+    const real_t    m_endFreq;
+    const real_t    m_tail;
+    const real_t    m_noise;
+    const real_t    m_slope;
+    const real_t    m_phaseFactor;
+    const real_t    m_env;
+    const real_t    m_distStart;
+    const real_t    m_distEnd;
+    const bool      m_hasDistEnv;
+    const real_t    m_length;
+    const WaveForm* m_sin;
+    const WaveForm* m_whn;
+
+    FX            m_FX;
+    unsigned long m_counter;
+    double        m_freq;
 };
-
 
 #endif

@@ -77,7 +77,7 @@ bool AmplifierEffect::processAudioBuffer( sampleFrame* buf, const fpp_t frames )
 
 	for( fpp_t f = 0; f < frames; ++f )
 	{
-                float w0, d0, w1, d1;
+                real_t w0, d0, w1, d1;
                 computeWetDryLevels(f, frames, smoothBegin, smoothEnd,
                                     w0, d0, w1, d1);
 
@@ -85,22 +85,22 @@ bool AmplifierEffect::processAudioBuffer( sampleFrame* buf, const fpp_t frames )
 		sample_t s[2] = { buf[f][0], buf[f][1] };
 
 		// vol knob
-		const float vol = volBuf 
-			? volBuf->value( f ) 
+		const float vol = volBuf
+			? volBuf->value( f )
 			: m_ampControls.m_volumeModel.value();
-                s[0] *= vol * 0.01f;
-                s[1] *= vol * 0.01f;
+                s[0] *= vol * 0.01;
+                s[1] *= vol * 0.01;
 
 		// convert pan values to left/right values
 		const float pan = panBuf
 			? panBuf->value( f )
 			: m_ampControls.m_panModel.value();
-		const float left1 = pan <= 0.f
-			? 1.f
-			: 1.f - pan * 0.01f;
-		const float right1 = pan >= 0.f
-                        ? 1.f
-                        : 1.f + pan * 0.01f;
+		const float left1 = pan <= 0.
+			? 1.
+			: 1. - pan * 0.01;
+		const float right1 = pan >= 0.
+                        ? 1.
+                        : 1. + pan * 0.01;
 
 		// second stage amplification
 		const float left2 = leftBuf

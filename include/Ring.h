@@ -51,7 +51,7 @@ class EXPORT Ring : public QObject
     };
 
     Ring(f_cnt_t _size);
-    Ring(float _duration);
+    Ring(real_t _duration);
     virtual ~Ring();
 
     void reset();
@@ -59,7 +59,7 @@ class EXPORT Ring : public QObject
     sample_t value(f_cnt_t _offset, ch_cnt_t _ch);
     sample_t value(f_cnt_t _offset, ch_cnt_t _ch, f_cnt_t _pos);
 
-    const float maxLevel() const
+    const real_t maxLevel() const
     {
         return m_maxLevel;
     }
@@ -71,7 +71,7 @@ class EXPORT Ring : public QObject
 
     void setFrozen(bool _b)
     {
-            m_frozen = _b;
+        m_frozen = _b;
     }
 
     const f_cnt_t size() const
@@ -83,12 +83,12 @@ class EXPORT Ring : public QObject
         return m_duration;
     }
     void changeSize(f_cnt_t _size);
-    void changeDuration(float _duration);
+    void changeDuration(real_t _duration);
 
     void rewind(f_cnt_t _frames);
     void forward(f_cnt_t _frames);
-    void rewind(float _ms);
-    void forward(float _ms);
+    void rewind(real_t _ms);
+    void forward(real_t _ms);
 
     bool isSampleRateAware();
     void setSampleRateAware(bool _b);
@@ -100,39 +100,39 @@ class EXPORT Ring : public QObject
               const f_cnt_t _pos) const;
     void read(sampleFrame*  _dst,
               const f_cnt_t _length,
-              const float   _pos) const;
+              const real_t  _pos) const;
 
     void write(const sampleFrame& _src,
                const OpMode       _op     = Put,
-               const float        _factor = 1.f);
+               const real_t       _factor = 1.f);
     void write(const sampleFrame* _src,
                const f_cnt_t      _length,
                const OpMode       _op     = Put,
-               const float        _factor = 1.f);
+               const real_t       _factor = 1.f);
     void write(const sampleFrame* _src,
                const f_cnt_t      _length,
                const f_cnt_t      _offset,
                const OpMode       _op     = Put,
-               const float        _factor = 1.f);
+               const real_t       _factor = 1.f);
     void write(const sampleFrame* _src,
                const f_cnt_t      _length,
-               const float        _offset,
+               const real_t       _offset,
                const OpMode       _op     = Put,
-               const float        _factor = 1.f);
+               const real_t       _factor = 1.f);
 
   protected slots:
     void updateSamplerate();
 
   protected:
-    inline f_cnt_t msToFrames(const float _ms) const
+    inline f_cnt_t msToFrames(const real_t _ms) const
     {
         return static_cast<f_cnt_t>(
-                ceilf(_ms * (float)m_sampleRate * 0.001f));
+                ceilf(_ms * (real_t)m_sampleRate * 0.001f));
     }
 
-    inline float framesToMs(const f_cnt_t _size) const
+    inline real_t framesToMs(const f_cnt_t _size) const
     {
-        return float(_size) * 1000.f / (float)m_sampleRate;
+        return real_t(_size) * 1000.f / (real_t)m_sampleRate;
     }
 
     inline f_cnt_t relpos(const f_cnt_t _offset) const
@@ -140,32 +140,36 @@ class EXPORT Ring : public QObject
         return abspos(m_position + _offset);
     }
 
-    inline f_cnt_t relpos(const float _offset) const
+    inline f_cnt_t relpos(const real_t _offset) const
     {
         return relpos(msToFrames(_offset));
     }
 
-    inline f_cnt_t abspos(const f_cnt_t _pos) const
+    /*inline*/ f_cnt_t abspos(const f_cnt_t _pos) const
     {
         f_cnt_t r = _pos;
+        Q_ASSERT(m_size > 0);
         if(r < 0)
             r = (r % m_size) + m_size;
         r %= m_size;
+
+        Q_ASSERT(r >= 0);
+        Q_ASSERT(r < m_size);
         return r;
     }
 
-    inline f_cnt_t abspos(const float _pos) const
+    inline f_cnt_t abspos(const real_t _pos) const
     {
         return abspos(msToFrames(_pos));
     }
 
     // const fpp_t m_fpp;
-    float            m_maxLevel;
+    real_t           m_maxLevel;
     volatile bool    m_frozen;
     bool             m_sampleRateAware;
     sample_rate_t    m_sampleRate;
     f_cnt_t          m_size;
-    float            m_duration;
+    real_t           m_duration;
     sampleFrame*     m_buffer;
     volatile f_cnt_t m_position;
 };

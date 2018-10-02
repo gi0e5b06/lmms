@@ -1,8 +1,7 @@
 /*
- * panning_constants.h - declaration of some constants, concerning the
- *             panning of a note
+ * pitch.h - declaration of some constants and types concerning instrument pitch
  *
- * Copyright (c) 2004-2009 Tobias Doerffel <tobydox/at/users.sourceforge.net>
+ * Copyright (c) 2014 Tobias Doerffel <tobydox/at/users.sourceforge.net>
  *
  * This file is part of LMMS - https://lmms.io
  *
@@ -23,14 +22,18 @@
  *
  */
 
-#ifndef PANNING_CONSTANTS_H
-#define PANNING_CONSTANTS_H
+#ifndef PITCH_H
+#define PITCH_H
+
+#include "lmmsconfig.h"
 
 #include "lmms_basics.h"
+//#include "lmms_basics.h"
+//#include "Midi.h"
 
-const panning_t PanningRight = ( 0 + 100 );
-const panning_t PanningLeft = - PanningRight;
-const panning_t PanningCenter = 0;
-const panning_t DefaultPanning = PanningCenter;
+const pitch_t CentsPerSemitone = 100;
+const pitch_t MinPitchDefault = -CentsPerSemitone;
+const pitch_t MaxPitchDefault = CentsPerSemitone;
+const pitch_t DefaultPitch = 0;
 
 #endif

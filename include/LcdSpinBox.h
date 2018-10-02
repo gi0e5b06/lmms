@@ -74,7 +74,7 @@ class EXPORT LcdSpinBox
     virtual void wheelEvent(QWheelEvent* _we);
     virtual void mouseDoubleClickEvent(QMouseEvent* _me);
 
-    virtual void convert(const QPoint& _p, float& value_, float& dist_);
+    virtual void convert(const QPoint& _p, real_t& value_, real_t& dist_);
     virtual void setPosition(const QPoint& _p, bool _shift);
 
   private slots:
@@ -84,7 +84,7 @@ class EXPORT LcdSpinBox
     // void toggleScale();
 
   private:
-    float  m_pressValue;  // model value when left button pressed
+    real_t m_pressValue;  // model value when left button pressed
     QPoint m_pressPos;    // mouse pos when left button pressed
     bool   m_pressLeft;   // true when left button pressed
 

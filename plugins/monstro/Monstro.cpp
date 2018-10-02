@@ -602,8 +602,8 @@ void MonstroSynth::renderOutput( fpp_t _frames, sampleFrame * _buf  )
 		// o2 modulation?
 		if( omod == MOD_AM )
 		{
-			O3L = qBound( -MODCLIP, O3L * qMax( 0.0f, 1.0f + O2L ), MODCLIP );
-			O3R = qBound( -MODCLIP, O3R * qMax( 0.0f, 1.0f + O2R ), MODCLIP );
+			O3L = qBound<sample_t>( -MODCLIP, O3L * qMax( 0., 1. + O2L ), MODCLIP );
+			O3R = qBound<sample_t>( -MODCLIP, O3R * qMax( 0., 1. + O2R ), MODCLIP );
 		}
 
 		// reverse sync - invert waveforms when needed
@@ -780,21 +780,21 @@ inline void MonstroSynth::updateModulators( float * env1, float * env2, float * 
 			if( m_env_phase[i] < 1.0f ) // pre-delay phase
 			{
 				env[i][f] = 0.0f;
-				m_env_phase[i] = qMin( 1.0f, m_env_phase[i] + m_env_pre[i] );
+				m_env_phase[i] = qMin<real_t>( 1., m_env_phase[i] + m_env_pre[i] );
 			}
 			else if( m_env_phase[i] < 2.0f ) // attack phase
 			{
 				env[i][f] = calcSlope( i, fraction( m_env_phase[i] ) );
-				m_env_phase[i] = qMin( 2.0f, m_env_phase[i] + m_env_att[i] );
+				m_env_phase[i] = qMin<real_t>( 2., m_env_phase[i] + m_env_att[i] );
 			}
 			else if( m_env_phase[i] < 3.0f ) // hold phase
 			{
 				env[i][f] = 1.0f;
-				m_env_phase[i] = qMin( 3.0f, m_env_phase[i] + m_env_hold[i] );
+				m_env_phase[i] = qMin<real_t>( 3., m_env_phase[i] + m_env_hold[i] );
 			}
 			else if( m_env_phase[i] < 4.0f ) // decay phase
 			{
-				const sample_t s = calcSlope( i, 1.0f - fraction( m_env_phase[i] ) );
+				const real_t s = calcSlope( i, 1.0f - fraction( m_env_phase[i] ) );
 				if( s <= m_env_sus[i] )
 				{
 					env[i][f] = m_env_sus[i];
@@ -802,7 +802,7 @@ inline void MonstroSynth::updateModulators( float * env1, float * env2, float * 
 				else
 				{
 					env[i][f] = s;
-					m_env_phase[i] = qMin( 4.0f - m_env_sus[i], m_env_phase[i] + m_env_dec[i] );
+					m_env_phase[i] = qMin<real_t>( 4. - m_env_sus[i], m_env_phase[i] + m_env_dec[i] );
 					if( m_env_phase[i] == 4.0f ) m_env_phase[i] = 5.0f; // jump over release if sustain is zero - fix for clicking
 				}
 			}
@@ -817,7 +817,7 @@ inline void MonstroSynth::updateModulators( float * env1, float * env2, float * 
 }
 
 
-inline sample_t MonstroSynth::calcSlope( int slope, sample_t s )
+inline real_t MonstroSynth::calcSlope( int slope, real_t s )
 {
 	if( m_parent->m_slope[slope] == 1.0f ) return s;
 	if( s == 0.0f ) return s;

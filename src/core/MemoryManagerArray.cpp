@@ -22,7 +22,7 @@ MemoryManagerArray MemoryManagerArray::S496 (   64, 496);
 MemoryManagerArray MemoryManagerArray::S512 ( 2048, 512,"tmp");
 MemoryManagerArray MemoryManagerArray::S552 ( 4096, 552);
 //968
-MemoryManagerArray MemoryManagerArray::S1024(   64,1024);
+MemoryManagerArray MemoryManagerArray::S1024(  256,1024);
 MemoryManagerArray MemoryManagerArray::S1056(  768,1056);
 MemoryManagerArray MemoryManagerArray::S1392(  128,1392);
 MemoryManagerArray MemoryManagerArray::S2048(  256,2048,"Buffer");
@@ -145,15 +145,15 @@ void MemoryManagerArray::free( void * ptr, const char* file, long line)
 void* MemoryManagerArray::alignedAlloc( size_t size , const char* file, long line)
 {
 	char *ptr, *ptr2, *aligned_ptr;
-	const int align_mask = ALIGN_SIZE - 1;
+	const int align_mask = MM_ALIGN_SIZE - 1;
 
-	//ptr = static_cast<char*>( malloc( size + ALIGN_SIZE + sizeof( int ) ) );
-	ptr = static_cast<char*>(MemoryManagerArray::alloc( size + ALIGN_SIZE + sizeof(int), file, line));
+	//ptr = static_cast<char*>( malloc( size + MM_ALIGN_SIZE + sizeof( int ) ) );
+	ptr = static_cast<char*>(MemoryManagerArray::alloc( size + MM_ALIGN_SIZE + sizeof(int), file, line));
 
 	if( ptr == NULL ) return NULL;
 
 	ptr2 = ptr + sizeof( int );
-	aligned_ptr = ptr2 + ( ALIGN_SIZE - ( ( size_t ) ptr2 & align_mask ) );
+	aligned_ptr = ptr2 + ( MM_ALIGN_SIZE - ( ( size_t ) ptr2 & align_mask ) );
 
 	ptr2 = aligned_ptr - sizeof( int );
 	*( ( int* ) ptr2 ) = ( int )( aligned_ptr - ptr );

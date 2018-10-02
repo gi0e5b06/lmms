@@ -4,7 +4,7 @@
  *                  filename should be: *.f<channels>r<samplerate>
  *                  endianness should be machine-like (no change).
  *
- * Copyright (c) 2018 gi0e5b06
+ * Copyright (c) 2018 gi0e5b06 <on github.com>
  *
  * This file is part of LMMS - https://lmms.io
  *
@@ -28,10 +28,10 @@
 #ifndef AUDIO_FILE_RAW_H
 #define AUDIO_FILE_RAW_H
 
-#include <cstdio>
-
 #include "AudioFileDevice.h"
 #include "lmmsconfig.h"
+
+#include <cstdio>
 
 class AudioFileRaw : public AudioFileDevice
 {
@@ -52,9 +52,7 @@ class AudioFileRaw : public AudioFileDevice
                  Mixer*                _mixer);
 
     virtual void writeBuffer(const surroundSampleFrame* _ab,
-                             const fpp_t                _frames,
-                             float                      _masterGain);
-    /*override*/
+                             const fpp_t                _frames) override;
 
   private:
     bool startEncoding();

@@ -90,7 +90,8 @@ bool ReverbSCEffect::processAudioBuffer( sampleFrame* _buf, const fpp_t _frames 
                 computeWetDryLevels(f, _frames, smoothBegin, smoothEnd,
                                     w0, d0, w1, d1);
 
-		float s[2] = { _buf[f][0],_buf[f][1] };
+                float s0=_buf[f][0];
+                float s1=_buf[f][1];
 
 		const SPFLOAT inGain = (SPFLOAT)DB2LIN((inGainBuf ?
 			inGainBuf->values()[f]
@@ -99,8 +100,8 @@ bool ReverbSCEffect::processAudioBuffer( sampleFrame* _buf, const fpp_t _frames 
 			outGainBuf->values()[f]
 			: m_reverbSCControls.m_outputGainModel.value()));
 
-		s[0] *= inGain;
-		s[1] *= inGain;
+		s0 *= inGain;
+		s1 *= inGain;
 		revsc->feedback = (SPFLOAT)(sizeBuf ?
 			sizeBuf->values()[f]
 			: m_reverbSCControls.m_sizeModel.value());
@@ -109,7 +110,7 @@ bool ReverbSCEffect::processAudioBuffer( sampleFrame* _buf, const fpp_t _frames 
 			colorBuf->values()[f]
 			: m_reverbSCControls.m_colorModel.value());
 
-		sp_revsc_compute(sp, revsc, &s[0], &s[1], &tmpL, &tmpR);
+		sp_revsc_compute(sp, revsc, &s0, &s1, &tmpL, &tmpR);
 		sp_dcblock_compute(sp, dcblk[0], &tmpL, &dcblkL);
 		sp_dcblock_compute(sp, dcblk[1], &tmpR, &dcblkR);
 

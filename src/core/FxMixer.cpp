@@ -47,7 +47,7 @@
 //#include <QUuid>
 
 
-FxRoute::FxRoute( FxChannel * from, FxChannel * to, float amount ) :
+FxRoute::FxRoute( FxChannel * from, FxChannel * to, real_t amount ) :
 	m_from( from ),
 	m_to( to ),
 	m_amount( amount, 0, 1, 0.001, NULL,
@@ -79,11 +79,11 @@ FxChannel::FxChannel( int idx, Model * _parent ) :
 	m_clippingModel( false, _parent ),
 	m_eqDJ( NULL ),
 	m_eqDJEnableModel( false, _parent ),
-	//m_eqDJHighModel  ( 0.f, -70.f, 0.f, 1.f, _parent ),
-	//m_eqDJMediumModel( 0.f, -70.f, 0.f, 1.f, _parent ),
-	//m_eqDJLowModel   ( 0.f, -70.f, 0.f, 1.f, _parent ),
-	m_peakLeft( 0.0f ),
-	m_peakRight( 0.0f ),
+	//m_eqDJHighModel  ( 0., -70., 0., 1., _parent ),
+	//m_eqDJMediumModel( 0., -70., 0., 1., _parent ),
+	//m_eqDJLowModel   ( 0., -70., 0., 1., _parent ),
+	m_peakLeft( 0. ),
+	m_peakRight( 0. ),
 	m_buffer( BufferManager::acquire() ),//new sampleFrame[Engine::mixer()->framesPerPeriod()] ),
 	m_mutedModel( false, _parent ),
 	m_soloModel( false, _parent ),
@@ -155,7 +155,7 @@ void FxChannel::updateFrozenBuffer()
         //if(m_frozenModel)
         {
                 const Song*   song=Engine::getSong();
-                const float   fpt =Engine::framesPerTick();
+                const real_t   fpt =Engine::framesPerTick();
                 const f_cnt_t len =song->ticksPerTact()*song->length()*fpt;
 
                 if((m_frozenBuf==NULL)||
@@ -175,7 +175,7 @@ void FxChannel::cleanFrozenBuffer()
         //if(m_frozenModel)
         {
                 const Song*   song=Engine::getSong();
-                const float   fpt =Engine::framesPerTick();
+                const real_t   fpt =Engine::framesPerTick();
                 const f_cnt_t len =song->ticksPerTact()*song->length()*fpt;
 
                 if((m_frozenBuf==NULL)||
@@ -275,7 +275,7 @@ void FxChannel::doProcessing()
 {
         const Song*   song      = Engine::getSong();
         const Mixer*  mixer     = Engine::mixer();
-        //const float   fpt       = Engine::framesPerTick();
+        //const real_t   fpt       = Engine::framesPerTick();
 	const fpp_t   fpp       = mixer->framesPerPeriod();
 	const bool    exporting = song->isExporting();
         const f_cnt_t af        = song->getPlayPos().absoluteFrame();
@@ -315,11 +315,11 @@ void FxChannel::doProcessing()
                 //	qInfo("NOT processing... %p %d %d %d",m_eqDJ,m_stillRunning,
                 //	      m_hasInput,m_eqDJEnableModel.value());
 
-		const float v=m_volumeModel.value();
-                if(v>0.f)
+		const real_t v=m_volumeModel.value();
+                if(v>0.)
                 {
-                        float peakLeft =0.f;
-                        float peakRight=0.f;
+                        real_t peakLeft =0.;
+                        real_t peakRight=0.;
                         mixer->getPeakValues( m_buffer, fpp, peakLeft, peakRight );
                         m_peakLeft =qMax(m_peakLeft ,peakLeft *v);
                         m_peakRight=qMax(m_peakRight,peakRight*v);
@@ -327,7 +327,7 @@ void FxChannel::doProcessing()
                         //if(m_channelIndex==1)
                         //      qInfo("ch1 peaks=%f,%f",m_peakLeft,m_peakRight);
 
-                        if(m_peakLeft>1.f || m_peakRight>1.f)
+                        if(m_peakLeft>1. || m_peakRight>1.)
                         {
                                 //qInfo("ch #%d clipping",m_channelIndex);
                                 m_clippingModel.setValue(true);
@@ -362,8 +362,8 @@ void FxChannel::doProcessing()
 				// use sample-exact mixing if sample-exact values are available
 				if( ! volBuf && ! sendBuf ) // neither volume nor send has sample-exact data...
 				{
-					const float v = sender->m_volumeModel.value() * sendModel->value();
-                                        if(v>0.f)
+					const real_t v = sender->m_volumeModel.value() * sendModel->value();
+                                        if(v>0.)
                                         {
                                                 if( exporting ) { MixHelpers::addSanitizedMultiplied( m_buffer, ch_buf, v, fpp ); }
                                                 else { MixHelpers::addMultiplied( m_buffer, ch_buf, v, fpp ); }
@@ -377,8 +377,8 @@ void FxChannel::doProcessing()
 				}
 				else if( volBuf ) // volume has sample-exact data but send does not
 				{
-					const float v = sendModel->value();
-                                        if(v>0.f)
+					const real_t v = sendModel->value();
+                                        if(v>0.)
                                         {
                                                 if( exporting ) { MixHelpers::addSanitizedMultipliedByBuffer( m_buffer, ch_buf, v, volBuf, fpp ); }
                                                 else { MixHelpers::addMultipliedByBuffer( m_buffer, ch_buf, v, volBuf, fpp ); }
@@ -387,8 +387,8 @@ void FxChannel::doProcessing()
 				}
 				else // vice versa
 				{
-					const float v = sender->m_volumeModel.value();
-                                        if(v>0.f)
+					const real_t v = sender->m_volumeModel.value();
+                                        if(v>0.)
                                         {
                                                 if( exporting ) { MixHelpers::addSanitizedMultipliedByBuffer( m_buffer, ch_buf, v, sendBuf, fpp ); }
                                                 else { MixHelpers::addMultipliedByBuffer( m_buffer, ch_buf, v, sendBuf, fpp ); }
@@ -436,11 +436,11 @@ void FxChannel::doProcessing()
                 //	qInfo("NOT processing... %p %d %d %d",m_eqDJ,m_stillRunning,
                 //	      m_hasInput,m_eqDJEnableModel.value());
 
-		const float v=m_volumeModel.value();
-                if(v>0.f)
+		const real_t v=m_volumeModel.value();
+                if(v>0.)
                 {
-                        float peakLeft =0.f;
-                        float peakRight=0.f;
+                        real_t peakLeft =0.;
+                        real_t peakRight=0.;
                         mixer->getPeakValues( m_buffer, fpp, peakLeft, peakRight );
                         m_peakLeft =qMax(m_peakLeft ,peakLeft *v);
                         m_peakRight=qMax(m_peakRight,peakRight*v);
@@ -448,7 +448,7 @@ void FxChannel::doProcessing()
                         //if(m_channelIndex==1)
                         //      qInfo("ch1 peaks=%f,%f",m_peakLeft,m_peakRight);
 
-                        if(m_peakLeft>1.f || m_peakRight>1.f)
+                        if(m_peakLeft>1. || m_peakRight>1.)
                         {
                                 //qInfo("ch #%d clipping",m_channelIndex);
                                 m_clippingModel.setValue(true);
@@ -457,7 +457,7 @@ void FxChannel::doProcessing()
         }
         //else
         //{
-        //        m_peakRight=m_peakLeft=0.f;
+        //        m_peakRight=m_peakLeft=0.;
         //}
 
 	// increment dependency counter of all receivers
@@ -696,7 +696,7 @@ void FxMixer::moveChannelRight( int index )
 
 
 FxRoute * FxMixer::createChannelSend( fx_ch_t fromChannel, fx_ch_t toChannel,
-								float amount )
+								real_t amount )
 {
 //	qDebug( "requested: %d to %d", fromChannel, toChannel );
 	// find the existing connection
@@ -718,7 +718,7 @@ FxRoute * FxMixer::createChannelSend( fx_ch_t fromChannel, fx_ch_t toChannel,
 }
 
 
-FxRoute * FxMixer::createRoute( FxChannel * from, FxChannel * to, float amount )
+FxRoute * FxMixer::createRoute( FxChannel * from, FxChannel * to, real_t amount )
 {
 	if( from == to )
 	{
@@ -926,8 +926,8 @@ void FxMixer::masterMix( sampleFrame * _buf )
 		}
 	}
 
-	const float v = volBuf
-		? 1.0f
+	const real_t v = volBuf
+		? 1.
 		: m_fxChannels[0]->m_volumeModel.value();
 	MixHelpers::addSanitizedMultiplied( _buf, m_fxChannels[0]->m_buffer, v, fpp );
         */
@@ -942,11 +942,11 @@ void FxMixer::masterMix( sampleFrame * _buf )
         }
         else
         {
-                const float volVal=m_fxChannels[0]->m_volumeModel.value();
-                if(volVal==0.f)
+                const real_t volVal=m_fxChannels[0]->m_volumeModel.value();
+                if(volVal==0.)
                         ;
                 else
-                if(volVal==1.f)
+                if(volVal==1.)
                         MixHelpers::add(_buf, m_fxChannels[0]->m_buffer, fpp);
                 else
                         MixHelpers::addMultiplied(_buf, m_fxChannels[0]->m_buffer, volVal, fpp);
@@ -990,7 +990,7 @@ void FxMixer::clearChannel(fx_ch_t index)
 {
 	FxChannel * ch = m_fxChannels[index];
 	ch->m_fxChain.clear();
-	ch->m_volumeModel.setValue( 1.0f );
+	ch->m_volumeModel.setValue( 1. );
 	ch->m_mutedModel.setValue( false );
 	ch->m_soloModel.setValue( false );
 	ch->m_name = ( index == 0 ) ? tr( "Master" ) : tr( "FX %1" ).arg( index );
@@ -1092,7 +1092,7 @@ void FxMixer::loadSettings( const QDomElement & _this )
 			{
 				int sendTo = chDataItem.attribute( "channel" ).toInt();
 				allocateChannelsTo( sendTo ) ;
-				FxRoute * fxr = createChannelSend( num, sendTo, 1.0f );
+				FxRoute * fxr = createChannelSend( num, sendTo, 1. );
 				if( fxr ) fxr->amount()->loadSettings( chDataItem, "amount" );
 			}
 		}

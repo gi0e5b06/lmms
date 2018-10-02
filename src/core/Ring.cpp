@@ -30,9 +30,11 @@
 //#include "MixHelpers.h"
 #include "Mixer.h"
 
+#include "lmms_math.h"
+
 Ring::Ring(f_cnt_t size) :
       // m_fpp( Engine::mixer()->framesPerPeriod() ),
-      m_maxLevel(0.f), m_frozen(false), m_sampleRateAware(false),
+      m_maxLevel(0.), m_frozen(false), m_sampleRateAware(false),
       m_sampleRate(Engine::mixer()->processingSampleRate()),
       m_size(size)  // + m_fpp )
 {
@@ -42,9 +44,9 @@ Ring::Ring(f_cnt_t size) :
     m_position = 0;
 }
 
-Ring::Ring(float _duration) :
+Ring::Ring(real_t _duration) :
       // m_fpp( Engine::mixer()->framesPerPeriod() ),
-      m_maxLevel(0.f), m_frozen(false),
+      m_maxLevel(0.), m_frozen(false),
       m_sampleRateAware(false),  // changed below
       m_sampleRate(Engine::mixer()->processingSampleRate()),
       m_duration(_duration)
@@ -76,7 +78,7 @@ void Ring::reset()
 {
     memset(m_buffer, 0, m_size * sizeof(sampleFrame));
     m_position = 0;
-    m_maxLevel = 0.f;
+    m_maxLevel = 0.;
 }
 
 void Ring::changeSize(f_cnt_t _size)
@@ -93,7 +95,7 @@ void Ring::changeSize(f_cnt_t _size)
     delete[] old_buffer;
 }
 
-void Ring::changeDuration(float _duration)
+void Ring::changeDuration(real_t _duration)
 {
     changeSize(msToFrames(_duration));
 }
@@ -103,7 +105,7 @@ void Ring::rewind(f_cnt_t _amount)
     m_position = relpos(-_amount);
 }
 
-void Ring::rewind(float _amount)
+void Ring::rewind(real_t _amount)
 {
     rewind(msToFrames(_amount));
 }
@@ -113,7 +115,7 @@ void Ring::forward(f_cnt_t _amount)
     m_position = relpos(_amount);
 }
 
-void Ring::forward(float _amount)
+void Ring::forward(real_t _amount)
 {
     forward(msToFrames(_amount));
 }
@@ -162,14 +164,14 @@ void Ring::read(sampleFrame*  _dst,
 
 void Ring::read(sampleFrame*  _dst,
                 const f_cnt_t _length,
-                const float   _pos) const
+                const real_t  _pos) const
 {
     read(_dst, msToFrames(_pos), _length);
 }
 
 void Ring::write(const sampleFrame& _src,
                  const OpMode       _op,
-                 const float        _factor)
+                 const real_t       _factor)
 {
     if(m_frozen)
         return;
@@ -181,7 +183,7 @@ void Ring::write(const sampleFrame& _src,
 void Ring::write(const sampleFrame* _src,
                  const f_cnt_t      _length,
                  const OpMode       _op,
-                 const float        _factor)
+                 const real_t       _factor)
 {
     if(m_frozen)
         return;
@@ -194,7 +196,7 @@ void Ring::write(const sampleFrame* _src,
                  const f_cnt_t      _length,
                  const f_cnt_t      _pos,
                  const OpMode       _op,
-                 const float        _factor)
+                 const real_t       _factor)
 {
     if(m_frozen)
         return;
@@ -203,17 +205,17 @@ void Ring::write(const sampleFrame* _src,
 
     if(op == PutMul)
     {
-        if(_factor == 1.f)
+        if(_factor == 1.)
             op = Put;
-        else if(_factor == 0.f)
+        else if(_factor == 0.)
             op = Nop;
     }
 
     if(op == AddMul)
     {
-        if(_factor == 1.f)
+        if(_factor == 1.)
             op = Add;
-        else if(_factor == 0.f)
+        else if(_factor == 0.)
             op = Nop;
     }
 
@@ -223,7 +225,7 @@ void Ring::write(const sampleFrame* _src,
     for(f_cnt_t f = 0; f < _length; ++f)
         for(ch_cnt_t ch = DEFAULT_CHANNELS - 1; ch >= 0; --ch)
         {
-            size_t p = abs(_pos + f);
+            size_t p = abspos(_pos + f);
             switch(op)
             {
                 case Put:
@@ -241,7 +243,7 @@ void Ring::write(const sampleFrame* _src,
                 default:
                     break;
             }
-            const float a = fabsf(m_buffer[p][ch]);
+            const real_t a = bound(0., abs(m_buffer[p][ch]), 2.);
             m_maxLevel *= 0.991;
             if(a > m_maxLevel)
                 m_maxLevel = a;
@@ -250,9 +252,9 @@ void Ring::write(const sampleFrame* _src,
 
 void Ring::write(const sampleFrame* _src,
                  const f_cnt_t      _length,
-                 const float        _pos,
+                 const real_t       _pos,
                  const OpMode       _op,
-                 const float        _factor)
+                 const real_t       _factor)
 {
     if(m_frozen)
         return;
@@ -264,7 +266,7 @@ void Ring::updateSamplerate()
 {
     sample_rate_t old_samplerate = m_sampleRate;
     f_cnt_t       old_size       = m_size;
-    float         old_duration   = m_duration;
+    real_t        old_duration   = m_duration;
 
     if(m_sampleRateAware)
     {

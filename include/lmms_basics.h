@@ -22,92 +22,56 @@
  *
  */
 
+#ifndef LMMS_BASICS_H
+#define LMMS_BASICS_H
 
-#ifndef TYPES_H
-#define TYPES_H
-
-#include <limits>
 #include "lmmsconfig.h"
 
 #ifdef LMMS_HAVE_STDINT_H
 #include <cstdint>
 #endif
 
+//#include <limits>
+
+using namespace std;
+
+//#define REAL_IS_DOUBLE
+//#undef REAL_IS_FLOAT
+//typedef double real_t;
+
+#define REAL_IS_FLOAT
+#undef REAL_IS_DOUBLE
+typedef float real_t;
+
+typedef float FLOAT;
 
 typedef int32_t tact_t;
 typedef int32_t tick_t;
-typedef float volume_t; //uint8_t
-typedef float panning_t; //int8_t
 
+typedef real_t volume_t;   // uint8_t
+typedef real_t pitch_t;    // int16_t
+typedef real_t panning_t;  // int8_t
+typedef real_t frequency_t;
 
-typedef float sample_t;			// standard sample-type
-typedef int16_t int_sample_t;		// 16-bit-int-sample
+typedef real_t  sample_t;     // standard sample (everywhere)
+typedef float   sampleF32_t;  // 32-bit float sample
+typedef int16_t sampleS16_t;  // 16-bit int sample
 
+typedef int32_t sample_rate_t;  // sample-rate
+typedef int16_t fpp_t;          // frames per period (0-16384)
+typedef int32_t f_cnt_t;        // standard frame-count
+typedef int8_t  ch_cnt_t;       // channel-count (0-SURROUND_CHANNELS)
+typedef int16_t bpm_t;          // tempo (MIN_BPM to MAX_BPM)
+typedef int16_t bitrate_t;      // bitrate in kbps
+typedef int16_t fx_ch_t;        // FX-channel (0 to MAX_EFFECT_CHANNEL)
 
-typedef int32_t sample_rate_t;		// sample-rate
-typedef int16_t fpp_t;			// frames per period (0-16384)
-typedef int32_t f_cnt_t;			// standard frame-count
-typedef int8_t ch_cnt_t;			// channel-count (0-SURROUND_CHANNELS)
-typedef int16_t bpm_t;			// tempo (MIN_BPM to MAX_BPM)
-typedef int16_t bitrate_t;		// bitrate in kbps
-typedef int16_t fx_ch_t;			// FX-channel (0 to MAX_EFFECT_CHANNEL)
-
-typedef int32_t jo_id_t;			// (unique) ID of a journalling object
+typedef int32_t jo_id_t;  // (unique) ID of a journalling object
 
 // use for improved branch prediction
-#define likely(x)	__builtin_expect((x),1)
-#define unlikely(x)	__builtin_expect((x),0)
-
-
-template<typename T>
-struct typeInfo
-{
-	static inline T min()
-	{
-		return std::numeric_limits<T>::min();
-	}
-
-	static inline T max()
-	{
-		return std::numeric_limits<T>::max();
-	}
-
-	static inline T minEps()
-	{
-		return 1;
-	}
-
-	static inline bool isEqual( T x, T y )
-	{
-		return x == y;
-	}
-
-	static inline T absVal( T t )
-	{
-		return t >= 0 ? t : -t;
-	}
-} ;
-
+#define likely(x) __builtin_expect((x), 1)
+#define unlikely(x) __builtin_expect((x), 0)
 
 #define SILENCE (1.E-10)
-
-template<>
-inline float typeInfo<float>::minEps()
-{
-	return SILENCE;
-}
-
-template<>
-inline bool typeInfo<float>::isEqual( float x, float y )
-{
-	if( x == y )
-	{
-		return true;
-	}
-	return absVal( x - y ) < minEps();
-}
-
-
 
 const ch_cnt_t DEFAULT_CHANNELS = 2;
 
@@ -130,23 +94,22 @@ const ch_cnt_t DEFAULT_CHANNELS = 2;
 #endif
 
 typedef sample_t sampleFrame[DEFAULT_CHANNELS];
-#define ALIGN_SIZE 16
-#if __GNUC__
-typedef sample_t sampleFrameA[DEFAULT_CHANNELS] __attribute__((__aligned__(ALIGN_SIZE)));
-#endif
+
+#define MM_ALIGN_SIZE 16
+//#if __GNUC__
+// typedef sample_t sampleFrameA[DEFAULT_CHANNELS]
+// __attribute__((__aligned__(ALIGN_SIZE))); #endif
 
 #define LMMS_DISABLE_SURROUND
 #ifndef LMMS_DISABLE_SURROUND
-const ch_cnt_t SURROUND_CHANNELS=4;
+const ch_cnt_t   SURROUND_CHANNELS = 4;
 typedef sample_t surroundSampleFrame[SURROUND_CHANNELS];
 #else
-const ch_cnt_t SURROUND_CHANNELS=DEFAULT_CHANNELS;
+const ch_cnt_t      SURROUND_CHANNELS = DEFAULT_CHANNELS;
 typedef sampleFrame surroundSampleFrame;
 #endif
 
-
 #define STRINGIFY(s) STR(s)
-#define STR(PN)	#PN
-
+#define STR(PN) #PN
 
 #endif

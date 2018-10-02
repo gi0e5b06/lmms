@@ -35,37 +35,36 @@ AudioFileDevice* AudioFileNull::getInst(const QString&        outputFilename,
                                         Mixer*                mixer,
                                         bool&                 successful)
 {
-        if(!outputFilename.isEmpty())
-                qFatal("AudioFileNull: output filename given: %s",
-                       qPrintable(outputFilename));
+    if(!outputFilename.isEmpty())
+        qFatal("AudioFileNull: output filename given: %s",
+               qPrintable(outputFilename));
 
-        AudioFileNull* r = new AudioFileNull(outputSettings, channels,
-                                             successful,
-                                             //outputFilename,
-                                             mixer);
-        /*
-        r->initOutputFile();
-        r->openOutputFile();
-        successful = r->outputFileOpened() && r->startEncoding();
-        */
-        successful = true;
+    AudioFileNull* r = new AudioFileNull(outputSettings, channels, successful,
+                                         // outputFilename,
+                                         mixer);
+    /*
+    r->initOutputFile();
+    r->openOutputFile();
+    successful = r->outputFileOpened() && r->startEncoding();
+    */
+    successful = true;
 
-        return r;
+    return r;
 }
 
 AudioFileNull::AudioFileNull(OutputSettings const& outputSettings,
                              const ch_cnt_t        channels,
                              bool&                 successful,
-                             //const QString&        file,
-                             Mixer*                mixer) :
-        AudioFileDevice(outputSettings, channels, "", mixer)
+                             // const QString&        file,
+                             Mixer* mixer) :
+      AudioFileDevice(outputSettings, channels, "", mixer)
 {
-        successful=true;
+    successful = true;
 }
 
 AudioFileNull::~AudioFileNull()
 {
-        //finishEncoding();
+    // finishEncoding();
 }
 
 void AudioFileNull::initOutputFile()
@@ -78,16 +77,16 @@ void AudioFileNull::openOutputFile()
 
 bool AudioFileNull::outputFileOpened() const
 {
-	return true;
+    return true;
 }
 
 void AudioFileNull::closeOutputFile()
 {
 }
 
-int AudioFileNull::writeData( const void* data, int len )
+int AudioFileNull::writeData(const void* data, int len)
 {
-        return len;
+    return len;
 }
 
 /*
@@ -97,8 +96,7 @@ bool AudioFileNull::startEncoding()
 }
 
 void AudioFileNull::writeBuffer(const surroundSampleFrame* _ab,
-                                const fpp_t                _frames,
-                                const float                _master_gain)
+                                const fpp_t                _frames )
 {
 }
 

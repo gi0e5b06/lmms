@@ -23,316 +23,331 @@
  *
  */
 
-
 #ifndef SAMPLE_BUFFER_H
 #define SAMPLE_BUFFER_H
 
-#include <QReadWriteLock>
+#include <QMutex>
 #include <QObject>
+#include <QReadWriteLock>
 
 #ifdef LMMS_HAVE_MPG123
 #include <mpg123.h>
 #endif
 
-#include <samplerate.h>
-
 #include "export.h"
 #include "interpolation.h"
 #include "lmms_basics.h"
+
+#include <samplerate.h>
 //#include "lmms_math.h"
-#include "shared_object.h"
 #include "MemoryManager.h"
+#include "shared_object.h"
 
 class QPainter;
 class QRect;
 
+// values for buffer margins, used for various libsamplerate interpolation
+// modes the array positions correspond to the converter_type parameter values
+// in libsamplerate if there appears problems with playback on some
+// interpolation mode, then the value for that mode may need to be higher -
+// conversely, to optimize, some may work with lower values
+const f_cnt_t MARGIN[] = {64, 64, 64, 4, 4};
 
-// values for buffer margins, used for various libsamplerate interpolation modes
-// the array positions correspond to the converter_type parameter values in libsamplerate
-// if there appears problems with playback on some interpolation mode, then the value for that mode
-// may need to be higher - conversely, to optimize, some may work with lower values
-const f_cnt_t MARGIN[] = { 64, 64, 64, 4, 4 };
-
-
-class EXPORT SampleBuffer : public QObject, public sharedObject
+class EXPORT SampleBuffer
+      : public QObject
+      , public sharedObject
 {
-	Q_OBJECT
-	MM_OPERATORS
-public:
-	enum LoopMode {
-		LoopOff = 0,
-		LoopOn,
-		LoopPingPong
-	};
-	class EXPORT handleState
-	{
-		MM_OPERATORS
-	public:
-		handleState( bool _varying_pitch = false, int interpolation_mode = SRC_LINEAR );
-		virtual ~handleState();
+    Q_OBJECT
+    MM_OPERATORS
+  public:
+    enum LoopMode
+    {
+        LoopOff = 0,
+        LoopOn,
+        LoopPingPong
+    };
+    class EXPORT handleState
+    {
+        MM_OPERATORS
+      public:
+        handleState(bool _varying_pitch     = false,
+                    int  interpolation_mode = SRC_LINEAR);
+        virtual ~handleState();
 
-		const f_cnt_t frameIndex() const
-		{
-			return m_frameIndex;
-		}
+        const f_cnt_t frameIndex() const
+        {
+            return m_frameIndex;
+        }
 
-		void setFrameIndex( f_cnt_t _index )
-		{
-			m_frameIndex = _index;
-		}
+        void setFrameIndex(f_cnt_t _index)
+        {
+            m_frameIndex = _index;
+        }
 
-		bool isBackwards() const
-		{
-			return m_isBackwards;
-		}
+        bool isBackwards() const
+        {
+            return m_isBackwards;
+        }
 
-		void setBackwards( bool _backwards )
-		{
-			m_isBackwards = _backwards;
-		}
+        void setBackwards(bool _backwards)
+        {
+            m_isBackwards = _backwards;
+        }
 
-		int interpolationMode() const
-		{
-			return m_interpolationMode;
-		}
+        int interpolationMode() const
+        {
+            return m_interpolationMode;
+        }
 
+      private:
+        f_cnt_t    m_frameIndex;
+        const bool m_varyingPitch;
+        bool       m_isBackwards;
+        SRC_STATE* m_resamplingData;
+        int        m_interpolationMode;
 
-	private:
-		f_cnt_t m_frameIndex;
-		const bool m_varyingPitch;
-		bool m_isBackwards;
-		SRC_STATE * m_resamplingData;
-		int m_interpolationMode;
+        friend class SampleBuffer;
+    };
 
-		friend class SampleBuffer;
+    // constructor which either loads sample _audioFile or decodes
+    // base64-data out of string
+    SampleBuffer(const SampleBuffer& _other);
+    SampleBuffer(const QString& _audioFile,
+                 bool           _isBase64Data        = false,
+                 bool           _sampleRateDependent = true);
+    SampleBuffer(const sampleFrame* _data,
+                 const f_cnt_t      _frames,
+                 bool               _sampleRateDependent = true);
+    SampleBuffer(const f_cnt_t _frames = 0, bool _sampleRateDependent = true);
 
-	} ;
+    virtual ~SampleBuffer();
 
+    bool play(sampleFrame*      _ab,
+              handleState*      _state,
+              const fpp_t       _frames,
+              const frequency_t _freq,
+              const LoopMode    _loopmode = LoopOff);
 
-	// constructor which either loads sample _audioFile or decodes
-	// base64-data out of string
-        SampleBuffer( const SampleBuffer& _other );
-	SampleBuffer( const QString & _audioFile,
-                      bool _isBase64Data = false,
-                      bool _sampleRateDependent = true);
-	SampleBuffer( const sampleFrame * _data,
-                      const f_cnt_t _frames,
-                      bool _sampleRateDependent = true );
-	SampleBuffer( const f_cnt_t _frames = 0,
-                      bool _sampleRateDependent = true);
+    void visualize(QPainter&    _p,
+                   const QRect& _dr,
+                   const QRect& _clip,
+                   f_cnt_t      _from_frame,
+                   f_cnt_t      _to_frame);
 
-	virtual ~SampleBuffer();
+    inline void visualize(QPainter& _p, const QRect& _dr)
+    {
+        visualize(_p, _dr, _dr, 0, m_frames);
+    }
 
-	bool play( sampleFrame * _ab, handleState * _state,
-				const fpp_t _frames,
-				const float _freq,
-				const LoopMode _loopmode = LoopOff );
+    inline const QString& audioFile() const
+    {
+        return m_audioFile;
+    }
 
-	void visualize( QPainter & _p, const QRect & _dr, const QRect & _clip,
-                        f_cnt_t _from_frame, f_cnt_t _to_frame);
+    inline f_cnt_t startFrame() const
+    {
+        return m_startFrame;
+    }
 
-	inline void visualize(QPainter& _p, const QRect& _dr)
-	{
-		visualize(_p,_dr,_dr,0,m_frames);
-	}
+    inline f_cnt_t endFrame() const
+    {
+        return m_endFrame;
+    }
 
-	inline const QString & audioFile() const
-	{
-		return m_audioFile;
-	}
+    inline f_cnt_t loopStartFrame() const
+    {
+        return m_loopStartFrame;
+    }
 
-	inline f_cnt_t startFrame() const
-	{
-		return m_startFrame;
-	}
+    inline f_cnt_t loopEndFrame() const
+    {
+        return m_loopEndFrame;
+    }
 
-	inline f_cnt_t endFrame() const
-	{
-		return m_endFrame;
-	}
+    void setLoopStartFrame(f_cnt_t _start);
+    void setLoopEndFrame(f_cnt_t _end);
+    void setAllPointFrames(f_cnt_t _start,
+                           f_cnt_t _end,
+                           f_cnt_t _loopstart,
+                           f_cnt_t _loopend);
 
-	inline f_cnt_t loopStartFrame() const
-	{
-		return m_loopStartFrame;
-	}
+    inline f_cnt_t frames() const
+    {
+        return m_frames;
+    }
 
-	inline f_cnt_t loopEndFrame() const
-	{
-		return m_loopEndFrame;
-	}
+    inline real_t amplification() const
+    {
+        return m_amplification;
+    }
 
-	void setLoopStartFrame(f_cnt_t _start);
-	void setLoopEndFrame  (f_cnt_t _end);
-	void setAllPointFrames(f_cnt_t _start, f_cnt_t _end, f_cnt_t _loopstart, f_cnt_t _loopend);
+    inline bool reversed() const
+    {
+        return m_reversed;
+    }
 
-	inline f_cnt_t frames() const
-	{
-		return m_frames;
-	}
+    inline frequency_t frequency() const
+    {
+        return m_frequency;
+    }
 
-	inline float amplification() const
-	{
-		return m_amplification;
-	}
+    sample_rate_t sampleRate() const
+    {
+        return m_sampleRate;
+    }
 
-	inline bool reversed() const
-	{
-		return m_reversed;
-	}
+    int sampleLength() const
+    {
+        return double(m_endFrame - m_startFrame) / m_sampleRate * 1000.;
+    }
 
-	inline float frequency() const
-	{
-		return m_frequency;
-	}
+    inline void setFrequency(frequency_t _freq)
+    {
+        m_frequency = _freq;
+    }
 
-	sample_rate_t sampleRate() const
-	{
-		return m_sampleRate;
-	}
+    inline void setSampleRate(sample_rate_t _rate)
+    {
+        m_sampleRate = _rate;
+    }
 
-	int sampleLength() const
-	{
-		return double( m_endFrame - m_startFrame ) / m_sampleRate * 1000;
-	}
+    inline const sampleFrame* data() const
+    {
+        return m_data;
+    }
 
-	inline void setFrequency( float _freq )
-	{
-		m_frequency = _freq;
-	}
+    f_cnt_t findClosestZero(f_cnt_t _index);
 
-	inline void setSampleRate( sample_rate_t _rate )
-	{
-		m_sampleRate = _rate;
-	}
+    QString openAudioFile() const;
+    QString openAndSetAudioFile();
+    QString openAndSetWaveformFile();
 
-	inline const sampleFrame * data() const
-	{
-		return m_data;
-	}
+    QString& toBase64(QString& _dst) const;
 
-	f_cnt_t findClosestZero(f_cnt_t _index);
+    // protect calls from the GUI to this function with dataReadLock() and
+    // dataUnlock()
+    // SampleBuffer *
+    void resample(const sample_rate_t _src_sr, const sample_rate_t _dst_sr);
 
-	QString openAudioFile() const;
-	QString openAndSetAudioFile();
-	QString openAndSetWaveformFile();
+    void retune(  // const sample_rate_t _src_sr,
+            const double _semitones);
 
-	QString & toBase64( QString & _dst ) const;
+    void normalizeSampleRate(const sample_rate_t _src_sr,
+                             bool                _keep_settings = false);
 
+    // protect calls from the GUI to this function with dataReadLock() and
+    // dataUnlock(), out of loops for efficiency
+    inline sample_t userWaveSample(const real_t _sample) const
+    {
+        const f_cnt_t       frames = m_frames;
+        const sampleFrame*  data   = m_data;
+        const real_t  frame  = _sample * frames;
 
-	// protect calls from the GUI to this function with dataReadLock() and
-	// dataUnlock()
-	//SampleBuffer *
-        void resample( const sample_rate_t _src_sr,
-                       const sample_rate_t _dst_sr );
+        f_cnt_t f1     = static_cast<f_cnt_t>(frame) % frames;
+        if(f1 < 0)
+            f1 += frames;
+        f_cnt_t f2 = f1 + 1;
+        if(f2 == frames)
+            f2 = 0;
+        return linearInterpolate(data[f1][0], data[f2][0], fraction(_sample));
+    }
 
-        void retune( //const sample_rate_t _src_sr,
-                     const double _semitones );
+    void dataReadLock()
+    {
+        m_varLock.lockForRead();
+    }
 
-	void normalizeSampleRate( const sample_rate_t _src_sr,
-                                  bool _keep_settings = false );
+    void dataUnlock()
+    {
+        m_varLock.unlock();
+    }
 
-	// protect calls from the GUI to this function with dataReadLock() and
-	// dataUnlock(), out of loops for efficiency
-	inline sample_t userWaveSample( const float _sample ) const
-	{
-		f_cnt_t frames = m_frames;
-		sampleFrame * data = m_data;
-		const float frame = _sample * frames;
-		f_cnt_t f1 = static_cast<f_cnt_t>( frame ) % frames;
-		if( f1 < 0 )
-		{
-			f1 += frames;
-		}
-		return linearInterpolate( data[f1][0], data[ (f1 + 1) % frames ][0], fraction( frame ) );
-	}
+    static const QString rawStereoSuffix();    // typically f2r44100
+    static const QString rawSurroundSuffix();  // not used, f4r48000
+    static QString selectAudioFile(const QString& _file = QString::null);
+    static QString tryToMakeRelative(const QString& _file);
+    static QString tryToMakeAbsolute(const QString& _file);
+    static void    clearMMap();
 
-	void dataReadLock()
-	{
-		m_varLock.lockForRead();
-	}
+  public slots:
+    void setAudioFile(const QString& _audioFile);
+    void loadFromBase64(const QString& _data);
+    void setStartFrame(f_cnt_t _f);
+    void setEndFrame(f_cnt_t _f);
+    void setAmplification(real_t _a);
+    void setReversed(bool _on);
+    void sampleRateChanged();
 
-	void dataUnlock()
-	{
-		m_varLock.unlock();
-	}
+  signals:
+    void sampleUpdated();
 
-        static const QString rawStereoSuffix(); // typically f2r44100
-        static const QString rawSurroundSuffix(); // not used, f4r48000
-        static QString selectAudioFile  (const QString & _file = QString::null);
-	static QString tryToMakeRelative(const QString & _file);
-	static QString tryToMakeAbsolute(const QString & _file);
-	static void clearMMap();
+  private:
+    void update(bool _keep_settings = false);
+    void prefetch(f_cnt_t _index);
 
-public slots:
-	void setAudioFile(const QString & _audioFile);
-	void loadFromBase64(const QString & _data);
-	void setStartFrame(f_cnt_t _f);
-	void setEndFrame(f_cnt_t _f);
-	void setAmplification(float _a);
-	void setReversed(bool _on);
-	void sampleRateChanged();
+    void getDataFrame(f_cnt_t _f, sample_t& ch0_, sample_t& ch1_);
+    void setDataFrame(f_cnt_t _f, sample_t _ch0, sample_t _ch1);
+    void writeCacheData(QString _fileName) const;
 
-signals:
-	void sampleUpdated();
+    void convertFromS16(sampleS16_t*& _ibuf, f_cnt_t _frames, int _channels);
+    void directFloatWrite(sample_t*& _fbuf, f_cnt_t _frames, int _channels);
 
-private:
-	void update( bool _keep_settings = false );
-        void prefetch(f_cnt_t _index);
-
-        void getDataFrame(f_cnt_t _f,sample_t& ch0_,sample_t& ch1_);
-        void setDataFrame(f_cnt_t _f,sample_t _ch0,sample_t _ch1);
-        void writeCacheData(QString _fileName) const;
-
-	void convertIntToFloat ( int_sample_t * & _ibuf, f_cnt_t _frames, int _channels);
-	void directFloatWrite ( sample_t * & _fbuf, f_cnt_t _frames, int _channels);
-
-	f_cnt_t decodeSampleSF( const char * _f, sample_t * & _buf,
-				ch_cnt_t & _channels,
-				sample_rate_t & _sample_rate );
+    f_cnt_t decodeSampleSF(const char*    _f,
+                           sample_t*&     _buf,
+                           ch_cnt_t&      _channels,
+                           sample_rate_t& _sample_rate);
 #ifdef LMMS_HAVE_MPG123
-        void cleanupMPG123(void* mh);
-        f_cnt_t decodeSampleMPG123(const char* _f,
-                                   sample_t* & _buf,
-                                   ch_cnt_t & _channels,
-                                   sample_rate_t & _samplerate);
+    void    cleanupMPG123(void* mh);
+    f_cnt_t decodeSampleMPG123(const char*    _f,
+                               sample_t*&     _buf,
+                               ch_cnt_t&      _channels,
+                               sample_rate_t& _samplerate);
 #endif
 
 #ifdef LMMS_HAVE_OGGVORBIS
-	f_cnt_t decodeSampleOGGVorbis( const char * _f, int_sample_t * & _buf,
-				       ch_cnt_t & _channels,
-				       sample_rate_t & _sample_rate );
+    f_cnt_t decodeSampleOGGVorbis(const char*    _f,
+                                  sampleS16_t*&  _buf,
+                                  ch_cnt_t&      _channels,
+                                  sample_rate_t& _sample_rate);
 #endif
-	f_cnt_t decodeSampleDS( const char * _f, int_sample_t * & _buf,
-				ch_cnt_t & _channels,
-				sample_rate_t & _sample_rate );
+    f_cnt_t decodeSampleDS(const char*    _f,
+                           sampleS16_t*&  _buf,
+                           ch_cnt_t&      _channels,
+                           sample_rate_t& _sample_rate);
 
-	sampleFrame * getSampleFragment( f_cnt_t _index, f_cnt_t _frames,
-					 LoopMode _loopmode,
-					 sampleFrame * * _tmp,
-					 bool * _backwards, f_cnt_t _loopstart, f_cnt_t _loopend,
-					 f_cnt_t _end ) const;
-	f_cnt_t getLoopedIndex( f_cnt_t _index, f_cnt_t _startf, f_cnt_t _endf  ) const;
-	f_cnt_t getPingPongIndex( f_cnt_t _index, f_cnt_t _startf, f_cnt_t _endf  ) const;
+    sampleFrame* getSampleFragment(f_cnt_t       _index,
+                                   f_cnt_t       _frames,
+                                   LoopMode      _loopmode,
+                                   sampleFrame** _tmp,
+                                   bool*         _backwards,
+                                   f_cnt_t       _loopstart,
+                                   f_cnt_t       _loopend,
+                                   f_cnt_t       _end) const;
+    f_cnt_t      getLoopedIndex(f_cnt_t _index,
+                                f_cnt_t _startf,
+                                f_cnt_t _endf) const;
+    f_cnt_t      getPingPongIndex(f_cnt_t _index,
+                                  f_cnt_t _startf,
+                                  f_cnt_t _endf) const;
 
-	QString m_audioFile;
-	sampleFrame * m_origData;
-	f_cnt_t m_origFrames;
-	bool m_mmapped;
-	sampleFrame * m_data;
-	f_cnt_t m_frames;
-	f_cnt_t m_startFrame;
-	f_cnt_t m_endFrame;
-	f_cnt_t m_loopStartFrame;
-	f_cnt_t m_loopEndFrame;
-	float m_amplification;
-	bool m_reversed;
-	float m_frequency;
-	sample_rate_t m_sampleRate;
-	QReadWriteLock m_varLock;
+    QString        m_audioFile;
+    sampleFrame*   m_origData;
+    f_cnt_t        m_origFrames;
+    bool           m_mmapped;
+    sampleFrame*   m_data;
+    f_cnt_t        m_frames;
+    f_cnt_t        m_startFrame;
+    f_cnt_t        m_endFrame;
+    f_cnt_t        m_loopStartFrame;
+    f_cnt_t        m_loopEndFrame;
+    real_t         m_amplification;
+    bool           m_reversed;
+    frequency_t    m_frequency;
+    sample_rate_t  m_sampleRate;
+    QReadWriteLock m_varLock;
 
-        friend class AudioPort;
-        friend class FxChannel;
-} ;
-
+    friend class AudioPort;
+    friend class FxChannel;
+};
 
 #endif

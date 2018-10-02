@@ -82,23 +82,23 @@ void PeakController::fillValueBuffer()
 {
 	if( m_coeffNeedsUpdate )
 	{
-		const float ratio = 44100.0f / Engine::mixer()->processingSampleRate();
-		m_attackCoeff = 1.0f - powf( 2.0f, -0.3f * ( 1.0f - m_peakEffect->attackModel()->value() ) * ratio );
-		m_decayCoeff = 1.0f -  powf( 2.0f, -0.3f * ( 1.0f - m_peakEffect->decayModel()->value()  ) * ratio );
+		const real_t ratio = 44100. / Engine::mixer()->processingSampleRate();
+		m_attackCoeff = 1. - pow( 2., -0.3 * ( 1. - m_peakEffect->attackModel()->value() ) * ratio );
+		m_decayCoeff = 1. -  pow( 2., -0.3 * ( 1. - m_peakEffect->decayModel()->value()  ) * ratio );
 		m_coeffNeedsUpdate = false;
 	}
 
 	if( m_peakEffect )
 	{
-		float targetSample = m_peakEffect->lastSample();
+		sample_t targetSample = m_peakEffect->lastSample();
 		if( m_currentSample != targetSample )
 		{
 			const f_cnt_t frames = Engine::mixer()->framesPerPeriod();
-			float * values = m_valueBuffer.values();
+			real_t* values = m_valueBuffer.values();
 
 			for( f_cnt_t f = 0; f < frames; ++f )
 			{
-				const float diff = ( targetSample - m_currentSample );
+				const real_t diff = ( targetSample - m_currentSample );
 				if( m_currentSample < targetSample ) // going up...
 				{
 					m_currentSample += diff * m_attackCoeff;

@@ -68,11 +68,11 @@ protected:
 	IntModel m_waveModel;
 	IntModel m_multiplierModel;
 
-	float m_duration;
-	float m_phaseOffset;
-	float m_currentPhase;
+	real_t m_duration;
+	real_t m_phaseOffset;
+	real_t m_currentPhase;
 
-	sample_t (*m_sampleFunction)( const float );
+	sample_t (*m_sampleFunction)( const real_t );
 
 private:
 	SampleBuffer * m_userDefSampleBuffer;

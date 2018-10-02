@@ -36,6 +36,7 @@ class QPixmap;
 class EnvelopeAndLfoParameters;
 
 class automatableButtonGroup;
+class ComboBox;
 class Knob;
 class LedCheckBox;
 class PixmapButton;
@@ -67,8 +68,8 @@ protected slots:
 
 
 private:
-	static QPixmap * s_envGraph;
-	static QPixmap * s_lfoGraph;
+	QPixmap m_envGraph;
+	QPixmap m_lfoGraph;
 
 	EnvelopeAndLfoParameters * m_params;
 
@@ -88,12 +89,14 @@ private:
 	TempoSyncKnob * m_lfoSpeedKnob;
 	Knob * m_lfoAmountKnob;
 	PixmapButton * m_userLfoBtn;
-	automatableButtonGroup * m_lfoWaveBtnGrp;
+	//automatableButtonGroup * m_lfoWaveBtnGrp;
+        ComboBox* m_lfoWaveBankCMB;
+        ComboBox* m_lfoWaveIndexCMB;
 
 	LedCheckBox * m_x100Cb;
 	LedCheckBox * m_controlEnvAmountCb;
-	
-	float m_randomGraph;
+
+	//float m_randomGraph;
 } ;
 
 #endif

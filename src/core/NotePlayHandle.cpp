@@ -573,17 +573,6 @@ void NotePlayHandle::updateFrequency()
                 ? Engine::getSong()->masterPitch()
                 : 0;
 
-        /*
-	const float pitch =
-		( key() -
-		  m_instrumentTrack->baseNoteModel()->value() +
-		  mp +
-		  m_baseDetune )
-		/ 12.0f;
-	m_frequency = BaseFreq * powf( 2.0f, pitch + m_instrumentTrack->pitchModel()->value() / ( 100 * 12.0f ) );
-	m_unpitchedFrequency = BaseFreq * powf( 2.0f, pitch );
-        */
-
         int k=key() + 69.f - m_instrumentTrack->baseNoteModel()->value();
 
         m_frequency = scl->frequency
@@ -609,7 +598,8 @@ void NotePlayHandle::processMidiTime( const MidiTime& time )
 	if( detuning() && time >= songGlobalParentOffset()+pos() )
 	{
 		const float v = detuning()->automationPattern()->valueAt( time - songGlobalParentOffset() - pos() );
-		if( !typeInfo<float>::isEqual( v, m_baseDetune))//->value() ) )
+		//if( !typeInfo<float>::isEqual( v, m_baseDetune))
+                if( abs( v - m_baseDetune ) <= SILENCE )
 		{
 			m_baseDetune=v;//->setValue( v );
 			updateFrequency();

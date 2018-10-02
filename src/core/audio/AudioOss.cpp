@@ -105,7 +105,7 @@ AudioOss::AudioOss( bool & _success_ful, Mixer*  _mixer ) :
 	int frag_spec;
 	for( frag_spec = 0; static_cast<int>( 0x01 << frag_spec ) <
 		mixer()->framesPerPeriod() * channels() *
-							BYTES_PER_INT_SAMPLE;
+							BYTES_PER_S16_SAMPLE;
 		++frag_spec )
 	{
 	}
@@ -297,8 +297,8 @@ void AudioOss::run()
 {
 	surroundSampleFrame * temp =
 		new surroundSampleFrame[mixer()->framesPerPeriod()];
-	int_sample_t * outbuf =
-			new int_sample_t[mixer()->framesPerPeriod() *
+	sampleS16_t * outbuf =
+			new sampleS16_t[mixer()->framesPerPeriod() *
 								channels()];
 
 	while( true )
@@ -309,9 +309,8 @@ void AudioOss::run()
 			break;
 		}
 
-		int bytes = convertToS16( temp, frames,
-				mixer()->masterGain(), outbuf,
-							m_convertEndian );
+		int bytes = convertToS16( temp, frames, outbuf,
+                                          m_convertEndian );
 		if( write( m_audioFD, outbuf, bytes ) != bytes )
 		{
 			break;
@@ -335,11 +334,11 @@ AudioOss::setupWidget::setupWidget( QWidget * _parent ) :
 	dev_lbl->setFont( pointSize<7>( dev_lbl->font() ) );
 	dev_lbl->setGeometry( 10, 40, 160, 10 );
 
-	LcdSpinBoxModel * m = new LcdSpinBoxModel( /* this */ );	
+	LcdSpinBoxModel * m = new LcdSpinBoxModel( /* this */ );
 	m->setRange( DEFAULT_CHANNELS, SURROUND_CHANNELS );
 	m->setStep( 2 );
-	m->setValue( ConfigManager::inst()->value( "audiooss",
-							"channels" ).toInt() );
+	m->setValue( ConfigManager::inst()->value
+                     ( "audiooss","channels" ).toInt() );
 
 	m_channels = new LcdSpinBox( 1, this );
 	m_channels->setModel( m );

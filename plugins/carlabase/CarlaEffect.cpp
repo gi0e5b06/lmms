@@ -427,7 +427,7 @@ bool CarlaEffect::processAudioBuffer(sampleFrame* buf, const fpp_t frames)
 
     for(fpp_t f=0;f<frames;f++)
     {
-          float w0, d0, w1, d1;
+          real_t w0, d0, w1, d1;
           computeWetDryLevels(f, frames, smoothBegin, smoothEnd,
                               w0, d0, w1, d1);
 

@@ -69,33 +69,31 @@ bool CompressorGDX::processAudioBuffer(sampleFrame* _buf, const fpp_t _frames)
 
     for(fpp_t f = 0; f < _frames; ++f)
     {
-        float w0, d0, w1, d1;
+        real_t w0, d0, w1, d1;
         computeWetDryLevels(f, _frames, smoothBegin, smoothEnd, w0, d0, w1,
                             d1);
 
-        float threshold
-                = (float)(thresholdBuf
-                                  ? thresholdBuf->value(f)
-                                  : m_gdxControls.m_thresholdModel.value());
-        float ratio = (float)(ratioBuf ? ratioBuf->value(f)
-                                       : m_gdxControls.m_ratioModel.value());
-        float outGain
-                = (float)(outGainBuf ? outGainBuf->value(f)
-                                     : m_gdxControls.m_outGainModel.value());
+        real_t threshold = thresholdBuf
+                                   ? thresholdBuf->value(f)
+                                   : m_gdxControls.m_thresholdModel.value();
+        real_t ratio = ratioBuf ? ratioBuf->value(f)
+                                : m_gdxControls.m_ratioModel.value();
+        real_t outGain = outGainBuf ? outGainBuf->value(f)
+                                    : m_gdxControls.m_outGainModel.value();
         int mode = (int)(modeBuf ? modeBuf->value(f)
                                  : m_gdxControls.m_modeModel.value());
 
-        float curVal0 = _buf[f][0];
-        float curVal1 = _buf[f][1];
+        sample_t curVal0 = _buf[f][0];
+        sample_t curVal1 = _buf[f][1];
 
-        if(threshold > 0.f || ratio > 0.f)
-            outGain /= (threshold + ratio * (1.f - threshold));
+        if(threshold > 0. || ratio > 0.)
+            outGain /= (threshold + ratio * (1. - threshold));
 
         {
-            float y0 = qBound(0.f, fabs(curVal0) - threshold, 1.f);
-            if(y0 > 0.f)
+            real_t y0 = bound(0., abs(curVal0) - threshold, 1.);
+            if(y0 > 0.)
             {
-                float s0 = sign(curVal0);
+                real_t s0 = sign(curVal0);
                 switch(mode)
                 {
                     case 0:
@@ -104,13 +102,16 @@ bool CompressorGDX::processAudioBuffer(sampleFrame* _buf, const fpp_t _frames)
                             y0 = ratio;
                         break;
                     case 2:
-                        y0 *= (2 - y0) * ratio;
+                        y0 *= (2. - y0) * ratio;
                         break;
                     case 3:
-                        y0 *= WaveForm::sine(y0 / 4.f) * ratio;
+                        y0 *= WaveForm::sqrt(y0) * ratio;
                         break;
                     case 4:
-                        y0 *= (1.f + erf(2.f * y0) / 2.f) * ratio;
+                        y0 *= WaveForm::sine(y0 / 4.) * ratio;
+                        break;
+                    case 5:
+                        y0 *= (1. + erf(2. * y0) / 2.) * ratio;
                         break;
                     case 1:
                     default:
@@ -118,20 +119,20 @@ bool CompressorGDX::processAudioBuffer(sampleFrame* _buf, const fpp_t _frames)
                         break;
                 }
                 curVal0 = s0 * (threshold + y0) * outGain;
-                // curVal0 = qBound(-1.f, curVal0, 1.f);
+                // curVal0 = qBound(-1., curVal0, 1.);
             }
             else
             {
                 curVal0 *= outGain;
-                // curVal0 = qBound(-1.f, curVal0, 1.f);
+                // curVal0 = qBound(-1., curVal0, 1.);
             }
         }
 
         {
-            float y1 = qBound(0.f, fabs(curVal1) - threshold, 1.f);
-            if(y1 > 0.f)
+            real_t y1 = bound(0., abs(curVal1) - threshold, 1.);
+            if(y1 > 0.)
             {
-                float s1 = sign(curVal1);
+                real_t s1 = sign(curVal1);
                 switch(mode)
                 {
                     case 0:
@@ -143,9 +144,12 @@ bool CompressorGDX::processAudioBuffer(sampleFrame* _buf, const fpp_t _frames)
                         y1 *= (2 - y1) * ratio;
                         break;
                     case 3:
-                        y1 *= WaveForm::sine(y1 / 4.f) * ratio;
+                        y1 *= WaveForm::sqrt(y1) * ratio;
                         break;
                     case 4:
+                        y1 *= WaveForm::sine(y1 / 4.f) * ratio;
+                        break;
+                    case 5:
                         y1 *= (1.f + erf(2.f * y1) / 2.f) * ratio;
                         break;
                     case 1:
@@ -154,17 +158,17 @@ bool CompressorGDX::processAudioBuffer(sampleFrame* _buf, const fpp_t _frames)
                         break;
                 }
                 curVal1 = s1 * (threshold + y1) * outGain;
-                //curVal1 = qBound(-1.f, curVal1, 1.f);
+                // curVal1 = qBound(-1.f, curVal1, 1.f);
             }
             else
             {
-                    curVal1 *= outGain;
-                    //curVal1 = qBound(-1.f, curVal1, 1.f);
+                curVal1 *= outGain;
+                // curVal1 = qBound(-1.f, curVal1, 1.f);
             }
         }
 
-        curVal0=qBound(-1.f,curVal0,1.f);
-        curVal1=qBound(-1.f,curVal1,1.f);
+        curVal0 = bound(-1., curVal0, 1.);
+        curVal1 = bound(-1., curVal1, 1.);
 
         _buf[f][0] = d0 * _buf[f][0] + w0 * curVal0;
         _buf[f][1] = d1 * _buf[f][1] + w1 * curVal1;

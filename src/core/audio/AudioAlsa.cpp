@@ -303,10 +303,10 @@ void AudioAlsa::run()
 {
 	surroundSampleFrame * temp =
 		new surroundSampleFrame[mixer()->framesPerPeriod()];
-	int_sample_t * outbuf =
-			new int_sample_t[mixer()->framesPerPeriod() *
+	sampleS16_t * outbuf =
+			new sampleS16_t[mixer()->framesPerPeriod() *
 								channels()];
-	int_sample_t * pcmbuf = new int_sample_t[m_periodSize * channels()];
+	sampleS16_t * pcmbuf = new sampleS16_t[m_periodSize * channels()];
 
 	int outbuf_size = mixer()->framesPerPeriod() * channels();
 	int outbuf_pos = 0;
@@ -315,7 +315,7 @@ void AudioAlsa::run()
 	bool quit = false;
 	while( quit == false )
 	{
-		int_sample_t * ptr = pcmbuf;
+		sampleS16_t * ptr = pcmbuf;
 		int len = pcmbuf_size;
 		while( len )
 		{
@@ -327,19 +327,17 @@ void AudioAlsa::run()
 				{
 					quit = true;
 					memset( ptr, 0, len
-						* sizeof( int_sample_t ) );
+						* sizeof( sampleS16_t ) );
 					break;
 				}
 				outbuf_size = frames * channels();
 
-				convertToS16( temp, frames,
-						mixer()->masterGain(),
-						outbuf,
-						m_convertEndian );
+				convertToS16( temp, frames, outbuf,
+                                              m_convertEndian );
 			}
 			int min_len = qMin( len, outbuf_size - outbuf_pos );
 			memcpy( ptr, outbuf + outbuf_pos,
-					min_len * sizeof( int_sample_t ) );
+					min_len * sizeof( sampleS16_t ) );
 			ptr += min_len;
 			len -= min_len;
 			outbuf_pos += min_len;
@@ -527,7 +525,7 @@ int AudioAlsa::setSWParams()
 	}
 
 	// align all transfers to 1 sample
-	
+
 #if SND_LIB_VERSION < ((1<<16)|(0)|16)
 	if( ( err = snd_pcm_sw_params_set_xfer_align( m_handle,
 							m_swParams, 1 ) ) < 0 )

@@ -27,9 +27,9 @@
 #include "DrumSynth.h"
 
 #include <fstream>
+#include <limits>
 #include <cstring>
-
-#include <math.h>     //sin(), exp(), etc.
+#include <cmath>     //sin(), exp(), etc.
 
 #ifdef LMMS_BUILD_WIN32
 #define powf pow
@@ -308,7 +308,7 @@ int DrumSynth::GetDSFileSamples(const char *dsfile, int16_t *&wave, int channels
   comment[commentLen+1]=0; commentLen++;
   if((commentLen % 2)==1) commentLen++;
 
-  timestretch = .01f * mem_time * GetPrivateProfileFloat(sec,"Stretch",100.0,dsfile);
+  timestretch = 0.01f * mem_time * GetPrivateProfileFloat(sec,"Stretch",100.0,dsfile);
   if(timestretch<0.2f) timestretch=0.2f;
   if(timestretch>10.f) timestretch=10.f;
 

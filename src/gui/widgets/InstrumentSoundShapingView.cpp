@@ -29,11 +29,12 @@
 #include "EnvelopeAndLfoView.h"
 #include "GroupBox.h"
 #include "Knob.h"
-#include "TabWidget.h"
+//#include "TabWidget.h"
 
 #include "gui_templates.h"
 
 #include <QLabel>
+#include <QGridLayout>
 
 
 const int TARGETS_TABWIDGET_X = 4;
@@ -49,10 +50,11 @@ const int FILTER_GROUPBOX_HEIGHT = 245-FILTER_GROUPBOX_Y;
 
 
 InstrumentSoundShapingView::InstrumentSoundShapingView( QWidget * _parent ) :
-	QWidget( _parent ),
+	QScrollArea( _parent ),
 	ModelView( NULL, this ),
 	m_ss( NULL )
 {
+        /*
 	m_targetsTabWidget = new TabWidget( tr( "TARGET" ), this );
 	m_targetsTabWidget->setGeometry( TARGETS_TABWIDGET_X,
 						TARGETS_TABWIDGET_Y,
@@ -80,16 +82,44 @@ InstrumentSoundShapingView::InstrumentSoundShapingView( QWidget * _parent ) :
 						tr( InstrumentSoundShaping::targetNames[i][0].toUtf8().constData() ), 
                                                 NULL );
 	}
+        */
 
+	// E&L tab
+	QScrollArea* envSCA = this; //new QScrollArea( _tabWidget );
+	envSCA->setVerticalScrollBarPolicy( Qt::ScrollBarAlwaysOn );
+	envSCA->setHorizontalScrollBarPolicy( Qt::ScrollBarAlwaysOff );
+	envSCA->setFrameStyle( QFrame::NoFrame );
 
-	m_filterGroupBox = new GroupBox( tr( "FILTER" ), this );
-	m_filterGroupBox->setGeometry( FILTER_GROUPBOX_X, FILTER_GROUPBOX_Y,
-						FILTER_GROUPBOX_WIDTH,
-						FILTER_GROUPBOX_HEIGHT );
+	QWidget* envPNL = new QWidget( envSCA );
+	QVBoxLayout* envLOT = new QVBoxLayout( envPNL );
+        envLOT->setContentsMargins(2,3,2,5);
 
+	for( int i = 0; i < InstrumentSoundShaping::NumTargets; ++i )
+	{
+                GroupBox* g=new GroupBox(tr( InstrumentSoundShaping::targetNames[i][0]
+                                             .toUtf8().constData() ),
+                                         envPNL,false,true);
+		m_envLfoViews[i] = new EnvelopeAndLfoView( g );
+                m_envLfoViews[i]->setMinimumWidth(230);
+                m_envLfoViews[i]->setFixedHeight(274);
+                g->setContentWidget(m_envLfoViews[i]);
+                envLOT->addWidget(g);
+	}
 
-	m_filterComboBox = new ComboBox( m_filterGroupBox );
-	m_filterComboBox->setGeometry( 14, 22, 120, 22 );
+	m_filterGroupBox = new GroupBox( tr( "FILTER" ), envPNL, true, true );
+        QWidget* filterPNL=new QWidget(m_filterGroupBox);
+        filterPNL->setMinimumWidth(230);
+        filterPNL->setFixedHeight(42);
+        m_filterGroupBox->setContentWidget(filterPNL);
+        envLOT->addWidget(m_filterGroupBox);
+
+                //m_filterGroupBox->setGeometry( FILTER_GROUPBOX_X, FILTER_GROUPBOX_Y,
+		//				FILTER_GROUPBOX_WIDTH,
+		//				FILTER_GROUPBOX_HEIGHT );
+
+	m_filterComboBox = new ComboBox( filterPNL );
+	//m_filterComboBox->setGeometry( 14, 22, 120, 22 );
+        m_filterComboBox->setGeometry( 3, 3, 130, 26 );
 	m_filterComboBox->setFont( pointSize<8>( m_filterComboBox->font() ) );
 
 	m_filterComboBox->setWhatsThis(
@@ -98,9 +128,9 @@ InstrumentSoundShapingView::InstrumentSoundShapingView( QWidget * _parent ) :
 			"for changing the characteristics of a sound." ) );
 
 
-	m_filterCutKnob = new Knob( knobBright_26, m_filterGroupBox );
+	m_filterCutKnob = new Knob( knobBright_26, filterPNL );
 	m_filterCutKnob->setLabel( tr( "FREQ" ) );
-	m_filterCutKnob->move( 140, 18 );
+	m_filterCutKnob->move( 142, 3 );
 	m_filterCutKnob->setHintText( tr( "cutoff frequency:" ), " " + tr( "Hz" ) );
 	m_filterCutKnob->setWhatsThis(
 		tr( "Use this knob for setting the cutoff frequency for the "
@@ -111,9 +141,9 @@ InstrumentSoundShapingView::InstrumentSoundShapingView( QWidget * _parent ) :
 			"frequencies below cutoff frequency, and so on..." ) );
 
 
-	m_filterResKnob = new Knob( knobBright_26, m_filterGroupBox );
+	m_filterResKnob = new Knob( knobBright_26, filterPNL );
 	m_filterResKnob->setLabel( tr( "RESO" ) );
-	m_filterResKnob->move( 196, 18 );
+	m_filterResKnob->move( 174, 3 );
 	m_filterResKnob->setHintText( tr( "Resonance:" ), "" );
 	m_filterResKnob->setWhatsThis(
 		tr( "Use this knob for setting Q/Resonance for the selected "
@@ -121,14 +151,25 @@ InstrumentSoundShapingView::InstrumentSoundShapingView( QWidget * _parent ) :
 			"should amplify frequencies near Cutoff-frequency." ) );
 
 
-	m_singleStreamInfoLabel = new QLabel( tr( "Envelopes, LFOs and filters are not supported by the current instrument." ), this );
+        //envLOT->addWidget(m_filterGroupBox);
+        //envLOT->addStretch(1);
+        //setLayout(envLOT);
+	envSCA->setWidget(envPNL);
+
+        /*
+        m_singleStreamInfoLabel = new QLabel( tr( "Envelopes, LFOs and filters are not supported by the current instrument." ), this );
 	m_singleStreamInfoLabel->setWordWrap( true );
 	m_singleStreamInfoLabel->setFont( pointSize<8>( m_singleStreamInfoLabel->font() ) );
+        m_singleStreamInfoLabel->setFixedWidth(230);
+        m_singleStreamInfoLabel->setVisible(false);
+        */
 
+        /*
 	m_singleStreamInfoLabel->setGeometry( TARGETS_TABWIDGET_X,
                                               TARGETS_TABWIDGET_Y,
                                               TARGETS_TABWIDGET_WIDTH,
                                               TARGETS_TABWIDGET_HEIGTH );
+        */
 }
 
 
@@ -136,16 +177,17 @@ InstrumentSoundShapingView::InstrumentSoundShapingView( QWidget * _parent ) :
 
 InstrumentSoundShapingView::~InstrumentSoundShapingView()
 {
-	delete m_targetsTabWidget;
+	//delete m_targetsTabWidget;
 }
 
 
 
 void InstrumentSoundShapingView::setFunctionsHidden( bool hidden )
 {
-	m_targetsTabWidget->setHidden( hidden );
-	m_filterGroupBox->setHidden( hidden );
-	m_singleStreamInfoLabel->setHidden( !hidden );
+	//m_targetsTabWidget->setHidden( hidden );
+	//m_filterGroupBox->setHidden( hidden );
+	//m_singleStreamInfoLabel->setVisible( !hidden );
+        setVisible(hidden);
 }
 
 

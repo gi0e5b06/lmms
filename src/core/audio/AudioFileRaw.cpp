@@ -74,10 +74,8 @@ bool AudioFileRaw::startEncoding()
 }
 
 void AudioFileRaw::writeBuffer(const surroundSampleFrame* _ab,
-                               const fpp_t                _frames,
-                               const float                _masterGain)
+                               const fpp_t                _frames)
 {
-    Q_UNUSED(_masterGain);
     Q_ASSERT(getOutputSettings().getBitDepth() == OutputSettings::Depth_F32);
 
     fwrite(_ab, sizeof(surroundSampleFrame), _frames, m_fh);

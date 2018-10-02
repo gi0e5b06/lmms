@@ -27,28 +27,49 @@
 #define PANNING_H
 
 #include "Midi.h"
-
-//#include "lmms_basics.h"
-#include "volume.h" //REQUIRED
+#include "lmms_basics.h"
+#include "lmmsconfig.h"
+#include "volume.h"  //REQUIRED
 //#include "templates.h"
-#include "panning_constants.h"
 
-inline stereoVolumeVector panningToVolumeVector( panning_t _p,
-							float _scale = 1.0f )
+#include <cmath>
+
+const panning_t PanningRight   = 100;
+const panning_t PanningLeft    = -PanningRight;
+const panning_t PanningCenter  = 0;
+const panning_t DefaultPanning = PanningCenter;
+
+inline StereoGain toStereoGain(const panning_t _p, const volume_t _v)
 {
-	stereoVolumeVector v = { { _scale, _scale } };
-	const float pf = _p / 100.0f;
-	v.vol[_p >= PanningCenter ? 0 : 1] *= 1.0f - qAbs<float>( pf );
-	return v;
+    StereoGain r = {{_v / MaxVolume, _v / MaxVolume}};
+    r.gain[_p >= PanningCenter ? 0 : 1] *= 1. - abs(_p / PanningRight);
+    return r;
 }
 
-
-inline int panningToMidi( panning_t _p )
+inline SurroundGain toSurroundGain(const panning_t _p, const volume_t _v)
 {
-	return MidiMinPanning + (int) (
-			  ( (float)( _p - PanningLeft ) ) /
-			  ( (float)( PanningRight - PanningLeft ) ) *
-			  ( (float)( MidiMaxPanning - MidiMinPanning ) ) );
+    SurroundGain r;
+    for(ch_cnt_t ch = SURROUND_CHANNELS - 1; ch >= 0; --ch)
+        r.gain[ch] = _v / MaxVolume;
+
+    // last channel skipped if centered
+    for(ch_cnt_t ch = (SURROUND_CHANNELS / 2) * 2 - 1; ch >= 0; --ch)
+    {
+        if((_p >= PanningCenter) && (ch % 2 == 0))
+            r.gain[ch] *= 1. - abs(_p / PanningRight);
+        else if((_p < PanningCenter) && (ch % 2 == 1))
+            r.gain[ch] *= 1. - abs(_p / PanningRight);
+    }
+
+    return r;
+}
+
+inline int panningToMidi(panning_t _p)
+{
+    return MidiMinPanning
+           + (int)((real_t(_p - PanningLeft))
+                   / (real_t(PanningRight - PanningLeft))
+                   * (real_t(MidiMaxPanning - MidiMinPanning)));
 }
 
 #endif

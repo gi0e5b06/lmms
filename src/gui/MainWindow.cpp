@@ -205,7 +205,8 @@ MainWindow::MainWindow() :
 	setCentralWidget( main_widget );
 
         // fps
-        m_updateTimer.start( 1000 / CONFIG_GET_INT("ui.framespersecond"), this );
+        connect(&m_updateTimer,SIGNAL(timeout()),this,SLOT(onTimeout()));
+        m_updateTimer.start( 1000 / CONFIG_GET_INT("ui.framespersecond") );//, this );
         PaintManager::start(this);
 
         requireActionUpdate();
@@ -251,6 +252,11 @@ MainWindow::~MainWindow()
 }
 
 
+void MainWindow::onTimeout()
+{
+        if(!Engine::mixer()->warningXRuns())
+                emit periodicUpdate();
+}
 
 
 void MainWindow::finalize()
@@ -1649,12 +1655,12 @@ void MainWindow::keyReleaseEvent( QKeyEvent * _ke )
 
 
 
-
+/*
 void MainWindow::timerEvent( QTimerEvent * _te)
 {
 	emit periodicUpdate();
 }
-
+*/
 
 
 

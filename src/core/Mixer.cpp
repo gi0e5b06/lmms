@@ -86,7 +86,8 @@ Mixer::Mixer( bool renderOnly ) :
 	m_numWorkers( QThread::idealThreadCount()*2-1 ), //tmp GDX
 	m_newPlayHandles(),// PlayHandle::MaxNumber ),
 	m_qualitySettings( qualitySettings::Mode_Draft ),
-	m_masterGain( 1.0f ),
+	m_masterVolumeGain( 1.f ),
+	m_masterPanningGain( 0.f ),
 	m_isProcessing( false ),
 	m_audioDev( nullptr ),
 	m_oldAudioDev( nullptr ),
@@ -230,8 +231,9 @@ void Mixer::initDevices()
         {
                 //m_displayBuf=MM_ALLOC(surroundSampleFrame, m_framesPerPeriod);
                 //memset(m_displayBuf,0,sizeof(surroundSampleFrame)*m_framesPerPeriod);
-                int periodsPerDisplayRefresh=qMax(1,int(ceilf(float(processingSampleRate())
-                                                              /m_framesPerPeriod/CONFIG_GET_INT("ui.framespersecond"))));
+                int periodsPerDisplayRefresh=
+                        qMax(1,int(ceil(real_t(processingSampleRate())
+                                        /real_t(m_framesPerPeriod/CONFIG_GET_INT("ui.framespersecond")))));
                 m_displayRing=new Ring(m_framesPerPeriod*periodsPerDisplayRefresh);
         }
 }
@@ -326,9 +328,17 @@ sample_rate_t Mixer::processingSampleRate() const
 
 
 
-bool Mixer::criticalXRuns() const
+bool Mixer::warningXRuns() const
 {
 	return cpuLoad() >= 95 && Engine::getSong()->isExporting() == false;
+}
+
+
+
+
+bool Mixer::criticalXRuns() const
+{
+	return cpuLoad() >= 98 && Engine::getSong()->isExporting() == false;
 }
 
 
@@ -393,15 +403,15 @@ const surroundSampleFrame * Mixer::renderNextBuffer()
 
 		const tick_t  ticksPerTact   =MidiTime::ticksPerTact();
                 const tick_t  ticksPerBeat   =ticksPerTact/song->getTimeSigModel().getNumerator();
-                const float   framesPerTick  =Engine::framesPerTick();
+                const real_t   framesPerTick  =Engine::framesPerTick();
                 const fpp_t   framesPerPeriod=Engine::mixer()->framesPerPeriod();
 
-                const float fptact=framesPerTick*ticksPerTact;
-                const float fpbeat=framesPerTick*ticksPerBeat;
-                const float curfa=p.absoluteFrame();
+                const real_t fptact=framesPerTick*ticksPerTact;
+                const real_t fpbeat=framesPerTick*ticksPerBeat;
+                const real_t curfa=p.absoluteFrame();
                  for(int k=0;k<framesPerPeriod;k++)
                 {
-                        const float metf=curfa+k;
+                        const real_t metf=curfa+k;
                         if(fmodf(metf,fptact)<1.f)
                         {
                                 SamplePlayHandle* sph=new SamplePlayHandle(s_metronome2);
@@ -607,14 +617,14 @@ void Mixer::clearInternal()
 
 
 
-void Mixer::getPeakValues(const sampleFrame * _ab, const f_cnt_t _frames, float & peakLeft, float & peakRight ) const
+void Mixer::getPeakValues(const sampleFrame * _ab, const f_cnt_t _frames, real_t & peakLeft, real_t & peakRight ) const
 {
 	peakLeft = 0.f;
 	peakRight = 0.f;
 	for( f_cnt_t f = _frames-1; f>=0; --f)
 	{
-		const float absLeft = qAbs( _ab[f][0] );
-		const float absRight = qAbs( _ab[f][1] );
+		const real_t absLeft = qAbs( _ab[f][0] );
+		const real_t absRight = qAbs( _ab[f][1] );
 		if (absLeft > peakLeft)
 			peakLeft = absLeft;
 		if (absRight > peakRight)
@@ -624,14 +634,14 @@ void Mixer::getPeakValues(const sampleFrame * _ab, const f_cnt_t _frames, float 
 
 
 #ifndef LMMS_DISABLE_SURROUND
-void Mixer::getPeakValues(const surroundSampleFrame * _ab, const f_cnt_t _frames, float & peakLeft, float & peakRight ) const
+void Mixer::getPeakValues(const surroundSampleFrame * _ab, const f_cnt_t _frames, real_t & peakLeft, real_t & peakRight ) const
 {
 	peakLeft = 0.f;
 	peakRight = 0.f;
 	for( f_cnt_t f = _frames-1; f>=0; --f)
 	{
-		const float absLeft = qAbs( _ab[f][0] );
-		const float absRight = qAbs( _ab[f][1] );
+		const real_t absLeft = qAbs( _ab[f][0] );
+		const real_t absRight = qAbs( _ab[f][1] );
 		if (absLeft > peakLeft)
 			peakLeft = absLeft;
 		if (absRight > peakRight)

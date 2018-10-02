@@ -1,7 +1,7 @@
 /*
- * Pitch.h - declaration of some constants and types concerning instrument pitch
+ * lmms_math.h - defines math functions
  *
- * Copyright (c) 2014 Tobias Doerffel <tobydox/at/users.sourceforge.net>
+ * Copyright (c) 2004-2008 Tobias Doerffel <tobydox/at/users.sourceforge.net>
  *
  * This file is part of LMMS - https://lmms.io
  *
@@ -22,17 +22,39 @@
  *
  */
 
-#ifndef PITCH_H
-#define PITCH_H
+#ifndef LMMS_FLOAT_H
+#define LMMS_FLOAT_H
 
-//#include "lmms_basics.h"
-//#include "Midi.h"
+#include "lmms_math.h"
 
-typedef float pitch_t; //int16_t
+#ifdef REAL_IS_DOUBLE
 
-const pitch_t CentsPerSemitone = 100.f;
-const pitch_t MinPitchDefault = -CentsPerSemitone;
-const pitch_t MaxPitchDefault = CentsPerSemitone;
-const pitch_t DefaultPitch = 0.f;
+static inline real_t cbrtf(const real_t _x)
+{
+        return cbrt(_x);
+}
+
+static inline real_t sqrtf(const real_t _x)
+{
+        return sqrt(_x);
+}
+
+
+#endif
+
+// fast approximation of square root (not used)
+/*
+static inline float fastSqrt( float n )
+{
+        union
+        {
+                int32_t i;
+                float f;
+        } u;
+        u.f = n;
+        u.i = ( u.i + ( 127 << 23 ) ) >> 1;
+        return u.f;
+}
+*/
 
 #endif

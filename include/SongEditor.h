@@ -108,15 +108,20 @@ protected:
 private slots:
 	void setHighQuality( bool );
 
-	void setMasterVolume( int new_val );
-	void showMasterVolumeFloat();
-	void updateMasterVolumeFloat( int new_val );
-	void hideMasterVolumeFloat();
+	void setMasterVolume( real_t _newVal );
+	//void showMasterVolumeFloat();
+	//void updateMasterVolumeFloat( int _newVal );
+	//void hideMasterVolumeFloat();
 
-	void setMasterPitch( int new_val );
-	void showMasterPitchFloat();
-	void updateMasterPitchFloat( int new_val );
-	void hideMasterPitchFloat();
+	void setMasterPitch( real_t _newVal );
+	//void showMasterPitchFloat();
+	//void updateMasterPitchFloat( int _newVal );
+	//void hideMasterPitchFloat();
+
+	void setMasterPanning( real_t _newVal );
+	//void showMasterPanFloat();
+	//void updateMasterPanFloat( int _newVal );
+	//void hideMasterPanFloat();
 
 	void updateScrollBar(int len);
 
@@ -139,13 +144,14 @@ private:
 	TimeLineWidget * m_timeLine;
 
 	MeterDialog * m_timeSigDisplay;
-	//AutomatableSlider * m_masterVolumeSlider;
-        Knob* m_masterVolumeSlider;
-	//AutomatableSlider * m_masterPitchSlider;
-        Knob* m_masterPitchSlider;
 
-	TextFloat * m_mvsStatus;
-	TextFloat * m_mpsStatus;
+        Knob* m_masterVolumeKNB;
+        Knob* m_masterPitchKNB;
+        Knob* m_masterPanningKNB;
+
+	TextFloat* m_masterVolumeTFT;
+	TextFloat* m_masterPitchTFT;
+	TextFloat* m_masterPanningTFT;
 
 	//positionLine * m_positionLine;
 

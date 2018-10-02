@@ -28,7 +28,7 @@
 #include "ComboBoxModel.h"
 #include "MemoryManager.h"
 //#include "fft_helpers.h"
-#include "Pitch.h"
+//#include "pitch.h"
 #include "lmms_basics.h"
 //#include "lmms_math.h"
 
@@ -40,11 +40,11 @@ class Scale
     Scale(const QString& _name,
           const int      _bank,
           const int      _index,
-          const float    _baseFreq      = 440.f,
-          const float    _baseKey       = 69.f,
-          const float    _octaveFactor  = 2.f,
-          const float    _octaveKeys    = 12.f,
-          const float    _bendingFactor = 2.f);
+          const real_t   _baseFreq      = 440.,
+          const real_t   _baseKey       = 69.,
+          const real_t   _octaveFactor  = 2.,
+          const real_t   _octaveKeys    = 12.,
+          const real_t   _bendingFactor = 2.);
     Scale(const QString& _name,
           const int      _bank,
           const int      _index,
@@ -59,15 +59,16 @@ class Scale
 
     // convenient f() for later (curve, waveform)
     // x must be between 0. and 1.
-    virtual float f(const float _x) const final;
+    virtual real_t f(const real_t _x) const final;
 
     // x must be between 0. and 1.
-    virtual float tune(const float _x) const final;
+    virtual real_t tune(const real_t _x) const final;
 
-    virtual float bending(const float _x) const final;
+    virtual real_t bending(const real_t _x) const final;
 
     // k should be between 0. and 127.
-    virtual float frequency(const float _key, const float _cents) const final;
+    virtual real_t frequency(const real_t _key,
+                             const real_t _cents) const final;
 
     inline const QString& name() const
     {
@@ -121,30 +122,30 @@ class Scale
     Scale(const QString& _name,
           const int      _bank,
           const int      _index,
-          const float    _baseFreq      = 440.f,
-          const float    _baseKey       = 69.f,
-          const float    _octaveFactor  = 2.f,
-          const float    _octaveKeys    = 12.f,
-          const float    _bendingFactor = 2.f);
+          const real_t    _baseFreq      = 440.,
+          const real_t    _baseKey       = 69.,
+          const real_t    _octaveFactor  = 2.,
+          const real_t    _octaveKeys    = 12.,
+          const real_t    _bendingFactor = 2.);
     */
 
     void rebuild();
     void build();
 
-    bool            m_built;
-    QString         m_name;
-    int             m_bank;
-    int             m_index;
+    bool    m_built;
+    QString m_name;
+    int     m_bank;
+    int     m_index;
 
-    float m_baseFrequency;  // 440.f
-    float m_baseKey;        // 69.f
-    float m_octaveFactor;   // 2.f
-    float m_octaveKeys;     // 12.f
-    float m_bendingFactor;  // 2.f
+    real_t m_baseFrequency;  // 440.
+    real_t m_baseKey;        // 69.
+    real_t m_octaveFactor;   // 2.
+    real_t m_octaveKeys;     // 12.
+    real_t m_bendingFactor;  // 2.
 
-    QString         m_file;
-    float*          m_data;
-    int             m_size;  // size of the data -1
+    QString m_file;
+    real_t* m_data;
+    int     m_size;  // size of the data -1
 };
 
 #endif

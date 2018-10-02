@@ -70,14 +70,14 @@ protected:
 	friend class PeakControllerDialog;
 
 private:
-	float m_currentSample;
+	sample_t m_currentSample;
 	//backward compatibility for <= 0.4.15
 	static int m_getCount;
 	static int m_loadCount;
 	static bool m_buggedFile;
-	
-	float m_attackCoeff;
-	float m_decayCoeff;
+
+	real_t m_attackCoeff;
+	real_t m_decayCoeff;
 	bool m_coeffNeedsUpdate;
 } ;
 

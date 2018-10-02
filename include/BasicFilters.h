@@ -51,7 +51,7 @@ class LinkwitzRiley
 {
 	MM_OPERATORS
 public:
-	LinkwitzRiley( float sampleRate )
+	LinkwitzRiley( sample_rate_t sampleRate )
 	{
 		m_sampleRate = sampleRate;
 		clearHistory();
@@ -66,7 +66,7 @@ public:
 		}
 	}
 
-	inline void setSampleRate( float sampleRate )
+	inline void setSampleRate( sample_rate_t sampleRate )
 	{
 		m_sampleRate = sampleRate;
 	}
@@ -115,7 +115,7 @@ public:
 		m_a2 = 6.0 * m_a0;
 	}
 
-	inline float update( float in, ch_cnt_t ch )
+	inline sample_t update( sample_t in, ch_cnt_t ch )
 	{
 		const double x = in - ( m_z1[ch] * m_b1 ) - ( m_z2[ch] * m_b2 ) -
 			( m_z3[ch] * m_b3 ) - ( m_z4[ch] * m_b4 );
@@ -130,7 +130,7 @@ public:
 	}
 
 private:
-	float m_sampleRate;
+	sample_rate_t m_sampleRate;
 	double m_wc4;
 	double m_k4;
 	double m_a, m_a0, m_a1, m_a2;
@@ -168,7 +168,7 @@ public:
 			m_z2[i] = 0.0f;
 		}
 	}
-	inline float update( float in, ch_cnt_t ch )
+	inline sample_t update( sample_t in, ch_cnt_t ch )
 	{
 		// biquad filter in transposed form
 		const float out = m_z1[ch] + m_b0 * in;
@@ -206,7 +206,7 @@ public:
 		m_b1 = b1;
 	}
 	
-	inline float update( float s, ch_cnt_t ch )
+	inline sample_t update( sample_t s, ch_cnt_t ch )
 	{
 		if( qAbs( s ) < 1.0e-10f && qAbs( m_z1[ch] ) < 1.0e-10f ) return 0.0f;
 		return m_z1[ch] = s * m_a0 + m_z1[ch] * m_b1;
@@ -339,19 +339,19 @@ public:
 
 				// four cascaded onepole filters
 				// (bilinear transform)
-				m_y1[_chnl] = qBound( -10.0f,
+				m_y1[_chnl] = qBound<sample_t>( -10.0f,
 						( x + m_oldx[_chnl] ) * m_p
 							- m_k * m_y1[_chnl],
 								10.0f );
-				m_y2[_chnl] = qBound( -10.0f,
+				m_y2[_chnl] = qBound<sample_t>( -10.0f,
 					( m_y1[_chnl] + m_oldy1[_chnl] ) * m_p
 							- m_k * m_y2[_chnl],
 								10.0f );
-				m_y3[_chnl] = qBound( -10.0f,
+				m_y3[_chnl] = qBound<sample_t>( -10.0f,
 					( m_y2[_chnl] + m_oldy2[_chnl] ) * m_p
 							- m_k * m_y3[_chnl],
 								10.0f );
-				m_y4[_chnl] = qBound( -10.0f,
+				m_y4[_chnl] = qBound<sample_t>( -10.0f,
 					( m_y3[_chnl] + m_oldy3[_chnl] ) * m_p
 							- m_k * m_y4[_chnl],
 								10.0f );
@@ -376,15 +376,15 @@ public:
 					ip += 0.25f;
 					sample_t x = linearInterpolate( m_last[_chnl], _in0, ip ) - m_r * m_y3[_chnl];
 					
-					m_y1[_chnl] = qBound( -10.0f,
+					m_y1[_chnl] = qBound<sample_t>( -10.0f,
 						( x + m_oldx[_chnl] ) * m_p
 							- m_k * m_y1[_chnl],
 								10.0f );
-					m_y2[_chnl] = qBound( -10.0f,
+					m_y2[_chnl] = qBound<sample_t>( -10.0f,
 						( m_y1[_chnl] + m_oldy1[_chnl] ) * m_p
 								- m_k * m_y2[_chnl],
 									10.0f );
-					m_y3[_chnl] = qBound( -10.0f,
+					m_y3[_chnl] = qBound<sample_t>( -10.0f,
 						( m_y2[_chnl] + m_oldy2[_chnl] ) * m_p
 								- m_k * m_y3[_chnl],
 									10.0f );
@@ -470,16 +470,16 @@ public:
 				for( int n = 4; n != 0; --n )
 				{
 					in = _in0 + m_rcbp0[_chnl] * m_rcq;
-					in = qBound( -1.0f, in, 1.0f );
+					in = qBound<sample_t>( -1.0f, in, 1.0f );
 
 					lp = in * m_rcb + m_rclp0[_chnl] * m_rca;
-					lp = qBound( -1.0f, lp, 1.0f );
+					lp = qBound<sample_t>( -1.0f, lp, 1.0f );
 
 					hp = m_rcc * ( m_rchp0[_chnl] + in - m_rclast0[_chnl] );
-					hp = qBound( -1.0f, hp, 1.0f );
+					hp = qBound<sample_t>( -1.0f, hp, 1.0f );
 
 					bp = hp * m_rcb + m_rcbp0[_chnl] * m_rca;
-					bp = qBound( -1.0f, bp, 1.0f );
+					bp = qBound<sample_t>( -1.0f, bp, 1.0f );
 
 					m_rclast0[_chnl] = in;
 					m_rclp0[_chnl] = lp;
@@ -495,13 +495,13 @@ public:
 				for( int n = 4; n != 0; --n )
 				{
 					in = _in0 + m_rcbp0[_chnl] * m_rcq;
-					in = qBound( -1.0f, in, 1.0f );
+					in = qBound<sample_t>( -1.0f, in, 1.0f );
 
 					hp = m_rcc * ( m_rchp0[_chnl] + in - m_rclast0[_chnl] );
-					hp = qBound( -1.0f, hp, 1.0f );
+					hp = qBound<sample_t>( -1.0f, hp, 1.0f );
 
 					bp = hp * m_rcb + m_rcbp0[_chnl] * m_rca;
-					bp = qBound( -1.0f, bp, 1.0f );
+					bp = qBound<sample_t>( -1.0f, bp, 1.0f );
 
 					m_rclast0[_chnl] = in;
 					m_rchp0[_chnl] = hp;
@@ -517,16 +517,16 @@ public:
 				{
 					// first stage is as for the 12dB case...
 					in = _in0 + m_rcbp0[_chnl] * m_rcq;
-					in = qBound( -1.0f, in, 1.0f );
+					in = qBound<sample_t>( -1.0f, in, 1.0f );
 
 					lp = in * m_rcb + m_rclp0[_chnl] * m_rca;
-					lp = qBound( -1.0f, lp, 1.0f );
+					lp = qBound<sample_t>( -1.0f, lp, 1.0f );
 
 					hp = m_rcc * ( m_rchp0[_chnl] + in - m_rclast0[_chnl] );
-					hp = qBound( -1.0f, hp, 1.0f );
+					hp = qBound<sample_t>( -1.0f, hp, 1.0f );
 
 					bp = hp * m_rcb + m_rcbp0[_chnl] * m_rca;
-					bp = qBound( -1.0f, bp, 1.0f );
+					bp = qBound<sample_t>( -1.0f, bp, 1.0f );
 
 					m_rclast0[_chnl] = in;
 					m_rclp0[_chnl] = lp;
@@ -535,16 +535,16 @@ public:
 
 					// second stage gets the output of the first stage as input...
 					in = lp + m_rcbp1[_chnl] * m_rcq;
-					in = qBound( -1.0f, in, 1.0f );
+					in = qBound<sample_t>( -1.0f, in, 1.0f );
 
 					lp = in * m_rcb + m_rclp1[_chnl] * m_rca;
-					lp = qBound( -1.0f, lp, 1.0f );
+					lp = qBound<sample_t>( -1.0f, lp, 1.0f );
 
 					hp = m_rcc * ( m_rchp1[_chnl] + in - m_rclast1[_chnl] );
-					hp = qBound( -1.0f, hp, 1.0f );
+					hp = qBound<sample_t>( -1.0f, hp, 1.0f );
 
 					bp = hp * m_rcb + m_rcbp1[_chnl] * m_rca;
-					bp = qBound( -1.0f, bp, 1.0f );
+					bp = qBound<sample_t>( -1.0f, bp, 1.0f );
 
 					m_rclast1[_chnl] = in;
 					m_rclp1[_chnl] = lp;
@@ -561,13 +561,13 @@ public:
 				{
 					// first stage is as for the 12dB case...
 					in = _in0 + m_rcbp0[_chnl] * m_rcq;
-					in = qBound( -1.0f, in, 1.0f );
+					in = qBound<sample_t>( -1.0f, in, 1.0f );
 
 					hp = m_rcc * ( m_rchp0[_chnl] + in - m_rclast0[_chnl] );
-					hp = qBound( -1.0f, hp, 1.0f );
+					hp = qBound<sample_t>( -1.0f, hp, 1.0f );
 
 					bp = hp * m_rcb + m_rcbp0[_chnl] * m_rca;
-					bp = qBound( -1.0f, bp, 1.0f );
+					bp = qBound<sample_t>( -1.0f, bp, 1.0f );
 
 					m_rclast0[_chnl] = in;
 					m_rchp0[_chnl] = hp;
@@ -578,13 +578,13 @@ public:
 						? hp + m_rcbp1[_chnl] * m_rcq
 						: bp + m_rcbp1[_chnl] * m_rcq;
 
-					in = qBound( -1.0f, in, 1.0f );
+					in = qBound<sample_t>( -1.0f, in, 1.0f );
 
 					hp = m_rcc * ( m_rchp1[_chnl] + in - m_rclast1[_chnl] );
-					hp = qBound( -1.0f, hp, 1.0f );
+					hp = qBound<sample_t>( -1.0f, hp, 1.0f );
 
 					bp = hp * m_rcb + m_rcbp1[_chnl] * m_rca;
-					bp = qBound( -1.0f, bp, 1.0f );
+					bp = qBound<sample_t>( -1.0f, bp, 1.0f );
 
 					m_rclast1[_chnl] = in;
 					m_rchp1[_chnl] = hp;
@@ -605,39 +605,39 @@ public:
 				{
 					// first formant
 					in = _in0 + m_vfbp[0][_chnl] * m_vfq;
-					in = qBound( -1.0f, in, 1.0f );
+					in = qBound<sample_t>( -1.0f, in, 1.0f );
 
 					hp = m_vfc[0] * ( m_vfhp[0][_chnl] + in - m_vflast[0][_chnl] );
-					hp = qBound( -1.0f, hp, 1.0f );
+					hp = qBound<sample_t>( -1.0f, hp, 1.0f );
 
 					bp = hp * m_vfb[0] + m_vfbp[0][_chnl] * m_vfa[0];
-					bp = qBound( -1.0f, bp, 1.0f );
+					bp = qBound<sample_t>( -1.0f, bp, 1.0f );
 
 					m_vflast[0][_chnl] = in;
 					m_vfhp[0][_chnl] = hp;
 					m_vfbp[0][_chnl] = bp;
 
 					in = bp + m_vfbp[2][_chnl] * m_vfq;
-					in = qBound( -1.0f, in, 1.0f );
+					in = qBound<sample_t>( -1.0f, in, 1.0f );
 
 					hp = m_vfc[0] * ( m_vfhp[2][_chnl] + in - m_vflast[2][_chnl] );
-					hp = qBound( -1.0f, hp, 1.0f );
+					hp = qBound<sample_t>( -1.0f, hp, 1.0f );
 
 					bp = hp * m_vfb[0] + m_vfbp[2][_chnl] * m_vfa[0];
-					bp = qBound( -1.0f, bp, 1.0f );
+					bp = qBound<sample_t>( -1.0f, bp, 1.0f );
 
 					m_vflast[2][_chnl] = in;
 					m_vfhp[2][_chnl] = hp;
 					m_vfbp[2][_chnl] = bp;
 
 					in = bp + m_vfbp[4][_chnl] * m_vfq;
-					in = qBound( -1.0f, in, 1.0f );
+					in = qBound<sample_t>( -1.0f, in, 1.0f );
 
 					hp = m_vfc[0] * ( m_vfhp[4][_chnl] + in - m_vflast[4][_chnl] );
-					hp = qBound( -1.0f, hp, 1.0f );
+					hp = qBound<sample_t>( -1.0f, hp, 1.0f );
 
 					bp = hp * m_vfb[0] + m_vfbp[4][_chnl] * m_vfa[0];
-					bp = qBound( -1.0f, bp, 1.0f );
+					bp = qBound<sample_t>( -1.0f, bp, 1.0f );
 
 					m_vflast[4][_chnl] = in;
 					m_vfhp[4][_chnl] = hp;
@@ -647,39 +647,39 @@ public:
 
 					// second formant
 					in = _in0 + m_vfbp[0][_chnl] * m_vfq;
-					in = qBound( -1.0f, in, 1.0f );
+					in = qBound<sample_t>( -1.0f, in, 1.0f );
 
 					hp = m_vfc[1] * ( m_vfhp[1][_chnl] + in - m_vflast[1][_chnl] );
-					hp = qBound( -1.0f, hp, 1.0f );
+					hp = qBound<sample_t>( -1.0f, hp, 1.0f );
 
 					bp = hp * m_vfb[1] + m_vfbp[1][_chnl] * m_vfa[1];
-					bp = qBound( -1.0f, bp, 1.0f );
+					bp = qBound<sample_t>( -1.0f, bp, 1.0f );
 
 					m_vflast[1][_chnl] = in;
 					m_vfhp[1][_chnl] = hp;
 					m_vfbp[1][_chnl] = bp;
 
 					in = bp + m_vfbp[3][_chnl] * m_vfq;
-					in = qBound( -1.0f, in, 1.0f );
+					in = qBound<sample_t>( -1.0f, in, 1.0f );
 
 					hp = m_vfc[1] * ( m_vfhp[3][_chnl] + in - m_vflast[3][_chnl] );
-					hp = qBound( -1.0f, hp, 1.0f );
+					hp = qBound<sample_t>( -1.0f, hp, 1.0f );
 
 					bp = hp * m_vfb[1] + m_vfbp[3][_chnl] * m_vfa[1];
-					bp = qBound( -1.0f, bp, 1.0f );
+					bp = qBound<sample_t>( -1.0f, bp, 1.0f );
 
 					m_vflast[3][_chnl] = in;
 					m_vfhp[3][_chnl] = hp;
 					m_vfbp[3][_chnl] = bp;
 
 					in = bp + m_vfbp[5][_chnl] * m_vfq;
-					in = qBound( -1.0f, in, 1.0f );
+					in = qBound<sample_t>( -1.0f, in, 1.0f );
 
 					hp = m_vfc[1] * ( m_vfhp[5][_chnl] + in - m_vflast[5][_chnl] );
-					hp = qBound( -1.0f, hp, 1.0f );
+					hp = qBound<sample_t>( -1.0f, hp, 1.0f );
 
 					bp = hp * m_vfb[1] + m_vfbp[5][_chnl] * m_vfa[1];
-					bp = qBound( -1.0f, bp, 1.0f );
+					bp = qBound<sample_t>( -1.0f, bp, 1.0f );
 
 					m_vflast[5][_chnl] = in;
 					m_vfhp[5][_chnl] = hp;
@@ -717,7 +717,7 @@ public:
 			m_type == Bandpass_RC24 ||
 			m_type == Highpass_RC24 )
 		{
-			_freq = qBound( 50.0f, _freq, 20000.0f );
+			_freq = qBound<real_t>( 50.0f, _freq, 20000.0f );
 			const float sr = m_sampleRatio * 0.25f;
 			const float f = 1.0f / ( _freq * F_2PI );
 			
@@ -733,7 +733,7 @@ public:
 		if( m_type == Formantfilter ||
 			m_type == FastFormant )
 		{
-			_freq = qBound( minFreq(), _freq, 20000.0f ); // limit freq and q for not getting bad noise out of the filter...
+			_freq = qBound<real_t>( minFreq(), _freq, 20000.0f ); // limit freq and q for not getting bad noise out of the filter...
 
 			// formats for a, e, i, o, u, a
 			static const float _f[6][2] = { { 1000, 1400 }, { 500, 2300 },
@@ -771,7 +771,7 @@ public:
 			m_type == DoubleMoog )
 		{
 			// [ 0 - 0.5 ]
-			const float f = qBound( minFreq(), _freq, 20000.0f ) * m_sampleRatio;
+			const float f = qBound<real_t>( minFreq(), _freq, 20000.0f ) * m_sampleRatio;
 			// (Empirical tunning)
 			m_p = ( 3.6f - 3.2f * f ) * f;
 			m_k = 2.0f * m_p - 1;
@@ -788,7 +788,7 @@ public:
 		
 		if( m_type == Tripole )
 		{
-			const float f = qBound( 20.0f, _freq, 20000.0f ) * m_sampleRatio * 0.25f;
+			const float f = qBound<real_t>( 20.0f, _freq, 20000.0f ) * m_sampleRatio * 0.25f;
 			
 			m_p = ( 3.6f - 3.2f * f ) * f;
 			m_k = 2.0f * m_p - 1.0f;
@@ -810,7 +810,7 @@ public:
 		}
 
 		// other filters
-		_freq = qBound( minFreq(), _freq, 20000.0f );
+		_freq = qBound<real_t>( minFreq(), _freq, 20000.0f );
 		const float omega = F_2PI * _freq * m_sampleRatio;
 		const float tsin = sinf( omega ) * 0.5f;
 		const float tcos = cosf( omega );

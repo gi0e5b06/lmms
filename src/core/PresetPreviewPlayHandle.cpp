@@ -180,8 +180,8 @@ PresetPreviewPlayHandle::PresetPreviewPlayHandle( const QString & _preset_file, 
 	// create note-play-handle for it
 	m_previewNote = NotePlayHandleManager::acquire(
 			s_previewTC->previewInstrumentTrack(), 0,
-			typeInfo<f_cnt_t>::max() / 2,
-				Note( 0, 0, DefaultKey, 100 ) );
+			std::numeric_limits<f_cnt_t>::max()/2,
+                        Note( 0, 0, DefaultKey, 100 ) );
 
 	setAudioPort( s_previewTC->previewInstrumentTrack()->audioPort() );
 

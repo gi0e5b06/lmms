@@ -140,9 +140,9 @@ VstSyncController::~VstSyncController()
 void VstSyncController::setAbsolutePosition( int ticks )
 {
 #ifdef VST_SNC_LATENCY
-	m_syncData->ppqPos = ( ( ticks + 0 ) / (float)48 ) - m_syncData->m_latency;
+	m_syncData->ppqPos = ( real_t( ticks + 0 ) / 48. ) - m_syncData->m_latency;
 #else
-	m_syncData->ppqPos = ( ( ticks + 0 ) / (float)48 );
+	m_syncData->ppqPos = ( real_t( ticks + 0 ) / 48. );
 #endif
 }
 
@@ -153,7 +153,7 @@ void VstSyncController::setTempo( int newTempo )
 	m_syncData->m_bpm = newTempo;
 
 #ifdef VST_SNC_LATENCY
-	m_syncData->m_latency = m_syncData->m_bufferSize * newTempo / ( (float) m_syncData->m_sampleRate * 60 );
+	m_syncData->m_latency = m_syncData->m_bufferSize * newTempo / ( real_t(m_syncData->m_sampleRate) * 60. );
 #endif
 
 }
@@ -163,8 +163,8 @@ void VstSyncController::setTempo( int newTempo )
 void VstSyncController::startCycle( int startTick, int endTick )
 {
 	m_syncData->isCycle = true;
-	m_syncData->cycleStart = startTick / (float)48;
-	m_syncData->cycleEnd = endTick / (float)48;
+	m_syncData->cycleStart = real_t(startTick) / 48.;
+	m_syncData->cycleEnd = real_t(endTick) / 48.;
 }
 
 
@@ -174,7 +174,7 @@ void VstSyncController::update()
 	m_syncData->m_bufferSize = Engine::mixer()->framesPerPeriod();
 
 #ifdef VST_SNC_LATENCY
-	m_syncData->m_latency = m_syncData->m_bufferSize * m_syncData->m_bpm / ( (float) m_syncData->m_sampleRate * 60 );
+	m_syncData->m_latency = m_syncData->m_bufferSize * m_syncData->m_bpm / ( real_t(m_syncData->m_sampleRate) * 60. );
 #endif
 }
 

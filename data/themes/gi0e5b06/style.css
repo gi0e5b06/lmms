@@ -197,10 +197,10 @@ PianoRoll {
 }
 
 TabWidget {
-    background-color: #3f4750;/*#262b30;*/
-    qproperty-tabText: rgba(255, 255, 255, 180);
-    qproperty-tabTitleText: #fff;
-    qproperty-tabSelected: #181b40; /*#323940;*/
+    background-color: #3f4750; /*#262b30;*/
+    qproperty-tabText: #888888;
+    qproperty-tabTitleText: #ffffff;
+    qproperty-tabSelected: #004080; /*#323940;*/
     qproperty-tabBackground: #181b1f;
     qproperty-tabBorder: #181b1f;
 }
@@ -941,7 +941,7 @@ sf2InstrumentView Knob {
 }
 
 sfxrInstrumentView Knob {
-    color: #000;
+    color: #000000;
     qproperty-outerColor: rgb(194, 177, 145);
     qproperty-innerRadius: 2;
     qproperty-outerRadius: 9;

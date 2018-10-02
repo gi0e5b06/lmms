@@ -2,7 +2,7 @@
  * AudioFileAU.cpp - audio-device which encodes au-stream and writes it
  *                   into a AU-file. This is used for song-export.
  *
- * Copyright (c) 2017
+ * Copyright (c) 2018 gi0e5b06 (on github.com)
  *
  * This file is part of LMMS - https://lmms.io
  *
@@ -23,172 +23,123 @@
  *
  */
 
-#include <unistd.h>
-
 #include "AudioFileAU.h"
 
-#include "endian_handling.h" // REQUIRED
 #include "Mixer.h"
+#include "endian_handling.h"  // REQUIRED
 
-AudioFileDevice * AudioFileAU::getInst( const QString & outputFilename,
-					OutputSettings const & outputSettings,
-					const ch_cnt_t channels,
-					Mixer * mixer,
-					bool & successful )
+#include <unistd.h>
+
+AudioFileDevice* AudioFileAU::getInst(const QString&        outputFilename,
+                                      OutputSettings const& outputSettings,
+                                      const ch_cnt_t        channels,
+                                      Mixer*                mixer,
+                                      bool&                 successful)
 {
-	AudioFileAU * r=new AudioFileAU( outputSettings, channels,
-					 successful, outputFilename,
-					 mixer );
-	qWarning("AudioFileAU: hasStreamSupport=%d",r->hasStreamSupport());
-	r->initOutputFile();
-	r->openOutputFile();
+    AudioFileAU* r = new AudioFileAU(outputSettings, channels, successful,
+                                     outputFilename, mixer);
+    qWarning("AudioFileAU: hasStreamSupport=%d", r->hasStreamSupport());
+    r->initOutputFile();
+    r->openOutputFile();
 
-	successful = r->outputFileOpened() && r->startEncoding();
-	qWarning("AudioFileAU::getInst success=%d",successful);
+    successful = r->outputFileOpened() && r->startEncoding();
+    qWarning("AudioFileAU::getInst success=%d", successful);
 
-	return r;
+    return r;
 }
 
-
-
-
-AudioFileAU::AudioFileAU( const OutputSettings & outputSettings,
-			  const ch_cnt_t channels, bool & successful,
-			  const QString & file,
-			  Mixer * mixer ) :
-	AudioFileDevice( outputSettings, channels, file, mixer ),
-	m_sf( nullptr )
+AudioFileAU::AudioFileAU(const OutputSettings& outputSettings,
+                         const ch_cnt_t        channels,
+                         bool&                 successful,
+                         const QString&        file,
+                         Mixer*                mixer) :
+      AudioFileDevice(outputSettings, channels, file, mixer),
+      m_sf(nullptr)
 {
 }
-
-
-
 
 AudioFileAU::~AudioFileAU()
 {
-	finishEncoding();
+    finishEncoding();
 }
-
-
-
 
 bool AudioFileAU::hasStreamSupport() const
 {
-	return true;
+    return true;
 }
-
-
-
 
 bool AudioFileAU::startEncoding()
 {
-	m_si.samplerate = sampleRate();
-	m_si.channels = channels();
-	m_si.frames = mixer()->framesPerPeriod();
-	m_si.sections = 1;
-	m_si.seekable = 0;
+    m_si.samplerate = sampleRate();
+    m_si.channels   = channels();
+    m_si.frames     = mixer()->framesPerPeriod();
+    m_si.sections   = 1;
+    m_si.seekable   = 0;
 
-	m_si.format = SF_FORMAT_AU;
+    m_si.format = SF_FORMAT_AU;
 
-	switch( getOutputSettings().getBitDepth() )
-	{
-	case OutputSettings::Depth_F64:
-		m_si.format |= SF_FORMAT_DOUBLE;
-		break;
-	case OutputSettings::Depth_F32:
-		m_si.format |= SF_FORMAT_FLOAT;
-		break;
-	case OutputSettings::Depth_S32:
-		m_si.format |= SF_FORMAT_PCM_32;
-		break;
-	case OutputSettings::Depth_S24:
-		m_si.format |= SF_FORMAT_PCM_24;
-		break;
-	case OutputSettings::Depth_S8:
-		m_si.format |= SF_FORMAT_PCM_S8;
-		break;
-	case OutputSettings::Depth_S16:
-	default:
-		m_si.format |= SF_FORMAT_PCM_16;
-		break;
-	}
+    switch(getOutputSettings().getBitDepth())
+    {
+        case OutputSettings::Depth_F64:
+            m_si.format |= SF_FORMAT_DOUBLE;
+            break;
+        case OutputSettings::Depth_F32:
+            m_si.format |= SF_FORMAT_FLOAT;
+            break;
+        case OutputSettings::Depth_S32:
+            m_si.format |= SF_FORMAT_PCM_32;
+            break;
+        case OutputSettings::Depth_S24:
+            m_si.format |= SF_FORMAT_PCM_24;
+            break;
+        case OutputSettings::Depth_S8:
+            m_si.format |= SF_FORMAT_PCM_S8;
+            break;
+        case OutputSettings::Depth_S16:
+        default:
+            m_si.format |= SF_FORMAT_PCM_16;
+            break;
+    }
 
-	//	if( m_si.format & SF_FORMAT_PCM_24 )
-	//	m_si.format = SF_FORMAT_AU | SF_ENDIAN_LITTLE | SF_FORMAT_PCM_16;
+    //	if( m_si.format & SF_FORMAT_PCM_24 )
+    //	m_si.format = SF_FORMAT_AU | SF_ENDIAN_LITTLE | SF_FORMAT_PCM_16;
 
-	if( m_useStdout )
-	{
-		qWarning("AudioFileAU: output to STDOUT");
-		m_sf = sf_open_fd( STDOUT_FILENO, SFM_WRITE, &m_si, false );
-		qWarning("AudioFileAU: m_sf=%p",m_sf);
- 	}
-	else
-	{
-		m_sf = sf_open(
+    if(m_useStdout)
+    {
+        qWarning("AudioFileAU: output to STDOUT");
+        m_sf = sf_open_fd(STDOUT_FILENO, SFM_WRITE, &m_si, false);
+        qWarning("AudioFileAU: m_sf=%p", m_sf);
+    }
+    else
+    {
+        m_sf = sf_open(
 #ifdef LMMS_BUILD_WIN32
-			       outputFile().toLocal8Bit().constData(),
+                outputFile().toLocal8Bit().constData(),
 #else
-			       outputFile().toUtf8().constData(),
+                outputFile().toUtf8().constData(),
 #endif
-			       SFM_WRITE, &m_si );
-	}
+                SFM_WRITE, &m_si);
+    }
 
-	// Prevent fold overs when encountering clipped data
-	sf_command(m_sf, SFC_SET_CLIPPING, NULL, SF_TRUE);
+    // Prevent fold overs when encountering clipped data
+    sf_command(m_sf, SFC_SET_CLIPPING, NULL, SF_TRUE);
 
-	sf_set_string ( m_sf, SF_STR_SOFTWARE, "LMMS" );
+    sf_set_string(m_sf, SF_STR_SOFTWARE, "LMMS");
 
-	return true;
+    return true;
 }
 
-
-
-
-void AudioFileAU::writeBuffer( const surroundSampleFrame * _ab,
-			       const fpp_t _frames,
-			       const float _master_gain )
+void AudioFileAU::writeBuffer(const surroundSampleFrame* _ab,
+                              const fpp_t                _frames)
 {
-        Q_UNUSED(_master_gain);
-        Q_ASSERT(sizeof(sample_t)==sizeof(float));
-        sf_write_float(m_sf,(const float*)_ab,_frames*channels());
-
-        /*
-	OutputSettings::BitDepth bitDepth = getOutputSettings().getBitDepth();
-
-	if( bitDepth == OutputSettings::Depth_32Bit || bitDepth == OutputSettings::Depth_24Bit )
-	{
-		float *  buf = new float[_frames*channels()];
-		for( fpp_t frame = 0; frame < _frames; ++frame )
-		{
-			for( ch_cnt_t chnl = 0; chnl < channels(); ++chnl )
-			{
-				buf[frame*channels()+chnl] = _ab[frame][chnl] *
-								_master_gain;
-			}
-		}
-		sf_writef_float( m_sf, buf, _frames );
-		delete[] buf;
-	}
-	else
-	{
-		int_sample_t * buf = new int_sample_t[_frames * channels()];
-		convertToS16( _ab, _frames, _master_gain, buf,
-							!isLittleEndian() );
-
-		sf_writef_short( m_sf, buf, _frames );
-		delete[] buf;
-	}
-        */
+    Q_ASSERT(sizeof(sample_t) == sizeof(float));
+    sf_write_float(m_sf, (const float*)_ab, _frames * channels());
 }
-
-
-
 
 void AudioFileAU::finishEncoding()
 {
-	if( m_sf )
-	{
-		sf_close( m_sf );
-	}
+    if(m_sf)
+    {
+        sf_close(m_sf);
+    }
 }
-

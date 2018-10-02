@@ -83,21 +83,21 @@ bool BassBoosterEffect::processAudioBuffer( sampleFrame* buf, const fpp_t frames
 	if( m_bbControls.m_gainModel.isValueChanged() ) { changeGain(); }
 	if( m_bbControls.m_ratioModel.isValueChanged() ) { changeRatio(); }
 
-	const float const_gain = m_bbControls.m_gainModel.value();
+	const real_t const_gain = m_bbControls.m_gainModel.value();
 	const ValueBuffer *gainBuffer = m_bbControls.m_gainModel.valueBuffer();
 
 	for( fpp_t f = 0; f < frames; ++f )
 	{
-                float w0, d0, w1, d1;
+                real_t w0, d0, w1, d1;
                 computeWetDryLevels(f, frames, smoothBegin, smoothEnd,
                                     w0, d0, w1, d1);
 
-		float gain = const_gain;
+		real_t gain = const_gain;
 		if (gainBuffer) {
 			//process period using sample exact data
 			gain = gainBuffer->value( f );
 		}
-		//float gain = gainBuffer ? gainBuffer[f] : gain;
+		//real_t gain = gainBuffer ? gainBuffer[f] : gain;
 		m_bbFX.leftFX().setGain( gain );
 		m_bbFX.rightFX().setGain( gain);
 
@@ -114,7 +114,7 @@ bool BassBoosterEffect::processAudioBuffer( sampleFrame* buf, const fpp_t frames
 
 inline void BassBoosterEffect::changeFrequency()
 {
-	const sample_t fac = Engine::mixer()->processingSampleRate() / 44100.0f;
+	const real_t fac = Engine::mixer()->processingSampleRate() / 44100.;
 
 	m_bbFX.leftFX().setFrequency( m_bbControls.m_freqModel.value() * fac );
 	m_bbFX.rightFX().setFrequency( m_bbControls.m_freqModel.value() * fac );

@@ -55,9 +55,10 @@ const tick_t MaxSongLength = 9999 * DefaultTicksPerTact;
 class EXPORT Song : public TrackContainer, public virtual Transportable
 {
 	Q_OBJECT
-	mapPropertyFromModel( int,getTempo,setTempo,m_tempoModel );
-	mapPropertyFromModel( int,masterPitch,setMasterPitch,m_masterPitchModel );
-	mapPropertyFromModel( int,masterVolume,setMasterVolume, m_masterVolumeModel );
+	mapPropertyFromModel( bpm_t    ,getTempo,setTempo,m_tempoModel );
+	mapPropertyFromModel( volume_t ,masterVolume,setMasterVolume, m_masterVolumeModel );
+	mapPropertyFromModel( pitch_t  ,masterPitch,setMasterPitch,m_masterPitchModel );
+	mapPropertyFromModel( panning_t,masterPanning,setMasterPanning,m_masterPanningModel );
 
 public:
 	enum PlayModes
@@ -81,35 +82,35 @@ public:
                 PlayPos( const int abs = 0 ) :
                          MidiTime( abs ),
 			 m_timeLine( NULL ),
-			 m_currentFrame( 0.0f )
+			 m_currentFrame( 0. )
 		{
 		}
 
-                inline void setCurrentFrame( const float f ) // relative
+                inline void setCurrentFrame( const real_t f ) // relative
 		{
 			m_currentFrame = f;
 		}
 
-		inline float currentFrame() const // relative
+		inline real_t currentFrame() const // relative
 		{
 			return m_currentFrame;
 		}
 
-                inline float absoluteFrame() const
+                inline real_t absoluteFrame() const
                 {
                         return getTicks()*Engine::framesPerTick()+m_currentFrame;
                 }
 
-                inline void setAbsoluteFrame(float _f)
+                inline void setAbsoluteFrame(real_t _f)
                 {
                         setTicks(_f/Engine::framesPerTick());
-                        setCurrentFrame(fmodf(_f,Engine::framesPerTick()));
+                        setCurrentFrame(fmod(_f,Engine::framesPerTick()));
                 }
 
                 TimeLineWidget * m_timeLine;
 
 	private:
-		float m_currentFrame;
+		real_t m_currentFrame;
 
 	} ;
 
@@ -372,6 +373,7 @@ private slots:
 	void setTimeSignature();
 
 	void masterVolumeChanged();
+	void masterPanningChanged();
 
 	void savePos();
 
@@ -415,10 +417,9 @@ private:
 	IntModel m_tempoModel;
 	MeterModel m_timeSigModel;
 	int m_oldTicksPerTact;
-	//IntModel m_masterVolumeModel;
         FloatModel m_masterVolumeModel;
-	//IntModel m_masterPitchModel;
         FloatModel m_masterPitchModel;
+        FloatModel m_masterPanningModel;
 
 	MetaData m_metaData;
 

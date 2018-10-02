@@ -246,8 +246,7 @@ InstrumentFunctionNoteStacking::ChordTable::Init
             {0, 2, 3, 6, 7, 8, 11, -1}},
            {QT_TRANSLATE_NOOP("InstrumentFunctionNoteStacking", "Dorian"),
             {0, 2, 3, 5, 7, 9, 10, -1}},
-           {QT_TRANSLATE_NOOP("InstrumentFunctionNoteStacking",
-                              "Phrygian"),
+           {QT_TRANSLATE_NOOP("InstrumentFunctionNoteStacking", "Phrygian"),
             {0, 1, 3, 5, 7, 8, 10, -1}},
            {QT_TRANSLATE_NOOP("InstrumentFunctionNoteStacking", "Lydian"),
             {0, 2, 4, 6, 7, 9, 11, -1}},
@@ -329,7 +328,7 @@ InstrumentFunctionNoteStacking::InstrumentFunctionNoteStacking(
       InstrumentFunction(_parent, tr("Chords")),
       // m_enabledModel( false, this ),
       m_chordsModel(this, tr("Chord type")),
-      m_chordRangeModel(1.0f, 1.0f, 9.0f, 1.0f, this, tr("Chord range"))
+      m_chordRangeModel(1., 1., 9., 1., this, tr("Chord range"))
 {
     const ChordTable& chord_table = ChordTable::getInstance();
     for(int i = 0; i < chord_table.size(); ++i)
@@ -443,13 +442,12 @@ InstrumentFunctionArpeggio::InstrumentFunctionArpeggio(Model* _parent) :
       InstrumentFunction(_parent, tr("Arpeggio")),
       // m_enabledModel( false ),
       m_arpModel(this, tr("Arpeggio type")),
-      m_arpRangeModel(1.0f, 1.0f, 9.0f, 1.0f, this, tr("Arpeggio range")),
-      m_arpCycleModel(0.0f, 0.0f, 6.0f, 1.0f, this, tr("Cycle steps")),
-      m_arpSkipModel(0.0f, 0.0f, 100.0f, 1.0f, this, tr("Skip rate")),
-      m_arpMissModel(0.0f, 0.0f, 100.0f, 1.0f, this, tr("Miss rate")),
-      m_arpTimeModel(
-              200.0f, 25.0f, 2000.0f, 1.0f, 2000, this, tr("Arpeggio time")),
-      m_arpGateModel(100.0f, 1.0f, 200.0f, 1.0f, this, tr("Arpeggio gate")),
+      m_arpRangeModel(1., 1., 9., 1., this, tr("Arpeggio range")),
+      m_arpCycleModel(0., 0., 6., 1., this, tr("Cycle steps")),
+      m_arpSkipModel(0., 0., 100., 1., this, tr("Skip rate")),
+      m_arpMissModel(0., 0., 100., 1., this, tr("Miss rate")),
+      m_arpTimeModel(200., 25., 2000., 1., 2000, this, tr("Arpeggio time")),
+      m_arpGateModel(100., 1., 200., 1., this, tr("Arpeggio gate")),
       m_arpDirectionModel(this, tr("Arpeggio direction")),
       m_arpModeModel(this, tr("Arpeggio mode"))
 {
@@ -527,10 +525,10 @@ bool InstrumentFunctionArpeggio::processNote(NotePlayHandle* _n)
 
     // number of frames that every note should be played
     const f_cnt_t arp_frames
-            = (f_cnt_t)(m_arpTimeModel.value() / 1000.0f
+            = (f_cnt_t)(m_arpTimeModel.value() / 1000.
                         * Engine::mixer()->processingSampleRate());
     const f_cnt_t gated_frames
-            = (f_cnt_t)(m_arpGateModel.value() * arp_frames / 100.0f);
+            = (f_cnt_t)(m_arpGateModel.value() * arp_frames / 100.);
 
     // used for calculating remaining frames for arp-note, we have to add
     // arp_frames-1, otherwise the first arp-note will not be setup
@@ -576,8 +574,8 @@ bool InstrumentFunctionArpeggio::processNote(NotePlayHandle* _n)
         // Skip notes randomly
         if(m_arpSkipModel.value())
         {
-            if(100 * ((float)rand() / (float)(RAND_MAX + 1.0f))
-               < m_arpSkipModel.value())
+            if(100. * fastrand01exc() < m_arpSkipModel.value())
+            // real_t(rand()) / real_t(RAND_MAX + 1.)
             {
                 // Set master note to prevent the note to extend over skipped
                 // notes This may only be needed for lb302
@@ -597,7 +595,7 @@ bool InstrumentFunctionArpeggio::processNote(NotePlayHandle* _n)
 
         if(m_arpMissModel.value())
         {
-            if(100 * ((float)rand() / (float)(RAND_MAX + 1.0f))
+            if(100 * ((float)rand() / (float)(RAND_MAX + 1.))
                < m_arpMissModel.value())
             {
                 dir = ArpDirRandom;
@@ -754,12 +752,11 @@ InstrumentFunctionNoteHumanizing::InstrumentFunctionNoteHumanizing(
         Model* _parent) :
       InstrumentFunction(_parent, tr("NoteHumanizing")),
       // m_enabledModel( false, this ),
-      m_volumeRangeModel(0.0f, 0.0f, 100.0f, 0.1f, this, tr("Volume change")),
-      m_panRangeModel(0.0f, 0.0f, 100.0f, 0.1f, this, tr("Pan change")),
-      m_tuneRangeModel(
-              0.0f, 0.0f, 100.0f, 0.1f, this, tr("Frequency change")),
-      m_offsetRangeModel(0.0f, 0.0f, 100.0f, 0.1f, this, tr("Start delay")),
-      m_shortenRangeModel(0.0f, 0.0f, 100.0f, 0.1f, this, tr("Shortening"))
+      m_volumeRangeModel(0., 0., 100., 0.1, this, tr("Volume change")),
+      m_panRangeModel(0., 0., 100., 0.1, this, tr("Pan change")),
+      m_tuneRangeModel(0., 0., 100., 0.1, this, tr("Frequency change")),
+      m_offsetRangeModel(0., 0., 100., 0.1, this, tr("Start delay")),
+      m_shortenRangeModel(0., 0., 100., 0.1, this, tr("Shortening"))
 {
 }
 
@@ -775,37 +772,36 @@ bool InstrumentFunctionNoteHumanizing::processNote(NotePlayHandle* _n)
         return true;
 
     {
-        float l = m_volumeRangeModel.value() / 100.f;
-        if(l > 0.f)
+        float l = m_volumeRangeModel.value() / 100.;
+        if(l > 0.)
         {
             float    r = fastrandf01inc();
             volume_t o = _n->getVolume();  // 0..200
-            volume_t n = qBound(0, qRound(o * (1.f - l * r)), 200);
+            volume_t n = bound(0, qRound(o * (1. - l * r)), 200);
             // qInfo("NH: volume %d->%d",o,n);
             _n->setVolume(n);
         }
     }
 
     {
-        float l = m_panRangeModel.value() / 100.f;
-        if(l > 0.f)
+        float l = m_panRangeModel.value() / 100.;
+        if(l > 0.)
         {
             float     r = fastrandf01inc();
             panning_t o = _n->getPanning();  // -100..100
-            panning_t n
-                    = qBound(-100, qRound(o + 200.f * l * (r - 0.5f)), 100);
+            panning_t n = qBound(-100, qRound(o + 200. * l * (r - 0.5)), 100);
             // qInfo("NH: panning %d->%d",o,n);
             _n->setPanning(n);
         }
     }
 
     {
-        float l = m_tuneRangeModel.value() / 100.f;
-        if(l > 0.f)
+        float l = m_tuneRangeModel.value() / 100.;
+        if(l > 0.)
         {
             float r = fastrandf01inc();
             float o = _n->baseDetune();
-            float n = o + 12.f * (l * (r - 0.5f));
+            float n = o + 12. * (l * (r - 0.5));
             // qInfo("NH: detune %f->%f",o,n);
             _n->setBaseDetune(n);
             _n->setFrequencyUpdate();
@@ -813,8 +809,8 @@ bool InstrumentFunctionNoteHumanizing::processNote(NotePlayHandle* _n)
     }
 
     {
-        float l = m_offsetRangeModel.value() / 100.f;
-        if(l > 0.f)
+        float l = m_offsetRangeModel.value() / 100.;
+        if(l > 0.)
         {
             float       r   = fastrandf01inc();
             f_cnt_t     o   = _n->offset();  // ?
@@ -829,12 +825,12 @@ bool InstrumentFunctionNoteHumanizing::processNote(NotePlayHandle* _n)
     }
 
     {
-        float l = m_shortenRangeModel.value() / 100.f;
-        if(l > 0.f)
+        float l = m_shortenRangeModel.value() / 100.;
+        if(l > 0.)
         {
             float   r = fastrandf01inc();
             f_cnt_t o = _n->frames();  // ?
-            f_cnt_t n = qBound(1, qRound(o * (1.f - l * r)), o);
+            f_cnt_t n = qBound(1, qRound(o * (1. - l * r)), o);
             // qInfo("NH: shorten %d->%d",o,n);
             _n->setFrames(n);
         }
@@ -1076,16 +1072,14 @@ InstrumentFunctionView* InstrumentFunctionNoteFiltering::createView()
 InstrumentFunctionNoteKeying::InstrumentFunctionNoteKeying(Model* _parent) :
       InstrumentFunction(_parent, tr("NoteKeying")),
       // m_enabledModel( false, this ),
-      m_volumeRangeModel(
-              0.0f, -500.0f, 500.0f, 1.0f, this, tr("Volume change")),
-      m_volumeBaseModel(
-              0.0f, 0.0f, 127.0f, 1.0f, this, tr("Volume base key")),
-      m_volumeMinModel(0.0f, 0.0f, 200.0f, 0.1f, this, tr("Volume min")),
-      m_volumeMaxModel(100.0f, 0.0f, 200.0f, 0.1f, this, tr("Volume max")),
-      m_panRangeModel(0.0f, -500.0f, 500.0f, 1.0f, this, tr("Pan change")),
-      m_panBaseModel(0.0f, 0.0f, 127.0f, 1.0f, this, tr("Pan base key")),
-      m_panMinModel(0.0f, -100.0f, 100.0f, 0.1f, this, tr("Pan min")),
-      m_panMaxModel(0.0f, -100.0f, 100.0f, 0.1f, this, tr("Pan max"))
+      m_volumeRangeModel(0., -500., 500., 1., this, tr("Volume change")),
+      m_volumeBaseModel(0., 0., 127., 1., this, tr("Volume base key")),
+      m_volumeMinModel(0., 0., 200., 0.1f, this, tr("Volume min")),
+      m_volumeMaxModel(100., 0., 200., 0.1f, this, tr("Volume max")),
+      m_panRangeModel(0., -500., 500., 1., this, tr("Pan change")),
+      m_panBaseModel(0., 0., 127., 1., this, tr("Pan base key")),
+      m_panMinModel(0., -100., 100., 0.1f, this, tr("Pan min")),
+      m_panMaxModel(0., -100., 100., 0.1f, this, tr("Pan max"))
 {
 }
 
@@ -1101,34 +1095,36 @@ bool InstrumentFunctionNoteKeying::processNote(NotePlayHandle* _n)
         return true;
 
     {
-        float l = m_volumeRangeModel.value() / 100.f;
-        if(l != 0.f)
+        float l = m_volumeRangeModel.value() / 100.;
+        if(l != 0.)
         {
-            float    r = qBound(-1.0f,
-                             (1.0f * _n->key() - m_volumeBaseModel.value())
-                                     * 2.f / NumKeys,
-                             1.0f);
+            real_t   r = bound(-1.,
+                             (real_t(_n->key()) - m_volumeBaseModel.value())
+                                     * 2. / NumKeys,
+                             1.);
             volume_t o = _n->getVolume();  // 0..200
-            volume_t n = qBound(m_volumeMinModel.value(), o + 100.f * l * r,
-                                m_volumeMaxModel.value());
-            n          = qBound(0.f, n, 200.f);
+            volume_t n = qBound<volume_t>(m_volumeMinModel.value(),
+                                          o + 100. * l * r,
+                                          m_volumeMaxModel.value());
+            n          = qBound<volume_t>(0., n, 200.);
             qInfo("NK: volume %f->%f", o, n);
             _n->setVolume(n);
         }
     }
 
     {
-        float l = m_panRangeModel.value() / 100.f;
-        if(l != 0.f)
+        float l = m_panRangeModel.value() / 100.;
+        if(l != 0.)
         {
-            float     r = qBound(-1.0f,
-                             (1.0f * _n->key() - m_panBaseModel.value()) * 2.f
+            real_t    r = bound(-1.,
+                             (real_t(_n->key()) - m_panBaseModel.value()) * 2.
                                      / NumKeys,
-                             1.0f);
+                             1.);
             panning_t o = _n->getPanning();  // -100..100
-            panning_t n = qBound(m_panMinModel.value(), o + 200.f * l * r,
-                                 m_panMaxModel.value());
-            n           = qBound(-100.f, n, 100.f);
+            panning_t n = qBound<panning_t>(m_panMinModel.value(),
+                                            o + 200. * l * r,
+                                            m_panMaxModel.value());
+            n           = qBound<volume_t>(-100., n, 100.);
             qInfo("NK: panning %f->%f", o, n);
             _n->setPanning(n);
         }
@@ -1177,10 +1173,10 @@ InstrumentFunctionView* InstrumentFunctionNoteKeying::createView()
 InstrumentFunctionNoteOutting::InstrumentFunctionNoteOutting(Model* _parent) :
       InstrumentFunction(_parent, tr("NoteOutting")),
       // m_enabledModel( false, this ),
-      m_volumeModel(0.f, 0.f, 200.f, 0.1f, this, tr("Volume")),
-      m_panModel(0.f, -100.f, 100.f, 0.1f, this, tr("Pan")),
-      m_keyModel(DefaultKey, 0.f, 127.f, 1.0f, this, tr("Key")),
-      m_noteModel(DefaultKey % 12, 0.f, 11.f, 1.0f, this, tr("Note"))
+      m_volumeModel(0., 0., 200., 0.1f, this, tr("Volume")),
+      m_panModel(0., -100., 100., 0.1f, this, tr("Pan")),
+      m_keyModel(DefaultKey, 0., 127., 1., this, tr("Key")),
+      m_noteModel(DefaultKey % 12, 0., 11., 1., this, tr("Note"))
 {
 }
 
@@ -1226,11 +1222,10 @@ InstrumentFunctionView* InstrumentFunctionNoteOutting::createView()
 
 InstrumentFunctionGlissando::InstrumentFunctionGlissando(Model* _parent) :
       InstrumentFunction(_parent, tr("Glissando")),
-      m_gliTimeModel(
-              75.f, 5.f, 500.0f, 0.1f, 500.f, this, tr("Glissando time")),
-      m_gliGateModel(100.f, 1.0f, 100.0f, 1.0f, this, tr("Glissando gate")),
+      m_gliTimeModel(75., 5., 500., 0.1f, 500., this, tr("Glissando time")),
+      m_gliGateModel(100., 1., 100., 1., this, tr("Glissando gate")),
       m_gliAttenuationModel(
-              30.f, 0.0f, 99.f, 1.0f, this, tr("Glissando attenuation")),
+              30., 0., 99., 1., this, tr("Glissando attenuation")),
       m_gliUpModeModel(this, tr("Glissando Up Mode")),
       m_gliDownModeModel(this, tr("Glissando Down Mode")), m_lastKey(-1),
       m_lastTime(-1)
@@ -1310,16 +1305,16 @@ bool InstrumentFunctionGlissando::processNote(NotePlayHandle* _n)
                       .count();
     */
     const int64_t perTime
-            = static_cast<int64_t>(Engine::mixer()->framesPerPeriod() * 1000.f
+            = static_cast<int64_t>(Engine::mixer()->framesPerPeriod() * 1000.
                                    / Engine::mixer()->processingSampleRate());
 
     const int64_t curTime = Engine::getSong()->getMilliseconds();
 
     const int64_t frmTime = static_cast<int64_t>(
-            _n->length() * Engine::framesPerTick() * 1000.f
+            _n->length() * Engine::framesPerTick() * 1000.
             / Engine::mixer()->processingSampleRate());
     const int64_t offTime = static_cast<int64_t>(
-            _n->offset() * 1000.f / Engine::mixer()->processingSampleRate());
+            _n->offset() * 1000. / Engine::mixer()->processingSampleRate());
     // qInfo("Glissando: INFO lk=%d nk=%d last=%ld cur=%ld frm=%ld off=%ld "
     //      "per=%ld",
     //      m_lastKey, newKey, m_lastTime, curTime, frmTime, offTime,
@@ -1442,14 +1437,14 @@ bool InstrumentFunctionGlissando::processNote(NotePlayHandle* _n)
 
     // number of frames that every note should be played
     f_cnt_t note_frames
-            = (f_cnt_t)(m_gliTimeModel.value() / 1000.0f
+            = (f_cnt_t)(m_gliTimeModel.value() / 1000.
                         * Engine::mixer()->processingSampleRate());
 
     if(howmany * note_frames > _n->length() * Engine::framesPerTick())
         note_frames = _n->length() * Engine::framesPerTick() / howmany;
 
     const f_cnt_t gated_frames
-            = (f_cnt_t)(m_gliGateModel.value() * note_frames / 100.0f);
+            = (f_cnt_t)(m_gliGateModel.value() * note_frames / 100.);
 
     if(gated_frames <= 6)
     {
@@ -1473,12 +1468,12 @@ bool InstrumentFunctionGlissando::processNote(NotePlayHandle* _n)
         if(!allowWhite && Piano::isWhiteKey(key))
             continue;
 
-        float a = m_gliAttenuationModel.value() / 100.f;
+        real_t a = m_gliAttenuationModel.value() / 100.;
         if(Piano::isBlackKey(key))
-            a *= 1.05f;
-        a = qBound(0.f, a, 0.99f);
+            a *= 1.05;
+        a = bound(0., a, 0.99);
 
-        Note subnote(_n->length(), 0, key, _n->getVolume() * (1.f - a),
+        Note subnote(_n->length(), 0, key, _n->getVolume() * (1. - a),
                      _n->getPanning(), _n->detuning());
 
         // create sub-note-play-handle, only ptr to note is different
@@ -1498,11 +1493,11 @@ bool InstrumentFunctionGlissando::processNote(NotePlayHandle* _n)
     const f_cnt_t total_frames = frames_processed - _n->offset();
 
     // const int64_t totTime = static_cast<int64_t>(
-    //        total_frames * 1000.f /
+    //        total_frames * 1000. /
     //        Engine::mixer()->processingSampleRate());
 
     // const int64_t posTime = static_cast<int64_t>(
-    //        pos_frame * 1000.f / Engine::mixer()->processingSampleRate());
+    //        pos_frame * 1000. / Engine::mixer()->processingSampleRate());
 
     // qInfo("Glissando : ++++++++> frm=%ld off=%ld pos=%ld tot=%ld", frmTime,
     //      offTime, posTime, totTime);

@@ -75,42 +75,41 @@ bool waveShaperEffect::processAudioBuffer( sampleFrame * _buf,
          if(!shouldProcessAudioBuffer(_buf, _frames, smoothBegin, smoothEnd))
                  return false;
 
-        float input = m_wsControls.m_inputModel.value();
-	float output = m_wsControls.m_outputModel.value();
+        real_t input = m_wsControls.m_inputModel.value();
+	real_t output = m_wsControls.m_outputModel.value();
 	const float * samples = m_wsControls.m_wavegraphModel.samples();
 	const bool clip = m_wsControls.m_clipModel.value();
 
-	ValueBuffer *inputBuffer = m_wsControls.m_inputModel.valueBuffer();
-	ValueBuffer *outputBufer = m_wsControls.m_outputModel.valueBuffer();
+	ValueBuffer* inputBuffer = m_wsControls.m_inputModel.valueBuffer();
+	ValueBuffer* outputBufer = m_wsControls.m_outputModel.valueBuffer();
 
 	int inputInc = inputBuffer ? 1 : 0;
 	int outputInc = outputBufer ? 1 : 0;
 
-	const float *inputPtr = inputBuffer ? &( inputBuffer->values()[ 0 ] ) : &input;
-	const float *outputPtr = outputBufer ? &( outputBufer->values()[ 0 ] ) : &output;
+	const real_t* inputPtr = inputBuffer ? &( inputBuffer->values()[ 0 ] ) : &input;
+	const real_t* outputPtr = outputBufer ? &( outputBufer->values()[ 0 ] ) : &output;
 
 	for( fpp_t f = 0; f < _frames; ++f )
 	{
-                float w0, d0, w1, d1;
+                real_t w0, d0, w1, d1;
                 computeWetDryLevels(f, _frames, smoothBegin, smoothEnd,
                                     w0, d0, w1, d1);
 
 		sample_t s[2] = { _buf[f][0],_buf[f][1] };
 
-
-		for(int i=0; i <= 1; ++i )
+		for(int i=0; i <2; ++i )
 		{
                         // apply input gain
                         s[i] *= *inputPtr;
 
                         // clip if clip enabled
                         if( clip )
-                                s[i] = qBound( -1.0f, s[i], 1.0f );
+                                s[i] = qBound<sample_t>( -1., s[i], 1. );
 
                         // start effect
-			const int lookup = static_cast<int>( qAbs( s[i] ) * 200.0f );
-			const float frac = fraction( qAbs( s[i] ) * 200.0f );
-			const float posneg = s[i] < 0 ? -1.0f : 1.0f;
+			const int lookup = static_cast<int>( qAbs( s[i] ) * 200. );
+			const real_t frac = fraction( qAbs( s[i] ) * 200. );
+			const real_t posneg = s[i] < 0. ? -1. : 1.;
 
 			if( lookup < 1 )
 			{

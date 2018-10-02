@@ -76,20 +76,20 @@ void addSanitized(sampleFrame*       _dst,
 /*! \brief Add samples from src multiplied by coeffSrc to dst */
 void addMultiplied(sampleFrame*       dst,
                    const sampleFrame* src,
-                   float              coeffSrc,
+                   real_t             coeffSrc,
                    int                frames);
 
 /*! \brief Add samples from src multiplied by coeffSrc to dst, swap inputs */
 void addSwappedMultiplied(sampleFrame*       dst,
                           const sampleFrame* src,
-                          float              coeffSrc,
+                          real_t             coeffSrc,
                           int                frames);
 
 /*! \brief Add samples from src multiplied by coeffSrc and coeffSrcBuf to dst
  */
 void addMultipliedByBuffer(sampleFrame*       dst,
                            const sampleFrame* src,
-                           float              coeffSrc,
+                           real_t             coeffSrc,
                            ValueBuffer*       coeffSrcBuf,
                            int                frames);
 
@@ -104,14 +104,14 @@ void addMultipliedByBuffers(sampleFrame*       dst,
 /*! \brief Same as addMultiplied, but sanitize output (strip out infs/nans) */
 void addSanitizedMultiplied(sampleFrame*       dst,
                             const sampleFrame* src,
-                            float              coeffSrc,
+                            real_t             coeffSrc,
                             int                frames);
 
 /*! \brief Add samples from src multiplied by coeffSrc and coeffSrcBuf to dst
  * - sanitized version */
 void addSanitizedMultipliedByBuffer(sampleFrame*       dst,
                                     const sampleFrame* src,
-                                    float              coeffSrc,
+                                    real_t             coeffSrc,
                                     ValueBuffer*       coeffSrcBuf,
                                     int                frames);
 
@@ -127,16 +127,16 @@ void addSanitizedMultipliedByBuffers(sampleFrame*       dst,
  * dst */
 void addMultipliedStereo(sampleFrame*       dst,
                          const sampleFrame* src,
-                         float              coeffSrcLeft,
-                         float              coeffSrcRight,
+                         real_t             coeffSrcLeft,
+                         real_t             coeffSrcRight,
                          int                frames);
 
 /*! \brief Multiply dst by coeffDst and add samples from src multiplied by
  * coeffSrc */
 void multiplyAndAddMultiplied(sampleFrame*       dst,
                               const sampleFrame* src,
-                              float              coeffDst,
-                              float              coeffSrc,
+                              real_t             coeffDst,
+                              real_t             coeffSrc,
                               int                frames);
 
 /*! \brief Multiply dst by coeffDst and add samples from srcLeft/srcRight
@@ -144,8 +144,8 @@ void multiplyAndAddMultiplied(sampleFrame*       dst,
 void multiplyAndAddMultipliedJoined(sampleFrame*    dst,
                                     const sample_t* srcLeft,
                                     const sample_t* srcRight,
-                                    float           coeffDst,
-                                    float           coeffSrc,
+                                    real_t          coeffDst,
+                                    real_t          coeffSrc,
                                     int             frames);
 
 }  // namespace MixHelpers

@@ -23,43 +23,41 @@
  *
  */
 
-
 #ifndef DUALFILTER_H
 #define DUALFILTER_H
 
-#include "Effect.h"
-#include "DualFilterControls.h"
 #include "BasicFilters.h"
+#include "DualFilterControls.h"
+#include "Effect.h"
 
 class DualFilterEffect : public Effect
 {
-public:
-	DualFilterEffect( Model* parent, const Descriptor::SubPluginFeatures::Key* key );
-	virtual ~DualFilterEffect();
-	virtual bool processAudioBuffer( sampleFrame* buf, const fpp_t frames );
+  public:
+    DualFilterEffect(Model*                                    parent,
+                     const Descriptor::SubPluginFeatures::Key* key);
+    virtual ~DualFilterEffect();
+    virtual bool processAudioBuffer(sampleFrame* buf, const fpp_t frames);
 
-	virtual EffectControls* controls()
-	{
-		return &m_dfControls;
-	}
+    virtual EffectControls* controls()
+    {
+        return &m_dfControls;
+    }
 
+  private:
+    DualFilterControls m_dfControls;
 
-private:
-	DualFilterControls m_dfControls;
+    BasicFilters<2>* m_filter1;
+    BasicFilters<2>* m_filter2;
 
-	BasicFilters<2> * m_filter1;
-	BasicFilters<2> * m_filter2;
-	
-	bool m_filter1changed;
-	bool m_filter2changed;
+    bool m_filter1changed;
+    bool m_filter2changed;
 
-	float m_currentCut1;
-	float m_currentRes1;
-	float m_currentCut2;
-	float m_currentRes2;
+    real_t m_currentCut1;
+    real_t m_currentRes1;
+    real_t m_currentCut2;
+    real_t m_currentRes2;
 
-	friend class DualFilterControls;
-
-} ;
+    friend class DualFilterControls;
+};
 
 #endif

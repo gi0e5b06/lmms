@@ -55,13 +55,13 @@ class ClickGDXEffect : public Effect
 	  5 (1.+sin(pi*(x-0.5)))*0.5.
 	  6 (1.19+atan(10*x-2.5))*0.38023
 	*/
-	static inline float f0(float t) { return 0.f; }
-	static inline float f1(float t) { return 1.f; }
-	static inline float f2(float t) { return t; }
-	static inline float f3(float t) { return sin(F_PI_2*t); }
-	static inline float f4(float t) { return (1.19f+atan(2.f*t-2.5f))*1.3755f; }
-	static inline float f5(float t) { return (1.5f+sin(F_PI*(t-0.5f)))*0.5f; }
-	static inline float f6(float t) { return (1.19f+atan(10.f*t-2.5f))*0.38023f; }
+	static inline real_t f0(real_t t) { return 0.f; }
+	static inline real_t f1(real_t t) { return 1.f; }
+	static inline real_t f2(real_t t) { return t; }
+	static inline real_t f3(real_t t) { return sin(F_PI_2*t); }
+	static inline real_t f4(real_t t) { return (1.19f+atan(2.f*t-2.5f))*1.3755f; }
+	static inline real_t f5(real_t t) { return (1.5f+sin(F_PI*(t-0.5f)))*0.5f; }
+	static inline real_t f6(real_t t) { return (1.19f+atan(10.f*t-2.5f))*0.38023f; }
 
  private:
 	ClickGDXControls m_gdxControls;

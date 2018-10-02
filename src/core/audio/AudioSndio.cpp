@@ -165,8 +165,8 @@ void AudioSndio::run( void )
 {
 	surroundSampleFrame * temp =
 	    new surroundSampleFrame[mixer()->framesPerPeriod()];
-	int_sample_t * outbuf =
-	    new int_sample_t[mixer()->framesPerPeriod() * channels()];
+	sampleS16_t * outbuf =
+	    new sampleS16_t[mixer()->framesPerPeriod() * channels()];
 
 	while( true )
 	{
@@ -177,7 +177,7 @@ void AudioSndio::run( void )
 		}
 
 		uint bytes = convertToS16( temp, frames,
-		    mixer()->masterGain(), outbuf, m_convertEndian );
+                                           outbuf, m_convertEndian );
 		if( sio_write( m_hdl, outbuf, bytes ) != bytes )
 		{
 			break;
@@ -199,7 +199,7 @@ AudioSndio::setupWidget::setupWidget( QWidget * _parent ) :
 	dev_lbl->setFont( pointSize<6>( dev_lbl->font() ) );
 	dev_lbl->setGeometry( 10, 40, 160, 10 );
 
-	LcdSpinBoxModel * m = new LcdSpinBoxModel( /* this */ );	
+	LcdSpinBoxModel * m = new LcdSpinBoxModel( /* this */ );
 	m->setRange( DEFAULT_CHANNELS, SURROUND_CHANNELS );
 	m->setStep( 2 );
 	m->setValue( ConfigManager::inst()->value( "audiosndio",

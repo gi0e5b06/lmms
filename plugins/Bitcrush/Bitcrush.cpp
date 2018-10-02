@@ -24,225 +24,240 @@
  */
 
 #include "Bitcrush.h"
+
 #include "embed.h"
 
-const int OS_RATE = 5;
-const float OS_RATIO = 1.0f / OS_RATE;
-const float CUTOFF_RATIO = 0.353553391f;
-const int SILENCEFRAMES = 10;
-const float OS_RESAMPLE [5] = { 0.0001490062883964112, 0.1645978376763992, 0.6705063120704088,
-		0.1645978376763992, 0.0001490062883964112 };
+const int    OS_RATE       = 5;
+const real_t OS_RATIO      = 1. / OS_RATE;
+const real_t CUTOFF_RATIO  = 0.353553391;
+const int    SILENCEFRAMES = 10;
+const real_t OS_RESAMPLE[5]
+        = {0.0001490062883964112, 0.1645978376763992, 0.6705063120704088,
+           0.1645978376763992, 0.0001490062883964112};
 
 extern "C"
 {
 
-Plugin::Descriptor PLUGIN_EXPORT bitcrush_plugin_descriptor =
-{
-	STRINGIFY( PLUGIN_NAME ),
-	"Bitcrush",
-	QT_TRANSLATE_NOOP( "pluginBrowser", "An oversampling bitcrusher" ),
-	"Vesa Kivimäki <contact/dot/diizy/at/nbl/dot/fi>",
-	0x0100,
-	Plugin::Effect,
-	new PluginPixmapLoader( "logo" ),
-	NULL,
-	NULL
-};
-
+    Plugin::Descriptor PLUGIN_EXPORT bitcrush_plugin_descriptor = {
+            STRINGIFY(PLUGIN_NAME),
+            "Bitcrush",
+            QT_TRANSLATE_NOOP("pluginBrowser", "An oversampling bitcrusher"),
+            "Vesa Kivimäki <contact/dot/diizy/at/nbl/dot/fi>",
+            0x0100,
+            Plugin::Effect,
+            new PluginPixmapLoader("logo"),
+            NULL,
+            NULL};
 }
 
-BitcrushEffect::BitcrushEffect( Model * parent, const Descriptor::SubPluginFeatures::Key * key ) :
-	Effect( &bitcrush_plugin_descriptor, parent, key ),
-	m_controls( this ),
-	m_sampleRate( Engine::mixer()->processingSampleRate() ),
-	m_filter( m_sampleRate )
+BitcrushEffect::BitcrushEffect(
+        Model* parent, const Descriptor::SubPluginFeatures::Key* key) :
+      Effect(&bitcrush_plugin_descriptor, parent, key),
+      m_controls(this), m_sampleRate(Engine::mixer()->processingSampleRate()),
+      m_filter(m_sampleRate)
 {
-	m_buffer = MM_ALLOC( sampleFrame, Engine::mixer()->framesPerPeriod() * OS_RATE );
-	m_filter.setLowpass( m_sampleRate * ( CUTOFF_RATIO * OS_RATIO ) );
-	m_needsUpdate = true;
-	
-	m_bitCounterL = 0.0f;
-	m_bitCounterR = 0.0f;
-	
-	m_left = 0.0f;
-	m_right = 0.0f;
-	
-	m_silenceCounter = 0;
+    m_buffer = MM_ALLOC(sampleFrame,
+                        Engine::mixer()->framesPerPeriod() * OS_RATE);
+    m_filter.setLowpass(m_sampleRate * (CUTOFF_RATIO * OS_RATIO));
+    m_needsUpdate = true;
+
+    m_bitCounterL = 0.;
+    m_bitCounterR = 0.;
+
+    m_left  = 0.;
+    m_right = 0.;
+
+    m_silenceCounter = 0;
 }
 
 BitcrushEffect::~BitcrushEffect()
 {
-	MM_FREE( m_buffer );
+    MM_FREE(m_buffer);
 }
-
 
 void BitcrushEffect::sampleRateChanged()
 {
-	m_sampleRate = Engine::mixer()->processingSampleRate();
-	m_filter.setSampleRate( m_sampleRate );
-	m_filter.setLowpass( m_sampleRate * ( CUTOFF_RATIO * OS_RATIO ) );
-	m_needsUpdate = true;
+    m_sampleRate = Engine::mixer()->processingSampleRate();
+    m_filter.setSampleRate(m_sampleRate);
+    m_filter.setLowpass(m_sampleRate * (CUTOFF_RATIO * OS_RATIO));
+    m_needsUpdate = true;
 }
 
-
-inline float BitcrushEffect::depthCrush( float in )
+inline real_t BitcrushEffect::depthCrush(real_t in)
 {
-	return roundf( in * (float) m_levels ) * m_levelsRatio;
+    return roundf(in * (real_t)m_levels) * m_levelsRatio;
 }
 
-inline float BitcrushEffect::noise( float amt )
+inline real_t BitcrushEffect::noise(real_t amt)
 {
-	return fastRandf( amt * 2.0f ) - amt;
+    return amt * (2. * fastrandf01inc() - 1.);
+    // fastrand( amt * 2. ) - amt;
 }
 
-bool BitcrushEffect::processAudioBuffer( sampleFrame* buf, const fpp_t frames )
+bool BitcrushEffect::processAudioBuffer(sampleFrame* buf, const fpp_t frames)
 {
-        bool smoothBegin, smoothEnd;
-        if(!shouldProcessAudioBuffer(buf, frames, smoothBegin, smoothEnd))
-                return false;
+    bool smoothBegin, smoothEnd;
+    if(!shouldProcessAudioBuffer(buf, frames, smoothBegin, smoothEnd))
+        return false;
 
-	// update values
-	if( m_needsUpdate || m_controls.m_rateEnabled.isValueChanged() )
-	{
-		m_rateEnabled = m_controls.m_rateEnabled.value();
-		m_bitCounterL = 0.0f;
-		m_bitCounterR = 0.0f;
-	}
-	if( m_needsUpdate || m_controls.m_depthEnabled.isValueChanged() )
-	{
-		m_depthEnabled = m_controls.m_depthEnabled.value();
-	}
-	if( m_needsUpdate || m_controls.m_rate.isValueChanged() || m_controls.m_stereoDiff.isValueChanged() )
-	{
-		const float rate = m_controls.m_rate.value();
-		const float diff = m_controls.m_stereoDiff.value() * 0.005 * rate;
+    // update values
+    if(m_needsUpdate || m_controls.m_rateEnabled.isValueChanged())
+    {
+        m_rateEnabled = m_controls.m_rateEnabled.value();
+        m_bitCounterL = 0.0f;
+        m_bitCounterR = 0.0f;
+    }
+    if(m_needsUpdate || m_controls.m_depthEnabled.isValueChanged())
+    {
+        m_depthEnabled = m_controls.m_depthEnabled.value();
+    }
+    if(m_needsUpdate || m_controls.m_rate.isValueChanged()
+       || m_controls.m_stereoDiff.isValueChanged())
+    {
+        const real_t rate = m_controls.m_rate.value();
+        const real_t diff = m_controls.m_stereoDiff.value() * 0.005 * rate;
 
-		m_rateCoeffL = ( m_sampleRate * OS_RATE ) / ( rate - diff );
-		m_rateCoeffR = ( m_sampleRate * OS_RATE ) / ( rate + diff );
+        m_rateCoeffL = (m_sampleRate * OS_RATE) / (rate - diff);
+        m_rateCoeffR = (m_sampleRate * OS_RATE) / (rate + diff);
 
-		m_bitCounterL = 0.0f;
-		m_bitCounterR = 0.0f;
-	}
-	if( m_needsUpdate || m_controls.m_levels.isValueChanged() )
-	{
-		m_levels = m_controls.m_levels.value();
-		m_levelsRatio = 1.0f / (float) m_levels;
-	}
-	if( m_needsUpdate || m_controls.m_inGain.isValueChanged() )
-	{
-		m_inGain = dbfsToAmp( m_controls.m_inGain.value() );
-	}
-	if( m_needsUpdate || m_controls.m_outGain.isValueChanged() )
-	{
-		m_outGain = dbfsToAmp( m_controls.m_outGain.value() );
-	}
-	if( m_needsUpdate || m_controls.m_outClip.isValueChanged() )
-	{
-		m_outClip = dbfsToAmp( m_controls.m_outClip.value() );
-	}
-	m_needsUpdate = false;
+        m_bitCounterL = 0.0f;
+        m_bitCounterR = 0.0f;
+    }
+    if(m_needsUpdate || m_controls.m_levels.isValueChanged())
+    {
+        m_levels      = m_controls.m_levels.value();
+        m_levelsRatio = 1.0f / (real_t)m_levels;
+    }
+    if(m_needsUpdate || m_controls.m_inGain.isValueChanged())
+    {
+        m_inGain = dbfsToAmp(m_controls.m_inGain.value());
+    }
+    if(m_needsUpdate || m_controls.m_outGain.isValueChanged())
+    {
+        m_outGain = dbfsToAmp(m_controls.m_outGain.value());
+    }
+    if(m_needsUpdate || m_controls.m_outClip.isValueChanged())
+    {
+        m_outClip = dbfsToAmp(m_controls.m_outClip.value());
+    }
+    m_needsUpdate = false;
 
-	const float noiseAmt = m_controls.m_inNoise.value() * 0.01f;
+    const real_t noiseAmt = m_controls.m_inNoise.value() * 0.01f;
 
-	// read input buffer and write it to oversampled buffer
-	if( m_rateEnabled ) // rate crushing enabled so do that
-	{
-		for( int f = 0; f < frames; ++f )
-		{
-			for( int o = 0; o < OS_RATE; ++o )
-			{
-				m_buffer[f * OS_RATE + o][0] = m_left;
-				m_buffer[f * OS_RATE + o][1] = m_right;
-				m_bitCounterL += 1.0f;
-				m_bitCounterR += 1.0f;
-				if( m_bitCounterL > m_rateCoeffL )
-				{
-					m_bitCounterL -= m_rateCoeffL;
-					m_left = m_depthEnabled 
-						? depthCrush( buf[f][0] * m_inGain + noise( buf[f][0] * noiseAmt ) ) 
-						: buf[f][0] * m_inGain + noise( buf[f][0] * noiseAmt );
-				}
-				if( m_bitCounterR > m_rateCoeffR )
-				{
-					m_bitCounterR -= m_rateCoeffR;
-					m_right = m_depthEnabled 
-						? depthCrush( buf[f][1] * m_inGain + noise( buf[f][1] * noiseAmt ) ) 
-						: buf[f][1] * m_inGain + noise( buf[f][1] * noiseAmt );
-				}
-			}
-		}
-	}
-	else // rate crushing disabled: simply oversample with zero-order hold
-	{
-		for( int f = 0; f < frames; ++f )
-		{
-			for( int o = 0; o < OS_RATE; ++o )
-			{
-				m_buffer[f * OS_RATE + o][0] = m_depthEnabled
-					? depthCrush( buf[f][0] * m_inGain + noise( buf[f][0] * noiseAmt ) ) 
-					: buf[f][0] * m_inGain + noise( buf[f][0] * noiseAmt );
-				m_buffer[f * OS_RATE + o][1] = m_depthEnabled
-					? depthCrush( buf[f][1] * m_inGain + noise( buf[f][1] * noiseAmt ) ) 
-					: buf[f][1] * m_inGain + noise( buf[f][1] * noiseAmt );
-			}
-		}
-	}
+    // read input buffer and write it to oversampled buffer
+    if(m_rateEnabled)  // rate crushing enabled so do that
+    {
+        for(int f = 0; f < frames; ++f)
+        {
+            for(int o = 0; o < OS_RATE; ++o)
+            {
+                m_buffer[f * OS_RATE + o][0] = m_left;
+                m_buffer[f * OS_RATE + o][1] = m_right;
+                m_bitCounterL += 1.0f;
+                m_bitCounterR += 1.0f;
+                if(m_bitCounterL > m_rateCoeffL)
+                {
+                    m_bitCounterL -= m_rateCoeffL;
+                    m_left = m_depthEnabled
+                                     ? depthCrush(
+                                               buf[f][0] * m_inGain
+                                               + noise(buf[f][0] * noiseAmt))
+                                     : buf[f][0] * m_inGain
+                                               + noise(buf[f][0] * noiseAmt);
+                }
+                if(m_bitCounterR > m_rateCoeffR)
+                {
+                    m_bitCounterR -= m_rateCoeffR;
+                    m_right = m_depthEnabled
+                                      ? depthCrush(
+                                                buf[f][1] * m_inGain
+                                                + noise(buf[f][1] * noiseAmt))
+                                      : buf[f][1] * m_inGain
+                                                + noise(buf[f][1] * noiseAmt);
+                }
+            }
+        }
+    }
+    else  // rate crushing disabled: simply oversample with zero-order hold
+    {
+        for(int f = 0; f < frames; ++f)
+        {
+            for(int o = 0; o < OS_RATE; ++o)
+            {
+                m_buffer[f * OS_RATE + o][0]
+                        = m_depthEnabled
+                                  ? depthCrush(buf[f][0] * m_inGain
+                                               + noise(buf[f][0] * noiseAmt))
+                                  : buf[f][0] * m_inGain
+                                            + noise(buf[f][0] * noiseAmt);
+                m_buffer[f * OS_RATE + o][1]
+                        = m_depthEnabled
+                                  ? depthCrush(buf[f][1] * m_inGain
+                                               + noise(buf[f][1] * noiseAmt))
+                                  : buf[f][1] * m_inGain
+                                            + noise(buf[f][1] * noiseAmt);
+            }
+        }
+    }
 
-	// the oversampled buffer is now written, so filter it to reduce aliasing
+    // the oversampled buffer is now written, so filter it to reduce aliasing
 
-	for( int f = 0; f < frames * OS_RATE; ++f )
-	{
-		if( qMax( qAbs( m_buffer[f][0] ), qAbs( m_buffer[f][1] ) ) >= 1.0e-10f )
-		{
-			m_silenceCounter = 0;
-			m_buffer[f][0] = m_filter.update( m_buffer[f][0], 0 );
-			m_buffer[f][1] = m_filter.update( m_buffer[f][1], 1 );
-		}
-		else
-		{
-			if( m_silenceCounter > SILENCEFRAMES )
-			{
-				m_buffer[f][0] = m_buffer[f][1] = 0.0f;
-			}
-			else
-			{
-				++m_silenceCounter;
-				m_buffer[f][0] = m_filter.update( m_buffer[f][0], 0 );
-				m_buffer[f][1] = m_filter.update( m_buffer[f][1], 1 );
-			}
-		}
-	}
+    for(int f = 0; f < frames * OS_RATE; ++f)
+    {
+        if(qMax(qAbs(m_buffer[f][0]), qAbs(m_buffer[f][1])) >= 1.0e-10f)
+        {
+            m_silenceCounter = 0;
+            m_buffer[f][0]   = m_filter.update(m_buffer[f][0], 0);
+            m_buffer[f][1]   = m_filter.update(m_buffer[f][1], 1);
+        }
+        else
+        {
+            if(m_silenceCounter > SILENCEFRAMES)
+            {
+                m_buffer[f][0] = m_buffer[f][1] = 0.0f;
+            }
+            else
+            {
+                ++m_silenceCounter;
+                m_buffer[f][0] = m_filter.update(m_buffer[f][0], 0);
+                m_buffer[f][1] = m_filter.update(m_buffer[f][1], 1);
+            }
+        }
+    }
 
+    // now downsample and write it back to main buffer
+    for(int f = 0; f < frames; ++f)
+    {
+        real_t w0, d0, w1, d1;
+        computeWetDryLevels(f, frames, smoothBegin, smoothEnd, w0, d0, w1,
+                            d1);
 
-	// now downsample and write it back to main buffer
-	for( int f = 0; f < frames; ++f )
-	{
-                float w0, d0, w1, d1;
-                computeWetDryLevels(f, frames, smoothBegin, smoothEnd,
-                                    w0, d0, w1, d1);
+        real_t lsum = 0.;
+        real_t rsum = 0.;
+        for(int o = 0; o < OS_RATE; ++o)
+        {
+            lsum += m_buffer[f * OS_RATE + o][0] * OS_RESAMPLE[o];
+            rsum += m_buffer[f * OS_RATE + o][1] * OS_RESAMPLE[o];
+        }
+        buf[f][0] = d0 * buf[f][0]
+                    + w0 * qBound(-m_outClip, lsum, m_outClip) * m_outGain;
+        buf[f][1] = d1 * buf[f][1]
+                    + w1 * qBound(-m_outClip, rsum, m_outClip) * m_outGain;
+    }
 
-		float lsum = 0.0f;
-		float rsum = 0.0f;
-		for( int o = 0; o < OS_RATE; ++o )
-		{
-			lsum += m_buffer[f * OS_RATE + o][0] * OS_RESAMPLE[o];
-			rsum += m_buffer[f * OS_RATE + o][1] * OS_RESAMPLE[o];
-		}
-		buf[f][0] = d0 * buf[f][0] + w0 * qBound( -m_outClip, lsum, m_outClip ) * m_outGain;
-		buf[f][1] = d1 * buf[f][1] + w1 * qBound( -m_outClip, rsum, m_outClip ) * m_outGain;
-	}
-
-	return true;
+    return true;
 }
-
 
 extern "C"
 {
 
-// necessary for getting instance out of shared lib
-Plugin * PLUGIN_EXPORT lmms_plugin_main( Model* parent, void* data )
-{
-	return new BitcrushEffect( parent, static_cast<const Plugin::Descriptor::SubPluginFeatures::Key *>( data ) );
-}
-
+    // necessary for getting instance out of shared lib
+    Plugin* PLUGIN_EXPORT lmms_plugin_main(Model* parent, void* data)
+    {
+        return new BitcrushEffect(
+                parent,
+                static_cast<
+                        const Plugin::Descriptor::SubPluginFeatures::Key*>(
+                        data));
+    }
 }

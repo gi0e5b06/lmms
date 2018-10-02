@@ -24,43 +24,36 @@
 
 #include "MixerProfiler.h"
 
-
-MixerProfiler::MixerProfiler() :
-	m_periodTimer(),
-	m_cpuLoad( 0 ),
-	m_outputFile()
+MixerProfiler::MixerProfiler() : m_periodTimer(), m_cpuLoad(0), m_outputFile()
 {
 }
-
-
 
 MixerProfiler::~MixerProfiler()
 {
 }
 
-
-void MixerProfiler::finishPeriod( sample_rate_t sampleRate, fpp_t framesPerPeriod )
+void MixerProfiler::finishPeriod(sample_rate_t sampleRate,
+                                 fpp_t         framesPerPeriod)
 {
-	int periodElapsed = m_periodTimer.elapsed();
+    int periodElapsed = m_periodTimer.elapsed();
 
-	const float newCpuLoad = periodElapsed / 10000.0f * sampleRate / framesPerPeriod;
-	m_cpuLoad = qBound<int>( 0, ( newCpuLoad * 0.1f + m_cpuLoad * 0.9f ), 100 );
-        //m_cpuLoad = qBound<int>( 0, int(newCpuLoad) , 100 );
-        //const float d=float(framesPerPeriod)/float(sampleRate);
-        //m_cpuLoad = qBound<int>( 0, int( newCpuLoad * d + m_cpuLoad * (1.f-d) ), 100 );
+    const real_t newCpuLoad = real_t(periodElapsed) / 10000.
+                              * real_t(sampleRate) / real_t(framesPerPeriod);
+    m_cpuLoad = qBound<int>(0, (newCpuLoad * 0.05 + m_cpuLoad * 0.95), 100);
+    // m_cpuLoad = qBound<int>( 0, int(newCpuLoad) , 100 );
+    // const real_t d=real_t(framesPerPeriod)/real_t(sampleRate);
+    // m_cpuLoad = qBound<int>( 0, int( newCpuLoad * d + m_cpuLoad * (1.f-d)
+    // ), 100 );
 
-	if( m_outputFile.isOpen() )
-	{
-		m_outputFile.write( QString( "%1\n" ).arg( periodElapsed ).toLatin1() );
-	}
+    if(m_outputFile.isOpen())
+    {
+        m_outputFile.write(QString("%1\n").arg(periodElapsed).toLatin1());
+    }
 }
 
-
-
-void MixerProfiler::setOutputFile( const QString& outputFile )
+void MixerProfiler::setOutputFile(const QString& outputFile)
 {
-	m_outputFile.close();
-	m_outputFile.setFileName( outputFile );
-	m_outputFile.open( QFile::WriteOnly | QFile::Truncate );
+    m_outputFile.close();
+    m_outputFile.setFileName(outputFile);
+    m_outputFile.open(QFile::WriteOnly | QFile::Truncate);
 }
-

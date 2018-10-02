@@ -27,10 +27,10 @@
 #ifndef EFFECT_H
 #define EFFECT_H
 
-#include "Plugin.h"
+#include "AutomatableModel.h"
 #include "Engine.h"
 #include "Mixer.h"
-#include "AutomatableModel.h"
+#include "Plugin.h"
 #include "TempoSyncKnobModel.h"
 //#include "MemoryManager.h"
 #include "Configuration.h"
@@ -38,218 +38,233 @@
 class EffectChain;
 class EffectControls;
 
-
 class EXPORT Effect : public Plugin
 {
-	MM_OPERATORS
-	Q_OBJECT
+    MM_OPERATORS
+    Q_OBJECT
 
-public:
-	Effect( const Plugin::Descriptor * _desc,
-                Model * _parent,
-                const Descriptor::SubPluginFeatures::Key * _key );
-	virtual ~Effect();
+  public:
+    Effect(const Plugin::Descriptor*                 _desc,
+           Model*                                    _parent,
+           const Descriptor::SubPluginFeatures::Key* _key);
+    virtual ~Effect();
 
-        virtual QDomElement saveState( QDomDocument & _doc, QDomElement & _parent );
+    virtual QDomElement saveState(QDomDocument& _doc, QDomElement& _parent);
 
-	virtual void saveSettings( QDomDocument & _doc, QDomElement & _parent );
-	virtual void loadSettings( const QDomElement & _this );
+    virtual void saveSettings(QDomDocument& _doc, QDomElement& _parent);
+    virtual void loadSettings(const QDomElement& _this);
 
-	static QString classNodeName()
-	{
-		return "effect";
-	}
+    static QString classNodeName()
+    {
+        return "effect";
+    }
 
-	inline virtual QString nodeName() const
-	{
-		return classNodeName();
-	}
+    inline virtual QString nodeName() const
+    {
+        return classNodeName();
+    }
 
-	virtual bool processAudioBuffer( sampleFrame * _buf,
-					 const fpp_t _frames ) = 0;
+    virtual bool processAudioBuffer(sampleFrame* _buf, const fpp_t _frames)
+            = 0;
 
-	inline ch_cnt_t processorCount() const
-	{
-		return m_processors;
-	}
+    inline ch_cnt_t processorCount() const
+    {
+        return m_processors;
+    }
 
-	inline void setProcessorCount( ch_cnt_t _processors )
-	{
-		m_processors = _processors;
-	}
+    inline void setProcessorCount(ch_cnt_t _processors)
+    {
+        m_processors = _processors;
+    }
 
-	inline bool isOkay() const
-	{
-		return m_okay;
-	}
+    inline bool isOkay() const
+    {
+        return m_okay;
+    }
 
-	inline void setOkay( bool _state )
-	{
-		m_okay = _state;
-	}
+    inline void setOkay(bool _state)
+    {
+        m_okay = _state;
+    }
 
+    inline bool isRunning() const
+    {
+        return m_runningModel.value();
+    }
 
-	inline bool isRunning() const
-        {
-		return m_runningModel.value();
-        }
+    void startRunning();
+    void stopRunning();
 
-	void startRunning();
-	void stopRunning();
+    inline bool isEnabled() const
+    {
+        return m_enabledModel.value();
+    }
 
-	inline bool isEnabled() const
-	{
-		return m_enabledModel.value();
-	}
+    virtual bool isBalanceable() const
+    {
+        return true;
+    }
 
-        virtual bool isBalanceable() const
-        {
-                return true;
-        }
+    /*
+    inline real_t wetLevel() const
+    {
+            return m_wetDryModel.value();
+    }
 
-        /*
-	inline float wetLevel() const
-	{
-		return m_wetDryModel.value();
-	}
+    inline real_t dryLevel() const
+    {
+            return 1. - m_wetDryModel.value();
+    }
+    */
 
-	inline float dryLevel() const
-	{
-		return 1.0f - m_wetDryModel.value();
-	}
-        */
+    inline real_t gate() const
+    {
+        return m_gateModel.value();
+        // const real_t level = m_gateModel.value();
+        // return level*level * m_processors;
+    }
 
-	inline float gate() const
-	{
-                return m_gateModel.value();
-                //const float level = m_gateModel.value();
-		//return level*level * m_processors;
-	}
+    // should be replaced by Runnable
+    inline bool dontRun() const
+    {
+        return m_noRun;
+    }
 
-	// should be replaced by Runnable
-	inline bool dontRun() const
-	{
-		return m_noRun;
-	}
+    inline void setDontRun(bool _state)
+    {
+        m_noRun = _state;
+    }
 
-	inline void setDontRun( bool _state )
-	{
-		m_noRun = _state;
-	}
+    inline const Descriptor::SubPluginFeatures::Key& key() const
+    {
+        return m_key;
+    }
 
-	inline const Descriptor::SubPluginFeatures::Key & key() const
-	{
-		return m_key;
-	}
+    EffectChain* effectChain() const
+    {
+        return m_parent;
+    }
 
-	EffectChain * effectChain() const
-	{
-		return m_parent;
-	}
+    virtual EffectControls* controls() = 0;
 
-	virtual EffectControls * controls() = 0;
+    static Effect* instantiate(const QString& _plugin_name,
+                               Model*         _parent,
+                               Descriptor::SubPluginFeatures::Key* _key);
 
-	static Effect * instantiate( const QString & _plugin_name,
-				Model * _parent,
-				Descriptor::SubPluginFeatures::Key * _key );
+  protected:
+    inline bool isAutoQuitEnabled() const
+    {
+        return !CONFIG_GET_BOOL("ui.disableautoquit");
+        //! m_autoQuitDisabled;
+    }
 
+    inline int timeout() const
+    {
+        const real_t samples = Engine::mixer()->processingSampleRate()
+                               * m_autoQuitModel.value() / 1000.;
+        return /*1+*/ static_cast<int>(samples
+                                       / Engine::mixer()->framesPerPeriod());
+    }
 
-protected:
-	inline bool isAutoQuitEnabled() const
-        {
-                return !CONFIG_GET_BOOL("ui.disableautoquit");
-                //!m_autoQuitDisabled;
-        }
+    virtual PluginView* instantiateView(QWidget*);
 
-	inline int timeout() const
-	{
-		const float samples = Engine::mixer()->processingSampleRate() * m_autoQuitModel.value() / 1000.0f;
-		return /*1+*/ static_cast<int>( samples / Engine::mixer()->framesPerPeriod() );
-	}
+    // some effects might not be capable of higher sample-rates so they can
+    // sample it down before processing and back after processing
+    inline void sampleDown(const sampleFrame* _src_buf,
+                           sampleFrame*       _dst_buf,
+                           sample_rate_t      _dst_sr)
+    {
+        resample(0, _src_buf, Engine::mixer()->processingSampleRate(),
+                 _dst_buf, _dst_sr, Engine::mixer()->framesPerPeriod());
+    }
 
-	virtual PluginView * instantiateView( QWidget * );
+    inline void sampleBack(const sampleFrame* _src_buf,
+                           sampleFrame*       _dst_buf,
+                           sample_rate_t      _src_sr)
+    {
+        resample(1, _src_buf, _src_sr, _dst_buf,
+                 Engine::mixer()->processingSampleRate(),
+                 Engine::mixer()->framesPerPeriod() * _src_sr
+                         / Engine::mixer()->processingSampleRate());
+    }
+    void reinitSRC();
 
-	// some effects might not be capable of higher sample-rates so they can
-	// sample it down before processing and back after processing
-	inline void sampleDown( const sampleFrame * _src_buf,
-							sampleFrame * _dst_buf,
-							sample_rate_t _dst_sr )
-	{
-		resample( 0, _src_buf,
-				Engine::mixer()->processingSampleRate(),
-					_dst_buf, _dst_sr,
-					Engine::mixer()->framesPerPeriod() );
-	}
+    inline bool isGateClosed() const
+    {
+        return m_gateClosed;
+    }
 
-	inline void sampleBack( const sampleFrame * _src_buf,
-							sampleFrame * _dst_buf,
-							sample_rate_t _src_sr )
-	{
-		resample( 1, _src_buf, _src_sr, _dst_buf,
-				Engine::mixer()->processingSampleRate(),
-			Engine::mixer()->framesPerPeriod() * _src_sr /
-				Engine::mixer()->processingSampleRate() );
-	}
-	void reinitSRC();
+    bool shouldProcessAudioBuffer(sampleFrame* _buf,
+                                  const fpp_t  _frames,
+                                  bool&        _smoothBegin,
+                                  bool&        _smoothEnd);
 
-        inline bool isGateClosed() const
-        {
-                return m_gateClosed;
-        }
+    bool shouldKeepRunning(sampleFrame* _buf,
+                           const fpp_t  _frames,
+                           bool         _unclip = false);
 
-        bool shouldProcessAudioBuffer(sampleFrame* _buf, const fpp_t _frames,
-                                      bool& _smoothBegin, bool& _smoothEnd);
+#ifdef REAL_IS_DOUBLE
+// TMP, obsolete
+    void computeWetDryLevels(fpp_t  _f,
+                             fpp_t  _frames,
+                             bool   _smoothBegin,
+                             bool   _smoothEnd,
+                             float& _w0,
+                             float& _d0,
+                             float& _w1,
+                             float& _d1);
+#endif
 
-        bool shouldKeepRunning(sampleFrame* _buf, const fpp_t _frames, bool _unclip=false);
+    void computeWetDryLevels(fpp_t   _f,
+                             fpp_t   _frames,
+                             bool    _smoothBegin,
+                             bool    _smoothEnd,
+                             real_t& _w0,
+                             real_t& _d0,
+                             real_t& _w1,
+                             real_t& _d1);
 
-        void computeWetDryLevels(fpp_t _f, fpp_t _frames,
-                                 bool _smoothBegin, bool _smoothEnd,
-                                 float& _w0,float &_d0,
-                                 float& _w1,float &_d1);
+    real_t computeRMS(sampleFrame* _buf, const fpp_t _frames);
 
-        float computeRMS(sampleFrame* _buf, const fpp_t _frames);
+  private:
+    bool gateHasClosed(real_t& _rms, sampleFrame* _buf, const fpp_t _frames);
+    bool gateHasOpen(real_t& _rms, sampleFrame* _buf, const fpp_t _frames);
 
- private:
-	bool gateHasClosed(float& _rms, sampleFrame* _buf, const fpp_t _frames);
-	bool gateHasOpen(float& _rms, sampleFrame* _buf, const fpp_t _frames);
+    bool         m_gateClosed;
+    EffectChain* m_parent;
+    void         resample(int                _i,
+                          const sampleFrame* _src_buf,
+                          sample_rate_t      _src_sr,
+                          sampleFrame*       _dst_buf,
+                          sample_rate_t      _dst_sr,
+                          const f_cnt_t      _frames);
 
-        bool m_gateClosed;
-	EffectChain * m_parent;
-	void resample( int _i, const sampleFrame * _src_buf,
-                       sample_rate_t _src_sr,
-                       sampleFrame * _dst_buf, sample_rate_t _dst_sr,
-                       const f_cnt_t _frames );
+    Descriptor::SubPluginFeatures::Key m_key;
 
-	Descriptor::SubPluginFeatures::Key m_key;
+    ch_cnt_t m_processors;
 
-	ch_cnt_t m_processors;
+    bool      m_okay;
+    bool      m_noRun;
+    BoolModel m_runningModel;
+    f_cnt_t   m_bufferCount;
 
-	bool m_okay;
-	bool m_noRun;
-        BoolModel m_runningModel;
-	f_cnt_t m_bufferCount;
+    BoolModel          m_enabledModel;
+    BoolModel          m_clippingModel;
+    FloatModel         m_wetDryModel;
+    TempoSyncKnobModel m_autoQuitModel;
+    FloatModel         m_gateModel;
+    FloatModel         m_balanceModel;
 
-	BoolModel m_enabledModel;
-        BoolModel  m_clippingModel;
-	FloatModel m_wetDryModel;
-	TempoSyncKnobModel m_autoQuitModel;
-	FloatModel m_gateModel;
-	FloatModel m_balanceModel;
+    // bool m_autoQuitDisabled;
 
-	//bool m_autoQuitDisabled;
+    SRC_DATA   m_srcData[2];
+    SRC_STATE* m_srcState[2];
 
-	SRC_DATA m_srcData[2];
-	SRC_STATE * m_srcState[2];
+    friend class EffectView;
+    friend class EffectChain;
+};
 
-
-	friend class EffectView;
-	friend class EffectChain;
-
-} ;
-
-
-typedef Effect::Descriptor::SubPluginFeatures::Key EffectKey;
+typedef Effect::Descriptor::SubPluginFeatures::Key     EffectKey;
 typedef Effect::Descriptor::SubPluginFeatures::KeyList EffectKeyList;
-
 
 #endif

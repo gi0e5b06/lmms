@@ -109,17 +109,22 @@ EnvelopeAndLfoParameters::EnvelopeAndLfoParameters(
 	m_rBufSize( 0 ),
 	m_lfoPredelayModel( 0.0, 0.0, 1.0, 0.001, this, tr( "LFO Predelay" ) ),
 	m_lfoAttackModel( 0.0, 0.0, 1.0, 0.001, this, tr( "LFO Attack" ) ),
-	m_lfoSpeedModel( 0.1, 0.001, 1.0, 0.0001,
+	m_lfoSpeedModel( 0.1, 0.0001, 1.0, 0.0001,
 				SECS_PER_LFO_OSCILLATION * 1000.0, this,
 							tr( "LFO speed" ) ),
 	m_lfoAmountModel( 0.0, -1.0, 1.0, 0.005, this, tr( "LFO Modulation" ) ),
-	m_lfoWaveModel( SineWave, 0, NumLfoShapes, this, tr( "LFO Wave Shape" ) ),
+	//m_lfoWaveModel( SineWave, 0, NumLfoShapes, this, tr( "LFO Wave Shape" ) ),
+        m_lfoWaveBankModel(this,tr( "LFO Wave Bank" )),
+        m_lfoWaveIndexModel(this,tr( "LFO Wave Index" )),
 	m_x100Model( false, this, tr( "Freq x 100" ) ),
 	m_controlEnvAmountModel( false, this, tr( "Modulate Env-Amount" ) ),
 	m_lfoFrame( 0 ),
 	m_lfoAmountIsZero( false ),
 	m_lfoShapeData( NULL )
 {
+        WaveForm::fillBankModel(m_lfoWaveBankModel);
+        WaveForm::fillIndexModel(m_lfoWaveIndexModel,m_lfoWaveBankModel.value());
+
 	m_amountModel.setCenterValue( 0 );
 	m_lfoAmountModel.setCenterValue( 0 );
 
@@ -153,8 +158,12 @@ EnvelopeAndLfoParameters::EnvelopeAndLfoParameters(
 			this, SLOT( updateSampleVars() ) );
 	connect( &m_lfoAmountModel, SIGNAL( dataChanged() ),
 			this, SLOT( updateSampleVars() ) );
-	connect( &m_lfoWaveModel, SIGNAL( dataChanged() ),
-			this, SLOT( updateSampleVars() ) );
+	//connect( &m_lfoWaveModel, SIGNAL( dataChanged() ),
+        //  this, SLOT( updateSampleVars() ) );
+	connect( &m_lfoWaveBankModel, SIGNAL( dataChanged() ),
+                 this, SLOT( updateSampleVars() ) );
+	connect( &m_lfoWaveIndexModel, SIGNAL( dataChanged() ),
+                 this, SLOT( updateSampleVars() ) );
 	connect( &m_x100Model, SIGNAL( dataChanged() ),
 				this, SLOT( updateSampleVars() ) );
 
@@ -184,7 +193,9 @@ EnvelopeAndLfoParameters::~EnvelopeAndLfoParameters()
 	m_lfoAttackModel.disconnect( this );
 	m_lfoSpeedModel.disconnect( this );
 	m_lfoAmountModel.disconnect( this );
-	m_lfoWaveModel.disconnect( this );
+	//m_lfoWaveModel.disconnect( this );
+        m_lfoWaveBankModel.disconnect( this );
+        m_lfoWaveIndexModel.disconnect( this );
 	m_x100Model.disconnect( this );
 
 	delete[] m_pahdEnv;
@@ -205,10 +216,15 @@ EnvelopeAndLfoParameters::~EnvelopeAndLfoParameters()
 
 inline sample_t EnvelopeAndLfoParameters::lfoShapeSample( fpp_t _frame_offset )
 {
-	f_cnt_t frame = ( m_lfoFrame + _frame_offset ) % m_lfoOscillationFrames;
-	const float phase = frame / static_cast<float>(
-						m_lfoOscillationFrames );
-	sample_t shape_sample;
+        const float phase =
+                m_lfoOscillationFrames>0
+                ? absFraction(float(m_lfoFrame + _frame_offset) / float(m_lfoOscillationFrames))
+                : 0.f;
+
+	sample_t shape_sample=
+                WaveForm::get(m_lfoWaveBankModel.value(),m_lfoWaveIndexModel.value())->f(phase);
+
+        /*
 	switch( m_lfoWaveModel.value()  )
 	{
 		case TriangleWave:
@@ -235,6 +251,7 @@ inline sample_t EnvelopeAndLfoParameters::lfoShapeSample( fpp_t _frame_offset )
 			shape_sample = Oscillator::sinSample( phase );
 			break;
 	}
+        */
 	return shape_sample * m_lfoAmount;
 }
 
@@ -347,7 +364,6 @@ void EnvelopeAndLfoParameters::saveSettings( QDomDocument & _doc,
 	m_sustainModel.saveSettings( _doc, _parent, "sustain" );
 	m_releaseModel.saveSettings( _doc, _parent, "rel" );
 	m_amountModel.saveSettings( _doc, _parent, "amt" );
-	m_lfoWaveModel.saveSettings( _doc, _parent, "lshp" );
 	m_lfoPredelayModel.saveSettings( _doc, _parent, "lpdel" );
 	m_lfoAttackModel.saveSettings( _doc, _parent, "latt" );
 	m_lfoSpeedModel.saveSettings( _doc, _parent, "lspd" );
@@ -355,6 +371,10 @@ void EnvelopeAndLfoParameters::saveSettings( QDomDocument & _doc,
 	m_x100Model.saveSettings( _doc, _parent, "x100" );
 	m_controlEnvAmountModel.saveSettings( _doc, _parent, "ctlenvamt" );
 	_parent.setAttribute( "userwavefile", m_userWave.audioFile() );
+
+	m_lfoWaveBankModel.saveSettings( _doc, _parent, "lfo_wave_bank" );
+	m_lfoWaveIndexModel.saveSettings( _doc, _parent, "lfo_wave_index" );
+	m_lfoWaveIndexModel.saveSettings( _doc, _parent, "lshp" ); // compatibility
 }
 
 
@@ -369,13 +389,21 @@ void EnvelopeAndLfoParameters::loadSettings( const QDomElement & _this )
 	m_sustainModel.loadSettings( _this, "sustain" );
 	m_releaseModel.loadSettings( _this, "rel" );
 	m_amountModel.loadSettings( _this, "amt" );
-	m_lfoWaveModel.loadSettings( _this, "lshp" );
 	m_lfoPredelayModel.loadSettings( _this, "lpdel" );
 	m_lfoAttackModel.loadSettings( _this, "latt" );
 	m_lfoSpeedModel.loadSettings( _this, "lspd" );
 	m_lfoAmountModel.loadSettings( _this, "lamt" );
 	m_x100Model.loadSettings( _this, "x100" );
 	m_controlEnvAmountModel.loadSettings( _this, "ctlenvamt" );
+
+	if( _this.hasAttribute("lfo_wave_bank") )
+                m_lfoWaveBankModel.loadSettings( _this, "lfo_wave_bank" );
+        else
+                m_lfoWaveBankModel.setValue(0);
+
+	//m_lfoWaveModel.loadSettings( _this, "lshp" );
+        if( _this.hasAttribute("lfo_wave_index") )
+                m_lfoWaveIndexModel.loadSettings( _this, "lfo_wave_index" );
 
 /*	 ### TODO:
 	Old reversed sustain kept for backward compatibility

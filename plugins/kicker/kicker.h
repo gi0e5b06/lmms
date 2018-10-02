@@ -23,103 +23,109 @@
  *
  */
 
-
 #ifndef KICKER_H
 #define KICKER_H
 
-#include <QObject>
+#include "ComboBox.h"
 #include "Instrument.h"
 #include "InstrumentView.h"
 #include "Knob.h"
 #include "LedCheckBox.h"
 #include "TempoSyncKnob.h"
 
+#include <QObject>
 
-#define KICKER_PRESET_VERSION 1
-
+#define KICKER_PRESET_VERSION 2
 
 class kickerInstrumentView;
 class NotePlayHandle;
 
-
 class kickerInstrument : public Instrument
 {
-	Q_OBJECT
-public:
-	kickerInstrument( InstrumentTrack * _instrument_track );
-	virtual ~kickerInstrument();
+    Q_OBJECT
+  public:
+    kickerInstrument(InstrumentTrack* _instrument_track);
+    virtual ~kickerInstrument();
 
-	virtual void playNote( NotePlayHandle * _n,
-						sampleFrame * _working_buffer );
-	virtual void deleteNotePluginData( NotePlayHandle * _n );
+    virtual void playNote(NotePlayHandle* _n, sampleFrame* _working_buffer);
 
-	virtual void saveSettings( QDomDocument & _doc, QDomElement & _parent );
-	virtual void loadSettings( const QDomElement & _this );
+    virtual void deleteNotePluginData(NotePlayHandle* _n);
 
-	virtual QString nodeName() const;
+    virtual void saveSettings(QDomDocument& _doc, QDomElement& _parent);
+    virtual void loadSettings(const QDomElement& _this);
 
-	virtual Flags flags() const
-	{
-		return IsNotBendable;
-	}
+    virtual QString nodeName() const;
 
-	virtual f_cnt_t desiredReleaseFrames() const
-	{
-		return 512;
-	}
+    virtual Flags flags() const
+    {
+        return IsNotBendable;
+    }
 
-	virtual PluginView * instantiateView( QWidget * _parent );
+    virtual f_cnt_t desiredReleaseFrames() const
+    {
+        return 512;
+    }
 
+    virtual PluginView* instantiateView(QWidget* _parent);
 
-private:
-	FloatModel m_startFreqModel;
-	FloatModel m_endFreqModel;
-	TempoSyncKnobModel m_decayModel;
-	FloatModel m_distModel;
-	FloatModel m_distEndModel;
-	FloatModel m_gainModel;
-	FloatModel m_envModel;
-	FloatModel m_noiseModel;
-	FloatModel m_clickModel;
-	FloatModel m_slopeModel;
+  public slots:
+    void updateSinIndexModel();
+    void updateWhnIndexModel();
 
-	BoolModel m_startNoteModel;
-	BoolModel m_endNoteModel;
+  private:
+    FloatModel         m_startFreqModel;
+    FloatModel         m_endFreqModel;
+    TempoSyncKnobModel m_decayModel;
+    FloatModel         m_distModel;
+    FloatModel         m_distEndModel;
+    FloatModel         m_gainModel;
+    FloatModel         m_envModel;
+    FloatModel         m_tailModel;
+    FloatModel         m_noiseModel;
+    FloatModel         m_clickModel;
+    FloatModel         m_slopeModel;
+    FloatModel         m_phaseFactorModel;
+    BoolModel          m_startNoteModel;
+    BoolModel          m_endNoteModel;
+    IntModel           m_versionModel;
+    ComboBoxModel      m_sinBankModel;
+    ComboBoxModel      m_sinIndexModel;
+    ComboBoxModel      m_whnBankModel;
+    ComboBoxModel      m_whnIndexModel;
 
-	IntModel m_versionModel;
-
-	friend class kickerInstrumentView;
-
-} ;
-
-
+    friend class kickerInstrumentView;
+};
 
 class kickerInstrumentView : public InstrumentView
 {
-	Q_OBJECT
-public:
-	kickerInstrumentView( Instrument * _instrument, QWidget * _parent );
-	virtual ~kickerInstrumentView();
+    Q_OBJECT
+  public:
+    kickerInstrumentView(Instrument* _instrument, QWidget* _parent);
+    virtual ~kickerInstrumentView();
 
-private:
-	virtual void modelChanged();
+  private:
+    virtual void modelChanged();
 
-	Knob * m_startFreqKnob;
-	Knob * m_endFreqKnob;
-	Knob * m_decayKnob;
-	Knob * m_distKnob;
-	Knob * m_distEndKnob;
-	Knob * m_gainKnob;
-	Knob * m_envKnob;
-	Knob * m_noiseKnob;
-	Knob * m_clickKnob;
-	Knob * m_slopeKnob;
+    Knob* m_startFreqKnob;
+    Knob* m_endFreqKnob;
+    Knob* m_decayKnob;
+    Knob* m_distKnob;
+    Knob* m_distEndKnob;
+    Knob* m_gainKnob;
+    Knob* m_envKnob;
+    Knob* m_tailKnob;
+    Knob* m_noiseKnob;
+    Knob* m_clickKnob;
+    Knob* m_slopeKnob;
+    Knob* m_phaseFactorKnob;
 
-	LedCheckBox * m_startNoteToggle;
-	LedCheckBox * m_endNoteToggle;
+    LedCheckBox* m_startNoteToggle;
+    LedCheckBox* m_endNoteToggle;
 
-} ;
-
-
+    ComboBox* m_sinBankCMB;
+    ComboBox* m_sinIndexCMB;
+    ComboBox* m_whnBankCMB;
+    ComboBox* m_whnIndexCMB;
+};
 
 #endif

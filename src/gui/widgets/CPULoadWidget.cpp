@@ -29,7 +29,9 @@
 #include "GuiApplication.h"
 #include "MainWindow.h"
 #include "Mixer.h"
+
 #include "embed.h"
+#include "gui_templates.h"
 
 #include <QPainter>
 
@@ -57,20 +59,24 @@ CPULoadWidget::CPULoadWidget(QWidget* _parent, const bool _bigger) :
     // resizeCache(w,h);
     setAttribute(Qt::WA_OpaquePaintEvent, true);
 
-    connect(gui->mainWindow(), SIGNAL(periodicUpdate()), this,
-            SLOT(update()), Qt::UniqueConnection);
+    connect(gui->mainWindow(), SIGNAL(periodicUpdate()), this, SLOT(update()),
+            Qt::UniqueConnection);
 }
 
 CPULoadWidget::~CPULoadWidget()
 {
-        //disconnect(gui->mainWindow(), SIGNAL(periodicUpdate()), this,
-        //       SLOT(update()));
+    // disconnect(gui->mainWindow(), SIGNAL(periodicUpdate()), this,
+    //       SLOT(update()));
 }
 
 void CPULoadWidget::drawWidget(QPainter& _p)
 {
     _p.setRenderHints(QPainter::Antialiasing, false);
-    _p.drawPixmap(0, 0, m_background);
+
+    if(m_background.isNull())
+        _p.fillRect(0, 0, width(), height(), Qt::black);
+    else
+        _p.drawPixmap(0, 0, m_background);
 
     if(m_bigger)
     {
@@ -90,6 +96,24 @@ void CPULoadWidget::drawWidget(QPainter& _p)
 
     if(m_bigger)
         _p.drawPixmap(0, 0, m_foreground);
+
+    _p.setRenderHints(QPainter::Antialiasing, true);
+
+    {
+        _p.setPen(Qt::white);  // Color(192, 192, 192));
+        _p.setFont(pointSizeF(font(), 7.f));
+        //_p.drawText(6, height() - 5, tr("Click to enable"));
+        int32_t sr  = Engine::mixer()->processingSampleRate();
+        int32_t ss  = 8 * sizeof(sample_t);
+        //int32_t bps = sr * ss;
+        //int32_t fpp = Engine::mixer()->framesPerPeriod();
+        QString s("%1 Hz %2 bits");
+        s = s.arg(sr).arg(ss);//.arg(bps).arg(fpp);
+        _p.drawText(2, height() - 2, s);
+        _p.drawText(2, height() - 2, s);
+    }
+
+    _p.setRenderHints(QPainter::Antialiasing, false);
 }
 
 /*

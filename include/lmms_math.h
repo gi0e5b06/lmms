@@ -25,11 +25,13 @@
 #ifndef LMMS_MATH_H
 #define LMMS_MATH_H
 
-#include <cmath>
-#include <QtGlobal>
-
+#include "lmms_basics.h"
 #include "lmms_constants.h"
 #include "lmmsconfig.h"
+
+#include <QtGlobal>
+
+#include <cmath>
 
 using namespace std;
 
@@ -49,23 +51,57 @@ using namespace std;
 #define _isinff(x) isinf(x)
 #endif
 #ifndef exp10
-#define exp10(x) pow(10.0, x)
+#define exp10(x) pow(10., x)
 #endif
 #ifndef exp10f
-#define exp10f(x) powf(10.0f, x)
+#define exp10f(x) powf(10.f, x)
 #endif
 #endif
 
-#ifdef __INTEL_COMPILER
+#define absFraction absfraction
+
+static inline real_t absfraction(const real_t _x)
+{
+#ifdef REAL_IS_FLOAT
+    // if(sizeof(real_t) == sizeof(float))
+    return _x - floorf(_x) + (_x >= 0.f ? 0.f : 1.f);
+#endif
+#ifdef REAL_IS_DOUBLE
+    // else
+    return _x - floor(_x) + (_x >= 0. ? 0. : 1.);
+#endif
+}
+
+static inline real_t fraction(const real_t _x)
+{
+    if(sizeof(real_t) == sizeof(float))
+        return _x - floorf(_x);
+    else
+        return _x - floor(_x);
+}
+
+/*
+static inline double absFraction(const double _x)
+{
+    return _x - floor(_x) + (_x >= 0. ? 0. : 1.);
+}
+
+static inline double fraction(const double _x)
+{
+    return _x - floor(_x);
+}
+
+//#ifdef __INTEL_COMPILER
 
 static inline float absFraction(const float _x)
 {
-    return (_x - (_x >= 0.f ? floorf(_x) : floorf(_x) - 1.f));
+    //return _x - (_x >= 0.f ? floorf(_x) : floorf(_x) - 1.f);
+    return _x - floorf(_x) + (_x >= 0.f ? 0.f : 1.f);
 }
 
 static inline float fraction(const float _x)
 {
-    return (_x - floorf(_x));
+    return _x - floorf(_x);
 }
 
 #else
@@ -73,7 +109,8 @@ static inline float fraction(const float _x)
 static inline float absFraction(const float _x)
 {
     return (_x
-            - (_x >= 0.f ? static_cast<int>(_x) : static_cast<int>(_x) - 1.f));
+            - (_x >= 0.f ? static_cast<int>(_x) : static_cast<int>(_x)
+- 1.f));
 }
 
 static inline float fraction(const float _x)
@@ -85,71 +122,109 @@ static inline float fraction(const float _x)
 // SSE3-version
 static inline float absFraction( float _x )
 {
-	unsigned int tmp;
-	asm(
-		"fld %%st\n\t"
-		"fisttp %1\n\t"
-		"fild %1\n\t"
-		"ftst\n\t"
-		"sahf\n\t"
-		"jae 1f\n\t"
-		"fld1\n\t"
-		"fsubrp %%st, %%st(1)\n\t"
-	"1:\n\t"
-		"fsubrp %%st, %%st(1)"
-		: "+t"( _x ), "=m"( tmp )
-		:
-		: "st(1)", "cc" );
-	return( _x );
+        unsigned int tmp;
+        asm(
+                "fld %%st\n\t"
+                "fisttp %1\n\t"
+                "fild %1\n\t"
+                "ftst\n\t"
+                "sahf\n\t"
+                "jae 1f\n\t"
+                "fld1\n\t"
+                "fsubrp %%st, %%st(1)\n\t"
+        "1:\n\t"
+                "fsubrp %%st, %%st(1)"
+                : "+t"( _x ), "=m"( tmp )
+                :
+                : "st(1)", "cc" );
+        return( _x );
 }
 
 static inline float absFraction( float _x )
 {
-	unsigned int tmp;
-	asm(
-		"fld %%st\n\t"
-		"fisttp %1\n\t"
-		"fild %1\n\t"
-		"fsubrp %%st, %%st(1)"
-		: "+t"( _x ), "=m"( tmp )
-		:
-		: "st(1)" );
-	return( _x );
+        unsigned int tmp;
+        asm(
+                "fld %%st\n\t"
+                "fisttp %1\n\t"
+                "fild %1\n\t"
+                "fsubrp %%st, %%st(1)"
+                : "+t"( _x ), "=m"( tmp )
+                :
+                : "st(1)" );
+        return( _x );
 }
 #endif
 
 #endif
+*/
+
+static inline real_t
+        bound(const real_t _min, const real_t _val, const real_t _max)
+{
+    return _val < _min ? _min : (_val > _max ? _max : _val);
+}
+
+static inline real_t
+        roundat(const real_t _val, const real_t _where, const real_t _step)
+{
+    return abs(_val - _where) <= _step ? _where : _val;
+}
 
 #define FAST_RAND_MAX 32767
-static inline int fast_rand()
+static inline int fastrandi()
 {
     static unsigned long next = 1;
     next                      = next * 1103515245 + 12345;
     return ((unsigned)(next / 65536) % 32768);
 }
 
-static inline double fastRand(double range)
+static inline real_t fastrand(real_t range)
 {
-    static const double fast_rand_ratio = 1.0 / FAST_RAND_MAX;
-    return fast_rand() * range * fast_rand_ratio;
+    if(sizeof(real_t) == sizeof(float))
+    {
+        static const float fast_rand_ratio = 1.0f / FAST_RAND_MAX;
+        return fastrandi() * range * fast_rand_ratio;
+    }
+    else
+    {
+        static const double fast_rand_ratio = 1.0 / FAST_RAND_MAX;
+        return fastrandi() * range * fast_rand_ratio;
+    }
 }
 
-static inline float fastRandf(float range)
+static inline real_t fastrand01inc()
 {
-    static const float fast_rand_ratio = 1.0f / FAST_RAND_MAX;
-    return fast_rand() * range * fast_rand_ratio;
+    return real_t(fastrandi()) / real_t(FAST_RAND_MAX);
 }
 
+static inline real_t fastrand01exc()
+{
+    return real_t(fastrandi()) / real_t(FAST_RAND_MAX + 1);
+}
+
+// obsolete
 static inline float fastrandf01inc()
 {
-    return ((float)fast_rand()) / ((float)FAST_RAND_MAX);
+    return float(fastrandi()) / float(FAST_RAND_MAX);
 }
 
+// obsolete
 static inline float fastrandf01exc()
 {
-    return ((float)fast_rand()) / ((float)(FAST_RAND_MAX + 1));
+    return float(fastrandi()) / float(FAST_RAND_MAX + 1);
 }
 
+#define fastFma fma
+#define fastFmaf fmaf
+
+/*
+static inline float fma(float a, float b, float c)
+{
+    return fmaf(a, b, c);
+}
+*/
+
+/*
 //! @brief Takes advantage of fmal() function if present in hardware
 static inline long double
         fastFmal(long double a, long double b, long double c)
@@ -188,9 +263,22 @@ static inline double fastFma(double a, double b, double c)
     return a * b + c;
 #endif
 }
+*/
 
+static inline double fastPow(double a, double b)
+{
+    return powf(a, b);
+}
+
+static inline float fastPowf(float a, float b)
+{
+    return powf(a, b);
+}
+
+/*
 // source:
-// http://martin.ankerl.com/2007/10/04/optimized-pow-approximation-for-java-and-c-c/
+//
+http://martin.ankerl.com/2007/10/04/optimized-pow-approximation-for-java-and-c-c/
 static inline double fastPow(double a, double b)
 {
     union {
@@ -202,16 +290,75 @@ static inline double fastPow(double a, double b)
     return u.d;
 }
 
-// sinc function
-static inline double sinc(double _x)
+static inline float fastPowf(float a, float b)
 {
-    return _x == 0.0 ? 1.0 : sin(F_PI * _x) / (F_PI * _x);
+    return fastPow(double(a), double(b));
+}
+
+static inline real_t fastpow(real_t a, real_t b)
+{
+    if(sizeof(real_t) == sizeof(float))
+        return fastPowf(a, b);
+    else
+        return fastPow(a, b);
+}
+*/
+
+// sinc function
+static inline real_t sinc(real_t _x)
+{
+    if(sizeof(real_t) == sizeof(float))
+        return _x == 0.f ? 1.f : sinf(F_PI * _x) / (F_PI * _x);
+    else
+        return _x == 0. ? 1. : sin(D_PI * _x) / (D_PI * _x);
+}
+
+static inline real_t signedpow(real_t v, real_t e)
+{
+    if(sizeof(real_t) == sizeof(float))
+        return v < 0.f ? powf(-v, e) * -1.f : powf(v, e);
+    else
+        return v < 0. ? pow(-v, e) * -1. : pow(v, e);
+}
+
+//! @brief Exponential function that deals with negative bases
+static inline double signedPow(double v, double e)
+{
+    return v < 0 ? pow(-v, e) * -1. : pow(v, e);
 }
 
 //! @brief Exponential function that deals with negative bases
 static inline float signedPowf(float v, float e)
 {
-    return v < 0 ? powf(-v, e) * -1.0f : powf(v, e);
+    return v < 0 ? powf(-v, e) * -1.f : powf(v, e);
+}
+
+static inline double logToLinearScale(double min, double max, double value)
+{
+    if(min < 0)
+    {
+        const double mmax   = qMax(qAbs(min), qAbs(max));
+        const double val    = value * (max - min) + min;
+        double       result = signedPow(val / mmax, D_E) * mmax;
+        return isnan(result) ? 0 : result;
+    }
+    double result = pow(value, D_E) * (max - min) + min;
+    return isnan(result) ? 0 : result;
+}
+
+static inline double linearToLogScale(double min, double max, double value)
+{
+    static const double EXP          = 1.0f / D_E;
+    const double        valueLimited = qBound(min, value, max);
+    const double        val          = (valueLimited - min) / (max - min);
+    if(min < 0)
+    {
+        const double mmax   = qMax(qAbs(min), qAbs(max));
+        double       result = signedPow(valueLimited / mmax, EXP) * mmax;
+        return isnan(result) ? 0 : result;
+    }
+    double result = pow(val, EXP) * (max - min) + min;
+    return isnan(result) ? 0 : result;
 }
 
 //! @brief Scales @value from linear to logarithmic.
@@ -250,9 +397,18 @@ static inline float linearToLogScale(float min, float max, float value)
 //! -inf.
 //! @param amp Linear amplitude, where 1.0 = 0dBFS.
 //! @return Amplitude in dBFS. -inf for 0 amplitude.
-static inline float safeAmpToDbfs(float amp)
+static inline real_t safeAmpToDbfs(real_t amp)
 {
-    return amp == 0.0f ? -INFINITY : log10f(amp) * 20.0f;
+    if(sizeof(real_t) == sizeof(float))
+    {
+        // return amp == 0.0f ? -INFINITY : log10f(amp) * 20.0f;
+        return amp <= 0.0f ? -INFINITY : log10f(amp) * 20.0f;
+    }
+    else
+    {
+        return amp <= 0.0f ? -std::numeric_limits<real_t>::infinity()
+                           : log10(amp) * 20.;
+    }
 }
 
 //! @brief Converts dBFS-scale to linear amplitude with 0dBFS = 1.0. Handles
@@ -260,39 +416,55 @@ static inline float safeAmpToDbfs(float amp)
 //! @param dbfs The dBFS value to convert: all infinites are treated as -inf
 //! and result in 0
 //! @return Linear amplitude
-static inline float safeDbfsToAmp(float dbfs)
+static inline real_t safeDbfsToAmp(real_t dbfs)
 {
-    return isinf(dbfs) ? 0.0f : exp10(dbfs * 0.05f);
+    if(sizeof(real_t) == sizeof(float))
+        return isinf(dbfs) ? 0.0f : exp10f(dbfs * 0.05f);
+    else
+        return isinf(dbfs) ? 0. : exp10(dbfs * 0.05);
 }
 
 //! @brief Converts linear amplitude (>0-1.0) to dBFS scale.
 //! @param amp Linear amplitude, where 1.0 = 0dBFS. ** Must be larger than
 //! zero! **
 //! @return Amplitude in dBFS.
-static inline float ampToDbfs(float amp)
+static inline real_t ampToDbfs(real_t amp)
 {
-    return log10f(amp) * 20.0f;
+    if(sizeof(real_t) == sizeof(float))
+        return log10f(amp) * 20.f;
+    else
+        return log10(amp) * 20.;
 }
 
 //! @brief Converts dBFS-scale to linear amplitude with 0dBFS = 1.0
 //! @param dbfs The dBFS value to convert. ** Must be a real number - not
 //! inf/nan! **
 //! @return Linear amplitude
-static inline float dbfsToAmp(float dbfs)
+static inline real_t dbfsToAmp(real_t dbfs)
 {
-    return exp10(dbfs * 0.05f);
+    if(sizeof(real_t) == sizeof(float))
+        return exp10f(dbfs * 0.05f);
+    else
+        return exp10(dbfs * 0.05);
 }
 
 //! returns 1.0f if val >= 0.0f, -1.0 else
-static inline float sign(float val)
+static inline real_t sign(real_t val)
 {
-    return val >= 0.0f ? 1.0f : -1.0f;
+    if(sizeof(real_t) == sizeof(float))
+        return val >= 0.f ? 1.f : -1.f;
+    else
+        return val >= 0. ? 1. : -1.;
 }
 
 //! if val >= 0.0f, returns sqrtf(val), else: -sqrtf(-val)
-static inline float sqrt_neg(float val)
+#define sqrt_neg sqrtneg
+static inline real_t sqrtneg(real_t val)
 {
-    return sqrtf(fabs(val)) * sign(val);
+    if(sizeof(real_t) == sizeof(float))
+        return sqrtf(fabs(val)) * sign(val);
+    else
+        return sqrt(abs(val)) * sign(val);
 }
 
 //! returns value furthest from zero
@@ -309,33 +481,33 @@ static inline T absMin(T a, T b)
     return qAbs<T>(a) < qAbs<T>(b) ? a : b;
 }
 
-static inline float phasef(const float _x)
+static inline real_t phasef(const real_t _x)
 {
-    float i;
+    real_t i;
     return modf(_x, &i);
 }
 
-static inline float sqf(const float _x)
+static inline real_t sqf(const real_t _x)
 {
     return _x * _x;
 }
 
-static inline float cbf(const float _x)
+static inline real_t cbf(const real_t _x)
 {
     return _x * _x * _x;
 }
 
-static inline float identityf(const float x)
+static inline real_t identityf(const real_t x)
 {
-        return x;
+    return x;
 }
 
-static inline float nsinf(const float x)
+static inline real_t nsinf(const real_t x)
 {
     return sinf(x * F_2PI);
 }
 
-static inline float trianglef(const float x)
+static inline real_t trianglef(const real_t x)
 {
     if(x < 0.25f)
         return x * 4.f;
@@ -345,12 +517,12 @@ static inline float trianglef(const float x)
         return x * 4.f - 4.f;
 }
 
-static inline float sawtoothf(const float x)
+static inline real_t sawtoothf(const real_t x)
 {
     return -1.f + x * 2.f;
 }
 
-static inline float sawtooth0pf(const float x)
+static inline real_t sawtooth0pf(const real_t x)
 {
     if(x < 0.5f)
         return 2.f * x;
@@ -358,12 +530,12 @@ static inline float sawtooth0pf(const float x)
         return -1.f + 2.f * (x - 0.5f);
 }
 
-static inline float squaref(const float x)
+static inline real_t squaref(const real_t x)
 {
     return (x < 0.5f) ? 1.f : -1.f;
 }
 
-static inline float harshsawf(const float x)
+static inline real_t harshsawf(const real_t x)
 {
     if(x < 0.5f)
         return -1.f + x * 4.f;
@@ -371,7 +543,7 @@ static inline float harshsawf(const float x)
         return 1.f - 2.f * x;
 }
 
-static inline float harshsaw0pf(const float x)
+static inline real_t harshsaw0pf(const real_t x)
 {
     if(x < 0.25f)
         return 4.f * x;
@@ -382,7 +554,7 @@ static inline float harshsaw0pf(const float x)
 }
 
 /*
-static inline float octaviussawf(const float x)
+static inline real_t octaviussawf(const real_t x)
 {
         if(x < 0.225f)
                 return (4.f*x-0.45f)*(4.f*x-0.45f);
@@ -390,65 +562,66 @@ static inline float octaviussawf(const float x)
                 return 0.2f+(x-0.225f) * 1.02564102564f;
 }
 
-static inline float octaviussaw0pf(const float x)
+static inline real_t octaviussaw0pf(const real_t x)
 {
     return octaviussawf(phasef(x + 0.2025f));
 }
 */
 
-static inline float octaviussawf(float x)
+static inline real_t octaviussawf(real_t x)
 {
-  float x2 = x * x;
-  float x3 = x2 * x;
-  float y = (x < 0.225f) ? (-223.2124952380952f * x3 + 103.3947428571429f * x2 -
-                            12.99710476190476f * x + 0.5f)
-                         : (4.634282931882935f * x3 - 7.651001253561262f * x2 +
-                            4.391827775187776f * x - 0.37510945350945f);
-  return 2.f * y - 1.f;
+    real_t x2 = x * x;
+    real_t x3 = x2 * x;
+    real_t y  = (x < 0.225f)
+                       ? (-223.2124952380952f * x3 + 103.3947428571429f * x2
+                          - 12.99710476190476f * x + 0.5f)
+                       : (4.634282931882935f * x3 - 7.651001253561262f * x2
+                          + 4.391827775187776f * x - 0.37510945350945f);
+    return 2.f * y - 1.f;
 }
 
-static inline float octaviussaw0pf(const float x)
+static inline real_t octaviussaw0pf(const real_t x)
 {
     return octaviussawf(phasef(x + 0.566454));
 }
 
-static inline float sqpeakf(const float x)
+static inline real_t sqpeakf(const real_t x)
 {
-    float p = x;
+    real_t p = x;
     if(p > 0.5f)
         p = 1.0f - p;
     return -1.0f + 8.0f * p * p;
 }
 
-static inline float sqpeak0pf(const float x)
+static inline real_t sqpeak0pf(const real_t x)
 {
     return sqpeakf(phasef(x + 0.353553f));
 }
 
-static inline float cbpeakf(const float x)
+static inline real_t cbpeakf(const real_t x)
 {
-    float p = x;
+    real_t p = x;
     if(p > 0.5f)
         p = 1.0f - p;
     return -1.0f + 16.0f * p * p * p;
 }
 
-static inline float cbpeak0pf(const float x)
+static inline real_t cbpeak0pf(const real_t x)
 {
     return cbpeakf(phasef(x + 0.603150f));
 }
 
-static inline float randf(const float)
+static inline real_t randf(const real_t)
 {
     return 2.f * fastrandf01inc() - 1.f;
 }
 
-static inline float pulsef(const float x)
+static inline real_t pulsef(const real_t x)
 {
     return x < 0.5f ? 1.f : 0.f;
 }
 
-static inline float pulse0pf(const float x)
+static inline real_t pulse0pf(const real_t x)
 {
     if(x < 0.25f)
         return 0.f;
@@ -458,26 +631,26 @@ static inline float pulse0pf(const float x)
         return 0.f;
 }
 
-static inline float moogsawf(const float x)
+static inline real_t moogsawf(const real_t x)
 {
     return 3.41333f * x * x * x - 7.36 * x * x + 5.22667 * x - 1.f;
 }
 
-static inline float moogsaw0pf(const float x)
+static inline real_t moogsaw0pf(const real_t x)
 {
-    const float p = phasef(x + 0.301297f);
+    const real_t p = phasef(x + 0.301297f);
     return 3.41333f * p * p * p - 7.36 * p * p + 5.22667 * p - 1.f;
 }
 
-static inline float moogsquaref(const float x)
+static inline real_t moogsquaref(const real_t x)
 {
     if(x < 0.5f)
         return 1.f / exp(2.5f * x);
     else
-        return - (1.f / exp(2.5f * (x - 0.5f)));
+        return -(1.f / exp(2.5f * (x - 0.5f)));
 }
 
-static inline float expsawf(const float x)
+static inline real_t expsawf(const real_t x)
 {
     if(x < 0.25f)
         return expm1(8.f * x) * 0.15651764274967f;
@@ -489,74 +662,43 @@ static inline float expsawf(const float x)
         return -expm1(8.f - 8.f * x) * 0.15651764274967f;
 }
 
-static inline float minus1f(const float x)
+static inline real_t minus1f(const real_t x)
 {
     return -1.f;
 }
 
-static inline float minus05f(const float x)
+static inline real_t minus05f(const real_t x)
 {
     return -0.5f;
 }
 
-static inline float zerof(const float x)
+static inline real_t zerof(const real_t x)
 {
     return 0.f;
 }
 
-static inline float plus05f(const float x)
+static inline real_t plus05f(const real_t x)
 {
     return 0.5f;
 }
 
-static inline float plus1f(const float x)
+static inline real_t plus1f(const real_t x)
 {
     return 1.f;
 }
 
-static inline float nexpf(const float x)
+static inline real_t nexpf(const real_t x)
 {
     return expm1(x) /*(exp(x) - 1.f)*/
            / 1.718281828459f;
 }
 
-static inline float nlogf(const float x)
+static inline real_t nlogf(const real_t x)
 {
     return log(x * 1.718281828459f + 1.f);
 }
 
 // nerf erf()
 // nexp2 exp2()
-
-/*
-#define FASTFUNC01_HEADER(name)          \
-    void  init_fast##name##01();         \
-    float fast##name##01(const float x); \
-    float linear##name##01(const float x);
-
-FASTFUNC01_HEADER(sqrtf)
-FASTFUNC01_HEADER(nsinf)
-FASTFUNC01_HEADER(trianglef)
-FASTFUNC01_HEADER(sawtoothf)
-FASTFUNC01_HEADER(squaref)
-FASTFUNC01_HEADER(harshsawf)
-FASTFUNC01_HEADER(peakexpf)
-FASTFUNC01_HEADER(randf)
-*/
-
-// fast approximation of square root (not used)
-/*
-static inline float fastSqrt( float n )
-{
-        union
-        {
-                int32_t i;
-                float f;
-        } u;
-        u.f = n;
-        u.i = ( u.i + ( 127 << 23 ) ) >> 1;
-        return u.f;
-}
-*/
 
 #endif

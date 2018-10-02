@@ -80,8 +80,8 @@ class FxChannel : public Model, public virtual ThreadableJob
 	//FloatModel m_eqDJMediumModel;
 	//FloatModel m_eqDJLowModel;
 
-	float m_peakLeft;
-	float m_peakRight;
+	real_t m_peakLeft;
+	real_t m_peakRight;
 	sampleFrame * m_buffer;
 	bool m_muteBeforeSolo;
 	BoolModel m_mutedModel;
@@ -123,7 +123,7 @@ class FxRoute : public QObject
 	Q_OBJECT
 
  public:
-	FxRoute( FxChannel * from, FxChannel * to, float amount );
+	FxRoute( FxChannel * from, FxChannel * to, real_t amount );
 	virtual ~FxRoute();
 
 	fx_ch_t senderIndex() const
@@ -194,8 +194,8 @@ class EXPORT FxMixer : public Model, public JournallingObject
 	// make the output of channel fromChannel go to the input of channel toChannel
 	// it is safe to call even if the send already exists
 	FxRoute * createChannelSend(fx_ch_t fromChannel, fx_ch_t toChannel,
-						   float amount = 1.0f);
-	FxRoute * createRoute( FxChannel * from, FxChannel * to, float amount );
+						   real_t amount = 1.);
+	FxRoute * createRoute( FxChannel * from, FxChannel * to, real_t amount );
 
 	// delete the connection made by createChannelSend
 	void deleteChannelSend(fx_ch_t fromChannel, fx_ch_t toChannel);

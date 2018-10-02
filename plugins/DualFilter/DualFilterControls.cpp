@@ -105,14 +105,14 @@ DualFilterControls::DualFilterControls( DualFilterEffect* effect ) :
 void DualFilterControls::updateFilters()
 {
 	// swap filters to new ones
-	
+
 	delete m_effect->m_filter1;
 	delete m_effect->m_filter2;
 	m_effect->m_filter1 = new BasicFilters<2>( Engine::mixer()->processingSampleRate() );
 	m_effect->m_filter2 = new BasicFilters<2>( Engine::mixer()->processingSampleRate() );
-	
+
 	// flag filters as needing recalculation
-	
+
 	m_effect->m_filter1changed = true;
 	m_effect->m_filter2changed = true;
 }

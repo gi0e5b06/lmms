@@ -33,7 +33,7 @@
 
 // fastnormsinf01 -> WaveForm::sin::f(x)
 
-typedef float (*wavefunction_t)(const float);
+typedef real_t (*wavefunction_t)(const real_t);
 
 class WaveForm
 {
@@ -69,7 +69,7 @@ class WaveForm
     WaveForm(const QString&        _name,
              const int             _bank,
              const int             _index,
-             float*                _data,
+             real_t*               _data,
              const int             _size,
              const interpolation_t _mode    = Linear,
              const int             _quality = 8);
@@ -83,12 +83,12 @@ class WaveForm
     virtual ~WaveForm();
 
     // x must be between 0. and 1.
-    float f(const float _x) const;
-    float f(const float _x, const interpolation_t _m) const;
-    float f(const float _x, const float _antialias) const;
-    float f(const float           _x,
-            const float           _antialias,
-            const interpolation_t _m) const;
+    real_t f(const real_t _x) const;
+    real_t f(const real_t _x, const interpolation_t _m) const;
+    real_t f(const real_t _x, const real_t _antialias) const;
+    real_t f(const real_t          _x,
+             const real_t          _antialias,
+             const interpolation_t _m) const;
 
     inline const QString& name() const
     {
@@ -111,12 +111,17 @@ class WaveForm
     static void fillIndexModel(ComboBoxModel& _model, const int _bank);
 
     // Standard waves
-    static const int ZERO_BANK  = 20;
-    static const int ZERO_INDEX = 40;
-    static const int MIN_BANK   = 0;
-    static const int MIN_INDEX  = 0;
-    static const int MAX_BANK   = 127;
-    static const int MAX_INDEX  = 127;
+    static const int ZERO_BANK        = 20;
+    static const int ZERO_INDEX       = 40;
+    static const int SINE_BANK        = 0;
+    static const int SINE_INDEX       = 0;
+    static const int WHITENOISE_BANK  = 0;
+    static const int WHITENOISE_INDEX = 6;
+
+    static const int MIN_BANK  = 0;
+    static const int MIN_INDEX = 0;
+    static const int MAX_BANK  = 127;
+    static const int MAX_INDEX = 127;
 
     static const WaveForm SINE;
     static const WaveForm TRIANGLE;
@@ -148,7 +153,7 @@ class WaveForm
 
       private:
         void createDegraded(int _bank, bool _linear, int _quality);
-        void createSoften(int _bank, float _bandwidth);
+        void createSoften(int _bank, real_t _bandwidth);
 
         QString         m_bankNames[MAX_BANK - MIN_BANK + 1];
         const WaveForm* m_stock[MAX_BANK - MIN_BANK + 1]
@@ -171,7 +176,7 @@ class WaveForm
         fftwf_plan     m_r2cPlan;
         fftwf_plan     m_c2rPlan;
         fftwf_complex* m_specBuf;
-        float*         m_normBuf;
+        real_t*         m_normBuf;
     };
 
     static Plan PLAN;
@@ -184,13 +189,13 @@ class WaveForm
              const interpolation_t _mode,
              const int             _quality);
 
-    WaveForm* setSoftness(float _softness);
+    WaveForm* setSoftness(real_t _softness);
     void      rebuild();
     void      build();
     void      soften();
 
     bool            m_built;
-    float           m_softness;
+    real_t          m_softness;
     QString         m_name;
     int             m_bank;
     int             m_index;
@@ -198,7 +203,7 @@ class WaveForm
     int             m_quality;
     wavefunction_t  m_func;
     QString         m_file;
-    float*          m_data;
+    real_t*         m_data;
     int             m_size;  // size of the data -1
 };
 

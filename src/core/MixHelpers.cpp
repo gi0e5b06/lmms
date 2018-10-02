@@ -138,32 +138,35 @@ int64_t convertToS64(double _v)
 
 sample_t convertFromS16(int16_t _v)
 {
-    if(sizeof(sample_t) == sizeof(float))
-        return sample_t(_v)
-               / (_v >= 0 ? F_S16_MULTIPLIER : F_S16_MULTIPLIER + 1.);
-    else
-        return sample_t(_v)
-               / (_v >= 0 ? D_S16_MULTIPLIER : D_S16_MULTIPLIER + 1.);
+#ifdef REAL_IS_DOUBLE
+    return sample_t(_v)
+           / (_v >= 0 ? D_S16_MULTIPLIER : D_S16_MULTIPLIER + 1.);
+#else
+    return sample_t(_v)
+           / (_v >= 0 ? F_S16_MULTIPLIER : F_S16_MULTIPLIER + 1.);
+#endif
 }
 
 sample_t convertFromS32(int32_t _v)
 {
-    if(sizeof(sample_t) == sizeof(float))
-        return sample_t(_v)
-               / (_v >= 0 ? F_S32_MULTIPLIER : F_S32_MULTIPLIER + 1.);
-    else
-        return sample_t(_v)
-               / (_v >= 0 ? D_S32_MULTIPLIER : D_S32_MULTIPLIER + 1.);
+#ifdef REAL_IS_DOUBLE
+    return sample_t(_v)
+           / (_v >= 0 ? D_S32_MULTIPLIER : D_S32_MULTIPLIER + 1.);
+#else
+    return sample_t(_v)
+           / (_v >= 0 ? F_S32_MULTIPLIER : F_S32_MULTIPLIER + 1.);
+#endif
 }
 
 sample_t convertFromS64(int64_t _v)
 {
-    if(sizeof(sample_t) == sizeof(float))
-        return sample_t(_v)
-               / (_v >= 0 ? F_S64_MULTIPLIER : F_S64_MULTIPLIER + 1.);
-    else
-        return sample_t(_v)
-               / (_v >= 0 ? D_S64_MULTIPLIER : D_S64_MULTIPLIER + 1.);
+#ifdef REAL_IS_DOUBLE
+    return sample_t(_v)
+           / (_v >= 0 ? D_S64_MULTIPLIER : D_S64_MULTIPLIER + 1.);
+#else
+    return sample_t(_v)
+           / (_v >= 0 ? F_S64_MULTIPLIER : F_S64_MULTIPLIER + 1.);
+#endif
 }
 
 /*! \brief Function for detecting silence - returns true if found */
@@ -252,7 +255,7 @@ void addMultiplied(sampleFrame*       _dst,
                    const ValueBuffer* _coeffSrcBuf,
                    const f_cnt_t      _frames)
 {
-    const float* values = _coeffSrcBuf->values();
+    const real_t* values = _coeffSrcBuf->values();
     for(f_cnt_t f = _frames - 1; f >= 0; --f)
     {
         _dst[f][0] += _src[f][0] * values[f];
@@ -276,7 +279,7 @@ void add(sampleFrame* dst, const sampleFrame* src, int frames)
 
 struct AddMultipliedOp
 {
-    AddMultipliedOp(float coeff) : m_coeff(coeff)
+    AddMultipliedOp(real_t coeff) : m_coeff(coeff)
     {
     }
 
@@ -286,12 +289,12 @@ struct AddMultipliedOp
         dst[1] += src[1] * m_coeff;
     }
 
-    const float m_coeff;
+    const real_t m_coeff;
 };
 
 void addMultiplied(sampleFrame*       dst,
                    const sampleFrame* src,
-                   float              coeffSrc,
+                   real_t             coeffSrc,
                    int                frames)
 {
     run<>(dst, src, frames, AddMultipliedOp(coeffSrc));
@@ -299,7 +302,7 @@ void addMultiplied(sampleFrame*       dst,
 
 struct AddSwappedMultipliedOp
 {
-    AddSwappedMultipliedOp(float coeff) : m_coeff(coeff)
+    AddSwappedMultipliedOp(real_t coeff) : m_coeff(coeff)
     {
     }
 
@@ -309,12 +312,12 @@ struct AddSwappedMultipliedOp
         dst[1] += src[0] * m_coeff;
     }
 
-    const float m_coeff;
+    const real_t m_coeff;
 };
 
 void addSwappedMultiplied(sampleFrame*       dst,
                           const sampleFrame* src,
-                          float              coeffSrc,
+                          real_t             coeffSrc,
                           int                frames)
 {
     run<>(dst, src, frames, AddSwappedMultipliedOp(coeffSrc));
@@ -322,7 +325,7 @@ void addSwappedMultiplied(sampleFrame*       dst,
 
 void addMultipliedByBuffer(sampleFrame*       dst,
                            const sampleFrame* src,
-                           float              coeffSrc,
+                           real_t             coeffSrc,
                            ValueBuffer*       coeffSrcBuf,
                            int                frames)
 {
@@ -354,16 +357,16 @@ void addSanitized(sampleFrame*       _dst,
 {
     for(f_cnt_t f = 0; f < _frames; ++f)
     {
-        _dst[f][0] += (isinf(_src[f][0]) || isnan(_src[f][0])) ? 0.0f
-                                                               : _src[f][0];
-        _dst[f][1] += (isinf(_src[f][1]) || isnan(_src[f][1])) ? 0.0f
-                                                               : _src[f][1];
+        _dst[f][0]
+                += (isinf(_src[f][0]) || isnan(_src[f][0])) ? 0. : _src[f][0];
+        _dst[f][1]
+                += (isinf(_src[f][1]) || isnan(_src[f][1])) ? 0. : _src[f][1];
     }
 }
 
 void addSanitizedMultipliedByBuffer(sampleFrame*       dst,
                                     const sampleFrame* src,
-                                    float              coeffSrc,
+                                    real_t             coeffSrc,
                                     ValueBuffer*       coeffSrcBuf,
                                     int                frames)
 {
@@ -371,11 +374,11 @@ void addSanitizedMultipliedByBuffer(sampleFrame*       dst,
     {
         dst[f][0]
                 += (isinf(src[f][0]) || isnan(src[f][0]))
-                           ? 0.0f
+                           ? 0.
                            : src[f][0] * coeffSrc * coeffSrcBuf->values()[f];
         dst[f][1]
                 += (isinf(src[f][1]) || isnan(src[f][1]))
-                           ? 0.0f
+                           ? 0.
                            : src[f][1] * coeffSrc * coeffSrcBuf->values()[f];
     }
 }
@@ -389,11 +392,11 @@ void addSanitizedMultipliedByBuffers(sampleFrame*       dst,
     for(int f = 0; f < frames; ++f)
     {
         dst[f][0] += (isinf(src[f][0]) || isnan(src[f][0]))
-                             ? 0.0f
+                             ? 0.
                              : src[f][0] * coeffSrcBuf1->values()[f]
                                        * coeffSrcBuf2->values()[f];
         dst[f][1] += (isinf(src[f][1]) || isnan(src[f][1]))
-                             ? 0.0f
+                             ? 0.
                              : src[f][1] * coeffSrcBuf1->values()[f]
                                        * coeffSrcBuf2->values()[f];
     }
@@ -401,22 +404,22 @@ void addSanitizedMultipliedByBuffers(sampleFrame*       dst,
 
 struct AddSanitizedMultipliedOp
 {
-    AddSanitizedMultipliedOp(float coeff) : m_coeff(coeff)
+    AddSanitizedMultipliedOp(real_t coeff) : m_coeff(coeff)
     {
     }
 
     void operator()(sampleFrame& dst, const sampleFrame& src) const
     {
-        dst[0] += (isinf(src[0]) || isnan(src[0])) ? 0.0f : src[0] * m_coeff;
-        dst[1] += (isinf(src[1]) || isnan(src[1])) ? 0.0f : src[1] * m_coeff;
+        dst[0] += (isinf(src[0]) || isnan(src[0])) ? 0. : src[0] * m_coeff;
+        dst[1] += (isinf(src[1]) || isnan(src[1])) ? 0. : src[1] * m_coeff;
     }
 
-    const float m_coeff;
+    const real_t m_coeff;
 };
 
 void addSanitizedMultiplied(sampleFrame*       dst,
                             const sampleFrame* src,
-                            float              coeffSrc,
+                            real_t             coeffSrc,
                             int                frames)
 {
     run<>(dst, src, frames, AddSanitizedMultipliedOp(coeffSrc));
@@ -424,7 +427,7 @@ void addSanitizedMultiplied(sampleFrame*       dst,
 
 struct AddMultipliedStereoOp
 {
-    AddMultipliedStereoOp(float coeffLeft, float coeffRight)
+    AddMultipliedStereoOp(real_t coeffLeft, real_t coeffRight)
     {
         m_coeffs[0] = coeffLeft;
         m_coeffs[1] = coeffRight;
@@ -436,13 +439,13 @@ struct AddMultipliedStereoOp
         dst[1] += src[1] * m_coeffs[1];
     }
 
-    float m_coeffs[2];
+    real_t m_coeffs[2];
 };
 
 void addMultipliedStereo(sampleFrame*       dst,
                          const sampleFrame* src,
-                         float              coeffSrcLeft,
-                         float              coeffSrcRight,
+                         real_t             coeffSrcLeft,
+                         real_t             coeffSrcRight,
                          int                frames)
 {
 
@@ -452,7 +455,7 @@ void addMultipliedStereo(sampleFrame*       dst,
 
 struct MultiplyAndAddMultipliedOp
 {
-    MultiplyAndAddMultipliedOp(float coeffDst, float coeffSrc)
+    MultiplyAndAddMultipliedOp(real_t coeffDst, real_t coeffSrc)
     {
         m_coeffs[0] = coeffDst;
         m_coeffs[1] = coeffSrc;
@@ -464,13 +467,13 @@ struct MultiplyAndAddMultipliedOp
         dst[1] = dst[1] * m_coeffs[0] + src[1] * m_coeffs[1];
     }
 
-    float m_coeffs[2];
+    real_t m_coeffs[2];
 };
 
 void multiplyAndAddMultiplied(sampleFrame*       dst,
                               const sampleFrame* src,
-                              float              coeffDst,
-                              float              coeffSrc,
+                              real_t             coeffDst,
+                              real_t             coeffSrc,
                               int                frames)
 {
     run<>(dst, src, frames, MultiplyAndAddMultipliedOp(coeffDst, coeffSrc));
@@ -479,8 +482,8 @@ void multiplyAndAddMultiplied(sampleFrame*       dst,
 void multiplyAndAddMultipliedJoined(sampleFrame*    dst,
                                     const sample_t* srcLeft,
                                     const sample_t* srcRight,
-                                    float           coeffDst,
-                                    float           coeffSrc,
+                                    real_t          coeffDst,
+                                    real_t          coeffSrc,
                                     int             frames)
 {
     run<>(dst, srcLeft, srcRight, frames,

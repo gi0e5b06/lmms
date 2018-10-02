@@ -33,10 +33,10 @@
 
 Oscillator::Oscillator( const IntModel * _wave_shape_model,
                         const IntModel * _mod_algo_model,
-                        const float & _freq,
-                        const float & _detuning,
-                        const float & _phase_offset,
-                        const float & _volume,
+                        const frequency_t & _freq,
+                        const real_t & _detuning,
+                        const real_t & _phase_offset,
+                        const volume_t & _volume,
 			Oscillator * _sub_osc ) :
 	m_waveShapeModel( _wave_shape_model ),
 	m_modulationAlgoModel( _mod_algo_model ),
@@ -310,7 +310,7 @@ void Oscillator::updateFM( sampleFrame * _ab, const fpp_t _frames,
 // should be called every time phase-offset is changed...
 inline void Oscillator::recalcPhase()
 {
-	if( !typeInfo<float>::isEqual( m_phaseOffset, m_ext_phaseOffset ) )
+        //if( abs(m_phaseOffset - m_ext_phaseOffset ) > SILENCE )
 	{
 		m_phase -= m_phaseOffset;
 		m_phaseOffset = m_ext_phaseOffset;
@@ -323,9 +323,9 @@ inline void Oscillator::recalcPhase()
 
 
 
-inline bool Oscillator::syncOk( float _osc_coeff )
+inline bool Oscillator::syncOk( real_t _osc_coeff )
 {
-	const float v1 = m_phase;
+	const real_t v1 = m_phase;
 	m_phase += _osc_coeff;
 	// check whether m_phase is in next period
 	return floorf( m_phase ) > floorf( v1 );
@@ -334,7 +334,7 @@ inline bool Oscillator::syncOk( float _osc_coeff )
 
 
 
-float Oscillator::syncInit( sampleFrame * _ab, const fpp_t _frames,
+real_t Oscillator::syncInit( sampleFrame * _ab, const fpp_t _frames,
 						const ch_cnt_t _chnl )
 {
 	if( m_subOsc != NULL )
@@ -354,7 +354,7 @@ void Oscillator::updateNoSub( sampleFrame * _ab, const fpp_t _frames,
 							const ch_cnt_t _chnl )
 {
 	recalcPhase();
-	const float osc_coeff = m_freq * m_detuning;
+	const real_t osc_coeff = m_freq * m_detuning;
 
 	for( fpp_t frame = 0; frame < _frames; ++frame )
 	{
@@ -373,7 +373,7 @@ void Oscillator::updatePM( sampleFrame * _ab, const fpp_t _frames,
 {
 	m_subOsc->update( _ab, _frames, _chnl );
 	recalcPhase();
-	const float osc_coeff = m_freq * m_detuning;
+	const real_t osc_coeff = m_freq * m_detuning;
 
 	for( fpp_t frame = 0; frame < _frames; ++frame )
 	{
@@ -394,7 +394,7 @@ void Oscillator::updateAM( sampleFrame * _ab, const fpp_t _frames,
 {
 	m_subOsc->update( _ab, _frames, _chnl );
 	recalcPhase();
-	const float osc_coeff = m_freq * m_detuning;
+	const real_t osc_coeff = m_freq * m_detuning;
 
 	for( fpp_t frame = 0; frame < _frames; ++frame )
 	{
@@ -413,7 +413,7 @@ void Oscillator::updateMix( sampleFrame * _ab, const fpp_t _frames,
 {
 	m_subOsc->update( _ab, _frames, _chnl );
 	recalcPhase();
-	const float osc_coeff = m_freq * m_detuning;
+	const real_t osc_coeff = m_freq * m_detuning;
 
 	for( fpp_t frame = 0; frame < _frames; ++frame )
 	{
@@ -431,9 +431,9 @@ template<Oscillator::WaveShapes W>
 void Oscillator::updateSync( sampleFrame * _ab, const fpp_t _frames,
 							const ch_cnt_t _chnl )
 {
-	const float sub_osc_coeff = m_subOsc->syncInit( _ab, _frames, _chnl );
+	const real_t sub_osc_coeff = m_subOsc->syncInit( _ab, _frames, _chnl );
 	recalcPhase();
-	const float osc_coeff = m_freq * m_detuning;
+	const real_t osc_coeff = m_freq * m_detuning;
 
 	for( fpp_t frame = 0; frame < _frames ; ++frame )
 	{
@@ -456,8 +456,8 @@ void Oscillator::updateFM( sampleFrame * _ab, const fpp_t _frames,
 {
 	m_subOsc->update( _ab, _frames, _chnl );
 	recalcPhase();
-	const float osc_coeff = m_freq * m_detuning;
-	const float sampleRateCorrection = 44100.0f /
+	const real_t osc_coeff = m_freq * m_detuning;
+	const real_t sampleRateCorrection = 44100.0f /
 				Engine::mixer()->processingSampleRate();
 
 	for( fpp_t frame = 0; frame < _frames; ++frame )
@@ -473,7 +473,7 @@ void Oscillator::updateFM( sampleFrame * _ab, const fpp_t _frames,
 
 template<>
 inline sample_t Oscillator::getSample<Oscillator::SineWave>(
-							const float _sample )
+							const real_t _sample )
 {
 	return sinSample( _sample );
 }
@@ -483,7 +483,7 @@ inline sample_t Oscillator::getSample<Oscillator::SineWave>(
 
 template<>
 inline sample_t Oscillator::getSample<Oscillator::TriangleWave>(
-							const float _sample )
+							const real_t _sample )
 {
 	return triangleSample( _sample );
 }
@@ -493,7 +493,7 @@ inline sample_t Oscillator::getSample<Oscillator::TriangleWave>(
 
 template<>
 inline sample_t Oscillator::getSample<Oscillator::SawWave>(
-							const float _sample )
+							const real_t _sample )
 {
 	return sawSample( _sample );
 }
@@ -503,7 +503,7 @@ inline sample_t Oscillator::getSample<Oscillator::SawWave>(
 
 template<>
 inline sample_t Oscillator::getSample<Oscillator::SquareWave>(
-							const float _sample )
+							const real_t _sample )
 {
 	return squareSample( _sample );
 }
@@ -513,7 +513,7 @@ inline sample_t Oscillator::getSample<Oscillator::SquareWave>(
 
 template<>
 inline sample_t Oscillator::getSample<Oscillator::MoogSawWave>(
-							const float _sample )
+							const real_t _sample )
 {
 	return moogSawSample( _sample );
 }
@@ -523,7 +523,7 @@ inline sample_t Oscillator::getSample<Oscillator::MoogSawWave>(
 
 template<>
 inline sample_t Oscillator::getSample<Oscillator::ExponentialWave>(
-							const float _sample )
+							const real_t _sample )
 {
 	return expSample( _sample );
 }
@@ -533,7 +533,7 @@ inline sample_t Oscillator::getSample<Oscillator::ExponentialWave>(
 
 template<>
 inline sample_t Oscillator::getSample<Oscillator::WhiteNoise>(
-							const float _sample )
+							const real_t _sample )
 {
 	return noiseSample( _sample );
 }
@@ -543,7 +543,7 @@ inline sample_t Oscillator::getSample<Oscillator::WhiteNoise>(
 
 template<>
 inline sample_t Oscillator::getSample<Oscillator::UserDefinedWave>(
-							const float _sample )
+							const real_t _sample )
 {
 	return userWaveSample( _sample );
 }

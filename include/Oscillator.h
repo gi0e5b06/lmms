@@ -76,10 +76,10 @@ public:
 
 	Oscillator( const IntModel * _wave_shape_model,
                     const IntModel * _mod_algo_model,
-                    const float & _freq,
-                    const float & _detuning,
-                    const float & _phase_offset,
-                    const float & _volume,
+                    const frequency_t & _freq,
+                    const real_t & _detuning,
+                    const real_t & _phase_offset,
+                    const volume_t & _volume,
                     Oscillator * _m_subOsc = NULL );
 
 	virtual ~Oscillator()
@@ -98,17 +98,17 @@ public:
 
 	// now follow the wave-shape-routines...
 
-	static inline sample_t sinSample( float _sample )
+	static inline sample_t sinSample( real_t _sample )
 	{
                 //return sinf( _sample * F_2PI );
                 //return fastnormsinf01(fraction(_sample));
                 return WaveForm::sine(absFraction(_sample));
 	}
 
-	static inline sample_t triangleSample( const float _sample )
+	static inline sample_t triangleSample( const real_t _sample )
 	{
                 /*
-		const float ph = fraction( _sample );
+		const real_t ph = fraction( _sample );
 		if( ph <= 0.25f )
 		{
 			return ph * 4.0f;
@@ -123,24 +123,24 @@ public:
                 return WaveForm::triangle(absFraction(_sample));
 	}
 
-	static inline sample_t sawSample( const float _sample )
+	static inline sample_t sawSample( const real_t _sample )
 	{
 		//return -1.0f + fraction( _sample ) * 2.0f;
                 //return fastsawf01(fraction(_sample));
                 return WaveForm::sawtooth(absFraction(_sample));
 	}
 
-	static inline sample_t squareSample( const float _sample )
+	static inline sample_t squareSample( const real_t _sample )
 	{
 		//return ( fraction( _sample ) > 0.5f ) ? -1.0f : 1.0f;
                 //return fastsquaref01(fraction(_sample));
                 return WaveForm::square(absFraction(_sample));
 	}
 
-	static inline sample_t moogSawSample( const float _sample )
+	static inline sample_t moogSawSample( const real_t _sample )
 	{
                 /*
-		const float ph = fraction( _sample );
+		const real_t ph = fraction( _sample );
 		if( ph < 0.5f )
 		{
 			return -1.0f + ph * 4.0f;
@@ -151,10 +151,10 @@ public:
                 return WaveForm::harshsaw(absFraction(_sample));
 	}
 
-	static inline sample_t expSample( const float _sample )
+	static inline sample_t expSample( const real_t _sample )
 	{
                 /*
-		float ph = fraction( _sample );
+		real_t ph = fraction( _sample );
 		if( ph > 0.5f )
 		{
 			ph = 1.0f - ph;
@@ -165,7 +165,7 @@ public:
                 return WaveForm::sqpeak(absFraction(_sample));
 	}
 
-	static inline sample_t noiseSample( const float _sample )
+	static inline sample_t noiseSample( const real_t _sample )
 	{
 		// Precise implementation
                 //return 1.0f - rand() * 2.0f / RAND_MAX;
@@ -175,7 +175,7 @@ public:
                 return WaveForm::whitenoise(absFraction(_sample));
 	}
 
-	inline sample_t userWaveSample( const float _sample ) const
+	inline sample_t userWaveSample( const real_t _sample ) const
 	{
 		return m_userWave->userWaveSample(_sample);
 	}
@@ -184,13 +184,13 @@ public:
 private:
 	const IntModel * m_waveShapeModel;
 	const IntModel * m_modulationAlgoModel;
-	const float & m_freq;
-	const float & m_detuning;
-	const float & m_volume;
-	const float & m_ext_phaseOffset;
+	const frequency_t & m_freq;
+	const real_t & m_detuning;
+	const volume_t & m_volume;
+	const real_t & m_ext_phaseOffset;
 	Oscillator * m_subOsc;
-	float m_phaseOffset;
-	float m_phase;
+	real_t m_phaseOffset;
+	real_t m_phase;
 	const SampleBuffer * m_userWave;
 
 
@@ -207,9 +207,9 @@ private:
 	void updateFM( sampleFrame * _ab, const fpp_t _frames,
 							const ch_cnt_t _chnl );
 
-	float syncInit( sampleFrame * _ab, const fpp_t _frames,
+	real_t syncInit( sampleFrame * _ab, const fpp_t _frames,
 							const ch_cnt_t _chnl );
-	inline bool syncOk( float _osc_coeff );
+	inline bool syncOk( real_t _osc_coeff );
 
 	template<WaveShapes W>
 	void updateNoSub( sampleFrame * _ab, const fpp_t _frames,
@@ -231,7 +231,7 @@ private:
 							const ch_cnt_t _chnl );
 
 	template<WaveShapes W>
-	inline sample_t getSample( const float _sample );
+	inline sample_t getSample( const real_t _sample );
 
 	inline void recalcPhase();
 

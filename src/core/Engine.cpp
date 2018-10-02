@@ -38,7 +38,7 @@
 //#include "Backtrace.h"
 
 
-float                LmmsCore::s_framesPerTick;
+real_t               LmmsCore::s_framesPerTick;
 Mixer*               LmmsCore::s_mixer = NULL;
 FxMixer*             LmmsCore::s_fxMixer = NULL;
 Song*                LmmsCore::s_song = NULL;
@@ -59,10 +59,14 @@ void LmmsCore::init( bool renderOnly )
 {
         qRegisterMetaType<tact_t>("tact_t");
         qRegisterMetaType<tick_t>("tick_t");
+        qRegisterMetaType<real_t>("real_t");
         qRegisterMetaType<volume_t>("volume_t");
         qRegisterMetaType<panning_t>("panning_t");
+        qRegisterMetaType<pitch_t>("pitch_t");
+        qRegisterMetaType<frequency_t>("frequency_t");
+
         qRegisterMetaType<sample_t>("sample_t");
-        qRegisterMetaType<int_sample_t>("int_sample_t");
+        qRegisterMetaType<sampleS16_t>("sampleS16_t");
         qRegisterMetaType<sample_rate_t>("sample_rate_t");
         qRegisterMetaType<f_cnt_t>("f_cnt_t");
         qRegisterMetaType<ch_cnt_t>( "ch_cnt_t" );

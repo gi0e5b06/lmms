@@ -31,7 +31,7 @@ public:
 	Noise();
 	float tick();
 private:
-	double inv_randmax;
+	//double inv_randmax;
 };
 
 #endif // NOISE_H

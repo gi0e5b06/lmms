@@ -166,7 +166,9 @@ public:
 
 	// Used to convert sample rates
 	int interpolation;
+        //#ifdef REAL_IS_FLOAT
 	SRC_STATE * srcState;
+        //#endif
 
 	// Used changing the pitch of the note if desired
 	float sampleFreq;

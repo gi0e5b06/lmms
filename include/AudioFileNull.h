@@ -26,45 +26,43 @@
 #ifndef AUDIO_FILE_NULL_H
 #define AUDIO_FILE_NULL_H
 
-#include "lmmsconfig.h"
 #include "AudioFileDevice.h"
+#include "lmmsconfig.h"
 
 #include <sndfile.h>
 
-
 class AudioFileNull : public AudioFileDevice
 {
- public:
-	virtual ~AudioFileNull();
+  public:
+    virtual ~AudioFileNull();
 
-	static AudioFileDevice * getInst( const QString & outputFileName,
-					  const OutputSettings & outputSettings,
-					  const ch_cnt_t channels,
-					  Mixer * mixer,
-					  bool & successful );
+    static AudioFileDevice* getInst(const QString&        outputFileName,
+                                    const OutputSettings& outputSettings,
+                                    const ch_cnt_t        channels,
+                                    Mixer*                mixer,
+                                    bool&                 successful);
 
- protected:
-	AudioFileNull( const OutputSettings & outputSettings,
-		       const ch_cnt_t channels,
-		       bool & successful,
-		       //const QString & file,
-		       Mixer* mixer );
+  protected:
+    AudioFileNull(const OutputSettings& outputSettings,
+                  const ch_cnt_t        channels,
+                  bool&                 successful,
+                  // const QString & file,
+                  Mixer* mixer);
 
-        virtual void initOutputFile();
-        virtual void openOutputFile();
-        virtual bool outputFileOpened() const;
-        virtual void closeOutputFile();
-        virtual int  writeData( const void* data, int len );
+    virtual void initOutputFile();
+    virtual void openOutputFile();
+    virtual bool outputFileOpened() const;
+    virtual void closeOutputFile();
+    virtual int  writeData(const void* data, int len);
 
-	/*
-          virtual void writeBuffer( const surroundSampleFrame * _ab,
-				  const fpp_t _frames,
-				  float _master_gain ); //override
-        */
+    /*
+      virtual void writeBuffer( const surroundSampleFrame * _ab,
+                              const fpp_t _frames ); //override
+    */
 
- private:
-	//bool startEncoding();
-	//void finishEncoding();
-} ;
+  private:
+    // bool startEncoding();
+    // void finishEncoding();
+};
 
 #endif

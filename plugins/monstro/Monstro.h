@@ -140,7 +140,7 @@ const int MOD_FM = 2;
 const int MOD_PM = 3;
 const int NUM_MODS = 4;
 
-const float MODCLIP = 2.0;
+const sample_t MODCLIP = 2.0; //float
 
 const float MIN_FREQ = 18.0f;
 const float MAX_FREQ = 48000.0f;

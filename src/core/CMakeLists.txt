@@ -79,6 +79,7 @@ SET(LMMS_SRCS
 	core/RingBuffer.cpp
 	core/SampleBuffer.cpp
 	core/SamplePlayHandle.cpp
+        core/SampleRate.cpp
 	core/SampleRecordHandle.cpp
         core/Scale.cpp
 	core/SerializingObject.cpp

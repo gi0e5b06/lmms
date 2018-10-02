@@ -26,10 +26,11 @@
 #ifndef ENGINE_H
 #define ENGINE_H
 
+#include "export.h"
+#include "lmms_basics.h"
+
 #include <QObject>
 #include <QString>
-
-#include "export.h"
 
 class BBTrackContainer;
 class DummyTrackContainer;
@@ -108,7 +109,7 @@ public:
 		return s_dummyTC;
 	}
 
-	static float framesPerTick()
+	static real_t framesPerTick()
 	{
 		return s_framesPerTick;
 	}
@@ -148,7 +149,7 @@ private:
 		delete tmp;
 	}
 
-	static float s_framesPerTick;
+	static real_t s_framesPerTick;
 
 	// core
 	static Mixer *s_mixer;

@@ -4,7 +4,7 @@
 
 //#include <cstdlib>
 //#include <cstring>
-#include <typeinfo>
+//#include <typeinfo>
 
 //#include <QHash>
 #include <QMutex>

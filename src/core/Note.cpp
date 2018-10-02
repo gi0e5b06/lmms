@@ -29,7 +29,7 @@
 
 #include "Note.h"
 #include "DetuningHelper.h"
-
+#include "lmms_math.h"
 
 Note::Note( const MidiTime & length, const MidiTime & pos,
 	    int key, volume_t volume, panning_t panning,
@@ -139,8 +139,8 @@ void Note::setPanning( panning_t panning )
 
 MidiTime Note::quantized( const MidiTime & m, const int qGrid )
 {
-	float p = ( (float) m / qGrid );
-	if( p - floorf( p ) < 0.5f )
+	real_t p = ( real_t(m) / real_t(qGrid) );
+	if( fraction( p ) < 0.5 )
 	{
 		return static_cast<int>( p ) * qGrid;
 	}
@@ -213,7 +213,7 @@ void Note::createDetuning()
 	{
 		m_detuning = sharedObject::ref(new DetuningHelper);
 		(void) m_detuning->automationPattern();
-		m_detuning->setRange( -MaxDetuning, MaxDetuning, 0.5f );
+		m_detuning->setRange( -MaxDetuning, MaxDetuning, 0.5 );
 		m_detuning->automationPattern()->setProgressionType( AutomationPattern::LinearProgression );
 	}
 }

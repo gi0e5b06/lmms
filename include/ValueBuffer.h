@@ -30,9 +30,10 @@
 
 //#include <vector>
 #include "MemoryManager.h"
+#include "lmms_basics.h"
 #include "export.h"
 
-class EXPORT ValueBuffer  //: public std::vector<float>
+class EXPORT ValueBuffer  //: public std::vector<real_t>
 {
     MM_OPERATORS
 
@@ -42,17 +43,17 @@ class EXPORT ValueBuffer  //: public std::vector<float>
     ValueBuffer(int _length);
     ~ValueBuffer();
 
-    inline float value(int _offset) const
+    inline real_t value(int _offset) const
     {
         return m_data[_offset % m_len];
     }
 
-    inline const float* values() const
+    inline const real_t* values() const
     {
         return m_data;
     }
 
-    inline float* values()
+    inline real_t* values()
     {
         return m_data;
     }
@@ -62,23 +63,23 @@ class EXPORT ValueBuffer  //: public std::vector<float>
         return m_len;
     }
 
-    inline void set(int _i, float _v)
+    inline void set(int _i, real_t _v)
     {
         m_data[_i] = _v;
     }
 
     inline void clear()
     {
-        memset(m_data, 0, sizeof(float) * m_len);
+        memset(m_data, 0, sizeof(real_t) * m_len);
     }
 
     void copyFrom(const ValueBuffer* _vb);
-    void fill(float _value);
-    void interpolate(float _start, float _end);
+    void fill(real_t _value);
+    void interpolate(real_t _start, real_t _end);
 
   private:
-    int    m_len;
-    float* m_data;
+    int     m_len;
+    real_t* m_data;
 };
 
 #endif

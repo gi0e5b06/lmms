@@ -26,18 +26,26 @@
 #ifndef VOLUME_H
 #define VOLUME_H
 
-#include "lmmsconfig.h"
-
 #include "lmms_basics.h"
+#include "lmmsconfig.h"
 //#include "Midi.h"
 
-const volume_t MinVolume = 0;
-const volume_t MaxVolume = 200;
+const volume_t MinVolume     = 0;
+const volume_t MaxVolume     = 200;
 const volume_t DefaultVolume = 100;
 
 typedef struct
 {
-	float vol[2];
-} stereoVolumeVector;
+    real_t gain[DEFAULT_CHANNELS];
+} StereoGain;
+
+#ifndef LMMS_DISABLE_SURROUND
+typedef struct
+{
+    real_t gain[SURROUND_CHANNELS];
+} SurroundGain;
+#else
+typedef StereoGain SurroundGain;
+#endif
 
 #endif
