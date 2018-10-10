@@ -33,6 +33,7 @@
 
 class GroupBox;
 class LcdSpinBox;
+class LedCheckBox;
 class QToolButton;
 class LedCheckBox;
 class InstrumentTrack;
@@ -76,7 +77,7 @@ class InstrumentMiscView : public QWidget
 
     GroupBox* pitchGroupBox()
     {
-        return m_pitchGBX;
+        return m_masterPitchGBX;
     }
 
   public slots:
@@ -87,9 +88,15 @@ class InstrumentMiscView : public QWidget
   private:
     InstrumentTrack* m_track;
 
-    GroupBox* m_pitchGBX;
-    GroupBox* m_scaleGBX;
+    GroupBox* m_masterPitchGBX;
 
+    GroupBox*    m_controlChangesGBX;
+    LedCheckBox* m_ccVolumeLCB;
+    LedCheckBox* m_ccPanningLCB;
+    LedCheckBox* m_ccBendingLCB;
+    LedCheckBox* m_ccModulatingLCB;
+
+    GroupBox*     m_scaleGBX;
     ComboBoxModel m_scaleBankModel;
     ComboBoxModel m_scaleIndexModel;
 };

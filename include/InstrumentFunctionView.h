@@ -111,11 +111,18 @@ class InstrumentFunctionNoteHumanizingView : public InstrumentFunctionView
 
   private:
     InstrumentFunctionNoteHumanizing* m_cc;
-    Knob*                             m_volumeRangeKnob;
-    Knob*                             m_panRangeKnob;
-    Knob*                             m_tuneRangeKnob;
-    Knob*                             m_offsetRangeKnob;
-    Knob*                             m_shortenRangeKnob;
+
+    Knob* m_volumeRangeKnob;
+    Knob* m_panRangeKnob;
+    Knob* m_tuneRangeKnob;
+    Knob* m_offsetRangeKnob;
+    Knob* m_shortenRangeKnob;
+
+    Knob* m_volumeStepKnob;
+    Knob* m_panStepKnob;
+    Knob* m_tuneStepKnob;
+    Knob* m_offsetStepKnob;
+    Knob* m_shortenStepKnob;
 };
 
 class InstrumentFunctionNoteDuplicatesRemovingView

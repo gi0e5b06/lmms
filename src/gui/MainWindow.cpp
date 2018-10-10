@@ -254,6 +254,7 @@ MainWindow::~MainWindow()
 
 void MainWindow::onTimeout()
 {
+        QThread::yieldCurrentThread();
         if(!Engine::mixer()->warningXRuns())
                 emit periodicUpdate();
 }

@@ -79,6 +79,11 @@ OscillatorView::OscillatorView(OscillatorObject* _osc,
 
     // wave 1
 
+    LedCheckBox* symetric1LCB = new LedCheckBox(this, LedCheckBox::White);
+    symetric1LCB->setModel(&m_osc->m_wave1SymetricModel);
+    symetric1LCB->setText("SYM");
+    symetric1LCB->setTextAnchorPoint(Qt::AnchorBottom);
+
     LedCheckBox* reverse1LCB = new LedCheckBox(this, LedCheckBox::White);
     reverse1LCB->setModel(&m_osc->m_wave1ReverseModel);
     reverse1LCB->setText("REV");
@@ -92,7 +97,7 @@ OscillatorView::OscillatorView(OscillatorObject* _osc,
 
     ComboBox* index1CMB = new ComboBox(this);
     index1CMB->setModel(&m_osc->m_wave1IndexModel);
-    index1CMB->setMinimumWidth(7 * 27 + 12);
+    index1CMB->setMinimumWidth(6 * 27 + 12);
     updateWave1IndexModel();
 
     LedCheckBox* absolute1LCB = new LedCheckBox(this, LedCheckBox::White);
@@ -112,6 +117,11 @@ OscillatorView::OscillatorView(OscillatorObject* _osc,
 
     // wave 2
 
+    LedCheckBox* symetric2LCB = new LedCheckBox(this, LedCheckBox::White);
+    symetric2LCB->setModel(&m_osc->m_wave2SymetricModel);
+    symetric2LCB->setText("SYM");
+    symetric2LCB->setTextAnchorPoint(Qt::AnchorBottom);
+
     LedCheckBox* reverse2LCB = new LedCheckBox(this, LedCheckBox::White);
     reverse2LCB->setModel(&m_osc->m_wave2ReverseModel);
     reverse2LCB->setText("REV");
@@ -125,7 +135,7 @@ OscillatorView::OscillatorView(OscillatorObject* _osc,
 
     ComboBox* index2CMB = new ComboBox(this);
     index2CMB->setModel(&m_osc->m_wave2IndexModel);
-    index2CMB->setMinimumWidth(7 * 27 + 12);
+    index2CMB->setMinimumWidth(6 * 27 + 12);
     updateWave2IndexModel();
 
     LedCheckBox* absolute2LCB = new LedCheckBox(this, LedCheckBox::White);
@@ -360,7 +370,9 @@ OscillatorView::OscillatorView(OscillatorObject* _osc,
                           Qt::AlignBottom | Qt::AlignHCenter);
     col = 0;
     row++;
-    mainLayout->addWidget(index1CMB, row, ++col, 1, 7,
+    mainLayout->addWidget(index1CMB, row, ++col, 1, 6,
+                          Qt::AlignBottom | Qt::AlignHCenter);
+    mainLayout->addWidget(symetric1LCB, row, col = 7, 1, 1,
                           Qt::AlignBottom | Qt::AlignHCenter);
 
     col = 0;
@@ -377,7 +389,9 @@ OscillatorView::OscillatorView(OscillatorObject* _osc,
                           Qt::AlignBottom | Qt::AlignHCenter);
     col = 0;
     row++;
-    mainLayout->addWidget(index2CMB, row, ++col, 1, 7,
+    mainLayout->addWidget(index2CMB, row, ++col, 1, 6,
+                          Qt::AlignBottom | Qt::AlignHCenter);
+    mainLayout->addWidget(symetric2LCB, row, col = 7, 1, 1,
                           Qt::AlignBottom | Qt::AlignHCenter);
 
     col = 0;

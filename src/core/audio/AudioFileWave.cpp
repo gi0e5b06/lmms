@@ -150,8 +150,15 @@ bool AudioFileWave::startEncoding()
 void AudioFileWave::writeBuffer(const surroundSampleFrame* _ab,
                                 const fpp_t                _frames)
 {
-    Q_ASSERT(sizeof(sample_t) == sizeof(float));
-    sf_write_float(m_sf, (const float*)_ab, _frames * channels());
+#ifdef REAL_IS_FLOAT
+    sf_write_float(m_sf, (const FLOAT*)_ab, _frames * channels());
+#endif
+#ifdef REAL_IS_DOUBLE
+    FLOAT* ob = new FLOAT[_frames * channels()];
+    convertToF32(_ab, _frames, ob, false);
+    sf_write_float(m_sf, ob, _frames * channels());
+    delete ob;
+#endif
 }
 
 void AudioFileWave::finishEncoding()

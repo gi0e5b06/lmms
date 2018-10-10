@@ -78,6 +78,7 @@ IF("${PLUGIN_LIST}" STREQUAL "")
 		# ladspa_browser - not needed
 		LadspaEffect
 		lb302
+                # MatrixGDX
 		MidiImport
 		MidiExport
 		MultitapEcho
@@ -107,6 +108,7 @@ IF("${PLUGIN_LIST}" STREQUAL "")
 		stereo_matrix
 		stk
                 SynthGDX
+                VectorGDX
 		vestige
 		vst_base
 		VstEffect

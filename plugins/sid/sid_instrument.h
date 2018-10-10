@@ -93,7 +93,7 @@ public:
 	virtual ~sidInstrument();
 
 	virtual void playNote( NotePlayHandle * _n,
-						sampleFrame * _working_buffer );
+                               sampleFrame * _working_buffer );
 	virtual void deleteNotePluginData( NotePlayHandle * _n );
 
 
@@ -103,6 +103,11 @@ public:
 	virtual QString nodeName() const;
 
 	virtual f_cnt_t desiredReleaseFrames() const;
+
+	virtual Flags flags() const
+	{
+		return IsMonophonic;
+	}
 
 	virtual PluginView * instantiateView( QWidget * _parent );
 

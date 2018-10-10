@@ -188,7 +188,7 @@ void Knob::setText(const QString& txt)
         {
             QFontMetrics mx(pointSizeF(font(), 7.f));  // 6.5));
             w = qMax<int>(w, qMin<int>(2 * w, mx.width(txt)));
-            h += 7; //10;
+            h += 7;  // 10;
         }
         setMinimumSize(w, h);
         resize(w, h);
@@ -454,9 +454,9 @@ void Knob::drawKnob(QPainter& _p)
         const float radius = m_knobPixmap->width() / 2.0f - 3.f;
         mid = QPointF(width() / 2.f, m_knobPixmap->height() / 2.f);
 
-        _p.drawPixmap( QPointF((width()-m_knobPixmap->width())/2.f,
-                               0.f), //(height()-m_knobPixmap->height())/2.f),
-                       *m_knobPixmap );
+        _p.drawPixmap(QPointF((width() - m_knobPixmap->width()) / 2.f,
+                              0.f),  //(height()-m_knobPixmap->height())/2.f),
+                      *m_knobPixmap);
 
         // _p.setRenderHint( QPainter::Antialiasing );
 
@@ -466,7 +466,7 @@ void Knob::drawKnob(QPainter& _p)
 
         const float arcLineWidth = 3.f;
         const float arcRectSize
-                = m_knobPixmap->width() - arcLineWidth; // - 2.f;  // 0
+                = m_knobPixmap->width() - arcLineWidth;  // - 2.f;  // 0
 
         /*
         QColor col;
@@ -492,7 +492,7 @@ void Knob::drawKnob(QPainter& _p)
                 const float rb = qMax<float>((radius - 8) / 3.0, 0.0);
                 const float re = qMax<float>((radius - 2), 0.0);
                 line           = calculateLine(mid, re, rb);
-                //line.translate(1, 1);
+                // line.translate(1, 1);
             }
             break;
             case knobVintage_32:
@@ -507,7 +507,7 @@ void Knob::drawKnob(QPainter& _p)
         _p.setPen(pen0);
 
         _p.setBrush(m_statusColor);
-        float re = 11.f; //radius;
+        float re = 11.f;  // radius;
         _p.drawEllipse(QRectF(mid.x() - re / 2.f, mid.y() - re / 2.f, re,
                               re));  //+1.f,re+1.f);
 
@@ -520,7 +520,8 @@ void Knob::drawKnob(QPainter& _p)
         QPen pen2(QColor(0, 0, 0, 96), 4, Qt::SolidLine, Qt::RoundCap);
         _p.setPen(pen2);
         _p.drawLine(line);
-        _p.drawArc(QRectF(mid.x() - arcRectSize / 2.f, 1.f, arcRectSize, arcRectSize),
+        _p.drawArc(QRectF(mid.x() - arcRectSize / 2.f, 1.f, arcRectSize,
+                          arcRectSize),
                    16.f * (90.f - centerAngle),
                    -16.f * (m_angle - centerAngle));
         _p.setBrush(QColor(0, 0, 0, 96));
@@ -530,7 +531,8 @@ void Knob::drawKnob(QPainter& _p)
         QPen pen3(pc, 2, Qt::SolidLine, Qt::RoundCap);
         _p.setPen(pen3);
         _p.drawLine(line);
-        _p.drawArc(QRectF(mid.x() - arcRectSize / 2, 1, arcRectSize, arcRectSize),
+        _p.drawArc(QRectF(mid.x() - arcRectSize / 2, 1, arcRectSize,
+                          arcRectSize),
                    16.f * (90.f - centerAngle),
                    -16.f * (m_angle - centerAngle));
         _p.setBrush(pc);
@@ -548,7 +550,7 @@ void Knob::drawText(QPainter& _p)
         QString text = metrix.elidedText(m_label, Qt::ElideRight, width());
         int     x    = width() / 2 - metrix.width(text) / 2;
         int     y    = height() - 1;
-        //if(m_knobPixmap)
+        // if(m_knobPixmap)
         //    y = qMin(y, m_knobPixmap->height() + 7);
         _p.drawText(x, y, text);
         _p.drawText(x, y, text);  // twice for aa
@@ -916,30 +918,30 @@ void Knob::enterValue()
     if(!m)
         return;
 
-    bool  ok;
-    float new_val;
+    bool   ok;
+    double newVal;
 
     if(isVolumeKnob()
        && ConfigManager::inst()->value("app", "displaydbfs").toInt())
     {
-        new_val = QInputDialog::getDouble(
+        newVal = QInputDialog::getDouble(
                 this, windowTitle(),
                 tr("Please enter a new value between "
                    "-96.0 dBFS and 6.0 dBFS:"),
-                ampToDbfs(m->getRoundedValue() / 100.0), -96.0, 6.0,
+                ampToDbfs(m->getRoundedValue() / 100.), -96., 6.,
                 m->getDigitCount(), &ok);
-        if(new_val <= -96.0)
+        if(newVal <= -96.)
         {
-            new_val = 0.0f;
+            newVal = 0.;
         }
         else
         {
-            new_val = dbfsToAmp(new_val) * 100.0;
+            newVal = dbfsToAmp(newVal) * 100.;
         }
     }
     else
     {
-        new_val = QInputDialog::getDouble(
+        newVal = QInputDialog::getDouble(
                 this, windowTitle(),
                 tr("Please enter a new value between "
                    "%1 and %2:")
@@ -951,7 +953,26 @@ void Knob::enterValue()
 
     if(ok)
     {
-        m->setValue(new_val);
+        m->setValue(newVal);
+    }
+}
+
+void Knob::editRandomization()
+{
+    FloatModel* m = model();
+    if(m == nullptr)
+        return;
+
+    bool   ok;
+    double newVal = QInputDialog::getDouble(
+            this, windowTitle(),
+            QObject::tr("Please enter a randomization ratio between "
+                        "0 and 100:"),
+            100.*m->randomRatio(), 0., 100., 2, &ok);
+
+    if(ok)
+    {
+        m->setRandomRatio(newVal / 100.);
     }
 }
 

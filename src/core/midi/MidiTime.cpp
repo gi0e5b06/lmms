@@ -118,7 +118,7 @@ tick_t MidiTime::getTicks() const
 }
 
 
-MidiTime::operator int() const
+MidiTime::operator tick_t() const
 {
 	return m_ticks;
 }

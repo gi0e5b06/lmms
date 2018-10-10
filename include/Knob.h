@@ -138,6 +138,7 @@ class EXPORT Knob
   public slots:
     virtual void modelChanged();
     virtual void enterValue();
+    virtual void editRandomization();
     virtual void update();
     virtual void friendlyUpdate();
 

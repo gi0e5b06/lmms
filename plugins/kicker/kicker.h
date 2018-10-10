@@ -58,7 +58,7 @@ class kickerInstrument : public Instrument
 
     virtual Flags flags() const
     {
-        return IsNotBendable;
+        return IsNotBendable | IsMonophonic;
     }
 
     virtual f_cnt_t desiredReleaseFrames() const

@@ -141,8 +141,8 @@ FxMixerView::FxMixerView() :
     QPushButton* newChannelBtn = new QPushButton(
             embed::getIconPixmap("new_channel"), QString::null, this);
     newChannelBtn->setObjectName("newChannelBtn");
-    newChannelBtn->setFixedSize(
-            QSize(fxLineSize.width(), fxLineSize.width()));
+    const int wpb=fxLineSize.width();
+    newChannelBtn->setFixedSize(wpb,wpb);
     connect(newChannelBtn, SIGNAL(clicked()), this, SLOT(addNewChannel()));
     ml->addWidget(newChannelBtn, 0, Qt::AlignTop);
 

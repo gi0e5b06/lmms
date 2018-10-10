@@ -23,141 +23,187 @@
  *
  */
 
+#include "peak_controller_effect.h"
 
 #include "Controller.h"
-#include "Song.h"
 #include "PeakController.h"
-#include "peak_controller_effect.h"
-#include "lmms_math.h"
 #include "PresetPreviewPlayHandle.h"
+#include "Song.h"
 #include "embed.h"
+#include "lmms_math.h"
 
 extern "C"
 {
 
-Plugin::Descriptor PLUGIN_EXPORT peakcontrollereffect_plugin_descriptor =
-{
-	STRINGIFY( PLUGIN_NAME ),
-	"Peak Controller",
-	QT_TRANSLATE_NOOP( "pluginBrowser",
-			"Plugin for controlling knobs with sound peaks" ),
-	"Paul Giblock <drfaygo/at/gmail.com>",
-	0x0100,
-	Plugin::Effect,
-	new PluginPixmapLoader("logo"),
-	NULL,
-	NULL
-} ;
-
+    Plugin::Descriptor PLUGIN_EXPORT peakcontrollereffect_plugin_descriptor
+            = {STRINGIFY(PLUGIN_NAME),
+               "Peak Controller",
+               QT_TRANSLATE_NOOP(
+                       "pluginBrowser",
+                       "Plugin for controlling knobs with sound peaks"),
+               "Paul Giblock <drfaygo/at/gmail.com>",
+               0x0100,
+               Plugin::Effect,
+               new PluginPixmapLoader("logo"),
+               NULL,
+               NULL};
 }
 
-// We have to keep a list of all the PeakController effects so that we can save
-// an peakEffect-ID to the project.  This ID is referenced in the PeakController
-// settings and is used to set the PeakControllerEffect pointer upon load
+// We have to keep a list of all the PeakController effects so that we can
+// save an peakEffect-ID to the project.  This ID is referenced in the
+// PeakController settings and is used to set the PeakControllerEffect pointer
+// upon load
 
-//QVector<PeakControllerEffect *> PeakControllerEffect::s_effects;
+// QVector<PeakControllerEffect *> PeakControllerEffect::s_effects;
 
 PeakControllerEffect::PeakControllerEffect(
-			Model * _parent,
-			const Descriptor::SubPluginFeatures::Key * _key ) :
-	Effect( &peakcontrollereffect_plugin_descriptor, _parent, _key ),
-	m_effectId( rand() ),
-	m_peakControls( this ),
-	m_lastSample( m_peakControls.m_baseModel.value() ),
-	m_autoController( NULL )
+        Model* _parent, const Descriptor::SubPluginFeatures::Key* _key) :
+      Effect(&peakcontrollereffect_plugin_descriptor, _parent, _key),
+      m_effectId(rand()), m_peakControls(this),
+      m_lastSample(m_peakControls.m_baseModel.value()), m_autoController(NULL)
 {
-	m_autoController = new PeakController( Engine::getSong(), this );
-	if( !Engine::getSong()->isLoadingProject() &&
-	    !Engine::getSong()->isSavingProject() &&
-	    !PresetPreviewPlayHandle::isPreviewing() )
-	{
-		//qWarning("PeakControllerEffect::PeakControllerEffect() add auto peak controller");
-		Engine::getSong()->addController( m_autoController );
-	}
-	PeakController::s_effects.append( this );
+    m_autoController = new PeakController(Engine::getSong(), this);
+    if(!Engine::getSong()->isLoadingProject()
+       && !Engine::getSong()->isSavingProject()
+       && !PresetPreviewPlayHandle::isPreviewing())
+    {
+        // qWarning("PeakControllerEffect::PeakControllerEffect() add auto
+        // peak controller");
+        Engine::getSong()->addController(m_autoController);
+    }
+    PeakController::s_effects.append(this);
 }
-
-
-
 
 PeakControllerEffect::~PeakControllerEffect()
 {
-	int idx = PeakController::s_effects.indexOf( this );
-	if( idx >= 0 )
-	{
-		//qWarning("PeakControllerEffect::~PeakControllerEffect() self-remove");
-		PeakController::s_effects.remove( idx );
-	}
-	if( m_autoController )
-		Engine::getSong()->removeController( m_autoController );
+    int idx = PeakController::s_effects.indexOf(this);
+    if(idx >= 0)
+    {
+        // qWarning("PeakControllerEffect::~PeakControllerEffect()
+        // self-remove");
+        PeakController::s_effects.remove(idx);
+    }
+    if(m_autoController)
+        Engine::getSong()->removeController(m_autoController);
 }
 
-
-bool PeakControllerEffect::processAudioBuffer( sampleFrame * _buf,
-							const fpp_t _frames )
+bool PeakControllerEffect::processAudioBuffer(sampleFrame* _buf,
+                                              const fpp_t  _frames)
 {
-	PeakControllerEffectControls & c = m_peakControls;
+    PeakControllerEffectControls& c = m_peakControls;
 
-	// This appears to be used for determining whether or not to continue processing
-	// audio with this effect
-	if( !isEnabled() || !isRunning() )
-	{
-		return false;
-	}
+    // This appears to be used for determining whether or not to continue
+    // processing audio with this effect
+    if(!isOkay() || dontRun() || !isEnabled())
+    {
+        if(isRunning())
+            stopRunning();
+        return false;
+    }
 
-	// RMS:
-	double sum = 0;
+    if(!isRunning())
+        startRunning();
 
-	if( c.m_absModel.value() )
-	{
-		for( int i = 0; i < _frames; ++i )
-		{
-			// absolute value is achieved because the squares are > 0
-			sum += _buf[i][0]*_buf[i][0] + _buf[i][1]*_buf[i][1];
-		}
-	}
-	else
-	{
-		for( int i = 0; i < _frames; ++i )
-		{
-			// the value is absolute because of squaring,
-			// so we need to correct it
-			sum += _buf[i][0] * _buf[i][0] * sign( _buf[i][0] )
-				+ _buf[i][1] * _buf[i][1] * sign( _buf[i][1] );
-		}
-	}
+    const bool muting = c.m_muteModel.value();
+    const int  mode   = c.m_modeModel.value();
 
-	// TODO: flipping this might cause clipping
-	// this will mute the output after the values were measured
-	if( c.m_muteModel.value() )
-	{
-		for( int i = 0; i < _frames; ++i )
-		{
-			_buf[i][0] = _buf[i][1] = 0.0f;
-		}
-	}
+    // RMS:
+    real_t sum    = 0.;
+    real_t abssum = 0.;
 
-	real_t curRMS = sqrt_neg( sum / _frames );
-	const real_t tres = c.m_tresholdModel.value();
-	const real_t amount = c.m_amountModel.value() * c.m_amountMultModel.value();
-	curRMS = qAbs( curRMS ) < tres ? 0. : curRMS;
-	m_lastSample = qBound<sample_t>( 0., c.m_baseModel.value() + amount * curRMS, 1. );
+    for(int i = 0; i < _frames; ++i)
+    {
+        switch(mode)
+        {
+            case 0:
+                // the value is absolute because of squaring,
+                // so we need to correct it
+                sum += _buf[i][0] * _buf[i][0] * sign(_buf[i][0])
+                       + _buf[i][1] * _buf[i][1] * sign(_buf[i][1]);
+                break;
+            case 2:
+            {
+                const real_t val0    = _buf[i][0];
+                const real_t absval0 = abs(val0);
+                if(absval0 > abssum)
+                {
+                    sum    = val0;
+                    abssum = absval0;
+                }
+                const real_t val1    = _buf[i][1];
+                const real_t absval1 = abs(val1);
+                if(absval1 > abssum)
+                {
+                    sum    = val1;
+                    abssum = absval1;
+                }
+            }
+            break;
+            case 3:
+            {
+                const real_t absval0 = abs(_buf[i][0]);
+                if(absval0 > abssum)
+                    abssum = sum = absval0;
+                const real_t absval1 = _buf[i][1];
+                if(absval1 > abssum)
+                    abssum = sum = absval1;
+            }
+            break;
+            case 1:
+            default:
+                // absolute value is achieved because the squares are > 0
+                sum += _buf[i][0] * _buf[i][0] + _buf[i][1] * _buf[i][1];
+                break;
+        }
 
-	return isRunning();
+        if(muting)
+            _buf[i][0] = _buf[i][1] = 0.;
+    }
+
+    // TODO: flipping this might cause clipping
+    // this will mute the output after the values were measured
+
+    const real_t tres = c.m_tresholdModel.value();
+    const real_t amount
+            = c.m_amountModel.value() * c.m_amountMultModel.value();
+
+    real_t curRMS = 0.;
+    switch(mode)
+    {
+        case 0:
+            curRMS = sqrt_neg(sum / _frames);
+            curRMS = qAbs(curRMS) < tres ? 0. : curRMS;
+            break;
+        case 1:
+        default:
+            curRMS = sqrt(sum / _frames);
+            if(curRMS < tres)
+                curRMS = 0.;
+            break;
+        case 2:
+            curRMS = abssum < tres ? 0. : sum;
+            break;
+        case 3:
+            curRMS = abssum < tres ? 0. : abssum;
+            break;
+    }
+
+    m_lastSample
+            = bound(0., c.m_baseModel.value() + amount * curRMS, 1.);
+
+    return true;  // isRunning();
 }
-
-
-
 
 extern "C"
 {
 
-// necessary for getting instance out of shared lib
-Plugin * PLUGIN_EXPORT lmms_plugin_main( Model * _parent, void * _data )
-{
-	return new PeakControllerEffect( _parent,
-		static_cast<const Plugin::Descriptor::SubPluginFeatures::Key *>( _data ) );
+    // necessary for getting instance out of shared lib
+    Plugin* PLUGIN_EXPORT lmms_plugin_main(Model* _parent, void* _data)
+    {
+        return new PeakControllerEffect(
+                _parent,
+                static_cast<
+                        const Plugin::Descriptor::SubPluginFeatures::Key*>(
+                        _data));
+    }
 }
-
-}
-

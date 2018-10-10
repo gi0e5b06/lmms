@@ -657,7 +657,7 @@ void sf2Instrument::play( sampleFrame * _working_buffer )
 	const fpp_t frames = Engine::mixer()->framesPerPeriod();
 
 	// set midi pitch for this period
-	const int currentMidiPitch = instrumentTrack()->midiPitch();
+	const int currentMidiPitch = instrumentTrack()->midiBending();
 	if( m_lastMidiPitch != currentMidiPitch )
 	{
 		m_lastMidiPitch = currentMidiPitch;
@@ -667,7 +667,7 @@ void sf2Instrument::play( sampleFrame * _working_buffer )
 
 	}
 
-	const int currentMidiPitchRange = instrumentTrack()->midiPitchRange();
+	const int currentMidiPitchRange = instrumentTrack()->midiBendingRange();
 	if( m_lastMidiPitchRange != currentMidiPitchRange )
 	{
 		m_lastMidiPitchRange = currentMidiPitchRange;

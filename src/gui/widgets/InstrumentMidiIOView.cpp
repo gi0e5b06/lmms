@@ -29,7 +29,7 @@
 #include "GroupBox.h"
 #include "InstrumentTrack.h"
 #include "LcdSpinBox.h"
-//#include "LedCheckBox.h"
+#include "LedCheckBox.h"
 #include "MidiClient.h"
 #include "MidiPortMenu.h"  // REQUIRED
 #include "Mixer.h"
@@ -47,6 +47,7 @@
 InstrumentMidiIOView::InstrumentMidiIOView(QWidget* parent) :
       QWidget(parent), ModelView(NULL, this), m_rpBtn(NULL), m_wpBtn(NULL)
 {
+    setAutoFillBackground(true);
     QVBoxLayout* layout = new QVBoxLayout(this);
     layout->setContentsMargins(2, 3, 2, 5);
 
@@ -147,6 +148,7 @@ InstrumentMidiIOView::InstrumentMidiIOView(QWidget* parent) :
     connect(m_midiOutputGBX->ledButton(), SIGNAL(toggled(bool)),
             m_fixedOutputNoteSpinBox, SLOT(setEnabled(bool)));
 
+
     /// Base Velocity
 
     m_baseVelocityGBX
@@ -157,13 +159,15 @@ InstrumentMidiIOView::InstrumentMidiIOView(QWidget* parent) :
     midiOutputLayout->setSpacing(6);
     m_baseVelocityGBX->setContentWidget(baseVelocityPNL);
 
+    /*
     QLabel* baseVelocityHelp
             = new QLabel(tr("Specify the velocity normalization base for "
                             "MIDI-based instruments at 100% note velocity"));
     baseVelocityHelp->setWordWrap(true);
     baseVelocityHelp->setFont(pointSize<8>(baseVelocityHelp->font()));
     baseVelocityLayout->addWidget(baseVelocityHelp);
-
+    */
+ 
     m_baseVelocitySpinBox = new LcdSpinBox(3, baseVelocityPNL);
     m_baseVelocitySpinBox->setLabel(tr("BASE VELOCITY"));
     m_baseVelocitySpinBox->setEnabled(false);
@@ -216,22 +220,64 @@ void InstrumentMidiIOView::modelChanged()
 InstrumentMiscView::InstrumentMiscView(InstrumentTrack* it, QWidget* parent) :
       QWidget(parent), m_track(it)
 {
+    setAutoFillBackground(true);
     QVBoxLayout* layout = new QVBoxLayout(this);
-    layout->setMargin(5);
+    layout->setContentsMargins(2, 3, 2, 5);
 
-    m_pitchGBX = new GroupBox(tr("MASTER PITCH"), this, true, false);
-    m_pitchGBX->ledButton()->setModel(&it->m_useMasterPitchModel);
 
-    QWidget*     masterPitchPNL = new QWidget(m_pitchGBX);
+    /// Master pitch
+
+    m_masterPitchGBX = new GroupBox(tr("MASTER PITCH"), this, true, false);
+    m_masterPitchGBX->ledButton()->setModel(&it->m_useMasterPitchModel);
+
+    QWidget*     masterPitchPNL = new QWidget(m_masterPitchGBX);
     QHBoxLayout* masterPitchLOT = new QHBoxLayout(masterPitchPNL);
     masterPitchLOT->setContentsMargins(6, 6, 6, 6);
     masterPitchLOT->setSpacing(6);
-    m_pitchGBX->setContentWidget(masterPitchPNL);
+    m_masterPitchGBX->setContentWidget(masterPitchPNL);
 
     QLabel* masterPitchHelp
             = new QLabel(tr("Enables the use of Master Pitch"));
     masterPitchLOT->addWidget(masterPitchHelp);
     masterPitchLOT->addStretch(1);
+
+
+    /// Control Changes
+
+    m_controlChangesGBX
+            = new GroupBox(tr("CONTROL CHANGES"), this, false, false);
+    QWidget*     controlChangesPNL = new QWidget(m_controlChangesGBX);
+    QGridLayout* controlChangesLOT = new QGridLayout(controlChangesPNL);
+    controlChangesLOT->setContentsMargins(3,3,3,3);
+    controlChangesLOT->setSpacing(3);
+    m_controlChangesGBX->setContentWidget(controlChangesPNL);
+
+    m_ccVolumeLCB=new LedCheckBox(m_controlChangesGBX);
+    m_ccVolumeLCB->setText(tr("Volume"));
+    m_ccVolumeLCB->setModel(m_track->volumeEnabledModel());
+    //m_ccVolumeLCB->setEnabled(false);
+    controlChangesLOT->addWidget(m_ccVolumeLCB,0,0);
+
+    m_ccPanningLCB=new LedCheckBox(m_controlChangesGBX);
+    m_ccPanningLCB->setText(tr("Panning"));
+    m_ccPanningLCB->setModel(m_track->panningEnabledModel());
+    //m_ccPanningLCB->setEnabled(false);
+    controlChangesLOT->addWidget(m_ccPanningLCB,1,0);
+
+    m_ccBendingLCB=new LedCheckBox(m_controlChangesGBX);
+    m_ccBendingLCB->setText(tr("Bending"));
+    m_ccBendingLCB->setModel(m_track->bendingEnabledModel());
+    //m_ccBendingLCB->setEnabled(false);
+    controlChangesLOT->addWidget(m_ccBendingLCB,0,1);
+
+    m_ccModulatingLCB=new LedCheckBox(m_controlChangesGBX);
+    m_ccModulatingLCB->setText(tr("(TODO) Modulating"));
+    //m_ccModulatingLCB->setModel(m_track->modulatingEnabledModel());
+    //m_ccModulatingLCB->setEnabled(false);
+    controlChangesLOT->addWidget(m_ccModulatingLCB,1,1);
+
+
+    /// Scale
 
     m_scaleGBX = new GroupBox(tr("SCALE"), this, false, false);
 
@@ -273,7 +319,8 @@ InstrumentMiscView::InstrumentMiscView(InstrumentTrack* it, QWidget* parent) :
     scaleLOT->setRowStretch(2, 1);
     scaleLOT->setColumnStretch(7, 1);
 
-    layout->addWidget(m_pitchGBX);
+    layout->addWidget(m_controlChangesGBX);
+    layout->addWidget(m_masterPitchGBX);
     layout->addWidget(m_scaleGBX);
     layout->addStretch(1);
     setLayout(layout);

@@ -181,39 +181,35 @@ void AudioDevice::resample(const surroundSampleFrame* _srcBuf,
                            const sample_rate_t        _srcSR,
                            const sample_rate_t        _dstSR)
 {
-        const double frqRatio=double(_dstSR) / double(_srcSR);
+    const double frqRatio = double(_dstSR) / double(_srcSR);
 
-        SampleRate::resample(_srcBuf,
-                             _dstBuf,
-                             _frames,
-                             _frames,
-                             frqRatio);
-        /*
+    SampleRate::resample(_srcBuf, _dstBuf, _frames, _frames, frqRatio);
+    /*
 #ifdef REAL_IS_FLOAT
+{
+    if(m_srcState == NULL)
+        return;
+    m_srcData.input_frames  = _frames;
+    m_srcData.output_frames = _frames;
+    m_srcData.data_in       = _src[0];
+    m_srcData.data_out      = _dst[0];
+    m_srcData.src_ratio     = double(_dst_sr) / double(_src_sr);
+    m_srcData.end_of_input  = 0;
+    int error;
+    if((error = src_process(m_srcState, &m_srcData)))
     {
-        if(m_srcState == NULL)
-            return;
-        m_srcData.input_frames  = _frames;
-        m_srcData.output_frames = _frames;
-        m_srcData.data_in       = _src[0];
-        m_srcData.data_out      = _dst[0];
-        m_srcData.src_ratio     = double(_dst_sr) / double(_src_sr);
-        m_srcData.end_of_input  = 0;
-        int error;
-        if((error = src_process(m_srcState, &m_srcData)))
-        {
-            qFatal("AudioDevice::resample(): error while resampling: %s",
-                   src_strerror(error));
-        }
+        qFatal("AudioDevice::resample(): error while resampling: %s",
+               src_strerror(error));
     }
+}
 #endif
 #ifdef REAL_IS_DOUBLE
-    {
-        // resample64
-        qFatal("AudioDevice::resample");
-    }
+{
+    // resample64
+    qFatal("AudioDevice::resample");
+}
 #endif
-        */
+    */
 }
 
 void AudioDevice::swapEndian(void*       _buf,
@@ -242,7 +238,7 @@ void AudioDevice::clearBuffer(void*       _outbuf,
 
 int AudioDevice::convertToS16(const surroundSampleFrame* _ab,
                               const fpp_t                _frames,
-                              sampleS16_t*              _output_buffer,
+                              sampleS16_t*               _output_buffer,
                               const bool                 _convert_endian)
 {
     int size = _frames * channels() * sizeof(sampleS16_t);
@@ -269,36 +265,66 @@ void AudioDevice::clearS16Buffer(sampleS16_t* _outbuf, const fpp_t _frames)
 
 int AudioDevice::convertToF32(const surroundSampleFrame* _ab,
                               const fpp_t                _frames,
-                              float*                     _output_buffer,
+                              FLOAT*                     _output_buffer,
                               const bool                 _convert_endian)
 {
-    int size = _frames * channels() * sizeof(float);
+    int size = _frames * channels() * sizeof(FLOAT);
 
-    if(sizeof(float) == sizeof(sample_t))
+#ifdef REAL_IS_FLOAT
+    memcpy(_output_buffer, _ab, size);
+#endif
+#ifdef REAL_IS_DOUBLE
+    for(fpp_t frame = 0; frame < _frames; ++frame)
     {
-        memcpy(_output_buffer, _ab, size);
-    }
-    else
-    {
-        for(fpp_t frame = 0; frame < _frames; ++frame)
+        for(ch_cnt_t chnl = 0; chnl < channels(); ++chnl)
         {
-            for(ch_cnt_t chnl = 0; chnl < channels(); ++chnl)
-            {
-                (_output_buffer + frame * channels())[chnl]
-                        = Mixer::clip(_ab[frame][chnl]);
-            }
+            (_output_buffer + frame * channels())[chnl]
+                    = Mixer::clip(_ab[frame][chnl]);
         }
     }
+#endif
 
     if(_convert_endian)
-        swapEndian(_output_buffer, size, sizeof(float));
+        swapEndian(_output_buffer, size, sizeof(FLOAT));
 
     return size;
 }
 
-void AudioDevice::clearF32Buffer(float* _outbuf, const fpp_t _frames)
+void AudioDevice::clearF32Buffer(FLOAT* _outbuf, const fpp_t _frames)
 {
-    clearBuffer(_outbuf, _frames, sizeof(float));
+    clearBuffer(_outbuf, _frames, sizeof(FLOAT));
+}
+
+int AudioDevice::convertToF64(const surroundSampleFrame* _ab,
+                              const fpp_t                _frames,
+                              double*                    _output_buffer,
+                              const bool                 _convert_endian)
+{
+    int size = _frames * channels() * sizeof(double);
+
+#ifdef REAL_IS_DOUBLE
+    memcpy(_output_buffer, _ab, size);
+#endif
+#ifdef REAL_IS_FLOAT
+    for(fpp_t frame = 0; frame < _frames; ++frame)
+    {
+        for(ch_cnt_t chnl = 0; chnl < channels(); ++chnl)
+        {
+            (_output_buffer + frame * channels())[chnl]
+                    = Mixer::clip(_ab[frame][chnl]);
+        }
+    }
+#endif
+
+    if(_convert_endian)
+        swapEndian(_output_buffer, size, sizeof(double));
+
+    return size;
+}
+
+void AudioDevice::clearF64Buffer(double* _outbuf, const fpp_t _frames)
+{
+    clearBuffer(_outbuf, _frames, sizeof(double));
 }
 
 int AudioDevice::convertToS32(const surroundSampleFrame* _ab,

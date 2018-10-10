@@ -136,7 +136,7 @@ ZynAddSubFxInstrument::ZynAddSubFxInstrument(
 	connect( Engine::mixer(), SIGNAL( sampleRateChanged() ),
 			this, SLOT( reloadPlugin() ) );
 
-	connect( instrumentTrack()->pitchRangeModel(), SIGNAL( dataChanged() ),
+	connect( instrumentTrack()->bendingRangeModel(), SIGNAL( dataChanged() ),
 				this, SLOT( updatePitchRange() ) );
 }
 
@@ -389,19 +389,19 @@ void ZynAddSubFxInstrument::reloadPlugin()
 
 
 
-void ZynAddSubFxInstrument::updatePitchRange()
+void ZynAddSubFxInstrument::updateBendingRange()
 {
 	m_pluginMutex.lock();
 	if( m_remotePlugin )
 	{
-                //qInfo("ZynAddSubFxInstrument::updatePitchRange #1 %d",instrumentTrack()->midiPitchRange());
+                //qInfo("ZynAddSubFxInstrument::updateBendingRange #1 %d",instrumentTrack()->midiBendingRange());
 		m_remotePlugin->sendMessage( RemotePlugin::message( IdZasfSetPitchWheelBendRange ).
-                                             addInt( instrumentTrack()->midiPitchRange() ) );
+                                             addInt( instrumentTrack()->midiBendingRange() ) );
 	}
 	else
 	{
-                //qInfo("ZynAddSubFxInstrument::updatePitchRange #2 %d",instrumentTrack()->midiPitchRange());
-		m_plugin->setPitchWheelBendRange( instrumentTrack()->midiPitchRange() );
+                //qInfo("ZynAddSubFxInstrument::updateBendingRange #2 %d",instrumentTrack()->midiBendingRange());
+		m_plugin->setPitchWheelBendRange( instrumentTrack()->midiBendingRange() );
 	}
 	m_pluginMutex.unlock();
 }

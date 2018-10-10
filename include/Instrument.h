@@ -57,9 +57,10 @@ class EXPORT Instrument : public Plugin
 	enum Flag
 	{
 		NoFlags = 0x00,
-		IsSingleStreamed = 0x01,	/*! Instrument provides a single audio stream for all notes */
-		IsMidiBased = 0x02,			/*! Instrument is controlled by MIDI events rather than NotePlayHandles */
-		IsNotBendable = 0x04,		/*! Instrument can't react to pitch bend changes */
+		IsSingleStreamed = 0x01, /*! Instrument provides a single audio stream for all notes */
+		IsMidiBased = 0x02,      /*! Instrument is controlled by MIDI events rather than NotePlayHandles */
+		IsNotBendable = 0x04,    /*! Instrument can't react to pitch bend changes */
+                IsMonophonic = 0x08,     /*! All channels have the same stream */
 	};
 
 	Q_DECLARE_FLAGS(Flags, Flag);
@@ -104,10 +105,23 @@ class EXPORT Instrument : public Plugin
 		return 0;
 	}
 
-	virtual Flags flags() const
-	{
-		return NoFlags;
-	}
+        // convenient accessors
+        inline virtual bool isBendable() const final
+        {
+                return !flags().testFlag(Instrument::IsNotBendable);
+        }
+        inline virtual bool isMidiBased() const final
+        {
+                return flags().testFlag(Instrument::IsMidiBased);
+        }
+        inline virtual bool isMonophonic() const final
+        {
+                return flags().testFlag(Instrument::IsMonophonic);
+        }
+        inline virtual bool isSingleStreamed() const final
+        {
+                return flags().testFlag(Instrument::IsSingleStreamed);
+        }
 
 	// sub-classes can re-implement this for receiving all incoming
 	// MIDI-events
@@ -175,6 +189,10 @@ protected:
 	// desiredReleaseFrames() frames are left
 	void applyRelease( sampleFrame * buf, const NotePlayHandle * _n );
 
+	virtual Flags flags() const
+	{
+		return NoFlags;
+	}
 
 private:
 	InstrumentTrack * m_instrumentTrack;

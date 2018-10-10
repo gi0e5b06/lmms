@@ -28,52 +28,51 @@
 
 #include "EffectControls.h"
 #include "peak_controller_effect_control_dialog.h"
-#include "Knob.h"
+#include "ComboBoxModel.h"
+//#include "Knob.h"
 
 class PeakControllerEffect;
 
 class PeakControllerEffectControls : public EffectControls
 {
-	Q_OBJECT
-public:
-	PeakControllerEffectControls( PeakControllerEffect * _eff );
-	virtual ~PeakControllerEffectControls()
-	{
-	}
+    Q_OBJECT
 
-	virtual void saveSettings( QDomDocument & _doc, QDomElement & _parent );
-	virtual void loadSettings( const QDomElement & _this );
-	inline virtual QString nodeName() const
-	{
-		return "peakcontrollereffectcontrols";
-	}
+ public:
+    PeakControllerEffectControls(PeakControllerEffect* _eff);
+    virtual ~PeakControllerEffectControls()
+    {
+    }
 
-	virtual int controlCount()
-	{
-		return 1;
-	}
-	virtual EffectControlDialog * createView()
-	{
-		return new PeakControllerEffectControlDialog( this );
-	}
+    virtual void saveSettings(QDomDocument& _doc, QDomElement& _parent);
+    virtual void loadSettings(const QDomElement& _this);
+    inline virtual QString nodeName() const
+    {
+        return "peakcontrollereffectcontrols";
+    }
 
+    virtual int controlCount()
+    {
+        return 1;
+    }
+    virtual EffectControlDialog* createView()
+    {
+        return new PeakControllerEffectControlDialog(this);
+    }
 
-private:
-	PeakControllerEffect * m_effect;
+  private:
+    PeakControllerEffect* m_effect;
 
-	FloatModel m_baseModel;
-	FloatModel m_amountModel;
-	FloatModel m_attackModel;
-	FloatModel m_decayModel;
-	FloatModel m_tresholdModel;
-	BoolModel m_muteModel;
-	BoolModel m_absModel;
-	FloatModel m_amountMultModel;
+    FloatModel    m_baseModel;
+    FloatModel    m_amountModel;
+    FloatModel    m_attackModel;
+    FloatModel    m_decayModel;
+    FloatModel    m_tresholdModel;
+    BoolModel     m_muteModel;
+    ComboBoxModel m_modeModel;
+    FloatModel    m_amountMultModel;
 
-	friend class PeakControllerEffectControlDialog;
-	friend class PeakControllerEffect;
-
-} ;
-
+    friend class PeakControllerEffectControlDialog;
+    friend class PeakControllerEffect;
+};
 
 #endif

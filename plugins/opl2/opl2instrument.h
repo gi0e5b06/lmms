@@ -53,7 +53,7 @@ public:
 
 	virtual Flags flags() const
 	{
-		return IsSingleStreamed | IsMidiBased;
+		return IsSingleStreamed | IsMidiBased | IsMonophonic;
 	}
 
 	virtual bool handleMidiEvent( const MidiEvent& event, const MidiTime& time, f_cnt_t offset = 0 );

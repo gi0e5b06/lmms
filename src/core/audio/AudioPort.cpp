@@ -39,21 +39,27 @@
 
 
 AudioPort::AudioPort( const QString & _name, bool _has_effect_chain,
-		FloatModel * volumeModel, FloatModel * panningModel,
-                      BoolModel * mutedModel, BoolModel * frozenModel,
-                      BoolModel * clippingModel) :
+                      BoolModel* volumeEnabledModel, FloatModel* volumeModel,
+                      BoolModel* panningEnabledModel, FloatModel* panningModel,
+                      BoolModel* bendingEnabledModel, FloatModel* bendingModel,
+                      BoolModel* mutedModel, BoolModel* frozenModel,
+                      BoolModel* clippingModel) :
 	m_bufferUsage( false ),
 	m_portBuffer( BufferManager::acquire() ),
 	m_extOutputEnabled( false ),
 	m_nextFxChannel( 0 ),
 	m_name( "unnamed port" ),
-	m_effects( _has_effect_chain ? new EffectChain( NULL ) : NULL ),
+	m_effects( _has_effect_chain ? new EffectChain( nullptr ) : nullptr ),
+	m_volumeEnabledModel( volumeEnabledModel ),
 	m_volumeModel( volumeModel ),
+	m_panningEnabledModel( panningEnabledModel ),
 	m_panningModel( panningModel ),
+	m_bendingEnabledModel( bendingEnabledModel ),
+	m_bendingModel( bendingModel ),
 	m_mutedModel( mutedModel ),
 	m_frozenModel( frozenModel ),
 	m_clippingModel( clippingModel ),
-        m_frozenBuf( NULL )
+        m_frozenBuf( nullptr )
 {
 	Engine::mixer()->addAudioPort( this );
 	setExtOutputEnabled( true );
@@ -201,9 +207,79 @@ void AudioPort::doProcessing()
         //qInfo("AudioPort::doProcessing #2");
 	if( m_bufferUsage )
 	{
-                //qInfo("AudioPort::doProcessing #3");
+                if(m_panningModel!=nullptr &&
+                   (m_panningEnabledModel==nullptr ||
+                    m_panningEnabledModel->value()))
+                {
+                        //qInfo("AudioPort::doProcessing adjust panning");
+
+                        const ValueBuffer* panBuf = m_panningModel->valueBuffer();
+                        if(panBuf!=nullptr)
+                        {
+                                const real_t* panArr = panBuf->values();
+                                for( f_cnt_t f = 0; f < fpp; ++f )
+                                {
+                                        const real_t panVal = panArr[f] * 0.01;
+                                        const real_t panVal0 = (panVal <= 0. ? 1. : 1. - panVal );
+                                        const real_t panVal1 = (panVal >= 0. ? 1. : 1. + panVal );
+                                        m_portBuffer[f][0] *= panVal0;
+                                        m_portBuffer[f][1] *= panVal1;
+                                }
+                        }
+                        else
+                        {
+                                const real_t panVal = m_panningModel->value() * 0.01;
+                                const real_t panVal0 = (panVal <= 0. ? 1. : 1. - panVal );
+                                const real_t panVal1 = (panVal >= 0. ? 1. : 1. + panVal );
+                                for( f_cnt_t f = 0; f < fpp; ++f )
+                                {
+                                        m_portBuffer[f][0] *= panVal0;
+                                        m_portBuffer[f][1] *= panVal1;
+                                }
+                        }
+                }
+
+
+                if(m_volumeModel!=nullptr &&
+                   (m_volumeEnabledModel==nullptr ||
+                    m_volumeEnabledModel->value()))
+                {
+                        //qInfo("AudioPort::doProcessing adjust volume");
+
+                        const ValueBuffer* volBuf = m_volumeModel->valueBuffer();
+                        if(volBuf!=nullptr)
+                        {
+                                const real_t* volArr = volBuf->values();
+                                for( f_cnt_t f = 0; f < fpp; ++f )
+                                {
+                                        const real_t volVal = volArr[f] * 0.01;
+                                        m_portBuffer[f][0] *= volVal;
+                                        m_portBuffer[f][1] *= volVal;
+                                }
+                        }
+                        else
+                        {
+                                real_t volVal = m_volumeModel->value() * 0.01;
+                                for( f_cnt_t f = 0; f < fpp; ++f )
+                                {
+                                        m_portBuffer[f][0] *= volVal;
+                                        m_portBuffer[f][1] *= volVal;
+                                }
+                        }
+                }
+
+
+                /*
+                if(m_bendingEnabledModel==nullptr || m_bendingEnabledModel->value())
+                {
+                        real_t benVal = m_bendingModel->value();
+                        if(benVal!=0.) qInfo("AudioPort::doProcessing adjust bending %f",benVal);
+                }
+                */
+
 		// handle volume and panning
 		// has both vol and pan models
+                /*
 		if( m_volumeModel && m_panningModel )
 		{
 			ValueBuffer * volBuf = m_volumeModel->valueBuffer();
@@ -284,6 +360,7 @@ void AudioPort::doProcessing()
 				}
 			}
 		}
+                */
 	}
 	// as of now there's no situation where we only have panning model but no volume model
 	// if we have neither, we don't have to do anything here - just pass the audio as is

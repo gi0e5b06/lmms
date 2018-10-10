@@ -1,6 +1,7 @@
 /*
  * AutomatableModel.cpp - some implementations of AutomatableModel-class
  *
+ * Copyright (c) 2017-2018 gi0e5b06 (on github.com)
  * Copyright (c) 2008-2014 Tobias Doerffel <tobydox/at/users.sourceforge.net>
  *
  * This file is part of LMMS - https://lmms.io
@@ -29,6 +30,7 @@
 #include "Engine.h"
 #include "Mixer.h"
 #include "ProjectJournal.h"
+#include "WaveForm.h"
 #include "debug.h"
 #include "lmms_math.h"  // REQUIRED
 
@@ -43,8 +45,8 @@ AutomatableModel::AutomatableModel(const real_t   val,
                                    bool           defaultConstructed) :
       Model(parent, displayName, defaultConstructed),
       m_scaleType(Linear), m_minValue(min), m_maxValue(max), m_step(step),
-      m_range(max - min), m_centerValue(m_minValue),
-      m_valueChanged( false ),
+      m_range(max - min), m_centerValue(m_minValue), m_randomRatio(0.),
+      m_randomDistribution(nullptr), m_valueChanged(false),
       m_setValueDepth(0), m_hasStrictStepSize(false),
       m_controllerConnection(NULL),
       m_valueBuffer(static_cast<int>(Engine::mixer()->framesPerPeriod())),
@@ -92,6 +94,9 @@ void AutomatableModel::saveSettings(QDomDocument&  doc,
         me.setAttribute("value", m_value);
         me.setAttribute("scale_type",
                         m_scaleType == Logarithmic ? "log" : "linear");
+
+        // TODO: randomRatio
+
         element.appendChild(me);
     }
     else
@@ -225,6 +230,15 @@ void AutomatableModel::loadSettings(const QDomElement& element,
     }
 }
 
+void AutomatableModel::setRandomRatio(const real_t _ratio)
+{
+    real_t rr = bound(0., abs(_ratio), 1.);
+    if(rr != 0. && m_randomDistribution == nullptr)
+        m_randomDistribution = &WaveForm::SHARPGAUSS;
+    m_randomRatio = rr;
+    emit propertiesChanged();
+}
+
 void AutomatableModel::setValue(const real_t value)
 {
     const real_t oldval = m_value;
@@ -232,8 +246,8 @@ void AutomatableModel::setValue(const real_t value)
 
     if(oldval != newval)
     {
-        m_oldValue = m_value;
-        m_value    = newval;
+        m_oldValue     = m_value;
+        m_value        = newval;
         m_valueChanged = true;
         emit dataChanged();
         propagateValue();
@@ -273,8 +287,8 @@ void AutomatableModel::setAutomatedValue(const real_t value)
 
     if(oldval != newval)
     {
-        m_oldValue = m_value;
-        m_value    = newval;
+        m_oldValue     = m_value;
+        m_value        = newval;
         m_valueChanged = true;
         propagateAutomatedValue();
         emit dataChanged();
@@ -375,7 +389,8 @@ real_t AutomatableModel::inverseNormalizedValue(real_t value) const
 template <class T>
 void roundAt(T& value, const T& where, const T& step_size)
 {
-    if(abs(value - where) <= SILENCE * abs(step_size))
+    // SILENCE
+    if(qAbs<T>(value - where) <= T(0.001) * qAbs<T>(step_size))
     {
         value = where;
     }
@@ -420,27 +435,89 @@ void AutomatableModel::setStep(const real_t step)
 
 real_t AutomatableModel::fittedValue(real_t value) const
 {
-    value = qBound(m_minValue, value, m_maxValue);
+    value = bound(m_minValue, value, m_maxValue);
 
-    if(m_step != 0.f && m_hasStrictStepSize)
+    if(m_step != real_t(0.))
     {
-        value = nearbyintf(value / m_step) * m_step;
-    }
+        real_t magnet;
+        if(m_hasStrictStepSize)
+        {
+            // nearbyintf
+            value  = round(value / m_step) * m_step;
+            magnet = m_step / 2.;
+        }
+        else
+            magnet = m_step / 1000.;
 
-    roundAt<real_t>(value, m_maxValue);
-    roundAt<real_t>(value, m_minValue);
-    roundAt<real_t>(value, 0.);
+        /*
+        roundAt<real_t>(value, m_initValue);
+        roundAt<real_t>(value, m_centerValue);
+        roundAt<real_t>(value, m_maxValue);
+        roundAt<real_t>(value, m_minValue);
+        roundAt<real_t>(value, 0.);
+        */
+        roundat(value, m_initValue, magnet);
+        roundat(value, m_centerValue, magnet);
+        roundat(value, m_maxValue, magnet);
+        roundat(value, m_minValue, magnet);
+        roundat(value, 0., magnet);
 
-    if(value < m_minValue)
-    {
-        return m_minValue;
-    }
-    else if(value > m_maxValue)
-    {
-        return m_maxValue;
+        value = bound(m_minValue, value, m_maxValue);
     }
 
     return value;
+}
+
+void AutomatableModel::fitValues(ValueBuffer* _vb) const
+{
+    // TODO: this loop could be improved using pointer arithmetic
+    real_t* v = _vb->values();
+    for(int i = _vb->length() - 1; i >= 0; --i)
+        v[i] = fittedValue(v[i]);
+}
+
+real_t AutomatableModel::randomizedValue(real_t) const
+{
+    real_t r = m_value;
+    if(m_randomRatio != 0.)
+    {
+        const real_t    rr = m_randomRatio * range();
+        const WaveForm* d  = m_randomDistribution;
+
+        real_t x = 2. * fastrand01inc() - 1.;
+        if(d != nullptr)
+            x *= d->f(abs(x));
+        r += rr * x;
+    }
+    return r;
+}
+
+void AutomatableModel::randomizeValues(ValueBuffer* _vb) const
+{
+    if(m_randomRatio != 0.)
+    {
+        const real_t    rr = m_randomRatio * range();
+        const WaveForm* d  = m_randomDistribution;
+
+        // TODO: this loop could be improved using pointer arithmetic
+        real_t* v = _vb->values();
+        if(d != nullptr)
+        {
+            for(int i = _vb->length() - 1; i >= 0; --i)
+            {
+                const real_t x = 2. * fastrand01inc() - 1.;
+                v[i] += rr * x * d->f(abs(x));
+            }
+        }
+        else
+        {
+            for(int i = _vb->length() - 1; i >= 0; --i)
+            {
+                const real_t x = 2. * fastrand01inc() - 1.;
+                v[i] += rr * x;
+            }
+        }
+    }
 }
 
 void AutomatableModel::linkModel(AutomatableModel* model, bool propagate)
@@ -756,9 +833,14 @@ void AutomatableModel::setAutomatedBuffer(const ValueBuffer* _vb)
     QMutexLocker m(&m_valueBufferMutex);
 
     m_valueBuffer.copyFrom(_vb);
+
     real_t* v = m_valueBuffer.values();
-    for(int i = m_valueBuffer.length() - 1; i >= 0; --i)
-        v[i] = fittedValue(scaledValue(v[i]));
+    for(int i = FPP - 1; i >= 0; --i)
+        v[i] = scaledValue(v[i]);
+
+    randomizeValues(&m_valueBuffer);
+    fitValues(&m_valueBuffer);
+
     m_lastUpdatedPeriod  = s_periodCounter;
     m_hasSampleExactData = true;
     setAutomatedValue(m_valueBuffer.value(0));
@@ -769,7 +851,7 @@ void AutomatableModel::setControlledBuffer(const ValueBuffer* _vb)
     const fpp_t FPP = Engine::mixer()->framesPerPeriod();
     if(_vb == NULL || _vb->length() != FPP || m_valueBuffer.length() != FPP)
     {
-        qWarning("AutomatableModel::setAutomatedBuffer");
+        qWarning("AutomatableModel::setControlledBuffer");
         return;
     }
 
@@ -777,9 +859,14 @@ void AutomatableModel::setControlledBuffer(const ValueBuffer* _vb)
     QMutexLocker m(&m_valueBufferMutex);
 
     m_valueBuffer.copyFrom(_vb);
+
     real_t* v = m_valueBuffer.values();
-    for(int i = m_valueBuffer.length() - 1; i >= 0; --i)
-        v[i] = fittedValue(scaledValue(inverseNormalizedValue(v[i])));
+    for(int i = FPP - 1; i >= 0; --i)
+        v[i] = scaledValue(inverseNormalizedValue(v[i]));
+
+    randomizeValues(&m_valueBuffer);
+    fitValues(&m_valueBuffer);
+
     m_lastUpdatedPeriod  = s_periodCounter;
     m_hasSampleExactData = true;
     setAutomatedValue(m_valueBuffer.value(0));

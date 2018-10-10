@@ -85,6 +85,11 @@ public:
 		return 64;
 	}
 
+        virtual Flags flags() const
+        {
+                return IsMonophonic;
+        }
+
 	virtual PluginView * instantiateView( QWidget * _parent );
 
 protected slots:

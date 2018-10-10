@@ -123,15 +123,25 @@ class AudioDevice
     // clear given signed-int 32-bit buffer
     void clearS32Buffer(int32_t* _outbuf, const fpp_t _frames);
 
-    // convert a given audio-buffer to a buffer in signed 16-bit samples
+    // convert a given audio-buffer to a buffer in float 32-bit samples
     // returns num of bytes in outbuf
     int convertToF32(const surroundSampleFrame* _ab,
                      const fpp_t                _frames,
-                     float*                     _output_buffer,
+                     FLOAT*                     _output_buffer,
                      const bool                 _convert_endian = false);
 
     // clear given signed-int-16-buffer
-    void clearF32Buffer(float* _outbuf, const fpp_t _frames);
+    void clearF32Buffer(FLOAT* _outbuf, const fpp_t _frames);
+
+    // convert a given audio-buffer to a buffer in float 32-bit samples
+    // returns num of bytes in outbuf
+    int convertToF64(const surroundSampleFrame* _ab,
+                     const fpp_t                _frames,
+                     double*                    _output_buffer,
+                     const bool                 _convert_endian = false);
+
+    // clear given signed-int-16-buffer
+    void clearF64Buffer(double* _outbuf, const fpp_t _frames);
 
     // resample given buffer from samplerate _src_sr to samplerate _dst_sr
     void resample(const surroundSampleFrame* _src,

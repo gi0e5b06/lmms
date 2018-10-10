@@ -1,6 +1,7 @@
 /*
  * AutomatableModel.h - declaration of class AutomatableModel
  *
+ * Copyright (c) 2017-2018 gi0e5b06 (on github.com)
  * Copyright (c) 2007-2014 Tobias Doerffel <tobydox/at/users.sourceforge.net>
  *
  * This file is part of LMMS - https://lmms.io
@@ -60,6 +61,7 @@
     }
 
 class ControllerConnection;
+class WaveForm;
 
 class EXPORT AutomatableModel
       : public Model
@@ -112,14 +114,17 @@ class EXPORT AutomatableModel
     inline T value(int frameOffset = 0, bool recording = false) const
     {
         /*
-        if( unlikely( m_controllerConnection != nullptr || hasLinkedModels() ) )
+        if( unlikely( m_controllerConnection != nullptr || hasLinkedModels() )
+        )
         {
                 return castValue<T>( controllerValue( frameOffset, recording )
         );
         }
         */
 
-        return castValue<T>(m_value);
+        return castValue<T>(recording || m_randomRatio == 0.
+                                    ? m_value
+                                    : fittedValue(randomizedValue(m_value)));
     }
 
     // real_t controllerValue( int frameOffset, bool recording ) const;
@@ -171,6 +176,19 @@ class EXPORT AutomatableModel
     real_t inverseNormalizedValue(real_t value) const;
 
     void setInitValue(const real_t value);
+
+    inline real_t randomRatio() const
+    {
+        return m_randomRatio;
+    }
+
+    //! @brief Amount of randomization, between 0 and 1. Default to 0.
+    // Only applies to sample-exact, value buffer.
+    void setRandomRatio(const real_t value);
+
+    //! @brief Distribution of randomization, Default to gaussf().
+    // Only applies to sample-exact, value buffer.
+    void setRandomDistribution(const WaveForm* _wf);
 
     void decrValue(int steps = 1)
     {
@@ -328,6 +346,10 @@ class EXPORT AutomatableModel
     //! 0.12345 becomes 0.10 etc.). You should always call it at the end after
     //! doing your own calculations.
     real_t fittedValue(real_t value) const;
+    void   fitValues(ValueBuffer* _vb) const;
+
+    real_t randomizedValue(real_t value) const;
+    void   randomizeValues(ValueBuffer* _vb) const;
 
     void propagateValue();
     void propagateAutomatedValue();
@@ -356,14 +378,16 @@ class EXPORT AutomatableModel
     template <class T>
     void roundAt(T& value, const T& where) const;
 
-    ScaleType m_scaleType;  //! scale type, linear by default
-    real_t    m_value;
-    real_t    m_initValue;
-    real_t    m_minValue;
-    real_t    m_maxValue;
-    real_t    m_step;
-    real_t    m_range;
-    real_t    m_centerValue;
+    ScaleType       m_scaleType;  //! scale type, linear by default
+    real_t          m_value;
+    real_t          m_initValue;
+    real_t          m_minValue;
+    real_t          m_maxValue;
+    real_t          m_step;
+    real_t          m_range;
+    real_t          m_centerValue;
+    real_t          m_randomRatio;
+    const WaveForm* m_randomDistribution;
 
     bool m_valueChanged;
 
@@ -476,6 +500,7 @@ class BoolModel : public TypedAutomatableModel<bool>
     {
         setStrictStepSize(true);
     }
+
     virtual QString displayValue(const real_t val) const override;
 };
 

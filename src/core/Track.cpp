@@ -1207,6 +1207,8 @@ void TrackContentObjectView::mousePressEvent(QMouseEvent* me)
         else if(isSelected())
         {
             m_action = MoveSelection;
+
+            // TODO: ResizeSelection
         }
         else
         {
@@ -1351,8 +1353,12 @@ void TrackContentObjectView::mouseMoveEvent(QMouseEvent* me)
     }
 
     const real_t ppt = pixelsPerTact();
+
     if(m_action == Move)
     {
+        // qInfo("Track: Move: Is this called?");
+
+        /*
         const int x = mapToParent(me->pos()).x() - m_initialMousePos.x();
         MidiTime  t = qMax(
                 0, (int)m_trackView->trackContainerView()->currentPosition()
@@ -1364,7 +1370,39 @@ void TrackContentObjectView::mouseMoveEvent(QMouseEvent* me)
             t = t.toNearestTact();
         }
         m_tco->movePosition(t);
+        */
+        const int dx = me->x() - m_initialMousePos.x();
+        if(dx == 0)
+            return;
+
+        const tick_t q = gui->songEditor()->m_editor->quantization();
+
+        tick_t delta = dx * MidiTime::ticksPerTact() / ppt;
+        if(me->modifiers() & Qt::ShiftModifier)
+            delta = round(delta / q) * q;
+        if(delta == 0)
+            return;
+
+        tick_t smallest_pos = m_tco->startPosition();
+
+        if(!(me->modifiers() & Qt::ControlModifier)
+           && !(me->modifiers() & Qt::ShiftModifier))
+        //&& me->button() == Qt::NoButton)
+        {
+            delta = delta - smallest_pos % q - delta % q;
+            // if(delta%q>q/2) delta+=q;
+        }
+        if(smallest_pos + delta < 0)
+            return;
+        // qInfo("q=%d delta=%d sp=%d", q, delta, smallest_pos);
+        if(delta == 0)
+            return;
+
+        tick_t t = m_tco->startPosition() + delta;
+        m_tco->movePosition(t);
+
         m_trackView->getTrackContentWidget()->changePosition();
+
         s_textFloat->setText(
                 QString("%1:%2")
                         .arg(m_tco->startPosition().getTact() + 1)
@@ -1374,46 +1412,73 @@ void TrackContentObjectView::mouseMoveEvent(QMouseEvent* me)
     }
     else if(m_action == MoveSelection)
     {
-        const int                  dx = me->x() - m_initialMousePos.x();
         QVector<SelectableObject*> so
                 = m_trackView->trackContainerView()->selectedObjects();
+        if(so.isEmpty())
+            return;
+
+        const int dx = me->x() - m_initialMousePos.x();
+        if(dx == 0)
+            return;
+
+        const tick_t q = gui->songEditor()->m_editor->quantization();
+
+        tick_t delta = dx * MidiTime::ticksPerTact() / ppt;
+        if(me->modifiers() & Qt::ShiftModifier)
+            delta = round(delta / q) * q;
+        if(delta == 0)
+            return;
+
         QVector<TrackContentObject*> tcos;
-        MidiTime                     smallest_pos, t;
+        // MidiTime::ticksPerTact()
         // find out smallest position of all selected objects for not
         // moving an object before zero
+        bool   first        = true;
+        tick_t smallest_pos = 0;
         for(QVector<SelectableObject*>::iterator it = so.begin();
             it != so.end(); ++it)
         {
             TrackContentObjectView* tcov
                     = dynamic_cast<TrackContentObjectView*>(*it);
-            if(tcov == NULL)
-            {
+            if(tcov == nullptr)
                 continue;
-            }
+
             TrackContentObject* tco = tcov->m_tco;
             tcos.push_back(tco);
-            smallest_pos = qMin<int>(
-                    smallest_pos,
-                    (int)tco->startPosition()
-                            + static_cast<int>(dx * MidiTime::ticksPerTact()
-                                               / ppt));
+            tick_t p = tco->startPosition();
+            if(first || smallest_pos > p)
+            {
+                smallest_pos = p;
+                first        = false;
+            }
         }
+        if(!(me->modifiers() & Qt::ControlModifier)
+           && !(me->modifiers() & Qt::ShiftModifier))
+        //&& me->button() == Qt::NoButton)
+        {
+            delta = delta - smallest_pos % q - delta % q;
+            // if(delta%q>q/2) delta+=q;
+        }
+        if(smallest_pos + delta < 0)
+            return;
+        // qInfo("q=%d delta=%d sp=%d", q, delta, smallest_pos);
+        if(delta == 0)
+            return;
         for(QVector<TrackContentObject*>::iterator it = tcos.begin();
             it != tcos.end(); ++it)
         {
-            t = (*it)->startPosition()
-                + static_cast<int>(dx * MidiTime::ticksPerTact() / ppt)
-                - smallest_pos;
-            if(!(me->modifiers() & Qt::ControlModifier)
-               && me->button() == Qt::NoButton)
-            {
-                t = t.toNearestTact();
-            }
+            tick_t t = (*it)->startPosition() + delta;
             (*it)->movePosition(t);
         }
+
+        // ??? GDX
+        m_trackView->getTrackContentWidget()->changePosition();
     }
     else if(m_action == Resize)
     {
+        qInfo("Track: Resize: Is this called?");
+
+        /*
         MidiTime t = qMax(
                 MidiTime::ticksPerTact() / 16,
                 static_cast<int>(me->x() * MidiTime::ticksPerTact() / ppt));
@@ -1423,6 +1488,35 @@ void TrackContentObjectView::mouseMoveEvent(QMouseEvent* me)
             t = qMax<int>(MidiTime::ticksPerTact(), t.toNearestTact());
         }
         m_tco->changeLength(t);
+        */
+
+        const int    x = me->x();
+        const tick_t q = gui->songEditor()->m_editor->quantization();
+
+        tick_t delta
+                = x * MidiTime::ticksPerTact() / ppt - m_tco->startPosition();
+        if(me->modifiers() & Qt::ShiftModifier)
+            delta = round(delta / q) * q;
+        if(delta == 0)
+            return;
+
+        tick_t smallest_len = m_tco->length();
+
+        if(!(me->modifiers() & Qt::ControlModifier)
+           && !(me->modifiers() & Qt::ShiftModifier))
+        //&& me->button() == Qt::NoButton)
+        {
+            delta = delta - smallest_len % q - delta % q;
+            // if(delta%q>q/2) delta+=q;
+        }
+        if(smallest_len + delta < 4)
+            return;
+        // qInfo("q=%d delta=%d sp=%d", q, delta, smallest_pos);
+        if(delta == 0)
+            return;
+
+        m_tco->changeLength(delta);
+
         s_textFloat->setText(
                 tr("%1:%2 (%3:%4 to %5:%6)")
                         .arg(m_tco->length().getTact())
@@ -2473,7 +2567,7 @@ TrackOperationsWidget::TrackOperationsWidget(TrackView* parent) :
     setObjectName("automationEnabled");
 
     m_trackOps = new QPushButton(this);
-    m_trackOps->move(11, 6);
+    m_trackOps->setGeometry(8, 6, 10, 20);
     m_trackOps->setIcon(embed::getIcon("menu"));
     m_trackOps->setFocusPolicy(Qt::NoFocus);
     m_trackOps->setMenu(toMenu);
@@ -3277,7 +3371,7 @@ void Track::loadSettings(const QDomElement& element)
     {
         delete m_trackContentObjects.front();
         //		m_trackContentObjects.erase(
-        //m_trackContentObjects.begin() );
+        // m_trackContentObjects.begin() );
     }
 
     QDomNode node = element.firstChild();

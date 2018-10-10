@@ -334,11 +334,11 @@ kickerInstrumentView::kickerInstrumentView(Instrument* _instrument,
 
     m_decayKnob = new kickerEnvKnob(this);
     m_decayKnob->setHintText(tr("Envelope Length:"), "ms");
-    m_decayKnob->move(COL1 + 49, ROW3);
+    m_decayKnob->move(COL1 + 45, ROW3);
 
     m_envKnob = new kickerKnob(this);
     m_envKnob->setHintText(tr("Envelope Slope:"), "");
-    m_envKnob->move(COL1 + 89, ROW3);
+    m_envKnob->move(COL1 + 82, ROW3);
 
     m_tailKnob = new kickerKnob(this);
     m_tailKnob->setHintText(tr("Tail:"), "");

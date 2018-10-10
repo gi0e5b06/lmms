@@ -75,7 +75,8 @@ NotePlayHandle::NotePlayHandle( InstrumentTrack* instrumentTrack,
 	m_frequency( 0 ),
 	m_unpitchedFrequency( 0 ),
 	//m_baseDetuning( NULL ),
-	m_baseDetune( 0.f ),
+	m_automationDetune( 0. ),
+	m_effectDetune( 0. ),
 	m_songGlobalParentOffset( 0 ),
 	m_midiChannel( midiEventChannel >= 0
 		       ? midiEventChannel
@@ -89,7 +90,7 @@ NotePlayHandle::NotePlayHandle( InstrumentTrack* instrumentTrack,
 	if( hasParent() == false )
 	{
 		//m_baseDetuning = new BaseDetuning( detuning() );
-		m_baseDetune=( detuning()
+		m_automationDetune=( detuning()
 			       ? detuning()->automationPattern()->valueAt( 0 )
 			       : 0.f );
 		m_instrumentTrack->m_processHandles.push_back( this );
@@ -97,7 +98,7 @@ NotePlayHandle::NotePlayHandle( InstrumentTrack* instrumentTrack,
 	else
 	{
 		//m_baseDetuning = parent->m_baseDetuning;
-		m_baseDetune=( m_parent && m_parent->detuning()
+		m_automationDetune=( m_parent && m_parent->detuning()
 			       ? m_parent->detuning()->automationPattern()->valueAt( 0 )
 			       : 0.f );
 
@@ -131,7 +132,7 @@ NotePlayHandle::NotePlayHandle( InstrumentTrack* instrumentTrack,
                 qWarning("NotePlayHandle::NotePlayHandle no instrument");
         }
         else
-	if( m_instrumentTrack->instrument()->flags() & Instrument::IsSingleStreamed )
+        if( m_instrumentTrack->instrument()->isSingleStreamed() )
 	{
 		//setUsesBuffer( false );
 		m_usesBuffer=false;
@@ -200,21 +201,24 @@ void NotePlayHandle::setVolume( volume_t _volume )
 {
 	Note::setVolume( _volume );
 
-	const int baseVelocity = m_instrumentTrack->midiPort()->baseVelocity();
+        m_instrumentTrack->noteVolumeModel()->setAutomatedValue(_volume);
 
-	m_instrumentTrack->processOutEvent( MidiEvent( MidiKeyPressure, midiChannel(), midiKey(), midiVelocity( baseVelocity ) ) );
+        const int baseVelocity = m_instrumentTrack->midiPort()->baseVelocity();
+        MidiEvent event( MidiKeyPressure, midiChannel(), midiKey(), midiVelocity( baseVelocity ) );
+        m_instrumentTrack->processOutEvent( event );
 }
 
 
 
 
-void NotePlayHandle::setPanning( panning_t panning )
+void NotePlayHandle::setPanning( panning_t _panning )
 {
-	Note::setPanning( panning );
+	Note::setPanning( _panning );
 
-	MidiEvent event( MidiMetaEvent, midiChannel(), midiKey(), panningToMidi( panning ) );
+        m_instrumentTrack->notePanningModel()->setAutomatedValue(_panning);
+
+	MidiEvent event( MidiMetaEvent, midiChannel(), midiKey(), panningToMidi( _panning ) );
 	event.setMetaEvent( MidiNotePanning );
-
 	m_instrumentTrack->processOutEvent( event );
 }
 
@@ -244,10 +248,20 @@ void NotePlayHandle::play( sampleFrame * _working_buffer )
 	}
 
 	lock();
+
+        /*
+        if(instrumentTrack()->instrument() &&
+           instrumentTrack()->instrument()->isMidiBased())
+        {
+                setVolume(getVolume());  // tmp, need updateVolume()
+                setPanning(getPanning());
+        }
+
 	if( m_frequencyNeedsUpdate )
 	{
 		updateFrequency();
 	}
+        */
 
 	// number of frames that can be played this period
 	f_cnt_t framesThisPeriod = m_totalFramesPlayed == 0
@@ -277,7 +291,7 @@ void NotePlayHandle::play( sampleFrame * _working_buffer )
 		// ... also, they don't actually render the sound in NPH's, which is an even better reason to skip...
 		if( m_totalFramesPlayed == 0 &&
                     ! ( m_instrumentTrack->instrument() &&
-                        (m_instrumentTrack->instrument()->flags() & Instrument::IsSingleStreamed) ) )
+                        m_instrumentTrack->instrument()->isSingleStreamed() ) )
 		{
 			memset( _working_buffer, 0, sizeof( sampleFrame ) * offset() );
 		}
@@ -466,7 +480,7 @@ void NotePlayHandle::setFrames( const f_cnt_t _frames )
 
 
 
-float NotePlayHandle::volumeLevel( const f_cnt_t _frame )
+real_t NotePlayHandle::volumeLevel( const f_cnt_t _frame )
 {
 	return m_instrumentTrack->m_soundShaping.volumeLevel( this, _frame );
 }
@@ -569,18 +583,31 @@ void NotePlayHandle::updateFrequency()
 {
         const Scale* scl=scale();
 
-	const int mp = m_instrumentTrack->m_useMasterPitchModel.value()
+	const real_t mp = m_instrumentTrack->m_useMasterPitchModel.value()
                 ? Engine::getSong()->masterPitch()
-                : 0;
+                : 0.;
 
-        int k=key() + 69.f - m_instrumentTrack->baseNoteModel()->value();
+        const real_t ip=m_instrumentTrack->bendingModel()->value()/100.;
 
-        m_frequency = scl->frequency
-                (k+mp+m_baseDetune,
-                 m_instrumentTrack->pitchModel()->value());
+        const real_t k=key() + 69.f - m_instrumentTrack->baseNoteModel()->value();
 
-        m_unpitchedFrequency = scl->frequency
-                (k+mp+m_baseDetune,0.f);
+        real_t b=automationDetune()+effectDetune();
+        //if(b!=0.) qInfo("Detune: A=%f E=%f B=%f",automationDetune(),effectDetune(),b);
+
+        if(m_instrumentTrack->bendingEnabledModel()!=nullptr &&
+           !m_instrumentTrack->bendingEnabledModel()->value())
+        {
+                //if(b!=0.) qInfo("NotePlayHandle::updateFrequency adjust bending");
+                m_instrumentTrack->noteBendingModel()->setAutomatedValue(b);
+                b=0.;
+        }
+
+        m_frequency = scl->frequency(k+mp+ip,b);
+
+        if(b==0.)
+                m_unpitchedFrequency = m_frequency;
+        else
+                m_unpitchedFrequency = scl->frequency(k+mp+ip,0.);
 
         //qInfo("Scale: %s key %d (%d) %f Hz",qPrintable(scl->name()),key(),k,m_frequency);
 
@@ -595,15 +622,44 @@ void NotePlayHandle::updateFrequency()
 
 void NotePlayHandle::processMidiTime( const MidiTime& time )
 {
-	if( detuning() && time >= songGlobalParentOffset()+pos() )
+	if( hasParent() == false && detuning() &&
+            time >= songGlobalParentOffset()+pos() )
 	{
-		const float v = detuning()->automationPattern()->valueAt( time - songGlobalParentOffset() - pos() );
-		//if( !typeInfo<float>::isEqual( v, m_baseDetune))
-                if( abs( v - m_baseDetune ) <= SILENCE )
+		const real_t ad = detuning()->automationPattern()
+                        ->valueAt( time - songGlobalParentOffset() - pos() );
+		//if( !typeInfo<float>::isEqual( ad, m_automationDetune))
+                if( abs( ad - automationDetune() ) > SILENCE )
 		{
-			m_baseDetune=v;//->setValue( v );
-			updateFrequency();
+                        //qInfo("NotePlayHandle::processMidiTime");
+			setAutomationDetune(ad);
+			//updateFrequency();
 		}
+	}
+        else
+	if( hasParent() == true && m_parent && m_parent->detuning() &&
+            time >= songGlobalParentOffset()+pos() )
+	{
+		const real_t ad = m_parent->detuning()->automationPattern()
+                        ->valueAt( time - songGlobalParentOffset() - pos() );
+		//if( !typeInfo<float>::isEqual( ad, m_automationDetune))
+                if( abs( ad - automationDetune() ) > SILENCE )
+		{
+                        //qInfo("NotePlayHandle::processMidiTime");
+			setAutomationDetune(ad);
+			//updateFrequency();
+		}
+	}
+
+        if(instrumentTrack()->instrument() &&
+           instrumentTrack()->instrument()->isMidiBased())
+        {
+                setVolume(getVolume());  // tmp, need updateVolume()
+                setPanning(getPanning());
+        }
+
+	if( m_frequencyNeedsUpdate )
+	{
+		updateFrequency();
 	}
 }
 

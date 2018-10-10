@@ -107,13 +107,13 @@ class EXPORT NotePlayHandle /*final*/
         return m_totalFramesPlayed == 0 ? offset() : 0;
     }
 
-    const float& frequency() const
+    const frequency_t& frequency() const
     {
         return m_frequency;
     }
 
     /*! Returns frequency without pitch wheel influence */
-    float unpitchedFrequency() const
+    frequency_t unpitchedFrequency() const
     {
         return m_unpitchedFrequency;
     }
@@ -187,7 +187,7 @@ class EXPORT NotePlayHandle /*final*/
     }
 
     /*! Returns volume level at given frame (envelope/LFO) */
-    float volumeLevel(const f_cnt_t frame);
+    real_t volumeLevel(const f_cnt_t frame);
 
     /*! Returns instrument track which is being played by this handle (const
      * version) */
@@ -304,14 +304,32 @@ class EXPORT NotePlayHandle /*final*/
         m_frequencyNeedsUpdate = true;
     }
 
-    float baseDetune()
+    real_t automationDetune()
     {
-        return m_baseDetune;
+        return m_automationDetune;
     }
 
-    void setBaseDetune(const float _bdt)
+    void setAutomationDetune(const real_t _ad)
     {
-        m_baseDetune = _bdt;
+            if(m_automationDetune!=_ad)
+            {
+                    m_automationDetune = _ad;
+                    m_frequencyNeedsUpdate = true;
+            }
+    }
+
+    real_t effectDetune()
+    {
+        return m_effectDetune;
+    }
+
+    void addEffectDetune(const real_t _ed)
+    {
+            if(_ed!=0.)
+            {
+                    m_effectDetune += _ed;
+                    m_frequencyNeedsUpdate = true;
+            }
     }
 
     const Scale* scale() const;
@@ -327,19 +345,19 @@ class EXPORT NotePlayHandle /*final*/
     public:
             BaseDetuning( DetuningHelper* detuning );
 
-            void setValue( float val )
+            void setValue( real_t val )
             {
                     m_value = val;
             }
 
-            float value() const
+            real_t value() const
             {
                     return m_value;
             }
 
 
     private:
-            float m_value;
+            real_t m_value;
 
     } ;
     */
@@ -371,11 +389,12 @@ class EXPORT NotePlayHandle /*final*/
 
     int m_origBaseNote;
 
-    float m_frequency;
-    float m_unpitchedFrequency;
+    frequency_t m_frequency;
+    frequency_t m_unpitchedFrequency;
 
     // BaseDetuning* m_baseDetuning;
-    float    m_baseDetune;
+    real_t   m_automationDetune;
+    real_t   m_effectDetune;
     MidiTime m_songGlobalParentOffset;
 
     int    m_midiChannel;

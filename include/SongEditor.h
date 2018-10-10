@@ -23,7 +23,6 @@
  *
  */
 
-
 #ifndef SONG_EDITOR_H
 #define SONG_EDITOR_H
 
@@ -51,169 +50,179 @@ class TimeLineWidget;
 class positionLine : public QWidget
 {
 public:
-	positionLine( QWidget * parent );
+        positionLine( QWidget * parent );
 
 private:
-	virtual void paintEvent( QPaintEvent * pe );
+        virtual void paintEvent( QPaintEvent * pe );
 
 };
 */
 
-class SongEditor : public TrackContainerView, public virtual ActionUpdatable
+class SongEditor
+      : public TrackContainerView
+      , public virtual ActionUpdatable
 {
-	Q_OBJECT
-public:
-	enum EditMode
-	{
-		DrawMode,
-		SelectMode
-	};
+    Q_OBJECT
+  public:
+    enum EditMode
+    {
+        DrawMode,
+        SelectMode
+    };
 
-	SongEditor( Song * song );
-	~SongEditor();
+    SongEditor(Song* song);
+    ~SongEditor();
 
-        void unitePatterns();
-        void dividePatterns();
+    tick_t quantization() const;
 
-	void saveSettings( QDomDocument& doc, QDomElement& element );
-	void loadSettings( const QDomElement& element );
+    void unitePatterns();
+    void dividePatterns();
 
-        virtual void updateActions(const bool _active, QHash<QString,bool>& _table) const; // = 0;
-        virtual void actionTriggered(QString _name);
+    void saveSettings(QDomDocument& doc, QDomElement& element);
+    void loadSettings(const QDomElement& element);
 
-        ComboBoxModel *zoomingXModel() const;
-	ComboBoxModel *zoomingYModel() const;
+    virtual void updateActions(const bool            _active,
+                               QHash<QString, bool>& _table) const;  // = 0;
+    virtual void actionTriggered(QString _name);
 
-        const TimeLineWidget* timeLineWidget() { return m_timeLine; }
+    ComboBoxModel* zoomingXModel() const;
+    ComboBoxModel* zoomingYModel() const;
+    ComboBoxModel* quantizeModel() const;
 
-public slots:
-	void scrolled( int new_pos );
+    const TimeLineWidget* timeLineWidget()
+    {
+        return m_timeLine;
+    }
 
-	void setEditMode( EditMode mode );
-	void setEditModeDraw();
-	void setEditModeSelect();
+  public slots:
+    void scrolled(int new_pos);
 
-	void updatePosition( const MidiTime & t );
-	void updatePositionLine();
-	void selectAllTcos( bool select );
+    void setEditMode(EditMode mode);
+    void setEditModeDraw();
+    void setEditModeSelect();
 
-        void deleteSelection();
-        void cutSelection();
-        void copySelection();
-        void pasteSelection();
+    void updatePosition(const MidiTime& t);
+    void updatePositionLine();
+    void selectAllTcos(bool select);
 
-protected:
-	virtual void closeEvent( QCloseEvent * ce );
+    void deleteSelection();
+    void cutSelection();
+    void copySelection();
+    void pasteSelection();
 
-private slots:
-	void setHighQuality( bool );
+  protected:
+    virtual void closeEvent(QCloseEvent* ce);
 
-	void setMasterVolume( real_t _newVal );
-	//void showMasterVolumeFloat();
-	//void updateMasterVolumeFloat( int _newVal );
-	//void hideMasterVolumeFloat();
+  private slots:
+    void setHighQuality(bool);
 
-	void setMasterPitch( real_t _newVal );
-	//void showMasterPitchFloat();
-	//void updateMasterPitchFloat( int _newVal );
-	//void hideMasterPitchFloat();
+    void setMasterVolume(real_t _newVal);
+    // void showMasterVolumeFloat();
+    // void updateMasterVolumeFloat( int _newVal );
+    // void hideMasterVolumeFloat();
 
-	void setMasterPanning( real_t _newVal );
-	//void showMasterPanFloat();
-	//void updateMasterPanFloat( int _newVal );
-	//void hideMasterPanFloat();
+    void setMasterPitch(real_t _newVal);
+    // void showMasterPitchFloat();
+    // void updateMasterPitchFloat( int _newVal );
+    // void hideMasterPitchFloat();
 
-	void updateScrollBar(int len);
+    void setMasterPanning(real_t _newVal);
+    // void showMasterPanFloat();
+    // void updateMasterPanFloat( int _newVal );
+    // void hideMasterPanFloat();
 
-	void zoomingXChanged();
-	void zoomingYChanged();
+    void updateScrollBar(int len);
 
-private:
-	virtual void keyPressEvent( QKeyEvent * ke );
-	virtual void wheelEvent( QWheelEvent * we );
+    void zoomingXChanged();
+    void zoomingYChanged();
 
-	virtual bool allowRubberband() const;
+  private:
+    virtual void keyPressEvent(QKeyEvent* ke);
+    virtual void wheelEvent(QWheelEvent* we);
 
+    virtual bool allowRubberband() const;
 
-	Song * m_song;
+    Song* m_song;
 
-	QScrollBar * m_leftRightScroll;
+    QScrollBar* m_leftRightScroll;
 
-	LcdSpinBox * m_tempoSpinBox;
+    LcdSpinBox* m_tempoSpinBox;
 
-	TimeLineWidget * m_timeLine;
+    TimeLineWidget* m_timeLine;
 
-	MeterDialog * m_timeSigDisplay;
+    MeterDialog* m_timeSigDisplay;
 
-        Knob* m_masterVolumeKNB;
-        Knob* m_masterPitchKNB;
-        Knob* m_masterPanningKNB;
+    Knob* m_masterVolumeKNB;
+    Knob* m_masterPitchKNB;
+    Knob* m_masterPanningKNB;
 
-	TextFloat* m_masterVolumeTFT;
-	TextFloat* m_masterPitchTFT;
-	TextFloat* m_masterPanningTFT;
+    TextFloat* m_masterVolumeTFT;
+    TextFloat* m_masterPitchTFT;
+    TextFloat* m_masterPanningTFT;
 
-	//positionLine * m_positionLine;
+    // positionLine * m_positionLine;
 
-	ComboBoxModel* m_zoomingXModel;
-	ComboBoxModel* m_zoomingYModel;
+    ComboBoxModel* m_zoomingXModel;
+    ComboBoxModel* m_zoomingYModel;
+    ComboBoxModel* m_quantizeModel;
 
-	bool m_scrollBack;
-	bool m_smoothScroll;
+    bool m_scrollBack;
+    bool m_smoothScroll;
 
-	EditMode m_mode;
-	EditMode m_ctrlMode; // mode they were in before they hit ctrl
+    EditMode m_mode;
+    EditMode m_ctrlMode;  // mode they were in before they hit ctrl
 
-	friend class SongEditorWindow;
+    friend class SongEditorWindow;
 };
 
-
-
-
-class SongEditorWindow : public Editor, public virtual ActionUpdatable
+class SongEditorWindow
+      : public Editor
+      , public virtual ActionUpdatable
 {
-	Q_OBJECT
-public:
-	SongEditorWindow( Song* song );
+    Q_OBJECT
+  public:
+    SongEditorWindow(Song* song);
 
-        virtual void updateActions(const bool _active, QHash<QString,bool>& _table) const; // = 0;
-        virtual void actionTriggered(QString _name);
+    virtual void updateActions(const bool            _active,
+                               QHash<QString, bool>& _table) const;  // = 0;
+    virtual void actionTriggered(QString _name);
 
-	QSize sizeHint() const;
+    QSize sizeHint() const;
 
-	SongEditor* m_editor;
+    SongEditor* m_editor;
 
-protected:
-	virtual void resizeEvent( QResizeEvent * event );
+  protected:
+    virtual void resizeEvent(QResizeEvent* event);
 
-protected slots:
-	void play();
-	void record();
-	void recordAccompany();
-	void stop();
+  protected slots:
+    void play();
+    void record();
+    void recordAccompany();
+    void stop();
 
-	void lostFocus();
-	void adjustUiAfterProjectLoad();
+    void lostFocus();
+    void adjustUiAfterProjectLoad();
 
-signals:
-	void playTriggered();
-	void resized();
+  signals:
+    void playTriggered();
+    void resized();
 
-private:
-	virtual void keyPressEvent( QKeyEvent * ke );
-	virtual void keyReleaseEvent( QKeyEvent * ke );
+  private:
+    virtual void keyPressEvent(QKeyEvent* ke);
+    virtual void keyReleaseEvent(QKeyEvent* ke);
 
-	QAction* m_addBBTrackAction;
-	QAction* m_addSampleTrackAction;
-	QAction* m_addAutomationTrackAction;
+    QAction* m_addBBTrackAction;
+    QAction* m_addSampleTrackAction;
+    QAction* m_addAutomationTrackAction;
 
-	ActionGroup * m_editModeGroup;
-	QAction* m_drawModeAction;
-	QAction* m_selectModeAction;
-	QAction* m_crtlAction;
+    ActionGroup* m_editModeGroup;
+    QAction*     m_drawModeAction;
+    QAction*     m_selectModeAction;
+    //QAction*     m_crtlAction;
 
-	ComboBox * m_zoomingXComboBox;
-	ComboBox * m_zoomingYComboBox;
+    ComboBox* m_zoomingXComboBox;
+    ComboBox* m_zoomingYComboBox;
+    ComboBox* m_quantizeComboBox;
 };
 
 #endif

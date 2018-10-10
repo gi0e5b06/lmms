@@ -68,7 +68,8 @@ public:
 	}
 
 	virtual void addDefaultActions( QMenu* menu );
-        virtual void enterValue() { qWarning("enterValue() not implemented"); }
+        virtual void enterValue();
+        virtual void editRandomization();
 
 protected:
 	virtual void mousePressEvent( QMouseEvent* event );
@@ -89,6 +90,7 @@ public:
 
 public slots:
         void enterValue();
+        void editRandomization();
 	void execConnectionDialog();
 	void removeConnection();
 	void editSongGlobalAutomation();

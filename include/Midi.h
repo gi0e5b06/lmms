@@ -126,17 +126,21 @@ const uint8_t MidiChannelCount = 16;
 const uint8_t MidiControllerCount = 128;
 const uint8_t MidiProgramCount = 128;
 
-const uint8_t MidiMinVelocity = 0;
-const uint8_t MidiMaxVelocity = 127;
-const uint8_t MidiDefaultVelocity = 64;      // MidiMaxVelocity/2;
-
 const uint8_t MidiMinControllerValue = 0;
 const uint8_t MidiMaxControllerValue = 127;
 
 const uint8_t MidiMinKey = 0;
 const uint8_t MidiMaxKey = 127;
 
-const uint8_t MidiMinPanning = 0;     //-128;
+const uint8_t MidiMinVelocity = 0;
+const uint8_t MidiMaxVelocity = 127;
+const uint8_t MidiDefaultVelocity = 64;
+
+const uint8_t MidiMinVolume = 0;
+const uint8_t MidiMaxVolume = 127;
+const uint8_t MidiDefaultVolume = 64;
+
+const uint8_t MidiMinPanning = 0;
 const uint8_t MidiMaxPanning = 127;
 const uint8_t MidiDefaultPanning = 64;
 

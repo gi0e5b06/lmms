@@ -29,7 +29,6 @@
 #include "Engine.h"
 //#include "MixHelpers.h"
 #include "Mixer.h"
-
 #include "lmms_math.h"
 
 Ring::Ring(f_cnt_t size) :
@@ -74,6 +73,16 @@ sample_t Ring::value(f_cnt_t _offset, ch_cnt_t _ch, f_cnt_t _pos)
     return m_buffer[abspos(_pos + _offset)][_ch];
 }
 
+sample_t Ring::valuet(real_t _offset, ch_cnt_t _ch)
+{
+    return value(msToFrames(_offset), _ch);
+}
+
+sample_t Ring::valuet(real_t _offset, ch_cnt_t _ch, real_t _pos)
+{
+    return value(msToFrames(_offset), _ch, msToFrames(_pos));
+}
+
 void Ring::reset()
 {
     memset(m_buffer, 0, m_size * sizeof(sampleFrame));
@@ -105,7 +114,7 @@ void Ring::rewind(f_cnt_t _amount)
     m_position = relpos(-_amount);
 }
 
-void Ring::rewind(real_t _amount)
+void Ring::rewindt(real_t _amount)
 {
     rewind(msToFrames(_amount));
 }
@@ -115,7 +124,7 @@ void Ring::forward(f_cnt_t _amount)
     m_position = relpos(_amount);
 }
 
-void Ring::forward(real_t _amount)
+void Ring::forwardt(real_t _amount)
 {
     forward(msToFrames(_amount));
 }
@@ -162,9 +171,9 @@ void Ring::read(sampleFrame*  _dst,
             _dst[f][ch] = m_buffer[abspos(_pos + f)][ch];
 }
 
-void Ring::read(sampleFrame*  _dst,
-                const f_cnt_t _length,
-                const real_t  _pos) const
+void Ring::readt(sampleFrame*  _dst,
+                 const f_cnt_t _length,
+                 const real_t  _pos) const
 {
     read(_dst, msToFrames(_pos), _length);
 }
@@ -250,11 +259,11 @@ void Ring::write(const sampleFrame* _src,
         }
 }
 
-void Ring::write(const sampleFrame* _src,
-                 const f_cnt_t      _length,
-                 const real_t       _pos,
-                 const OpMode       _op,
-                 const real_t       _factor)
+void Ring::writet(const sampleFrame* _src,
+                  const f_cnt_t      _length,
+                  const real_t       _pos,
+                  const OpMode       _op,
+                  const real_t       _factor)
 {
     if(m_frozen)
         return;

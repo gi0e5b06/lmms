@@ -48,37 +48,50 @@ WaveForm::Set::Set()
     // 107 is reserved
     BANK              = 0;
     m_bankNames[BANK] = "Basic";
-    new WaveForm /*PULSE*/ ("Pulse", BANK, 8, pulsef, Exact);
-    new WaveForm /*CBPEAK*/ ("Cb peak", BANK, 15, cbpeakf, Linear);
-    new WaveForm /*MOOGSAW*/ ("Moog saw", BANK, 52, moogsawf, Linear);
-    new WaveForm /*MOOGSQUARE*/ ("Moog square", BANK, 53, moogsquaref,
-                                 Linear);
-    new WaveForm /*OCTAVIUSSAW*/ ("Octavius saw", BANK, 62, octaviussawf,
-                                  Linear);
-    new WaveForm /*EXPSAW*/ ("Exponential saw", BANK, 82, expsawf, Linear);
+    new WaveForm("Pulse", BANK, 8, pulsef, Exact);
+    new WaveForm("Cb peak", BANK, 15, cbpeakf, Linear);
+    new WaveForm("Moog saw", BANK, 52, moogsawf, Linear);
+    new WaveForm("Moog square", BANK, 53, moogsquaref, Linear);
+    new WaveForm("Octavius saw", BANK, 62, octaviussawf, Linear);
+    new WaveForm("Exponential saw", BANK, 82, expsawf, Linear);
+    new WaveForm("Sin2 saw", BANK, 90, nsin2f, Linear);
+    new WaveForm("Sin4 saw", BANK, 91, nsin4f, Linear);
+    new WaveForm("Inv saw", BANK, 92, ninvsawf, Linear);
+    new WaveForm("Corner saw", BANK, 93, cornersawf, Linear);
+    new WaveForm("Corner peak", BANK, 98, cornerpeakf, Linear);
+    new WaveForm("Profil peak", BANK, 99, profilpeakf, Linear);
 
     // Adjusted
     // 0a/0p versions (minimize the volume at the end and the beginning.
     // 107 is reserved
     BANK              = 1;
     m_bankNames[BANK] = "Adjusted";
-    new WaveForm /*SAWTOOTH0P*/ ("Saw tooth 0p", BANK, 2, sawtooth0pf, Exact);
-    new WaveForm /*HARSHSAW0P*/ ("Harsh saw 0p", BANK, 4, harshsaw0pf, Exact);
-    new WaveForm /*SQPEAK0P*/ ("Sq peak 0p", BANK, 5, sqpeak0pf, Linear);
-    new WaveForm /*PULSE0P*/ ("Pulse 0p", BANK, 8, pulse0pf, Exact);
-    new WaveForm /*CBPEAK0P*/ ("Cb peak 0p", BANK, 15, cbpeak0pf, Linear);
-    new WaveForm /*MOOGSAW0P*/ ("Moog saw 0p", BANK, 52, moogsaw0pf, Linear);
-    new WaveForm /*OCTAVIUSSAW0P*/ ("Octavius saw 0p", BANK, 62,
-                                    octaviussaw0pf, Linear);
+    new WaveForm("Saw tooth 0p", BANK, 2, sawtooth0pf, Exact);
+    new WaveForm("Harsh saw 0p", BANK, 4, harshsaw0pf, Exact);
+    new WaveForm("Sq peak 0p", BANK, 5, sqpeak0pf, Linear);
+    new WaveForm("Pulse 0p", BANK, 8, pulse0pf, Exact);
+    new WaveForm("Cb peak 0p", BANK, 15, cbpeak0pf, Linear);
+    new WaveForm("Moog saw 0p", BANK, 52, moogsaw0pf, Linear);
+    new WaveForm("Octavius saw 0p", BANK, 62, octaviussaw0pf, Linear);
 
     // Centered (2)
     // Max energy at the center
     BANK              = 2;
     m_bankNames[BANK] = "Centered";
 
+    // Dephased (3)
+    // Phase - 0.5
+    BANK              = 3;
+    m_bankNames[BANK] = "Dephased";
+
+    // Reversed (4)
+    // - Phase
+    BANK              = 4;
+    m_bankNames[BANK] = "Reversed";
+
     // Soften
-    BANK              = 5;
-    m_bankNames[BANK] = "Soften";
+    // BANK              = 5;
+    // m_bankNames[BANK] = "Soften";
     createSoften(5, 0.02);
     createSoften(6, 0.05);
     createSoften(7, 0.10);
@@ -111,56 +124,87 @@ WaveForm::Set::Set()
     new WaveForm /*ID*/ ("id()", BANK, 1, identityf, Exact);
     new WaveForm /*SQ*/ ("sq()", BANK, 2, sqf, Exact);
     new WaveForm /*CB*/ ("cb()", BANK, 3, cbf, Exact);
+    new WaveForm /*CMPL*/ ("complement()", BANK, 10, complementf, Exact);
     new WaveForm /*CBRT*/ ("cbrt()", BANK, 13, cbrtf, Linear);
     new WaveForm /*NEXP*/ ("n_exp()", BANK, 20, nexpf, Linear);
     new WaveForm /*NLOG*/ ("n_log()", BANK, 30, nlogf, Linear);
+    new WaveForm /*NGAUSS*/ ("n_gauss()", BANK, 41, ngaussf, Linear);
+    // SHARPGAUSS 47
+    new WaveForm /*COS*/ ("n_cos()", BANK, 80, ncosf, Linear);
+    new WaveForm /*COS2*/ ("n_cos2()", BANK, 90, ncos2f, Linear);
+    new WaveForm /*COS4*/ ("n_cos4()", BANK, 91, ncos4f, Linear);
+    new WaveForm /*INVDIST*/ ("d_inv()", BANK, 92, ninvdistf, Linear);
+    new WaveForm /*CORNERDIST*/ ("d_corner()", BANK, 93, cornerdistf, Linear);
 
-    int  sbank = 35;
-    QDir wfrd("../../../lmms/waveforms", "*", QDir::Name | QDir::IgnoreCase,
-              QDir::AllDirs | QDir::NoDotAndDotDot);
-    for(QString& wfb : wfrd.entryList())
+    int sbank = 35;
     {
-        QDir wfbd(wfrd.absolutePath() + "/" + wfb, "*.wav",
+        QDir wfrd("../../../lmms/waveforms", "AKWF_*",
                   QDir::Name | QDir::IgnoreCase,
-                  QDir::Files | QDir::NoDotAndDotDot);
-
-        QString bankname = wfb;
-        bankname.replace(QRegExp("^AKWF_"), "");
-        bankname.replace('_', ' ');
-        m_bankNames[sbank - MIN_BANK] = bankname.trimmed();
-
-        int sindex = MIN_INDEX;
-        for(QString& wff : wfbd.entryList())
+                  QDir::Dirs | QDir::NoDotAndDotDot);
+        for(QString& wfb : wfrd.entryList())
         {
-            if(sindex > MAX_INDEX)
-                continue;
-            // qInfo("%s : %s", qPrintable(wff),
-            //      qPrintable(wfbd.absolutePath() + "/" + wff));
-            /*
-            SampleBuffer* sb = new SampleBuffer(
-                    wfbd.absolutePath() + "/" + wff, false, false);
+            QDir wfbd(wfrd.absolutePath() + "/" + wfb, "*.wav",
+                      QDir::Name | QDir::IgnoreCase,
+                      QDir::Files | QDir::NoDotAndDotDot);
 
-            QString wavename = wff;
-            wavename.replace(QRegExp("^AKWF_"), "");
-            wavename.replace(QRegExp("[.]wav$", Qt::CaseInsensitive), "");
-            wavename.replace('_', ' ');
+            QString bankname = wfb;
+            bankname.replace(QRegExp("^AKWF_"), "");
+            bankname.replace('_', ' ');
+            m_bankNames[sbank - MIN_BANK] = bankname.trimmed();
 
-            new WaveForm(qPrintable(wavename.trimmed()), sbank, sindex,
-                         sb->data(), sb->frames(), Linear);
-            delete sb;
-            */
-            QString filename = wfbd.absolutePath() + "/" + wff;
-            QString wavename = wff;
-            wavename.replace(QRegExp("^AKWF_"), "");
-            wavename.replace(QRegExp("[.]wav$", Qt::CaseInsensitive), "");
-            wavename.replace('_', ' ');
+            int sindex = MIN_INDEX;
+            for(QString& wff : wfbd.entryList())
+            {
+                if(sindex > MAX_INDEX)
+                    continue;
+                QString filename = wfbd.absolutePath() + "/" + wff;
+                QString wavename = wff;
+                wavename.replace(QRegExp("^AKWF_"), "");
+                wavename.replace(QRegExp("[.]wav$", Qt::CaseInsensitive), "");
+                wavename.replace('_', ' ');
 
-            new WaveForm(qPrintable(wavename.trimmed()), sbank, sindex,
-                         filename, Linear);
+                new WaveForm(qPrintable(wavename.trimmed()), sbank, sindex,
+                             filename, Linear);
 
-            sindex++;
+                sindex++;
+            }
+            sbank++;
         }
-        sbank++;
+    }
+    sbank = 100;
+    {
+        QDir wfrd("../../../lmms/waveforms", "User_*",
+                  QDir::Name | QDir::IgnoreCase,
+                  QDir::Dirs | QDir::NoDotAndDotDot);
+        for(QString& wfb : wfrd.entryList())
+        {
+            QDir wfbd(wfrd.absolutePath() + "/" + wfb, "*.wav",
+                      QDir::Name | QDir::IgnoreCase,
+                      QDir::Files | QDir::NoDotAndDotDot);
+
+            QString bankname = wfb;
+            bankname.replace(QRegExp("^AKWF_"), "");
+            bankname.replace('_', ' ');
+            m_bankNames[sbank - MIN_BANK] = bankname.trimmed();
+
+            int sindex = MIN_INDEX;
+            for(QString& wff : wfbd.entryList())
+            {
+                if(sindex > MAX_INDEX)
+                    continue;
+                QString filename = wfbd.absolutePath() + "/" + wff;
+                QString wavename = wff;
+                // wavename.replace(QRegExp("^AKWF_"), "");
+                wavename.replace(QRegExp("[.]wav$", Qt::CaseInsensitive), "");
+                wavename.replace('_', ' ');
+
+                new WaveForm(qPrintable(wavename.trimmed()), sbank, sindex,
+                             filename, Linear);
+
+                sindex++;
+            }
+            sbank++;
+        }
     }
 }
 
@@ -249,6 +293,8 @@ const WaveForm WaveForm::WHITENOISE("White noise", 0, 6, randf, Discrete, 10);
 // 7 is reserved
 const WaveForm WaveForm::ZERO(" 0.0", ZERO_BANK, ZERO_INDEX, zerof, Exact);
 const WaveForm WaveForm::SQRT("sqrt()", 20, 12, sqrtf, Linear, 10);
+const WaveForm
+        WaveForm::SHARPGAUSS("sharpgauss()", 21, 47, sharpgaussf, Linear, 10);
 
 const wavefunction_t WaveForm::sine
         = [](const real_t _x) { return WaveForm::SINE.f(_x); };

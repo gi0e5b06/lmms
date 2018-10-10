@@ -35,35 +35,37 @@
 
 using namespace std;
 
-//#define REAL_IS_DOUBLE
-//#undef REAL_IS_FLOAT
-//typedef double real_t;
+#define REAL_IS_DOUBLE
+#undef REAL_IS_FLOAT
+typedef double real_t;
 
-#define REAL_IS_FLOAT
-#undef REAL_IS_DOUBLE
-typedef float real_t;
+//#define REAL_IS_FLOAT
+//#undef REAL_IS_DOUBLE
+// typedef float real_t;
 
 typedef float FLOAT;
 
 typedef int32_t tact_t;
 typedef int32_t tick_t;
 
-typedef real_t volume_t;   // uint8_t
-typedef real_t pitch_t;    // int16_t
-typedef real_t panning_t;  // int8_t
-typedef real_t frequency_t;
+typedef real_t volume_t;     // uint8_t (0 .. 200)
+typedef real_t pitch_t;      // int16_t
+typedef real_t panning_t;    // int8_t  (-100 .. 100)
+typedef real_t frequency_t;  //
 
-typedef real_t  sample_t;     // standard sample (everywhere)
+typedef real_t control_t;  // (0 .. 1)
+
+typedef real_t  sample_t;     // standard sample everywhere (-1 .. 1)
 typedef float   sampleF32_t;  // 32-bit float sample
 typedef int16_t sampleS16_t;  // 16-bit int sample
 
-typedef int32_t sample_rate_t;  // sample-rate
-typedef int16_t fpp_t;          // frames per period (0-16384)
+typedef int32_t sample_rate_t;  // sample rate
+typedef int16_t fpp_t;          // frames per period (0 .. 16384)
 typedef int32_t f_cnt_t;        // standard frame-count
-typedef int8_t  ch_cnt_t;       // channel-count (0-SURROUND_CHANNELS)
-typedef int16_t bpm_t;          // tempo (MIN_BPM to MAX_BPM)
+typedef int8_t  ch_cnt_t;       // channel count (0 .. SURROUND_CHANNELS)
+typedef int16_t bpm_t;          // tempo (MIN_BPM .. MAX_BPM)
 typedef int16_t bitrate_t;      // bitrate in kbps
-typedef int16_t fx_ch_t;        // FX-channel (0 to MAX_EFFECT_CHANNEL)
+typedef int16_t fx_ch_t;        // FX-channel (0 .. MAX_EFFECT_CHANNEL)
 
 typedef int32_t jo_id_t;  // (unique) ID of a journalling object
 

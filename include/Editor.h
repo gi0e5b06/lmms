@@ -27,12 +27,14 @@
 
 #include "ActionUpdatable.h"
 
+#include "lmms_basics.h"
+
 #include <QMainWindow>
 //#include <QHash>
 #include <QToolBar>
 
 class QAction;
-
+class ComboBoxModel;
 class DropToolBar;
 
 /// \brief Superclass for editors with a toolbar.
@@ -47,7 +49,13 @@ class Editor : public QMainWindow, public virtual ActionUpdatable
 	void setPauseIcon(bool displayPauseIcon=true);
 	QAction *playAction() const;
 
-	static const QVector<float> ZOOM_LEVELS;
+	static const QVector<real_t> ZOOM_LEVELS;
+	static const QVector<tick_t> QUANTIZE_LEVELS;
+	static const QVector<tick_t> LENGTH_LEVELS;
+
+        static void fillZoomLevels(ComboBoxModel& _cbm);
+        static void fillQuantizeLevels(ComboBoxModel& _cbm);
+        static void fillLengthLevels(ComboBoxModel& _cbm);
 
  protected:
 	/// \brief	Constructor.

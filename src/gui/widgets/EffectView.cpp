@@ -49,6 +49,10 @@
 //const int EFFECT_WIDTH  = 228;
 //const int EFFECT_HEIGHT = 60;
 
+/*! The width of the resize grip in pixels
+ */
+const int RESIZE_GRIP_WIDTH = 4;
+
 EffectView::EffectView( Effect * _model, QWidget * _parent ) :
 	PluginView( _model, _parent ),
 	m_bg( embed::getIconPixmap( "effect_plugin" ) ),
@@ -124,15 +128,16 @@ EffectView::EffectView( Effect * _model, QWidget * _parent ) :
 	m_balanceKNB->setGeometry( 19+127,5,36,36 );
 	m_balanceKNB->setEnabled( isEnabled );
 	m_balanceKNB->setHintText( tr( "Balance:" ), "" );
-	m_balanceKNB->setWhatsThis( tr(
-"The Balance knob controls how ..." ) );
+	m_balanceKNB->setWhatsThis
+                ( tr( "The Balance knob controls how ..." ) );
 
         m_balanceKNB->setVisible(_model->isBalanceable());
 	setModel( _model );
 
         QPushButton* menuBTN=new QPushButton(this);
         menuBTN->setIcon(embed::getIcon("menu"));
-        menuBTN->setGeometry( 1, 3, 20, 20 );
+        menuBTN->move( 223-25, 34);
+        menuBTN->setFixedSize(20, 20 );
         connect( menuBTN, SIGNAL( clicked() ), this, SLOT( showContextMenu() ) );
 
         if(!effect())
@@ -377,12 +382,21 @@ QMenu* EffectView::buildContextMenu()
 
 void EffectView::paintEvent( QPaintEvent * )
 {
+        static QPixmap s_grip(embed::getPixmap("track_op_grip"));
+
 	QPainter p( this );
 	p.drawPixmap( 0, 0, m_bg );
 
-	QFont f = pointSizeF( font(), 7.5f );
-	f.setBold( true );
-	p.setFont( f );
+        int y = 2;
+        while(y < height())
+        {
+                p.drawPixmap(2, y, s_grip);
+                y += s_grip.height();
+        }
+
+        QFont ft = pointSizeF( font(), 7.5f );
+	ft.setBold( true );
+	p.setFont( ft );
 
 	//p.setPen( palette().shadow().color() );
 	//p.drawText( 19+25, 54, model()->displayName() );

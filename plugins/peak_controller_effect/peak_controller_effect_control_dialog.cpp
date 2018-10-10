@@ -3,7 +3,7 @@
  *                                             PeakControllerEffect
  *
  * Copyright (c) 2008 Paul Giblock <drfaygo/at/gmail/dot/com>
- * 
+ *
  * This file is part of LMMS - https://lmms.io
  *
  * This program is free software; you can redistribute it and/or
@@ -23,88 +23,90 @@
  *
  */
 
-
-
-#include <QLayout>
-#include <QLabel>
-
 #include "peak_controller_effect_control_dialog.h"
+
 #include "peak_controller_effect_controls.h"
+#include "ComboBox.h"
 #include "Knob.h"
 #include "LedCheckBox.h"
+
 #include "embed.h"
 
+#include <QLabel>
+#include <QLayout>
 
 PeakControllerEffectControlDialog::PeakControllerEffectControlDialog(
-				PeakControllerEffectControls * _controls ) :
-	EffectControlDialog( _controls )
+        PeakControllerEffectControls* _controls) :
+      EffectControlDialog(_controls)
 {
-	setWindowIcon( embed::getIconPixmap( "controller" ) );
-	setAutoFillBackground( true );
-	QPalette pal;
-	pal.setBrush( backgroundRole(), PLUGIN_NAME::getIconPixmap( "artwork" ) );
-	setPalette( pal );
-	//setFixedSize( 240, 80 );
-        setFixedSize(254,70);
+    setWindowIcon(embed::getIconPixmap("controller"));
+    setAutoFillBackground(true);
+    QPalette pal;
+    pal.setBrush(backgroundRole(), PLUGIN_NAME::getIconPixmap("artwork"));
+    setPalette(pal);
+    // setFixedSize( 240, 80 );
+    setFixedSize(254, 70);
 
-	m_baseKnob = new Knob( knobBright_26, this );
-	m_baseKnob->setLabel( tr( "BASE" ) );
-	m_baseKnob->setModel( &_controls->m_baseModel );
-	m_baseKnob->setHintText( tr( "Base amount:" ) , "" );
+    m_baseKnob = new Knob(knobBright_26, this);
+    m_baseKnob->setLabel(tr("BASE"));
+    m_baseKnob->setModel(&_controls->m_baseModel);
+    m_baseKnob->setHintText(tr("Base amount:"), "");
 
-	m_amountKnob = new Knob( knobBright_26, this );
-	m_amountKnob->setLabel( tr( "AMNT" ) );
-	m_amountKnob->setModel( &_controls->m_amountModel );
-	m_amountKnob->setHintText( tr( "Modulation amount:" ) , "" );
+    m_amountKnob = new Knob(knobBright_26, this);
+    m_amountKnob->setLabel(tr("AMNT"));
+    m_amountKnob->setModel(&_controls->m_amountModel);
+    m_amountKnob->setHintText(tr("Modulation amount:"), "");
 
-	m_amountMultKnob = new Knob( knobBright_26, this );
-	m_amountMultKnob->setLabel( tr( "MULT" ) );
-	m_amountMultKnob->setModel( &_controls->m_amountMultModel );
-	m_amountMultKnob->setHintText( tr( "Amount Multiplicator:" ) , "" );
+    m_amountMultKnob = new Knob(knobBright_26, this);
+    m_amountMultKnob->setLabel(tr("MULT"));
+    m_amountMultKnob->setModel(&_controls->m_amountMultModel);
+    m_amountMultKnob->setHintText(tr("Amount Multiplicator:"), "");
 
-	m_attackKnob = new Knob( knobBright_26, this );
-	m_attackKnob->setLabel( tr( "ATCK" ) );
-	m_attackKnob->setModel( &_controls->m_attackModel );
-	m_attackKnob->setHintText( tr( "Attack:" ) , "" );
+    m_attackKnob = new Knob(knobBright_26, this);
+    m_attackKnob->setLabel(tr("ATCK"));
+    m_attackKnob->setModel(&_controls->m_attackModel);
+    m_attackKnob->setHintText(tr("Attack:"), "");
 
-	m_decayKnob = new Knob( knobBright_26, this );
-	m_decayKnob->setLabel( tr( "DCAY" ) );
-	m_decayKnob->setModel( &_controls->m_decayModel );
-	m_decayKnob->setHintText( tr( "Release:" ) , "" );
-	
-	m_tresholdKnob = new Knob( knobBright_26, this );
-	m_tresholdKnob->setLabel( tr( "TRSH" ) );
-	m_tresholdKnob->setModel( &_controls->m_tresholdModel );
-	m_tresholdKnob->setHintText( tr( "Treshold:" ) , "" );
+    m_decayKnob = new Knob(knobBright_26, this);
+    m_decayKnob->setLabel(tr("DCAY"));
+    m_decayKnob->setModel(&_controls->m_decayModel);
+    m_decayKnob->setHintText(tr("Release:"), "");
 
-	m_muteLed = new LedCheckBox( "Mute Effect", this );
-	m_muteLed->setModel( &_controls->m_muteModel );
+    m_tresholdKnob = new Knob(knobBright_26, this);
+    m_tresholdKnob->setLabel(tr("TRSH"));
+    m_tresholdKnob->setModel(&_controls->m_tresholdModel);
+    m_tresholdKnob->setHintText(tr("Treshold:"), "");
 
-	m_absLed = new LedCheckBox( "Absolute Value", this );
-	m_absLed->setModel( &_controls->m_absModel );
+    m_muteLed = new LedCheckBox("Mute Effect", this);
+    m_muteLed->setModel(&_controls->m_muteModel);
 
-	QVBoxLayout * mainLayout = new QVBoxLayout();
-	QHBoxLayout * knobLayout = new QHBoxLayout();
-	QHBoxLayout * ledLayout = new QHBoxLayout();
+    // m_absLed = new LedCheckBox( "Absolute Value", this );
+    // m_absLed->setModel( &_controls->m_absModel );
+    m_modeCMB = new ComboBox(this);
+    m_modeCMB->setModel(&_controls->m_modeModel);
 
-	knobLayout->addWidget( m_baseKnob );
-	knobLayout->addWidget( m_amountKnob );
-	knobLayout->addWidget( m_amountMultKnob );
-	knobLayout->addWidget( m_attackKnob );
-	knobLayout->addWidget( m_decayKnob );
-	knobLayout->addWidget( m_tresholdKnob );
+    QVBoxLayout* mainLayout = new QVBoxLayout();
+    QHBoxLayout* knobLayout = new QHBoxLayout();
+    QHBoxLayout* ledLayout  = new QHBoxLayout();
 
-	ledLayout->addWidget( m_muteLed );
-	ledLayout->addWidget( m_absLed );
+    knobLayout->addWidget(m_baseKnob);
+    knobLayout->addWidget(m_amountKnob);
+    knobLayout->addWidget(m_amountMultKnob);
+    knobLayout->addWidget(m_attackKnob);
+    knobLayout->addWidget(m_decayKnob);
+    knobLayout->addWidget(m_tresholdKnob);
 
-	mainLayout->addLayout( knobLayout );
-	mainLayout->addLayout( ledLayout );
+    ledLayout->addWidget(m_muteLed);
+    // ledLayout->addWidget(m_absLed);
+    ledLayout->addWidget(m_modeCMB);
 
-	mainLayout->setContentsMargins(6,6,6,6);
-        mainLayout->setSpacing(3);
-        knobLayout->setSpacing(3);
-        ledLayout->setSpacing(3);
+    mainLayout->addLayout(knobLayout);
+    mainLayout->addLayout(ledLayout);
 
-	setLayout( mainLayout );
+    mainLayout->setContentsMargins(6, 6, 6, 6);
+    mainLayout->setSpacing(3);
+    knobLayout->setSpacing(3);
+    ledLayout->setSpacing(3);
+
+    setLayout(mainLayout);
 }
-

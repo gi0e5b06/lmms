@@ -24,11 +24,11 @@
 
 #include "InstrumentPlayHandle.h"
 
-#include <cmath>
-
 #include "Engine.h"
-#include "Mixer.h"
 #include "InstrumentTrack.h"
+#include "Mixer.h"
+
+#include <cmath>
 
 InstrumentPlayHandle::InstrumentPlayHandle(Instrument*      instrument,
                                            InstrumentTrack* instrumentTrack) :
@@ -53,11 +53,9 @@ void InstrumentPlayHandle::play(sampleFrame* _working_buffer)
     ConstNotePlayHandleList nphv = NotePlayHandle::nphsOfInstrumentTrack(
             m_instrument->instrumentTrack(), true);
 
-    float ndm = m_instrument->instrumentTrack()->noteDetuneModel()->value()
-            *(1.f-0.05f*Engine::mixer()->baseSampleRate() / Engine::mixer()->processingSampleRate());
-    if(fabsf(ndm)<0.001f) ndm=0.f;
-
-    bool nphsLeft;
+    bool   processed = false;
+    real_t ndm;
+    bool   nphsLeft;
     do
     {
         nphsLeft = false;
@@ -68,19 +66,23 @@ void InstrumentPlayHandle::play(sampleFrame* _working_buffer)
             if(notePlayHandle->state() != ThreadableJob::Done
                && !notePlayHandle->isFinished())
             {
-                nphsLeft = true;
+                processed = true;
+                nphsLeft  = true;
                 notePlayHandle->process();
-                ndm = notePlayHandle->baseDetune();
+                ndm = notePlayHandle->automationDetune()
+                      + notePlayHandle->effectDetune();
             }
         }
     } while(nphsLeft);
 
-    // if(m_instrument->flags().testFlag(Instrument::IsMidiBased) == true)
+    // ndm = m_instrument->instrumentTrack()->noteBendingModel()->value();
+    // ndm*=(1.-0.05*Engine::mixer()->baseSampleRate() /
+    // Engine::mixer()->processingSampleRate()); if(abs(ndm)<0.001) ndm=0.;
+
+    if(processed)
     {
-        // qInfo("InstrumentPlayHandle::processAudioBuffer
-        // baseDetune=%f",ndm);
-        m_instrument->instrumentTrack()->noteDetuneModel()->setAutomatedValue(
-                ndm);
+        ndm = round(1000. * ndm) / 1000.;
+        m_instrument->instrumentTrack()->noteBendingModel()->setAutomatedValue(ndm);
     }
 
     m_instrument->play(_working_buffer);

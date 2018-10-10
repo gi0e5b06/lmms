@@ -25,128 +25,132 @@
 #ifndef AUDIO_PORT_H
 #define AUDIO_PORT_H
 
-#include <QString>
 #include <QMutex>
+#include <QString>
 //#include <QMutexLocker>
 
+#include "AutomatableModel.h"
 #include "MemoryManager.h"
 #include "PlayHandle.h"
 
 class EffectChain;
-class FloatModel;
-class BoolModel;
+// class FloatModel;
+// class BoolModel;
 class SampleBuffer;
-
 
 class AudioPort : public ThreadableJob
 {
-	MM_OPERATORS
-public:
-	AudioPort( const QString & _name, bool _has_effect_chain = true,
-                   FloatModel * volumeModel = NULL, FloatModel * panningModel = NULL,
-                   BoolModel * mutedModel = NULL, BoolModel * frozenModel = NULL,
-                   BoolModel * clippingModel = NULL );
-	virtual ~AudioPort();
+    MM_OPERATORS
+  public:
+    AudioPort(const QString& _name,
+              bool           _has_effect_chain,    // = true,
+              BoolModel*     volumeEnabledModel,   // = nullptr,
+              FloatModel*    volumeModel,          // = nullptr,
+              BoolModel*     panningEnabledModel,  // = nullptr,
+              FloatModel*    panningModel,         // = nullptr,
+              BoolModel*     bendingEnabledModel,  // = nullptr,
+              FloatModel*    bendingModel,         // = nullptr,
+              BoolModel*     mutedModel,           // = nullptr,
+              BoolModel*     frozenModel,          // = nullptr,
+              BoolModel*     clippingModel);       // = nullptr);
+    virtual ~AudioPort();
 
-	inline sampleFrame * buffer()
-	{
-		return m_portBuffer;
-	}
+    inline sampleFrame* buffer()
+    {
+        return m_portBuffer;
+    }
 
-	inline void lockBuffer()
-	{
-		m_portBufferLock.lock();
-	}
+    inline void lockBuffer()
+    {
+        m_portBufferLock.lock();
+    }
 
-	inline void unlockBuffer()
-	{
-		m_portBufferLock.unlock();
-	}
+    inline void unlockBuffer()
+    {
+        m_portBufferLock.unlock();
+    }
 
+    // indicate whether JACK & Co should provide output-buffer at ext. port
+    inline bool extOutputEnabled() const
+    {
+        return m_extOutputEnabled;
+    }
 
-	// indicate whether JACK & Co should provide output-buffer at ext. port
-	inline bool extOutputEnabled() const
-	{
-		return m_extOutputEnabled;
-	}
+    void setExtOutputEnabled(bool _enabled);
 
-	void setExtOutputEnabled( bool _enabled );
+    // next effect-channel after this audio-port
+    // (-1 = none  0 = master)
+    inline fx_ch_t nextFxChannel() const
+    {
+        return m_nextFxChannel;
+    }
 
+    inline EffectChain* effects()
+    {
+        return m_effects;
+    }
 
-	// next effect-channel after this audio-port
-	// (-1 = none  0 = master)
-	inline fx_ch_t nextFxChannel() const
-	{
-		return m_nextFxChannel;
-	}
+    void setNextFxChannel(const fx_ch_t _chnl)
+    {
+        m_nextFxChannel = _chnl;
+    }
 
-	inline EffectChain * effects()
-	{
-		return m_effects;
-	}
+    const QString& name() const
+    {
+        return m_name;
+    }
 
-	void setNextFxChannel( const fx_ch_t _chnl )
-	{
-		m_nextFxChannel = _chnl;
-	}
+    void setName(const QString& _new_name);
 
+    bool processEffects();
 
-	const QString & name() const
-	{
-		return m_name;
-	}
+    // ThreadableJob stuff
+    virtual void doProcessing();
+    virtual bool requiresProcessing() const
+    {
+        return true;
+    }
 
-	void setName( const QString & _new_name );
+    void addPlayHandle(PlayHandle* handle);
+    void removePlayHandle(PlayHandle* handle);
 
+    void updateFrozenBuffer(f_cnt_t _len);
+    void cleanFrozenBuffer(f_cnt_t _len);
+    void readFrozenBuffer(QString _uuid);
+    void writeFrozenBuffer(QString _uuid);
 
-	bool processEffects();
+  private:
+    volatile bool m_bufferUsage;
 
-	// ThreadableJob stuff
-	virtual void doProcessing();
-	virtual bool requiresProcessing() const
-	{
-		return true;
-	}
+    sampleFrame* m_portBuffer;
+    QMutex       m_portBufferLock;
 
-	void addPlayHandle( PlayHandle * handle );
-	void removePlayHandle( PlayHandle * handle );
+    bool    m_extOutputEnabled;
+    fx_ch_t m_nextFxChannel;
 
-        void updateFrozenBuffer(f_cnt_t _len);
-        void cleanFrozenBuffer(f_cnt_t _len);
-        void readFrozenBuffer(QString _uuid);
-        void writeFrozenBuffer(QString _uuid);
+    QString m_name;
 
+    EffectChain* m_effects;
 
-private:
-	volatile bool m_bufferUsage;
+    PlayHandleList m_playHandles;
+    QMutex         m_playHandleLock;
 
-	sampleFrame * m_portBuffer;
-	QMutex m_portBufferLock;
+    BoolModel*  m_volumeEnabledModel;
+    FloatModel* m_volumeModel;
+    BoolModel*  m_panningEnabledModel;
+    FloatModel* m_panningModel;
+    BoolModel*  m_bendingEnabledModel;
+    FloatModel* m_bendingModel;
+    BoolModel*  m_mutedModel;
+    BoolModel*  m_frozenModel;
+    BoolModel*  m_clippingModel;
 
-	bool m_extOutputEnabled;
-	fx_ch_t m_nextFxChannel;
+    SampleBuffer* m_frozenBuf;
+    // sampleFrame* m_frozenBuf;
+    // int          m_frozenLen;
 
-	QString m_name;
-
-	EffectChain * m_effects;
-
-	PlayHandleList m_playHandles;
-	QMutex m_playHandleLock;
-
-	FloatModel * m_volumeModel;
-	FloatModel * m_panningModel;
-	BoolModel * m_mutedModel;
-	BoolModel * m_frozenModel;
-	BoolModel * m_clippingModel;
-
-        SampleBuffer*  m_frozenBuf;
-        //sampleFrame* m_frozenBuf;
-        //int          m_frozenLen;
-
-	friend class Mixer;
-	friend class MixerWorkerThread;
-
-} ;
-
+    friend class Mixer;
+    friend class MixerWorkerThread;
+};
 
 #endif

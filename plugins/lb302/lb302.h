@@ -154,7 +154,7 @@ public:
 
 	virtual Flags flags() const
 	{
-		return IsSingleStreamed;
+		return IsSingleStreamed | IsMonophonic;
 	}
 
         /* 0 is the default

@@ -14,10 +14,25 @@ QLabel {
     margin: 0px 0px 0px 0px;
 }
 
+QPushButton {
+    color: #d1d8e4;
+    font-size: 13px;
+    margin: 0px 0px 0px 0px;
+    padding: 1px 6px 1px 6px;
+    text-align: left;
+    width: 99px;
+    height: 22px;
+}
+
 QCheckBox {
     color: #d1d8e4;
     font-size: 13px;
     margin: 0px 0px 0px 0px;
+}
+
+QComboBox {
+    color: #d1d8e4;
+    font-size: 13px;
 }
 
 LedCheckBox {
@@ -740,9 +755,11 @@ PianoView {
 
 /* font sizes for text buttons */
 
+/*
 FxMixerView QPushButton, EffectRackView QPushButton, ControllerRackView QPushButton {
     font-size: 13px;
 }
+*/
 
 FxLine {
     background-color: #14161A; /*#3f4750;*/

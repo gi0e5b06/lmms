@@ -161,7 +161,7 @@ static inline float absFraction( float _x )
 static inline real_t
         bound(const real_t _min, const real_t _val, const real_t _max)
 {
-    return _val < _min ? _min : (_val > _max ? _max : _val);
+    return _val <= _min ? _min : (_val >= _max ? _max : _val);
 }
 
 static inline real_t
@@ -174,22 +174,21 @@ static inline real_t
 static inline int fastrandi()
 {
     static unsigned long next = 1;
-    next                      = next * 1103515245 + 12345;
+
+    next = next * 1103515245 + 12345;
     return ((unsigned)(next / 65536) % 32768);
 }
 
 static inline real_t fastrand(real_t range)
 {
-    if(sizeof(real_t) == sizeof(float))
-    {
-        static const float fast_rand_ratio = 1.0f / FAST_RAND_MAX;
-        return fastrandi() * range * fast_rand_ratio;
-    }
-    else
-    {
-        static const double fast_rand_ratio = 1.0 / FAST_RAND_MAX;
-        return fastrandi() * range * fast_rand_ratio;
-    }
+#ifdef REAL_IS_DOUBLE
+    static const double fast_rand_ratio = 1. / double(FAST_RAND_MAX);
+    return double(fastrandi()) * range * fast_rand_ratio;
+#endif
+#ifdef REAL_IS_FLOAT
+    static const float fast_rand_ratio = 1.f / float(FAST_RAND_MAX);
+    return float(fastrandi()) * range * fast_rand_ratio;
+#endif
 }
 
 static inline real_t fastrand01inc()
@@ -339,7 +338,7 @@ static inline double logToLinearScale(double min, double max, double value)
     {
         const double mmax   = qMax(qAbs(min), qAbs(max));
         const double val    = value * (max - min) + min;
-        double       result = signedPow(val / mmax, D_E) * mmax;
+        const double result = signedPow(val / mmax, D_E) * mmax;
         return isnan(result) ? 0 : result;
     }
     double result = pow(value, D_E) * (max - min) + min;
@@ -354,7 +353,7 @@ static inline double linearToLogScale(double min, double max, double value)
     if(min < 0)
     {
         const double mmax   = qMax(qAbs(min), qAbs(max));
-        double       result = signedPow(valueLimited / mmax, EXP) * mmax;
+        const double result = signedPow(valueLimited / mmax, EXP) * mmax;
         return isnan(result) ? 0 : result;
     }
     double result = pow(val, EXP) * (max - min) + min;
@@ -369,7 +368,7 @@ static inline float logToLinearScale(float min, float max, float value)
     {
         const float mmax   = qMax(qAbs(min), qAbs(max));
         const float val    = value * (max - min) + min;
-        float       result = signedPowf(val / mmax, F_E) * mmax;
+        const float result = signedPowf(val / mmax, F_E) * mmax;
         return isnan(result) ? 0 : result;
     }
     float result = powf(value, F_E) * (max - min) + min;
@@ -386,7 +385,7 @@ static inline float linearToLogScale(float min, float max, float value)
     if(min < 0)
     {
         const float mmax   = qMax(qAbs(min), qAbs(max));
-        float       result = signedPowf(valueLimited / mmax, EXP) * mmax;
+        const float result = signedPowf(valueLimited / mmax, EXP) * mmax;
         return isnan(result) ? 0 : result;
     }
     float result = powf(val, EXP) * (max - min) + min;
@@ -399,16 +398,14 @@ static inline float linearToLogScale(float min, float max, float value)
 //! @return Amplitude in dBFS. -inf for 0 amplitude.
 static inline real_t safeAmpToDbfs(real_t amp)
 {
-    if(sizeof(real_t) == sizeof(float))
-    {
-        // return amp == 0.0f ? -INFINITY : log10f(amp) * 20.0f;
-        return amp <= 0.0f ? -INFINITY : log10f(amp) * 20.0f;
-    }
-    else
-    {
-        return amp <= 0.0f ? -std::numeric_limits<real_t>::infinity()
-                           : log10(amp) * 20.;
-    }
+#ifdef REAL_IS_FLOAT
+    // return amp == 0.0f ? -INFINITY : log10f(amp) * 20.0f;
+    return amp <= 0.0f ? -INFINITY : log10f(amp) * 20.0f;
+#endif
+#ifdef REAL_IS_DOUBLE
+    return amp <= 0.0f ? -std::numeric_limits<real_t>::infinity()
+                       : log10(amp) * 20.;
+#endif
 }
 
 //! @brief Converts dBFS-scale to linear amplitude with 0dBFS = 1.0. Handles
@@ -418,10 +415,12 @@ static inline real_t safeAmpToDbfs(real_t amp)
 //! @return Linear amplitude
 static inline real_t safeDbfsToAmp(real_t dbfs)
 {
-    if(sizeof(real_t) == sizeof(float))
-        return isinf(dbfs) ? 0.0f : exp10f(dbfs * 0.05f);
-    else
-        return isinf(dbfs) ? 0. : exp10(dbfs * 0.05);
+#ifdef REAL_IS_FLOAT
+    return isinf(dbfs) ? 0.0f : exp10f(dbfs * 0.05f);
+#endif
+#ifdef REAL_IS_DOUBLE
+    return isinf(dbfs) ? 0. : exp10(dbfs * 0.05);
+#endif
 }
 
 //! @brief Converts linear amplitude (>0-1.0) to dBFS scale.
@@ -430,10 +429,12 @@ static inline real_t safeDbfsToAmp(real_t dbfs)
 //! @return Amplitude in dBFS.
 static inline real_t ampToDbfs(real_t amp)
 {
-    if(sizeof(real_t) == sizeof(float))
-        return log10f(amp) * 20.f;
-    else
-        return log10(amp) * 20.;
+#ifdef REAL_IS_FLOAT
+    return log10f(amp) * 20.f;
+#endif
+#ifdef REAL_IS_DOUBLE
+    return log10(amp) * 20.;
+#endif
 }
 
 //! @brief Converts dBFS-scale to linear amplitude with 0dBFS = 1.0
@@ -442,29 +443,35 @@ static inline real_t ampToDbfs(real_t amp)
 //! @return Linear amplitude
 static inline real_t dbfsToAmp(real_t dbfs)
 {
-    if(sizeof(real_t) == sizeof(float))
-        return exp10f(dbfs * 0.05f);
-    else
-        return exp10(dbfs * 0.05);
+#ifdef REAL_IS_FLOAT
+    return exp10f(dbfs * 0.05f);
+#endif
+#ifdef REAL_IS_DOUBLE
+    return exp10(dbfs * 0.05);
+#endif
 }
 
 //! returns 1.0f if val >= 0.0f, -1.0 else
 static inline real_t sign(real_t val)
 {
-    if(sizeof(real_t) == sizeof(float))
-        return val >= 0.f ? 1.f : -1.f;
-    else
-        return val >= 0. ? 1. : -1.;
+#ifdef REAL_IS_FLOAT
+    return val >= 0.f ? 1.f : -1.f;
+#endif
+#ifdef REAL_IS_DOUBLE
+    return val >= 0. ? 1. : -1.;
+#endif
 }
 
 //! if val >= 0.0f, returns sqrtf(val), else: -sqrtf(-val)
 #define sqrt_neg sqrtneg
 static inline real_t sqrtneg(real_t val)
 {
-    if(sizeof(real_t) == sizeof(float))
-        return sqrtf(fabs(val)) * sign(val);
-    else
-        return sqrt(abs(val)) * sign(val);
+#ifdef REAL_IS_FLOAT
+    return sqrtf(fabs(val)) * sign(val);
+#endif
+#ifdef REAL_IS_DOUBLE
+    return sqrt(abs(val)) * sign(val);
+#endif
 }
 
 //! returns value furthest from zero
@@ -484,7 +491,17 @@ static inline T absMin(T a, T b)
 static inline real_t phasef(const real_t _x)
 {
     real_t i;
+#ifdef REAL_IS_DOUBLE
     return modf(_x, &i);
+#endif
+#ifdef REAL_IS_FLOAT
+    return modf(_x, &i);
+#endif
+}
+
+static inline real_t identityf(const real_t x)
+{
+    return x;
 }
 
 static inline real_t sqf(const real_t _x)
@@ -497,14 +514,53 @@ static inline real_t cbf(const real_t _x)
     return _x * _x * _x;
 }
 
-static inline real_t identityf(const real_t x)
+static inline real_t ninvsawf(const real_t x)
 {
-    return x;
+    return 3 - 4 / (1 + x);
+}
+
+static inline real_t ninvdistf(const real_t x)
+{
+    return 2 / (1 + x) - 1;
+}
+
+static inline real_t cornersawf(const real_t x)
+{
+    // -(1-(2*x)**7)/(1+(2*x)**7)
+    real_t y = pow((2 * x), 7);
+    return -(1 - y) / (1 + y);
+}
+
+static inline real_t cornerpeakf(const real_t x)
+{
+    // -1-(1-(4*x)**6) / (1+(4*x)**6)-(1-(4*(1-x))**6) / (1+(4*(1-x))**6)
+    real_t y0 = pow(4. * x, 6);
+    real_t y1 = pow(4. * (1. - x), 6);
+    return -1. - (1. - y0) / (1. + y0) - (1. - y1) / (1. + y1);
+}
+
+static inline real_t cornerdistf(const real_t x)
+{
+    // (1-x**8) / (1+x**8)
+    real_t y = pow(x, 8);
+    return (1. - y) / (1 + y);
+}
+
+static inline real_t profilpeakf(const real_t x)
+{
+    // cos(2*pi*x+pi)+10*x*(1-x)*sin(7*pi*x)/8
+    return cos(2. * D_PI * x + D_PI)
+           + 10. * x * (1 - x) * sin(7 * D_PI * x) / 8.;
 }
 
 static inline real_t nsinf(const real_t x)
 {
+#ifdef REAL_IS_DOUBLE
+    return sin(x * D_2PI);
+#endif
+#ifdef REAL_IS_FLOAT
     return sinf(x * F_2PI);
+#endif
 }
 
 static inline real_t trianglef(const real_t x)
@@ -553,20 +609,88 @@ static inline real_t harshsaw0pf(const real_t x)
         return 4.f * x - 4.f;
 }
 
-/*
-static inline real_t octaviussawf(const real_t x)
+static inline real_t nsin2f(const real_t x)
 {
-        if(x < 0.225f)
-                return (4.f*x-0.45f)*(4.f*x-0.45f);
-        else
-                return 0.2f+(x-0.225f) * 1.02564102564f;
+#ifdef REAL_IS_DOUBLE
+    return sin((x / 2. + 0.75) * D_2PI);
+#endif
+#ifdef REAL_IS_FLOAT
+    return sinf((x / 2.f + 0.75f) * F_2PI);
+#endif
 }
 
-static inline real_t octaviussaw0pf(const real_t x)
+static inline real_t nsin4f(const real_t x)
 {
-    return octaviussawf(phasef(x + 0.2025f));
+#ifdef REAL_IS_DOUBLE
+    return sin(x * D_PI_2);
+#endif
+#ifdef REAL_IS_FLOAT
+    return 2f. * sinf(x * F_PI_2) - 1.f;
+#endif
 }
-*/
+
+static inline real_t ncosf(const real_t x)
+{
+#ifdef REAL_IS_DOUBLE
+    return (cos(x * D_2PI) + 1.) / 2.;
+#endif
+#ifdef REAL_IS_FLOAT
+    return (cosf(x * F_2PI) + 1.f) / 2.f;
+#endif
+}
+
+static inline real_t ncos2f(const real_t x)
+{
+#ifdef REAL_IS_DOUBLE
+    return (cos(x * D_PI) + 1.) / 2.;
+#endif
+#ifdef REAL_IS_FLOAT
+    return (cosf(x * F_PI) + 1.f) / 2.f;
+#endif
+}
+
+static inline real_t ncos4f(const real_t x)
+{
+#ifdef REAL_IS_DOUBLE
+    return cos(x * D_PI_2);
+#endif
+#ifdef REAL_IS_FLOAT
+    return cosf(x * F_PI_2);
+#endif
+}
+
+static inline real_t complementf(const real_t x)
+{
+    return 1 - x;
+}
+
+static inline real_t ngaussf(const real_t _x)
+{
+#ifdef REAL_IS_DOUBLE
+    return (exp(-_x * _x)
+            - 0.367879441355257019719005029401159845292568206787109375)
+           / 0.632120558644742924769843739341013133525848388671875;
+#endif
+#ifdef REAL_IS_FLOAT
+    return (expf(-_x * _x)
+            - 0.367879441355257019719005029401159845292568206787109375f)
+           / 0.632120558644742924769843739341013133525848388671875f;
+#endif
+}
+
+static inline real_t sharpgaussf(const real_t _x)
+{
+#ifdef REAL_IS_DOUBLE
+    return (exp(-7. * _x * _x)
+            - 0.00091188196874393361544830494125335462740622460842132568359375)
+           / 0.9990881180312560783107755923992954194545745849609375;
+#endif
+#ifdef REAL_IS_FLOAT
+    return (expf(-7.f * _x * _x)
+            - 0.00091188196874393361544830494125335462740622460842132568359375f)
+           / 0.9990881180312560783107755923992954194545745849609375f;
+#endif
+}
 
 static inline real_t octaviussawf(real_t x)
 {

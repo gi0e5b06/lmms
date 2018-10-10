@@ -91,38 +91,81 @@ Scale::Set::Set()
     BANK              = 21;
     m_bankNames[BANK] = "Mathematical";
 
-    int  sbank = 35;
-    QDir sclrd("../../../lmms/scales", "*", QDir::Name | QDir::IgnoreCase,
-               QDir::AllDirs | QDir::NoDotAndDotDot);
-    for(QString& sclb : sclrd.entryList())
+    int sbank = 35;
     {
-        QDir sclbd(sclrd.absolutePath() + "/" + sclb, "*.scl",
+        QDir sclrd("../../../lmms/scales", "Scala_*",
                    QDir::Name | QDir::IgnoreCase,
-                   QDir::Files | QDir::NoDotAndDotDot);
-
-        QString bankname = sclb;
-        // bankname.replace(QRegExp("^AKSCL_"), "");
-        bankname.replace('_', ' ');
-        m_bankNames[sbank - MIN_BANK] = bankname.trimmed();
-
-        int sindex = MIN_INDEX;
-        for(QString& sclf : sclbd.entryList())
+                   QDir::Dirs | QDir::NoDotAndDotDot);
+        for(QString& sclb : sclrd.entryList())
         {
-            if(sindex > MAX_INDEX)
-                continue;
-            QString filename  = sclbd.absolutePath() + "/" + sclf;
-            QString scalename = sclf;
-            // scalename.replace(QRegExp("^AKSCL_"), "");
-            scalename.replace(QRegExp("[.]scl$", Qt::CaseInsensitive), "");
-            scalename.replace('_', ' ');
-            scalename.replace('-', ' ');
+            QDir sclbd(sclrd.absolutePath() + "/" + sclb, "*.scl",
+                       QDir::Name | QDir::IgnoreCase,
+                       QDir::Files | QDir::NoDotAndDotDot);
 
-            new Scale(qPrintable(scalename.trimmed()), sbank, sindex,
-                      filename);
+            QString bankname = sclb;
+            // bankname.replace(QRegExp("^AKSCL_"), "");
+            bankname.replace('_', ' ');
+            m_bankNames[sbank - MIN_BANK] = bankname.trimmed();
 
-            sindex++;
+            int sindex = MIN_INDEX;
+            for(QString& sclf : sclbd.entryList())
+            {
+                if(sindex > MAX_INDEX)
+                    continue;
+                QString filename  = sclbd.absolutePath() + "/" + sclf;
+                QString scalename = sclf;
+                // scalename.replace(QRegExp("^AKSCL_"), "");
+                scalename.replace(QRegExp("[.]scl$", Qt::CaseInsensitive),
+                                  "");
+                scalename.replace('_', ' ');
+                scalename.replace('-', ' ');
+
+                new Scale(qPrintable(scalename.trimmed()), sbank, sindex,
+                          filename);
+
+                sindex++;
+            }
+            sbank++;
         }
-        sbank++;
+    }
+
+    sbank = 100;
+    {
+        QDir sclrd("../../../lmms/scales", "User_*",
+                   QDir::Name | QDir::IgnoreCase,
+                   QDir::Dirs | QDir::NoDotAndDotDot);
+        for(QString& sclb : sclrd.entryList())
+        {
+            QDir sclbd(sclrd.absolutePath() + "/" + sclb, "*.scl",
+                       QDir::Name | QDir::IgnoreCase,
+                       QDir::Files | QDir::NoDotAndDotDot);
+
+            qInfo("bank scale '%s'", qPrintable(sclb));
+            QString bankname = sclb;
+            // bankname.replace(QRegExp("^AKSCL_"), "");
+            bankname.replace('_', ' ');
+            m_bankNames[sbank - MIN_BANK] = bankname.trimmed();
+
+            int sindex = MIN_INDEX;
+            for(QString& sclf : sclbd.entryList())
+            {
+                if(sindex > MAX_INDEX)
+                    continue;
+                QString filename  = sclbd.absolutePath() + "/" + sclf;
+                QString scalename = sclf;
+                // scalename.replace(QRegExp("^AKSCL_"), "");
+                scalename.replace(QRegExp("[.]scl$", Qt::CaseInsensitive),
+                                  "");
+                scalename.replace('_', ' ');
+                scalename.replace('-', ' ');
+
+                new Scale(qPrintable(scalename.trimmed()), sbank, sindex,
+                          filename);
+
+                sindex++;
+            }
+            sbank++;
+        }
     }
 }
 
@@ -364,7 +407,7 @@ real_t Scale::tune(const real_t _x) const
                * pow(m_octaveFactor, _x * 127. / m_octaveKeys);
 
     const real_t x = _x * 127.;
-    int          k = x; //floor(x);
+    int          k = x;  // floor(x);
     const real_t b = x - k;
     real_t       r = m_baseFrequency;
     while(k < 0)

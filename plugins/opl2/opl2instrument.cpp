@@ -370,14 +370,14 @@ bool opl2instrument::handleMidiEvent( const MidiEvent& event, const MidiTime& ti
 			break;
 		default:
 #ifdef LMMS_DEBUG
-			printf("Midi CC %02x %02x\n", event.controllerNumber(), event.controllerValue() );
+			//qInfo("Midi CC %02x %02x", event.controllerNumber(), event.controllerValue() );
 #endif
 			break;
 		}
 		break;
         default:
 #ifdef LMMS_DEBUG
-                printf("Midi event type %d\n",event.type());
+                //qInfo("Midi event type %d",event.type());
 #endif
 		break;
         }

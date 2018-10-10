@@ -274,6 +274,12 @@ class InstrumentFunctionNoteHumanizing : public InstrumentFunction
     FloatModel m_offsetRangeModel;
     FloatModel m_shortenRangeModel;
 
+    FloatModel m_volumeStepModel;
+    FloatModel m_panStepModel;
+    FloatModel m_tuneStepModel;
+    FloatModel m_offsetStepModel;
+    FloatModel m_shortenStepModel;
+
     friend class InstrumentFunctionNoteHumanizingView;
 };
 

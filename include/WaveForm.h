@@ -132,6 +132,7 @@ class WaveForm
     static const WaveForm WHITENOISE;
     static const WaveForm ZERO;
     static const WaveForm SQRT;
+    static const WaveForm SHARPGAUSS;
 
     static const wavefunction_t sine;
     static const wavefunction_t triangle;

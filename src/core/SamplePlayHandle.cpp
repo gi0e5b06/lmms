@@ -44,7 +44,16 @@ SamplePlayHandle::SamplePlayHandle( const QString& sampleFile ) :
 	m_bbTrack( NULL )
 {
         m_frames=m_sampleBuffer->frames();
-	setAudioPort( new AudioPort( "SamplePlayHandle", false ) );
+	setAudioPort( new AudioPort( "SamplePlayHandle", false,
+                                     nullptr,
+                                     m_volumeModel,
+                                     nullptr,
+                                     nullptr,
+                                     nullptr,
+                                     nullptr,
+                                     nullptr,
+                                     nullptr,
+                                     nullptr ) );
 }
 
 
@@ -62,7 +71,16 @@ SamplePlayHandle::SamplePlayHandle( SampleBuffer* sampleBuffer ) :
 	m_bbTrack( NULL )
 {
         m_frames=m_sampleBuffer->frames();
-	setAudioPort( new AudioPort( "SamplePlayHandle", false ) );
+	setAudioPort( new AudioPort( "SamplePlayHandle", false,
+                                     nullptr,
+                                     m_volumeModel,
+                                     nullptr,
+                                     nullptr,
+                                     nullptr,
+                                     nullptr,
+                                     nullptr,
+                                     nullptr,
+                                     nullptr) );
 }
 
 

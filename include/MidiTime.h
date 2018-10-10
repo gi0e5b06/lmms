@@ -31,7 +31,7 @@
 #include "lmms_basics.h"
 
 // note: 1 "Tact" = 1 Measure
-const int DefaultTicksPerTact = 192;
+const tick_t DefaultTicksPerTact = 192;
 const int DefaultStepsPerTact = 16;
 const int DefaultBeatsPerTact = DefaultTicksPerTact / DefaultStepsPerTact;
 
@@ -75,7 +75,7 @@ public:
 	void setTicks( tick_t ticks );
 	tick_t getTicks() const;
 
-	operator int() const;
+	operator tick_t() const;
 
 	tick_t ticksPerBeat( const TimeSig &sig ) const;
 	// Remainder ticks after bar is removed

@@ -59,6 +59,9 @@ class EXPORT Ring : public QObject
     sample_t value(f_cnt_t _offset, ch_cnt_t _ch);
     sample_t value(f_cnt_t _offset, ch_cnt_t _ch, f_cnt_t _pos);
 
+    sample_t valuet(real_t _offset, ch_cnt_t _ch);
+    sample_t valuet(real_t _offset, ch_cnt_t _ch, real_t _pos);
+
     const real_t maxLevel() const
     {
         return m_maxLevel;
@@ -87,8 +90,8 @@ class EXPORT Ring : public QObject
 
     void rewind(f_cnt_t _frames);
     void forward(f_cnt_t _frames);
-    void rewind(real_t _ms);
-    void forward(real_t _ms);
+    void rewindt(real_t _ms);
+    void forwardt(real_t _ms);
 
     bool isSampleRateAware();
     void setSampleRateAware(bool _b);
@@ -98,9 +101,9 @@ class EXPORT Ring : public QObject
     void read(sampleFrame*  _dst,
               const f_cnt_t _length,
               const f_cnt_t _pos) const;
-    void read(sampleFrame*  _dst,
-              const f_cnt_t _length,
-              const real_t  _pos) const;
+    void readt(sampleFrame*  _dst,
+               const f_cnt_t _length,
+               const real_t  _pos) const;
 
     void write(const sampleFrame& _src,
                const OpMode       _op     = Put,
@@ -114,11 +117,11 @@ class EXPORT Ring : public QObject
                const f_cnt_t      _offset,
                const OpMode       _op     = Put,
                const real_t       _factor = 1.f);
-    void write(const sampleFrame* _src,
-               const f_cnt_t      _length,
-               const real_t       _offset,
-               const OpMode       _op     = Put,
-               const real_t       _factor = 1.f);
+    void writet(const sampleFrame* _src,
+                const f_cnt_t      _length,
+                const real_t       _offset,
+                const OpMode       _op     = Put,
+                const real_t       _factor = 1.f);
 
   protected slots:
     void updateSamplerate();
@@ -140,7 +143,7 @@ class EXPORT Ring : public QObject
         return abspos(m_position + _offset);
     }
 
-    inline f_cnt_t relpos(const real_t _offset) const
+    inline f_cnt_t relpost(const real_t _offset) const
     {
         return relpos(msToFrames(_offset));
     }
@@ -158,7 +161,7 @@ class EXPORT Ring : public QObject
         return r;
     }
 
-    inline f_cnt_t abspos(const real_t _pos) const
+    inline f_cnt_t abspost(const real_t _pos) const
     {
         return abspos(msToFrames(_pos));
     }

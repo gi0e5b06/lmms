@@ -91,7 +91,7 @@ public:
 private slots:
 	void reloadPlugin();
 
-	void updatePitchRange();
+	void updateBendingRange();
 
 	void updatePortamento();
 	void updateFilterFreq();
