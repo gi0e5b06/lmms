@@ -54,7 +54,7 @@ public:
 	f_cnt_t envFrames( const bool _only_vol = false ) const;
 	f_cnt_t releaseFrames() const;
 
-	float volumeLevel( NotePlayHandle * _n, const f_cnt_t _frame );
+	real_t volumeLevel( NotePlayHandle * _n, const f_cnt_t _frame );
 
 
 	virtual void saveSettings( QDomDocument & _doc, QDomElement & _parent );

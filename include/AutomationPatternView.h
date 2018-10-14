@@ -25,55 +25,48 @@
 #ifndef AUTOMATION_PATTERN_VIEW_H
 #define AUTOMATION_PATTERN_VIEW_H
 
-#include <QStaticText>
-
 #include "Track.h"
+
+#include <QStaticText>
 
 class AutomationPattern;
 
-
 class AutomationPatternView : public TrackContentObjectView
 {
-	Q_OBJECT
+    Q_OBJECT
 
+  public:
+    AutomationPatternView(AutomationPattern* _pat, TrackView* _parent);
+    virtual ~AutomationPatternView();
 
-public:
-	AutomationPatternView( AutomationPattern * _pat, TrackView * _parent );
-	virtual ~AutomationPatternView();
+  public slots:
+    /// Opens this view's pattern in the global automation editor
+    void         openInAutomationEditor();
+    virtual void update();
 
-public slots:
-	/// Opens this view's pattern in the global automation editor
-	void openInAutomationEditor();
-	virtual void update();
+  protected slots:
+    // void resetName();
+    // void changeName();
+    void disconnectObject(QAction* _a);
+    void toggleRecording();
+    void flipY();
+    void flipX();
 
+  protected:
+    virtual QMenu* buildContextMenu();
 
-protected slots:
-	//void resetName();
-	//void changeName();
-	void disconnectObject( QAction * _a );
-	void toggleRecording();
-	void flipY();
-	void flipX();
+    virtual void mouseDoubleClickEvent(QMouseEvent* me);
+    virtual void paintEvent(QPaintEvent* pe);
+    virtual void dragEnterEvent(QDragEnterEvent* _dee);
+    virtual void dropEvent(QDropEvent* _de);
 
-protected:
-	virtual QMenu* buildContextMenu();
+  private:
+    AutomationPattern* m_pat;
+    QPixmap            m_paintPixmap;
+    QPixmap            m_pat_rec;
+    QStaticText        m_staticTextName;
 
-	virtual void mouseDoubleClickEvent(QMouseEvent * me );
-	virtual void paintEvent( QPaintEvent * pe );
-	virtual void dragEnterEvent( QDragEnterEvent * _dee );
-	virtual void dropEvent( QDropEvent * _de );
-
-
-private:
-	AutomationPattern * m_pat;
-	QPixmap m_paintPixmap;
-	
-	QStaticText m_staticTextName;
-	
-	static QPixmap * s_pat_rec;
-
-	void scaleTimemapToFit( float oldMin, float oldMax );
-} ;
-
+    void scaleTimemapToFit(real_t oldMin, real_t oldMax);
+};
 
 #endif

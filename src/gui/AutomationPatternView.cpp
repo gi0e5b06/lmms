@@ -31,517 +31,479 @@
 #include "StringPairDrag.h"
 #include "TextFloat.h"
 #include "ToolTip.h"
-
 #include "embed.h"
 //#include "gui_templates.h"
 
 #include <QApplication>
+#include <QMenu>
 #include <QMouseEvent>
 #include <QPainter>
-#include <QMenu>
 
+//QPixmap* AutomationPatternView::s_pat_rec = NULL;
 
-QPixmap * AutomationPatternView::s_pat_rec = NULL;
-
-
-AutomationPatternView::AutomationPatternView( AutomationPattern * _pattern,
-						TrackView * _parent ) :
-	TrackContentObjectView( _pattern, _parent ),
-	m_pat( _pattern ),
-	m_paintPixmap()
+AutomationPatternView::AutomationPatternView(AutomationPattern* _pattern,
+                                             TrackView*         _parent) :
+      TrackContentObjectView(_pattern, _parent),
+      m_pat(_pattern), m_paintPixmap(), m_pat_rec(embed::getPixmap("pat_rec"))
 {
-	connect( m_pat, SIGNAL( dataChanged() ),
-			this, SLOT( update() ) );
-	connect( gui->automationEditor(), SIGNAL( currentPatternChanged() ),
-			this, SLOT( update() ) );
+    connect(m_pat, SIGNAL(dataChanged()), this, SLOT(update()));
+    connect(gui->automationEditor(), SIGNAL(currentPatternChanged()), this,
+            SLOT(update()));
 
-	setAttribute( Qt::WA_OpaquePaintEvent, true );
+    setAttribute(Qt::WA_OpaquePaintEvent, true);
 
-	ToolTip::add(this, m_pat->name());
-	setStyle( QApplication::style() );
-	
-	if( s_pat_rec == NULL ) { s_pat_rec = new QPixmap( embed::getIconPixmap(
-							"pat_rec" ) ); }
-							
-	update();
+    ToolTip::add(this, m_pat->name());
+    setStyle(QApplication::style());
+
+    //if(s_pat_rec == NULL)
+    //    s_pat_rec = embed::getPixmap("pat_rec");
+
+    update();
 }
-
-
-
 
 AutomationPatternView::~AutomationPatternView()
 {
 }
 
-
-
-
 void AutomationPatternView::openInAutomationEditor()
 {
-	if(gui) gui->automationEditor()->open(m_pat);
+    if(gui)
+        gui->automationEditor()->open(m_pat);
 }
-
 
 void AutomationPatternView::update()
 {
-	ToolTip::add(this, m_pat->name());
+    ToolTip::add(this, m_pat->name());
 
-	TrackContentObjectView::update();
+    TrackContentObjectView::update();
 }
-
-
 
 /*
 void AutomationPatternView::resetName()
 {
-	m_pat->setName( QString::null );
+        m_pat->setName( QString::null );
 }
 
 void AutomationPatternView::changeName()
 {
-	QString s = m_pat->name();
-	RenameDialog rename_dlg( s );
-	rename_dlg.exec();
-	m_pat->setName( s );
-	update();
+        QString s = m_pat->name();
+        RenameDialog rename_dlg( s );
+        rename_dlg.exec();
+        m_pat->setName( s );
+        update();
 }
 */
 
-
-
-void AutomationPatternView::disconnectObject( QAction * _a )
+void AutomationPatternView::disconnectObject(QAction* _a)
 {
-	JournallingObject * j = Engine::projectJournal()->
-				journallingObject( _a->data().toInt() );
-	if( j && dynamic_cast<AutomatableModel *>( j ) )
-	{
-		float oldMin = m_pat->getMin();
-		float oldMax = m_pat->getMax();
+    JournallingObject* j
+            = Engine::projectJournal()->journallingObject(_a->data().toInt());
+    if(j && dynamic_cast<AutomatableModel*>(j))
+    {
+        real_t oldMin = m_pat->getMin();
+        real_t oldMax = m_pat->getMax();
 
-		m_pat->m_objects.erase( qFind( m_pat->m_objects.begin(),
-					m_pat->m_objects.end(),
-				dynamic_cast<AutomatableModel *>( j ) ) );
-		update();
+        m_pat->m_objects.erase(qFind(m_pat->m_objects.begin(),
+                                     m_pat->m_objects.end(),
+                                     dynamic_cast<AutomatableModel*>(j)));
+        update();
 
-		//If automation editor is opened, update its display after disconnection
-		if( gui->automationEditor() )
-		{
-			gui->automationEditor()->m_editor->updateAfterPatternChange();
-		}
+        // If automation editor is opened, update its display after
+        // disconnection
+        if(gui->automationEditor())
+        {
+            gui->automationEditor()->m_editor->updateAfterPatternChange();
+        }
 
-		//if there is no more connection connected to the AutomationPattern
-		if( m_pat->m_objects.size() == 0 )
-		{
-			//scale the points to fit the new min. and max. value
-			this->scaleTimemapToFit( oldMin, oldMax );
-		}
-	}
+        // if there is no more connection connected to the AutomationPattern
+        if(m_pat->m_objects.size() == 0)
+        {
+            // scale the points to fit the new min. and max. value
+            this->scaleTimemapToFit(oldMin, oldMax);
+        }
+    }
 }
-
 
 void AutomationPatternView::toggleRecording()
 {
-	m_pat->setRecording( ! m_pat->isRecording() );
-	update();
+    m_pat->setRecording(!m_pat->isRecording());
+    update();
 }
-
-
-
 
 void AutomationPatternView::flipY()
 {
-	m_pat->flipY( m_pat->getMin(), m_pat->getMax() );
-	update();
+    m_pat->flipY(m_pat->getMin(), m_pat->getMax());
+    update();
 }
-
-
-
 
 void AutomationPatternView::flipX()
 {
-	m_pat->flipX( m_pat->length() );
-	update();
+    m_pat->flipX(m_pat->length());
+    update();
 }
-
-
-
 
 QMenu* AutomationPatternView::buildContextMenu()
 {
-        QMenu* cm=new QMenu(this);
-	QAction* a;
+    QMenu*   cm = new QMenu(this);
+    QAction* a;
 
-        a=cm->addAction( embed::getIconPixmap( "automation" ),
-                         tr( "Open in Automation editor" ),
-                         this, SLOT( openInAutomationEditor()) );
+    a = cm->addAction(embed::getIconPixmap("automation"),
+                      tr("Open in Automation editor"), this,
+                      SLOT(openInAutomationEditor()));
 
-        addRemoveMuteClearMenu(cm,true,true,m_pat->hasAutomation());
-	cm->addSeparator();
-        addCutCopyPasteMenu(cm,true,true,true);
+    addRemoveMuteClearMenu(cm, true, true, m_pat->hasAutomation());
+    cm->addSeparator();
+    addCutCopyPasteMenu(cm, true, true, true);
 
-	if(isFixed())
+    if(isFixed())
+    {
+        cm->addSeparator();
+        addStepMenu(cm, m_pat->length() >= MidiTime::ticksPerTact(), true,
+                    true);
+    }
+
+    cm->addSeparator();
+    cm->addAction(embed::getIconPixmap("record"), tr("Set/clear record"),
+                  this, SLOT(toggleRecording()));
+    cm->addAction(embed::getIconPixmap("flip_y"),
+                  tr("Flip Vertically (Visible)"), this, SLOT(flipY()));
+    cm->addAction(embed::getIconPixmap("flip_x"),
+                  tr("Flip Horizontally (Visible)"), this, SLOT(flipX()));
+    // if( !m_pat->m_objects.isEmpty() )
+    {
+        bool smce = (!m_pat->m_objects.isEmpty());
+
+        // cm->addSeparator();
+        int     n   = m_pat->m_objects.count();
+        QString t   = (n <= 1 ? tr("%1 connection") : tr("%1 connections"));
+        QMenu*  smc = new QMenu(t.arg(n), cm);
+        for(AutomationPattern::objectVector::iterator it
+            = m_pat->m_objects.begin();
+            it != m_pat->m_objects.end(); ++it)
         {
-                cm->addSeparator();
-                addStepMenu(cm,
-                            m_pat->length()>=MidiTime::ticksPerTact(),
-                            true,true);
+            if(*it)
+            {
+                a = new QAction(
+                        tr("Disconnect \"%1\"").arg((*it)->fullDisplayName()),
+                        smc);
+                a->setData((*it)->id());
+                a->setEnabled(smce);
+                smc->addAction(a);
+            }
+        }
+        connect(smc, SIGNAL(triggered(QAction*)), this,
+                SLOT(disconnectObject(QAction*)));
+        cm->addMenu(smc);
+        smc->setEnabled(smce);
+    }
+
+    cm->addSeparator();
+    addNameMenu(cm, true);
+    cm->addSeparator();
+    addColorMenu(cm, true);
+
+    // cm->addSeparator();
+    return cm;
+}
+
+void AutomationPatternView::mouseDoubleClickEvent(QMouseEvent* me)
+{
+    if(me->button() != Qt::LeftButton)
+    {
+        me->ignore();
+        return;
+    }
+    openInAutomationEditor();
+}
+
+void AutomationPatternView::paintEvent(QPaintEvent*)
+{
+    QPainter painter(this);
+
+    if(!needsUpdate())
+    {
+        painter.drawPixmap(0, 0, m_paintPixmap);
+        return;
+    }
+
+    setNeedsUpdate(false);
+
+    if(m_paintPixmap.isNull() || m_paintPixmap.size() != size())
+    {
+        m_paintPixmap = QPixmap(size());
+    }
+
+    QPainter p(&m_paintPixmap);
+
+    // QLinearGradient lingrad( 0, 0, 0, height() );
+    bool muted   = m_pat->getTrack()->isMuted() || m_pat->isMuted();
+    bool current = gui->automationEditor()->currentPattern() == m_pat;
+
+    // state: selected, muted, default, user
+    QColor bgcolor
+            = isSelected()
+                      ? selectedColor()
+                      : (muted ? mutedBackgroundColor()
+                               : (useStyleColor()
+                                          ? (m_pat->getTrack()
+                                                             ->useStyleColor()
+                                                     ? painter.background()
+                                                               .color()
+                                                     : m_pat->getTrack()
+                                                               ->color())
+                                          : color()));
+    /*
+    lingrad.setColorAt( 1, c.darker( 300 ) );
+    lingrad.setColorAt( 0, c );
+
+    // paint a black rectangle under the pattern to prevent glitches with
+    transparent backgrounds p.fillRect( rect(), QColor( 0, 0, 0 ) );
+
+    if( gradient() )
+    {
+            p.fillRect( rect(), lingrad );
+    }
+    else
+    */
+    {
+        p.fillRect(rect(), bgcolor);
+    }
+
+    /*
+    const real_t ppt = fixedTCOs() ?
+                    ( parentWidget()->width() - 2 * TCO_BORDER_WIDTH )
+                            / (real_t) m_pat->timeMapLength().getTact() :
+                                                            pixelsPerTact();
+    */
+    const real_t ppt = pixelsPerTact();
+
+    const int x_base = TCO_BORDER_WIDTH;
+
+    const real_t min = m_pat->firstObject()->minValue<real_t>();
+    const real_t max = m_pat->firstObject()->maxValue<real_t>();
+
+    const real_t y_scale = max - min;
+    const real_t h       = (height() - 2 * TCO_BORDER_WIDTH) / y_scale;
+    const real_t ppTick  = ppt / MidiTime::ticksPerTact();
+
+    p.translate(0.0f, max * height() / y_scale - TCO_BORDER_WIDTH);
+    p.scale(1.0f, -h);
+
+    // QLinearGradient lin2grad( 0, min, 0, max );
+    QColor fgcolor
+            = muted ? mutedColor()
+                    : (useStyleColor()
+                               ? (m_pat->getTrack()->useStyleColor()
+                                          ? painter.pen().brush().color()
+                                          : m_pat->getTrack()
+                                                    ->color()
+                                                    .lighter())
+                               : color().lighter());
+    if(bgcolor.value() >= 192)
+        fgcolor = bgcolor.darker();
+
+    /*
+    lin2grad.setColorAt( 1, col.lighter( 150 ) );
+    lin2grad.setColorAt( 0.5, col );
+    lin2grad.setColorAt( 0, col.darker( 150 ) );
+    */
+
+    p.setRenderHints(QPainter::Antialiasing, true);
+    for(AutomationPattern::timeMap::const_iterator it
+        = m_pat->getTimeMap().begin();
+        it != m_pat->getTimeMap().end(); ++it)
+    {
+        if(it + 1 == m_pat->getTimeMap().end())
+        {
+            const real_t x1 = x_base + it.key() * ppTick;
+            const real_t x2 = (real_t)(width() - TCO_BORDER_WIDTH);
+            if(x1 > (width() - TCO_BORDER_WIDTH))
+                break;
+            /*
+            if( gradient() )
+            {
+                    p.fillRect( QRectF( x1, 0.0f, x2 - x1, it.value() ),
+            lin2grad );
+            }
+            else
+            */
+            {
+                p.fillRect(QRectF(x1, 0.0f, x2 - x1, it.value()), fgcolor);
+            }
+            break;
         }
 
-        cm->addSeparator();
-	cm->addAction( embed::getIconPixmap( "record" ),
-                       tr( "Set/clear record" ),
-                       this, SLOT( toggleRecording() ) );
-	cm->addAction( embed::getIconPixmap( "flip_y" ),
-                       tr( "Flip Vertically (Visible)" ),
-                       this, SLOT( flipY() ) );
-	cm->addAction( embed::getIconPixmap( "flip_x" ),
-                       tr( "Flip Horizontally (Visible)" ),
-                       this, SLOT( flipX() ) );
-	//if( !m_pat->m_objects.isEmpty() )
-	{
-                bool smce=( !m_pat->m_objects.isEmpty() );
+        real_t* values = m_pat->valuesAfter(it.key());
 
-		//cm->addSeparator();
-                int n=m_pat->m_objects.count();
-                QString t=(n<=1 ? tr( "%1 connection" ) : tr( "%1 connections" ));
-		QMenu* smc = new QMenu( t.arg( n ), cm );
-		for( AutomationPattern::objectVector::iterator it =
-                             m_pat->m_objects.begin();
-                     it != m_pat->m_objects.end(); ++it )
-		{
-			if( *it )
-			{
-				a = new QAction( tr( "Disconnect \"%1\"" ).
-					arg( ( *it )->fullDisplayName() ), smc );
-				a->setData( ( *it )->id() );
-                                a->setEnabled(smce);
-				smc->addAction( a );
-			}
-		}
-		connect( smc, SIGNAL( triggered( QAction * ) ),
-				this, SLOT( disconnectObject( QAction * ) ) );
-		cm->addMenu( smc );
-                smc->setEnabled(smce);
-	}
+        real_t nextValue;
+        if(m_pat->progressionType() == AutomationPattern::DiscreteProgression)
+        {
+            nextValue = it.value();
+        }
+        else
+        {
+            nextValue = (it + 1).value();
+        }
 
-        cm->addSeparator();
-        addNameMenu(cm,true);
-        cm->addSeparator();
-        addColorMenu(cm,true);
+        QPainterPath path;
+        QPointF      origin = QPointF(x_base + it.key() * ppTick, 0.0f);
+        path.moveTo(origin);
+        path.moveTo(QPointF(x_base + it.key() * ppTick, values[0]));
+        real_t x;
+        for(int i = it.key() + 1; i < (it + 1).key(); i++)
+        {
+            x = x_base + i * ppTick;
+            if(x > (width() - TCO_BORDER_WIDTH))
+                break;
+            real_t value = values[i - it.key()];
+            path.lineTo(QPointF(x, value));
+        }
+        path.lineTo(x_base + ((it + 1).key()) * ppTick, nextValue);
+        path.lineTo(x_base + ((it + 1).key()) * ppTick, 0.0f);
+        path.lineTo(origin);
 
-	//cm->addSeparator();
-        return cm;
+        /*
+        if( gradient() )
+        {
+                p.fillPath( path, lin2grad );
+        }
+        else
+        */
+        {
+            p.fillPath(path, fgcolor);
+        }
+        delete[] values;
+    }
+
+    p.setRenderHints(QPainter::Antialiasing, false);
+    p.resetMatrix();
+
+    /*
+    // bar lines
+    const int lineSize = 3;
+    p.setPen( c.darker( 300 ) );
+
+    for( tact_t t = 1; t < width() - TCO_BORDER_WIDTH; ++t )
+    {
+            const int tx = x_base + static_cast<int>( ppt * t ) - 2;
+            p.drawLine( tx, TCO_BORDER_WIDTH, tx, TCO_BORDER_WIDTH + lineSize
+    ); p.drawLine( tx,	rect().bottom() - ( lineSize + TCO_BORDER_WIDTH ), tx,
+    rect().bottom() - TCO_BORDER_WIDTH );
+    }
+    */
+
+    // recording icon for when recording automation
+    if(m_pat->isRecording())
+    {
+        p.drawPixmap(1, rect().bottom() - m_pat_rec.height(), m_pat_rec);
+    }
+
+    bool frozen = m_pat->getTrack()->isFrozen();
+    paintFrozenIcon(frozen, p);
+
+    paintTileTacts(false, m_pat->length().nextFullTact(), 1, bgcolor, p);
+
+    // pattern name
+    paintTextLabel(m_pat->name(), bgcolor, p);
+
+    /*
+    // inner border
+    p.setPen( c.lighter( current ? 160 : 130 ) );
+    p.drawRect( 1, 1, rect().right() - TCO_BORDER_WIDTH,
+            rect().bottom() - TCO_BORDER_WIDTH );
+
+    // outer border
+    p.setPen( current? c.lighter( 130 ) : c.darker( 300 ) );
+    p.drawRect( 0, 0, rect().right(), rect().bottom() );
+    */
+    paintTileBorder(current, bgcolor, p);
+
+    // draw the 'muted' pixmap only if the pattern was manualy muted
+    /*
+    if( m_pat->isMuted() )
+    {
+            const int spacing = TCO_BORDER_WIDTH;
+            const int size = 14;
+            p.drawPixmap( spacing, height() - ( size + spacing ),
+                    embed::getIconPixmap( "muted", size, size ) );
+    }
+    */
+    paintMutedIcon(m_pat->isMuted(), p);
+
+    p.end();
+
+    painter.drawPixmap(0, 0, m_paintPixmap);
 }
 
-
-
-
-void AutomationPatternView::mouseDoubleClickEvent( QMouseEvent * me )
+void AutomationPatternView::dragEnterEvent(QDragEnterEvent* _dee)
 {
-	if(me->button() != Qt::LeftButton)
-	{
-		me->ignore();
-		return;
-	}
-	openInAutomationEditor();
+    StringPairDrag::processDragEnterEvent(_dee, "automatable_model");
+    if(!_dee->isAccepted())
+    {
+        TrackContentObjectView::dragEnterEvent(_dee);
+    }
 }
 
-
-
-
-void AutomationPatternView::paintEvent( QPaintEvent * )
+void AutomationPatternView::dropEvent(QDropEvent* _de)
 {
-	QPainter painter( this );
+    QString type = StringPairDrag::decodeKey(_de);
+    QString val  = StringPairDrag::decodeValue(_de);
+    if(type == "automatable_model")
+    {
+        AutomatableModel* mod = dynamic_cast<AutomatableModel*>(
+                Engine::projectJournal()->journallingObject(val.toInt()));
+        if(mod != NULL)
+        {
+            bool added = m_pat->addObject(mod);
+            if(!added)
+            {
+                TextFloat::displayMessage(mod->displayName(),
+                                          tr("Model is already connected "
+                                             "to this pattern."),
+                                          embed::getIconPixmap("automation"),
+                                          2000);
+            }
+        }
+        update();
 
-	if( !needsUpdate() )
-	{
-		painter.drawPixmap( 0, 0, m_paintPixmap );
-		return;
-	}
-
-	setNeedsUpdate( false );
-
-	if (m_paintPixmap.isNull() || m_paintPixmap.size() != size())
-	{
-		m_paintPixmap = QPixmap(size());
-	}
-
-	QPainter p( &m_paintPixmap );
-
-	//QLinearGradient lingrad( 0, 0, 0, height() );
-	bool muted = m_pat->getTrack()->isMuted() || m_pat->isMuted();
-	bool current = gui->automationEditor()->currentPattern() == m_pat;
-
-	// state: selected, muted, default, user
-	QColor bgcolor = isSelected()
-                ? selectedColor()
-                : ( muted
-                    ? mutedBackgroundColor()
-                    : ( useStyleColor()
-                        ? ( m_pat->getTrack()->useStyleColor()
-                            ? painter.background().color()
-                            : m_pat->getTrack()->color() )
-                        : color() ));
-        /*
-	lingrad.setColorAt( 1, c.darker( 300 ) );
-	lingrad.setColorAt( 0, c );
-
-	// paint a black rectangle under the pattern to prevent glitches with transparent backgrounds
-	p.fillRect( rect(), QColor( 0, 0, 0 ) );
-
-	if( gradient() )
-	{
-		p.fillRect( rect(), lingrad );
-	}
-	else
-        */
-	{
-		p.fillRect( rect(), bgcolor );
-	}
-
-        /*
-	const float ppt = fixedTCOs() ?
-			( parentWidget()->width() - 2 * TCO_BORDER_WIDTH )
-				/ (float) m_pat->timeMapLength().getTact() :
-								pixelsPerTact();
-        */
-        const float ppt = pixelsPerTact();
-
-	const int x_base = TCO_BORDER_WIDTH;
-
-	const float min = m_pat->firstObject()->minValue<float>();
-	const float max = m_pat->firstObject()->maxValue<float>();
-
-	const float y_scale = max - min;
-	const float h = ( height() - 2 * TCO_BORDER_WIDTH ) / y_scale;
-	const float ppTick  = ppt / MidiTime::ticksPerTact();
-
-	p.translate( 0.0f, max * height() / y_scale - TCO_BORDER_WIDTH );
-	p.scale( 1.0f, -h );
-
-	//QLinearGradient lin2grad( 0, min, 0, max );
-	QColor fgcolor = muted
-                ? mutedColor()
-                : ( useStyleColor()
-                        ? ( m_pat->getTrack()->useStyleColor()
-                            ? painter.pen().brush().color()
-                            : m_pat->getTrack()->color().lighter() )
-                    : color().lighter() );
-        if(bgcolor.value()>=192)
-                fgcolor=bgcolor.darker();
-
-        /*
-	lin2grad.setColorAt( 1, col.lighter( 150 ) );
-	lin2grad.setColorAt( 0.5, col );
-	lin2grad.setColorAt( 0, col.darker( 150 ) );
-        */
-
-	p.setRenderHints( QPainter::Antialiasing, true );
-	for( AutomationPattern::timeMap::const_iterator it =
-						m_pat->getTimeMap().begin();
-					it != m_pat->getTimeMap().end(); ++it )
-	{
-		if( it+1 == m_pat->getTimeMap().end() )
-		{
-			const float x1 = x_base + it.key() * ppTick;
-			const float x2 = (float)( width() - TCO_BORDER_WIDTH );
-			if( x1 > ( width() - TCO_BORDER_WIDTH ) ) break;
-                        /*
-			if( gradient() )
-			{
-				p.fillRect( QRectF( x1, 0.0f, x2 - x1, it.value() ), lin2grad );
-			}
-			else
-                        */
-			{
-				p.fillRect( QRectF( x1, 0.0f, x2 - x1, it.value() ), fgcolor );
-			}
-			break;
-		}
-
-		float *values = m_pat->valuesAfter( it.key() );
-
-		float nextValue;
-		if( m_pat->progressionType() == AutomationPattern::DiscreteProgression )
-		{
-			nextValue = it.value();
-		}
-		else
-		{
-			nextValue = ( it + 1 ).value();
-		}
-
-		QPainterPath path;
-		QPointF origin = QPointF( x_base + it.key() * ppTick, 0.0f );
-		path.moveTo( origin );
-		path.moveTo( QPointF( x_base + it.key() * ppTick,values[0] ) );
-		float x;
-		for( int i = it.key() + 1; i < ( it + 1 ).key(); i++ )
-		{
-			x = x_base + i * ppTick;
-			if( x > ( width() - TCO_BORDER_WIDTH ) ) break;
-			float value = values[ i - it.key() ];
-			path.lineTo( QPointF( x, value ) );
-
-		}
-		path.lineTo( x_base + ( ( it + 1 ).key() ) * ppTick, nextValue );
-		path.lineTo( x_base + ( ( it + 1 ).key() ) * ppTick, 0.0f );
-		path.lineTo( origin );
-
-                /*
-		if( gradient() )
-		{
-			p.fillPath( path, lin2grad );
-		}
-		else
-                */
-		{
-			p.fillPath( path, fgcolor );
-		}
-		delete [] values;
-	}
-
-	p.setRenderHints( QPainter::Antialiasing, false );
-	p.resetMatrix();
-
-        /*
-	// bar lines
-	const int lineSize = 3;
-	p.setPen( c.darker( 300 ) );
-
-	for( tact_t t = 1; t < width() - TCO_BORDER_WIDTH; ++t )
-	{
-		const int tx = x_base + static_cast<int>( ppt * t ) - 2;
-		p.drawLine( tx, TCO_BORDER_WIDTH, tx, TCO_BORDER_WIDTH + lineSize );
-		p.drawLine( tx,	rect().bottom() - ( lineSize + TCO_BORDER_WIDTH ),
-					tx, rect().bottom() - TCO_BORDER_WIDTH );
-	}
-        */
-
-	// recording icon for when recording automation
-	if( m_pat->isRecording() )
-	{
-		p.drawPixmap( 1, rect().bottom() - s_pat_rec->height(),
-		 	*s_pat_rec );
-	}
-
-        bool frozen=m_pat->getTrack()->isFrozen();
-        paintFrozenIcon(frozen,p);
-
-        paintTileTacts(false,m_pat->length().nextFullTact(),1,
-                       bgcolor,p);
-
-	// pattern name
-	paintTextLabel(m_pat->name(), bgcolor, p);
-
-        /*
-	// inner border
-	p.setPen( c.lighter( current ? 160 : 130 ) );
-	p.drawRect( 1, 1, rect().right() - TCO_BORDER_WIDTH,
-		rect().bottom() - TCO_BORDER_WIDTH );
-
-	// outer border
-	p.setPen( current? c.lighter( 130 ) : c.darker( 300 ) );
-	p.drawRect( 0, 0, rect().right(), rect().bottom() );
-        */
-        paintTileBorder(current,bgcolor,p);
-
-	// draw the 'muted' pixmap only if the pattern was manualy muted
-        /*
-	if( m_pat->isMuted() )
-	{
-		const int spacing = TCO_BORDER_WIDTH;
-		const int size = 14;
-		p.drawPixmap( spacing, height() - ( size + spacing ),
-			embed::getIconPixmap( "muted", size, size ) );
-	}
-        */
-        paintMutedIcon(m_pat->isMuted(),p);
-
-	p.end();
-
-	painter.drawPixmap( 0, 0, m_paintPixmap );
+        if(gui->automationEditor()
+           && gui->automationEditor()->currentPattern() == m_pat)
+        {
+            gui->automationEditor()->setCurrentPattern(m_pat);
+        }
+    }
+    else
+    {
+        TrackContentObjectView::dropEvent(_de);
+    }
 }
-
-
-
-
-void AutomationPatternView::dragEnterEvent( QDragEnterEvent * _dee )
-{
-	StringPairDrag::processDragEnterEvent( _dee, "automatable_model" );
-	if( !_dee->isAccepted() )
-	{
-		TrackContentObjectView::dragEnterEvent( _dee );
-	}
-}
-
-
-
-
-void AutomationPatternView::dropEvent( QDropEvent * _de )
-{
-	QString type = StringPairDrag::decodeKey( _de );
-	QString val = StringPairDrag::decodeValue( _de );
-	if( type == "automatable_model" )
-	{
-		AutomatableModel * mod = dynamic_cast<AutomatableModel *>(
-				Engine::projectJournal()->
-					journallingObject( val.toInt() ) );
-		if( mod != NULL )
-		{
-			bool added = m_pat->addObject( mod );
-			if ( !added )
-			{
-				TextFloat::displayMessage( mod->displayName(),
-							   tr( "Model is already connected "
-							   "to this pattern." ),
-							   embed::getIconPixmap( "automation" ),
-							   2000 );
-			}
-		}
-		update();
-
-		if( gui->automationEditor() &&
-			gui->automationEditor()->currentPattern() == m_pat )
-		{
-			gui->automationEditor()->setCurrentPattern( m_pat );
-		}
-	}
-	else
-	{
-		TrackContentObjectView::dropEvent( _de );
-	}
-}
-
-
-
 
 /**
  * @brief Preserves the auto points over different scale
  */
-void AutomationPatternView::scaleTimemapToFit( float oldMin, float oldMax )
+void AutomationPatternView::scaleTimemapToFit(real_t oldMin, real_t oldMax)
 {
-	float newMin = m_pat->getMin();
-	float newMax = m_pat->getMax();
+    real_t newMin = m_pat->getMin();
+    real_t newMax = m_pat->getMax();
 
-	if( oldMin == newMin && oldMax == newMax )
-	{
-		return;
-	}
+    if(oldMin == newMin && oldMax == newMax)
+    {
+        return;
+    }
 
-	for( AutomationPattern::timeMap::iterator it = m_pat->m_timeMap.begin();
-		it != m_pat->m_timeMap.end(); ++it )
-	{
-		if( *it < oldMin )
-		{
-			*it = oldMin;
-		}
-		else if( *it > oldMax )
-		{
-			*it = oldMax;
-		}
-		*it = (*it-oldMin)*(newMax-newMin)/(oldMax-oldMin)+newMin;
-	}
+    for(AutomationPattern::timeMap::iterator it = m_pat->m_timeMap.begin();
+        it != m_pat->m_timeMap.end(); ++it)
+    {
+        if(*it < oldMin)
+        {
+            *it = oldMin;
+        }
+        else if(*it > oldMax)
+        {
+            *it = oldMax;
+        }
+        *it = (*it - oldMin) * (newMax - newMin) / (oldMax - oldMin) + newMin;
+    }
 
-	m_pat->generateTangents();
+    m_pat->generateTangents();
 }

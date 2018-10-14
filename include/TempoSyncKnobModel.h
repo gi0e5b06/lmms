@@ -32,75 +32,75 @@ class QAction;
 
 class EXPORT TempoSyncKnobModel : public FloatModel
 {
-	Q_OBJECT
-public:
-	enum TempoSyncMode
-	{
-		SyncNone,
-		SyncDoubleWholeNote,
-		SyncWholeNote,
-		SyncHalfNote,
-		SyncQuarterNote,
-		SyncEighthNote,
-		SyncSixteenthNote,
-		SyncThirtySecondNote,
-		SyncSixtyFourthNote,
-                SyncOneHundredTwentyEighthNote,
-		SyncCustom
-	} ;
+    Q_OBJECT
+  public:
+    enum TempoSyncMode
+    {
+        SyncNone,
+        SyncDoubleWholeNote,
+        SyncWholeNote,
+        SyncHalfNote,
+        SyncQuarterNote,
+        SyncEighthNote,
+        SyncSixteenthNote,
+        SyncThirtySecondNote,
+        SyncSixtyFourthNote,
+        SyncOneHundredTwentyEighthNote,
+        SyncCustom
+    };
 
-	TempoSyncKnobModel( const float _val, const float _min,
-                            const float _max, const float _step,
-                            const float _scale, Model * _parent,
-                            const QString & _display_name = QString() );
-	virtual ~TempoSyncKnobModel();
+    TempoSyncKnobModel(const real_t   _val,
+                       const real_t   _min,
+                       const real_t   _max,
+                       const real_t   _step,
+                       const real_t   _scale,
+                       Model*         _parent,
+                       const QString& _display_name = QString());
+    virtual ~TempoSyncKnobModel();
 
-	void saveSettings( QDomDocument & _doc, QDomElement & _this, const QString& name );
-	void loadSettings( const QDomElement & _this, const QString& name );
+    void saveSettings(QDomDocument&  _doc,
+                      QDomElement&   _this,
+                      const QString& name);
+    void loadSettings(const QDomElement& _this, const QString& name);
 
-	TempoSyncMode syncMode() const
-	{
-		return m_tempoSyncMode;
-	}
+    TempoSyncMode syncMode() const
+    {
+        return m_tempoSyncMode;
+    }
 
-	void setSyncMode( TempoSyncMode _new_mode );
+    void setSyncMode(TempoSyncMode _new_mode);
 
-	float scale() const
-	{
-		return m_scale;
-	}
+    real_t scale() const
+    {
+        return m_scale;
+    }
 
-	void setScale( float _new_scale );
+    void setScale(real_t _new_scale);
 
-signals:
-	void syncModeChanged( TempoSyncMode _new_mode );
-	//void scaleChanged( float _new_scale );
+  signals:
+    void syncModeChanged(TempoSyncMode _new_mode);
+    // void scaleChanged( real_t _new_scale );
 
+  public slots:
+    inline void disableSync()
+    {
+        setTempoSync(SyncNone);
+    }
+    void setTempoSync(int _note_type);
+    void setTempoSync(QAction* _item);
 
-public slots:
-	inline void disableSync()
-	{
-		setTempoSync( SyncNone );
-	}
-	void setTempoSync( int _note_type );
-	void setTempoSync( QAction * _item );
+  protected slots:
+    void calculateTempoSyncTime(bpm_t _bpm);
+    void updateCustom();
 
+  private:
+    TempoSyncMode m_tempoSyncMode;
+    TempoSyncMode m_tempoLastSyncMode;
+    real_t        m_scale;
 
-protected slots:
-	void calculateTempoSyncTime( bpm_t _bpm );
-	void updateCustom();
+    MeterModel m_custom;
 
-
-private:
-	TempoSyncMode m_tempoSyncMode;
-	TempoSyncMode m_tempoLastSyncMode;
-	float m_scale;
-
-	MeterModel m_custom;
-
-
-	friend class TempoSyncKnob;
-
-} ;
+    friend class TempoSyncKnob;
+};
 
 #endif

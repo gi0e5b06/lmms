@@ -292,18 +292,18 @@ void InstrumentTrack::processAudioBuffer(sampleFrame*    buf,
         const f_cnt_t offset = n->noteOffset();
         m_soundShaping.processAudioBuffer(buf + offset, frames - offset, n);
 
-        if(!m_instrument->isMidiBased() ||
-           m_volumeEnabledModel.value() ||
-           m_panningEnabledModel.value())
+        if(!m_instrument->isMidiBased() || m_volumeEnabledModel.value()
+           || m_panningEnabledModel.value())
         {
-            const volume_t vol =
-                    m_volumeEnabledModel.value()
-                    ? qBound(MinVolume, n->getVolume(), MaxVolume)
-                    : DefaultVolume;
+            const volume_t vol
+                    = m_volumeEnabledModel.value()
+                              ? qBound(MinVolume, n->getVolume(), MaxVolume)
+                              : DefaultVolume;
             const panning_t pan
                     = m_panningEnabledModel.value()
-                    ? qBound(PanningLeft, n->getPanning(), PanningRight)
-                    : DefaultPanning;
+                              ? qBound(PanningLeft, n->getPanning(),
+                                       PanningRight)
+                              : DefaultPanning;
             StereoGain sg = toStereoGain(pan, vol);
 
             for(f_cnt_t f = offset; f < frames; ++f)
@@ -943,13 +943,17 @@ void InstrumentTrack::saveTrackSpecificSettings(QDomDocument& doc,
     m_baseNoteModel.saveSettings(doc, thisElement, "basenote");
     m_useMasterPitchModel.saveSettings(doc, thisElement, "usemasterpitch");
 
-    if(m_instrument != NULL)
+    if(m_scale != nullptr)
+            thisElement.setAttribute("scale",m_scale->bank()*1000+m_scale->index());
+
+    if(m_instrument != nullptr)
     {
         QDomElement i = doc.createElement("instrument");
         i.setAttribute("name", m_instrument->descriptor()->name);
         m_instrument->saveState(doc, i);
         thisElement.appendChild(i);
     }
+
     m_soundShaping.saveState(doc, thisElement);
 
     /*
@@ -990,6 +994,12 @@ void InstrumentTrack::loadTrackSpecificSettings(
 
     m_baseNoteModel.loadSettings(thisElement, "basenote");
     m_useMasterPitchModel.loadSettings(thisElement, "usemasterpitch");
+
+    if(thisElement.hasAttribute("scale"))
+    {
+            qulonglong bi=thisElement.attribute("scale").toULongLong();
+            setScale(Scale::get(bi/1000,bi%1000));
+    }
 
     // clear effect-chain just in case we load an old preset without FX-data
     m_audioPort.effects()->clear();

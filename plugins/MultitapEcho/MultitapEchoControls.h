@@ -80,8 +80,8 @@ private:
 	BoolModel m_swapInputs;
 	FloatModel m_stages;
 	
-	graphModel m_ampGraph;
-	graphModel m_lpGraph;
+	GraphModel m_ampGraph;
+	GraphModel m_lpGraph;
 
 	friend class MultitapEchoEffect;
 	friend class MultitapEchoControlDialog;

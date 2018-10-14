@@ -80,29 +80,101 @@ bool AutomatableModel::isAutomated() const
     return AutomationPattern::isAutomated(this);
 }
 
+QString AutomatableModel::formatNumber(real_t v)
+{
+#ifdef REAL_IS_FLOAT
+    QString r = QString::number(v, 'f', 9);
+#endif
+#ifdef REAL_IS_DOUBLE
+    QString r = QString::number(v, 'f', 17);
+#endif
+    if(r.indexOf(QChar('.')) >= 0)
+    {
+        r.replace(QRegExp("0*$"), "");
+        r.replace(QRegExp("[.]$"), "");
+    }
+    return r;
+}
+
 void AutomatableModel::saveSettings(QDomDocument&  doc,
                                     QDomElement&   element,
-                                    const QString& name)
+                                    const QString& name,
+                                    const bool     unique)
 {
-    if(isAutomated() || m_scaleType != Linear)
+    QRegExp reg1("^[A-Za-z_][A-Za-z0-9._-]*$");
+    QRegExp reg2("^xml", Qt::CaseInsensitive);
+    bool    mustQuote = (reg1.indexIn(name) < 0) || (reg2.indexIn(name) >= 0);
+
+    if(mustQuote || isAutomated() || m_scaleType != Linear
+       || m_randomRatio != 0.)
     {
+        // TODO: check for unicity
+#ifdef DEBUG_LMMS
+        if(unique)
+        {
+            if(mustQuote)
+            {
+                bool warning = false;
+
+                QDomElement e = element.firstChildElement(
+                        QString("automatablemodel"));
+                while(!e.isNull())
+                {
+                    if(e.hasAttribute("nodename")
+                       && e.attribute("nodename") == name)
+                    {
+                        warning = true;
+                        break;
+                    }
+                }
+
+                if(warning)
+                    qWarning(
+                            "AutomatableModel: suspicious multiple element "
+                            "'automatablemodel/%s'",
+                            qPrintable(name));
+            }
+            else
+            {
+                if(!element.elementsByTagName(name).isEmpty())
+                    qWarning(
+                            "AutomatableModel: suspicious multiple element "
+                            "'%s'",
+                            qPrintable(name));
+            }
+        }
+#endif
+
         // automation needs tuple of data (name, id, value)
         // scale type also needs an extra value
         // => it must be appended as a node
-        QDomElement me = doc.createElement(name);
+        QDomElement me = doc.createElement(
+                mustQuote ? QString("automatablemodel") : name);
+
         me.setAttribute("id", ProjectJournal::idToSave(id()));
-        me.setAttribute("value", m_value);
+        me.setAttribute("value", formatNumber(m_value));
         me.setAttribute("scale_type",
                         m_scaleType == Logarithmic ? "log" : "linear");
 
-        // TODO: randomRatio
+        me.setAttribute("random_ratio", m_randomRatio);
+        // TODO: randomDistribution
+
+        if(mustQuote)
+            me.setAttribute("nodename", name);
 
         element.appendChild(me);
     }
     else
     {
-        // non automation, linear scale (default), can be saved as attribute
-        element.setAttribute(name, m_value);
+#ifdef DEBUG_LMMS
+        if(unique && !element.elementsByTagName(name).isEmpty())
+            qWarning("AutomatableModel: suspicious multiple element '%s'",
+                     qPrintable(name));
+#endif
+
+        // non automation, linear scale (default), can be saved as
+        // attribute
+        element.setAttribute(name, formatNumber(m_value));
     }
 
     if(m_controllerConnection
@@ -171,18 +243,38 @@ void AutomatableModel::loadSettings(const QDomElement& element,
         }
     }
 
+    node = element.namedItem(name);
+
+    if(node.isNull())
+    {
+        // PR 4605
+        QDomElement e
+                = element.firstChildElement(QString("automatablemodel"));
+        while(!e.isNull())
+        {
+            if(!e.hasAttribute("nodename") || e.attribute("nodename") != name)
+            {
+                e = e.nextSiblingElement();
+                continue;
+            }
+
+            node = e;
+            break;
+        }
+    }
+
     // models can be stored as elements (port00) or attributes (port10):
     // <ladspacontrols port10="4.41">
     //   <port00 value="4.41" id="4249278"/>
     // </ladspacontrols>
     // element => there is automation data, or scaletype information
-    node = element.namedItem(name);
+
     if(node.isElement())
     {
         changeID(node.toElement().attribute("id").toInt());
 
         QString v = node.toElement().attribute("value");
-        v         = v.replace(',', '.');
+        v.replace(',', '.');
 #ifdef REAL_IS_FLOAT
         setValue(v.toFloat());
 #endif
@@ -210,7 +302,7 @@ void AutomatableModel::loadSettings(const QDomElement& element,
         // attribute => read the element's value from the attribute list
         {
             QString v = element.attribute(name);
-            v         = v.replace(',', '.');
+            v.replace(',', '.');
 #ifdef REAL_IS_FLOAT
             setInitValue(v.toFloat());
 #endif
@@ -418,7 +510,7 @@ void AutomatableModel::setRange(const real_t min,
         m_step  = step;
 
         // re-adjust value
-        setValue(value<real_t>());
+        setValue(m_value);
 
         emit propertiesChanged();
     }
@@ -625,7 +717,7 @@ const
         if( m_controllerConnection &&
             (recording || m_controllerConnection->hasChanged() ))
         {
-                real_t v = 0.f;
+                real_t v = 0.;
 
                 switch(m_scaleType)
                 {
@@ -652,7 +744,7 @@ m_hasStrictStepSize ) v=qRound( v );
         }
         if(lm)
         {
-                real_t v=0.f;
+                real_t v=0.;
 
                 if( lm->controllerConnection() &&
                     (recording || lm->controllerConnection()->hasChanged() ))
@@ -662,7 +754,7 @@ false ) ); else v=fittedValue( lm->m_value );
                 return v;
         }
 
-        //if(recording) return 0.5f;
+        //if(recording) return 0.5;
         //qWarning("AutomatableModel::controllerValue should not reach");
         return m_value;
 }
@@ -1009,9 +1101,9 @@ int FloatModel::getDigitCount() const
 
 void FloatModel::setDigitCount()
 {
-    real_t t = fabsf(step<real_t>());
+    real_t t = abs(step<real_t>());
     bool   b = false;
-    if(t >= 1.f)
+    if(t >= 1.)
     {
         b = true;
 #ifdef REAL_IS_FLOAT
@@ -1021,14 +1113,14 @@ void FloatModel::setDigitCount()
         t = fmod(t, 1.);
 #endif
     }
-    if(t <= 0.000001f)
+    if(t <= 0.000001)
     {
         m_digitCount = (b ? 0 : 6);
     }
     else
     {
 #ifdef REAL_IS_FLOAT
-        int v = int(floorf(1000000.f * t));
+        int v = int(floorf(1000000.f * t));  // FLOAT REQUIRED
 #endif
 #ifdef REAL_IS_DOUBLE
         int v = int(floor(1000000. * t));

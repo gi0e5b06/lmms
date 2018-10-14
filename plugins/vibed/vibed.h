@@ -71,7 +71,7 @@ private:
 	QList<FloatModel*> m_randomKnobs;
 	QList<FloatModel*> m_lengthKnobs;
 	QList<BoolModel*> m_powerButtons;
-	QList<graphModel*> m_graphs;
+	QList<GraphModel*> m_graphs;
 	QList<BoolModel*> m_impulses;
 	QList<nineButtonSelectorModel*> m_harmonics;
 

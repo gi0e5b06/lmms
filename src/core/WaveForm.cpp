@@ -53,7 +53,9 @@ WaveForm::Set::Set()
     new WaveForm("Moog saw", BANK, 52, moogsawf, Linear);
     new WaveForm("Moog square", BANK, 53, moogsquaref, Linear);
     new WaveForm("Octavius saw", BANK, 62, octaviussawf, Linear);
+    new WaveForm("Error saw", BANK, 72, nerf, Linear);
     new WaveForm("Exponential saw", BANK, 82, expsawf, Linear);
+    new WaveForm("Exp2 saw", BANK, 83, nexp2sawf, Linear);
     new WaveForm("Sin2 saw", BANK, 90, nsin2f, Linear);
     new WaveForm("Sin4 saw", BANK, 91, nsin4f, Linear);
     new WaveForm("Inv saw", BANK, 92, ninvsawf, Linear);
@@ -126,15 +128,22 @@ WaveForm::Set::Set()
     new WaveForm /*CB*/ ("cb()", BANK, 3, cbf, Exact);
     new WaveForm /*CMPL*/ ("complement()", BANK, 10, complementf, Exact);
     new WaveForm /*CBRT*/ ("cbrt()", BANK, 13, cbrtf, Linear);
-    new WaveForm /*NEXP*/ ("n_exp()", BANK, 20, nexpf, Linear);
+    new WaveForm /*NEXP*/ ("n_exp()", BANK, 20, nexp2f, Linear);
     new WaveForm /*NLOG*/ ("n_log()", BANK, 30, nlogf, Linear);
     new WaveForm /*NGAUSS*/ ("n_gauss()", BANK, 41, ngaussf, Linear);
     // SHARPGAUSS 47
+    new WaveForm("fibonacci1", BANK, 61, fibonacci1, Linear);
+    new WaveForm("fibonacci2", BANK, 62, fibonacci2, Linear);
     new WaveForm /*COS*/ ("n_cos()", BANK, 80, ncosf, Linear);
+    new WaveForm("n_exp2()", BANK, 83, nexp2f, Linear);
     new WaveForm /*COS2*/ ("n_cos2()", BANK, 90, ncos2f, Linear);
     new WaveForm /*COS4*/ ("n_cos4()", BANK, 91, ncos4f, Linear);
     new WaveForm /*INVDIST*/ ("d_inv()", BANK, 92, ninvdistf, Linear);
     new WaveForm /*CORNERDIST*/ ("d_corner()", BANK, 93, cornerdistf, Linear);
+
+    // Mathematical
+    BANK              = 22;
+    m_bankNames[BANK] = "Statistical";
 
     int sbank = 35;
     {
@@ -182,8 +191,9 @@ WaveForm::Set::Set()
                       QDir::Name | QDir::IgnoreCase,
                       QDir::Files | QDir::NoDotAndDotDot);
 
+            qInfo("bank waveform '%s'", qPrintable(wfb));
             QString bankname = wfb;
-            bankname.replace(QRegExp("^AKWF_"), "");
+            // bankname.replace(QRegExp("^AKWF_"), "");
             bankname.replace('_', ' ');
             m_bankNames[sbank - MIN_BANK] = bankname.trimmed();
 
@@ -292,9 +302,10 @@ const WaveForm WaveForm::SQPEAK("Sq peak", 0, 5, sqpeakf, Linear, 10);
 const WaveForm WaveForm::WHITENOISE("White noise", 0, 6, randf, Discrete, 10);
 // 7 is reserved
 const WaveForm WaveForm::ZERO(" 0.0", ZERO_BANK, ZERO_INDEX, zerof, Exact);
-const WaveForm WaveForm::SQRT("sqrt()", 20, 12, sqrtf, Linear, 10);
+const WaveForm WaveForm::SQRT(
+        "sqrt()", 20, 12, sqrtf, Linear, 10);  // FLOAT REQUIRED
 const WaveForm
-        WaveForm::SHARPGAUSS("sharpgauss()", 21, 47, sharpgaussf, Linear, 10);
+        WaveForm::SHARPGAUSS("sharpgauss()", 21, 47, sharpgaussf, Linear, 9);
 
 const wavefunction_t WaveForm::sine
         = [](const real_t _x) { return WaveForm::SINE.f(_x); };
@@ -333,7 +344,8 @@ void WaveForm::Set::set(const int       _bank,
     if(m_stock[b][i] == _wf)
         return;
     if(m_stock[b][i] != NULL)
-        qWarning("Warning: replacing waveform[%d][%d]", b, i);
+        qWarning("Warning: replacing waveform[%d][%d] %s %s", b, i,
+                 qPrintable(m_stock[b][i]->m_name), qPrintable(_wf->m_name));
     m_stock[b][i] = _wf;
 }
 

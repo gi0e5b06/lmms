@@ -111,7 +111,7 @@ class EXPORT AutomatableModel
     }
 
     template <class T>
-    inline T value(int frameOffset = 0, bool recording = false) const
+    inline T value(f_cnt_t frameOffset = 0, bool recording = false) const
     {
         /*
         if( unlikely( m_controllerConnection != nullptr || hasLinkedModels() )
@@ -134,6 +134,8 @@ class EXPORT AutomatableModel
     //! otherwise
     ValueBuffer* valueBuffer();
 
+    // Initial/Reset value
+
     template <class T>
     T initValue() const
     {
@@ -144,6 +146,22 @@ class EXPORT AutomatableModel
     {
         return m_value == m_initValue;
     }
+
+    void setInitValue(const real_t value);
+
+    // Center
+
+    real_t centerValue() const
+    {
+        return m_centerValue;
+    }
+
+    void setCenterValue(const real_t _value)
+    {
+        m_centerValue = _value;
+    }
+
+    // Range values (min,max,step)
 
     template <class T>
     T minValue() const
@@ -163,53 +181,28 @@ class EXPORT AutomatableModel
         return castValue<T>(m_step);
     }
 
-    //! @brief Returns value scaled with the scale type and min/max values of
-    //! this model
-    real_t scaledValue(real_t value) const;
-    //! @brief Returns value applied with the inverse of this model's scale
-    //! type
-    real_t inverseScaledValue(real_t value) const;
+    virtual void setRange(const real_t min,
+                          const real_t max,
+                          const real_t step = 1.f);
 
-    //! @brief Convert value from min-max to 0-1
-    real_t normalizedValue(real_t value) const;
-    //! @brief Convert value from 0-1 to min-max
-    real_t inverseNormalizedValue(real_t value) const;
-
-    void setInitValue(const real_t value);
-
-    inline real_t randomRatio() const
-    {
-        return m_randomRatio;
-    }
-
-    //! @brief Amount of randomization, between 0 and 1. Default to 0.
-    // Only applies to sample-exact, value buffer.
-    void setRandomRatio(const real_t value);
-
-    //! @brief Distribution of randomization, Default to gaussf().
-    // Only applies to sample-exact, value buffer.
-    void setRandomDistribution(const WaveForm* _wf);
-
-    void decrValue(int steps = 1)
-    {
-        setValue(m_value - steps * m_step);
-    }
-
-    void incrValue(int steps = 1)
-    {
-        setValue(m_value + steps * m_step);
-    }
+    virtual void setStep(const real_t step);
 
     real_t range() const
     {
         return m_range;
     }
 
-    virtual void setRange(const real_t min,
-                          const real_t max,
-                          const real_t step = 1.f);
+    bool hasStrictStepSize() const
+    {
+        return m_hasStrictStepSize;
+    }
 
-    virtual void setStep(const real_t step);
+    void setStrictStepSize(const bool b)
+    {
+        m_hasStrictStepSize = b;
+    }
+
+    // Scale
 
     void setScaleType(ScaleType sc)
     {
@@ -224,20 +217,60 @@ class EXPORT AutomatableModel
         return m_scaleType == Logarithmic;
     }
 
-    real_t centerValue() const
+    // Randomization
+
+    inline real_t randomRatio() const
     {
-        return m_centerValue;
+        return m_randomRatio;
     }
 
-    void setCenterValue(const real_t centerVal)
+    //! @brief Amount of randomization, between 0 and 1. Default to 0.
+    void setRandomRatio(const real_t _ratio);
+
+    //! @brief Distribution of randomization, Default to gaussf().
+    void setRandomDistribution(const WaveForm* _wf);
+
+    template <class T>
+    inline T rawValue() const
     {
-        m_centerValue = centerVal;
+        return castValue<T>(m_value);
     }
+
+    // Various functions
+
+    //! @brief Returns value scaled with the scale type and min/max values of
+    //! this model
+    real_t scaledValue(real_t value) const;
+    //! @brief Returns value applied with the inverse of this model's scale
+    //! type
+    real_t inverseScaledValue(real_t value) const;
+
+    //! @brief Convert value from min-max to 0-1
+    real_t normalizedValue(real_t value) const;
+    //! @brief Convert value from 0-1 to min-max
+    real_t inverseNormalizedValue(real_t value) const;
+
+    void decrValue(int steps = 1)
+    {
+        setValue(m_value - steps * m_step);
+    }
+
+    void incrValue(int steps = 1)
+    {
+        setValue(m_value + steps * m_step);
+    }
+
+    // Links
 
     static void linkModels(AutomatableModel* m1, AutomatableModel* m2);
     static void unlinkModels(AutomatableModel* m1, AutomatableModel* m2);
 
     void unlinkAllModels();
+
+    bool hasLinkedModels() const
+    {
+        return !m_linkedModels.empty();
+    }
 
     /**
      * @brief Saves settings (value, automation links and controller
@@ -251,7 +284,8 @@ class EXPORT AutomatableModel
      */
     virtual void saveSettings(QDomDocument&  doc,
                               QDomElement&   element,
-                              const QString& name);
+                              const QString& name,
+                              const bool     unique = true);
 
     /*! \brief Loads settings (value, automation links and controller
        connections) of AutomatableModel from specified DOM element using
@@ -271,11 +305,6 @@ class EXPORT AutomatableModel
         return displayValue(m_value);
     }
 
-    bool hasLinkedModels() const
-    {
-        return !m_linkedModels.empty();
-    }
-
     // a way to track changed values in the model and avoid using
     // signals/slots. useful for speed-critical code. note that this method
     // should only be called once per period since it resets the state of the
@@ -292,16 +321,6 @@ class EXPORT AutomatableModel
     }
 
     real_t globalAutomationValueAt(const MidiTime& time);
-
-    bool hasStrictStepSize() const
-    {
-        return m_hasStrictStepSize;
-    }
-
-    void setStrictStepSize(const bool b)
-    {
-        m_hasStrictStepSize = b;
-    }
 
     static void incrementPeriodCounter()
     {
@@ -355,6 +374,8 @@ class EXPORT AutomatableModel
     void propagateAutomatedValue();
 
   private:
+    QString formatNumber(real_t v);
+
     virtual void saveSettings(QDomDocument& doc, QDomElement& element)
     {
         saveSettings(doc, element, "value");
@@ -406,10 +427,7 @@ class EXPORT AutomatableModel
     long        m_lastUpdatedPeriod;
     static long s_periodCounter;
 
-    bool m_hasSampleExactData;
-
-    // prevent several threads from attempting to write the same vb at
-    // the same time. Still useful with signals?
+    bool   m_hasSampleExactData;
     QMutex m_valueBufferMutex;
 };
 
@@ -418,22 +436,28 @@ class EXPORT TypedAutomatableModel : public AutomatableModel
 {
   public:
     using AutomatableModel::AutomatableModel;
-    T value(int frameOffset = 0) const
+
+    inline T value(f_cnt_t frameOffset = 0, bool recording = false) const
     {
         return AutomatableModel::value<T>(frameOffset);
     }
 
-    T initValue() const
+    inline T initValue() const
     {
         return AutomatableModel::initValue<T>();
     }
 
-    T minValue() const
+    inline T rawValue() const
+    {
+        return AutomatableModel::rawValue<T>();
+    }
+
+    inline T minValue() const
     {
         return AutomatableModel::minValue<T>();
     }
 
-    T maxValue() const
+    inline T maxValue() const
     {
         return AutomatableModel::maxValue<T>();
     }

@@ -357,12 +357,12 @@ bool Knob::updateAngle()
     float angle = 0.f;
     if(m)  //&& m->maxValue() != m->minValue() )
     {
-        // angle = angleFromValue( m->inverseScaledValue( m->value() ),
+        // angle = angleFromValue( m->inverseScaledValue( m->rawValue() ),
         // m->minValue(), m->maxValue(), m_totalAngle ); float
-        // v=m->minValue()+qRound( (m->value()-m->minValue()) /
+        // v=m->minValue()+qRound( (m->rawValue()-m->minValue()) /
         //                              m->step<float>() ) * m->step<float>();
         // v=m->normalizedValue(v);
-        float v = m->value();
+        float v = m->rawValue();
         if(m->isScaleLogarithmic())
             v = ::linearToLogScale(m->minValue(), m->maxValue(), v);
         v     = (v - m->minValue()) / m->range();
@@ -625,11 +625,12 @@ void Knob::setPosition(const QPoint& _p, bool _shift)
     convert(_p, value, dist);
 
     // const float step = model()->step<float>();
-    // const float oldValue = model()->value();
+    // const float oldValue = model()->rawValue();
 
     if(_shift)
     {
-        m_pressValue = 0.3f * value + 0.7f * m->normalizedValue(m->value());
+        m_pressValue
+                = 0.3f * value + 0.7f * m->normalizedValue(m->rawValue());
         dist /= 4.f;
         // qInfo("shift pv=%f dist=%f",m_pressValue,dist);
     }
@@ -653,7 +654,7 @@ void Knob::setPosition(const QPoint& _p, bool _shift)
             m_leftOver = value;
     }
     */
-    /*                float v=m->value();
+    /*                float v=m->rawValue();
             if(m->isScaleLogarithmic())
        v=::linearToLogScale(m->minValue(),m->maxValue(),v);
             v=(v-m->minValue())/m->range();
@@ -763,7 +764,7 @@ void Knob::dropEvent(QDropEvent* _de)
 
                 {
                     AutomatableModel::linkModels(m, mod);
-                    mod->setValue(m->value());
+                    mod->setValue(m->rawValue());
                     _de->accept();
                     mod->emit propertiesChanged();
                     update();
@@ -789,7 +790,7 @@ void Knob::mousePressEvent(QMouseEvent* _me)
         m->saveJournallingState(false);
 
         if(m)
-            m_pressValue = m->normalizedValue(m->value());
+            m_pressValue = m->normalizedValue(m->rawValue());
         else
             m_pressValue = 0.f;
 
@@ -813,7 +814,7 @@ void Knob::mousePressEvent(QMouseEvent* _me)
                     gui->mainWindow()->isShiftPressed() == true )
     {
             new StringPairDrag( "float_value",
-                                    QString::number( m->value() ),
+                                    QString::number( m->rawValue() ),
                                                     QPixmap(), this );
     }
     */
@@ -835,7 +836,7 @@ void Knob::mouseMoveEvent(QMouseEvent* _me)
         // setPosition( m_mouseOffset, _me->modifiers() & Qt::ShiftModifier);
         setPosition(_me->pos() - m_pressPos,
                     _me->modifiers() & Qt::ShiftModifier);
-        emit sliderMoved(m->value());
+        emit sliderMoved(m->rawValue());
         // QCursor::setPos( mapToGlobal( m_origMousePos ) );
     }
     s_textFloat->setText(displayValue());
@@ -908,7 +909,7 @@ void Knob::wheelEvent(QWheelEvent* _we)
         s_textFloat->moveGlobal(this, QPoint(width() + 2, 0));
         s_textFloat->setVisibilityTimeOut(1000);
 
-        emit sliderMoved(m->value());
+        emit sliderMoved(m->rawValue());
     }
 }
 
@@ -968,7 +969,7 @@ void Knob::editRandomization()
             this, windowTitle(),
             QObject::tr("Please enter a randomization ratio between "
                         "0 and 100:"),
-            100.*m->randomRatio(), 0., 100., 2, &ok);
+            100. * m->randomRatio(), 0., 100., 2, &ok);
 
     if(ok)
     {
@@ -1068,7 +1069,7 @@ QString Knob::displayValue() const
            + " "
            //+ QString( " %1" ).arg( m->getRoundedValue(), 0, 'f',
            // m->getDigitCount() )
-           + m->displayValue(m->value()) + " " + m_unit;
+           + m->displayValue(m->rawValue()) + " " + m_unit;
 }
 
 void Knob::doConnections()

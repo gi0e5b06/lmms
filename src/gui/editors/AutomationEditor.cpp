@@ -105,7 +105,7 @@ AutomationEditor::AutomationEditor() :
     m_waveRatioModel     = new FloatModel(1.f, 0.f, 1.f, 0.01f);
     m_waveSkewModel      = new FloatModel(1.f, 0.f, 1.f, 0.01f);
     m_waveAmplitudeModel = new FloatModel(0.2f, -1.f, 1.f, 0.01f);
-    m_waveRepeatModel    = new FloatModel(0.f, 0.f, 20.f, 0.01f);
+    m_waveRepeatModel    = new FloatModel(0.f, -10.f, 20.f, 0.01f);
 
     WaveForm::fillBankModel(*m_waveBankModel);
     WaveForm::fillIndexModel(*m_waveIndexModel, m_waveBankModel->value());
@@ -342,9 +342,9 @@ void AutomationEditor::updateAfterPatternChange()
         return;
     }
 
-    m_minLevel    = m_pattern->firstObject()->minValue<float>();
-    m_maxLevel    = m_pattern->firstObject()->maxValue<float>();
-    m_step        = m_pattern->firstObject()->step<float>();
+    m_minLevel    = m_pattern->firstObject()->minValue<real_t>();
+    m_maxLevel    = m_pattern->firstObject()->maxValue<real_t>();
+    m_step        = m_pattern->firstObject()->step<real_t>();
     m_scrollLevel = (m_minLevel + m_maxLevel) / 2;
 
     m_tensionModel->setValue(m_pattern->tension());
@@ -448,17 +448,17 @@ void AutomationEditor::leaveEvent(QEvent* e)
     QWidget::leaveEvent(e);
 }
 
-void AutomationEditor::drawLine(int x0In, float y0, int x1In, float y1)
+void AutomationEditor::drawLine(int x0In, real_t y0, int x1In, real_t y1)
 {
     int x0     = Note::quantized(x0In, AutomationPattern::quantization());
     int x1     = Note::quantized(x1In, AutomationPattern::quantization());
     int deltax = qAbs(x1 - x0);
-    // int deltax = qRound( qAbs<float>( x1 - x0 ) );
-    float deltay = qAbs<float>(y1 - y0);
-    int   x      = x0;
-    float y      = y0;
-    int   xstep;
-    int   ystep;
+    // int deltax = qRound( qAbs<real_t>( x1 - x0 ) );
+    real_t deltay = qAbs<real_t>(y1 - y0);
+    int    x      = x0;
+    real_t y      = y0;
+    int    xstep;
+    int    ystep;
 
     if(deltax < AutomationPattern::quantization())
     {
@@ -467,7 +467,7 @@ void AutomationEditor::drawLine(int x0In, float y0, int x1In, float y1)
 
     deltax /= AutomationPattern::quantization();
 
-    float yscale = deltay / (deltax);
+    real_t yscale = deltay / (deltax);
 
     if(x0 < x1)
     {
@@ -478,7 +478,7 @@ void AutomationEditor::drawLine(int x0In, float y0, int x1In, float y1)
         xstep = -(AutomationPattern::quantization());
     }
 
-    float lineAdjust;
+    real_t lineAdjust;
     if(y0 < y1)
     {
         ystep      = 1;
@@ -511,7 +511,7 @@ void AutomationEditor::mousePressEvent(QMouseEvent* mouseEvent)
     }
     if(mouseEvent->y() > TOP_MARGIN)
     {
-        float level = getLevel(mouseEvent->y());
+        real_t level = getLevel(mouseEvent->y());
 
         int x = mouseEvent->x();
 
@@ -588,8 +588,8 @@ void AutomationEditor::mousePressEvent(QMouseEvent* mouseEvent)
 
                 // move it
                 m_action      = MOVE_VALUE;
-                int aligned_x = (int)((float)((it.key() - m_currentPosition)
-                                              * m_ppt)
+                int aligned_x = (int)((real_t)((it.key() - m_currentPosition)
+                                               * m_ppt)
                                       / MidiTime::ticksPerTact());
                 m_moveXOffset = x - aligned_x - 1;
                 // set move-cursor
@@ -699,8 +699,8 @@ void AutomationEditor::mouseMoveEvent(QMouseEvent* mouseEvent)
 
     if(mouseEvent->y() > TOP_MARGIN)
     {
-        float level = getLevel(mouseEvent->y());
-        int   x     = mouseEvent->x();
+        real_t level = getLevel(mouseEvent->y());
+        int    x     = mouseEvent->x();
 
         x -= VALUES_WIDTH;
         if(m_action == MOVE_VALUE)
@@ -878,7 +878,7 @@ void AutomationEditor::mouseMoveEvent(QMouseEvent* mouseEvent)
             ticks_diff    = ticks_diff % MidiTime::ticksPerTact();
 
             // do vertical move-stuff
-            float level_diff = level - m_moveStartLevel;
+            real_t level_diff = level - m_moveStartLevel;
 
             if(m_selectedLevels > 0)
             {
@@ -977,7 +977,7 @@ void AutomationEditor::mouseMoveEvent(QMouseEvent* mouseEvent)
                 m_selectedTick = -m_selectStartTick;
             }
 
-            float level = getLevel(mouseEvent->y());
+            real_t level = getLevel(mouseEvent->y());
 
             if(level <= m_bottomLevel)
             {
@@ -1008,13 +1008,13 @@ void AutomationEditor::mouseMoveEvent(QMouseEvent* mouseEvent)
 inline void AutomationEditor::drawCross(QPainter& p)
 {
     QPoint mouse_pos   = mapFromGlobal(QCursor::pos());
-    float  level       = getLevel(mouse_pos.y());
+    real_t level       = getLevel(mouse_pos.y());
     int    grid_bottom = height() - SCROLLBAR_SIZE - 1;
-    float  cross_y
+    real_t cross_y
             = m_y_auto ? grid_bottom
                                  - ((grid_bottom - TOP_MARGIN)
                                     * (level - m_minLevel)
-                                    / (float)(m_maxLevel - m_minLevel))
+                                    / (real_t)(m_maxLevel - m_minLevel))
                        : grid_bottom - (level - m_bottomLevel) * m_y_delta;
 
     p.setPen(crossColor());
@@ -1025,16 +1025,16 @@ inline void AutomationEditor::drawCross(QPainter& p)
     tt_pos.ry() -= 64;
     tt_pos.rx() += 32;
 
-    float scaledLevel = m_pattern->firstObject()->scaledValue(level);
+    real_t scaledLevel = m_pattern->firstObject()->scaledValue(level);
 
     int tick = roundf((mouse_pos.x() - VALUES_WIDTH)
                       * MidiTime::ticksPerTact() / m_ppt);
 
-    float x = float(mouse_pos.x() - VALUES_WIDTH)
-              //*Engine::getSong()->getTimeSigModel().getNumerator()
-              / m_ppt;
+    real_t x = real_t(mouse_pos.x() - VALUES_WIDTH)
+               //*Engine::getSong()->getTimeSigModel().getNumerator()
+               / m_ppt;
 
-    float current = m_pattern->valueAt(tick);
+    real_t current = m_pattern->valueAt(tick);
 
     QToolTip::showText(tt_pos,
                        QString("Tick: %1\nValue: %2\nCurrent: %3\n"
@@ -1096,8 +1096,8 @@ void AutomationEditor::paintEvent(QPaintEvent* pe)
     {
         if(m_y_auto)
         {
-            int   y[]     = {grid_bottom, TOP_MARGIN + font_height / 2};
-            float level[] = {m_minLevel, m_maxLevel};
+            int    y[]     = {grid_bottom, TOP_MARGIN + font_height / 2};
+            real_t level[] = {m_minLevel, m_maxLevel};
             for(int i = 0; i < 2; ++i)
             {
                 const QString& label
@@ -1196,7 +1196,7 @@ void AutomationEditor::paintEvent(QPaintEvent* pe)
             // pen.setStyle( Qt::DotLine );
             // p.setPen( pen );
             p.setPen(beatLineColor());
-            float y_delta = (grid_bottom - TOP_MARGIN) / 8.0f;
+            real_t y_delta = (grid_bottom - TOP_MARGIN) / 8.0f;
             for(int i = 1; i < 8; ++i)
             {
                 int y = (int)(grid_bottom - i * y_delta);
@@ -1212,10 +1212,10 @@ void AutomationEditor::paintEvent(QPaintEvent* pe)
         }
         else
         {
-            float y;
+            real_t y;
             for(int level = (int)m_bottomLevel; level <= m_topLevel; level++)
             {
-                y = yCoordOfLevel((float)level);
+                y = yCoordOfLevel((real_t)level);
                 if(level % 10 == 0)
                 {
                     p.setPen(beatLineColor());
@@ -1233,13 +1233,13 @@ void AutomationEditor::paintEvent(QPaintEvent* pe)
         }
 
         // alternating shades for better contrast
-        float timeSignature
-                = static_cast<float>(
+        real_t timeSignature
+                = static_cast<real_t>(
                           Engine::getSong()->getTimeSigModel().getNumerator())
-                  / static_cast<float>(Engine::getSong()
-                                               ->getTimeSigModel()
-                                               .getDenominator());
-        float zoomFactor = Editor::ZOOM_LEVELS[m_zoomingXModel.value()];
+                  / static_cast<real_t>(Engine::getSong()
+                                                ->getTimeSigModel()
+                                                .getDenominator());
+        real_t zoomFactor = Editor::ZOOM_LEVELS[m_zoomingXModel.value()];
         // the bars which disappears at the left side by scrolling
         int leftBars
                 = m_currentPosition * zoomFactor / MidiTime::ticksPerTact();
@@ -1299,11 +1299,11 @@ void AutomationEditor::paintEvent(QPaintEvent* pe)
         qSwap<int>(sel_pos_start, sel_pos_end);
     }
 
-    float selLevel_start = m_selectStartLevel;
-    float selLevel_end   = selLevel_start + m_selectedLevels;
+    real_t selLevel_start = m_selectStartLevel;
+    real_t selLevel_end   = selLevel_start + m_selectedLevels;
     if(selLevel_start > selLevel_end)
     {
-        qSwap<float>(selLevel_start, selLevel_end);
+        qSwap<real_t>(selLevel_start, selLevel_end);
     }
 
     if(validPattern())
@@ -1355,9 +1355,9 @@ void AutomationEditor::paintEvent(QPaintEvent* pe)
                         is_selected = true;
                 }*/
 
-                float* values = m_pattern->valuesAfter(it.key());
+                real_t* values = m_pattern->valuesAfter(it.key());
 
-                float nextValue;
+                real_t nextValue;
                 if(m_pattern->progressionType()
                    == AutomationPattern::DiscreteProgression)
                 {
@@ -1433,10 +1433,10 @@ void AutomationEditor::paintEvent(QPaintEvent* pe)
         y = (int)(grid_bottom
                   - ((grid_bottom - TOP_MARGIN)
                      * (selLevel_start - m_minLevel)
-                     / (float)(m_maxLevel - m_minLevel)));
+                     / (real_t)(m_maxLevel - m_minLevel)));
         h = (int)(grid_bottom
                   - ((grid_bottom - TOP_MARGIN) * (selLevel_end - m_minLevel)
-                     / (float)(m_maxLevel - m_minLevel))
+                     / (real_t)(m_maxLevel - m_minLevel))
                   - y);
     }
     else
@@ -1502,7 +1502,7 @@ int AutomationEditor::xCoordOfTick(int tick)
            + ((tick - m_currentPosition) * m_ppt / MidiTime::ticksPerTact());
 }
 
-float AutomationEditor::yCoordOfLevel(float level)
+real_t AutomationEditor::yCoordOfLevel(real_t level)
 {
     int grid_bottom = height() - SCROLLBAR_SIZE - 1;
     if(m_y_auto)
@@ -1518,7 +1518,7 @@ float AutomationEditor::yCoordOfLevel(float level)
 }
 
 // NEEDS Change in CSS
-void AutomationEditor::drawLevelTick(QPainter& p, int tick, float value)
+void AutomationEditor::drawLevelTick(QPainter& p, int tick, real_t value)
 //			bool is_selected )
 {
     int       grid_bottom = height() - SCROLLBAR_SIZE - 1;
@@ -1579,10 +1579,10 @@ void AutomationEditor::resizeEvent(QResizeEvent* re)
     if(!m_y_auto && grid_height < total_pixels)
     {
         int min_scroll
-                = (int)(m_minLevel + floorf(half_grid / (float)m_y_delta));
+                = (int)(m_minLevel + floorf(half_grid / (real_t)m_y_delta));
         int max_scroll = (int)(m_maxLevel
                                - (int)floorf((grid_height - half_grid)
-                                             / (float)m_y_delta));
+                                             / (real_t)m_y_delta));
         m_topBottomScroll->setRange(min_scroll, max_scroll);
     }
     else
@@ -1664,17 +1664,17 @@ void AutomationEditor::wheelEvent(QWheelEvent* we)
     }
 }
 
-float AutomationEditor::getLevel(int y)
+real_t AutomationEditor::getLevel(int y)
 {
     int level_line_y = height() - SCROLLBAR_SIZE - 1;
     // pressed level
-    float level
+    real_t level
             = roundf((m_bottomLevel
                       + (m_y_auto ? (m_maxLevel - m_minLevel)
                                             * (level_line_y - y)
-                                            / (float)(level_line_y
-                                                      - (TOP_MARGIN + 2))
-                                  : (level_line_y - y) / (float)m_y_delta))
+                                            / (real_t)(level_line_y
+                                                       - (TOP_MARGIN + 2))
+                                  : (level_line_y - y) / (real_t)m_y_delta))
                      / m_step)
               * m_step;
     // some range-checking-stuff
@@ -1895,7 +1895,7 @@ void AutomationEditor::selectAll()
 
     while(++it != time_map.end())
     {
-        const float level = it.value();
+        const real_t level = it.value();
         if(level < m_selectStartLevel)
         {
             // if we move start-level down, we have to add
@@ -1928,11 +1928,11 @@ void AutomationEditor::getSelectedValues(timeMap& selected_values)
         qSwap<int>(sel_pos_start, sel_pos_end);
     }
 
-    float selLevel_start = m_selectStartLevel;
-    float selLevel_end   = selLevel_start + m_selectedLevels;
+    real_t selLevel_start = m_selectStartLevel;
+    real_t selLevel_end   = selLevel_start + m_selectedLevels;
     if(selLevel_start > selLevel_end)
     {
-        qSwap<float>(selLevel_start, selLevel_end);
+        qSwap<real_t>(selLevel_start, selLevel_end);
     }
 
     timeMap& time_map = m_pattern->getTimeMap();
@@ -1942,7 +1942,7 @@ void AutomationEditor::getSelectedValues(timeMap& selected_values)
         // TODO: Add constant
         tick_t len_ticks = MidiTime::ticksPerTact() / 16;
 
-        float  level     = it.value();
+        real_t level     = it.value();
         tick_t pos_ticks = it.key();
 
         if(level >= selLevel_start && level <= selLevel_end
@@ -2143,22 +2143,23 @@ void AutomationEditor::updateTopBottomLevels()
     {
         int centralLevel = (int)(m_minLevel + m_maxLevel - m_scrollLevel);
 
-        m_bottomLevel = centralLevel - (half_grid / (float)m_y_delta);
+        m_bottomLevel = centralLevel - (half_grid / (real_t)m_y_delta);
         if(m_bottomLevel < m_minLevel)
         {
             m_bottomLevel = m_minLevel;
             m_topLevel    = m_minLevel
-                         + (int)floorf(grid_height / (float)m_y_delta);
+                         + (int)floorf(grid_height / (real_t)m_y_delta);
         }
         else
         {
             m_topLevel = m_bottomLevel
-                         + (int)floorf(grid_height / (float)m_y_delta);
+                         + (int)floorf(grid_height / (real_t)m_y_delta);
             if(m_topLevel > m_maxLevel)
             {
-                m_topLevel    = m_maxLevel;
-                m_bottomLevel = m_maxLevel
-                                - (int)floorf(grid_height / (float)m_y_delta);
+                m_topLevel = m_maxLevel;
+                m_bottomLevel
+                        = m_maxLevel
+                          - (int)floorf(grid_height / (real_t)m_y_delta);
             }
         }
     }
@@ -2422,7 +2423,7 @@ AutomationEditorWindow::AutomationEditorWindow() :
     m_zoomingXComboBox = new ComboBox(zoomToolBar);
     m_zoomingXComboBox->setFixedSize(70, 32);
 
-    for(const float& zoomLevel : Editor::ZOOM_LEVELS)
+    for(const real_t& zoomLevel : Editor::ZOOM_LEVELS)
     {
         m_editor->m_zoomingXModel.addItem(
                 QString("%1\%").arg(zoomLevel * 100));
@@ -2690,12 +2691,12 @@ void AutomationEditor::copySelection()
     if(m_pattern == nullptr)
         return;
 
-    QString r = "";
-    auto map=m_pattern->getTimeMap();
+    QString r   = "";
+    auto    map = m_pattern->getTimeMap();
     for(auto t : map.keys())
     {
-        float x = float(t) / MidiTime::ticksPerTact();
-        float y = map.value(t);
+        real_t x = real_t(t) / MidiTime::ticksPerTact();
+        real_t y = map.value(t);
 
         r.append(QString::number(t));
         r.append(QChar(','));
@@ -2705,7 +2706,7 @@ void AutomationEditor::copySelection()
 
         for(auto m : m_pattern->objects())
         {
-            float v = m->scaledValue(y);
+            real_t v = m->scaledValue(y);
             r.append(QChar(','));
             r.append(QString::number(v, 'f'));
         }

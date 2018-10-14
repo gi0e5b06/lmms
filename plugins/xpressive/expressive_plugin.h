@@ -73,14 +73,14 @@ public:
 
 	virtual PluginView* instantiateView( QWidget * parent );
 
-	graphModel& graphO1() { return m_graphO1; }
-	graphModel& graphO2() { return m_graphO2; }
-	graphModel& graphW1() { return m_graphW1; }
-	graphModel& graphW2() { return m_graphW2; }
-	graphModel& graphW3() { return m_graphW3; }
-	graphModel& rawgraphW1() { return m_rawgraphW1; }
-	graphModel& rawgraphW2() { return m_rawgraphW2; }
-	graphModel& rawgraphW3() { return m_rawgraphW3; }
+	GraphModel& graphO1() { return m_graphO1; }
+	GraphModel& graphO2() { return m_graphO2; }
+	GraphModel& graphW1() { return m_graphW1; }
+	GraphModel& graphW2() { return m_graphW2; }
+	GraphModel& graphW3() { return m_graphW3; }
+	GraphModel& rawgraphW1() { return m_rawgraphW1; }
+	GraphModel& rawgraphW2() { return m_rawgraphW2; }
+	GraphModel& rawgraphW3() { return m_rawgraphW3; }
 	IntModel& selectedGraph() { return m_selectedGraph; }
 	QByteArray& wavesExpression(int i) { return m_wavesExpression[i]; }
 	QByteArray& outputExpression(int i) { return m_outputExpression[i]; }
@@ -101,21 +101,21 @@ public:
 	WaveSample& W2() { return m_W2; }
 	WaveSample& W3() { return m_W3; }
 	BoolModel& exprValid() { return m_exprValid; }
-	static void smooth(float smoothness,const graphModel* in,graphModel* out);
+	static void smooth(float smoothness,const GraphModel* in,GraphModel* out);
 protected:
 	
 protected slots:
 
 
 private:
-	graphModel  m_graphO1;
-	graphModel  m_graphO2;
-	graphModel  m_graphW1;
-	graphModel  m_graphW2;
-	graphModel  m_graphW3;
-	graphModel  m_rawgraphW1;
-	graphModel  m_rawgraphW2;
-	graphModel  m_rawgraphW3;
+	GraphModel  m_graphO1;
+	GraphModel  m_graphO2;
+	GraphModel  m_graphW1;
+	GraphModel  m_graphW2;
+	GraphModel  m_graphW3;
+	GraphModel  m_rawgraphW1;
+	GraphModel  m_rawgraphW2;
+	GraphModel  m_rawgraphW3;
 	IntModel m_selectedGraph;
 	QByteArray m_wavesExpression[3];
 	QByteArray m_outputExpression[2];
@@ -193,7 +193,7 @@ private:
 	static QPixmap *s_artwork;
 
 	Graph *m_graph;
-	graphModel *m_raw_graph;
+	GraphModel *m_raw_graph;
 	LedCheckBox *m_expressionValidToggle;
 	LedCheckBox *m_waveInterpolate;
 	bool m_output_expr;

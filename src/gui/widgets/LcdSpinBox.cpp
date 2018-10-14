@@ -63,12 +63,12 @@ LcdSpinBox::~LcdSpinBox()
 void LcdSpinBox::modelChanged()
 {
     ModelView::modelChanged();
-    LcdWidget::setValue(model()->value());
+    LcdWidget::setValue(model()->rawValue());
 }
 
 void LcdSpinBox::update()
 {
-    LcdWidget::setValue(model()->value());
+    LcdWidget::setValue(model()->rawValue());
     LcdWidget::update();
 }
 
@@ -97,11 +97,11 @@ void LcdSpinBox::setPosition(const QPoint& _p, bool _shift)
     if(!model())
         return;
 
-    // const real_t oldValue = model()->value();
+    // const real_t oldValue = model()->rawValue();
 
     if(_shift)
     {
-        // m_pressValue=model()->value();
+        // m_pressValue=model()->rawValue();
         dist /= 5.;
         // qInfo("shift pv=%f dist=%f",m_pressValue,dist);
     }
@@ -131,12 +131,14 @@ void LcdSpinBox::setPosition(const QPoint& _p, bool _shift)
         real_t roundedValue
                 = qRound(((m_pressValue - model()->minValue())
                           + dist * (value - 0.5)
-                                    * qMin<real_t>(50. * step, model()->range()))
+                                    * qMin<real_t>(50. * step,
+                                                   model()->range()))
                          / step)
                   * step;
         // model()->setValue( roundedValue );
         real_t v = model()->minValue()
-                + qMax<real_t>(0., qMin<real_t>(roundedValue, model()->range()));
+                   + qMax<real_t>(0., qMin<real_t>(roundedValue,
+                                                   model()->range()));
         model()->setValue(v);
         LcdWidget::setValue(v);
         // qInfo("       rv=%f dist=%f",roundedValue,dist);
@@ -174,7 +176,7 @@ void LcdSpinBox::mousePressEvent(QMouseEvent* _me)
         }
 
         if(model())
-            m_pressValue = model()->value();
+            m_pressValue = model()->rawValue();
         else
             m_pressValue = 0.;
 
@@ -203,7 +205,7 @@ void LcdSpinBox::mouseMoveEvent(QMouseEvent* _me)
         // dy = qBound( -4, dy/4, 4 );
         // if( dy > 1 || dy < -1 )
         //{
-        // model()->setInitValue( model()->value() -
+        // model()->setInitValue( model()->rawValue() -
         // dy / 2 * model()->step<int>() );
         setPosition(_me->pos() - m_pressPos,
                     _me->modifiers() & Qt::ShiftModifier);
@@ -234,7 +236,7 @@ void LcdSpinBox::wheelEvent(QWheelEvent* _we)
     {
         _we->accept();
         if(model())
-            model()->setInitValue(model()->value()
+            model()->setInitValue(model()->rawValue()
                                   + ((_we->delta() > 0) ? 1 : -1)
                                             * model()->step<int>());
         emit manualChange();
@@ -259,7 +261,7 @@ void LcdSpinBox::enterValue()
             tr("Please enter a new value between %1 and %2:")
                     .arg(model()->minValue())
                     .arg(model()->maxValue()),
-            model()->value(), model()->minValue(), model()->maxValue(), 4,
+            model()->rawValue(), model()->minValue(), model()->maxValue(), 4,
             &ok);
 
     if(ok)

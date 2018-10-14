@@ -32,70 +32,48 @@
 
 
 
-SamplePlayHandle::SamplePlayHandle( const QString& sampleFile ) :
+SamplePlayHandle::SamplePlayHandle( SampleBuffer* sampleBuffer, bool ownAudioPort ) :
 	PlayHandle( TypeSamplePlayHandle ),
-	m_sampleBuffer( new SampleBuffer( sampleFile ) ),
+	m_sampleBuffer( sharedObject::ref( sampleBuffer ) ),
 	m_doneMayReturnTrue( true ),
 	m_currentFrame( 0 ),
-	m_ownAudioPort( true ),
+	m_ownAudioPort( ownAudioPort ),
 	m_defaultVolumeModel( DefaultVolume, MinVolume, MaxVolume, 1 ),
 	m_volumeModel( &m_defaultVolumeModel ),
 	m_track( NULL ),
 	m_bbTrack( NULL )
 {
         m_frames=m_sampleBuffer->frames();
-	setAudioPort( new AudioPort( "SamplePlayHandle", false,
-                                     nullptr,
-                                     m_volumeModel,
-                                     nullptr,
-                                     nullptr,
-                                     nullptr,
-                                     nullptr,
-                                     nullptr,
-                                     nullptr,
-                                     nullptr ) );
+
+        if(ownAudioPort)
+                setAudioPort( new AudioPort( "SamplePlayHandle", false,
+                                             nullptr,
+                                             m_volumeModel,
+                                             nullptr,
+                                             nullptr,
+                                             nullptr,
+                                             nullptr,
+                                             nullptr,
+                                             nullptr,
+                                             nullptr) );
 }
 
 
 
 
-SamplePlayHandle::SamplePlayHandle( SampleBuffer* sampleBuffer ) :
-	PlayHandle( TypeSamplePlayHandle ),
-	m_sampleBuffer( sharedObject::ref( sampleBuffer ) ),
-	m_doneMayReturnTrue( true ),
-	m_currentFrame( 0 ),
-	m_ownAudioPort( true ),
-	m_defaultVolumeModel( DefaultVolume, MinVolume, MaxVolume, 1 ),
-	m_volumeModel( &m_defaultVolumeModel ),
-	m_track( NULL ),
-	m_bbTrack( NULL )
+SamplePlayHandle::SamplePlayHandle( const QString& sampleFile ) :
+        SamplePlayHandle( new SampleBuffer( sampleFile ) , true)
 {
-        m_frames=m_sampleBuffer->frames();
-	setAudioPort( new AudioPort( "SamplePlayHandle", false,
-                                     nullptr,
-                                     m_volumeModel,
-                                     nullptr,
-                                     nullptr,
-                                     nullptr,
-                                     nullptr,
-                                     nullptr,
-                                     nullptr,
-                                     nullptr) );
+        sharedObject::unref( m_sampleBuffer );
 }
 
 
 
 
 SamplePlayHandle::SamplePlayHandle( SampleTCO* tco ) :
-	PlayHandle( TypeSamplePlayHandle ),
-	m_sampleBuffer( sharedObject::ref( tco->sampleBuffer() ) ),
-	m_doneMayReturnTrue( true ),
-	m_ownAudioPort( false ),
-	m_defaultVolumeModel( DefaultVolume, MinVolume, MaxVolume, 1 ),
-	m_volumeModel( &m_defaultVolumeModel ),
-	m_track( tco->getTrack() ),
-	m_bbTrack( NULL )
+        SamplePlayHandle( tco->sampleBuffer() , false)
 {
+	m_track = tco->getTrack();
 	m_currentFrame=0;//tco->initialPlayTick() * Engine::framesPerTick();
         m_frames=(/*tco->initialPlayTick() +*/ tco->length()) * Engine::framesPerTick();
         m_state.setFrameIndex(tco->initialPlayTick() * Engine::framesPerTick());

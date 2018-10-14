@@ -24,14 +24,13 @@
 
 #include "Mixer.h"
 
-#include "lmmsconfig.h"
-
 #include "AudioPort.h"
+#include "EnvelopeAndLfoParameters.h"
 #include "FxMixer.h"
 #include "MixerWorkerThread.h"
-#include "Song.h"
-#include "EnvelopeAndLfoParameters.h"
 #include "NotePlayHandle.h"
+#include "Song.h"
+#include "lmmsconfig.h"
 //#include "ConfigManager.h"
 #include "Configuration.h"
 #include "SamplePlayHandle.h"
@@ -39,1218 +38,1128 @@
 // platform-specific audio-interface-classes
 #include "AudioAlsa.h"
 #include "AudioAlsaGdx.h"
+#include "AudioDummy.h"
 #include "AudioJack.h"
 #include "AudioOss.h"
-#include "AudioSndio.h"
 #include "AudioPortAudio.h"
-#include "AudioSoundIo.h"
 #include "AudioPulseAudio.h"
 #include "AudioSdl.h"
-#include "AudioDummy.h"
+#include "AudioSndio.h"
+#include "AudioSoundIo.h"
 
 // platform-specific midi-interface-classes
-#include "MidiAlsaRaw.h"
+#include "Backtrace.h"
+#include "BufferManager.h"
+#include "MemoryHelper.h"
 #include "MidiAlsaGdx.h"
+#include "MidiAlsaRaw.h"
 #include "MidiAlsaSeq.h"
+#include "MidiApple.h"
+#include "MidiDummy.h"
 #include "MidiJack.h"
 #include "MidiOss.h"
 #include "MidiSndio.h"
 #include "MidiWinMM.h"
-#include "MidiApple.h"
-#include "MidiDummy.h"
-
-#include "MemoryHelper.h"
-#include "BufferManager.h"
-#include "Backtrace.h"
-
 #include "denormals.h"
 
-//typedef LocklessList<PlayHandle *>::Element LocklessListElement;
-
+// typedef LocklessList<PlayHandle *>::Element LocklessListElement;
 
 static __thread bool s_renderingThread;
 
-
-
-
-Mixer::Mixer( bool renderOnly ) :
-	m_renderOnly( renderOnly ),
-	m_framesPerPeriod( DEFAULT_BUFFER_SIZE ),
-        //m_periodCounter(0),
-	m_inputBufferRead( 0 ),
-	m_inputBufferWrite( 1 ),
-	m_readBuf( nullptr ),
-	m_writeBuf( nullptr ),
-        m_displayRing( nullptr ),
-	m_workers(),
-	m_numWorkers( QThread::idealThreadCount()*2-1 ), //tmp GDX
-	m_newPlayHandles(),// PlayHandle::MaxNumber ),
-	m_qualitySettings( qualitySettings::Mode_Draft ),
-	m_masterVolumeGain( 1.f ),
-	m_masterPanningGain( 0.f ),
-	m_isProcessing( false ),
-	m_audioDev( nullptr ),
-	m_oldAudioDev( nullptr ),
-	m_audioDevStartFailed( false ),
-	m_profiler(),
-	m_metronomeActive(false),
-	m_clearSignal( false ),
-	m_changesSignal( false ),
-	m_changes( 0 ),
-	m_doChangesMutex( QMutex::Recursive ),
-	m_waitingForWrite( false )
+Mixer::Mixer(bool renderOnly) :
+      m_renderOnly(renderOnly), m_framesPerPeriod(DEFAULT_BUFFER_SIZE),
+      // m_periodCounter(0),
+      m_inputBufferRead(0), m_inputBufferWrite(1), m_readBuf(nullptr),
+      m_writeBuf(nullptr), m_displayRing(nullptr), m_workers(),
+      m_numWorkers(QThread::idealThreadCount() * 2 - 1),  // tmp GDX
+      m_newPlayHandles(),  // PlayHandle::MaxNumber ),
+      m_qualitySettings(qualitySettings::Mode_Draft), m_masterVolumeGain(1.),
+      m_masterPanningGain(0.), m_isProcessing(false), m_audioDev(nullptr),
+      m_oldAudioDev(nullptr), m_audioDevStartFailed(false), m_profiler(),
+      m_metronomeActive(false), m_clearSignal(false), m_changesSignal(false),
+      m_changes(0), m_doChangesMutex(QMutex::Recursive),
+      m_waitingForWrite(false)
 {
-	for( int i = 0; i < 2; ++i )
-	{
-		m_inputBufferFrames[i] = 0;
-		m_inputBufferSize[i] = DEFAULT_BUFFER_SIZE * 100;
-		m_inputBuffer[i] = new sampleFrame[ m_inputBufferSize[i] ];
-		memset(m_inputBuffer[i],0,sizeof(sampleFrame) * m_inputBufferSize[i]);
-		//BufferManager::clear( m_inputBuffer[i], m_inputBufferSize[i] );
-	}
+    for(int i = 0; i < 2; ++i)
+    {
+        m_inputBufferFrames[i] = 0;
+        m_inputBufferSize[i]   = DEFAULT_BUFFER_SIZE * 100;
+        m_inputBuffer[i]       = new sampleFrame[m_inputBufferSize[i]];
+        memset(m_inputBuffer[i], 0,
+               sizeof(sampleFrame) * m_inputBufferSize[i]);
+        // BufferManager::clear( m_inputBuffer[i], m_inputBufferSize[i] );
+    }
 
-	// determine FIFO size and number of frames per period
-	int fifoSize = 1;
+    // determine FIFO size and number of frames per period
+    int fifoSize = 1;
 
-	// if not only rendering (that is, using the GUI), load the buffer
-	// size from user configuration
-	if( renderOnly == false )
-	{
-		m_framesPerPeriod = (fpp_t)CONFIG_GET_INT("mixer.framesperaudiobuffer");
-		//	( fpp_t ) ConfigManager::inst()->
-		//		value( "mixer", "framesperaudiobuffer" ).toInt();
+    // if not only rendering (that is, using the GUI), load the buffer
+    // size from user configuration
+    if(renderOnly == false)
+    {
+        m_framesPerPeriod
+                = (fpp_t)CONFIG_GET_INT("mixer.framesperaudiobuffer");
+        //	( fpp_t ) ConfigManager::inst()->
+        //		value( "mixer", "framesperaudiobuffer" ).toInt();
 
-		// if the value read from user configuration is not set or
-		// lower than the minimum allowed, use the default value and
-		// save it to the configuration
-		if( m_framesPerPeriod < MINIMUM_BUFFER_SIZE )
-		{
-                        CONFIG_SET_INT("mixer.framesperaudiobuffer",DEFAULT_BUFFER_SIZE);
-			//ConfigManager::inst()->setValue( "mixer",
-			//			"framesperaudiobuffer",
-			//			QString::number( DEFAULT_BUFFER_SIZE ) );
-			m_framesPerPeriod = DEFAULT_BUFFER_SIZE;
-		}
-		else if( m_framesPerPeriod > DEFAULT_BUFFER_SIZE )
-		{
-			fifoSize = m_framesPerPeriod / DEFAULT_BUFFER_SIZE;
-			m_framesPerPeriod = DEFAULT_BUFFER_SIZE;
-		}
-	}
+        // if the value read from user configuration is not set or
+        // lower than the minimum allowed, use the default value and
+        // save it to the configuration
+        if(m_framesPerPeriod < MINIMUM_BUFFER_SIZE)
+        {
+            CONFIG_SET_INT("mixer.framesperaudiobuffer", DEFAULT_BUFFER_SIZE);
+            // ConfigManager::inst()->setValue( "mixer",
+            //			"framesperaudiobuffer",
+            //			QString::number( DEFAULT_BUFFER_SIZE ) );
+            m_framesPerPeriod = DEFAULT_BUFFER_SIZE;
+        }
+        else if(m_framesPerPeriod > DEFAULT_BUFFER_SIZE)
+        {
+            fifoSize          = m_framesPerPeriod / DEFAULT_BUFFER_SIZE;
+            m_framesPerPeriod = DEFAULT_BUFFER_SIZE;
+        }
+    }
 
-	// allocte the FIFO from the determined size
-	m_fifo = new fifo( fifoSize );
+    // allocte the FIFO from the determined size
+    m_fifo = new fifo(fifoSize);
 
-	// now that framesPerPeriod is fixed initialize global BufferManager
-	BufferManager::init( m_framesPerPeriod );
+    // now that framesPerPeriod is fixed initialize global BufferManager
+    BufferManager::init(m_framesPerPeriod);
 
-	for( int i = 0; i < 4; i++ ) //3
-	{
-		//m_readBuf = (surroundSampleFrame*)
-		//MemoryHelper::alignedMalloc( m_framesPerPeriod * sizeof( surroundSampleFrame ) );
-		m_readBuf = MM_ALIGNED_ALLOC(surroundSampleFrame, m_framesPerPeriod);
-		m_bufferPool.push_back( m_readBuf );
-	}
+    for(int i = 0; i < 4; i++)  // 3
+    {
+        // m_readBuf = (surroundSampleFrame*)
+        // MemoryHelper::alignedMalloc( m_framesPerPeriod * sizeof(
+        // surroundSampleFrame ) );
+        m_readBuf = MM_ALIGNED_ALLOC(surroundSampleFrame, m_framesPerPeriod);
+        m_bufferPool.push_back(m_readBuf);
+    }
 
-	for( int i = 0; i < m_numWorkers+1; ++i )
-	{
-		MixerWorkerThread * wt = new MixerWorkerThread( this );
-		if( i < m_numWorkers )
-		{
-                        wt->setObjectName(QString("mixer worker #%1").arg(i));
-			wt->start( QThread::TimeCriticalPriority );
-		}
-		m_workers.push_back( wt );
-	}
+    for(int i = 0; i < m_numWorkers + 1; ++i)
+    {
+        MixerWorkerThread* wt = new MixerWorkerThread(this);
+        if(i < m_numWorkers)
+        {
+            wt->setObjectName(QString("mixer worker #%1").arg(i));
+            wt->start(QThread::TimeCriticalPriority);
+        }
+        m_workers.push_back(wt);
+    }
 
-	m_poolDepth = m_bufferPool.size()-1; //2;
-	m_readBuffer = 0;
-	m_writeBuffer = 1;
+    m_poolDepth   = m_bufferPool.size() - 1;  // 2;
+    m_readBuffer  = 0;
+    m_writeBuffer = 1;
 }
-
-
-
 
 Mixer::~Mixer()
 {
-	runChangesInModel();
+    runChangesInModel();
 
-	for( int w = 0; w < m_numWorkers; ++w )
-	{
-		m_workers[w]->quit();
-	}
+    for(int w = 0; w < m_numWorkers; ++w)
+    {
+        m_workers[w]->quit();
+    }
 
-	MixerWorkerThread::startAndWaitForJobs();
+    MixerWorkerThread::startAndWaitForJobs();
 
-	for( int w = 0; w < m_numWorkers; ++w )
-	{
-		m_workers[w]->wait( 500 );
-	}
+    for(int w = 0; w < m_numWorkers; ++w)
+    {
+        m_workers[w]->wait(500);
+    }
 
-	while( m_fifo->available() )
-	{
-		delete[] m_fifo->read();
-	}
-	delete m_fifo;
+    while(m_fifo->available())
+    {
+        delete[] m_fifo->read();
+    }
+    delete m_fifo;
 
-	delete m_audioDev;
+    delete m_audioDev;
 
-	delete m_midiClient;
+    delete m_midiClient;
 
-	for( int i = 0; i < 3; i++ )
-	{
-		//MemoryHelper::alignedFree( m_bufferPool[i] );
-		MM_ALIGNED_FREE( m_bufferPool[i] );
-	}
+    for(int i = 0; i < 3; i++)
+    {
+        // MemoryHelper::alignedFree( m_bufferPool[i] );
+        MM_ALIGNED_FREE(m_bufferPool[i]);
+    }
 
-	for( int i = 0; i < 2; ++i )
-	{
-		delete[] m_inputBuffer[i];
-	}
+    for(int i = 0; i < 2; ++i)
+    {
+        delete[] m_inputBuffer[i];
+    }
 
-        if(m_displayRing!=nullptr) delete m_displayRing;
+    if(m_displayRing != nullptr)
+        delete m_displayRing;
 }
-
-
-
 
 void Mixer::initDevices()
 {
-	bool success_ful = false;
-	if( m_renderOnly ) {
-		m_audioDev = new AudioDummy( success_ful, this );
-		m_audioDevName = AudioDummy::name();
-		m_midiClient = new MidiDummy;
-		m_midiClientName = MidiDummy::name();
-	} else {
-		m_audioDev = tryAudioDevices();
-		m_midiClient = tryMidiClients();
-	}
+    bool success_ful = false;
+    if(m_renderOnly)
+    {
+        m_audioDev       = new AudioDummy(success_ful, this);
+        m_audioDevName   = AudioDummy::name();
+        m_midiClient     = new MidiDummy;
+        m_midiClientName = MidiDummy::name();
+    }
+    else
+    {
+        m_audioDev   = tryAudioDevices();
+        m_midiClient = tryMidiClients();
+    }
 
-        if(m_displayRing==nullptr)
-        {
-                //m_displayBuf=MM_ALLOC(surroundSampleFrame, m_framesPerPeriod);
-                //memset(m_displayBuf,0,sizeof(surroundSampleFrame)*m_framesPerPeriod);
-                int periodsPerDisplayRefresh=
-                        qMax(1,int(ceil(real_t(processingSampleRate())
-                                        /real_t(m_framesPerPeriod/CONFIG_GET_INT("ui.framespersecond")))));
-                m_displayRing=new Ring(m_framesPerPeriod*periodsPerDisplayRefresh);
-        }
+    if(m_displayRing == nullptr)
+    {
+        // m_displayBuf=MM_ALLOC(surroundSampleFrame, m_framesPerPeriod);
+        // memset(m_displayBuf,0,sizeof(surroundSampleFrame)*m_framesPerPeriod);
+        int periodsPerDisplayRefresh = qMax(
+                1,
+                int(ceil(real_t(processingSampleRate())
+                         / real_t(m_framesPerPeriod
+                                  / CONFIG_GET_INT("ui.framespersecond")))));
+        m_displayRing
+                = new Ring(m_framesPerPeriod * periodsPerDisplayRefresh);
+    }
 }
 
-
-
-
-void Mixer::startProcessing( bool _needs_fifo )
+void Mixer::startProcessing(bool _needs_fifo)
 {
-	if( _needs_fifo )
-	{
-		m_fifoWriter = new fifoWriter( this, m_fifo );
-		m_fifoWriter->start( QThread::HighPriority );
-	}
-	else
-	{
-		m_fifoWriter = nullptr;
-	}
+    if(_needs_fifo)
+    {
+        m_fifoWriter = new fifoWriter(this, m_fifo);
+        m_fifoWriter->start(QThread::HighPriority);
+    }
+    else
+    {
+        m_fifoWriter = nullptr;
+    }
 
-	m_audioDev->startProcessing();
+    m_audioDev->startProcessing();
 
-	m_isProcessing = true;
+    m_isProcessing = true;
 }
-
-
-
 
 void Mixer::stopProcessing()
 {
-	m_isProcessing = false;
+    m_isProcessing = false;
 
-	if( m_fifoWriter != nullptr )
-	{
-		m_fifoWriter->finish();
-		m_fifoWriter->wait();
-		m_audioDev->stopProcessing();
-		delete m_fifoWriter;
-		m_fifoWriter = nullptr;
-	}
-	else
-	{
-		m_audioDev->stopProcessing();
-	}
+    if(m_fifoWriter != nullptr)
+    {
+        m_fifoWriter->finish();
+        m_fifoWriter->wait();
+        m_audioDev->stopProcessing();
+        delete m_fifoWriter;
+        m_fifoWriter = nullptr;
+    }
+    else
+    {
+        m_audioDev->stopProcessing();
+    }
 }
-
-
-
 
 sample_rate_t Mixer::baseSampleRate() const
 {
-        return CONFIG_GET_INT("mixer.samplerate");
-        /*
-        ConfigManager* cm=ConfigManager::inst();
+    return CONFIG_GET_INT("mixer.samplerate");
+    /*
+    ConfigManager* cm=ConfigManager::inst();
 
-	sample_rate_t sr = cm!=nullptr
-                ? qMax(44100,cm->value( "mixer", "samplerate" ).toInt())
-                : 44100;
+    sample_rate_t sr = cm!=nullptr
+            ? qMax(44100,cm->value( "mixer", "samplerate" ).toInt())
+            : 44100;
 
-        // temporary reminder
-        if(cm==nullptr) qWarning("       : in Mixer::baseSampleRate()");
+    // temporary reminder
+    if(cm==nullptr) qWarning("       : in Mixer::baseSampleRate()");
 
-	return sr;
-        */
+    return sr;
+    */
 }
-
-
-
 
 sample_rate_t Mixer::outputSampleRate() const
 {
-	return m_audioDev != nullptr ? m_audioDev->sampleRate() :
-							baseSampleRate();
+    return m_audioDev != nullptr ? m_audioDev->sampleRate()
+                                 : baseSampleRate();
 }
-
-
-
 
 sample_rate_t Mixer::inputSampleRate() const
 {
-	return m_audioDev != nullptr ? m_audioDev->sampleRate() :
-							baseSampleRate();
+    return m_audioDev != nullptr ? m_audioDev->sampleRate()
+                                 : baseSampleRate();
 }
-
-
-
 
 sample_rate_t Mixer::processingSampleRate() const
 {
-	return outputSampleRate() * m_qualitySettings.sampleRateMultiplier();
+    return outputSampleRate() * m_qualitySettings.sampleRateMultiplier();
 }
-
-
-
 
 bool Mixer::warningXRuns() const
 {
-	return cpuLoad() >= 95 && Engine::getSong()->isExporting() == false;
+    return cpuLoad() >= 95 && Engine::getSong()->isExporting() == false;
 }
-
-
-
 
 bool Mixer::criticalXRuns() const
 {
-	return cpuLoad() >= 98 && Engine::getSong()->isExporting() == false;
+    return cpuLoad() >= 98 && Engine::getSong()->isExporting() == false;
 }
 
-
-
-
-void Mixer::pushInputFrames( sampleFrame * _ab, const f_cnt_t _frames )
+void Mixer::pushInputFrames(sampleFrame* _ab, const f_cnt_t _frames)
 {
-	requestChangeInModel();
+    requestChangeInModel();
 
-	f_cnt_t frames = m_inputBufferFrames[ m_inputBufferWrite ];
-	int size = m_inputBufferSize[ m_inputBufferWrite ];
-	sampleFrame * buf = m_inputBuffer[ m_inputBufferWrite ];
+    f_cnt_t      frames = m_inputBufferFrames[m_inputBufferWrite];
+    int          size   = m_inputBufferSize[m_inputBufferWrite];
+    sampleFrame* buf    = m_inputBuffer[m_inputBufferWrite];
 
-	if( frames + _frames > size )
-	{
-		size = qMax( size * 2, frames + _frames );
-		sampleFrame * ab = new sampleFrame[ size ];
-		memset( ab , 0 , sizeof(sampleFrame) * size );
-		memcpy( ab, buf, frames * sizeof( sampleFrame ) );
-		delete [] buf;
+    if(frames + _frames > size)
+    {
+        size            = qMax(size * 2, frames + _frames);
+        sampleFrame* ab = new sampleFrame[size];
+        memset(ab, 0, sizeof(sampleFrame) * size);
+        memcpy(ab, buf, frames * sizeof(sampleFrame));
+        delete[] buf;
 
-		m_inputBufferSize[ m_inputBufferWrite ] = size;
-		m_inputBuffer[ m_inputBufferWrite ] = ab;
+        m_inputBufferSize[m_inputBufferWrite] = size;
+        m_inputBuffer[m_inputBufferWrite]     = ab;
 
-		buf = ab;
-	}
+        buf = ab;
+    }
 
-	memcpy( &buf[ frames ], _ab, _frames * sizeof( sampleFrame ) );
-	m_inputBufferFrames[ m_inputBufferWrite ] += _frames;
+    memcpy(&buf[frames], _ab, _frames * sizeof(sampleFrame));
+    m_inputBufferFrames[m_inputBufferWrite] += _frames;
 
-	doneChangeInModel();
+    doneChangeInModel();
 }
 
+SampleBuffer* s_metronome1 = nullptr;
+SampleBuffer* s_metronome2 = nullptr;
 
-SampleBuffer* s_metronome1=nullptr;
-SampleBuffer* s_metronome2=nullptr;
-
-const surroundSampleFrame * Mixer::renderNextBuffer()
+const surroundSampleFrame* Mixer::renderNextBuffer()
 {
-	m_profiler.startPeriod();
+    m_profiler.startPeriod();
 
-	s_renderingThread = true;
+    s_renderingThread = true;
 
-	//static Song::PlayPos last_metro_pos = -1;
+    // static Song::PlayPos last_metro_pos = -1;
 
-	Song *song = Engine::getSong();
+    Song* song = Engine::getSong();
 
-	Song::PlayModes currentPlayMode = song->playMode();
-	Song::PlayPos p = song->getPlayPos( currentPlayMode );
+    Song::PlayModes currentPlayMode = song->playMode();
+    Song::PlayPos   p               = song->getPlayPos(currentPlayMode);
 
-	bool playModeSupportsMetronome = currentPlayMode == Song::Mode_PlayPattern ||
-					 currentPlayMode == Song::Mode_PlaySong ||
-					 currentPlayMode == Song::Mode_PlayBB;
+    bool playModeSupportsMetronome = currentPlayMode == Song::Mode_PlayPattern
+                                     || currentPlayMode == Song::Mode_PlaySong
+                                     || currentPlayMode == Song::Mode_PlayBB;
 
-	if( playModeSupportsMetronome && m_metronomeActive && !song->isExporting() &&
-            //p != last_metro_pos &&
-            // Stop crash with metronome if empty project
-            Engine::getSong()->countTracks() )
-	{
-                if(!s_metronome1) s_metronome1=sharedObject::ref(new SampleBuffer("misc/metronome01.ogg"));
-                if(!s_metronome2) s_metronome2=sharedObject::ref(new SampleBuffer("misc/metronome02.ogg"));
+    if(playModeSupportsMetronome && m_metronomeActive && !song->isExporting()
+       &&
+       // p != last_metro_pos &&
+       // Stop crash with metronome if empty project
+       Engine::getSong()->countTracks())
+    {
+        if(!s_metronome1)
+            s_metronome1 = sharedObject::ref(
+                    new SampleBuffer("misc/metronome01.ogg"));
+        if(!s_metronome2)
+            s_metronome2 = sharedObject::ref(
+                    new SampleBuffer("misc/metronome02.ogg"));
 
-		const tick_t  ticksPerTact   =MidiTime::ticksPerTact();
-                const tick_t  ticksPerBeat   =ticksPerTact/song->getTimeSigModel().getNumerator();
-                const real_t   framesPerTick  =Engine::framesPerTick();
-                const fpp_t   framesPerPeriod=Engine::mixer()->framesPerPeriod();
+        const tick_t ticksPerTact = MidiTime::ticksPerTact();
+        const tick_t ticksPerBeat
+                = ticksPerTact / song->getTimeSigModel().getNumerator();
+        const real_t framesPerTick   = Engine::framesPerTick();
+        const fpp_t  framesPerPeriod = Engine::mixer()->framesPerPeriod();
 
-                const real_t fptact=framesPerTick*ticksPerTact;
-                const real_t fpbeat=framesPerTick*ticksPerBeat;
-                const real_t curfa=p.absoluteFrame();
-                 for(int k=0;k<framesPerPeriod;k++)
-                {
-                        const real_t metf=curfa+k;
-                        if(fmodf(metf,fptact)<1.f)
-                        {
-                                SamplePlayHandle* sph=new SamplePlayHandle(s_metronome2);
-                                sph->setOffset(k);
-                                //sph->setFrames(qMin(sph->frames(),framesPerBeat));
-                                addPlayHandle(sph);
-                                //k+=framesPerTick-1;
-                        }
-                        else
-                        if(fmodf(metf,fpbeat)<1.f)
-                        {
-                                SamplePlayHandle* sph=new SamplePlayHandle(s_metronome1);
-                                sph->setOffset(k);
-                                //sph->setFrames(qMin(sph->frames(),framesPerBeat));
-                                addPlayHandle(sph);
-                                //k+=framesPerTick-1;
-                        }
-                        //else k++;
-                }
-                //last_metro_f=curf;
-	}
-
-	// swap buffer
-	m_inputBufferWrite = ( m_inputBufferWrite + 1 ) % 2;
-	m_inputBufferRead =  ( m_inputBufferRead + 1 ) % 2;
-
-	// clear new write buffer
-	m_inputBufferFrames[ m_inputBufferWrite ] = 0;
-
-	if( m_clearSignal )
-	{
-		m_clearSignal = false;
-		clearInternal();
-	}
-
-	// remove all play-handles that have to be deleted and delete
-	// them if they still exist...
-	// maybe this algorithm could be optimized...
-	ConstPlayHandleList::Iterator it_rem = m_playHandlesToRemove.begin();
-	while( it_rem != m_playHandlesToRemove.end() )
-	{
-		PlayHandleList::Iterator it = qFind( m_playHandles.begin(), m_playHandles.end(), *it_rem );
-
-		if( it != m_playHandles.end() )
-		{
-			( *it )->audioPort()->removePlayHandle( ( *it ) );
-			if( ( *it )->type() == PlayHandle::TypeNotePlayHandle )
-			{
-				NotePlayHandleManager::release( (NotePlayHandle*) *it );
-			}
-			else delete *it;
-			m_playHandles.erase( it );
-		}
-
-		it_rem = m_playHandlesToRemove.erase( it_rem );
-	}
-
-	// rotate buffers
-	m_writeBuffer = ( m_writeBuffer + 1 ) % m_poolDepth;
-	m_readBuffer = ( m_readBuffer + 1 ) % m_poolDepth;
-
-	m_writeBuf = m_bufferPool[m_writeBuffer];
-	m_readBuf = m_bufferPool[m_readBuffer];
-
-	// clear last audio-buffer
-	memset(m_writeBuf,0,m_framesPerPeriod * sizeof(surroundSampleFrame));
-
-
-	// prepare master mix (clear internal buffers etc.)
-	FxMixer * fxMixer = Engine::fxMixer();
-	fxMixer->prepareMasterMix();
-
-	// create play-handles for new notes, samples etc.
-	song->processNextBuffer();
-
-	// add all play-handles that have to be added
-	/*
-	for( LocklessListElement * e = m_newPlayHandles.popList(); e; )
-	{
-		m_playHandles += e->value;
-		LocklessListElement * next = e->next;
-		m_newPlayHandles.free( e );
-		e = next;
-	}
-	*/
-	while(!m_newPlayHandles.isEmpty())
-		m_playHandles.append(m_newPlayHandles.takeFirst());
-
-	// STAGE 1: run and render all play handles
-	MixerWorkerThread::fillJobQueue<PlayHandleList>( m_playHandles );
-	MixerWorkerThread::startAndWaitForJobs();
-
-	// removed all play handles which are done
-	for( PlayHandleList::Iterator it = m_playHandles.begin();
-						it != m_playHandles.end(); )
-	{
-		if( ( *it )->affinityMatters() &&
-			( *it )->affinity() != QThread::currentThread() )
-		{
-			++it;
-			continue;
-		}
-		if( ( *it )->isFinished() )
-		{
-			( *it )->audioPort()->removePlayHandle( ( *it ) );
-			if( ( *it )->type() == PlayHandle::TypeNotePlayHandle )
-			{
-				NotePlayHandleManager::release( (NotePlayHandle*) *it );
-			}
-			else delete *it;
-			it = m_playHandles.erase( it );
-		}
-		else
-		{
-			++it;
-		}
-	}
-
-	// STAGE 2: process effects of all instrument- and sampletracks
-	MixerWorkerThread::fillJobQueue<QVector<AudioPort *> >( m_audioPorts );
-	MixerWorkerThread::startAndWaitForJobs();
-
-
-	// STAGE 3: do master mix in FX mixer
-	fxMixer->masterMix( m_writeBuf );
-
-        /*
-        if(m_periodCounter%periodsPerDisplayRefresh==0)
+        const real_t fptact = framesPerTick * ticksPerTact;
+        const real_t fpbeat = framesPerTick * ticksPerBeat;
+        const real_t curfa  = p.absoluteFrame();
+        for(int k = 0; k < framesPerPeriod; k++)
         {
-                memcpy(m_displayBuf,m_writeBuf,m_framesPerPeriod * sizeof(surroundSampleFrame));
-                emit nextSurroundDisplayBuffer(m_displayBuf);
+            const real_t metf = curfa + k;
+            if(fmod(metf, fptact) < 1.)
+            {
+                SamplePlayHandle* sph = new SamplePlayHandle(s_metronome2);
+                sph->setOffset(k);
+                // sph->setFrames(qMin(sph->frames(),framesPerBeat));
+                addPlayHandle(sph);
+                // k+=framesPerTick-1;
+            }
+            else if(fmod(metf, fpbeat) < 1.)
+            {
+                SamplePlayHandle* sph = new SamplePlayHandle(s_metronome1);
+                sph->setOffset(k);
+                // sph->setFrames(qMin(sph->frames(),framesPerBeat));
+                addPlayHandle(sph);
+                // k+=framesPerTick-1;
+            }
+            // else k++;
         }
-        */
-        //emit nextAudioBuffer( m_readBuf );
-        m_displayRing->write(m_readBuf,m_framesPerPeriod);
+        // last_metro_f=curf;
+    }
 
-	runChangesInModel();
+    // swap buffer
+    m_inputBufferWrite = (m_inputBufferWrite + 1) % 2;
+    m_inputBufferRead  = (m_inputBufferRead + 1) % 2;
 
-	// and trigger LFOs
-	EnvelopeAndLfoParameters::instances()->trigger();
-	Controller::triggerFrameCounter();
-	AutomatableModel::incrementPeriodCounter();
+    // clear new write buffer
+    m_inputBufferFrames[m_inputBufferWrite] = 0;
 
-	s_renderingThread = false;
+    if(m_clearSignal)
+    {
+        m_clearSignal = false;
+        clearInternal();
+    }
 
-	m_profiler.finishPeriod( processingSampleRate(), m_framesPerPeriod );
+    // remove all play-handles that have to be deleted and delete
+    // them if they still exist...
+    // maybe this algorithm could be optimized...
+    ConstPlayHandleList::Iterator it_rem = m_playHandlesToRemove.begin();
+    while(it_rem != m_playHandlesToRemove.end())
+    {
+        PlayHandleList::Iterator it
+                = qFind(m_playHandles.begin(), m_playHandles.end(), *it_rem);
 
-	return m_readBuf;
+        if(it != m_playHandles.end())
+        {
+            (*it)->audioPort()->removePlayHandle((*it));
+            if((*it)->type() == PlayHandle::TypeNotePlayHandle)
+            {
+                NotePlayHandleManager::release((NotePlayHandle*)*it);
+            }
+            else
+                delete *it;
+            m_playHandles.erase(it);
+        }
+
+        it_rem = m_playHandlesToRemove.erase(it_rem);
+    }
+
+    // rotate buffers
+    m_writeBuffer = (m_writeBuffer + 1) % m_poolDepth;
+    m_readBuffer  = (m_readBuffer + 1) % m_poolDepth;
+
+    m_writeBuf = m_bufferPool[m_writeBuffer];
+    m_readBuf  = m_bufferPool[m_readBuffer];
+
+    // clear last audio-buffer
+    memset(m_writeBuf, 0, m_framesPerPeriod * sizeof(surroundSampleFrame));
+
+    // prepare master mix (clear internal buffers etc.)
+    FxMixer* fxMixer = Engine::fxMixer();
+    fxMixer->prepareMasterMix();
+
+    // create play-handles for new notes, samples etc.
+    song->processNextBuffer();
+
+    // add all play-handles that have to be added
+    /*
+    for( LocklessListElement * e = m_newPlayHandles.popList(); e; )
+    {
+            m_playHandles += e->value;
+            LocklessListElement * next = e->next;
+            m_newPlayHandles.free( e );
+            e = next;
+    }
+    */
+    while(!m_newPlayHandles.isEmpty())
+        m_playHandles.append(m_newPlayHandles.takeFirst());
+
+    // STAGE 1: run and render all play handles
+    MixerWorkerThread::fillJobQueue<PlayHandleList>(m_playHandles);
+    MixerWorkerThread::startAndWaitForJobs();
+
+    // removed all play handles which are done
+    for(PlayHandleList::Iterator it = m_playHandles.begin();
+        it != m_playHandles.end();)
+    {
+        if((*it)->affinityMatters()
+           && (*it)->affinity() != QThread::currentThread())
+        {
+            ++it;
+            continue;
+        }
+        if((*it)->isFinished())
+        {
+            (*it)->audioPort()->removePlayHandle((*it));
+            if((*it)->type() == PlayHandle::TypeNotePlayHandle)
+            {
+                NotePlayHandleManager::release((NotePlayHandle*)*it);
+            }
+            else
+                delete *it;
+            it = m_playHandles.erase(it);
+        }
+        else
+        {
+            ++it;
+        }
+    }
+
+    // STAGE 2: process effects of all instrument- and sampletracks
+    MixerWorkerThread::fillJobQueue<QVector<AudioPort*>>(m_audioPorts);
+    MixerWorkerThread::startAndWaitForJobs();
+
+    // STAGE 3: do master mix in FX mixer
+    fxMixer->masterMix(m_writeBuf);
+
+    /*
+    if(m_periodCounter%periodsPerDisplayRefresh==0)
+    {
+            memcpy(m_displayBuf,m_writeBuf,m_framesPerPeriod *
+    sizeof(surroundSampleFrame)); emit
+    nextSurroundDisplayBuffer(m_displayBuf);
+    }
+    */
+    // emit nextAudioBuffer( m_readBuf );
+    m_displayRing->write(m_readBuf, m_framesPerPeriod);
+
+    runChangesInModel();
+
+    // and trigger LFOs
+    EnvelopeAndLfoParameters::instances()->trigger();
+    Controller::triggerFrameCounter();
+    AutomatableModel::incrementPeriodCounter();
+
+    s_renderingThread = false;
+
+    m_profiler.finishPeriod(processingSampleRate(), m_framesPerPeriod);
+
+    return m_readBuf;
 }
-
-
-
 
 void Mixer::clear()
 {
-	m_clearSignal = true;
+    m_clearSignal = true;
 }
-
-
-
 
 void Mixer::clearNewPlayHandles()
 {
-        requestChangeInModel();
-	while(!m_newPlayHandles.isEmpty())
-        {
-                PlayHandle* ph=m_newPlayHandles.takeFirst();
-                NotePlayHandle* nph=dynamic_cast<NotePlayHandle*>(ph);
-                if(nph) NotePlayHandleManager::release(nph);
-                else delete ph;
-        }
+    requestChangeInModel();
+    while(!m_newPlayHandles.isEmpty())
+    {
+        PlayHandle*     ph  = m_newPlayHandles.takeFirst();
+        NotePlayHandle* nph = dynamic_cast<NotePlayHandle*>(ph);
+        if(nph)
+            NotePlayHandleManager::release(nph);
+        else
+            delete ph;
+    }
 
-        /*
-        for( LocklessListElement * e = m_newPlayHandles.popList(); e; )
-        {
-                LocklessListElement * next = e->next;
-                m_newPlayHandles.free( e );
-                e = next;
-        }
-        */
-        doneChangeInModel();
+    /*
+    for( LocklessListElement * e = m_newPlayHandles.popList(); e; )
+    {
+            LocklessListElement * next = e->next;
+            m_newPlayHandles.free( e );
+            e = next;
+    }
+    */
+    doneChangeInModel();
 }
-
-
-
 
 // removes all play-handles. this is necessary, when the song is stopped ->
 // all remaining notes etc. would be played until their end
 void Mixer::clearInternal()
 {
-	// TODO: m_midiClient->noteOffAll();
-	for( PlayHandleList::Iterator it = m_playHandles.begin(); it != m_playHandles.end(); ++it )
-	{
-		// we must not delete instrument-play-handles as they exist
-		// during the whole lifetime of an instrument
-		if( ( *it )->type() != PlayHandle::TypeInstrumentPlayHandle )
-		{
-			m_playHandlesToRemove.push_back( *it );
-		}
-	}
+    // TODO: m_midiClient->noteOffAll();
+    for(PlayHandleList::Iterator it = m_playHandles.begin();
+        it != m_playHandles.end(); ++it)
+    {
+        // we must not delete instrument-play-handles as they exist
+        // during the whole lifetime of an instrument
+        if((*it)->type() != PlayHandle::TypeInstrumentPlayHandle)
+        {
+            m_playHandlesToRemove.push_back(*it);
+        }
+    }
 }
 
-
-
-
-void Mixer::getPeakValues(const sampleFrame * _ab, const f_cnt_t _frames, real_t & peakLeft, real_t & peakRight ) const
+void Mixer::getPeakValues(const sampleFrame* _ab,
+                          const f_cnt_t      _frames,
+                          real_t&            peakLeft,
+                          real_t&            peakRight) const
 {
-	peakLeft = 0.f;
-	peakRight = 0.f;
-	for( f_cnt_t f = _frames-1; f>=0; --f)
-	{
-		const real_t absLeft = qAbs( _ab[f][0] );
-		const real_t absRight = qAbs( _ab[f][1] );
-		if (absLeft > peakLeft)
-			peakLeft = absLeft;
-		if (absRight > peakRight)
-			peakRight = absRight;
-	}
+    peakLeft  = 0.;
+    peakRight = 0.;
+    for(f_cnt_t f = _frames - 1; f >= 0; --f)
+    {
+        const real_t absLeft  = qAbs(_ab[f][0]);
+        const real_t absRight = qAbs(_ab[f][1]);
+        if(absLeft > peakLeft)
+            peakLeft = absLeft;
+        if(absRight > peakRight)
+            peakRight = absRight;
+    }
 }
-
 
 #ifndef LMMS_DISABLE_SURROUND
-void Mixer::getPeakValues(const surroundSampleFrame * _ab, const f_cnt_t _frames, real_t & peakLeft, real_t & peakRight ) const
+void Mixer::getPeakValues(const surroundSampleFrame* _ab,
+                          const f_cnt_t              _frames,
+                          real_t&                    peakLeft,
+                          real_t&                    peakRight) const
 {
-	peakLeft = 0.f;
-	peakRight = 0.f;
-	for( f_cnt_t f = _frames-1; f>=0; --f)
-	{
-		const real_t absLeft = qAbs( _ab[f][0] );
-		const real_t absRight = qAbs( _ab[f][1] );
-		if (absLeft > peakLeft)
-			peakLeft = absLeft;
-		if (absRight > peakRight)
-			peakRight = absRight;
-	}
+    peakLeft  = 0.;
+    peakRight = 0.;
+    for(f_cnt_t f = _frames - 1; f >= 0; --f)
+    {
+        const real_t absLeft  = qAbs(_ab[f][0]);
+        const real_t absRight = qAbs(_ab[f][1]);
+        if(absLeft > peakLeft)
+            peakLeft = absLeft;
+        if(absRight > peakRight)
+            peakRight = absRight;
+    }
 }
 #endif
 
-
-void Mixer::changeQuality( const struct qualitySettings & _qs )
+void Mixer::changeQuality(const struct qualitySettings& _qs)
 {
-	// don't delete the audio-device
-	stopProcessing();
+    // don't delete the audio-device
+    stopProcessing();
 
-	m_qualitySettings = _qs;
-	m_audioDev->applyQualitySettings();
+    m_qualitySettings = _qs;
+    m_audioDev->applyQualitySettings();
 
-	emit sampleRateChanged();
-	emit qualitySettingsChanged();
+    emit sampleRateChanged();
+    emit qualitySettingsChanged();
 
-	startProcessing();
+    startProcessing();
 }
 
-
-
-
-void Mixer::setAudioDevice( AudioDevice * _dev )
+void Mixer::setAudioDevice(AudioDevice* _dev)
 {
-	stopProcessing();
+    stopProcessing();
 
-        qInfo("Mixer::setAudioDevice p=%p",_dev);
+    qInfo("Mixer::setAudioDevice p=%p", _dev);
 
-	if( _dev == nullptr )
-	{
-		qWarning("Warning: param _dev == nullptr in Mixer::setAudioDevice(...). "
-                         "Trying any working audio-device" );
-		m_audioDev = tryAudioDevices();
-	}
-	else
-	{
-		m_audioDev = _dev;
-	}
+    if(_dev == nullptr)
+    {
+        qWarning(
+                "Warning: param _dev == nullptr in "
+                "Mixer::setAudioDevice(...). "
+                "Trying any working audio-device");
+        m_audioDev = tryAudioDevices();
+    }
+    else
+    {
+        m_audioDev = _dev;
+    }
 
-	emit sampleRateChanged();
+    emit sampleRateChanged();
 
-	startProcessing();
+    startProcessing();
 }
 
-
-
-
-void Mixer::setAudioDevice( AudioDevice * _dev,
-				const struct qualitySettings & _qs,
-				bool _needs_fifo )
+void Mixer::setAudioDevice(AudioDevice*                  _dev,
+                           const struct qualitySettings& _qs,
+                           bool                          _needs_fifo)
 {
-	// don't delete the audio-device
-	stopProcessing();
+    // don't delete the audio-device
+    stopProcessing();
 
-	m_qualitySettings = _qs;
+    m_qualitySettings = _qs;
 
-        qInfo("Mixer::setAudioDevice p=%p",_dev);
+    qInfo("Mixer::setAudioDevice p=%p", _dev);
 
-	if( _dev == nullptr )
-	{
-		qWarning( "Warning: param _dev == nullptr in Mixer::setAudioDevice(...). "
-                          "Trying any working audio-device" );
-		m_audioDev = tryAudioDevices();
-	}
-	else
-	{
-		m_audioDev = _dev;
-	}
+    if(_dev == nullptr)
+    {
+        qWarning(
+                "Warning: param _dev == nullptr in "
+                "Mixer::setAudioDevice(...). "
+                "Trying any working audio-device");
+        m_audioDev = tryAudioDevices();
+    }
+    else
+    {
+        m_audioDev = _dev;
+    }
 
-	emit qualitySettingsChanged();
-	emit sampleRateChanged();
+    emit qualitySettingsChanged();
+    emit sampleRateChanged();
 
-	startProcessing( _needs_fifo );
+    startProcessing(_needs_fifo);
 }
-
-
-
 
 void Mixer::storeAudioDevice()
 {
-	if( !m_oldAudioDev )
-	{
-		m_oldAudioDev = m_audioDev;
-	}
+    if(!m_oldAudioDev)
+    {
+        m_oldAudioDev = m_audioDev;
+    }
 }
-
-
-
 
 void Mixer::restoreAudioDevice()
 {
-	if( m_oldAudioDev != nullptr )
-	{
-		stopProcessing();
-		delete m_audioDev;
+    if(m_oldAudioDev != nullptr)
+    {
+        stopProcessing();
+        delete m_audioDev;
 
-		m_audioDev = m_oldAudioDev;
-		emit sampleRateChanged();
+        m_audioDev = m_oldAudioDev;
+        emit sampleRateChanged();
 
-		m_oldAudioDev = nullptr;
-		startProcessing();
-	}
+        m_oldAudioDev = nullptr;
+        startProcessing();
+    }
 }
 
-
-
-
-void Mixer::removeAudioPort( AudioPort * _port )
+void Mixer::removeAudioPort(AudioPort* _port)
 {
-	requestChangeInModel();
-	QVector<AudioPort *>::Iterator it = qFind( m_audioPorts.begin(),
-							m_audioPorts.end(),
-							_port );
-	if( it != m_audioPorts.end() )
-	{
-		m_audioPorts.erase( it );
-	}
-	doneChangeInModel();
+    requestChangeInModel();
+    QVector<AudioPort*>::Iterator it
+            = qFind(m_audioPorts.begin(), m_audioPorts.end(), _port);
+    if(it != m_audioPorts.end())
+    {
+        m_audioPorts.erase(it);
+    }
+    doneChangeInModel();
 }
 
-
-bool Mixer::addPlayHandle( PlayHandle* _ph )
+bool Mixer::addPlayHandle(PlayHandle* _ph)
 {
-	bool r;
+    bool r;
 
-	if(criticalXRuns())
-	{
-		//if( handle->type() == PlayHandle::TypeNotePlayHandle )
-		//	NotePlayHandleManager::release( (NotePlayHandle*)handle );
-		//else delete handle;
-		m_playHandlesToRemove.push_back( _ph );
-		r=false;
-	}
-	else
-	{
-		//m_newPlayHandles.push( handle );
-		m_newPlayHandles.push_back( _ph );
-		_ph->audioPort()->addPlayHandle( _ph );
-		r=true;
-	}
+    if(criticalXRuns())
+    {
+        // if( handle->type() == PlayHandle::TypeNotePlayHandle )
+        //	NotePlayHandleManager::release( (NotePlayHandle*)handle );
+        // else delete handle;
+        m_playHandlesToRemove.push_back(_ph);
+        r = false;
+    }
+    else
+    {
+        // m_newPlayHandles.push( handle );
+        m_newPlayHandles.push_back(_ph);
+        _ph->audioPort()->addPlayHandle(_ph);
+        r = true;
+    }
 
-	return r;
+    return r;
 }
 
-
-void Mixer::removePlayHandle( PlayHandle * _ph )
+void Mixer::removePlayHandle(PlayHandle* _ph)
 {
-	requestChangeInModel();
-	// check thread affinity as we must not delete play-handles
-	// which were created in a thread different than mixer thread
-	if( _ph->affinityMatters() &&
-	    _ph->affinity() == QThread::currentThread() )
-	{
-		_ph->audioPort()->removePlayHandle( _ph );
-		/*
-		bool removedFromList = false;
-		// Check m_newPlayHandles first because doing it the other way around
-		// creates a race condition
-		for( LocklessListElement * e = m_newPlayHandles.first(),
-			     * ePrev = nullptr; e; ePrev = e, e = e->next )
-		{
-			if( e->value == _ph )
-			{
-				if( ePrev )
-				{
-					ePrev->next = e->next;
-				}
-				else
-				{
-					m_newPlayHandles.setFirst( e->next );
-				}
-				m_newPlayHandles.free( e );
-				removedFromList = true;
-				break;
-			}
-		}
+    requestChangeInModel();
+    // check thread affinity as we must not delete play-handles
+    // which were created in a thread different than mixer thread
+    if(_ph->affinityMatters() && _ph->affinity() == QThread::currentThread())
+    {
+        _ph->audioPort()->removePlayHandle(_ph);
+        /*
+        bool removedFromList = false;
+        // Check m_newPlayHandles first because doing it the other way around
+        // creates a race condition
+        for( LocklessListElement * e = m_newPlayHandles.first(),
+                     * ePrev = nullptr; e; ePrev = e, e = e->next )
+        {
+                if( e->value == _ph )
+                {
+                        if( ePrev )
+                        {
+                                ePrev->next = e->next;
+                        }
+                        else
+                        {
+                                m_newPlayHandles.setFirst( e->next );
+                        }
+                        m_newPlayHandles.free( e );
+                        removedFromList = true;
+                        break;
+                }
+        }
 
-		// Now check m_playHandles
-		PlayHandleList::Iterator it = qFind( m_playHandles.begin(),
-						     m_playHandles.end(), _ph );
-		if( it != m_playHandles.end() )
-		{
-			m_playHandles.erase( it );
-			removedFromList = true;
-		}
-		// Only deleting PlayHandles that were actually found in the list
-		// "fixes crash when previewing a preset under high load"
-		// (See tobydox's 2008 commit 4583e48)
-		if ( removedFromList )
-		{
-			if( _ph->type() == PlayHandle::TypeNotePlayHandle )
-			{
-				NotePlayHandleManager::release( (NotePlayHandle*) _ph );
-			}
-			else delete _ph;
-		}
-		*/
-		if(m_newPlayHandles.removeOne(_ph) || m_playHandles.removeOne(_ph))
-		{
-			if( _ph->type() == PlayHandle::TypeNotePlayHandle )
-				NotePlayHandleManager::release( (NotePlayHandle*) _ph );
-			else delete _ph;
-		}
-	}
-	else
-	{
-		m_playHandlesToRemove.push_back( _ph );
-	}
-	doneChangeInModel();
+        // Now check m_playHandles
+        PlayHandleList::Iterator it = qFind( m_playHandles.begin(),
+                                             m_playHandles.end(), _ph );
+        if( it != m_playHandles.end() )
+        {
+                m_playHandles.erase( it );
+                removedFromList = true;
+        }
+        // Only deleting PlayHandles that were actually found in the list
+        // "fixes crash when previewing a preset under high load"
+        // (See tobydox's 2008 commit 4583e48)
+        if ( removedFromList )
+        {
+                if( _ph->type() == PlayHandle::TypeNotePlayHandle )
+                {
+                        NotePlayHandleManager::release( (NotePlayHandle*) _ph
+        );
+                }
+                else delete _ph;
+        }
+        */
+        if(m_newPlayHandles.removeOne(_ph) || m_playHandles.removeOne(_ph))
+        {
+            if(_ph->type() == PlayHandle::TypeNotePlayHandle)
+                NotePlayHandleManager::release((NotePlayHandle*)_ph);
+            else
+                delete _ph;
+        }
+    }
+    else
+    {
+        m_playHandlesToRemove.push_back(_ph);
+    }
+    doneChangeInModel();
 }
 
-
-
-
-void Mixer::removePlayHandlesOfTypes( Track * _track, const quint8 types )
+void Mixer::removePlayHandlesOfTypes(Track* _track, const quint8 types)
 {
-	requestChangeInModel();
-	PlayHandleList::Iterator it = m_playHandles.begin();
-	while( it != m_playHandles.end() )
-	{
-		if( ( *it )->isFromTrack( _track ) && ( ( *it )->type() & types ) )
-		{
-			( *it )->audioPort()->removePlayHandle( ( *it ) );
-			if( ( *it )->type() == PlayHandle::TypeNotePlayHandle )
-			{
-				NotePlayHandleManager::release( (NotePlayHandle*) *it );
-			}
-			else delete *it;
-			it = m_playHandles.erase( it );
-		}
-		else
-		{
-			++it;
-		}
-	}
-	doneChangeInModel();
+    requestChangeInModel();
+    PlayHandleList::Iterator it = m_playHandles.begin();
+    while(it != m_playHandles.end())
+    {
+        if((*it)->isFromTrack(_track) && ((*it)->type() & types))
+        {
+            (*it)->audioPort()->removePlayHandle((*it));
+            if((*it)->type() == PlayHandle::TypeNotePlayHandle)
+            {
+                NotePlayHandleManager::release((NotePlayHandle*)*it);
+            }
+            else
+                delete *it;
+            it = m_playHandles.erase(it);
+        }
+        else
+        {
+            ++it;
+        }
+    }
+    doneChangeInModel();
 }
-
-
-
 
 void Mixer::requestChangeInModel()
 {
-	if( s_renderingThread )
-		return;
+    if(s_renderingThread)
+        return;
 
-	m_changesMutex.lock();
-	m_changes++;
-	m_changesMutex.unlock();
+    m_changesMutex.lock();
+    m_changes++;
+    m_changesMutex.unlock();
 
-	m_doChangesMutex.lock();
-	m_waitChangesMutex.lock();
-	if ( m_isProcessing && !m_waitingForWrite && !m_changesSignal )
-	{
-		m_changesSignal = true;
-		m_changesRequestCondition.wait( &m_waitChangesMutex );
-	}
-	m_waitChangesMutex.unlock();
+    m_doChangesMutex.lock();
+    m_waitChangesMutex.lock();
+    if(m_isProcessing && !m_waitingForWrite && !m_changesSignal)
+    {
+        m_changesSignal = true;
+        m_changesRequestCondition.wait(&m_waitChangesMutex);
+    }
+    m_waitChangesMutex.unlock();
 }
-
-
-
 
 void Mixer::doneChangeInModel()
 {
-	if( s_renderingThread )
-		return;
+    if(s_renderingThread)
+        return;
 
-	m_changesMutex.lock();
-	bool moreChanges = --m_changes;
-	m_changesMutex.unlock();
+    m_changesMutex.lock();
+    bool moreChanges = --m_changes;
+    m_changesMutex.unlock();
 
-	if( !moreChanges )
-	{
-		m_changesSignal = false;
-		m_changesMixerCondition.wakeOne();
-	}
-	m_doChangesMutex.unlock();
+    if(!moreChanges)
+    {
+        m_changesSignal = false;
+        m_changesMixerCondition.wakeOne();
+    }
+    m_doChangesMutex.unlock();
 }
-
-
-
 
 void Mixer::runChangesInModel()
 {
-	if( m_changesSignal )
-	{
-		m_waitChangesMutex.lock();
-		m_changesRequestCondition.wakeOne();
-		m_changesMixerCondition.wait( &m_waitChangesMutex );
-		m_waitChangesMutex.unlock();
-	}
+    if(m_changesSignal)
+    {
+        m_waitChangesMutex.lock();
+        m_changesRequestCondition.wakeOne();
+        m_changesMixerCondition.wait(&m_waitChangesMutex);
+        m_waitChangesMutex.unlock();
+    }
 }
 
-
-
-
-AudioDevice * Mixer::tryAudioDevices()
+AudioDevice* Mixer::tryAudioDevices()
 {
-	bool success_ful = false;
-	AudioDevice * dev = nullptr;
-	QString dev_name = CONFIG_GET_STRING("mixer.audiodev");
-        //ConfigManager::inst()->value( "mixer", "audiodev" );
+    bool         success_ful = false;
+    AudioDevice* dev         = nullptr;
+    QString      dev_name    = CONFIG_GET_STRING("mixer.audiodev");
+    // ConfigManager::inst()->value( "mixer", "audiodev" );
 
-	m_audioDevStartFailed = false;
-        //BACKTRACE
+    m_audioDevStartFailed = false;
+    // BACKTRACE
 
 #ifdef LMMS_HAVE_ALSA
-        qInfo("Mixer::tryAudioDevices trying device '%s'",qPrintable(dev_name));
+    qInfo("Mixer::tryAudioDevices trying device '%s'", qPrintable(dev_name));
 
-	if( dev_name == AudioAlsaGdx::name() || dev_name == "" )
-	{
-                qInfo("Mixer::tryAudioDevices #2");
+    if(dev_name == AudioAlsaGdx::name() || dev_name == "")
+    {
+        qInfo("Mixer::tryAudioDevices #2");
 
-		dev = new AudioAlsaGdx( success_ful, this );
-		if( success_ful )
-		{
-                        qInfo("Mixer::tryAudioDevices #3");
+        dev = new AudioAlsaGdx(success_ful, this);
+        if(success_ful)
+        {
+            qInfo("Mixer::tryAudioDevices #3");
 
-			m_audioDevName = AudioAlsaGdx::name();
-			return dev;
-		}
-		delete dev;
-	}
+            m_audioDevName = AudioAlsaGdx::name();
+            return dev;
+        }
+        delete dev;
+    }
 
-	if( dev_name == AudioAlsa::name() || dev_name == "" )
-	{
-		dev = new AudioAlsa( success_ful, this );
-		if( success_ful )
-		{
-                        qInfo("Mixer::tryAudioDevices #4");
+    if(dev_name == AudioAlsa::name() || dev_name == "")
+    {
+        dev = new AudioAlsa(success_ful, this);
+        if(success_ful)
+        {
+            qInfo("Mixer::tryAudioDevices #4");
 
-			m_audioDevName = AudioAlsa::name();
-			return dev;
-		}
-		delete dev;
-	}
+            m_audioDevName = AudioAlsa::name();
+            return dev;
+        }
+        delete dev;
+    }
 #endif
-
 
 #ifdef LMMS_HAVE_SDL
-	if( dev_name == AudioSdl::name() || dev_name == "" )
-	{
-		dev = new AudioSdl( success_ful, this );
-		if( success_ful )
-		{
-			m_audioDevName = AudioSdl::name();
-			return dev;
-		}
-		delete dev;
-	}
+    if(dev_name == AudioSdl::name() || dev_name == "")
+    {
+        dev = new AudioSdl(success_ful, this);
+        if(success_ful)
+        {
+            m_audioDevName = AudioSdl::name();
+            return dev;
+        }
+        delete dev;
+    }
 #endif
-
 
 #ifdef LMMS_HAVE_PULSEAUDIO
-	if( dev_name == AudioPulseAudio::name() || dev_name == "" )
-	{
-		dev = new AudioPulseAudio( success_ful, this );
-		if( success_ful )
-		{
-			m_audioDevName = AudioPulseAudio::name();
-			return dev;
-		}
-		delete dev;
-	}
+    if(dev_name == AudioPulseAudio::name() || dev_name == "")
+    {
+        dev = new AudioPulseAudio(success_ful, this);
+        if(success_ful)
+        {
+            m_audioDevName = AudioPulseAudio::name();
+            return dev;
+        }
+        delete dev;
+    }
 #endif
 
-
 #ifdef LMMS_HAVE_OSS
-	if( dev_name == AudioOss::name() || dev_name == "" )
-	{
-		dev = new AudioOss( success_ful, this );
-		if( success_ful )
-		{
-			m_audioDevName = AudioOss::name();
-			return dev;
-		}
-		delete dev;
-	}
+    if(dev_name == AudioOss::name() || dev_name == "")
+    {
+        dev = new AudioOss(success_ful, this);
+        if(success_ful)
+        {
+            m_audioDevName = AudioOss::name();
+            return dev;
+        }
+        delete dev;
+    }
 #endif
 
 #ifdef LMMS_HAVE_SNDIO
-	if( dev_name == AudioSndio::name() || dev_name == "" )
-	{
-		dev = new AudioSndio( success_ful, this );
-		if( success_ful )
-		{
-			m_audioDevName = AudioSndio::name();
-			return dev;
-		}
-		delete dev;
-	}
+    if(dev_name == AudioSndio::name() || dev_name == "")
+    {
+        dev = new AudioSndio(success_ful, this);
+        if(success_ful)
+        {
+            m_audioDevName = AudioSndio::name();
+            return dev;
+        }
+        delete dev;
+    }
 #endif
-
 
 #ifdef LMMS_HAVE_JACK
-	if( dev_name == AudioJack::name() || dev_name == "" )
-	{
-		dev = new AudioJack( success_ful, this );
-		if( success_ful )
-		{
-			m_audioDevName = AudioJack::name();
-			return dev;
-		}
-		delete dev;
-	}
+    if(dev_name == AudioJack::name() || dev_name == "")
+    {
+        dev = new AudioJack(success_ful, this);
+        if(success_ful)
+        {
+            m_audioDevName = AudioJack::name();
+            return dev;
+        }
+        delete dev;
+    }
 #endif
-
 
 #ifdef LMMS_HAVE_PORTAUDIO
-	if( dev_name == AudioPortAudio::name() || dev_name == "" )
-	{
-		dev = new AudioPortAudio( success_ful, this );
-		if( success_ful )
-		{
-			m_audioDevName = AudioPortAudio::name();
-			return dev;
-		}
-		delete dev;
-	}
+    if(dev_name == AudioPortAudio::name() || dev_name == "")
+    {
+        dev = new AudioPortAudio(success_ful, this);
+        if(success_ful)
+        {
+            m_audioDevName = AudioPortAudio::name();
+            return dev;
+        }
+        delete dev;
+    }
 #endif
-
 
 #ifdef LMMS_HAVE_SOUNDIO
-	if( dev_name == AudioSoundIo::name() || dev_name == "" )
-	{
-		dev = new AudioSoundIo( success_ful, this );
-		if( success_ful )
-		{
-			m_audioDevName = AudioSoundIo::name();
-			return dev;
-		}
-		delete dev;
-	}
+    if(dev_name == AudioSoundIo::name() || dev_name == "")
+    {
+        dev = new AudioSoundIo(success_ful, this);
+        if(success_ful)
+        {
+            m_audioDevName = AudioSoundIo::name();
+            return dev;
+        }
+        delete dev;
+    }
 #endif
 
+    // add more device-classes here...
+    // dev = new audioXXXX( SAMPLE_RATES[m_qualityLevel], success_ful, this );
+    // if( sucess_ful )
+    //{
+    //	return dev;
+    //}
+    // delete dev
 
-	// add more device-classes here...
-	//dev = new audioXXXX( SAMPLE_RATES[m_qualityLevel], success_ful, this );
-	//if( sucess_ful )
-	//{
-	//	return dev;
-	//}
-	//delete dev
+    if(dev_name != AudioDummy::name())
+    {
+        qWarning(
+                "Warning: No audio-driver working - falling back to "
+                "dummy-audio-"
+                "driver\nYou can render your songs and listen to the output "
+                "files...\n");
 
-	if( dev_name != AudioDummy::name() )
-	{
-		qWarning( "Warning: No audio-driver working - falling back to dummy-audio-"
-			"driver\nYou can render your songs and listen to the output "
-			"files...\n" );
+        m_audioDevStartFailed = true;
+    }
 
-		m_audioDevStartFailed = true;
-	}
+    m_audioDevName = AudioDummy::name();
 
-	m_audioDevName = AudioDummy::name();
-
-	return new AudioDummy( success_ful, this );
+    return new AudioDummy(success_ful, this);
 }
 
-
-
-
-MidiClient * Mixer::tryMidiClients()
+MidiClient* Mixer::tryMidiClients()
 {
-	QString client_name = CONFIG_GET_STRING("mixer.mididev");
-        //ConfigManager::inst()->value( "mixer","mididev" );
+    QString client_name = CONFIG_GET_STRING("mixer.mididev");
+    // ConfigManager::inst()->value( "mixer","mididev" );
 
 #ifdef LMMS_HAVE_ALSA
-	if( client_name == MidiAlsaGdx::name() || client_name == "" )
-	{
-		MidiAlsaGdx * malsag = new MidiAlsaGdx();
-		if( malsag->isRunning() )
-		{
-			m_midiClientName = MidiAlsaGdx::name();
-			return malsag;
-		}
-		delete malsag;
-	}
+    if(client_name == MidiAlsaGdx::name() || client_name == "")
+    {
+        MidiAlsaGdx* malsag = new MidiAlsaGdx();
+        if(malsag->isRunning())
+        {
+            m_midiClientName = MidiAlsaGdx::name();
+            return malsag;
+        }
+        delete malsag;
+    }
 
-	if( client_name == MidiAlsaSeq::name() || client_name == "" )
-	{
-		MidiAlsaSeq * malsas = new MidiAlsaSeq;
-		if( malsas->isRunning() )
-		{
-			m_midiClientName = MidiAlsaSeq::name();
-			return malsas;
-		}
-		delete malsas;
-	}
+    if(client_name == MidiAlsaSeq::name() || client_name == "")
+    {
+        MidiAlsaSeq* malsas = new MidiAlsaSeq;
+        if(malsas->isRunning())
+        {
+            m_midiClientName = MidiAlsaSeq::name();
+            return malsas;
+        }
+        delete malsas;
+    }
 
-	if( client_name == MidiAlsaRaw::name() || client_name == "" )
-	{
-		MidiAlsaRaw * malsar = new MidiAlsaRaw;
-		if( malsar->isRunning() )
-		{
-			m_midiClientName = MidiAlsaRaw::name();
-			return malsar;
-		}
-		delete malsar;
-	}
+    if(client_name == MidiAlsaRaw::name() || client_name == "")
+    {
+        MidiAlsaRaw* malsar = new MidiAlsaRaw;
+        if(malsar->isRunning())
+        {
+            m_midiClientName = MidiAlsaRaw::name();
+            return malsar;
+        }
+        delete malsar;
+    }
 #endif
 
 #ifdef LMMS_HAVE_JACK
-	if( client_name == MidiJack::name() || client_name == "" )
-	{
-		MidiJack * mjack = new MidiJack;
-		if( mjack->isRunning() )
-		{
-			m_midiClientName = MidiJack::name();
-			return mjack;
-		}
-		delete mjack;
-	}
+    if(client_name == MidiJack::name() || client_name == "")
+    {
+        MidiJack* mjack = new MidiJack;
+        if(mjack->isRunning())
+        {
+            m_midiClientName = MidiJack::name();
+            return mjack;
+        }
+        delete mjack;
+    }
 #endif
 
 #ifdef LMMS_HAVE_OSS
-	if( client_name == MidiOss::name() || client_name == "" )
-	{
-		MidiOss * moss = new MidiOss;
-		if( moss->isRunning() )
-		{
-			m_midiClientName = MidiOss::name();
-			return moss;
-		}
-		delete moss;
-	}
+    if(client_name == MidiOss::name() || client_name == "")
+    {
+        MidiOss* moss = new MidiOss;
+        if(moss->isRunning())
+        {
+            m_midiClientName = MidiOss::name();
+            return moss;
+        }
+        delete moss;
+    }
 #endif
 
 #ifdef LMMS_HAVE_SNDIO
-	if( client_name == MidiSndio::name() || client_name == "" )
-	{
-		MidiSndio * msndio = new MidiSndio;
-		if( msndio->isRunning() )
-		{
-			m_midiClientName = MidiSndio::name();
-			return msndio;
-		}
-		delete msndio;
-	}
+    if(client_name == MidiSndio::name() || client_name == "")
+    {
+        MidiSndio* msndio = new MidiSndio;
+        if(msndio->isRunning())
+        {
+            m_midiClientName = MidiSndio::name();
+            return msndio;
+        }
+        delete msndio;
+    }
 #endif
 
 #ifdef LMMS_BUILD_WIN32
-	if( client_name == MidiWinMM::name() || client_name == "" )
-	{
-		MidiWinMM * mwmm = new MidiWinMM;
-//		if( moss->isRunning() )
-		{
-			m_midiClientName = MidiWinMM::name();
-			return mwmm;
-		}
-		delete mwmm;
-	}
+    if(client_name == MidiWinMM::name() || client_name == "")
+    {
+        MidiWinMM* mwmm = new MidiWinMM;
+        //		if( moss->isRunning() )
+        {
+            m_midiClientName = MidiWinMM::name();
+            return mwmm;
+        }
+        delete mwmm;
+    }
 #endif
 
 #ifdef LMMS_BUILD_APPLE
-    printf( "trying midi apple...\n" );
-    if( client_name == MidiApple::name() || client_name == "" )
+    printf("trying midi apple...\n");
+    if(client_name == MidiApple::name() || client_name == "")
     {
-        MidiApple * mapple = new MidiApple;
-        m_midiClientName = MidiApple::name();
-        printf( "Returning midi apple\n" );
+        MidiApple* mapple = new MidiApple;
+        m_midiClientName  = MidiApple::name();
+        printf("Returning midi apple\n");
         return mapple;
     }
 
-    qWarning( "Error: MIDI apple didn't work: client_name=%s", qPrintable(client_name) );
+    qWarning("Error: MIDI apple didn't work: client_name=%s",
+             qPrintable(client_name));
 #endif
 
-    qWarning( "Error: Couldn't create MIDI-client, neither with ALSA nor with "
-	      "OSS. Will use dummy-MIDI-client." );
+    qWarning(
+            "Error: Couldn't create MIDI-client, neither with ALSA nor with "
+            "OSS. Will use dummy-MIDI-client.");
 
-	m_midiClientName = MidiDummy::name();
+    m_midiClientName = MidiDummy::name();
 
-	return new MidiDummy;
+    return new MidiDummy;
 }
 
-
-
-
-
-
-
-
-
-Mixer::fifoWriter::fifoWriter( Mixer* mixer, fifo * _fifo ) :
-	m_mixer( mixer ),
-	m_fifo( _fifo ),
-	m_writing( true )
+Mixer::fifoWriter::fifoWriter(Mixer* mixer, fifo* _fifo) :
+      m_mixer(mixer), m_fifo(_fifo), m_writing(true)
 {
-        setObjectName("mixer fifo writer");
+    setObjectName("mixer fifo writer");
 }
-
-
-
 
 void Mixer::fifoWriter::finish()
 {
-	m_writing = false;
+    m_writing = false;
 }
-
-
-
 
 void Mixer::fifoWriter::run()
 {
-	disable_denormals();
+    disable_denormals();
 
 #if 0
 #ifdef LMMS_BUILD_LINUX
@@ -1263,34 +1172,28 @@ void Mixer::fifoWriter::run()
 #endif
 #endif
 
-	const fpp_t frames = m_mixer->framesPerPeriod();
-	while( m_writing )
-	{
-		surroundSampleFrame * buffer = new surroundSampleFrame[frames];
-		const surroundSampleFrame * b = m_mixer->renderNextBuffer();
-		memcpy( buffer, b, frames * sizeof( surroundSampleFrame ) );
-		write( buffer );
-	}
+    const fpp_t frames = m_mixer->framesPerPeriod();
+    while(m_writing)
+    {
+        surroundSampleFrame*       buffer = new surroundSampleFrame[frames];
+        const surroundSampleFrame* b      = m_mixer->renderNextBuffer();
+        memcpy(buffer, b, frames * sizeof(surroundSampleFrame));
+        write(buffer);
+    }
 
-	write( nullptr );
+    write(nullptr);
 }
 
-
-
-
-void Mixer::fifoWriter::write( surroundSampleFrame * buffer )
+void Mixer::fifoWriter::write(surroundSampleFrame* buffer)
 {
-	m_mixer->m_waitChangesMutex.lock();
-	m_mixer->m_waitingForWrite = true;
-	m_mixer->m_waitChangesMutex.unlock();
-	m_mixer->runChangesInModel();
+    m_mixer->m_waitChangesMutex.lock();
+    m_mixer->m_waitingForWrite = true;
+    m_mixer->m_waitChangesMutex.unlock();
+    m_mixer->runChangesInModel();
 
-	m_fifo->write( buffer );
+    m_fifo->write(buffer);
 
-	m_mixer->m_doChangesMutex.lock();
-	m_mixer->m_waitingForWrite = false;
-	m_mixer->m_doChangesMutex.unlock();
+    m_mixer->m_doChangesMutex.lock();
+    m_mixer->m_waitingForWrite = false;
+    m_mixer->m_doChangesMutex.unlock();
 }
-
-
-

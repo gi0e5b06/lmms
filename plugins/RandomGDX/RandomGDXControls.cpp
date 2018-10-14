@@ -32,18 +32,18 @@
 
 RandomGDXControls::RandomGDXControls(RandomGDXEffect* effect) :
       EffectControls(effect), m_effect(effect),
-      m_rndAmpModel(0.0f, 0.0f, 1.0f, 0.00001f, this, tr("Random Amp")),
-      m_fixAmpModel(1.0f, 0.0f, 1.0f, 0.00001f, this, tr("Fixed Amp")),
-      m_sngPosModel(0.0f, 0.0f, 1.0f, 0.00001f, this, tr("Singularity")),
-      m_delPosModel(0.0f, 0.0f, 1.0f, 0.001f, this, tr("Delay"))
+      m_rndAmpModel(0., 0., 1., 0.00001, this, tr("Random Amp")),
+      m_fixAmpModel(1., 0., 1., 0.00001, this, tr("Fixed Amp")),
+      m_sngPosModel(0., 0., 1., 0.00001, this, tr("Singularity")),
+      m_delPosModel(0., 0., 1., 0.001, this, tr("Delay"))
 {
     /*
-            connect( &m_volumeModel, SIGNAL( dataChanged() ), this, SLOT(
-       changeControl() ) ); connect( &m_panModel, SIGNAL( dataChanged() ),
-       this, SLOT( changeControl() ) ); connect( &m_leftModel, SIGNAL(
-       dataChanged() ), this, SLOT( changeControl() ) ); connect(
-       &m_rightModel, SIGNAL( dataChanged() ), this, SLOT( changeControl() )
-       );
+      connect( &m_volumeModel, SIGNAL( dataChanged() ), this, SLOT(
+      changeControl() ) ); connect( &m_panModel, SIGNAL( dataChanged() ),
+      this, SLOT( changeControl() ) ); connect( &m_leftModel, SIGNAL(
+      dataChanged() ), this, SLOT( changeControl() ) ); connect(
+      &m_rightModel, SIGNAL( dataChanged() ), this, SLOT( changeControl() )
+      );
     */
 }
 

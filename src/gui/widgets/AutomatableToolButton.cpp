@@ -1,7 +1,7 @@
 /*
  * AutomatableToolButton.cpp - implementation
  *
- * Copyright (c) 2017
+ * Copyright (c) 2017-2018 gi0e5b06 (on github.com)
  *
  * This file is part of LMMS - https://lmms.io
  *
@@ -79,9 +79,9 @@ void AutomatableToolButton::setChecked( bool _on )
 
 bool AutomatableToolButton::isChecked()
 {
-	//qInfo("AutomatableToolButton::isChecked() c=%d m=%d",QToolButton::isChecked(),model()->value());
+	//qInfo("AutomatableToolButton::isChecked() c=%d m=%d",QToolButton::isChecked(),model()->rawValue());
 
-	return model()->value();
+	return model()->rawValue();
 }
 
 
@@ -93,9 +93,9 @@ void AutomatableToolButton::modelChanged()
 
 	update();
 	/*
-	if( QToolButton::isChecked() != model()->value() )
+	if( QToolButton::isChecked() != model()->rawValue() )
 	{
-		QToolButton::setChecked( model()->value() );
+		QToolButton::setChecked( model()->rawValue() );
 	}
 	*/
 }
@@ -105,9 +105,9 @@ void AutomatableToolButton::modelChanged()
 
 void AutomatableToolButton::update()
 {
-	//qInfo("AutomatableToolButton::update() c=%d m=%d",QToolButton::isChecked(),model()->value());
+	//qInfo("AutomatableToolButton::update() c=%d m=%d",QToolButton::isChecked(),model()->rawValue());
 
-	if( defaultAction()->isChecked() != model()->value() )
+	if( defaultAction()->isChecked() != model()->rawValue() )
 	{
 		//qInfo("AutomatableToolButton::update() -> setChecked");
 		emit triggered(defaultAction());
@@ -198,7 +198,7 @@ void AutomatableToolButton::dropEvent( QDropEvent * _de )
 		if( mod != NULL )
 		{
 			AutomatableModel::linkModels( model(), mod );
-			mod->setValue( model()->value() );
+			mod->setValue( model()->rawValue() );
 		}
 	}
 }
@@ -211,7 +211,7 @@ void AutomatableToolButton::toggle()
 {
        	if( isCheckable() )
 	{
-		model()->setValue( !model()->value() );
+		model()->setValue( !model()->rawValue() );
 	}
 }
 */

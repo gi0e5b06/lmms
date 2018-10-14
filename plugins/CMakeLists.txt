@@ -54,6 +54,7 @@ IF("${PLUGIN_LIST}" STREQUAL "")
 		${MINIMAL_LIST}
                 ${LMMS_LV2_PLUGINS}
 		Amplifier
+		AmplifierGDX
 		BassBooster
 		bit_invader
 		Bitcrush

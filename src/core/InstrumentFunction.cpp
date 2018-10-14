@@ -1110,12 +1110,12 @@ InstrumentFunctionNoteKeying::InstrumentFunctionNoteKeying(Model* _parent) :
       // m_enabledModel( false, this ),
       m_volumeRangeModel(0., -500., 500., 1., this, tr("Volume change")),
       m_volumeBaseModel(0., 0., 127., 1., this, tr("Volume base key")),
-      m_volumeMinModel(0., 0., 200., 0.1f, this, tr("Volume min")),
-      m_volumeMaxModel(100., 0., 200., 0.1f, this, tr("Volume max")),
+      m_volumeMinModel(0., 0., 200., 0.1, this, tr("Volume min")),
+      m_volumeMaxModel(100., 0., 200., 0.1, this, tr("Volume max")),
       m_panRangeModel(0., -500., 500., 1., this, tr("Pan change")),
       m_panBaseModel(0., 0., 127., 1., this, tr("Pan base key")),
-      m_panMinModel(0., -100., 100., 0.1f, this, tr("Pan min")),
-      m_panMaxModel(0., -100., 100., 0.1f, this, tr("Pan max"))
+      m_panMinModel(0., -100., 100., 0.1, this, tr("Pan min")),
+      m_panMaxModel(0., -100., 100., 0.1, this, tr("Pan max"))
 {
 }
 
@@ -1209,8 +1209,8 @@ InstrumentFunctionView* InstrumentFunctionNoteKeying::createView()
 InstrumentFunctionNoteOutting::InstrumentFunctionNoteOutting(Model* _parent) :
       InstrumentFunction(_parent, tr("NoteOutting")),
       // m_enabledModel( false, this ),
-      m_volumeModel(0., 0., 200., 0.1f, this, tr("Volume")),
-      m_panModel(0., -100., 100., 0.1f, this, tr("Pan")),
+      m_volumeModel(0., 0., 200., 0.1, this, tr("Volume")),
+      m_panModel(0., -100., 100., 0.1, this, tr("Pan")),
       m_keyModel(DefaultKey, 0., 127., 1., this, tr("Key")),
       m_noteModel(DefaultKey % 12, 0., 11., 1., this, tr("Note"))
 {
@@ -1258,7 +1258,7 @@ InstrumentFunctionView* InstrumentFunctionNoteOutting::createView()
 
 InstrumentFunctionGlissando::InstrumentFunctionGlissando(Model* _parent) :
       InstrumentFunction(_parent, tr("Glissando")),
-      m_gliTimeModel(75., 5., 500., 0.1f, 500., this, tr("Glissando time")),
+      m_gliTimeModel(75., 5., 500., 0.1, 500., this, tr("Glissando time")),
       m_gliGateModel(100., 1., 100., 1., this, tr("Glissando gate")),
       m_gliAttenuationModel(
               30., 0., 99., 1., this, tr("Glissando attenuation")),

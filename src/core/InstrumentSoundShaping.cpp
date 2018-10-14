@@ -34,9 +34,9 @@
 #include "Mixer.h"
 
 
-const float CUT_FREQ_MULTIPLIER = 6000.0f;
-const float RES_MULTIPLIER = 2.0f;
-const float RES_PRECISION = 1000.0f;
+const real_t CUT_FREQ_MULTIPLIER = 6000.;
+const real_t RES_MULTIPLIER = 2.;
+const real_t RES_PRECISION = 1000.;
 
 
 // names for env- and lfo-targets - first is name being displayed to user
@@ -66,7 +66,7 @@ InstrumentSoundShaping::InstrumentSoundShaping(
 {
 	for( int i = 0; i < NumTargets; ++i )
 	{
-		float value_for_zero_amount = 0.0;
+		real_t value_for_zero_amount = 0.0;
 		if( i == Volume )
 		{
 			value_for_zero_amount = 1.0;
@@ -112,7 +112,7 @@ InstrumentSoundShaping::~InstrumentSoundShaping()
 
 
 
-float InstrumentSoundShaping::volumeLevel( NotePlayHandle* n, const f_cnt_t frame )
+real_t InstrumentSoundShaping::volumeLevel( NotePlayHandle* n, const f_cnt_t frame )
 {
 	f_cnt_t envReleaseBegin = frame - n->releaseFramesDone() + n->framesBeforeRelease();
 
@@ -121,7 +121,7 @@ float InstrumentSoundShaping::volumeLevel( NotePlayHandle* n, const f_cnt_t fram
 		envReleaseBegin += Engine::mixer()->framesPerPeriod();
 	}
 
-	float level;
+	real_t level;
 	m_envLfoParameters[Volume]->fillLevel( &level, frame, envReleaseBegin, 1 );
 
 	return level;
@@ -153,8 +153,8 @@ void InstrumentSoundShaping::processAudioBuffer( sampleFrame* buffer,
 
 	if( m_filterEnabledModel.value() )
 	{
-		float cutBuffer [frames];
-		float resBuffer [frames];
+		real_t cutBuffer [frames];
+		real_t resBuffer [frames];
 
 		int old_filter_cut = 0;
 		int old_filter_res = 0;
@@ -174,18 +174,18 @@ void InstrumentSoundShaping::processAudioBuffer( sampleFrame* buffer,
 			m_envLfoParameters[Resonance]->fillLevel( resBuffer, envTotalFrames, envReleaseBegin, frames );
 		}
 
-		const float fcv = m_filterCutModel.value();
-		const float frv = m_filterResModel.value();
+		const real_t fcv = m_filterCutModel.value();
+		const real_t frv = m_filterResModel.value();
 
 		if( m_envLfoParameters[Cut]->isUsed() &&
 			m_envLfoParameters[Resonance]->isUsed() )
 		{
 			for( fpp_t frame = 0; frame < frames; ++frame )
 			{
-				const float new_cut_val = EnvelopeAndLfoParameters::expKnobVal( cutBuffer[frame] ) *
+				const real_t new_cut_val = EnvelopeAndLfoParameters::expKnobVal( cutBuffer[frame] ) *
 								CUT_FREQ_MULTIPLIER + fcv;
 
-				const float new_res_val = frv + RES_MULTIPLIER * resBuffer[frame];
+				const real_t new_res_val = frv + RES_MULTIPLIER * resBuffer[frame];
 
 				if( static_cast<int>( new_cut_val ) != old_filter_cut ||
 					static_cast<int>( new_res_val*RES_PRECISION ) != old_filter_res )
@@ -203,7 +203,7 @@ void InstrumentSoundShaping::processAudioBuffer( sampleFrame* buffer,
 		{
 			for( fpp_t frame = 0; frame < frames; ++frame )
 			{
-				float new_cut_val = EnvelopeAndLfoParameters::expKnobVal( cutBuffer[frame] ) *
+				real_t new_cut_val = EnvelopeAndLfoParameters::expKnobVal( cutBuffer[frame] ) *
 								CUT_FREQ_MULTIPLIER + fcv;
 
 				if( static_cast<int>( new_cut_val ) != old_filter_cut )
@@ -220,7 +220,7 @@ void InstrumentSoundShaping::processAudioBuffer( sampleFrame* buffer,
 		{
 			for( fpp_t frame = 0; frame < frames; ++frame )
 			{
-				float new_res_val = frv + RES_MULTIPLIER * resBuffer[frame];
+				real_t new_res_val = frv + RES_MULTIPLIER * resBuffer[frame];
 
 				if( static_cast<int>( new_res_val*RES_PRECISION ) != old_filter_res )
 				{
@@ -246,12 +246,12 @@ void InstrumentSoundShaping::processAudioBuffer( sampleFrame* buffer,
 
 	if( m_envLfoParameters[Volume]->isUsed() )
 	{
-		float volBuffer [frames];
+		real_t volBuffer [frames];
 		m_envLfoParameters[Volume]->fillLevel( volBuffer, envTotalFrames, envReleaseBegin, frames );
 
 		for( fpp_t frame = 0; frame < frames; ++frame )
 		{
-			float vol_level = volBuffer[frame];
+			real_t vol_level = volBuffer[frame];
 			vol_level = vol_level * vol_level;
 			buffer[frame][0] = vol_level * buffer[frame][0];
 			buffer[frame][1] = vol_level * buffer[frame][1];
@@ -263,7 +263,7 @@ void InstrumentSoundShaping::processAudioBuffer( sampleFrame* buffer,
 		// only use panning-envelope...
 		for( fpp_t frame = 0; frame < frames; ++frame )
 		{
-			float vol_level = pan_buf[frame];
+			real_t vol_level = pan_buf[frame];
 			vol_level = vol_level*vol_level;
 			for( ch_cnt_t chnl = 0; chnl < DEFAULT_CHANNELS; ++chnl )
 			{

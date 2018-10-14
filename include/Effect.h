@@ -204,7 +204,7 @@ class EXPORT Effect : public Plugin
                            bool         _unclip = false);
 
 #ifdef REAL_IS_DOUBLE
-// TMP, obsolete
+    // TMP, obsolete
     void computeWetDryLevels(fpp_t  _f,
                              fpp_t  _frames,
                              bool   _smoothBegin,
@@ -225,6 +225,16 @@ class EXPORT Effect : public Plugin
                              real_t& _d1);
 
     real_t computeRMS(sampleFrame* _buf, const fpp_t _frames);
+
+    inline bool isClipping()
+    {
+        return m_clippingModel.value();
+    }
+
+    inline void setClipping(bool _b)
+    {
+        m_clippingModel.setAutomatedValue(_b);
+    }
 
   private:
     bool gateHasClosed(real_t& _rms, sampleFrame* _buf, const fpp_t _frames);

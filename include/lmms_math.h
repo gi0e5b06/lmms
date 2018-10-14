@@ -822,7 +822,12 @@ static inline real_t nlogf(const real_t x)
     return log(x * 1.718281828459f + 1.f);
 }
 
-// nerf erf()
-// nexp2 exp2()
+real_t nexp2f(const real_t x);
+real_t nexp2sawf(const real_t x);
+
+real_t nerf(const real_t x);
+
+real_t fibonacci1(const real_t x);
+real_t fibonacci2(const real_t x);
 
 #endif

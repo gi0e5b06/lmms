@@ -58,52 +58,52 @@ static inline void run(sampleFrame*    dst,
     }
 }
 
-int16_t convertToS16(float _v)
+int16_t convertToS16(FLOAT _v)
 {
-    if(_v >= 1.f)
+    if(_v >= 1.f)  // FLOAT
         return I_S16_MULTIPLIER;
-    else if(_v <= -1.f)
+    else if(_v <= -1.f)  // FLOAT
         return -I_S16_MULTIPLIER - 1;
-    else if(_v >= 0.f)
+    else if(_v >= 0.f)  // FLOAT
         _v *= F_S16_MULTIPLIER;
     else
-        _v *= F_S16_MULTIPLIER + 1.f;
+        _v *= F_S16_MULTIPLIER + 1.f;  // FLOAT
     return _v;
 }
 
-int32_t convertToS32(float _v)
+int32_t convertToS32(FLOAT _v)
 {
-    if(_v >= 1.f)
+    if(_v >= 1.f)  // FLOAT
         return I_S32_MULTIPLIER;
-    else if(_v <= -1.f)
+    else if(_v <= -1.f)  // FLOAT
         return -I_S32_MULTIPLIER - 1;
-    else if(_v >= 0.f)
+    else if(_v >= 0.f)  // FLOAT
         _v *= F_S32_MULTIPLIER;
     else
-        _v *= F_S32_MULTIPLIER + 1.f;
+        _v *= F_S32_MULTIPLIER + 1.f;  // FLOAT
     return _v;
 }
 
-int64_t convertToS64(float _v)
+int64_t convertToS64(FLOAT _v)
 {
-    if(_v >= 1.f)
+    if(_v >= 1.f)  // FLOAT
         return I_S64_MULTIPLIER;
-    else if(_v <= -1.f)
+    else if(_v <= -1.f)  // FLOAT
         return -I_S64_MULTIPLIER - 1;
-    else if(_v >= 0.f)
+    else if(_v >= 0.f)  // FLOAT
         _v *= F_S64_MULTIPLIER;
     else
-        _v *= F_S64_MULTIPLIER + 1.f;
+        _v *= F_S64_MULTIPLIER + 1.f;  // FLOAT
     return _v;
 }
 
 int16_t convertToS16(double _v)
 {
-    if(_v >= 1.f)
+    if(_v >= 1.)
         return I_S16_MULTIPLIER;
-    else if(_v <= -1.f)
+    else if(_v <= -1.)
         return -I_S16_MULTIPLIER - 1;
-    else if(_v >= 0.f)
+    else if(_v >= 0.)
         _v *= D_S16_MULTIPLIER;
     else
         _v *= D_S16_MULTIPLIER + 1.;
@@ -112,11 +112,11 @@ int16_t convertToS16(double _v)
 
 int32_t convertToS32(double _v)
 {
-    if(_v >= 1.f)
+    if(_v >= 1.)
         return I_S32_MULTIPLIER;
-    else if(_v <= -1.f)
+    else if(_v <= -1.)
         return -I_S32_MULTIPLIER - 1;
-    else if(_v >= 0.f)
+    else if(_v >= 0.)
         _v *= D_S32_MULTIPLIER;
     else
         _v *= D_S32_MULTIPLIER + 1.;
@@ -125,11 +125,11 @@ int32_t convertToS32(double _v)
 
 int64_t convertToS64(double _v)
 {
-    if(_v >= 1.f)
+    if(_v >= 1.)
         return I_S64_MULTIPLIER;
-    else if(_v <= -1.f)
+    else if(_v <= -1.)
         return -I_S64_MULTIPLIER - 1;
-    else if(_v >= 0.f)
+    else if(_v >= 0.)
         _v *= D_S64_MULTIPLIER;
     else
         _v *= D_S64_MULTIPLIER + 1.;
@@ -174,7 +174,7 @@ bool isSilent(const sampleFrame* _src, const f_cnt_t _frames)
 {
     for(f_cnt_t f = _frames - 1; f >= 0; f -= 4)  //--f
     {
-        if(fabsf(_src[f][0]) >= SILENCE || fabsf(_src[f][1]) >= SILENCE)
+        if(abs(_src[f][0]) >= SILENCE || abs(_src[f][1]) >= SILENCE)
         {
             return false;
         }
@@ -188,7 +188,7 @@ bool isClipping(const sampleFrame* _src, const f_cnt_t _frames)
 {
     for(f_cnt_t f = _frames - 1; f >= 0; --f)
     {
-        if(fabsf(_src[f][0]) > 1.f || fabsf(_src[f][1]) > 1.f)
+        if(abs(_src[f][0]) > 1. || abs(_src[f][1]) > 1.)
         {
             return true;
         }
@@ -204,15 +204,15 @@ bool sanitize(sampleFrame* _src, const f_cnt_t _frames)
     for(f_cnt_t f = _frames - 1; f >= 0; --f)
     {
         const sample_t s0 = _src[f][0];
-        if(isinf(s0) || isnan(s0) || fabsf(s0) < SILENCE)
+        if(isinf(s0) || isnan(s0) || abs(s0) < SILENCE)
         {
-            _src[f][0] = 0.f;
+            _src[f][0] = 0.;
             found      = true;
         }
         const sample_t s1 = _src[f][1];
-        if(isinf(s1) || isnan(s1) || fabsf(s1) < SILENCE)
+        if(isinf(s1) || isnan(s1) || abs(s1) < SILENCE)
         {
-            _src[f][1] = 0.f;
+            _src[f][1] = 0.;
             found      = true;
         }
     }
@@ -225,25 +225,25 @@ bool unclip(sampleFrame* _src, const f_cnt_t _frames)
     bool found = false;
     for(f_cnt_t f = _frames - 1; f >= 0; --f)
     {
-        if(_src[f][0] < -1.f)
+        if(_src[f][0] < -1.)
         {
-            _src[f][0] = -1.f;
+            _src[f][0] = -1.;
             found      = true;
         }
-        else if(_src[f][0] > 1.f)
+        else if(_src[f][0] > 1.)
         {
-            _src[f][0] = 1.f;
+            _src[f][0] = 1.;
             found      = true;
         }
 
-        if(_src[f][1] < -1.f)
+        if(_src[f][1] < -1.)
         {
-            _src[f][1] = -1.f;
+            _src[f][1] = -1.;
             found      = true;
         }
-        else if(_src[f][1] > 1.f)
+        else if(_src[f][1] > 1.)
         {
-            _src[f][1] = 1.f;
+            _src[f][1] = 1.;
             found      = true;
         }
     }

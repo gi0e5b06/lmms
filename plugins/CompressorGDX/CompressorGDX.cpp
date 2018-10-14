@@ -46,7 +46,7 @@ extern "C"
 CompressorGDX::CompressorGDX(Model*                                    parent,
                              const Descriptor::SubPluginFeatures::Key* key) :
       Effect(&compressorgdx_plugin_descriptor, parent, key),
-      m_gdxControls(this)  //, m_fact0(0.0f), m_sact0(0.0f)
+      m_gdxControls(this)  //, m_fact0(0.), m_sact0(0.)
 {
 }
 
@@ -141,16 +141,16 @@ bool CompressorGDX::processAudioBuffer(sampleFrame* _buf, const fpp_t _frames)
                             y1 = ratio;
                         break;
                     case 2:
-                        y1 *= (2 - y1) * ratio;
+                        y1 *= (2. - y1) * ratio;
                         break;
                     case 3:
                         y1 *= WaveForm::sqrt(y1) * ratio;
                         break;
                     case 4:
-                        y1 *= WaveForm::sine(y1 / 4.f) * ratio;
+                        y1 *= WaveForm::sine(y1 / 4.) * ratio;
                         break;
                     case 5:
-                        y1 *= (1.f + erf(2.f * y1) / 2.f) * ratio;
+                        y1 *= (1. + erf(2. * y1) / 2.) * ratio;
                         break;
                     case 1:
                     default:
@@ -158,12 +158,12 @@ bool CompressorGDX::processAudioBuffer(sampleFrame* _buf, const fpp_t _frames)
                         break;
                 }
                 curVal1 = s1 * (threshold + y1) * outGain;
-                // curVal1 = qBound(-1.f, curVal1, 1.f);
+                // curVal1 = qBound(-1., curVal1, 1.);
             }
             else
             {
                 curVal1 *= outGain;
-                // curVal1 = qBound(-1.f, curVal1, 1.f);
+                // curVal1 = qBound(-1., curVal1, 1.);
             }
         }
 

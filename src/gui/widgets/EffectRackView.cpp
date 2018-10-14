@@ -47,6 +47,7 @@ EffectRackView::EffectRackView(EffectChain* model,
     qRegisterMetaType<EffectView*>("EffectView*");
 
     QWidget* effectsView = new QWidget();
+    effectsView->setContentsMargins(0,0,0,12);
 
     m_scrollArea = new QScrollArea(this);
     m_scrollArea->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);

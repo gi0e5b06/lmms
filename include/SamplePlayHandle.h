@@ -39,7 +39,7 @@ class SamplePlayHandle : public PlayHandle
 {
 public:
 	SamplePlayHandle( const QString& sampleFile );
-	SamplePlayHandle( SampleBuffer* sampleBuffer );
+        SamplePlayHandle( SampleBuffer* sampleBuffer, bool ownAudioPort = true );
 	SamplePlayHandle( SampleTCO* tco );
 	virtual ~SamplePlayHandle();
 

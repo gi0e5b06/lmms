@@ -307,7 +307,7 @@ class SynthGDX : public Instrument
     // FilterObject*     m_fil[NB_FILTERS];
     ModulatorObject*  m_mod[NB_MODULATORS];
     OscillatorObject* m_osc[NB_OSCILLATORS];
-    // graphModel* m_graphModel;
+    // GraphModel* m_GraphModel;
 
     QMutex m_mtx;
 

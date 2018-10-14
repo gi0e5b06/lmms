@@ -45,8 +45,8 @@ class PLUGIN_EXPORT RandomGDXEffect : public Effect
 
   private:
     RandomGDXControls m_gdxControls;
-    float             m_fact0, m_fact1;
-    float             m_sact0, m_sact1;
+    real_t            m_fact0, m_fact1;
+    real_t            m_sact0, m_sact1;
 
     friend class RandomGDXControls;
 };

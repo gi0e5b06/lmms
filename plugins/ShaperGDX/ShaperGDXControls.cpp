@@ -36,17 +36,17 @@
 ShaperGDXControls::ShaperGDXControls(ShaperGDX* effect) :
       EffectControls(effect), m_effect(effect),
       m_waveBankModel(this, tr("Wave Bank")),
-      m_waveIndexModel(this, tr("Wave Index")), m_timeModel(55.0f,
-                                                            0.00001f,
-                                                            20000.0f,
-                                                            0.00001f,
-                                                            20000.0f,
+      m_waveIndexModel(this, tr("Wave Index")), m_timeModel(55.,
+                                                            0.00001,
+                                                            20000.,
+                                                            0.00001,
+                                                            20000.,
                                                             this,
                                                             tr("Time")),
-      m_ratioModel(1.0f, 0.0f, 1.0f, 0.001f, this, tr("Ratio")),
-      m_fillModel(0.0f, 0.0f, 1.0f, 0.001f, this, tr("Fill")),
-      m_hardModel(0.f, 0.f, 1.f, 0.001f, this, tr("Mode")),
-      m_outGainModel(1.0f, 0.0f, 10.0f, 0.001f, this, tr("Out gain")),
+      m_ratioModel(1., 0., 1., 0.001, this, tr("Ratio")),
+      m_fillModel(0., 0., 1., 0.001, this, tr("Fill")),
+      m_hardModel(0., 0., 1., 0.001, this, tr("Mode")),
+      m_outGainModel(1., 0., 10., 0.001, this, tr("Out gain")),
       m_ring(600)
 {
     WaveForm::fillBankModel(m_waveBankModel);

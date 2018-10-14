@@ -87,7 +87,7 @@ private:
 	FloatModel m_outputModel;
 	FloatModel m_attackModel;
 	FloatModel m_releaseModel;
-	graphModel m_wavegraphModel;
+	GraphModel m_waveGraphModel;
 	IntModel m_stereomodeModel;
 
 	friend class dynProcControlDialog;

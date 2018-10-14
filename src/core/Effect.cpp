@@ -334,12 +334,12 @@ bool Effect::shouldKeepRunning(sampleFrame* _buf, const fpp_t _frames, bool _unc
         if(_unclip)
         {
                 if(MixHelpers::unclip(_buf,_frames))
-                        m_clippingModel.setValue(true);
+                        setClipping(true);
         }
         else
         {
                 if(MixHelpers::isClipping(_buf,_frames))
-                        m_clippingModel.setValue(true);
+                        setClipping(true);
         }
 
 	if(!isAutoQuitEnabled()) return true;
@@ -364,8 +364,8 @@ bool Effect::shouldKeepRunning(sampleFrame* _buf, const fpp_t _frames, bool _unc
 // TMP, obsolete
 void Effect::computeWetDryLevels(fpp_t _f, fpp_t _frames,
                                  bool _smoothBegin, bool _smoothEnd,
-                                 float& _w0, float&_d0,
-                                 float& _w1, float&_d1)
+                                 FLOAT& _w0, FLOAT&_d0,
+                                 FLOAT& _w1, FLOAT&_d1)
 {
         real_t w0,d0,w1,d1;
         computeWetDryLevels(_f,_frames,_smoothBegin,_smoothEnd,

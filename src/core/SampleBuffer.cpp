@@ -1619,12 +1619,19 @@ QString& SampleBuffer::toBase64(QString& _dst) const
     // );
     ba_writer.close();
 
-    base64::encode(ba_writer.buffer().data(), ba_writer.buffer().size(),
-                   _dst);
+    _dst = base64::encodeChars(ba_writer.buffer().data(),
+                               ba_writer.buffer().size());
 
 #else /* LMMS_HAVE_FLAC_STREAM_ENCODER_H */
 
-    base64::encode((const char*)m_data, m_frames * sizeof(sampleFrame), _dst);
+    // base64::encode((const char*)m_data, m_frames * sizeof(sampleFrame),
+    // _dst);
+#ifdef REAL_IS_FLOAT
+    _dst = base64::encodeFloats((const FLOAT*)m_data, m_frames * DEFAULT_CHANNELS);
+#endif
+#ifdef REAL_IS_DOUBLE
+    _dst = base64::encodeDoublesAsFloats((const double*)m_data, m_frames * DEFAULT_CHANNELS);
+#endif
 
 #endif /* LMMS_HAVE_FLAC_STREAM_ENCODER_H */
 
@@ -1710,7 +1717,7 @@ void SampleBuffer::retune(  // const sample_rate_t _srcSR,
     if(_semitones == 0.)
         return;
 
-    const double  frq_ratio  = pow(2., _semitones / -12.);
+    const double  frq_ratio  = exp2(_semitones / -12.);
     const f_cnt_t dst_frames = static_cast<f_cnt_t>(m_frames * frq_ratio);
     sampleFrame*  dst_data   = MM_ALLOC(sampleFrame, dst_frames);
     f_cnt_t       input_frames_used       = 0;
@@ -2007,11 +2014,9 @@ void flacStreamDecoderErrorCallback(const FLAC__StreamDecoder*,
 
 void SampleBuffer::loadFromBase64(const QString& _data)
 {
-    char* dst   = NULL;
-    int   dsize = 0;
-    base64::decode(_data, &dst, &dsize);
-
 #ifdef LMMS_HAVE_FLAC_STREAM_DECODER_H
+    char* dst   = NULL;
+    int   dsize = base64::decodeChars(_data, &dst);
 
     QByteArray orig_data = QByteArray::fromRawData(dst, dsize);
     QBuffer    ba_reader(&orig_data);
@@ -2060,6 +2065,15 @@ void SampleBuffer::loadFromBase64(const QString& _data)
     memcpy(m_origData, orig_data.data(), orig_data.size());
 
 #else /* LMMS_HAVE_FLAC_STREAM_DECODER_H */
+
+#ifdef REAL_IS_FLOAT
+    FLOAT* dst = NULL;
+    int dsize = base64::decodeFloats(_data, &dst);
+#endif
+#ifdef REAL_IS_DOUBLE
+    double* dst = NULL;
+    int dsize = base64::decodeFloatsAsDoubles(_data, &dst);
+#endif
 
     if(dsize % BYTES_PER_FRAME != 0)  // dsize/BYTES
     {

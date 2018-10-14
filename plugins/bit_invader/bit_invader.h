@@ -3,7 +3,7 @@
  *                         are a wavetable synthesizer
  *
  * Copyright (c) 2006-2008 Andreas Brandmaier <andy/at/brandmaier/dot/de>
- * 
+ *
  * This file is part of LMMS - https://lmms.io
  *
  * This program is free software; you can redistribute it and/or
@@ -23,140 +23,130 @@
  *
  */
 
-
 #ifndef BIT_INVADER_H
 #define BIT_INVADER_H
 
+#include "Graph.h"
 #include "Instrument.h"
 #include "InstrumentView.h"
-#include "Graph.h"
 #include "Knob.h"
-#include "PixmapButton.h"
 #include "LedCheckBox.h"
 #include "MemoryManager.h"
+#include "PixmapButton.h"
 
 class oscillator;
 class bitInvaderView;
 
 class bSynth
 {
-	MM_OPERATORS
-public:
-	bSynth( float * sample, int length, NotePlayHandle * _nph,
-			bool _interpolation, float factor, 
-			const sample_rate_t _sample_rate );
-	virtual ~bSynth();
-	
-	sample_t nextStringSample();
+    MM_OPERATORS
+  public:
+    bSynth(const FLOAT*        _shape,
+           int                 _length,
+           NotePlayHandle*     _nph,
+           bool                _interpolation,
+           real_t              _factor,
+           const sample_rate_t _sample_rate);
+    virtual ~bSynth();
 
+    sample_t nextStringSample();
 
-private:
-	int sample_index;
-	float sample_realindex;
-	float* sample_shape;
-	NotePlayHandle* nph;
-	const int sample_length;
-	const sample_rate_t sample_rate;
+  private:
+    int                 sample_index;
+    real_t              sample_realindex;
+    real_t*             sample_shape;
+    NotePlayHandle*     nph;
+    const int           sample_length;
+    const sample_rate_t sample_rate;
 
-	bool interpolation;
-	
-} ;
+    bool interpolation;
+};
 
 class bitInvader : public Instrument
 {
-	Q_OBJECT
-public:
-	bitInvader(InstrumentTrack * _instrument_track );
-	virtual ~bitInvader();
+    Q_OBJECT
+  public:
+    bitInvader(InstrumentTrack* _instrument_track);
+    virtual ~bitInvader();
 
-	virtual void playNote( NotePlayHandle * _n,
-						sampleFrame * _working_buffer );
-	virtual void deleteNotePluginData( NotePlayHandle * _n );
+    virtual void playNote(NotePlayHandle* _n, sampleFrame* _working_buffer);
+    virtual void deleteNotePluginData(NotePlayHandle* _n);
 
+    virtual void saveSettings(QDomDocument& _doc, QDomElement& _parent);
+    virtual void loadSettings(const QDomElement& _this);
 
-	virtual void saveSettings( QDomDocument & _doc,
-							QDomElement & _parent );
-	virtual void loadSettings( const QDomElement & _this );
+    virtual QString nodeName() const;
 
-	virtual QString nodeName() const;
+    virtual f_cnt_t desiredReleaseFrames() const
+    {
+        return 64;
+    }
 
-	virtual f_cnt_t desiredReleaseFrames() const
-	{
-		return 64;
-	}
+    virtual Flags flags() const
+    {
+        return IsMonophonic;
+    }
 
-        virtual Flags flags() const
-        {
-                return IsMonophonic;
-        }
+    virtual PluginView* instantiateView(QWidget* _parent);
 
-	virtual PluginView * instantiateView( QWidget * _parent );
+  protected slots:
+    void lengthChanged();
+    void samplesChanged(int, int);
 
-protected slots:
-	void lengthChanged();
-	void samplesChanged( int, int );
+    void normalize();
 
-	void normalize();
+  private:
+    FloatModel m_sampleLength;
+    GraphModel m_graph;
 
+    BoolModel m_interpolation;
+    BoolModel m_normalize;
 
-private:
-	FloatModel  m_sampleLength;
-	graphModel  m_graph;
-	
-	BoolModel m_interpolation;
-	BoolModel m_normalize;
-	
-	float m_normalizeFactor;
-	
-	friend class bitInvaderView;
-} ;
+    real_t m_normalizeFactor;
 
-
+    friend class bitInvaderView;
+};
 
 class bitInvaderView : public InstrumentView
 {
-	Q_OBJECT
-public:
-	bitInvaderView( Instrument * _instrument,
-					QWidget * _parent );
+    Q_OBJECT
+  public:
+    bitInvaderView(Instrument* _instrument, QWidget* _parent);
 
-	virtual ~bitInvaderView() {};
+    virtual ~bitInvaderView(){};
 
-protected slots:
-	//void sampleSizeChanged( float _new_sample_length );
+  protected slots:
+    // void sampleSizeChanged( real_t _new_sample_length );
 
-	void interpolationToggled( bool value );
-	void normalizeToggled( bool value );
+    void interpolationToggled(bool value);
+    void normalizeToggled(bool value);
 
-	void sinWaveClicked();
-	void triangleWaveClicked();
-	void sqrWaveClicked();
-	void sawWaveClicked();
-	void noiseWaveClicked();
-	void usrWaveClicked();
-	
-	void smoothClicked( void  );
+    void sinWaveClicked();
+    void triangleWaveClicked();
+    void sqrWaveClicked();
+    void sawWaveClicked();
+    void noiseWaveClicked();
+    void usrWaveClicked();
 
-private:
-	virtual void modelChanged();
+    void smoothClicked(void);
 
-	Knob * m_sampleLengthKnob;
-	PixmapButton * m_sinWaveBtn;
-	PixmapButton * m_triangleWaveBtn;
-	PixmapButton * m_sqrWaveBtn;
-	PixmapButton * m_sawWaveBtn;
-	PixmapButton * m_whiteNoiseWaveBtn;
-	PixmapButton * m_smoothBtn;
-	PixmapButton * m_usrWaveBtn;
+  private:
+    virtual void modelChanged();
 
-	static QPixmap * s_artwork;
+    Knob*         m_sampleLengthKnob;
+    PixmapButton* m_sinWaveBtn;
+    PixmapButton* m_triangleWaveBtn;
+    PixmapButton* m_sqrWaveBtn;
+    PixmapButton* m_sawWaveBtn;
+    PixmapButton* m_whiteNoiseWaveBtn;
+    PixmapButton* m_smoothBtn;
+    PixmapButton* m_usrWaveBtn;
 
-	Graph * m_graph;
-	LedCheckBox * m_interpolationToggle;
-	LedCheckBox * m_normalizeToggle;
+    static QPixmap* s_artwork;
 
-} ;
-
-
+    Graph*       m_graph;
+    LedCheckBox* m_interpolationToggle;
+    LedCheckBox* m_normalizeToggle;
+};
 
 #endif

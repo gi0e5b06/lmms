@@ -315,7 +315,7 @@ void TrackContainer::automatedValuesFromTracks(const Tracks& tracks, MidiTime ti
                         if(relTime>=p->length())
                                 continue;
 
-                        float value = p->valueAt(relTime);
+                        real_t value = p->valueAt(relTime);
 
 			for (AutomatableModel* model : p->objects())
 			{
@@ -410,7 +410,7 @@ void TrackContainer::automatedValuesFromTrack(const Track* _track, MidiTime time
                                 relTime = relTime % p->length();
                         }
 
-                        float value = p->valueAt(relTime);
+                        real_t value = p->valueAt(relTime);
 
 			for (AutomatableModel* model : p->objects())
 			{

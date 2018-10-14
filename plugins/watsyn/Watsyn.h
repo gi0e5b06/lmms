@@ -263,10 +263,10 @@ private:
 	FloatModel b1_rtune;
 	FloatModel b2_rtune;
 
-	graphModel a1_graph;
-	graphModel a2_graph;
-	graphModel b1_graph;
-	graphModel b2_graph;
+	GraphModel a1_graph;
+	GraphModel a2_graph;
+	GraphModel b1_graph;
+	GraphModel b2_graph;
 
 	FloatModel m_abmix;
 

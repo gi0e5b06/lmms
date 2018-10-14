@@ -90,21 +90,21 @@ void BandLimitedWave::generateWaves()
 		{
 			const int len = TLENS[i];
 			//const double om = 1.0 / len;
-			double max = 0.0;
+			double max = 0.;
 
 			for( int ph = 0; ph < len; ph++ )
 			{
 				int harm = 1;
-				double s = 0.0f;
+				double s = 0.;
 				double hlen;
 				do
 				{
 					hlen = static_cast<double>( len ) / static_cast<double>( harm );
-					const double amp = -1.0 / static_cast<double>( harm );
+					const double amp = -1. / static_cast<double>( harm );
 					//const double a2 = cos( om * harm * F_2PI );
-					s += amp * /*a2 **/sin( static_cast<double>( ph * harm ) / static_cast<double>( len ) * F_2PI );
+					s += amp * /*a2 **/sin( static_cast<double>( ph * harm ) / static_cast<double>( len ) * D_2PI );
 					harm++;
-				} while( hlen > 2.0 );
+				} while( hlen > 2. );
 				s_waveforms[ BandLimitedWave::BLSaw ].setSampleAt( i, ph, s );
 				max = qMax( max, qAbs( s ) );
 			}
@@ -132,21 +132,21 @@ void BandLimitedWave::generateWaves()
 		{
 			const int len = TLENS[i];
 			//const double om = 1.0 / len;
-			double max = 0.0;
+			double max = 0.;
 
 			for( int ph = 0; ph < len; ph++ )
 			{
 				int harm = 1;
-				double s = 0.0f;
+				double s = 0.;
 				double hlen;
 				do
 				{
 					hlen = static_cast<double>( len ) / static_cast<double>( harm );
-					const double amp = 1.0 / static_cast<double>( harm );
+					const double amp = 1. / static_cast<double>( harm );
 					//const double a2 = cos( om * harm * F_2PI );
-					s += amp * /*a2 **/ sin( static_cast<double>( ph * harm ) / static_cast<double>( len ) * F_2PI );
+					s += amp * /*a2 **/ sin( static_cast<double>( ph * harm ) / static_cast<double>( len ) * D_2PI );
 					harm += 2;
-				} while( hlen > 2.0 );
+				} while( hlen > 2. );
 				s_waveforms[ BandLimitedWave::BLSquare ].setSampleAt( i, ph, s );
 				max = qMax( max, qAbs( s ) );
 			}
@@ -173,20 +173,20 @@ void BandLimitedWave::generateWaves()
 		{
 			const int len = TLENS[i];
 			//const double om = 1.0 / len;
-			double max = 0.0;
+			double max = 0.;
 
 			for( int ph = 0; ph < len; ph++ )
 			{
 				int harm = 1;
-				double s = 0.0f;
+				double s = 0.;
 				double hlen;
 				do
 				{
 					hlen = static_cast<double>( len ) / static_cast<double>( harm );
-					const double amp = 1.0 / static_cast<double>( harm * harm );
+					const double amp = 1. / static_cast<double>( harm * harm );
 					//const double a2 = cos( om * harm * F_2PI );
 					s += amp * /*a2 **/ sin( ( static_cast<double>( ph * harm ) / static_cast<double>( len ) +
-							( ( harm + 1 ) % 4 == 0 ? 0.5 : 0.0 ) ) * F_2PI );
+							( ( harm + 1 ) % 4 == 0 ? 0.5 : 0. ) ) * D_2PI );
 					harm += 2;
 				} while( hlen > 2.0 );
 				s_waveforms[ BandLimitedWave::BLTriangle ].setSampleAt( i, ph, s );
@@ -221,7 +221,7 @@ void BandLimitedWave::generateWaves()
 				const int sawph = ( ph + static_cast<int>( len * 0.75 ) ) % len;
 				const sample_t saw = s_waveforms[ BandLimitedWave::BLSaw ].sampleAt( i, sawph );
 				const sample_t tri = s_waveforms[ BandLimitedWave::BLTriangle ].sampleAt( i, ph );
-				s_waveforms[ BandLimitedWave::BLMoog ].setSampleAt( i, ph, ( saw + tri ) * 0.5f );
+				s_waveforms[ BandLimitedWave::BLMoog ].setSampleAt( i, ph, ( saw + tri ) * 0.5 );
 			}
 		}
 	}

@@ -48,7 +48,7 @@ dynProcControlDialog::dynProcControlDialog(
 
 	Graph * waveGraph = new Graph( this, Graph::LinearNonCyclicStyle, 204, 205 );
 	waveGraph -> move( 10, 6 );
-	waveGraph -> setModel( &_controls -> m_wavegraphModel );
+	waveGraph -> setModel( &_controls -> m_waveGraphModel );
 	waveGraph -> setAutoFillBackground( true );
 	pal = QPalette();
 	pal.setBrush( backgroundRole(),

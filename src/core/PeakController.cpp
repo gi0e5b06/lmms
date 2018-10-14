@@ -83,8 +83,8 @@ void PeakController::fillValueBuffer()
 	if( m_coeffNeedsUpdate )
 	{
 		const real_t ratio = 44100. / Engine::mixer()->processingSampleRate();
-		m_attackCoeff = 1. - pow( 2., -0.3 * ( 1. - m_peakEffect->attackModel()->value() ) * ratio );
-		m_decayCoeff = 1. -  pow( 2., -0.3 * ( 1. - m_peakEffect->decayModel()->value()  ) * ratio );
+		m_attackCoeff = 1. - exp2( -0.3 * ( 1. - m_peakEffect->attackModel()->value() ) * ratio );
+		m_decayCoeff = 1. -  exp2( -0.3 * ( 1. - m_peakEffect->decayModel()->value()  ) * ratio );
 		m_coeffNeedsUpdate = false;
 	}
 

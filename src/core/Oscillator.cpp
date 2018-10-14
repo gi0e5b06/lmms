@@ -328,7 +328,7 @@ inline bool Oscillator::syncOk( real_t _osc_coeff )
 	const real_t v1 = m_phase;
 	m_phase += _osc_coeff;
 	// check whether m_phase is in next period
-	return floorf( m_phase ) > floorf( v1 );
+	return floor( m_phase ) > floor( v1 );
 }
 
 
@@ -457,7 +457,7 @@ void Oscillator::updateFM( sampleFrame * _ab, const fpp_t _frames,
 	m_subOsc->update( _ab, _frames, _chnl );
 	recalcPhase();
 	const real_t osc_coeff = m_freq * m_detuning;
-	const real_t sampleRateCorrection = 44100.0f /
+	const real_t sampleRateCorrection = 44100. /
 				Engine::mixer()->processingSampleRate();
 
 	for( fpp_t frame = 0; frame < _frames; ++frame )

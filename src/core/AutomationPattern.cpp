@@ -40,15 +40,15 @@
 
 #include <cmath>
 
-int         AutomationPattern::s_quantization    = 1;
-const float AutomationPattern::DEFAULT_MIN_VALUE = 0;
-const float AutomationPattern::DEFAULT_MAX_VALUE = 1;
+int          AutomationPattern::s_quantization    = 1;
+const real_t AutomationPattern::DEFAULT_MIN_VALUE = 0.;
+const real_t AutomationPattern::DEFAULT_MAX_VALUE = 1.;
 
 AutomationPattern::AutomationPattern(AutomationTrack* _auto_track) :
       TrackContentObject(_auto_track), m_autoTrack(_auto_track), m_objects(),
-      m_tension(1.f), m_waveBank(WaveForm::ZERO_BANK),
-      m_waveIndex(WaveForm::ZERO_INDEX), m_waveRatio(0.5f), m_waveSkew(0.f),
-      m_waveAmplitude(0.10f), m_waveRepeat(0.f),
+      m_tension(1.), m_waveBank(WaveForm::ZERO_BANK),
+      m_waveIndex(WaveForm::ZERO_INDEX), m_waveRatio(0.5), m_waveSkew(0.),
+      m_waveAmplitude(0.1), m_waveRepeat(0.),
       m_progressionType(DiscreteProgression), m_dragging(false),
       m_isRecording(false), m_lastRecordedValue(0)
 {
@@ -100,16 +100,15 @@ QString AutomationPattern::defaultName() const
     return TrackContentObject::defaultName();
 }
 
-
 void AutomationPattern::setRecording(const bool b)
 {
     m_isRecording = b;
     if(b)
-        connect(this, SIGNAL(recordValue(MidiTime, float)), this,
-                SLOT(onRecordValue(MidiTime, float)));
+        connect(this, SIGNAL(recordValue(MidiTime, real_t)), this,
+                SLOT(onRecordValue(MidiTime, real_t)));
     else
-        disconnect(this, SIGNAL(recordValue(MidiTime, float)), this,
-                   SLOT(onRecordValue(MidiTime, float)));
+        disconnect(this, SIGNAL(recordValue(MidiTime, real_t)), this,
+                   SLOT(onRecordValue(MidiTime, real_t)));
 }
 
 bool AutomationPattern::addObject(AutomatableModel* _obj, bool _search_dup)
@@ -123,7 +122,7 @@ bool AutomationPattern::addObject(AutomatableModel* _obj, bool _search_dup)
     if(m_objects.isEmpty() && hasAutomation() == false)
     {
         // then initialize first value
-        putValue(MidiTime(0), _obj->inverseScaledValue(_obj->value<float>()),
+        putValue(MidiTime(0), _obj->inverseScaledValue(_obj->value<real_t>()),
                  false);
     }
 
@@ -149,10 +148,10 @@ void AutomationPattern::setProgressionType(ProgressionTypes _progressionType)
     }
 }
 
-void AutomationPattern::setTension(const float _tension)
+void AutomationPattern::setTension(const real_t _tension)
 {
     // qInfo("AutomationPattern::setTension tension=%f",_tension);
-    if(_tension >= -10.f && _tension <= 10.f)  // nt > -0.01 && nt < 1.01 )
+    if(_tension >= -10. && _tension <= 10.)  // nt > -0.01 && nt < 1.01 )
     {
         m_tension = _tension;
         generateTangents();
@@ -180,41 +179,41 @@ void AutomationPattern::setWaveIndex(const int _waveIndex)
     }
 }
 
-void AutomationPattern::setWaveRatio(const float _waveRatio)
+void AutomationPattern::setWaveRatio(const real_t _waveRatio)
 {
     // qInfo("AutomationPattern::setWaveRatio waveRatio=%f",_waveRatio);
-    if(_waveRatio >= 0.f && _waveRatio <= 1.f)
+    if(_waveRatio >= 0. && _waveRatio <= 1.)
     {
         m_waveRatio = _waveRatio;
         emit dataChanged();
     }
 }
 
-void AutomationPattern::setWaveSkew(const float _waveSkew)
+void AutomationPattern::setWaveSkew(const real_t _waveSkew)
 {
     // qInfo("AutomationPattern::setWaveSkew waveSkew=%f",_waveSkew);
-    if(_waveSkew >= 0.f && _waveSkew <= 1.f)
+    if(_waveSkew >= 0. && _waveSkew <= 1.)
     {
         m_waveSkew = _waveSkew;
         emit dataChanged();
     }
 }
 
-void AutomationPattern::setWaveAmplitude(const float _waveAmplitude)
+void AutomationPattern::setWaveAmplitude(const real_t _waveAmplitude)
 {
     // qInfo("AutomationPattern::setWaveAmplitude
     // waveAmplitude=%f",_waveAmplitude);
-    if(_waveAmplitude >= -10.f && _waveAmplitude <= 10.f)
+    if(_waveAmplitude >= -10. && _waveAmplitude <= 10.)
     {
         m_waveAmplitude = _waveAmplitude;
         emit dataChanged();
     }
 }
 
-void AutomationPattern::setWaveRepeat(const float _waveRepeat)
+void AutomationPattern::setWaveRepeat(const real_t _waveRepeat)
 {
     // qInfo("AutomationPattern::setWaveRepeat waveRepeat=%f",_waveRepeat);
-    if(_waveRepeat >= 0.f && _waveRepeat <= 15.f)
+    if(_waveRepeat >= -10. && _waveRepeat <= 20.)
     {
         m_waveRepeat = _waveRepeat;
         emit dataChanged();
@@ -286,7 +285,7 @@ void AutomationPattern::updateBBTrack()
 */
 
 MidiTime AutomationPattern::putValue(const MidiTime& time,
-                                     const float     value,
+                                     const real_t    value,
                                      const bool      quantPos,
                                      const bool      ignoreSurroundingPoints)
 {
@@ -362,7 +361,7 @@ void AutomationPattern::removeValue(const MidiTime& time)
     emit dataChanged();
 }
 
-void AutomationPattern::onRecordValue(MidiTime time, float value)
+void AutomationPattern::onRecordValue(MidiTime time, real_t value)
 {
     // removeValue(time);
 
@@ -396,7 +395,7 @@ void AutomationPattern::onRecordValue(MidiTime time, float value)
  * @return
  */
 MidiTime AutomationPattern::setDragValue(const MidiTime& time,
-                                         const float     value,
+                                         const real_t    value,
                                          const bool      quantPos,
                                          const bool      controlKey)
 {
@@ -430,11 +429,11 @@ void AutomationPattern::applyDragValue()
     m_dragging = false;
 }
 
-float AutomationPattern::valueAt(const MidiTime& _time) const
+real_t AutomationPattern::valueAt(const MidiTime& _time) const
 {
     if(m_timeMap.isEmpty())
     {
-        return 0.f;
+        return 0.;
     }
 
     /*
@@ -448,7 +447,7 @@ float AutomationPattern::valueAt(const MidiTime& _time) const
 
     if(v == m_timeMap.begin())
     {
-        return 0.f;
+        return 0.;
     }
 
     if(v == m_timeMap.end())
@@ -460,11 +459,11 @@ float AutomationPattern::valueAt(const MidiTime& _time) const
                    Engine::mixer()->criticalXRuns());
 }
 
-float AutomationPattern::valueAt(timeMap::const_iterator v,
-                                 int                     offset,
-                                 bool                    xruns) const
+real_t AutomationPattern::valueAt(timeMap::const_iterator v,
+                                  int                     offset,
+                                  bool                    xruns) const
 {
-    float r = 0.f;
+    real_t r = 0.;
 
     ProgressionTypes pt = m_progressionType;
     if(xruns && pt != DiscreteProgression)
@@ -480,8 +479,8 @@ float AutomationPattern::valueAt(timeMap::const_iterator v,
                 break;
             case LinearProgression:
             {
-                float slope = ((v + 1).value() - v.value())
-                              / ((v + 1).key() - v.key());
+                real_t slope = ((v + 1).value() - v.value())
+                               / ((v + 1).key() - v.key());
                 r = v.value() + offset * slope;
             }
             break;
@@ -495,11 +494,11 @@ float AutomationPattern::valueAt(timeMap::const_iterator v,
                 // that this segment spans to values of t for t = 0.0 -> 1.0
                 // and scale the tangents _m1 and _m2
                 {
-                    int   numValues = ((v + 1).key() - v.key());
-                    float t         = (float)offset / (float)numValues;
-                    float m1 = (m_tangents[v.key()]) * numValues * m_tension;
-                    float m2 = (m_tangents[(v + 1).key()]) * numValues
-                               * m_tension;
+                    int    numValues = ((v + 1).key() - v.key());
+                    real_t t         = (real_t)offset / (real_t)numValues;
+                    real_t m1 = (m_tangents[v.key()]) * numValues * m_tension;
+                    real_t m2 = (m_tangents[(v + 1).key()]) * numValues
+                                * m_tension;
 
                     r = (2 * pow(t, 3) - 3 * pow(t, 2) + 1) * v.value()
                         + (pow(t, 3) - 2 * pow(t, 2) + t) * m1
@@ -511,8 +510,8 @@ float AutomationPattern::valueAt(timeMap::const_iterator v,
             {
                 // v1=v
                 timeMap::const_iterator v2 = v + 1;
-                float                   x0, x1, x2, x3;
-                float                   y0, y1, y2, y3;
+                real_t                  x0, x1, x2, x3;
+                real_t                  y0, y1, y2, y3;
                 x1 = v.key();
                 x2 = v2.key();
                 y1 = v.value();
@@ -539,17 +538,17 @@ float AutomationPattern::valueAt(timeMap::const_iterator v,
                     x3                         = v3.key();
                     y3                         = v3.value();
                 }
-                float x = x1 + float(offset);
+                real_t x = x1 + real_t(offset);
                 // if(offset==0) qInfo("X %f %f %f %f X=%f",x0,x1,x2,x3,x);
                 // if(offset==0) qInfo("Y %f %f %f %f",y0,y1,y2,y3);
-                float a0 = ((x - x1) * (x - x2) * (x - x3))
-                           / ((x0 - x1) * (x0 - x2) * (x0 - x3));
-                float a1 = ((x - x0) * (x - x2) * (x - x3))
-                           / ((x1 - x0) * (x1 - x2) * (x1 - x3));
-                float a2 = ((x - x0) * (x - x1) * (x - x3))
-                           / ((x2 - x0) * (x2 - x1) * (x2 - x3));
-                float a3 = ((x - x0) * (x - x1) * (x - x2))
-                           / ((x3 - x0) * (x3 - x1) * (x3 - x2));
+                real_t a0 = ((x - x1) * (x - x2) * (x - x3))
+                            / ((x0 - x1) * (x0 - x2) * (x0 - x3));
+                real_t a1 = ((x - x0) * (x - x2) * (x - x3))
+                            / ((x1 - x0) * (x1 - x2) * (x1 - x3));
+                real_t a2 = ((x - x0) * (x - x1) * (x - x3))
+                            / ((x2 - x0) * (x2 - x1) * (x2 - x3));
+                real_t a3 = ((x - x0) * (x - x1) * (x - x2))
+                            / ((x3 - x0) * (x3 - x1) * (x3 - x2));
                 // if(offset==0) qInfo("A %f %f %f %f",a0,a1,a2,a3);
                 r = a0 * y0 + a1 * y1 + a2 * y2 + a3 * y3;
                 // if(offset==0) qInfo("R=%f",r);
@@ -567,39 +566,44 @@ float AutomationPattern::valueAt(timeMap::const_iterator v,
     {
         if(offset == 0)
         {
-            // float x  = 0.f;
-            float dy = (v + 1).value() - v.value();
-            float my = m->range();
-            float w0 = wf->f(0.f);
-            // float w1 = wf->f(1.f);
-            r += fabsf((1.f - m_waveRatio) * dy + m_waveRatio * my)
-                 * m_waveSkew * w0 * m_waveAmplitude;
+            // real_t x  = 0.;
+            real_t dy = (v + 1).value() - v.value();
+            real_t my = m->range();
+            real_t w0 = wf->f(0.);
+            // real_t w1 = wf->f(1.);
+            r += abs((1. - m_waveRatio) * dy + m_waveRatio * my) * m_waveSkew
+                 * w0 * m_waveAmplitude;
         }
         else if(v != m_timeMap.end())
         {
-            float rx = (v + 1).key() - v.key();
-            if(rx > 0.f)
+            real_t rx = (v + 1).key() - v.key();
+            if(rx > 0.)
             {
-                float x  = float(offset) / rx;
-                float dy = (v + 1).value() - v.value();
-                float my = m->range();
-                float w0 = wf->f(0.f);
-                float w1 = wf->f(1.f);
-                float nw = qMax(1.f, roundf(rx * powf(2.f, m_waveRepeat) / 4.f
-                                            / 192.f));
-                float ph = fmodf(x * nw, 1.f);
-                r += fabsf((1.f - m_waveRatio) * dy + m_waveRatio * my)
-                     * (wf->f(ph)
-                        + (1.f - m_waveSkew) * (-w0 - x * (w1 - w0)))
+                real_t x  = real_t(offset) / rx;
+                real_t dy = (v + 1).value() - v.value();
+                real_t my = m->range();
+                real_t w0 = wf->f(0.);
+                real_t w1 = wf->f(1.);
+                real_t nw = rx * exp2(m_waveRepeat) / 4. / 192.;
+                if(nw >= 1.)
+                    nw = qMax(1., round(nw));
+                else if(nw > SILENCE)
+                    nw = 1. / qMax(1., round(1. / nw));
+                else
+                    nw = 0.;
+
+                real_t ph = fmod(x * nw, 1.);
+                r += abs((1. - m_waveRatio) * dy + m_waveRatio * my)
+                     * (wf->f(ph) + (1. - m_waveSkew) * (-w0 - x * (w1 - w0)))
                      * m_waveAmplitude;
             }
         }
     }
 
-    return qBound(m->minValue<float>(), r, m->maxValue<float>());
+    return qBound(m->minValue<real_t>(), r, m->maxValue<real_t>());
 }
 
-float* AutomationPattern::valuesAfter(const MidiTime& _time) const
+real_t* AutomationPattern::valuesAfter(const MidiTime& _time) const
 {
     timeMap::ConstIterator v = m_timeMap.lowerBound(_time);
     if(v == m_timeMap.end() || (v + 1) == m_timeMap.end())
@@ -607,8 +611,8 @@ float* AutomationPattern::valuesAfter(const MidiTime& _time) const
         return NULL;
     }
 
-    int    numValues = (v + 1).key() - v.key();
-    float* ret       = new float[numValues];
+    int     numValues = (v + 1).key() - v.key();
+    real_t* ret       = new real_t[numValues];
 
     for(int i = 0; i < numValues; i++)
     {
@@ -622,7 +626,7 @@ void AutomationPattern::flipY(int min, int max)
 {
     timeMap                tempMap   = m_timeMap;
     timeMap::ConstIterator iterate   = m_timeMap.lowerBound(0);
-    float                  tempValue = 0;
+    real_t                 tempValue = 0;
 
     int numPoints = 0;
 
@@ -662,7 +666,7 @@ void AutomationPattern::flipX(int length)
     timeMap tempMap;
 
     timeMap::ConstIterator iterate   = m_timeMap.lowerBound(0);
-    float                  tempValue = 0;
+    real_t                 tempValue = 0;
     int                    numPoints = 0;
 
     for(int i = 0; (iterate + i + 1) != m_timeMap.end()
@@ -672,7 +676,7 @@ void AutomationPattern::flipX(int length)
         numPoints++;
     }
 
-    float realLength = (iterate + numPoints).key();
+    real_t realLength = (iterate + numPoints).key();
 
     if(length != -1 && length != realLength)
     {
@@ -746,8 +750,8 @@ void AutomationPattern::saveSettings(QDomDocument& _doc, QDomElement& _this)
         ++it)
     {
         QDomElement element = _doc.createElement("time");
-        element.setAttribute("pos", it.key());
-        element.setAttribute("value", it.value());
+        element.setAttribute("pos", QString::number(it.key()));
+        element.setAttribute("value", QString::number(it.value()));
         _this.appendChild(element);
     }
 
@@ -1044,7 +1048,7 @@ void AutomationPattern::generateTangents(timeMap::const_iterator it,
 
     if(m_timeMap.size() < 2)
     {
-        m_tangents[it.key()] = 0.f;
+        m_tangents[it.key()] = 0.;
         return;
     }
 
@@ -1052,13 +1056,13 @@ void AutomationPattern::generateTangents(timeMap::const_iterator it,
     {
         if(it == m_timeMap.begin())
         {
-            m_tangents[it.key()] = 0.f;
+            m_tangents[it.key()] = 0.;
             // ( (it+1).value() - (it).value() ) /
             //   ( (it+1).key() - (it).key() );
         }
         else if(it + 1 == m_timeMap.end())
         {
-            m_tangents[it.key()] = 0.f;
+            m_tangents[it.key()] = 0.;
             return;
         }
         else
@@ -1067,7 +1071,7 @@ void AutomationPattern::generateTangents(timeMap::const_iterator it,
                 m_tangents[it.key()] = ((it + 1).value() - (it - 1).value())
                                        / ((it + 1).key() - (it - 1).key());
             else
-                m_tangents[it.key()] = 0.f;
+                m_tangents[it.key()] = 0.;
         }
         it++;
     }

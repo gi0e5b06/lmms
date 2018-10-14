@@ -17,11 +17,11 @@ QLabel {
 QPushButton {
     color: #d1d8e4;
     font-size: 13px;
-    margin: 0px 0px 0px 0px;
+    /* margin: 0px 0px 0px 0px;
     padding: 1px 6px 1px 6px;
     text-align: left;
     width: 99px;
-    height: 22px;
+    height: 22px; */
 }
 
 QCheckBox {

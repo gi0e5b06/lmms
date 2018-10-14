@@ -26,31 +26,41 @@
 #ifndef _BASE64_H
 #define _BASE64_H
 
+#include "lmms_basics.h"
+
 #include <QByteArray>
 #include <QString>
 #include <QVariant>
 
-
 namespace base64
 {
-	inline void encode( const char * _data, const int _size,
-								QString & _dst )
-	{
-		_dst = QByteArray( _data, _size ).toBase64();
-	}
 
-	template<class T>
-	inline void decode( const QString & _b64, T * * _data, int * _size )
-	{
-		QByteArray data = QByteArray::fromBase64( _b64.toUtf8() );
-		*_size = data.size();
-		*_data = new T[*_size / sizeof(T)];
-		memcpy( *_data, data.constData(), *_size );
-	}
-	// for compatibility-code only
-	QVariant decode( const QString & _b64,
-			QVariant::Type _force_type = QVariant::Invalid );
-
+/*
+inline void encode(const char* _data, const int _size, QString& _dst)
+{
+_dst = QByteArray(_data, _size).toBase64();
 }
+
+template <class T>
+inline void decode(const QString& _b64, T** _data, int* _size)
+{
+QByteArray data = QByteArray::fromBase64(_b64.toUtf8());
+*_size          = data.size();
+*_data          = new T[*_size / sizeof(T)];
+memcpy(*_data, data.constData(), *_size);
+}
+*/
+
+QString encodeChars(const char* _data, const int _size);
+QString encodeFloats(const FLOAT* _data, const int _size);
+QString encodeDoublesAsFloats(const double* _data, const int _size);
+int     decodeChars(const QString& _b64, char** _data);
+int     decodeFloats(const QString& _b64, FLOAT** _data);
+int     decodeFloatsAsDoubles(const QString& _b64, double** _data);
+
+// for compatibility-code only
+QVariant decodeVariant(const QString& _b64,
+                       QVariant::Type _force_type = QVariant::Invalid);
+}  // namespace base64
 
 #endif

@@ -188,7 +188,7 @@ OscillatorObject::OscillatorObject(Model* _parent, int _idx) :
     m_lfoTimeModel.setScaleLogarithmic(true);
 
     // const fpp_t FPP = Engine::mixer()->framesPerPeriod();
-    // m_graphModel = new graphModel(0., 1., FPP, NULL);
+    // m_GraphModel = new GraphModel(0., 1., FPP, NULL);
 }
 
 OscillatorObject::~OscillatorObject()
@@ -665,13 +665,13 @@ void OscillatorObject::updateVolumes(const fpp_t _f)
 void OscillatorObject::updateDetunings(const fpp_t _f)
 {
     m_detuningBase[0]
-            = pow(2., (m_coarseModel.value() * 100. + m_fineLeftModel.value())
-                              / 1200.)
+            = exp2((m_coarseModel.value() * 100. + m_fineLeftModel.value())
+                   / 1200.)
               / Engine::mixer()->processingSampleRate();
-    m_detuningBase[1] = pow(2., (m_coarseModel.value() * 100.
-                                 + m_fineRightModel.value())
-                                        / 1200.)
-                        / Engine::mixer()->processingSampleRate();
+    m_detuningBase[1]
+            = exp2((m_coarseModel.value() * 100. + m_fineRightModel.value())
+                   / 1200.)
+              / Engine::mixer()->processingSampleRate();
 }
 
 void OscillatorObject::updatePhaseOffsets(const fpp_t _f)
@@ -898,7 +898,7 @@ void SynthGDX::loadSettings(const QDomElement& _this)
         const QString is = QString::number(i);
 
         // tmp compat
-        m_osc[i]->m_enabledModel.loadSettings(_this, "enabled" + is);
+        m_osc[i]->m_enabledModel.loadSettings(_this, "enabled" + is, false);
         m_osc[i]->m_wave1IndexModel.loadSettings(_this, "wave1type" + is,
                                                  false);
         m_osc[i]->m_wave2IndexModel.loadSettings(_this, "wave2type" + is,
@@ -1160,7 +1160,7 @@ void SynthGDX::playNote(NotePlayHandle* _n, sampleFrame* _buf)
 
     saveToState(state);
     applyRelease(_buf, _n);
-    // m_graphModel->setSamples(_buf);
+    // m_GraphModel->setSamples(_buf);
     instrumentTrack()->processAudioBuffer(_buf, frames + offset, _n);
 }
 

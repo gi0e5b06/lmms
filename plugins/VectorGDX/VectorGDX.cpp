@@ -82,7 +82,7 @@ bool VectorGDXEffect::processAudioBuffer(sampleFrame* _buf,
 
     for(fpp_t f = 0; f < _frames; ++f)
     {
-        float w0, d0, w1, d1;
+        real_t w0, d0, w1, d1;
         computeWetDryLevels(f, _frames, smoothBegin, smoothEnd, w0, d0, w1,
                             d1);
 

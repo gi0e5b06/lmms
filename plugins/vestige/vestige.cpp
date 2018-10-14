@@ -119,7 +119,10 @@ vestigeInstrument::~vestigeInstrument()
 void vestigeInstrument::loadSettings( const QDomElement & _this )
 {
 	loadFile( _this.attribute( "plugin" ) );
-	m_pluginMutex.lock();
+	//m_pluginMutex.lock();
+        if (!m_pluginMutex.tryLock())
+                return;
+
 	if( m_plugin != NULL )
 	{
 		m_plugin->loadSettings( _this );
@@ -282,21 +285,22 @@ void vestigeInstrument::loadFile( const QString & _file )
 
 void vestigeInstrument::play( sampleFrame * _buf )
 {
-	m_pluginMutex.lock();
+	//m_pluginMutex.lock();
+        if (!m_pluginMutex.tryLock())
+                return;
 
 	const fpp_t frames = Engine::mixer()->framesPerPeriod();
 
-	if( m_plugin == NULL )
+	if( m_plugin == nullptr )
 	{
-		BufferManager::clear( _buf );//, frames );
-
+		//BufferManager::clear( _buf );//, frames );
 		m_pluginMutex.unlock();
 		return;
 	}
 
-	m_plugin->process( NULL, _buf );
+	m_plugin->process( nullptr, _buf );
 
-	instrumentTrack()->processAudioBuffer( _buf, frames, NULL );
+	instrumentTrack()->processAudioBuffer( _buf, frames, nullptr );
 
 	m_pluginMutex.unlock();
 }
@@ -307,7 +311,7 @@ void vestigeInstrument::play( sampleFrame * _buf )
 bool vestigeInstrument::handleMidiEvent( const MidiEvent& event, const MidiTime& time, f_cnt_t offset )
 {
 	m_pluginMutex.lock();
-	if( m_plugin != NULL )
+	if( m_plugin != nullptr )
 	{
 		m_plugin->processMidiEvent( event, offset );
 	}

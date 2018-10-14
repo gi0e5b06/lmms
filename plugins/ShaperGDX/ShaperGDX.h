@@ -46,7 +46,7 @@ class PLUGIN_EXPORT ShaperGDX : public Effect
     ShaperGDXControls m_gdxControls;
     fpp_t             m_fpp;
     Ring*             m_ring;
-    float             m_phase;
+    real_t            m_phase;
 
     friend class ShaperGDXControls;
 };

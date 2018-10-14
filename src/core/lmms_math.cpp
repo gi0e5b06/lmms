@@ -24,43 +24,55 @@
 
 #include "lmms_math.h"
 
-/*
+real_t nexp2f(const real_t x)
+{
+        return exp2(x) - 1.;
+}
 
-#define FASTFUNC01_BODY(name, FFSZ)                           \
-    float name##01_DATA [FFSZ + 1];                           \
-    void  init_fast##name##01()                               \
-    {                                                         \
-        for(int i = FFSZ; i >= 0; --i)                        \
-            name##01_DATA [i] = name(float(i) / float(FFSZ)); \
-    }                                                         \
-    float fast##name##01(const float x)                       \
-    {                                                         \
-        return name##01_DATA [int(x * float(FFSZ))];          \
-    }                                                         \
-    float linear##name##01(const float x)                     \
-    {                                                         \
-        const float j  = x * float(FFSZ);                     \
-        const int   i  = int(j);                              \
-        const float d  = j - i;                               \
-        const float r0 = name##01_DATA [i];                   \
-        const float r1 = name##01_DATA [i + 1];               \
-        return r0 + d * (r1 - r0);                            \
+real_t nexp2sawf(const real_t x)
+{
+    return (exp2(x) - 1.) * 2. - 1.;
+}
+
+real_t nerf(const real_t x)
+{
+    return erf(6. * (x - 0.5))
+           / 0.99997790950300136092465663750772364437580108642578125;
+}
+real_t fibonacci1(const real_t x)
+{
+    int n = int(13. * x) - 1;
+    int a = 0;
+    int b = 1;
+    if(n == -1)
+        return 0;
+    if(n == 0)
+        return 1. / 144.;
+    int c = 0;
+    while(n > 0)
+    {
+        n--;
+        c = a + b;
+        a = b;
+        b = c;
     }
+    return c / 144.;
+}
 
-
-#define _QFAST 16
-#define FFSZ1M 1048576*_QFAST/16
-#define FFSZ100K 131072*_QFAST/16
-#define FFSZ10K 16384*_QFAST/16
-#define FFSZ1K 1024
-
-FASTFUNC01_BODY(sqrtf, FFSZ10K)
-FASTFUNC01_BODY(nsinf, FFSZ100K)
-FASTFUNC01_BODY(trianglef, FFSZ1K)
-FASTFUNC01_BODY(sawtoothf, FFSZ1K)
-FASTFUNC01_BODY(squaref, FFSZ1K)
-FASTFUNC01_BODY(harshsawf, FFSZ1K)
-FASTFUNC01_BODY(peakexpf, FFSZ100K)
-FASTFUNC01_BODY(randf, FFSZ100K)
-
-*/
+real_t fibonacci2(const real_t xmax)
+{
+    double x = 0.;
+    int    a = 0;
+    int    b = 1;
+    int    c = 0;
+    int    r = 0;
+    while(x < xmax)
+    {
+        c = a + b;
+        a = b;
+        b = c;
+        x += c / 377.;
+        r = 1 - r;
+    }
+    return r;
+}

@@ -29,163 +29,154 @@
 
 //#include "JournallingObject.h"
 #include "AutomatableModel.h"
+#include "ComboBoxModel.h"
 #include "SampleBuffer.h"
 #include "TempoSyncKnobModel.h"
-#include "ComboBoxModel.h"
-
 #include "lmms_basics.h"
 
-
-class EXPORT EnvelopeAndLfoParameters : public Model, public JournallingObject
+class EXPORT EnvelopeAndLfoParameters
+      : public Model
+      , public JournallingObject
 {
-	Q_OBJECT
-public:
-	class LfoInstances
-	{
-	public:
-		LfoInstances()
-		{
-		}
+    Q_OBJECT
+  public:
+    class LfoInstances
+    {
+      public:
+        LfoInstances()
+        {
+        }
 
-		~LfoInstances()
-		{
-		}
+        ~LfoInstances()
+        {
+        }
 
-		inline bool isEmpty() const
-		{
-			return m_lfos.isEmpty();
-		}
+        inline bool isEmpty() const
+        {
+            return m_lfos.isEmpty();
+        }
 
-		void trigger();
-		void reset();
+        void trigger();
+        void reset();
 
-		void add( EnvelopeAndLfoParameters * lfo );
-		void remove( EnvelopeAndLfoParameters * lfo );
+        void add(EnvelopeAndLfoParameters* lfo);
+        void remove(EnvelopeAndLfoParameters* lfo);
 
-	private:
-		QMutex m_lfoListMutex;
-		typedef QList<EnvelopeAndLfoParameters *> LfoList;
-		LfoList m_lfos;
+      private:
+        QMutex                                   m_lfoListMutex;
+        typedef QList<EnvelopeAndLfoParameters*> LfoList;
+        LfoList                                  m_lfos;
+    };
 
-	} ;
+    EnvelopeAndLfoParameters(real_t _value_for_zero_amount, Model* _parent);
+    virtual ~EnvelopeAndLfoParameters();
 
-	EnvelopeAndLfoParameters( float _value_for_zero_amount,
-							Model * _parent );
-	virtual ~EnvelopeAndLfoParameters();
+    static inline real_t expKnobVal(real_t _val)
+    {
+        // return abs(_val);
+        return ((_val < 0) ? -_val : _val) * _val;
+    }
 
-	static inline float expKnobVal( float _val )
-	{
-		//return fabsf(_val);
-                return ( ( _val < 0 ) ? -_val : _val ) * _val;
-	}
+    static LfoInstances* instances()
+    {
+        return s_lfoInstances;
+    }
 
-	static LfoInstances * instances()
-	{
-		return s_lfoInstances;
-	}
+    void fillLevel(real_t*       _buf,
+                   f_cnt_t       _frame,
+                   const f_cnt_t _release_begin,
+                   const fpp_t   _frames);
 
-	void fillLevel( float * _buf, f_cnt_t _frame,
-				const f_cnt_t _release_begin,
-				const fpp_t _frames );
+    inline bool isUsed() const
+    {
+        return m_used;
+    }
 
-	inline bool isUsed() const
-	{
-		return m_used;
-	}
+    virtual void    saveSettings(QDomDocument& _doc, QDomElement& _parent);
+    virtual void    loadSettings(const QDomElement& _this);
+    virtual QString nodeName() const
+    {
+        return "el";
+    }
 
+    inline f_cnt_t PAHD_Frames() const
+    {
+        return m_pahdFrames;
+    }
 
-	virtual void saveSettings( QDomDocument & _doc, QDomElement & _parent );
-	virtual void loadSettings( const QDomElement & _this );
-	virtual QString nodeName() const
-	{
-		return "el";
-	}
+    inline f_cnt_t releaseFrames() const
+    {
+        return m_rFrames;
+    }
 
-	inline f_cnt_t PAHD_Frames() const
-	{
-		return m_pahdFrames;
-	}
+  public slots:
+    void updateSampleVars();
 
-	inline f_cnt_t releaseFrames() const
-	{
-		return m_rFrames;
-	}
+  protected:
+    void fillLfoLevel(real_t* _buf, f_cnt_t _frame, const fpp_t _frames);
 
+  private:
+    static LfoInstances* s_lfoInstances;
+    bool                 m_used;
 
-public slots:
-	void updateSampleVars();
+    QMutex m_paramMutex;
 
+    TempoSyncKnobModel m_predelayModel;
+    TempoSyncKnobModel m_attackModel;
+    TempoSyncKnobModel m_holdModel;
+    TempoSyncKnobModel m_decayModel;
+    FloatModel         m_sustainModel;
+    TempoSyncKnobModel m_releaseModel;
+    FloatModel         m_amountModel;
 
-protected:
-	void fillLfoLevel( float * _buf, f_cnt_t _frame, const fpp_t _frames );
+    real_t    m_sustainLevel;
+    real_t    m_amount;
+    real_t    m_valueForZeroAmount;
+    real_t    m_amountAdd;
+    f_cnt_t   m_pahdFrames;
+    f_cnt_t   m_rFrames;
+    sample_t* m_pahdEnv;
+    sample_t* m_rEnv;
+    f_cnt_t   m_pahdBufSize;
+    f_cnt_t   m_rBufSize;
 
+    FloatModel         m_lfoPredelayModel;
+    FloatModel         m_lfoAttackModel;
+    TempoSyncKnobModel m_lfoSpeedModel;
+    FloatModel         m_lfoAmountModel;
+    // IntModel m_lfoWaveModel;
+    ComboBoxModel m_lfoWaveBankModel;
+    ComboBoxModel m_lfoWaveIndexModel;
 
-private:
-	static LfoInstances * s_lfoInstances;
-	bool m_used;
+    BoolModel m_x100Model;
+    BoolModel m_controlEnvAmountModel;
 
-	QMutex m_paramMutex;
+    f_cnt_t      m_lfoPredelayFrames;
+    f_cnt_t      m_lfoAttackFrames;
+    f_cnt_t      m_lfoOscillationFrames;
+    f_cnt_t      m_lfoFrame;
+    real_t       m_lfoAmount;
+    bool         m_lfoAmountIsZero;
+    sample_t*    m_lfoShapeData;
+    sample_t     m_random;
+    bool         m_bad_lfoShapeData;
+    SampleBuffer m_userWave;
 
-	TempoSyncKnobModel m_predelayModel;
-	TempoSyncKnobModel m_attackModel;
-	TempoSyncKnobModel m_holdModel;
-	TempoSyncKnobModel m_decayModel;
-	FloatModel         m_sustainModel;
-	TempoSyncKnobModel m_releaseModel;
-	FloatModel         m_amountModel;
+    enum LfoShapes
+    {
+        SineWave,
+        TriangleWave,
+        SawWave,
+        SquareWave,
+        UserDefinedWave,
+        RandomWave,
+        NumLfoShapes
+    };
 
-	float  m_sustainLevel;
-	float  m_amount;
-	float  m_valueForZeroAmount;
-	float  m_amountAdd;
-	f_cnt_t m_pahdFrames;
-	f_cnt_t m_rFrames;
-	sample_t * m_pahdEnv;
-	sample_t * m_rEnv;
-	f_cnt_t m_pahdBufSize;
-	f_cnt_t m_rBufSize;
+    sample_t lfoShapeSample(fpp_t _frame_offset);
+    void     updateLfoShapeData();
 
-
-	FloatModel m_lfoPredelayModel;
-	FloatModel m_lfoAttackModel;
-	TempoSyncKnobModel m_lfoSpeedModel;
-	FloatModel m_lfoAmountModel;
-	//IntModel m_lfoWaveModel;
-        ComboBoxModel m_lfoWaveBankModel;
-        ComboBoxModel m_lfoWaveIndexModel;
-
-	BoolModel m_x100Model;
-	BoolModel m_controlEnvAmountModel;
-
-
-	f_cnt_t m_lfoPredelayFrames;
-	f_cnt_t m_lfoAttackFrames;
-	f_cnt_t m_lfoOscillationFrames;
-	f_cnt_t m_lfoFrame;
-	float m_lfoAmount;
-	bool m_lfoAmountIsZero;
-	sample_t * m_lfoShapeData;
-	sample_t m_random;
-	bool m_bad_lfoShapeData;
-	SampleBuffer m_userWave;
-
-	enum LfoShapes
-	{
-		SineWave,
-		TriangleWave,
-		SawWave,
-		SquareWave,
-		UserDefinedWave,
-		RandomWave,
-		NumLfoShapes
-	} ;
-
-	sample_t lfoShapeSample( fpp_t _frame_offset );
-	void updateLfoShapeData();
-
-
-	friend class EnvelopeAndLfoView;
-
-} ;
+    friend class EnvelopeAndLfoView;
+};
 
 #endif

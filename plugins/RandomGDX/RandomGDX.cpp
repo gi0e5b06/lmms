@@ -47,7 +47,7 @@ extern "C"
 RandomGDXEffect::RandomGDXEffect(
         Model* parent, const Descriptor::SubPluginFeatures::Key* key) :
       Effect(&randomgdx_plugin_descriptor, parent, key),
-      m_gdxControls(this), m_fact0(0.0f), m_sact0(0.0f)
+      m_gdxControls(this), m_fact0(0.), m_sact0(0.)
 {
 }
 
@@ -69,42 +69,42 @@ bool RandomGDXEffect::processAudioBuffer(sampleFrame* _buf,
 
     for(fpp_t f = 0; f < _frames; ++f)
     {
-        float w0, d0, w1, d1;
+        real_t w0, d0, w1, d1;
         computeWetDryLevels(f, _frames, smoothBegin, smoothEnd, w0, d0, w1,
                             d1);
 
-        float ramp = (float)(rndAmpBuf ? rndAmpBuf->value(f)
-                                       : m_gdxControls.m_rndAmpModel.value());
-        float famp = (float)(fixAmpBuf ? fixAmpBuf->value(f)
-                                       : m_gdxControls.m_fixAmpModel.value());
-        float spos = (float)(sngPosBuf ? sngPosBuf->value(f)
-                                       : m_gdxControls.m_sngPosModel.value());
-        float dpos = (float)(delPosBuf ? delPosBuf->value(f)
-                                       : m_gdxControls.m_delPosModel.value());
+        real_t ramp = rndAmpBuf ? rndAmpBuf->value(f)
+                                : m_gdxControls.m_rndAmpModel.value();
+        real_t famp = fixAmpBuf ? fixAmpBuf->value(f)
+                                : m_gdxControls.m_fixAmpModel.value();
+        real_t spos = sngPosBuf ? sngPosBuf->value(f)
+                                : m_gdxControls.m_sngPosModel.value();
+        real_t dpos = delPosBuf ? delPosBuf->value(f)
+                                : m_gdxControls.m_delPosModel.value();
 
-        float curVal0 = _buf[f][0];
-        float curVal1 = _buf[f][1];
+        sample_t curVal0 = _buf[f][0];
+        sample_t curVal1 = _buf[f][1];
 
-        // dpos*=0.05f;
+        // dpos*=0.05;
 
         {
-            float fact = ramp * fastrandf01inc();
-            m_fact0    = (m_fact0 * dpos + fact * 0.001f) / (dpos + 0.001f);
-            fact       = m_fact0;
-            float sact = abs(abs(curVal0) - spos);
-            m_sact0    = (m_sact0 * dpos + sact * 0.001f) / (dpos + 0.001f);
-            sact       = m_sact0;
-            curVal0    = (sign(curVal0) * sact * (1.0f + fact)) * famp;
+            real_t fact = ramp * fastrand01inc();
+            m_fact0     = (m_fact0 * dpos + fact * 0.001) / (dpos + 0.001);
+            fact        = m_fact0;
+            real_t sact = abs(abs(curVal0) - spos);
+            m_sact0     = (m_sact0 * dpos + sact * 0.001) / (dpos + 0.001);
+            sact        = m_sact0;
+            curVal0     = (sign(curVal0) * sact * (1. + fact)) * famp;
         }
 
         {
-            float fact = ramp * fastrandf01inc();
-            m_fact1    = (m_fact1 * dpos + fact * 0.001f) / (dpos + 0.001f);
-            fact       = m_fact1;
-            float sact = abs(abs(curVal1) - spos);
-            m_sact1    = (m_sact1 * dpos + sact * 0.001f) / (dpos + 0.001f);
-            sact       = m_sact1;
-            curVal1    = (sign(curVal1) * sact * (1.0f + fact)) * famp;
+            real_t fact = ramp * fastrand01inc();
+            m_fact1     = (m_fact1 * dpos + fact * 0.001) / (dpos + 0.001);
+            fact        = m_fact1;
+            real_t sact = abs(abs(curVal1) - spos);
+            m_sact1     = (m_sact1 * dpos + sact * 0.001) / (dpos + 0.001);
+            sact        = m_sact1;
+            curVal1     = (sign(curVal1) * sact * (1. + fact)) * famp;
         }
 
         _buf[f][0] = d0 * _buf[f][0] + w0 * curVal0;

@@ -328,15 +328,19 @@ QString ZynAddSubFxInstrument::nodeName() const
 
 void ZynAddSubFxInstrument::play( sampleFrame * _buf )
 {
-	m_pluginMutex.lock();
+	//m_pluginMutex.lock();
+        if (!m_pluginMutex.tryLock())
+                return;
+
 	if( m_remotePlugin )
 	{
-		m_remotePlugin->process( NULL, _buf );
+		m_remotePlugin->process( nullptr, _buf );
 	}
 	else
 	{
 		m_plugin->processAudio( _buf );
 	}
+
 	m_pluginMutex.unlock();
 	instrumentTrack()->processAudioBuffer( _buf, Engine::mixer()->framesPerPeriod(), NULL );
 }

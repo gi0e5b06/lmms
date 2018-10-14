@@ -87,15 +87,15 @@ bool VstEffect::processAudioBuffer( sampleFrame * _buf, const fpp_t _frames )
 
 	if(! m_plugin ) return false;
 
-#ifdef __GNUC__
-        sampleFrame vstbuf[_frames];
-#else
-        sampleFrame * vstbuf = new sampleFrame[_frames];
-#endif
+        sampleFrame* vstbuf = MM_ALLOC(sampleFrame,_frames);
+
         memcpy( vstbuf, _buf, sizeof( sampleFrame ) * _frames );
-        m_pluginMutex.lock();
-        m_plugin->process( vstbuf, vstbuf );
-        m_pluginMutex.unlock();
+
+        if(m_pluginMutex.tryLock())
+        {
+                m_plugin->process( vstbuf, vstbuf );
+                m_pluginMutex.unlock();
+        }
 
         for(fpp_t f = 0; f < _frames; ++f)
         {
@@ -107,9 +107,7 @@ bool VstEffect::processAudioBuffer( sampleFrame * _buf, const fpp_t _frames )
                 _buf[f][1] = d1 * _buf[f][1] + w1 * vstbuf[f][1];
         }
 
-#ifndef __GNUC__
-        delete[] vstbuf;
-#endif
+        MM_FREE(vstbuf);
 
         return true;
 }

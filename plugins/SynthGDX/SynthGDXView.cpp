@@ -85,7 +85,7 @@ SynthGDXView::SynthGDXView(Instrument* _instrument, QWidget* _parent) :
 
     /*
     Graph* g     = new Graph(panel, Graph::LinearStyle, 256, 256);
-    g->setModel(m_graphModel);
+    g->setModel(m_GraphModel);
     mainLayout->addWidget(NB_OSCILLATORS + NB_MODULATORS);
     */
 

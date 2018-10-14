@@ -1,7 +1,7 @@
 /*
  * Widget.h - base widget for new components
  *
- * Copyright (c) 2018 gi0e5b06
+ * Copyright (c) 2018 gi0e5b06 (on github.com)
  *
  * This file is part of LMMS - https://lmms.io
  *

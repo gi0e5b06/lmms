@@ -1490,11 +1490,11 @@ void TrackContentObjectView::mouseMoveEvent(QMouseEvent* me)
         m_tco->changeLength(t);
         */
 
-        const int    x = me->x();
+        const int    dx = me->x() - m_initialMousePos.x();
         const tick_t q = gui->songEditor()->m_editor->quantization();
 
         tick_t delta
-                = x * MidiTime::ticksPerTact() / ppt - m_tco->startPosition();
+                = dx * MidiTime::ticksPerTact() / ppt;
         if(me->modifiers() & Qt::ShiftModifier)
             delta = round(delta / q) * q;
         if(delta == 0)
@@ -1511,11 +1511,12 @@ void TrackContentObjectView::mouseMoveEvent(QMouseEvent* me)
         }
         if(smallest_len + delta < 4)
             return;
-        // qInfo("q=%d delta=%d sp=%d", q, delta, smallest_pos);
+        //qInfo("q=%d delta=%d sl=%d", q, delta, smallest_len);
         if(delta == 0)
             return;
 
-        m_tco->changeLength(delta);
+        m_tco->changeLength(m_tco->length()+delta);
+        m_initialMousePos=me->pos();
 
         s_textFloat->setText(
                 tr("%1:%2 (%3:%4 to %5:%6)")

@@ -82,7 +82,9 @@ class WaveForm
              const int             _quality = 8);
     virtual ~WaveForm();
 
+    // function
     // x must be between 0. and 1.
+    // return between -1. and 1.
     real_t f(const real_t _x) const;
     real_t f(const real_t _x, const interpolation_t _m) const;
     real_t f(const real_t _x, const real_t _antialias) const;

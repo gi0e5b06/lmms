@@ -35,17 +35,17 @@ const int16_t I_S16_MULTIPLIER = 32767;
 const int32_t I_S32_MULTIPLIER = 2147483647;
 const int64_t I_S64_MULTIPLIER = 9223372036854775807;
 
-const float F_S16_MULTIPLIER = 32767.f;
-const float F_S32_MULTIPLIER = 2147483647.f;
-const float F_S64_MULTIPLIER = 9223372036854775807.f;
+const FLOAT F_S16_MULTIPLIER = 32767.f;
+const FLOAT F_S32_MULTIPLIER = 2147483647.f;
+const FLOAT F_S64_MULTIPLIER = 9223372036854775807.f;
 
 const double D_S16_MULTIPLIER = 32767.;
 const double D_S32_MULTIPLIER = 2147483647.;
 const double D_S64_MULTIPLIER = 9223372036854775807.;
 
-int16_t convertToS16(float _v);
-int32_t convertToS32(float _v);
-int64_t convertToS64(float _v);
+int16_t convertToS16(FLOAT _v);
+int32_t convertToS32(FLOAT _v);
+int64_t convertToS64(FLOAT _v);
 int16_t convertToS16(double _v);
 int32_t convertToS32(double _v);
 int64_t convertToS64(double _v);

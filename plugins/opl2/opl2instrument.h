@@ -27,11 +27,10 @@
 
 #include "Instrument.h"
 #include "InstrumentView.h"
-#include "opl.h"
-
-#include "LcdSpinBox.h"
 #include "Knob.h"
+#include "LcdSpinBox.h"
 #include "PixmapButton.h"
+#include "opl.h"
 
 // This one is a flag, MIDI notes take 7 low bits
 #define OPL2_VOICE_FREE 128
@@ -43,161 +42,156 @@
 
 class opl2instrument : public Instrument
 {
-	Q_OBJECT
-public:
-	opl2instrument( InstrumentTrack * _instrument_track );
-	virtual ~opl2instrument();
+    Q_OBJECT
+  public:
+    opl2instrument(InstrumentTrack* _instrument_track);
+    virtual ~opl2instrument();
 
-	virtual QString nodeName() const;
-	virtual PluginView * instantiateView( QWidget * _parent );
+    virtual QString     nodeName() const;
+    virtual PluginView* instantiateView(QWidget* _parent);
 
-	virtual Flags flags() const
-	{
-		return IsSingleStreamed | IsMidiBased | IsMonophonic;
-	}
+    virtual Flags flags() const
+    {
+        return IsSingleStreamed | IsMidiBased | IsMonophonic;
+    }
 
-	virtual bool handleMidiEvent( const MidiEvent& event, const MidiTime& time, f_cnt_t offset = 0 );
-	virtual void play( sampleFrame * _working_buffer );
+    virtual bool handleMidiEvent(const MidiEvent& event,
+                                 const MidiTime&  time,
+                                 f_cnt_t          offset = 0);
+    virtual void play(sampleFrame* _working_buffer);
 
-	void saveSettings( QDomDocument & _doc, QDomElement & _this );
-	void loadSettings( const QDomElement & _this );
-	void loadPatch(const unsigned char inst[14]);
-	void tuneEqual(int center, float Hz);
-	virtual void loadFile( const QString& file );
+    void         saveSettings(QDomDocument& _doc, QDomElement& _this);
+    void         loadSettings(const QDomElement& _this);
+    void         loadPatch(const unsigned char inst[14]);
+    void         tuneEqual(int center, real_t Hz);
+    virtual void loadFile(const QString& file);
 
-	IntModel m_patchModel;
+    IntModel m_patchModel;
 
-	FloatModel op1_a_mdl;
-	FloatModel op1_d_mdl;
-	FloatModel op1_s_mdl;
-	FloatModel op1_r_mdl;
-	FloatModel op1_lvl_mdl;
-	FloatModel op1_scale_mdl;
-	FloatModel op1_mul_mdl;
-	FloatModel feedback_mdl;
-	BoolModel op1_ksr_mdl;
-	BoolModel op1_perc_mdl;
-	BoolModel op1_trem_mdl;
-	BoolModel op1_vib_mdl;
-	BoolModel op1_w0_mdl;
-	BoolModel op1_w1_mdl;
-	BoolModel op1_w2_mdl;
-	BoolModel op1_w3_mdl;
-	IntModel op1_waveform_mdl;
+    FloatModel op1_a_mdl;
+    FloatModel op1_d_mdl;
+    FloatModel op1_s_mdl;
+    FloatModel op1_r_mdl;
+    FloatModel op1_lvl_mdl;
+    FloatModel op1_scale_mdl;
+    FloatModel op1_mul_mdl;
+    FloatModel feedback_mdl;
+    BoolModel  op1_ksr_mdl;
+    BoolModel  op1_perc_mdl;
+    BoolModel  op1_trem_mdl;
+    BoolModel  op1_vib_mdl;
+    BoolModel  op1_w0_mdl;
+    BoolModel  op1_w1_mdl;
+    BoolModel  op1_w2_mdl;
+    BoolModel  op1_w3_mdl;
+    IntModel   op1_waveform_mdl;
 
+    FloatModel op2_a_mdl;
+    FloatModel op2_d_mdl;
+    FloatModel op2_s_mdl;
+    FloatModel op2_r_mdl;
+    FloatModel op2_lvl_mdl;
+    FloatModel op2_scale_mdl;
+    FloatModel op2_mul_mdl;
+    BoolModel  op2_ksr_mdl;
+    BoolModel  op2_perc_mdl;
+    BoolModel  op2_trem_mdl;
+    BoolModel  op2_vib_mdl;
+    BoolModel  op2_w0_mdl;
+    BoolModel  op2_w1_mdl;
+    BoolModel  op2_w2_mdl;
+    BoolModel  op2_w3_mdl;
+    IntModel   op2_waveform_mdl;
 
-	FloatModel op2_a_mdl;
-	FloatModel op2_d_mdl;
-	FloatModel op2_s_mdl;
-	FloatModel op2_r_mdl;
-	FloatModel op2_lvl_mdl;
-	FloatModel op2_scale_mdl;
-	FloatModel op2_mul_mdl;
-	BoolModel op2_ksr_mdl;
-	BoolModel op2_perc_mdl;
-	BoolModel op2_trem_mdl;
-	BoolModel op2_vib_mdl;
-	BoolModel op2_w0_mdl;
-	BoolModel op2_w1_mdl;
-	BoolModel op2_w2_mdl;
-	BoolModel op2_w3_mdl;
-	IntModel op2_waveform_mdl;
+    BoolModel fm_mdl;
+    BoolModel vib_depth_mdl;
+    BoolModel trem_depth_mdl;
 
-	BoolModel fm_mdl;
-	BoolModel vib_depth_mdl;
-	BoolModel trem_depth_mdl;
+  private slots:
+    void updatePatch();
+    void reloadEmulator();
+    void loadGMPatch();
 
+  private:
+    Copl*   theEmulator;
+    QString storedname;
+    fpp_t   frameCount;
+    short*  renderbuffer;
+    int     voiceNote[OPL2_VOICES];
+    // Least recently used voices
+    int voiceLRU[OPL2_VOICES];
+    // 0 - no note, >0 - note on velocity
+    int velocities[128];
+    // These include both octave and Fnumber
+    int fnums[128];
+    // in cents, range defaults to +/-100 cents (should this be changeable?)
+    int pitchbend;
+    int pitchBendRange;
 
-private slots:
-        void updatePatch();
-	void reloadEmulator();
-	void loadGMPatch();
+    int popVoice();
+    int pushVoice(int v);
 
-private:
-	Copl *theEmulator;
-	QString storedname;
-	fpp_t frameCount;
-	short *renderbuffer;
-	int voiceNote[OPL2_VOICES];
-	// Least recently used voices
-	int voiceLRU[OPL2_VOICES];
-	// 0 - no note, >0 - note on velocity
-	int velocities[128];
-	// These include both octave and Fnumber
-	int fnums[128];
-	// in cents, range defaults to +/-100 cents (should this be changeable?)
-	int pitchbend;
-	int pitchBendRange;
+    int           Hz2fnum(real_t Hz);
+    static QMutex emulatorMutex;
+    void          setVoiceVelocity(int voice, int vel);
 
-	int popVoice();
-	int pushVoice(int v);
-
-	int Hz2fnum(float Hz);
-	static QMutex emulatorMutex;
-	void setVoiceVelocity(int voice, int vel);
-
-	// Pitch bend range comes through RPNs.
-	int RPNcoarse, RPNfine;
+    // Pitch bend range comes through RPNs.
+    int RPNcoarse, RPNfine;
 };
-
-
 
 class opl2instrumentView : public InstrumentView
 {
-	Q_OBJECT
-public:
-	opl2instrumentView( Instrument * _instrument, QWidget * _parent );
-	virtual ~opl2instrumentView();
-	LcdSpinBox *m_patch;
-	void modelChanged();
+    Q_OBJECT
+  public:
+    opl2instrumentView(Instrument* _instrument, QWidget* _parent);
+    virtual ~opl2instrumentView();
+    LcdSpinBox* m_patch;
+    void        modelChanged();
 
-	Knob *op1_a_kn;
-	Knob *op1_d_kn;
-	Knob *op1_s_kn;
-	Knob *op1_r_kn;
-	Knob *op1_lvl_kn;
-	Knob *op1_scale_kn;
-	Knob *op1_mul_kn;
-	Knob *feedback_kn;
-	PixmapButton *op1_ksr_btn;
-	PixmapButton *op1_perc_btn;
-	PixmapButton *op1_trem_btn;
-	PixmapButton *op1_vib_btn;
-	PixmapButton *op1_w0_btn;
-	PixmapButton *op1_w1_btn;
-	PixmapButton *op1_w2_btn;
-	PixmapButton *op1_w3_btn;
-	automatableButtonGroup *op1_waveform;
+    Knob*                   op1_a_kn;
+    Knob*                   op1_d_kn;
+    Knob*                   op1_s_kn;
+    Knob*                   op1_r_kn;
+    Knob*                   op1_lvl_kn;
+    Knob*                   op1_scale_kn;
+    Knob*                   op1_mul_kn;
+    Knob*                   feedback_kn;
+    PixmapButton*           op1_ksr_btn;
+    PixmapButton*           op1_perc_btn;
+    PixmapButton*           op1_trem_btn;
+    PixmapButton*           op1_vib_btn;
+    PixmapButton*           op1_w0_btn;
+    PixmapButton*           op1_w1_btn;
+    PixmapButton*           op1_w2_btn;
+    PixmapButton*           op1_w3_btn;
+    automatableButtonGroup* op1_waveform;
 
+    Knob*                   op2_a_kn;
+    Knob*                   op2_d_kn;
+    Knob*                   op2_s_kn;
+    Knob*                   op2_r_kn;
+    Knob*                   op2_lvl_kn;
+    Knob*                   op2_scale_kn;
+    Knob*                   op2_mul_kn;
+    PixmapButton*           op2_ksr_btn;
+    PixmapButton*           op2_perc_btn;
+    PixmapButton*           op2_trem_btn;
+    PixmapButton*           op2_vib_btn;
+    PixmapButton*           op2_w0_btn;
+    PixmapButton*           op2_w1_btn;
+    PixmapButton*           op2_w2_btn;
+    PixmapButton*           op2_w3_btn;
+    automatableButtonGroup* op2_waveform;
 
-	Knob *op2_a_kn;
-	Knob *op2_d_kn;
-	Knob *op2_s_kn;
-	Knob *op2_r_kn;
-	Knob *op2_lvl_kn;
-	Knob *op2_scale_kn;
-	Knob *op2_mul_kn;
-	PixmapButton *op2_ksr_btn;
-	PixmapButton *op2_perc_btn;
-	PixmapButton *op2_trem_btn;
-	PixmapButton *op2_vib_btn;
-	PixmapButton *op2_w0_btn;
-	PixmapButton *op2_w1_btn;
-	PixmapButton *op2_w2_btn;
-	PixmapButton *op2_w3_btn;
-	automatableButtonGroup *op2_waveform;
+    PixmapButton* fm_btn;
+    PixmapButton* vib_depth_btn;
+    PixmapButton* trem_depth_btn;
 
+  private slots:
+    void updateKnobHints();
 
-	PixmapButton *fm_btn;
-	PixmapButton *vib_depth_btn;
-	PixmapButton *trem_depth_btn;
-
-	private slots:
-	void updateKnobHints();
-
- private:
-	QString knobHintHelper(float n);
-
+  private:
+    QString knobHintHelper(real_t n);
 };
 
 #endif

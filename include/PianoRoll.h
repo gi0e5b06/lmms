@@ -168,7 +168,8 @@ class PianoRoll : public QWidget
                              const QColor& noteCol,
                              const QColor& selCol,
                              const int     noteOpc,
-                             const bool    borderless);
+                             const bool    borderless,
+                             const bool    drawNoteNames);
     void        removeSelection();
     void        selectAll();
     NoteVector  getSelectedNotes();

@@ -168,7 +168,7 @@ void LedCheckBox::paintEvent(QPaintEvent* _pe)
     xl += mw.left();
     yl += mw.top();
     p.drawPixmap(xl, yl,
-                 m && m->value() && (!m_blinking || m_blinkingState)
+                 m && m->rawValue() && (!m_blinking || m_blinkingState)
                          ? *m_ledOnPixmap
                          : *m_ledOffPixmap);
     // m_blinkingState=!m_blinkingState;
@@ -204,8 +204,8 @@ void LedCheckBox::onTextUpdated()
     int            h = m_ledOffPixmap->height() - 6;
     if(!t.isEmpty())
     {
-        const Qt::AnchorPoint a = textAnchorPoint();
-        const QFont ft = pointSizeF(
+        const Qt::AnchorPoint a  = textAnchorPoint();
+        const QFont           ft = pointSizeF(
                 font(),
                 (a == Qt::AnchorLeft || a == Qt::AnchorRight) ? 8.5f : 6.5f);
         const QFontMetrics mx(ft);
@@ -242,8 +242,8 @@ void LedCheckBox::enterValue()
                                       "%1 and %2:")
                                            .arg(m->minValue())
                                            .arg(m->maxValue()),
-                                   m->value(), m->minValue(), m->maxValue(),
-                                   0, &ok);
+                                   m->rawValue(), m->minValue(),
+                                   m->maxValue(), 0, &ok);
 
     if(ok)
     {
