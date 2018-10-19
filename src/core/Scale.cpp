@@ -43,7 +43,7 @@
 real_t scale_et(const real_t _x,
                const real_t _b             = 0.,
                const real_t _baseFrequency = 440.,
-               const real_t _baseKey       = 57.,
+               const real_t _baseKey       = 69.,
                const real_t _octaveFactor  = 2.,
                const real_t _octaveKeys    = 12.)
 {

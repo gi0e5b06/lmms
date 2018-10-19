@@ -1,5 +1,5 @@
 /*
- * OutputGDX.h - audio output properties
+ * InputGDX.h - audio output properties
  *
  * Copyright (c) 2018 gi0e5b06 (on github.com)
  *
@@ -22,22 +22,22 @@
  *
  */
 
-#ifndef OUTPUTGDX_H
-#define OUTPUTGDX_H
+#ifndef INPUTGDX_H
+#define INPUTGDX_H
 
 #include "Effect.h"
-#include "OutputGDXControls.h"
+#include "InputGDXControls.h"
 #include "ValueBuffer.h"
 #include "lmms_math.h"
 
-class OutputGDX : public Effect
+class InputGDX : public Effect
 {
     MM_OPERATORS
     Q_OBJECT
 
   public:
-    OutputGDX(Model* parent, const Descriptor::SubPluginFeatures::Key* key);
-    virtual ~OutputGDX();
+    InputGDX(Model* parent, const Descriptor::SubPluginFeatures::Key* key);
+    virtual ~InputGDX();
     virtual bool processAudioBuffer(sampleFrame* buf, const fpp_t frames);
 
     virtual EffectControls* controls()
@@ -45,19 +45,12 @@ class OutputGDX : public Effect
         return &m_gdxControls;
     }
 
-  signals:
-    void sendRms(const real_t _v);
-    void sendVol(const real_t _v);
-    void sendPan(const real_t _v);
-    void sendLeft(const ValueBuffer* _v);
-    void sendRight(const ValueBuffer* _v);
-
   private:
-    OutputGDXControls m_gdxControls;
-    ValueBuffer       m_left;
-    ValueBuffer       m_right;
+    InputGDXControls m_gdxControls;
+    real_t m_curVol;
+    real_t m_curBal;
 
-    friend class OutputGDXControls;
+    friend class InputGDXControls;
 };
 
 #endif

@@ -26,68 +26,87 @@
 #ifndef CARLA_H
 #define CARLA_H
 
-#include <QMutex>
-
 #include "CarlaNative.h"
-
 #include "Instrument.h"
 #include "InstrumentView.h"
 #include "Knob.h"
-#include "LedCheckBox.h"
 #include "LcdSpinBox.h"
+#include "LedCheckBox.h"
+#include "SubWindow.h"
 
+#include <QMutex>
+#include <QStringListModel>
 
+class QMessageBox;
+class QCompleter;
+class QScrollArea;
+class QGridLayout;
+class QHBoxLayout;
+class QLineEdit;
 class QPushButton;
 
+class CarlaParamsView;
 
-#define NB_KNOBS      18
-#define NB_LEDS        8
-#define NB_LCDS        0
-#define NB_KNOB_START 40
-#define NB_LED_START  60
-#define NB_LCD_START  70
-#define MIDI_CH        1
-
+#define NB_MIDI_KNOBS 128
+//#define NB_MIDI_LEDS        8
+//#define NB_MIDI_LCDS        0
+#define NB_MIDI_KNOB_START 0
+//#define NB_MIDI_LED_START  60
+//#define NB_MIDI_LCD_START  70
+#define MIDI_CH 1
 
 class PLUGIN_EXPORT CarlaInstrument : public Instrument
 {
     Q_OBJECT
 
-public:
+  public:
     static const uint32_t kMaxMidiEvents = 512;
 
-    CarlaInstrument(InstrumentTrack* const instrumentTrack, const Descriptor* const descriptor, const bool isPatchbay);
+    CarlaInstrument(InstrumentTrack* const  instrumentTrack,
+                    const Descriptor* const descriptor,
+                    const bool              isPatchbay);
     virtual ~CarlaInstrument();
 
     // CarlaNative functions
-    uint32_t handleGetBufferSize() const;
-    double handleGetSampleRate() const;
-    bool handleIsOffline() const;
+    uint32_t              handleGetBufferSize() const;
+    double                handleGetSampleRate() const;
+    bool                  handleIsOffline() const;
     const NativeTimeInfo* handleGetTimeInfo() const;
-    void handleUiParameterChanged(const uint32_t index, const float value) const;
-    void handleUiClosed();
-    intptr_t handleDispatcher(const NativeHostDispatcherOpcode opcode, const int32_t index, const intptr_t value, void* const ptr, const float opt);
+    void                  handleUiParameterChanged(const uint32_t index,
+                                                   const float    value) const;
+    void                  handleUiClosed();
+    intptr_t handleDispatcher(const NativeHostDispatcherOpcode opcode,
+                              const int32_t                    index,
+                              const intptr_t                   value,
+                              void* const                      ptr,
+                              const float                      opt);
 
     // LMMS functions
-    virtual Flags flags() const;
-    virtual QString nodeName() const;
-    virtual void saveSettings(QDomDocument& doc, QDomElement& parent);
-    virtual void loadSettings(const QDomElement& elem);
-    virtual void play(sampleFrame* workingBuffer);
-    virtual bool handleMidiEvent(const MidiEvent& event, const MidiTime& time, f_cnt_t offset);
+    virtual Flags       flags() const;
+    virtual f_cnt_t     desiredReleaseFrames() const;
+    virtual QString     nodeName() const;
+    virtual void        saveSettings(QDomDocument& doc, QDomElement& parent);
+    virtual void        loadSettings(const QDomElement& elem);
+    virtual void        play(sampleFrame* workingBuffer);
+    virtual bool        handleMidiEvent(const MidiEvent& event,
+                                        const MidiTime&  time,
+                                        f_cnt_t          offset);
     virtual PluginView* instantiateView(QWidget* parent);
 
-signals:
+  signals:
     void uiClosed();
 
-private slots:
+  private slots:
     void sampleRateChanged();
+    void refreshParams(bool valuesOnly, const QDomElement* elem = nullptr);
+    void clearParamModels();
+    void paramModelChanged(uint32_t index);
 
-private:
+  private:
     const bool kIsPatchbay;
 
-    NativePluginHandle fHandle;
-    NativeHostDescriptor fHost;
+    NativePluginHandle            fHandle;
+    NativeHostDescriptor          fHost;
     const NativePluginDescriptor* fDescriptor;
 
     uint32_t        fMidiEventCount;
@@ -97,39 +116,100 @@ private:
     // this is only needed because note-offs are being sent during play
     QMutex fMutex;
 
-    FloatModel*  m_knobs[NB_KNOBS];
-    BoolModel*   m_leds [NB_LEDS ];
-    IntModel*    m_lcds [NB_LCDS ];
+    QList<FloatModel*> paramModels;
+    // QDomElement settingsElem;
+    QStringList m_completerList;
+    // QStringListModel m_completerModel;
+
+    FloatModel* m_midiKnobs[NB_MIDI_KNOBS];
+    // BoolModel*   m_midiLeds [NB_MIDI_LEDS ];
+    // IntModel*    m_midiLcds [NB_MIDI_LCDS ];
 
     friend class CarlaInstrumentView;
+    friend class CarlaParamsView;
 };
-
 
 class CarlaInstrumentView : public InstrumentView
 {
     Q_OBJECT
 
-public:
-    CarlaInstrumentView(CarlaInstrument* const instrument, QWidget* const parent);
+  public:
+    CarlaInstrumentView(CarlaInstrument* instrument, QWidget* parent);
     virtual ~CarlaInstrumentView();
 
-private slots:
+  private slots:
     void toggleUI(bool);
     void uiClosed();
     void onDataChanged();
+    void toggleParamsWindow(bool);
+    void paramsWindowClosed();
 
-private:
+  private:
     virtual void modelChanged();
     virtual void timerEvent(QTimerEvent*);
 
-    NativePluginHandle fHandle;
+    NativePluginHandle            fHandle;
     const NativePluginDescriptor* fDescriptor;
-    int fTimerId;
+    int                           fTimerId;
 
     QPushButton* m_toggleUIButton;
-    Knob*        m_knobs[NB_KNOBS];
-    LedCheckBox* m_leds [NB_LEDS ];
-    LcdSpinBox*  m_lcds [NB_LCDS ];
+
+    Knob* m_midiKnobs[NB_MIDI_KNOBS];
+    // LedCheckBox* m_midiLeds [NB_MIDI_LEDS ];
+    // LcdSpinBox*  m_midiLcds [NB_MIDI_LCDS ];
+
+    CarlaInstrument* m_carlaInstrument;
+    QPushButton*     m_toggleParamsWindowButton;
+    CarlaParamsView* m_paramsView;
+    // QWidget*         p_parent;
+};
+
+class CarlaParamsView : public QWidget  // InstrumentView
+{
+    Q_OBJECT
+  public:
+    CarlaParamsView(CarlaInstrument* instrument, QWidget* parent);
+    virtual ~CarlaParamsView();
+
+    SubWindow* subWindow()
+    {
+        return m_subWindow;
+    }
+
+  private slots:
+    void onRefreshButton();
+    void onRefreshValuesButton();
+    void refreshKnobs();
+    void filterKnobs();
+    void clearFilterText();
+
+  private:
+    virtual void modelChanged();
+
+    void addKnob(uint32_t index);
+    void clearKnobs();
+
+    SubWindow* m_subWindow;
+    // QObject*         p_subWindow;
+    CarlaInstrument* m_carlaInstrument;
+    QCompleter*      m_paramCompleter;
+
+    QList<Knob*> m_knobs;
+
+    uint32_t lMaxColumns;
+    uint32_t lCurColumn;
+    uint32_t lCurRow;
+
+    QScrollArea* m_scrollArea;
+    QGridLayout* m_scrollAreaLayout;
+    QWidget*     m_scrollAreaWidgetContent;
+    QHBoxLayout* m_toolBarLayout;
+
+    QPushButton* m_refreshParamsButton;
+    QPushButton* m_refreshParamValuesButton;
+    QLineEdit*   m_paramsFilterLineEdit;
+    QPushButton* m_clearFilterButton;
+    QPushButton* m_automatedOnlyButton;
 };
 
 #endif

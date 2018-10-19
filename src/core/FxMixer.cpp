@@ -116,7 +116,7 @@ FxChannel::FxChannel( int idx, Model * _parent ) :
 				v->dumpObjectTree();
 				qInfo("v %d children",v->children().size());
 				QList<Knob*> allKnobs=v->findChildren<Knob*>();
-				foreach(Knob* k,allKnobs)
+				for(Knob* k : allKnobs)
 					qInfo("FxChannel::FxChannel knob k='%s'",
 						 qPrintable(k->objectName()));
 			}

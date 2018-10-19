@@ -153,8 +153,8 @@ void MonstroSynth::renderOutput( fpp_t _frames, sampleFrame * _buf  )
 	const float lfo2_po = m_parent->m_lfo2Phs.value() / 360.0f;
 
 	// remove cruft from phase counters to prevent overflow, add phase offset
-	m_lfo_phase[0] = absFraction( m_lfo_phase[0] + lfo1_po );
-	m_lfo_phase[1] = absFraction( m_lfo_phase[1] + lfo2_po );
+	m_lfo_phase[0] = positivefraction( m_lfo_phase[0] + lfo1_po );
+	m_lfo_phase[1] = positivefraction( m_lfo_phase[1] + lfo2_po );
 
 	// LFO rates and increment
 	m_lfo_rate[0] = ( m_parent->m_lfo1Rate.value() * 0.001f * m_parent->m_samplerate );
@@ -389,8 +389,8 @@ void MonstroSynth::renderOutput( fpp_t _frames, sampleFrame * _buf  )
 		}
 
 		// pulse wave osc
-		sample_t O1L = ( absFraction( leftph ) < o1_pw ) ? 1.0f : -1.0f;
-		sample_t O1R = ( absFraction( rightph ) < o1_pw ) ? 1.0f : -1.0f;
+		sample_t O1L = ( positivefraction( leftph ) < o1_pw ) ? 1.0f : -1.0f;
+		sample_t O1R = ( positivefraction( rightph ) < o1_pw ) ? 1.0f : -1.0f;
 
 		// check for rise/fall, and sync if appropriate
 		// sync on rise
@@ -493,8 +493,8 @@ void MonstroSynth::renderOutput( fpp_t _frames, sampleFrame * _buf  )
 			modulatephs( leftph, o2p )
 			modulatephs( rightph, o2p )
 		}
-		leftph = absFraction( leftph );
-		rightph = absFraction( rightph );
+		leftph = positivefraction( leftph );
+		rightph = positivefraction( rightph );
 
 		// phase delta
 		pd_l = qAbs( leftph - m_ph2l_last );
@@ -558,8 +558,8 @@ void MonstroSynth::renderOutput( fpp_t _frames, sampleFrame * _buf  )
 			leftph += O2L * 0.5f;
 			rightph += O2R * 0.5f;
 		}
-		leftph = absFraction( leftph );
-		rightph = absFraction( rightph );
+		leftph = positivefraction( leftph );
+		rightph = positivefraction( rightph );
 
 		// phase delta
 		pd_l = qAbs( leftph - m_ph3l_last );
@@ -636,15 +636,15 @@ void MonstroSynth::renderOutput( fpp_t _frames, sampleFrame * _buf  )
 	}
 
 	// update phases
-	m_osc1l_phase = absFraction( o1l_p - o1lpo );
-	m_osc1r_phase = absFraction( o1r_p - o1rpo );
-	m_osc2l_phase = absFraction( o2l_p - o2lpo );
-	m_osc2r_phase = absFraction( o2r_p - o2rpo );
-	m_osc3l_phase = absFraction( o3l_p - o3lpo );
-	m_osc3r_phase = absFraction( o3r_p - o3rpo );
+	m_osc1l_phase = positivefraction( o1l_p - o1lpo );
+	m_osc1r_phase = positivefraction( o1r_p - o1rpo );
+	m_osc2l_phase = positivefraction( o2l_p - o2lpo );
+	m_osc2r_phase = positivefraction( o2r_p - o2rpo );
+	m_osc3l_phase = positivefraction( o3l_p - o3lpo );
+	m_osc3r_phase = positivefraction( o3r_p - o3rpo );
 
-	m_lfo_phase[0] = absFraction( m_lfo_phase[0] - lfo1_po );
-	m_lfo_phase[1] = absFraction( m_lfo_phase[1] - lfo2_po );
+	m_lfo_phase[0] = positivefraction( m_lfo_phase[0] - lfo1_po );
+	m_lfo_phase[1] = positivefraction( m_lfo_phase[1] - lfo2_po );
 }
 
 

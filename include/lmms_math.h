@@ -58,9 +58,9 @@ using namespace std;
 #endif
 #endif
 
-#define absFraction absfraction
+#define absFraction positivefraction
 
-static inline real_t absfraction(const real_t _x)
+static inline real_t positivefraction(const real_t _x)
 {
 #ifdef REAL_IS_FLOAT
     // if(sizeof(real_t) == sizeof(float))
@@ -74,10 +74,12 @@ static inline real_t absfraction(const real_t _x)
 
 static inline real_t fraction(const real_t _x)
 {
-    if(sizeof(real_t) == sizeof(float))
+#ifdef REAL_IS_FLOAT
         return _x - floorf(_x);
-    else
+#endif
+#ifdef REAL_IS_DOUBLE
         return _x - floor(_x);
+#endif
 }
 
 /*

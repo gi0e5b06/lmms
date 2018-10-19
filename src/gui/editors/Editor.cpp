@@ -25,14 +25,11 @@
 #include "Editor.h"
 
 #include "ComboBoxModel.h"
-//#include "MainWindow.h"
 #include "Song.h"
 #include "embed.h"
 
 #include <QAction>
 #include <QLabel>
-//#include <QMdiArea>
-//#include <QMdiSubWindow>
 #include <QShortcut>
 
 const QVector<real_t> Editor::ZOOM_LEVELS

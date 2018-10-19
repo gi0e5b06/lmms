@@ -24,11 +24,11 @@
 
 #include "OutputGDX.h"
 
-#include <math.h>
-
 #include "ValueBuffer.h"
 #include "WaveForm.h"
 #include "embed.h"
+
+#include <math.h>
 //#include "lmms_math.h"
 
 extern "C"
@@ -53,19 +53,18 @@ OutputGDX::OutputGDX(Model*                                    parent,
       m_gdxControls(this), m_left(Engine::mixer()->framesPerPeriod()),
       m_right(Engine::mixer()->framesPerPeriod())
 {
-    connect(this, SIGNAL(sendRms(const float)), &m_gdxControls.m_rmsModel,
-            SLOT(setAutomatedValue(const float)));
-    connect(this, SIGNAL(sendVol(const float)), &m_gdxControls.m_volModel,
-            SLOT(setAutomatedValue(const float)));
-    connect(this, SIGNAL(sendPan(const float)), &m_gdxControls.m_panModel,
-            SLOT(setAutomatedValue(const float)));
+    connect(this, SIGNAL(sendRms(const real_t)), &m_gdxControls.m_rmsModel,
+            SLOT(setAutomatedValue(const real_t)));
+    connect(this, SIGNAL(sendVol(const real_t)), &m_gdxControls.m_volModel,
+            SLOT(setAutomatedValue(const real_t)));
+    connect(this, SIGNAL(sendPan(const real_t)), &m_gdxControls.m_panModel,
+            SLOT(setAutomatedValue(const real_t)));
     connect(this, SIGNAL(sendLeft(const ValueBuffer*)),
-            &m_gdxControls.m_leftModel, SLOT(copyFrom(const ValueBuffer*)));
+            &m_gdxControls.m_leftModel,
+            SLOT(setAutomatedBuffer(const ValueBuffer*)));
     connect(this, SIGNAL(sendRight(const ValueBuffer*)),
-            &m_gdxControls.m_rightModel, SLOT(copyFrom(const ValueBuffer*)));
-    connect(this, SIGNAL(sendFrequency(const float)),
-            &m_gdxControls.m_frequencyModel,
-            SLOT(setAutomatedValue(const float)));
+            &m_gdxControls.m_rightModel,
+            SLOT(setAutomatedBuffer(const ValueBuffer*)));
 }
 
 OutputGDX::~OutputGDX()
@@ -85,38 +84,56 @@ bool OutputGDX::processAudioBuffer(sampleFrame* _buf, const fpp_t _frames)
         qWarning("OutputGDX::processAudioBuffer");
         return false;
     }
-    // float rms = computeRMS(_buf, _frames);
-    // sendRms(rms);
 
     // qInfo("OutputGDX::processAudioBuffer rms=%f scl=%f val=%f", rms,
     //      m_rmsModel.scaledValue(rms), m_rmsModel.value());
-    float rms[2] = {0.f, 0.f};
-    float max[2] = {0.f, 0.f};
+    real_t rms[2] = {0., 0.};
+    real_t max[2] = {0., 0.};
 
     for(fpp_t f = 0; f < _frames; ++f)
     {
-        float curVal0 = _buf[f][0];
-        float curVal1 = _buf[f][1];
+        const sample_t curVal0 = _buf[f][0];
+        const sample_t curVal1 = _buf[f][1];
 
         m_left.set(f, curVal0);
         m_right.set(f, curVal1);
         rms[0] += curVal0 * curVal0;
         rms[1] += curVal1 * curVal1;
-        max[0] = qMax(max[0], fabsf(curVal0));
-        max[1] = qMax(max[1], fabsf(curVal1));
+        max[0] = qMax(max[0], abs(curVal0));
+        max[1] = qMax(max[1], abs(curVal1));
     }
 
-    sendLeft(&m_left);
-    sendRight(&m_right);
-    sendRms(WaveForm::sqrt(qBound(0.f, rms[0] + rms[1], 1.f)));
-    sendVol(qMax(max[0], max[1]));
-    sendPan(WaveForm::sqrt(qBound(0.f, rms[1], 1.f))
-            - WaveForm::sqrt(qBound(0.f, rms[0], 1.f)));
+    emit sendLeft(&m_left);
+    emit sendRight(&m_right);
 
-    // sendFrequency(440.f);
-    // qInfo("OutputGDX::processAudioBuffer rms=%f",rms);
+    bool silent = true;
+    if(max[0] <= SILENCE)
+    {
+        max[0] = 0.;
+        rms[0] = 0.;
+    }
+    else
+    {
+        silent = false;
+        rms[0] = WaveForm::sqrt(bound(0.,rms[0] / _frames,1.));
+    }
 
-    return true;
+    if(max[1] <= SILENCE)
+    {
+        max[1] = 0.;
+        rms[1] = 0.;
+    }
+    else
+    {
+        silent = false;
+        rms[1] = WaveForm::sqrt(bound(0.,rms[1] / _frames,1.));
+    }
+
+    emit sendRms(bound(0., rms[0] + rms[1], 1.));
+    emit sendVol(qMax(max[0], max[1]));
+    emit sendPan(bound(-1., rms[1] - rms[0], 1.));
+
+    return !silent;
 }
 
 extern "C"

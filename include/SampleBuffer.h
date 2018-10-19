@@ -237,20 +237,7 @@ class EXPORT SampleBuffer
 
     // protect calls from the GUI to this function with dataReadLock() and
     // dataUnlock(), out of loops for efficiency
-    inline sample_t userWaveSample(const real_t _sample) const
-    {
-        const f_cnt_t       frames = m_frames;
-        const sampleFrame*  data   = m_data;
-        const real_t  frame  = _sample * frames;
-
-        f_cnt_t f1     = static_cast<f_cnt_t>(frame) % frames;
-        if(f1 < 0)
-            f1 += frames;
-        f_cnt_t f2 = f1 + 1;
-        if(f2 == frames)
-            f2 = 0;
-        return linearInterpolate(data[f1][0], data[f2][0], fraction(_sample));
-    }
+    sample_t userWaveSample(const real_t _sample) const;
 
     void dataReadLock()
     {

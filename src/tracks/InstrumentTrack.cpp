@@ -1855,8 +1855,9 @@ InstrumentTrackWindow::InstrumentTrackWindow(InstrumentTrackView* _itv) :
 
     updateInstrumentView();
 
-    setFixedWidth(INSTRUMENT_WIDTH);
-    resize(sizeHint());
+    //setFixedWidth(INSTRUMENT_WIDTH);
+    //resize(sizeHint());
+    resize(250,500);
 
     /*
     QMdiSubWindow * win = gui->mainWindow()->addWindowedWidget( this );

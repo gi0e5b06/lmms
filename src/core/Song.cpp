@@ -1194,7 +1194,7 @@ void Song::loadProject( const QString & fileName )
 				else if( node.nodeName() == m_playPos[Mode_PlaySong].m_timeLine->nodeName() )
 				{
 					m_playPos[Mode_PlaySong].m_timeLine->restoreState( node.toElement() );
-				}
+                                }
 			}
 		}
 		node = node.nextSibling();

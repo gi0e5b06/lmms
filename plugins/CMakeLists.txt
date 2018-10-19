@@ -76,9 +76,11 @@ IF("${PLUGIN_LIST}" STREQUAL "")
                 FrequencyGDX
 		GigPlayer
 		HydrogenImport
+                InputGDX
 		# ladspa_browser - not needed
 		LadspaEffect
 		lb302
+                # lvst2instrument - not ready
                 # MatrixGDX
 		MidiImport
 		MidiExport

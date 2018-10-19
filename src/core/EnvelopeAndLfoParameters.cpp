@@ -30,10 +30,6 @@
 
 #include <QDomElement>
 
-// how long should be each envelope-segment maximal (e.g. attack)?
-extern const real_t SECS_PER_ENV_SEGMENT = 5.;
-// how long should be one LFO-oscillation maximal?
-extern const real_t SECS_PER_LFO_OSCILLATION = 20.;
 // minimum number of frames for ENV/LFO stages that mustn't be '0'
 const f_cnt_t minimumFrames = 1;
 
@@ -224,7 +220,7 @@ inline sample_t EnvelopeAndLfoParameters::lfoShapeSample(fpp_t _frame_offset)
 {
     const real_t phase
             = m_lfoOscillationFrames > 0
-                      ? absFraction(real_t(m_lfoFrame + _frame_offset)
+                      ? positivefraction(real_t(m_lfoFrame + _frame_offset)
                                     / real_t(m_lfoOscillationFrames))
                       : 0.;
 
@@ -543,6 +539,10 @@ void EnvelopeAndLfoParameters::updateSampleVars()
                                    * expKnobVal(m_lfoAttackModel.value()));
     m_lfoOscillationFrames = static_cast<f_cnt_t>(frames_per_lfo_oscillation
                                                   * m_lfoSpeedModel.value());
+
+    //qInfo("m_lfoSpeedModel = %f",m_lfoSpeedModel.value());
+    //qInfo("m_lfoOscillationFrames = %d",m_lfoOscillationFrames);
+
     if(m_x100Model.value())
     {
         m_lfoOscillationFrames /= 100;

@@ -666,7 +666,7 @@ QString MidiAlsaGdx::sourcePortName( const MidiEvent & _event ) const
 		QString prefix=QString("%1:%2 ")
 			.arg(addr.client==m_clientID ? 128 : addr.client)
 			.arg(addr.port);
-		foreach(QString s,m_readablePorts)
+		for(QString s : m_readablePorts)
 			if(s.startsWith(prefix)) return s;
 		foreach(QString s,m_writablePorts)
 			if(s.startsWith(prefix)) return s;

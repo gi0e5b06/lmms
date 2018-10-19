@@ -303,7 +303,7 @@ kickerInstrumentView::kickerInstrumentView(Instrument* _instrument,
     const int LED_ROW = 60;
     const int COL1    = 14;
     const int COL2    = COL1 + 56;
-    const int COL3    = COL2 + 56;
+    const int COL3    = COL2 + 59;
     const int COL4    = COL3 + 41;
     const int COL5    = COL4 + 41;
     const int END_COL = COL1 + 48;
@@ -330,15 +330,15 @@ kickerInstrumentView::kickerInstrumentView(Instrument* _instrument,
 
     m_gainKnob = new kickerKnob(this);
     m_gainKnob->setHintText(tr("Gain:"), "");
-    m_gainKnob->move(COL1 + 9, ROW3);
+    m_gainKnob->move(COL1-4, ROW3);
 
     m_decayKnob = new kickerEnvKnob(this);
     m_decayKnob->setHintText(tr("Envelope Length:"), "ms");
-    m_decayKnob->move(COL1 + 45, ROW3);
+    m_decayKnob->move(COL1 + 36, ROW3);
 
     m_envKnob = new kickerKnob(this);
     m_envKnob->setHintText(tr("Envelope Slope:"), "");
-    m_envKnob->move(COL1 + 82, ROW3);
+    m_envKnob->move(COL1 + 76, ROW3);
 
     m_tailKnob = new kickerKnob(this);
     m_tailKnob->setHintText(tr("Tail:"), "");

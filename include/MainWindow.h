@@ -35,6 +35,7 @@
 #include <QIcon>
 #include <QList>
 #include <QMainWindow>
+#include <QTabBar>
 //#include <QThread>
 #include <QTimer>
 
@@ -68,6 +69,8 @@ public:
 	int addWidgetToToolBar( QWidget * _w, int _row = -1, int _col = -1,
                                 int _rowSpan = -1, int _colSpan = -1);
 	int addSpacingToToolBar( int _size, int _col = -1 );
+
+        bool isTabbed() { return m_tabBar!=nullptr; }
 
 	// wrap the widget with a window decoration and add it to the workspace
 	//EXPORT SubWindow* addWindowedWidget(QWidget* _w);//, Qt::WindowFlags windowFlags=0);
@@ -182,8 +185,10 @@ public slots:
 	void showSongMetaDataDialog();
 	void aboutLMMS();
 	void help();
+        void closeTab(int _index);
+        void toggleActiveWindow(QMdiSubWindow* _w);
 	void toggleAutomationEditorWin();
-	void toggleBBEditorWin( bool forceShow = false );
+	void toggleBBEditorWin();
 	void toggleSongEditorWin();
 	void toggleProjectNotesWin();
 	void toggleFxMixerWin();
@@ -218,13 +223,14 @@ private:
 
 	void finalize();
 
-	void toggleWindow( QWidget *window, bool forceShow = false );
+	void toggleWindow( QWidget *window, bool forceShow);
 	void refocus();
 
         QHash<QString,QAction*> m_actions;
         QHash<QAction*,QString> m_actionNames;
 
 	QMdiArea * m_workspace;
+        QTabBar* m_tabBar;
 
 	QWidget * m_toolBar;
 	QGridLayout * m_toolBarLayout;

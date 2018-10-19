@@ -1,5 +1,5 @@
 /*
- * OutputGDXControls.cpp - controls for audio output properties
+ * InputGDXControls.cpp - controls for audio output properties
  *
  * Copyright (c) 2018 gi0e5b06 (on github.com)
  *
@@ -22,27 +22,28 @@
  *
  */
 
-#include "OutputGDXControls.h"
+#include "InputGDXControls.h"
+
+#include "Engine.h"
+#include "InputGDX.h"
+#include "Song.h"
 
 #include <QDomElement>
 
-#include "Engine.h"
-#include "OutputGDX.h"
-#include "Song.h"
-
-OutputGDXControls::OutputGDXControls(OutputGDX* effect) :
+InputGDXControls::InputGDXControls(InputGDX* effect) :
       EffectControls(effect), m_effect(effect),
-      m_leftModel(0., -1., 1., 0.00001, this, tr("Left")),
-      m_rightModel(0., -1., 1., 0.00001, this, tr("Right")),
-      m_rmsModel(0., 0., 1., 0.0001, this, tr("RMS")),
-      m_volModel(0., 0., 1., 0.0001, this, tr("VOL")),
-      m_panModel(0., -1., 1., 0.0001, this, tr("BAL"))
+      m_leftSignalModel(0., -1., 1., 0.00000001, this, tr("Left")),
+      m_rightSignalModel(0., -1., 1., 0.00000001, this, tr("Right")),
+      m_volumeModel(1., 0., 1., 0.00000001, this, tr("Volume")),
+      m_balanceModel(0., -1., 1., 0.00000001, this, tr("Balance")),
+      m_mixingModel(0.5, 0., 1., 0.00000001, this, tr("Mixing")),
+      m_deltaModel(0.001, 0.001, 1., 0.001, this, tr("Delta"))
 {
-    m_leftModel.setFrequentlyUpdated(true);
-    m_rightModel.setFrequentlyUpdated(true);
-    m_rmsModel.setFrequentlyUpdated(true);
-    m_volModel.setFrequentlyUpdated(true);
-    m_panModel.setFrequentlyUpdated(true);
+    m_leftSignalModel.setFrequentlyUpdated(true);
+    m_rightSignalModel.setFrequentlyUpdated(true);
+    m_volumeModel.setFrequentlyUpdated(true);
+    m_balanceModel.setFrequentlyUpdated(true);
+    //m_mixingModel.setFrequentlyUpdated(true);
 
     /*
     connect(effect,SIGNAL(sendLeft(const ValueBuffer*)),
@@ -58,10 +59,18 @@ OutputGDXControls::OutputGDXControls(OutputGDX* effect) :
     */
 }
 
-void OutputGDXControls::loadSettings(const QDomElement& _this)
+void InputGDXControls::loadSettings(const QDomElement& _this)
 {
+    m_volumeModel.loadSettings(_this, "volume");
+    m_balanceModel.loadSettings(_this, "balance");
+    m_mixingModel.loadSettings(_this, "mixing");
+    m_deltaModel.loadSettings(_this, "delta");
 }
 
-void OutputGDXControls::saveSettings(QDomDocument& doc, QDomElement& _this)
+void InputGDXControls::saveSettings(QDomDocument& doc, QDomElement& _this)
 {
+    m_volumeModel.saveSettings(doc, _this, "volume");
+    m_balanceModel.saveSettings(doc, _this, "balance");
+    m_mixingModel.saveSettings(doc, _this, "mixing");
+    m_deltaModel.saveSettings(doc, _this, "delta");
 }

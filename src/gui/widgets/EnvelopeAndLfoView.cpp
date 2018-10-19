@@ -45,8 +45,8 @@
 #include <QMouseEvent>
 #include <QPainter>
 
-extern const float SECS_PER_ENV_SEGMENT;
-extern const float SECS_PER_LFO_OSCILLATION;
+//extern const float SECS_PER_ENV_SEGMENT;
+//extern const float SECS_PER_LFO_OSCILLATION;
 
 
 const int ENV_GRAPH_X = 4; //6
@@ -456,7 +456,7 @@ void EnvelopeAndLfoView::paintEvent( QPaintEvent * )
         p.drawText( LFO_GRAPH_X + m_lfoGraph.width() - 23, LFO_GRAPH_Y+10, tr("LFO"));
         */
 
-	const float env_gray_amount = 1.0f - fabsf( m_amountKnob->value<float>() );
+	const real_t env_gray_amount = 1.0f - fabsf( m_amountKnob->value<real_t>() );
 	p.setPen( QPen( QColor( static_cast<int>( 96 * env_gray_amount ),
 				static_cast<int>( 180 - 84 * env_gray_amount ),  // 255,159
 				static_cast<int>( 255 - 159 * env_gray_amount ) ), // 128,32
@@ -468,12 +468,12 @@ void EnvelopeAndLfoView::paintEvent( QPaintEvent * )
 	const int y_base = ENV_GRAPH_Y + m_envGraph.height() - 3;
 	const int avail_height = m_envGraph.height() - 6;
 
-	int x1 = static_cast<int>( m_predelayKnob->value<float>() * TIME_UNIT_WIDTH );
-	int x2 = x1 + static_cast<int>( m_attackKnob->value<float>() * TIME_UNIT_WIDTH );
-	int x3 = x2 + static_cast<int>( m_holdKnob->value<float>() * TIME_UNIT_WIDTH );
-	int x4 = x3 + static_cast<int>( ( m_decayKnob->value<float>() *
-						( 1 - m_sustainKnob->value<float>() ) ) * TIME_UNIT_WIDTH );
-	int x5 = x4 + static_cast<int>( m_releaseKnob->value<float>() * TIME_UNIT_WIDTH );
+	int x1 = static_cast<int>( m_predelayKnob->value<real_t>() * TIME_UNIT_WIDTH );
+	int x2 = x1 + static_cast<int>( m_attackKnob->value<real_t>() * TIME_UNIT_WIDTH );
+	int x3 = x2 + static_cast<int>( m_holdKnob->value<real_t>() * TIME_UNIT_WIDTH );
+	int x4 = x3 + static_cast<int>( ( m_decayKnob->value<real_t>() *
+						( 1 - m_sustainKnob->value<real_t>() ) ) * TIME_UNIT_WIDTH );
+	int x5 = x4 + static_cast<int>( m_releaseKnob->value<real_t>() * TIME_UNIT_WIDTH );
 
 	if( x5 > 174 )
 	{
@@ -500,20 +500,20 @@ void EnvelopeAndLfoView::paintEvent( QPaintEvent * )
 
 	p.drawLine( x3, y_base-avail_height, x4, static_cast<int>( y_base -
 								avail_height +
-				( 1 - m_sustainKnob->value<float>() ) * avail_height ) );
+				( 1 - m_sustainKnob->value<real_t>() ) * avail_height ) );
 	p.fillRect( x3 - 1, y_base - 2 - avail_height, 4, 4,
 							end_points_bg_color );
 	p.fillRect( x3, y_base - 1 - avail_height, 2, 2, end_points_color );
 
 	p.drawLine( x4, static_cast<int>( y_base - avail_height +
-						( 1 - m_sustainKnob->value<float>() ) *
+						( 1 - m_sustainKnob->value<real_t>() ) *
 						avail_height ), x5, y_base );
 	p.fillRect( x4 - 1, static_cast<int>( y_base - avail_height +
-						( 1 - m_sustainKnob->value<float>() ) *
+						( 1 - m_sustainKnob->value<real_t>() ) *
 						avail_height ) - 2, 4, 4,
 							end_points_bg_color );
 	p.fillRect( x4, static_cast<int>( y_base - avail_height +
-						( 1 - m_sustainKnob->value<float>() ) *
+						( 1 - m_sustainKnob->value<real_t>() ) *
 						avail_height ) - 1, 2, 2,
 							end_points_color );
 	p.fillRect( x5 - 1, y_base - 2, 4, 4, end_points_bg_color );
@@ -526,21 +526,21 @@ void EnvelopeAndLfoView::paintEvent( QPaintEvent * )
         int ly=ENV_GRAPH_Y+10;//+m_envGraph.height()-5;
         int dy=9;
 
-        s=QString("P %1 ms").arg(int(1000.f*m_predelayKnob->value<float>()));
+        s=QString("P %1 ms").arg(int(1000.*m_predelayKnob->value<real_t>()));
         p.setPen(Qt::black);
         p.drawText( lx+1, ly+1, s);
         p.setPen(Qt::white);
         p.drawText( lx, ly, s);
 
         lx+=dx; ly+=dy;
-        s=QString("A %1 ms").arg(int(1000.f*m_attackKnob->value<float>()));
+        s=QString("A %1 ms").arg(int(1000.*m_attackKnob->value<real_t>()));
         p.setPen(Qt::black);
         p.drawText( lx+1, ly+1, s);
         p.setPen(Qt::white);
         p.drawText( lx, ly, s);
 
         lx+=dx; ly+=dy;
-        s=QString("H %1 ms").arg(int(1000.f*m_holdKnob->value<float>()));
+        s=QString("H %1 ms").arg(int(1000.*m_holdKnob->value<real_t>()));
         p.setPen(Qt::black);
         p.drawText( lx+1, ly+1, s);
         p.setPen(Qt::white);
@@ -548,8 +548,8 @@ void EnvelopeAndLfoView::paintEvent( QPaintEvent * )
 
         lx+=dx; ly+=dy;
 	s=QString("D %1 ms")
-                .arg(int(1000.f*m_decayKnob->value<float>() *
-                         ( 1.f - m_sustainKnob->value<float>())));
+                .arg(int(1000.*m_decayKnob->value<real_t>() *
+                         ( 1. - m_sustainKnob->value<real_t>())));
         p.setPen(Qt::black);
         p.drawText( lx+1, ly+1, s);
         p.setPen(Qt::white);
@@ -557,14 +557,14 @@ void EnvelopeAndLfoView::paintEvent( QPaintEvent * )
 
         lx+=dx; ly+=dy;
 	s=QString("S %1%")
-                .arg(int(100.f*m_sustainKnob->value<float>()));
+                .arg(int(100.*m_sustainKnob->value<real_t>()));
         p.setPen(Qt::black);
         p.drawText( lx+1, ly+1, s);
         p.setPen(Qt::white);
         p.drawText( lx, ly, s);
 
         lx+=dx; ly+=dy;
-        s=QString("R %1 ms").arg(int(1000.f*m_releaseKnob->value<float>()));
+        s=QString("R %1 ms").arg(int(1000.*m_releaseKnob->value<real_t>()));
         p.setPen(Qt::black);
         p.drawText( lx+1, ly+1, s);
         p.setPen(Qt::white);
@@ -575,34 +575,34 @@ void EnvelopeAndLfoView::paintEvent( QPaintEvent * )
 	int graph_x_base = LFO_GRAPH_X + 3;
 	int graph_y_base = LFO_GRAPH_Y + 3 + LFO_GRAPH_H / 2;
 
-	const float frames_for_graph = SECS_PER_LFO_OSCILLATION *
-				Engine::mixer()->baseSampleRate() / 10.f;
+	const real_t frames_for_graph = EnvelopeAndLfoParameters::SECS_PER_LFO_OSCILLATION *
+				Engine::mixer()->baseSampleRate() / 10.;
 
-	const float lfo_gray_amount = 1.0f - fabsf( m_lfoAmountKnob->value<float>() );
+	const real_t lfo_gray_amount = 1.0f - fabsf( m_lfoAmountKnob->value<real_t>() );
 	p.setPen( QPen( QColor( static_cast<int>( 96 * lfo_gray_amount ),
 				static_cast<int>( 180 - 84 * lfo_gray_amount ),  // 255,159
 				static_cast<int>( 255 - 159 * lfo_gray_amount ) ), // 128,32
 									1 ) );
 
 
-	float osc_frames = m_params->m_lfoOscillationFrames;
+	real_t osc_frames = m_params->m_lfoOscillationFrames;
 	if( m_params->m_x100Model.value() )
 		osc_frames *= 100.0f;
-        osc_frames=qBound(1E-5f,osc_frames,1E+10f);
+        osc_frames=bound(1.E-5,osc_frames,1.E+10);
 
 	// userWaveSample() may be used, called out of loop for efficiency
 	m_params->m_userWave.dataReadLock();
-	float old_y = 0;
+	real_t old_y = 0;
         const int xstep=(LFO_GRAPH_W%3==0 ? 3 : 2);
 	for( int x = 0; x <= LFO_GRAPH_W; x+=xstep )
 	{
-		float val = 0.0;
-		float cur_sample = x * frames_for_graph / LFO_GRAPH_W;
+		real_t val = 0.0;
+		real_t cur_sample = x * frames_for_graph / LFO_GRAPH_W;
 		if( static_cast<f_cnt_t>( cur_sample ) >
 						m_params->m_lfoPredelayFrames )
 		{
                         cur_sample -= m_params->m_lfoPredelayFrames;
-			const float phase = absFraction( cur_sample / osc_frames );
+			const real_t phase = positivefraction( cur_sample / osc_frames );
                         /*
 			switch( m_params->m_lfoWaveModel.value() )
 			{
@@ -623,7 +623,7 @@ void EnvelopeAndLfoView::paintEvent( QPaintEvent * )
                                         //Oscillator::squareSample( phase );
 					break;
 				case EnvelopeAndLfoParameters::RandomWave:
-                                //if( x % (int)( 900 * m_lfoSpeedKnob->value<float>() + 1 ) == 0 )
+                                //if( x % (int)( 900 * m_lfoSpeedKnob->value<real_t>() + 1 ) == 0 )
                                 //{
                                 //m_randomGraph = Oscillator::noiseSample( 0.0f );
                                 //}
@@ -645,7 +645,7 @@ void EnvelopeAndLfoView::paintEvent( QPaintEvent * )
 				val *= cur_sample / m_params->m_lfoAttackFrames;
 			}
 		}
-		float cur_y = -LFO_GRAPH_H / 2.0f * val;
+		real_t cur_y = -LFO_GRAPH_H / 2.0f * val;
 		p.drawLine( QLineF( graph_x_base + x - 1, graph_y_base + old_y,
 						graph_x_base + x,
 						graph_y_base + cur_y ) );
@@ -655,22 +655,24 @@ void EnvelopeAndLfoView::paintEvent( QPaintEvent * )
 
         QString unit="ms";
         int     prec=0;
-	float t = SECS_PER_LFO_OSCILLATION *
+	real_t t = EnvelopeAndLfoParameters::SECS_PER_LFO_OSCILLATION *
                 m_params->m_lfoSpeedModel.value();
 
+        qInfo("EALView: m_lfoSpeedModel = %f",m_params->m_lfoSpeedModel.value());
+
         if(m_params->m_x100Model.value())
-                t/=100.f;
+                t/=100.;
 
         uint32_t f=t*Engine::mixer()->baseSampleRate();
-        t*=1000.f;
+        t*=1000.;
 
-        if(t<5.f)
-                { t*=1000.f; unit="µs"; prec=0; }
+        if(t<5.)
+                { t*=1000.; unit="µs"; prec=0; }
         else
-        if(t>=500.f)
-                { t/=1000.f; unit="s"; prec=3; }
+        if(t>=500.)
+                { t/=1000.; unit="s"; prec=3; }
         else
-                { t=roundf(t*2.f)/2.f; prec=1; }
+                { t=roundf(t*2.)/2.; prec=1; }
 
         /*
 	p.setPen( QColor( 201, 201, 225 ) );

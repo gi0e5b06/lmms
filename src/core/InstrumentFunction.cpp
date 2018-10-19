@@ -938,7 +938,7 @@ bool InstrumentFunctionNoteDuplicatesRemoving::processNote(NotePlayHandle* _n)
 
     // const real_t fpt=Engine::framesPerTick();
     int i = 0;
-    foreach(const int64_t ck, m_cache)
+    for(const int64_t ck : m_cache)
     {
         if(ck + 150 < k)  // || ck>=k+150)
         {

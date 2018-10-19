@@ -1087,9 +1087,9 @@ void SampleTrackView::freeSampleTrackWindow()
 {
     if(m_window != NULL)
     {
+        /*
         m_lastPos = m_window->parentWidget()->pos();
 
-        /*
         if( ConfigManager::inst()->value( "ui",
                                           "oneinstrumenttrackwindow" ).toInt()
         || s_windowCache.count() < INSTRUMENT_WINDOW_CACHE_SIZE )

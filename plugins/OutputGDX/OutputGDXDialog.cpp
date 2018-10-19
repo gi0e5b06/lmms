@@ -73,12 +73,6 @@ OutputGDXDialog::OutputGDXDialog(OutputGDXControls* controls) :
     panKNB->setText(tr("PAN"));
     panKNB->setHintText(tr("Pan:"), "");
 
-    Knob* frequencyKNB = new Knob(this);
-    frequencyKNB->setModel(&controls->m_frequencyModel);
-    frequencyKNB->setPointColor(Qt::green);
-    frequencyKNB->setText(tr("FREQ"));
-    frequencyKNB->setHintText(tr("Frequency:"), "");
-
     int col = 0, row = 0;  // first row
     mainLayout->addWidget(leftKNB, row, ++col, 1, 1,
                           Qt::AlignBottom | Qt::AlignHCenter);
@@ -90,10 +84,8 @@ OutputGDXDialog::OutputGDXDialog(OutputGDXControls* controls) :
                           Qt::AlignBottom | Qt::AlignHCenter);
     mainLayout->addWidget(panKNB, row, ++col, 1, 1,
                           Qt::AlignBottom | Qt::AlignHCenter);
-    mainLayout->addWidget(frequencyKNB, row, ++col, 1, 1,
-                          Qt::AlignBottom | Qt::AlignHCenter);
 
-    mainLayout->setColumnStretch(7, 1);
+    mainLayout->setColumnStretch(6, 1);
     mainLayout->setRowStretch(1, 1);
 
     setFixedWidth(250);

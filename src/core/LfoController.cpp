@@ -118,7 +118,7 @@ void LfoController::fillValueBuffer()
 		amountPtr += amountInc;
 	}
 
-	m_currentPhase = absFraction( phase - m_phaseOffset );
+	m_currentPhase = positivefraction( phase - m_phaseOffset );
 	//m_lastUpdatedPeriod = s_periods;
 }
 

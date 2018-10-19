@@ -25,17 +25,18 @@
  */
 
 //#include <QDebug>
+#include "SubWindow.h"
+
+#include "GuiApplication.h"
+#include "MainWindow.h"
+#include "embed.h"
+
 #include <QMdiArea>
+#include <QMdiSubWindow>
 #include <QMenu>
 #include <QMoveEvent>
 #include <QPainter>
-//#include <QScrollBar>
-#include "GuiApplication.h"
-#include "MainWindow.h"
-#include "SubWindow.h"
-#include "embed.h"
-
-#include <QMdiSubWindow>
+#include <QScrollBar>
 
 SubWindow* SubWindow::putWidgetOnWorkspace(QWidget* _widget,
                                            bool     _deleteOnClose,
@@ -47,6 +48,10 @@ SubWindow* SubWindow::putWidgetOnWorkspace(QWidget* _widget,
             = new SubWindow(_widget, _deleteOnClose, _ignoreCloseEvents,
                             _maximizable, _frameless);
     gui->mainWindow()->workspace()->addSubWindow(win);
+
+    //win->setOption(QMdiSubWindow::RubberBandResize, true);
+    //win->setOption(QMdiSubWindow::RubberBandMove, true);
+
     connect(win->mdiArea(), SIGNAL(subWindowActivated(QMdiSubWindow*)), win,
             SLOT(focusChanged(QMdiSubWindow*)));
     return win;
@@ -71,64 +76,69 @@ SubWindow::SubWindow(QWidget* _child,
     // setWindowFlags( _flags );
     setAttribute(Qt::WA_DeleteOnClose, _deleteOnClose);
 
-    // initialize the tracked geometry to whatever Qt thinks the normal
-    // geometry currently is. this should always work, since QMdiSubWindows
-    // will not start as maximized
-    m_trackedNormalGeom = normalGeometry();
+    if(gui->mainWindow()->isTabbed())
+    {
+        _maximizable     = false;
+        _frameless       = true;
+        m_titleBarHeight = 0;
+    }
 
     // inits the colors
     m_activeColor     = Qt::SolidPattern;
     m_textShadowColor = Qt::black;
     m_borderColor     = Qt::black;
 
-    // close, maximize and restore (after maximizing) buttons
-    m_closeBtn
-            = new QPushButton(embed::getIcon("close"), QString::null, this);
-    //m_closeBtn->setContentsMargins(0, 0, 0, 0);
-    m_closeBtn->resize(m_buttonSize);
-    m_closeBtn->setFocusPolicy(Qt::NoFocus);
-    m_closeBtn->setCursor(Qt::ArrowCursor);
-    m_closeBtn->setAttribute(Qt::WA_NoMousePropagation);
-    m_closeBtn->setToolTip(tr("Close"));
-    connect(m_closeBtn, SIGNAL(clicked(bool)), this, SLOT(close()));
-
-    if(_maximizable)
+    if(!gui->mainWindow()->isTabbed())
     {
-        m_maximizeBtn = new QPushButton(embed::getIcon("maximize"),
-                                        QString::null, this);
-        //m_maximizeBtn->setContentsMargins(0, 0, 0, 0);
-        m_maximizeBtn->resize(m_buttonSize);
-        m_maximizeBtn->setFocusPolicy(Qt::NoFocus);
-        m_maximizeBtn->setCursor(Qt::ArrowCursor);
-        m_maximizeBtn->setAttribute(Qt::WA_NoMousePropagation);
-        m_maximizeBtn->setToolTip(tr("Maximize"));
-        connect(m_maximizeBtn, SIGNAL(clicked(bool)), this,
-                SLOT(showMaximized()));
+        // close, maximize and restore (after maximizing) buttons
+        m_closeBtn = new QPushButton(embed::getIcon("close"), QString::null,
+                                     this);
+        // m_closeBtn->setContentsMargins(0, 0, 0, 0);
+        m_closeBtn->resize(m_buttonSize);
+        m_closeBtn->setFocusPolicy(Qt::NoFocus);
+        m_closeBtn->setCursor(Qt::ArrowCursor);
+        m_closeBtn->setAttribute(Qt::WA_NoMousePropagation);
+        m_closeBtn->setToolTip(tr("Close"));
+        connect(m_closeBtn, SIGNAL(clicked(bool)), this, SLOT(close()));
 
-        m_restoreBtn = new QPushButton(embed::getIcon("restore"),
-                                       QString::null, this);
-        //m_restoreBtn->setContentsMargins(0, 0, 0, 0);
-        m_restoreBtn->resize(m_buttonSize);
-        m_restoreBtn->setFocusPolicy(Qt::NoFocus);
-        m_restoreBtn->setCursor(Qt::ArrowCursor);
-        m_restoreBtn->setAttribute(Qt::WA_NoMousePropagation);
-        m_restoreBtn->setToolTip(tr("Restore"));
-        connect(m_restoreBtn, SIGNAL(clicked(bool)), this,
-                SLOT(showNormal()));
+        if(_maximizable)
+        {
+            m_maximizeBtn = new QPushButton(embed::getIcon("maximize"),
+                                            QString::null, this);
+            // m_maximizeBtn->setContentsMargins(0, 0, 0, 0);
+            m_maximizeBtn->resize(m_buttonSize);
+            m_maximizeBtn->setFocusPolicy(Qt::NoFocus);
+            m_maximizeBtn->setCursor(Qt::ArrowCursor);
+            m_maximizeBtn->setAttribute(Qt::WA_NoMousePropagation);
+            m_maximizeBtn->setToolTip(tr("Maximize"));
+            connect(m_maximizeBtn, SIGNAL(clicked(bool)), this,
+                    SLOT(showMaximized()));
+
+            m_restoreBtn = new QPushButton(embed::getIcon("restore"),
+                                           QString::null, this);
+            // m_restoreBtn->setContentsMargins(0, 0, 0, 0);
+            m_restoreBtn->resize(m_buttonSize);
+            m_restoreBtn->setFocusPolicy(Qt::NoFocus);
+            m_restoreBtn->setCursor(Qt::ArrowCursor);
+            m_restoreBtn->setAttribute(Qt::WA_NoMousePropagation);
+            m_restoreBtn->setToolTip(tr("Restore"));
+            connect(m_restoreBtn, SIGNAL(clicked(bool)), this,
+                    SLOT(showNormal()));
+        }
+
+        // QLabel for the window title and the shadow effect
+        /*
+        m_shadow = new QGraphicsDropShadowEffect();
+        m_shadow->setColor( m_textShadowColor );
+        m_shadow->setXOffset( 1 );
+        m_shadow->setYOffset( 1 );
+        */
+
+        m_windowTitle = new QLabel(this);
+        m_windowTitle->setFocusPolicy(Qt::NoFocus);
+        m_windowTitle->setAttribute(Qt::WA_TransparentForMouseEvents, true);
+        // m_windowTitle->setGraphicsEffect( m_shadow );
     }
-
-    // QLabel for the window title and the shadow effect
-    /*
-    m_shadow = new QGraphicsDropShadowEffect();
-    m_shadow->setColor( m_textShadowColor );
-    m_shadow->setXOffset( 1 );
-    m_shadow->setYOffset( 1 );
-    */
-
-    m_windowTitle = new QLabel(this);
-    m_windowTitle->setFocusPolicy(Qt::NoFocus);
-    m_windowTitle->setAttribute(Qt::WA_TransparentForMouseEvents, true);
-    // m_windowTitle->setGraphicsEffect( m_shadow );
 
     // disable the minimize button
     Qt::WindowFlags flags = Qt::SubWindow | Qt::CustomizeWindowHint;
@@ -148,18 +158,33 @@ SubWindow::SubWindow(QWidget* _child,
 
     setWidget(_child);
 
-    QSize sz = widget()->sizeHint();
-    // qWarning("Child SizeHint: %d x %d",sz.width(),sz.height());
-    widget()->resize(sz);
-    sz = widget()->size();
-    // qWarning("Child Size: %d x %d",sz.width(),sz.height());
-
-    if(flags & Qt::FramelessWindowHint)
+    if(gui->mainWindow()->isTabbed())
+    {
+        QSize sz = gui->mainWindow()->workspace()->size();
+        move(0, 0);
         resize(sz);
+        widget()->setGeometry(0, 0, sz.width(), sz.height());
+    }
     else
-        resize(sz.width() + 6, sz.height() + m_titleBarHeight + 4);
+    {
+        QSize sz = widget()->sizeHint();
+        // qWarning("Child SizeHint: %d x %d",sz.width(),sz.height());
+        widget()->resize(sz);
+        sz = widget()->size();
+        // qWarning("Child Size: %d x %d",sz.width(),sz.height());
+
+        if(flags & Qt::FramelessWindowHint)
+            resize(sz);
+        else
+            resize(sz.width() + 6, sz.height() + m_titleBarHeight + 4);
+    }
 
     // qWarning("SubWindow Size: %d x %d\n",width(),height());
+
+    // initialize the tracked geometry to whatever Qt thinks the normal
+    // geometry currently is. this should always work, since QMdiSubWindows
+    // will not start as maximized
+    m_trackedNormalGeom = normalGeometry();
 
     if(!_maximizable)
     {
@@ -185,11 +210,18 @@ void SubWindow::closeEvent(QCloseEvent* _evt)
         _evt->ignore();
     }
     else
+    {
         QMdiSubWindow::closeEvent(_evt);
+    }
+
+    emit closed();
 }
 
 void SubWindow::paintEvent(QPaintEvent*)
 {
+    if(gui->mainWindow()->isTabbed())
+        return;
+
     QPainter p(this);
     QRect    rect(0, 0, width(), m_titleBarHeight);
     bool     isActive = (mdiArea() && (mdiArea()->activeSubWindow() == this));
@@ -252,10 +284,10 @@ bool SubWindow::isMaximized()
             = mdiArea()->verticalScrollBar()->isVisible()
                       ? mdiArea()->verticalScrollBar()->size().width()
                       : 0;
-    QSize areaSize(this->mdiArea()->size().width() - vScrollBarWidth,
-                   this->mdiArea()->size().height() - hScrollBarHeight);
+    QSize areaSize(mdiArea()->size().width() - vScrollBarWidth,
+                   mdiArea()->size().height() - hScrollBarHeight);
 
-    return areaSize == this->size();
+    return areaSize == size();
 #else
     return QMdiSubWindow::isMaximized();
 #endif
@@ -296,19 +328,11 @@ void SubWindow::setBorderColor(const QColor& c)
     m_borderColor = c;
 }
 
-void SubWindow::moveEvent(QMoveEvent* event)
-{
-    QMdiSubWindow::moveEvent(event);
-    // if the window was moved and ISN'T minimized/maximized/fullscreen,
-    // then save the current position
-    if(!isMaximized() && !isMinimized() && !isFullScreen())
-    {
-        m_trackedNormalGeom.moveTopLeft(event->pos());
-    }
-}
-
 void SubWindow::adjustTitleBar()
 {
+    if(gui->mainWindow()->isTabbed())
+        return;
+
     // button adjustments
     if(m_maximizeBtn)
         m_maximizeBtn->hide();
@@ -332,7 +356,8 @@ void SubWindow::adjustTitleBar()
 
     // set the buttons on their positions.
     // the close button is always needed and on the rightButtonPos
-    m_closeBtn->move(rightButtonPos);
+    if(m_closeBtn)
+            m_closeBtn->move(rightButtonPos);
 
     // here we ask: is the Subwindow maximizable and
     // then we set the buttons and show them if needed
@@ -390,9 +415,43 @@ void SubWindow::focusChanged(QMdiSubWindow* subWindow)
     }
 }
 
+void SubWindow::moveEvent(QMoveEvent* event)
+{
+    /*
+if(gui->mainWindow()->isTabbed())
+{
+    event->accept();
+    QRect r(QPoint(0, 0), mdiArea()->size());
+    if(r != geometry())
+        setGeometry(r);
+}
+else
+    */
+    QMdiSubWindow::moveEvent(event);
+
+    // if the window was moved and ISN'T minimized/maximized/fullscreen,
+    // then save the current position
+    if(!isMaximized() && !isMinimized() && !isFullScreen())
+    {
+        // const QRect& r=geometry();
+        m_trackedNormalGeom.moveTopLeft(event->pos());
+    }
+}
+
 void SubWindow::resizeEvent(QResizeEvent* event)
 {
     adjustTitleBar();
+
+    /*
+    if(gui->mainWindow()->isTabbed())
+    {
+        event->accept();
+        QRect r(QPoint(0, 0), mdiArea()->size());
+        if(r != geometry())
+            setGeometry(r);
+    }
+    else
+    */
     QMdiSubWindow::resizeEvent(event);
 
     // if the window was resized and ISN'T minimized/maximized/fullscreen,

@@ -1,5 +1,5 @@
 /*
- * OutputGDXControls.h - controls for audio output properties
+ * InputGDXControls.h - controls for audio output properties
  *
  * Copyright (c) 2018 gi0e5b06 (on github.com)
  *
@@ -22,21 +22,21 @@
  *
  */
 
-#ifndef OUTPUTGDX_CONTROLS_H
-#define OUTPUTGDX_CONTROLS_H
+#ifndef INPUTGDX_CONTROLS_H
+#define INPUTGDX_CONTROLS_H
 
 #include "EffectControls.h"
+#include "InputGDXDialog.h"
 #include "Knob.h"
-#include "OutputGDXDialog.h"
 
-class OutputGDX;
+class InputGDX;
 
-class OutputGDXControls : public EffectControls
+class InputGDXControls : public EffectControls
 {
     Q_OBJECT
   public:
-    OutputGDXControls(OutputGDX* effect);
-    virtual ~OutputGDXControls()
+    InputGDXControls(InputGDX* effect);
+    virtual ~InputGDXControls()
     {
     }
 
@@ -44,7 +44,7 @@ class OutputGDXControls : public EffectControls
     virtual void loadSettings(const QDomElement& _this);
     inline virtual QString nodeName() const
     {
-        return "OutputGDXControls";
+        return "InputGDXControls";
     }
 
     virtual int controlCount()
@@ -54,19 +54,20 @@ class OutputGDXControls : public EffectControls
 
     virtual EffectControlDialog* createView()
     {
-        return new OutputGDXDialog(this);
+        return new InputGDXDialog(this);
     }
 
   private:
-    OutputGDX* m_effect;
-    FloatModel       m_leftModel;
-    FloatModel       m_rightModel;
-    FloatModel       m_rmsModel;
-    FloatModel       m_volModel;
-    FloatModel       m_panModel;
+    InputGDX*  m_effect;
+    FloatModel m_leftSignalModel;
+    FloatModel m_rightSignalModel;
+    FloatModel m_volumeModel;
+    FloatModel m_balanceModel;
+    FloatModel m_mixingModel;
+    FloatModel m_deltaModel;
 
-    friend class OutputGDXDialog;
-    friend class OutputGDX;
+    friend class InputGDXDialog;
+    friend class InputGDX;
 };
 
 #endif

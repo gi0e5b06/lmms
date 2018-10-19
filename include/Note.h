@@ -55,6 +55,7 @@ enum Keys
 
 enum Octaves
 {
+	Octave_M1,
 	Octave_0,
 	Octave_1,
 	Octave_2,
@@ -74,7 +75,7 @@ const int WhiteKeysPerOctave = 7;
 const int BlackKeysPerOctave = 5;
 const int KeysPerOctave = WhiteKeysPerOctave + BlackKeysPerOctave;
 const int NumKeys = 128;//NumOctaves * KeysPerOctave;
-const int DefaultKey = DefaultOctave*KeysPerOctave + Key_A; // A3???
+const int DefaultKey = DefaultOctave*KeysPerOctave + Key_A; // A4 69
 
 const float MaxDetuning = 4 * 12.0f;
 

@@ -106,11 +106,12 @@ tact_t BBTrackContainer::lengthOfBB( int _bb ) const
 {
 	MidiTime max_length = MidiTime::ticksPerTact();
 
-	const Tracks& tl = tracks();
-	for( Tracks::const_iterator it = tl.begin(); it != tl.end(); ++it )
+	for(const Track* t: tracks())
 	{
-		max_length = qMax( max_length,
-                                   ( *it )->getTCO( _bb )->length() );
+                TrackContentObject* tco=t->getTCO( _bb );
+                if(tco !=nullptr)
+                        max_length = qMax( max_length,
+                                           tco->length() );
 	}
 
 	return max_length.nextFullTact();
@@ -120,10 +121,9 @@ tact_t BBTrackContainer::lengthOfBB( int _bb ) const
 tick_t BBTrackContainer::beatLengthOfBB( int _bb ) const
 {
         tick_t max_length=0;
-        const Tracks& tl = tracks();
-	for( Tracks::const_iterator it = tl.begin(); it != tl.end(); ++it )
+	for(const Track* t: tracks())
 	{
-                Pattern* p=dynamic_cast<Pattern*>((*it)->getTCO( _bb ));
+                Pattern* p=dynamic_cast<Pattern*>(t->getTCO( _bb ));
                 if(p)
                 {
                         tick_t plen=p->length();//beatPatternLength();

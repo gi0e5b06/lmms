@@ -169,7 +169,7 @@ static QHash<QString, QFile*>       s_mmap_file;
 void SampleBuffer::clearMMap()
 {
     s_mmap_pointer.clear();
-    foreach(QFile* f, s_mmap_file)
+    for(QFile* f : s_mmap_file)
     {
         f->close();
         delete f;
@@ -636,6 +636,26 @@ void SampleBuffer::normalizeSampleRate(const sample_rate_t _srcSR,
         m_loopStartFrame = m_startFrame = 0;
         m_loopEndFrame = m_endFrame = m_frames;
     }
+}
+
+sample_t SampleBuffer::userWaveSample(const real_t _sample) const
+{
+    const f_cnt_t frames = m_frames;
+    if(frames == 0)
+        return 0.;
+
+    const sampleFrame* data = m_data;
+
+    const real_t f = _sample * frames;
+
+    f_cnt_t f1 = static_cast<f_cnt_t>(f) % frames;
+    if(f1 < 0)
+        f1 += frames;
+    f_cnt_t f2 = f1 + 1;
+    if(f2 == frames)
+        f2 = 0;
+    return linearInterpolate(data[f1][0], data[f2][0],
+                             positivefraction(_sample));
 }
 
 f_cnt_t SampleBuffer::decodeSampleSF(const char*    _f,
@@ -1627,10 +1647,12 @@ QString& SampleBuffer::toBase64(QString& _dst) const
     // base64::encode((const char*)m_data, m_frames * sizeof(sampleFrame),
     // _dst);
 #ifdef REAL_IS_FLOAT
-    _dst = base64::encodeFloats((const FLOAT*)m_data, m_frames * DEFAULT_CHANNELS);
+    _dst = base64::encodeFloats((const FLOAT*)m_data,
+                                m_frames * DEFAULT_CHANNELS);
 #endif
 #ifdef REAL_IS_DOUBLE
-    _dst = base64::encodeDoublesAsFloats((const double*)m_data, m_frames * DEFAULT_CHANNELS);
+    _dst = base64::encodeDoublesAsFloats((const double*)m_data,
+                                         m_frames * DEFAULT_CHANNELS);
 #endif
 
 #endif /* LMMS_HAVE_FLAC_STREAM_ENCODER_H */

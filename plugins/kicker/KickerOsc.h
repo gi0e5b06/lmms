@@ -85,7 +85,7 @@ class KickerOsc
                 /*
                   const real_t gain
                   = 1. - fastPowf(m_counter / m_length, m_env);
-                  const real_t    p = absFraction(m_phase);
+                  const real_t    p = positivefraction(m_phase);
                   const sample_t s = (WaveForm::SINE.f(p) * (1. - m_noise))
                   + (WaveForm::WHITENOISE.f(p) * gain * gain * m_noise);
                 */
@@ -94,8 +94,8 @@ class KickerOsc
                         = 1.
                           - fastPow(real_t(m_counter) / real_t(m_length),
                                     m_env);
-                const real_t   p1 = absFraction(m_phase);
-                const real_t   p2 = absFraction(m_phaseFactor * m_phase);
+                const real_t   p1 = positivefraction(m_phase);
+                const real_t   p2 = positivefraction(m_phaseFactor * m_phase);
                 const sample_t s
                         = (m_sin->f(p1) * (1. - m_noise))
                           + (m_whn->f(p2) * fastPow(gain, m_tail) * m_noise);

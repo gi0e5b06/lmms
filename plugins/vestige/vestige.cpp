@@ -43,6 +43,7 @@
 #include "GuiApplication.h"
 #include "PixmapButton.h"
 #include "SampleBuffer.h"
+#include "Song.h"
 #include "StringPairDrag.h"
 #include "TextFloat.h"
 #include "ToolTip.h"
@@ -286,19 +287,18 @@ void vestigeInstrument::loadFile( const QString & _file )
 void vestigeInstrument::play( sampleFrame * _buf )
 {
 	//m_pluginMutex.lock();
-        if (!m_pluginMutex.tryLock())
+        if (!m_pluginMutex.tryLock(Engine::getSong()->isExporting() ? -1 : 0))
                 return;
-
-	const fpp_t frames = Engine::mixer()->framesPerPeriod();
 
 	if( m_plugin == nullptr )
 	{
-		//BufferManager::clear( _buf );//, frames );
 		m_pluginMutex.unlock();
 		return;
 	}
 
 	m_plugin->process( nullptr, _buf );
+
+	const fpp_t frames = Engine::mixer()->framesPerPeriod();
 
 	instrumentTrack()->processAudioBuffer( _buf, frames, nullptr );
 

@@ -354,7 +354,7 @@ bool Knob::updateAngle()
     if(!m)
         return true;
 
-    float angle = 0.f;
+    real_t angle = 0.;
     if(m)  //&& m->maxValue() != m->minValue() )
     {
         // angle = angleFromValue( m->inverseScaledValue( m->rawValue() ),
@@ -362,13 +362,13 @@ bool Knob::updateAngle()
         // v=m->minValue()+qRound( (m->rawValue()-m->minValue()) /
         //                              m->step<float>() ) * m->step<float>();
         // v=m->normalizedValue(v);
-        float v = m->rawValue();
+        real_t v = m->rawValue();
         if(m->isScaleLogarithmic())
             v = ::linearToLogScale(m->minValue(), m->maxValue(), v);
         v     = (v - m->minValue()) / m->range();
-        angle = m_totalAngle * (v - 0.5f);
+        angle = m_totalAngle * (v - 0.5);
     }
-    if(qAbs(angle - m_angle) > 3.f)
+    if(abs(angle - m_angle) > 3.)
     {
         m_angle = angle;
         return true;

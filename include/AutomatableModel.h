@@ -372,6 +372,7 @@ class EXPORT AutomatableModel
 
     void propagateValue();
     void propagateAutomatedValue();
+    void propagateAutomatedBuffer();
 
   private:
     QString formatNumber(real_t v);

@@ -39,7 +39,13 @@ class EXPORT EnvelopeAndLfoParameters
       , public JournallingObject
 {
     Q_OBJECT
+
   public:
+    // how long should be each envelope-segment maximal (e.g. attack)?
+    static constexpr real_t SECS_PER_ENV_SEGMENT = 5.;
+    // how long should be one LFO-oscillation maximal?
+    static constexpr real_t SECS_PER_LFO_OSCILLATION = 20.;
+
     class LfoInstances
     {
       public:

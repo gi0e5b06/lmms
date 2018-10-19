@@ -435,6 +435,25 @@ void AutomatableModel::propagateAutomatedValue()
     --m_setValueDepth;
 }
 
+void AutomatableModel::propagateAutomatedBuffer()
+{
+    if(!m_hasSampleExactData)
+        return;
+
+    ++m_setValueDepth;
+    // notify linked models
+    for(QVector<AutomatableModel*>::Iterator it = m_linkedModels.begin();
+        it != m_linkedModels.end(); ++it)
+    {
+        if((*it)->m_setValueDepth < 1)
+        {
+            (*it)->setAutomatedBuffer(&m_valueBuffer);
+        }
+    }
+    setAutomatedValue(m_valueBuffer.value(0));
+    --m_setValueDepth;
+}
+
 template <class T>
 T AutomatableModel::logToLinearScale(T value) const
 {
@@ -914,6 +933,9 @@ void AutomatableModel::setBuffer(const ValueBuffer* _vb)
 
 void AutomatableModel::setAutomatedBuffer(const ValueBuffer* _vb)
 {
+    if(m_lastUpdatedPeriod == s_periodCounter)
+        return;
+
     const fpp_t FPP = Engine::mixer()->framesPerPeriod();
     if(_vb == NULL || _vb->length() != FPP || m_valueBuffer.length() != FPP)
     {
@@ -935,11 +957,14 @@ void AutomatableModel::setAutomatedBuffer(const ValueBuffer* _vb)
 
     m_lastUpdatedPeriod  = s_periodCounter;
     m_hasSampleExactData = true;
-    setAutomatedValue(m_valueBuffer.value(0));
+    propagateAutomatedBuffer();
 }
 
 void AutomatableModel::setControlledBuffer(const ValueBuffer* _vb)
 {
+    if(m_lastUpdatedPeriod == s_periodCounter)
+        return;
+
     const fpp_t FPP = Engine::mixer()->framesPerPeriod();
     if(_vb == NULL || _vb->length() != FPP || m_valueBuffer.length() != FPP)
     {
@@ -961,7 +986,7 @@ void AutomatableModel::setControlledBuffer(const ValueBuffer* _vb)
 
     m_lastUpdatedPeriod  = s_periodCounter;
     m_hasSampleExactData = true;
-    setAutomatedValue(m_valueBuffer.value(0));
+    propagateAutomatedBuffer();
 }
 
 void AutomatableModel::unlinkControllerConnection()

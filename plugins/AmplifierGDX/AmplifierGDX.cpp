@@ -27,6 +27,8 @@
 #include "embed.h"
 #include "lmms_math.h"
 
+#include <QTimer>
+
 extern "C"
 {
 
@@ -170,8 +172,8 @@ bool AmplifierGDXEffect::processAudioBuffer(sampleFrame* buf,
     if(r && volumeBuf == nullptr && isClipping())
     {
         setClipping(false);
-        m_ampControls.m_volumeModel.setValue(
-                m_ampControls.m_volumeModel.rawValue() * 0.999);
+        m_ampControls.m_volumeModel.setAutomatedValue(
+          m_ampControls.m_volumeModel.rawValue() * 0.995);
     }
     return r;
 }
