@@ -109,8 +109,6 @@ public slots:
         //void setCurrentSample(SampleBuffer* _sample);
         bool checkPointBounds(int _key);
 
-	typedef SampleBuffer::handleState handleState;
-
         int           m_currentKey;
         //double        m_semitones[128];
 	SampleBuffer* m_sampleBuffer[128];

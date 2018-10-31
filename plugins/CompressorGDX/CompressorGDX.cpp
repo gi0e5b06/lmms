@@ -60,12 +60,14 @@ bool CompressorGDX::processAudioBuffer(sampleFrame* _buf, const fpp_t _frames)
     if(!shouldProcessAudioBuffer(_buf, _frames, smoothBegin, smoothEnd))
         return false;
 
+    const ValueBuffer* inGainBuf
+            = m_gdxControls.m_inGainModel.valueBuffer();
     const ValueBuffer* thresholdBuf
             = m_gdxControls.m_thresholdModel.valueBuffer();
     const ValueBuffer* ratioBuf = m_gdxControls.m_ratioModel.valueBuffer();
+    const ValueBuffer* modeBuf = m_gdxControls.m_modeModel.valueBuffer();
     const ValueBuffer* outGainBuf
             = m_gdxControls.m_outGainModel.valueBuffer();
-    const ValueBuffer* modeBuf = m_gdxControls.m_modeModel.valueBuffer();
 
     for(fpp_t f = 0; f < _frames; ++f)
     {
@@ -73,6 +75,8 @@ bool CompressorGDX::processAudioBuffer(sampleFrame* _buf, const fpp_t _frames)
         computeWetDryLevels(f, _frames, smoothBegin, smoothEnd, w0, d0, w1,
                             d1);
 
+        real_t inGain = outGainBuf ? inGainBuf->value(f)
+                                    : m_gdxControls.m_inGainModel.value();
         real_t threshold = thresholdBuf
                                    ? thresholdBuf->value(f)
                                    : m_gdxControls.m_thresholdModel.value();
@@ -83,8 +87,8 @@ bool CompressorGDX::processAudioBuffer(sampleFrame* _buf, const fpp_t _frames)
         int mode = (int)(modeBuf ? modeBuf->value(f)
                                  : m_gdxControls.m_modeModel.value());
 
-        sample_t curVal0 = _buf[f][0];
-        sample_t curVal1 = _buf[f][1];
+        sample_t curVal0 = _buf[f][0] * inGain;
+        sample_t curVal1 = _buf[f][1] * inGain;
 
         if(threshold > 0. || ratio > 0.)
             outGain /= (threshold + ratio * (1. - threshold));
@@ -167,14 +171,22 @@ bool CompressorGDX::processAudioBuffer(sampleFrame* _buf, const fpp_t _frames)
             }
         }
 
-        curVal0 = bound(-1., curVal0, 1.);
-        curVal1 = bound(-1., curVal1, 1.);
+        //curVal0 = bound(-1., curVal0, 1.);
+        //curVal1 = bound(-1., curVal1, 1.);
 
         _buf[f][0] = d0 * _buf[f][0] + w0 * curVal0;
         _buf[f][1] = d1 * _buf[f][1] + w1 * curVal1;
     }
 
-    return shouldKeepRunning(_buf, _frames);
+    bool r = shouldKeepRunning(_buf, _frames, true);
+    if(r && inGainBuf == nullptr && isClipping())
+    {
+        setClipping(false);
+        m_gdxControls.m_inGainModel.setAutomatedValue(
+          m_gdxControls.m_inGainModel.rawValue() * 0.995);
+    }
+    return r;
+
 }
 
 extern "C"

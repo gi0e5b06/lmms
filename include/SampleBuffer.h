@@ -46,33 +46,31 @@
 class QPainter;
 class QRect;
 
-// values for buffer margins, used for various libsamplerate interpolation
-// modes the array positions correspond to the converter_type parameter values
-// in libsamplerate if there appears problems with playback on some
-// interpolation mode, then the value for that mode may need to be higher -
-// conversely, to optimize, some may work with lower values
-const f_cnt_t MARGIN[] = {64, 64, 64, 4, 4};
-
 class EXPORT SampleBuffer
       : public QObject
       , public sharedObject
 {
     Q_OBJECT
     MM_OPERATORS
+
   public:
     enum LoopMode
     {
-        LoopOff = 0,
+        LoopOff,
         LoopOn,
         LoopPingPong
     };
-    class EXPORT handleState
+
+    class EXPORT HandleState
     {
         MM_OPERATORS
+
       public:
-        handleState(bool _varying_pitch     = false,
-                    int  interpolation_mode = SRC_LINEAR);
-        virtual ~handleState();
+        HandleState(f_cnt_t _startIndex   = -1,
+                    bool    _varyingPitch = false,
+                    int     _quality      = 10,
+                    bool    _isBackwards  = false);
+        virtual ~HandleState();
 
         const f_cnt_t frameIndex() const
         {
@@ -94,17 +92,17 @@ class EXPORT SampleBuffer
             m_isBackwards = _backwards;
         }
 
-        int interpolationMode() const
+        int quality() const
         {
-            return m_interpolationMode;
+            return m_quality;
         }
 
       private:
         f_cnt_t    m_frameIndex;
         const bool m_varyingPitch;
+        int        m_quality;
         bool       m_isBackwards;
         SRC_STATE* m_resamplingData;
-        int        m_interpolationMode;
 
         friend class SampleBuffer;
     };
@@ -123,10 +121,12 @@ class EXPORT SampleBuffer
     virtual ~SampleBuffer();
 
     bool play(sampleFrame*      _ab,
-              handleState*      _state,
+              HandleState*      _state,
               const fpp_t       _frames,
               const frequency_t _freq,
-              const LoopMode    _loopmode = LoopOff);
+              const LoopMode    _loopmode        = LoopOff,
+              const bool        _released        = false,
+              const LoopMode    _releaseLoopmode = LoopOff);
 
     void visualize(QPainter&    _p,
                    const QRect& _dr,
@@ -269,6 +269,15 @@ class EXPORT SampleBuffer
     void sampleUpdated();
 
   private:
+    f_cnt_t nextFrame(const f_cnt_t  _currentFrame,
+                      const LoopMode _loopMode,
+                      bool&          isBackwards_);
+
+    real_t nextStretchedFrame(const real_t   _currentFrame,
+                              const LoopMode _loopMode,
+                              bool&          isBackwards_,
+                              const real_t   _step);
+
     void update(bool _keep_settings = false);
     void prefetch(f_cnt_t _index);
 
@@ -327,6 +336,7 @@ class EXPORT SampleBuffer
     f_cnt_t        m_endFrame;
     f_cnt_t        m_loopStartFrame;
     f_cnt_t        m_loopEndFrame;
+    real_t         m_stretching;
     real_t         m_amplification;
     bool           m_reversed;
     frequency_t    m_frequency;

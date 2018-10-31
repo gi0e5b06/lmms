@@ -80,7 +80,7 @@ IF("${PLUGIN_LIST}" STREQUAL "")
 		# ladspa_browser - not needed
 		LadspaEffect
 		lb302
-                # lvst2instrument - not ready
+                lvst2instrument
                 # MatrixGDX
 		MidiImport
 		MidiExport
@@ -119,6 +119,7 @@ IF("${PLUGIN_LIST}" STREQUAL "")
 		waveshaper
 		vibed
                 VideoLineExport
+                VideoWaveExport
                 WallGDX
 		xpressive
 		zynaddsubfx

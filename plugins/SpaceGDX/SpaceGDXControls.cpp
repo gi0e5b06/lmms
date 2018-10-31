@@ -24,18 +24,18 @@
 
 #include "SpaceGDXControls.h"
 
-#include <QDomElement>
-
 #include "Engine.h"
 #include "Song.h"
 #include "SpaceGDX.h"
 
+#include <QDomElement>
+
 SpaceGDXControls::SpaceGDXControls(SpaceGDXEffect* effect) :
-        EffectControls(effect), m_effect(effect),
-      m_rightPhaseModel(0.f, 0.f, 1.f, 0.0001f, this, tr("Phase")),
-      m_rightGainModel(1.f, 0.f, 1.f, 0.0001f, this, tr("Gain")),
-        m_rightLowModel(0.f, 0.f, 1.f, 0.0001f, this, tr("Low Pass")),
-      m_rightHighModel(0.f, 0.f, 1.f, 0.0001f, this, tr("High Pass"))
+      EffectControls(effect), m_effect(effect),
+      m_rightPhaseModel(0., 0., 1., 0.0001, this, tr("Phase")),
+      m_rightGainModel(1., 0., 1., 0.0001, this, tr("Gain")),
+      m_rightLowModel(0., 0., 1., 0.0001, this, tr("Low Pass")),
+      m_rightHighModel(0., 0., 1., 0.0001, this, tr("High Pass"))
 {
     /*
     connect( &m_distanceModel, SIGNAL( dataChanged() ), this, SLOT(
@@ -52,17 +52,17 @@ void SpaceGDXControls::changeControl()
 
 void SpaceGDXControls::loadSettings(const QDomElement& _this)
 {
-        /*    m_distanceModel.loadSettings(_this, "distance");
-    m_dryModel.loadSettings(_this, "dry");
-    m_wetModel.loadSettings(_this, "wet");
-        */
+    /*    m_distanceModel.loadSettings(_this, "distance");
+m_dryModel.loadSettings(_this, "dry");
+m_wetModel.loadSettings(_this, "wet");
+    */
 }
 
 void SpaceGDXControls::saveSettings(QDomDocument& doc, QDomElement& _this)
 {
-        /*
-    m_distanceModel.saveSettings(doc, _this, "distance");
-    m_dryModel.saveSettings(doc, _this, "dry");
-    m_wetModel.saveSettings(doc, _this, "wet");
-        */
+    /*
+m_distanceModel.saveSettings(doc, _this, "distance");
+m_dryModel.saveSettings(doc, _this, "dry");
+m_wetModel.saveSettings(doc, _this, "wet");
+    */
 }

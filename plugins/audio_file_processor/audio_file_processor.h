@@ -78,8 +78,6 @@ class audioFileProcessor : public Instrument
     void isPlaying(f_cnt_t _current_frame);
 
   private:
-    typedef SampleBuffer::handleState handleState;
-
     SampleBuffer m_sampleBuffer;
 
     FloatModel    m_ampModel;

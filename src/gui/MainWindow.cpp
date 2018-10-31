@@ -363,6 +363,9 @@ void MainWindow::finalize()
     project_menu->addAction(embed::getIconPixmap("project_export"),
                             tr("Render &Video line..."), Engine::getSong(),
                             SLOT(exportProjectVideoLine()));
+    project_menu->addAction(embed::getIconPixmap("project_export"),
+                            tr("Render Video &Wave..."), Engine::getSong(),
+                            SLOT(exportProjectVideoWave()));
 
     project_menu->addSeparator();
     project_menu->addAction(embed::getIconPixmap("project_import"),
@@ -1004,7 +1007,7 @@ void MainWindow::updateRecentlyOpenedProjectsMenu()
                     ->setIconVisibleInMenu(true);
 #endif
             shownInMenu++;
-            if(shownInMenu >= 15)
+            if(shownInMenu >= 23)
             {
                 return;
             }

@@ -82,8 +82,21 @@ void InstrumentPlayHandle::play(sampleFrame* _working_buffer)
     if(processed)
     {
         ndm = round(1000. * ndm) / 1000.;
-        m_instrument->instrumentTrack()->noteBendingModel()->setAutomatedValue(ndm);
+        m_instrument->instrumentTrack()
+                ->noteBendingModel()
+                ->setAutomatedValue(ndm);
     }
 
     m_instrument->play(_working_buffer);
 }
+
+bool InstrumentPlayHandle::isFinished() const
+{
+        return false;
+}
+
+bool InstrumentPlayHandle::isFromTrack(const Track* _track) const
+{
+    return m_instrument->isFromTrack(_track);
+}
+

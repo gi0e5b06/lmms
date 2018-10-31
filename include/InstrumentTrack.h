@@ -28,6 +28,7 @@
 #define INSTRUMENT_TRACK_H
 
 #include "AudioPort.h"
+#include "BasicFilters.h"
 //#include "GroupBox.h"
 #include "InstrumentFunction.h"
 #include "InstrumentSoundShaping.h"

@@ -204,16 +204,25 @@ bool sanitize(sampleFrame* _src, const f_cnt_t _frames)
     for(f_cnt_t f = _frames - 1; f >= 0; --f)
     {
         const sample_t s0 = _src[f][0];
-        if(isinf(s0) || isnan(s0) || abs(s0) < SILENCE)
+        if(isinf(s0) || isnan(s0))
         {
             _src[f][0] = 0.;
             found      = true;
         }
+        else if(abs(s0) <= SILENCE)
+        {
+            _src[f][0] = 0.;
+        }
+
         const sample_t s1 = _src[f][1];
-        if(isinf(s1) || isnan(s1) || abs(s1) < SILENCE)
+        if(isinf(s1) || isnan(s1))
         {
             _src[f][1] = 0.;
             found      = true;
+        }
+        else if(abs(s1) <= SILENCE)
+        {
+            _src[f][1] = 0.;
         }
     }
     return found;

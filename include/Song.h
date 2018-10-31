@@ -315,7 +315,12 @@ public:
 	}
 
 
-	MeterModel & getTimeSigModel()
+	const MeterModel& getTimeSigModel() const
+	{
+		return m_timeSigModel;
+	}
+
+	MeterModel& getTimeSigModel()
 	{
 		return m_timeSigModel;
 	}
@@ -347,6 +352,7 @@ public slots:
 	void exportProjectTracks();
 	void exportProjectMidi();
         void exportProjectVideoLine();
+        void exportProjectVideoWave();
 
 	void startExport();
 	void stopExport();

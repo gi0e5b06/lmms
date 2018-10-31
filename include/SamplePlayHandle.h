@@ -50,17 +50,16 @@ public:
 
 	virtual void play( sampleFrame * buffer );
 	virtual bool isFinished() const;
-
 	virtual bool isFromTrack( const Track * _track ) const;
 
 	/*! Returns total numbers of frames to play (including release frames = 0) */
-	f_cnt_t frames() const;
+	virtual f_cnt_t frames() const;
 	/*! Sets the total number of frames to play (including release frames = 0) */
-	void setFrames( const f_cnt_t _frames );
+	virtual void setFrames( const f_cnt_t _frames );
 
 	//f_cnt_t totalFrames() const;
 
-	inline f_cnt_t framesDone() const
+	virtual f_cnt_t framesDone() const
 	{
 		return m_currentFrame;
 	}
@@ -87,7 +86,7 @@ private:
 
 	f_cnt_t m_currentFrame;
 	f_cnt_t m_frames;       // total frames to play
-	SampleBuffer::handleState m_state;
+	SampleBuffer::HandleState m_state;
 
 	const bool m_ownAudioPort;
 

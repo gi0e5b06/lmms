@@ -140,6 +140,7 @@ bool SampleRate::resample(const sampleFrame* _srcBuf,
         if(srcSize != 0 && src_data.output_frames_gen == 0)
         {
             qCritical("SampleRate: could not resample, no frames generated");
+            qCritical("srcSize=%d inputFrames=%d frqRatio=%f",srcSize,inputFramesUsed,frqRatio);
             return false;
         }
 

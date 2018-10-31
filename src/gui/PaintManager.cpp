@@ -47,12 +47,14 @@ PaintManager::~PaintManager()
 void PaintManager::runQueue()
 {
     // qInfo("PaintManager::runQueue %d", m_queue.size());
+    int n=0;
     while(!m_queue.empty())
     {
         QThread::yieldCurrentThread();
-        if(Engine::mixer()->warningXRuns())
+        if(n<20 && Engine::mixer()->warningXRuns())
         {
-                QThread::msleep(10);
+                n++;
+                QThread::msleep(20);
                 continue;
         }
         PaintCacheable* w = m_queue.dequeue();

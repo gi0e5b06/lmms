@@ -25,61 +25,69 @@
 #ifndef INSTRUMENT_SOUND_SHAPING_H
 #define INSTRUMENT_SOUND_SHAPING_H
 
+#include "BasicFilters.h"
 #include "ComboBoxModel.h"
-
 
 class InstrumentTrack;
 class EnvelopeAndLfoParameters;
 class NotePlayHandle;
+class InstrumentPlayHandle;
 
-
-class InstrumentSoundShaping : public Model, public JournallingObject
+class InstrumentSoundShaping
+      : public Model
+      , public JournallingObject
 {
-	Q_OBJECT
-public:
-	InstrumentSoundShaping( InstrumentTrack * _instrument_track );
-	virtual ~InstrumentSoundShaping();
+    Q_OBJECT
+  public:
+    InstrumentSoundShaping(InstrumentTrack* _instrument_track);
+    virtual ~InstrumentSoundShaping();
 
-	void processAudioBuffer( sampleFrame * _ab, const fpp_t _frames,
-							NotePlayHandle * _n );
+    void processAudioBuffer(sampleFrame*    _ab,
+                            const fpp_t     _frames,
+                            NotePlayHandle* _n);
+    void processAudioBuffer(sampleFrame*          _ab,
+                            const fpp_t           _frames,
+                            InstrumentPlayHandle* _n);
 
-	enum Targets
-	{
-		Volume,
-		Cut,
-		Resonance,
-		NumTargets
-	} ;
+    enum Targets
+    {
+        Volume,
+        Cut,
+        Resonance,
+        NumTargets
+    };
 
-	f_cnt_t envFrames( const bool _only_vol = false ) const;
-	f_cnt_t releaseFrames() const;
+    f_cnt_t envFrames(const bool _only_vol = false) const;
+    f_cnt_t releaseFrames() const;
 
-	real_t volumeLevel( NotePlayHandle * _n, const f_cnt_t _frame );
+    real_t volumeLevel(NotePlayHandle* _n, const f_cnt_t _frame);
 
+    virtual void saveSettings(QDomDocument& _doc, QDomElement& _parent);
+    virtual void loadSettings(const QDomElement& _this);
+    inline virtual QString nodeName() const
+    {
+        return "eldata";
+    }
 
-	virtual void saveSettings( QDomDocument & _doc, QDomElement & _parent );
-	virtual void loadSettings( const QDomElement & _this );
-	inline virtual QString nodeName() const
-	{
-		return "eldata";
-	}
+  protected:
+    void processAudioBuffer(sampleFrame*    buffer,
+                            const fpp_t     frames,
+                            BasicFilters<>* filter,
+                            f_cnt_t         envTotalFrames,
+                            f_cnt_t         envReleaseBegin);
 
+  private:
+    EnvelopeAndLfoParameters* m_envLfoParameters[NumTargets];
+    InstrumentTrack*          m_instrumentTrack;
 
-private:
-	EnvelopeAndLfoParameters * m_envLfoParameters[NumTargets];
-	InstrumentTrack * m_instrumentTrack;
+    BoolModel     m_filterEnabledModel;
+    ComboBoxModel m_filterModel;
+    FloatModel    m_filterCutModel;
+    FloatModel    m_filterResModel;
 
-	BoolModel m_filterEnabledModel;
-	ComboBoxModel m_filterModel;
-	FloatModel m_filterCutModel;
-	FloatModel m_filterResModel;
+    static const QString targetNames[InstrumentSoundShaping::NumTargets][3];
 
-	static const QString targetNames[InstrumentSoundShaping::NumTargets][3];
-
-
-	friend class InstrumentSoundShapingView;
-
-} ;
-
+    friend class InstrumentSoundShapingView;
+};
 
 #endif

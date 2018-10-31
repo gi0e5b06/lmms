@@ -29,6 +29,7 @@
 #include "DataFile.h"
 #include "Engine.h"
 #include "InstrumentTrack.h"
+#include "MixHelpers.h"
 #include "Mixer.h"
 #include "NotePlayHandle.h"
 #include "Song.h"
@@ -93,7 +94,7 @@ audioFileProcessor::audioFileProcessor(InstrumentTrack* _instrument_track) :
     m_interpolationModel.addItem(tr("None"));
     m_interpolationModel.addItem(tr("Linear"));
     m_interpolationModel.addItem(tr("Sinc"));
-    m_interpolationModel.setValue(1);
+    m_interpolationModel.setValue(2);
 
     pointChanged();
 }
@@ -129,22 +130,22 @@ void audioFileProcessor::playNote(NotePlayHandle* _n,
             m_nextPlayBackwards  = false;
         }
         // set interpolation mode for libsamplerate
-        int srcmode = SRC_LINEAR;
+        int srcmode = 2;  // SRC_SINC_BEST_QUALITY;  // SRC_LINEAR;
         switch(m_interpolationModel.value())
         {
             case 0:
-                srcmode = SRC_ZERO_ORDER_HOLD;
+                srcmode = 0;  // SRC_ZERO_ORDER_HOLD;
                 break;
             case 1:
-                srcmode = SRC_LINEAR;
+                srcmode = 2;  // SRC_LINEAR;
                 break;
-            case 2:
-                srcmode = SRC_SINC_MEDIUM_QUALITY;
+            default:
+                srcmode = 10;  // SRC_SINC_BEST_QUALITY;
                 break;
         }
-        _n->m_pluginData = new handleState(_n->hasDetuningInfo(), srcmode);
-        ((handleState*)_n->m_pluginData)->setFrameIndex(m_nextPlayStartPoint);
-        ((handleState*)_n->m_pluginData)->setBackwards(m_nextPlayBackwards);
+        _n->m_pluginData = new SampleBuffer::HandleState(
+                m_nextPlayStartPoint, _n->hasDetuningInfo(), srcmode,
+                m_nextPlayBackwards);
 
         // debug code
         /*		qDebug( "frames %d", m_sampleBuffer.frames() );
@@ -155,15 +156,18 @@ void audioFileProcessor::playNote(NotePlayHandle* _n,
     if(!_n->isFinished())
     {
         if(m_sampleBuffer.play(
-                   _working_buffer + offset, (handleState*)_n->m_pluginData,
-                   frames, _n->frequency(),
-                   static_cast<SampleBuffer::LoopMode>(m_loopModel.value())))
+                   _working_buffer + offset,
+                   (SampleBuffer::HandleState*)_n->m_pluginData, frames,
+                   _n->frequency(),
+                   static_cast<SampleBuffer::LoopMode>(m_loopModel.value()),
+                   _n->isReleased()))
         {
             applyRelease(_working_buffer, _n);
             instrumentTrack()->processAudioBuffer(_working_buffer,
                                                   frames + offset, _n);
 
-            emit isPlaying(((handleState*)_n->m_pluginData)->frameIndex());
+            emit isPlaying(((SampleBuffer::HandleState*)_n->m_pluginData)
+                                   ->frameIndex());
         }
         else
         {
@@ -178,14 +182,22 @@ void audioFileProcessor::playNote(NotePlayHandle* _n,
     }
     if(m_stutterModel.value() == true)
     {
-        m_nextPlayStartPoint = ((handleState*)_n->m_pluginData)->frameIndex();
-        m_nextPlayBackwards = ((handleState*)_n->m_pluginData)->isBackwards();
+        m_nextPlayStartPoint = ((SampleBuffer::HandleState*)_n->m_pluginData)
+                                       ->frameIndex();
+        m_nextPlayBackwards = ((SampleBuffer::HandleState*)_n->m_pluginData)
+                                      ->isBackwards();
+        if(m_nextPlayStartPoint < 0
+           || m_nextPlayStartPoint >= m_sampleBuffer.frames())
+        {
+            m_nextPlayStartPoint = m_sampleBuffer.startFrame();
+            m_nextPlayBackwards  = false;
+        }
     }
 }
 
 void audioFileProcessor::deleteNotePluginData(NotePlayHandle* _n)
 {
-    delete(handleState*)_n->m_pluginData;
+    delete(SampleBuffer::HandleState*)_n->m_pluginData;
 }
 
 void audioFileProcessor::saveSettings(QDomDocument& _doc, QDomElement& _this)
@@ -252,7 +264,7 @@ void audioFileProcessor::loadSettings(const QDomElement& _this)
     }
     else
     {
-        m_interpolationModel.setValue(1);  // linear by default
+        m_interpolationModel.setValue(2);  // sinc by default
     }
 
     pointChanged();
@@ -270,13 +282,13 @@ QString audioFileProcessor::nodeName(void) const
 
 int audioFileProcessor::getBeatLen(NotePlayHandle* _n) const
 {
-    const float freq_factor = BaseFreq / _n->frequency()
+    const double freqFactor = BaseFreq / _n->frequency()
                               * Engine::mixer()->processingSampleRate()
                               / Engine::mixer()->baseSampleRate();
 
     return static_cast<int>(
-            floorf((m_sampleBuffer.endFrame() - m_sampleBuffer.startFrame())
-                   * freq_factor));
+            floor((m_sampleBuffer.endFrame() - m_sampleBuffer.startFrame())
+                  * freqFactor));
 }
 
 PluginView* audioFileProcessor::instantiateView(QWidget* _parent)

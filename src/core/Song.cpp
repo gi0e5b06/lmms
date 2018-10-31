@@ -1736,6 +1736,7 @@ void Song::exportProjectMidi()
 
 void Song::exportProjectVideoLine()
 {
+        /*
 	if( isEmpty() )
 	{
 		QMessageBox::information( gui->mainWindow(),
@@ -1745,6 +1746,7 @@ void Song::exportProjectVideoLine()
 					"Song Editor first!" ) );
 		return;
 	}
+        */
 
 	FileDialog efd( gui->mainWindow() );
 
@@ -1804,6 +1806,67 @@ void Song::exportProjectVideoLine()
 			return;
 		}
 		//exf->tryExport(tracks, tracks_BB, getTempo(), loops, export_filename);
+                exf->proceed(export_filename);
+	}
+}
+
+
+
+void Song::exportProjectVideoWave()
+{
+        /*
+	if( isEmpty() )
+	{
+		QMessageBox::information( gui->mainWindow(),
+				tr( "Empty project" ),
+				tr( "This project is empty so exporting makes "
+					"no sense. Please put some items into "
+					"Song Editor first!" ) );
+		return;
+	}
+        */
+
+	FileDialog efd( gui->mainWindow() );
+
+	efd.setFileMode( FileDialog::AnyFile );
+
+	QStringList types;
+	types << tr("MP4 File (*.mp4)");
+	efd.setNameFilters( types );
+	QString baseFileName;
+	if( !m_fileName.isEmpty() )
+	{
+                createProjectTree();
+                //QString rvldp= QFileInfo( m_fileName ).absolutePath();
+                QString rvldp= projectDir()+QDir::separator()+"videos"+QDir::separator()+"rendered";
+                efd.setDirectory(rvldp);
+                baseFileName = "wave";//QFileInfo( m_fileName ).completeBaseName();
+	}
+	else
+	{
+		efd.setDirectory( ConfigManager::inst()->userProjectsDir() );
+		baseFileName = tr( "untitled" );
+	}
+	efd.selectFile( baseFileName + ".mp4" );
+	efd.setDefaultSuffix( "mp4");
+	efd.setWindowTitle( tr( "Select file for export..." ) );
+
+	efd.setAcceptMode( FileDialog::AcceptSave );
+
+
+	if( efd.exec() == QDialog::Accepted && !efd.selectedFiles().isEmpty() && !efd.selectedFiles()[0].isEmpty() )
+	{
+		const QString suffix = ".mp4";
+
+		QString export_filename = efd.selectedFiles()[0];
+		if (!export_filename.endsWith(suffix)) export_filename += suffix;
+
+		// instantiate videowave export plugin
+		ExportFilter *exf = dynamic_cast<ExportFilter *> (Plugin::instantiate("videowaveexport", NULL, NULL));
+		if (exf==NULL) {
+			qWarning("Warning: Failed to load videowave export filter");
+			return;
+		}
                 exf->proceed(export_filename);
 	}
 }

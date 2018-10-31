@@ -25,13 +25,12 @@
 #ifndef PLAY_HANDLE_H
 #define PLAY_HANDLE_H
 
-#include <QList>
-#include <QMutex>
-
 #include "MemoryManager.h"
-
 #include "ThreadableJob.h"
 #include "lmms_basics.h"
+
+#include <QList>
+#include <QMutex>
 
 class QThread;
 
@@ -40,129 +39,128 @@ class AudioPort;
 
 class PlayHandle : public ThreadableJob
 {
-	MM_OPERATORS
- public:
-	enum Types
-	{
-		TypeNotePlayHandle = 0x01,
-		TypeInstrumentPlayHandle = 0x02,
-		TypeSamplePlayHandle = 0x04,
-		TypePresetPreviewHandle = 0x08
-	} ;
-	typedef Types Type;
+    MM_OPERATORS
+  public:
+    enum Types
+    {
+        TypeNotePlayHandle       = 0x01,
+        TypeInstrumentPlayHandle = 0x02,
+        TypeSamplePlayHandle     = 0x04,
+        TypePresetPreviewHandle  = 0x08
+    };
+    typedef Types Type;
 
-	enum
-	{
-		MaxNumber = 1024
-	} ;
+    enum
+    {
+        MaxNumber = 1024
+    };
 
-	virtual ~PlayHandle();
+    virtual ~PlayHandle();
 
-	virtual bool affinityMatters() const
-	{
-		return false;
-	}
+    virtual bool affinityMatters() const
+    {
+        return false;
+    }
 
-	const QThread* affinity() const
-	{
-		return m_affinity;
-	}
+    const QThread* affinity() const
+    {
+        return m_affinity;
+    }
 
-	Type type() const
-	{
-		return m_type;
-	}
+    Type type() const
+    {
+        return m_type;
+    }
 
-	// required for ThreadableJob
-	virtual void doProcessing();
+    // required for ThreadableJob
+    virtual void doProcessing();
 
-	virtual bool requiresProcessing() const
-	{
-		return !isFinished();
-	}
+    virtual bool requiresProcessing() const
+    {
+        return !isFinished();
+    }
 
-	void lock()
-	{
-		m_processingLock.lock();
-	}
-	void unlock()
-	{
-		m_processingLock.unlock();
-	}
-	bool tryLock()
-	{
-		return m_processingLock.tryLock();
-	}
-	virtual void play( sampleFrame* buffer ) = 0;
-	virtual bool isFinished() const = 0;
+    void lock()
+    {
+        m_processingLock.lock();
+    }
+    void unlock()
+    {
+        m_processingLock.unlock();
+    }
+    bool tryLock()
+    {
+        return m_processingLock.tryLock();
+    }
+    virtual void play(sampleFrame* buffer)              = 0;
+    virtual bool isFinished() const                     = 0;
+    virtual bool isFromTrack(const Track* _track) const = 0;
 
-	// returns the frameoffset at the start of the playhandle,
-	// ie. how many empty frames should be inserted at the start of the first period
-	f_cnt_t offset() const
-	{
-		return m_offset;
-	}
+    // returns the frameoffset at the start of the playhandle,
+    // ie. how many empty frames should be inserted at the start of the first
+    // period
+    virtual f_cnt_t offset() const final
+    {
+        return m_offset;
+    }
 
-	void setOffset( f_cnt_t _offset )
-	{
-		m_offset = _offset;
-	}
+    virtual void setOffset(f_cnt_t _offset) final
+    {
+        m_offset = _offset;
+    }
 
+    inline bool usesBuffer() const
+    {
+        return m_usesBuffer;
+    }
 
-	virtual bool isFromTrack( const Track * _track ) const = 0;
+    inline void setUsesBuffer(const bool b)
+    {
+        m_usesBuffer = b;
+    }
 
-	inline bool usesBuffer() const
-	{
-		return m_usesBuffer;
-	}
+    inline AudioPort* audioPort() const
+    {
+        return m_audioPort;
+    }
 
-	inline void setUsesBuffer( const bool b )
-	{
-		m_usesBuffer = b;
-	}
+    inline void setAudioPort(AudioPort* port)
+    {
+        m_audioPort = port;
+    }
 
-	inline AudioPort* audioPort() const
-	{
-		return m_audioPort;
-	}
+    void releaseBuffer();
 
-	inline void setAudioPort(AudioPort * port)
-	{
-		m_audioPort = port;
-	}
+    sampleFrame* buffer();
 
-	void releaseBuffer();
+  protected:
+    PlayHandle(const Type type, f_cnt_t offset = 0);
 
-	sampleFrame * buffer();
+    /*
+    PlayHandle& operator=(PlayHandle& p)
+    {
+        m_type       = p.m_type;
+        m_offset     = p.m_offset;
+        m_affinity   = p.m_affinity;
+        m_usesBuffer = p.m_usesBuffer;
+        m_audioPort  = p.m_audioPort;
+        return *this;
+    }
+    */
 
- protected:
-	PlayHandle( const Type type, f_cnt_t offset = 0 );
+    bool       m_usesBuffer;
+    AudioPort* m_audioPort;
 
-	PlayHandle & operator = ( PlayHandle & p )
-	{
-		m_type = p.m_type;
-		m_offset = p.m_offset;
-		m_affinity = p.m_affinity;
-		m_usesBuffer = p.m_usesBuffer;
-		m_audioPort = p.m_audioPort;
-		return *this;
-	}
+  private:
+    Type         m_type;
+    f_cnt_t      m_offset;
+    QThread*     m_affinity;
+    QMutex       m_processingLock;
+    sampleFrame* m_playHandleBuffer;
+    bool         m_bufferReleased;
+};
 
-	bool m_usesBuffer;
-	AudioPort* m_audioPort;
-
- private:
-	Type m_type;
-	f_cnt_t m_offset;
-	QThread* m_affinity;
-	QMutex m_processingLock;
-	sampleFrame* m_playHandleBuffer;
-	bool m_bufferReleased;
-} ;
-
-
-typedef QList<PlayHandle *> PlayHandleList;
-typedef QList<const PlayHandle *> ConstPlayHandleList;
-
+typedef QList<PlayHandle*>       PlayHandleList;
+typedef QList<const PlayHandle*> ConstPlayHandleList;
 
 #endif

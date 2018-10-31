@@ -27,39 +27,41 @@
 
 #include "AutomatableModel.h"
 
-
 class MeterModel : public Model
 {
-	Q_OBJECT
-	mapPropertyFromModel(int,getNumerator,setNumerator,m_numeratorModel);
-	mapPropertyFromModel(int,getDenominator,setDenominator,m_denominatorModel);
-public:
-	MeterModel( Model * _parent );
-	~MeterModel();
+    Q_OBJECT
+    mapPropertyFromModel(int, getNumerator, setNumerator, m_numeratorModel);
+    mapPropertyFromModel(int,
+                         getDenominator,
+                         setDenominator,
+                         m_denominatorModel);
 
-	void saveSettings( QDomDocument & _doc, QDomElement & _this,
-						const QString & _name );
-	void loadSettings( const QDomElement & _this, const QString & _name );
+  public:
+    MeterModel(Model* _parent);
+    ~MeterModel();
 
-	void reset();
+    void saveSettings(QDomDocument&  _doc,
+                      QDomElement&   _this,
+                      const QString& _name);
+    void loadSettings(const QDomElement& _this, const QString& _name);
 
-	// Must have the sub-models exposed to programatically connect
-	// to automation or controllers
-	IntModel & numeratorModel()
-	{
-		return m_numeratorModel;
-	}
+    void reset();
 
-	IntModel & denominatorModel()
-	{
-		return m_denominatorModel;
-	}
+    // Must have the sub-models exposed to programatically connect
+    // to automation or controllers
+    IntModel& numeratorModel()
+    {
+        return m_numeratorModel;
+    }
 
+    IntModel& denominatorModel()
+    {
+        return m_denominatorModel;
+    }
 
-private:
-	IntModel m_numeratorModel;
-	IntModel m_denominatorModel;
-
-} ;
+  private:
+    IntModel m_numeratorModel;
+    IntModel m_denominatorModel;
+};
 
 #endif

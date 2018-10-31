@@ -272,7 +272,7 @@ void PadsGDXView::doConnections()
 
 void PadsGDXView::onKeyUpdated(int _key)
 {
-        qInfo("PadsGDXView::onKeyUpdated");
+        //qInfo("PadsGDXView::onKeyUpdated");
         onModelChanged();
         onSampleUpdated();
 }
@@ -286,15 +286,15 @@ void PadsGDXView::onModelChanged()
         if(key<0 || key>127 || !a->currentSample())
         {
                 //qInfo("PadsGDXView::onModelChanged key not set");
-                m_startKnob    ->setModel(new FloatModel(0,0,0,1    ,NULL,"",true));
-                m_endKnob      ->setModel(new FloatModel(0,0,0,1    ,NULL,"",true));
-                m_loopStartKnob->setModel(new FloatModel(0,0,0,1    ,NULL,"",true));
-                m_loopEndKnob  ->setModel(new FloatModel(0,0,0,1    ,NULL,"",true));
+                m_startKnob    ->setModel(new FloatModel(0.,0.,0.,1.,NULL,"",true));
+                m_endKnob      ->setModel(new FloatModel(0.,0.,0.,1.,NULL,"",true));
+                m_loopStartKnob->setModel(new FloatModel(0.,0.,0.,1.,NULL,"",true));
+                m_loopEndKnob  ->setModel(new FloatModel(0.,0.,0.,1.,NULL,"",true));
                 m_reverseButton->setModel(new BoolModel (false      ,NULL,"",true));
                 m_loopGroup    ->setModel(new IntModel  (0,0,0      ,NULL,"",true));
                 m_stutterButton->setModel(new BoolModel (false      ,NULL,"",true));
-                m_ampKnob      ->setModel(new FloatModel(100,0,500,1,NULL,"",true));
-                m_tuneKnob     ->setModel(new FloatModel(0,-144,144,0.01,NULL,"",true));
+                m_ampKnob      ->setModel(new FloatModel(100.,0.,500.,1.,NULL,"",true));
+                m_tuneKnob     ->setModel(new FloatModel(0.,-144.,144.,0.01,NULL,"",true));
         }
         else
         {

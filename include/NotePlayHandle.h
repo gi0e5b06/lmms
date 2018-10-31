@@ -27,18 +27,17 @@
 #define NOTE_PLAY_HANDLE_H
 
 #include "AtomicInt.h"
+#include "BasicFilters.h"
 #include "Note.h"
 #include "ObjectManager.h"
 #include "PlayHandle.h"
 #include "Track.h"
-#include "BasicFilters.h"
 //#include "InstrumentTrack.h"
 //#include "MemoryManager.h"
 
-//class QReadWriteLock;
+// class QReadWriteLock;
 
-//template <ch_cnt_t = DEFAULT_CHANNELS> class BasicFilters;
-
+// template <ch_cnt_t = DEFAULT_CHANNELS> class BasicFilters;
 
 class InstrumentTrack;
 class NotePlayHandle;
@@ -52,6 +51,7 @@ class EXPORT NotePlayHandle /*final*/
       , public Note
 {
     MM_OPERATORS
+
   public:
     void*           m_pluginData;
     BasicFilters<>* m_filter;
@@ -63,9 +63,9 @@ class EXPORT NotePlayHandle /*final*/
         OriginMidiInput = 2, /*! playback of a MIDI note input event */
         OriginNoteStacking
         = 4, /*! created by note stacking instrument function */
-        OriginArpeggio = 8, /*! created by arpeggio instrument function */
-        OriginGlissando=16, /*! created by glissando instrument function */
-        //OriginCount //not used
+        OriginArpeggio  = 8,  /*! created by arpeggio instrument function */
+        OriginGlissando = 16, /*! created by glissando instrument function */
+        // OriginCount //not used
     };
     // typedef Origins Origin;
     typedef int Origin;
@@ -128,79 +128,79 @@ class EXPORT NotePlayHandle /*final*/
         return m_released && framesLeft() <= 0;
     }
 
-    /*! Returns number of frames left for playback */
-    f_cnt_t framesLeft() const;
-
-    /*! Returns how many frames have to be rendered in current period */
-    fpp_t framesLeftForCurrentPeriod() const;
-
     /*! Returns whether the play handle plays on a certain track */
     virtual bool isFromTrack(const Track* _track) const;
 
-    /*! Starts the note */
-    void noteOn(const f_cnt_t offset = 0);
+    /*! Returns number of frames left for playback */
+    virtual f_cnt_t framesLeft() const;
 
-    /*! Releases the note (and plays release frames */
-    void noteOff(const f_cnt_t offset = 0);
+    /*! Returns how many frames have to be rendered in current period */
+    virtual fpp_t framesLeftForCurrentPeriod() const;
 
     /*! Returns number of frames to be played until the note is going to be
      * released */
-    f_cnt_t framesBeforeRelease() const
+    virtual f_cnt_t framesBeforeRelease() const
     {
         return m_framesBeforeRelease;
     }
 
     /*! Returns how many frames were played since release */
-    f_cnt_t releaseFramesDone() const
+    virtual f_cnt_t releaseFramesDone() const
     {
         return m_releaseFramesDone;
     }
 
     /*! Returns the number of frames to be played after release according to
         the release times in the envelopes */
-    f_cnt_t actualReleaseFramesToDo() const;
+    virtual f_cnt_t actualReleaseFramesToDo() const;
 
     /*! Returns total numbers of frames to play (including release frames) */
-    f_cnt_t frames() const
+    virtual f_cnt_t frames() const
     {
         return m_frames;
     }
 
     /*! Sets the total number of frames to play (including release frames) */
-    void setFrames(const f_cnt_t _frames);
+    virtual void setFrames(const f_cnt_t _frames);
 
     /*! Returns whether note was released */
-    bool isReleased() const
+    virtual bool isReleased() const
     {
         return m_released;
     }
 
-    bool isReleaseStarted() const
+    virtual bool isReleaseStarted() const
     {
         return m_releaseStarted;
     }
 
     /*! Returns total numbers of frames played so far */
-    f_cnt_t totalFramesPlayed() const
+    virtual f_cnt_t totalFramesPlayed() const
     {
         return m_totalFramesPlayed;
     }
 
     /*! Returns volume level at given frame (envelope/LFO) */
-    real_t volumeLevel(const f_cnt_t frame);
+    virtual real_t volumeLevel(const f_cnt_t frame);
 
     /*! Returns instrument track which is being played by this handle (const
      * version) */
-    const InstrumentTrack* instrumentTrack() const
+    virtual const InstrumentTrack* instrumentTrack() const
     {
         return m_instrumentTrack;
     }
 
     /*! Returns instrument track which is being played by this handle */
-    InstrumentTrack* instrumentTrack()
+    virtual InstrumentTrack* instrumentTrack()
     {
         return m_instrumentTrack;
     }
+
+    /*! Starts the note */
+    void noteOn(const f_cnt_t offset = 0);
+
+    /*! Releases the note (and plays release frames */
+    void noteOff(const f_cnt_t offset = 0);
 
     /*! Returns whether note has a parent, e.g. is not part of an arpeggio or
      * a chord */
@@ -311,11 +311,11 @@ class EXPORT NotePlayHandle /*final*/
 
     void setAutomationDetune(const real_t _ad)
     {
-            if(m_automationDetune!=_ad)
-            {
-                    m_automationDetune = _ad;
-                    m_frequencyNeedsUpdate = true;
-            }
+        if(m_automationDetune != _ad)
+        {
+            m_automationDetune     = _ad;
+            m_frequencyNeedsUpdate = true;
+        }
     }
 
     real_t effectDetune()
@@ -325,17 +325,17 @@ class EXPORT NotePlayHandle /*final*/
 
     void addEffectDetune(const real_t _ed)
     {
-            if(_ed!=0.)
-            {
-                    m_effectDetune += _ed;
-                    m_frequencyNeedsUpdate = true;
-            }
+        if(_ed != 0.)
+        {
+            m_effectDetune += _ed;
+            m_frequencyNeedsUpdate = true;
+        }
     }
 
     const Scale* scale() const;
-    void setScale(const Scale* _scale);
+    void         setScale(const Scale* _scale);
 
- private:
+  private:
     void updateFrequency();
 
     /*
@@ -447,10 +447,10 @@ static bool safe()
     // static void extend( int i );
 
   protected:
-    //static NotePlayHandleManager* s_singleton;
+    // static NotePlayHandleManager* s_singleton;
 
   private:
-    //NotePlayHandleManager() : ObjectManager(1024, "NotePlayHandle") { }
+    // NotePlayHandleManager() : ObjectManager(1024, "NotePlayHandle") { }
 
     // static NotePlayHandleManager s_singleton(1024, "NotePlayHandle");
     // static NotePlayHandle ** s_available;

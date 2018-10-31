@@ -46,6 +46,12 @@ CompressorGDXDialog::CompressorGDXDialog(CompressorGDXControls* controls) :
     m_mainLayout->setContentsMargins(6, 6, 6, 6);
     m_mainLayout->setSpacing(6);
 
+    Knob* inGainKNB = new Knob(this);
+    // outGainKNB->move(17, 85);
+    inGainKNB->setModel(&controls->m_inGainModel);
+    inGainKNB->setLabel(tr("IN"));
+    inGainKNB->setHintText(tr("In gain:"), "");
+
     Knob* thresholdKNB = new Knob(this);
     // thresholdKNB->move(17, 35);
     thresholdKNB->setModel(&controls->m_thresholdModel);
@@ -58,26 +64,28 @@ CompressorGDXDialog::CompressorGDXDialog(CompressorGDXControls* controls) :
     ratioKNB->setLabel(tr("RATIO"));
     ratioKNB->setHintText(tr("Ratio:"), "");
 
-    Knob* outGainKNB = new Knob(this);
-    // outGainKNB->move(17, 85);
-    outGainKNB->setModel(&controls->m_outGainModel);
-    outGainKNB->setLabel(tr("OUT"));
-    outGainKNB->setHintText(tr("Out gain:"), "");
-
     Knob* modeKNB = new Knob(this);
     // modeKNB->move(67, 85);
     modeKNB->setModel(&controls->m_modeModel);
     modeKNB->setLabel(tr("MODE"));
     modeKNB->setHintText(tr("Mode:"), "");
 
-    m_mainLayout->addWidget(thresholdKNB, 0, 0,
+    Knob* outGainKNB = new Knob(this);
+    // outGainKNB->move(17, 85);
+    outGainKNB->setModel(&controls->m_outGainModel);
+    outGainKNB->setLabel(tr("OUT"));
+    outGainKNB->setHintText(tr("Out gain:"), "");
+
+    m_mainLayout->addWidget(inGainKNB, 0, 0,
                             Qt::AlignHCenter | Qt::AlignTop);
-    m_mainLayout->addWidget(ratioKNB, 0, 1, Qt::AlignHCenter | Qt::AlignTop);
-    m_mainLayout->addWidget(modeKNB, 0, 2, Qt::AlignHCenter | Qt::AlignTop);
-    m_mainLayout->addWidget(outGainKNB, 0, 3,
+    m_mainLayout->addWidget(thresholdKNB, 0, 1,
+                            Qt::AlignHCenter | Qt::AlignTop);
+    m_mainLayout->addWidget(ratioKNB, 0, 2, Qt::AlignHCenter | Qt::AlignTop);
+    m_mainLayout->addWidget(modeKNB, 0, 3, Qt::AlignHCenter | Qt::AlignTop);
+    m_mainLayout->addWidget(outGainKNB, 0, 4,
                             Qt::AlignHCenter | Qt::AlignTop);
 
-    m_mainLayout->setColumnStretch(4, 1);
+    m_mainLayout->setColumnStretch(5, 1);
     m_mainLayout->setRowStretch(1, 1);
 
     setFixedWidth(250);

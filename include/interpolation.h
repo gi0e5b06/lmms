@@ -2,7 +2,7 @@
  * interpolation.h - fast implementations of several interpolation-algorithms
  *
  * Copyright (c) 2004-2005 Tobias Doerffel <tobydox/at/users.sourceforge.net>
- * 
+ *
  * This file is part of LMMS - https://lmms.io
  *
  * This program is free software; you can redistribute it and/or
@@ -22,7 +22,6 @@
  *
  */
 
-
 #ifndef INTERPOLATION_H
 #define INTERPOLATION_H
 
@@ -33,107 +32,174 @@
 #include "lmms_constants.h"
 #include "lmms_math.h"
 
-inline float hermiteInterpolate( float x0, float x1, float x2, float x3,
-								float frac_pos )
-{
-	const float frsq = frac_pos*frac_pos;
-	const float frsq2 = 2*frsq;
-	return( ( (x2-x0) *0.5f ) * ( frac_pos * (frsq+1) -frsq2 ) +
-				( frsq2*frac_pos - 3*frsq ) * ( x1-x2 ) +
-			frsq2 * (frac_pos-1) * ( ( x3-x1 ) * 0.25f ) + x1 );
+// FLOAT versions
 
-/*
-   const float frsq	= frac_pos*frac_pos;
-   //const float frsq2	= 2*frsq;
-   frac_pos *= 0.5;
-   const float frcu	= frsq*frac_pos;
-   return (
-   
-   (frcu - frsq + frac_pos) * ((x2 - x0)) +
-   
-   (4*frcu - 3*frsq) * (x1 - x2)
-   //frsq*(2*frac_pos-3) * (x1 - x2)
-   
-   + (frcu - 0.5*frsq)*((x3 - x1))  
-    
-   + x1
-   
-   );
-*/
+inline FLOAT
+        hermiteInterpolate(FLOAT v0, FLOAT v1, FLOAT v2, FLOAT v3, FLOAT x)
+{
+    const FLOAT frsq  = x * x;
+    const FLOAT frsq2 = 2.f * frsq;
+
+    return (((v2 - v0) * 0.5f) * (x * (frsq + 1.f) - frsq2)
+            + (frsq2 * x - 3.f * frsq) * (v1 - v2)
+            + frsq2 * (x - 1.f) * ((v3 - v1) * 0.25f) + v1);
 }
 
-
-
-inline float cubicInterpolate( float v0, float v1, float v2, float v3, float x )
+inline FLOAT cubicInterpolate(FLOAT v0, FLOAT v1, FLOAT v2, FLOAT v3, FLOAT x)
 {
-	float frsq = x*x;
-	float frcu = frsq*v0;
-	float t1 = v3 + 3*v1;
+    FLOAT frsq = x * x;
+    FLOAT frcu = frsq * v0;
+    FLOAT t1   = v3 + 3 * v1;
 
-	return( v1 + fastFmaf( 0.5f, frcu, x ) * ( v2 - frcu * ( 1.0f/6.0f ) -
-		fastFmaf( t1, ( 1.0f/6.0f ), -v0 ) * ( 1.0f/3.0f ) ) + frsq * x * ( t1 *
-		( 1.0f/6.0f ) - 0.5f * v2 ) + frsq * fastFmaf( 0.5f, v2, -v1 ) );
+    return (v1
+            + fastFmaf(0.5f, frcu, x)
+                      * (v2 - frcu * (1.f / 6.f)
+                         - fastFmaf(t1, (1.f / 6.f), -v0) * (1.f / 3.f))
+            + frsq * x * (t1 * (1.f / 6.f) - 0.5f * v2)
+            + frsq * fastFmaf(0.5f, v2, -v1));
 }
 
-
-
-inline float cosinusInterpolate( float v0, float v1, float x )
+inline FLOAT cosinusInterpolate(FLOAT v0, FLOAT v1, FLOAT x)
 {
-	const float f = ( 1.0f - cosf( x * F_PI ) ) * 0.5f;
-	return fastFmaf( f, v1-v0, v0 );
+    const FLOAT f = (1.f - cosf(x * F_PI)) * 0.5f;
+
+    return fastFmaf(f, v1 - v0, v0);  // FLOAT
 }
 
-
-inline float linearInterpolate( float v0, float v1, float x )
+inline FLOAT linearInterpolate(FLOAT v0, FLOAT v1, FLOAT x)
 {
-	return fastFmaf( x, v1-v0, v0 );
+    return fastFmaf(x, v1 - v0, v0);  // FLOAT
 }
 
-
-inline float optimalInterpolate( float v0, float v1, float x )
+inline FLOAT optimalInterpolate(FLOAT v0, FLOAT v1, FLOAT x)
 {
-	const float z = x - 0.5f;
-	const float even = v1 + v0;
-	const float odd = v1 - v0;
-	
-	const float c0 = even * 0.50037842517188658;
-	const float c1 = odd * 1.00621089801788210;
-	const float c2 = even * -0.004541102062639801;
-	const float c3 = odd * -1.57015627178718420;
-	
-	return fastFmaf( fastFmaf( fastFmaf( c3, z, c2 ), z, c1 ), z, c0 );
+    const FLOAT z    = x - 0.5f;
+    const FLOAT even = v1 + v0;
+    const FLOAT odd  = v1 - v0;
+
+    const FLOAT c0 = even * 0.50037842517188658f;
+    const FLOAT c1 = odd * 1.00621089801788210f;
+    const FLOAT c2 = even * -0.004541102062639801f;
+    const FLOAT c3 = odd * -1.57015627178718420f;
+
+    return fastFmaf(fastFmaf(fastFmaf(c3, z, c2), z, c1), z, c0);  // FLOAT
 }
 
-
-inline float optimal4pInterpolate( float v0, float v1, float v2, float v3, float x )
+inline FLOAT
+        optimal4pInterpolate(FLOAT v0, FLOAT v1, FLOAT v2, FLOAT v3, FLOAT x)
 {
-	const float z = x - 0.5f;
-	const float even1 = v2 + v1;
-	const float odd1 = v2 - v1;
-	const float even2 = v3 + v0; 
-	const float odd2 = v3 - v0;
+    const FLOAT z     = x - 0.5f;
+    const FLOAT even1 = v2 + v1;
+    const FLOAT odd1  = v2 - v1;
+    const FLOAT even2 = v3 + v0;
+    const FLOAT odd2  = v3 - v0;
 
-	const float c0 = even1 * 0.45868970870461956 + even2 * 0.04131401926395584;
-	const float c1 = odd1 * 0.48068024766578432 + odd2 * 0.17577925564495955;
-	const float c2 = even1 * -0.246185007019907091 + even2 * 0.24614027139700284;
-	const float c3 = odd1 * -0.36030925263849456 + odd2 * 0.10174985775982505;
+    const FLOAT c0
+            = even1 * 0.45868970870461956f + even2 * 0.04131401926395584f;
+    const FLOAT c1
+            = odd1 * 0.48068024766578432f + odd2 * 0.17577925564495955f;
+    const FLOAT c2
+            = even1 * -0.246185007019907091f + even2 * 0.24614027139700284f;
+    const FLOAT c3
+            = odd1 * -0.36030925263849456f + odd2 * 0.10174985775982505f;
 
-	return fastFmaf( fastFmaf( fastFmaf( c3, z, c2 ), z, c1 ), z, c0 );
+    return fastFmaf(fastFmaf(fastFmaf(c3, z, c2), z, c1), z, c0);  // FLOAT
 }
 
-
-
-inline float lagrangeInterpolate( float v0, float v1, float v2, float v3, float x )
+inline FLOAT
+        lagrangeInterpolate(FLOAT v0, FLOAT v1, FLOAT v2, FLOAT v3, FLOAT x)
 {
-	const float c0 = v1;
-	const float c1 = v2 - v0 * ( 1.0f / 3.0f ) - v1 * 0.5f - v3 * ( 1.0f / 6.0f );
-	const float c2 = 0.5f * (v0 + v2) - v1;
-	const float c3 = ( 1.0f/6.0f ) * ( v3 - v0 ) + 0.5f * ( v1 - v2 );
-	return fastFmaf( fastFmaf( fastFmaf( c3, x, c2 ), x, c1 ), x, c0 );
+    const FLOAT c0 = v1;
+    const FLOAT c1 = v2 - v0 * (1.f / 3.f) - v1 * 0.5f - v3 * (1.f / 6.f);
+    const FLOAT c2 = 0.5f * (v0 + v2) - v1;
+    const FLOAT c3 = (1.f / 6.f) * (v3 - v0) + 0.5f * (v1 - v2);
+
+    return fastFmaf(fastFmaf(fastFmaf(c3, x, c2), x, c1), x, c0);  // FLOAT
 }
 
+// DOUBLE versions
 
+inline DOUBLE
+        hermiteInterpolate(DOUBLE v0, DOUBLE v1, DOUBLE v2, DOUBLE v3, DOUBLE x)
+{
+    const DOUBLE frsq  = x * x;
+    const DOUBLE frsq2 = 2. * frsq;
 
+    return (((v2 - v0) * 0.5) * (x * (frsq + 1.) - frsq2)
+            + (frsq2 * x - 3. * frsq) * (v1 - v2)
+            + frsq2 * (x - 1.) * ((v3 - v1) * 0.25) + v1);
+}
 
+inline DOUBLE cubicInterpolate(DOUBLE v0, DOUBLE v1, DOUBLE v2, DOUBLE v3, DOUBLE x)
+{
+    DOUBLE frsq = x * x;
+    DOUBLE frcu = frsq * v0;
+    DOUBLE t1   = v3 + 3 * v1;
+
+    return (v1
+            + fastFma(0.5, frcu, x)
+                      * (v2 - frcu * (1. / 6.)
+                         - fastFma(t1, (1. / 6.), -v0) * (1. / 3.))
+            + frsq * x * (t1 * (1. / 6.) - 0.5 * v2)
+            + frsq * fastFma(0.5, v2, -v1));
+}
+
+inline DOUBLE cosinusInterpolate(DOUBLE v0, DOUBLE v1, DOUBLE x)
+{
+    const DOUBLE f = (1. - cos(x * D_PI)) * 0.5;
+
+    return fastFma(f, v1 - v0, v0);
+}
+
+inline DOUBLE linearInterpolate(DOUBLE v0, DOUBLE v1, DOUBLE x)
+{
+    return fastFma(x, v1 - v0, v0);
+}
+
+inline DOUBLE optimalInterpolate(DOUBLE v0, DOUBLE v1, DOUBLE x)
+{
+    const DOUBLE z    = x - 0.5;
+    const DOUBLE even = v1 + v0;
+    const DOUBLE odd  = v1 - v0;
+
+    const DOUBLE c0 = even * 0.50037842517188658;
+    const DOUBLE c1 = odd * 1.00621089801788210;
+    const DOUBLE c2 = even * -0.004541102062639801;
+    const DOUBLE c3 = odd * -1.57015627178718420;
+
+    return fastFma(fastFma(fastFma(c3, z, c2), z, c1), z, c0);
+}
+
+inline DOUBLE
+        optimal4pInterpolate(DOUBLE v0, DOUBLE v1, DOUBLE v2, DOUBLE v3, DOUBLE x)
+{
+    const DOUBLE z     = x - 0.5;
+    const DOUBLE even1 = v2 + v1;
+    const DOUBLE odd1  = v2 - v1;
+    const DOUBLE even2 = v3 + v0;
+    const DOUBLE odd2  = v3 - v0;
+
+    const DOUBLE c0
+            = even1 * 0.45868970870461956 + even2 * 0.04131401926395584;
+    const DOUBLE c1
+            = odd1 * 0.48068024766578432 + odd2 * 0.17577925564495955;
+    const DOUBLE c2
+            = even1 * -0.246185007019907091 + even2 * 0.24614027139700284;
+    const DOUBLE c3
+            = odd1 * -0.36030925263849456 + odd2 * 0.10174985775982505;
+
+    return fastFma(fastFma(fastFma(c3, z, c2), z, c1), z, c0);
+}
+
+inline DOUBLE
+        lagrangeInterpolate(DOUBLE v0, DOUBLE v1, DOUBLE v2, DOUBLE v3, DOUBLE x)
+{
+    const DOUBLE c0 = v1;
+    const DOUBLE c1 = v2 - v0 * (1. / 3.) - v1 * 0.5 - v3 * (1. / 6.);
+    const DOUBLE c2 = 0.5 * (v0 + v2) - v1;
+    const DOUBLE c3 = (1. / 6.) * (v3 - v0) + 0.5 * (v1 - v2);
+
+    return fastFma(fastFma(fastFma(c3, x, c2), x, c1), x, c0);
+}
 
 #endif

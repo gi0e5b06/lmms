@@ -25,6 +25,7 @@
 #ifndef INSTRUMENT_PLAY_HANDLE_H
 #define INSTRUMENT_PLAY_HANDLE_H
 
+#include "BasicFilters.h"
 #include "Instrument.h"
 //#include "NotePlayHandle.h"
 #include "PlayHandle.h"
@@ -32,7 +33,11 @@
 
 class EXPORT InstrumentPlayHandle : public PlayHandle
 {
+    MM_OPERATORS
+
   public:
+    BasicFilters<>* m_filter;
+
     InstrumentPlayHandle(Instrument*      instrument,
                          InstrumentTrack* instrumentTrack);
 
@@ -41,19 +46,33 @@ class EXPORT InstrumentPlayHandle : public PlayHandle
     }
 
     virtual void play(sampleFrame* _working_buffer);
+    virtual bool isFinished() const;
+    virtual bool isFromTrack(const Track* _track) const;
 
-    virtual bool isFinished() const
-    {
-        return false;
-    }
+    /*
+    virtual f_cnt_t frames() const;
+    virtual void    setFrames(const f_cnt_t _frames);
+    virtual f_cnt_t totalFramesPlayed() const;
 
-    virtual bool isFromTrack(const Track* _track) const
-    {
-        return m_instrument->isFromTrack(_track);
-    }
+    virtual f_cnt_t framesLeft() const;
+    virtual fpp_t   framesLeftForCurrentPeriod() const;
+    virtual f_cnt_t framesBeforeRelease() const;
+    virtual f_cnt_t releaseFramesDone() const;
+    virtual f_cnt_t actualReleaseFramesToDo() const;
+    virtual bool    isReleased() const;
+    virtual bool    isReleaseStarted() const;
+    virtual real_t  volumeLevel(const f_cnt_t frame);
+    */
 
   private:
     Instrument* m_instrument;
+
+    /*
+    f_cnt_t m_envOffset;
+    f_cnt_t m_envTotalFrames;
+    f_cnt_t m_envReleaseBegin;
+    friend class InstrumentSoundShaping;
+    */
 };
 
 #endif

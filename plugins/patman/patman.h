@@ -80,7 +80,7 @@ private:
 	typedef struct
 	{
 		MM_OPERATORS
-		SampleBuffer::handleState* state;
+		SampleBuffer::HandleState* state;
 		bool tuned;
 		SampleBuffer* sample;
 	} handle_data;

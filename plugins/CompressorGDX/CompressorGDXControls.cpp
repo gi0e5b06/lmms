@@ -32,10 +32,11 @@
 
 CompressorGDXControls::CompressorGDXControls(CompressorGDX* effect) :
       EffectControls(effect), m_effect(effect),
+      m_inGainModel(1., 0., 10., 0.001, this, tr("In gain")),
       m_thresholdModel(0., 0., 1., 0.001, this, tr("Threshold")),
       m_ratioModel(1., 0., 1., 0.001, this, tr("Ratio")),
-      m_outGainModel(1., 0., 1., 0.001, this, tr("Out gain")),
-      m_modeModel(2., 0., 5., 1., this, tr("Mode"))
+      m_modeModel(2., 0., 5., 1., this, tr("Mode")),
+      m_outGainModel(1., 0., 1., 0.001, this, tr("Out gain"))
 {
     /*
       connect( &m_volumeModel, SIGNAL( dataChanged() ), this, SLOT(
@@ -54,17 +55,19 @@ void CompressorGDXControls::changeControl()
 
 void CompressorGDXControls::loadSettings(const QDomElement& _this)
 {
+    m_inGainModel.loadSettings(_this, "in_gain");
     m_thresholdModel.loadSettings(_this, "treshold");
     m_ratioModel.loadSettings(_this, "ratio");
-    m_outGainModel.loadSettings(_this, "out_gain");
     m_modeModel.loadSettings(_this, "mode");
+    m_outGainModel.loadSettings(_this, "out_gain");
 }
 
 void CompressorGDXControls::saveSettings(QDomDocument& doc,
                                          QDomElement&  _this)
 {
+    m_inGainModel.saveSettings(doc, _this, "in_gain");
     m_thresholdModel.saveSettings(doc, _this, "treshold");
     m_ratioModel.saveSettings(doc, _this, "ratio");
-    m_outGainModel.saveSettings(doc, _this, "out_gain");
     m_modeModel.saveSettings(doc, _this, "mode");
+    m_outGainModel.saveSettings(doc, _this, "out_gain");
 }

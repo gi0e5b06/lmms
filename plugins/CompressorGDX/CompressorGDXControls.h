@@ -1,7 +1,7 @@
 /*
- * CompressorGDXControls.h - 
+ * CompressorGDXControls.h -
  *
- * Copyright (c) 2017
+ * Copyright (c) 2018 gi0e5b06 (on github.com)
  *
  * This file is part of LMMS - https://lmms.io
  *
@@ -25,55 +25,52 @@
 #ifndef COMPRESSORGDX_CONTROLS_H
 #define COMPRESSORGDX_CONTROLS_H
 
-#include "EffectControls.h"
 #include "CompressorGDXDialog.h"
+#include "EffectControls.h"
 #include "Knob.h"
-
 
 class CompressorGDX;
 
-
 class CompressorGDXControls : public EffectControls
 {
-	Q_OBJECT
-public:
-	CompressorGDXControls( CompressorGDX* effect );
-	virtual ~CompressorGDXControls()
-	{
-	}
+    Q_OBJECT
+  public:
+    CompressorGDXControls(CompressorGDX* effect);
+    virtual ~CompressorGDXControls()
+    {
+    }
 
-	virtual void saveSettings( QDomDocument & _doc, QDomElement & _parent );
-	virtual void loadSettings( const QDomElement & _this );
-	inline virtual QString nodeName() const
-	{
-		return "CompressorGDXControls";
-	}
+    virtual void saveSettings(QDomDocument& _doc, QDomElement& _parent);
+    virtual void loadSettings(const QDomElement& _this);
+    inline virtual QString nodeName() const
+    {
+        return "CompressorGDXControls";
+    }
 
-	virtual int controlCount()
-	{
-		return 4;
-	}
+    virtual int controlCount()
+    {
+        return 4;
+    }
 
-	virtual EffectControlDialog* createView()
-	{
-		return new CompressorGDXDialog( this );
-	}
+    virtual EffectControlDialog* createView()
+    {
+        return new CompressorGDXDialog(this);
+    }
 
+  private slots:
+    void changeControl();
 
-private slots:
-	void changeControl();
+  private:
+    CompressorGDX* m_effect;
 
-private:
-	CompressorGDX* m_effect;
+    FloatModel m_inGainModel;
+    FloatModel m_thresholdModel;
+    FloatModel m_ratioModel;
+    FloatModel m_modeModel;
+    FloatModel m_outGainModel;
 
-	FloatModel m_thresholdModel;
-	FloatModel m_ratioModel;
-	FloatModel m_outGainModel;
-	FloatModel m_modeModel;
-
-	friend class CompressorGDXDialog;
-	friend class CompressorGDX;
-
-} ;
+    friend class CompressorGDXDialog;
+    friend class CompressorGDX;
+};
 
 #endif

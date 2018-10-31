@@ -37,6 +37,7 @@
 #include "NotePlayHandle.h"
 #include "PixmapButton.h"
 #include "Song.h"
+#include "SampleBuffer.h"
 #include "StringPairDrag.h"
 #include "ToolTip.h"
 #include "FileDialog.h"
@@ -421,7 +422,8 @@ void patmanInstrument::selectSample( NotePlayHandle * _n )
 	{
 		hdata->sample = new SampleBuffer( NULL, 0 );
 	}
-	hdata->state = new SampleBuffer::handleState( _n->hasDetuningInfo() );
+	hdata->state = new SampleBuffer::HandleState( hdata->sample->startFrame(),
+                                                      _n->hasDetuningInfo() );
 
 	_n->m_pluginData = hdata;
 }

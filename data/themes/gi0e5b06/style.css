@@ -88,21 +88,24 @@ LedCheckBox {
 
 QGroupBox {
     color: #d1d8e4;
-    font-size: 13px;
+    font-size: 11px;
     font-weight: bold;
-    background-color: rgba(0,0,0,192); /*none; #262b3080;*/
+    background-color: black; /* rgba(0,0,0,192); none; #262b3080;*/
     /*border-radius: 0px;*/
     border: 1px solid #d1d8e4;/*rgba(0,0,0,96);#262b30;*/
-    margin:  20px 0px 0px 0px;
-    padding: 10px 10px 10px 10px;
+    margin:  18px 0px 0px 0px;
+    padding: 6px 6px 6px 6px;
 }
 
 QGroupBox::title {
     subcontrol-origin: margin;
     subcontrol-position: top left;
+    text-align: left;
+    width: 100%;
     margin: 0px;
     padding: 0px 1px;
-    background-color: rgba(0,0,0,192);
+    background-color: #004080; /*#323940;*/
+    /*background-color: rgba(0,0,0,192);*/
     border-left: 1px solid #d1d8e4;
     border-right: 1px solid #d1d8e4;
     border-top: 1px solid #d1d8e4;

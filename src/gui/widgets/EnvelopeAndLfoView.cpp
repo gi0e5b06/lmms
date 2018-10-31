@@ -658,8 +658,6 @@ void EnvelopeAndLfoView::paintEvent( QPaintEvent * )
 	real_t t = EnvelopeAndLfoParameters::SECS_PER_LFO_OSCILLATION *
                 m_params->m_lfoSpeedModel.value();
 
-        qInfo("EALView: m_lfoSpeedModel = %f",m_params->m_lfoSpeedModel.value());
-
         if(m_params->m_x100Model.value())
                 t/=100.;
 

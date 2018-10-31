@@ -444,6 +444,7 @@ void GigInstrument::play( sampleFrame * _working_buffer )
 					freq_factor *= sample->freqFactor;
 				}
 
+                                static const f_cnt_t MARGIN[] = {64, 64, 64, 4, 4};
 				// We need a bit of margin so we don't get glitching
 				samples = frames / freq_factor + MARGIN[m_interpolation];
 			}

@@ -50,8 +50,8 @@ class SpaceGDXEffect : public Effect
     Ring             m_ring;
     BasicFilters<1>  m_leftLowFilter, m_rightLowFilter;
     BasicFilters<1>  m_leftHighFilter, m_rightHighFilter;
-    float            m_prevLeftLowFreq, m_prevRightLowFreq;
-    float            m_prevLeftHighFreq, m_prevRightHighFreq;
+    frequency_t      m_prevLeftLowFreq, m_prevRightLowFreq;
+    frequency_t      m_prevLeftHighFreq, m_prevRightHighFreq;
 
     friend class SpaceGDXControls;
 };

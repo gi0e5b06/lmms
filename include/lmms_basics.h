@@ -43,7 +43,8 @@ typedef double real_t;
 //#undef REAL_IS_DOUBLE
 // typedef float real_t;
 
-typedef float FLOAT;
+typedef float  FLOAT;
+typedef double DOUBLE;
 
 typedef int32_t tact_t;
 typedef int32_t tick_t;

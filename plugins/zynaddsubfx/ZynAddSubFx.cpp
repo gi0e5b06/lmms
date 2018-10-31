@@ -137,7 +137,7 @@ ZynAddSubFxInstrument::ZynAddSubFxInstrument(
 			this, SLOT( reloadPlugin() ) );
 
 	connect( instrumentTrack()->bendingRangeModel(), SIGNAL( dataChanged() ),
-				this, SLOT( updatePitchRange() ) );
+				this, SLOT( updateBendingRange() ) );
 }
 
 

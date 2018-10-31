@@ -237,14 +237,14 @@ int InstrumentTrack::baseNote() const
 
 void InstrumentTrack::processAudioBuffer(sampleFrame*    buf,
                                          const fpp_t     frames,
-                                         NotePlayHandle* n)
+                                         NotePlayHandle* nph)
 {
     const Song* song = Engine::getSong();
 
     // we must not play the sound if this InstrumentTrack is muted...
     if(/*tmp isMuted() ||*/
-       (song->playMode() != Song::Mode_PlayPattern && n
-        && n->isBbTrackMuted())
+       (song->playMode() != Song::Mode_PlayPattern && nph!=nullptr
+        && nph->isBbTrackMuted())
        || !m_instrument)
     {
         memset(buf, 0, frames * BYTES_PER_FRAME);
@@ -287,21 +287,23 @@ void InstrumentTrack::processAudioBuffer(sampleFrame*    buf,
     // instruments using instrument-play-handles will call this method
     // without any knowledge about notes, so they pass NULL for n, which
     // is no problem for us since we just bypass the envelopes+LFOs
-    if(n != nullptr && !m_instrument->isSingleStreamed())
+    if(nph != nullptr && !m_instrument->isSingleStreamed())
     {
-        const f_cnt_t offset = n->noteOffset();
-        m_soundShaping.processAudioBuffer(buf + offset, frames - offset, n);
+            const f_cnt_t offset = nph->noteOffset();
+
+            m_soundShaping.processAudioBuffer(buf + offset, frames - offset,
+                                              nph);
 
         if(!m_instrument->isMidiBased() || m_volumeEnabledModel.value()
            || m_panningEnabledModel.value())
         {
             const volume_t vol
                     = m_volumeEnabledModel.value()
-                              ? qBound(MinVolume, n->getVolume(), MaxVolume)
+                              ? qBound(MinVolume, nph->getVolume(), MaxVolume)
                               : DefaultVolume;
             const panning_t pan
                     = m_panningEnabledModel.value()
-                              ? qBound(PanningLeft, n->getPanning(),
+                              ? qBound(PanningLeft, nph->getPanning(),
                                        PanningRight)
                               : DefaultPanning;
             StereoGain sg = toStereoGain(pan, vol);
@@ -429,7 +431,7 @@ void InstrumentTrack::processInEvent(const MidiEvent& event,
                 {
                     for(NotePlayHandle* nph : m_sustainedNotes)
                     {
-                        if(nph && nph->isReleased())
+                        if(nph!=nullptr && nph->isReleased())
                         {
                             if(nph->origin() == nph->OriginMidiInput)
                             {
@@ -594,7 +596,7 @@ f_cnt_t InstrumentTrack::beatLen(NotePlayHandle* _n) const
     return m_soundShaping.envFrames();
 }
 
-void InstrumentTrack::playNote(NotePlayHandle* _n,
+void InstrumentTrack::playNote(NotePlayHandle* _nph,
                                sampleFrame*    _workingBuffer)
 {
     /*
@@ -607,18 +609,18 @@ void InstrumentTrack::playNote(NotePlayHandle* _n,
     if(!m_noteDuplicatesRemoving.processNote( _n )) return;
     */
     for(InstrumentFunction* f : m_noteFunctions)
-        if(!f->processNote(_n))
+        if(!f->processNote(_nph))
             return;
 
-    if(_n->isMasterNote() == false && m_instrument != nullptr)
+    if(_nph->isMasterNote() == false && m_instrument != nullptr)
     {
         // qWarning("InstrumentTrack::play n.key=%d
-        // g=%d",_n->key(),_n->generation());
+        // g=%d",_nph->key(),_nph->generation());
         // all is done, so now lets play the note!
-        m_instrument->playNote(_n, _workingBuffer);
+        m_instrument->playNote(_nph, _workingBuffer);
     }
     // else qWarning("InstrumentTrack::play SKIP n.key=%d
-    // g=%d",_n->key(),_n->generation());
+    // g=%d",_nph->key(),_nph->generation());
 }
 
 QString InstrumentTrack::instrumentName() const
@@ -779,8 +781,8 @@ int InstrumentTrack::midiVolume() const
 
 int InstrumentTrack::midiPanning() const
 {
-    qInfo("InstrumentTrack::midiPanning models instr=%f note=%f",
-          m_panningModel.value(), m_notePanningModel.value());
+    // qInfo("InstrumentTrack::midiPanning models instr=%f note=%f",
+    //  m_panningModel.value(), m_notePanningModel.value());
 
     real_t p = (m_panningModel.value() + m_notePanningModel.value()) / 100.;
     p        = 1. - (1. + p) / 2.;
@@ -944,7 +946,8 @@ void InstrumentTrack::saveTrackSpecificSettings(QDomDocument& doc,
     m_useMasterPitchModel.saveSettings(doc, thisElement, "usemasterpitch");
 
     if(m_scale != nullptr)
-            thisElement.setAttribute("scale",m_scale->bank()*1000+m_scale->index());
+        thisElement.setAttribute("scale",
+                                 m_scale->bank() * 1000 + m_scale->index());
 
     if(m_instrument != nullptr)
     {
@@ -997,8 +1000,8 @@ void InstrumentTrack::loadTrackSpecificSettings(
 
     if(thisElement.hasAttribute("scale"))
     {
-            qulonglong bi=thisElement.attribute("scale").toULongLong();
-            setScale(Scale::get(bi/1000,bi%1000));
+        qulonglong bi = thisElement.attribute("scale").toULongLong();
+        setScale(Scale::get(bi / 1000, bi % 1000));
     }
 
     // clear effect-chain just in case we load an old preset without FX-data
@@ -1855,9 +1858,9 @@ InstrumentTrackWindow::InstrumentTrackWindow(InstrumentTrackView* _itv) :
 
     updateInstrumentView();
 
-    //setFixedWidth(INSTRUMENT_WIDTH);
-    //resize(sizeHint());
-    resize(250,500);
+    // setFixedWidth(INSTRUMENT_WIDTH);
+    // resize(sizeHint());
+    resize(250, 500);
 
     /*
     QMdiSubWindow * win = gui->mainWindow()->addWindowedWidget( this );
