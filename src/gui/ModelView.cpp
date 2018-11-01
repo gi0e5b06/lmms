@@ -28,65 +28,58 @@
 
 //#include "Backtrace.h"
 
-ModelView::ModelView( Model* model, QWidget* widget ) :
-	m_widget( widget ),
-	m_model( model )
+ModelView::ModelView(Model* model, QWidget* widget) :
+      m_widget(widget), m_model(model)
 {
-        //if(!model) qFatal("ModelView::ModelView null not allowed");
-        doConnections();
+    // if(!model) qFatal("ModelView::ModelView null not allowed");
+    doConnections();
 }
-
-
-
 
 ModelView::~ModelView()
 {
-	if( m_model != NULL && m_model->isDefaultConstructed() )
-	{
-		delete m_model;
-	}
+    if(m_model != NULL && m_model->isDefaultConstructed())
+    {
+        delete m_model;
+    }
 }
 
-
-
-
-void ModelView::setModel( Model* model, bool isOldModelValid )
+void ModelView::setModel(Model* model, bool isOldModelValid)
 {
-        if(!model) qFatal("ModelView::setModel null not allowed");
+    if(model == nullptr)
+        qFatal("ModelView::setModel null not allowed");
 
-        if(model!=m_model)
+    if(model != m_model)
+    {
+        if(isOldModelValid && m_model != NULL)
         {
-                if( isOldModelValid && m_model != NULL )
-                {
-                        if( m_model->isDefaultConstructed() )
-                                delete m_model;
-                        else
-                                m_model->disconnect( widget() );
-		}
-                m_model=model;
+            if(m_model->isDefaultConstructed())
+                delete m_model;
+            else
+                m_model->disconnect(widget());
         }
+        m_model = model;
+    }
 
-        doConnections();
-	modelChanged();
+    doConnections();
+    modelChanged();
 }
-
 
 void ModelView::modelChanged()
 {
-        //qWarning("ModelView::setModel widget=%p ->update()",widget());
-        if(widget()) widget()->update();
+    // qWarning("ModelView::setModel widget=%p ->update()",widget());
+    if(widget())
+        widget()->update();
 }
-
 
 void ModelView::doConnections()
 {
-	if( m_model && widget() )
-	{
-                //qWarning("ModelView::doConnections m_model=%p",m_model);
-                //m_model->disconnect(widget());
-		QObject::connect( m_model, SIGNAL( dataChanged() ), widget(), SLOT( update() ) );
-		QObject::connect( m_model, SIGNAL( propertiesChanged() ), widget(), SLOT( update() ) );
-	}
+    if(m_model && widget())
+    {
+        // qWarning("ModelView::doConnections m_model=%p",m_model);
+        // m_model->disconnect(widget());
+        QObject::connect(m_model, SIGNAL(dataChanged()), widget(),
+                         SLOT(update()));
+        QObject::connect(m_model, SIGNAL(propertiesChanged()), widget(),
+                         SLOT(update()));
+    }
 }
-
-
