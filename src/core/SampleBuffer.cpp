@@ -60,6 +60,7 @@
 #include "Mixer.h"
 #include "SampleBuffer.h"
 #include "SampleRate.h"
+#include "Song.h"
 #include "endian_handling.h"  // REQUIRED
 
 SampleBuffer::SampleBuffer(const SampleBuffer& _other) :
@@ -69,6 +70,7 @@ SampleBuffer::SampleBuffer(const SampleBuffer& _other) :
       m_endFrame(_other.m_endFrame),
       m_loopStartFrame(_other.m_loopStartFrame),
       m_loopEndFrame(_other.m_loopEndFrame),
+      m_stretching(_other.m_stretching),
       m_amplification(_other.m_amplification), m_reversed(_other.m_reversed),
       m_frequency(BaseFreq), m_sampleRate(Engine::mixer()->baseSampleRate())
 {
@@ -102,7 +104,7 @@ SampleBuffer::SampleBuffer(const QString& _audioFile,
         connect(Engine::mixer(), SIGNAL(sampleRateChanged()), this,
                 SLOT(sampleRateChanged()));
     }
-    update();
+    update(false);
 }
 
 SampleBuffer::SampleBuffer(const sampleFrame* _data,
@@ -126,7 +128,7 @@ SampleBuffer::SampleBuffer(const sampleFrame* _data,
         connect(Engine::mixer(), SIGNAL(sampleRateChanged()), this,
                 SLOT(sampleRateChanged()));
     }
-    update();
+    update(false);
 }
 
 SampleBuffer::SampleBuffer(const f_cnt_t _frames, bool _sampleRateDependent) :
@@ -147,7 +149,7 @@ SampleBuffer::SampleBuffer(const f_cnt_t _frames, bool _sampleRateDependent) :
         connect(Engine::mixer(), SIGNAL(sampleRateChanged()), this,
                 SLOT(sampleRateChanged()));
     }
-    update();
+    update(false);
 }
 
 SampleBuffer::~SampleBuffer()
@@ -219,7 +221,7 @@ void SampleBuffer::update(bool _keepSettings)
         m_data = MM_ALLOC(sampleFrame, m_origFrames);
         memcpy(m_data, m_origData, m_origFrames * BYTES_PER_FRAME);
         m_frames = m_origFrames;
-        if(_keepSettings == false)
+        if(!_keepSettings)
         {
             m_loopStartFrame = m_startFrame = 0;
             m_loopEndFrame = m_endFrame = m_frames;
@@ -248,14 +250,17 @@ void SampleBuffer::update(bool _keepSettings)
         if(s_mmap_pointer.contains(filename))  // m_data = MM_ALLOC(
                                                // sampleFrame, m_origFrames );
         {
-            quint64 n        = s_mmap_file.value(filename)->size();
-            m_origData       = s_mmap_pointer.value(filename);
-            m_origFrames     = n / BYTES_PER_FRAME;
-            m_mmapped        = true;
-            m_data           = m_origData;
-            m_frames         = m_origFrames;
-            m_loopStartFrame = m_startFrame = 0;
-            m_loopEndFrame = m_endFrame = m_frames;
+            quint64 n    = s_mmap_file.value(filename)->size();
+            m_origData   = s_mmap_pointer.value(filename);
+            m_origFrames = n / BYTES_PER_FRAME;
+            m_mmapped    = true;
+            m_data       = m_origData;
+            m_frames     = m_origFrames;
+            if(!_keepSettings)
+            {
+                m_loopStartFrame = m_startFrame = 0;
+                m_loopEndFrame = m_endFrame = m_frames;
+            }
             qInfo("SampleBuffer: File %s already mapped (%d frames,%lld "
                   "bytes) %p",
                   qPrintable(filename), m_frames, n, m_data);
@@ -279,13 +284,15 @@ void SampleBuffer::update(bool _keepSettings)
             {
                 s_mmap_file.insert(filename, file);
                 s_mmap_pointer.insert(filename, m_origData);
-                m_origFrames     = n / BYTES_PER_FRAME;
-                m_mmapped        = true;
-                m_data           = m_origData;
-                m_frames         = m_origFrames;
-                m_loopStartFrame = m_startFrame = 0;
-                m_loopEndFrame = m_endFrame = m_frames;
-                // file.unmap();
+                m_origFrames = n / BYTES_PER_FRAME;
+                m_mmapped    = true;
+                m_data       = m_origData;
+                m_frames     = m_origFrames;
+                if(!_keepSettings)
+                {
+                    m_loopStartFrame = m_startFrame = 0;
+                    m_loopEndFrame = m_endFrame = m_frames;
+                }  // file.unmap();
                 qInfo("SampleBuffer: File %s mapped successfully (%d "
                       "frames,%lld bytes) %p",
                       qPrintable(filename), m_frames, n, m_data);
@@ -397,9 +404,12 @@ samplerate );
 
             m_data = MM_ALLOC(sampleFrame, 1);
             memset(m_data, 0, 1 * BYTES_PER_FRAME);
-            m_frames         = 1;
-            m_loopStartFrame = m_startFrame = 0;
-            m_loopEndFrame = m_endFrame = 1;
+            m_frames = 1;
+            if(!_keepSettings)
+            {
+                m_loopStartFrame = m_startFrame = 0;
+                m_loopEndFrame = m_endFrame = 1;
+            }
         }
         else  // otherwise normalize sample rate
         {
@@ -464,9 +474,15 @@ samplerate );
         m_frames = 1;
         m_data   = MM_ALLOC(sampleFrame, m_frames);
         memset(m_data, 0, m_frames * BYTES_PER_FRAME);
-        m_loopStartFrame = m_startFrame = 0;
-        m_loopEndFrame = m_endFrame = 1;
+        if(!_keepSettings)
+        {
+            m_loopStartFrame = m_startFrame = 0;
+            m_loopEndFrame = m_endFrame = 1;
+        }
     }
+
+    if(!fileLoadError && m_stretching != 0.)
+        stretch(exp2(m_stretching));
 
     if(lock)
     {
@@ -485,7 +501,8 @@ samplerate );
                                   .arg(sampleLengthMax);
         if(gui)
         {
-            QMessageBox::information(nullptr, title, message, QMessageBox::Ok);
+            QMessageBox::information(nullptr, title, message,
+                                     QMessageBox::Ok);
         }
         else
         {
@@ -1037,9 +1054,12 @@ bool SampleBuffer::play(sampleFrame*      _ab,
     if(_frames == 0)
         return false;
 
-    const double freqFactor = (double)_freq / (double)m_frequency
-                              * m_sampleRate
-                              / Engine::mixer()->processingSampleRate();
+    const double freqFactor
+            = (_freq == m_frequency
+               && m_sampleRate == Engine::mixer()->processingSampleRate())
+                      ? 1.
+                      : double(_freq) / double(m_frequency) * m_sampleRate
+                                / Engine::mixer()->processingSampleRate();
 
     /*
     // calculate how many frames we have in requested pitch
@@ -1105,59 +1125,116 @@ bool SampleBuffer::play(sampleFrame*      _ab,
     }
     */
 
-    f_cnt_t  n = 0;
-    LoopMode l = (_released ? _releaseLoopMode : _loopMode);
-    bool     b = _state->isBackwards();
-    real_t   f = _state->m_frameIndex;
+    const LoopMode l = (_released ? _releaseLoopMode : _loopMode);
 
-    // bound(0.01,(double)m_frequency / (double)_freq - 1., 100.);
-    while(n < _frames)
+    f_cnt_t n = 0;
+    bool    b = _state->isBackwards();
+
+    if(freqFactor != 1.)
     {
-        // f_cnt_t old_f = f;
-        // bool    old_b = b;
-
-        f = nextStretchedFrame(f, l, b, freqFactor);
-        if(f < 0.)
+        int q = _state->quality();
+        if(!Engine::getSong()->isExporting())
         {
-            _ab[n][0] = 0.;
-            _ab[n][1] = 0.;
+            if(Engine::mixer()->criticalXRuns())
+                q = 0;
+            else if(q > 2 && Engine::mixer()->warningXRuns())
+                q = 2;
         }
-        else
-        {
-            // tmp[n][0] = m_data[f][0];
-            // tmp[n][1] = m_data[f][1];
 
-            /*
-            f_cnt_t f1 = static_cast<f_cnt_t>(f);
-            f_cnt_t f2 = f1 + 1;
-            if(f2 == m_frames)
-                f2 = m_frames - 1;
-            _ab[n][0] = linearInterpolate(m_data[f1][0], m_data[f2][0],
-                                          positivefraction(f));
-            _ab[n][1] = linearInterpolate(m_data[f1][1], m_data[f2][1],
-                                          positivefraction(f));
-            */
-            f_cnt_t f1 = static_cast<f_cnt_t>(f);
-            f_cnt_t f2 = f1 + 1;
-            if(f2 == m_frames)
-                f2 = m_frames - 1;
-            f_cnt_t f3 = f2 + 1;
-            if(f3 == m_frames)
-                f3 = m_frames - 1;
-            f_cnt_t f0 = f1 - 1;
-            if(f0 == -1)
-                f0 = 0;
-            _ab[n][0] = optimal4pInterpolate(m_data[f0][0], m_data[f1][0],
-                                             m_data[f2][0], m_data[f3][0],
-                                             positivefraction(f));
-            _ab[n][1] = optimal4pInterpolate(m_data[f0][1], m_data[f1][1],
-                                             m_data[f2][1], m_data[f3][1],
-                                             positivefraction(f));
+        real_t f = _state->m_frameIndex;
+
+        // const bool exporting = Engine::getSong()->isExporting();
+        while(n < _frames)
+        {
+            f = nextStretchedFrame(f, l, b, freqFactor);
+            if(f < 0.)
+            {
+                _ab[n][0] = 0.;
+                _ab[n][1] = 0.;
+            }
+            else
+            {
+                switch(q)
+                {
+                    case 0:
+                    {
+                        const f_cnt_t f1 = f;
+                        _ab[n][0]        = m_data[f1][0];
+                        _ab[n][1]        = m_data[f1][1];
+                    }
+                    break;
+                    case 1:
+                    {
+                        f_cnt_t f1 = round(f);
+                        if(f1 == m_frames)
+                            f1 = m_frames - 1;
+                        _ab[n][0] = m_data[f1][0];
+                        _ab[n][1] = m_data[f1][1];
+                    }
+                    break;
+                    case 2:
+                    case 3:
+                    {
+                        const f_cnt_t f1 = f;
+                        f_cnt_t       f2 = f1 + 1;
+                        const real_t  x  = positivefraction(f);
+                        if(f2 == m_frames)
+                            f2 = m_frames - 1;
+                        _ab[n][0] = linearInterpolate(m_data[f1][0],
+                                                      m_data[f2][0], x);
+                        _ab[n][1] = linearInterpolate(m_data[f1][1],
+                                                      m_data[f2][1], x);
+                    }
+                    break;
+                    default:
+                    {
+                        f_cnt_t f1 = static_cast<f_cnt_t>(f);
+                        f_cnt_t f2 = f1 + 1;
+                        if(f2 == m_frames)
+                            f2 = m_frames - 1;
+                        f_cnt_t f3 = f2 + 1;
+                        if(f3 == m_frames)
+                            f3 = m_frames - 1;
+                        f_cnt_t f0 = f1 - 1;
+                        if(f0 == -1)
+                            f0 = 0;
+                        _ab[n][0] = optimal4pInterpolate(
+                                m_data[f0][0], m_data[f1][0], m_data[f2][0],
+                                m_data[f3][0], positivefraction(f));
+                        _ab[n][1] = optimal4pInterpolate(
+                                m_data[f0][1], m_data[f1][1], m_data[f2][1],
+                                m_data[f3][1], positivefraction(f));
+                    }
+                    break;
+                }
+            }
+            n++;
         }
-        n++;
+        _state->setFrameIndex(f);
+    }
+    else
+    {
+        f_cnt_t f = _state->m_frameIndex;
+
+        // const bool exporting = Engine::getSong()->isExporting();
+        while(n < _frames)
+        {
+            f = nextFrame(f, l, b);
+            if(f < 0.)
+            {
+                _ab[n][0] = 0.;
+                _ab[n][1] = 0.;
+            }
+            else
+            {
+                _ab[n][0] = m_data[f][0];
+                _ab[n][1] = m_data[f][1];
+            }
+            n++;
+        }
+        _state->setFrameIndex(f);
     }
 
-    _state->setFrameIndex(f);
     _state->setBackwards(b);
 
     if(m_amplification != 1.)
@@ -1298,7 +1375,7 @@ const QString SampleBuffer::rawStereoSuffix()
 {
     // qInfo("SampleBuffer::rawStereoSuffix");
     return QString("f%1c%2s%3")
-            .arg(8*sizeof(sample_t))
+            .arg(8 * sizeof(sample_t))
             .arg(DEFAULT_CHANNELS)
             .arg(Engine::mixer()->baseSampleRate());
 }
@@ -1307,7 +1384,7 @@ const QString SampleBuffer::rawSurroundSuffix()
 {
     // qInfo("SampleBuffer::rawSurroundSuffix");
     return QString("f%1c%2s%3")
-            .arg(8*sizeof(sample_t))
+            .arg(8 * sizeof(sample_t))
             .arg(SURROUND_CHANNELS)
             .arg(Engine::mixer()->processingSampleRate());
 }
@@ -1588,9 +1665,10 @@ void SampleBuffer::resample(const sample_rate_t _srcSR,
         MM_FREE(dst_data);
 }
 
-void SampleBuffer::retune(  // const sample_rate_t _srcSR,
-        const double _semitones)
+void SampleBuffer::retune(const double _semitones)
 {
+    qInfo("SampleBuffer::retune semitones=%f", _semitones);
+
     update(true);  // Test?
     if(_semitones == 0.)
         return;
@@ -1667,10 +1745,56 @@ void SampleBuffer::retune(  // const sample_rate_t _srcSR,
         MM_FREE(dst_data);
 }
 
+void SampleBuffer::stretch(const double _factor)
+{
+    if(_factor == 1. || _factor > 128. || _factor < 1. / 128.)
+        return;
+
+    qInfo("SampleBuffer::stretch factor=%f", _factor);
+    // update(true);  // Test?
+
+    const f_cnt_t dst_frames = m_frames * _factor;
+    if(dst_frames == m_frames || dst_frames < 1)
+        return;
+    sampleFrame* dst_data = MM_ALLOC(sampleFrame, dst_frames);
+    int          grain    = qMin(2205, m_frames);
+
+    memset(dst_data, 0, sizeof(sampleFrame) * dst_frames);
+
+    const int q = 551;
+    int       n = 0;
+    while(n < dst_frames)
+    {
+        int g = (n / grain) * grain / _factor;
+        for(int i = 0; i < grain; i++)
+        {
+            int    f = g + i;
+            real_t a = 1.;
+            if(i < q)
+                a *= real_t(i + 1) / real_t(q);
+            if(i > grain - q)
+                a *= real_t(grain - i) / real_t(q);
+            dst_data[n][0] += m_data[f][0] * a;
+            dst_data[n][1] += m_data[f][1] * a;
+            n++;
+            if(n >= dst_frames)
+                break;
+        }
+        if(n >= dst_frames)
+            break;
+        n -= q;
+    }
+
+    if(m_data != m_origData)
+        MM_FREE(m_data);
+    m_data   = dst_data;
+    m_frames = dst_frames;
+}
+
 void SampleBuffer::setAudioFile(const QString& _audioFile)
 {
     m_audioFile = tryToMakeRelative(_audioFile);
-    update();
+    update(false);
 }
 
 #ifdef LMMS_HAVE_MPG123
@@ -1971,7 +2095,7 @@ void SampleBuffer::loadFromBase64(const QString& _data)
     delete[] dst;
 
     m_audioFile = QString();
-    update();
+    update(false);
 }
 
 void SampleBuffer::setStartFrame(f_cnt_t _f)
@@ -2026,6 +2150,13 @@ void SampleBuffer::setAmplification(real_t _a)
 void SampleBuffer::setReversed(bool _on)
 {
     m_reversed = _on;
+    // emit sampleUpdated();
+    update(true);
+}
+
+void SampleBuffer::setStretching(real_t _v)
+{
+    m_stretching = _v;
     update(true);
 }
 
@@ -2159,42 +2290,45 @@ SampleBuffer::HandleState::HandleState(f_cnt_t _startIndex,
                                        bool    _isBackwards) :
       m_frameIndex(_startIndex),
       m_varyingPitch(_varyingPitch), m_quality(_quality),
-      m_isBackwards(_isBackwards), m_resamplingData(nullptr)
+      m_isBackwards(_isBackwards)
+//, m_resamplingData(nullptr)
 {
-    int error;
+    /*
+int error;
 
-    int converter = 0;
-    switch(_quality)
-    {
-        case 0:
-        case 1:
-            converter = SRC_ZERO_ORDER_HOLD;
-            break;
-        case 2:
-        case 3:
-            converter = SRC_LINEAR;
-            break;
-        case 4:
-        case 5:
-            converter = SRC_SINC_FASTEST;
-            break;
-        case 6:
-        case 7:
-            converter = SRC_SINC_MEDIUM_QUALITY;
-            break;
-        default:
-            converter = SRC_SINC_BEST_QUALITY;
-            break;
-    }
+int converter = 0;
+switch(_quality)
+{
+    case 0:
+    case 1:
+        converter = SRC_ZERO_ORDER_HOLD;
+        break;
+    case 2:
+    case 3:
+        converter = SRC_LINEAR;
+        break;
+    case 4:
+    case 5:
+        converter = SRC_SINC_FASTEST;
+        break;
+    case 6:
+    case 7:
+        converter = SRC_SINC_MEDIUM_QUALITY;
+        break;
+    default:
+        converter = SRC_SINC_BEST_QUALITY;
+        break;
+}
 
-    if((m_resamplingData = src_new(converter, DEFAULT_CHANNELS, &error))
-       == nullptr)
-    {
-        qWarning("SampleBuffer::HandleState src_new() failed");
-    }
+if((m_resamplingData = src_new(converter, DEFAULT_CHANNELS, &error))
+   == nullptr)
+{
+    qWarning("SampleBuffer::HandleState src_new() failed");
+}
+    */
 }
 
 SampleBuffer::HandleState::~HandleState()
 {
-    src_delete(m_resamplingData);
+    // src_delete(m_resamplingData);
 }

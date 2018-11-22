@@ -163,6 +163,7 @@ InstrumentTrack::InstrumentTrack(TrackContainer* tc) :
     m_noteFunctions.append(new InstrumentFunctionGlissando(this));
     m_noteFunctions.append(new InstrumentFunctionNoteStacking(this));
     m_noteFunctions.append(new InstrumentFunctionArpeggio(this));
+    m_noteFunctions.append(new InstrumentFunctionNoteSustaining(this));
     m_noteFunctions.append(new InstrumentFunctionNoteOutting(this));
 
     m_bendingModel.setCenterValue(DefaultPitch);
@@ -173,7 +174,7 @@ InstrumentTrack::InstrumentTrack(TrackContainer* tc) :
 
     for(int i = 0; i < NumKeys; ++i)
     {
-        m_notes[i]            = NULL;
+        m_notes[i]            = nullptr;
         m_runningMidiNotes[i] = 0;
     }
 
@@ -285,7 +286,7 @@ void InstrumentTrack::processAudioBuffer(sampleFrame*    buf,
             : getVolume() * DefaultVolumeRatio;*/
 
     // instruments using instrument-play-handles will call this method
-    // without any knowledge about notes, so they pass NULL for n, which
+    // without any knowledge about notes, so they pass nullptr for n, which
     // is no problem for us since we just bypass the envelopes+LFOs
     if(nph != nullptr && !m_instrument->isSingleStreamed())
     {
@@ -359,19 +360,19 @@ void InstrumentTrack::processInEvent(const MidiEvent& event,
         case MidiNoteOn:
             if(event.velocity() > 0)
             {
-                if(m_notes[event.key()] == NULL)
+                if(m_notes[event.key()] == nullptr)
                 {
                     NotePlayHandle* nph = NotePlayHandleManager::acquire(
                             this, offset,
                             std::numeric_limits<f_cnt_t>::max() / 2,
                             Note(MidiTime(), MidiTime(), event.key(),
                                  event.volume(midiPort()->baseVelocity())),
-                            NULL, event.channel(),
+                            nullptr, event.channel(),
                             NotePlayHandle::OriginMidiInput);
                     m_notes[event.key()] = nph;
                     if(!Engine::mixer()->addPlayHandle(nph))
                     {
-                        m_notes[event.key()] = NULL;
+                        m_notes[event.key()] = nullptr;
                     }
                 }
                 eventHandled = true;
@@ -379,7 +380,7 @@ void InstrumentTrack::processInEvent(const MidiEvent& event,
             }
 
         case MidiNoteOff:
-            if(m_notes[event.key()] != NULL)
+            if(m_notes[event.key()] != nullptr)
             {
                 // do actual note off and remove internal reference to
                 // NotePlayHandle (which itself will be deleted later
@@ -393,7 +394,7 @@ void InstrumentTrack::processInEvent(const MidiEvent& event,
                 {
                     m_sustainedNotes << m_notes[event.key()];
                 }
-                m_notes[event.key()] = NULL;
+                m_notes[event.key()] = nullptr;
 
                 Engine::mixer()->doneChangeInModel();
             }
@@ -401,7 +402,7 @@ void InstrumentTrack::processInEvent(const MidiEvent& event,
             break;
 
         case MidiKeyPressure:
-            if(m_notes[event.key()] != NULL)
+            if(m_notes[event.key()] != nullptr)
             {
                 // setVolume() calls processOutEvent() with MidiKeyPressure so
                 // the attached instrument will receive the event as well
@@ -462,7 +463,7 @@ void InstrumentTrack::processInEvent(const MidiEvent& event,
             switch(event.metaEvent())
             {
                 case MidiNotePanning:
-                    if(m_notes[event.key()] != NULL)
+                    if(m_notes[event.key()] != nullptr)
                     {
                         eventHandled = true;
                         m_notes[event.key()]->setPanning(event.panning());
@@ -563,7 +564,7 @@ void InstrumentTrack::silenceAllNotes(bool removeIPH)
     m_midiNotesMutex.lock();
     for(int i = 0; i < NumKeys; ++i)
     {
-        m_notes[i]            = NULL;
+        m_notes[i]            = nullptr;
         m_runningMidiNotes[i] = 0;
     }
     m_midiNotesMutex.unlock();
@@ -585,7 +586,7 @@ void InstrumentTrack::silenceAllNotes(bool removeIPH)
 
 f_cnt_t InstrumentTrack::beatLen(NotePlayHandle* _n) const
 {
-    if(m_instrument != NULL)
+    if(m_instrument != nullptr)
     {
         const f_cnt_t len = m_instrument->beatLen(_n);
         if(len > 0)
@@ -830,7 +831,7 @@ bool InstrumentTrack::play(const MidiTime& _start,
     }
 
     tcoVector  tcos;
-    ::BBTrack* bb_track = NULL;
+    ::BBTrack* bb_track = nullptr;
     if(_tco_num >= 0)
     {
         TrackContentObject* tco = getTCO(_tco_num);
@@ -866,7 +867,7 @@ bool InstrumentTrack::play(const MidiTime& _start,
         {
             Pattern* p = dynamic_cast<Pattern*>(*it);
             // everything which is not a pattern or muted won't be played
-            if(p == NULL || p->isMuted())
+            if(p == nullptr || p->isMuted())
                 continue;
 
             MidiTime cur_start = _start;
@@ -1063,7 +1064,7 @@ void InstrumentTrack::loadTrackSpecificSettings(
             else if(node.nodeName() == "instrument")
             {
                 delete m_instrument;
-                m_instrument = NULL;
+                m_instrument = nullptr;
                 m_instrument = Instrument::instantiate(
                         node.toElement().attribute("name"), this);
                 m_instrument->restoreState(node.firstChildElement());
@@ -1079,7 +1080,7 @@ void InstrumentTrack::loadTrackSpecificSettings(
                     && !node.toElement().hasAttribute("id"))
             {
                 delete m_instrument;
-                m_instrument = NULL;
+                m_instrument = nullptr;
                 m_instrument = Instrument::instantiate(node.nodeName(), this);
                 if(m_instrument->nodeName() == node.nodeName())
                 {
@@ -1138,7 +1139,7 @@ QQueue<InstrumentTrackWindow*> InstrumentTrackView::s_windowCache;
 InstrumentTrackView::InstrumentTrackView(InstrumentTrack*    _it,
                                          TrackContainerView* _tcv) :
       TrackView(_it, _tcv),
-      m_window(NULL), m_lastPos(-1, -1)
+      m_window(nullptr), m_lastPos(-1, -1)
 {
     setAcceptDrops(true);
     setFixedHeight(32);
@@ -1245,7 +1246,7 @@ InstrumentTrackView::~InstrumentTrackView()
 
 InstrumentTrackWindow* InstrumentTrackView::topLevelInstrumentTrackWindow()
 {
-    InstrumentTrackWindow* w = NULL;
+    InstrumentTrackWindow* w = nullptr;
     for(const QMdiSubWindow* sw :
         gui->mainWindow()->workspace()->subWindowList(
                 QMdiArea::ActivationHistoryOrder))
@@ -1279,11 +1280,11 @@ void InstrumentTrackView::assignFxLine(int channelIndex)
 }
 
 // TODO: Add windows to free list on freeInstrumentTrackWindow.
-// But, don't NULL m_window or disconnect signals.  This will allow windows
+// But, don't nullptr m_window or disconnect signals.  This will allow windows
 // that are being show/hidden frequently to stay connected.
 void InstrumentTrackView::freeInstrumentTrackWindow()
 {
-    if(m_window != NULL)
+    if(m_window != nullptr)
     {
         m_lastPos = m_window->parentWidget()->pos();
 
@@ -1292,8 +1293,8 @@ void InstrumentTrackView::freeInstrumentTrackWindow()
                    .toInt()
            || s_windowCache.count() < INSTRUMENT_WINDOW_CACHE_SIZE)
         {
-            model()->setHook(NULL);
-            m_window->setInstrumentTrackView(NULL);
+            model()->setHook(nullptr);
+            m_window->setInstrumentTrackView(nullptr);
             m_window->parentWidget()->hide();
             // m_window->setModel(
             //	engine::dummyTrackContainer()->
@@ -1306,7 +1307,7 @@ void InstrumentTrackView::freeInstrumentTrackWindow()
             delete m_window;
         }
 
-        m_window = NULL;
+        m_window = nullptr;
     }
 }
 
@@ -1320,7 +1321,7 @@ void InstrumentTrackView::cleanupWindowCache()
 
 InstrumentTrackWindow* InstrumentTrackView::instrumentTrackWindow()
 {
-    if(m_window != NULL)
+    if(m_window != nullptr)
     {
     }
     else if(!s_windowCache.isEmpty())
@@ -1592,7 +1593,7 @@ class fxLineLcdSpinBox : public LcdSpinBox
         // button, the context-menu appears while mouse-cursor is still hidden
         // and it isn't shown again until user does something which causes
         // an QApplication::restoreOverrideCursor()-call...
-        mouseReleaseEvent(NULL);
+        mouseReleaseEvent(nullptr);
 
         QPointer<CaptionMenu> contextMenu
                 = new CaptionMenu(model()->displayName(), this);
@@ -1616,8 +1617,8 @@ class fxLineLcdSpinBox : public LcdSpinBox
 
 // #### ITW:
 InstrumentTrackWindow::InstrumentTrackWindow(InstrumentTrackView* _itv) :
-      QWidget(), ModelView(NULL, this), m_track(_itv->model()), m_itv(_itv),
-      m_instrumentView(NULL)
+      QWidget(), ModelView(nullptr, this), m_track(_itv->model()), m_itv(_itv),
+      m_instrumentView(nullptr)
 {
     setAcceptDrops(true);
 
@@ -1678,7 +1679,7 @@ InstrumentTrackWindow::InstrumentTrackWindow(InstrumentTrackView* _itv) :
             = Qt::AlignHCenter | Qt::AlignBottom;  // Center;
 
     // set up volume knob
-    m_volumeKnob = new Knob(knobBright_26, NULL, tr("Instrument volume"));
+    m_volumeKnob = new Knob(knobBright_26, nullptr, tr("Instrument volume"));
     m_volumeKnob->setVolumeKnob(true);
     m_volumeKnob->setText(tr("VOL"));
     m_volumeKnob->setHintText(tr("Volume:"), "%");
@@ -1693,7 +1694,7 @@ InstrumentTrackWindow::InstrumentTrackWindow(InstrumentTrackView* _itv) :
     // basicControlsLayout->setAlignment( label, labelAlignment );
 
     // set up panning knob
-    m_panningKnob = new Knob(knobBright_26, NULL, tr("Panning"));
+    m_panningKnob = new Knob(knobBright_26, nullptr, tr("Panning"));
     m_panningKnob->setText(tr("PAN"));
     m_panningKnob->setHintText(tr("Panning:"), "");
     m_panningKnob->setPointColor(Qt::magenta);
@@ -1709,7 +1710,7 @@ InstrumentTrackWindow::InstrumentTrackWindow(InstrumentTrackView* _itv) :
     basicControlsLayout->setColumnStretch(2, 1);
 
     // set up pitch knob
-    m_bendingKnob = new Knob(knobBright_26, NULL, tr("Pitch"));
+    m_bendingKnob = new Knob(knobBright_26, nullptr, tr("Pitch"));
     m_bendingKnob->setPointColor(Qt::cyan);
     m_bendingKnob->setHintText(tr("Pitch:"), " " + tr("cents"));
     m_bendingKnob->setText(tr("PITCH"));
@@ -1723,7 +1724,7 @@ InstrumentTrackWindow::InstrumentTrackWindow(InstrumentTrackView* _itv) :
     // basicControlsLayout->setAlignment( m_pitchLabel, labelAlignment );
 
     // set up pitch range knob
-    m_bendingRangeSpinBox = new LcdSpinBox(2, "19cyan", NULL,
+    m_bendingRangeSpinBox = new LcdSpinBox(2, "19cyan", nullptr,
                                            tr("Pitch range (semitones)"));
     m_bendingRangeSpinBox->setText(tr("RANGE"));
     basicControlsLayout->addWidget(m_bendingRangeSpinBox, 0, 4);
@@ -1738,7 +1739,7 @@ InstrumentTrackWindow::InstrumentTrackWindow(InstrumentTrackView* _itv) :
     basicControlsLayout->setColumnStretch(5, 1);
 
     // setup spinbox for selecting FX-channel
-    m_effectChannelNumber = new fxLineLcdSpinBox(2, NULL, tr("FX channel"));
+    m_effectChannelNumber = new fxLineLcdSpinBox(2, nullptr, tr("FX channel"));
     m_effectChannelNumber->setText(tr("FX"));
 
     basicControlsLayout->addWidget(m_effectChannelNumber, 0, 6);
@@ -1937,7 +1938,7 @@ void InstrumentTrackWindow::modelChanged()
         m_bendingKnob->hide();
         // m_pitchLabel->hide();
         m_bendingKnob->setModel(new FloatModel(0., 0., 0., 0.01, nullptr, "",
-                                               true));  //(NULL);
+                                               true));  //(nullptr);
         m_bendingRangeSpinBox->hide();
         // m_bendingRangeLabel->hide();
     }
@@ -2014,7 +2015,7 @@ void InstrumentTrackWindow::updateName()
 void InstrumentTrackWindow::updateInstrumentView()
 {
     delete m_instrumentView;
-    if(m_track->m_instrument != NULL)
+    if(m_track->m_instrument != nullptr)
     {
         m_instrumentView = m_track->m_instrument->createView(m_tabWidget);
         m_tabWidget->addTab(m_instrumentView, tr("Plugin"), "plugin_tab", 0);

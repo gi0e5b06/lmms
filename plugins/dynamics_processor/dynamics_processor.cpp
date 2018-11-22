@@ -198,8 +198,8 @@ bool dynProcEffect::processAudioBuffer(sampleFrame* _buf, const fpp_t _frames)
                 }
                 else if(lookup < 200)
                 {
-                    gain = linearInterpolate(samples[lookup - 1],
-                                             samples[lookup], frac);
+                    gain = linearInterpolate(real_t(samples[lookup - 1]),
+                                             real_t(samples[lookup]), frac);
                 }
                 else
                 {

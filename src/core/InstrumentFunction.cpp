@@ -781,13 +781,13 @@ bool InstrumentFunctionNoteHumanizing::processNote(NotePlayHandle* _n)
         {
             real_t r = fastrand01inc();
             real_t s = round(m_volumeStepModel.value());
-            //real_t oldr=r;
+            // real_t oldr=r;
             if(s > 0.)
                 r = round(r * 100. / s) * s / 100.;
-            //qInfo("NH: oldr=%f r=%f s=%f",oldr,r,s);
+            // qInfo("NH: oldr=%f r=%f s=%f",oldr,r,s);
             volume_t o = _n->getVolume();  // 0..200
             volume_t n = bound(0., qRound(o * (1. - l * r)), 200.);
-            //qInfo("NH: volume %f->%f",o,n);
+            // qInfo("NH: volume %f->%f",o,n);
             _n->setVolume(n);
         }
     }
@@ -1583,4 +1583,123 @@ void InstrumentFunctionGlissando::loadSettings(const QDomElement& _this)
 InstrumentFunctionView* InstrumentFunctionGlissando::createView()
 {
     return new InstrumentFunctionGlissandoView(this);
+}
+
+InstrumentFunctionNoteSustaining::InstrumentFunctionNoteSustaining(
+        Model* _parent) :
+      InstrumentFunction(_parent, tr("NoteSustaining")),
+      // m_enabledModel( false, this ),
+      m_lastKey(-1), m_lastTime(-1)
+/*m_lastNPH(nullptr),
+ m_volumeRangeModel(0., 0., 100., 0.1, this, tr("Volume change")),
+ m_panRangeModel(0., 0., 100., 0.1, this, tr("Pan change")),
+ m_tuneRangeModel(0., 0., 100., 0.1, this, tr("Frequency change")),
+ m_offsetRangeModel(0., 0., 100., 0.1, this, tr("Start delay")),
+ m_shortenRangeModel(1., 1., 100., 0.1, this, tr("Shortening")),
+ m_volumeStepModel(1., 1., 100., 1., this, tr("Volume step")),
+ m_panStepModel(1., 1., 100., 1., this, tr("Pan step")),
+ m_tuneStepModel(1., 1., 100., 1., this, tr("Frequency step")),
+ m_offsetStepModel(1., 1., 100., 1., this, tr("Start step")),
+ m_shortenStepModel(1., 1., 100., 1., this, tr("Shortening step"))
+                   */
+{
+    connect(Engine::getSong(), SIGNAL(playbackStateChanged()), this,
+            SLOT(reset()));
+}
+
+InstrumentFunctionNoteSustaining::~InstrumentFunctionNoteSustaining()
+{
+}
+
+void InstrumentFunctionNoteSustaining::reset()
+{
+    if(!Engine::getSong()->isPlaying())
+    {
+        // qInfo("Glissando: reset()");
+        m_lastKey  = -1;
+        m_lastTime = -1;
+    }
+}
+
+bool InstrumentFunctionNoteSustaining::processNote(NotePlayHandle* _n)
+{
+    if(!shouldProcessNote(_n))
+        return true;
+
+    const int     newKey  = _n->key();
+    const int64_t curTime = Engine::getSong()->getMilliseconds();
+
+    QMutexLocker locker(&m_mutex);
+
+    if(newKey == m_lastKey)
+    {
+        if(!_n->isReleased())
+            _n->setFrames(_n->frames() + Engine::mixer()->framesPerPeriod());
+        else
+        {
+            m_lastKey  = -1;
+            m_lastTime = -1;
+        }
+    }
+    else if(_n->totalFramesPlayed() == 0)
+    {
+        const int64_t offTime = static_cast<int64_t>(
+                _n->offset() * 1000.
+                / Engine::mixer()->processingSampleRate());
+
+        m_lastKey  = newKey;
+        m_lastTime = curTime + offTime;
+    }
+
+    // qInfo("InstrumentFunctionNoteSustaining::process Note %p f=%d", _n,
+    //      _n->frames());
+    return true;
+}
+
+void InstrumentFunctionNoteSustaining::saveSettings(QDomDocument& _doc,
+                                                    QDomElement&  _this)
+{
+    m_enabledModel.saveSettings(_doc, _this, "enabled");
+    m_minNoteGenerationModel.saveSettings(_doc, _this, "mingen");
+    m_maxNoteGenerationModel.saveSettings(_doc, _this, "maxgen");
+
+    /*
+    m_volumeRangeModel.saveSettings(_doc, _this, "volume");
+    m_panRangeModel.saveSettings(_doc, _this, "pan");
+    m_tuneRangeModel.saveSettings(_doc, _this, "tune");
+    m_offsetRangeModel.saveSettings(_doc, _this, "offset");
+    m_shortenRangeModel.saveSettings(_doc, _this, "shorten");
+
+    m_volumeStepModel.saveSettings(_doc, _this, "volume_step");
+    m_panStepModel.saveSettings(_doc, _this, "pan_step");
+    m_tuneStepModel.saveSettings(_doc, _this, "tune_step");
+    m_offsetStepModel.saveSettings(_doc, _this, "offset_step");
+    m_shortenStepModel.saveSettings(_doc, _this, "shorten_step");
+    */
+}
+
+void InstrumentFunctionNoteSustaining::loadSettings(const QDomElement& _this)
+{
+    m_enabledModel.loadSettings(_this, "enabled");
+    m_minNoteGenerationModel.loadSettings(_this, "mingen");
+    m_maxNoteGenerationModel.loadSettings(_this, "maxgen");
+
+    /*
+    m_volumeRangeModel.loadSettings(_this, "volume");
+    m_panRangeModel.loadSettings(_this, "pan");
+    m_tuneRangeModel.loadSettings(_this, "tune");
+    m_offsetRangeModel.loadSettings(_this, "offset");
+    m_shortenRangeModel.loadSettings(_this, "shorten");
+
+    m_volumeStepModel.loadSettings(_this, "volume_step");
+    m_panStepModel.loadSettings(_this, "pan_step");
+    m_tuneStepModel.loadSettings(_this, "tune_step");
+    m_offsetStepModel.loadSettings(_this, "offset_step");
+    m_shortenStepModel.loadSettings(_this, "shorten_step");
+    */
+}
+
+InstrumentFunctionView* InstrumentFunctionNoteSustaining::createView()
+{
+    return new InstrumentFunctionNoteSustainingView(this);
 }

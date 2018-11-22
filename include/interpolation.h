@@ -32,6 +32,20 @@
 #include "lmms_constants.h"
 #include "lmms_math.h"
 
+enum interpolation_t
+{
+    Discrete,
+    Rounded,
+    Linear,
+    Cosinus,
+    Optimal2,
+    Cubic,
+    Hermite,
+    Lagrange,
+    Optimal4,
+    Exact
+};
+
 // FLOAT versions
 
 inline FLOAT
@@ -119,8 +133,8 @@ inline FLOAT
 
 // DOUBLE versions
 
-inline DOUBLE
-        hermiteInterpolate(DOUBLE v0, DOUBLE v1, DOUBLE v2, DOUBLE v3, DOUBLE x)
+inline DOUBLE hermiteInterpolate(
+        DOUBLE v0, DOUBLE v1, DOUBLE v2, DOUBLE v3, DOUBLE x)
 {
     const DOUBLE frsq  = x * x;
     const DOUBLE frsq2 = 2. * frsq;
@@ -130,7 +144,8 @@ inline DOUBLE
             + frsq2 * (x - 1.) * ((v3 - v1) * 0.25) + v1);
 }
 
-inline DOUBLE cubicInterpolate(DOUBLE v0, DOUBLE v1, DOUBLE v2, DOUBLE v3, DOUBLE x)
+inline DOUBLE
+        cubicInterpolate(DOUBLE v0, DOUBLE v1, DOUBLE v2, DOUBLE v3, DOUBLE x)
 {
     DOUBLE frsq = x * x;
     DOUBLE frcu = frsq * v0;
@@ -170,8 +185,8 @@ inline DOUBLE optimalInterpolate(DOUBLE v0, DOUBLE v1, DOUBLE x)
     return fastFma(fastFma(fastFma(c3, z, c2), z, c1), z, c0);
 }
 
-inline DOUBLE
-        optimal4pInterpolate(DOUBLE v0, DOUBLE v1, DOUBLE v2, DOUBLE v3, DOUBLE x)
+inline DOUBLE optimal4pInterpolate(
+        DOUBLE v0, DOUBLE v1, DOUBLE v2, DOUBLE v3, DOUBLE x)
 {
     const DOUBLE z     = x - 0.5;
     const DOUBLE even1 = v2 + v1;
@@ -181,8 +196,7 @@ inline DOUBLE
 
     const DOUBLE c0
             = even1 * 0.45868970870461956 + even2 * 0.04131401926395584;
-    const DOUBLE c1
-            = odd1 * 0.48068024766578432 + odd2 * 0.17577925564495955;
+    const DOUBLE c1 = odd1 * 0.48068024766578432 + odd2 * 0.17577925564495955;
     const DOUBLE c2
             = even1 * -0.246185007019907091 + even2 * 0.24614027139700284;
     const DOUBLE c3
@@ -191,8 +205,8 @@ inline DOUBLE
     return fastFma(fastFma(fastFma(c3, z, c2), z, c1), z, c0);
 }
 
-inline DOUBLE
-        lagrangeInterpolate(DOUBLE v0, DOUBLE v1, DOUBLE v2, DOUBLE v3, DOUBLE x)
+inline DOUBLE lagrangeInterpolate(
+        DOUBLE v0, DOUBLE v1, DOUBLE v2, DOUBLE v3, DOUBLE x)
 {
     const DOUBLE c0 = v1;
     const DOUBLE c1 = v2 - v0 * (1. / 3.) - v1 * 0.5 - v3 * (1. / 6.);

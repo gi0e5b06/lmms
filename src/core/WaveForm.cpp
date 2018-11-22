@@ -691,12 +691,17 @@ real_t WaveForm::f(const real_t _x, const interpolation_t _m) const
         case Optimal2:
         {
             const real_t j = _x * m_size;
-            const int    i = int(j);
+            const int    i = j;  // int()
 
             if(m_data == nullptr || i < 0 || i > m_size)
             {
-                qInfo("WaveForm::f m_data=%p i=%d size=%d", m_data, i,
-                      m_size);
+                qInfo("WaveForm::f x=%f m_data=%p i=%d size=%d", _x, m_data,
+                      i, m_size);
+                if(_x < 0. || _x > 1. || isnan(_x))
+                {
+                    BACKTRACE
+                    return 0.;
+                }
             }
             const real_t d  = j - i;
             const real_t r0 = m_data[i];
@@ -724,7 +729,7 @@ real_t WaveForm::f(const real_t _x, const interpolation_t _m) const
         default:
         {
             const real_t p  = _x * m_size;
-            const int    i1 = int(p);
+            const int    i1 = p;  // int()
             const real_t d  = p - i1;
             const int    i0 = (i1 == 0 ? m_size + 1 : i1 - 1);
             const int    i2 = i1 + 1;

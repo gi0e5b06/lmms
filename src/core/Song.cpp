@@ -1252,6 +1252,8 @@ void Song::loadProject( const QString & fileName )
 	if( gui && gui->mainWindow() )
 	{
 		gui->mainWindow()->resetWindowTitle();
+                gui->songEditor()->m_editor->realignTracks();
+                gui->getBBEditor()->trackContainerView()->realignTracks();
 	}
 }
 

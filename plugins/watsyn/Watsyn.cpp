@@ -1,6 +1,7 @@
 /*
  * Watsyn.cpp - a 4-oscillator modulating wavetable synth
  *
+ * Copyright (c) 2018 gi0e5b06 (on github.com)
  * Copyright (c) 2014 Vesa Kivimäki <contact/dot/diizy/at/nbl/dot/fi>
  *
  * This file is part of LMMS - https://lmms.io
@@ -53,10 +54,10 @@ extern "C"
                NULL};
 }
 
-WatsynObject::WatsynObject(float*              _A1wave,
-                           float*              _A2wave,
-                           float*              _B1wave,
-                           float*              _B2wave,
+WatsynObject::WatsynObject(FLOAT*              _A1wave,
+                           FLOAT*              _A2wave,
+                           FLOAT*              _B1wave,
+                           FLOAT*              _B2wave,
                            int                 _amod,
                            int                 _bmod,
                            const sample_rate_t _samplerate,
@@ -70,15 +71,15 @@ WatsynObject::WatsynObject(float*              _A1wave,
     m_abuf = new sampleFrame[_frames];
     m_bbuf = new sampleFrame[_frames];
 
-    m_lphase[A1_OSC] = 0.0f;
-    m_lphase[A2_OSC] = 0.0f;
-    m_lphase[B1_OSC] = 0.0f;
-    m_lphase[B2_OSC] = 0.0f;
+    m_lphase[A1_OSC] = 0.;
+    m_lphase[A2_OSC] = 0.;
+    m_lphase[B1_OSC] = 0.;
+    m_lphase[B2_OSC] = 0.;
 
-    m_rphase[A1_OSC] = 0.0f;
-    m_rphase[A2_OSC] = 0.0f;
-    m_rphase[B1_OSC] = 0.0f;
-    m_rphase[B2_OSC] = 0.0f;
+    m_rphase[A1_OSC] = 0.;
+    m_rphase[A2_OSC] = 0.;
+    m_rphase[B1_OSC] = 0.;
+    m_rphase[B2_OSC] = 0.;
 
     // copy wavegraphs to the synth object to prevent race conditions
 
@@ -105,100 +106,110 @@ void WatsynObject::renderOutput(fpp_t _frames)
     {
         // put phases of 1-series oscs into variables because phase modulation
         // might happen
-        float A1_lphase = m_lphase[A1_OSC];
-        float A1_rphase = m_rphase[A1_OSC];
-        float B1_lphase = m_lphase[B1_OSC];
-        float B1_rphase = m_rphase[B1_OSC];
+        real_t A1_lphase = m_lphase[A1_OSC];
+        real_t A1_rphase = m_rphase[A1_OSC];
+        real_t B1_lphase = m_lphase[B1_OSC];
+        real_t B1_rphase = m_rphase[B1_OSC];
 
         /////////////   A-series   /////////////////
 
         // A2
-        sample_t A2_L
-                = linearInterpolate(
-                          m_A2wave[static_cast<int>(m_lphase[A2_OSC])],
-                          m_A2wave[static_cast<int>(m_lphase[A2_OSC] + 1)
-                                   % WAVELEN],
-                          fraction(m_lphase[A2_OSC]))
-                  * m_parent->m_lvol[A2_OSC];
-        sample_t A2_R
-                = linearInterpolate(
-                          m_A2wave[static_cast<int>(m_rphase[A2_OSC])],
-                          m_A2wave[static_cast<int>(m_rphase[A2_OSC] + 1)
-                                   % WAVELEN],
-                          fraction(m_rphase[A2_OSC]))
-                  * m_parent->m_rvol[A2_OSC];
+        sample_t A2_L = linearInterpolate(
+                                real_t(m_A2wave[static_cast<int>(
+                                        m_lphase[A2_OSC])]),
+                                real_t(m_A2wave[static_cast<int>(
+                                                        m_lphase[A2_OSC] + 1)
+                                                % WAVELEN]),
+                                fraction(m_lphase[A2_OSC]))
+                        * m_parent->m_lvol[A2_OSC];
+        sample_t A2_R = linearInterpolate(
+                                real_t(m_A2wave[static_cast<int>(
+                                        m_rphase[A2_OSC])]),
+                                real_t(m_A2wave[static_cast<int>(
+                                                        m_rphase[A2_OSC] + 1)
+                                                % WAVELEN]),
+                                fraction(m_rphase[A2_OSC]))
+                        * m_parent->m_rvol[A2_OSC];
 
         // if phase mod, add to phases
         if(m_amod == MOD_PM)
         {
-            A1_lphase = fmodf(A1_lphase + A2_L * PMOD_AMT, WAVELEN);
+            A1_lphase = fmod(A1_lphase + A2_L * PMOD_AMT, WAVELEN);
             if(A1_lphase < 0)
                 A1_lphase += WAVELEN;
-            A1_rphase = fmodf(A1_rphase + A2_R * PMOD_AMT, WAVELEN);
+            A1_rphase = fmod(A1_rphase + A2_R * PMOD_AMT, WAVELEN);
             if(A1_rphase < 0)
                 A1_rphase += WAVELEN;
         }
         // A1
         sample_t A1_L
                 = linearInterpolate(
-                          m_A1wave[static_cast<int>(A1_lphase)],
-                          m_A1wave[static_cast<int>(A1_lphase + 1) % WAVELEN],
+                          real_t(m_A1wave[static_cast<int>(A1_lphase)]),
+                          real_t(m_A1wave[static_cast<int>(A1_lphase + 1)
+                                          % WAVELEN]),
                           fraction(A1_lphase))
                   * m_parent->m_lvol[A1_OSC];
         sample_t A1_R
                 = linearInterpolate(
-                          m_A1wave[static_cast<int>(A1_rphase)],
-                          m_A1wave[static_cast<int>(A1_rphase + 1) % WAVELEN],
+                          real_t(m_A1wave[static_cast<int>(A1_rphase)]),
+                          real_t(m_A1wave[static_cast<int>(A1_rphase + 1)
+                                          % WAVELEN]),
                           fraction(A1_rphase))
                   * m_parent->m_rvol[A1_OSC];
 
         /////////////   B-series   /////////////////
 
         // B2
-        sample_t B2_L
-                = linearInterpolate(
-                          m_B2wave[static_cast<int>(m_lphase[B2_OSC])],
-                          m_B2wave[static_cast<int>(m_lphase[B2_OSC] + 1)
-                                   % WAVELEN],
-                          fraction(m_lphase[B2_OSC]))
-                  * m_parent->m_lvol[B2_OSC];
-        sample_t B2_R
-                = linearInterpolate(
-                          m_B2wave[static_cast<int>(m_rphase[B2_OSC])],
-                          m_B2wave[static_cast<int>(m_rphase[B2_OSC] + 1)
-                                   % WAVELEN],
-                          fraction(m_rphase[B2_OSC]))
-                  * m_parent->m_rvol[B2_OSC];
+        sample_t B2_L = linearInterpolate(
+                                real_t(m_B2wave[static_cast<int>(
+                                        m_lphase[B2_OSC])]),
+                                real_t(m_B2wave[static_cast<int>(
+                                                        m_lphase[B2_OSC] + 1)
+                                                % WAVELEN]),
+                                fraction(m_lphase[B2_OSC]))
+                        * m_parent->m_lvol[B2_OSC];
+        sample_t B2_R = linearInterpolate(
+                                real_t(m_B2wave[static_cast<int>(
+                                        m_rphase[B2_OSC])]),
+                                real_t(m_B2wave[static_cast<int>(
+                                                        m_rphase[B2_OSC] + 1)
+                                                % WAVELEN]),
+                                fraction(m_rphase[B2_OSC]))
+                        * m_parent->m_rvol[B2_OSC];
 
         // if crosstalk active, add a1
-        const float xt = m_parent->m_xtalk.value();
-        if(xt > 0.0)
+        const real_t xt = m_parent->m_xtalk.value();
+        if(xt > 0.)
         {
-            B2_L += (A1_L * xt) * 0.01f;
-            B2_R += (A1_R * xt) * 0.01f;
+            B2_L += (A1_L * xt) * 0.01;
+            B2_R += (A1_R * xt) * 0.01;
         }
 
         // if phase mod, add to phases
         if(m_bmod == MOD_PM)
         {
-            B1_lphase = fmodf(B1_lphase + B2_L * PMOD_AMT, WAVELEN);
-            if(B1_lphase < 0)
+            B1_lphase = fmod(B1_lphase + B2_L * PMOD_AMT, WAVELEN);
+            if(B1_lphase < 0.)
                 B1_lphase += WAVELEN;
-            B1_rphase = fmodf(B1_rphase + B2_R * PMOD_AMT, WAVELEN);
-            if(B1_rphase < 0)
+            B1_rphase = fmod(B1_rphase + B2_R * PMOD_AMT, WAVELEN);
+            if(B1_rphase < 0.)
                 B1_rphase += WAVELEN;
         }
         // B1
         sample_t B1_L
                 = linearInterpolate(
-                          m_B1wave[static_cast<int>(B1_lphase) % WAVELEN],
-                          m_B1wave[static_cast<int>(B1_lphase + 1) % WAVELEN],
+                          real_t(m_B1wave[static_cast<int>(B1_lphase)
+                                          % WAVELEN]),
+                          real_t(m_B1wave[static_cast<int>(B1_lphase + 1)
+                                          % WAVELEN]),
                           fraction(B1_lphase))
                   * m_parent->m_lvol[B1_OSC];
         sample_t B1_R
                 = linearInterpolate(
-                          m_B1wave[static_cast<int>(B1_rphase) % WAVELEN],
-                          m_B1wave[static_cast<int>(B1_rphase + 1) % WAVELEN],
+                          real_t(m_B1wave[static_cast<int>(B1_rphase)
+                                          % WAVELEN]),
+                          real_t(m_B1wave[static_cast<int>(B1_rphase + 1)
+                                          % WAVELEN]),
                           fraction(B1_rphase))
                   * m_parent->m_rvol[B1_OSC];
 
@@ -244,15 +255,15 @@ void WatsynObject::renderOutput(fpp_t _frames)
         for(int i = 0; i < NUM_OSCS; i++)
         {
             m_lphase[i]
-                    += (static_cast<float>(WAVELEN)
+                    += (real_t(WAVELEN)
                         / (m_samplerate
                            / (m_nph->frequency() * m_parent->m_lfreq[i])));
-            m_lphase[i] = fmodf(m_lphase[i], WAVELEN);
+            m_lphase[i] = fmod(m_lphase[i], WAVELEN);
             m_rphase[i]
-                    += (static_cast<float>(WAVELEN)
+                    += (real_t(WAVELEN)
                         / (m_samplerate
                            / (m_nph->frequency() * m_parent->m_rfreq[i])));
-            m_rphase[i] = fmodf(m_rphase[i], WAVELEN);
+            m_rphase[i] = fmod(m_rphase[i], WAVELEN);
         }
     }
 }
@@ -260,67 +271,42 @@ void WatsynObject::renderOutput(fpp_t _frames)
 WatsynInstrument::WatsynInstrument(InstrumentTrack* _instrument_track) :
       Instrument(_instrument_track, &watsyn_plugin_descriptor),
 
-      a1_vol(100.0f, 0.0f, 200.0f, 0.1f, this, tr("Volume A1")),
-      a2_vol(100.0f, 0.0f, 200.0f, 0.1f, this, tr("Volume A2")),
-      b1_vol(100.0f, 0.0f, 200.0f, 0.1f, this, tr("Volume B1")),
-      b2_vol(100.0f, 0.0f, 200.0f, 0.1f, this, tr("Volume B2")),
+      a1_vol(100., 0., 200., 0.1, this, tr("Volume A1")),
+      a2_vol(100., 0., 200., 0.1, this, tr("Volume A2")),
+      b1_vol(100., 0., 200., 0.1, this, tr("Volume B1")),
+      b2_vol(100., 0., 200., 0.1, this, tr("Volume B2")),
 
-      a1_pan(0.0f, -100.0f, 100.0f, 0.1f, this, tr("Panning A1")),
-      a2_pan(0.0f, -100.0f, 100.0f, 0.1f, this, tr("Panning A2")),
-      b1_pan(0.0f, -100.0f, 100.0f, 0.1f, this, tr("Panning B1")),
-      b2_pan(0.0f, -100.0f, 100.0f, 0.1f, this, tr("Panning B2")),
+      a1_pan(0., -100., 100., 0.1, this, tr("Panning A1")),
+      a2_pan(0., -100., 100., 0.1, this, tr("Panning A2")),
+      b1_pan(0., -100., 100., 0.1, this, tr("Panning B1")),
+      b2_pan(0., -100., 100., 0.1, this, tr("Panning B2")),
 
-      a1_mult(8.0f, 1.0, 24.0, 1.0, this, tr("Freq. multiplier A1")),
-      a2_mult(8.0f, 1.0, 24.0, 1.0, this, tr("Freq. multiplier A2")),
-      b1_mult(8.0f, 1.0, 24.0, 1.0, this, tr("Freq. multiplier B1")),
-      b2_mult(8.0f, 1.0, 24.0, 1.0, this, tr("Freq. multiplier B2")),
+      a1_mult(8., 1.0, 24.0, 1.0, this, tr("Freq. multiplier A1")),
+      a2_mult(8., 1.0, 24.0, 1.0, this, tr("Freq. multiplier A2")),
+      b1_mult(8., 1.0, 24.0, 1.0, this, tr("Freq. multiplier B1")),
+      b2_mult(8., 1.0, 24.0, 1.0, this, tr("Freq. multiplier B2")),
 
-      a1_ltune(0.0f, -600.0f, 600.0f, 1.0f, this, tr("Left detune A1")),
-      a2_ltune(0.0f, -600.0f, 600.0f, 1.0f, this, tr("Left detune A2")),
-      b1_ltune(0.0f, -600.0f, 600.0f, 1.0f, this, tr("Left detune B1")),
-      b2_ltune(0.0f, -600.0f, 600.0f, 1.0f, this, tr("Left detune B2")),
+      a1_ltune(0., -600., 600., 1., this, tr("Left detune A1")),
+      a2_ltune(0., -600., 600., 1., this, tr("Left detune A2")),
+      b1_ltune(0., -600., 600., 1., this, tr("Left detune B1")),
+      b2_ltune(0., -600., 600., 1., this, tr("Left detune B2")),
 
-      a1_rtune(0.0f, -600.0f, 600.0f, 1.0f, this, tr("Right detune A1")),
-      a2_rtune(0.0f, -600.0f, 600.0f, 1.0f, this, tr("Right detune A2")),
-      b1_rtune(0.0f, -600.0f, 600.0f, 1.0f, this, tr("Right detune B1")),
-      b2_rtune(0.0f, -600.0f, 600.0f, 1.0f, this, tr("Right detune B2")),
+      a1_rtune(0., -600., 600., 1., this, tr("Right detune A1")),
+      a2_rtune(0., -600., 600., 1., this, tr("Right detune A2")),
+      b1_rtune(0., -600., 600., 1., this, tr("Right detune B1")),
+      b2_rtune(0., -600., 600., 1., this, tr("Right detune B2")),
 
-      a1_graph(-1.0f, 1.0f, GRAPHLEN, this),
-      a2_graph(-1.0f, 1.0f, GRAPHLEN, this),
-      b1_graph(-1.0f, 1.0f, GRAPHLEN, this),
-      b2_graph(-1.0f, 1.0f, GRAPHLEN, this),
+      a1_graph(-1., 1., GRAPHLEN, this), a2_graph(-1., 1., GRAPHLEN, this),
+      b1_graph(-1., 1., GRAPHLEN, this), b2_graph(-1., 1., GRAPHLEN, this),
 
-      m_abmix(0.0f, -100.0f, 100.0f, 0.1f, this, tr("A-B Mix")),
-      m_envAmt(0.0f,
-               -200.0f,
-               200.0f,
-               1.0f,
-               this,
-               tr("A-B Mix envelope amount")),
+      m_abmix(0., -100., 100., 0.1, this, tr("A-B Mix")),
+      m_envAmt(0., -200., 200., 1., this, tr("A-B Mix envelope amount")),
 
-      m_envAtt(0.0f,
-               0.0f,
-               2000.0f,
-               1.0f,
-               2000.0f,
-               this,
-               tr("A-B Mix envelope attack")),
-      m_envHold(0.0f,
-                0.0f,
-                2000.0f,
-                1.0f,
-                2000.0f,
-                this,
-                tr("A-B Mix envelope hold")),
-      m_envDec(0.0f,
-               0.0f,
-               2000.0f,
-               1.0f,
-               2000.0f,
-               this,
-               tr("A-B Mix envelope decay")),
+      m_envAtt(0., 0., 2000., 1., 2000., this, tr("A-B Mix envelope attack")),
+      m_envHold(0., 0., 2000., 1., 2000., this, tr("A-B Mix envelope hold")),
+      m_envDec(0., 0., 2000., 1., 2000., this, tr("A-B Mix envelope decay")),
 
-      m_xtalk(0.0f, 0.0f, 100.0f, 0.1f, this, tr("A1-B2 Crosstalk")),
+      m_xtalk(0., 0., 100., 0.1, this, tr("A1-B2 Crosstalk")),
 
       m_amod(0, 0, 3, this, tr("A2-A1 modulation")),
       m_bmod(0, 0, 3, this, tr("B2-B1 modulation")),
@@ -407,12 +393,12 @@ void WatsynInstrument::playNote(NotePlayHandle* _n,
     w->renderOutput(frames);
 
     // envelope parameters
-    const float envAmt  = m_envAmt.value();
-    const float envAtt  = (m_envAtt.value() * w->samplerate()) / 1000.0f;
-    const float envHold = (m_envHold.value() * w->samplerate()) / 1000.0f;
-    const float envDec  = (m_envDec.value() * w->samplerate()) / 1000.0f;
-    const float envLen  = envAtt + envDec + envHold;
-    const float tfp_    = static_cast<float>(_n->totalFramesPlayed());
+    const real_t envAmt  = m_envAmt.value();
+    const real_t envAtt  = (m_envAtt.value() * w->samplerate()) / 1000.;
+    const real_t envHold = (m_envHold.value() * w->samplerate()) / 1000.;
+    const real_t envDec  = (m_envDec.value() * w->samplerate()) / 1000.;
+    const real_t envLen  = envAtt + envDec + envHold;
+    const real_t tfp_    = static_cast<real_t>(_n->totalFramesPlayed());
 
     // if sample-exact is enabled, use sample-exact calculations...
     // disabled pending proper implementation of sample-exactness
@@ -420,32 +406,32 @@ void WatsynInstrument::playNote(NotePlayHandle* _n,
             {
                     for( fpp_t f=0; f < frames; f++ )
                     {
-                            const float tfp = tfp_ + f;
+                            const real_t tfp = tfp_ + f;
                             // handle mixing envelope
-                            float mixvalue = m_abmix.value( f );
-                            if( envAmt != 0.0f && tfp < envLen )
+                            real_t mixvalue = m_abmix.value( f );
+                            if( envAmt != 0. && tfp < envLen )
                             {
                                     if( tfp < envAtt )
                                     {
-                                            mixvalue = qBound( -100.0f,
-       mixvalue + ( tfp / envAtt * envAmt ), 100.0f );
+                                            mixvalue = bound( -100.,
+       mixvalue + ( tfp / envAtt * envAmt ), 100. );
                                     }
                                     else if ( tfp >= envAtt && tfp < envAtt +
        envHold )
                                     {
-                                            mixvalue = qBound( -100.0f,
-       mixvalue + envAmt, 100.0f );
+                                            mixvalue = bound( -100.,
+       mixvalue + envAmt, 100. );
                                     }
                                     else
                                     {
-                                            mixvalue = qBound( -100.0f,
+                                            mixvalue = bound( -100.,
        mixvalue + envAmt - ( ( tfp - ( envAtt + envHold ) ) / envDec * envAmt
-       ), 100.0f );
+       ), 100. );
                                     }
                             }
                             // get knob values in sample-exact way
-                            const float bmix = ( ( mixvalue + 100.0 ) / 200.0
-       ); const float amix = 1.0 - bmix;
+                            const real_t bmix = ( ( mixvalue + 100.0 ) / 200.0
+       ); const real_t amix = 1.0 - bmix;
 
                             // mix a/b streams according to mixing knob
                             _working_buffer[f][0] = ( abuf[f][0] * amix ) +
@@ -459,35 +445,35 @@ void WatsynInstrument::playNote(NotePlayHandle* _n,
     // if sample-exact is not enabled, use simpler calculations:
     // if mix envelope is active, and we haven't gone past the envelope end,
     // use envelope-aware calculation...
-    if(envAmt != 0.0f && tfp_ < envLen)
+    if(envAmt != 0. && tfp_ < envLen)
     {
-        const float mixvalue_ = m_abmix.value();
+        const real_t mixvalue_ = m_abmix.value();
         for(fpp_t f = 0; f < frames; f++)
         {
-            float       mixvalue = mixvalue_;
-            const float tfp      = tfp_ + f;
+            real_t       mixvalue = mixvalue_;
+            const real_t tfp      = tfp_ + f;
             // handle mixing envelope
             if(tfp < envAtt)
             {
-                mixvalue = qBound(-100.0f, mixvalue + (tfp / envAtt * envAmt),
-                                  100.0f);
+                mixvalue = bound(-100., mixvalue + (tfp / envAtt * envAmt),
+                                  100.);
             }
             else if(tfp >= envAtt && tfp < envAtt + envHold)
             {
-                mixvalue = qBound(-100.0f, mixvalue + envAmt, 100.0f);
+                mixvalue = bound(-100., mixvalue + envAmt, 100.);
             }
             else
             {
-                mixvalue = qBound(-100.0f,
+                mixvalue = bound(-100.,
                                   mixvalue + envAmt
                                           - ((tfp - (envAtt + envHold))
                                              / envDec * envAmt),
-                                  100.0f);
+                                  100.);
             }
 
             // get knob values
-            const float bmix = ((mixvalue + 100.0) / 200.0);
-            const float amix = 1.0 - bmix;
+            const real_t bmix = ((mixvalue + 100.0) / 200.0);
+            const real_t amix = 1.0 - bmix;
 
             // mix a/b streams according to mixing knob
             buffer[f][0] = (abuf[f][0] * amix) + (bbuf[f][0] * bmix);
@@ -500,8 +486,8 @@ void WatsynInstrument::playNote(NotePlayHandle* _n,
     else
     {
         // get knob values
-        const float bmix = ((m_abmix.value() + 100.0) / 200.0);
-        const float amix = 1.0 - bmix;
+        const real_t bmix = ((m_abmix.value() + 100.0) / 200.0);
+        const real_t amix = 1.0 - bmix;
         for(fpp_t f = 0; f < frames; f++)
         {
             // mix a/b streams according to mixing knob
@@ -660,60 +646,60 @@ void WatsynInstrument::updateFreqA1()
 {
     // calculate frequencies
     m_lfreq[A1_OSC]
-            = (a1_mult.value() / 8) * powf(2, a1_ltune.value() / 1200);
+            = (a1_mult.value() / 8.) * exp2( a1_ltune.value() / 1200.);
     m_rfreq[A1_OSC]
-            = (a1_mult.value() / 8) * powf(2, a1_rtune.value() / 1200);
+            = (a1_mult.value() / 8.) * exp2( a1_rtune.value() / 1200.);
 }
 
 void WatsynInstrument::updateFreqA2()
 {
     // calculate frequencies
     m_lfreq[A2_OSC]
-            = (a2_mult.value() / 8) * powf(2, a2_ltune.value() / 1200);
+            = (a2_mult.value() / 8.) * exp2( a2_ltune.value() / 1200.);
     m_rfreq[A2_OSC]
-            = (a2_mult.value() / 8) * powf(2, a2_rtune.value() / 1200);
+            = (a2_mult.value() / 8.) * exp2( a2_rtune.value() / 1200.);
 }
 
 void WatsynInstrument::updateFreqB1()
 {
     // calculate frequencies
     m_lfreq[B1_OSC]
-            = (b1_mult.value() / 8) * powf(2, b1_ltune.value() / 1200);
+            = (b1_mult.value() / 8.) * exp2( b1_ltune.value() / 1200.);
     m_rfreq[B1_OSC]
-            = (b1_mult.value() / 8) * powf(2, b1_rtune.value() / 1200);
+            = (b1_mult.value() / 8.) * exp2( b1_rtune.value() / 1200.);
 }
 
 void WatsynInstrument::updateFreqB2()
 {
     // calculate frequencies
     m_lfreq[B2_OSC]
-            = (b2_mult.value() / 8) * powf(2, b2_ltune.value() / 1200);
+            = (b2_mult.value() / 8.) * exp2( b2_ltune.value() / 1200.);
     m_rfreq[B2_OSC]
-            = (b2_mult.value() / 8) * powf(2, b2_rtune.value() / 1200);
+            = (b2_mult.value() / 8.) * exp2( b2_rtune.value() / 1200.);
 }
 
 void WatsynInstrument::updateWaveA1()
 {
     // do sinc+oversampling on the wavetables to improve quality
-    srccpy(&A1_wave[0], const_cast<float*>(a1_graph.samples()));
+    srccpy(&A1_wave[0], const_cast<FLOAT*>(a1_graph.samples()));
 }
 
 void WatsynInstrument::updateWaveA2()
 {
     // do sinc+oversampling on the wavetables to improve quality
-    srccpy(&A2_wave[0], const_cast<float*>(a2_graph.samples()));
+    srccpy(&A2_wave[0], const_cast<FLOAT*>(a2_graph.samples()));
 }
 
 void WatsynInstrument::updateWaveB1()
 {
     // do sinc+oversampling on the wavetables to improve quality
-    srccpy(&B1_wave[0], const_cast<float*>(b1_graph.samples()));
+    srccpy(&B1_wave[0], const_cast<FLOAT*>(b1_graph.samples()));
 }
 
 void WatsynInstrument::updateWaveB2()
 {
     // do sinc+oversampling on the wavetables to improve quality
-    srccpy(&B2_wave[0], const_cast<float*>(b2_graph.samples()));
+    srccpy(&B2_wave[0], const_cast<FLOAT*>(b2_graph.samples()));
 }
 
 WatsynView::WatsynView(Instrument* _instrument, QWidget* _parent) :

@@ -63,7 +63,36 @@ SpaceGDXDialog::SpaceGDXDialog(SpaceGDXControls* controls) :
     rightHighKNB->setText(tr("HIGH"));
     rightHighKNB->setHintText(tr("Right low pass:"), "");
 
+    Knob* leftPhaseKNB = new Knob(this);
+    leftPhaseKNB->setModel(&controls->m_leftPhaseModel);
+    leftPhaseKNB->setText(tr("PHASE"));
+    leftPhaseKNB->setHintText(tr("Left phase:"), "");
+
+    Knob* leftGainKNB = new Knob(this);
+    leftGainKNB->setModel(&controls->m_leftGainModel);
+    leftGainKNB->setText(tr("GAIN"));
+    leftGainKNB->setHintText(tr("Left gain:"), "");
+
+    Knob* leftLowKNB = new Knob(this);
+    leftLowKNB->setModel(&controls->m_leftLowModel);
+    leftLowKNB->setText(tr("LOW"));
+    leftLowKNB->setHintText(tr("Left low pass:"), "");
+
+    Knob* leftHighKNB = new Knob(this);
+    leftHighKNB->setModel(&controls->m_leftHighModel);
+    leftHighKNB->setText(tr("HIGH"));
+    leftHighKNB->setHintText(tr("Left low pass:"), "");
+
     int col = 0, row = 0;  // first row
+    mainLOT->addWidget(leftPhaseKNB, row, ++col, 1, 1,
+                          Qt::AlignBottom | Qt::AlignHCenter);
+    mainLOT->addWidget(leftGainKNB, row, ++col, 1, 1,
+                          Qt::AlignBottom | Qt::AlignHCenter);
+    mainLOT->addWidget(leftLowKNB, row, ++col, 1, 1,
+                          Qt::AlignBottom | Qt::AlignHCenter);
+    mainLOT->addWidget(leftHighKNB, row, ++col, 1, 1,
+                          Qt::AlignBottom | Qt::AlignHCenter);
+    col=0; row++;
     mainLOT->addWidget(rightPhaseKNB, row, ++col, 1, 1,
                           Qt::AlignBottom | Qt::AlignHCenter);
     mainLOT->addWidget(rightGainKNB, row, ++col, 1, 1,
@@ -74,8 +103,8 @@ SpaceGDXDialog::SpaceGDXDialog(SpaceGDXControls* controls) :
                           Qt::AlignBottom | Qt::AlignHCenter);
 
     mainLOT->setColumnStretch(5, 1);
-    mainLOT->setRowStretch(1, 1);
+    mainLOT->setRowStretch(2, 1);
 
     setFixedWidth(250);
-    //setMinimumHeight(((sizeHint().height() - 1) / 50 + 1) * 50);
+    setMinimumHeight(((sizeHint().height() - 1) / 50 + 1) * 50);
 }

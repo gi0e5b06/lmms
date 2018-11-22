@@ -334,6 +334,8 @@ SampleBuffer* s_metronome2 = nullptr;
 
 const surroundSampleFrame* Mixer::renderNextBuffer()
 {
+    QThread::yieldCurrentThread();
+
     m_profiler.startPeriod();
 
     s_renderingThread = true;

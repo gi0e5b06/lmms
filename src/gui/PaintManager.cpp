@@ -24,11 +24,11 @@
 
 #include "PaintManager.h"
 
+#include "Engine.h"
 #include "GuiApplication.h"
 #include "MainWindow.h"
-#include "PaintCacheable.h"
-#include "Engine.h"
 #include "Mixer.h"
+#include "PaintCacheable.h"
 
 #include <QWidget>
 
@@ -47,16 +47,11 @@ PaintManager::~PaintManager()
 void PaintManager::runQueue()
 {
     // qInfo("PaintManager::runQueue %d", m_queue.size());
-    int n=0;
+    int n = 0;
     while(!m_queue.empty())
     {
-        QThread::yieldCurrentThread();
-        if(n<20 && Engine::mixer()->warningXRuns())
-        {
-                n++;
-                QThread::msleep(20);
-                continue;
-        }
+        if(Engine::mixer()->warningXRuns())
+            QThread::yieldCurrentThread();
         PaintCacheable* w = m_queue.dequeue();
         m_unique.remove(w);
         w->updateNow();

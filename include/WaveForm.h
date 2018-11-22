@@ -30,6 +30,7 @@
 //#include "fft_helpers.h"
 #include "lmms_basics.h"
 //#include "lmms_math.h"
+#include "interpolation.h"
 
 // fastnormsinf01 -> WaveForm::sin::f(x)
 
@@ -40,20 +41,6 @@ class WaveForm
     MM_OPERATORS
 
   public:
-    enum interpolation_t
-    {
-        Discrete,
-        Rounded,
-        Linear,
-        Cosinus,
-        Optimal2,
-        Cubic,
-        Hermite,
-        Lagrange,
-        Optimal4,
-        Exact
-    };
-
     WaveForm(const QString&        _name,
              const int             _bank,
              const int             _index,

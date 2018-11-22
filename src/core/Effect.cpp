@@ -24,483 +24,485 @@
  *
  */
 
-#include <cmath>
-
-#include <QDomElement>
-
 #include "Effect.h"
+
+#include "Configuration.h"
 #include "EffectChain.h"
 #include "EffectControls.h"
 #include "EffectView.h"
 
-#include "Configuration.h"
+#include <QDomElement>
+
+#include <cmath>
 //#include "ConfigManager.h"
 #include "MixHelpers.h"
 #include "SampleRate.h"
 #include "WaveForm.h"
 //#include "lmms_math.h"
 
-
-Effect::Effect( const Plugin::Descriptor * _desc,
-                Model * _parent,
-                const Descriptor::SubPluginFeatures::Key * _key ) :
-    Plugin( _desc, _parent ),
-    m_gateClosed( true ),
-    m_parent( NULL ),
-    m_key( _key ? *_key : Descriptor::SubPluginFeatures::Key() ),
-    m_processors( 1 ),
-    m_okay( true ),
-    m_noRun( false ),
-    m_runningModel( false, this, tr("Effect running") ),
-    m_bufferCount( 0 ),
-    m_enabledModel( true, this, tr( "Effect enabled" ) ),
-    m_clippingModel(false, this,  tr( "Clipping alert" ) ),
-    m_wetDryModel  ( 1., 0., 1., 0.01, this, tr( "Wet/Dry mix" ) ), //min=-1
-    m_autoQuitModel( 1000., 1., 8000., 1., 8000., this, tr( "Decay" ) ),
-    m_gateModel    ( 0.0001, 0.0001, 1., 0.0001, this, tr( "Gate" ) ),
-    m_balanceModel ( 0.,-1., 1., 0.01, this, tr( "Balance" ) )
-    //m_autoQuitDisabled( false )
+Effect::Effect(const Plugin::Descriptor*                 _desc,
+               Model*                                    _parent,
+               const Descriptor::SubPluginFeatures::Key* _key) :
+      Plugin(_desc, _parent),
+      m_gateClosed(true), m_parent(NULL),
+      m_key(_key ? *_key : Descriptor::SubPluginFeatures::Key()),
+      m_processors(1), m_okay(true), m_noRun(false),
+      m_runningModel(false, this, tr("Effect running")), m_bufferCount(0),
+      m_enabledModel(true, this, tr("Effect enabled")),
+      m_clippingModel(false, this, tr("Clipping alert")),
+      m_wetDryModel(1., 0., 1., 0.01, this, tr("Wet/Dry mix")),  // min=-1
+      m_autoQuitModel(1000., 1., 8000., 1., 8000., this, tr("Decay")),
+      m_gateModel(0.0001, 0.0001, 1., 0.0001, this, tr("Gate")),
+      m_balanceModel(0., -1., 1., 0.01, this, tr("Balance"))
+// m_autoQuitDisabled( false )
 {
-        //m_gateModel.setScaleLogarithmic(true);
+    // m_gateModel.setScaleLogarithmic(true);
 
-	m_srcState[0] = m_srcState[1] = NULL;
-	reinitSRC();
+    m_srcState[0] = m_srcState[1] = NULL;
+    reinitSRC();
 
-	//if( ConfigManager::inst()->value( "ui", "disableautoquit").toInt() )
-	//{
-	//	m_autoQuitDisabled = true;
-	//}
-        //qInfo("Effect::Effect end constructor");
+    // if( ConfigManager::inst()->value( "ui", "disableautoquit").toInt() )
+    //{
+    //	m_autoQuitDisabled = true;
+    //}
+    // qInfo("Effect::Effect end constructor");
 }
-
-
-
 
 Effect::~Effect()
 {
-	for( int i = 0; i < 2; ++i )
-	{
-		if( m_srcState[i] != NULL )
-		{
-			src_delete( m_srcState[i] );
-		}
-	}
+    for(int i = 0; i < 2; ++i)
+    {
+        if(m_srcState[i] != NULL)
+        {
+            src_delete(m_srcState[i]);
+        }
+    }
 }
-
 
 void Effect::startRunning()
 {
-        if(!isRunning())
-        {
-                //resetBufferCount();//m_bufferCount = 0;
-                m_runningModel.setAutomatedValue(true);
-        }
+    if(!isRunning())
+    {
+        // resetBufferCount();//m_bufferCount = 0;
+        m_runningModel.setAutomatedValue(true);
+    }
 }
 
 void Effect::stopRunning()
 {
-        if(isRunning())
-           m_runningModel.setAutomatedValue(false);
-        if(!m_gateClosed)
-                m_gateClosed=true;
+    if(isRunning())
+        m_runningModel.setAutomatedValue(false);
+    if(!m_gateClosed)
+        m_gateClosed = true;
 }
 
-QDomElement Effect::saveState( QDomDocument & _doc, QDomElement & _parent )
+QDomElement Effect::saveState(QDomDocument& _doc, QDomElement& _parent)
 {
-        //qInfo("Effect::saveState");
-        QDomElement  r=Plugin::saveState(_doc,_parent);
-        r.setAttribute( "name", QString::fromUtf8( descriptor()->name ) );
-        r.appendChild( key().saveXML( _doc ) );
-        return r;
-
+    // qInfo("Effect::saveState");
+    QDomElement r = Plugin::saveState(_doc, _parent);
+    r.setAttribute("name", QString::fromUtf8(descriptor()->name));
+    r.appendChild(key().saveXML(_doc));
+    return r;
 }
 
-void Effect::saveSettings( QDomDocument & _doc, QDomElement & _this )
+void Effect::saveSettings(QDomDocument& _doc, QDomElement& _this)
 {
-        m_enabledModel.saveSettings( _doc, _this, "on" );
-	m_wetDryModel.saveSettings( _doc, _this, "wet" );
-	m_autoQuitModel.saveSettings( _doc, _this, "autoquit" );
-	m_gateModel.saveSettings( _doc, _this, "gate" );
-	m_balanceModel.saveSettings( _doc, _this, "balance" );
-	controls()->saveState( _doc, _this );
+    m_enabledModel.saveSettings(_doc, _this, "on");
+    m_wetDryModel.saveSettings(_doc, _this, "wet");
+    m_autoQuitModel.saveSettings(_doc, _this, "autoquit");
+    m_gateModel.saveSettings(_doc, _this, "gate");
+    m_balanceModel.saveSettings(_doc, _this, "balance");
+    controls()->saveState(_doc, _this);
 }
 
-
-
-
-void Effect::loadSettings( const QDomElement & _this )
+void Effect::loadSettings(const QDomElement& _this)
 {
-	m_enabledModel.loadSettings( _this, "on" );
-	m_wetDryModel.loadSettings( _this, "wet" );
-	m_autoQuitModel.loadSettings( _this, "autoquit" );
-	m_gateModel.loadSettings( _this, "gate" );
-	m_balanceModel.loadSettings( _this, "balance" );
+    m_enabledModel.loadSettings(_this, "on");
+    m_wetDryModel.loadSettings(_this, "wet");
+    m_autoQuitModel.loadSettings(_this, "autoquit");
+    m_gateModel.loadSettings(_this, "gate");
+    m_balanceModel.loadSettings(_this, "balance");
 
-	QDomNode node = _this.firstChild();
-	while( !node.isNull() )
-	{
-		if( node.isElement() )
-		{
-			if( controls()->nodeName() == node.nodeName() )
-			{
-				controls()->restoreState( node.toElement() );
-			}
-		}
-		node = node.nextSibling();
-	}
-
-	/*
-	if(m_wetDryModel.minValue()==-1.)
-	{
-		m_wetDryModel.setMinValue(0.);
-	}
-	*/
-	if(m_wetDryModel.value()<0.)
-	{
-		m_wetDryModel.setValue(-m_wetDryModel.value());
-	}
-
-        if(!isBalanceable())
-                m_balanceModel.setValue(0.);
-
-        m_gateModel.setScaleLogarithmic(true);
-}
-
-
-
-
-
-Effect * Effect::instantiate( const QString& pluginName,
-				Model * _parent,
-				Descriptor::SubPluginFeatures::Key * _key )
-{
-	Plugin * p = Plugin::instantiate( pluginName, _parent, _key );
-	// check whether instantiated plugin is an effect
-	if( dynamic_cast<Effect *>( p ) != NULL )
-	{
-                //qInfo("Effect::instantiate SUCCESS %s",qPrintable(pluginName));
-		// everything ok, so return pointer
-		Effect * effect = dynamic_cast<Effect *>( p );
-		effect->m_parent = dynamic_cast<EffectChain *>(_parent);
-		return effect;
-	}
-
-        qWarning("Effect::instantiate FAILED %s",qPrintable(pluginName));
-	// not quite... so delete plugin and leave it up to the caller to instantiate a DummyEffect
-	delete p;
-
-	return NULL;
-}
-
-
-
-
-bool Effect::gateHasClosed(real_t& _rms, sampleFrame* _buf, const fpp_t _frames)
-{
-	if(!isAutoQuitEnabled()) return false;
-        if(!isRunning())
+    QDomNode node = _this.firstChild();
+    while(!node.isNull())
+    {
+        if(node.isElement())
         {
-                m_gateClosed=true;
+            if(controls()->nodeName() == node.nodeName())
+            {
+                controls()->restoreState(node.toElement());
+            }
+        }
+        node = node.nextSibling();
+    }
+
+    /*
+    if(m_wetDryModel.minValue()==-1.)
+    {
+            m_wetDryModel.setMinValue(0.);
+    }
+    */
+    if(m_wetDryModel.value() < 0.)
+    {
+        m_wetDryModel.setValue(-m_wetDryModel.value());
+    }
+
+    if(!isBalanceable())
+        m_balanceModel.setValue(0.);
+
+    m_gateModel.setScaleLogarithmic(true);
+}
+
+Effect* Effect::instantiate(const QString&                      pluginName,
+                            Model*                              _parent,
+                            Descriptor::SubPluginFeatures::Key* _key)
+{
+    Plugin* p = Plugin::instantiate(pluginName, _parent, _key);
+    // check whether instantiated plugin is an effect
+    if(dynamic_cast<Effect*>(p) != NULL)
+    {
+        // qInfo("Effect::instantiate SUCCESS %s",qPrintable(pluginName));
+        // everything ok, so return pointer
+        Effect* effect   = dynamic_cast<Effect*>(p);
+        effect->m_parent = dynamic_cast<EffectChain*>(_parent);
+        return effect;
+    }
+
+    qWarning("Effect::instantiate FAILED %s", qPrintable(pluginName));
+    // not quite... so delete plugin and leave it up to the caller to
+    // instantiate a DummyEffect
+    delete p;
+
+    return NULL;
+}
+
+bool Effect::gateHasClosed(real_t&      _rms,
+                           sampleFrame* _buf,
+                           const fpp_t  _frames)
+{
+    if(!isAutoQuitEnabled())
+        return false;
+    if(!isRunning())
+    {
+        m_gateClosed = true;
+        return false;
+    }
+
+    real_t g = gate();
+    // Check whether we need to continue processing input.  Restart the
+    // counter if the threshold has been exceeded.
+    if(g > 0.)
+    {
+        if(g < 1. && _rms < 0.)
+            _rms = computeRMS(_buf, _frames);
+        // qInfo("GHC g=%f rms=%f",g,_rms);
+
+        if(Engine::mixer()->warningXRuns())
+            g += 0.01;
+        if(Engine::mixer()->criticalXRuns())
+            g += 0.05;
+
+        if(_rms < g)
+        {
+            m_bufferCount++;  // incrementBufferCount();
+            // qInfo("GHC buffercount %d/%d",m_bufferCount,timeout());
+            if(!m_gateClosed && (m_bufferCount > timeout()))
+            {
+                // qInfo("GHC STOP");
+                m_gateClosed = true;
+                stopRunning();
+                // resetBufferCount();
+                return true;
+            }
+            else
                 return false;
         }
+    }
 
-        real_t g=gate();
-	// Check whether we need to continue processing input.  Restart the
-	// counter if the threshold has been exceeded.
-	if( g>0. )
-	{
-                if(g<1. && _rms<0.) _rms=computeRMS(_buf,_frames);
-                //qInfo("GHC g=%f rms=%f",g,_rms);
-
-                if(Engine::mixer()->warningXRuns()) g+=0.01;
-                if(Engine::mixer()->criticalXRuns()) g+=0.05;
-
-                if(_rms < g)
-                {
-                        m_bufferCount++;//incrementBufferCount();
-                        //qInfo("GHC buffercount %d/%d",m_bufferCount,timeout());
-                        if( !m_gateClosed && (m_bufferCount > timeout() ))
-                        {
-                                //qInfo("GHC STOP");
-                                m_gateClosed=true;
-                                stopRunning();
-                                //resetBufferCount();
-                                return true;
-                        }
-                        else return false;
-                }
-	}
-
-        m_bufferCount=0;
-        //qInfo("GHC RESET"); // resetBufferCount();
-        return false;
+    m_bufferCount = 0;
+    // qInfo("GHC RESET"); // resetBufferCount();
+    return false;
 }
-
 
 bool Effect::gateHasOpen(real_t& _rms, sampleFrame* _buf, const fpp_t _frames)
 {
-	if(!isAutoQuitEnabled()) return false;
-        //if(isRunning()) return false;
-
-        const real_t g=gate();
-	// Check whether we need to continue processing input.  Restart the
-	// counter if the threshold has been exceeded.
-	if( m_gateClosed && g<1.)
-	{
-                if(g>0. && _rms<0.) _rms=computeRMS(_buf,_frames);
-                if(g==0. || _rms >= g)
-                {
-                        m_gateClosed=false;
-                        if(!isRunning()) startRunning();
-                        m_bufferCount=0;
-                        //qInfo("GHO RESET");//resetBufferCount();
-                        return true;
-                }
-        }
-
+    if(!isAutoQuitEnabled())
         return false;
-}
+    // if(isRunning()) return false;
 
+    const real_t g = gate();
+    // Check whether we need to continue processing input.  Restart the
+    // counter if the threshold has been exceeded.
+    if(m_gateClosed && g < 1.)
+    {
+        if(g > 0. && _rms < 0.)
+            _rms = computeRMS(_buf, _frames);
+        if(g == 0. || _rms >= g)
+        {
+            m_gateClosed = false;
+            if(!isRunning())
+                startRunning();
+            m_bufferCount = 0;
+            // qInfo("GHO RESET");//resetBufferCount();
+            return true;
+        }
+    }
+
+    return false;
+}
 
 real_t Effect::computeRMS(sampleFrame* _buf, const fpp_t _frames)
 {
-	//if( !isEnabled() ) return 0.;
-	//if(!isAutoQuitEnabled()) return 1.;
+    // if( !isEnabled() ) return 0.;
+    // if(!isAutoQuitEnabled()) return 1.;
 
-        real_t rms = 0.;
-        fpp_t step= qMax(1,_frames>>5);
-        for( fpp_t f = 0; f < _frames; f+=step )
-                rms+=_buf[f][0]*_buf[f][0]+_buf[f][1]*_buf[f][1];
-        //rms/=_frames;
-        rms/= (_frames/step);
-        //return fastsqrtf01(qBound(0.,rms,1.));
-        return WaveForm::sqrt(bound(0.,rms,1.));
+    real_t rms  = 0.;
+    fpp_t  step = qMax(1, _frames >> 5);
+    for(fpp_t f = 0; f < _frames; f += step)
+        rms += _buf[f][0] * _buf[f][0] + _buf[f][1] * _buf[f][1];
+    // rms/=_frames;
+    rms /= (_frames / step);
+
+    if(isnan(rms))
+    {
+        qInfo("Effect::computeRMS rms=%f step=%d _frames=%d", rms, step,
+              _frames);
+        rms = 0.;
+    }
+    // return fastsqrtf01(qBound(0.,rms,1.));
+    return WaveForm::sqrt(bound(0., rms, 1.));
 }
 
-
-bool Effect::shouldProcessAudioBuffer(sampleFrame* _buf, const fpp_t _frames,
-                                      bool& _smoothBegin, bool& _smoothEnd)
+bool Effect::shouldProcessAudioBuffer(sampleFrame* _buf,
+                                      const fpp_t  _frames,
+                                      bool&        _smoothBegin,
+                                      bool&        _smoothEnd)
 {
-	if(!isOkay() || dontRun() || !isEnabled())
+    if(!isOkay() || dontRun() || !isEnabled())
+    {
+        if(isRunning())
+            stopRunning();
+        return false;
+    }
+
+    _smoothBegin = false;
+    _smoothEnd   = false;
+
+    if(isAutoQuitEnabled())
+    {
+        real_t rms = -1.;
+        if(gateHasOpen(rms, _buf, _frames))
         {
-                if(isRunning()) stopRunning();
-                return false;
+            // qInfo("%s: gate open",qPrintable(nodeName()));
+            _smoothBegin = true;
+        }
+        else if(gateHasClosed(rms, _buf, _frames))
+        {
+            // qInfo("%s: gate closed",qPrintable(nodeName()));
+            _smoothEnd = true;
+        }
+    }
+
+    if(!isRunning() && !_smoothEnd)
+    {
+        const ValueBuffer* wetDryBuf = m_wetDryModel.valueBuffer();
+
+        for(fpp_t f = 0; f < _frames; ++f)
+        {
+            real_t w = (wetDryBuf ? wetDryBuf->value(f)
+                                  : m_wetDryModel.value());
+            real_t d = 1. - w;
+            _buf[f][0] *= d;
+            _buf[f][1] *= d;
         }
 
-        _smoothBegin=false;
-        _smoothEnd  =false;
+        return false;
+    }
 
-	if(isAutoQuitEnabled())
-        {
-                real_t rms=-1.;
-                if(gateHasOpen(rms,_buf,_frames))
-                {
-                        //qInfo("%s: gate open",qPrintable(nodeName()));
-                        _smoothBegin=true;
-                }
-                else
-                if(gateHasClosed(rms,_buf,_frames))
-                {
-                        //qInfo("%s: gate closed",qPrintable(nodeName()));
-                        _smoothEnd=true;
-                }
-        }
+    return true;
+}
 
-        if(!isRunning() && !_smoothEnd)
-        {
-                const ValueBuffer* wetDryBuf = m_wetDryModel.valueBuffer();
+bool Effect::shouldKeepRunning(sampleFrame* _buf,
+                               const fpp_t  _frames,
+                               bool         _unclip)
+{
+    if(!isOkay() || dontRun() || !isEnabled())
+        return false;
+    if(!isRunning())
+        return false;
 
-                for(fpp_t f=0; f<_frames; ++f)
-                {
-                        real_t w = (wetDryBuf ? wetDryBuf->value(f)
-                                   : m_wetDryModel.value());
-                        real_t d = 1.-w;
-                        _buf[f][0]*=d;
-                        _buf[f][1]*=d;
-                }
+    if(_unclip)
+    {
+        if(MixHelpers::unclip(_buf, _frames))
+            setClipping(true);
+    }
+    else
+    {
+        if(MixHelpers::isClipping(_buf, _frames))
+            setClipping(true);
+    }
 
-                return false;
-        }
-
+    if(!isAutoQuitEnabled())
         return true;
-}
 
+    real_t rms = computeRMS(_buf, _frames);
+    if(rms > 0.00001)
+        return true;
 
-bool Effect::shouldKeepRunning(sampleFrame* _buf, const fpp_t _frames, bool _unclip)
-{
-	if(!isOkay() || dontRun() || !isEnabled()) return false;
-	if(!isRunning()) return false;
+    // qInfo("KR buffercount %d/%d",m_bufferCount,timeout());
+    if(m_bufferCount > timeout())  // qMax<int>(176,timeout()))
+    {
+        // qInfo("KR STOP");
+        stopRunning();
+        // resetBufferCount();
+        return false;
+    }
+    else
+        m_bufferCount++;  // incrementBufferCount();
 
-        if(_unclip)
-        {
-                if(MixHelpers::unclip(_buf,_frames))
-                        setClipping(true);
-        }
-        else
-        {
-                if(MixHelpers::isClipping(_buf,_frames))
-                        setClipping(true);
-        }
-
-	if(!isAutoQuitEnabled()) return true;
-
-        real_t rms=computeRMS(_buf,_frames);
-        if(rms>0.00001) return true;
-
-        //qInfo("KR buffercount %d/%d",m_bufferCount,timeout());
-        if(m_bufferCount > timeout())//qMax<int>(176,timeout()))
-        {
-                //qInfo("KR STOP");
-                stopRunning();
-                //resetBufferCount();
-                return false;
-        }
-        else m_bufferCount++;//incrementBufferCount();
-
-	return true;
+    return true;
 }
 
 #ifdef REAL_IS_DOUBLE
 // TMP, obsolete
-void Effect::computeWetDryLevels(fpp_t _f, fpp_t _frames,
-                                 bool _smoothBegin, bool _smoothEnd,
-                                 FLOAT& _w0, FLOAT&_d0,
-                                 FLOAT& _w1, FLOAT&_d1)
+void Effect::computeWetDryLevels(fpp_t  _f,
+                                 fpp_t  _frames,
+                                 bool   _smoothBegin,
+                                 bool   _smoothEnd,
+                                 FLOAT& _w0,
+                                 FLOAT& _d0,
+                                 FLOAT& _w1,
+                                 FLOAT& _d1)
 {
-        real_t w0,d0,w1,d1;
-        computeWetDryLevels(_f,_frames,_smoothBegin,_smoothEnd,
-                            w0,d0,w1,d1);
-        _w0=w0;
-        _d0=d0;
-        _w1=w1;
-        _d1=d1;
+    real_t w0, d0, w1, d1;
+    computeWetDryLevels(_f, _frames, _smoothBegin, _smoothEnd, w0, d0, w1,
+                        d1);
+    _w0 = w0;
+    _d0 = d0;
+    _w1 = w1;
+    _d1 = d1;
 }
 #endif
 
-void Effect::computeWetDryLevels(fpp_t _f, fpp_t _frames,
-                                 bool _smoothBegin, bool _smoothEnd,
-                                 real_t& _w0, real_t&_d0,
-                                 real_t& _w1, real_t&_d1)
+void Effect::computeWetDryLevels(fpp_t   _f,
+                                 fpp_t   _frames,
+                                 bool    _smoothBegin,
+                                 bool    _smoothEnd,
+                                 real_t& _w0,
+                                 real_t& _d0,
+                                 real_t& _w1,
+                                 real_t& _d1)
 {
-        const ValueBuffer* wetDryBuf = m_wetDryModel.valueBuffer();
+    const ValueBuffer* wetDryBuf = m_wetDryModel.valueBuffer();
 
-        real_t w=(wetDryBuf ? wetDryBuf->value(_f)
-                 : m_wetDryModel.value());
-        _d0=1.0-w;
-        _d1=1.0-w;
+    real_t w = (wetDryBuf ? wetDryBuf->value(_f) : m_wetDryModel.value());
+    _d0      = 1.0 - w;
+    _d1      = 1.0 - w;
 
-        int nsb=_frames;
-        if(nsb>128) nsb=128;
-        if(_smoothBegin && _f<nsb)
-                w*=real_t(_f)/real_t(nsb);
-        int nse=_frames;
-        if(nse>128) nse=128;
-        if(_smoothEnd && _f>=_frames-nse)
-                w*=real_t(_frames-1-_f)/real_t(nse);
+    int nsb = _frames;
+    if(nsb > 128)
+        nsb = 128;
+    if(_smoothBegin && _f < nsb)
+        w *= real_t(_f) / real_t(nsb);
+    int nse = _frames;
+    if(nse > 128)
+        nse = 128;
+    if(_smoothEnd && _f >= _frames - nse)
+        w *= real_t(_frames - 1 - _f) / real_t(nse);
 
-        if(isGateClosed() &&!_smoothEnd)
-        {
-                //w=0.;
-                _w0=0.;
-                _w1=0.;
-        }
-        else
-        if(isBalanceable())
-        {
-                const ValueBuffer* balanceBuf = m_balanceModel.valueBuffer();
-                const real_t bal = (balanceBuf ? balanceBuf->value(_f)
-                                   : m_balanceModel.value());
-                const real_t bal0 = bal < 0. ? 1. : 1. - bal;
-                const real_t bal1 = bal < 0. ? 1. + bal : 1.;
-                _w0  = bal0 * w;
-                _w1  = bal1 * w;
-                const real_t df=(2.+_d0+_d1)/4.;
-                _d0 += (1.-bal0)*w*df;
-                _d1 += (1.-bal1)*w*df;
-        }
-        else
-        {
-                _w0=w;
-                _w1=w;
-        }
+    if(isGateClosed() && !_smoothEnd)
+    {
+        // w=0.;
+        _w0 = 0.;
+        _w1 = 0.;
+    }
+    else if(isBalanceable())
+    {
+        const ValueBuffer* balanceBuf = m_balanceModel.valueBuffer();
+        const real_t       bal        = (balanceBuf ? balanceBuf->value(_f)
+                                       : m_balanceModel.value());
+        const real_t       bal0       = bal < 0. ? 1. : 1. - bal;
+        const real_t       bal1       = bal < 0. ? 1. + bal : 1.;
+        _w0                           = bal0 * w;
+        _w1                           = bal1 * w;
+        const real_t df               = (2. + _d0 + _d1) / 4.;
+        _d0 += (1. - bal0) * w * df;
+        _d1 += (1. - bal1) * w * df;
+    }
+    else
+    {
+        _w0 = w;
+        _w1 = w;
+    }
 
-        _d0*=(1. - _w0);
-        _d1*=(1. - _w1);
+    _d0 *= (1. - _w0);
+    _d1 *= (1. - _w1);
 }
 
-
-PluginView * Effect::instantiateView( QWidget * _parent )
+PluginView* Effect::instantiateView(QWidget* _parent)
 {
-	return new EffectView( this, _parent );
+    return new EffectView(this, _parent);
 }
-
-
-
 
 void Effect::reinitSRC()
 {
-	for( int i = 0; i < 2; ++i )
-	{
-		if( m_srcState[i] != NULL )
-		{
-			src_delete( m_srcState[i] );
-		}
-		int error;
-		if( ( m_srcState[i] = src_new(
-			Engine::mixer()->currentQualitySettings().
-							libsrcInterpolation(),
-					DEFAULT_CHANNELS, &error ) ) == NULL )
-		{
-			qFatal( "Error: src_new() failed in effect.cpp!\n" );
-		}
-	}
+    for(int i = 0; i < 2; ++i)
+    {
+        if(m_srcState[i] != NULL)
+        {
+            src_delete(m_srcState[i]);
+        }
+        int error;
+        if((m_srcState[i] = src_new(Engine::mixer()
+                                            ->currentQualitySettings()
+                                            .libsrcInterpolation(),
+                                    DEFAULT_CHANNELS, &error))
+           == NULL)
+        {
+            qFatal("Error: src_new() failed in effect.cpp!\n");
+        }
+    }
 }
 
-
-
-
-void Effect::resample( int _i, const sampleFrame * _src_buf, sample_rate_t _src_sr,
-                       sampleFrame * _dst_buf, sample_rate_t _dst_sr,
-                       f_cnt_t _frames )
+void Effect::resample(int                _i,
+                      const sampleFrame* _src_buf,
+                      sample_rate_t      _src_sr,
+                      sampleFrame*       _dst_buf,
+                      sample_rate_t      _dst_sr,
+                      f_cnt_t            _frames)
 {
-        const double frqRatio=double(_dst_sr) / double(_src_sr);
-        const fpp_t  fpp=Engine::mixer()->framesPerPeriod();
-        f_cnt_t input_frames_used = 0;
-        f_cnt_t output_frames_generated = 0;
-        
-        SampleRate::resample(_src_buf,
-                             _dst_buf,
-                             _frames,
-                             fpp,
-                             frqRatio,
-                             10,
-                             input_frames_used,
-                             output_frames_generated,
-                             m_srcState[_i]);
-        /*
+    const double frqRatio                = double(_dst_sr) / double(_src_sr);
+    const fpp_t  fpp                     = Engine::mixer()->framesPerPeriod();
+    f_cnt_t      input_frames_used       = 0;
+    f_cnt_t      output_frames_generated = 0;
+
+    SampleRate::resample(_src_buf, _dst_buf, _frames, fpp, frqRatio, 10,
+                         input_frames_used, output_frames_generated,
+                         m_srcState[_i]);
+    /*
 #ifdef REAL_IS_FLOAT
-        {
-                if( m_srcState[_i] == NULL )
-                        return;
-                m_srcData[_i].input_frames = _frames;
-                m_srcData[_i].output_frames = Engine::mixer()->framesPerPeriod();
-                m_srcData[_i].data_in = _src_buf[0];
-                m_srcData[_i].data_out = _dst_buf[0];
-                m_srcData[_i].src_ratio = double(_dst_sr) / double(_src_sr);
-                m_srcData[_i].end_of_input = 0;
-                int error;
-                if( ( error = src_process( m_srcState[_i], &m_srcData[_i] ) ) )
-                {
-                        qFatal( "Effect::resample(): error while resampling: %s",
-                                src_strerror( error ) );
-                }
-        }
+    {
+            if( m_srcState[_i] == NULL )
+                    return;
+            m_srcData[_i].input_frames = _frames;
+            m_srcData[_i].output_frames = Engine::mixer()->framesPerPeriod();
+            m_srcData[_i].data_in = _src_buf[0];
+            m_srcData[_i].data_out = _dst_buf[0];
+            m_srcData[_i].src_ratio = double(_dst_sr) / double(_src_sr);
+            m_srcData[_i].end_of_input = 0;
+            int error;
+            if( ( error = src_process( m_srcState[_i], &m_srcData[_i] ) ) )
+            {
+                    qFatal( "Effect::resample(): error while resampling: %s",
+                            src_strerror( error ) );
+            }
+    }
 #endif
 #ifdef REAL_IS_DOUBLE
-        {
-                //resample64
-                qFatal("Effect::resample");
-        }
+    {
+            //resample64
+            qFatal("Effect::resample");
+    }
 #endif
-        */
+    */
 }

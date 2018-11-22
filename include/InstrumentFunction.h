@@ -434,4 +434,49 @@ class InstrumentFunctionGlissando : public InstrumentFunction
     friend class InstrumentFunctionGlissandoView;
 };
 
+class InstrumentFunctionNoteSustaining : public InstrumentFunction
+{
+    Q_OBJECT
+
+  public:
+    InstrumentFunctionNoteSustaining(Model* _parent);
+    virtual ~InstrumentFunctionNoteSustaining();
+
+    virtual bool processNote(NotePlayHandle* n);
+    virtual void saveSettings(QDomDocument& _doc, QDomElement& _parent);
+    virtual void loadSettings(const QDomElement& _this);
+
+    inline virtual QString nodeName() const
+    {
+        return "notesustaining";
+    }
+
+    virtual InstrumentFunctionView* createView();
+
+  public slots:
+    void reset();
+
+  private:
+    int     m_lastKey;
+    int64_t m_lastTime;
+    QMutex  m_mutex;
+
+    //volatile NotePlayHandle* m_lastNPH;
+    /*
+    FloatModel m_volumeRangeModel;
+    FloatModel m_panRangeModel;
+    FloatModel m_tuneRangeModel;
+    FloatModel m_offsetRangeModel;
+    FloatModel m_shortenRangeModel;
+
+    FloatModel m_volumeStepModel;
+    FloatModel m_panStepModel;
+    FloatModel m_tuneStepModel;
+    FloatModel m_offsetStepModel;
+    FloatModel m_shortenStepModel;
+    */
+
+    friend class InstrumentFunctionNoteSustainingView;
+};
+
 #endif

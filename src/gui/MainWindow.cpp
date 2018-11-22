@@ -661,7 +661,7 @@ void MainWindow::finalize()
         toggleWindow(widget, false);
 
     toggleWindow(gui->songEditor(), true);
-    //reorganizeWindows();
+    // reorganizeWindows();
 
     /*
     // gui->fxMixerView()->parentWidget()->move(5,290);
@@ -1201,8 +1201,8 @@ void MainWindow::toggleWindow(QWidget* window, bool forceShow)
     if(forceShow || m_workspace->activeSubWindow() != parent
        || parent->isHidden())
     {
-        qInfo("parent %dx%d", parent->width(), parent->height());
-        qInfo("window %dx%d", window->width(), window->height());
+        // qInfo("parent %dx%d", parent->width(), parent->height());
+        // qInfo("window %dx%d", window->width(), window->height());
         if(gui->mainWindow()->isTabbed())
         {
             // for(QMdiSubWindow* subWindow : workspace()->subWindowList())

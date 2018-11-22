@@ -60,12 +60,11 @@ bool CompressorGDX::processAudioBuffer(sampleFrame* _buf, const fpp_t _frames)
     if(!shouldProcessAudioBuffer(_buf, _frames, smoothBegin, smoothEnd))
         return false;
 
-    const ValueBuffer* inGainBuf
-            = m_gdxControls.m_inGainModel.valueBuffer();
+    const ValueBuffer* inGainBuf = m_gdxControls.m_inGainModel.valueBuffer();
     const ValueBuffer* thresholdBuf
             = m_gdxControls.m_thresholdModel.valueBuffer();
     const ValueBuffer* ratioBuf = m_gdxControls.m_ratioModel.valueBuffer();
-    const ValueBuffer* modeBuf = m_gdxControls.m_modeModel.valueBuffer();
+    const ValueBuffer* modeBuf  = m_gdxControls.m_modeModel.valueBuffer();
     const ValueBuffer* outGainBuf
             = m_gdxControls.m_outGainModel.valueBuffer();
 
@@ -76,7 +75,7 @@ bool CompressorGDX::processAudioBuffer(sampleFrame* _buf, const fpp_t _frames)
                             d1);
 
         real_t inGain = outGainBuf ? inGainBuf->value(f)
-                                    : m_gdxControls.m_inGainModel.value();
+                                   : m_gdxControls.m_inGainModel.value();
         real_t threshold = thresholdBuf
                                    ? thresholdBuf->value(f)
                                    : m_gdxControls.m_thresholdModel.value();
@@ -92,6 +91,10 @@ bool CompressorGDX::processAudioBuffer(sampleFrame* _buf, const fpp_t _frames)
 
         if(threshold > 0. || ratio > 0.)
             outGain /= (threshold + ratio * (1. - threshold));
+        if(isnan(outGain) || outGain <= SILENCE)
+            outGain = 0.;
+        if(outGain >= 10000.)
+            outGain = 10000.;
 
         {
             real_t y0 = bound(0., abs(curVal0) - threshold, 1.);
@@ -171,8 +174,8 @@ bool CompressorGDX::processAudioBuffer(sampleFrame* _buf, const fpp_t _frames)
             }
         }
 
-        //curVal0 = bound(-1., curVal0, 1.);
-        //curVal1 = bound(-1., curVal1, 1.);
+        // curVal0 = bound(-1., curVal0, 1.);
+        // curVal1 = bound(-1., curVal1, 1.);
 
         _buf[f][0] = d0 * _buf[f][0] + w0 * curVal0;
         _buf[f][1] = d1 * _buf[f][1] + w1 * curVal1;
@@ -183,10 +186,9 @@ bool CompressorGDX::processAudioBuffer(sampleFrame* _buf, const fpp_t _frames)
     {
         setClipping(false);
         m_gdxControls.m_inGainModel.setAutomatedValue(
-          m_gdxControls.m_inGainModel.rawValue() * 0.995);
+                m_gdxControls.m_inGainModel.rawValue() * 0.995);
     }
     return r;
-
 }
 
 extern "C"

@@ -839,6 +839,8 @@ void PadsGDX::loadSFZ(const QString& _file)
         s.replace(rx2, "\n");
         QRegExp rx1("(\\s|^)/[^\n]*\n*");
         s.replace(rx1, "\n");
+        QRegExp rx3("//[^\n]*\n");
+        s.replace(rx3, "\n");
         s = s.trimmed();
         // qInfo("[S]%s\n---\n",s.toUtf8().constData());
         QString defaultPath = "";

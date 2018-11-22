@@ -494,16 +494,19 @@ real_t AutomationPattern::valueAt(timeMap::const_iterator v,
                 // that this segment spans to values of t for t = 0.0 -> 1.0
                 // and scale the tangents _m1 and _m2
                 {
-                    int    numValues = ((v + 1).key() - v.key());
-                    real_t t         = (real_t)offset / (real_t)numValues;
-                    real_t m1 = (m_tangents[v.key()]) * numValues * m_tension;
-                    real_t m2 = (m_tangents[(v + 1).key()]) * numValues
-                                * m_tension;
+                    const int    numValues = ((v + 1).key() - v.key());
+                    const real_t t = (real_t)offset / (real_t)numValues;
+                    const real_t m1
+                            = (m_tangents[v.key()]) * numValues * m_tension;
+                    const real_t m2 = (m_tangents[(v + 1).key()]) * numValues
+                                      * m_tension;
 
-                    r = (2 * pow(t, 3) - 3 * pow(t, 2) + 1) * v.value()
-                        + (pow(t, 3) - 2 * pow(t, 2) + t) * m1
-                        + (-2 * pow(t, 3) + 3 * pow(t, 2)) * (v + 1).value()
-                        + (pow(t, 3) - pow(t, 2)) * m2;
+                    const real_t t3=pow(t, 3);
+                    const real_t t2=pow(t, 2);
+                    r = (2 * t3 - 3 * t2 + 1) * v.value()
+                        + (t3 - 2 * t2 + t) * m1
+                        + (-2 * t3 + 3 * t2) * (v + 1).value()
+                        + (t3 - t2) * m2;
                 }
                 break;
             case ParabolicProgression:
@@ -584,7 +587,7 @@ real_t AutomationPattern::valueAt(timeMap::const_iterator v,
                 real_t my = m->range();
                 real_t w0 = wf->f(0.);
                 real_t w1 = wf->f(1.);
-                real_t nw = rx * exp2(m_waveRepeat) / 4. / 192.;
+                real_t nw = rx * fastexp2(m_waveRepeat) / 4. / 192.;
                 if(nw >= 1.)
                     nw = qMax(1., round(nw));
                 else if(nw > SILENCE)

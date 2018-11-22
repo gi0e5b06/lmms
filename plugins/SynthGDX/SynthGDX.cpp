@@ -665,11 +665,11 @@ void OscillatorObject::updateVolumes(const fpp_t _f)
 void OscillatorObject::updateDetunings(const fpp_t _f)
 {
     m_detuningBase[0]
-            = exp2((m_coarseModel.value() * 100. + m_fineLeftModel.value())
+            = fastexp2((m_coarseModel.value() * 100. + m_fineLeftModel.value())
                    / 1200.)
               / Engine::mixer()->processingSampleRate();
     m_detuningBase[1]
-            = exp2((m_coarseModel.value() * 100. + m_fineRightModel.value())
+            = fastexp2((m_coarseModel.value() * 100. + m_fineRightModel.value())
                    / 1200.)
               / Engine::mixer()->processingSampleRate();
 }

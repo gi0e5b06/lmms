@@ -600,3 +600,111 @@ void InstrumentFunctionGlissandoView::modelChanged()
     m_gliUpModeComboBox->setModel(&m_cc->m_gliUpModeModel);
     m_gliDownModeComboBox->setModel(&m_cc->m_gliDownModeModel);
 }
+
+InstrumentFunctionNoteSustainingView::InstrumentFunctionNoteSustainingView(
+        InstrumentFunctionNoteSustaining* cc, QWidget* parent) :
+      InstrumentFunctionView(cc, tr("SUSTAINING"), parent),
+      m_cc(cc)/*,
+      m_volumeRangeKnob(new Knob(knobBright_26)),
+      m_panRangeKnob(new Knob(knobBright_26)),
+      m_tuneRangeKnob(new Knob(knobBright_26)),
+      m_offsetRangeKnob(new Knob(knobBright_26)),
+      m_shortenRangeKnob(new Knob(knobBright_26)),
+      m_volumeStepKnob(new Knob(knobBright_26)),
+      m_panStepKnob(new Knob(knobBright_26)),
+      m_tuneStepKnob(new Knob(knobBright_26)),
+      m_offsetStepKnob(new Knob(knobBright_26)),
+      m_shortenStepKnob(new Knob(knobBright_26))*/
+{
+    QGridLayout* mainLayout = new QGridLayout(m_panel);
+    mainLayout->setContentsMargins(6, 2, 2, 2);
+    mainLayout->setColumnStretch(5, 1);
+    mainLayout->setHorizontalSpacing(6);
+    mainLayout->setVerticalSpacing(1);
+    /*
+    m_volumeRangeKnob->setLabel(tr("VOL%"));
+    m_volumeRangeKnob->setHintText(tr("Volume change:"), "%");
+    m_volumeRangeKnob->setWhatsThis(
+            tr("Use this knob for setting the volume change in %."));
+
+    m_panRangeKnob->setLabel(tr("PAN%"));
+    m_panRangeKnob->setHintText(tr("Pan change:"), "%");
+    m_panRangeKnob->setWhatsThis(
+            tr("Use this knob for setting the pan change in %."));
+
+    m_tuneRangeKnob->setLabel(tr("PITCH%"));
+    m_tuneRangeKnob->setHintText(tr("Pitch change:"), "%");
+    m_tuneRangeKnob->setWhatsThis(
+            tr("Use this knob for setting the tune change in %."));
+
+    m_offsetRangeKnob->setLabel(tr("DELAY%"));
+    m_offsetRangeKnob->setHintText(tr("Start delay:"), "");
+    m_offsetRangeKnob->setWhatsThis(
+            tr("Use this knob for setting the delay."));
+
+    m_shortenRangeKnob->setLabel(tr("SHORT%"));
+    m_shortenRangeKnob->setHintText(tr("Shortening:"), "%");
+    m_shortenRangeKnob->setWhatsThis(tr("Use this knob for shortening in %."));
+
+    m_volumeStepKnob->setLabel(tr("STEP"));
+    m_volumeStepKnob->setHintText(tr("Volume step:"), "");
+    m_volumeStepKnob->setWhatsThis(
+            tr("Use this knob for setting the volume step."));
+
+    m_panStepKnob->setLabel(tr("STEP"));
+    m_panStepKnob->setHintText(tr("Pan step:"), "");
+    m_panStepKnob->setWhatsThis(
+            tr("Use this knob for setting the pan step."));
+
+    m_tuneStepKnob->setLabel(tr("STEP"));
+    m_tuneStepKnob->setHintText(tr("Pitch step:"), "");
+    m_tuneStepKnob->setWhatsThis(
+            tr("Use this knob for setting the tune step."));
+
+    m_offsetStepKnob->setLabel(tr("STEP"));
+    m_offsetStepKnob->setHintText(tr("Start delay step:"), "");
+    m_offsetStepKnob->setWhatsThis(
+            tr("Use this knob for setting the delay step."));
+
+    m_shortenStepKnob->setLabel(tr("STEP"));
+    m_shortenStepKnob->setHintText(tr("Shortening step:"), "");
+    m_shortenStepKnob->setWhatsThis(tr("Use this knob for the shortening step."));
+
+    mainLayout->addWidget(m_volumeRangeKnob, 0, 0, 1, 1, Qt::AlignHCenter);
+    mainLayout->addWidget(m_panRangeKnob, 0, 1, 1, 1, Qt::AlignHCenter);
+    mainLayout->addWidget(m_tuneRangeKnob, 0, 2, 1, 1, Qt::AlignHCenter);
+    mainLayout->addWidget(m_offsetRangeKnob, 0, 3, 1, 1, Qt::AlignHCenter);
+    mainLayout->addWidget(m_shortenRangeKnob, 0, 4, 1, 1, Qt::AlignHCenter);
+
+    mainLayout->addWidget(m_volumeStepKnob, 1, 0, 1, 1, Qt::AlignHCenter);
+    mainLayout->addWidget(m_panStepKnob, 1, 1, 1, 1, Qt::AlignHCenter);
+    mainLayout->addWidget(m_tuneStepKnob, 1, 2, 1, 1, Qt::AlignHCenter);
+    mainLayout->addWidget(m_offsetStepKnob, 1, 3, 1, 1, Qt::AlignHCenter);
+    mainLayout->addWidget(m_shortenStepKnob, 1, 4, 1, 1, Qt::AlignHCenter);
+    */
+}
+
+InstrumentFunctionNoteSustainingView::~InstrumentFunctionNoteSustainingView()
+{
+}
+
+void InstrumentFunctionNoteSustainingView::modelChanged()
+{
+    m_cc = castModel<InstrumentFunctionNoteSustaining>();
+    ledButton()->setModel(&m_cc->m_enabledModel);
+
+    /*
+    m_volumeRangeKnob->setModel(&m_cc->m_volumeRangeModel);
+    m_panRangeKnob->setModel(&m_cc->m_panRangeModel);
+    m_tuneRangeKnob->setModel(&m_cc->m_tuneRangeModel);
+    m_offsetRangeKnob->setModel(&m_cc->m_offsetRangeModel);
+    m_shortenRangeKnob->setModel(&m_cc->m_shortenRangeModel);
+
+    m_volumeStepKnob->setModel(&m_cc->m_volumeStepModel);
+    m_panStepKnob->setModel(&m_cc->m_panStepModel);
+    m_tuneStepKnob->setModel(&m_cc->m_tuneStepModel);
+    m_offsetStepKnob->setModel(&m_cc->m_offsetStepModel);
+    m_shortenStepKnob->setModel(&m_cc->m_shortenStepModel);
+    */
+}
+

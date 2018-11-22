@@ -26,10 +26,6 @@
 #ifndef SAMPLE_BUFFER_H
 #define SAMPLE_BUFFER_H
 
-#include <QMutex>
-#include <QObject>
-#include <QReadWriteLock>
-
 #ifdef LMMS_HAVE_MPG123
 #include <mpg123.h>
 #endif
@@ -37,11 +33,15 @@
 #include "export.h"
 #include "interpolation.h"
 #include "lmms_basics.h"
-
-#include <samplerate.h>
 //#include "lmms_math.h"
 #include "MemoryManager.h"
 #include "shared_object.h"
+
+#include <QMutex>
+#include <QObject>
+#include <QReadWriteLock>
+
+//#include <samplerate.h>
 
 class QPainter;
 class QRect;
@@ -102,7 +102,7 @@ class EXPORT SampleBuffer
         const bool m_varyingPitch;
         int        m_quality;
         bool       m_isBackwards;
-        SRC_STATE* m_resamplingData;
+        //SRC_STATE* m_resamplingData;
 
         friend class SampleBuffer;
     };
@@ -198,7 +198,7 @@ class EXPORT SampleBuffer
 
     int sampleLength() const
     {
-        return double(m_endFrame - m_startFrame) / m_sampleRate * 1000.;
+        return DOUBLE(m_endFrame - m_startFrame) / m_sampleRate * 1000.;
     }
 
     inline void setFrequency(frequency_t _freq)
@@ -228,9 +228,8 @@ class EXPORT SampleBuffer
     // dataUnlock()
     // SampleBuffer *
     void resample(const sample_rate_t _src_sr, const sample_rate_t _dst_sr);
-
-    void retune(  // const sample_rate_t _src_sr,
-            const double _semitones);
+    void retune(const DOUBLE _semitones);
+    void stretch(const DOUBLE _factor);
 
     void normalizeSampleRate(const sample_rate_t _src_sr,
                              bool                _keep_settings = false);
@@ -263,6 +262,7 @@ class EXPORT SampleBuffer
     void setEndFrame(f_cnt_t _f);
     void setAmplification(real_t _a);
     void setReversed(bool _on);
+    void setStretching(real_t _v);
     void sampleRateChanged();
 
   signals:

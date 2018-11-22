@@ -68,6 +68,7 @@ extern "C"
 audioFileProcessor::audioFileProcessor(InstrumentTrack* _instrument_track) :
       Instrument(_instrument_track, &audiofileprocessor_plugin_descriptor),
       m_sampleBuffer(), m_ampModel(100, 0, 500, 1, this, tr("Amplify")),
+      m_stretchModel(0., -7., 7., 0.0000001, this, tr("Stretch")),
       m_startPointModel(0, 0, 1, 0.0000001, this, tr("Start of sample")),
       m_endPointModel(1, 0, 1, 0.0000001, this, tr("End of sample")),
       m_loopPointModel(0, 0, 1, 0.0000001, this, tr("Loopback point")),
@@ -81,6 +82,8 @@ audioFileProcessor::audioFileProcessor(InstrumentTrack* _instrument_track) :
             SLOT(reverseModelChanged()));
     connect(&m_ampModel, SIGNAL(dataChanged()), this,
             SLOT(ampModelChanged()));
+    connect(&m_stretchModel, SIGNAL(dataChanged()), this,
+            SLOT(stretchModelChanged()));
     connect(&m_startPointModel, SIGNAL(dataChanged()), this,
             SLOT(startPointChanged()));
     connect(&m_endPointModel, SIGNAL(dataChanged()), this,
@@ -91,9 +94,17 @@ audioFileProcessor::audioFileProcessor(InstrumentTrack* _instrument_track) :
             SLOT(stutterModelChanged()));
 
     // interpolation modes
-    m_interpolationModel.addItem(tr("None"));
+    m_interpolationModel.addItem(tr("Default"));
+    m_interpolationModel.addItem(tr("Discrete"));
+    m_interpolationModel.addItem(tr("Rounded"));
     m_interpolationModel.addItem(tr("Linear"));
-    m_interpolationModel.addItem(tr("Sinc"));
+    m_interpolationModel.addItem(tr("---"));
+    m_interpolationModel.addItem(tr("---"));
+    m_interpolationModel.addItem(tr("---"));
+    m_interpolationModel.addItem(tr("---"));
+    m_interpolationModel.addItem(tr("---"));
+    m_interpolationModel.addItem(tr("Optimal4"));
+    m_interpolationModel.addItem(tr("---"));
     m_interpolationModel.setValue(2);
 
     pointChanged();
@@ -130,21 +141,12 @@ void audioFileProcessor::playNote(NotePlayHandle* _n,
             m_nextPlayBackwards  = false;
         }
         // set interpolation mode for libsamplerate
-        int srcmode = 2;  // SRC_SINC_BEST_QUALITY;  // SRC_LINEAR;
-        switch(m_interpolationModel.value())
-        {
-            case 0:
-                srcmode = 0;  // SRC_ZERO_ORDER_HOLD;
-                break;
-            case 1:
-                srcmode = 2;  // SRC_LINEAR;
-                break;
-            default:
-                srcmode = 10;  // SRC_SINC_BEST_QUALITY;
-                break;
-        }
+        int q = m_interpolationModel.value();
+        if(q <= 0 || q >= 11)
+            q = 3;
+        q--;
         _n->m_pluginData = new SampleBuffer::HandleState(
-                m_nextPlayStartPoint, _n->hasDetuningInfo(), srcmode,
+                m_nextPlayStartPoint, _n->hasDetuningInfo(), q,
                 m_nextPlayBackwards);
 
         // debug code
@@ -216,6 +218,7 @@ void audioFileProcessor::saveSettings(QDomDocument& _doc, QDomElement& _this)
     m_loopPointModel.saveSettings(_doc, _this, "lframe");
     m_stutterModel.saveSettings(_doc, _this, "stutter");
     m_interpolationModel.saveSettings(_doc, _this, "interp");
+    m_stretchModel.saveSettings(_doc, _this, "stretch");
 }
 
 void audioFileProcessor::loadSettings(const QDomElement& _this)
@@ -256,16 +259,17 @@ void audioFileProcessor::loadSettings(const QDomElement& _this)
     }
 
     m_reverseModel.loadSettings(_this, "reversed");
-
     m_stutterModel.loadSettings(_this, "stutter");
+
     if(_this.hasAttribute("interp"))
-    {
         m_interpolationModel.loadSettings(_this, "interp");
-    }
     else
-    {
-        m_interpolationModel.setValue(2);  // sinc by default
-    }
+        m_interpolationModel.setValue(2 + 1);  // linear by default
+
+    if(_this.hasAttribute("stretch"))
+        m_stretchModel.loadSettings(_this, "stretch");
+    else
+        m_stretchModel.setValue(0.);  // no stretching by default
 
     pointChanged();
 }
@@ -324,6 +328,13 @@ void audioFileProcessor::reverseModelChanged(void)
 void audioFileProcessor::ampModelChanged(void)
 {
     m_sampleBuffer.setAmplification(m_ampModel.value() / 100.);
+}
+
+void audioFileProcessor::stretchModelChanged()
+{
+    // m_sampleBuffer.stretch(exp2(m_stretchModel.value()));
+    m_sampleBuffer.setStretching(m_stretchModel.value());
+    pointChanged();
 }
 
 void audioFileProcessor::stutterModelChanged()
@@ -523,6 +534,9 @@ AudioFileProcessorView::AudioFileProcessorView(Instrument* _instrument,
                "Otherwise it will be amplified up or down (your "
                "actual sample-file isn't touched!)"));
 
+    m_stretchKnob = new Knob(knobBright_26, this);
+    m_stretchKnob->move(5, 5);
+
     m_startKnob = new AudioFileProcessorWaveView::knob(this);
     m_startKnob->move(45, 108);
     m_startKnob->setHintText(tr("Startpoint:"), "");
@@ -687,6 +701,7 @@ void AudioFileProcessorView::modelChanged(void)
     connect(&a->m_sampleBuffer, SIGNAL(sampleUpdated()), this,
             SLOT(sampleUpdated()));
     m_ampKnob->setModel(&a->m_ampModel);
+    m_stretchKnob->setModel(&a->m_stretchModel);
     m_startKnob->setModel(&a->m_startPointModel);
     m_endKnob->setModel(&a->m_endPointModel);
     m_loopKnob->setModel(&a->m_loopPointModel);

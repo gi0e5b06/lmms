@@ -1,5 +1,5 @@
 /*
- * SpaceGDX.cpp - wall effect
+ * SpaceGDX.cpp -
  *
  * Copyright (c) 2018 gi0e5b06 (on github.com)
  *
@@ -52,11 +52,10 @@ SpaceGDXEffect::SpaceGDXEffect(
       Effect(&spacegdx_plugin_descriptor, parent, key),
       m_gdxControls(this),
       m_sampleRate(Engine::mixer()->processingSampleRate()),
-      m_ring(m_sampleRate), m_leftLowFilter(m_sampleRate),
+      m_ring(48000), m_leftLowFilter(m_sampleRate),
       m_rightLowFilter(m_sampleRate), m_leftHighFilter(m_sampleRate),
       m_rightHighFilter(m_sampleRate), m_prevLeftLowFreq(0.),
-      m_prevRightLowFreq(0.), m_prevLeftHighFreq(0.),
-      m_prevRightHighFreq(0.)
+      m_prevRightLowFreq(0.), m_prevLeftHighFreq(0.), m_prevRightHighFreq(0.)
 {
     // TODO: move that to startRunning()
     // m_len    = Engine::mixer()->processingSampleRate();
@@ -97,7 +96,16 @@ bool SpaceGDXEffect::processAudioBuffer(sampleFrame* _buf,
     const ValueBuffer* rightLowBuf
             = m_gdxControls.m_rightLowModel.valueBuffer();
     const ValueBuffer* rightHighBuf
-            = m_gdxControls.m_rightLowModel.valueBuffer();
+            = m_gdxControls.m_rightHighModel.valueBuffer();
+
+    const ValueBuffer* leftPhaseBuf
+            = m_gdxControls.m_leftPhaseModel.valueBuffer();
+    const ValueBuffer* leftGainBuf
+            = m_gdxControls.m_leftGainModel.valueBuffer();
+    const ValueBuffer* leftLowBuf
+            = m_gdxControls.m_leftLowModel.valueBuffer();
+    const ValueBuffer* leftHighBuf
+            = m_gdxControls.m_leftHighModel.valueBuffer();
 
     for(fpp_t f = 0; f < _frames; ++f)
     {
@@ -105,47 +113,60 @@ bool SpaceGDXEffect::processAudioBuffer(sampleFrame* _buf,
         computeWetDryLevels(f, _frames, smoothBegin, smoothEnd, w0, d0, w1,
                             d1);
 
-        real_t rightPhase = rightPhaseBuf
+        real_t rightPhase = rightPhaseBuf != nullptr
                                     ? rightPhaseBuf->value(f)
                                     : m_gdxControls.m_rightPhaseModel.value();
-        real_t rightGain = rightGainBuf
+        real_t rightGain = rightGainBuf != nullptr
                                    ? rightGainBuf->value(f)
                                    : m_gdxControls.m_rightGainModel.value();
-        real_t rightLow = rightLowBuf ? rightLowBuf->value(f)
-                                      : m_gdxControls.m_rightLowModel.value();
-        real_t rightHigh = rightHighBuf
+        real_t rightLow = rightLowBuf != nullptr
+                                  ? rightLowBuf->value(f)
+                                  : m_gdxControls.m_rightLowModel.value();
+        real_t rightHigh = rightHighBuf != nullptr
                                    ? rightHighBuf->value(f)
                                    : m_gdxControls.m_rightHighModel.value();
 
-        real_t leftPhase = 1. - rightPhase;
-        real_t leftGain  = 1. - rightGain;
-        real_t leftLow   = rightLow;
-        real_t leftHigh  = rightHigh;
+        real_t leftPhase = leftPhaseBuf != nullptr
+                                   ? leftPhaseBuf->value(f)
+                                   : m_gdxControls.m_leftPhaseModel.value();
+        real_t leftGain = leftGainBuf != nullptr
+                                  ? leftGainBuf->value(f)
+                                  : m_gdxControls.m_leftGainModel.value();
+        real_t leftLow = leftLowBuf != nullptr
+                                 ? leftLowBuf->value(f)
+                                 : m_gdxControls.m_leftLowModel.value();
+        real_t leftHigh = leftHighBuf != nullptr
+                                  ? leftHighBuf->value(f)
+                                  : m_gdxControls.m_leftHighModel.value();
 
-        int f0 = -_frames + 1 + f - round(leftPhase * 200.);
-        int f1 = -_frames + 1 + f - round(rightPhase * 200.);
+        int g[4][2];
+        g[0][0] = -_frames + 1 + f;
+        g[1][0] = g[0][0] - round(leftPhase * 5000.);
+        g[2][0] = g[1][0] - round(rightPhase * 5000.);
+        g[3][0] = g[2][0] - round(leftPhase * 5000.);
 
-        sample_t v00 = m_ring.value(f0, 0);
-        sample_t v01 = m_ring.value(f0, 1);
-        sample_t v10 = m_ring.value(f1, 0);
-        sample_t v11 = m_ring.value(f1, 1);
+        g[0][1] = -_frames + 1 + f;
+        g[1][1] = g[0][1] - round(rightPhase * 5000.);
+        g[2][1] = g[1][1] - round(leftPhase * 5000.);
+        g[3][1] = g[2][1] - round(rightPhase * 5000.);
 
-        sample_t curVal0 = v00 + v01;
-        sample_t curVal1 = v10 + v11;
+        sample_t v[4][2];  //={{0.,0.},{0.,0.},{0.,0.}};
 
-        if(abs(curVal0) >= SILENCE)
-            curVal0 /= (v00 * v00 + v01 * v01);
-        else
-            curVal0 = 0.;
+        sample_t curVal[2] = {0., 0.};
 
-        if(abs(curVal1) >= SILENCE)
-            curVal1 /= (v10 * v10 + v11 * v11);
-        else
-            curVal1 = 0.;
+        for(int s = 0; s < 4; s++)
+            for(int ch = 0; ch < 2; ch++)
+            {
+                int i   = (s + ch) % 2;
+                v[s][i] = m_ring.value(g[s][i], 0);
+                if(v[s][i] <= SILENCE)
+                    v[s][i] = 0.;
+                curVal[i] += v[s][i] / (s + 1);
+            }
 
         // LEFT EAR
 
-        curVal0 *= leftGain;
+        curVal[0] *= leftGain;
 
         const frequency_t leftLowFreq
                 = round(5000. + 115000. * leftLow) / 1000.;
@@ -155,7 +176,7 @@ bool SpaceGDXEffect::processAudioBuffer(sampleFrame* _buf,
             m_prevLeftLowFreq = leftLowFreq;
             m_leftLowFilter.calcFilterCoeffs(leftLowFreq, 0.05);
         }
-        curVal0 = m_leftLowFilter.update(curVal0, 0);
+        curVal[0] = m_leftLowFilter.update(curVal[0], 0);
 
         const frequency_t leftHighFreq = qMin<real_t>(
                 m_sampleRate / 2., round(22050. - 11025. * leftHigh));
@@ -165,11 +186,11 @@ bool SpaceGDXEffect::processAudioBuffer(sampleFrame* _buf,
             m_prevLeftHighFreq = leftHighFreq;
             m_leftHighFilter.calcFilterCoeffs(leftHighFreq, 0.05);
         }
-        curVal0 = m_leftHighFilter.update(curVal0, 0);
+        curVal[0] = m_leftHighFilter.update(curVal[0], 0);
 
         // RIGHT EAR
 
-        curVal1 *= rightGain;
+        curVal[1] *= rightGain;
 
         const frequency_t rightLowFreq
                 = round(5000. + 115000. * rightLow) / 1000.;
@@ -179,7 +200,7 @@ bool SpaceGDXEffect::processAudioBuffer(sampleFrame* _buf,
             m_prevRightLowFreq = rightLowFreq;
             m_rightLowFilter.calcFilterCoeffs(rightLowFreq, 0.05);
         }
-        curVal1 = m_rightLowFilter.update(curVal1, 0);
+        curVal[1] = m_rightLowFilter.update(curVal[1], 0);
 
         const frequency_t rightHighFreq = qMin<frequency_t>(
                 m_sampleRate / 2., round(22050. - 11025. * rightHigh));
@@ -189,10 +210,10 @@ bool SpaceGDXEffect::processAudioBuffer(sampleFrame* _buf,
             m_prevRightHighFreq = rightHighFreq;
             m_rightHighFilter.calcFilterCoeffs(rightHighFreq, 0.05);
         }
-        curVal1 = m_rightHighFilter.update(curVal1, 0);
+        curVal[1] = m_rightHighFilter.update(curVal[1], 0);
 
-        _buf[f][0] = d0 * _buf[f][0] + w0 * curVal1;  // 1
-        _buf[f][1] = d1 * _buf[f][1] + w1 * curVal1;
+        _buf[f][0] = d0 * _buf[f][0] + w0 * curVal[0];
+        _buf[f][1] = d1 * _buf[f][1] + w1 * curVal[1];
     }
 
     return true;

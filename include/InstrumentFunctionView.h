@@ -227,4 +227,34 @@ class InstrumentFunctionGlissandoView : public InstrumentFunctionView
     ComboBox*                    m_gliDownModeComboBox;
 };
 
+class InstrumentFunctionNoteSustainingView : public InstrumentFunctionView
+{
+    Q_OBJECT
+
+  public:
+    InstrumentFunctionNoteSustainingView(InstrumentFunctionNoteSustaining* cc,
+                                         QWidget* parent = NULL);
+    virtual ~InstrumentFunctionNoteSustainingView();
+
+  public slots:
+    virtual void modelChanged();
+
+  private:
+    InstrumentFunctionNoteSustaining* m_cc;
+
+    /*
+    Knob* m_volumeRangeKnob;
+    Knob* m_panRangeKnob;
+    Knob* m_tuneRangeKnob;
+    Knob* m_offsetRangeKnob;
+    Knob* m_shortenRangeKnob;
+
+    Knob* m_volumeStepKnob;
+    Knob* m_panStepKnob;
+    Knob* m_tuneStepKnob;
+    Knob* m_offsetStepKnob;
+    Knob* m_shortenStepKnob;
+    */
+};
+
 #endif

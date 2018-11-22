@@ -266,15 +266,29 @@ static inline double fastFma(double a, double b, double c)
 }
 */
 
-static inline double fastPow(double a, double b)
+#define fastPow fastpow
+
+static inline real_t fastpow(real_t a, real_t b)
 {
     return powf(a, b);
 }
 
+static inline real_t fastexp(real_t a)
+{
+    return expf(a);
+}
+
+static inline real_t fastexp2(real_t a)
+{
+    return exp2f(a);
+}
+
+/*
 static inline float fastPowf(float a, float b)
 {
     return powf(a, b);
 }
+*/
 
 /*
 // source:

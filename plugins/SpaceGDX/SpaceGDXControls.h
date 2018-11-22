@@ -49,7 +49,7 @@ class SpaceGDXControls : public EffectControls
 
     virtual int controlCount()
     {
-        return 3;
+        return 8;
     }
 
     virtual EffectControlDialog* createView()
@@ -67,6 +67,11 @@ class SpaceGDXControls : public EffectControls
     FloatModel m_rightGainModel;
     FloatModel m_rightLowModel;
     FloatModel m_rightHighModel;
+
+    FloatModel m_leftPhaseModel;
+    FloatModel m_leftGainModel;
+    FloatModel m_leftLowModel;
+    FloatModel m_leftHighModel;
 
     friend class SpaceGDXDialog;
     friend class SpaceGDXEffect;

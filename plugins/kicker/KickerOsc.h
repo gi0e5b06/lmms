@@ -92,13 +92,13 @@ class KickerOsc
 
                 const real_t gain
                         = 1.
-                          - fastPow(real_t(m_counter) / real_t(m_length),
+                          - fastpow(real_t(m_counter) / real_t(m_length),
                                     m_env);
                 const real_t   p1 = positivefraction(m_phase);
                 const real_t   p2 = positivefraction(m_phaseFactor * m_phase);
                 const sample_t s
                         = (m_sin->f(p1) * (1. - m_noise))
-                          + (m_whn->f(p2) * fastPow(gain, m_tail) * m_noise);
+                          + (m_whn->f(p2) * fastpow(gain, m_tail) * m_noise);
 
                 // if( gain>1. || m_noise>1. || s>1. ) qInfo("Kicker g=%f
                 // n=%f s=%f",gain,m_noise,s);
@@ -128,7 +128,7 @@ class KickerOsc
                 const double change
                         = double(m_startFreq - m_endFreq)
                           * (1.
-                             - fastPow(double(m_counter) / double(m_length),
+                             - pow(double(m_counter) / double(m_length),
                                        double(m_slope)));
                 m_freq = m_endFreq + change;
             }
