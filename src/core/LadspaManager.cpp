@@ -81,13 +81,14 @@ LadspaManager::LadspaManager()
                         QString path=f.absoluteFilePath();
                         if(path=="/usr/lib/ladspa/ZamGEQ31-ladspa.so" ||
                            path=="/usr/lib/ladspa/ZamTube-ladspa.so")
-                        {
+                       {
                                 qWarning("Warning: skipped because buggy: %s",
                                          qPrintable(path));
                                 continue;
                         }
 
                         QLibrary plugin_lib(path);
+			qInfo("Ladspa: %s",qPrintable(path));
 
 			if( plugin_lib.load() == true )
 			{

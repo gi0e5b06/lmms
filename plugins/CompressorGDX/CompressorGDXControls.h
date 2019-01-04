@@ -67,6 +67,7 @@ class CompressorGDXControls : public EffectControls
     FloatModel m_thresholdModel;
     FloatModel m_ratioModel;
     FloatModel m_modeModel;
+    FloatModel m_boostModel;
     FloatModel m_outGainModel;
 
     friend class CompressorGDXDialog;

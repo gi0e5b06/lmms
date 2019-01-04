@@ -22,16 +22,15 @@
  *
  */
 
-
 #ifndef ORGANIC_H
 #define ORGANIC_H
 
-#include <QString>
-
+#include "AutomatableModel.h"
 #include "Instrument.h"
 #include "InstrumentView.h"
 #include "Oscillator.h"
-#include "AutomatableModel.h"
+
+#include <QString>
 
 class QPixmap;
 
@@ -39,190 +38,153 @@ class Knob;
 class NotePlayHandle;
 class PixmapButton;
 
-const int NUM_OSCILLATORS = 8;
-const int NUM_HARMONICS = 18;
-const QString HARMONIC_NAMES[NUM_HARMONICS] =  {
-	"Octave below",
-	"Fifth below",
-	"Fundamental",
-	"2nd harmonic",
-	"3rd harmonic",
-	"4th harmonic",
-	"5th harmonic",
-	"6th harmonic",
-	"7th harmonic",
-	"8th harmonic",
-	"9th harmonic",
-	"10th harmonic",
-	"11th harmonic",
-	"12th harmonic",
-	"13th harmonic",
-	"14th harmonic",
-	"15th harmonic",
-	"16th harmonic"
-	};
-	
-const QString WAVEFORM_NAMES[6] = {
-	"Sine wave",
-	"Saw wave",
-	"Square wave",
-	"Triangle wave",
-	"Moog saw wave",
-	"Exponential wave"
-	};
-	
-const float CENT = 1.0f / 1200.0f;
+const int     NUM_OSCILLATORS = 8;
+const int     NUM_HARMONICS   = 18;
+const QString HARMONIC_NAMES[NUM_HARMONICS]
+        = {"Octave below",  "Fifth below",   "Fundamental",   "2nd harmonic",
+           "3rd harmonic",  "4th harmonic",  "5th harmonic",  "6th harmonic",
+           "7th harmonic",  "8th harmonic",  "9th harmonic",  "10th harmonic",
+           "11th harmonic", "12th harmonic", "13th harmonic", "14th harmonic",
+           "15th harmonic", "16th harmonic"};
+
+const QString WAVEFORM_NAMES[6]
+        = {"Sine wave",     "Saw wave",      "Square wave",
+           "Triangle wave", "Moog saw wave", "Exponential wave"};
+
+const real_t CENT = 1. / 1200.;
 
 class OscillatorObject : public Model
 {
-	Q_OBJECT
-	MM_OPERATORS
-private:
-	int m_numOscillators;
-	IntModel m_waveShape;
-	FloatModel m_oscModel;
-	FloatModel m_harmModel;
-	FloatModel m_volModel;
-	FloatModel m_panModel;
-	FloatModel m_detuneModel;
+    Q_OBJECT
+    MM_OPERATORS
+  private:
+    int        m_numOscillators;
+    IntModel   m_waveShape;
+    FloatModel m_oscModel;
+    FloatModel m_harmModel;
+    FloatModel m_volModel;
+    FloatModel m_panModel;
+    FloatModel m_detuneModel;
 
-	float m_volumeLeft;
-	float m_volumeRight;
-	// normalized detuning -> x/sampleRate
-	float m_detuningLeft;
-	float m_detuningRight;
-	// normalized offset -> x/360
-	float m_phaseOffsetLeft;
-	float m_phaseOffsetRight;
+    real_t m_volumeLeft;
+    real_t m_volumeRight;
+    // normalized detuning -> x/sampleRate
+    real_t m_detuningLeft;
+    real_t m_detuningRight;
+    // normalized offset -> x/360
+    real_t m_phaseOffsetLeft;
+    real_t m_phaseOffsetRight;
 
-	OscillatorObject( Model * _parent, int _index );
-	virtual ~OscillatorObject();
+    OscillatorObject(Model* _parent, int _index);
+    virtual ~OscillatorObject();
 
-	friend class organicInstrument;
-	friend class organicInstrumentView;
+    friend class organicInstrument;
+    friend class organicInstrumentView;
 
-
-private slots:
-	void oscButtonChanged();
-	void updateVolume();
-	void updateDetuning();
-
-} ;
-
+  private slots:
+    void oscButtonChanged();
+    void updateVolume();
+    void updateDetuning();
+};
 
 class organicInstrument : public Instrument
 {
-	Q_OBJECT
-public:
-	organicInstrument( InstrumentTrack * _instrument_track );
-	virtual ~organicInstrument();
+    Q_OBJECT
+  public:
+    organicInstrument(InstrumentTrack* _instrument_track);
+    virtual ~organicInstrument();
 
-	virtual void playNote( NotePlayHandle * _n,
-						sampleFrame * _working_buffer );
-	virtual void deleteNotePluginData( NotePlayHandle * _n );
+    virtual void playNote(NotePlayHandle* _n, sampleFrame* _working_buffer);
+    virtual void deleteNotePluginData(NotePlayHandle* _n);
 
+    virtual void saveSettings(QDomDocument& _doc, QDomElement& _parent);
+    virtual void loadSettings(const QDomElement& _this);
 
-	virtual void saveSettings( QDomDocument & _doc, QDomElement & _parent );
-	virtual void loadSettings( const QDomElement & _this );
+    virtual QString nodeName() const;
 
-	virtual QString nodeName() const;
+    int intRand(int min, int max);
 
-	int intRand( int min, int max );
+    static sample_t* s_harmonics;
 
-	static float * s_harmonics;
+  public slots:
+    void randomiseSettings();
 
-public slots:
-	void randomiseSettings();
+  private:
+    sample_t inline waveshape(sample_t in, real_t amount);
 
+    // fast atan, fast rather than accurate
+    inline real_t fastatan(real_t x)
+    {
+        return (x / (1.0 + 0.28 * (x * x)));
+    }
 
-private:
-	float inline waveshape(float in, float amount);
+    int m_numOscillators;
 
+    OscillatorObject** m_osc;
 
-	// fast atan, fast rather than accurate
-	inline float fastatan( float x )
-	{
-    	return (x / (1.0 + 0.28 * (x * x)));
-	}
+    struct oscPtr
+    {
+        MM_OPERATORS
+        Oscillator* oscLeft;
+        Oscillator* oscRight;
+        real_t      phaseOffsetLeft[NUM_OSCILLATORS];
+        real_t      phaseOffsetRight[NUM_OSCILLATORS];
+    };
 
-	int m_numOscillators;
+    const IntModel m_modulationAlgo;
 
-	OscillatorObject ** m_osc;
+    FloatModel m_fx1Model;
+    FloatModel m_volModel;
 
-	struct oscPtr
-	{
-		MM_OPERATORS
-		Oscillator * oscLeft;
-		Oscillator * oscRight;
-		float phaseOffsetLeft[NUM_OSCILLATORS];
-		float phaseOffsetRight[NUM_OSCILLATORS];		
-	} ;
+    virtual PluginView* instantiateView(QWidget* _parent);
 
-	const IntModel m_modulationAlgo;
+  private slots:
+    void updateAllDetuning();
 
-	FloatModel  m_fx1Model;
-	FloatModel  m_volModel;
-
-	virtual PluginView * instantiateView( QWidget * _parent );
-
-
-private slots:
-	void updateAllDetuning();
-
-	friend class organicInstrumentView;
-} ;
-
+    friend class organicInstrumentView;
+};
 
 class organicInstrumentView : public InstrumentView
 {
-	Q_OBJECT
-public:
-	organicInstrumentView( Instrument * _instrument, QWidget * _parent );
-	virtual ~organicInstrumentView();
+    Q_OBJECT
+  public:
+    organicInstrumentView(Instrument* _instrument, QWidget* _parent);
+    virtual ~organicInstrumentView();
 
-private:
-	virtual void modelChanged();
+  private:
+    virtual void modelChanged();
 
-	struct OscillatorKnobs
-	{
-		MM_OPERATORS
-		OscillatorKnobs( 
-					Knob * h,
-					Knob * v,
-					Knob * o,
-					Knob * p,
-					Knob * dt ) :
-			m_harmKnob( h ),
-			m_volKnob( v ),
-			m_oscKnob( o ),
-			m_panKnob( p ),
-			m_detuneKnob( dt )
-		{
-		}
-		OscillatorKnobs()
-		{
-		}
+    struct OscillatorKnobs
+    {
+        MM_OPERATORS
+        OscillatorKnobs(Knob* h, Knob* v, Knob* o, Knob* p, Knob* dt) :
+              m_harmKnob(h), m_volKnob(v), m_oscKnob(o), m_panKnob(p),
+              m_detuneKnob(dt)
+        {
+        }
+        OscillatorKnobs()
+        {
+        }
 
-		Knob * m_harmKnob;
-		Knob * m_volKnob;
-		Knob * m_oscKnob;
-		Knob * m_panKnob;
-		Knob * m_detuneKnob;
-	} ;
+        Knob* m_harmKnob;
+        Knob* m_volKnob;
+        Knob* m_oscKnob;
+        Knob* m_panKnob;
+        Knob* m_detuneKnob;
+    };
 
-	OscillatorKnobs * m_oscKnobs;
+    OscillatorKnobs* m_oscKnobs;
 
-	Knob * m_fx1Knob;
-	Knob * m_volKnob;
-	PixmapButton * m_randBtn;
+    Knob*         m_fx1Knob;
+    Knob*         m_volKnob;
+    PixmapButton* m_randBtn;
 
-	int m_numOscillators;
+    int m_numOscillators;
 
-	static QPixmap * s_artwork;
-	
-protected slots:
-	void updateKnobHint();
+    static QPixmap* s_artwork;
+
+  protected slots:
+    void updateKnobHint();
 };
-
 
 #endif

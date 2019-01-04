@@ -29,7 +29,7 @@
 
 
 SerializingObject::SerializingObject() :
-	m_hook( NULL )
+	m_hook( nullptr )
 {
 }
 
@@ -40,7 +40,7 @@ SerializingObject::~SerializingObject()
 {
 	if( m_hook )
 	{
-		m_hook->m_hookedIn = NULL;
+		m_hook->m_hookedIn = nullptr;
 	}
 }
 

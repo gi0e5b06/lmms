@@ -156,7 +156,7 @@ class EXPORT Plugin : public Model, public JournallingObject
 	}
 
 	// return plugin-type
-	inline PluginTypes type( void ) const
+	inline PluginTypes type() const
 	{
 		return m_descriptor->type;
 	}

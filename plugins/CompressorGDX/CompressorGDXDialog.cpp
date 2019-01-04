@@ -70,6 +70,12 @@ CompressorGDXDialog::CompressorGDXDialog(CompressorGDXControls* controls) :
     modeKNB->setLabel(tr("MODE"));
     modeKNB->setHintText(tr("Mode:"), "");
 
+    Knob* boostKNB = new Knob(this);
+    // boostKNB->move(17, 85);
+    boostKNB->setModel(&controls->m_boostModel);
+    boostKNB->setLabel(tr("BOOST"));
+    boostKNB->setHintText(tr("Boost:"), "");
+
     Knob* outGainKNB = new Knob(this);
     // outGainKNB->move(17, 85);
     outGainKNB->setModel(&controls->m_outGainModel);
@@ -82,10 +88,12 @@ CompressorGDXDialog::CompressorGDXDialog(CompressorGDXControls* controls) :
                             Qt::AlignHCenter | Qt::AlignTop);
     m_mainLayout->addWidget(ratioKNB, 0, 2, Qt::AlignHCenter | Qt::AlignTop);
     m_mainLayout->addWidget(modeKNB, 0, 3, Qt::AlignHCenter | Qt::AlignTop);
-    m_mainLayout->addWidget(outGainKNB, 0, 4,
+    m_mainLayout->addWidget(boostKNB, 0, 4,
+                            Qt::AlignHCenter | Qt::AlignTop);
+    m_mainLayout->addWidget(outGainKNB, 0, 5,
                             Qt::AlignHCenter | Qt::AlignTop);
 
-    m_mainLayout->setColumnStretch(5, 1);
+    m_mainLayout->setColumnStretch(6, 1);
     m_mainLayout->setRowStretch(1, 1);
 
     setFixedWidth(250);

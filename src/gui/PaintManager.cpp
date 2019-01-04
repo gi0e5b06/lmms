@@ -47,7 +47,6 @@ PaintManager::~PaintManager()
 void PaintManager::runQueue()
 {
     // qInfo("PaintManager::runQueue %d", m_queue.size());
-    int n = 0;
     while(!m_queue.empty())
     {
         if(Engine::mixer()->warningXRuns())

@@ -286,12 +286,12 @@ void SampleTCO::saveSettings(QDomDocument& _doc, QDomElement& _this)
 
 void SampleTCO::loadSettings(const QDomElement& _this)
 {
-    TrackContentObject::loadSettings(_this);
     setSampleFile(_this.attribute("src"));
     if(sampleFile().isEmpty() && _this.hasAttribute("data"))
         m_sampleBuffer->loadFromBase64(_this.attribute("data"));
     setInitialPlayTick(_this.attribute("initial").toInt());
 
+    TrackContentObject::loadSettings(_this);
     /*
     if( _this.attribute( "pos" ).toInt() >= 0 )
     {

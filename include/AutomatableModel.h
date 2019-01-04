@@ -183,7 +183,7 @@ class EXPORT AutomatableModel
 
     virtual void setRange(const real_t min,
                           const real_t max,
-                          const real_t step = 1.f);
+                          const real_t step = 1.);
 
     virtual void setStep(const real_t step);
 

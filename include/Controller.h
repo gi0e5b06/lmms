@@ -23,7 +23,6 @@
  *
  */
 
-
 #ifndef CONTROLLER_H
 #define CONTROLLER_H
 
@@ -38,139 +37,135 @@ class ControllerDialog;
 class Controller;
 class ControllerConnection;
 
-typedef QVector<Controller *> ControllerVector;
-
+typedef QVector<Controller*> ControllerVector;
 
 class Controller : public Model, public JournallingObject
 {
-	Q_OBJECT
-public:
-	enum ControllerTypes
-	{
-		DummyController,
-		LfoController,
-		MidiController,
-		PeakController,
-		/*
-		XYController,
-		EquationController
-		*/
-		NumControllerTypes
-	} ;
+    Q_OBJECT
+  public:
+    enum ControllerTypes
+    {
+        DummyController,
+        LfoController,
+        MidiController,
+        PeakController,
+        /*
+        XYController,
+        EquationController
+        */
+        NumControllerTypes
+    };
 
-	Controller( ControllerTypes _type, Model * _parent,
-						const QString & _display_name );
+    Controller(ControllerTypes _type,
+               Model*          _parent,
+               const QString&  _display_name);
 
-	virtual ~Controller();
+    virtual ~Controller();
 
-	virtual float currentValue( int _offset = 0);
-	// The per-controller get-value-in-buffers function
-	//virtual ValueBuffer * valueBuffer();
-        //virtual bool hasChanged() const;
+    virtual real_t currentValue(int _offset = 0);
+    // The per-controller get-value-in-buffers function
+    // virtual ValueBuffer * valueBuffer();
+    // virtual bool hasChanged() const;
 
-	inline bool isSampleExact() const
-	{
-		return m_sampleExact;
-	}
+    inline bool isSampleExact() const
+    {
+        return m_sampleExact;
+    }
 
-	void setSampleExact( bool _exact )
-	{
-		m_sampleExact = _exact;
-	}
+    void setSampleExact(bool _exact)
+    {
+        m_sampleExact = _exact;
+    }
 
-	inline ControllerTypes type() const
-	{
-		return( m_type );
-	}
+    inline ControllerTypes type() const
+    {
+        return (m_type);
+    }
 
-	virtual const QString & name() const
-	{
-		return( m_name );
-	}
+    virtual const QString& name() const
+    {
+        return (m_name);
+    }
 
-	inline bool isEnabled() const
-	{
-		return m_enabledModel.value();
-	}
+    inline bool isEnabled() const
+    {
+        return m_enabledModel.value();
+    }
 
-	virtual void saveSettings( QDomDocument & _doc, QDomElement & _this );
-	virtual void loadSettings( const QDomElement & _this );
-	virtual QString nodeName() const;
+    virtual void    saveSettings(QDomDocument& _doc, QDomElement& _this);
+    virtual void    loadSettings(const QDomElement& _this);
+    virtual QString nodeName() const;
 
-	static Controller * create( ControllerTypes _tt, Model * _parent );
-	static Controller * create( const QDomElement & _this,
-							Model * _parent );
+    static Controller* create(ControllerTypes _tt, Model* _parent);
+    static Controller* create(const QDomElement& _this, Model* _parent);
 
-	inline static float fittedValue( float _val )
-	{
-		return tLimit<float>( _val, 0.0f, 1.0f );
-	}
+    inline static real_t fittedValue(real_t _val)
+    {
+        return tLimit<real_t>(_val, 0., 1.);
+    }
 
-	static long runningPeriods()
-	{
-		return s_periods;
-	}
-	static unsigned int runningFrames();
-	static float runningTime();
+    static long runningPeriods()
+    {
+        return s_periods;
+    }
+    static unsigned int runningFrames();
+    static real_t       runningTime();
 
-	static void triggerFrameCounter();
-	static void resetFrameCounter();
+    static void triggerFrameCounter();
+    static void resetFrameCounter();
 
-	//Accepts a ControllerConnection * as it may be used in the future.
-	void addConnection( ControllerConnection * );
-	void removeConnection( ControllerConnection * );
-	int connectionCount() const;
+    // Accepts a ControllerConnection * as it may be used in the future.
+    void addConnection(ControllerConnection*);
+    void removeConnection(ControllerConnection*);
+    int  connectionCount() const;
 
-	bool hasModel( const Model * m ) const;
+    bool hasModel(const Model* m) const;
 
+  public slots:
+    virtual ControllerDialog* createDialog(QWidget* _parent);
 
-public slots:
-	virtual ControllerDialog * createDialog( QWidget * _parent );
+    virtual void setName(const QString& _new_name)
+    {
+        m_name = _new_name;
+    }
 
-	virtual void setName( const QString & _new_name )
-	{
-		m_name = _new_name;
-	}
+  protected:
+    // The internal per-controller get-value function
+    virtual real_t value(int _offset) final;
 
+    virtual void updateValueBuffer() final;
+    virtual void fillValueBuffer();
 
-protected:
-	// The internal per-controller get-value function
-	virtual float value( int _offset ) final;
+    // buffer for storing sample-exact values in case there
+    // are more than one model wanting it, so we don't have to create it
+    // again every time
+    ValueBuffer m_valueBuffer;
+    // when we last updated the valuebuffer - so we know if we have to update
+    // it
+    long m_lastUpdatedPeriod;
+    // bool  m_hasChanged;
+    real_t m_currentValue;
+    bool   m_sampleExact;
+    int    m_connectionCount;
 
-	virtual void updateValueBuffer() final;
-	virtual void fillValueBuffer();
+    QString         m_name;
+    ControllerTypes m_type;
 
-	// buffer for storing sample-exact values in case there
-	// are more than one model wanting it, so we don't have to create it
-	// again every time
-	ValueBuffer m_valueBuffer;
-	// when we last updated the valuebuffer - so we know if we have to update it
-	long m_lastUpdatedPeriod;
-        //bool  m_hasChanged;
-	float m_currentValue;
-	bool  m_sampleExact;
-	int m_connectionCount;
+    BoolModel m_enabledModel;
 
-	QString m_name;
-	ControllerTypes m_type;
+    static ControllerVector s_controllers;
 
-	BoolModel m_enabledModel;
+    static long s_periods;
 
-	static ControllerVector s_controllers;
+  signals:
+    // The value changed while the mixer isn't running (i.e: MIDI CC)
+    // void valueChanged();
+    void controlledValueChanged(real_t _v);
+    void controlledBufferChanged(const ValueBuffer* _vb);
 
-	static long s_periods;
-
-
-signals:
-	// The value changed while the mixer isn't running (i.e: MIDI CC)
-	//void valueChanged();
-        void controlledValueChanged(float _v);
-        void controlledBufferChanged(const ValueBuffer* _vb);
-
-	friend class ControllerView;
-	friend class ControllerDialog;
-	friend class ControllerConnection;
+    friend class ControllerView;
+    friend class ControllerDialog;
+    friend class ControllerConnection;
 };
 
 #endif
-

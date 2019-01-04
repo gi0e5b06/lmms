@@ -62,7 +62,7 @@ public:
 	inline void setController( int _controllerId );
 
         /*
-	float currentValue( int _offset )
+	real_t currentValue( int _offset )
 	{
 		return m_controller->currentValue( _offset );
 	}
@@ -101,13 +101,13 @@ public:
 
 public slots:
 	void deleteConnection();
-        void onControlledValueChanged(float _v);
+        void onControlledValueChanged(real_t _v);
         void onControlledBufferChanged(const ValueBuffer* _vb);
 
 signals:
 	// The value changed while the mixer isn't running (i.e: MIDI CC)
 	//void valueChanged();
-        void controlledValueChanged(float _v);
+        void controlledValueChanged(real_t _v);
         void controlledBufferChanged(const ValueBuffer* _vb);
 
 protected:
@@ -116,7 +116,7 @@ protected:
 	QString m_targetName;
 	int m_controllerId;
 	bool m_ownsController;
-        float m_previousValue;
+        real_t m_previousValue;
 	long m_lastUpdatedPeriod;
 
 	static ControllerConnectionVector s_connections;

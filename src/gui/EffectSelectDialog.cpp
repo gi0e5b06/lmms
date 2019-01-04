@@ -32,7 +32,7 @@
 //#include "gui_templates.h"
 
 #include <QLabel>
-
+#include <QHeaderView>
 
 EffectSelectDialog::EffectSelectDialog( QWidget * _parent ) :
 	QDialog( _parent ),

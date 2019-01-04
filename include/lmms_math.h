@@ -63,22 +63,29 @@ using namespace std;
 static inline real_t positivefraction(const real_t _x)
 {
 #ifdef REAL_IS_FLOAT
-    // if(sizeof(real_t) == sizeof(float))
-    return _x - floorf(_x) + (_x >= 0.f ? 0.f : 1.f);
+    real_t r = _x - floorf(_x);
+    if(r < 0.f)
+        r++;
+    if(r >= 1.f)
+        r--;
 #endif
 #ifdef REAL_IS_DOUBLE
-    // else
-    return _x - floor(_x) + (_x >= 0. ? 0. : 1.);
+    real_t r = _x - floor(_x);
+    if(r < 0.)
+        r++;
+    if(r >= 1.)
+        r--;
 #endif
+    return r;
 }
 
 static inline real_t fraction(const real_t _x)
 {
 #ifdef REAL_IS_FLOAT
-        return _x - floorf(_x);
+    return _x - floorf(_x);
 #endif
 #ifdef REAL_IS_DOUBLE
-        return _x - floor(_x);
+    return _x - floor(_x);
 #endif
 }
 

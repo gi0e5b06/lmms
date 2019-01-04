@@ -108,7 +108,7 @@ DataFile::DataFile( Type type ) :
 {
 	DataFile::seed_count++;
 	if(DataFile::seed_count>1) qWarning("DataFile::seed_count>1");
-	qSetGlobalQHashSeed(42);
+	//qSetGlobalQHashSeed(42);
 
 	appendChild( createProcessingInstruction("xml", "version=\"1.0\""));
 	QDomElement root = createElement( "lmms-project" );
@@ -136,7 +136,7 @@ DataFile::DataFile( const QString & _fileName ) :
 {
 	DataFile::seed_count++;
 	if(DataFile::seed_count>1) qWarning("DataFile::seed_count>1");
-	qSetGlobalQHashSeed(42);
+	//qSetGlobalQHashSeed(42);
 
         QFile inFile( _fileName );
 	if( !inFile.open( QIODevice::ReadOnly ) )
@@ -168,7 +168,7 @@ DataFile::DataFile( const QByteArray & _data ) :
 {
 	DataFile::seed_count++;
 	if(DataFile::seed_count>1) qWarning("DataFile::seed_count>1");
-	qSetGlobalQHashSeed(42);
+	//qSetGlobalQHashSeed(42);
 
 	loadData( _data, "<internal data>" );
 }
@@ -180,7 +180,7 @@ DataFile::~DataFile()
 {
 	DataFile::seed_count--;
 	if(DataFile::seed_count>1) qWarning("DataFile::seed_count>1");
-	else qSetGlobalQHashSeed(-1);
+	//else qSetGlobalQHashSeed(-1);
 }
 
 

@@ -118,8 +118,8 @@ void ControllerConnection::setController( Controller * _controller )
 	if( _controller->type() != Controller::DummyController )
 	{
 		_controller->addConnection( this );
-		connect( _controller, SIGNAL( controlledValueChanged(float) ),
-                         this, SLOT( onControlledValueChanged(float) ) );
+		connect( _controller, SIGNAL( controlledValueChanged(real_t) ),
+                         this, SLOT( onControlledValueChanged(real_t) ) );
 		connect( _controller, SIGNAL( controlledBufferChanged(const ValueBuffer*) ),
                          this, SLOT( onControlledBufferChanged(const ValueBuffer*) ) );
 	}
@@ -227,9 +227,9 @@ void ControllerConnection::deleteConnection()
 	delete this;
 }
 
-void ControllerConnection::onControlledValueChanged(float v)
+void ControllerConnection::onControlledValueChanged(real_t v)
 {
-        //const float v=m_controller->m_currentValue;
+        //const real_t v=m_controller->m_currentValue;
         if(v!=m_previousValue)
         {
                 m_previousValue=v;

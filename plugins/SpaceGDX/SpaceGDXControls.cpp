@@ -56,17 +56,26 @@ void SpaceGDXControls::changeControl()
 
 void SpaceGDXControls::loadSettings(const QDomElement& _this)
 {
-    /*    m_distanceModel.loadSettings(_this, "distance");
-m_dryModel.loadSettings(_this, "dry");
-m_wetModel.loadSettings(_this, "wet");
-    */
+    m_rightPhaseModel.loadSettings(_this, "right_phase");
+    m_rightGainModel.loadSettings(_this, "right_gain");
+    m_rightLowModel.loadSettings(_this, "right_low");
+    m_rightHighModel.loadSettings(_this, "right_high");
+
+    m_leftPhaseModel.loadSettings(_this, "left_phase");
+    m_leftGainModel.loadSettings(_this, "left_gain");
+    m_leftLowModel.loadSettings(_this, "left_low");
+    m_leftHighModel.loadSettings(_this, "left_high");
 }
 
 void SpaceGDXControls::saveSettings(QDomDocument& doc, QDomElement& _this)
 {
-    /*
-m_distanceModel.saveSettings(doc, _this, "distance");
-m_dryModel.saveSettings(doc, _this, "dry");
-m_wetModel.saveSettings(doc, _this, "wet");
-    */
+    m_rightPhaseModel.saveSettings(doc, _this, "right_phase");
+    m_rightGainModel.saveSettings(doc, _this, "right_gain");
+    m_rightLowModel.saveSettings(doc, _this, "right_low");
+    m_rightHighModel.saveSettings(doc, _this, "right_high");
+
+    m_leftPhaseModel.saveSettings(doc, _this, "left_phase");
+    m_leftGainModel.saveSettings(doc, _this, "left_gain");
+    m_leftLowModel.saveSettings(doc, _this, "left_low");
+    m_leftHighModel.saveSettings(doc, _this, "left_high");
 }

@@ -63,7 +63,7 @@ class opl2instrument : public Instrument
     void         saveSettings(QDomDocument& _doc, QDomElement& _this);
     void         loadSettings(const QDomElement& _this);
     void         loadPatch(const unsigned char inst[14]);
-    void         tuneEqual(int center, real_t Hz);
+    void         tuneEqual(int center, frequency_t Hz);
     virtual void loadFile(const QString& file);
 
     IntModel m_patchModel;
@@ -128,12 +128,13 @@ class opl2instrument : public Instrument
     int pitchbend;
     int pitchBendRange;
 
+    static QMutex emulatorMutex;
+
     int popVoice();
     int pushVoice(int v);
 
-    int           Hz2fnum(real_t Hz);
-    static QMutex emulatorMutex;
-    void          setVoiceVelocity(int voice, int vel);
+    int    Hz2fnum(frequency_t Hz);
+    void   setVoiceVelocity(int voice, int vel);
 
     // Pitch bend range comes through RPNs.
     int RPNcoarse, RPNfine;

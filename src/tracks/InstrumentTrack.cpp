@@ -244,7 +244,7 @@ void InstrumentTrack::processAudioBuffer(sampleFrame*    buf,
 
     // we must not play the sound if this InstrumentTrack is muted...
     if(/*tmp isMuted() ||*/
-       (song->playMode() != Song::Mode_PlayPattern && nph!=nullptr
+       (song->playMode() != Song::Mode_PlayPattern && nph != nullptr
         && nph->isBbTrackMuted())
        || !m_instrument)
     {
@@ -290,10 +290,9 @@ void InstrumentTrack::processAudioBuffer(sampleFrame*    buf,
     // is no problem for us since we just bypass the envelopes+LFOs
     if(nph != nullptr && !m_instrument->isSingleStreamed())
     {
-            const f_cnt_t offset = nph->noteOffset();
+        const f_cnt_t offset = nph->noteOffset();
 
-            m_soundShaping.processAudioBuffer(buf + offset, frames - offset,
-                                              nph);
+        m_soundShaping.processAudioBuffer(buf + offset, frames - offset, nph);
 
         if(!m_instrument->isMidiBased() || m_volumeEnabledModel.value()
            || m_panningEnabledModel.value())
@@ -430,9 +429,9 @@ void InstrumentTrack::processInEvent(const MidiEvent& event,
                 }
                 else if(isSustainPedalPressed())
                 {
-                    for(NotePlayHandle* nph : m_sustainedNotes)
+                    for(NotePlayHandle* nph: m_sustainedNotes)
                     {
-                        if(nph!=nullptr && nph->isReleased())
+                        if(nph != nullptr && nph->isReleased())
                         {
                             if(nph->origin() == nph->OriginMidiInput)
                             {
@@ -609,7 +608,7 @@ void InstrumentTrack::playNote(NotePlayHandle* _nph,
     if(!m_arpeggio              .processNote( _n )) return;
     if(!m_noteDuplicatesRemoving.processNote( _n )) return;
     */
-    for(InstrumentFunction* f : m_noteFunctions)
+    for(InstrumentFunction* f: m_noteFunctions)
         if(!f->processNote(_nph))
             return;
 
@@ -757,11 +756,14 @@ void InstrumentTrack::updateEffectChannel()
     m_audioPort.setNextFxChannel(m_effectChannelModel.value());
 }
 
-int InstrumentTrack::masterKey(int _midi_key) const
+int InstrumentTrack::masterKey(int _midiKey) const
 {
-
-    int key = baseNote();
-    return qBound(0, _midi_key - (key - DefaultKey), NumKeys);
+    int key = _midiKey - (baseNote() - DefaultKey);
+    if(key < 0)
+        key = 12 + key % 12;
+    if(key > 127)
+        key = 120 + key % 12;
+    return key;  // qBound(0, key, NumKeys - 1);
 }
 
 void InstrumentTrack::removeMidiPortNode(DataFile& _dataFile)
@@ -967,7 +969,7 @@ void InstrumentTrack::saveTrackSpecificSettings(QDomDocument& doc,
       m_arpeggio              .saveState( doc, thisElement );
       m_noteDuplicatesRemoving.saveState( doc, thisElement );
     */
-    for(InstrumentFunction* f : m_noteFunctions)
+    for(InstrumentFunction* f: m_noteFunctions)
         f->saveState(doc, thisElement);
 
     m_midiPort.saveState(doc, thisElement);
@@ -1014,7 +1016,7 @@ void InstrumentTrack::loadTrackSpecificSettings(
         if(node.isElement())
         {
             bool found = false;
-            for(InstrumentFunction* f : m_noteFunctions)
+            for(InstrumentFunction* f: m_noteFunctions)
                 if(f->nodeName() == node.nodeName())
                 {
                     f->restoreState(node.toElement());
@@ -1247,7 +1249,7 @@ InstrumentTrackView::~InstrumentTrackView()
 InstrumentTrackWindow* InstrumentTrackView::topLevelInstrumentTrackWindow()
 {
     InstrumentTrackWindow* w = nullptr;
-    for(const QMdiSubWindow* sw :
+    for(const QMdiSubWindow* sw:
         gui->mainWindow()->workspace()->subWindowList(
                 QMdiArea::ActivationHistoryOrder))
     {
@@ -1617,8 +1619,8 @@ class fxLineLcdSpinBox : public LcdSpinBox
 
 // #### ITW:
 InstrumentTrackWindow::InstrumentTrackWindow(InstrumentTrackView* _itv) :
-      QWidget(), ModelView(nullptr, this), m_track(_itv->model()), m_itv(_itv),
-      m_instrumentView(nullptr)
+      QWidget(), ModelView(nullptr, this), m_track(_itv->model()),
+      m_itv(_itv), m_instrumentView(nullptr)
 {
     setAcceptDrops(true);
 
@@ -1739,7 +1741,8 @@ InstrumentTrackWindow::InstrumentTrackWindow(InstrumentTrackView* _itv) :
     basicControlsLayout->setColumnStretch(5, 1);
 
     // setup spinbox for selecting FX-channel
-    m_effectChannelNumber = new fxLineLcdSpinBox(2, nullptr, tr("FX channel"));
+    m_effectChannelNumber
+            = new fxLineLcdSpinBox(2, nullptr, tr("FX channel"));
     m_effectChannelNumber->setText(tr("FX"));
 
     basicControlsLayout->addWidget(m_effectChannelNumber, 0, 6);
@@ -1794,7 +1797,7 @@ InstrumentTrackWindow::InstrumentTrackWindow(InstrumentTrackView* _itv) :
     instrumentFunctionsLayout->setContentsMargins(2, 3, 2, 5);
     // instrumentFunctionsLayout->addStrut( 230 );
 
-    for(InstrumentFunction* f : m_track->m_noteFunctions)
+    for(InstrumentFunction* f: m_track->m_noteFunctions)
     {
         InstrumentFunctionView* v = f->createView();
         m_noteFunctionViews.append(v);
@@ -2084,11 +2087,15 @@ void InstrumentTrackWindow::dragEnterEvent(QDragEnterEvent* event)
 
 void InstrumentTrackWindow::dropEvent(QDropEvent* event)
 {
+    qInfo("InstrumentTrackWindow::dropEvent event=%p", event);
+
     QString type  = StringPairDrag::decodeKey(event);
     QString value = StringPairDrag::decodeValue(event);
 
+    qInfo("InstrumentTrackWindow::dropEvent #2");
     if(type == "instrument")
     {
+        qInfo("InstrumentTrackWindow::dropEvent #instrument");
         m_track->loadInstrument(value);
 
         Engine::getSong()->setModified();
@@ -2098,6 +2105,7 @@ void InstrumentTrackWindow::dropEvent(QDropEvent* event)
     }
     else if(type == "presetfile")
     {
+        qInfo("InstrumentTrackWindow::dropEvent #preset");
         DataFile dataFile(value);
         InstrumentTrack::removeMidiPortNode(dataFile);
         m_track->setSimpleSerializing();
@@ -2110,16 +2118,21 @@ void InstrumentTrackWindow::dropEvent(QDropEvent* event)
     }
     else if(type == "pluginpresetfile")
     {
+        qInfo("InstrumentTrackWindow::dropEvent #plugin");
+
         const QString ext = FileItem::extension(value);
         Instrument*   i   = m_track->instrument();
 
-        if(!i->descriptor()->supportsFileType(ext))
+        qInfo("InstrumentTrackWindow::dropEvent i=%p", i);
+
+        if((i == nullptr) || !i->descriptor()->supportsFileType(ext))
         {
             i = m_track->loadInstrument(
                     pluginFactory->pluginSupportingExtension(ext).name());
         }
 
-        i->loadFile(value);
+        if(i != nullptr)
+            i->loadFile(value);
 
         event->accept();
         setFocus();

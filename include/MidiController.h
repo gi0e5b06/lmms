@@ -2,7 +2,7 @@
  * MidiController.h - A controller to receive MIDI control-changes
  *
  * Copyright (c) 2008 Paul Giblock <drfaygo/at/gmail.com>
- * 
+ *
  * This file is part of LMMS - https://lmms.io
  *
  * This program is free software; you can redistribute it and/or
@@ -33,55 +33,49 @@
 #include "MidiEventProcessor.h"
 #include "MidiPort.h"
 
-
 class MidiPort;
-
 
 class MidiController : public Controller, public MidiEventProcessor
 {
-	Q_OBJECT
-public:
-	MidiController( Model * _parent );
-	virtual ~MidiController();
+    Q_OBJECT
+  public:
+    MidiController(Model* _parent);
+    virtual ~MidiController();
 
-	virtual void processInEvent( const MidiEvent & _me,
-					const MidiTime & _time, f_cnt_t offset = 0 );
+    virtual void processInEvent(const MidiEvent& _me,
+                                const MidiTime&  _time,
+                                f_cnt_t          offset = 0);
 
-	virtual void processOutEvent( const MidiEvent& _me,
-					const MidiTime & _time, f_cnt_t offset = 0 )
-	{
-		// No output yet
-	}
+    virtual void processOutEvent(const MidiEvent& _me,
+                                 const MidiTime&  _time,
+                                 f_cnt_t          offset = 0)
+    {
+        // No output yet
+    }
 
-	virtual void saveSettings( QDomDocument & _doc, QDomElement & _this );
-	virtual void loadSettings( const QDomElement & _this );
-	virtual QString nodeName() const;
+    virtual void    saveSettings(QDomDocument& _doc, QDomElement& _this);
+    virtual void    loadSettings(const QDomElement& _this);
+    virtual QString nodeName() const;
 
-	// Used by controllerConnectionDialog to copy
-	void subscribeReadablePorts( const MidiPort::Map & _map );
+    // Used by controllerConnectionDialog to copy
+    void subscribeReadablePorts(const MidiPort::Map& _map);
 
+  public slots:
+    virtual ControllerDialog* createDialog(QWidget* _parent);
+    void                      updateName();
 
-public slots:
-	virtual ControllerDialog * createDialog( QWidget * _parent );
-	void updateName();
+  protected:
+    // The internal per-controller get-value function
+    virtual void fillValueBuffer();
 
+    MidiPort m_midiPort;
 
-protected:
-	// The internal per-controller get-value function
-	virtual void fillValueBuffer();
+    real_t m_lastValue;
+    real_t m_previousValue;
+    bool   m_switch;
 
-
-	MidiPort m_midiPort;
-
-
-	float m_lastValue;
-	float m_previousValue;
-	bool  m_switch;
-
-	friend class ControllerConnectionDialog;
-	friend class AutoDetectMidiController;
-
-} ;
-
+    friend class ControllerConnectionDialog;
+    friend class AutoDetectMidiController;
+};
 
 #endif

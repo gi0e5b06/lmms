@@ -36,6 +36,7 @@ CompressorGDXControls::CompressorGDXControls(CompressorGDX* effect) :
       m_thresholdModel(0., 0., 1., 0.001, this, tr("Threshold")),
       m_ratioModel(1., 0., 1., 0.001, this, tr("Ratio")),
       m_modeModel(2., 0., 5., 1., this, tr("Mode")),
+      m_boostModel(1., 1., 100., 0.001, this, tr("Boost")),
       m_outGainModel(1., 0., 1., 0.001, this, tr("Out gain"))
 {
     /*
@@ -60,6 +61,7 @@ void CompressorGDXControls::loadSettings(const QDomElement& _this)
     m_ratioModel.loadSettings(_this, "ratio");
     m_modeModel.loadSettings(_this, "mode");
     m_outGainModel.loadSettings(_this, "out_gain");
+    m_boostModel.loadSettings(_this, "boost");
 }
 
 void CompressorGDXControls::saveSettings(QDomDocument& doc,
@@ -70,4 +72,5 @@ void CompressorGDXControls::saveSettings(QDomDocument& doc,
     m_ratioModel.saveSettings(doc, _this, "ratio");
     m_modeModel.saveSettings(doc, _this, "mode");
     m_outGainModel.saveSettings(doc, _this, "out_gain");
+    m_boostModel.saveSettings(doc, _this, "boost");
 }

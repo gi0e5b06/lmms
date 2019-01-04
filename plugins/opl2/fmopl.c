@@ -32,6 +32,7 @@
  */
 
 #define INLINE		static inline
+#define STATIC          static
 #define HAS_YM3812	1
 
 #include <stdio.h>
@@ -49,9 +50,9 @@
 /* -------------------- for debug --------------------- */
 /* #define OPL_OUTPUT_LOG */
 #ifdef OPL_OUTPUT_LOG
-static FILE *opl_dbg_fp = NULL;
-static FM_OPL *opl_dbg_opl[16];
-static int opl_dbg_maxchip,opl_dbg_chip;
+STATIC FILE *opl_dbg_fp = NULL;
+STATIC FM_OPL *opl_dbg_opl[16];
+STATIC int opl_dbg_maxchip,opl_dbg_chip;
 #endif
 
 /* -------------------- preliminary define section --------------------- */
@@ -114,7 +115,7 @@ static int opl_dbg_maxchip,opl_dbg_chip;
 #define ENV_MOD_AR  0x02
 
 /* -------------------- tables --------------------- */
-static const int slot_array[32]= {
+STATIC const int slot_array[32]= {
 	0, 2, 4, 1, 3, 5,-1,-1,
 	6, 8,10, 7, 9,11,-1,-1,
 	12,14,16,13,15,17,-1,-1,
@@ -124,7 +125,7 @@ static const int slot_array[32]= {
 /* key scale level */
 /* table is 3dB/OCT , DV converts this in TL step at 6dB/OCT */
 #define DV (EG_STEP/2)
-static const UINT32 KSL_TABLE[8*16]= {
+STATIC const UINT32 KSL_TABLE[8*16]= {
 	/* OCT 0 */
 	0.000/DV, 0.000/DV, 0.000/DV, 0.000/DV,
 	0.000/DV, 0.000/DV, 0.000/DV, 0.000/DV,
@@ -171,7 +172,7 @@ static const UINT32 KSL_TABLE[8*16]= {
 /* sustain level table (3db per step) */
 /* 0 - 15: 0, 3, 6, 9,12,15,18,21,24,27,30,33,36,39,42,93 (dB)*/
 #define SC(db) (db*((3/EG_STEP)*(1<<ENV_BITS)))+EG_DST
-static const INT32 SL_TABLE[16] = {
+STATIC const INT32 SL_TABLE[16] = {
 	SC( 0),SC( 1),SC( 2),SC(3 ),SC(4 ),SC(5 ),SC(6 ),SC( 7),
 	SC( 8),SC( 9),SC(10),SC(11),SC(12),SC(13),SC(14),SC(31)
 };
@@ -181,22 +182,22 @@ static const INT32 SL_TABLE[16] = {
 /* TotalLevel : 48 24 12  6  3 1.5 0.75 (dB) */
 /* TL_TABLE[ 0      to TL_MAX          ] : plus  section */
 /* TL_TABLE[ TL_MAX to TL_MAX+TL_MAX-1 ] : minus section */
-static INT32 *TL_TABLE;
+STATIC INT32 *TL_TABLE;
 
 /* pointers to TL_TABLE with sinwave output offset */
-static INT32 **SIN_TABLE;
+STATIC INT32 **SIN_TABLE;
 
 /* LFO table */
-static INT32 *AMS_TABLE;
-static INT32 *VIB_TABLE;
+STATIC INT32 *AMS_TABLE;
+STATIC INT32 *VIB_TABLE;
 
 /* envelope output curve table */
 /* attack + decay + OFF */
-static INT32 ENV_CURVE[2*EG_ENT+1];
+STATIC INT32 ENV_CURVE[2*EG_ENT+1];
 
 /* multiple table */
 #define ML 2
-static const UINT32 MUL_TABLE[16]= {
+STATIC const UINT32 MUL_TABLE[16]= {
 /* 1/2, 1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,15 */
    0.50*ML, 1.00*ML, 2.00*ML, 3.00*ML, 4.00*ML, 5.00*ML, 6.00*ML, 7.00*ML,
    8.00*ML, 9.00*ML,10.00*ML,10.00*ML,12.00*ML,12.00*ML,15.00*ML,15.00*ML
@@ -204,30 +205,30 @@ static const UINT32 MUL_TABLE[16]= {
 #undef ML
 
 /* dummy attack / decay rate ( when rate == 0 ) */
-static INT32 RATE_0[16]= {
+STATIC INT32 RATE_0[16]= {
 	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 };
 
 /* -------------------- static state --------------------- */
 
 /* lock level of common table */
-static int num_lock = 0;
+STATIC int num_lock = 0;
 
 /* work table */
-static void *cur_chip = NULL;	/* current chip point */
+STATIC void *cur_chip = NULL;	/* current chip point */
 /* current chip state */
 /* static OPLSAMPLE  *bufL,*bufR; */
-static OPL_CH *S_CH;
-static OPL_CH *E_CH;
+STATIC OPL_CH *S_CH;
+STATIC OPL_CH *E_CH;
 OPL_SLOT *SLOT7_1,*SLOT7_2,*SLOT8_1,*SLOT8_2;
 
-static INT32 outd[1];
-static INT32 ams;
-static INT32 vib;
+STATIC INT32 outd[1];
+STATIC INT32 ams;
+STATIC INT32 vib;
 INT32  *ams_table;
 INT32  *vib_table;
-static INT32 amsIncr;
-static INT32 vibIncr;
+STATIC INT32 amsIncr;
+STATIC INT32 vibIncr;
 INT32 feedback2;		/* connect for SLOT 2 */
 
 /* log output level */
@@ -380,7 +381,7 @@ INLINE UINT32 OPL_CALC_SLOT( OPL_SLOT *SLOT ) {
 }
 
 /* set algorythm connection */
-static void set_algorythm( OPL_CH *CH) {
+STATIC void set_algorythm( OPL_CH *CH) {
 	INT32 *carrier = &outd[0];
 	CH->connect1 = CH->CON ? carrier : &feedback2;
 	CH->connect2 = carrier;
@@ -648,7 +649,7 @@ INLINE void OPL_CALC_RH( OPL_CH *CH ) {
 }
 
 /* ----------- initialize time tabls ----------- */
-static void init_timetables( FM_OPL *OPL , int ARRATE , int DRRATE ) {
+STATIC void init_timetables( FM_OPL *OPL , int ARRATE , int DRRATE ) {
 	int i;
 	double rate;
 
@@ -678,7 +679,7 @@ static void init_timetables( FM_OPL *OPL , int ARRATE , int DRRATE ) {
 }
 
 /* ---------- generic table initialize ---------- */
-static int OPLOpenTable( void ) {
+STATIC int OPLOpenTable( void ) {
 	int s,t;
 	double rate;
 	int i,j;
@@ -764,7 +765,7 @@ static int OPLOpenTable( void ) {
 }
 
 
-static void OPLCloseTable( void ) {
+STATIC void OPLCloseTable( void ) {
 	free(TL_TABLE);
 	free(SIN_TABLE);
 	free(AMS_TABLE);
@@ -792,7 +793,7 @@ INLINE void CSMKeyControll(OPL_CH *CH) {
 }
 
 /* ---------- opl initialize ---------- */
-static void OPL_initalize(FM_OPL *OPL) {
+STATIC void OPL_initalize(FM_OPL *OPL) {
 	int fn;
 
 	/* frequency base */
@@ -811,7 +812,7 @@ static void OPL_initalize(FM_OPL *OPL) {
 }
 
 /* ---------- write a OPL registers ---------- */
-static void OPLWriteReg(FM_OPL *OPL, int r, int v) {
+STATIC void OPLWriteReg(FM_OPL *OPL, int r, int v) {
 	OPL_CH *CH;
 	int slot;
 	int block_fnum;
@@ -1082,7 +1083,7 @@ static void OPLWriteReg(FM_OPL *OPL, int r, int v) {
 }
 
 /* lock/unlock for common table */
-static int OPL_LockTable(void) {
+STATIC int OPL_LockTable(void) {
 	num_lock++;
 	if ( num_lock>1 ) {
 		return 0;
@@ -1097,7 +1098,7 @@ static int OPL_LockTable(void) {
 	return 0;
 }
 
-static void OPL_UnLockTable(void) {
+STATIC void OPL_UnLockTable(void) {
 	if(num_lock) {
 		num_lock--;
 	}

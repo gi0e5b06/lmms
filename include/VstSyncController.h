@@ -72,19 +72,19 @@ private:
 	struct VstSyncData
 	{
 		bool isPlaying;
-		float ppqPos;
+		FLOAT ppqPos;
 		int timeSigNumer;
 		int timeSigDenom;
 		bool isCycle;
 		bool hasSHM;
-		float cycleStart;
-		float cycleEnd;
+		FLOAT cycleStart;
+		FLOAT cycleEnd;
 		int m_bufferSize;
 		int m_sampleRate;
 		int m_bpm;
 
 #ifdef VST_SNC_LATENCY
-		float m_latency;
+		FLOAT m_latency;
 #endif
 	} ;
 

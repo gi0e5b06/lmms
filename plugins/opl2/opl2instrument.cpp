@@ -433,7 +433,7 @@ void opl2instrument::play(sampleFrame* _working_buffer)
 
     for(fpp_t frame = 0; frame < frameCount; ++frame)
     {
-        sample_t s = real_t(renderbuffer[frame]) / 8192.;
+        sample_t s = sample_t(renderbuffer[frame]) / 8192.;
         for(ch_cnt_t ch = 0; ch < DEFAULT_CHANNELS; ++ch)
         {
             _working_buffer[frame][ch] = s;
@@ -536,18 +536,17 @@ void opl2instrument::loadPatch(const unsigned char inst[14])
     emulatorMutex.unlock();
 }
 
-void opl2instrument::tuneEqual(int center, real_t Hz)
+void opl2instrument::tuneEqual(int center, frequency_t Hz)
 {
-    real_t tmp;
     for(int n = 0; n < 128; ++n)
     {
-        tmp = Hz * exp2((n - center) * (1. / 12.) + pitchbend * (1. / 1200.));
+        frequency_t tmp = Hz * exp2((n - center) * (1. / 12.) + pitchbend * (1. / 1200.));
         fnums[n] = Hz2fnum(tmp);
     }
 }
 
 // Find suitable F number in lowest possible block
-int opl2instrument::Hz2fnum(real_t Hz)
+int opl2instrument::Hz2fnum(frequency_t Hz)
 {
     for(int block = 0; block < 8; ++block)
     {
@@ -823,11 +822,11 @@ opl2instrumentView::~opl2instrumentView()
 // Returns text for time knob formatted nicely
 inline QString opl2instrumentView::knobHintHelper(real_t n)
 {
-    if(n > 1000)
+    if(n >= 1000.)
     {
-        return QString::number(n / 1000, 'f', 0) + " s";
+        return QString::number(n / 1000., 'f', 0) + " s";
     }
-    else if(n > 10)
+    else if(n >= 10.)
     {
         return QString::number(n, 'f', 0) + " ms";
     }
@@ -843,11 +842,11 @@ void opl2instrumentView::updateKnobHints()
     // 0.6311 for D/R Here some rounding has been applied.
     const real_t attack_times[16]
             = {0.,  0.2, 0.4,  0.9,  1.8,  3.7,  7.4,   15.,
-               30., 60., 120., 240., 480., 950., 1900., 3800.0};
+               30., 60., 120., 240., 480., 950., 1900., 3800.};
 
     const real_t dr_times[16]
             = {0.,   1.2,  2.5,  5.,    10.,   20.,   40.,    80.,
-               160., 320., 640., 1300., 2600., 5200., 10000., 20000.0};
+               160., 320., 640., 1300., 2600., 5200., 10000., 20000.};
 
     const int fmultipliers[16] = {-12, 0,  12, 19, 24, 28, 31, 34,
                                   36,  38, 40, 40, 43, 43, 47, 47};

@@ -185,7 +185,7 @@ void VstSyncController::updateSampleRate()
 	m_syncData->m_sampleRate = Engine::mixer()->processingSampleRate();
 
 #ifdef VST_SNC_LATENCY
-	m_syncData->m_latency = m_syncData->m_bufferSize * m_syncData->m_bpm / ( (float) m_syncData->m_sampleRate * 60 );
+	m_syncData->m_latency = m_syncData->m_bufferSize * m_syncData->m_bpm / ( (FLOAT) m_syncData->m_sampleRate * 60.f );
 #endif
 }
 

@@ -686,7 +686,7 @@ void AutomatableModel::unlinkModels(AutomatableModel* model1,
 
 void AutomatableModel::unlinkAllModels()
 {
-    for(AutomatableModel* model : m_linkedModels)
+    for(AutomatableModel* model: m_linkedModels)
     {
         unlinkModels(this, model);
     }
@@ -1145,7 +1145,7 @@ void FloatModel::setDigitCount()
     else
     {
 #ifdef REAL_IS_FLOAT
-        int v = int(floorf(1000000.f * t));  // FLOAT REQUIRED
+        int v = int(floorf(1000000.f * t));
 #endif
 #ifdef REAL_IS_DOUBLE
         int v = int(floor(1000000. * t));

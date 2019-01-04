@@ -384,7 +384,7 @@ void Song::processNextBuffer()
 				m_vstSyncController.stopCycle();
 			}
 
-			currentFrame = fmodf( currentFrame, framesPerTick );
+			currentFrame = fmod( currentFrame, framesPerTick );
 			m_playPos[m_playMode].setCurrentFrame( currentFrame );
 		}
 

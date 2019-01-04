@@ -101,7 +101,7 @@ Controller::~Controller()
 
 
 // Get current value, with an offset into the current buffer for sample exactness
-float Controller::currentValue( int _offset )
+real_t Controller::currentValue( int _offset )
 {
 	if(isEnabled() && ( _offset == 0 || isSampleExact() ))
 	{
@@ -113,7 +113,7 @@ float Controller::currentValue( int _offset )
 
 
 
-float Controller::value( int offset )
+real_t Controller::value( int offset )
 {
 	if(isEnabled())
 	{
@@ -155,7 +155,7 @@ void Controller::updateValueBuffer()
 
 void Controller::fillValueBuffer()
 {
-        m_valueBuffer.fill(0.5f);
+        m_valueBuffer.fill(0.5);
 }
 
 
@@ -168,7 +168,7 @@ unsigned int Controller::runningFrames()
 
 
 // Get position in seconds
-float Controller::runningTime()
+real_t Controller::runningTime()
 {
 	return runningFrames() / Engine::mixer()->processingSampleRate();
 }

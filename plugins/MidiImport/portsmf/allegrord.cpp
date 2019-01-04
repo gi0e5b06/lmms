@@ -151,7 +151,7 @@ bool Alg_reader::parse()
     while (line_parser_flag) {
         bool time_flag = false;
         bool next_flag = false;
-        double next;
+        double next = 0.0;
         bool voice_flag = false;
         bool loud_flag = false;
         bool dur_flag = false;

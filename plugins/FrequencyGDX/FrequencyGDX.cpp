@@ -73,7 +73,7 @@ FrequencyGDX::FrequencyGDX(Model*                                    parent,
       Effect(&frequencygdx_plugin_descriptor, parent, key),
       m_gdxControls(this), m_framesFilledUp(0), m_ak(-1), m_energy(0)
 {
-    memset(m_buffer, 0, 2 * FFT_BUFFER_SIZE);
+  memset(m_buffer, 0, 2 * FFT_BUFFER_SIZE * sizeof(float));
 
     m_specBuf = (fftwf_complex*)fftwf_malloc((FFT_BUFFER_SIZE + 1)
                                              * sizeof(fftwf_complex));

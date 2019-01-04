@@ -150,7 +150,7 @@ WaveForm::Set::Set()
         QDir wfrd("../../../lmms/waveforms", "AKWF_*",
                   QDir::Name | QDir::IgnoreCase,
                   QDir::Dirs | QDir::NoDotAndDotDot);
-        for(QString& wfb : wfrd.entryList())
+        for(QString& wfb: wfrd.entryList())
         {
             QDir wfbd(wfrd.absolutePath() + "/" + wfb, "*.wav",
                       QDir::Name | QDir::IgnoreCase,
@@ -162,7 +162,7 @@ WaveForm::Set::Set()
             m_bankNames[sbank - MIN_BANK] = bankname.trimmed();
 
             int sindex = MIN_INDEX;
-            for(QString& wff : wfbd.entryList())
+            for(QString& wff: wfbd.entryList())
             {
                 if(sindex > MAX_INDEX)
                     continue;
@@ -185,7 +185,7 @@ WaveForm::Set::Set()
         QDir wfrd("../../../lmms/waveforms", "User_*",
                   QDir::Name | QDir::IgnoreCase,
                   QDir::Dirs | QDir::NoDotAndDotDot);
-        for(QString& wfb : wfrd.entryList())
+        for(QString& wfb: wfrd.entryList())
         {
             QDir wfbd(wfrd.absolutePath() + "/" + wfb, "*.wav",
                       QDir::Name | QDir::IgnoreCase,
@@ -198,7 +198,7 @@ WaveForm::Set::Set()
             m_bankNames[sbank - MIN_BANK] = bankname.trimmed();
 
             int sindex = MIN_INDEX;
-            for(QString& wff : wfbd.entryList())
+            for(QString& wff: wfbd.entryList())
             {
                 if(sindex > MAX_INDEX)
                     continue;
@@ -678,12 +678,39 @@ real_t WaveForm::f(const real_t _x, const interpolation_t _m) const
     switch(m)
     {
         case Discrete:
-            r = m_data[int(_x * m_size)];
-            break;
+        {
+            const int i = _x * m_size;
+
+            if(m_data == nullptr || i < 0 || i > m_size)
+            {
+                qInfo("WaveForm::f Discrete x=%f m_data=%p i=%d size=%d", _x,
+                      m_data, i, m_size);
+                if(_x < 0. || _x > 1. || isnan(_x))
+                {
+                    BACKTRACE
+                    return 0.;
+                }
+            }
+
+            r = m_data[i];
+        }
+        break;
         case Rounded:
         {
-            int i = round(_x * m_size);
-            r     = m_data[i];
+            const int i = round(_x * m_size);
+
+            if(m_data == nullptr || i < 0 || i > m_size)
+            {
+                qInfo("WaveForm::f Rounded x=%f m_data=%p i=%d size=%d", _x,
+                      m_data, i, m_size);
+                if(_x < 0. || _x > 1. || isnan(_x))
+                {
+                    BACKTRACE
+                    return 0.;
+                }
+            }
+
+            r = m_data[i];
         }
         break;
         case Linear:
@@ -695,8 +722,8 @@ real_t WaveForm::f(const real_t _x, const interpolation_t _m) const
 
             if(m_data == nullptr || i < 0 || i > m_size)
             {
-                qInfo("WaveForm::f x=%f m_data=%p i=%d size=%d", _x, m_data,
-                      i, m_size);
+                qInfo("WaveForm::f Optimal2 x=%f m_data=%p i=%d size=%d", _x,
+                      m_data, i, m_size);
                 if(_x < 0. || _x > 1. || isnan(_x))
                 {
                     BACKTRACE

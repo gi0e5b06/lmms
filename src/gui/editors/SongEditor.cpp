@@ -473,7 +473,7 @@ void SongEditor::unitePatterns()
     // Unite multiple selected patterns horizontally
     QVector<SelectableObject*> so = selectedObjects();
     qSort(so.begin(), so.end(), SelectableObject::lessThan);
-    for(Track* t : model()->tracks())
+    for(Track* t: model()->tracks())
     {
         if(t->type() == Track::InstrumentTrack)
         {
@@ -514,7 +514,7 @@ void SongEditor::unitePatterns()
                 }
                 else
                 {
-                    for(Note* n : p->notes())
+                    for(Note* n: p->notes())
                     {
                         Note* newn = new Note(*n);
                         newn->setPos(newn->pos() + p->startPosition()
@@ -577,14 +577,14 @@ void SongEditor::unitePatterns()
                 else
                 {
                     AutomationPattern::timeMap& map = p->getTimeMap();
-                    for(int t : map.keys())
+                    for(int t: map.keys())
                     {
                         float v    = map.value(t);
                         int   newt = t + p->startPosition()
                                    - newp->startPosition();
                         newp->getTimeMap().insert(newt, v);
                     }
-                    for(QPointer<AutomatableModel> o : p->objects())
+                    for(QPointer<AutomatableModel> o: p->objects())
                         newp->addObject(o);
                     endPos = qMax(endPos, p->endPosition());
                 }
@@ -670,7 +670,7 @@ void SongEditor::dividePatterns()
 
     int  splitPos = song->getPlayPos(Song::Mode_PlaySong);
     bool first    = true;
-    for(Track* t : model()->tracks())
+    for(Track* t: model()->tracks())
     {
         if(t->type() == Track::InstrumentTrack)
         {
@@ -716,7 +716,7 @@ void SongEditor::dividePatterns()
                 Pattern* newp1 = new Pattern(*p);  // 1 left, before
                 newp1->setJournalling(false);
                 newp1->movePosition(p->startPosition());
-                for(Note* n : newp1->notes())
+                for(Note* n: newp1->notes())
                 {
                     if(newp1->startPosition() + n->pos() < splitPos)
                         continue;
@@ -729,16 +729,24 @@ void SongEditor::dividePatterns()
                 Pattern* newp2 = new Pattern(*p);  // 2 right, after
                 newp2->setJournalling(false);
                 newp2->movePosition(p->startPosition());
-                for(Note* n : newp2->notes())
+
+                NoteVector todelete;
+                for(Note* n: newp2->notes())
                 {
                     if(newp2->startPosition() + n->pos() >= splitPos)
                     {
+                        // qInfo("p2 pos: s=%d n=%d r=%d k=%d move note",
+                        //  (int)newp2->startPosition(),(int)n->pos(),splitPos,n->key());
                         n->setPos(n->pos() + newp2->startPosition()
                                   - splitPos);
                         continue;
                     }
-                    newp2->removeNote(n);
+                    // qInfo("p2 pos: s=%d n=%d r=%d k=%d remove note",
+                    //  (int)newp2->startPosition(),(int)n->pos(),splitPos,n->key());
+                    todelete << n;
                 }
+                for(Note* n: todelete)
+                    newp2->removeNote(n);
                 newp2->movePosition(splitPos);
                 newp2->changeLength(p->endPosition() - splitPos);
 
@@ -799,7 +807,7 @@ void SongEditor::dividePatterns()
                 newp1->setJournalling(false);
                 newp1->movePosition(p->startPosition());
                 AutomationPattern::timeMap& map1 = newp1->getTimeMap();
-                for(int t : map1.keys())
+                for(int t: map1.keys())
                 {
                     // qInfo(" val: t=%d",t);
                     if(t >= splitPos - p->startPosition())
@@ -821,7 +829,7 @@ void SongEditor::dividePatterns()
                 AutomationPattern::timeMap& map2 = newp2->getTimeMap();
                 if(!map2.contains(0))
                     map2.insert(0, p->valueAt(splitPos));
-                for(int t : map2.keys())
+                for(int t: map2.keys())
                 {
                     float v = map2.value(t);
                     newp2->removeValue(t);
@@ -1240,14 +1248,14 @@ void SongEditor::zoomingYChanged()
 {
     const float f = Editor::ZOOM_LEVELS[m_zoomingYModel->value()];
 
-    for(TrackView* tv : trackViews())
+    for(TrackView* tv: trackViews())
     {
         const int ht = qMax<int>(qRound(f * DEFAULT_TRACK_HEIGHT),
                                  MINIMAL_TRACK_HEIGHT);
         tv->setFixedHeight(ht);
     }
     realignTracks();
-    for(TrackView* tv : trackViews())
+    for(TrackView* tv: trackViews())
         tv->getTrack()->setHeight(height());
 }
 
