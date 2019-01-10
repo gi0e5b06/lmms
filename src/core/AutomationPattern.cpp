@@ -259,7 +259,7 @@ MidiTime AutomationPattern::beatLength() const
 void AutomationPattern::updateLength()
 {
     tick_t len;
-    if(getAutoResize())
+    if(autoResize())
         len = timeMapLength();
     else
         len = length();

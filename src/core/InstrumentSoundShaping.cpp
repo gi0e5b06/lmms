@@ -57,11 +57,16 @@ InstrumentSoundShaping::InstrumentSoundShaping(
       Model(_instrument_track, tr("Envelopes/LFOs")),
       m_instrumentTrack(_instrument_track), m_filterEnabledModel(false, this),
       m_filterModel(this, tr("Filter type")),
-      m_filterCutModel(
-              14000.0, 1.0, 14000.0, 1.0, this, tr("Cutoff frequency")),
+      m_filterCutModel(BasicFilters<>::maxFreq(),
+                       BasicFilters<>::minFreq(),
+                       BasicFilters<>::maxFreq(),
+                       1.0,
+                       this,
+                       tr("Cutoff frequency")),
+      // 14000,1,14000
       m_filterResModel(0.5,
                        BasicFilters<>::minQ(),
-                       10.0,
+                       BasicFilters<>::maxQ(),
                        0.001,
                        this,
                        tr("Q/Resonance"))
@@ -108,6 +113,8 @@ InstrumentSoundShaping::InstrumentSoundShaping(
     m_filterModel.addItem(tr("SV Notch"), new PixmapLoader("filter_notch"));
     m_filterModel.addItem(tr("Fast Formant"), new PixmapLoader("filter_hp"));
     m_filterModel.addItem(tr("Tripole"), new PixmapLoader("filter_lp"));
+    m_filterModel.addItem(tr("Brown"), new PixmapLoader("filter_lp"));
+    m_filterModel.addItem(tr("Pink"), new PixmapLoader("filter_lp"));
 }
 
 InstrumentSoundShaping::~InstrumentSoundShaping()
@@ -159,8 +166,8 @@ void InstrumentSoundShaping::processAudioBuffer(sampleFrame*          buffer,
                                                 const fpp_t           frames,
                                                 InstrumentPlayHandle* iph)
 {
-    const f_cnt_t envTotalFrames = 0;  // iph->totalFramesPlayed();
-    f_cnt_t envReleaseBegin = 1000000;
+    const f_cnt_t envTotalFrames  = 0;  // iph->totalFramesPlayed();
+    f_cnt_t       envReleaseBegin = 1000000;
     // envTotalFrames - iph->releaseFramesDone() + iph->framesBeforeRelease();
 
     /*
@@ -236,6 +243,7 @@ void InstrumentSoundShaping::processAudioBuffer(sampleFrame*    buffer,
                    || static_cast<int>(new_res_val * RES_PRECISION)
                               != old_filter_res)
                 {
+                    // qInfo("CF=%f RQ=%f", new_cut_val, new_res_val);
                     filter->calcFilterCoeffs(new_cut_val, new_res_val);
                     old_filter_cut = static_cast<int>(new_cut_val);
                     old_filter_res
@@ -257,6 +265,7 @@ void InstrumentSoundShaping::processAudioBuffer(sampleFrame*    buffer,
 
                 if(static_cast<int>(new_cut_val) != old_filter_cut)
                 {
+                    // qInfo("CF=%f FRV=%f", new_cut_val, frv);
                     filter->calcFilterCoeffs(new_cut_val, frv);
                     old_filter_cut = static_cast<int>(new_cut_val);
                 }
@@ -274,6 +283,7 @@ void InstrumentSoundShaping::processAudioBuffer(sampleFrame*    buffer,
                 if(static_cast<int>(new_res_val * RES_PRECISION)
                    != old_filter_res)
                 {
+                    // qInfo("FCV=%f RQ=%f", fcv, new_res_val);
                     filter->calcFilterCoeffs(fcv, new_res_val);
                     old_filter_res
                             = static_cast<int>(new_res_val * RES_PRECISION);

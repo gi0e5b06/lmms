@@ -73,9 +73,7 @@ const int DEFAULT_TRACK_HEIGHT = 32;
 
 const int TCO_BORDER_WIDTH = 1;  // 2
 
-class TrackContentObject
-      : public Model
-      , public JournallingObject
+class TrackContentObject : public Model, public JournallingObject
 {
     Q_OBJECT
     MM_OPERATORS
@@ -131,14 +129,24 @@ class TrackContentObject
         return m_length;
     }
 
+    inline const bool autoResize() const
+    {
+        return m_autoResize;
+    }
+
     inline void setAutoResize(const bool r)
     {
         m_autoResize = r;
     }
 
-    inline const bool getAutoResize() const
+    inline const bool autoRepeat() const
     {
-        return m_autoResize;
+        return m_autoRepeat;
+    }
+
+    inline void setAutoRepeat(const bool r)
+    {
+        m_autoRepeat = r;
     }
 
     virtual void movePosition(const MidiTime& pos);
@@ -215,12 +223,14 @@ class TrackContentObject
     void rotateOneStepRight();
 
   private:
+    /*
     enum Actions
     {
         NoAction,
         Move,
         Resize
     };
+    */
 
     Track*  m_track;
     QString m_name;
@@ -232,6 +242,7 @@ class TrackContentObject
     BoolModel m_soloModel;
 
     bool   m_autoResize;
+    bool   m_autoRepeat;
     QColor m_color;
     bool   m_useStyleColor;
 
@@ -240,9 +251,7 @@ class TrackContentObject
     friend class TrackContentObjectView;
 };
 
-class TrackContentObjectView
-      : public SelectableObject
-      , public ModelView
+class TrackContentObjectView : public SelectableObject, public ModelView
 {
     Q_OBJECT
 
@@ -318,6 +327,8 @@ class TrackContentObjectView
     virtual void cut() final;
     virtual void copy() final;
     virtual void paste() final;
+    virtual void changeAutoResize() final;
+    virtual void changeAutoRepeat() final;
     virtual void changeName() final;
     virtual void resetName() final;
     virtual void changeColor();
@@ -338,7 +349,9 @@ class TrackContentObjectView
                                  bool   _beat,
                                  bool   _step) final;
     virtual void
-                 addStepMenu(QMenu* _cm, bool _bar, bool _beat, bool _step) final;
+            addStepMenu(QMenu* _cm, bool _bar, bool _beat, bool _step) final;
+    virtual void
+                 addPropertiesMenu(QMenu* _cm, bool _resize, bool _repeat) final;
     virtual void addNameMenu(QMenu* _cm, bool _enabled) final;
     virtual void addColorMenu(QMenu* _cm, bool _enabled) final;
     virtual void contextMenuEvent(QContextMenuEvent* _cme) final;
@@ -387,8 +400,9 @@ class TrackContentObjectView
         NoAction,
         Move,
         MoveSelection,
-        Resize,
         CopySelection,
+        ResizeLeft,
+        ResizeRight,
         ToggleSelected
     };
 
@@ -480,9 +494,7 @@ class BarView : public QObject
     const bool                   m_sign;
 };
 
-class TrackContentWidget
-      : public QWidget
-      , public JournallingObject
+class TrackContentWidget : public QWidget, public JournallingObject
 {
     Q_OBJECT
 
@@ -632,9 +644,7 @@ class TrackOperationsWidget : public QWidget
 };
 
 // base-class for all tracks
-class EXPORT Track
-      : public Model
-      , public JournallingObject
+class EXPORT Track : public Model, public JournallingObject
 {
     Q_OBJECT
     MM_OPERATORS
@@ -827,10 +837,7 @@ class EXPORT Track
     void trackContentObjectAdded(TrackContentObject*);
 };
 
-class TrackView
-      : public QWidget
-      , public ModelView
-      , public JournallingObject
+class TrackView : public QWidget, public ModelView, public JournallingObject
 {
     Q_OBJECT
   public:

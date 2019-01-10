@@ -305,7 +305,7 @@ void TrackContainer::automatedValuesFromTracks(const Tracks& tracks, MidiTime ti
 			}
 			MidiTime relTime = time - p->startPosition();
                         /*
-                        if (! p->getAutoResize()) {
+                        if (! p->autoResize()) {
 				relTime = qMin(relTime, p->length());
 			}
                         */
@@ -401,7 +401,7 @@ void TrackContainer::automatedValuesFromTrack(const Track* _track, MidiTime time
 			}
 			MidiTime relTime = time - p->startPosition();
                         /*
-                        if (! p->getAutoResize()) {
+                        if (! p->autoResize()) {
 				relTime = qMin(relTime, p->length());
 			}
                         */

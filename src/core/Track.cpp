@@ -135,8 +135,9 @@ TrackContentObject::TrackContentObject(const TrackContentObject& _other) :
       m_name(_other.m_name), m_startPosition(_other.m_startPosition),
       m_length(_other.m_length),
       m_mutedModel(_other.m_mutedModel.value(), this, tr("Mute")),
-      m_autoResize(_other.m_autoResize), m_color(_other.m_color),
-      m_useStyleColor(_other.m_useStyleColor), m_selectViewOnCreate(false)
+      m_autoResize(_other.m_autoResize), m_autoRepeat(_other.m_autoRepeat),
+      m_color(_other.m_color), m_useStyleColor(_other.m_useStyleColor),
+      m_selectViewOnCreate(false)
 {
 }
 
@@ -728,6 +729,16 @@ void TrackContentObjectView::paste()
     m_tco->paste();
 }
 
+void TrackContentObjectView::changeAutoResize()
+{
+    m_tco->setAutoResize(!m_tco->autoResize());
+}
+
+void TrackContentObjectView::changeAutoRepeat()
+{
+    m_tco->setAutoRepeat(!m_tco->autoRepeat());
+}
+
 void TrackContentObjectView::changeName()
 {
     QString      s = m_tco->name();
@@ -974,7 +985,7 @@ void TrackContentObjectView::leaveEvent(QEvent* _le)
     {
         QApplication::restoreOverrideCursor();
     }
-    if(_le != NULL)
+    if(_le != nullptr)
     {
         QWidget::leaveEvent(_le);
     }
@@ -1220,30 +1231,10 @@ void TrackContentObjectView::mousePressEvent(QMouseEvent* me)
 
             setInitialMousePos(me->pos());
 
-            if(me->x() < width() - RESIZE_GRIP_WIDTH)
+            if(!m_tco->autoResize()
+               && (me->x() >= width() - RESIZE_GRIP_WIDTH))
             {
-                m_action = Move;
-                QCursor c(Qt::SizeAllCursor);
-                QApplication::setOverrideCursor(c);
-                delete m_hint;
-                m_hint = TextFloat::displayMessage(
-                        tr("Hint"),
-                        tr("Press <%1> to disable the magnetic grid.")
-                                .arg(UI_CTRL_KEY),
-                        embed::getIconPixmap("hint"), 0);
-
-                s_textFloat->setTitle(tr("Current position"));
-                s_textFloat->setText(
-                        QString("%1:%2")
-                                .arg(m_tco->startPosition().getTact() + 1)
-                                .arg(m_tco->startPosition().getTicks()
-                                     % MidiTime::ticksPerTact()));
-                s_textFloat->moveGlobal(this,
-                                        QPoint(width() + 2, height() + 2));
-            }
-            else if(!m_tco->getAutoResize())
-            {
-                m_action = Resize;
+                m_action = ResizeRight;
                 QCursor c(Qt::SizeHorCursor);
                 QApplication::setOverrideCursor(c);
                 delete m_hint;
@@ -1264,6 +1255,53 @@ void TrackContentObjectView::mousePressEvent(QMouseEvent* me)
                                      % MidiTime::ticksPerTact())
                                 .arg(m_tco->endPosition().getTact() + 1)
                                 .arg(m_tco->endPosition().getTicks()
+                                     % MidiTime::ticksPerTact()));
+                s_textFloat->moveGlobal(this,
+                                        QPoint(width() + 2, height() + 2));
+            }
+            else if(!m_tco->autoResize() && (me->x() < RESIZE_GRIP_WIDTH))
+            {
+                m_action = ResizeLeft;
+                QCursor c(Qt::SizeHorCursor);
+                QApplication::setOverrideCursor(c);
+                delete m_hint;
+                m_hint = TextFloat::displayMessage(
+                        tr("Hint"),
+                        tr("Press <%1> for free "
+                           "resizing.")
+                                .arg(UI_CTRL_KEY),
+                        embed::getIconPixmap("hint"), 0);
+                s_textFloat->setTitle(tr("Current length"));
+                s_textFloat->setText(
+                        tr("%1:%2 (%3:%4 to %5:%6)")
+                                .arg(m_tco->length().getTact())
+                                .arg(m_tco->length().getTicks()
+                                     % MidiTime::ticksPerTact())
+                                .arg(m_tco->startPosition().getTact() + 1)
+                                .arg(m_tco->startPosition().getTicks()
+                                     % MidiTime::ticksPerTact())
+                                .arg(m_tco->endPosition().getTact() + 1)
+                                .arg(m_tco->endPosition().getTicks()
+                                     % MidiTime::ticksPerTact()));
+                s_textFloat->moveGlobal(this, QPoint(2, height() + 2));
+            }
+            else
+            {
+                m_action = Move;
+                QCursor c(Qt::SizeAllCursor);
+                QApplication::setOverrideCursor(c);
+                delete m_hint;
+                m_hint = TextFloat::displayMessage(
+                        tr("Hint"),
+                        tr("Press <%1> to disable the magnetic grid.")
+                                .arg(UI_CTRL_KEY),
+                        embed::getIconPixmap("hint"), 0);
+
+                s_textFloat->setTitle(tr("Current position"));
+                s_textFloat->setText(
+                        QString("%1:%2")
+                                .arg(m_tco->startPosition().getTact() + 1)
+                                .arg(m_tco->startPosition().getTicks()
                                      % MidiTime::ticksPerTact()));
                 s_textFloat->moveGlobal(this,
                                         QPoint(width() + 2, height() + 2));
@@ -1474,27 +1512,14 @@ void TrackContentObjectView::mouseMoveEvent(QMouseEvent* me)
         // ??? GDX
         m_trackView->getTrackContentWidget()->changePosition();
     }
-    else if(m_action == Resize)
+    else if(m_action == ResizeRight)
     {
-        qInfo("Track: Resize: Is this called?");
-
-        /*
-        MidiTime t = qMax(
-                MidiTime::ticksPerTact() / 16,
-                static_cast<int>(me->x() * MidiTime::ticksPerTact() / ppt));
-        if(!(me->modifiers() & Qt::ControlModifier)
-           && me->button() == Qt::NoButton)
-        {
-            t = qMax<int>(MidiTime::ticksPerTact(), t.toNearestTact());
-        }
-        m_tco->changeLength(t);
-        */
+        qInfo("Track: ResizeRight");
 
         const int    dx = me->x() - m_initialMousePos.x();
-        const tick_t q = gui->songEditor()->m_editor->quantization();
+        const tick_t q  = gui->songEditor()->m_editor->quantization();
 
-        tick_t delta
-                = dx * MidiTime::ticksPerTact() / ppt;
+        tick_t delta = dx * MidiTime::ticksPerTact() / ppt;
         if(me->modifiers() & Qt::ShiftModifier)
             delta = round(delta / q) * q;
         if(delta == 0)
@@ -1504,19 +1529,71 @@ void TrackContentObjectView::mouseMoveEvent(QMouseEvent* me)
 
         if(!(me->modifiers() & Qt::ControlModifier)
            && !(me->modifiers() & Qt::ShiftModifier))
-        //&& me->button() == Qt::NoButton)
         {
             delta = delta - smallest_len % q - delta % q;
             // if(delta%q>q/2) delta+=q;
         }
         if(smallest_len + delta < 4)
             return;
-        //qInfo("q=%d delta=%d sl=%d", q, delta, smallest_len);
+        // qInfo("q=%d delta=%d sl=%d", q, delta, smallest_len);
         if(delta == 0)
             return;
 
-        m_tco->changeLength(m_tco->length()+delta);
-        m_initialMousePos=me->pos();
+        // qInfo("before: m_initialMousePos %d,%d", m_initialMousePos.x(),
+        //  m_initialMousePos.y());
+        m_tco->changeLength(m_tco->length() + delta);
+        m_initialMousePos = QPoint(width(), height() / 2);
+
+        s_textFloat->setText(
+                tr("%1:%2 (%3:%4 to %5:%6)")
+                        .arg(m_tco->length().getTact())
+                        .arg(m_tco->length().getTicks()
+                             % MidiTime::ticksPerTact())
+                        .arg(m_tco->startPosition().getTact() + 1)
+                        .arg(m_tco->startPosition().getTicks()
+                             % MidiTime::ticksPerTact())
+                        .arg(m_tco->endPosition().getTact() + 1)
+                        .arg(m_tco->endPosition().getTicks()
+                             % MidiTime::ticksPerTact()));
+        s_textFloat->moveGlobal(this, QPoint(width() + 2, height() + 2));
+    }
+    else if(m_action == ResizeLeft)
+    {
+        qInfo("Track: ResizeLeft");
+
+        const int    dx = me->x() - m_initialMousePos.x();
+        const tick_t q  = gui->songEditor()->m_editor->quantization();
+
+        tick_t delta = dx * MidiTime::ticksPerTact() / ppt;
+        if(me->modifiers() & Qt::ShiftModifier)
+            delta = round(delta / q) * q;
+        if(delta == 0)
+            return;
+
+        tick_t smallest_len = m_tco->length();
+
+        if(!(me->modifiers() & Qt::ControlModifier)
+           && !(me->modifiers() & Qt::ShiftModifier))
+        {
+            delta = delta - smallest_len % q - delta % q;
+            // if(delta%q>q/2) delta+=q;
+        }
+        if(smallest_len + delta < 4)
+            return;
+        // qInfo("q=%d delta=%d sl=%d", q, delta, smallest_len);
+        if(delta == 0)
+            return;
+
+        // qInfo("before: m_initialMousePos %d,%d", m_initialMousePos.x(),
+        //  m_initialMousePos.y());
+
+        tick_t sp = m_tco->startPosition() + delta;
+        if(sp < 0)
+            return;
+
+        m_tco->movePosition(sp);
+        m_tco->changeLength(m_tco->length() - delta);
+        m_initialMousePos = QPoint(0, height() / 2);
 
         s_textFloat->setText(
                 tr("%1:%2 (%3:%4 to %5:%6)")
@@ -1533,8 +1610,9 @@ void TrackContentObjectView::mouseMoveEvent(QMouseEvent* me)
     }
     else
     {
-        if(me->x() > width() - RESIZE_GRIP_WIDTH && !me->buttons()
-           && !m_tco->getAutoResize())
+        if((me->x() >= width() - RESIZE_GRIP_WIDTH
+            || me->x() < RESIZE_GRIP_WIDTH)
+           && !me->buttons() && !m_tco->autoResize())
         {
             if(QApplication::overrideCursor() != NULL
                && QApplication::overrideCursor()->shape()
@@ -1550,7 +1628,7 @@ void TrackContentObjectView::mouseMoveEvent(QMouseEvent* me)
         }
         else
         {
-            leaveEvent(NULL);
+            leaveEvent(nullptr);
         }
     }
 }
@@ -1580,16 +1658,16 @@ void TrackContentObjectView::mouseReleaseEvent(QMouseEvent* me)
         setSelected(!isSelected());
     }
 
-    if(m_action == Move || m_action == Resize)
+    if(m_action == Move || m_action == ResizeLeft || m_action == ResizeRight)
     {
         m_tco->setJournalling(true);
         Selection::select(m_tco);
     }
     m_action = NoAction;
     delete m_hint;
-    m_hint = NULL;
+    m_hint = nullptr;
     s_textFloat->hide();
-    leaveEvent(NULL);
+    leaveEvent(nullptr);
     SelectableObject::mouseReleaseEvent(me);
 }
 
@@ -1774,6 +1852,23 @@ void TrackContentObjectView::addStepMenu(QMenu* _cm,
                 ->setData(labels[i]);
     //_cm->addSeparator();
     _cm->addMenu(sme);
+}
+
+void TrackContentObjectView::addPropertiesMenu(QMenu* _cm,
+                                               bool   _resize,
+                                               bool   _repeat)
+{
+    QAction* a;
+    // embed::getIcon("zoom_x"),
+    a = _cm->addAction(tr("Autoresize"), this, SLOT(changeAutoResize()));
+    a->setCheckable(true);
+    a->setChecked(m_tco->autoResize());
+    a->setEnabled(_resize);
+    // embed::getIcon("reload"),
+    a = _cm->addAction(tr("Autorepeat"), this, SLOT(changeAutoRepeat()));
+    a->setCheckable(true);
+    a->setChecked(m_tco->autoRepeat());
+    a->setEnabled(_repeat);
 }
 
 void TrackContentObjectView::addNameMenu(QMenu* _cm, bool _enabled)
@@ -2771,7 +2866,7 @@ void TrackOperationsWidget::splitTrack()
 
     // qInfo("TrackOperationsWidget::splitTrack start splitting");
     BBTrackContainerView* bbtcv = gui->getBBEditor()->trackContainerView();
-    for(TrackView* tv : bbtcv->trackViews())
+    for(TrackView* tv: bbtcv->trackViews())
     {
         // qInfo("TrackOperationsWidget::splitTrack isolate track
         // %s",qPrintable(tv->getTrack()->name()));
@@ -2828,7 +2923,7 @@ void TrackOperationsWidget::isolateTrack()
     bbtc->setCurrentBB(newidxbb);
 
     // qInfo("TrackOperationsWidget::isolateTrack start cleaning");
-    for(Track* t : bbtc->tracks())
+    for(Track* t: bbtc->tracks())
     {
         /*TrackView* tv=*/tcview->createTrackView(t);
         if(t == instr)
@@ -3527,7 +3622,7 @@ void Track::getTCOsInRange(tcoVector&      tcoV,
                            const MidiTime& start,
                            const MidiTime& end) const
 {
-    for(TrackContentObject* tco : m_trackContentObjects)
+    for(TrackContentObject* tco: m_trackContentObjects)
     {
         int s = tco->startPosition();
         int e = tco->endPosition();

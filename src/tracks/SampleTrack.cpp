@@ -90,6 +90,7 @@ SampleTCO::SampleTCO(Track* _track) :
 
     changeLength(MidiTime(1, 0));
     setAutoResize(false);
+    setAutoRepeat(false);
 
     doConnections();
     updateTrackTcos();
@@ -102,7 +103,8 @@ SampleTCO::SampleTCO(const SampleTCO& _other) :
       m_isPlaying(false)
 {
     doConnections();
-    setAutoResize(_other.getAutoResize());
+    setAutoResize(_other.autoResize());
+    setAutoRepeat(_other.autoRepeat());
     updateTrackTcos();
 }
 
@@ -236,7 +238,7 @@ void SampleTCO::updateLength()
 {
     // emit sampleChanged();
     tick_t len;
-    if(getAutoResize())
+    if(autoResize())
         len = sampleLength();
     else
         len = length();
@@ -383,6 +385,8 @@ QMenu* SampleTCOView::buildContextMenu()
                       SLOT(reloadSample()));
     a->setEnabled(hasFile);
 
+    cm->addSeparator();
+    addPropertiesMenu(cm, !isFixed(), !isFixed());
     cm->addSeparator();
     addNameMenu(cm, true);
     cm->addSeparator();
