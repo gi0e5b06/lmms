@@ -167,6 +167,44 @@ static inline float absFraction( float _x )
 #endif
 */
 
+static inline real_t folding(const real_t _x)
+{
+#ifdef REAL_IS_FLOAT
+    real_t r = _x * 0.5f;
+    if(r >= 0.f)
+    {
+        r = fraction(r);
+        if(r > 0.5f)
+            r = 1.f - r;
+    }
+    else
+    {
+        r = fraction(-r);
+        if(r > 0.5f)
+            r = 1.f - r;
+        r = -r;
+    }
+    return 2.f * r;
+#endif
+#ifdef REAL_IS_DOUBLE
+    real_t r = _x * 0.5f;
+    if(r >= 0.)
+    {
+        r = fraction(r);
+        if(r > 0.5)
+            r = 1. - r;
+    }
+    else
+    {
+        r = fraction(-r);
+        if(r > 0.5)
+            r = 1. - r;
+        r = -r;
+    }
+    return 2. * r;
+#endif
+}
+
 static inline real_t
         bound(const real_t _min, const real_t _val, const real_t _max)
 {

@@ -260,6 +260,8 @@ class BasicFilters
         Notch_SV,
         FastFormant,
         Tripole,
+        Brown,
+        Pink,
         NumFilters
     };
 
@@ -271,6 +273,16 @@ class BasicFilters
     static inline real_t minQ()
     {
         return 0.01;
+    }
+
+    static inline frequency_t maxFreq()
+    {
+        return 20000.;
+    }
+
+    static inline real_t maxQ()
+    {
+        return 10.;
     }
 
     /*inline*/ void setFilterType(const int _idx)
@@ -319,7 +331,8 @@ class BasicFilters
                     = m_oldy3[_chnl]                 = 0.;
 
             // tripole
-            m_last[_chnl] = 0.;
+            m_last[_chnl]   = 0.;
+            m_brownv[_chnl] = 0.;
 
             // reset in/out history for RC-filters
             m_rclp0[_chnl] = m_rcbp0[_chnl] = m_rchp0[_chnl]
@@ -734,7 +747,60 @@ class BasicFilters
                 }
                 return m_type == FastFormant ? out * 2. : out * 0.5;
             }
+            case Brown:
+            {
+                if(m_brownf != 1.)
+                    _in0 = _in0 * m_brownf
+                           + (1. - m_brownf) * m_last[_chnl];  // * 3.5;
 
+                //+ bound(-1., exp(_in0 -
+                // m_last[_chnl]), 1.)
+                //       * (m_brownq - 1.);
+                if(m_brownq != 1.)
+                    _in0 += folding(
+                            (m_brownq - 1.) * 0.25
+                            * folding(m_last[_chnl] + m_brownv[_chnl]));
+
+                //_in0 = fraction(_in0);
+                _in0 = bound(-1., _in0, 1.);
+
+                out = (m_brownv[_chnl] + (0.02 * _in0)) / 1.02;
+
+                m_brownv[_chnl] = out;
+                m_last[_chnl]   = _in0;
+                return out;  // * 3.5;  // compensate for gain
+            }
+            case Pink:
+            {
+                if(m_pinkf != 1.)
+                    _in0 = _in0 * m_pinkf + (1. - m_pinkf) * m_last[_chnl];
+                if(m_pinkq != 1.)
+                    _in0 += folding(
+                            (m_pinkq - 1.) * 0.25
+                            * folding(m_last[_chnl] + m_pinkv[_chnl]));
+
+                //_in0 = fraction(_in0);
+                _in0 = bound(-1., _in0, 1.);
+
+                b0[_chnl] = 0.99886 * b0[_chnl] + _in0 * 0.0555179;
+                b1[_chnl] = 0.99332 * b1[_chnl] + _in0 * 0.0750759;
+                b2[_chnl] = 0.96900 * b2[_chnl] + _in0 * 0.1538520;
+                b3[_chnl] = 0.86650 * b3[_chnl] + _in0 * 0.3104856;
+                b4[_chnl] = 0.55000 * b4[_chnl] + _in0 * 0.5329522;
+                b5[_chnl] = -0.7616 * b5[_chnl] - _in0 * 0.0168980;
+
+                out = (b0[_chnl] + b1[_chnl] + b2[_chnl] + b3[_chnl]
+                       + b4[_chnl] + b5[_chnl]
+                       + b6[_chnl]
+                       //+ b5[_chnl] * b5[_chnl] * b5[_chnl] * (m_pinkq - 1.)
+                       //+ b6[_chnl] * b6[_chnl] * b6[_chnl] * (m_pinkq - 1.)
+                       + (_in0 * 0.5362))
+                      * 0.11;
+                b6[_chnl]       = _in0 * 0.115926;
+                m_pinkv[_chnl] = out;
+                m_last[_chnl]   = _in0;
+                return out;
+            }
             default:
                 out = m_biQuad.update(_in0, _chnl);
                 break;
@@ -752,13 +818,14 @@ class BasicFilters
     inline void calcFilterCoeffs(frequency_t _freq, real_t _q)
     {
         // temp coef vars
-        _q = qMax(_q, minQ());
+        _q    = bound(minQ(), _q, maxQ());
+        _freq = bound(minFreq(), _freq, maxFreq());
 
         if(m_type == Lowpass_RC12 || m_type == Bandpass_RC12
            || m_type == Highpass_RC12 || m_type == Lowpass_RC24
            || m_type == Bandpass_RC24 || m_type == Highpass_RC24)
         {
-            _freq = bound(50., _freq, 20000.);
+            //_freq = bound(50., _freq, 20000.);
 
             const real_t sr = m_sampleRatio * 0.25;
             const real_t f  = 1. / (_freq * D_2PI);
@@ -775,10 +842,9 @@ class BasicFilters
 
         if(m_type == Formantfilter || m_type == FastFormant)
         {
-            _freq = qBound<real_t>(
-                    minFreq(), _freq,
-                    20000.);  // limit freq and q for not getting bad noise
-                              // out of the filter...
+            //_freq = qBound<real_t>(minFreq(), _freq, 20000.);
+            // limit freq and q for not getting bad noise
+            // out of the filter...
 
             // formats for a, e, i, o, u, a
             static const real_t FF[6][2]
@@ -789,7 +855,7 @@ class BasicFilters
             // Stretch Q/resonance
             m_vfq = _q * 0.25;
 
-            // frequency in lmms ranges from 1Hz to 14000Hz
+            // frequency in lmms ranges from 1Hz to 20kHz --14000Hz
             const real_t vowelf = _freq * freqRatio;
             const int    vowel  = static_cast<int>(vowelf);
             const real_t fract  = vowelf - vowel;
@@ -820,8 +886,9 @@ class BasicFilters
         if(m_type == Moog || m_type == DoubleMoog)
         {
             // [ 0 - 0.5 ]
-            const real_t f = bound(minFreq(), _freq, 20000.)
-                             * m_sampleRatio;
+            // const real_t f = bound(minFreq(), _freq, 20000.) *
+            // m_sampleRatio;
+            const real_t f = _freq * m_sampleRatio;
             // (Empirical tunning)
             m_p = (3.6 - 3.2 * f) * f;
             m_k = 2. * m_p - 1;
@@ -838,8 +905,8 @@ class BasicFilters
 
         if(m_type == Tripole)
         {
-            const real_t f = bound(20., _freq, 20000.)
-                             * m_sampleRatio * 0.25;
+            // bound(20., _freq, 20000.)
+            const real_t f = _freq * m_sampleRatio * 0.25;
 
             m_p = (3.6 - 3.2 * f) * f;
             m_k = 2. * m_p - 1.;
@@ -851,16 +918,33 @@ class BasicFilters
         if(m_type == Lowpass_SV || m_type == Bandpass_SV
            || m_type == Highpass_SV || m_type == Notch_SV)
         {
-            const real_t f
-                    = sin(qMax(minFreq(), _freq) * m_sampleRatio * D_PI);
-            m_svf1 = qMin(f, 0.825);
-            m_svf2 = qMin(f * 2., 0.825);
-            m_svq  = qMax(0.0001, 2. - (_q * 0.1995));
+            // qMax(minFreq(), _freq)
+            const real_t f = sin(_freq * m_sampleRatio * D_PI);
+            m_svf1         = qMin(f, 0.825);
+            m_svf2         = qMin(f * 2., 0.825);
+            m_svq          = qMax(0.0001, 2. - (_q * 0.1995));
+            return;
+        }
+
+        if(m_type == Brown)
+        {
+            m_brownf = _freq / maxFreq();
+            m_brownf = log10(1. + m_brownf) / log10(2.);
+            m_brownq = _q / 0.5;
+            qInfo("brown: %f", m_brownf);
+            return;
+        }
+        if(m_type == Pink)
+        {
+            m_pinkf = _freq / maxFreq();
+            m_pinkf = log10(1. + m_pinkf) / log10(2.);
+            m_pinkq = _q / 0.5;
+            qInfo("pink: %f", m_pinkf);
             return;
         }
 
         // other filters
-        _freq = bound(minFreq(), _freq, 20000.);
+        //_freq = bound(minFreq(), _freq, 20000.);
 
         const real_t omega = D_2PI * _freq * m_sampleRatio;
         const real_t tsin  = sin(omega) * 0.5;
@@ -939,12 +1023,15 @@ class BasicFilters
     // coeffs for Lowpass_SV (state-variant lowpass)
     real_t m_svf1, m_svf2, m_svq;
 
+    real_t m_brownf, m_brownq, m_pinkf, m_pinkq;
+
     typedef sample_t bf_frame_t[CHANNELS];
 
     // in/out history for moog-filter
     bf_frame_t m_y1, m_y2, m_y3, m_y4, m_oldx, m_oldy1, m_oldy2, m_oldy3;
     // additional one for Tripole filter
     bf_frame_t m_last;
+    bf_frame_t m_brownv,m_pinkv;
 
     // in/out history for RC-type-filters
     bf_frame_t m_rcbp0, m_rclp0, m_rchp0, m_rclast0;
@@ -955,6 +1042,9 @@ class BasicFilters
 
     // in/out history for Lowpass_SV (state-variant lowpass)
     bf_frame_t m_delay1, m_delay2, m_delay3, m_delay4;
+
+    // in/out history for Pink, ...
+    bf_frame_t b0, b1, b2, b3, b4, b5, b6;
 
     FilterTypes m_type;
     bool        m_doubleFilter;

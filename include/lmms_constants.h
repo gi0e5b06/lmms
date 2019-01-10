@@ -45,6 +45,8 @@ const long double LD_2_SQRT
         = 1.4142135623730950488016887242096980785696718753769480731766797379907324;
 const long double LD_2_SQRT_R
         = 0.7071067811865475244008443621048490392848359376884740365883398689953662;
+const long double LD_2_LOG
+        = 0.6931471805599453094172321214581765680755001343602552541206800094933936;
 
 const double D_PI       = (double)LD_PI;
 const double D_2PI      = (double)LD_2PI;
@@ -55,6 +57,7 @@ const double D_E        = (double)LD_E;
 const double D_E_R      = (double)LD_E_R;
 const double D_2_SQRT   = (double)LD_2_SQRT;
 const double D_2_SQRT_R = (double)LD_2_SQRT_R;
+const double D_2_LOG    = (double)LD_2_LOG;
 
 const float F_PI       = (float)LD_PI;
 const float F_2PI      = (float)LD_2PI;
@@ -65,5 +68,6 @@ const float F_E        = (float)LD_E;
 const float F_E_R      = (float)LD_E_R;
 const float F_2_SQRT   = (float)LD_2_SQRT;
 const float F_2_SQRT_R = (float)LD_2_SQRT_R;
+const float F_2_LOG    = (float)LD_2_LOG;
 
 #endif
