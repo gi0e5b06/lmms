@@ -35,7 +35,7 @@ public:
 	InlineAutomation() :
 		FloatModel(),
 		sharedObject(),
-		m_autoPattern( NULL )
+		m_autoPattern( nullptr )
 	{
 	}
 
@@ -51,7 +51,7 @@ public:
 
 	bool hasAutomation() const
 	{
-		if( m_autoPattern != NULL && m_autoPattern->getTimeMap().isEmpty() == false )
+		if( m_autoPattern != nullptr && m_autoPattern->getTimeMap().isEmpty() == false )
 		{
 			// prevent saving inline automation if there's just one value which equals value
 			// of model which is going to be saved anyways
@@ -71,9 +71,9 @@ public:
 
 	AutomationPattern * automationPattern()
 	{
-		if( m_autoPattern == NULL )
+		if( m_autoPattern == nullptr )
 		{
-			m_autoPattern = new AutomationPattern( NULL );
+			m_autoPattern = new AutomationPattern( nullptr );
 			m_autoPattern->addObject( this );
 		}
 		return m_autoPattern;

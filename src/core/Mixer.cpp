@@ -140,7 +140,7 @@ Mixer::Mixer(bool renderOnly) :
         MixerWorkerThread* wt = new MixerWorkerThread(this);
         if(i < m_numWorkers)
         {
-            wt->setObjectName(QString("mixer worker #%1").arg(i));
+            wt->setObjectName(QString("mixer:worker%1").arg(i));
             wt->start(QThread::TimeCriticalPriority);
         }
         m_workers.push_back(wt);
@@ -1151,7 +1151,7 @@ MidiClient* Mixer::tryMidiClients()
 Mixer::fifoWriter::fifoWriter(Mixer* mixer, fifo* _fifo) :
       m_mixer(mixer), m_fifo(_fifo), m_writing(true)
 {
-    setObjectName("mixer fifo writer");
+    setObjectName("mixer:fifowriter");
 }
 
 void Mixer::fifoWriter::finish()

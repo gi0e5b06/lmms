@@ -124,6 +124,8 @@ class TrackContentObject : public Model, public JournallingObject
         return sp + m_length;
     }
 
+    virtual tick_t unitLength() const = 0;
+
     inline const MidiTime& length() const
     {
         return m_length;
@@ -134,9 +136,14 @@ class TrackContentObject : public Model, public JournallingObject
         return m_autoResize;
     }
 
-    inline void setAutoResize(const bool r)
+    /*inline*/ void setAutoResize(const bool r)
     {
-        m_autoResize = r;
+        if(r != m_autoResize)
+        {
+            m_autoResize = r;
+            if(r) updateLength();
+            emit dataChanged();
+        }
     }
 
     inline const bool autoRepeat() const
@@ -144,9 +151,13 @@ class TrackContentObject : public Model, public JournallingObject
         return m_autoRepeat;
     }
 
-    inline void setAutoRepeat(const bool r)
+    /*inline*/ void setAutoRepeat(const bool r)
     {
-        m_autoRepeat = r;
+        if(r != m_autoRepeat)
+        {
+            m_autoRepeat = r;
+            emit dataChanged();
+        }
     }
 
     virtual void movePosition(const MidiTime& pos);

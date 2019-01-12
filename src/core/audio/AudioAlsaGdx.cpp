@@ -49,7 +49,7 @@ AudioAlsaGdx::AudioAlsaGdx(bool& _success_ful, Mixer* _mixer) :
 {
     qWarning("AudioAlsaGdx::AudioAlsaGdx");
 
-    setObjectName("audio alsa gdx");
+    setObjectName("audio:alsagdx");
 
     _success_ful = false;
 

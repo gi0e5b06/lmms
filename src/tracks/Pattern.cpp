@@ -345,8 +345,11 @@ void Pattern::rotate(tick_t _ticks)
 
 void Pattern::saveSettings(QDomDocument& _doc, QDomElement& _this)
 {
+    TrackContentObject::saveSettings(_doc, _this);
+
     _this.setAttribute("type", m_patternType);
-    _this.setAttribute("name", name());
+
+    //_this.setAttribute("name", name());
     // as the target of copied/dragged pattern is always an existing
     // pattern, we must not store actual position, instead we store -1
     // which tells loadSettings() not to mess around with position
@@ -359,14 +362,15 @@ void Pattern::saveSettings(QDomDocument& _doc, QDomElement& _this)
     else
     */
     {
-        _this.setAttribute("pos", startPosition());
+        //_this.setAttribute("pos", startPosition());
     }
 
     // len not used but added for coherency
-    if(length() > 0)
-        _this.setAttribute("len", length());
+    // if(length() > 0)
+    //    _this.setAttribute("len", length());
 
-    _this.setAttribute("muted", isMuted());
+    //_this.setAttribute("muted", isMuted());
+
     _this.setAttribute("steps", m_steps);
     _this.setAttribute("stepres", m_stepResolution);
 
@@ -381,15 +385,20 @@ void Pattern::loadSettings(const QDomElement& _this)
 {
     m_patternType
             = static_cast<PatternTypes>(_this.attribute("type").toInt());
-    setName(_this.attribute("name"));
-    if(_this.attribute("pos").toInt() >= 0)
-    {
-        movePosition(_this.attribute("pos").toInt());
-    }
-    if(_this.attribute("muted").toInt() != isMuted())
-    {
-        toggleMute();
-    }
+
+    TrackContentObject::loadSettings(_this);
+
+    /*
+      setName(_this.attribute("name"));
+      if(_this.attribute("pos").toInt() >= 0)
+      {
+      movePosition(_this.attribute("pos").toInt());
+      }
+      if(_this.attribute("muted").toInt() != isMuted())
+      {
+      toggleMute();
+      }
+    */
 
     clearNotes();
 
@@ -489,25 +498,30 @@ this )
 }
 */
 
+tick_t Pattern::unitLength() const
+{
+    tick_t len = MidiTime::ticksPerTact();
+
+    for(NoteVector::ConstIterator it = m_notes.begin(); it != m_notes.end();
+        ++it)
+    {
+        if((*it)->length() > 0)
+        {
+            len = qMax<tick_t>(len, (*it)->endPos());
+        }
+    }
+    len = MidiTime(len).nextFullTact() * MidiTime::ticksPerTact();
+
+    return len;
+}
+
 void Pattern::updateLength()
 {
     checkType();
 
     tick_t len;
     if(autoResize())
-    {
-        len = MidiTime::ticksPerTact();
-
-        for(NoteVector::ConstIterator it = m_notes.begin();
-            it != m_notes.end(); ++it)
-        {
-            if((*it)->length() > 0)
-            {
-                len = qMax<tick_t>(len, (*it)->endPos());
-            }
-        }
-        len = MidiTime(len).nextFullTact() * MidiTime::ticksPerTact();
-    }
+        len = unitLength();
     else
         len = length();
 
@@ -939,8 +953,10 @@ void PatternView::paintEvent(QPaintEvent*)
     // (float) m_pat->length().getTact();
 
     // Length of one tact/beat in the [0,1] x [0,1] coordinate system
-    const float tactLength = 1. / m_pat->length().getTact();
-    const float tickLength = tactLength / MidiTime::ticksPerTact();
+    // const float tactLength = 1. / ceilf(m_pat->length().getTact());
+    // const float tactLength = 1. / MidiTime(m_pat->unitLength()).getTact();
+    //const float tickLength = tactLength / MidiTime::ticksPerTact();
+    const float tickLength = 1. / m_pat->length();
 
     // melody pattern paint event
     NoteVector const& noteCollection = m_pat->m_notes;
@@ -1037,30 +1053,42 @@ void PatternView::paintEvent(QPaintEvent*)
 
         float const noteHeight = 1. / adjustedNoteRange;
 
-        // scan through all the notes and draw them on the pattern
-        for(Note const* currentNote: noteCollection)
+        float x0 = 0.f;
+        while(x0 < width())
         {
-            // Map to 0, 1, 2, ...
-            int mappedNoteKey         = currentNote->key() - minKey;
-            int invertedMappedNoteKey = adjustedNoteRange - mappedNoteKey - 1;
-
-            float const noteStartX = currentNote->pos() * tickLength;
-            float const noteLength = currentNote->length() * tickLength;
-
-            float const noteStartY = invertedMappedNoteKey * noteHeight;
-
-            QRectF noteRectF(noteStartX, noteStartY, noteLength, noteHeight);
-            if(drawAsLines)
+            // scan through all the notes and draw them on the pattern
+            for(Note const* currentNote: noteCollection)
             {
-                p.drawLine(QPointF(noteStartX, noteStartY + 0.5 * noteHeight),
-                           QPointF(noteStartX + noteLength,
-                                   noteStartY + 0.5 * noteHeight));
+                // Map to 0, 1, 2, ...
+                int mappedNoteKey = currentNote->key() - minKey;
+                int invertedMappedNoteKey
+                        = adjustedNoteRange - mappedNoteKey - 1;
+
+                float const noteStartX = x0 + currentNote->pos() * tickLength;
+                float const noteLength = currentNote->length() * tickLength;
+
+                float const noteStartY = invertedMappedNoteKey * noteHeight;
+
+                QRectF noteRectF(noteStartX, noteStartY, noteLength,
+                                 noteHeight);
+                if(drawAsLines)
+                {
+                    p.drawLine(QPointF(noteStartX,
+                                       noteStartY + 0.5 * noteHeight),
+                               QPointF(noteStartX + noteLength,
+                                       noteStartY + 0.5 * noteHeight));
+                }
+                else
+                {
+                    p.fillRect(noteRectF, noteFillColor);
+                    p.drawRect(noteRectF);
+                }
             }
-            else
-            {
-                p.fillRect(noteRectF, noteFillColor);
-                p.drawRect(noteRectF);
-            }
+
+            if(!m_pat->autoRepeat())
+                break;
+
+            x0 += m_pat->unitLength() * tickLength;
         }
 
         p.restore();

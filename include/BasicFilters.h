@@ -931,7 +931,7 @@ class BasicFilters
             m_brownf = _freq / maxFreq();
             m_brownf = log10(1. + m_brownf) / log10(2.);
             m_brownq = _q / 0.5;
-            qInfo("brown: %f", m_brownf);
+            //qInfo("brown: %f", m_brownf);
             return;
         }
         if(m_type == Pink)
@@ -939,7 +939,7 @@ class BasicFilters
             m_pinkf = _freq / maxFreq();
             m_pinkf = log10(1. + m_pinkf) / log10(2.);
             m_pinkq = _q / 0.5;
-            qInfo("pink: %f", m_pinkf);
+            //qInfo("pink: %f", m_pinkf);
             return;
         }
 

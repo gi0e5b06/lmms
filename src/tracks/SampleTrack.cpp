@@ -103,8 +103,6 @@ SampleTCO::SampleTCO(const SampleTCO& _other) :
       m_isPlaying(false)
 {
     doConnections();
-    setAutoResize(_other.autoResize());
-    setAutoRepeat(_other.autoRepeat());
     updateTrackTcos();
 }
 
@@ -122,6 +120,13 @@ bool SampleTCO::isEmpty() const
 {
     return m_sampleBuffer->audioFile().isEmpty()
            || (m_sampleBuffer->frames() <= 1);
+}
+
+tick_t SampleTCO::unitLength() const
+{
+    tick_t n = MidiTime::ticksPerTact() / 8;
+    return qMax(n, sampleLength().getTicks());
+    // tick_t(ceilf(float(sampleLength().getTicks()) / n) * n));
 }
 
 QString SampleTCO::defaultName() const
@@ -195,7 +200,7 @@ void SampleTCO::setSampleBuffer(SampleBuffer* sb)
 void SampleTCO::setSampleFile(const QString& _sf)
 {
     m_sampleBuffer->setAudioFile(_sf);
-    changeLength((int)(m_sampleBuffer->frames() / Engine::framesPerTick()));
+    changeLength(int(m_sampleBuffer->frames() / Engine::framesPerTick()));
 
     emit sampleChanged();
     emit playbackPositionChanged();
@@ -238,7 +243,7 @@ void SampleTCO::updateLength()
 {
     // emit sampleChanged();
     tick_t len;
-    if(autoResize())
+    if(autoResize() && !isEmpty())
         len = sampleLength();
     else
         len = length();
@@ -248,7 +253,7 @@ void SampleTCO::updateLength()
 
 MidiTime SampleTCO::sampleLength() const
 {
-    return (int)(m_sampleBuffer->frames() / Engine::framesPerTick());
+    return int(m_sampleBuffer->frames() / Engine::framesPerTick());
 }
 
 tick_t SampleTCO::initialPlayTick()
@@ -538,16 +543,25 @@ void SampleTCOView::paintEvent(QPaintEvent* pe)
                                                             pixelsPerTact();
     */
     const float ppt = pixelsPerTact();
-    float       nom = Engine::getSong()->getTimeSigModel().getNumerator();
-    float       den = Engine::getSong()->getTimeSigModel().getDenominator();
-    float       ticksPerTact = DefaultTicksPerTact * nom / den;
+    const float nom = Engine::getSong()->getTimeSigModel().getNumerator();
+    const float den = Engine::getSong()->getTimeSigModel().getDenominator();
+    const float ticksPerTact = DefaultTicksPerTact * nom / den;
+    const float ppTick       = ppt / ticksPerTact;
 
-    QRect r = QRect(
-            TCO_BORDER_WIDTH, spacing,
-            qMax(static_cast<int>(m_tco->sampleLength() * ppt / ticksPerTact),
-                 1),
-            rect().bottom() - 2 * spacing);
-    m_tco->m_sampleBuffer->visualize(p, r);  //, pe->rect() );
+    float x0 = TCO_BORDER_WIDTH;
+    while(x0 < width())
+    {
+        QRect r = QRect(
+                x0, spacing,
+                qMax(static_cast<int>(m_tco->sampleLength() * ppTick), 1),
+                rect().bottom() - 2 * spacing);
+        m_tco->m_sampleBuffer->visualize(p, r);  //, pe->rect() );
+
+        if(!m_tco->autoRepeat())
+            break;
+
+        x0 += m_tco->unitLength() * ppTick;
+    }
 
     bool frozen = m_tco->getTrack()->isFrozen();
     paintFrozenIcon(frozen, p);
@@ -692,6 +706,8 @@ bool SampleTrack::play(const MidiTime& _start,
     // m_audioPort.effects()->startRunning();
     bool played_a_note = false;  // will be return variable
 
+    const float framesPerTick = Engine::framesPerTick();
+
     tcoVector  tcos;
     ::BBTrack* bb_track = NULL;
     if(_tco_num >= 0)
@@ -710,35 +726,50 @@ bool SampleTrack::play(const MidiTime& _start,
     {
         for(int i = 0; i < numOfTCOs(); ++i)
         {
-            TrackContentObject* tco           = getTCO(i);
-            SampleTCO*          sTco          = dynamic_cast<SampleTCO*>(tco);
-            float               framesPerTick = Engine::framesPerTick();
+            TrackContentObject* tco  = getTCO(i);
+            SampleTCO*          sTco = dynamic_cast<SampleTCO*>(tco);
             if(_start >= sTco->startPosition()
                && _start < sTco->endPosition())
             {
-                if(sTco->isPlaying() == false)
+                // if(sTco->isPlaying() == false)
                 {
-                    f_cnt_t sampleStart = framesPerTick
-                                          * (_start - sTco->startPosition());
-                    f_cnt_t tcoFrameLength
-                            = framesPerTick
-                              * (sTco->endPosition() - sTco->startPosition());
-                    f_cnt_t sampleBufferLength
-                            = sTco->sampleBuffer()->frames();
-                    // if the Tco smaller than the sample length we play only
-                    // until Tco end else we play the sample to the end but
-                    // nothing more
-                    f_cnt_t samplePlayLength
-                            = tcoFrameLength > sampleBufferLength
-                                      ? sampleBufferLength
-                                      : tcoFrameLength;
-                    // we only play within the sampleBuffer limits
-                    if(sampleStart < sampleBufferLength)
+                    /*
+                tick_t start = (_start - sTco->startPosition());
+                if(sTco->autoRepeat())
+                {
+                    tick_t ul = sTco->unitLength();
+                    start %= ul;
+                }
+
+                f_cnt_t sampleStart = framesPerTick * start;
+                f_cnt_t tcoFrameLength
+                        = framesPerTick
+                          * (sTco->endPosition() - sTco->startPosition());
+                f_cnt_t sampleBufferLength
+                        = sTco->sampleBuffer()->frames();
+                // if the Tco smaller than the sample length we play only
+                // until Tco end else we play the sample to the end but
+                // nothing more
+                f_cnt_t samplePlayLength
+                        = tcoFrameLength > sampleBufferLength
+                                  ? sampleBufferLength
+                                  : tcoFrameLength;
+                // we only play within the sampleBuffer limits
+                if(sampleStart < sampleBufferLength)
+                    */
                     {
-                        sTco->sampleBuffer()->setStartFrame(sampleStart);
-                        sTco->sampleBuffer()->setEndFrame(samplePlayLength);
-                        tcos.push_back(sTco);
-                        sTco->setIsPlaying(true);
+                        /*
+qInfo("sampleStart=%d samplePlayLength=%d",
+                          sampleStart, samplePlayLength);
+                    sTco->sampleBuffer()->setStartFrame(sampleStart);
+                    sTco->sampleBuffer()->setEndFrame(samplePlayLength
+                                                      - sampleStart);
+                        */
+                        if(sTco->isPlaying() == false)
+                        {
+                            tcos.push_back(sTco);
+                            sTco->setIsPlaying(true);
+                        }
                     }
                 }
             }
@@ -753,7 +784,7 @@ bool SampleTrack::play(const MidiTime& _start,
         for(tcoVector::Iterator it = tcos.begin(); it != tcos.end(); ++it)
         {
             SampleTCO* st = dynamic_cast<SampleTCO*>(*it);
-            if(st == NULL || st->isMuted())
+            if(st == nullptr || st->isMuted())
                 continue;
 
             PlayHandle* handle;
@@ -763,16 +794,33 @@ bool SampleTrack::play(const MidiTime& _start,
                 {
                     return played_a_note;
                 }
+
                 SampleRecordHandle* smpHandle = new SampleRecordHandle(st);
-                handle                        = smpHandle;
+
+                handle = smpHandle;
             }
             else
             {
                 SamplePlayHandle* smpHandle = new SamplePlayHandle(st);
                 smpHandle->setVolumeModel(&m_volumeModel);
                 smpHandle->setBBTrack(bb_track);
+
+                if(st->autoRepeat())
+                {
+                    tick_t ul = st->unitLength();
+                    // qInfo("smpHandle->setAutoRepeat 1");
+                    smpHandle->setAutoRepeat(
+                            f_cnt_t(roundf(ul * framesPerTick)));
+                }
+                else
+                {
+                    // qInfo("smpHandle->setAutoRepeat 0");
+                    smpHandle->setAutoRepeat(0);
+                }
+
                 handle = smpHandle;
             }
+
             handle->setOffset(_offset);
             // send it to the mixer
             Engine::mixer()->addPlayHandle(handle);

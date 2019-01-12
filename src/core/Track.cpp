@@ -163,6 +163,8 @@ QString TrackContentObject::defaultName() const
 void TrackContentObject::saveSettings(QDomDocument& doc, QDomElement& element)
 {
     element.setAttribute("name", name());
+    element.setAttribute("autoresize", autoResize() ? 1 : 0);
+    element.setAttribute("autorepeat", autoRepeat() ? 1 : 0);
     element.setAttribute("pos", startPosition());
     element.setAttribute("len", length());
     element.setAttribute("muted", isMuted());
@@ -181,6 +183,12 @@ void TrackContentObject::loadSettings(const QDomElement& element)
 
     if(element.hasAttribute("len"))
         changeLength(element.attribute("len").toInt());
+
+    if(element.hasAttribute("autoresize"))
+        setAutoResize(element.attribute("autoresize").toInt());
+
+    if(element.hasAttribute("autorepeat"))
+        setAutoRepeat(element.attribute("autorepeat").toInt());
 
     if(element.hasAttribute("muted"))
         if(element.attribute("muted").toInt() != isMuted())
@@ -244,6 +252,8 @@ void TrackContentObject::movePosition(const MidiTime& pos)
  */
 void TrackContentObject::changeLength(const MidiTime& _length)
 {
+    // qInfo("TrackContentObject::changeLength #1");
+
     real_t nom = Engine::getSong()->getTimeSigModel().getNumerator();
     real_t den = Engine::getSong()->getTimeSigModel().getDenominator();
     int    ticksPerTact = DefaultTicksPerTact * (nom / den);
@@ -255,7 +265,9 @@ void TrackContentObject::changeLength(const MidiTime& _length)
         m_length = len;
         m_steps  = len * m_stepResolution * stepsPerTact()
                   / MidiTime::ticksPerTact() / 16;
+        qInfo("TrackContentObject::changeLength #2");
         Engine::getSong()->updateLength();
+        qInfo("TrackContentObject::changeLength #3");
         emit lengthChanged();
     }
 }
@@ -664,6 +676,7 @@ bool TrackContentObjectView::needsUpdate()
 {
     return m_needsUpdate;
 }
+
 void TrackContentObjectView::setNeedsUpdate(bool b)
 {
     m_needsUpdate = b;
@@ -1514,7 +1527,7 @@ void TrackContentObjectView::mouseMoveEvent(QMouseEvent* me)
     }
     else if(m_action == ResizeRight)
     {
-        qInfo("Track: ResizeRight");
+        // qInfo("Track: ResizeRight");
 
         const int    dx = me->x() - m_initialMousePos.x();
         const tick_t q  = gui->songEditor()->m_editor->quantization();
@@ -1533,15 +1546,18 @@ void TrackContentObjectView::mouseMoveEvent(QMouseEvent* me)
             delta = delta - smallest_len % q - delta % q;
             // if(delta%q>q/2) delta+=q;
         }
-        if(smallest_len + delta < 4)
-            return;
+        // if(smallest_len + delta < 4)
+        //    return;
         // qInfo("q=%d delta=%d sl=%d", q, delta, smallest_len);
         if(delta == 0)
             return;
 
+        tick_t nl = m_tco->length() + delta;
+        if(nl < MidiTime::ticksPerTact() / 8)
+            return;
         // qInfo("before: m_initialMousePos %d,%d", m_initialMousePos.x(),
         //  m_initialMousePos.y());
-        m_tco->changeLength(m_tco->length() + delta);
+        m_tco->changeLength(nl);
         m_initialMousePos = QPoint(width(), height() / 2);
 
         s_textFloat->setText(
@@ -1559,7 +1575,7 @@ void TrackContentObjectView::mouseMoveEvent(QMouseEvent* me)
     }
     else if(m_action == ResizeLeft)
     {
-        qInfo("Track: ResizeLeft");
+        // qInfo("Track: ResizeLeft");
 
         const int    dx = me->x() - m_initialMousePos.x();
         const tick_t q  = gui->songEditor()->m_editor->quantization();
@@ -1578,21 +1594,24 @@ void TrackContentObjectView::mouseMoveEvent(QMouseEvent* me)
             delta = delta - smallest_len % q - delta % q;
             // if(delta%q>q/2) delta+=q;
         }
-        if(smallest_len + delta < 4)
-            return;
-        // qInfo("q=%d delta=%d sl=%d", q, delta, smallest_len);
+        // if(smallest_len + delta < MidiTime::ticksPerTact() / 8)
+        //    return;
+        qInfo("q=%d delta=%d sl=%d", q, delta, smallest_len);
         if(delta == 0)
             return;
 
-        // qInfo("before: m_initialMousePos %d,%d", m_initialMousePos.x(),
-        //  m_initialMousePos.y());
-
+        qInfo("before: mX=%d m_initialMousePos=%d", me->x(),
+              m_initialMousePos.x());
+        tick_t nl = m_tco->length() - delta;
+        qInfo("nl=%d", nl);
+        if(nl < MidiTime::ticksPerTact() / 8)
+            return;
         tick_t sp = m_tco->startPosition() + delta;
         if(sp < 0)
             return;
 
         m_tco->movePosition(sp);
-        m_tco->changeLength(m_tco->length() - delta);
+        m_tco->changeLength(nl);
         m_initialMousePos = QPoint(0, height() / 2);
 
         s_textFloat->setText(
@@ -3626,7 +3645,7 @@ void Track::getTCOsInRange(tcoVector&      tcoV,
     {
         int s = tco->startPosition();
         int e = tco->endPosition();
-        if((s <= end) && (e >= start))
+        if((s < end) && (e > start))  // >=
         {
             // TCO is within given range
             // Insert sorted by TCO's position

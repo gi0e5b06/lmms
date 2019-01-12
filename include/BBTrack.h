@@ -49,6 +49,8 @@ class BBTCO : public TrackContentObject
 	int bbTrackIndex() const;
         virtual bool isEmpty() const;
 
+        virtual tick_t unitLength() const;
+
 	virtual void saveSettings( QDomDocument & _doc, QDomElement & _parent );
 	virtual void loadSettings( const QDomElement & _this );
 

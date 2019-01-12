@@ -52,6 +52,7 @@ public:
 	virtual ~SampleTCO();
 
         virtual bool isEmpty() const;
+        virtual tick_t unitLength() const;
 	virtual QString defaultName() const;
 
 	//virtual void changeLength( const MidiTime & _length );

@@ -223,7 +223,7 @@ void AutomationPattern::setWaveRepeat(const real_t _waveRepeat)
 const AutomatableModel* AutomationPattern::firstObject() const
 {
     AutomatableModel* m;
-    if(!m_objects.isEmpty() && (m = m_objects.first()) != NULL)
+    if(!m_objects.isEmpty() && (m = m_objects.first()) != nullptr)
     {
         return m;
     }
@@ -245,6 +245,11 @@ MidiTime AutomationPattern::timeMapLength() const
     return MidiTime(MidiTime((it - 1).key()).nextFullTact(), 0);
 }
 
+tick_t AutomationPattern::unitLength() const
+{
+    return qMax(MidiTime::ticksPerTact() / 8, timeMapLength().getTicks());
+}
+
 /*
 MidiTime AutomationPattern::beatLength() const
 {
@@ -259,7 +264,7 @@ MidiTime AutomationPattern::beatLength() const
 void AutomationPattern::updateLength()
 {
     tick_t len;
-    if(autoResize())
+    if(autoResize() && !isEmpty())
         len = timeMapLength();
     else
         len = length();
@@ -442,8 +447,15 @@ real_t AutomationPattern::valueAt(const MidiTime& _time) const
             return m_timeMap[_time];
     }
     */
+    tick_t time = _time.getTicks();
 
-    timeMap::ConstIterator v = m_timeMap.upperBound(_time);
+    if(autoRepeat())
+    {
+        tick_t ul = unitLength();
+        time %= ul;
+    }
+
+    timeMap::ConstIterator v = m_timeMap.upperBound(time);
 
     if(v == m_timeMap.begin())
     {
@@ -455,12 +467,12 @@ real_t AutomationPattern::valueAt(const MidiTime& _time) const
         return (v - 1).value();
     }
 
-    return valueAt(v - 1, _time - (v - 1).key(),
+    return valueAt(v - 1, time - (v - 1).key(),
                    Engine::mixer()->criticalXRuns());
 }
 
 real_t AutomationPattern::valueAt(timeMap::const_iterator v,
-                                  int                     offset,
+                                  tick_t                  offset,
                                   bool                    xruns) const
 {
     real_t r = 0.;
@@ -501,9 +513,9 @@ real_t AutomationPattern::valueAt(timeMap::const_iterator v,
                     const real_t m2 = (m_tangents[(v + 1).key()]) * numValues
                                       * m_tension;
 
-                    const real_t t3=pow(t, 3);
-                    const real_t t2=pow(t, 2);
-                    r = (2 * t3 - 3 * t2 + 1) * v.value()
+                    const real_t t3 = pow(t, 3);
+                    const real_t t2 = pow(t, 2);
+                    r               = (2 * t3 - 3 * t2 + 1) * v.value()
                         + (t3 - 2 * t2 + t) * m1
                         + (-2 * t3 + 3 * t2) * (v + 1).value()
                         + (t3 - t2) * m2;
@@ -608,10 +620,18 @@ real_t AutomationPattern::valueAt(timeMap::const_iterator v,
 
 real_t* AutomationPattern::valuesAfter(const MidiTime& _time) const
 {
-    timeMap::ConstIterator v = m_timeMap.lowerBound(_time);
+    tick_t time = _time.getTicks();
+
+    if(autoRepeat())
+    {
+        tick_t ul = unitLength();
+        time %= ul;
+    }
+
+    timeMap::ConstIterator v = m_timeMap.lowerBound(time);
     if(v == m_timeMap.end() || (v + 1) == m_timeMap.end())
     {
-        return NULL;
+        return nullptr;
     }
 
     int     numValues = (v + 1).key() - v.key();
@@ -735,10 +755,13 @@ void AutomationPattern::flipX(int length)
 
 void AutomationPattern::saveSettings(QDomDocument& _doc, QDomElement& _this)
 {
-    _this.setAttribute("pos", startPosition());
-    _this.setAttribute("len", length());
-    _this.setAttribute("name", name());
-    _this.setAttribute("mute", QString::number(isMuted()));
+    //_this.setAttribute("pos", startPosition());
+    //_this.setAttribute("len", length());
+    //_this.setAttribute("name", name());
+    //_this.setAttribute("mute", QString::number(isMuted()));
+
+    TrackContentObject::saveSettings(_doc, _this);
+
     _this.setAttribute("prog", QString::number(progressionType()));
     _this.setAttribute("tens", QString::number(tension()));  // obsolete
     _this.setAttribute("tension", QString::number(tension()));
@@ -774,9 +797,10 @@ void AutomationPattern::loadSettings(const QDomElement& _this)
 {
     clear();
 
-    movePosition(_this.attribute("pos").toInt());
-    setName(_this.attribute("name"));
-    setMuted(_this.attribute("mute", QString::number(false)).toInt());
+    //movePosition(_this.attribute("pos").toInt());
+    //setName(_this.attribute("name"));
+    //setMuted(_this.attribute("mute", QString::number(false)).toInt());
+    TrackContentObject::loadSettings(_this);
 
     setProgressionType(
             static_cast<ProgressionTypes>(_this.attribute("prog").toInt()));
@@ -828,7 +852,7 @@ const QString AutomationPattern::name() const
     {
         return TrackContentObject::name();
     }
-    if(!m_objects.isEmpty() && m_objects.first() != NULL)
+    if(!m_objects.isEmpty() && m_objects.first() != nullptr)
     {
         return m_objects.first()->fullDisplayName();
     }

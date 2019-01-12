@@ -2,7 +2,7 @@
  * SamplePlayHandle.h - play-handle for playing a sample
  *
  * Copyright (c) 2005-2014 Tobias Doerffel <tobydox/at/users.sourceforge.net>
- * 
+ *
  * This file is part of LMMS - https://lmms.io
  *
  * This program is free software; you can redistribute it and/or
@@ -25,76 +25,82 @@
 #ifndef SAMPLE_PLAY_HANDLE_H
 #define SAMPLE_PLAY_HANDLE_H
 
-#include "SampleBuffer.h"
 #include "AutomatableModel.h"
 #include "PlayHandle.h"
+#include "SampleBuffer.h"
 
 class BBTrack;
 class SampleTCO;
 class Track;
 class AudioPort;
 
-
 class SamplePlayHandle : public PlayHandle
 {
-public:
-	SamplePlayHandle( const QString& sampleFile );
-        SamplePlayHandle( SampleBuffer* sampleBuffer, bool ownAudioPort = true );
-	SamplePlayHandle( SampleTCO* tco );
-	virtual ~SamplePlayHandle();
+  public:
+    SamplePlayHandle(const QString& sampleFile);
+    SamplePlayHandle(SampleBuffer* sampleBuffer, bool ownAudioPort = true);
+    SamplePlayHandle(SampleTCO* tco);
+    virtual ~SamplePlayHandle();
 
-	virtual inline bool affinityMatters() const
-	{
-		return true;
-	}
+    virtual inline bool affinityMatters() const
+    {
+        return true;
+    }
 
-	virtual void play( sampleFrame * buffer );
-	virtual bool isFinished() const;
-	virtual bool isFromTrack( const Track * _track ) const;
+    virtual void play(sampleFrame* buffer);
+    virtual bool isFinished() const;
+    virtual bool isFromTrack(const Track* _track) const;
 
-	/*! Returns total numbers of frames to play (including release frames = 0) */
-	virtual f_cnt_t frames() const;
-	/*! Sets the total number of frames to play (including release frames = 0) */
-	virtual void setFrames( const f_cnt_t _frames );
+    /*! Returns total numbers of frames to play (including release frames = 0)
+     */
+    virtual f_cnt_t frames() const;
+    /*! Sets the total number of frames to play (including release frames = 0)
+     */
+    virtual void setFrames(const f_cnt_t _frames);
 
-	//f_cnt_t totalFrames() const;
+    virtual f_cnt_t currentFrame();
+    virtual void    setCurrentFrame(f_cnt_t _f);
 
-	virtual f_cnt_t framesDone() const
-	{
-		return m_currentFrame;
-	}
+    virtual f_cnt_t autoRepeat();
+    virtual void setAutoRepeat(f_cnt_t _f);
 
-	void setDoneMayReturnTrue( bool _enable )
-	{
-		m_doneMayReturnTrue = _enable;
-	}
+    // f_cnt_t totalFrames() const;
 
-	void setBBTrack( BBTrack * _bb_track )
-	{
-		m_bbTrack = _bb_track;
-	}
+    virtual f_cnt_t framesDone() const
+    {
+        return m_totalFramesPlayed;
+    }
 
-	void setVolumeModel( FloatModel * _model )
-	{
-		m_volumeModel = _model;
-	}
+    void setDoneMayReturnTrue(bool _enable)
+    {
+        m_doneMayReturnTrue = _enable;
+    }
 
+    void setBBTrack(BBTrack* _bb_track)
+    {
+        m_bbTrack = _bb_track;
+    }
 
-private:
-	SampleBuffer * m_sampleBuffer;
-	bool m_doneMayReturnTrue;
+    void setVolumeModel(FloatModel* _model)
+    {
+        m_volumeModel = _model;
+    }
 
-	f_cnt_t m_currentFrame;
-	f_cnt_t m_frames;       // total frames to play
-	SampleBuffer::HandleState m_state;
+  private:
+    SampleBuffer* m_sampleBuffer;
+    bool          m_doneMayReturnTrue;
 
-	const bool m_ownAudioPort;
+    f_cnt_t                   m_totalFramesPlayed;
+    f_cnt_t                   m_frames;  // total frames to play
+    SampleBuffer::HandleState m_state;
+    f_cnt_t                   m_autoRepeat;
 
-	FloatModel  m_defaultVolumeModel;
-	FloatModel* m_volumeModel;
-	Track*      m_track;
-	BBTrack*    m_bbTrack;
-} ;
+    const bool m_ownAudioPort;
 
+    FloatModel  m_defaultVolumeModel;
+    FloatModel* m_volumeModel;
+    Track*      m_track;
+    BBTrack*    m_bbTrack;
+};
 
 #endif

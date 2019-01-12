@@ -846,7 +846,7 @@ bool InstrumentTrack::play(const MidiTime& _start,
     else
     {
         getTCOsInRange(tcos, _start,
-                       _start + static_cast<int>(_frames / fpt));
+                       _start + tick_t(ceilf(float(_frames) / fpt))); //static_cast<int>(
     }
 
     // Handle automation: detuning
@@ -872,10 +872,20 @@ bool InstrumentTrack::play(const MidiTime& _start,
             if(p == nullptr || p->isMuted())
                 continue;
 
-            MidiTime cur_start = _start;
+            tick_t ul = p->unitLength();
+            if(ul == 0)
+                continue;
+
+            // MidiTime
+            tick_t cur_start = _start;
             if(_tco_num < 0)
             {
                 cur_start -= p->startPosition();
+            }
+
+            if(p->autoRepeat())
+            {
+                cur_start %= ul;
             }
 
             // get all notes from the given pattern...

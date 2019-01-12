@@ -65,7 +65,8 @@ public:
 	void init();
 
 	virtual void updateLength();
-	//MidiTime beatPatternLength() const;
+	virtual tick_t unitLength() const;
+        //MidiTime beatPatternLength() const;
 
 	// note management
 	Note * addNote( const Note & _new_note, const bool _quant_pos = true );

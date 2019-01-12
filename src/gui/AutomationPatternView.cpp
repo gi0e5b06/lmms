@@ -39,7 +39,7 @@
 #include <QMouseEvent>
 #include <QPainter>
 
-//QPixmap* AutomationPatternView::s_pat_rec = NULL;
+// QPixmap* AutomationPatternView::s_pat_rec = NULL;
 
 AutomationPatternView::AutomationPatternView(AutomationPattern* _pattern,
                                              TrackView*         _parent) :
@@ -55,7 +55,7 @@ AutomationPatternView::AutomationPatternView(AutomationPattern* _pattern,
     ToolTip::add(this, m_pat->name());
     setStyle(QApplication::style());
 
-    //if(s_pat_rec == NULL)
+    // if(s_pat_rec == NULL)
     //    s_pat_rec = embed::getPixmap("pat_rec");
 
     update();
@@ -198,6 +198,8 @@ QMenu* AutomationPatternView::buildContextMenu()
     }
 
     cm->addSeparator();
+    addPropertiesMenu(cm, !isFixed(), !isFixed());
+    cm->addSeparator();
     addNameMenu(cm, true);
     cm->addSeparator();
     addColorMenu(cm, true);
@@ -309,70 +311,86 @@ void AutomationPatternView::paintEvent(QPaintEvent*)
     */
 
     p.setRenderHints(QPainter::Antialiasing, true);
-    for(AutomationPattern::timeMap::const_iterator it
-        = m_pat->getTimeMap().begin();
-        it != m_pat->getTimeMap().end(); ++it)
+
+    real_t x0 = x_base;
+    while(x0 < (width() - TCO_BORDER_WIDTH))
     {
-        if(it + 1 == m_pat->getTimeMap().end())
+        for(AutomationPattern::timeMap::const_iterator it
+            = m_pat->getTimeMap().begin();
+            it != m_pat->getTimeMap().end(); ++it)
         {
-            const real_t x1 = x_base + it.key() * ppTick;
-            const real_t x2 = (real_t)(width() - TCO_BORDER_WIDTH);
-            if(x1 > (width() - TCO_BORDER_WIDTH))
+            if(it + 1 == m_pat->getTimeMap().end())
+            {
+                if(!m_pat->autoRepeat())
+                {
+                    const real_t x1 = x0 + it.key() * ppTick;
+                    const real_t x2 = (real_t)(width() - TCO_BORDER_WIDTH);
+                    if(x1 > (width() - TCO_BORDER_WIDTH))
+                        break;
+                    /*
+                    if( gradient() )
+                    {
+                            p.fillRect( QRectF( x1, 0.0f, x2 - x1, it.value()
+                    ), lin2grad );
+                    }
+                    else
+                    */
+                    {
+                        p.fillRect(QRectF(x1, 0.f, x2 - x1, it.value()),
+                                   fgcolor);
+                    }
+                }
                 break;
+            }
+
+            real_t* values = m_pat->valuesAfter(it.key());
+
+            real_t nextValue;
+            if(m_pat->progressionType()
+               == AutomationPattern::DiscreteProgression)
+            {
+                nextValue = it.value();
+            }
+            else
+            {
+                nextValue = (it + 1).value();
+            }
+
+            QPainterPath path;
+            QPointF      origin = QPointF(x0 + it.key() * ppTick, 0.f);
+            path.moveTo(origin);
+            path.moveTo(QPointF(x0 + it.key() * ppTick, values[0]));
+            real_t x;
+            for(int i = it.key() + 1; i < (it + 1).key(); i++)
+            {
+                x = x0 + i * ppTick;
+                if(x > (width() - TCO_BORDER_WIDTH))
+                    break;
+                real_t value = values[i - it.key()];
+                path.lineTo(QPointF(x, value));
+            }
+            path.lineTo(x0 + ((it + 1).key()) * ppTick, nextValue);
+            path.lineTo(x0 + ((it + 1).key()) * ppTick, 0.0f);
+            path.lineTo(origin);
+
             /*
             if( gradient() )
             {
-                    p.fillRect( QRectF( x1, 0.0f, x2 - x1, it.value() ),
-            lin2grad );
+                    p.fillPath( path, lin2grad );
             }
             else
             */
             {
-                p.fillRect(QRectF(x1, 0.0f, x2 - x1, it.value()), fgcolor);
+                p.fillPath(path, fgcolor);
             }
+            delete[] values;
+        }
+
+        if(!m_pat->autoRepeat())
             break;
-        }
 
-        real_t* values = m_pat->valuesAfter(it.key());
-
-        real_t nextValue;
-        if(m_pat->progressionType() == AutomationPattern::DiscreteProgression)
-        {
-            nextValue = it.value();
-        }
-        else
-        {
-            nextValue = (it + 1).value();
-        }
-
-        QPainterPath path;
-        QPointF      origin = QPointF(x_base + it.key() * ppTick, 0.0f);
-        path.moveTo(origin);
-        path.moveTo(QPointF(x_base + it.key() * ppTick, values[0]));
-        real_t x;
-        for(int i = it.key() + 1; i < (it + 1).key(); i++)
-        {
-            x = x_base + i * ppTick;
-            if(x > (width() - TCO_BORDER_WIDTH))
-                break;
-            real_t value = values[i - it.key()];
-            path.lineTo(QPointF(x, value));
-        }
-        path.lineTo(x_base + ((it + 1).key()) * ppTick, nextValue);
-        path.lineTo(x_base + ((it + 1).key()) * ppTick, 0.0f);
-        path.lineTo(origin);
-
-        /*
-        if( gradient() )
-        {
-                p.fillPath( path, lin2grad );
-        }
-        else
-        */
-        {
-            p.fillPath(path, fgcolor);
-        }
-        delete[] values;
+        x0 += m_pat->unitLength() * ppTick;
+        qInfo("X0=%f w=%d", x0, width());
     }
 
     p.setRenderHints(QPainter::Antialiasing, false);

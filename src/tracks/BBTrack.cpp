@@ -59,15 +59,15 @@ BBTCO::BBTCO(Track* _track) : TrackContentObject(_track), m_mask(nullptr)
 }
 
 BBTCO::BBTCO(const BBTCO& _other) :
-      TrackContentObject(_other.getTrack()), m_mask(nullptr)
+      TrackContentObject(_other), m_mask(nullptr)
 {
     const Bitset* mask = _other.mask();
     if(mask)
         m_mask = new Bitset(*mask);
 
-    changeLength(_other.length());
-    setAutoResize(_other.autoResize());
-    setAutoRepeat(_other.autoRepeat());
+    // changeLength(_other.length());
+    // setAutoResize(_other.autoResize());
+    // setAutoRepeat(_other.autoRepeat());
 }
 
 BBTCO::~BBTCO()
@@ -88,6 +88,13 @@ bool BBTCO::isEmpty() const
         if(!t->isMuted() && !t->getTCO(index)->isEmpty())
             return false;
     return true;
+}
+
+tick_t BBTCO::unitLength() const
+{
+    return qMax(
+            MidiTime::ticksPerTact() / 8,
+            Engine::getBBTrackContainer()->beatLengthOfBB(bbTrackIndex()));
 }
 
 void BBTCO::saveSettings(QDomDocument& doc, QDomElement& element)
@@ -374,8 +381,9 @@ void BBTCOView::paintEvent(QPaintEvent*)
     // ppt=(width()-2*TCO_BORDER_WIDTH)/(float)m_bbTCO->length().getTact();
     // tact_t tpg=Engine::getBBTrackContainer()->...lengthOfBB(
     // m_bbTCO->bbTrackIndex() );
-    tick_t tpg = Engine::getBBTrackContainer()->beatLengthOfBB(
-            m_bbTCO->bbTrackIndex());
+    // tick_t tpg = Engine::getBBTrackContainer()->beatLengthOfBB(
+    //        m_bbTCO->bbTrackIndex());
+    tick_t tpg = m_bbTCO->unitLength();
     paintTileTacts(false, m_bbTCO->length().nextFullTact(), tpg, bgcolor, p);
 
     // pattern name

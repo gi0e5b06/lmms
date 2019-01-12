@@ -40,6 +40,7 @@ class MidiTime;
 class EXPORT AutomationPattern : public TrackContentObject
 {
     Q_OBJECT
+
   public:
     enum ProgressionTypes
     {
@@ -49,7 +50,7 @@ class EXPORT AutomationPattern : public TrackContentObject
         ParabolicProgression
     };
 
-    typedef QMap<int, real_t>                   timeMap;
+    typedef QMap<tick_t, real_t>                timeMap;
     typedef QVector<QPointer<AutomatableModel>> objectVector;
 
     AutomationPattern(AutomationTrack* _auto_track);
@@ -122,6 +123,7 @@ class EXPORT AutomationPattern : public TrackContentObject
 
     MidiTime timeMapLength() const;
 
+    virtual tick_t unitLength() const;
     // virtual MidiTime beatLength() const;
     // virtual void changeLength( const MidiTime & _length );
     virtual void updateLength();

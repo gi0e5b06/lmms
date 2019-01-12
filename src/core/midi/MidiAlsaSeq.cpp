@@ -76,7 +76,7 @@ MidiAlsaSeq::MidiAlsaSeq() :
 	m_quit( false ),
 	m_portListUpdateTimer( this )
 {
-        setObjectName("midi alsa seq");
+        setObjectName("midi:alsaseq");
 
 	int err;
 	if( ( err = snd_seq_open( &m_seqHandle,
