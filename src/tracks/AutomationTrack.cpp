@@ -69,7 +69,7 @@ QString AutomationTrack::defaultName() const
 
 
 bool AutomationTrack::play( const MidiTime & time_start, const fpp_t _frames,
-							const f_cnt_t _frame_base, int _tco_num )
+                            const f_cnt_t _frame_base, int _tco_num )
 {
 	return false;
 }

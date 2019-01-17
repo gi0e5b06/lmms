@@ -265,9 +265,9 @@ void TrackContentObject::changeLength(const MidiTime& _length)
         m_length = len;
         m_steps  = len * m_stepResolution * stepsPerTact()
                   / MidiTime::ticksPerTact() / 16;
-        qInfo("TrackContentObject::changeLength #2");
+        // qInfo("TrackContentObject::changeLength #2");
         Engine::getSong()->updateLength();
-        qInfo("TrackContentObject::changeLength #3");
+        // qInfo("TrackContentObject::changeLength #3");
         emit lengthChanged();
     }
 }
@@ -1096,6 +1096,7 @@ void TrackContentObjectView::paintTextLabel(QString const& text,
 }
 
 void TrackContentObjectView::paintTileBorder(const bool    current,
+                                             const bool    ghost,
                                              const QColor& c,
                                              QPainter&     p)
 {
@@ -1110,6 +1111,11 @@ void TrackContentObjectView::paintTileBorder(const bool    current,
         p.setPen(current ? c.darker(150) : c.darker(200));
         p.drawLine(0, h - 1, w - 1, h - 1);
         p.drawLine(w - 1, 1, w - 1, h - 2);
+        if(ghost)
+        {
+            p.setPen(QColor(255, 128, 0));
+            p.drawRect(0, 0, w - 1, h - 1);  // 1,1,w-2,h-2);
+        }
         if(current)
         {
             p.setPen(Qt::yellow);

@@ -25,10 +25,11 @@
 #ifndef LV2_BASE_H
 #define LV2_BASE_H
 
-#ifdef WANT_LV2
+#include "lmmsconfig.h"
 
+#ifdef LMMS_HAVE_LILV
 
-//#include "LV2Manager.h"
+#include "LV2Manager.h"
 #include "Plugin.h"
 
 class LV2Control;

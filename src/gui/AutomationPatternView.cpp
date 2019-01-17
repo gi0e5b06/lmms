@@ -390,7 +390,7 @@ void AutomationPatternView::paintEvent(QPaintEvent*)
             break;
 
         x0 += m_pat->unitLength() * ppTick;
-        qInfo("X0=%f w=%d", x0, width());
+        // qInfo("X0=%f w=%d", x0, width());
     }
 
     p.setRenderHints(QPainter::Antialiasing, false);
@@ -419,7 +419,8 @@ void AutomationPatternView::paintEvent(QPaintEvent*)
     bool frozen = m_pat->getTrack()->isFrozen();
     paintFrozenIcon(frozen, p);
 
-    paintTileTacts(false, m_pat->length().nextFullTact(), 1, bgcolor, p);
+    paintTileTacts(false, m_pat->length().nextFullTact(), 1, bgcolor,
+                   p);
 
     // pattern name
     paintTextLabel(m_pat->name(), bgcolor, p);
@@ -434,7 +435,7 @@ void AutomationPatternView::paintEvent(QPaintEvent*)
     p.setPen( current? c.lighter( 130 ) : c.darker( 300 ) );
     p.drawRect( 0, 0, rect().right(), rect().bottom() );
     */
-    paintTileBorder(current, bgcolor, p);
+    paintTileBorder(current, false, bgcolor, p);
 
     // draw the 'muted' pixmap only if the pattern was manualy muted
     /*

@@ -18,8 +18,8 @@ IF(LMMS_HOST_X86 OR LMMS_HOST_X86_64)
 	ADD_DEFINITIONS(-DASM_F2I_YES)
 ENDIF(LMMS_HOST_X86 OR LMMS_HOST_X86_64)
 
-# build ZynAddSubFX with full optimizations
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2 -Wno-write-strings -Wno-deprecated-declarations -fpermissive")
+# build ZynAddSubFX with full optimizations #O2
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O9 -Wno-write-strings -Wno-deprecated-declarations -fpermissive")
 
 IF(LMMS_BUILD_WIN32)
 	# link system-libraries

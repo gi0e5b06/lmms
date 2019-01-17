@@ -25,8 +25,9 @@
 #ifndef LV2_CONTROL_VIEW_H
 #define LV2_CONTROL_VIEW_H
 
-#ifdef WANT_LV2
+#include "lmmsconfig.h"
 
+#ifdef LMMS_HAVE_LILV
 
 #include <QWidget>
 

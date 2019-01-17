@@ -1,12 +1,12 @@
 SET(LMMS_LV2_SRCS "")
-IF(WANT_LV2)
+IF(LMMS_HAVE_LILV)
   SET(LMMS_LV2_SRCS
     ${LMMS_LV2_SRCS}
     core/LV2Manager.cpp
     core/LV2Control.cpp
     core/LV22LMMS.cpp
     )
-ENDIF(WANT_LV2)
+ENDIF(LMMS_HAVE_LILV)
 
 SET(LMMS_SRCS
 	${LMMS_SRCS}

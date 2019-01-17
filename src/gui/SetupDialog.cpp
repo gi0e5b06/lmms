@@ -217,7 +217,7 @@ SetupDialog::SetupDialog( ConfigTabs _tab_to_open ) :
 	m_bufSizeSlider->setPageStep( 8 );
 	m_bufSizeSlider->setTickInterval( 8 );
 	m_bufSizeSlider->setGeometry( XDelta, YDelta*labelNumber, 289-XDelta, YDelta );
-	m_bufSizeSlider->setValue( m_bufferSize / 64 );
+	m_bufSizeSlider->setValue( m_bufferSize / 32 );
 	connect( m_bufSizeSlider, SIGNAL( valueChanged( int ) ), this,
 						SLOT( setBufferSize( int ) ) );
 	setBufferSize( m_bufSizeSlider->value() );
@@ -1243,7 +1243,8 @@ void SetupDialog::accept()
 
 void SetupDialog::setBufferSize( int _value )
 {
-	const int step = DEFAULT_BUFFER_SIZE / 64;
+        /*
+	const int step = DEFAULT_BUFFER_SIZE / 32;
 	if( _value > step && _value % step )
 	{
 		int mod_value = _value % step;
@@ -1262,8 +1263,9 @@ void SetupDialog::setBufferSize( int _value )
 	{
 		m_bufSizeSlider->setValue( _value );
 	}
+        */
 
-	m_bufferSize = _value * 64;
+	m_bufferSize = _value * 32;
 	m_bufSizeLbl->setText( tr( "Frames: %1, Latency: %2 ms" ).arg(
 					m_bufferSize ).arg(
 						1000.0f * m_bufferSize /
@@ -1276,7 +1278,7 @@ void SetupDialog::setBufferSize( int _value )
 
 void SetupDialog::resetBufSize()
 {
-	setBufferSize( DEFAULT_BUFFER_SIZE / 64 );
+	setBufferSize( DEFAULT_BUFFER_SIZE / 32 );
 }
 
 

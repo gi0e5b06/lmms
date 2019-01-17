@@ -38,16 +38,16 @@ IF(LMMS_MINIMAL)
 ENDIF()
 
 SET(LMMS_LV2_PLUGINS "")
-IF(WANT_LV2)
+IF(LMMS_SUPPORT_LV2)
   SET(LMMS_LV2_PLUGINS
     ${LMMS_LV2_PLUGINS}
     #Ilv2GDX
-    #jalv
+    jalv
     LV2EffectGDX
-    #LV2InstrumentGDX
+    LV2InstrumentGDX
     #LV2InstrumentGDXUI
     )
-ENDIF(WANT_LV2)
+ENDIF(LMMS_SUPPORT_LV2)
 
 IF("${PLUGIN_LIST}" STREQUAL "")
 	SET(PLUGIN_LIST
@@ -80,7 +80,7 @@ IF("${PLUGIN_LIST}" STREQUAL "")
 		# ladspa_browser - not needed
 		LadspaEffect
 		lb302
-                # lvst2instrument
+                lvst2instrument
                 # MatrixGDX
 		MidiImport
 		MidiExport

@@ -399,7 +399,7 @@ void BBTCOView::paintEvent(QPaintEvent*)
     p.setPen( c.darker( 300 ) );
     p.drawRect( 0, 0, rect().right(), rect().bottom() );
     */
-    paintTileBorder(false, bgcolor, p);
+    paintTileBorder(false, false, bgcolor, p);
 
     /*
     // draw the 'muted' pixmap only if the pattern was manualy muted
@@ -579,10 +579,12 @@ bool BBTrack::play(const MidiTime& _start,
                                                    s_infoMap[this], nullptr);
     }
 
+    const float fpt = Engine::framesPerTick();
+
     tcoVector tcos;
-    getTCOsInRange(
-            tcos, _start,
-            _start + static_cast<int>(_frames / Engine::framesPerTick()));
+    // getTCOsInRange(tcos, _start, _start + static_cast<int>(_frames / fpt));
+    getTCOsInRange(tcos, _start,
+                   _start + tick_t(ceilf(float(_frames) / fpt)));
 
     if(tcos.size() == 0)
         return false;
@@ -629,7 +631,7 @@ bool BBTrack::play(const MidiTime& _start,
             {
                 fpp_t nbf = qMin<int>(_frames,
                                       (stp + len - _start)
-                                              * Engine::framesPerTick());
+                                      * fpt);
                 played |= Engine::getBBTrackContainer()->play(
                         _start - stp, nbf, _offset, s_infoMap[this],
                         tco->mask());

@@ -391,6 +391,7 @@ class TrackContentObjectView : public SelectableObject, public ModelView
                                 const QColor&  bg,
                                 QPainter&      painter) final;
     virtual void paintTileBorder(const bool    current,
+                                 const bool    ghost,
                                  const QColor& bg,
                                  QPainter&     painter) final;
     virtual void paintTileTacts(const bool    current,

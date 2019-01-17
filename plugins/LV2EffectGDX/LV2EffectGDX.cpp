@@ -24,8 +24,6 @@
 
 #include "LV2EffectGDX.h"
 
-#include <QMessageBox>
-
 #include "AudioDevice.h"
 #include "AutomationPattern.h"
 #include "ConfigManager.h"
@@ -39,6 +37,8 @@
 #include "ValueBuffer.h"
 #include "debug.h"
 #include "embed.h"
+
+#include <QMessageBox>
 //#include "LV2Control.h"
 #include "LV2EffectGDXSubPluginFeatures.h"
 
@@ -133,7 +133,7 @@ bool LV2EffectGDX::processAudioBuffer(sampleFrame* _buf, const fpp_t _frames)
     m_pluginMutex.lock();
 
     bool smoothBegin, smoothEnd;
-    if(!shouldProcessAudioBuffer(buf, frames, smoothBegin, smoothEnd))
+    if(!shouldProcessAudioBuffer(_buf, _frames, smoothBegin, smoothEnd))
     {
         // qInfo("okay=%d dontRun=%d isRunning=%d isEnabled=%d",
         //      isOkay(),dontRun(),isRunning(),isEnabled());
@@ -141,7 +141,7 @@ bool LV2EffectGDX::processAudioBuffer(sampleFrame* _buf, const fpp_t _frames)
         return false;
     }
 
-    //int frames = _frames;
+    // int frames = _frames;
     // sampleFrame * o_buf = NULL;
     // sampleFrame sBuf [_frames];
 
@@ -235,14 +235,18 @@ bool LV2EffectGDX::processAudioBuffer(sampleFrame* _buf, const fpp_t _frames)
                 case CONTROL_RATE_INPUT:
                     break;
                 case CHANNEL_OUT:
-                    for(fpp_t frame = 0; frame < _frames; ++frame)
+                    for(fpp_t f = 0; f < _frames; ++f)
                     {
+                        real_t w0, d0, w1, d1;
+                        computeWetDryLevels(f, _frames, smoothBegin,
+                                            smoothEnd, w0, d0, w1, d1);
+
                         if(channel == 0)
-                            _buf[frame][channel] = d0 * _buf[frame][channel]
-                                                   + w0 * pp->buffer[frame].f;
+                            _buf[f][channel] = d0 * _buf[f][channel]
+                                                   + w0 * pp->buffer[f].f;
                         else if(channel == 1)
-                            _buf[frame][channel] = d1 * _buf[frame][channel]
-                                                   + w1 * pp->buffer[frame].f;
+                            _buf[f][channel] = d1 * _buf[f][channel]
+                                                   + w1 * pp->buffer[f].f;
                     }
                     ++channel;
                     break;

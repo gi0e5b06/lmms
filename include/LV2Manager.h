@@ -29,7 +29,9 @@
 #ifndef LV2_MANAGER_H
 #define LV2_MANAGER_H
 
-#ifdef WANT_LV2
+#include "lmmsconfig.h"
+
+#ifdef LMMS_HAVE_LILV
 
 #include "Plugin.h"
 
@@ -43,10 +45,24 @@
 
 //#include <lv2.h>
 //#include <lilv/lilv.h>
-#include <lilv/lilvmm.hpp>
+#include "lv2/lv2plug.in/ns/ext/atom/atom.h"
+#include "lv2/lv2plug.in/ns/ext/buf-size/buf-size.h"
+#include "lv2/lv2plug.in/ns/ext/data-access/data-access.h"
 #include "lv2/lv2plug.in/ns/ext/event/event.h"
+#include "lv2/lv2plug.in/ns/ext/options/options.h"
+#include "lv2/lv2plug.in/ns/ext/parameters/parameters.h"
+#include "lv2/lv2plug.in/ns/ext/patch/patch.h"
+#include "lv2/lv2plug.in/ns/ext/port-groups/port-groups.h"
+#include "lv2/lv2plug.in/ns/ext/port-props/port-props.h"
+#include "lv2/lv2plug.in/ns/ext/presets/presets.h"
+#include "lv2/lv2plug.in/ns/ext/state/state.h"
+#include "lv2/lv2plug.in/ns/ext/time/time.h"
 #include "lv2/lv2plug.in/ns/ext/uri-map/uri-map.h"
-#include "lv2/lv2plug.in/ns/ext/event/event-helpers.h"
+#include "lv2/lv2plug.in/ns/ext/urid/urid.h"
+#include "lv2/lv2plug.in/ns/ext/worker/worker.h"
+#include "lv2/lv2plug.in/ns/extensions/ui/ui.h"
+
+#include "lilv/lilvmm.hpp"
 
 //const float NOHINT = -99342.2243f;
 

@@ -131,12 +131,12 @@ void SamplePlayHandle::play(sampleFrame* buffer)
         if(a > 0)
         {
             f_cnt_t f = currentFrame();
-            if(f < 0 || f >= a)
-            {
+            if(f >= a)
+                f %= a;
+            if(f < 0)
                 f = 0;
-                setCurrentFrame(f);
-                // qInfo("f=%d a=%d", f, a);
-            }
+            setCurrentFrame(f);
+            // qInfo("f=%d a=%d", f, a);
         }
 
         // qWarning("SamplePlayHandle::play workingBuffer=%p",workingBuffer);

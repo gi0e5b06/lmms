@@ -246,6 +246,12 @@ PianoRoll {
     qproperty-noteOpacity: 165;
     qproperty-noteBorders: false; /* boolean property, set false to have borderless notes */
     qproperty-selectedNoteColor: #004080; /*#006b65;*/
+
+    qproperty-ghostNoteColor: #804000;
+    /*qproperty-ghostNoteTextColor: #ffffff;*/
+    qproperty-ghostNoteOpacity: 82;
+    qproperty-ghostNoteBorders: true;
+
     qproperty-barColor: #078f3a;
     qproperty-markedSemitoneColor: rgba(255,0,0,48);/*#06170E;*/
     /* Grid colors */

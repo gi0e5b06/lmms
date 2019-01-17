@@ -43,197 +43,218 @@ class QPushButton;
 class InstrumentTrack;
 class SampleBuffer;
 
-
 class EXPORT Pattern : public TrackContentObject
 {
-	Q_OBJECT
+    Q_OBJECT
 
-public:
-	enum PatternTypes
-	{
-		BeatPattern,
-		MelodyPattern
-	} ;
+  public:
+    enum PatternTypes
+    {
+        BeatPattern,
+        MelodyPattern
+    };
 
-	Pattern( InstrumentTrack* instrumentTrack );
-	Pattern( const Pattern& other );
-	virtual ~Pattern();
+    Pattern(InstrumentTrack* instrumentTrack);
+    Pattern(const Pattern& other);
+    virtual ~Pattern();
 
-	bool empty() { return isEmpty(); } // obsolete
-        virtual bool isEmpty() const;
+    bool empty()
+    {
+        return isEmpty();
+    }  // obsolete
+    virtual bool isEmpty() const;
 
-	void init();
+    void init();
 
-	virtual void updateLength();
-	virtual tick_t unitLength() const;
-        //MidiTime beatPatternLength() const;
+    virtual void   updateLength();
+    virtual tick_t unitLength() const;
+    // MidiTime beatPatternLength() const;
 
-	// note management
-	Note * addNote( const Note & _new_note, const bool _quant_pos = true );
+    // note management
+    Note* addNote(const Note& _new_note, const bool _quant_pos = true);
 
-	void removeNote( Note * _note_to_del );
+    void removeNote(Note* _note_to_del);
 
-	Note * noteAtStep( int _step );
+    Note* noteAtStep(int _step);
 
-	void rearrangeAllNotes();
-	void clearNotes();
+    void rearrangeAllNotes();
+    void clearNotes();
 
-	inline const NoteVector & notes() const
-	{
-		return m_notes;
-	}
+    inline const NoteVector& notes() const
+    {
+        return m_notes;
+    }
 
-	Note * addStepNote( int step );
-	void setStep( int step, bool enabled );
+    Note* addStepNote(int step);
+    void  setStep(int step, bool enabled);
 
-	// pattern-type stuff
-	inline PatternTypes type() const
-	{
-		return m_patternType;
-	}
+    // pattern-type stuff
+    inline PatternTypes type() const
+    {
+        return m_patternType;
+    }
 
+    // next/previous track based on position in the containing track
+    Pattern* previousPattern() const;
+    Pattern* nextPattern() const;
 
-	// next/previous track based on position in the containing track
-	Pattern * previousPattern() const;
-	Pattern * nextPattern() const;
+    // settings-management
+    virtual void saveSettings(QDomDocument& _doc, QDomElement& _parent);
+    virtual void loadSettings(const QDomElement& _this);
+    inline virtual QString nodeName() const
+    {
+        return "pattern";
+    }
 
-	// settings-management
-	virtual void saveSettings( QDomDocument & _doc, QDomElement & _parent );
-	virtual void loadSettings( const QDomElement & _this );
-	inline virtual QString nodeName() const
-	{
-		return "pattern";
-	}
+    inline InstrumentTrack* instrumentTrack() const
+    {
+        return m_instrumentTrack;
+    }
 
-	inline InstrumentTrack * instrumentTrack() const
-	{
-		return m_instrumentTrack;
-	}
+    virtual TrackContentObjectView* createView(TrackView* _tv);
 
-	virtual TrackContentObjectView * createView( TrackView * _tv );
+    using Model::dataChanged;
 
+  public slots:
+    virtual void clear();
 
-	using Model::dataChanged;
+  protected:
+    // void updateBBTrack();
+    virtual void rotate(tick_t _ticks);
 
+  protected slots:
+    void changeTimeSignature();
+    void cloneSteps();
+    /*
+    void addBarSteps();
+    void addBeatSteps();
+    void addOneStep();
+    void removeBarSteps();
+    void removeBeatSteps();
+    void removeOneStep();
+    void setStepResolution(int _res);
+    int      stepsPerTact() const;
+    MidiTime stepPosition(int _step) const;
+    */
 
-public slots:
-	virtual void clear();
+  private:
+    void setType(PatternTypes _new_pattern_type);
+    void checkType();
 
-protected:
-        //void updateBBTrack();
-        virtual void rotate(tick_t _ticks);
+    void resizeToFirstTrack();
 
-protected slots:
-	void changeTimeSignature();
-	void cloneSteps();
-        /*
-	void addBarSteps();
-	void addBeatSteps();
-	void addOneStep();
-	void removeBarSteps();
-	void removeBeatSteps();
-	void removeOneStep();
-        void setStepResolution(int _res);
-	int      stepsPerTact() const;
-	MidiTime stepPosition(int _step) const;
-        */
+    InstrumentTrack* m_instrumentTrack;
 
-private:
-	void setType( PatternTypes _new_pattern_type );
-	void checkType();
+    PatternTypes m_patternType;
 
-	void resizeToFirstTrack();
+    // data-stuff
+    // NoteVector m_notes;
+    QVector<Note*> m_notes;
 
-	InstrumentTrack * m_instrumentTrack;
+    Pattern* adjacentPatternByOffset(int offset) const;
 
-	PatternTypes m_patternType;
+    friend class PatternView;
+    friend class BBTrackContainerView;
 
-	// data-stuff
-	//NoteVector m_notes;
-        QVector<Note*> m_notes;
-
-	Pattern * adjacentPatternByOffset(int offset) const;
-
-	friend class PatternView;
-	friend class BBTrackContainerView;
-
-
-signals:
-	void destroyedPattern( Pattern* );
-
-} ;
-
-
+  signals:
+    void destroyedPattern(Pattern*);
+};
 
 class PatternView : public TrackContentObjectView
 {
-	Q_OBJECT
+    Q_OBJECT
 
- public:
-	PatternView( Pattern* pattern, TrackView* parent );
-	virtual ~PatternView();
+  public:
+    PatternView(Pattern* pattern, TrackView* parent);
+    virtual ~PatternView();
 
-	Q_PROPERTY(QColor noteFillColor READ getNoteFillColor WRITE setNoteFillColor)
-	Q_PROPERTY(QColor noteBorderColor READ getNoteBorderColor WRITE setNoteBorderColor)
-	Q_PROPERTY(QColor mutedNoteFillColor READ getMutedNoteFillColor WRITE setMutedNoteFillColor)
-	Q_PROPERTY(QColor mutedNoteBorderColor READ getMutedNoteBorderColor WRITE setMutedNoteBorderColor)
+    Q_PROPERTY(
+            QColor noteFillColor READ getNoteFillColor WRITE setNoteFillColor)
+    Q_PROPERTY(QColor noteBorderColor READ getNoteBorderColor WRITE
+                                                              setNoteBorderColor)
+    Q_PROPERTY(QColor mutedNoteFillColor READ getMutedNoteFillColor WRITE
+                                                                    setMutedNoteFillColor)
+    Q_PROPERTY(QColor mutedNoteBorderColor READ getMutedNoteBorderColor WRITE
+                                                                        setMutedNoteBorderColor)
 
-	QColor const & getNoteFillColor() const { return m_noteFillColor; }
-	void setNoteFillColor(QColor const & color) { m_noteFillColor = color; }
+    QColor const& getNoteFillColor() const
+    {
+        return m_noteFillColor;
+    }
+    void setNoteFillColor(QColor const& color)
+    {
+        m_noteFillColor = color;
+    }
 
-	QColor const & getNoteBorderColor() const { return m_noteBorderColor; }
-	void setNoteBorderColor(QColor const & color) { m_noteBorderColor = color; }
+    QColor const& getNoteBorderColor() const
+    {
+        return m_noteBorderColor;
+    }
+    void setNoteBorderColor(QColor const& color)
+    {
+        m_noteBorderColor = color;
+    }
 
-	QColor const & getMutedNoteFillColor() const { return m_mutedNoteFillColor; }
-	void setMutedNoteFillColor(QColor const & color) { m_mutedNoteFillColor = color; }
+    QColor const& getMutedNoteFillColor() const
+    {
+        return m_mutedNoteFillColor;
+    }
+    void setMutedNoteFillColor(QColor const& color)
+    {
+        m_mutedNoteFillColor = color;
+    }
 
-	QColor const & getMutedNoteBorderColor() const { return m_mutedNoteBorderColor; }
-	void setMutedNoteBorderColor(QColor const & color) { m_mutedNoteBorderColor = color; }
+    QColor const& getMutedNoteBorderColor() const
+    {
+        return m_mutedNoteBorderColor;
+    }
+    void setMutedNoteBorderColor(QColor const& color)
+    {
+        m_mutedNoteBorderColor = color;
+    }
 
- public slots:
-        virtual void update();
+  public slots:
+    virtual void update();
 
-        //virtual void remove();
-        //virtual void cut();
-	//virtual void copy();
-	//virtual void paste();
-        //virtual void changeName();
-        //virtual void resetName();
-        //virtual void changeColor();
-        //virtual void resetColor();
+    // virtual void remove();
+    // virtual void cut();
+    // virtual void copy();
+    // virtual void paste();
+    // virtual void changeName();
+    // virtual void resetName();
+    // virtual void changeColor();
+    // virtual void resetColor();
 
-	void openInPianoRoll();
+    void openInPianoRoll();
+    void setGhostInPianoRoll();
 
+    void changeStepResolution(QAction* _a);
 
-        void changeStepResolution(QAction* _a);
+  protected:
+    virtual QMenu* buildContextMenu();
+    // virtual void addStepMenu(QMenu* _cm, bool _enabled) final;
 
-protected:
-	virtual QMenu* buildContextMenu();
-        //virtual void addStepMenu(QMenu* _cm, bool _enabled) final;
+    virtual void mousePressEvent(QMouseEvent* _me);
+    virtual void mouseDoubleClickEvent(QMouseEvent* _me);
+    virtual void paintEvent(QPaintEvent* pe);
+    virtual void wheelEvent(QWheelEvent* _we);
+    virtual int  mouseToStep(int _x, int _y);
 
-	virtual void mousePressEvent( QMouseEvent * _me );
-	virtual void mouseDoubleClickEvent( QMouseEvent * _me );
-	virtual void paintEvent( QPaintEvent * pe );
-	virtual void wheelEvent( QWheelEvent * _we );
-        virtual int mouseToStep(int _x,int _y);
+  private:
+    static QPixmap* s_stepBtnOn0;
+    static QPixmap* s_stepBtnOn200;
+    static QPixmap* s_stepBtnOff;
+    static QPixmap* s_stepBtnOffLight;
 
-private:
-	static QPixmap * s_stepBtnOn0;
-	static QPixmap * s_stepBtnOn200;
-	static QPixmap * s_stepBtnOff;
-	static QPixmap * s_stepBtnOffLight;
+    Pattern* m_pat;
+    QPixmap  m_paintPixmap;
 
-	Pattern* m_pat;
-	QPixmap m_paintPixmap;
+    QColor m_noteFillColor;
+    QColor m_noteBorderColor;
+    QColor m_mutedNoteFillColor;
+    QColor m_mutedNoteBorderColor;
 
-	QColor m_noteFillColor;
-	QColor m_noteBorderColor;
-	QColor m_mutedNoteFillColor;
-	QColor m_mutedNoteBorderColor;
-
-	QStaticText m_staticTextName;
-} ;
-
-
+    QStaticText m_staticTextName;
+};
 
 #endif

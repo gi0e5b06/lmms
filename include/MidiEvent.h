@@ -124,6 +124,22 @@ class MidiEvent final
         m_data.m_param[i] = value;
     }
 
+    uint8_t byte(int i) const
+    {
+            return m_data.m_bytes[i];
+    }
+
+    void setByte(int i, uint16_t value)
+    {
+        if(value < 0 || value > 127)
+            WARNING2("MidiEvent::setByte [%d] invalid value: %d", i, value);
+        if(value < 0)
+            value = 0;
+        if(value > 127)
+            value = 127;
+        m_data.m_bytes[i] = value;
+    }
+
     int16_t key() const
     {
         return param(0);

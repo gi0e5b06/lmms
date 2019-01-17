@@ -658,7 +658,7 @@ int AudioAlsaGdx::setHWParams(const ch_cnt_t   _channels,
     }
 
     m_periodSize = mixer()->framesPerPeriod();
-    m_bufferSize = m_periodSize * 8;
+
     dir          = 0;
     err = snd_pcm_hw_params_set_period_size_near(m_outHandle, m_hwParams,
                                                  &m_periodSize, &dir);
@@ -680,7 +680,9 @@ int AudioAlsaGdx::setHWParams(const ch_cnt_t   _channels,
                 snd_strerror(err));
     }
 
-    dir = 0;
+    m_bufferSize = m_periodSize * 2;
+
+    //dir = 0;
     err = snd_pcm_hw_params_set_buffer_size_near(m_outHandle, m_hwParams,
                                                  &m_bufferSize);
     if(err < 0)
@@ -691,7 +693,16 @@ int AudioAlsaGdx::setHWParams(const ch_cnt_t   _channels,
                 m_bufferSize, snd_strerror(err));
         return err;
     }
+
     err = snd_pcm_hw_params_get_buffer_size(m_hwParams, &m_bufferSize);
+    if(err < 0)
+    {
+        qCritical(
+                "AudioAlsaGdx: "
+                "unable to get buffer size for playback: %s",
+                snd_strerror(err));
+        return err;
+    }
 
     if(2 * m_periodSize > m_bufferSize)
     {

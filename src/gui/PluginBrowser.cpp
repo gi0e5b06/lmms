@@ -41,7 +41,8 @@
 
 static bool pluginBefore( const Plugin::Descriptor* d1, const Plugin::Descriptor* d2 )
 {
-	return qstricmp( d1->displayName, d2->displayName ) < 0 ? true : false;
+	//return qstricmp( d1->displayName, d2->displayName ) < 0 ? true : false;
+        return d1->displayName < d2->displayName;
 }
 
 
@@ -49,7 +50,8 @@ static bool pluginBefore( const Plugin::Descriptor* d1, const Plugin::Descriptor
 
 PluginBrowser::PluginBrowser( QWidget * _parent ) :
 	SideBarWidget( tr( "Instrument Plugins" ),
-				embed::getIconPixmap( "plugins" ).transformed( QTransform().rotate( 90 ) ), _parent )
+                       embed::getIconPixmap( "plugins" ).
+                       transformed( QTransform().rotate( 90 ) ), _parent )
 {
 	setWindowTitle( tr( "Instrument browser" ) );
 	m_view = new QWidget( contentParent() );
@@ -172,7 +174,7 @@ void PluginDescWidget::paintEvent( QPaintEvent * e )
 		p.drawText( 10 + logo_size.width(), 22, width() - 58 - 5, 999,
                             Qt::TextWordWrap,
                             qApp->translate( "pluginBrowser",
-                                             m_pluginDescriptor.description ),
+                                             m_pluginDescriptor.description.toUtf8().constData() ),
                             &br );
 		if( m_mouseOver )
 		{

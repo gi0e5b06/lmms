@@ -22,7 +22,6 @@
  *
  */
 
-
 #ifndef ENGINE_H
 #define ENGINE_H
 
@@ -43,136 +42,137 @@ class LV22LMMS;
 class Transportable;
 
 // Note: This class is called 'LmmsCore' instead of 'Engine' because of naming
-// conflicts caused by ZynAddSubFX. See https://github.com/LMMS/lmms/issues/2269
-// and https://github.com/LMMS/lmms/pull/2118 for more details.
+// conflicts caused by ZynAddSubFX. See
+// https://github.com/LMMS/lmms/issues/2269 and
+// https://github.com/LMMS/lmms/pull/2118 for more details.
 //
 // The workaround was to rename Lmms' Engine so that it has a different symbol
-// name in the object files, but typedef it back to 'Engine' and keep it inside
-// of Engine.h so that the rest of the codebase can be oblivious to this issue
-// (and it could be fixed without changing every single file).
+// name in the object files, but typedef it back to 'Engine' and keep it
+// inside of Engine.h so that the rest of the codebase can be oblivious to
+// this issue (and it could be fixed without changing every single file).
 
 class LmmsCore;
 typedef LmmsCore Engine;
 
 class EXPORT LmmsCore : public QObject
 {
-	Q_OBJECT
-public:
-	static void init( bool renderOnly );
-	static void destroy();
+    Q_OBJECT
 
-	// core
-	static Mixer *mixer()
-	{
-		return s_mixer;
-	}
+  public:
+    static void init(bool renderOnly);
+    static void destroy();
 
-	static FxMixer * fxMixer()
-	{
-		return s_fxMixer;
-	}
+    // core
+    static Mixer* mixer()
+    {
+        return s_mixer;
+    }
 
-	static Song * getSong()
-	{
-		return s_song;
-	}
+    static FxMixer* fxMixer()
+    {
+        return s_fxMixer;
+    }
 
-	static Transportable * transport()
-	{
-		return s_transport;
-	}
+    static Song* getSong()
+    {
+        return s_song;
+    }
 
-	static BBTrackContainer * getBBTrackContainer()
-	{
-		return s_bbTrackContainer;
-	}
+    static Transportable* transport()
+    {
+        return s_transport;
+    }
 
-	static ProjectJournal * projectJournal()
-	{
-		return s_projectJournal;
-	}
+    static BBTrackContainer* getBBTrackContainer()
+    {
+        return s_bbTrackContainer;
+    }
 
-	static Ladspa2LMMS * getLADSPAManager()
-	{
-		return s_ladspaManager;
-	}
+    static ProjectJournal* projectJournal()
+    {
+        return s_projectJournal;
+    }
 
-#ifdef WANT_LV2
-	static LV22LMMS* getLV2Manager()
-	{
-		return s_lv2Manager;
-	}
+    static Ladspa2LMMS* getLADSPAManager()
+    {
+        return s_ladspaManager;
+    }
+
+#ifdef LMMS_HAVE_LILV
+    static LV22LMMS* getLV2Manager()
+    {
+        return s_lv2Manager;
+    }
 #endif
 
-	static DummyTrackContainer * dummyTrackContainer()
-	{
-		return s_dummyTC;
-	}
+    static DummyTrackContainer* dummyTrackContainer()
+    {
+        return s_dummyTC;
+    }
 
-	static real_t framesPerTick()
-	{
-		return s_framesPerTick;
-	}
-	static void updateFramesPerTick();
+    static real_t framesPerTick()
+    {
+        return s_framesPerTick;
+    }
+    static void updateFramesPerTick();
 
-	static inline LmmsCore * inst()
-	{
-		if( s_instanceOfMe == NULL )
-		{
-			s_instanceOfMe = new LmmsCore();
-		}
-		return s_instanceOfMe;
-	}
+    static inline LmmsCore* inst()
+    {
+        if(s_instanceOfMe == NULL)
+        {
+            s_instanceOfMe = new LmmsCore();
+        }
+        return s_instanceOfMe;
+    }
 
-signals:
-	void initProgress(const QString &msg);
+  signals:
+    void initProgress(const QString& msg);
 
+  private:
+    static void init1();
+    static void init1b();
+    static void init2();
+    static void init3a();
+    static void init3b();
+    static void init3c();
+    static void init3d();
+    static void init4(bool _renderOnly);
+    static void init5();
+    static void init7();
 
-private:
-        static void init1();
-        static void init1b();
-        static void init2();
-        static void init3();
-        static void init3b();
-        static void init4(bool _renderOnly);
-        static void init5();
-        static void init6();
-        static void init7();
+    // small helper function which sets the pointer to NULL before
+    // actually deleting the object it refers to
+    template <class T>
+    static inline void deleteHelper(T** ptr)
+    {
+        T* tmp = *ptr;
+        *ptr   = NULL;
+        delete tmp;
+    }
 
-	// small helper function which sets the pointer to NULL before
-        // actually deleting the object it refers to
-	template<class T>
-	static inline void deleteHelper( T * * ptr )
-	{
-		T * tmp = *ptr;
-		*ptr = NULL;
-		delete tmp;
-	}
+    static real_t s_framesPerTick;
 
-	static real_t s_framesPerTick;
+    // core
+    static Mixer*               s_mixer;
+    static FxMixer*             s_fxMixer;
+    static Song*                s_song;
+    static Transportable*       s_transport;
+    static BBTrackContainer*    s_bbTrackContainer;
+    static ProjectJournal*      s_projectJournal;
+    static DummyTrackContainer* s_dummyTC;
 
-	// core
-	static Mixer *s_mixer;
-	static FxMixer * s_fxMixer;
-	static Song * s_song;
-	static Transportable * s_transport;
-	static BBTrackContainer * s_bbTrackContainer;
-	static ProjectJournal * s_projectJournal;
-	static DummyTrackContainer * s_dummyTC;
+    static Ladspa2LMMS* s_ladspaManager;
 
-	static Ladspa2LMMS* s_ladspaManager;
-
-#ifdef WANT_LV2
-        static LV22LMMS*    s_lv2Manager;
+#ifdef LMMS_HAVE_LILV
+    static LV22LMMS* s_lv2Manager;
 #endif
 
-	// even though most methods are static, an instance is needed for Qt slots/signals
-	static LmmsCore * s_instanceOfMe;
+    // even though most methods are static, an instance is needed for Qt
+    // slots/signals
+    static LmmsCore* s_instanceOfMe;
 
-	friend class GuiApplication;
-	friend class AudioJack;
+    friend class GuiApplication;
+    friend class AudioJack;
 };
 
-
 #endif
-

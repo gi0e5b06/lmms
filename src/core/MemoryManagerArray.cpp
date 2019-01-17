@@ -36,7 +36,7 @@ MemoryManagerArray MemoryManagerArray::S4128( 256,4128);
 int                 L2[32768];
 int                 P2[16];
 int                 ASZ[16] = {128, 128, 128, 512, 512, 512, 512, 512,
-               512, 1024, 512, 512, 512, 512, 512, 128};
+               512, 2048, 1024, 512, 512, 512, 512, 128};
 MemoryManagerArray* MMA[16];
 
 //#define MMA_STD_ALLOC(size) ::malloc(size)

@@ -60,7 +60,7 @@ extern "C"
                0x0100,
                Plugin::Effect,
                new PluginPixmapLoader("logo"),
-               NULL,
+               nullptr,
                new LadspaSubPluginFeatures(Plugin::Effect)};
 }
 
@@ -71,7 +71,7 @@ LadspaEffect::LadspaEffect(Model*                                    _parent,
       m_key(LadspaSubPluginFeatures::subPluginKeyToLadspaKey(_key))
 {
     Ladspa2LMMS* manager = Engine::getLADSPAManager();
-    if(manager->getDescription(m_key) == NULL)
+    if(manager->getDescription(m_key) == nullptr)
     {
         Engine::getSong()->collectError(
                 tr("Unknown LADSPA plugin %1 requested.").arg(m_key.second));
@@ -100,7 +100,7 @@ void LadspaEffect::changeSampleRate()
     m_controls->saveState(dataFile, dataFile.content());
 
     LadspaControls* controls = m_controls;
-    m_controls               = NULL;
+    m_controls               = nullptr;
 
     m_pluginMutex.lock();
     pluginDestruction();
@@ -134,7 +134,7 @@ bool LadspaEffect::processAudioBuffer(sampleFrame* _buf, const fpp_t _frames)
     }
 
     int          frames = _frames;
-    sampleFrame* o_buf  = NULL;
+    sampleFrame* o_buf  = nullptr;
     sampleFrame  sBuf[_frames];
 
     if(m_maxSampleRate < Engine::mixer()->processingSampleRate())
@@ -186,7 +186,7 @@ bool LadspaEffect::processAudioBuffer(sampleFrame* _buf, const fpp_t _frames)
                     break;
                 }
                 case CONTROL_RATE_INPUT:
-                    if(pp->control == NULL)
+                    if(pp->control == nullptr)
                     {
                         break;
                     }
@@ -252,7 +252,7 @@ bool LadspaEffect::processAudioBuffer(sampleFrame* _buf, const fpp_t _frames)
         }
     }
 
-    if(o_buf != NULL)
+    if(o_buf != nullptr)
     {
         sampleBack(_buf, o_buf, m_maxSampleRate);
     }
@@ -290,8 +290,8 @@ void LadspaEffect::pluginInstantiation()
     int          inputch  = 0;
     int          outputch = 0;
     LADSPA_Data* inbuf[2];
-    inbuf[0] = NULL;
-    inbuf[1] = NULL;
+    inbuf[0] = nullptr;
+    inbuf[1] = nullptr;
     for(ch_cnt_t proc = 0; proc < processorCount(); proc++)
     {
         multi_proc_t ports;
@@ -302,8 +302,8 @@ void LadspaEffect::pluginInstantiation()
             p->name    = manager->getPortName(m_key, port);
             p->proc    = proc;
             p->port_id = port;
-            p->control = NULL;
-            p->buffer  = NULL;
+            p->control = nullptr;
+            p->buffer  = nullptr;
 
             // Determine the port's category.
             if(manager->isPortAudio(m_key, port))
@@ -458,7 +458,7 @@ void LadspaEffect::pluginInstantiation()
 
     // Instantiate the processing units.
     m_descriptor = manager->getDescriptor(m_key);
-    if(m_descriptor == NULL)
+    if(m_descriptor == nullptr)
     {
         QMessageBox::warning(0, "Effect",
                              "Can't get LADSPA descriptor function: "
@@ -467,7 +467,7 @@ void LadspaEffect::pluginInstantiation()
         setOkay(false);
         return;
     }
-    if(m_descriptor->run == NULL)
+    if(m_descriptor->run == nullptr)
     {
         QMessageBox::warning(0, "Effect",
                              "Plugin has no processor: " + m_key.second,
@@ -477,7 +477,7 @@ void LadspaEffect::pluginInstantiation()
     for(ch_cnt_t proc = 0; proc < processorCount(); proc++)
     {
         LADSPA_Handle effect = manager->instantiate(m_key, m_maxSampleRate);
-        if(effect == NULL)
+        if(effect == nullptr)
         {
             QMessageBox::warning(0, "Effect",
                                  "Can't get LADSPA instance: " + m_key.second,

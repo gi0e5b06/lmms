@@ -106,7 +106,7 @@ LadspaControl::LadspaControl( Model * _parent, port_desc_t * _port,
 			//			m_port->min ) / 800.0f );
                         {
                                 float rng=fabsf( m_port->max - m_port->min );
-                                m_tempoSyncKnobModel.setRange( m_port->min,
+                                m_tempoSyncKnobModel.setRange( qMax(1.f,m_port->min),
                                                       m_port->max,
                                                       rng<1E-32f ? rng : powf(10.f,ceilf(log10f(rng)-5)));
                         }

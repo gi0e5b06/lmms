@@ -601,6 +601,14 @@ void PatternView::openInPianoRoll()
     gui->pianoRoll()->setFocus();
 }
 
+void PatternView::setGhostInPianoRoll()
+{
+    gui->pianoRoll()->setGhostPattern(m_pat);
+    gui->pianoRoll()->parentWidget()->show();
+    gui->pianoRoll()->show();
+    gui->pianoRoll()->setFocus();
+}
+
 /*
 void PatternView::changeName()
 {
@@ -629,10 +637,9 @@ void PatternView::changeStepResolution(QAction* _a)
 QMenu* PatternView::buildContextMenu()
 {
     QMenu* cm = new QMenu(this);
-    /*
-      QAction* a;
-      a=
-    */
+
+    QAction* a;
+
     cm->addAction(embed::getIconPixmap("piano"), tr("Open in piano-roll"),
                   this, SLOT(openInPianoRoll()));
     addRemoveMuteClearMenu(cm, true, true, !m_pat->m_notes.empty());
@@ -661,6 +668,14 @@ QMenu* PatternView::buildContextMenu()
 
     cm->addSeparator();
     addPropertiesMenu(cm, !isFixed(), !isFixed());
+
+    a = cm->addAction(embed::getIconPixmap("ghost_note"),
+                      tr("Set as ghost in piano-roll"), this,
+                      SLOT(setGhostInPianoRoll()));
+    a->setEnabled(gui->pianoRoll()->currentPattern()
+                  && gui->pianoRoll()->currentPattern() != m_pat
+                  && !m_pat->empty());
+
     cm->addSeparator();
     addNameMenu(cm, true);
     cm->addSeparator();
@@ -892,6 +907,7 @@ void PatternView::paintEvent(QPaintEvent*)
 
     bool const muted       = m_pat->getTrack()->isMuted() || m_pat->isMuted();
     bool       current     = gui->pianoRoll()->currentPattern() == m_pat;
+    bool       ghost       = gui->pianoRoll()->ghostPattern() == m_pat;
     bool       beatPattern = m_pat->m_patternType == Pattern::BeatPattern;
 
     // state: selected, normal, user, beat pattern, muted
@@ -955,7 +971,7 @@ void PatternView::paintEvent(QPaintEvent*)
     // Length of one tact/beat in the [0,1] x [0,1] coordinate system
     // const float tactLength = 1. / ceilf(m_pat->length().getTact());
     // const float tactLength = 1. / MidiTime(m_pat->unitLength()).getTact();
-    //const float tickLength = tactLength / MidiTime::ticksPerTact();
+    // const float tickLength = tactLength / MidiTime::ticksPerTact();
     const float tickLength = 1. / m_pat->length();
 
     // melody pattern paint event
@@ -1176,8 +1192,8 @@ void PatternView::paintEvent(QPaintEvent*)
 
     if(!beatPattern)
     {
-        paintTileTacts(current, m_pat->length().nextFullTact(), 1, bgcolor,
-                       p);
+        paintTileTacts(current, m_pat->length().nextFullTact(), 1,
+                       bgcolor, p);
     }
 
     // pattern name
@@ -1206,7 +1222,7 @@ void PatternView::paintEvent(QPaintEvent*)
         p.drawLine(0,height()-1,width()-1,height()-1);
         p.drawLine(width()-1,1,width()-1,height()-2);
         */
-        paintTileBorder(current, bgcolor, p);
+        paintTileBorder(current, ghost, bgcolor, p);
     }
 
     /*

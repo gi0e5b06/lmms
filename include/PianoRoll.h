@@ -30,13 +30,18 @@
 //#include <QVector>
 #include "ComboBoxModel.h"
 #include "Editor.h"
-
-#include <QWidget>
 //#include "SerializingObject.h"
 #include "Note.h"
 #include "Song.h"
 #include "lmms_basics.h"
 //#include "ToolTip.h"
+
+#include <QWidget>
+
+class ComboBox;
+class NotePlayHandle;
+class Pattern;
+class TimeLineWidget;
 
 class QPainter;
 class QPixmap;
@@ -44,11 +49,7 @@ class QScrollBar;
 class QString;
 class QMenu;
 class QSignalMapper;
-
-class ComboBox;
-class NotePlayHandle;
-class Pattern;
-class TimeLineWidget;
+class QToolButton;
 
 class PianoRoll : public QWidget
 {
@@ -58,6 +59,8 @@ class PianoRoll : public QWidget
     Q_PROPERTY(QColor lineColor READ lineColor WRITE setLineColor)
     Q_PROPERTY(QColor noteModeColor READ noteModeColor WRITE setNoteModeColor)
     Q_PROPERTY(QColor noteColor READ noteColor WRITE setNoteColor)
+    Q_PROPERTY(
+            QColor ghostNoteColor READ ghostNoteColor WRITE setGhostNoteColor)
     Q_PROPERTY(QColor barColor READ barColor WRITE setBarColor)
     Q_PROPERTY(QColor selectedNoteColor READ selectedNoteColor WRITE
                                                                setSelectedNoteColor)
@@ -68,7 +71,11 @@ class PianoRoll : public QWidget
     Q_PROPERTY(QColor markedSemitoneColor READ markedSemitoneColor WRITE
                                                                    setMarkedSemitoneColor)
     Q_PROPERTY(int noteOpacity READ noteOpacity WRITE setNoteOpacity)
+    Q_PROPERTY(unsigned char ghostNoteOpacity READ ghostNoteOpacity WRITE
+                                                                    setGhostNoteOpacity)
     Q_PROPERTY(bool noteBorders READ noteBorders WRITE setNoteBorders)
+    Q_PROPERTY(bool ghostNoteBorders READ ghostNoteBorders WRITE
+                                                           setGhostNoteBorders)
     Q_PROPERTY(QColor backgroundShade READ backgroundShade WRITE
                                                            setBackgroundShade)
   public:
@@ -90,7 +97,8 @@ class PianoRoll : public QWidget
     void showVolTextFloat(volume_t vol, const QPoint& pos, int timeout = -1);
     void showPanTextFloat(panning_t pan, const QPoint& pos, int timeout = -1);
 
-    void setCurrentPattern(Pattern* newPattern);
+    void setCurrentPattern(Pattern* _pattern);
+    void setGhostPattern(Pattern* _pattern);
 
     inline void stopRecording()
     {
@@ -107,9 +115,14 @@ class PianoRoll : public QWidget
         return m_pattern;
     }
 
+    const Pattern* ghostPattern() const
+    {
+        return m_ghostPattern;
+    }
+
     bool hasValidPattern() const
     {
-        return m_pattern != NULL;
+        return m_pattern != nullptr;
     }
 
     Song::PlayModes desiredPlayModeForAccompany() const;
@@ -127,6 +140,8 @@ class PianoRoll : public QWidget
     void   setNoteModeColor(const QColor& c);
     QColor noteColor() const;
     void   setNoteColor(const QColor& c);
+    QColor ghostNoteColor() const;
+    void   setGhostNoteColor(const QColor& c);
     QColor barColor() const;
     void   setBarColor(const QColor& c);
     QColor selectedNoteColor() const;
@@ -141,8 +156,12 @@ class PianoRoll : public QWidget
     void   setMarkedSemitoneColor(const QColor& c);
     int    noteOpacity() const;
     void   setNoteOpacity(const int i);
+    int    ghostNoteOpacity() const;
+    void   setGhostNoteOpacity(const int i);
     bool   noteBorders() const;
     void   setNoteBorders(const bool b);
+    bool   ghostNoteBorders() const;
+    void   setGhostNoteBorders(const bool b);
     QColor backgroundShade() const;
     void   setBackgroundShade(const QColor& c);
 
@@ -211,11 +230,13 @@ class PianoRoll : public QWidget
     void markSemiTone(int i);
 
     void hidePattern(Pattern* pattern);
+    void clearGhostPattern();
 
     void selectRegionFromPixels(int xStart, int xEnd);
 
   signals:
     void currentPatternChanged();
+    void ghostPatternSet(bool);
     void semiToneMarkerMenuScaleSetEnabled(bool);
     void semiToneMarkerMenuChordSetEnabled(bool);
 
@@ -312,7 +333,9 @@ class PianoRoll : public QWidget
     ComboBoxModel m_scaleModel;
     ComboBoxModel m_chordModel;
 
-    Pattern*    m_pattern;
+    Pattern* m_pattern;
+    Pattern* m_ghostPattern;
+
     QScrollBar* m_leftRightScroll;
     QScrollBar* m_topBottomScroll;
 
@@ -391,6 +414,7 @@ class PianoRoll : public QWidget
     QColor m_lineColor;
     QColor m_noteModeColor;
     QColor m_noteColor;
+    QColor m_ghostNoteColor;
     QColor m_barColor;
     QColor m_selectedNoteColor;
     QColor m_textColor;
@@ -398,25 +422,26 @@ class PianoRoll : public QWidget
     QColor m_textShadow;
     QColor m_markedSemitoneColor;
     int    m_noteOpacity;
+    int    m_ghostNoteOpacity;
     bool   m_noteBorders;
+    bool   m_ghostNoteBorders;
     QColor m_backgroundShade;
 
   signals:
     void positionChanged(const MidiTime&);
 };
 
-class PianoRollWindow
-      : public Editor
-      , SerializingObject
+class PianoRollWindow : public Editor, SerializingObject
 {
     Q_OBJECT
   public:
     PianoRollWindow();
 
     const Pattern* currentPattern() const;
-    void           setCurrentPattern(Pattern* pattern);
+    const Pattern* ghostPattern() const;
 
-    int quantization() const;
+    void setCurrentPattern(Pattern* _pattern);
+    void setGhostPattern(Pattern* _pattern);
 
     void play();
     void stop();
@@ -424,6 +449,7 @@ class PianoRollWindow
     void recordAccompany();
     void stopRecording();
 
+    int  quantization() const;
     bool isRecording() const;
 
     /*! \brief Resets settings to default when e.g. creating a new project */
@@ -446,17 +472,19 @@ class PianoRollWindow
 
   private slots:
     void patternRenamed();
+    void ghostPatternSet(bool state);
 
   private:
     void focusInEvent(QFocusEvent* event);
 
     PianoRoll* m_editor;
 
-    ComboBox* m_zoomingXComboBox;
-    ComboBox* m_quantizeComboBox;
-    ComboBox* m_noteLenComboBox;
-    ComboBox* m_scaleComboBox;
-    ComboBox* m_chordComboBox;
+    ComboBox*    m_zoomingXComboBox;
+    ComboBox*    m_quantizeComboBox;
+    ComboBox*    m_noteLenComboBox;
+    ComboBox*    m_scaleComboBox;
+    ComboBox*    m_chordComboBox;
+    QToolButton* m_clearGhostButton;
 };
 
 #endif

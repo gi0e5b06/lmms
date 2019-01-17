@@ -100,7 +100,7 @@ QDomElement Effect::saveState(QDomDocument& _doc, QDomElement& _parent)
 {
     // qInfo("Effect::saveState");
     QDomElement r = Plugin::saveState(_doc, _parent);
-    r.setAttribute("name", QString::fromUtf8(descriptor()->name));
+    r.setAttribute("name",/* QString::fromUtf8*/(descriptor()->name));
     r.appendChild(key().saveXML(_doc));
     return r;
 }

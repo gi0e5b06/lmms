@@ -25,10 +25,11 @@
 #ifndef LV2_CONTROL_H
 #define LV2_CONTROL_H
 
-#ifdef WANT_LV2
+#include "lmmsconfig.h"
 
+#ifdef LMMS_HAVE_LILV
 
-//typedef float LV2_Data;
+// typedef float LV2_Data;
 //#include <lv2.h>
 
 #include "AutomatableModel.h"
@@ -38,89 +39,83 @@
 
 typedef struct LV2PortDescription lv2_port_desc_t;
 
-
 class EXPORT LV2Control : public Model, public JournallingObject
 {
-	Q_OBJECT
-public:
-	LV2Control( Model * _parent, lv2_port_desc_t * _port,
-							bool _link = false );
-	~LV2Control();
+    Q_OBJECT
+  public:
+    LV2Control(Model* _parent, lv2_port_desc_t* _port, bool _link = false);
+    ~LV2Control();
 
-	LV2_Data value();
-	ValueBuffer * valueBuffer();
-	void setValue( LV2_Data _value );
-	void setLink( bool _state );
+    LV2_Data     value();
+    ValueBuffer* valueBuffer();
+    void         setValue(LV2_Data _value);
+    void         setLink(bool _state);
 
-	void linkControls( LV2Control * _control );
-	void unlinkControls( LV2Control * _control );
+    void linkControls(LV2Control* _control);
+    void unlinkControls(LV2Control* _control);
 
-	inline BoolModel * toggledModel()
-	{
-		return &m_toggledModel;
-	}
+    inline BoolModel* toggledModel()
+    {
+        return &m_toggledModel;
+    }
 
-	inline FloatModel * knobModel()
-	{
-		return &m_knobModel;
-	}
+    inline FloatModel* knobModel()
+    {
+        return &m_knobModel;
+    }
 
-	inline TempoSyncKnobModel * tempoSyncKnobModel()
-	{
-		return &m_tempoSyncKnobModel;
-	}
+    inline TempoSyncKnobModel* tempoSyncKnobModel()
+    {
+        return &m_tempoSyncKnobModel;
+    }
 
-	inline lv2_port_desc_t * port()
-	{
-		return m_port;
-	}
+    inline lv2_port_desc_t* port()
+    {
+        return m_port;
+    }
 
-	virtual void saveSettings( QDomDocument & _doc, QDomElement & _parent, const QString & _name );
-	virtual void loadSettings( const QDomElement & _this, const QString & _name );
-	inline virtual QString nodeName() const
-	{
-		return "port";
-	}
+    virtual void saveSettings(QDomDocument&  _doc,
+                              QDomElement&   _parent,
+                              const QString& _name);
+    virtual void loadSettings(const QDomElement& _this, const QString& _name);
+    inline virtual QString nodeName() const
+    {
+        return "port";
+    }
 
+  signals:
+    void changed(int _port, LV2_Data _value);
+    void linkChanged(int _port, bool _state);
 
-signals:
-	void changed( int _port, LV2_Data _value );
-	void linkChanged( int _port, bool _state );
+  protected slots:
+    void ledChanged();
+    void knobChanged();
+    void tempoKnobChanged();
+    void linkStateChanged();
 
+  protected:
+    virtual void saveSettings(QDomDocument& doc, QDomElement& element)
+    {
+        Q_UNUSED(doc)
+        Q_UNUSED(element)
+    }
 
-protected slots:
-	void ledChanged();
-	void knobChanged();
-	void tempoKnobChanged();
-	void linkStateChanged();
+    virtual void loadSettings(const QDomElement& element)
+    {
+        Q_UNUSED(element)
+    }
 
-protected:
-	virtual void saveSettings( QDomDocument& doc, QDomElement& element )
-	{
-		Q_UNUSED(doc)
-		Q_UNUSED(element)
-	}
+  private:
+    bool             m_link;
+    lv2_port_desc_t* m_port;
 
-	virtual void loadSettings( const QDomElement& element )
-	{
-		Q_UNUSED(element)
-	}
+    BoolModel          m_linkEnabledModel;
+    BoolModel          m_toggledModel;
+    FloatModel         m_knobModel;
+    TempoSyncKnobModel m_tempoSyncKnobModel;
 
-
-
-private:
-	bool m_link;
-	lv2_port_desc_t * m_port;
-
-	BoolModel m_linkEnabledModel;
-	BoolModel m_toggledModel;
-	FloatModel m_knobModel;
-	TempoSyncKnobModel m_tempoSyncKnobModel;
-
-
-	friend class LV2ControlView;
-
-} ;
+    friend class LV2ControlView;
+};
 
 #endif
 #endif

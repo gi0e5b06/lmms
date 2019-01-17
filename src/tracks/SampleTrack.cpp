@@ -586,7 +586,7 @@ void SampleTCOView::paintEvent(QPaintEvent* pe)
     p.setPen( c.darker( 300 ) );
     p.drawRect( 0, 0, rect().right(), rect().bottom() );
     */
-    paintTileBorder(false, bgcolor, p);
+    paintTileBorder(false, false, bgcolor, p);
 
     /*
     // draw the 'muted' pixmap only if the pattern was manualy muted
@@ -706,7 +706,7 @@ bool SampleTrack::play(const MidiTime& _start,
     // m_audioPort.effects()->startRunning();
     bool played_a_note = false;  // will be return variable
 
-    const float framesPerTick = Engine::framesPerTick();
+    const float fpt = Engine::framesPerTick();
 
     tcoVector  tcos;
     ::BBTrack* bb_track = NULL;
@@ -741,9 +741,9 @@ bool SampleTrack::play(const MidiTime& _start,
                     start %= ul;
                 }
 
-                f_cnt_t sampleStart = framesPerTick * start;
+                f_cnt_t sampleStart = fpt * start;
                 f_cnt_t tcoFrameLength
-                        = framesPerTick
+                        = fpt
                           * (sTco->endPosition() - sTco->startPosition());
                 f_cnt_t sampleBufferLength
                         = sTco->sampleBuffer()->frames();
@@ -809,8 +809,7 @@ qInfo("sampleStart=%d samplePlayLength=%d",
                 {
                     tick_t ul = st->unitLength();
                     // qInfo("smpHandle->setAutoRepeat 1");
-                    smpHandle->setAutoRepeat(
-                            f_cnt_t(roundf(ul * framesPerTick)));
+                    smpHandle->setAutoRepeat(f_cnt_t(roundf(ul * fpt)));
                 }
                 else
                 {
@@ -818,6 +817,13 @@ qInfo("sampleStart=%d samplePlayLength=%d",
                     smpHandle->setAutoRepeat(0);
                 }
 
+                tick_t t = _start - st->startPosition();
+                if(t > 0)
+                {
+                    f_cnt_t f = smpHandle->currentFrame();
+                    f += fpt * t;
+                    smpHandle->setCurrentFrame(f);
+                }
                 handle = smpHandle;
             }
 
