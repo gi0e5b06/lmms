@@ -41,6 +41,8 @@ Instrument::Instrument( InstrumentTrack * _instrument_track,
 
 Instrument::~Instrument()
 {
+        qInfo("Instrument::~Instrument");
+        m_instrumentTrack=nullptr;
 }
 
 
@@ -90,6 +92,7 @@ Instrument * Instrument::instantiate( const QString & _plugin_name,
 
 bool Instrument::isFromTrack( const Track * _track ) const
 {
+        qWarning("Instrument::isFromTrack %p %p",m_instrumentTrack,_track);
 	return (m_instrumentTrack == _track);
 }
 

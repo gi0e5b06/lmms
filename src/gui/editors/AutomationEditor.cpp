@@ -50,7 +50,7 @@
 //#include "debug.h"
 #include "embed.h"
 #include "gui_templates.h"
-#include "lmms_qt.h"
+#include "lmms_qt_core.h"
 
 #include <QApplication>
 #include <QKeyEvent>

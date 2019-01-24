@@ -60,6 +60,8 @@ VstEffect::VstEffect( Model * _parent,
 	m_key( *_key ),
 	m_vstControls( this )
 {
+        setColor(QColor(128,96,74));
+
 	if( !m_key.attributes["file"].isEmpty() )
 	{
 		openPlugin( m_key.attributes["file"] );

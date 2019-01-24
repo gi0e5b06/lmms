@@ -62,9 +62,10 @@ void ImportFilter::import( const QString & _file_to_import,
 
 	for (const Plugin::Descriptor* desc : pluginFactory->descriptors(Plugin::ImportFilter))
 	{
-		Plugin * p = Plugin::instantiate( desc->name, NULL, s );
-		if( dynamic_cast<ImportFilter *>( p ) != NULL &&
-			dynamic_cast<ImportFilter *>( p )->tryImport( tc ) == true )
+                qInfo("Notice: trying import filter: %s",qPrintable(desc->name));
+		Plugin * p = Plugin::instantiate( desc->name, nullptr, s );
+		if( dynamic_cast<ImportFilter *>( p ) != nullptr &&
+                    dynamic_cast<ImportFilter *>( p )->tryImport( tc ) == true )
 		{
 			delete p;
 			successful = true;

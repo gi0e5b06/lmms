@@ -66,11 +66,20 @@ AudioPort::AudioPort(const QString& _name,
 
 AudioPort::~AudioPort()
 {
+    qWarning("AudioPort::~AudioPort 1");
     setExtOutputEnabled(false);
+
+    qWarning("AudioPort::~AudioPort 2");
     Engine::mixer()->removeAudioPort(this);
-    delete m_effects;
+
+    qWarning("AudioPort::~AudioPort 3");
+    if(m_effects)
+        delete m_effects;
+
+    qWarning("AudioPort::~AudioPort 4");
     BufferManager::release(m_portBuffer);
 
+    qWarning("AudioPort::~AudioPort 5");
     if(m_frozenBuf)
         delete m_frozenBuf;
 }
@@ -176,15 +185,23 @@ void AudioPort::doProcessing()
 
     // qInfo("AudioPort::doProcessing #1");
     // qDebug( "Playhandles: %d", m_playHandles.size() );
-    for(PlayHandle* ph : m_playHandles)  // now we mix all playhandle buffers
-                                         // into the audioport buffer
+    m_playHandleLock.lock();
+    PlayHandleList tmp = m_playHandles;
+    m_playHandleLock.unlock();
+    // now we mix all playhandle buffers into the audioport buffer
+    for(PlayHandle* ph: tmp)
     {
-        if(ph->buffer())
+        sampleFrame* buf = ph->buffer();
+        if(buf)
         {
-            if(ph->usesBuffer())
+            // if(ph->type() == PlayHandle::TypeInstrumentPlayHandle)
+            // qWarning("ph->type() == PlayHandle::TypeInstrumentPlayHandle");
+            if(ph->usesBuffer()
+               && (ph->type() == PlayHandle::TypeNotePlayHandle
+                   || !MixHelpers::isSilent(buf, fpp)))
             {
                 m_bufferUsage = true;
-                MixHelpers::add(m_portBuffer, ph->buffer(), fpp);
+                MixHelpers::add(m_portBuffer, buf, fpp);
             }
 
             // gets rid of playhandle's buffer and sets
@@ -258,11 +275,12 @@ void AudioPort::doProcessing()
         }
 
         /*
-        if(m_bendingEnabledModel==nullptr || m_bendingEnabledModel->value())
+        if(m_bendingEnabledModel==nullptr ||
+        m_bendingEnabledModel->value())
         {
                 real_t benVal = m_bendingModel->value();
-                if(benVal!=0.) qInfo("AudioPort::doProcessing adjust bending
-        %f",benVal);
+                if(benVal!=0.) qInfo("AudioPort::doProcessing adjust
+        bending %f",benVal);
         }
         */
 
@@ -281,8 +299,9 @@ void AudioPort::doProcessing()
                         {
                                 float v = volBuf->values()[ f ] * 0.01f;
                                 float p = panBuf->values()[ f ] * 0.01f;
-                                m_portBuffer[f][0] *= ( p <= 0 ? 1.0f : 1.0f -
-        p ) * v; m_portBuffer[f][1] *= ( p >= 0 ? 1.0f : 1.0f + p ) * v;
+                                m_portBuffer[f][0] *= ( p <= 0 ? 1.0f
+        : 1.0f - p ) * v; m_portBuffer[f][1] *= ( p >= 0 ? 1.0f : 1.0f + p
+        ) * v;
                         }
                 }
 
@@ -307,8 +326,9 @@ void AudioPort::doProcessing()
                         for( f_cnt_t f = 0; f < fpp; ++f )
                         {
                                 float p = panBuf->values()[ f ] * 0.01f;
-                                m_portBuffer[f][0] *= ( p <= 0 ? 1.0f : 1.0f -
-        p ) * v; m_portBuffer[f][1] *= ( p >= 0 ? 1.0f : 1.0f + p ) * v;
+                                m_portBuffer[f][0] *= ( p <= 0 ? 1.0f
+        : 1.0f - p ) * v; m_portBuffer[f][1] *= ( p >= 0 ? 1.0f : 1.0f + p
+        ) * v;
                         }
                 }
 
@@ -319,8 +339,9 @@ void AudioPort::doProcessing()
                         float v = m_volumeModel->value() * 0.01f;
                         for( f_cnt_t f = 0; f < fpp; ++f )
                         {
-                                m_portBuffer[f][0] *= ( p <= 0 ? 1.0f : 1.0f -
-        p ) * v; m_portBuffer[f][1] *= ( p >= 0 ? 1.0f : 1.0f + p ) * v;
+                                m_portBuffer[f][0] *= ( p <= 0 ? 1.0f
+        : 1.0f - p ) * v; m_portBuffer[f][1] *= ( p >= 0 ? 1.0f : 1.0f + p
+        ) * v;
                         }
                 }
         }
@@ -351,9 +372,9 @@ void AudioPort::doProcessing()
         }
         */
     }
-    // as of now there's no situation where we only have panning model but no
-    // volume model if we have neither, we don't have to do anything here -
-    // just pass the audio as is
+    // as of now there's no situation where we only have panning model but
+    // no volume model if we have neither, we don't have to do anything
+    // here - just pass the audio as is
 
     // handle effects
     const bool me = processEffects();
@@ -362,8 +383,8 @@ void AudioPort::doProcessing()
     {
         /*
         qInfo("AudioPort::doProcessing #5 frozen=%d fb=%p song=%d
-        playing==%d", m_frozenModel->value(),m_frozenBuf, (song->playMode() ==
-        Song::Mode_PlaySong), song->isPlaying());
+        playing==%d", m_frozenModel->value(),m_frozenBuf,
+        (song->playMode() == Song::Mode_PlaySong), song->isPlaying());
         */
 
         if(m_frozenModel && !m_frozenModel->value() && m_frozenBuf
@@ -411,7 +432,7 @@ void AudioPort::doProcessing()
                    || m_volumeEnabledModel->value())
                && m_volumeModel->valueBuffer() == nullptr)
                 m_volumeModel->setAutomatedValue(m_volumeModel->rawValue()
-                                                * 0.995);
+                                                 * 0.995);
         }
 
         // send output to fx mixer
@@ -423,15 +444,42 @@ void AudioPort::doProcessing()
 
 void AudioPort::addPlayHandle(PlayHandle* handle)
 {
+    if(handle == nullptr)
+    {
+        qWarning("AudioPort::addPlayHandle(null)");
+        return;
+    }
+
     m_playHandleLock.lock();
-    m_playHandles.append(handle);
+    if(m_playHandles.contains(handle))
+        qWarning("AudioPort::addPlayHandle handle already listed");
+    else
+        m_playHandles.append(handle);
     m_playHandleLock.unlock();
 }
 
 void AudioPort::removePlayHandle(PlayHandle* handle)
 {
+    if(handle == nullptr)
+    {
+        qWarning("AudioPort::removePlayHandle(null)");
+        return;
+    }
+
     m_playHandleLock.lock();
-    PlayHandleList::Iterator it
+    if(m_playHandles.contains(handle))
+    {
+        NotePlayHandle* nph = dynamic_cast<NotePlayHandle*>(handle);
+        if(nph && !nph->isReleased())
+            nph->noteOff(0);
+        m_playHandles.removeOne(handle);
+    }
+    else
+    {
+        qWarning("AudioPort::removePlayHandle handle not found");
+    }
+    /*
+      PlayHandleList::Iterator it
             = qFind(m_playHandles.begin(), m_playHandles.end(), handle);
     if(it != m_playHandles.end())
     {
@@ -440,6 +488,7 @@ void AudioPort::removePlayHandle(PlayHandle* handle)
             nph->noteOff(0);
         m_playHandles.erase(it);
     }
+    */
     m_playHandleLock.unlock();
 }
 
@@ -447,7 +496,7 @@ void AudioPort::updateFrozenBuffer(f_cnt_t _len)
 {
     if(m_frozenModel)
     {
-        if((m_frozenBuf == NULL) || (_len != m_frozenBuf->frames()))
+        if((m_frozenBuf == nullptr) || (_len != m_frozenBuf->frames()))
         {
             if(m_frozenBuf)
                 delete m_frozenBuf;
@@ -461,7 +510,7 @@ void AudioPort::cleanFrozenBuffer(f_cnt_t _len)
 {
     if(m_frozenModel)
     {
-        if((m_frozenBuf == NULL) || (_len != m_frozenBuf->frames())
+        if((m_frozenBuf == nullptr) || (_len != m_frozenBuf->frames())
            || m_frozenBuf->m_mmapped)
         {
             if(m_frozenBuf)
@@ -479,7 +528,7 @@ void AudioPort::readFrozenBuffer(QString _uuid)
        m_frozenBuf)
     {
         delete m_frozenBuf;
-        m_frozenBuf = NULL;
+        m_frozenBuf = nullptr;
         QString d   = Engine::getSong()->projectDir() + QDir::separator()
                     + "tracks" + QDir::separator() + "frozen";
         if(QFileInfo(d).exists())

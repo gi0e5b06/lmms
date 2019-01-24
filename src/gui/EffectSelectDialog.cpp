@@ -189,13 +189,13 @@ void EffectSelectDialog::rowChanged(const QModelIndex& _idx,
             logoLabel->setSizePolicy(QSizePolicy::Minimum,
                                      QSizePolicy::Minimum);
 
-            hbox->addWidget(logoLabel);
+            hbox->addWidget(logoLabel, 0);
             hbox->setAlignment(logoLabel, Qt::AlignTop);
         }
 
         QWidget* textualInfoWidget = new QWidget(m_descriptionWidget);
 
-        hbox->addWidget(textualInfoWidget);
+        hbox->addWidget(textualInfoWidget, 1);
 
         QVBoxLayout* textWidgetLayout = new QVBoxLayout(textualInfoWidget);
         textWidgetLayout->setMargin(4);
@@ -221,17 +221,16 @@ void EffectSelectDialog::rowChanged(const QModelIndex& _idx,
         }
         else
         {
-            QLabel* label     = new QLabel(m_descriptionWidget);
-            QString labelText = "<p><b>" + tr("Name") + ":</b> "
-                    + /*QString::fromUtf8*/(descriptor.displayName)
-                                + "</p>";
-            labelText += "<p><b>" + tr("Description") + ":</b> "
-                         + qApp->translate("pluginBrowser",
-                                           descriptor.description.toUtf8().constData())
-                         + "</p>";
-            labelText += "<p><b>" + tr("Author") + ":</b> "
-                    + /*QString::fromUtf8*/(descriptor.author) + "</p>";
-
+            QLabel* label = new QLabel(m_descriptionWidget);
+            QString labelText
+                    = QString("<p>") + "<b>" + tr("Name") + ":</b> "
+                      + /*QString::fromUtf8*/ (descriptor.displayName)
+                      + "<br/>" + "<b>" + tr("Description") + ":</b> "
+                      + qApp->translate(
+                                "pluginBrowser",
+                                descriptor.description.toUtf8().constData())
+                      + "<br/>" + "<b>" + tr("Author") + ":</b> "
+                      + /*QString::fromUtf8*/ (descriptor.author) + "</p>";
             label->setText(labelText);
             textWidgetLayout->addWidget(label);
         }

@@ -58,7 +58,7 @@ class EffectRackView
     void moveDown(EffectView* view);
     void moveTop(EffectView* view);
     void moveBottom(EffectView* view);
-    void deletePlugin(EffectView* view);
+    void removeEffect(EffectView* view);
 
   protected:
     virtual void mousePressEvent(QMouseEvent* _me);

@@ -102,16 +102,16 @@ struct Dimension
 class ADSR
 {
 	// From the file
-	float preattack; // initial amplitude (0-1)
-	float attack; // 0-60s
-	float decay1; // 0-60s
-	float decay2; // 0-60s
+	real_t preattack; // initial amplitude (0-1)
+	real_t attack; // 0-60s
+	real_t decay1; // 0-60s
+	real_t decay2; // 0-60s
 	bool infiniteSustain; // i.e., no decay2
-	float sustain; // sustain amplitude (0-1)
-	float release; // 0-60s
+	real_t sustain; // sustain amplitude (0-1)
+	real_t release; // 0-60s
 
 	// Used to calculate current amplitude
-	float amplitude;
+	real_t amplitude;
 	bool isAttack;
 	bool isRelease;
 	bool isDone;
@@ -126,7 +126,7 @@ public:
 	ADSR( gig::DimensionRegion * region, int sampleRate );
 	void keyup(); // We will begin releasing starting now
 	bool done(); // Is this sample done playing?
-	float value(); // What's the current amplitude
+	real_t value(); // What's the current amplitude
 	void inc( f_cnt_t num ); // Increment internal positions by num
 } ;
 
@@ -139,7 +139,7 @@ class GigSample
 {
 public:
 	GigSample( gig::Sample * pSample, gig::DimensionRegion * pDimRegion,
-			float attenuation, int interpolation, float desiredFreq );
+			real_t attenuation, int interpolation, frequency_t desiredFreq );
 	~GigSample();
 
 	// Needed when initially creating in QList
@@ -149,11 +149,11 @@ public:
 	// Needed since libsamplerate stores data internally between calls
 	void updateSampleRate();
 	bool convertSampleRate( sampleFrame & oldBuf, sampleFrame & newBuf,
-		f_cnt_t oldSize, f_cnt_t newSize, float freq_factor, f_cnt_t& used );
+		f_cnt_t oldSize, f_cnt_t newSize, double freq_factor, f_cnt_t& used );
 
 	gig::Sample * sample;
 	gig::DimensionRegion * region;
-	float attenuation;
+	real_t attenuation;
 	ADSR adsr;
 
 	// The position in sample
@@ -171,8 +171,8 @@ public:
         //#endif
 
 	// Used changing the pitch of the note if desired
-	float sampleFreq;
-	float freqFactor;
+	real_t sampleFreq;
+	double freqFactor;
 } ;
 
 
@@ -205,7 +205,7 @@ public:
 	bool release; // Whether to trigger a release sample on key up
 	bool isRelease; // Whether this is a release sample, changes when we delete it
 	GigState state;
-	float frequency;
+	frequency_t frequency;
 	QList<GigSample> samples;
 
 	// Used to determine which note should be released on key up
@@ -214,7 +214,7 @@ public:
 	// has been released since that's when it is deleted
 	GIGPluginData * handle;
 
-	GigNote( int midiNote, int velocity, float frequency, GIGPluginData * handle )
+	GigNote( int midiNote, int velocity, frequency_t frequency, GIGPluginData * handle )
 		: midiNote( midiNote ), velocity( velocity ),
 		  release( false ), isRelease( false ), state( KeyDown ),
 		  frequency( frequency ), handle( handle )
@@ -304,7 +304,7 @@ private:
 
 	// Used when determining which samples to use
 	uint32_t m_RandomSeed;
-	float m_currentKeyDimension;
+	real_t m_currentKeyDimension;
 
 private:
 	// Delete the current GIG instance if one is open

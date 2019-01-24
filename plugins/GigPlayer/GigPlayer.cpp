@@ -288,7 +288,7 @@ QString GigInstrument::getCurrentPatchName()
 // A key has been pressed
 void GigInstrument::playNote( NotePlayHandle * _n, sampleFrame * )
 {
-	const float LOG440 = 2.643452676f;
+	const real_t LOG440 = 2.643452676486187;
 
 	const f_cnt_t tfp = _n->totalFramesPlayed();
 
@@ -325,7 +325,7 @@ void GigInstrument::play( sampleFrame * _working_buffer )
 	const int rate = Engine::mixer()->processingSampleRate();
 
 	// Initialize to zeros
-	std::memset( &_working_buffer[0][0], 0, DEFAULT_CHANNELS * frames * sizeof( float ) );
+	std::memset( &_working_buffer[0][0], 0, DEFAULT_CHANNELS * frames * sizeof( sample_t ) );
 
 	m_synthMutex.lock();
 	m_notesMutex.lock();
@@ -426,7 +426,7 @@ void GigInstrument::play( sampleFrame * _working_buffer )
 			bool resample = false;
 			f_cnt_t samples = frames; // How many to grab
 			f_cnt_t used = frames; // How many we used
-			float freq_factor = 1.0; // How to resample
+			double freq_factor = 1.; // How to resample
 
 			// Resample to be the correct pitch when the sample provided isn't
 			// solely for this one note (e.g. one or two samples per octave) or
@@ -436,7 +436,7 @@ void GigInstrument::play( sampleFrame * _working_buffer )
 				resample = true;
 
 				// Factor just for resampling
-				freq_factor = 1.0 * rate / sample->sample->SamplesPerSecond;
+				freq_factor = 1. * rate / sample->sample->SamplesPerSecond;
 
 				// Factor for pitch shifting as well as resampling
 				if( sample->region->PitchTrack == true )
@@ -459,7 +459,7 @@ void GigInstrument::play( sampleFrame * _working_buffer )
 
 			for( f_cnt_t i = 0; i < samples; ++i )
 			{
-				float amplitude = copy.value();
+				real_t amplitude = copy.value();
 				sampleData[i][0] *= amplitude;
 				sampleData[i][1] *= amplitude;
 			}
@@ -588,7 +588,7 @@ void GigInstrument::loadSample( GigSample& sample, sampleFrame* sampleData, f_cn
 		std::memset( (int8_t*) &buffer + size, 0, allocationsize - size );
 	}
 
-	// Convert from 16 or 24 bit into 32-bit float
+	// Convert from 16 or 24 bit into real (-- 32-bit float --)
 	if( sample.sample->BitDepth == 24 ) // 24 bit
 	{
 		uint8_t * pInt = reinterpret_cast<uint8_t*>( &buffer );
@@ -604,7 +604,7 @@ void GigInstrument::loadSample( GigSample& sample, sampleFrame* sampleData, f_cn
 
 			// Store the notes to this buffer before saving to output
 			// so we can fade them out as needed
-			sampleData[i][0] = 1.0 / 0x100000000 * sample.attenuation * valueLeft;
+			sampleData[i][0] = 1. / 0x100000000 * sample.attenuation * valueLeft;
 
 			if( sample.sample->Channels == 1 )
 			{
@@ -617,7 +617,7 @@ void GigInstrument::loadSample( GigSample& sample, sampleFrame* sampleData, f_cn
 							( pInt[ 3 * sample.sample->Channels * i + 4 ] << 16 ) |
 							( pInt[ 3 * sample.sample->Channels * i + 5 ] << 24 ) );
 
-				sampleData[i][1] = 1.0 / 0x100000000 * sample.attenuation * valueRight;
+				sampleData[i][1] = 1. / 0x100000000 * sample.attenuation * valueRight;
 			}
 		}
 	}
@@ -627,7 +627,7 @@ void GigInstrument::loadSample( GigSample& sample, sampleFrame* sampleData, f_cn
 
 		for( f_cnt_t i = 0; i < samples; ++i )
 		{
-			sampleData[i][0] = 1.0 / 0x10000 *
+			sampleData[i][0] = 1. / 0x10000 *
 				pInt[ sample.sample->Channels * i ] * sample.attenuation;
 
 			if( sample.sample->Channels == 1 )
@@ -636,7 +636,7 @@ void GigInstrument::loadSample( GigSample& sample, sampleFrame* sampleData, f_cn
 			}
 			else
 			{
-				sampleData[i][1] = 1.0 / 0x10000 *
+				sampleData[i][1] = 1. / 0x10000 *
 					pInt[ sample.sample->Channels * i + 1 ] * sample.attenuation;
 			}
 		}
@@ -726,7 +726,7 @@ void GigInstrument::addSamples( GigNote & gignote, bool wantReleaseSample )
 			gignote.midiNote >= m_instrument->DimensionKeyRange.low &&
 			gignote.midiNote <= m_instrument->DimensionKeyRange.high )
 	{
-		m_currentKeyDimension = float( gignote.midiNote -
+		m_currentKeyDimension = real_t( gignote.midiNote -
 				m_instrument->DimensionKeyRange.low ) / (
 					m_instrument->DimensionKeyRange.high -
 					m_instrument->DimensionKeyRange.low + 1 );
@@ -758,8 +758,9 @@ void GigInstrument::addSamples( GigNote & gignote, bool wantReleaseSample )
 
 			if( gignote.midiNote >= keyLow && gignote.midiNote <= keyHigh )
 			{
-				float attenuation = pDimRegion->GetVelocityAttenuation( gignote.velocity );
-				float length = (float) pSample->SamplesTotal / Engine::mixer()->processingSampleRate();
+				real_t attenuation = pDimRegion->GetVelocityAttenuation( gignote.velocity );
+				real_t length = real_t(pSample->SamplesTotal) /
+                                        Engine::mixer()->processingSampleRate();
 
 				// TODO: sample panning? crossfade different layers?
 
@@ -1111,7 +1112,7 @@ void GigInstrumentView::showPatchDialog()
 
 // Store information related to playing a sample from the GIG file
 GigSample::GigSample( gig::Sample * pSample, gig::DimensionRegion * pDimRegion,
-		float attenuation, int interpolation, float desiredFreq )
+                      real_t attenuation, int interpolation, frequency_t desiredFreq )
 	: sample( pSample ), region( pDimRegion ), attenuation( attenuation ),
 	  pos( 0 ), interpolation( interpolation ), srcState( NULL ),
 	  sampleFreq( 0 ), freqFactor( 1 )
@@ -1128,8 +1129,8 @@ GigSample::GigSample( gig::Sample * pSample, gig::DimensionRegion * pDimRegion,
 		if( region->PitchTrack == true )
 		{
 			// Calculate what frequency the provided sample is
-			sampleFreq = 440.0 * powf( 2, 1.0 / 12 * (
-						1.0 * region->UnityNote - 69 -
+			sampleFreq = 440.0 * powf( 2, 1. / 12 * (
+						1. * region->UnityNote - 69 -
 						0.01 * region->FineTune ) );
 			freqFactor = sampleFreq / desiredFreq;
 		}
@@ -1211,7 +1212,7 @@ void GigSample::updateSampleRate()
 
 
 bool GigSample::convertSampleRate( sampleFrame & oldBuf, sampleFrame & newBuf,
-		f_cnt_t oldSize, f_cnt_t newSize, float freq_factor, f_cnt_t& used )
+		f_cnt_t oldSize, f_cnt_t newSize, double freq_factor, f_cnt_t& used )
 {
         /*
 #ifdef REAL_IS_FLOAT
@@ -1347,9 +1348,9 @@ bool ADSR::done()
 
 
 // Return the current amplitude and increment internal positions
-float ADSR::value()
+real_t ADSR::value()
 {
-	float currentAmplitude = amplitude;
+	real_t currentAmplitude = amplitude;
 
 	// If we're done, don't output any signal
 	if( isDone == true )

@@ -50,6 +50,7 @@ AmplifierGDXEffect::AmplifierGDXEffect(
       Effect(&amplifiergdx_plugin_descriptor, parent, key),
       m_ampControls(this)
 {
+    setColor(QColor(160, 99, 111));
 }
 
 AmplifierGDXEffect::~AmplifierGDXEffect()

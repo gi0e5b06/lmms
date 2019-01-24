@@ -67,6 +67,7 @@ LV2EffectGDX::LV2EffectGDX(Model*                                    _parent,
       m_uri(LV2EffectGDXSubPluginFeatures::subPluginKeyToLV2Key(_key))
 {
     qInfo("LV2EffectGDX::LV2EffectGDX beginning");
+    setColor(QColor(59,128,74));
 
     LV22LMMS* manager = Engine::getLV2Manager();
 

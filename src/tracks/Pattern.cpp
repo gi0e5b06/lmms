@@ -27,6 +27,7 @@
 #include "AudioSampleRecorder.h"
 #include "BBTrackContainer.h"
 #include "Backtrace.h"
+#include "CaptionMenu.h"
 #include "GuiApplication.h"
 #include "InstrumentTrack.h"
 #include "MainWindow.h"
@@ -636,12 +637,14 @@ void PatternView::changeStepResolution(QAction* _a)
 
 QMenu* PatternView::buildContextMenu()
 {
-    QMenu* cm = new QMenu(this);
+    QPointer<CaptionMenu> cm = new CaptionMenu(model()->displayName(), this);
+    // QMenu* cm = new QMenu(this);
 
     QAction* a;
 
     cm->addAction(embed::getIconPixmap("piano"), tr("Open in piano-roll"),
                   this, SLOT(openInPianoRoll()));
+    cm->addSeparator();
     addRemoveMuteClearMenu(cm, true, true, !m_pat->m_notes.empty());
     cm->addSeparator();
     addCutCopyPasteMenu(cm, true, true, true);
@@ -1192,8 +1195,8 @@ void PatternView::paintEvent(QPaintEvent*)
 
     if(!beatPattern)
     {
-        paintTileTacts(current, m_pat->length().nextFullTact(), 1,
-                       bgcolor, p);
+        paintTileTacts(current, m_pat->length().nextFullTact(), 1, bgcolor,
+                       p);
     }
 
     // pattern name

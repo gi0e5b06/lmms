@@ -1,24 +1,22 @@
 /*
  * FrequencyGDX.cpp -
  *
- * Copyright (c) 2018 gi0e5b06 (on github.com)
+ * Copyright (c) 2018-2019 gi0e5b06 (on github.com)
  *
- * This file is part of LMMS - https://lmms.io
+ * This file is part of LSMM -
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public
- * License along with this program (see COPYING); if not, write to the
- * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
- * Boston, MA 02110-1301 USA.
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
 
@@ -36,7 +34,7 @@ extern "C"
     Plugin::Descriptor PLUGIN_EXPORT frequencygdx_plugin_descriptor
             = {STRINGIFY(PLUGIN_NAME),
                "FrequencyGDX",
-               QT_TRANSLATE_NOOP("pluginBrowser", "A wave shaping plugin"),
+               QT_TRANSLATE_NOOP("pluginBrowser", "A frequency detector"),
                "gi0e5b06 (on github.com)",
                0x0100,
                Plugin::Effect,
@@ -45,20 +43,20 @@ extern "C"
                NULL};
 }
 
-static float REF_FREQS[128];
+static frequency_t REF_FREQS[128];
 
-int closest_key(float _f, float _delta)
+int closest_key(frequency_t _f, real_t _delta)
 {
-    if(_f < 7.9f)
+    if(_f < 7.9)
         return -1;
-    if(_f > 13000.f)
+    if(_f > 13000.)
         return 128;
 
-    float vmin = 100000.f;
-    int   kmin = 0;
+    real_t vmin = 100000.;
+    int    kmin = 0;
     for(int k = 0; k < 128; k++)
     {
-        float v = fabsf(_f / REF_FREQS[k] - 1.f);
+        real_t v = abs(_f / REF_FREQS[k] - 1.);
         if(v <= vmin)
         {
             vmin = v;
@@ -73,7 +71,9 @@ FrequencyGDX::FrequencyGDX(Model*                                    parent,
       Effect(&frequencygdx_plugin_descriptor, parent, key),
       m_gdxControls(this), m_framesFilledUp(0), m_ak(-1), m_energy(0)
 {
-  memset(m_buffer, 0, 2 * FFT_BUFFER_SIZE * sizeof(float));
+    setColor(QColor(59, 128, 74));
+
+    memset(m_buffer, 0, 2 * FFT_BUFFER_SIZE * sizeof(FLOAT));
 
     m_specBuf = (fftwf_complex*)fftwf_malloc((FFT_BUFFER_SIZE + 1)
                                              * sizeof(fftwf_complex));
@@ -83,8 +83,8 @@ FrequencyGDX::FrequencyGDX(Model*                                    parent,
     // A4 69 440Hz
     for(int k = 0; k < 128; k++)
     {
-        float pitch  = (k - 69) / 12.f;
-        REF_FREQS[k] = 440.f * powf(2.f, pitch);
+        real_t pitch = (k - 69) / 12.;
+        REF_FREQS[k] = 440. * pow(2., pitch);
     }
 }
 
@@ -109,7 +109,6 @@ bool FrequencyGDX::processAudioBuffer(sampleFrame* _buf, const fpp_t _frames)
     }
 
     const int cm = LeftChannel;  // m_saControls.m_channelMode.value();
-
     switch(cm)
     {
         case MergeChannels:
@@ -142,42 +141,108 @@ bool FrequencyGDX::processAudioBuffer(sampleFrame* _buf, const fpp_t _frames)
     else
         m_framesFilledUp = 2 * FFT_BUFFER_SIZE;
 
-    fftwf_execute(m_fftPlan);
-    absspec(m_specBuf, m_absSpecBuf, FFT_BUFFER_SIZE + 1);
-
-    const int topf = topband(m_absSpecBuf, FFT_BUFFER_SIZE + 1);
-    m_energy       = maximum(m_absSpecBuf, FFT_BUFFER_SIZE + 1);
-    // qInfo("FrequencyGDX: %d Hz, E=%f", topf, m_energy);
-
-    if(topf > 0)
+    const int   mode = m_gdxControls.m_modeModel.value();
+    frequency_t tf   = 0.;
+    switch(mode)
     {
-        float tf = float(topf) * 22050.f / float(FFT_BUFFER_SIZE);
+        case 2:
+        {
+            fftwf_execute(m_fftPlan);
+            absspec(m_specBuf, m_absSpecBuf, FFT_BUFFER_SIZE + 1);
+
+            const int topfq = topband(m_absSpecBuf, FFT_BUFFER_SIZE + 1);
+            m_energy        = maximum(m_absSpecBuf, FFT_BUFFER_SIZE + 1);
+            tf = round(real_t(topfq) * 22050. / real_t(FFT_BUFFER_SIZE));
+        }
+        break;
+        case 0:
+        {
+            int    topfq = 0;
+            real_t first = -1;
+            int    f     = 0;
+            while(f < m_framesFilledUp - 1)
+            {
+                int i = 2 * FFT_BUFFER_SIZE - m_framesFilledUp + f;
+                f++;
+                if(m_buffer[i] < 0. && m_buffer[i + 1] >= 0.)
+                //|| (m_buffer[i] > 0. && m_buffer[i + 1] <= 0.))
+                {
+                    first = i
+                            + abs(m_buffer[i])
+                                      / (abs(m_buffer[i]) + m_buffer[i + 1]);
+                    break;
+                }
+            }
+            real_t second = -1;
+            if(first >= 0)
+            {
+                while(f < m_framesFilledUp - 1)
+                {
+                    int i = 2 * FFT_BUFFER_SIZE - m_framesFilledUp + f;
+                    f++;
+                    if(m_buffer[i] < 0. && m_buffer[i + 1] >= 0.)
+                    //|| (m_buffer[i] > 0. && m_buffer[i + 1] <= 0.))
+                    {
+                        second = i
+                                 + abs(m_buffer[i])
+                                           / (abs(m_buffer[i])
+                                              + m_buffer[i + 1]);
+                        ;
+                        break;
+                    }
+                }
+                if(second >= 0. && (second - first > 4.))
+                {
+                    topfq = round(
+                            real_t(Engine::mixer()->processingSampleRate())
+                            / (1. * (second - first)));
+                }
+            }
+            // qInfo("FrequencyGDX first=%d second=%d topfq=%d", first,
+            // second,
+            //      topfq);
+            m_energy = 0.;
+            tf = frequency_t(topfq);  // * 22050. / real_t(FFT_BUFFER_SIZE);
+        }
+        break;
+        case 1:
+        default:
+        {
+            m_energy = 0.;
+            tf       = 0.;
+        }
+        break;
+    }
+    qInfo("FrequencyGDX: %f Hz, E=%f", tf, m_energy);
+
+    if(tf > 0.)
+    {
         m_gdxControls.m_topFrequencyModel.setValue(tf);
 
-        int tk = closest_key(tf, 0.16f);
+        int tk = closest_key(tf, 0.16);
         // if(tk >= 0 && tk <= 127)
         {
             m_gdxControls.m_topKeyModel.setValue(tk);
             m_gdxControls.m_topNoteModel.setValue(tk < 0 ? -1 : tk % 12);
         }
 
-        int ak = closest_key(tf, 0.01f);
+        int ak = closest_key(tf, 0.01);
         if(ak == m_ak && ak >= 0 && ak <= 127)
         {
-            float af = REF_FREQS[ak];
+            frequency_t af = REF_FREQS[ak];
             m_gdxControls.m_avgFrequencyModel.setValue(af);
             m_gdxControls.m_avgKeyModel.setValue(ak);
             m_gdxControls.m_avgNoteModel.setValue(ak < 0 ? -1 : ak % 12);
         }
 
-        if(ak==m_ak && ak == tk)
+        if(ak == m_ak && ak == tk)
         {
             int mk = tk;
             m_gdxControls.m_mainKeyModel.setValue(mk);
             m_gdxControls.m_mainNoteModel.setValue(mk < 0 ? -1 : mk % 12);
             if(mk >= 0 && mk <= 127)
             {
-                float mf = REF_FREQS[mk];
+                frequency_t mf = REF_FREQS[mk];
                 m_gdxControls.m_mainFrequencyModel.setValue(mf);
             }
         }

@@ -4,7 +4,7 @@ SET(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 # Enable C++11
 #ADD_DEFINITIONS(-std=c++0x)
 #ADD_DEFINITIONS(-std=c++11)
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O9 -std=c++11")
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0 -std=c++11")
 
 IF(LMMS_BUILD_APPLE)
 	SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
@@ -86,6 +86,7 @@ IF("${PLUGIN_LIST}" STREQUAL "")
 		MidiExport
 		MultitapEcho
 		monstro
+                NormalizeGDX
 		nes
 		opl2
 		organic
@@ -107,6 +108,7 @@ IF("${PLUGIN_LIST}" STREQUAL "")
                 SpaceGDX
 		SpectrumAnalyzer
                 SplitGDX
+                StemMP4Import
 		stereo_enhancer
 		stereo_matrix
 		stk

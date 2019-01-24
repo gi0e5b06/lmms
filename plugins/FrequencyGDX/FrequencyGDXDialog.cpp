@@ -49,6 +49,9 @@ FrequencyGDXDialog::FrequencyGDXDialog(FrequencyGDXControls* controls) :
     mainLayout->setContentsMargins(6, 6, 6, 6);
     mainLayout->setSpacing(6);
 
+    ComboBox* modeCMB = new ComboBox(this);
+    modeCMB->setModel(&controls->m_modeModel);
+
     m_topFrequencyLBL = new QLabel("------", this);
     m_topKeyLBL       = new QLabel("---", this);
     m_topNoteLBL      = new QLabel("-", this);
@@ -159,6 +162,8 @@ FrequencyGDXDialog::FrequencyGDXDialog(FrequencyGDXControls* controls) :
                           Qt::AlignBottom | Qt::AlignHCenter);
     mainLayout->addWidget(m_mainNoteKNB, 5, 2,
                           Qt::AlignBottom | Qt::AlignHCenter);
+
+    mainLayout->addWidget(modeCMB, 6, 0, 1, 3);
 
     setFixedWidth(250);
     setMinimumHeight(((sizeHint().height() - 1) / 50 + 1) * 50);

@@ -48,6 +48,7 @@ CompressorGDX::CompressorGDX(Model*                                    parent,
       Effect(&compressorgdx_plugin_descriptor, parent, key),
       m_gdxControls(this)  //, m_fact0(0.), m_sact0(0.)
 {
+    setColor(QColor(192, 66, 74));
 }
 
 CompressorGDX::~CompressorGDX()

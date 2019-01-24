@@ -50,6 +50,7 @@ ScatterGDXEffect::ScatterGDXEffect(
       Effect(&scattergdx_plugin_descriptor, parent, key),
       m_gdxControls(this), m_len(0), m_prev(0), m_pos(0), m_time(0), m_end(0)
 {
+    setColor(QColor(59, 160, 74));
     m_buffer = MM_ALLOC(sampleFrame, 1536000);  // 8s*192k
 }
 

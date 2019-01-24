@@ -71,7 +71,16 @@ SamplePlayHandle::~SamplePlayHandle()
     sharedObject::unref(m_sampleBuffer);
     if(m_ownAudioPort)
     {
-        delete audioPort();
+        AudioPort* ap = audioPort();
+        if(ap == nullptr)
+        {
+            qWarning("SamplePlayHandle::~SamplePlayHandle ap==nullptr");
+        }
+        else
+        {
+            qWarning("SamplePlayHandle::~SamplePlayHandle delete");
+            delete ap;
+        }
     }
 }
 

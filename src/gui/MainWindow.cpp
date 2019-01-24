@@ -369,7 +369,7 @@ void MainWindow::finalize()
 
     project_menu->addSeparator();
     project_menu->addAction(embed::getIconPixmap("project_import"),
-                            tr("&Import MIDI..."), Engine::getSong(),
+                            tr("&Import..."), Engine::getSong(),
                             SLOT(importProject()));
     project_menu->addAction(embed::getIconPixmap("midi_file"),
                             tr("&Export MIDI..."), Engine::getSong(),

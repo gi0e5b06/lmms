@@ -1,5 +1,5 @@
 /*
- * lmms_qt.cpp - generic Qt-related stuff
+ * lmms_qt_core.cpp - generic Qt-related stuff
  *
  * Copyright (c) 2018 gi0e5b06 (on github.com)
  *
@@ -22,7 +22,7 @@
  *
  */
 
-#include "lmms_qt.h"
+#include "lmms_qt_core.h"
 
 #include "lmms_basics.h" // REQUIRED
 

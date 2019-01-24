@@ -52,6 +52,8 @@ ShaperGDX::ShaperGDX(Model*                                    parent,
       m_gdxControls(this), m_fpp(Engine::mixer()->framesPerPeriod()),
       m_phase(0.)
 {
+    setColor(QColor(160, 160, 74));
+
     int periodsPerDisplayRefresh = qMax(
             1, int(ceil(real_t(Engine::mixer()->processingSampleRate())
                         / m_fpp / CONFIG_GET_INT("ui.framespersecond"))));

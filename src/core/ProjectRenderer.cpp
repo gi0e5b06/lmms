@@ -201,7 +201,7 @@ void ProjectRenderer::run()
 
     qInfo("ProjectRenderer::run #2");
 
-    const Song::PlayPos& exportPos
+    const PlayPos& exportPos
             = Engine::getSong()->getPlayPos(Song::Mode_PlaySong);
     m_progress = 0;
     std::pair<MidiTime, MidiTime> exportEndpoints

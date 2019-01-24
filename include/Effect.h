@@ -35,6 +35,8 @@
 //#include "MemoryManager.h"
 #include "Configuration.h"
 
+#include <QColor>
+
 class EffectChain;
 class EffectControls;
 
@@ -151,6 +153,17 @@ class EXPORT Effect : public Plugin
                                Model*         _parent,
                                Descriptor::SubPluginFeatures::Key* _key);
 
+    bool   useStyleColor() const;
+    void   setUseStyleColor(bool _b);
+    QColor color() const;
+    void   setColor(const QColor& _c);
+
+  public slots:
+    // virtual void clear();
+    virtual void copy() final;
+    // virtual void paste();
+    virtual void toggleMute() final;
+
   protected:
     inline bool isAutoQuitEnabled() const
     {
@@ -264,6 +277,9 @@ class EXPORT Effect : public Plugin
     TempoSyncKnobModel m_autoQuitModel;
     FloatModel         m_gateModel;
     FloatModel         m_balanceModel;
+
+    QColor m_color;
+    bool   m_useStyleColor;
 
     // bool m_autoQuitDisabled;
 

@@ -42,68 +42,92 @@ class Knob;
 class LedCheckBox;
 class TempoSyncKnob;
 
-
 class EffectView : public PluginView
 {
-	Q_OBJECT
+    Q_OBJECT
 
- public:
-	EffectView( Effect * _model, QWidget * _parent );
-	virtual ~EffectView();
+  public:
+    EffectView(Effect* _model, QWidget* _parent);
+    virtual ~EffectView();
 
-	inline Effect * effect()
-	{
-		return castModel<Effect>();
-	}
-	inline const Effect * effect() const
-	{
-		return castModel<Effect>();
-	}
+    inline Effect* effect()
+    {
+        return castModel<Effect>();
+    }
 
+    inline const Effect* effect() const
+    {
+        return castModel<Effect>();
+    }
 
- public slots:
-	void editControls();
-	void moveUp();
-	void moveDown();
-	void moveTop();
-	void moveBottom();
-	void deletePlugin();
-	void displayHelp();
-	void closeEffects();
-        void showContextMenu();
+  public slots:
+    // virtual bool close();
+    // virtual void update();
+    // virtual void remove() final;
+    // virtual void mute() final;
+    // virtual void clear() final;
+    virtual void cut() final;
+    virtual void copy() final;
+    virtual void paste() final;
+    virtual void changeName() final;
+    virtual void resetName();
+    virtual void changeColor() final;
+    virtual void resetColor() final;
 
-signals:
-	void moveUp( EffectView * _plugin );
-	void moveDown( EffectView * _plugin );
-	void moveTop( EffectView * _plugin );
-	void moveBottom( EffectView * _plugin );
-	void deletePlugin( EffectView * _plugin );
+    void displayHelp();
+    void showContextMenu();
 
+  private slots:
+    void openControls();
+    void closeControls();
+    void cloneEffect();
+    void toggleEffect();
+    void clearEffect();
+    void removeEffect();
+    void moveUp();
+    void moveDown();
+    void moveTop();
+    void moveBottom();
 
- protected:
-	virtual QMenu* buildContextMenu();
-	virtual void contextMenuEvent( QContextMenuEvent * _me );
-        virtual void mousePressEvent(QMouseEvent* _me);
-        virtual void mouseReleaseEvent(QMouseEvent* _me);
-	virtual void paintEvent( QPaintEvent * _pe );
-	virtual void modelChanged();
+  signals:
+    void moveUp(EffectView* _plugin);
+    void moveDown(EffectView* _plugin);
+    void moveTop(EffectView* _plugin);
+    void moveBottom(EffectView* _plugin);
+    void removeEffect(EffectView* _plugin);
 
+  protected:
+    virtual QMenu* buildContextMenu();
+    virtual void   addRemoveMuteClearMenu(QMenu* _cm,
+                                          bool   _remove,
+                                          bool   _mute,
+                                          bool   _clear) final;
+    virtual void   addCutCopyPasteMenu(QMenu* _cm,
+                                       bool   _cut,
+                                       bool   _copy,
+                                       bool   _paste) final;
+    virtual void   addNameMenu(QMenu* _cm, bool _enabled) final;
+    virtual void   addColorMenu(QMenu* _cm, bool _enabled) final;
+    virtual void   contextMenuEvent(QContextMenuEvent* _me);
 
+    virtual void mousePressEvent(QMouseEvent* _me);
+    virtual void mouseReleaseEvent(QMouseEvent* _me);
+    virtual void paintEvent(QPaintEvent* _pe);
+    virtual void modelChanged();
 
- private:
-	QPixmap m_bg;
+  private:
+    QPixmap m_bg;
 
-	LedCheckBox*   m_runningLCB;
-	LedCheckBox*   m_enabledLCB;
-	LedCheckBox*   m_clippingLCB;
-	Knob*          m_wetDryKNB;
-	TempoSyncKnob* m_autoQuitKNB;
-	Knob*          m_gateInKNB;
-        Knob*          m_balanceKNB;
+    LedCheckBox*   m_runningLCB;
+    LedCheckBox*   m_enabledLCB;
+    LedCheckBox*   m_clippingLCB;
+    Knob*          m_wetDryKNB;
+    TempoSyncKnob* m_autoQuitKNB;
+    Knob*          m_gateInKNB;
+    Knob*          m_balanceKNB;
 
-	QMdiSubWindow*       m_subWindow;
-	EffectControlDialog* m_controlView;
-
-} ;
+    QMdiSubWindow*       m_subWindow;
+    EffectControlDialog* m_controlView;
+};
 
 #endif

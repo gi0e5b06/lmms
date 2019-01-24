@@ -59,7 +59,7 @@ void InstrumentPlayHandle::play(sampleFrame* _working_buffer)
     do
     {
         nphsLeft = false;
-        for(const NotePlayHandle* constNotePlayHandle : nphv)
+        for(const NotePlayHandle* constNotePlayHandle: nphv)
         {
             NotePlayHandle* notePlayHandle
                     = const_cast<NotePlayHandle*>(constNotePlayHandle);
@@ -92,11 +92,16 @@ void InstrumentPlayHandle::play(sampleFrame* _working_buffer)
 
 bool InstrumentPlayHandle::isFinished() const
 {
-        return false;
+    return false;
 }
 
 bool InstrumentPlayHandle::isFromTrack(const Track* _track) const
 {
+    if(m_instrument == nullptr)
+    {
+        qWarning("InstrumentPlayHandle::isFromTrack m_instrument is null");
+        return false;
+    }
+    qWarning("InstrumentPlayHandle::isFromTrack %p %p", m_instrument, _track);
     return m_instrument->isFromTrack(_track);
 }
-

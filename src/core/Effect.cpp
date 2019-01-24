@@ -1,7 +1,7 @@
 /*
  * Effect.cpp - base-class for effects
  *
- * Copyright (c) 2018      gi0e5b06 (on github.com)
+ * Copyright (c) 2018-2019 gi0e5b06 (on github.com)
  * Copyright (c) 2006-2007 Danny McRae <khjklujn/at/users.sourceforge.net>
  * Copyright (c) 2006-2014 Tobias Doerffel <tobydox/at/users.sourceforge.net>
  *
@@ -26,6 +26,7 @@
 
 #include "Effect.h"
 
+#include "Clipboard.h"
 #include "Configuration.h"
 #include "EffectChain.h"
 #include "EffectControls.h"
@@ -52,8 +53,10 @@ Effect::Effect(const Plugin::Descriptor*                 _desc,
       m_clippingModel(false, this, tr("Clipping alert")),
       m_wetDryModel(1., 0., 1., 0.01, this, tr("Wet/Dry mix")),  // min=-1
       m_autoQuitModel(1000., 1., 8000., 1., 8000., this, tr("Decay")),
-      m_gateModel(0.0001, 0.0001, 1., 0.0001, this, tr("Gate")),
-      m_balanceModel(0., -1., 1., 0.01, this, tr("Balance"))
+      m_gateModel(0.000001, 0.000001, 1., 0.000001, this, tr("Gate")),
+      m_balanceModel(0., -1., 1., 0.01, this, tr("Balance")),
+      m_color(59,66,74), //#3B424A
+      m_useStyleColor(true)
 // m_autoQuitDisabled( false )
 {
     // m_gateModel.setScaleLogarithmic(true);
@@ -100,7 +103,7 @@ QDomElement Effect::saveState(QDomDocument& _doc, QDomElement& _parent)
 {
     // qInfo("Effect::saveState");
     QDomElement r = Plugin::saveState(_doc, _parent);
-    r.setAttribute("name",/* QString::fromUtf8*/(descriptor()->name));
+    r.setAttribute("name", /* QString::fromUtf8*/ (descriptor()->name));
     r.appendChild(key().saveXML(_doc));
     return r;
 }
@@ -505,4 +508,34 @@ void Effect::resample(int                _i,
     }
 #endif
     */
+}
+
+QColor Effect::color() const
+{
+    return m_color;
+}
+
+void Effect::setColor(const QColor& _c)
+{
+    m_color = _c;
+}
+
+bool Effect::useStyleColor() const
+{
+    return m_useStyleColor;
+}
+
+void Effect::setUseStyleColor(bool _b)
+{
+    m_useStyleColor = _b;
+}
+
+void Effect::copy()
+{
+    Clipboard::copy(this);
+}
+
+void Effect::toggleMute()
+{
+    m_enabledModel.setValue(!m_enabledModel.value());
 }

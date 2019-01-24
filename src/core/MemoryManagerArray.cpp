@@ -1,3 +1,24 @@
+/*
+ * MemoryManagerArray.cpp -
+ *
+ * Copyright (c) 2017-2019 gi0e5b06 (on github.com)
+ *
+ * This file is part of LSMM -
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
 
 #include "MemoryManagerArray.h"
 
@@ -35,8 +56,10 @@ MemoryManagerArray MemoryManagerArray::S4128( 256,4128);
 
 int                 L2[32768];
 int                 P2[16];
-int                 ASZ[16] = {128, 128, 128, 512, 512, 512, 512, 512,
-               512, 2048, 1024, 512, 512, 512, 512, 128};
+int                 ASZ[16] = {128, 128,  128,  512,   // 1-8
+               512, 512,  512,  512,   // 16-128
+               512, 4096, 1024, 512,   // 256-2048
+               512, 512,  512,  128};  // 4096-32768
 MemoryManagerArray* MMA[16];
 
 //#define MMA_STD_ALLOC(size) ::malloc(size)
@@ -200,8 +223,8 @@ void* MemoryManagerArray::alignedAlloc(size_t      size,
     ptr = static_cast<char*>(MemoryManagerArray::alloc(
             size + MM_ALIGN_SIZE + sizeof(int), file, line));
 
-    if(ptr == NULL)
-        return NULL;
+    if(ptr == nullptr)
+        return nullptr;
 
     ptr2        = ptr + sizeof(int);
     aligned_ptr = ptr2 + (MM_ALIGN_SIZE - ((size_t)ptr2 & align_mask));
@@ -230,8 +253,8 @@ void MemoryManagerArray::setActive(bool active)
 MemoryManagerArray::MemoryManagerArray(const int    nbe,
                                        const size_t size,
                                        const char*  ref) :
-      m_mutex(QMutex::Recursive),
-      m_nbe(nbe), m_size(size), m_data(NULL), m_lastfree(0), m_count(0),
+      m_mutex(),  // QMutex::Recursive),
+      m_nbe(nbe), m_size(size), m_data(nullptr), m_lastfree(0), m_count(0),
       m_max(0), m_wasted(0), m_ref(ref), m_available(nbe, true)
 {
     if(nbe > 32 * 1024)
@@ -240,7 +263,8 @@ MemoryManagerArray::MemoryManagerArray(const int    nbe,
         qFatal("MemoryManagerArray: too big %lu (268435456 bytes max)",
                C2ULI(nbe * size));
 
-    m_data = (char*)::calloc(nbe, size);
+    m_data = (char*)MMA_STD_ALLOC(nbe * size);
+    // (char*)::calloc(nbe, size);
     // memset(available,0xFF,sizeof(unsigned int)*1024);
 }
 
@@ -250,22 +274,31 @@ MemoryManagerArray::~MemoryManagerArray()
             "~MemoryManagerArray %6lu : cnt=%6d : max=%6lu %s wasted=%6lu %s",
             C2ULI m_size, m_count, C2ULI m_max,
             (char*)(m_nbe == m_max ? "!!!" : "   "), C2ULI m_wasted, m_ref);
-    ::free(m_data);
+    MMA_STD_FREE(m_data);
+    //::free(m_data);
     //::free(m_available);
 
     QHashIterator<size_t, long> i(m_stats);
     while(i.hasNext())
     {
         i.next();
-        qWarning("                    %6lu : bytes=%6lu cnt=%6ld",
-                 C2ULI m_size, C2ULI i.key(), i.value());
+        qWarning(
+                "                    %6lu : bytes=%6lu cnt=%6ld"
+                "            %6ld",
+                C2ULI m_size, C2ULI i.key(), i.value(),
+                C2ULI(m_size - i.key()) * i.value());
     }
 }
 
+/*
 bool MemoryManagerArray::full()
 {
-    return m_count >= m_nbe;
+    m_mutex.lock();
+    bool r=m_count >= m_nbe;
+    m_mutex.unlock();
+    return r;
 }
+*/
 
 void* MemoryManagerArray::allocate(size_t size, const char* file, long line)
 {
@@ -365,7 +398,7 @@ bool MemoryManagerArray::deallocate(void* ptr, const char* file, long line)
         return false;
     }
 
-    size_t s = ((char*)ptr) - m_data;
+    const size_t s = ((char*)ptr) - m_data;
     if((s % m_size) != 0)
     {
         BACKTRACE
@@ -381,13 +414,20 @@ bool MemoryManagerArray::deallocate(void* ptr, const char* file, long line)
         qCritical("error: i out of range: %d in %lu: %s#%ld", i, C2ULI m_size,
                   file, line);
     }
-    if(m_available.bit(i))  // m_available[i])
+
+    if(m_available.bit(i))
     {
         BACKTRACE
         qWarning("error: should be taken n°%d in %lu: %s#%ld", i,
                  C2ULI m_size, file, line);
+        // BAD
+        m_available.set(i);
+        m_lastfree = i;
+        m_mutex.unlock();
+        return true;
     }
-    m_available.set(i);  // m_available[i]=true;
+
+    m_available.set(i);
     m_lastfree = i;
     m_count--;
     if(m_count < 0)

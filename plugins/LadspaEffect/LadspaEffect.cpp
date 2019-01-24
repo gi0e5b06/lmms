@@ -39,13 +39,11 @@
 #include "Mixer.h"
 #include "Song.h"
 #include "ValueBuffer.h"
-
 #include "debug.h"
 #include "embed.h"
 #include "lmms_math.h"
 
 #include <QMessageBox>
-
 
 extern "C"
 {
@@ -70,6 +68,8 @@ LadspaEffect::LadspaEffect(Model*                                    _parent,
       m_controls(NULL), m_maxSampleRate(0),
       m_key(LadspaSubPluginFeatures::subPluginKeyToLadspaKey(_key))
 {
+    setColor(QColor(59,66,128));
+
     Ladspa2LMMS* manager = Engine::getLADSPAManager();
     if(manager->getDescription(m_key) == nullptr)
     {
@@ -227,19 +227,19 @@ bool LadspaEffect::processAudioBuffer(sampleFrame* _buf, const fpp_t _frames)
                 case CHANNEL_OUT:
                     for(fpp_t f = 0; f < frames; ++f)
                     {
-                            float w0, d0, w1, d1;
-                            computeWetDryLevels(f, _frames, smoothBegin, smoothEnd,
-                                                w0, d0, w1, d1);
+                        float w0, d0, w1, d1;
+                        computeWetDryLevels(f, _frames, smoothBegin,
+                                            smoothEnd, w0, d0, w1, d1);
 
-                            float curVal = pp->buffer[f];
-                            if(isnan(curVal)||isinf(curVal)||(fabsf(curVal)<SILENCE))
-                                    curVal=0.f;
+                        float curVal = pp->buffer[f];
+                        if(isnan(curVal) || isinf(curVal)
+                           || (fabsf(curVal) < SILENCE))
+                            curVal = 0.f;
 
-                            if(channel==0)
-                                    _buf[f][0] = d0 * _buf[f][0] + w0 * curVal;
-                            else
-                            if(channel==1)
-                                    _buf[f][1] = d1 * _buf[f][1] + w1 * curVal;
+                        if(channel == 0)
+                            _buf[f][0] = d0 * _buf[f][0] + w0 * curVal;
+                        else if(channel == 1)
+                            _buf[f][1] = d1 * _buf[f][1] + w1 * curVal;
                     }
                     ++channel;
                     break;
@@ -258,7 +258,7 @@ bool LadspaEffect::processAudioBuffer(sampleFrame* _buf, const fpp_t _frames)
     }
 
     m_pluginMutex.unlock();
-    return shouldKeepRunning(_buf,_frames);
+    return shouldKeepRunning(_buf, _frames);
 }
 
 void LadspaEffect::setControl(int _control, LADSPA_Data _value)

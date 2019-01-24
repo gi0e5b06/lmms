@@ -154,7 +154,7 @@ void EffectRackView::moveBottom(EffectView* view)
     }
 }
 
-void EffectRackView::deletePlugin(EffectView* view)
+void EffectRackView::removeEffect(EffectView* view)
 {
     Effect* e = view->effect();
     m_effectViews.erase(
@@ -196,8 +196,8 @@ void EffectRackView::update()
                     SLOT(moveTop(EffectView*)));
             connect(view, SIGNAL(moveBottom(EffectView*)), this,
                     SLOT(moveBottom(EffectView*)));
-            connect(view, SIGNAL(deletePlugin(EffectView*)), this,
-                    SLOT(deletePlugin(EffectView*)), Qt::QueuedConnection);
+            connect(view, SIGNAL(removeEffect(EffectView*)), this,
+                    SLOT(removeEffect(EffectView*)), Qt::QueuedConnection);
             view->show();
             m_effectViews.append(view);
             if(i < view_map.size())
@@ -235,6 +235,7 @@ void EffectRackView::update()
     }
 
     // EFFECT_WIDTH
+    m_lastY+=18; // small bottom empty space
     w->setFixedSize(229 + 2 * EffectViewMargin, m_lastY);
 
     QWidget::update();
@@ -279,7 +280,7 @@ void EffectRackView::addEffect(Effect* fx)
         if((*vit)->effect() == fx)
         {
             qInfo("EffectRackView::addEffect() 4");
-            (*vit)->editControls();
+            (*vit)->openControls();
             qInfo("EffectRackView::addEffect() 5");
             break;
         }
@@ -291,7 +292,7 @@ void EffectRackView::mousePressEvent(QMouseEvent* _me)
 {
     if(_me->button() == Qt::MiddleButton)
     {
-        qInfo("MIDDLE PRESS");
+            //qInfo("MIDDLE PRESS");
         _me->accept();
     }
 }
@@ -301,7 +302,7 @@ void EffectRackView::mouseReleaseEvent(QMouseEvent* _me)
     if(_me->button() == Qt::MiddleButton)
     {
         _me->accept();
-        qInfo("MIDDLE RELEASE");
+        //qInfo("MIDDLE RELEASE");
         if(rect().contains(_me->pos()))
         {
             bool ok = Selection::has(Effect::classNodeName());

@@ -29,6 +29,7 @@
 
 #include <QThread>
 //#include <QDebug>
+#include <QUuid>
 
 #include <iterator>
 
@@ -40,6 +41,7 @@ PlayHandle::PlayHandle(const Type type, f_cnt_t offset) :
 		m_playHandleBuffer( NULL ),//BufferManager::acquire()),
 		m_bufferReleased(true)
 {
+        m_debug_uuid=QUuid::createUuid().toString();
 }
 
 

@@ -160,7 +160,7 @@ class EXPORT Mixer : public QObject
 
     void initDevices();
     void clear();
-    void clearNewPlayHandles();
+    void clearPlayHandlesToAdd();
 
     // audio-device-stuff
 
@@ -175,25 +175,20 @@ class EXPORT Mixer : public QObject
         return m_audioDevStartFailed;
     }
 
-    void                setAudioDevice(AudioDevice* _dev);
-    void                setAudioDevice(AudioDevice*                  _dev,
-                                       const struct qualitySettings& _qs,
-                                       bool                          _needs_fifo);
-    void                storeAudioDevice();
-    void                restoreAudioDevice();
+    void setAudioDevice(AudioDevice* _dev);
+    void setAudioDevice(AudioDevice*                  _dev,
+                        const struct qualitySettings& _qs,
+                        bool                          _needs_fifo);
+    void storeAudioDevice();
+    void restoreAudioDevice();
+
     inline AudioDevice* audioDev()
     {
         return m_audioDev;
     }
 
     // audio-port-stuff
-    inline void addAudioPort(AudioPort* _port)
-    {
-        requestChangeInModel();
-        m_audioPorts.push_back(_port);
-        doneChangeInModel();
-    }
-
+    void addAudioPort(AudioPort* _port);
     void removeAudioPort(AudioPort* _port);
 
     // MIDI-client-stuff
@@ -209,7 +204,6 @@ class EXPORT Mixer : public QObject
 
     // play-handle stuff
     bool addPlayHandle(PlayHandle* handle);
-
     void removePlayHandle(PlayHandle* handle);
 
     inline PlayHandleList& playHandles()
@@ -372,8 +366,11 @@ class EXPORT Mixer : public QObject
 
     const surroundSampleFrame* renderNextBuffer();
 
-    void clearInternal();
-
+    // void clearInternal();
+    bool addPlayHandleInternal(PlayHandle* _ph);
+    void removePlayHandleInternal(PlayHandle* _ph);
+    void removePlayHandleUnchecked(PlayHandle* _ph);
+    void deletePlayHandleInternal(PlayHandle* _ph);
     void runChangesInModel();
 
     bool m_renderOnly;
@@ -406,10 +403,10 @@ class EXPORT Mixer : public QObject
 
     // playhandle stuff
     PlayHandleList m_playHandles;
+    PlayHandleList m_playHandlesToAdd;
+    PlayHandleList m_playHandlesToRemove; /*Const*/
     // place where new playhandles are added temporarily
     // LocklessList<PlayHandle *> m_newPlayHandles;
-    PlayHandleList m_newPlayHandles;  // QList<PlayHandle*>
-    ConstPlayHandleList m_playHandlesToRemove;
 
     struct qualitySettings m_qualitySettings;
     real_t                 m_masterVolumeGain;

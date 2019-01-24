@@ -30,6 +30,7 @@ SET(LMMS_SRCS
 	gui/InstrumentView.cpp
 	gui/LfoControllerDialog.cpp
 	gui/LmmsPalette.cpp
+        gui/lmms_qt_gui.cpp
 	gui/LmmsStyle.cpp
 	gui/MainApplication.cpp
 	gui/MainWindow.cpp

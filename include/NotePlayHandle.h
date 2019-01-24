@@ -47,8 +47,9 @@ typedef QList<NotePlayHandle*>       NotePlayHandleList;
 typedef QList<const NotePlayHandle*> ConstNotePlayHandleList;
 
 class EXPORT NotePlayHandle /*final*/
-      : public PlayHandle
-      , public Note
+      :
+      public PlayHandle,
+      public Note
 {
     MM_OPERATORS
 
@@ -78,9 +79,7 @@ class EXPORT NotePlayHandle /*final*/
                    const int        midiEventChannel = -1,
                    const Origin     origin           = OriginPattern,
                    const int        generation       = 0);
-    virtual ~NotePlayHandle()
-    {
-    }
+    virtual ~NotePlayHandle();
     void done();
     void removeOneSubNote(NotePlayHandle* _nph);
 
@@ -265,7 +264,7 @@ class EXPORT NotePlayHandle /*final*/
                                   bool allPlayHandles = false);
 
     /*! Returns whether given NotePlayHandle instance is equal to *this */
-    bool operator==(const NotePlayHandle& _nph) const;
+    // bool operator==(const NotePlayHandle& _nph) const;
 
     /*! Returns whether NotePlayHandle belongs to BB track and BB track is
      * muted */
@@ -412,6 +411,7 @@ class EXPORT NotePlayHandle /*final*/
 class EXPORT NotePlayHandleManager  // : ObjectManager<NotePlayHandle>
 {
     // MM_OPERATORS
+
   public:
     /*
 static void init()

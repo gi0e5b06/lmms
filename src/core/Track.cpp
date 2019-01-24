@@ -43,6 +43,7 @@
 #include "BBEditor.h"
 #include "BBTrack.h"
 #include "BBTrackContainer.h"
+#include "CaptionMenu.h"
 #include "Clipboard.h"
 #include "ConfigManager.h"
 #include "Engine.h"
@@ -2681,14 +2682,16 @@ TrackOperationsWidget::TrackOperationsWidget(TrackView* parent) :
                           "to begin a new drag'n'drop-action.")
                                .arg(UI_CTRL_KEY));
 
-    QMenu* toMenu = new QMenu(this);
-    toMenu->setFont(pointSize<9>(toMenu->font()));
+    QPointer<CaptionMenu> toMenu
+            = new CaptionMenu(m_trackView->getTrack()->displayName(), this);
+    // QMenu* toMenu = new QMenu(this);
+    // toMenu->setFont(pointSize<9>(toMenu->font()));
     connect(toMenu, SIGNAL(aboutToShow()), this, SLOT(updateMenu()));
 
     setObjectName("automationEnabled");
 
     m_trackOps = new QPushButton(this);
-    m_trackOps->setGeometry(8, 6, 10, 20);
+    m_trackOps->setGeometry(11, 6, 10, 20);
     m_trackOps->setIcon(embed::getIcon("menu"));
     m_trackOps->setFocusPolicy(Qt::NoFocus);
     m_trackOps->setMenu(toMenu);
@@ -3312,7 +3315,7 @@ Track* Track::create(TrackTypes tt, TrackContainer* tc)
 {
     Engine::mixer()->requestChangeInModel();
 
-    Track* t = NULL;
+    Track* t = nullptr;
 
     switch(tt)
     {

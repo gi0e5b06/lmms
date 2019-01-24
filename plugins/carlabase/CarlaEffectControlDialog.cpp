@@ -186,7 +186,7 @@ void CarlaEffectControlDialog::onDataChanged()
                                              MIDI_CH-1,
                                              cc,
                                              v);
-                                Song::PlayPos pos=Engine::getSong()->getPlayPos();
+                                PlayPos pos=Engine::getSong()->getPlayPos();
                                 //qInfo("sending midi event");
                                 fx->handleMidiEvent(ev,pos,pos.currentFrame());
                         }

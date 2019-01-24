@@ -212,12 +212,18 @@ InstrumentTrack::InstrumentTrack(TrackContainer* tc) :
 
 InstrumentTrack::~InstrumentTrack()
 {
+    qWarning("InstrumentTrack::~InstrumentTrack");
+
     // kill all running notes and the iph
     silenceAllNotes(true);
 
     // now we're save deleting the instrument
-    if(m_instrument)
-        delete m_instrument;
+    Instrument* old = m_instrument;
+    if(old)
+    {
+        m_instrument = nullptr;
+        delete old;
+    }
 }
 
 QString InstrumentTrack::defaultName() const
@@ -846,7 +852,9 @@ bool InstrumentTrack::play(const MidiTime& _start,
     else
     {
         getTCOsInRange(tcos, _start,
-                       _start + tick_t(ceilf(float(_frames) / fpt))); //static_cast<int>(
+                       _start
+                               + tick_t(ceilf(float(_frames)
+                                              / fpt)));  // static_cast<int>(
     }
 
     // Handle automation: detuning

@@ -357,7 +357,7 @@ intptr_t CarlaInstrument::handleDispatcher(
 
 Instrument::Flags CarlaInstrument::flags() const
 {
-        return IsSingleStreamed | IsMidiBased | IsNotBendable;
+    return IsSingleStreamed | IsMidiBased | IsNotBendable;
 }
 
 f_cnt_t CarlaInstrument::desiredReleaseFrames() const
@@ -547,15 +547,16 @@ void CarlaInstrument::loadSettings(const QDomElement& elem)
 
 void CarlaInstrument::play(sampleFrame* workingBuffer)
 {
-    const uint bufsize = Engine::mixer()->framesPerPeriod();
+    const fpp_t bufsize = Engine::mixer()->framesPerPeriod();
 
-    //std::memset(workingBuffer, 0,
+    // std::memset(workingBuffer, 0,
     //            sizeof(sampleFrame) * bufsize);
 
     if(fHandle == nullptr)
     {
-            //instrumentTrack()->processAudioBuffer(workingBuffer, bufsize,
-            //                                nullptr);
+        // instrumentTrack()->processAudioBuffer(workingBuffer, bufsize,
+        //                                nullptr);
+        // qInfo("carla fHandle == nullptr");
         return;
     }
 
@@ -931,7 +932,7 @@ void CarlaInstrumentView::onDataChanged()
             {
                 MidiEvent ev(MidiEventTypes::MidiControlChange, MIDI_CH - 1,
                              cc, v);
-                Song::PlayPos pos = Engine::getSong()->getPlayPos();
+                PlayPos pos = Engine::getSong()->getPlayPos();
                 // qInfo("sending midi event");
                 fx->handleMidiEvent(ev, pos, pos.currentFrame());
             }

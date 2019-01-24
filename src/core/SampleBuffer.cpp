@@ -173,7 +173,7 @@ static QHash<QString, QFile*>       s_mmap_file;
 void SampleBuffer::clearMMap()
 {
     s_mmap_pointer.clear();
-    for(QFile* f : s_mmap_file)
+    for(QFile* f: s_mmap_file)
     {
         f->close();
         delete f;
@@ -1902,7 +1902,7 @@ f_cnt_t SampleBuffer::decodeSampleMPG123(const char*    _infile,
         err = mpg123_read(mh, buffer, buffer_size, &done);
         b.append((const char*)buffer, done);
         played += done;
-        // qInfo("libmpg123: done=%ld played=%ld",done,played);
+        // qInfo("libmpg123: done=%ld played=%ld", done, played);
 
         samples += done / framesize;
         /* We are not in feeder mode, so MPG123_OK, MPG123_ERR and
@@ -1921,13 +1921,18 @@ f_cnt_t SampleBuffer::decodeSampleMPG123(const char*    _infile,
     // qInfo("libmpg123: %li samples", (long)samples);
     cleanupMPG123(mh);
 
-    buf_ = new sample_t[samples];
-    memcpy(buf_, b.constData(), samples * sizeof(sample_t));
-    directFloatWrite(buf_, samples / channels, channels);
+    const f_cnt_t frames = samples / channels;
+    const float*  c      = (const float*)(b.constData());
+
+    buf_ = new sample_t[2 * frames];
+    for(f_cnt_t f = 0; f < frames; f++)
+        for(ch_cnt_t ch = 0; ch < 2; ch++)
+            buf_[2 * f + ch] = c[f * channels + ch];
+    directFloatWrite(buf_, frames, channels);
 
     channels_   = channels;
     samplerate_ = rate;
-    return samples / channels;
+    return frames;
 }
 
 #endif
@@ -2243,7 +2248,7 @@ QString SampleBuffer::tryToMakeRelative(const QString& file)
                         ConfigManager::inst()->dataDir().length());
 
         // Iterate over all valid "data:/" searchPaths
-        for(const QString& path : QDir::searchPaths("data"))
+        for(const QString& path: QDir::searchPaths("data"))
         {
             QString samplesPath = QDir::cleanPath(path + samplesSuffix) + "/";
             if(f.startsWith(samplesPath))

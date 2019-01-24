@@ -62,17 +62,19 @@ class FrequencyGDXControls : public EffectControls
 
   private:
     FrequencyGDX* m_effect;
-    FloatModel    m_topFrequencyModel;
-    FloatModel    m_avgFrequencyModel;
-    FloatModel    m_mainFrequencyModel;
+    ComboBoxModel m_modeModel;
 
-    FloatModel    m_topKeyModel;
-    FloatModel    m_avgKeyModel;
-    FloatModel    m_mainKeyModel;
+    FloatModel m_topFrequencyModel;
+    FloatModel m_avgFrequencyModel;
+    FloatModel m_mainFrequencyModel;
 
-    FloatModel    m_topNoteModel;
-    FloatModel    m_avgNoteModel;
-    FloatModel    m_mainNoteModel;
+    FloatModel m_topKeyModel;
+    FloatModel m_avgKeyModel;
+    FloatModel m_mainKeyModel;
+
+    FloatModel m_topNoteModel;
+    FloatModel m_avgNoteModel;
+    FloatModel m_mainNoteModel;
 
     friend class FrequencyGDXDialog;
     friend class FrequencyGDX;

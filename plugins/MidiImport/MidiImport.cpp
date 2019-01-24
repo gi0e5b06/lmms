@@ -76,10 +76,15 @@ MidiImport::~MidiImport()
 
 bool MidiImport::tryImport(TrackContainer* tc)
 {
-    if(openFile() == false)
-    {
+    if(!openFile())
         return false;
-    }
+
+    const QFile& f = file();
+    QFileInfo    fi(f);
+
+    if(fi.completeSuffix() != "mid" && fi.completeSuffix() != "midi"
+       && fi.completeSuffix() != "rmi")
+        return false;
 
 #ifdef LMMS_HAVE_FLUIDSYNTH
     if(gui != NULL && ConfigManager::inst()->defaultSoundfont().isEmpty())
@@ -275,7 +280,7 @@ bool MidiImport::readSMF(TrackContainer* tc)
     smfMidiCC      ccs[129];
     smfMidiChannel chs[256];
 
-    MeterModel&  timeSigMM = Engine::getSong()->getTimeSigModel();
+    MeterModel&        timeSigMM = Engine::getSong()->getTimeSigModel();
     AutomationPattern* timeSigNumeratorPat
             = AutomationPattern::globalAutomationPattern(
                     &timeSigMM.numeratorModel());

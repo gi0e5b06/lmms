@@ -40,7 +40,10 @@ class AudioPort;
 class PlayHandle : public ThreadableJob
 {
     MM_OPERATORS
+
   public:
+    QString m_debug_uuid;
+
     enum Types
     {
         TypeNotePlayHandle       = 0x01,

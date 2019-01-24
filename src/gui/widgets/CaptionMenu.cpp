@@ -2,7 +2,7 @@
  * CaptionMenu.cpp - context menu with a caption
  *
  * Copyright (c) 2007 Javier Serrano Polo <jasp00/at/users.sourceforge.net>
- * 
+ *
  * This file is part of LMMS - https://lmms.io
  *
  * This program is free software; you can redistribute it and/or
@@ -22,43 +22,44 @@
  *
  */
 
-
 #include "CaptionMenu.h"
+
 #include "embed.h"
 
-
-
-
-CaptionMenu::CaptionMenu( const QString & _title, QWidget * _parent ) :
-	QMenu( _title, _parent )
+CaptionMenu::CaptionMenu(const QString& _title, QWidget* _parent) :
+      QMenu(_title, _parent)
 {
-	QAction * caption = addAction( _title );
-	caption->setEnabled( false );
+    if(false)  // TODO: Config
+    {
+        QAction* caption = addAction(_title);
+        caption->setEnabled(false);
+    }
 }
-
-
-
 
 CaptionMenu::~CaptionMenu()
 {
 }
 
-
-
-
 void CaptionMenu::addHelpAction()
 {
-	QWidget* parent = (QWidget*) this->parent();
+    if(false)  // TODO: Config
+    {
+        addSeparator();
+        QWidget* parent = (QWidget*)this->parent();
 
-	if (parent == NULL)
-		return;
+        if(parent == NULL)
+            return;
 
-	if (! parent->whatsThis().isEmpty()) {
-		addAction( embed::getIconPixmap( "help" ), tr( "&Help" ),
-							parent, SLOT( displayHelp() ) );
-	}
-	else {
-		QAction* helpAction = addAction( embed::getIconPixmap("help"), tr("Help (not available)") );
-		helpAction->setDisabled(true);
-	}
+        if(!parent->whatsThis().isEmpty())
+        {
+            addAction(embed::getIconPixmap("help"), tr("&Help"), parent,
+                      SLOT(displayHelp()));
+        }
+        else
+        {
+            QAction* helpAction = addAction(embed::getIconPixmap("help"),
+                                            tr("Help (not available)"));
+            helpAction->setDisabled(true);
+        }
+    }
 }

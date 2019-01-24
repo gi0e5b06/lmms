@@ -31,7 +31,9 @@
 #include "Mixer.h"
 #include "Scale.h"
 #include "Song.h"
+#include "Backtrace.h"
 
+#include <QUuid>
 
 /*
 NotePlayHandle::BaseDetuning::BaseDetuning( DetuningHelper *detuning ) :
@@ -144,6 +146,11 @@ NotePlayHandle::NotePlayHandle( InstrumentTrack* instrumentTrack,
 }
 
 
+NotePlayHandle::~NotePlayHandle()
+{
+}
+
+
 void NotePlayHandle::removeOneSubNote(NotePlayHandle* _nph)
 {
         if(_nph)
@@ -158,9 +165,21 @@ void NotePlayHandle::removeOneSubNote(NotePlayHandle* _nph)
 }
 
 
+        static QHash<QString,bool> s_releaseTracker;
+
 void NotePlayHandle::done()
 {
 	lock();
+
+        if(s_releaseTracker.contains(m_debug_uuid))
+        {
+                BACKTRACE
+                qCritical("NotePlayHandleManager::release %p was "
+                          "already released",this);
+                return;
+        }
+        s_releaseTracker.insert(m_debug_uuid,true);
+
 	noteOff( 0 );
 
 	if( hasParent() == false )
@@ -541,8 +560,7 @@ ConstNotePlayHandleList NotePlayHandle::nphsOfInstrumentTrack( const InstrumentT
 }
 
 
-
-
+/*
 bool NotePlayHandle::operator==( const NotePlayHandle & _nph ) const
 {
 	return length() == _nph.length() &&
@@ -561,6 +579,7 @@ bool NotePlayHandle::operator==( const NotePlayHandle & _nph ) const
 		m_midiChannel == _nph.m_midiChannel &&
 		m_origin == _nph.m_origin;
 }
+*/
 
 
 const Scale* NotePlayHandle::scale() const

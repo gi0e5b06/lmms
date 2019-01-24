@@ -71,7 +71,7 @@ struct SF2PluginData
 {
 	int midiNote;
 	int lastPanning;
-	float lastVelocity;
+	real_t lastVelocity;
 	fluid_voice_t * fluidVoice;
 	bool isNew;
 	f_cnt_t offset;
@@ -551,7 +551,7 @@ void sf2Instrument::playNote( NotePlayHandle * _n, sampleFrame * )
 
 	if( tfp == 0 )
 	{
-		const float LOG440 = 2.643452676f;
+		const real_t LOG440 = 2.643452676486187;
 
 		int midiNote = (int)floor( 12.0 * ( log2( _n->unpitchedFrequency() ) - LOG440 ) - 4.0 );
 
@@ -560,6 +560,7 @@ void sf2Instrument::playNote( NotePlayHandle * _n, sampleFrame * )
 		{
 			return;
 		}
+                
 		const int baseVelocity = instrumentTrack()->midiPort()->baseVelocity();
 
 		SF2PluginData * pluginData = new SF2PluginData;
@@ -741,17 +742,28 @@ void sf2Instrument::play( sampleFrame * _working_buffer )
 }
 
 
-void sf2Instrument::renderFrames( f_cnt_t frames, sampleFrame * buf )
+void sf2Instrument::renderFrames( f_cnt_t frames, sampleFrame * _buf )
 {
+#ifdef REAL_IS_DOUBLE
+    FLOAT* buf = MM_ALLOC(FLOAT, 2 * frames);
+    for(f_cnt_t f = 0; f < frames; f++)
+        for(ch_cnt_t ch = 0; ch < 2; ch++)
+            buf[2 * f + ch] = _buf[f][ch];
+#endif
+#ifdef REAL_IS_FLOAT
+    FLOAT* buf=_buf;
+#endif
 	m_synthMutex.lock();
 	if( m_internalSampleRate < Engine::mixer()->processingSampleRate() &&
 							m_srcState != NULL )
 	{
 		const fpp_t f = frames * m_internalSampleRate / Engine::mixer()->processingSampleRate();
+
+                // TODO: use SampleRate::resample instead
 #ifdef __GNUC__
-		sampleFrame tmp[f];
+		FLOAT tmp[f*2];//sampleFrame tmp[f];
 #else
-		sampleFrame * tmp = new sampleFrame[f];
+		FLOAT* tmp=MM_ALLOC(FLOAT, 2 * f); //sampleFrame * tmp = new sampleFrame[f];
 #endif
 		fluid_synth_write_float( m_synth, f, tmp, 0, 2, tmp, 1, 2 );
 
@@ -764,7 +776,7 @@ void sf2Instrument::renderFrames( f_cnt_t frames, sampleFrame * buf )
 		src_data.end_of_input = 0;
 		int error = src_process( m_srcState, &src_data );
 #ifndef __GNUC__
-		delete[] tmp;
+		MM_FREE(tmp); //delete[] tmp;
 #endif
 		if( error )
 		{
@@ -777,9 +789,16 @@ void sf2Instrument::renderFrames( f_cnt_t frames, sampleFrame * buf )
 	}
 	else
 	{
-		fluid_synth_write_float( m_synth, frames, buf, 0, 2, buf, 1, 2 );
+                fluid_synth_write_float( m_synth, frames, buf, 0, 2, buf, 1, 2 );
 	}
 	m_synthMutex.unlock();
+
+#ifdef REAL_IS_DOUBLE
+        for(f_cnt_t f = 0; f < frames; f++)
+                for(ch_cnt_t ch = 0; ch < 2; ch++)
+                        _buf[f][ch] = buf[2 * f + ch];
+        MM_FREE(buf);
+#endif
 }
 
 

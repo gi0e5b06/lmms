@@ -1368,12 +1368,16 @@ bool Song::guiSaveProjectAs( const QString & _file_name )
 
 void Song::importProject()
 {
+        createProjectTree();
+
 	FileDialog ofd( NULL, tr( "Import file" ),
 			ConfigManager::inst()->userProjectsDir(),
 			tr("MIDI sequences") +
 			" (*.mid *.midi *.rmi);;" +
 			tr("Hydrogen projects") +
 			" (*.h2song);;" +
+			tr("Stems") +
+			" (*.stem.mp4);;" +
 			tr("All file types") +
 			" (*.*)");
 
@@ -1481,6 +1485,7 @@ bool Song::createProjectTree()
         pdir.mkpath("midi"    );
         pdir.mkpath("samples" );
         pdir.mkpath("song"    );
+        pdir.mkpath("stems"   );
         pdir.mkpath("tracks"  );
         pdir.mkpath("videos"  );
 
@@ -1488,6 +1493,8 @@ bool Song::createProjectTree()
         pdir.mkpath(QString("channels")+QDir::separator()+"rendered");
         pdir.mkpath(QString("midi"    )+QDir::separator()+"exported");
         pdir.mkpath(QString("song"    )+QDir::separator()+"rendered");
+        pdir.mkpath(QString("stems"   )+QDir::separator()+"imported");
+        pdir.mkpath(QString("stems"   )+QDir::separator()+"exported");
         pdir.mkpath(QString("tracks"  )+QDir::separator()+"frozen");
         pdir.mkpath(QString("tracks"  )+QDir::separator()+"rendered");
         pdir.mkpath(QString("videos"  )+QDir::separator()+"rendered");

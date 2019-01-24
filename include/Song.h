@@ -32,6 +32,7 @@
 #include "TrackContainer.h"
 #include "VstSyncController.h"
 //#include "ExportFilter.h"
+#include "PlayPos.h"
 #include "Transportable.h"
 #include "MetaData.h"
 
@@ -75,46 +76,6 @@ public:
 	void collectError( const QString error );
 	bool hasErrors();
 	QString errorSummary();
-
-	class PlayPos : public MidiTime
-	{
-	public:
-                PlayPos( const int abs = 0 ) :
-                         MidiTime( abs ),
-			 m_timeLine( NULL ),
-			 m_currentFrame( 0. )
-		{
-		}
-
-                inline void setCurrentFrame( const real_t f ) // relative
-		{
-			m_currentFrame = f;
-		}
-
-		inline real_t currentFrame() const // relative
-		{
-			return m_currentFrame;
-		}
-
-                inline real_t absoluteFrame() const
-                {
-                        return getTicks()*Engine::framesPerTick()+m_currentFrame;
-                }
-
-                inline void setAbsoluteFrame(real_t _f)
-                {
-                        setTicks(_f/Engine::framesPerTick());
-                        setCurrentFrame(fmod(_f,Engine::framesPerTick()));
-                }
-
-                TimeLineWidget * m_timeLine;
-
-	private:
-		real_t m_currentFrame;
-
-	} ;
-
-
 
 	void processNextBuffer();
 
@@ -278,7 +239,7 @@ public:
        void loadingCancelled()
        {
                m_isCancelled = true;
-               Engine::mixer()->clearNewPlayHandles();
+               Engine::mixer()->clearPlayHandlesToAdd();
        }
 
        bool isCancelled()

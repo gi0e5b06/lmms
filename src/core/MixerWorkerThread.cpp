@@ -97,9 +97,12 @@ void MixerWorkerThread::JobQueue::wait()
 {
 	while( (int) m_itemsDone < (int) m_queueSize )
 	{
-#if defined(LMMS_HOST_X86) || defined(LMMS_HOST_X86_64)
-		asm( "pause" );
-#endif
+                /*
+                  #if defined(LMMS_HOST_X86) || defined(LMMS_HOST_X86_64)
+                  asm( "pause" );
+                  #endif
+                */
+                QThread::yieldCurrentThread(); // GDX???
 	}
 }
 

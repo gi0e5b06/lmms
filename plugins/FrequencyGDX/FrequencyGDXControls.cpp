@@ -29,19 +29,20 @@
 #include <QDomElement>
 
 FrequencyGDXControls::FrequencyGDXControls(FrequencyGDX* effect) :
-      EffectControls(effect), m_effect(effect),
-      m_topFrequencyModel(0.f, 0.f, 22050.f, 1.f, this, tr("Top frequency")),
-      m_avgFrequencyModel(
-              0.f, 0.f, 22050.f, 1.f, this, tr("Average frequency")),
-      m_mainFrequencyModel(
-              0.f, 0.f, 22050.f, 1.f, this, tr("Main frequency")),
-      m_topKeyModel(-1.f, -1.f, 128.f, 1.f, this, tr("Top key")),
-      m_avgKeyModel(-1.f, -1.f, 128.f, 1.f, this, tr("Average key")),
-      m_mainKeyModel(-1.f, -1.f, 128.f, 1.f, this, tr("Main key")),
-      m_topNoteModel(-1.f, -1.f, 11.f, 1.f, this, tr("Top note")),
-      m_avgNoteModel(-1.f, -1.f, 11.f, 1.f, this, tr("Average note")),
-      m_mainNoteModel(-1.f, -1.f, 11.f, 1.f, this, tr("Main note"))
+      EffectControls(effect), m_effect(effect), m_modeModel(this, tr("Mode")),
+      m_topFrequencyModel(0., 0., 22050., 1., this, tr("Top frequency")),
+      m_avgFrequencyModel(0., 0., 22050., 1., this, tr("Average frequency")),
+      m_mainFrequencyModel(0., 0., 22050., 1., this, tr("Main frequency")),
+      m_topKeyModel(-1., -1., 128., 1., this, tr("Top key")),
+      m_avgKeyModel(-1., -1., 128., 1., this, tr("Average key")),
+      m_mainKeyModel(-1., -1., 128., 1., this, tr("Main key")),
+      m_topNoteModel(-1., -1., 11., 1., this, tr("Top note")),
+      m_avgNoteModel(-1., -1., 11., 1., this, tr("Average note")),
+      m_mainNoteModel(-1., -1., 11., 1., this, tr("Main note"))
 {
+    m_modeModel.addItem(tr("Simple"));
+    m_modeModel.addItem(tr("Precise (TODO)"));
+    m_modeModel.addItem(tr("FFT"));
 }
 
 FrequencyGDXControls::~FrequencyGDXControls()
@@ -54,8 +55,10 @@ void FrequencyGDXControls::changeControl()
 
 void FrequencyGDXControls::loadSettings(const QDomElement& _this)
 {
+    // TODO: mode
 }
 
 void FrequencyGDXControls::saveSettings(QDomDocument& doc, QDomElement& _this)
 {
+    // TODO: mode
 }

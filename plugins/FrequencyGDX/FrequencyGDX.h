@@ -41,7 +41,7 @@ class PLUGIN_EXPORT FrequencyGDX : public Effect
         RightChannel
     };
 
-    static const int FFT_BUFFER_SIZE = 4096; // 22050
+    static const int FFT_BUFFER_SIZE = 4096;  // 22050
     static const int MAX_BANDS       = 22050;
 
     FrequencyGDX(Model*                                    parent,
@@ -60,12 +60,12 @@ class PLUGIN_EXPORT FrequencyGDX : public Effect
     fftwf_plan m_fftPlan;
 
     fftwf_complex* m_specBuf;
-    float          m_absSpecBuf[FFT_BUFFER_SIZE + 1];
-    float          m_buffer[FFT_BUFFER_SIZE * 2];
+    FLOAT          m_absSpecBuf[FFT_BUFFER_SIZE + 1];
+    FLOAT          m_buffer[FFT_BUFFER_SIZE * 2];
     int            m_framesFilledUp;
 
-    int   m_ak;
-    float m_energy;
+    int    m_ak;
+    real_t m_energy;
 
     friend class FrequencyGDXControls;
 };
