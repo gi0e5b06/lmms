@@ -79,7 +79,7 @@ void PaintCacheable::resizeCache(int _w, int _h)
             delete oldc;
 
         if(m_valid)
-                qWarning("PaintCacheable::resizeCache");
+            qWarning("PaintCacheable::resizeCache");
     }
 }
 
@@ -96,7 +96,7 @@ void PaintCacheable::endCache()
 {
     m_painter->end();
     if(m_valid)
-            qWarning("PaintCacheable::endCache");
+        qWarning("PaintCacheable::endCache");
     m_valid = true;
 }
 

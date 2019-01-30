@@ -27,7 +27,7 @@
 
 #include "JournallingObject.h"
 #include "Model.h"
-#include "WaveForm.h"
+#include "WaveFormStandard.h"
 
 #include <QDomElement>
 
@@ -50,15 +50,25 @@ class EXPORT WaveFormModel
                               const QString&     name,
                               const bool         required = true);
 
-    const WaveForm* value() const;
+    static inline const QString classNodeName()
+    {
+        return "wave_form";
+    }
+
+    virtual QString nodeName() const
+    {
+        return classNodeName();
+    }
+
+    const WaveFormStandard* value() const;
 
   public slots:
-    void setValue(const WaveForm* _wf);
+    void setValue(const WaveFormStandard* _wf);
 
   private:
     QString formatNumber(real_t v);
 
-    const WaveForm* m_wf;
+    const WaveFormStandard* m_wf;
 };
 
 #endif

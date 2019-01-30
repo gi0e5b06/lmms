@@ -30,7 +30,7 @@
 #include "Engine.h"
 #include "Mixer.h"
 #include "ProjectJournal.h"
-#include "WaveForm.h"
+#include "WaveFormStandard.h"
 #include "debug.h"
 #include "lmms_math.h"  // REQUIRED
 
@@ -326,7 +326,7 @@ void AutomatableModel::setRandomRatio(const real_t _ratio)
 {
     real_t rr = bound(0., abs(_ratio), 1.);
     if(rr != 0. && m_randomDistribution == nullptr)
-        m_randomDistribution = &WaveForm::SHARPGAUSS;
+        m_randomDistribution = &WaveFormStandard::SHARPGAUSS;
     m_randomRatio = rr;
     emit propertiesChanged();
 }
@@ -592,8 +592,8 @@ real_t AutomatableModel::randomizedValue(real_t) const
     real_t r = m_value;
     if(m_randomRatio != 0.)
     {
-        const real_t    rr = m_randomRatio * range();
-        const WaveForm* d  = m_randomDistribution;
+        const real_t            rr = m_randomRatio * range();
+        const WaveFormStandard* d  = m_randomDistribution;
 
         real_t x = 2. * fastrand01inc() - 1.;
         if(d != nullptr)
@@ -607,8 +607,8 @@ void AutomatableModel::randomizeValues(ValueBuffer* _vb) const
 {
     if(m_randomRatio != 0.)
     {
-        const real_t    rr = m_randomRatio * range();
-        const WaveForm* d  = m_randomDistribution;
+        const real_t            rr = m_randomRatio * range();
+        const WaveFormStandard* d  = m_randomDistribution;
 
         // TODO: this loop could be improved using pointer arithmetic
         real_t* v = _vb->values();

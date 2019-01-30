@@ -55,13 +55,13 @@ class EqEffect : public Effect
             buf[f][0] *= scale;
             buf[f][1] *= scale;
 
-            if(fabs(buf[f][0]) > peak[0][0])
+            if(abs(buf[f][0]) > peak[0][0])
             {
-                peak[0][0] = fabs(buf[f][0]);
+                peak[0][0] = abs(buf[f][0]);
             }
-            if(fabs(buf[f][1]) > peak[0][1])
+            if(abs(buf[f][1]) > peak[0][1])
             {
-                peak[0][1] = fabs(buf[f][0]);
+                peak[0][1] = abs(buf[f][0]);
             }
         }
     }
@@ -91,14 +91,14 @@ class EqEffect : public Effect
     real_t m_inGain;
     real_t m_outGain;
 
-    real_t peakBand(real_t minF, real_t maxF, EqAnalyser*, int);
+    real_t peakBand(frequency_t minF, frequency_t maxF, EqAnalyser* fft, sample_rate_t sr);
 
-    inline real_t bandToFreq(int index, int sampleRate)
+    inline real_t bandToFreq(int index, sample_rate_t sr)
     {
-        return index * sampleRate / (MAX_BANDS * 2);
+        return index * sr / (MAX_BANDS * 2);
     }
 
-    void setBandPeaks(EqAnalyser* fft, int);
+    void setBandPeaks(EqAnalyser* fft, sample_rate_t sr);
 };
 
 #endif  // EQEFFECT_H

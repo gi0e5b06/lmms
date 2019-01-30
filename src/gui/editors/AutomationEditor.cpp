@@ -45,7 +45,7 @@
 #include "TextFloat.h"
 #include "TimeLineWidget.h"
 #include "ToolTip.h"
-#include "WaveForm.h"
+#include "WaveFormStandard.h"
 
 //#include "debug.h"
 #include "embed.h"
@@ -107,8 +107,9 @@ AutomationEditor::AutomationEditor() :
     m_waveAmplitudeModel = new FloatModel(0.2f, -1.f, 1.f, 0.01f);
     m_waveRepeatModel    = new FloatModel(0.f, -10.f, 20.f, 0.01f);
 
-    WaveForm::fillBankModel(*m_waveBankModel);
-    WaveForm::fillIndexModel(*m_waveIndexModel, m_waveBankModel->value());
+    WaveFormStandard::fillBankModel(*m_waveBankModel);
+    WaveFormStandard::fillIndexModel(*m_waveIndexModel,
+                                     m_waveBankModel->value());
 
     connect(m_tensionModel, SIGNAL(dataChanged()), this, SLOT(setTension()));
     connect(m_waveBankModel, SIGNAL(dataChanged()), this,
@@ -1825,7 +1826,8 @@ void AutomationEditor::setWaveBank()
     if(m_pattern)
     {
         int old = m_waveIndexModel->value();
-        WaveForm::fillIndexModel(*m_waveIndexModel, m_waveBankModel->value());
+        WaveFormStandard::fillIndexModel(*m_waveIndexModel,
+                                         m_waveBankModel->value());
         m_pattern->setWaveBank(m_waveBankModel->value());
         m_waveIndexModel->setValue(old);
         update();
@@ -2423,7 +2425,7 @@ AutomationEditorWindow::AutomationEditorWindow() :
     m_zoomingXComboBox = new ComboBox(zoomToolBar);
     m_zoomingXComboBox->setFixedSize(70, 32);
 
-    for(const real_t& zoomLevel : Editor::ZOOM_LEVELS)
+    for(const real_t& zoomLevel: Editor::ZOOM_LEVELS)
     {
         m_editor->m_zoomingXModel.addItem(
                 QString("%1\%").arg(zoomLevel * 100));
@@ -2693,7 +2695,7 @@ void AutomationEditor::copySelection()
 
     QString r   = "";
     auto    map = m_pattern->getTimeMap();
-    for(auto t : map.keys())
+    for(auto t: map.keys())
     {
         real_t x = real_t(t) / MidiTime::ticksPerTact();
         real_t y = map.value(t);
@@ -2704,7 +2706,7 @@ void AutomationEditor::copySelection()
         r.append(QChar(','));
         r.append(QString::number(y, 'f'));
 
-        for(auto m : m_pattern->objects())
+        for(auto m: m_pattern->objects())
         {
             real_t v = m->scaledValue(y);
             r.append(QChar(','));

@@ -25,11 +25,12 @@
 #ifndef OSCILLATOR_VIEW_H
 #define OSCILLATOR_VIEW_H
 
-#include <QWidget>
-
 #include "MemoryManager.h"
 
+#include <QWidget>
+
 class OscillatorObject;
+class VisualizationWidget;
 
 class OscillatorView : public QWidget
 {
@@ -43,9 +44,11 @@ class OscillatorView : public QWidget
   public slots:
     void updateWave1IndexModel();
     void updateWave2IndexModel();
+    void updateVisualizationWidget();
 
   private:
-    OscillatorObject* m_osc;
+    OscillatorObject*    m_osc;
+    VisualizationWidget* m_showWave;
 };
 
 #endif

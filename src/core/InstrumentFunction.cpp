@@ -502,7 +502,8 @@ bool InstrumentFunctionArpeggio::processNote(NotePlayHandle* _n)
     const int selected_arp  = m_arpModel.value();
 
     ConstNotePlayHandleList cnphv
-            = NotePlayHandle::nphsOfInstrumentTrack(_n->instrumentTrack());
+            //= NotePlayHandle::nphsOfInstrumentTrack(_n->instrumentTrack());
+            = Engine::mixer()->nphsOfTrack(_n->instrumentTrack());
 
     if(m_arpModeModel.value() != FreeMode && cnphv.size() == 0)
     {
@@ -513,7 +514,7 @@ bool InstrumentFunctionArpeggio::processNote(NotePlayHandle* _n)
         {
             // still nothing found here, so lets return
             // return;
-            cnphv.push_back(_n);
+            cnphv.append(_n);
         }
     }
 
@@ -537,10 +538,13 @@ bool InstrumentFunctionArpeggio::processNote(NotePlayHandle* _n)
                              ? cnphv.first()->totalFramesPlayed()
                              : _n->totalFramesPlayed())
                     + arp_frames - 1;
+    // int cur_frame = _n->totalFramesPlayed() + arp_frames - 1;
+
     // used for loop
     f_cnt_t frames_processed = (m_arpModeModel.value() != FreeMode)
                                        ? cnphv.first()->noteOffset()
                                        : _n->noteOffset();
+    // f_cnt_t frames_processed = _n->noteOffset();
 
     while(frames_processed < Engine::mixer()->framesPerPeriod())
     {
@@ -559,7 +563,8 @@ bool InstrumentFunctionArpeggio::processNote(NotePlayHandle* _n)
         // now?
         if(m_arpModeModel.value() == SortMode
            && ((cur_frame / arp_frames) % total_range) / range
-                      != (f_cnt_t)_n->index())
+                      != cnphv.indexOf(_n))
+                //(f_cnt_t)_n->index()) // <-- suspicious
         {
             // Set master note if not playing arp note or it will play as an
             // ordinary note
@@ -938,7 +943,7 @@ bool InstrumentFunctionNoteDuplicatesRemoving::processNote(NotePlayHandle* _n)
 
     // const real_t fpt=Engine::framesPerTick();
     int i = 0;
-    for(const int64_t ck : m_cache)
+    for(const int64_t ck: m_cache)
     {
         if(ck + 150 < k)  // || ck>=k+150)
         {

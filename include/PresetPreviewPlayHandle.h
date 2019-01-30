@@ -50,6 +50,7 @@ public:
 
 	static void init();
 	static void cleanup();
+
 	static ConstNotePlayHandleList nphsOfInstrumentTrack( const InstrumentTrack* instrumentTrack );
 
 	static bool isPreviewing();

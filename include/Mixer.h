@@ -38,12 +38,14 @@
 #include "MemoryManager.h"
 #include "MixerProfiler.h"
 #include "Note.h"
+#include "NotePlayHandle.h"
 #include "Ring.h"
 #include "fifo_buffer.h"
 
 class AudioDevice;
 class MidiClient;
 class AudioPort;
+class NotePlayHandle;
 
 const fpp_t MINIMUM_BUFFER_SIZE = 32;
 const fpp_t DEFAULT_BUFFER_SIZE = 256;
@@ -206,12 +208,19 @@ class EXPORT Mixer : public QObject
     bool addPlayHandle(PlayHandle* handle);
     void removePlayHandle(PlayHandle* handle);
 
+    /*
     inline PlayHandleList& playHandles()
     {
         return m_playHandles;
     }
+    */
 
-    void removePlayHandlesOfTypes(Track* _track, const quint8 types);
+    void removePlayHandlesOfTypes(const Track* _track, const quint8 types);
+
+    ConstNotePlayHandleList  // QList<const NotePlayHandle*>
+            nphsOfTrack(const Track* _track, bool _all = false);
+
+    void adjustTempo(const bpm_t _tempo);
 
     // methods providing information for other classes
     inline fpp_t framesPerPeriod() const

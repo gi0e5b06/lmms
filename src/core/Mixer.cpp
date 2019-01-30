@@ -28,7 +28,6 @@
 #include "EnvelopeAndLfoParameters.h"
 #include "FxMixer.h"
 #include "MixerWorkerThread.h"
-#include "NotePlayHandle.h"
 #include "Song.h"
 #include "lmmsconfig.h"
 //#include "ConfigManager.h"
@@ -789,7 +788,7 @@ void Mixer::addAudioPort(AudioPort* _port)
 
 void Mixer::removeAudioPort(AudioPort* _port)
 {
-    qInfo("Mixer::removeAudioPort");
+    qInfo("Mixer::removeAudioPort 1");
     requestChangeInModel();
     /*
     QVector<AudioPort*>::Iterator it
@@ -799,8 +798,11 @@ void Mixer::removeAudioPort(AudioPort* _port)
         m_audioPorts.erase(it);
     }
     */
+    qInfo("Mixer::removeAudioPort 2");
     m_audioPorts.removeOne(_port);
+    qInfo("Mixer::removeAudioPort 3");
     doneChangeInModel();
+    qInfo("Mixer::removeAudioPort 4");
 }
 
 bool Mixer::addPlayHandle(PlayHandle* _ph)
@@ -941,11 +943,17 @@ void Mixer::removePlayHandleUnchecked(PlayHandle* _ph)
     }
 }
 
-void Mixer::removePlayHandlesOfTypes(Track* _track, const quint8 _types)
+void Mixer::removePlayHandlesOfTypes(const Track* _track, const quint8 _types)
 {
     if(_track == nullptr)
     {
         qWarning("Mixer::removePlayHandlesOfTypes track is null");
+        return;
+    }
+
+    if(_types == 0)
+    {
+        qWarning("Mixer::removePlayHandlesOfTypes types is 0");
         return;
     }
 
@@ -965,14 +973,13 @@ void Mixer::removePlayHandlesOfTypes(Track* _track, const quint8 _types)
                 continue;
         */
         if(ph->isFromTrack(_track) && (ph->type() & _types))
-                toDelete.append(ph);
-           //&& !m_playHandlesToRemove.contains(ph))
-           //m_playHandlesToRemove.append(ph);
+            toDelete.append(ph);
+        //&& !m_playHandlesToRemove.contains(ph))
+        // m_playHandlesToRemove.append(ph);
     }
     while(!toDelete.isEmpty())
         removePlayHandleUnchecked(toDelete.takeFirst());
     doneChangeInModel();
-
 
     /*
       TMP GDX
@@ -1028,6 +1035,47 @@ void Mixer::removePlayHandlesOfTypes(Track* _track, const quint8 _types)
     }
     doneChangeInModel();
     */
+}
+
+ConstNotePlayHandleList Mixer::nphsOfTrack(const Track* _track, bool _all)
+{
+    ConstNotePlayHandleList cnphv;
+
+    if(_track == nullptr)
+    {
+        qWarning("Mixer::nphsOfTrack track is null");
+        return cnphv;
+    }
+
+    //requestChangeInModel();
+    for(PlayHandle* ph: m_playHandles)
+    {
+        if(!ph->isFromTrack(_track)
+           || !(ph->type() & PlayHandle::TypeNotePlayHandle))
+            continue;
+        const NotePlayHandle* nph = dynamic_cast<const NotePlayHandle*>(ph);
+        if(((nph->isReleased() == false && nph->hasParent() == false)
+            || _all == true))
+            cnphv.append(nph);
+    }
+    //doneChangeInModel();
+    return cnphv;
+}
+
+void Mixer::adjustTempo(const bpm_t _tempo)
+{
+    requestChangeInModel();
+    for(PlayHandle* ph: m_playHandles)
+    {
+        NotePlayHandle* nph = dynamic_cast<NotePlayHandle*>(ph);
+        if(nph != nullptr && !nph->isReleased())
+        {
+            nph->lock();
+            nph->resize(_tempo);
+            nph->unlock();
+        }
+    }
+    doneChangeInModel();
 }
 
 static QHash<QString, bool> s_deleteTracker;

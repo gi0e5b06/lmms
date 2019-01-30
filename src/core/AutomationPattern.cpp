@@ -36,7 +36,7 @@
 #include "Note.h"
 #include "ProjectJournal.h"
 #include "Song.h"
-#include "WaveForm.h"
+#include "WaveFormStandard.h"
 
 #include <cmath>
 
@@ -46,9 +46,9 @@ const real_t AutomationPattern::DEFAULT_MAX_VALUE = 1.;
 
 AutomationPattern::AutomationPattern(AutomationTrack* _auto_track) :
       TrackContentObject(_auto_track), m_autoTrack(_auto_track), m_objects(),
-      m_tension(1.), m_waveBank(WaveForm::ZERO_BANK),
-      m_waveIndex(WaveForm::ZERO_INDEX), m_waveRatio(0.5), m_waveSkew(0.),
-      m_waveAmplitude(0.1), m_waveRepeat(0.),
+      m_tension(1.), m_waveBank(WaveFormStandard::ZERO_BANK),
+      m_waveIndex(WaveFormStandard::ZERO_INDEX), m_waveRatio(0.5),
+      m_waveSkew(0.), m_waveAmplitude(0.1), m_waveRepeat(0.),
       m_progressionType(DiscreteProgression), m_dragging(false),
       m_isRecording(false), m_lastRecordedValue(0)
 {
@@ -162,7 +162,8 @@ void AutomationPattern::setTension(const real_t _tension)
 void AutomationPattern::setWaveBank(const int _waveBank)
 {
     // qInfo("AutomationPattern::setWaveBank waveBank=%d",_waveBank);
-    if(_waveBank >= WaveForm::MIN_BANK && _waveBank <= WaveForm::MAX_BANK)
+    if(_waveBank >= WaveFormStandard::MIN_BANK
+       && _waveBank <= WaveFormStandard::MAX_BANK)
     {
         m_waveBank = _waveBank;
         emit dataChanged();
@@ -172,7 +173,8 @@ void AutomationPattern::setWaveBank(const int _waveBank)
 void AutomationPattern::setWaveIndex(const int _waveIndex)
 {
     // qInfo("AutomationPattern::setWaveIndex waveIndex=%d",_waveIndex);
-    if(_waveIndex >= WaveForm::MIN_INDEX && _waveIndex <= WaveForm::MAX_INDEX)
+    if(_waveIndex >= WaveFormStandard::MIN_INDEX
+       && _waveIndex <= WaveFormStandard::MAX_INDEX)
     {
         m_waveIndex = _waveIndex;
         emit dataChanged();
@@ -576,8 +578,9 @@ real_t AutomationPattern::valueAt(timeMap::const_iterator v,
 
     const AutomatableModel* m = firstObject();
 
-    const WaveForm* wf = WaveForm::get(m_waveBank, m_waveIndex);
-    if(wf != &WaveForm::ZERO)
+    const WaveFormStandard* wf
+            = WaveFormStandard::get(m_waveBank, m_waveIndex);
+    if(wf != &WaveFormStandard::ZERO)
     {
         if(offset == 0)
         {
@@ -797,9 +800,9 @@ void AutomationPattern::loadSettings(const QDomElement& _this)
 {
     clear();
 
-    //movePosition(_this.attribute("pos").toInt());
-    //setName(_this.attribute("name"));
-    //setMuted(_this.attribute("mute", QString::number(false)).toInt());
+    // movePosition(_this.attribute("pos").toInt());
+    // setName(_this.attribute("name"));
+    // setMuted(_this.attribute("mute", QString::number(false)).toInt());
     TrackContentObject::loadSettings(_this);
 
     setProgressionType(

@@ -92,6 +92,7 @@ SET(LMMS_SRCS
 	core/VstSyncController.cpp
         core/WaveForm.cpp
         core/WaveFormModel.cpp
+        core/WaveFormStandard.cpp
 
 	core/audio/AudioAlsa.cpp
 	core/audio/AudioAlsaGdx.cpp

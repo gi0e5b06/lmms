@@ -25,7 +25,7 @@
 #include "ShaperGDX.h"
 
 #include "Configuration.h"
-#include "WaveForm.h"
+#include "WaveFormStandard.h"
 #include "embed.h"
 //#include "lmms_math.h"
 
@@ -77,9 +77,9 @@ bool ShaperGDX::processAudioBuffer(sampleFrame* _buf, const fpp_t _frames)
     const ValueBuffer* outGainBuf
             = m_gdxControls.m_outGainModel.valueBuffer();
 
-    const WaveForm* wf
-            = WaveForm::get(m_gdxControls.m_waveBankModel.value(),
-                            m_gdxControls.m_waveIndexModel.value());
+    const WaveFormStandard* wf
+            = WaveFormStandard::get(m_gdxControls.m_waveBankModel.value(),
+                                    m_gdxControls.m_waveIndexModel.value());
 
     for(fpp_t f = 0; f < _frames; ++f)
     {

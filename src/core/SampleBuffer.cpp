@@ -70,7 +70,8 @@ SampleBuffer::SampleBuffer(const SampleBuffer& _other) :
       m_endFrame(_other.m_endFrame),
       m_loopStartFrame(_other.m_loopStartFrame),
       m_loopEndFrame(_other.m_loopEndFrame),
-      m_stretching(_other.m_stretching),
+      m_stretching(_other.m_stretching), m_predelay(_other.m_predelay),
+      m_postdelay(_other.m_postdelay),
       m_amplification(_other.m_amplification), m_reversed(_other.m_reversed),
       m_frequency(BaseFreq), m_sampleRate(Engine::mixer()->baseSampleRate())
 {
@@ -91,8 +92,8 @@ SampleBuffer::SampleBuffer(const QString& _audioFile,
       m_audioFile((_isBase64Data == true) ? "" : _audioFile),
       m_origData(nullptr), m_origFrames(0), m_mmapped(false), m_data(nullptr),
       m_frames(0), m_startFrame(0), m_endFrame(0), m_loopStartFrame(0),
-      m_loopEndFrame(0), m_stretching(0.), m_amplification(1.),
-      m_reversed(false), m_frequency(BaseFreq),
+      m_loopEndFrame(0), m_stretching(0.), m_predelay(0.), m_postdelay(0.),
+      m_amplification(1.), m_reversed(false), m_frequency(BaseFreq),
       m_sampleRate(Engine::mixer()->baseSampleRate())
 {
     if(_isBase64Data == true)
@@ -113,8 +114,8 @@ SampleBuffer::SampleBuffer(const sampleFrame* _data,
       m_audioFile(""),
       m_origData(nullptr), m_origFrames(0), m_mmapped(false), m_data(nullptr),
       m_frames(0), m_startFrame(0), m_endFrame(0), m_loopStartFrame(0),
-      m_loopEndFrame(0), m_stretching(0.), m_amplification(1.),
-      m_reversed(false), m_frequency(BaseFreq),
+      m_loopEndFrame(0), m_stretching(0.), m_predelay(0.), m_postdelay(0.),
+      m_amplification(1.), m_reversed(false), m_frequency(BaseFreq),
       m_sampleRate(Engine::mixer()->baseSampleRate())
 {
     if(_frames > 0)
@@ -135,8 +136,8 @@ SampleBuffer::SampleBuffer(const f_cnt_t _frames, bool _sampleRateDependent) :
       m_audioFile(""), m_origData(nullptr), m_origFrames(0), m_mmapped(false),
       m_data(nullptr), m_frames(0), m_startFrame(0), m_endFrame(0),
       m_loopStartFrame(0), m_loopEndFrame(0), m_stretching(0.),
-      m_amplification(1.), m_reversed(false), m_frequency(BaseFreq),
-      m_sampleRate(Engine::mixer()->baseSampleRate())
+      m_predelay(0.), m_postdelay(0.), m_amplification(1.), m_reversed(false),
+      m_frequency(BaseFreq), m_sampleRate(Engine::mixer()->baseSampleRate())
 {
     if(_frames > 0)
     {
@@ -481,8 +482,15 @@ samplerate );
         }
     }
 
-    if(!fileLoadError && m_stretching != 0.)
-        stretch(exp2(m_stretching));
+    if(!fileLoadError)
+    {
+        if(m_stretching != 0.)
+            stretch(exp2(m_stretching));
+        if(m_predelay != 0.)
+            predelay(m_predelay);
+        if(m_postdelay != 0.)
+            postdelay(m_postdelay);
+    }
 
     if(lock)
     {
@@ -1240,8 +1248,8 @@ bool SampleBuffer::play(sampleFrame*      _ab,
     if(m_amplification != 1.)
         for(fpp_t i = 0; i < _frames; ++i)
         {
-            _ab[i][0] *= m_amplification;
-            _ab[i][1] *= m_amplification;
+            _ab[i][0] = bound(-1., _ab[i][0] * m_amplification, 1.);
+            _ab[i][1] = bound(-1., _ab[i][1] * m_amplification, 1.);
         }
 
     return true;
@@ -1312,10 +1320,10 @@ void SampleBuffer::visualize(QPainter&    _p,
         FLOAT   xp    = xr + FLOAT(wr - 1) / FLOAT(nbp - 1) * FLOAT(i);
         FLOAT   ypl   = yr
                     + FLOAT(hr - 1) / 2.
-                              * (1. + m_amplification * m_data[frame][0]);
+                * (1. + bound(-1.,m_amplification * m_data[frame][0],1.));
         FLOAT ypr = yr
                     + FLOAT(hr - 1) / 2.
-                              * (1. + m_amplification * m_data[frame][1]);
+                * (1. + bound(-1.,m_amplification * m_data[frame][1],1.));
         lc[i] = QPointF(xp, ypl);
         rc[i] = QPointF(xp, ypr);
     }
@@ -1791,6 +1799,44 @@ void SampleBuffer::stretch(const double _factor)
     m_frames = dst_frames;
 }
 
+void SampleBuffer::predelay(const real_t _t)
+{
+    if(_t <= 0.)
+        return;
+
+    const f_cnt_t add_frames = m_sampleRate * _t / 1000.;
+    qInfo("SampleBuffer::predelay t=%f add=%d", _t, add_frames);
+    const f_cnt_t dst_frames = add_frames + m_frames;
+    sampleFrame*  dst_data   = MM_ALLOC(sampleFrame, dst_frames);
+
+    memset(dst_data, 0, sizeof(sampleFrame) * dst_frames);
+    memcpy(dst_data + add_frames, m_data, m_frames * BYTES_PER_FRAME);
+
+    if(m_data != m_origData)
+        MM_FREE(m_data);
+    m_data   = dst_data;
+    m_frames = dst_frames;
+}
+
+void SampleBuffer::postdelay(const real_t _t)
+{
+    if(_t <= 0.)
+        return;
+
+    const f_cnt_t add_frames = m_sampleRate * _t / 1000.;
+    qInfo("SampleBuffer::postdelay t=%f add=%d", _t, add_frames);
+    const f_cnt_t dst_frames = add_frames + m_frames;
+    sampleFrame*  dst_data   = MM_ALLOC(sampleFrame, dst_frames);
+
+    memset(dst_data, 0, sizeof(sampleFrame) * dst_frames);
+    memcpy(dst_data, m_data, m_frames * BYTES_PER_FRAME);
+
+    if(m_data != m_origData)
+        MM_FREE(m_data);
+    m_data   = dst_data;
+    m_frames = dst_frames;
+}
+
 void SampleBuffer::setAudioFile(const QString& _audioFile)
 {
     m_audioFile = tryToMakeRelative(_audioFile);
@@ -2162,6 +2208,18 @@ void SampleBuffer::setReversed(bool _on)
 void SampleBuffer::setStretching(real_t _v)
 {
     m_stretching = _v;
+    update(true);
+}
+
+void SampleBuffer::setPredelay(real_t _v)
+{
+    m_predelay = _v;
+    update(true);
+}
+
+void SampleBuffer::setPostdelay(real_t _v)
+{
+    m_postdelay = _v;
     update(true);
 }
 

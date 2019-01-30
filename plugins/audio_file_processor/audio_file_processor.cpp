@@ -1,7 +1,7 @@
 /*
  * audio_file_processor.cpp - instrument for using audio-files
  *
- * Copyright (c) 2017-2018 gi0e5b06 (on github.com)
+ * Copyright (c) 2017-2019 gi0e5b06 (on github.com)
  * Copyright (c) 2004-2014 Tobias Doerffel <tobydox/at/users.sourceforge.net>
  *
  * This file is part of LMMS - https://lmms.io
@@ -67,11 +67,14 @@ extern "C"
 
 audioFileProcessor::audioFileProcessor(InstrumentTrack* _instrument_track) :
       Instrument(_instrument_track, &audiofileprocessor_plugin_descriptor),
-      m_sampleBuffer(), m_ampModel(100, 0, 500, 1, this, tr("Amplify")),
+      m_sampleBuffer(),
       m_stretchModel(0., -7., 7., 0.0000001, this, tr("Stretch")),
-      m_startPointModel(0, 0, 1, 0.0000001, this, tr("Start of sample")),
-      m_endPointModel(1, 0, 1, 0.0000001, this, tr("End of sample")),
-      m_loopPointModel(0, 0, 1, 0.0000001, this, tr("Loopback point")),
+      m_predelayModel(0., 0., 8000., 1., this, tr("Predelay")),
+      m_postdelayModel(0., 0., 8000., 1., this, tr("Postdelay")),
+      m_ampModel(100., 0., 1000., 0.1, this, tr("Amplify")),
+      m_startPointModel(0., 0., 1., 0.0000001, this, tr("Start of sample")),
+      m_endPointModel(1., 0., 1., 0.0000001, this, tr("End of sample")),
+      m_loopPointModel(0., 0., 1., 0.0000001, this, tr("Loopback point")),
       m_reverseModel(false, this, tr("Reverse sample")),
       m_loopModel(0, 0, 2, this, tr("Loop mode")),
       m_stutterModel(false, this, tr("Stutter")),
@@ -84,6 +87,10 @@ audioFileProcessor::audioFileProcessor(InstrumentTrack* _instrument_track) :
             SLOT(ampModelChanged()));
     connect(&m_stretchModel, SIGNAL(dataChanged()), this,
             SLOT(stretchModelChanged()));
+    connect(&m_predelayModel, SIGNAL(dataChanged()), this,
+            SLOT(predelayModelChanged()));
+    connect(&m_postdelayModel, SIGNAL(dataChanged()), this,
+            SLOT(postdelayModelChanged()));
     connect(&m_startPointModel, SIGNAL(dataChanged()), this,
             SLOT(startPointChanged()));
     connect(&m_endPointModel, SIGNAL(dataChanged()), this,
@@ -219,6 +226,8 @@ void audioFileProcessor::saveSettings(QDomDocument& _doc, QDomElement& _this)
     m_stutterModel.saveSettings(_doc, _this, "stutter");
     m_interpolationModel.saveSettings(_doc, _this, "interp");
     m_stretchModel.saveSettings(_doc, _this, "stretch");
+    m_predelayModel.saveSettings(_doc, _this, "predelay");
+    m_postdelayModel.saveSettings(_doc, _this, "postdelay");
 }
 
 void audioFileProcessor::loadSettings(const QDomElement& _this)
@@ -270,6 +279,16 @@ void audioFileProcessor::loadSettings(const QDomElement& _this)
         m_stretchModel.loadSettings(_this, "stretch");
     else
         m_stretchModel.setValue(0.);  // no stretching by default
+
+    if(_this.hasAttribute("predelay"))
+        m_predelayModel.loadSettings(_this, "predelay");
+    else
+        m_predelayModel.setValue(0.);  // no predelay by default
+
+    if(_this.hasAttribute("postdelay"))
+        m_postdelayModel.loadSettings(_this, "postdelay");
+    else
+        m_postdelayModel.setValue(0.);  // no postdelay by default
 
     pointChanged();
 }
@@ -334,6 +353,18 @@ void audioFileProcessor::stretchModelChanged()
 {
     // m_sampleBuffer.stretch(exp2(m_stretchModel.value()));
     m_sampleBuffer.setStretching(m_stretchModel.value());
+    pointChanged();
+}
+
+void audioFileProcessor::predelayModelChanged()
+{
+    m_sampleBuffer.setPredelay(m_predelayModel.value());
+    pointChanged();
+}
+
+void audioFileProcessor::postdelayModelChanged()
+{
+    m_sampleBuffer.setPostdelay(m_postdelayModel.value());
     pointChanged();
 }
 
@@ -404,7 +435,7 @@ void audioFileProcessor::loopPointChanged(void)
     pointChanged();
 }
 
-void audioFileProcessor::pointChanged(void)
+void audioFileProcessor::pointChanged()
 {
     const f_cnt_t f_start = static_cast<f_cnt_t>(
             m_startPointModel.value() * (m_sampleBuffer.frames() - 1));
@@ -420,7 +451,7 @@ void audioFileProcessor::pointChanged(void)
     emit dataChanged();
 }
 
-QPixmap* AudioFileProcessorView::s_artwork = NULL;
+QPixmap* AudioFileProcessorView::s_artwork = nullptr;
 
 AudioFileProcessorView::AudioFileProcessorView(Instrument* _instrument,
                                                QWidget*    _parent) :
@@ -524,18 +555,30 @@ AudioFileProcessorView::AudioFileProcessorView(Instrument* _instrument,
                "bottom "
                "of the keyboard (< 20 Hz)"));
 
+    m_stretchKnob = new Knob(knobBright_26, this);
+    m_stretchKnob->move(5, 5);
+    m_stretchKnob->setText(tr("STR"));
+    m_stretchKnob->setHintText(tr("Stretch:"), "");
+
+    m_predelayKnob = new Knob(this);
+    m_predelayKnob->move(45, 5);
+    m_predelayKnob->setText(tr("PRE"));
+    m_predelayKnob->setHintText(tr("Predelay:"), "ms");
+
+    m_postdelayKnob = new Knob(this);
+    m_postdelayKnob->move(85, 5);
+    m_postdelayKnob->setText(tr("POST"));
+    m_postdelayKnob->setHintText(tr("Postdelay:"), "ms");
+
     m_ampKnob = new Knob(knobBright_26, this);
     m_ampKnob->setVolumeKnob(true);
-    m_ampKnob->move(5, 108);
+    m_ampKnob->move(125, 5);
     m_ampKnob->setHintText(tr("Amplify:"), "%");
     m_ampKnob->setWhatsThis(
             tr("With this knob you can set the amplify ratio. When you "
                "set a value of 100% your sample isn't changed. "
                "Otherwise it will be amplified up or down (your "
                "actual sample-file isn't touched!)"));
-
-    m_stretchKnob = new Knob(knobBright_26, this);
-    m_stretchKnob->move(5, 5);
 
     m_startKnob = new AudioFileProcessorWaveView::knob(this);
     m_startKnob->move(45, 108);
@@ -544,19 +587,19 @@ AudioFileProcessorView::AudioFileProcessorView(Instrument* _instrument,
             tr("With this knob you can set the point where "
                "AudioFileProcessor should begin playing your sample. "));
 
-    m_endKnob = new AudioFileProcessorWaveView::knob(this);
-    m_endKnob->move(125, 108);
-    m_endKnob->setHintText(tr("Endpoint:"), "");
-    m_endKnob->setWhatsThis(
-            tr("With this knob you can set the point where "
-               "AudioFileProcessor should stop playing your sample. "));
-
     m_loopKnob = new AudioFileProcessorWaveView::knob(this);
     m_loopKnob->move(85, 108);
     m_loopKnob->setHintText(tr("Loopback point:"), "");
     m_loopKnob->setWhatsThis(
             tr("With this knob you can set the point where "
                "the loop starts. "));
+
+    m_endKnob = new AudioFileProcessorWaveView::knob(this);
+    m_endKnob->move(125, 108);
+    m_endKnob->setHintText(tr("Endpoint:"), "");
+    m_endKnob->setWhatsThis(
+            tr("With this knob you can set the point where "
+               "AudioFileProcessor should stop playing your sample. "));
 
     // interpolation selector
     m_interpBox = new ComboBox(this);
@@ -700,8 +743,10 @@ void AudioFileProcessorView::modelChanged(void)
     audioFileProcessor* a = castModel<audioFileProcessor>();
     connect(&a->m_sampleBuffer, SIGNAL(sampleUpdated()), this,
             SLOT(sampleUpdated()));
-    m_ampKnob->setModel(&a->m_ampModel);
     m_stretchKnob->setModel(&a->m_stretchModel);
+    m_predelayKnob->setModel(&a->m_predelayModel);
+    m_postdelayKnob->setModel(&a->m_postdelayModel);
+    m_ampKnob->setModel(&a->m_ampModel);
     m_startKnob->setModel(&a->m_startPointModel);
     m_endKnob->setModel(&a->m_endPointModel);
     m_loopKnob->setModel(&a->m_loopPointModel);

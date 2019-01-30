@@ -1,7 +1,7 @@
 /*
- * WaveForm.cpp -
+ * WaveFormModel.cpp -
  *
- * Copyright (c) 2018 gi0e5b06 (on github.com)
+ * Copyright (c) 2018-2019 gi0e5b06 (on github.com)
  *
  * This file is part of LMMS - https://lmms.io
  *
@@ -28,7 +28,7 @@ WaveFormModel::WaveFormModel(Model*  _parent,
                              QString _displayName,
                              bool    _defaultConstructed) :
       Model(_parent, _displayName, _defaultConstructed),
-      m_wf(&WaveForm::SINE)
+      m_wf(&WaveFormStandard::SINE)
 {
 }
 
@@ -41,28 +41,65 @@ void WaveFormModel::saveSettings(QDomDocument&  doc,
                                  const QString& name,
                                  const bool     unique)
 {
-    int32_t bi = m_wf->bank() * 1000 + m_wf->index();
-    element.setAttribute(name, formatNumber(bi));
+    // if(unique) test
+
+    QDomElement e = doc.createElement(nodeName());
+    element.appendChild(e);
+    e.setAttribute("name", name);
+
+    const WaveFormStandard* wfs = dynamic_cast<const WaveFormStandard*>(m_wf);
+    if(wfs)
+    {
+        e.setAttribute("type", "standard");
+        e.setAttribute("bank", wfs->bank());
+        e.setAttribute("index", wfs->index());
+    }
 }
 
 void WaveFormModel::loadSettings(const QDomElement& element,
                                  const QString&     name,
                                  const bool         required)
 {
-    int32_t bi = 0;
-    if(element.hasAttribute(name))
-        bi = element.attribute(name).toInt();
-    setValue(WaveForm::get(bi / 1000, bi % 1000));
+    const WaveFormStandard* r = nullptr;
+
+    QDomNode node = element.firstChild();
+    while(!node.isNull())
+    {
+        if(node.isElement())
+        {
+            if(node.nodeName() == nodeName())
+            {
+                QDomElement e = node.toElement();
+                if(e.attribute("name") == name)
+                {
+                    QString type = e.attribute("type");
+                    if(type == "standard")
+                    {
+                        int bank  = e.attribute("bank").toInt();
+                        int index = e.attribute("index").toInt();
+                        r         = WaveFormStandard::get(bank, index);
+                        break;
+                    }
+                }
+            }
+        }
+        node = node.nextSibling();
+    }
+
+    if(r != nullptr)
+        setValue(r);
+    // else if(required) error
 }
 
-const WaveForm* WaveFormModel::value() const
+const WaveFormStandard* WaveFormModel::value() const
 {
     return m_wf;
 }
 
-void WaveFormModel::setValue(const WaveForm* _wf)
+void WaveFormModel::setValue(const WaveFormStandard* _wf)
 {
-    const WaveForm* wf = (_wf == nullptr ? &WaveForm::SINE : _wf);
+    const WaveFormStandard* wf
+            = (_wf == nullptr ? &WaveFormStandard::SINE : _wf);
     if(wf != m_wf)
     {
         m_wf = wf;

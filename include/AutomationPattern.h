@@ -185,11 +185,12 @@ class EXPORT AutomationPattern : public TrackContentObject
     virtual void saveSettings(QDomDocument& _doc, QDomElement& _parent);
     virtual void loadSettings(const QDomElement& _this);
 
-    static const QString classNodeName()
+    static inline const QString classNodeName()
     {
         return "automationpattern";
     }
-    QString nodeName() const
+
+    virtual QString nodeName() const
     {
         return classNodeName();
     }

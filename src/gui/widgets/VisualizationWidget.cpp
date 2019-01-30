@@ -24,6 +24,7 @@
 
 #include "VisualizationWidget.h"
 
+#include "Backtrace.h"
 #include "BufferManager.h"
 #include "Configuration.h"
 #include "Engine.h"
@@ -65,7 +66,7 @@ VisualizationWidget::VisualizationWidget(int         _width,
                                          ChannelMode _channelMode,
                                          DisplayMode _displayMode) :
       Widget(_parent),
-      m_channelMode(_channelMode), m_displayMode(Off), //m_frozen(false),
+      m_channelMode(_channelMode), m_displayMode(Off),  // m_frozen(false),
       m_stabilized(false), m_zoomX(1.f), m_zoomY(1.f), m_ring(_ring)
 {
     m_pointCount = _width;
@@ -236,7 +237,7 @@ void VisualizationWidget::setFrozen(bool _frozen)
         return;
 
     m_ring->setFrozen(_frozen);
-    update(); //invalidateCache();
+    update();  // invalidateCache();
 }
 
 void VisualizationWidget::setStabilized(bool _stabilized)
@@ -245,7 +246,7 @@ void VisualizationWidget::setStabilized(bool _stabilized)
         return;
 
     m_stabilized = _stabilized;
-    update(); //invalidateCache();
+    update();  // invalidateCache();
 }
 
 void VisualizationWidget::drawWidget(QPainter& _p)
@@ -265,11 +266,11 @@ void VisualizationWidget::drawWidget(QPainter& _p)
         //_p.drawText(6, height() - 5, tr("Click to enable"));
         QString s("%1%2 %3%4 X%5 Y%6");
         s = s.arg(m_displayMode)
-                .arg(m_channelMode)
-                .arg(m_ring->isFrozen() ? "F" : "-")
-                .arg(m_stabilized ? "S" : "-")
-                .arg(m_zoomX,0,'f',0)
-                .arg(m_zoomY,0,'f',0);
+                    .arg(m_channelMode)
+                    .arg(m_ring->isFrozen() ? "F" : "-")
+                    .arg(m_stabilized ? "S" : "-")
+                    .arg(m_zoomX, 0, 'f', 0)
+                    .arg(m_zoomY, 0, 'f', 0);
         _p.drawText(2, height() - 2, s);
         _p.drawText(2, height() - 2, s);
     }
@@ -293,7 +294,7 @@ void VisualizationWidget::drawWidget(QPainter& _p)
             const fpp_t fpp = Engine::mixer()->framesPerPeriod();
 
             int size  = m_ring->size();
-            int fzero = 0;
+            int fzero = -1;
             // int izero = 0;
             if(m_stabilized)
             {
@@ -313,7 +314,8 @@ void VisualizationWidget::drawWidget(QPainter& _p)
                 }
                 // izero = (int)floorf(1.f * (nbp - 1) * fzero / (fpp - 1));
             }
-
+            if(fzero>=0) fzero=-1;
+            
             int nbp = 1;
             switch(m_displayMode)
             {
@@ -332,6 +334,7 @@ void VisualizationWidget::drawWidget(QPainter& _p)
                     nbp = qMax<int>(2, size / m_zoomX);
                     break;
             }
+
             if(nbp <= 1)
                 return;
             if(nbp > size)
@@ -370,12 +373,13 @@ void VisualizationWidget::drawWidget(QPainter& _p)
                             break;
                         case TimeLast:
                         case XYLast:
-                            frame = fpp * (1.f - tp) - 1;
+                            frame = fpp * (1.f - tp);  // - 1;
                             break;
                         default:
-                            frame = size * (1.f - tp) - 1;
+                            frame = size * (1.f - tp);  // - 1;
                             break;
                     }
+
                     float v0 = m_ring->value(fzero - frame, 0) * m_zoomY;
                     float v1 = m_ring->value(fzero - frame, 1) * m_zoomY;
                     applyChannelMode(v0, v1);
@@ -504,6 +508,7 @@ void VisualizationWidget::invalidateCache()
 
 void VisualizationWidget::update()
 {
+    // qInfo("VisualizationWidget::update");
     // if(!m_frozen)
     Widget::update();
     // else

@@ -230,6 +230,8 @@ class EXPORT SampleBuffer
     void resample(const sample_rate_t _src_sr, const sample_rate_t _dst_sr);
     void retune(const DOUBLE _semitones);
     void stretch(const DOUBLE _factor);
+    void predelay(const real_t _t);
+    void postdelay(const real_t _t);
 
     void normalizeSampleRate(const sample_rate_t _src_sr,
                              bool                _keep_settings = false);
@@ -263,6 +265,8 @@ class EXPORT SampleBuffer
     void setAmplification(real_t _a);
     void setReversed(bool _on);
     void setStretching(real_t _v);
+    void setPredelay(real_t _t);
+    void setPostdelay(real_t _t);
     void sampleRateChanged();
 
   signals:
@@ -337,6 +341,8 @@ class EXPORT SampleBuffer
     f_cnt_t        m_loopStartFrame;
     f_cnt_t        m_loopEndFrame;
     real_t         m_stretching;
+    real_t         m_predelay; // ms
+    real_t         m_postdelay; // ms
     real_t         m_amplification;
     bool           m_reversed;
     frequency_t    m_frequency;

@@ -371,10 +371,10 @@ bool EqEffect::processAudioBuffer(sampleFrame* buf, const fpp_t frames)
     return true;
 }
 
-real_t EqEffect::peakBand(real_t minF, real_t maxF, EqAnalyser* fft, int sr)
+real_t EqEffect::peakBand(frequency_t minF, frequency_t maxF, EqAnalyser* fft, sample_rate_t sr)
 {
     real_t peak = -60;
-    float* b    = fft->m_bands;
+    FLOAT* b    = fft->m_bands;
     real_t h    = 0;
     for(int x = 0; x < MAX_BANDS; x++, b++)
     {
@@ -388,7 +388,7 @@ real_t EqEffect::peakBand(real_t minF, real_t maxF, EqAnalyser* fft, int sr)
     return (peak + 60) / 100;
 }
 
-void EqEffect::setBandPeaks(EqAnalyser* fft, int samplerate)
+void EqEffect::setBandPeaks(EqAnalyser* fft, sample_rate_t samplerate)
 {
     m_eqControls.m_lowShelfPeakR = m_eqControls.m_lowShelfPeakL = peakBand(
             m_eqControls.m_lowShelfFreqModel.value()

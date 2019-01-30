@@ -81,7 +81,7 @@ const int PW_GAP_HEIGHT = 1;
  */
 PeripheralLaunchpadView::PeripheralLaunchpadView(QWidget* _parent) :
       PeripheralView(_parent), /*!< Our parent */
-      //m_startKey(0),
+      // m_startKey(0),
       m_lastKey(-1)
 {
     setAttribute(Qt::WA_OpaquePaintEvent, true);
@@ -441,8 +441,10 @@ void PeripheralLaunchpadView::focusOutEvent(QFocusEvent*)
     // hang otherwise
     for(int i = 0; i < NumKeys; ++i)
     {
-        m_piano->midiEventProcessor()->processInEvent(
-                MidiEvent(MidiNoteOff, -1, i, 0));
+        if(i < NumMidiKeys)
+            m_piano->midiEventProcessor()->processInEvent(
+                    MidiEvent(MidiNoteOff, -1, i, 0));
+
         m_piano->setKeyState(i, false);
     }
     update();

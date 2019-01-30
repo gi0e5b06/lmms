@@ -144,24 +144,10 @@ void Song::masterPanningChanged()
 
 void Song::setTempo()
 {
-	Engine::mixer()->requestChangeInModel();
 	const bpm_t tempo = ( bpm_t ) m_tempoModel.value();
-	PlayHandleList & playHandles = Engine::mixer()->playHandles();
-	for( PlayHandleList::Iterator it = playHandles.begin();
-						it != playHandles.end(); ++it )
-	{
-		NotePlayHandle * nph = dynamic_cast<NotePlayHandle *>( *it );
-		if( nph && !nph->isReleased() )
-		{
-			nph->lock();
-			nph->resize( tempo );
-			nph->unlock();
-		}
-	}
-	Engine::mixer()->doneChangeInModel();
 
+	Engine::mixer()->adjustTempo( tempo );
 	Engine::updateFramesPerTick();
-
 	m_vstSyncController.setTempo( tempo );
 
 	emit tempoChanged( tempo );

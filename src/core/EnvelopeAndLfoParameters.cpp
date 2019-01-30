@@ -27,6 +27,7 @@
 #include "Engine.h"
 #include "Mixer.h"
 #include "Oscillator.h"
+#include "WaveFormStandard.h"
 
 #include <QDomElement>
 
@@ -132,8 +133,9 @@ EnvelopeAndLfoParameters::EnvelopeAndLfoParameters(
       m_controlEnvAmountModel(false, this, tr("Modulate Env-Amount")),
       m_lfoFrame(0), m_lfoAmountIsZero(false), m_lfoShapeData(NULL)
 {
-    WaveForm::fillBankModel(m_lfoWaveBankModel);
-    WaveForm::fillIndexModel(m_lfoWaveIndexModel, m_lfoWaveBankModel.value());
+    WaveFormStandard::fillBankModel(m_lfoWaveBankModel);
+    WaveFormStandard::fillIndexModel(m_lfoWaveIndexModel,
+                                     m_lfoWaveBankModel.value());
 
     m_amountModel.setCenterValue(0);
     m_lfoAmountModel.setCenterValue(0);
@@ -221,11 +223,11 @@ inline sample_t EnvelopeAndLfoParameters::lfoShapeSample(fpp_t _frame_offset)
     const real_t phase
             = m_lfoOscillationFrames > 0
                       ? positivefraction(real_t(m_lfoFrame + _frame_offset)
-                                    / real_t(m_lfoOscillationFrames))
+                                         / real_t(m_lfoOscillationFrames))
                       : 0.;
 
-    sample_t shape_sample = WaveForm::get(m_lfoWaveBankModel.value(),
-                                          m_lfoWaveIndexModel.value())
+    sample_t shape_sample = WaveFormStandard::get(m_lfoWaveBankModel.value(),
+                                                  m_lfoWaveIndexModel.value())
                                     ->f(phase);
 
     /*
@@ -540,8 +542,8 @@ void EnvelopeAndLfoParameters::updateSampleVars()
     m_lfoOscillationFrames = static_cast<f_cnt_t>(frames_per_lfo_oscillation
                                                   * m_lfoSpeedModel.value());
 
-    //qInfo("m_lfoSpeedModel = %f",m_lfoSpeedModel.value());
-    //qInfo("m_lfoOscillationFrames = %d",m_lfoOscillationFrames);
+    // qInfo("m_lfoSpeedModel = %f",m_lfoSpeedModel.value());
+    // qInfo("m_lfoOscillationFrames = %d",m_lfoOscillationFrames);
 
     if(m_x100Model.value())
     {

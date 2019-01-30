@@ -26,71 +26,64 @@
 
 #include <QUuid>
 
-Model::Model( Model * _parent, QString _displayName,
-              bool _defaultConstructed) :
-        QObject( _parent ),
-        m_uuid(""),
-        m_displayName( _displayName ),
-        m_defaultConstructed( _defaultConstructed )
+Model::Model(Model* _parent, QString _displayName, bool _defaultConstructed) :
+      QObject(_parent), m_uuid(""), m_displayName(_displayName),
+      m_defaultConstructed(_defaultConstructed)
 {
 }
-
 
 Model::~Model()
 {
 }
 
-
 const QString Model::uuid()
 {
-        if(m_uuid.isEmpty())
-        {
-                m_uuid=QUuid::createUuid().toString()
-                        .replace("{","").replace("}","");
-        }
-        return m_uuid;
+    if(m_uuid.isEmpty())
+    {
+        m_uuid = QUuid::createUuid().toString().replace("{", "").replace("}",
+                                                                         "");
+    }
+    return m_uuid;
 }
-
 
 void Model::setDisplayName(const QString& _displayName)
 {
-        if(m_displayName!=_displayName)
-        {
-                m_displayName = _displayName;
-                emit propertiesChanged();
-        }
+    if(m_displayName != _displayName)
+    {
+        m_displayName = _displayName;
+        emit propertiesChanged();
+    }
 }
-
 
 QString Model::fullDisplayName() const
 {
-	const QString & n = displayName();
-	if( parentModel() )
-	{
-		const QString p = parentModel()->fullDisplayName();
-		if( n.isEmpty() && p.isEmpty() )
-		{
-			return QString::null;
-		}
-		else if( p.isEmpty() )
-		{
-			return n;
-		}
-		return p + ">" + n;
-	}
-	return n;
+    const QString& n = displayName();
+    if(parentModel())
+    {
+        const QString p = parentModel()->fullDisplayName();
+        if(n.isEmpty() && p.isEmpty())
+        {
+            return QString::null;
+        }
+        else if(p.isEmpty())
+        {
+            return n;
+        }
+        return p + ">" + n;
+    }
+    return n;
 }
 
 bool Model::frequentlyUpdated() const
 {
-        return m_frequentlyUpdated;
+    return m_frequentlyUpdated;
 }
 
 void Model::setFrequentlyUpdated(const bool _b)
 {
-        if(m_frequentlyUpdated!=_b)
-        {
-                m_frequentlyUpdated=_b;
-                emit propertiesChanged();
-        }
+    if(m_frequentlyUpdated != _b)
+    {
+        m_frequentlyUpdated = _b;
+        emit propertiesChanged();
+    }
 }

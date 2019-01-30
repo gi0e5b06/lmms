@@ -56,12 +56,12 @@ class EXPORT Effect : public Plugin
     virtual void saveSettings(QDomDocument& _doc, QDomElement& _parent);
     virtual void loadSettings(const QDomElement& _this);
 
-    static QString classNodeName()
+    static inline const QString classNodeName()
     {
         return "effect";
     }
 
-    inline virtual QString nodeName() const
+    virtual QString nodeName() const
     {
         return classNodeName();
     }

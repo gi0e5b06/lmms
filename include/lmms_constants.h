@@ -25,6 +25,8 @@
 #ifndef LMMS_CONSTANTS_H
 #define LMMS_CONSTANTS_H
 
+#include "lmms_basics.h"
+
 // bc: scale=70; e(1); quit
 
 const long double LD_PI
@@ -69,5 +71,16 @@ const float F_E_R      = (float)LD_E_R;
 const float F_2_SQRT   = (float)LD_2_SQRT;
 const float F_2_SQRT_R = (float)LD_2_SQRT_R;
 const float F_2_LOG    = (float)LD_2_LOG;
+
+const real_t R_PI       = (real_t)LD_PI;
+const real_t R_2PI      = (real_t)LD_2PI;
+const real_t R_PI_2     = (real_t)LD_PI_2;
+const real_t R_PI_R     = (real_t)LD_PI_R;
+const real_t R_PI_SQR   = (real_t)LD_PI_SQR;
+const real_t R_E        = (real_t)LD_E;
+const real_t R_E_R      = (real_t)LD_E_R;
+const real_t R_2_SQRT   = (real_t)LD_2_SQRT;
+const real_t R_2_SQRT_R = (real_t)LD_2_SQRT_R;
+const real_t R_2_LOG    = (real_t)LD_2_LOG;
 
 #endif

@@ -123,14 +123,19 @@ QPixmap* PianoRoll::s_toolOpen               = NULL;
 
 TextFloat* PianoRoll::s_textFloat = NULL;
 
+/*
 static QString s_noteStrings[12]
         = {"C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"};
 
 static QString getNoteString(int key)
 {
-    return s_noteStrings[key % 12]
-           + QString::number(static_cast<int>(key / KeysPerOctave));
+    int o = (key / KeysPerOctave) - 1;
+    if(o < 0)
+        return s_noteStrings[key % 12] + "❶";
+    else
+        return s_noteStrings[key % 12] + QString::number(o, 10);
 }
+*/
 
 // used for drawing of piano
 PianoRoll::PianoRollKeyTypes PianoRoll::prKeyOrder[]
@@ -989,7 +994,8 @@ void PianoRoll::drawNoteRect(QPainter&     p,
         int const noteTextHeight = static_cast<int>(noteHeight * 0.8);
         if(noteTextHeight > 6)
         {
-            QString noteKeyString = getNoteString(n->key());
+            QString noteKeyString = Note::findKeyName(n->key());
+            // getNoteString(n->key());
 
             QFont noteFont(p.font());
             noteFont.setPixelSize(noteTextHeight);
@@ -2907,7 +2913,8 @@ void PianoRoll::paintEvent(QPaintEvent* pe)
             // always drawn
             if(key % 12 == 0 || drawNoteNames)
             {
-                QString noteString = getNoteString(key);
+                QString noteString = Note::findKeyName(key);
+                // getNoteString(key);
 
                 QPoint textStart(WHITE_KEY_WIDTH - 20, key_line_y);
                 textStart += QPoint(0, yCorrectionForNoteLabels);

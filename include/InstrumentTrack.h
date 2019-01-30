@@ -303,10 +303,10 @@ class EXPORT InstrumentTrack
   private:
     MidiPort m_midiPort;
 
-    NotePlayHandle*    m_notes[NumKeys];
+    NotePlayHandle*    m_notes[NumMidiKeys];
     NotePlayHandleList m_sustainedNotes;
 
-    int    m_runningMidiNotes[NumKeys];
+    int    m_runningMidiNotes[NumMidiKeys];
     QMutex m_midiNotesMutex;
 
     bool m_sustainPedalPressed;

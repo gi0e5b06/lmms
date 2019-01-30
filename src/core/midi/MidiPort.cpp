@@ -147,7 +147,7 @@ void MidiPort::processInEvent( const MidiEvent& event, const MidiTime& time )
 		    event.type() == MidiNoteOff ||
 		    event.type() == MidiKeyPressure )
 		{
-			if( inEvent.key() < 0 || inEvent.key() >= NumKeys )
+			if( inEvent.key() < 0 || inEvent.key() >= NumMidiKeys )
 			{
                           //return; //GDX
 			}

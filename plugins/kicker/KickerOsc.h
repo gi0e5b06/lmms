@@ -29,7 +29,7 @@
 #include "DspEffectLibrary.h"
 //#include "Oscillator.h"
 #include "MemoryManager.h"
-#include "WaveForm.h"
+#include "WaveFormStandard.h"
 #include "interpolation.h"
 #include "lmms_math.h"
 
@@ -39,20 +39,20 @@ class KickerOsc
     MM_OPERATORS
 
   public:
-    KickerOsc(const FX&       fx,
-              const real_t    start,
-              const real_t    end,
-              const real_t    tail,
-              const real_t    noise,
-              const real_t    offset,
-              const real_t    slope,
-              const real_t    phaseFactor,
-              const real_t    env,
-              const real_t    diststart,
-              const real_t    distend,
-              const real_t    length,
-              const WaveForm* _sin,
-              const WaveForm* _whn) :
+    KickerOsc(const FX&               fx,
+              const real_t            start,
+              const real_t            end,
+              const real_t            tail,
+              const real_t            noise,
+              const real_t            offset,
+              const real_t            slope,
+              const real_t            phaseFactor,
+              const real_t            env,
+              const real_t            diststart,
+              const real_t            distend,
+              const real_t            length,
+              const WaveFormStandard* _sin,
+              const WaveFormStandard* _whn) :
           m_phase(offset),
           m_startFreq(start), m_endFreq(end), m_tail(tail), m_noise(noise),
           m_slope(slope), m_phaseFactor(phaseFactor), m_env(env),
@@ -86,8 +86,10 @@ class KickerOsc
                   const real_t gain
                   = 1. - fastPowf(m_counter / m_length, m_env);
                   const real_t    p = positivefraction(m_phase);
-                  const sample_t s = (WaveForm::SINE.f(p) * (1. - m_noise))
-                  + (WaveForm::WHITENOISE.f(p) * gain * gain * m_noise);
+                  const sample_t s = (WaveFormStandard::SINE.f(p) * (1. -
+                  m_noise))
+                  + (WaveFormStandard::WHITENOISE.f(p) * gain * gain *
+                  m_noise);
                 */
 
                 const real_t gain
@@ -129,7 +131,7 @@ class KickerOsc
                         = double(m_startFreq - m_endFreq)
                           * (1.
                              - pow(double(m_counter) / double(m_length),
-                                       double(m_slope)));
+                                   double(m_slope)));
                 m_freq = m_endFreq + change;
             }
             ++m_counter;
@@ -137,20 +139,20 @@ class KickerOsc
     }
 
   private:
-    double          m_phase;
-    const real_t    m_startFreq;
-    const real_t    m_endFreq;
-    const real_t    m_tail;
-    const real_t    m_noise;
-    const real_t    m_slope;
-    const real_t    m_phaseFactor;
-    const real_t    m_env;
-    const real_t    m_distStart;
-    const real_t    m_distEnd;
-    const bool      m_hasDistEnv;
-    const real_t    m_length;
-    const WaveForm* m_sin;
-    const WaveForm* m_whn;
+    double                  m_phase;
+    const real_t            m_startFreq;
+    const real_t            m_endFreq;
+    const real_t            m_tail;
+    const real_t            m_noise;
+    const real_t            m_slope;
+    const real_t            m_phaseFactor;
+    const real_t            m_env;
+    const real_t            m_distStart;
+    const real_t            m_distEnd;
+    const bool              m_hasDistEnv;
+    const real_t            m_length;
+    const WaveFormStandard* m_sin;
+    const WaveFormStandard* m_whn;
 
     FX            m_FX;
     unsigned long m_counter;

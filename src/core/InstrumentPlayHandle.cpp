@@ -50,16 +50,19 @@ void InstrumentPlayHandle::play(sampleFrame* _working_buffer)
     */
 
     // if not, we need to ensure that all our nph's have been processed first
-    ConstNotePlayHandleList nphv = NotePlayHandle::nphsOfInstrumentTrack(
+    // ConstNotePlayHandleList nphv = NotePlayHandle::nphsOfInstrumentTrack(
+    //        m_instrument->instrumentTrack(), true);
+    ConstNotePlayHandleList cnphv = Engine::mixer()->nphsOfTrack(
             m_instrument->instrumentTrack(), true);
 
     bool   processed = false;
     real_t ndm;
     bool   nphsLeft;
+    /*
     do
     {
         nphsLeft = false;
-        for(const NotePlayHandle* constNotePlayHandle: nphv)
+        for(const NotePlayHandle* constNotePlayHandle: cnphv)
         {
             NotePlayHandle* notePlayHandle
                     = const_cast<NotePlayHandle*>(constNotePlayHandle);
@@ -71,6 +74,26 @@ void InstrumentPlayHandle::play(sampleFrame* _working_buffer)
                 notePlayHandle->process();
                 ndm = notePlayHandle->automationDetune()
                       + notePlayHandle->effectDetune();
+            }
+        }
+    } while(nphsLeft);
+    */
+    do
+    {
+        nphsLeft = false;
+        for(const NotePlayHandle* cnph: cnphv)
+        {
+                //NotePlayHandle* nph = const_cast<NotePlayHandle*>(cnph);
+            // dynamic_cast<NotePlayHandle*>(
+            //  const_cast<PlayHandle*>(cph));
+            if(cnph != nullptr && cnph->state() != ThreadableJob::Done
+               && !cnph->isFinished())
+            {
+                processed = true;
+                nphsLeft  = true;
+                NotePlayHandle* nph = const_cast<NotePlayHandle*>(cnph);
+                nph->process();
+                ndm = cnph->automationDetune() + cnph->effectDetune();
             }
         }
     } while(nphsLeft);

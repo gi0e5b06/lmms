@@ -315,9 +315,10 @@ void sidInstrument::playNote(NotePlayHandle* _n, sampleFrame* _working_buffer)
     const fpp_t   frames = _n->framesLeftForCurrentPeriod();
     const f_cnt_t offset = _n->noteOffset();
 
-    cSID*         sid     = static_cast<cSID*>(_n->m_pluginData);
-    int           delta_t = clockrate * frames / samplerate + 4;
-    short         buf[frames];
+    cSID* sid     = static_cast<cSID*>(_n->m_pluginData);
+    int   delta_t = clockrate * frames / samplerate + 4;
+    // short buf[frames];
+    short*        buf = reinterpret_cast<short*>(_working_buffer + offset);
     unsigned char sidreg[NUMSIDREGS];
 
     for(int c = 0; c < NUMSIDREGS; c++)
@@ -438,7 +439,8 @@ void sidInstrument::playNote(NotePlayHandle* _n, sampleFrame* _working_buffer)
     if(num != frames)
         qWarning("sidInstrument: not enough samples: %d/%d", num, frames);
 
-    for(fpp_t frame = 0; frame < frames; ++frame)
+    // for(fpp_t frame = 0; frame < frames; ++frame)
+    for(fpp_t frame = frames - 1; frame >= 0; frame--)
     {
         sample_t s = real_t(buf[frame]) / 32768.;
         for(ch_cnt_t ch = 0; ch < DEFAULT_CHANNELS; ++ch)

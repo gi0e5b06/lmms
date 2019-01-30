@@ -29,8 +29,9 @@
 #include "ComboBoxModel.h"
 #include "Instrument.h"
 #include "NotePlayHandle.h"
+#include "Ring.h"
 #include "TempoSyncKnobModel.h"
-#include "WaveForm.h"
+#include "WaveFormStandard.h"
 //#include "Graph.h"
 
 // class NotePlayHandle;
@@ -49,9 +50,17 @@ class OscillatorObject : public Model
     OscillatorObject(Model* _parent, int _idx);
     virtual ~OscillatorObject();
 
+    Ring* waveRing();
+
     real_t output(const ch_cnt_t _ch);
     void   input1(const ch_cnt_t _ch, const real_t _in);
     void   input2(const ch_cnt_t _ch, const real_t _in);
+
+  signals:
+    void waveUpdated();
+
+  public slots:
+    void updateWaveRing();
 
   protected:
     // note-related state
@@ -62,8 +71,8 @@ class OscillatorObject : public Model
 
         real_t m_frequency;
         real_t m_velocity;
-        // const WaveForm* m_wave1;
-        // const WaveForm* m_wave2;
+        // const WaveFormStandard* m_wave1;
+        // const WaveFormStandard* m_wave2;
         real_t m_phase[2];
         real_t m_phaseOffset[2];
         real_t m_currentOutput[2];
@@ -126,20 +135,20 @@ class OscillatorObject : public Model
     FloatModel         m_wallModel;
 
     // transient state values
-    const WaveForm* m_wave1;
-    const WaveForm* m_wave2;
-    FloatModel      m_frequencyModel;
-    FloatModel      m_velocityModel;
-    real_t          m_phase[2];
-    real_t          m_phaseOffset[2];
-    real_t          m_currentOutput[2];
-    real_t          m_previousOutput[2];
-    real_t          m_averageOutput[2];
-    real_t          m_currentInput1[2];
-    real_t          m_previousInput1[2];
-    real_t          m_currentInput2[2];
-    real_t          m_previousInput2[2];
-    real_t          m_buffer[SZ_BUFFER][2];
+    const WaveFormStandard* m_wave1;
+    const WaveFormStandard* m_wave2;
+    FloatModel              m_frequencyModel;
+    FloatModel              m_velocityModel;
+    real_t                  m_phase[2];
+    real_t                  m_phaseOffset[2];
+    real_t                  m_currentOutput[2];
+    real_t                  m_previousOutput[2];
+    real_t                  m_averageOutput[2];
+    real_t                  m_currentInput1[2];
+    real_t                  m_previousInput1[2];
+    real_t                  m_currentInput2[2];
+    real_t                  m_previousInput2[2];
+    real_t                  m_buffer[SZ_BUFFER][2];
 
     // transient frame values
     bool   m_symetric1;
@@ -210,6 +219,8 @@ class OscillatorObject : public Model
     void updateVolumes(const fpp_t _f);
     void updateDetunings(const fpp_t _f);
     void updatePhaseOffsets(const fpp_t _f);
+
+    Ring* m_waveRing;
 
     friend class SynthGDX;
     friend class SynthGDXView;

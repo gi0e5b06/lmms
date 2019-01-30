@@ -25,62 +25,60 @@
 #ifndef MODEL_H
 #define MODEL_H
 
+#include "export.h"
+
 #include <QObject>
 #include <QString>
 
-#include "export.h"
-
-
 class EXPORT Model : public QObject
 {
-	Q_OBJECT
+    Q_OBJECT
 
- public:
-	Model( Model * _parent, QString _displayName = QString::null,
-               bool _defaultConstructed = false );
-	virtual ~Model();
+  public:
+    Model(Model*  _parent,
+          QString _displayName        = QString::null,
+          bool    _defaultConstructed = false);
+    virtual ~Model();
 
-	bool isDefaultConstructed()
-	{
-		return m_defaultConstructed;
-	}
+    bool isDefaultConstructed()
+    {
+        return m_defaultConstructed;
+    }
 
-	Model* parentModel() const
-	{
-		return static_cast<Model *>( parent() );
-	}
+    Model* parentModel() const
+    {
+        return static_cast<Model*>(parent());
+    }
 
-        virtual const QString uuid() final;
+    virtual const QString uuid() final;
 
-	virtual QString displayName() const
-	{
-		return m_displayName;
-	}
+    virtual QString displayName() const
+    {
+        return m_displayName;
+    }
 
-	virtual void setDisplayName( const QString& displayName );
+    virtual void setDisplayName(const QString& displayName);
 
-	virtual QString fullDisplayName() const;
+    virtual QString fullDisplayName() const;
 
-	virtual bool frequentlyUpdated() const;
-	virtual void setFrequentlyUpdated(const bool _b);
+    virtual bool frequentlyUpdated() const;
+    virtual void setFrequentlyUpdated(const bool _b);
 
- signals:
-	// emitted if actual data of the model (e.g. values) have changed
-	void dataChanged();
-	// emitted in case new data was not set as it's been equal to old data
-	void dataUnchanged();
-	// emitted if properties of the model (e.g. ranges) have changed
-	void propertiesChanged();
+  signals:
+    // emitted if actual data of the model (e.g. values) have changed
+    void dataChanged();
+    // emitted in case new data was not set as it's been equal to old data
+    void dataUnchanged();
+    // emitted if properties of the model (e.g. ranges) have changed
+    void propertiesChanged();
 
- protected:
-        QString m_uuid;
+  protected:
+    QString m_uuid;
 
- private:
-	QString m_displayName;
-	bool    m_defaultConstructed;
-        bool    m_frequentlyUpdated;
-} ;
-
+  private:
+    QString m_displayName;
+    bool    m_defaultConstructed;
+    bool    m_frequentlyUpdated;
+};
 
 #endif
-

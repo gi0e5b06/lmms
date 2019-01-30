@@ -172,7 +172,7 @@ InstrumentTrack::InstrumentTrack(TrackContainer* tc) :
 
     m_effectChannelModel.setRange(0, Engine::fxMixer()->numChannels() - 1);
 
-    for(int i = 0; i < NumKeys; ++i)
+    for(int i = 0; i < NumMidiKeys; ++i)
     {
         m_notes[i]            = nullptr;
         m_runningMidiNotes[i] = 0;
@@ -212,18 +212,21 @@ InstrumentTrack::InstrumentTrack(TrackContainer* tc) :
 
 InstrumentTrack::~InstrumentTrack()
 {
-    qWarning("InstrumentTrack::~InstrumentTrack");
-
+    qWarning("InstrumentTrack::~InstrumentTrack 1");
     // kill all running notes and the iph
     silenceAllNotes(true);
 
+    qWarning("InstrumentTrack::~InstrumentTrack 2");
     // now we're save deleting the instrument
     Instrument* old = m_instrument;
     if(old)
     {
+        qWarning("InstrumentTrack::~InstrumentTrack 3");
         m_instrument = nullptr;
         delete old;
+        qWarning("InstrumentTrack::~InstrumentTrack 4");
     }
+    qWarning("InstrumentTrack::~InstrumentTrack 5");
 }
 
 QString InstrumentTrack::defaultName() const
@@ -511,7 +514,7 @@ void InstrumentTrack::processOutEvent(const MidiEvent& event,
             m_piano.setKeyState(event.key(),
                                 true);  // event.key() = original key
 
-            if(key >= 0 && key < NumKeys)
+            if(key >= 0 && key < NumMidiKeys)
             {
                 while(m_runningMidiNotes[key] > 0)
                 {
@@ -537,7 +540,7 @@ void InstrumentTrack::processOutEvent(const MidiEvent& event,
             m_piano.setKeyState(event.key(),
                                 false);  // event.key() = original key
 
-            if(key >= 0 && key < NumKeys)
+            if(key >= 0 && key < NumMidiKeys)
             {
                 while(m_runningMidiNotes[key] > 0)
                 {
@@ -566,18 +569,23 @@ void InstrumentTrack::processOutEvent(const MidiEvent& event,
 
 void InstrumentTrack::silenceAllNotes(bool removeIPH)
 {
+    qInfo("InstrumentTrack::silenceAllNotes 1");
     m_midiNotesMutex.lock();
-    for(int i = 0; i < NumKeys; ++i)
+    for(int i = 0; i < NumMidiKeys; ++i)
     {
         m_notes[i]            = nullptr;
         m_runningMidiNotes[i] = 0;
     }
     m_midiNotesMutex.unlock();
+    qInfo("InstrumentTrack::silenceAllNotes 2");
 
     lock();
     // invalidate all NotePlayHandles and PresetPreviewHandles linked to this
     // track
+    qInfo("InstrumentTrack::silenceAllNotes 3");
+
     m_processHandles.clear();
+    qInfo("InstrumentTrack::silenceAllNotes 4");
 
     quint8 flags = PlayHandle::TypeNotePlayHandle
                    | PlayHandle::TypePresetPreviewHandle;
@@ -586,7 +594,9 @@ void InstrumentTrack::silenceAllNotes(bool removeIPH)
         flags |= PlayHandle::TypeInstrumentPlayHandle;
     }
     Engine::mixer()->removePlayHandlesOfTypes(this, flags);
+    qInfo("InstrumentTrack::silenceAllNotes 5");
     unlock();
+    qInfo("InstrumentTrack::silenceAllNotes 6");
 }
 
 f_cnt_t InstrumentTrack::beatLen(NotePlayHandle* _n) const
@@ -769,7 +779,7 @@ int InstrumentTrack::masterKey(int _midiKey) const
         key = 12 + key % 12;
     if(key > 127)
         key = 120 + key % 12;
-    return key;  // qBound(0, key, NumKeys - 1);
+    return key;  // qBound(0, key, NumMidiKeys - 1);
 }
 
 void InstrumentTrack::removeMidiPortNode(DataFile& _dataFile)

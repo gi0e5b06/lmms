@@ -26,7 +26,7 @@
 
 #include "Knob.h"
 #include "ShaperGDX.h"
-#include "WaveForm.h"
+#include "WaveFormStandard.h"
 //#include "Engine.h"
 //#include "Song.h"
 #include "BufferManager.h"
@@ -49,8 +49,8 @@ ShaperGDXControls::ShaperGDXControls(ShaperGDX* effect) :
       m_outGainModel(1., 0., 10., 0.001, this, tr("Out gain")),
       m_ring(600)
 {
-    WaveForm::fillBankModel(m_waveBankModel);
-    WaveForm::fillIndexModel(m_waveIndexModel, 0);
+    WaveFormStandard::fillBankModel(m_waveBankModel);
+    WaveFormStandard::fillIndexModel(m_waveIndexModel, 0);
 
     m_timeModel.setScaleLogarithmic(true);
 
@@ -106,6 +106,6 @@ void ShaperGDXControls::updateWaveIndexModel()
 {
     int bank = m_waveBankModel.value();
     int old  = m_waveIndexModel.value();
-    WaveForm::fillIndexModel(m_waveIndexModel, bank);
+    WaveFormStandard::fillIndexModel(m_waveIndexModel, bank);
     m_waveIndexModel.setValue(old);
 }

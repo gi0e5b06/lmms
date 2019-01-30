@@ -1,73 +1,79 @@
 /*
  * WaveForm.h -
  *
- * Copyright (c) 2018 gi0e5b06 (on github.com)
+ * Copyright (c) 2018-2019 gi0e5b06 (on github.com)
  *
- * This file is part of LMMS - https://lmms.io
+ * This file is part of LSMM -
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public
- * License along with this program (see COPYING); if not, write to the
- * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
- * Boston, MA 02110-1301 USA.
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
 
 #ifndef WAVEFORM_H
 #define WAVEFORM_H
 
-#include "ComboBoxModel.h"
+#include "JournallingObject.h"
+//#include "Model.h"
+//#include "ComboBoxModel.h"
 #include "MemoryManager.h"
 //#include "fft_helpers.h"
 #include "lmms_basics.h"
 //#include "lmms_math.h"
 #include "interpolation.h"
 
+#include <QObject>
+#include <QDomElement>
+
 // fastnormsinf01 -> WaveForm::sin::f(x)
 
 typedef real_t (*wavefunction_t)(const real_t);
 
-class WaveForm
+class WaveForm : public QObject  // public JournallingObject
 {
+    Q_OBJECT
     MM_OPERATORS
 
   public:
     WaveForm(const QString&        _name,
-             const int             _bank,
-             const int             _index,
              const wavefunction_t  _func,
              const interpolation_t _mode    = Exact,
              const int             _quality = 8);
     WaveForm(const QString&        _name,
-             const int             _bank,
-             const int             _index,
              const QString&        _file,
              const interpolation_t _mode    = Linear,
              const int             _quality = 8);
     WaveForm(const QString&        _name,
-             const int             _bank,
-             const int             _index,
              real_t*               _data,
              const int             _size,
              const interpolation_t _mode    = Linear,
              const int             _quality = 8);
     WaveForm(const QString&        _name,
-             const int             _bank,
-             const int             _index,
              const sampleFrame*    _data,
              const int             _size,
              const interpolation_t _mode    = Linear,
              const int             _quality = 8);
     virtual ~WaveForm();
+
+    /*
+    virtual void saveSettings(QDomDocument&  doc,
+                              QDomElement&   element,
+                              const QString& name,
+                              const bool     unique = true);
+    virtual void loadSettings(const QDomElement& element,
+                              const QString&     name,
+                              const bool         required = true);
+    */
 
     // function
     // x must be between 0. and 1.
@@ -84,45 +90,6 @@ class WaveForm
         return m_name;
     }
 
-    inline const int bank() const
-    {
-        return m_bank;
-    }
-
-    inline const int index() const
-    {
-        return m_index;
-    }
-
-    static const WaveForm* get(const int _bank, const int _index);
-
-    static void fillBankModel(ComboBoxModel& _model);
-    static void fillIndexModel(ComboBoxModel& _model, const int _bank);
-
-    // Standard waves
-    static const int ZERO_BANK        = 20;
-    static const int ZERO_INDEX       = 40;
-    static const int SINE_BANK        = 0;
-    static const int SINE_INDEX       = 0;
-    static const int WHITENOISE_BANK  = 0;
-    static const int WHITENOISE_INDEX = 6;
-
-    static const int MIN_BANK  = 0;
-    static const int MIN_INDEX = 0;
-    static const int MAX_BANK  = 127;
-    static const int MAX_INDEX = 127;
-
-    static const WaveForm SINE;
-    static const WaveForm TRIANGLE;
-    static const WaveForm SAWTOOTH;
-    static const WaveForm SQUARE;
-    static const WaveForm HARSHSAW;
-    static const WaveForm SQPEAK;
-    static const WaveForm WHITENOISE;
-    static const WaveForm ZERO;
-    static const WaveForm SQRT;
-    static const WaveForm SHARPGAUSS;
-
     static const wavefunction_t sine;
     static const wavefunction_t triangle;
     static const wavefunction_t sawtooth;
@@ -132,25 +99,8 @@ class WaveForm
     static const wavefunction_t whitenoise;
     static const wavefunction_t sqrt;
 
-    class Set
-    {
-      public:
-        Set();
-        const WaveForm* get(const int _bank, const int _index);
-        void set(const int _bank, const int _index, const WaveForm* _wf);
-        void fillBankModel(ComboBoxModel& _model);
-        void fillIndexModel(ComboBoxModel& _model, const int _bank);
-
-      private:
-        void createDegraded(int _bank, bool _linear, int _quality);
-        void createSoften(int _bank, real_t _bandwidth);
-
-        QString         m_bankNames[MAX_BANK - MIN_BANK + 1];
-        const WaveForm* m_stock[MAX_BANK - MIN_BANK + 1]
-                               [MAX_INDEX - MIN_INDEX + 1];
-    };
-
-    static Set WAVEFORMS;
+  signals:
+    void dataChanged();
 
     /*
     class Plan
@@ -174,27 +124,26 @@ class WaveForm
 
   protected:
     WaveForm(const QString&        _name,
-             const int             _bank,
-             const int             _index,
              const interpolation_t _mode,
              const int             _quality);
 
-    WaveForm* setSoftness(real_t _softness);
-    void      rebuild();
-    void      build();
-    void      soften();
+    virtual void rebuild() final;
+    virtual void build() final;
+
+    // internal
+    virtual bool build_frames();
+    virtual bool normalize_frames();
+    virtual bool rotate_frames(int _n);
 
     bool            m_built;
-    real_t          m_softness;
     QString         m_name;
-    int             m_bank;
-    int             m_index;
     interpolation_t m_mode;
     int             m_quality;
     wavefunction_t  m_func;
     QString         m_file;
     real_t*         m_data;
-    int             m_size;  // size of the data -1
+    int             m_size;    // size of the data -1
+    bool            m_static;  // true if data should be saved
 };
 
 #endif

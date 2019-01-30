@@ -539,7 +539,8 @@ void GigInstrument::loadSample( GigSample& sample, sampleFrame* sampleData, f_cn
 	}
 
 	unsigned long allocationsize = samples * sample.sample->FrameSize;
-	int8_t buffer[allocationsize];
+	//int8_t buffer[allocationsize];
+        int8_t* buffer=MM_ALLOC(int8_t,allocationsize);
 
 	// Load the sample in different ways depending on if we're looping or not
 	if( loop == true && ( sample.pos >= loopStart || sample.pos + samples > loopStart ) )
@@ -583,15 +584,16 @@ void GigInstrument::loadSample( GigSample& sample, sampleFrame* sampleData, f_cn
 	else
 	{
 		sample.sample->SetPos( sample.pos );
-
-		unsigned long size = sample.sample->Read( &buffer, samples ) * sample.sample->FrameSize;
-		std::memset( (int8_t*) &buffer + size, 0, allocationsize - size );
+                //qInfo("GIG b=%p pb=%p pb0=%p",buffer,&buffer,&buffer[0]);
+		unsigned long size = sample.sample->Read( &buffer[0], samples ) * sample.sample->FrameSize;
+		//std::memset( (int8_t*) &buffer + size, 0, allocationsize - size );
+                std::memset( buffer + size, 0, allocationsize - size );
 	}
 
 	// Convert from 16 or 24 bit into real (-- 32-bit float --)
 	if( sample.sample->BitDepth == 24 ) // 24 bit
 	{
-		uint8_t * pInt = reinterpret_cast<uint8_t*>( &buffer );
+		uint8_t * pInt = reinterpret_cast<uint8_t*>( /*&*/ buffer );
 
 		for( f_cnt_t i = 0; i < samples; ++i )
 		{
@@ -623,7 +625,7 @@ void GigInstrument::loadSample( GigSample& sample, sampleFrame* sampleData, f_cn
 	}
 	else // 16 bit
 	{
-		int16_t * pInt = reinterpret_cast<int16_t*>( &buffer );
+		int16_t * pInt = reinterpret_cast<int16_t*>( /*&*/ buffer );
 
 		for( f_cnt_t i = 0; i < samples; ++i )
 		{
@@ -641,6 +643,8 @@ void GigInstrument::loadSample( GigSample& sample, sampleFrame* sampleData, f_cn
 			}
 		}
 	}
+
+        MM_FREE(buffer);
 }
 
 

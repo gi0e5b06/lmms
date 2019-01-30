@@ -67,8 +67,10 @@ class audioFileProcessor : public Instrument
 
   private slots:
     void reverseModelChanged();
-    void ampModelChanged();
     void stretchModelChanged();
+    void predelayModelChanged();
+    void postdelayModelChanged();
+    void ampModelChanged();
     void loopPointChanged();
     void startPointChanged();
     void endPointChanged();
@@ -81,8 +83,10 @@ class audioFileProcessor : public Instrument
   private:
     SampleBuffer m_sampleBuffer;
 
-    FloatModel    m_ampModel;
     FloatModel    m_stretchModel;
+    FloatModel    m_predelayModel;
+    FloatModel    m_postdelayModel;
+    FloatModel    m_ampModel;
     FloatModel    m_startPointModel;
     FloatModel    m_endPointModel;
     FloatModel    m_loopPointModel;
@@ -122,8 +126,10 @@ class AudioFileProcessorView : public InstrumentView
     static QPixmap* s_artwork;
 
     AudioFileProcessorWaveView* m_waveView;
-    Knob*                       m_ampKnob;
     Knob*                       m_stretchKnob;
+    Knob*                       m_predelayKnob;
+    Knob*                       m_postdelayKnob;
+    Knob*                       m_ampKnob;
     Knob*                       m_startKnob;
     Knob*                       m_endKnob;
     Knob*                       m_loopKnob;

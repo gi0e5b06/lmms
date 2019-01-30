@@ -254,14 +254,16 @@ class EXPORT NotePlayHandle /*final*/
     /*! Returns index of NotePlayHandle in vector of note-play-handles
         belonging to this instrument track - used by arpeggiator.
         Ignores child note-play-handles, returns -1 when called on one */
-    int index() const;
+    //int index() const;
 
     /*! Returns list of note-play-handles belonging to given instrument track.
         If allPlayHandles = true, also released note-play-handles and children
         are returned */
+    /*
     static ConstNotePlayHandleList
             nphsOfInstrumentTrack(const InstrumentTrack* Track,
                                   bool allPlayHandles = false);
+    */
 
     /*! Returns whether given NotePlayHandle instance is equal to *this */
     // bool operator==(const NotePlayHandle& _nph) const;
@@ -303,7 +305,7 @@ class EXPORT NotePlayHandle /*final*/
         m_frequencyNeedsUpdate = true;
     }
 
-    real_t automationDetune()
+    real_t automationDetune() const
     {
         return m_automationDetune;
     }
@@ -317,7 +319,7 @@ class EXPORT NotePlayHandle /*final*/
         }
     }
 
-    real_t effectDetune()
+    real_t effectDetune() const
     {
         return m_effectDetune;
     }

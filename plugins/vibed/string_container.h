@@ -1,7 +1,7 @@
 /* string_container.h - contains a collection of strings
  *
  * Copyright (c) 2006 Danny McRae <khjklujn/at/yahoo/com>
- * 
+ *
  * This file is part of LMMS - https://lmms.io
  *
  * This program is free software; you can redistribute it and/or
@@ -24,57 +24,56 @@
 #ifndef _STRING_CONTAINER_H
 #define _STRING_CONTAINER_H
 
-#include <QVector>
-
-#include "vibrating_string.h"
 #include "MemoryManager.h"
+#include "vibrating_string.h"
 
+#include <QVector>
 
 class stringContainer
 {
-	MM_OPERATORS
-public:
-	stringContainer(const float _pitch, 
-			const sample_rate_t _sample_rate,
-			const int _buffer_length,
-			const int _strings = 9 );
-	
-	void addString(	int _harm,
-			const float _pick,
-			const float _pickup,
-			const float * _impluse,
-			const float _randomize,
-			const float _string_loss,
-			const float _detune,
-			const int _oversample,
-			const bool _state,
-			const int _id );
-	
-	bool exists( int _id ) const
-	{
-		return m_exists[_id];
-	}
-	
-	~stringContainer()
-	{
-		int strings = m_strings.count();
-		for( int i = 0; i < strings; i++ )
-		{
-			delete m_strings[i];
-		}
-	}
-	
-	float getStringSample( int _string )
-	{
-		return m_strings[_string]->nextSample();
-	}
-	
-private:
-	QVector<vibratingString *> m_strings;
-	const float m_pitch;
-	const sample_rate_t m_sampleRate;
-	const int m_bufferLength;
-	QVector<bool> m_exists;
-} ;
+    MM_OPERATORS
+  public:
+    stringContainer(const float         _pitch,
+                    const sample_rate_t _sample_rate,
+                    const int           _buffer_length,
+                    const int           _strings = 9);
+
+    void addString(int          _harm,
+                   const float  _pick,
+                   const float  _pickup,
+                   const float* _impluse,
+                   const float  _randomize,
+                   const float  _string_loss,
+                   const float  _detune,
+                   const int    _oversample,
+                   const bool   _state,
+                   const int    _id);
+
+    bool exists(int _id) const
+    {
+        return m_exists[_id];
+    }
+
+    ~stringContainer()
+    {
+        int strings = m_strings.count();
+        for(int i = 0; i < strings; i++)
+        {
+            delete m_strings[i];
+        }
+    }
+
+    float getStringSample(int _string)
+    {
+        return m_strings[_string]->nextSample();
+    }
+
+  private:
+    QVector<vibratingString*> m_strings;
+    const float               m_pitch;
+    const sample_rate_t       m_sampleRate;
+    const int                 m_bufferLength;
+    QVector<bool>             m_exists;
+};
 
 #endif

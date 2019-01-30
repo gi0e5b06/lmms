@@ -3406,9 +3406,13 @@ void Track::saveSettings(QDomDocument& doc, QDomElement& element)
     }
     element.setAttribute("type", type());
     element.setAttribute("name", name());
-    element.setAttribute("muted", isMuted());
-    element.setAttribute("solo", isSolo());
-    element.setAttribute("frozen", isFrozen());
+    // element.setAttribute("muted", isMuted());
+    // element.setAttribute("solo", isSolo());
+    // element.setAttribute("frozen", isFrozen());
+    m_mutedModel.saveSettings(doc, element, "muted");
+    m_soloModel.saveSettings(doc, element, "solo");
+    m_frozenModel.saveSettings(doc, element, "frozen");
+
     element.setAttribute("color", color().rgb());
     element.setAttribute("usestyle", useStyleColor() ? 1 : 0);
 
@@ -3465,9 +3469,12 @@ void Track::loadSettings(const QDomElement& element)
                     ? element.attribute("name")
                     : element.firstChild().toElement().attribute("name"));
 
-    setMuted(element.attribute("muted").toInt());
-    setSolo(element.attribute("solo").toInt());
-    setFrozen(element.attribute("frozen").toInt());
+    // setMuted(element.attribute("muted").toInt());
+    // setSolo(element.attribute("solo").toInt());
+    // setFrozen(element.attribute("frozen").toInt());
+    m_mutedModel.loadSettings(element, "muted");
+    m_soloModel.loadSettings(element, "solo");
+    m_frozenModel.loadSettings(element, "frozen");
 
     if(element.hasAttribute("color"))
         setColor(QColor(element.attribute("color").toUInt()));
@@ -3507,7 +3514,9 @@ void Track::loadSettings(const QDomElement& element)
             {
                 loadTrackSpecificSettings(node.toElement());
             }
-            else if(!node.toElement().attribute("metadata").toInt())
+            else if(node.nodeName() != "muted" && node.nodeName() != "solo"
+                    && node.nodeName() != "frozen"
+                    && !node.toElement().attribute("metadata").toInt())
             {
                 TrackContentObject* tco = createTCO(MidiTime(0));
                 tco->restoreState(node.toElement());

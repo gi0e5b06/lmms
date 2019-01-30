@@ -61,11 +61,9 @@
     }
 
 class ControllerConnection;
-class WaveForm;
+class WaveFormStandard;
 
-class EXPORT AutomatableModel
-      : public Model
-      , public JournallingObject
+class EXPORT AutomatableModel : public Model, public JournallingObject
 {
     Q_OBJECT
     MM_OPERATORS
@@ -228,7 +226,7 @@ class EXPORT AutomatableModel
     void setRandomRatio(const real_t _ratio);
 
     //! @brief Distribution of randomization, Default to gaussf().
-    void setRandomDistribution(const WaveForm* _wf);
+    void setRandomDistribution(const WaveFormStandard* _wf);
 
     template <class T>
     inline T rawValue() const
@@ -400,16 +398,17 @@ class EXPORT AutomatableModel
     template <class T>
     void roundAt(T& value, const T& where) const;
 
-    ScaleType       m_scaleType;  //! scale type, linear by default
-    real_t          m_value;
-    real_t          m_initValue;
-    real_t          m_minValue;
-    real_t          m_maxValue;
-    real_t          m_step;
-    real_t          m_range;
-    real_t          m_centerValue;
-    real_t          m_randomRatio;
-    const WaveForm* m_randomDistribution;
+    ScaleType m_scaleType;  //! scale type, linear by default
+    real_t    m_value;
+    real_t    m_initValue;
+    real_t    m_minValue;
+    real_t    m_maxValue;
+    real_t    m_step;
+    real_t    m_range;
+    real_t    m_centerValue;
+    real_t    m_randomRatio;
+
+    const WaveFormStandard* m_randomDistribution;
 
     bool m_valueChanged;
 

@@ -82,6 +82,8 @@ AudioPort::~AudioPort()
     qWarning("AudioPort::~AudioPort 5");
     if(m_frozenBuf)
         delete m_frozenBuf;
+
+    qWarning("AudioPort::~AudioPort 6");
 }
 
 void AudioPort::setExtOutputEnabled(bool _enabled)

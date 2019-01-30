@@ -33,7 +33,7 @@
 #include "NotePlayHandle.h"
 #include "PerfLog.h"
 #include "SynthGDXView.h"
-#include "WaveForm.h"
+#include "WaveFormStandard.h"
 #include "debug.h"
 #include "embed.h"
 
@@ -176,23 +176,83 @@ OscillatorObject::OscillatorObject(Model* _parent, int _idx) :
       m_velocityModel(
               0., 0., 1., 0.0001, this, tr("O%1 velocity").arg(_idx + 1))
 {
-    WaveForm::fillBankModel(m_wave1BankModel);
-    WaveForm::fillBankModel(m_wave2BankModel);
+    WaveFormStandard::fillBankModel(m_wave1BankModel);
+    WaveFormStandard::fillBankModel(m_wave2BankModel);
 
-    WaveForm::fillIndexModel(m_wave1IndexModel, 0);
-    WaveForm::fillIndexModel(m_wave2IndexModel, 0);
+    WaveFormStandard::fillIndexModel(m_wave1IndexModel, 0);
+    WaveFormStandard::fillIndexModel(m_wave2IndexModel, 0);
 
-    m_wave1 = WaveForm::get(0, 0);
-    m_wave2 = WaveForm::get(0, 0);
+    m_wave1 = WaveFormStandard::get(0, 0);
+    m_wave2 = WaveFormStandard::get(0, 0);
 
     m_lfoTimeModel.setScaleLogarithmic(true);
 
     // const fpp_t FPP = Engine::mixer()->framesPerPeriod();
     // m_GraphModel = new GraphModel(0., 1., FPP, NULL);
+
+    m_waveRing = new Ring(600);  // Engine::mixer()->framesPerPeriod());
+    connect(&m_wave1SymetricModel, SIGNAL(dataChanged()), this,
+            SLOT(updateWaveRing()));
+    connect(&m_wave1ReverseModel, SIGNAL(dataChanged()), this,
+            SLOT(updateWaveRing()));
+    connect(&m_wave1BankModel, SIGNAL(dataChanged()), this,
+            SLOT(updateWaveRing()));
+    connect(&m_wave1IndexModel, SIGNAL(dataChanged()), this,
+            SLOT(updateWaveRing()));
+    connect(&m_wave1AbsoluteModel, SIGNAL(dataChanged()), this,
+            SLOT(updateWaveRing()));
+    connect(&m_wave1OppositeModel, SIGNAL(dataChanged()), this,
+            SLOT(updateWaveRing()));
+    connect(&m_wave1ComplementModel, SIGNAL(dataChanged()), this,
+            SLOT(updateWaveRing()));
+    connect(&m_wave2SymetricModel, SIGNAL(dataChanged()), this,
+            SLOT(updateWaveRing()));
+    connect(&m_wave2ReverseModel, SIGNAL(dataChanged()), this,
+            SLOT(updateWaveRing()));
+    connect(&m_wave2BankModel, SIGNAL(dataChanged()), this,
+            SLOT(updateWaveRing()));
+    connect(&m_wave2IndexModel, SIGNAL(dataChanged()), this,
+            SLOT(updateWaveRing()));
+    connect(&m_wave2AbsoluteModel, SIGNAL(dataChanged()), this,
+            SLOT(updateWaveRing()));
+    connect(&m_wave2OppositeModel, SIGNAL(dataChanged()), this,
+            SLOT(updateWaveRing()));
+    connect(&m_wave2ComplementModel, SIGNAL(dataChanged()), this,
+            SLOT(updateWaveRing()));
+    connect(&m_waveMixModel, SIGNAL(dataChanged()), this,
+            SLOT(updateWaveRing()));
+    connect(&m_waveAntialiasModel, SIGNAL(dataChanged()), this,
+            SLOT(updateWaveRing()));
 }
 
 OscillatorObject::~OscillatorObject()
 {
+}
+
+Ring* OscillatorObject::waveRing()
+{
+    return m_waveRing;
+}
+
+void OscillatorObject::updateWaveRing()
+{
+    // qInfo("OscillatorObject::updateWaveRing()");
+    // m_waveRing->reset();
+    updateWaves(0);  // reset(0);
+    const int rs = m_waveRing->size();
+    // const real_t step = 1. / 600.;
+    // real_t(Engine::mixer()->framesPerPeriod());
+    // for(real_t x = 1. - step; x >= 0.; x -= step)
+    for(int f = rs - 1; f >= 0; f--)
+    {
+        real_t      x = real_t(f) / real_t(rs);
+        sampleFrame s;
+        s[0] = waveAt(0, x, 440.);
+        s[1] = waveAt(1, x, 440.);
+        m_waveRing->write(s);
+    }
+    // qInfo("wr: %f %f", waveAt(0, 0.45, 440.), waveAt(1, 0.45, 440.));
+    emit waveUpdated();
 }
 
 void OscillatorObject::reset(const fpp_t _f)
@@ -306,19 +366,29 @@ real_t OscillatorObject::waveAt(ch_cnt_t ch, real_t x, real_t w)
 
         real_t y1 = m_wave1->f(x1, m_waveAntialias * w);
 
+        if(m_complement1)
+        {
+            if(y1 < 0.)
+                y1 = -1. - y1;
+            else if(y1 > 0.)
+                y1 = 1. - y1;
+            else
+            {
+                real_t y1p = m_wave1->f(positivefraction(x1 + 0.99));
+                real_t y1n = m_wave1->f(positivefraction(x1 + 0.01));
+                if((y1p < 0. && y1n <= 0.) || (y1p <= 0. && y1n < 0.))
+                    y1 = -1;
+                else if((y1p > 0. && y1n >= 0.) || (y1p >= 0. && y1n > 0.))
+                    y1 = 1.;
+                // else y1=0.;
+            }
+        }
+
         if(m_absolute1 && y1 < 0.)
             y1 = -y1;
 
         if(m_opposite1)
             y1 = -y1;
-
-        if(m_complement1)
-        {
-            if(y1 < 0.)
-                y1 = -1. - y1;
-            else
-                y1 = 1. - y1;
-        }
 
         y += (1. - wm) * y1;
     }
@@ -339,19 +409,29 @@ real_t OscillatorObject::waveAt(ch_cnt_t ch, real_t x, real_t w)
 
         real_t y2 = m_wave2->f(x2, m_waveAntialias * w);
 
+        if(m_complement2)
+        {
+            if(y2 < 0.)
+                y2 = -1. - y2;
+            else if(y2 > 0.)
+                y2 = 1. - y2;
+            else
+            {
+                real_t y2p = m_wave2->f(positivefraction(x2 + 0.99));
+                real_t y2n = m_wave2->f(positivefraction(x2 + 0.01));
+                if((y2p < 0. && y2n <= 0.) || (y2p <= 0. && y2n < 0.))
+                    y2 = -1;
+                else if((y2p > 0. && y2n >= 0.) || (y2p >= 0. && y2n > 0.))
+                    y2 = 1.;
+                // else y2=0.;
+            }
+        }
+
         if(m_absolute2 && y2 < 0.)
             y2 = -y2;
 
         if(m_opposite2)
             y2 = -y2;
-
-        if(m_complement2)
-        {
-            if(y2 < 0.)
-                y2 = -1. - y2;
-            else
-                y2 = 1. - y2;
-        }
 
         y += wm * y2;
     }
@@ -498,8 +578,8 @@ void OscillatorObject::input2(const ch_cnt_t _ch, const real_t _in)
 
 OscillatorObject::OscState::OscState()
 {
-    // m_wave1 = WaveForm::get(0, 0);
-    // m_wave2 = WaveForm::get(0, 0);
+    // m_wave1 = WaveFormStandard::get(0, 0);
+    // m_wave2 = WaveFormStandard::get(0, 0);
 
     for(int ch = 1; ch >= 0; --ch)
     {
@@ -580,16 +660,16 @@ real_t OscillatorObject::syncInit(const ch_cnt_t _ch)
 
 void OscillatorObject::updateWaves(const fpp_t _f)
 {
-    m_wave1       = WaveForm::get(m_wave1BankModel.value(),
-                            m_wave1IndexModel.value());
+    m_wave1       = WaveFormStandard::get(m_wave1BankModel.value(),
+                                    m_wave1IndexModel.value());
     m_symetric1   = m_wave1SymetricModel.value();
     m_reverse1    = m_wave1ReverseModel.value();
     m_absolute1   = m_wave1AbsoluteModel.value();
     m_opposite1   = m_wave1OppositeModel.value();
     m_complement1 = m_wave1ComplementModel.value();
 
-    m_wave2       = WaveForm::get(m_wave2BankModel.value(),
-                            m_wave2IndexModel.value());
+    m_wave2       = WaveFormStandard::get(m_wave2BankModel.value(),
+                                    m_wave2IndexModel.value());
     m_symetric2   = m_wave2SymetricModel.value();
     m_reverse2    = m_wave2ReverseModel.value();
     m_absolute2   = m_wave2AbsoluteModel.value();
@@ -664,14 +744,14 @@ void OscillatorObject::updateVolumes(const fpp_t _f)
 
 void OscillatorObject::updateDetunings(const fpp_t _f)
 {
-    m_detuningBase[0]
-            = fastexp2((m_coarseModel.value() * 100. + m_fineLeftModel.value())
-                   / 1200.)
-              / Engine::mixer()->processingSampleRate();
-    m_detuningBase[1]
-            = fastexp2((m_coarseModel.value() * 100. + m_fineRightModel.value())
-                   / 1200.)
-              / Engine::mixer()->processingSampleRate();
+    m_detuningBase[0] = fastexp2((m_coarseModel.value() * 100.
+                                  + m_fineLeftModel.value())
+                                 / 1200.)
+                        / Engine::mixer()->processingSampleRate();
+    m_detuningBase[1] = fastexp2((m_coarseModel.value() * 100.
+                                  + m_fineRightModel.value())
+                                 / 1200.)
+                        / Engine::mixer()->processingSampleRate();
 }
 
 void OscillatorObject::updatePhaseOffsets(const fpp_t _f)
@@ -983,13 +1063,13 @@ QString SynthGDX::nodeName() const
 
 void SynthGDX::playNote(NotePlayHandle* _n, sampleFrame* _buf)
 {
-    if(_n == NULL)
+    if(_n == nullptr)
     {
         qWarning("SynthGDX::playNote _n is null");
         return;
     }
 
-    if(_buf == NULL)
+    if(_buf == nullptr)
     {
         qWarning("SynthGDX::playNote _buf is null");
         return;
@@ -1024,7 +1104,7 @@ void SynthGDX::playNote(NotePlayHandle* _n, sampleFrame* _buf)
 
     SynthGDX::InstrState* state
             = static_cast<SynthGDX::InstrState*>(_n->m_pluginData);
-    if(state == NULL)
+    if(state == nullptr)
     {
         state = new SynthGDX::InstrState();
 
@@ -1179,7 +1259,7 @@ void SynthGDX::restoreFromState(InstrState* _state)
 void SynthGDX::deleteNotePluginData(NotePlayHandle* _n)
 {
     delete static_cast<OscillatorObject::OscState*>(_n->m_pluginData);
-    _n->m_pluginData = NULL;  // TMP ???
+    _n->m_pluginData = nullptr;  // TMP ???
 }
 
 PluginView* SynthGDX::instantiateView(QWidget* _parent)

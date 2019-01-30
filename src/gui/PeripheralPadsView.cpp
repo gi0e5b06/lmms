@@ -434,8 +434,10 @@ void PeripheralPadsView::focusOutEvent(QFocusEvent*)
     // hang otherwise
     for(int i = 0; i < NumKeys; ++i)
     {
-        m_piano->midiEventProcessor()->processInEvent(
-                MidiEvent(MidiNoteOff, -1, i, 0));
+        if(i < NumMidiKeys)
+            m_piano->midiEventProcessor()->processInEvent(
+                    MidiEvent(MidiNoteOff, -1, i, 0));
+
         m_piano->setKeyState(i, false);
     }
     update();

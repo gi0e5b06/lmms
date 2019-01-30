@@ -67,7 +67,7 @@ protected:
 
 	std::string m_presetsDir;
 
-	int m_runningNotes[NumKeys];
+	int m_runningNotes[NumMidiKeys];
 	Master * m_master;
 	NulEngine* m_ioEngine;
 

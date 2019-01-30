@@ -32,7 +32,7 @@
 #include "Knob.h"
 #include "Mixer.h"
 #include "NotePlayHandle.h"
-#include "WaveForm.h"
+#include "WaveFormStandard.h"
 #include "embed.h"
 
 #include <QDomDocument>
@@ -72,10 +72,10 @@ kickerInstrument::kickerInstrument(InstrumentTrack* _instrument_track) :
       m_versionModel(
               KICKER_PRESET_VERSION, 0, KICKER_PRESET_VERSION, this, "")
 {
-    WaveForm::fillBankModel(m_sinBankModel);
-    WaveForm::fillBankModel(m_whnBankModel);
-    WaveForm::fillIndexModel(m_sinIndexModel, 0);
-    WaveForm::fillIndexModel(m_whnIndexModel, 0);
+    WaveFormStandard::fillBankModel(m_sinBankModel);
+    WaveFormStandard::fillBankModel(m_whnBankModel);
+    WaveFormStandard::fillIndexModel(m_sinIndexModel, 0);
+    WaveFormStandard::fillIndexModel(m_whnIndexModel, 0);
 
     connect(&m_sinBankModel, SIGNAL(dataChanged()), this,
             SLOT(updateSinIndexModel()));
@@ -91,7 +91,7 @@ void kickerInstrument::updateSinIndexModel()
 {
     int bank = m_sinBankModel.value();
     int old  = m_sinIndexModel.value();
-    WaveForm::fillIndexModel(m_sinIndexModel, bank);
+    WaveFormStandard::fillIndexModel(m_sinIndexModel, bank);
     m_sinIndexModel.setValue(old);
 }
 
@@ -99,7 +99,7 @@ void kickerInstrument::updateWhnIndexModel()
 {
     int bank = m_whnBankModel.value();
     int old  = m_whnIndexModel.value();
-    WaveForm::fillIndexModel(m_whnIndexModel, bank);
+    WaveFormStandard::fillIndexModel(m_whnIndexModel, bank);
     m_whnIndexModel.setValue(old);
 }
 
@@ -144,9 +144,9 @@ void kickerInstrument::loadSettings(const QDomElement& _this)
     m_envModel.loadSettings(_this, "env");
 
     if(_this.hasAttribute("tail"))
-            m_tailModel.loadSettings(_this, "tail");
+        m_tailModel.loadSettings(_this, "tail");
     else
-            m_distEndModel.setValue(2.);
+        m_distEndModel.setValue(2.);
 
     m_noiseModel.loadSettings(_this, "noise");
     m_clickModel.loadSettings(_this, "click");
@@ -168,10 +168,10 @@ void kickerInstrument::loadSettings(const QDomElement& _this)
         m_clickModel.setValue(0.);
     }
 
-    m_sinBankModel.setInitValue(WaveForm::SINE_BANK);
-    m_sinIndexModel.setInitValue(WaveForm::SINE_INDEX);
-    m_whnBankModel.setInitValue(WaveForm::WHITENOISE_BANK);
-    m_whnIndexModel.setInitValue(WaveForm::WHITENOISE_INDEX);
+    m_sinBankModel.setInitValue(WaveFormStandard::SINE_BANK);
+    m_sinIndexModel.setInitValue(WaveFormStandard::SINE_INDEX);
+    m_whnBankModel.setInitValue(WaveFormStandard::WHITENOISE_BANK);
+    m_whnIndexModel.setInitValue(WaveFormStandard::WHITENOISE_INDEX);
     m_sinBankModel.loadSettings(_this, "sin_bank");
     m_sinIndexModel.loadSettings(_this, "sin_index");
     m_whnBankModel.loadSettings(_this, "whn_bank");
@@ -214,10 +214,10 @@ void kickerInstrument::playNote(NotePlayHandle* _n,
                 m_clickModel.value() * 0.25, m_slopeModel.value(),
                 m_phaseFactorModel.value(), m_envModel.value(),
                 m_distModel.value(), m_distEndModel.value(), decfr,
-                WaveForm::get(m_sinBankModel.value(),
-                              m_sinIndexModel.value()),
-                WaveForm::get(m_whnBankModel.value(),
-                              m_whnIndexModel.value()));
+                WaveFormStandard::get(m_sinBankModel.value(),
+                                      m_sinIndexModel.value()),
+                WaveFormStandard::get(m_whnBankModel.value(),
+                                      m_whnIndexModel.value()));
     }
 
     // if(!_n->isReleased())
@@ -330,7 +330,7 @@ kickerInstrumentView::kickerInstrumentView(Instrument* _instrument,
 
     m_gainKnob = new kickerKnob(this);
     m_gainKnob->setHintText(tr("Gain:"), "");
-    m_gainKnob->move(COL1-4, ROW3);
+    m_gainKnob->move(COL1 - 4, ROW3);
 
     m_decayKnob = new kickerEnvKnob(this);
     m_decayKnob->setHintText(tr("Envelope Length:"), "ms");

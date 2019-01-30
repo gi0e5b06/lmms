@@ -79,7 +79,7 @@ class EXPORT TrackContainer
 
     bool isEmpty() const;
 
-    static const QString classNodeName()
+    static inline const QString classNodeName()
     {
         return "trackcontainer";
     }

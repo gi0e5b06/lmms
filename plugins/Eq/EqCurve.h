@@ -1,7 +1,7 @@
 /*
  * EqCurve.h - defination of EqCurve and EqHandle classes.
  *
-* Copyright (c) 2015 Steffen Baranowsky <BaraMGB/at/freenet/dot/de>
+ * Copyright (c) 2015 Steffen Baranowsky <BaraMGB/at/freenet/dot/de>
  *
  * This file is part of LMMS - https://lmms.io
  *

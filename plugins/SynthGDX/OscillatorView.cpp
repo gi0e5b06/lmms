@@ -24,14 +24,16 @@
 
 #include "OscillatorView.h"
 
-#include <QGridLayout>
-#include <QLabel>
-
 #include "ComboBox.h"
+//#include "HwWaveWidget.h"
 #include "Knob.h"
 #include "LedCheckBox.h"
 #include "SynthGDX.h"
 #include "TempoSyncKnob.h"
+#include "VisualizationWidget.h"
+
+#include <QGridLayout>
+#include <QLabel>
 
 OscillatorView::OscillatorView(OscillatorObject* _osc,
                                const int         _idx,
@@ -45,6 +47,14 @@ OscillatorView::OscillatorView(OscillatorObject* _osc,
     // mainLayout->setRowStretch(4, 1);
     mainLayout->setHorizontalSpacing(2);  // 6);
     mainLayout->setVerticalSpacing(2);
+
+    m_showWave = new VisualizationWidget(200, 75, this, _osc->waveRing());
+    // m_showWave->setDisplayMode(VisualizationWidget::Time);
+    QObject::connect(_osc, SIGNAL(waveUpdated()), this,
+                     SLOT(updateVisualizationWidget()));
+    //_osc->updateWaveRing();
+
+    // HwWaveWidget* ww = new HwWaveWidget(this, 100, 25);
 
     // QLabel* numLBL = new QLabel(QString("O%1").arg(_idx + 1));
     // numLBL->setAutoFillBackground(true);
@@ -75,7 +85,7 @@ OscillatorView::OscillatorView(OscillatorObject* _osc,
     waveAntialiasKNB->setModel(&m_osc->m_waveAntialiasModel);
     waveAntialiasKNB->setPointColor(Qt::white);
     waveAntialiasKNB->setText("AA");
-    //waveAntialiasKNB->setTextAnchorPoint(Qt::AnchorBottom);
+    // waveAntialiasKNB->setTextAnchorPoint(Qt::AnchorBottom);
 
     // wave 1
 
@@ -357,7 +367,18 @@ OscillatorView::OscillatorView(OscillatorObject* _osc,
     mainLayout->addWidget(enabledLCB, 0, 0, 9, 1,
                           Qt::AlignTop | Qt::AlignHCenter);
 
-    int col = 0, row = 0;  // first row
+    int col = 0, row = 0;
+    mainLayout->addWidget(m_showWave, row, ++col, 1, 7,
+                          Qt::AlignBottom | Qt::AlignHCenter);
+    /*
+    col = 0;
+    row++;
+    mainLayout->addWidget(ww, row, ++col, 1, 7,
+                          Qt::AlignBottom | Qt::AlignHCenter);
+    */
+
+    col = 0;  // first row
+    row++;
     mainLayout->addWidget(bank1CMB, row, ++col, 1, 3,
                           Qt::AlignBottom | Qt::AlignHCenter);
     mainLayout->addWidget(reverse1LCB, row, col = 4, 1, 1,
@@ -475,7 +496,7 @@ void OscillatorView::updateWave1IndexModel()
 {
     int bank1 = m_osc->m_wave1BankModel.value();
     int old   = m_osc->m_wave1IndexModel.value();
-    WaveForm::fillIndexModel(m_osc->m_wave1IndexModel, bank1);
+    WaveFormStandard::fillIndexModel(m_osc->m_wave1IndexModel, bank1);
     m_osc->m_wave1IndexModel.setValue(old);
 }
 
@@ -483,7 +504,7 @@ void OscillatorView::updateWave2IndexModel()
 {
     int bank2 = m_osc->m_wave2BankModel.value();
     int old   = m_osc->m_wave2IndexModel.value();
-    WaveForm::fillIndexModel(m_osc->m_wave2IndexModel, bank2);
+    WaveFormStandard::fillIndexModel(m_osc->m_wave2IndexModel, bank2);
     m_osc->m_wave2IndexModel.setValue(old);
 }
 
@@ -493,3 +514,9 @@ void OscillatorView::contextMenuEvent( QContextMenuEvent * _cme )
         Subwindow::putWidgetOnWorkspace(graph,true,false,false,false);
 }
 */
+
+void OscillatorView::updateVisualizationWidget()
+{
+    // qInfo("OscillatorView::updateVisualizationWidget");
+    m_showWave->update();
+}

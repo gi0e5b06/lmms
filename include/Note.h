@@ -74,7 +74,8 @@ enum Octaves
 const int WhiteKeysPerOctave = 7;
 const int BlackKeysPerOctave = 5;
 const int KeysPerOctave = WhiteKeysPerOctave + BlackKeysPerOctave;
-const int NumKeys = 128;//NumOctaves * KeysPerOctave;
+const int NumMidiKeys = 128;
+const int NumKeys = 140; // NumOctaves * KeysPerOctave;
 const int DefaultKey = DefaultOctave*KeysPerOctave + Key_A; // A4 69
 
 const float MaxDetuning = 4 * 12.0f;
@@ -193,12 +194,12 @@ public:
 		return m_panning;
 	}
 
-	static QString classNodeName()
+	static inline const QString classNodeName()
 	{
 		return "note";
 	}
 
-	inline virtual QString nodeName() const
+	virtual QString nodeName() const
 	{
 		return classNodeName();
 	}

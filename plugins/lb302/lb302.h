@@ -139,7 +139,7 @@ class lb302Synth : public Instrument
 
     virtual Flags flags() const
     {
-        return IsSingleStreamed | IsMonophonic;
+        return IsSingleStreamed | IsMonophonic | IsNotBendable;
     }
 
     /* 0 is the default
