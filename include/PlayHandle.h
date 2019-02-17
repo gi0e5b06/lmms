@@ -70,6 +70,11 @@ class PlayHandle : public ThreadableJob
         return m_affinity;
     }
 
+    void setAffinity(QThread* _thread)
+    {
+        m_affinity = _thread;
+    }
+
     Type type() const
     {
         return m_type;
@@ -87,14 +92,17 @@ class PlayHandle : public ThreadableJob
     {
         m_processingLock.lock();
     }
+
     void unlock()
     {
         m_processingLock.unlock();
     }
+
     bool tryLock()
     {
         return m_processingLock.tryLock();
     }
+
     virtual void play(sampleFrame* buffer)              = 0;
     virtual bool isFinished() const                     = 0;
     virtual bool isFromTrack(const Track* _track) const = 0;

@@ -75,6 +75,8 @@ NotePlayHandle::NotePlayHandle(InstrumentTrack* instrumentTrack,
       m_origin(origin), m_generation(generation),
       m_frequencyNeedsUpdate(false), m_scale(nullptr)
 {
+    setLegato(n.legato());
+
     lock();
     if(hasParent() == false)
     {
@@ -93,7 +95,7 @@ NotePlayHandle::NotePlayHandle(InstrumentTrack* instrumentTrack,
                                                 ->valueAt(0)
                                       : 0.f);
 
-        parent->m_subNotes.push_back(this);
+        parent->m_subNotes.append(this);
         parent->m_hadChildren = true;
 
         m_bbTrack = parent->m_bbTrack;
@@ -137,17 +139,17 @@ NotePlayHandle::~NotePlayHandle()
 {
 }
 
-void NotePlayHandle::removeOneSubNote(NotePlayHandle* _nph)
+void NotePlayHandle::removeSubNote(NotePlayHandle* _nph)
 {
     if(_nph)
     {
         if(tryLock())
         {
-            m_subNotes.removeOne(_nph);
+            m_subNotes.removeAll(_nph);
             unlock();
         }
         else
-            qWarning("NotePlayHandle::removeOneSubNote fail");
+            qWarning("NotePlayHandle::removeSubNote fail");
     }
 }
 
@@ -170,16 +172,29 @@ void NotePlayHandle::done()
 
     noteOff(0);
 
-    if(hasParent() == false)
-    {
-        // delete m_baseDetuning;
-        m_instrumentTrack->m_processHandles.removeAll(this);
-    }
-    else
+    if(hasParent())
     {
         // if(m_parent->m_subNotes.contains(this)) //tmp test SIGSEGV
         // m_parent->m_subNotes.removeOne( this );
-        m_parent->removeOneSubNote(this);
+        if(s_releaseTracker.contains(m_parent->m_debug_uuid))
+        {
+            BACKTRACE
+            qCritical(
+                    "NotePlayHandleManager::release parent %p was "
+                    "already released",
+                    m_parent);
+        }
+        else
+        {
+            m_parent->removeSubNote(this);
+            m_parent = nullptr;
+        }
+    }
+
+    // if(hasParent() == false)
+    {
+        // delete m_baseDetuning;
+        m_instrumentTrack->m_processHandles.removeAll(this);
     }
 
     if(m_pluginData != NULL)
@@ -189,7 +204,7 @@ void NotePlayHandle::done()
 
     if(m_instrumentTrack->m_notes[key()] == this)
     {
-        m_instrumentTrack->m_notes[key()] = NULL;
+        m_instrumentTrack->m_notes[key()] = nullptr;
     }
 
     m_subNotes.clear();
@@ -199,6 +214,7 @@ void NotePlayHandle::done()
     if(buffer())
         releaseBuffer();
 
+    m_instrumentTrack = nullptr;
     unlock();
 }
 
@@ -235,9 +251,27 @@ void NotePlayHandle::setPanning(panning_t _panning)
     }
 }
 
+void NotePlayHandle::setLegato(bool _legato)
+{
+    Note::setLegato(_legato);
+
+    /*
+    m_instrumentTrack->notePanningModel()->setAutomatedValue(_panning);
+
+    int key = midiKey();
+    if(key >= 0 && key < NumMidiKeys)
+    {
+        MidiEvent event(MidiMetaEvent, midiChannel(), key,
+                        panningToMidi(_panning));
+        event.setMetaEvent(MidiNotePanning);
+        m_instrumentTrack->processOutEvent(event);
+    }
+    */
+}
+
 int NotePlayHandle::midiKey() const
 {
-    return key() - m_origBaseNote + instrumentTrack()->baseNote();
+    return key() - m_origBaseNote + m_instrumentTrack->baseNote();
 }
 
 void NotePlayHandle::play(sampleFrame* _working_buffer)
@@ -258,8 +292,8 @@ void NotePlayHandle::play(sampleFrame* _working_buffer)
     lock();
 
     /*
-    if(instrumentTrack()->instrument() &&
-       instrumentTrack()->instrument()->isMidiBased())
+    if(m_instrumentTrack->instrument() &&
+       m_instrumentTrack->instrument()->isMidiBased())
     {
             setVolume(getVolume());  // tmp, need updateVolume()
             setPanning(getPanning());
@@ -278,11 +312,20 @@ void NotePlayHandle::play(sampleFrame* _working_buffer)
                       : Engine::mixer()->framesPerPeriod();
 
     if(m_totalFramesPlayed == 0)
+    {
+        /*
+    if(!legato())
+    {
+        m_instrumentTrack->setLegatoFrames(0);
+        qInfo("Legato 0 -> frames");
+    }
+        */
         noteOn(offset());
+    }
 
     // check if we start release during this period
     if(m_released == false
-       && instrumentTrack()->isSustainPedalPressed() == false
+       && m_instrumentTrack->isSustainPedalPressed() == false
        && m_totalFramesPlayed + framesThisPeriod > m_frames)
     {
         noteOff(m_totalFramesPlayed == 0
@@ -317,7 +360,7 @@ void NotePlayHandle::play(sampleFrame* _working_buffer)
     }
 
     if(m_released
-       && (!instrumentTrack()->isSustainPedalPressed() || m_releaseStarted))
+       && (!m_instrumentTrack->isSustainPedalPressed() || m_releaseStarted))
     {
         m_releaseStarted = true;
 
@@ -374,12 +417,19 @@ void NotePlayHandle::play(sampleFrame* _working_buffer)
 
     // update internal data
     m_totalFramesPlayed += framesThisPeriod;
+
+    /*
+    if(!legato()&&!isReleased())
+        m_instrumentTrack->setLegatoFrames(m_instrumentTrack->legatoFrames()
+
+                                               + framesThisPeriod);
+    */
     unlock();
 }
 
 f_cnt_t NotePlayHandle::framesLeft() const
 {
-    if(instrumentTrack()->isSustainPedalPressed())
+    if(m_instrumentTrack->isSustainPedalPressed())
     {
         return 4 * Engine::mixer()->framesPerPeriod();
     }
@@ -434,13 +484,13 @@ void NotePlayHandle::noteOn(const f_cnt_t _s)
 void NotePlayHandle::noteOff(const f_cnt_t _s)
 {
     if(m_released)
-    {
         return;
-    }
+
     m_released = true;
 
+    qInfo("NotePlayHandle::noteOff 1");
     // first note-off all sub-notes
-    for(NotePlayHandle* n: m_subNotes)
+    for(NotePlayHandle* n: m_subNotes.list())
     {
         n->lock();
         n->noteOff(_s);
@@ -451,7 +501,9 @@ void NotePlayHandle::noteOff(const f_cnt_t _s)
     m_framesBeforeRelease = _s;
     m_releaseFramesToDo   = qMax<f_cnt_t>(0, actualReleaseFramesToDo());
 
+    qInfo("NotePlayHandle::noteOff 2");
     // if( hasParent() || ! m_instrumentTrack->isArpeggioEnabled()*/ )
+    if(m_instrumentTrack != nullptr)
     {
         // send MidiNoteOff event
         int key = midiKey();
@@ -463,9 +515,10 @@ void NotePlayHandle::noteOff(const f_cnt_t _s)
         }
     }
 
+    qInfo("NotePlayHandle::noteOff 3");
     // inform attached components about MIDI finished (used for recording in
     // Piano Roll)
-    if(!instrumentTrack()->isSustainPedalPressed())
+    if(!m_instrumentTrack->isSustainPedalPressed())
     {
         if(m_origin == OriginMidiInput)
         {
@@ -474,6 +527,7 @@ void NotePlayHandle::noteOff(const f_cnt_t _s)
             m_instrumentTrack->midiNoteOff(*this);
         }
     }
+    qInfo("NotePlayHandle::noteOff 4");
 }
 
 f_cnt_t NotePlayHandle::actualReleaseFramesToDo() const
@@ -499,11 +553,15 @@ real_t NotePlayHandle::volumeLevel(const f_cnt_t _frame)
 void NotePlayHandle::mute()
 {
     // mute all sub-notes
-    for(NotePlayHandleList::Iterator it = m_subNotes.begin();
-        it != m_subNotes.end(); ++it)
-    {
-        (*it)->mute();
-    }
+    /*
+for(NotePlayHandleList::Iterator it = m_subNotes.begin();
+    it != m_subNotes.end(); ++it)
+{
+    (*it)->mute();
+}
+    */
+    for(NotePlayHandle* n: m_subNotes.list())
+        n->mute();
     m_muted = true;
 }
 
@@ -531,26 +589,26 @@ int NotePlayHandle::index() const
 }
 */
 
- /*
+/*
 ConstNotePlayHandleList
-        NotePlayHandle::nphsOfInstrumentTrack(const InstrumentTrack* _it,
-                                              bool                   _all_ph)
+       NotePlayHandle::nphsOfInstrumentTrack(const InstrumentTrack* _it,
+                                             bool                   _all_ph)
 {
-    const PlayHandleList&   playHandles = Engine::mixer()->playHandles();
-    ConstNotePlayHandleList cnphv;
+   const PlayHandleList&   playHandles = Engine::mixer()->playHandles();
+   ConstNotePlayHandleList cnphv;
 
-    for(PlayHandleList::ConstIterator it = playHandles.begin();
-        it != playHandles.end(); ++it)
-    {
-        const NotePlayHandle* nph = dynamic_cast<const NotePlayHandle*>(*it);
-        if(nph != NULL && nph->m_instrumentTrack == _it
-           && ((nph->isReleased() == false && nph->hasParent() == false)
-               || _all_ph == true))
-        {
-            cnphv.push_back(nph);
-        }
-    }
-    return cnphv;
+   for(PlayHandleList::ConstIterator it = playHandles.begin();
+       it != playHandles.end(); ++it)
+   {
+       const NotePlayHandle* nph = dynamic_cast<const NotePlayHandle*>(*it);
+       if(nph != NULL && nph->m_instrumentTrack == _it
+          && ((nph->isReleased() == false && nph->hasParent() == false)
+              || _all_ph == true))
+       {
+           cnphv.push_back(nph);
+       }
+   }
+   return cnphv;
 }
 */
 
@@ -631,12 +689,15 @@ void NotePlayHandle::updateFrequency()
 
     // qInfo("Scale: %s key %d (%d) %f
     // Hz",qPrintable(scl->name()),key(),k,m_frequency);
-
+    /*
     for(NotePlayHandleList::Iterator it = m_subNotes.begin();
         it != m_subNotes.end(); ++it)
     {
         (*it)->updateFrequency();
     }
+    */
+    for(NotePlayHandle* n: m_subNotes.list())
+        n->updateFrequency();
 }
 
 void NotePlayHandle::processMidiTime(const MidiTime& time)
@@ -668,8 +729,8 @@ void NotePlayHandle::processMidiTime(const MidiTime& time)
         }
     }
 
-    if(instrumentTrack()->instrument()
-       && instrumentTrack()->instrument()->isMidiBased())
+    if(m_instrumentTrack->instrument()
+       && m_instrumentTrack->instrument()->isMidiBased())
     {
         setVolume(getVolume());  // tmp, need updateVolume()
         setPanning(getPanning());
@@ -681,18 +742,22 @@ void NotePlayHandle::processMidiTime(const MidiTime& time)
     }
 }
 
-void NotePlayHandle::resize(const bpm_t _new_tempo)
+void NotePlayHandle::resize(const bpm_t _newTempo)
 {
     double completed    = m_totalFramesPlayed / (double)m_frames;
-    double new_frames   = m_origFrames * m_origTempo / (double)_new_tempo;
+    double new_frames   = m_origFrames * m_origTempo / (double)_newTempo;
     m_frames            = (f_cnt_t)new_frames;
     m_totalFramesPlayed = (f_cnt_t)(completed * new_frames);
 
+    /*
     for(NotePlayHandleList::Iterator it = m_subNotes.begin();
         it != m_subNotes.end(); ++it)
     {
-        (*it)->resize(_new_tempo);
+        (*it)->resize(_newTempo);
     }
+    */
+    for(NotePlayHandle* n: m_subNotes.list())
+        n->resize(_newTempo);
 }
 
 NotePlayHandle*

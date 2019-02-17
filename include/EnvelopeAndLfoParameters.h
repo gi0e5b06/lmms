@@ -34,9 +34,7 @@
 #include "TempoSyncKnobModel.h"
 #include "lmms_basics.h"
 
-class EXPORT EnvelopeAndLfoParameters
-      : public Model
-      , public JournallingObject
+class EXPORT EnvelopeAndLfoParameters : public Model, public JournallingObject
 {
     Q_OBJECT
 
@@ -91,7 +89,8 @@ class EXPORT EnvelopeAndLfoParameters
     void fillLevel(real_t*       _buf,
                    f_cnt_t       _frame,
                    const f_cnt_t _release_begin,
-                   const fpp_t   _frames);
+                   const fpp_t   _frames,
+                   const bool    _legato);
 
     inline bool isUsed() const
     {

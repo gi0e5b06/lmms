@@ -59,11 +59,16 @@ AutomatableModel::AutomatableModel(const real_t   val,
 
 AutomatableModel::~AutomatableModel()
 {
-    while(m_linkedModels.empty() == false)
-    {
-        m_linkedModels.last()->unlinkModel(this);
-        m_linkedModels.erase(m_linkedModels.end() - 1);
-    }
+    /*
+      while(!m_linkedModels.empty())
+      {
+      m_linkedModels.last()->unlinkModel(this);
+      m_linkedModels.erase(m_linkedModels.end() - 1);
+      }
+    */
+    for(AutomatableModel* m: m_linkedModels)
+        m->unlinkModel(this);
+    m_linkedModels.clear();
 
     if(m_controllerConnection)
     {
@@ -326,7 +331,7 @@ void AutomatableModel::setRandomRatio(const real_t _ratio)
 {
     real_t rr = bound(0., abs(_ratio), 1.);
     if(rr != 0. && m_randomDistribution == nullptr)
-        m_randomDistribution = &WaveFormStandard::SHARPGAUSS;
+        m_randomDistribution = WaveFormStandard::SHARPGAUSS;
     m_randomRatio = rr;
     emit propertiesChanged();
 }

@@ -38,8 +38,26 @@ InstrumentPlayHandle::InstrumentPlayHandle(Instrument*      instrument,
     setAudioPort(instrumentTrack->audioPort());
 }
 
+InstrumentPlayHandle::~InstrumentPlayHandle()
+{
+    setAudioPort(nullptr);
+    m_instrument = nullptr;
+}
+
 void InstrumentPlayHandle::play(sampleFrame* _working_buffer)
 {
+    if(m_instrument == nullptr)
+    {
+        qWarning("InstrumentPlayHandle::play m_instrument is null");
+        return;
+    }
+
+    InstrumentTrack* track = m_instrument->instrumentTrack();
+    if(track == nullptr)
+    {
+        qWarning("InstrumentPlayHandle::play m_instrument->track is null");
+        return;
+    }
     // if the instrument is midi-based, we can safely render right away
     /*
     if( m_instrument->flags() & Instrument::IsMidiBased )
@@ -52,12 +70,8 @@ void InstrumentPlayHandle::play(sampleFrame* _working_buffer)
     // if not, we need to ensure that all our nph's have been processed first
     // ConstNotePlayHandleList nphv = NotePlayHandle::nphsOfInstrumentTrack(
     //        m_instrument->instrumentTrack(), true);
-    ConstNotePlayHandleList cnphv = Engine::mixer()->nphsOfTrack(
-            m_instrument->instrumentTrack(), true);
+    ConstNotePlayHandleList cnphv = Engine::mixer()->nphsOfTrack(track, true);
 
-    bool   processed = false;
-    real_t ndm;
-    bool   nphsLeft;
     /*
     do
     {
@@ -78,25 +92,57 @@ void InstrumentPlayHandle::play(sampleFrame* _working_buffer)
         }
     } while(nphsLeft);
     */
+
+    bool processed = false;
+    bool nphsLeft;
     do
     {
         nphsLeft = false;
         for(const NotePlayHandle* cnph: cnphv)
         {
-                //NotePlayHandle* nph = const_cast<NotePlayHandle*>(cnph);
-            // dynamic_cast<NotePlayHandle*>(
-            //  const_cast<PlayHandle*>(cph));
             if(cnph != nullptr && cnph->state() != ThreadableJob::Done
                && !cnph->isFinished())
             {
                 processed = true;
                 nphsLeft  = true;
+
                 NotePlayHandle* nph = const_cast<NotePlayHandle*>(cnph);
                 nph->process();
-                ndm = cnph->automationDetune() + cnph->effectDetune();
             }
         }
     } while(nphsLeft);
+
+    real_t  ndm=0.;
+    f_cnt_t mintfp = -1;
+    for(const NotePlayHandle* cnph: cnphv)
+    {
+        if(cnph != nullptr && !cnph->isFinished())
+        {
+            NotePlayHandle* nph = const_cast<NotePlayHandle*>(cnph);
+
+            const f_cnt_t tfp = nph->totalFramesPlayed();
+            const f_cnt_t fbr = tfp - nph->releaseFramesDone()
+                                + nph->framesBeforeRelease();
+            const f_cnt_t off  = nph->noteOffset();
+            const f_cnt_t left = nph->framesLeft();
+
+            if(tfp <= 256)
+                qInfo("IPH: tfp=%d off=%d br=%d leftfcp=%d left=%d",
+                      tfp, off, fbr, nph->framesLeftForCurrentPeriod(), left);
+
+            if(/*left>0 &&*/ (mintfp == -1 || tfp < mintfp))
+            {
+                mintfp = tfp;
+                track->setEnvOffset(off);
+                track->setEnvTotalFramesPlayed(tfp);
+                track->setEnvReleaseBegin(fbr);
+                track->setEnvLegato(nph->legato());
+                track->setEnvVolume(nph->getVolume());
+                track->setEnvPanning(nph->getPanning());
+                ndm = cnph->automationDetune() + cnph->effectDetune();
+            }
+        }
+    }
 
     // ndm = m_instrument->instrumentTrack()->noteBendingModel()->value();
     // ndm*=(1.-0.05*Engine::mixer()->baseSampleRate() /
@@ -115,7 +161,8 @@ void InstrumentPlayHandle::play(sampleFrame* _working_buffer)
 
 bool InstrumentPlayHandle::isFinished() const
 {
-    return false;
+    return m_instrument == nullptr
+           || m_instrument->instrumentTrack() == nullptr;  // false;
 }
 
 bool InstrumentPlayHandle::isFromTrack(const Track* _track) const
@@ -125,6 +172,12 @@ bool InstrumentPlayHandle::isFromTrack(const Track* _track) const
         qWarning("InstrumentPlayHandle::isFromTrack m_instrument is null");
         return false;
     }
-    qWarning("InstrumentPlayHandle::isFromTrack %p %p", m_instrument, _track);
+    if(_track == nullptr)
+    {
+        qWarning("InstrumentPlayHandle::isFromTrack _track is null");
+        return false;
+    }
+    // qWarning("InstrumentPlayHandle::isFromTrack %p %p", m_instrument,
+    // _track);
     return m_instrument->isFromTrack(_track);
 }

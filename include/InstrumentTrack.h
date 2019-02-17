@@ -66,9 +66,7 @@ class TrackLabelButton;
 class LedCheckBox;
 class QLabel;
 
-class EXPORT InstrumentTrack
-      : public Track
-      , public MidiEventProcessor
+class EXPORT InstrumentTrack : public Track, public MidiEventProcessor
 {
     Q_OBJECT
     MM_OPERATORS
@@ -81,7 +79,7 @@ class EXPORT InstrumentTrack
     // used by instrument
     void processAudioBuffer(sampleFrame*    _buf,
                             const fpp_t     _frames,
-                            NotePlayHandle* _n);
+                            NotePlayHandle* _nph);
 
     MidiEvent applyMasterKey(const MidiEvent& event);
 
@@ -91,8 +89,6 @@ class EXPORT InstrumentTrack
     virtual void processOutEvent(const MidiEvent& event,
                                  const MidiTime&  time   = MidiTime(),
                                  f_cnt_t          offset = 0);
-    // silence all running notes played by this track
-    void silenceAllNotes(bool removeIPH = false);
 
     bool isSustainPedalPressed() const
     {
@@ -270,11 +266,51 @@ class EXPORT InstrumentTrack
         return &m_effectChannelModel;
     }
 
+    f_cnt_t legatoFrames() const
+    {
+        return m_soundShaping.legatoFrames();
+    }
+
+    void setLegatoFrames(f_cnt_t _frames)
+    {
+        m_soundShaping.setLegatoFrames(_frames);
+    }
+
     void setPreviewMode(const bool);
 
     virtual void cleanFrozenBuffer();
     virtual void readFrozenBuffer();
     virtual void writeFrozenBuffer();
+
+    void setEnvOffset(f_cnt_t _o)
+    {
+        m_envOffset = _o;
+    }
+
+    void setEnvTotalFramesPlayed(f_cnt_t _tfp)
+    {
+        m_envTotalFramesPlayed = _tfp;
+    }
+
+    void setEnvReleaseBegin(f_cnt_t _rb)
+    {
+        m_envReleaseBegin = _rb;
+    }
+
+    void setEnvLegato(bool _legato)
+    {
+        m_envLegato = _legato;
+    }
+
+    void setEnvVolume(volume_t _v)
+    {
+        m_envVolume = _v;
+    }
+
+    void setEnvPanning(panning_t _p)
+    {
+        m_envPanning = _p;
+    }
 
   signals:
     void instrumentChanged();
@@ -285,6 +321,8 @@ class EXPORT InstrumentTrack
 
   public slots:
     virtual void toggleFrozen();
+    // silence all running notes played by this track
+    void silenceAllNotes(bool removeIPH = false);
 
   protected:
     virtual QString nodeName() const
@@ -349,6 +387,15 @@ class EXPORT InstrumentTrack
     */
 
     Piano m_piano;
+
+    BasicFilters<>* m_envFilter;
+    f_cnt_t         m_envOffset;
+    f_cnt_t         m_envTotalFramesPlayed;
+    f_cnt_t         m_envReleaseBegin;
+    bool            m_envLegato;
+    volume_t        m_envVolume;
+    panning_t       m_envPanning;
+    // friend class InstrumentSoundShaping;
 
     friend class InstrumentTrackView;
     friend class InstrumentTrackWindow;
@@ -434,10 +481,10 @@ class InstrumentTrackView : public TrackView
     friend class InstrumentTrackWindow;
 };
 
-class InstrumentTrackWindow
-      : public QWidget
-      , public ModelView
-      , public SerializingObjectHook
+class InstrumentTrackWindow :
+      public QWidget,
+      public ModelView,
+      public SerializingObjectHook
 {
     Q_OBJECT
   public:

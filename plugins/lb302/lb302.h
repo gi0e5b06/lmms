@@ -145,7 +145,7 @@ class lb302Synth : public Instrument
     /* 0 is the default
     virtual f_cnt_t desiredReleaseFrames() const
     {
-            return 0; //4048;
+            return 0; //2048;
     }
     */
 

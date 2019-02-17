@@ -240,6 +240,7 @@ CarlaInstrument::CarlaInstrument(InstrumentTrack* const  instrumentTrack,
     // we need a play-handle which cares for calling play()
     InstrumentPlayHandle* iph
             = new InstrumentPlayHandle(this, instrumentTrack);
+    iph->setAffinity(Engine::mixer()->thread());
     Engine::mixer()->addPlayHandle(iph);
 
     connect(Engine::mixer(), SIGNAL(sampleRateChanged()), this,
@@ -251,8 +252,8 @@ CarlaInstrument::~CarlaInstrument()
     qInfo("CarlaInstrument::~CarlaInstrument START");
     Engine::mixer()->removePlayHandlesOfTypes(
             instrumentTrack(),
-            PlayHandle::TypeNotePlayHandle
-                    | PlayHandle::TypeInstrumentPlayHandle);
+            // PlayHandle::TypeNotePlayHandle|
+            PlayHandle::TypeInstrumentPlayHandle);
 
     paramModels.clear();
 
@@ -932,7 +933,7 @@ void CarlaInstrumentView::onDataChanged()
             {
                 MidiEvent ev(MidiEventTypes::MidiControlChange, MIDI_CH - 1,
                              cc, v);
-                PlayPos pos = Engine::getSong()->getPlayPos();
+                PlayPos   pos = Engine::getSong()->getPlayPos();
                 // qInfo("sending midi event");
                 fx->handleMidiEvent(ev, pos, pos.currentFrame());
             }

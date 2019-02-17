@@ -575,7 +575,7 @@ static inline real_t cbf(const real_t _x)
     return _x * _x * _x;
 }
 
-static inline real_t ninvsawf(const real_t x)
+static inline real_t ninvrampf(const real_t x)
 {
     return 3 - 4 / (1 + x);
 }
@@ -585,7 +585,7 @@ static inline real_t ninvdistf(const real_t x)
     return 2 / (1 + x) - 1;
 }
 
-static inline real_t cornersawf(const real_t x)
+static inline real_t cornerrampf(const real_t x)
 {
     // -(1-(2*x)**7)/(1+(2*x)**7)
     real_t y = pow((2 * x), 7);
@@ -636,10 +636,23 @@ static inline real_t trianglef(const real_t x)
 
 static inline real_t sawtoothf(const real_t x)
 {
-    return -1.f + x * 2.f;
+    return 1.f - x * 2.f;
 }
 
 static inline real_t sawtooth0pf(const real_t x)
+{
+    if(x < 0.5f)
+        return -2.f * x;
+    else
+        return 1.f - 2.f * (x - 0.5f);
+}
+
+static inline real_t rampf(const real_t x)
+{
+    return -1.f + x * 2.f;
+}
+
+static inline real_t ramp0pf(const real_t x)
 {
     if(x < 0.5f)
         return 2.f * x;
@@ -652,7 +665,7 @@ static inline real_t squaref(const real_t x)
     return (x < 0.5f) ? 1.f : -1.f;
 }
 
-static inline real_t harshsawf(const real_t x)
+static inline real_t harshrampf(const real_t x)
 {
     if(x < 0.5f)
         return -1.f + x * 4.f;
@@ -660,7 +673,7 @@ static inline real_t harshsawf(const real_t x)
         return 1.f - 2.f * x;
 }
 
-static inline real_t harshsaw0pf(const real_t x)
+static inline real_t harshramp0pf(const real_t x)
 {
     if(x < 0.25f)
         return 4.f * x;
@@ -683,7 +696,7 @@ static inline real_t nsin2f(const real_t x)
 static inline real_t nsin4f(const real_t x)
 {
 #ifdef REAL_IS_DOUBLE
-    return sin(x * D_PI_2);
+    return 2. * sin(x * D_PI_2) - 1.;
 #endif
 #ifdef REAL_IS_FLOAT
     return 2f. * sinf(x * F_PI_2) - 1.f;
@@ -753,7 +766,7 @@ static inline real_t sharpgaussf(const real_t _x)
 #endif
 }
 
-static inline real_t octaviussawf(real_t x)
+static inline real_t octaviusrampf(real_t x)
 {
     real_t x2 = x * x;
     real_t x3 = x2 * x;
@@ -765,9 +778,9 @@ static inline real_t octaviussawf(real_t x)
     return 2.f * y - 1.f;
 }
 
-static inline real_t octaviussaw0pf(const real_t x)
+static inline real_t octaviusramp0pf(const real_t x)
 {
-    return octaviussawf(phasef(x + 0.566454));
+    return octaviusrampf(phasef(x + 0.566454));
 }
 
 static inline real_t sqpeakf(const real_t x)
@@ -816,12 +829,12 @@ static inline real_t pulse0pf(const real_t x)
         return 0.f;
 }
 
-static inline real_t moogsawf(const real_t x)
+static inline real_t moogrampf(const real_t x)
 {
     return 3.41333f * x * x * x - 7.36 * x * x + 5.22667 * x - 1.f;
 }
 
-static inline real_t moogsaw0pf(const real_t x)
+static inline real_t moogramp0pf(const real_t x)
 {
     const real_t p = phasef(x + 0.301297f);
     return 3.41333f * p * p * p - 7.36 * p * p + 5.22667 * p - 1.f;
@@ -835,17 +848,7 @@ static inline real_t moogsquaref(const real_t x)
         return -(1.f / exp(2.5f * (x - 0.5f)));
 }
 
-static inline real_t expsawf(const real_t x)
-{
-    if(x < 0.25f)
-        return expm1(8.f * x) * 0.15651764274967f;
-    else if(x < 0.50f)
-        return expm1(4.f - 8.f * x) * 0.15651764274967f;
-    else if(x < 0.75f)
-        return -expm1(8.f * x - 4.f) * 0.15651764274967f;
-    else
-        return -expm1(8.f - 8.f * x) * 0.15651764274967f;
-}
+real_t exptrif(const real_t x);
 
 static inline real_t minus1f(const real_t x)
 {
@@ -872,19 +875,11 @@ static inline real_t plus1f(const real_t x)
     return 1.f;
 }
 
-static inline real_t nexpf(const real_t x)
-{
-    return expm1(x) /*(exp(x) - 1.f)*/
-           / 1.718281828459f;
-}
-
-static inline real_t nlogf(const real_t x)
-{
-    return log(x * 1.718281828459f + 1.f);
-}
+real_t nexpf(const real_t x);
+real_t nlogf(const real_t x);
 
 real_t nexp2f(const real_t x);
-real_t nexp2sawf(const real_t x);
+real_t nexp2rampf(const real_t x);
 
 real_t nerf(const real_t x);
 

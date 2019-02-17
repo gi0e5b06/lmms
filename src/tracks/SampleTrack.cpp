@@ -2,6 +2,7 @@
  * SampleTrack.cpp - implementation of class SampleTrack, a track which
  *                   provides arrangement of samples
  *
+ * Copyright (c) 2017-2018 gi0e5b06 (on github.com)
  * Copyright (c) 2005-2014 Tobias Doerffel <tobydox/at/users.sourceforge.net>
  *
  * This file is part of LMMS - https://lmms.io
@@ -26,7 +27,8 @@
 #include "SampleTrack.h"
 
 //#include "FileDialog.h"
-//#include "AutomationPattern.h"
+#include "AutomationPattern.h"
+#include "AutomationTrack.h"
 #include "BBTrack.h"
 //#include "CaptionMenu.h"
 #include "ConfigManager.h"
@@ -64,6 +66,7 @@
 #include "ToolTip.h"
 //#include "TrackContainerView.h"
 #include "TrackLabelButton.h"
+#include "WaveForm.h"
 
 #include <QDropEvent>
 #include <QFileInfo>
@@ -71,7 +74,9 @@
 #include <QMdiArea>
 #include <QMdiSubWindow>
 #include <QMenu>
+#include <QMessageBox>
 #include <QPainter>
+#include <QProcess>
 #include <QPushButton>
 #include <QSignalMapper>
 
@@ -358,7 +363,93 @@ void SampleTCOView::updateSample()
 
 void SampleTCOView::openInAudacity()
 {
-    qWarning("SampleTCOView::openInAudacity not implemented");
+    // qWarning("SampleTCOView::openInAudacity not implemented");
+    QFile p("/usr/bin/audacity");
+    if(!p.exists())
+    {
+        if(gui)
+        {
+            QMessageBox::information(gui->mainWindow(),
+                                     tr("Audacity missing"),
+                                     tr("The audacity software is required "
+                                        "for this operation. "
+                                        " Please install it and retry. "
+                                        "{ /usr/bin/audacity not found }"));
+        }
+        else
+        {
+            qInfo("Error: audacity not found");
+        }
+        return;
+    }
+
+    QProcess::execute(p.fileName(),
+                      QStringList() << SampleBuffer::tryToMakeAbsolute(
+                              m_tco->sampleFile()));
+}
+
+void SampleTCOView::createRmsAutomation()
+{
+    const MidiTime&  start  = m_tco->startPosition();
+    const MidiTime&  length = m_tco->length();
+    AutomationTrack* at     = nullptr;
+    for(Track* t: m_tco->track()->trackContainer()->tracks())
+        if(t->type() == Track::AutomationTrack)
+        {
+            at = dynamic_cast<AutomationTrack*>(t);
+            break;
+        }
+    if(at == nullptr)
+        return;
+
+    AutomationPattern* ap
+            = dynamic_cast<AutomationPattern*>(at->createTCO(start));
+    if(ap == nullptr)
+        return;
+
+    ap->setAutoResize(false);
+    ap->changeLength(length);
+
+    const SampleBuffer* sb     = m_tco->sampleBuffer();
+    const sampleFrame*  buf    = sb->data();
+    const f_cnt_t       frames = sb->frames();
+
+    sample_t vmax = 0.;
+    for(f_cnt_t f = 0; f < frames; f++)
+    {
+        sample_t v = abs(buf[f][0]);
+        if(vmax < v)
+            vmax = v;
+        v = abs(buf[f][1]);
+        if(vmax < v)
+            vmax = v;
+    }
+    if(vmax > SILENCE)
+    {
+        real_t  rms = 0.;
+        f_cnt_t step
+                = (Engine::framesPerTick() * MidiTime::ticksPerTact()) / 16;
+        for(f_cnt_t f = 0; f < frames; f++)
+        {
+            rms += buf[f][0] * buf[f][0] + buf[f][1] * buf[f][1];
+            if(f % step < step - 1)
+                continue;
+
+            ap->putValue(
+                    (f - step + 1) / Engine::framesPerTick(),
+                    bound(0.,
+                          100. - 1000. * WaveForm::sqrt(rms / frames) / vmax,
+                          100.),
+                    false, true);
+            rms = 0.;
+        }
+    }
+    else
+    {
+        ap->putValue(0, 0., false, true);
+    }
+
+    ap->putValue(frames / Engine::framesPerTick(), 0., false, true);
 }
 
 QMenu* SampleTCOView::buildContextMenu()
@@ -392,6 +483,10 @@ QMenu* SampleTCOView::buildContextMenu()
 
     cm->addSeparator();
     addPropertiesMenu(cm, !isFixed(), !isFixed());
+    a = cm->addAction(embed::getIconPixmap("automation"),
+                      tr("Create RMS automation"), this,
+                      SLOT(createRmsAutomation()));
+
     cm->addSeparator();
     addNameMenu(cm, true);
     cm->addSeparator();

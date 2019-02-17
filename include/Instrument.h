@@ -168,9 +168,9 @@ class EXPORT Instrument : public Plugin
 	// instantiate instrument-plugin with given name or return NULL
 	// on failure
 	static Instrument * instantiate( const QString & _plugin_name,
-									InstrumentTrack * _instrument_track );
+                                         InstrumentTrack * _instrument_track );
 
-	virtual bool isFromTrack( const Track * _track ) const;
+	virtual bool isFromTrack( const Track * _track ) const final;
 
 	inline InstrumentTrack * instrumentTrack() const
 	{

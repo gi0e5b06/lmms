@@ -34,6 +34,7 @@
 #include "Track.h"
 //#include "InstrumentTrack.h"
 //#include "MemoryManager.h"
+#include "SafeList.h"
 
 // class QReadWriteLock;
 
@@ -80,16 +81,23 @@ class EXPORT NotePlayHandle /*final*/
                    const Origin     origin           = OriginPattern,
                    const int        generation       = 0);
     virtual ~NotePlayHandle();
+
     void done();
-    void removeOneSubNote(NotePlayHandle* _nph);
+    void removeSubNote(NotePlayHandle* _nph);
+
+    const QList<NotePlayHandle*> subNotes() const
+    {
+        return m_subNotes.list();
+    }
 
     void* operator new(size_t size, void* p)
     {
         return p;
     }
 
-    virtual void setVolume(volume_t volume);
-    virtual void setPanning(panning_t panning);
+    virtual void setVolume(volume_t _volume);
+    virtual void setPanning(panning_t _panning);
+    virtual void setLegato(bool _legato);
 
     int midiKey() const;
     int midiChannel() const
@@ -184,13 +192,13 @@ class EXPORT NotePlayHandle /*final*/
 
     /*! Returns instrument track which is being played by this handle (const
      * version) */
-    virtual const InstrumentTrack* instrumentTrack() const
+    virtual const InstrumentTrack* instrumentTrack() const final
     {
         return m_instrumentTrack;
     }
 
     /*! Returns instrument track which is being played by this handle */
-    virtual InstrumentTrack* instrumentTrack()
+    virtual InstrumentTrack* instrumentTrack() final
     {
         return m_instrumentTrack;
     }
@@ -254,7 +262,7 @@ class EXPORT NotePlayHandle /*final*/
     /*! Returns index of NotePlayHandle in vector of note-play-handles
         belonging to this instrument track - used by arpeggiator.
         Ignores child note-play-handles, returns -1 when called on one */
-    //int index() const;
+    // int index() const;
 
     /*! Returns list of note-play-handles belonging to given instrument track.
         If allPlayHandles = true, also released note-play-handles and children
@@ -375,14 +383,17 @@ class EXPORT NotePlayHandle /*final*/
                                     // after release
     f_cnt_t m_releaseFramesDone;    // number of frames done after release of
                                     // note
-    NotePlayHandleList m_subNotes;  // used for chords and arpeggios
-    volatile bool      m_released;  // indicates whether note is released
-    bool               m_releaseStarted;
-    bool               m_hasParent;  // indicates whether note has parent
-    NotePlayHandle*    m_parent;     // parent note
-    bool               m_hadChildren;
-    bool               m_muted;    // indicates whether note is muted
-    Track*             m_bbTrack;  // related BB track
+
+    // NotePlayHandleList
+    SafeList<NotePlayHandle*> m_subNotes;  // used for chords and arpeggios
+
+    volatile bool   m_released;  // indicates whether note is released
+    bool            m_releaseStarted;
+    bool            m_hasParent;  // indicates whether note has parent
+    NotePlayHandle* m_parent;     // parent note
+    bool            m_hadChildren;
+    bool            m_muted;    // indicates whether note is muted
+    Track*          m_bbTrack;  // related BB track
 
     // tempo reaction
     bpm_t   m_origTempo;   // original tempo

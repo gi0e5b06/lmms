@@ -305,7 +305,8 @@ inline void EnvelopeAndLfoParameters::fillLfoLevel(real_t*     _buf,
 void EnvelopeAndLfoParameters::fillLevel(real_t*       _buf,
                                          f_cnt_t       _frame,
                                          const f_cnt_t _release_begin,
-                                         const fpp_t   _frames)
+                                         const fpp_t   _frames,
+                                         const bool    _legato)
 {
     QMutexLocker m(&m_paramMutex);
 
@@ -321,7 +322,7 @@ void EnvelopeAndLfoParameters::fillLevel(real_t*       _buf,
         real_t env_level;
         if(_frame < _release_begin)
         {
-            if(_frame < m_pahdFrames)
+            if(!_legato && _frame < m_pahdFrames)
             {
                 env_level = m_pahdEnv[_frame];
             }

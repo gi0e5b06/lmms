@@ -369,8 +369,9 @@ void SongEditor::setHighQuality(bool hq)
 
 void SongEditor::scrolled(int new_pos)
 {
+    m_currentPosition = MidiTime(new_pos, 0);
     update();
-    emit positionChanged(m_currentPosition = MidiTime(new_pos, 0));
+    emit positionChanged(m_currentPosition);
 }
 
 void SongEditor::setEditMode(EditMode mode)
@@ -1397,6 +1398,9 @@ SongEditorWindow::SongEditorWindow(Song* song) :
     // Loop mark actions
     DropToolBar* loopMarkToolBar = addDropToolBarToTop(tr("Loop marks"));
     loopMarkToolBar->addBlank();
+    loopMarkToolBar->addBlank();
+    loopMarkToolBar->addBlank();
+    loopMarkToolBar->addBlank();
     loopMarkToolBar->addSeparator();
     m_editor->m_timeLine->addLoopMarkButtons(loopMarkToolBar);
 
@@ -1545,6 +1549,8 @@ void SongEditorWindow::adjustUiAfterProjectLoad()
             qobject_cast<QMdiSubWindow*>(parentWidget()));
     connect(qobject_cast<SubWindow*>(parentWidget()), SIGNAL(focusLost()),
             this, SLOT(lostFocus()));
+
+    m_editor->realignTracks();
     m_editor->scrolled(0);
     requireActionUpdate();
 }

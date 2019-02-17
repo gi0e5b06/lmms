@@ -127,7 +127,7 @@ public:
 	{
 		//return -1.0f + fraction( _sample ) * 2.0f;
                 //return fastsawf01(fraction(_sample));
-                return WaveForm::sawtooth(positivefraction(_sample));
+                return WaveForm::ramp(positivefraction(_sample));
 	}
 
 	static inline sample_t squareSample( const real_t _sample )
@@ -148,7 +148,7 @@ public:
 		return 1.0f - 2.0f * ph;
                 */
                 //return fastmoogsawf01(fraction(_sample));
-                return WaveForm::harshsaw(positivefraction(_sample));
+                return WaveForm::harshramp(positivefraction(_sample));
 	}
 
 	static inline sample_t expSample( const real_t _sample )

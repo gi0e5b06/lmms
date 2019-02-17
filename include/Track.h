@@ -89,6 +89,12 @@ class TrackContentObject : public Model, public JournallingObject
     virtual void saveSettings(QDomDocument& doc, QDomElement& element);
     virtual void loadSettings(const QDomElement& element);
 
+    inline Track* track() const
+    {
+        return m_track;
+    }
+
+    // Obsolete
     inline Track* getTrack() const
     {
         return m_track;

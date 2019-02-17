@@ -25,57 +25,54 @@
 #ifndef AMPLIFIERGDX_CONTROLS_H
 #define AMPLIFIERGDX_CONTROLS_H
 
-#include "EffectControls.h"
 #include "AmplifierGDXDialog.h"
+#include "EffectControls.h"
 #include "Knob.h"
-
 
 class AmplifierGDXEffect;
 
-
 class AmplifierGDXControls : public EffectControls
 {
-	Q_OBJECT
-public:
-	AmplifierGDXControls( AmplifierGDXEffect* effect );
-	virtual ~AmplifierGDXControls()
-	{
-	}
+    Q_OBJECT
+  public:
+    AmplifierGDXControls(AmplifierGDXEffect* effect);
+    virtual ~AmplifierGDXControls()
+    {
+    }
 
-	virtual void saveSettings( QDomDocument & _doc, QDomElement & _parent );
-	virtual void loadSettings( const QDomElement & _this );
-	inline virtual QString nodeName() const
-	{
-		return "AmplifierGDXControls";
-	}
+    virtual void saveSettings(QDomDocument& _doc, QDomElement& _parent);
+    virtual void loadSettings(const QDomElement& _this);
+    inline virtual QString nodeName() const
+    {
+        return "AmplifierGDXControls";
+    }
 
-	virtual int controlCount()
-	{
-		return 4;
-	}
+    virtual int controlCount()
+    {
+        return 4;
+    }
 
-	virtual EffectControlDialog* createView()
-	{
-		return new AmplifierGDXDialog( this );
-	}
+    virtual EffectControlDialog* createView()
+    {
+        return new AmplifierGDXDialog(this);
+    }
 
+  private slots:
+    void changeControl();
 
-private slots:
-	void changeControl();
+  private:
+    AmplifierGDXEffect* m_effect;
+    FloatModel          m_volumeModel;
+    FloatModel          m_balanceModel;
+    FloatModel          m_leftVolumeModel;
+    FloatModel          m_rightVolumeModel;
+    FloatModel          m_widthModel;
+    FloatModel          m_leftPanningModel;
+    FloatModel          m_rightPanningModel;
+    FloatModel          m_responseModel;
 
-private:
-	AmplifierGDXEffect* m_effect;
-	FloatModel m_volumeModel;
-	FloatModel m_balanceModel;
-	FloatModel m_leftVolumeModel;
-	FloatModel m_rightVolumeModel;
-	FloatModel m_widthModel;
-	FloatModel m_leftPanningModel;
-	FloatModel m_rightPanningModel;
-
-	friend class AmplifierGDXDialog;
-	friend class AmplifierGDXEffect;
-
-} ;
+    friend class AmplifierGDXDialog;
+    friend class AmplifierGDXEffect;
+};
 
 #endif

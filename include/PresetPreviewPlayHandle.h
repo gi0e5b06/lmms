@@ -1,6 +1,6 @@
 /*
- * PresetPreviewPlayHandle.h - a PlayHandle specialization for playback of a short
- *                             preview of a preset or a file processed by a plugin
+ * PresetPreviewPlayHandle.h - a PlayHandle specialization for playback of a
+ * short preview of a preset or a file processed by a plugin
  *
  * Copyright (c) 2005-2014 Tobias Doerffel <tobydox/at/users.sourceforge.net>
  *
@@ -28,40 +28,39 @@
 
 #include "NotePlayHandle.h"
 
-
 class InstrumentTrack;
 class PreviewTrackContainer;
 
 class EXPORT PresetPreviewPlayHandle : public PlayHandle
 {
-public:
-	PresetPreviewPlayHandle( const QString& presetFile, bool loadByPlugin = false, DataFile *dataFile = 0 );
-	virtual ~PresetPreviewPlayHandle();
+  public:
+    PresetPreviewPlayHandle(const QString& presetFile,
+                            bool           loadByPlugin = false,
+                            DataFile*      dataFile     = 0);
+    virtual ~PresetPreviewPlayHandle();
 
-	virtual inline bool affinityMatters() const
-	{
-		return true;
-	}
+    virtual inline bool affinityMatters() const
+    {
+            return true;
+    }
 
-	virtual void play( sampleFrame* buffer );
-	virtual bool isFinished() const;
+    virtual void play(sampleFrame* buffer);
+    virtual bool isFinished() const;
 
-	virtual bool isFromTrack( const Track * _track ) const;
+    virtual bool isFromTrack(const Track* _track) const;
 
-	static void init();
-	static void cleanup();
+    static void init();
+    static void cleanup();
 
-	static ConstNotePlayHandleList nphsOfInstrumentTrack( const InstrumentTrack* instrumentTrack );
+    static ConstNotePlayHandleList
+            nphsOfInstrumentTrack(const InstrumentTrack* instrumentTrack);
 
-	static bool isPreviewing();
+    static bool isPreviewing();
 
+  private:
+    static PreviewTrackContainer* s_previewTC;
 
-private:
-	static PreviewTrackContainer* s_previewTC;
-
-	NotePlayHandle* m_previewNote;
-
-} ;
-
+    NotePlayHandle* m_previewNPH;
+};
 
 #endif

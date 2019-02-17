@@ -323,11 +323,17 @@ lb302Synth::lb302Synth(InstrumentTrack* _instrumentTrack) :
 
     InstrumentPlayHandle* iph
             = new InstrumentPlayHandle(this, _instrumentTrack);
+    iph->setAffinity(Engine::mixer()->thread());
     Engine::mixer()->addPlayHandle(iph);
 }
 
 lb302Synth::~lb302Synth()
 {
+    Engine::mixer()->removePlayHandlesOfTypes(
+            instrumentTrack(),
+            // PlayHandle::TypeNotePlayHandle|
+            PlayHandle::TypeInstrumentPlayHandle);
+
     for(int i = 0; i < NUM_FILTERS; ++i)
     {
         delete vcfs[i];
@@ -382,8 +388,8 @@ void lb302Synth::filterChanged()
     d *= Engine::mixer()->processingSampleRate();  // d *= smpl rate
     fs.envdecay
             = pow(0.1, 1. / d * ENVINC);  // decay is 0.1 to the 1/d * ENVINC
-                                           // vcf_envdecay is now adjusted for
-                                           // both sampling rate and ENVINC
+                                          // vcf_envdecay is now adjusted for
+                                          // both sampling rate and ENVINC
     recalcFilter();
 }
 

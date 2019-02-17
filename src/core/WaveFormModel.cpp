@@ -28,7 +28,7 @@ WaveFormModel::WaveFormModel(Model*  _parent,
                              QString _displayName,
                              bool    _defaultConstructed) :
       Model(_parent, _displayName, _defaultConstructed),
-      m_wf(&WaveFormStandard::SINE)
+      m_wf(WaveFormStandard::SINE)
 {
 }
 
@@ -99,7 +99,7 @@ const WaveFormStandard* WaveFormModel::value() const
 void WaveFormModel::setValue(const WaveFormStandard* _wf)
 {
     const WaveFormStandard* wf
-            = (_wf == nullptr ? &WaveFormStandard::SINE : _wf);
+            = (_wf == nullptr ? WaveFormStandard::SINE : _wf);
     if(wf != m_wf)
     {
         m_wf = wf;

@@ -22,17 +22,14 @@
  *
  */
 
-
 #ifndef FILE_BROWSER_H
 #define FILE_BROWSER_H
+
+#include "SideBarWidget.h"
 
 #include <QDir>
 #include <QMutex>
 #include <QTreeWidget>
-
-
-#include "SideBarWidget.h"
-
 
 class QLineEdit;
 
@@ -41,200 +38,184 @@ class InstrumentTrack;
 class FileBrowserTreeWidget;
 class PlayHandle;
 class TrackContainer;
-
-
+class PlayHandle;
 
 class FileBrowser : public SideBarWidget
 {
-	Q_OBJECT
-public:
-	FileBrowser( const QString & directories, const QString & filter,
-			const QString & title, const QPixmap & pm,
-			QWidget * parent, bool dirs_as_items = false, bool recurse = false );
-	virtual ~FileBrowser();
+    Q_OBJECT
+  public:
+    FileBrowser(const QString& directories,
+                const QString& filter,
+                const QString& title,
+                const QPixmap& pm,
+                QWidget*       parent,
+                bool           dirs_as_items = false,
+                bool           recurse       = false);
+    virtual ~FileBrowser();
 
-private slots:
-	void reloadTree();
-	void expandItems(QTreeWidgetItem* _item=nullptr, bool _all=false);
-	// call with item=NULL to filter the entire tree
-	bool filterItems(const QString& _filter, QTreeWidgetItem* _item=nullptr );
-	void giveFocusToFilter();
+  private slots:
+    void reloadTree();
+    void expandItems(QTreeWidgetItem* _item = nullptr, bool _all = false);
+    // call with item=NULL to filter the entire tree
+    bool filterItems(const QString&   _filter,
+                     QTreeWidgetItem* _item = nullptr);
+    void giveFocusToFilter();
 
-private:
-	virtual void keyPressEvent( QKeyEvent * ke );
+  private:
+    virtual void keyPressEvent(QKeyEvent* ke);
 
-	void addItems( const QString & path );
+    void addItems(const QString& path);
 
-	FileBrowserTreeWidget * m_fileBrowserTreeWidget;
+    FileBrowserTreeWidget* m_fileBrowserTreeWidget;
 
-	QLineEdit * m_filterEdit;
+    QLineEdit* m_filterEdit;
 
-	QString m_directories;
-	QString m_filter;
+    QString m_directories;
+    QString m_filter;
 
-	bool m_dirsAsItems;
-	bool m_recurse;
-
-} ;
-
-
-
+    bool m_dirsAsItems;
+    bool m_recurse;
+};
 
 class FileBrowserTreeWidget : public QTreeWidget
 {
-	Q_OBJECT
-public:
-	FileBrowserTreeWidget( QWidget * parent );
-	virtual ~FileBrowserTreeWidget();
+    Q_OBJECT
+  public:
+    FileBrowserTreeWidget(QWidget* parent);
+    virtual ~FileBrowserTreeWidget();
 
+  public slots:
+    void onPlayHandleDeleted(PlayHandle* handle);
 
-protected:
-	virtual void contextMenuEvent( QContextMenuEvent * e );
-	virtual void mousePressEvent( QMouseEvent * me );
-	virtual void mouseMoveEvent( QMouseEvent * me );
-	virtual void mouseReleaseEvent( QMouseEvent * me );
+  protected:
+    virtual void contextMenuEvent(QContextMenuEvent* e);
+    virtual void mousePressEvent(QMouseEvent* me);
+    virtual void mouseMoveEvent(QMouseEvent* me);
+    virtual void mouseReleaseEvent(QMouseEvent* me);
 
+  private slots:
+    void activateListItem(QTreeWidgetItem* item, int column);
+    void openInNewInstrumentTrackBBE(void);
+    void openInNewInstrumentTrackSE(void);
+    void sendToActiveInstrumentTrack(void);
+    void updateDirectory(QTreeWidgetItem* item);
 
-private:
-	void handleFile( FileItem * fi, InstrumentTrack * it );
-	void openInNewInstrumentTrack( TrackContainer* tc );
+  private:
+    void handleFile(FileItem* fi, InstrumentTrack* it);
+    void openInNewInstrumentTrack(TrackContainer* tc);
 
+    bool   m_mousePressed;
+    QPoint m_pressPos;
 
-	bool m_mousePressed;
-	QPoint m_pressPos;
+    PlayHandle* m_previewPlayHandle;
+    QMutex      m_pphMutex;
 
-	PlayHandle* m_previewPlayHandle;
-	QMutex m_pphMutex;
-
-	FileItem * m_contextMenuItem;
-
-
-private slots:
-	void activateListItem( QTreeWidgetItem * item, int column );
-	void openInNewInstrumentTrackBBE( void );
-	void openInNewInstrumentTrackSE( void );
-	void sendToActiveInstrumentTrack( void );
-	void updateDirectory( QTreeWidgetItem * item );
-
-} ;
-
-
-
+    FileItem* m_contextMenuItem;
+};
 
 class Directory : public QTreeWidgetItem
 {
-public:
-	Directory( const QString & filename, const QString & path,
-						const QString & filter );
+  public:
+    Directory(const QString& filename,
+              const QString& path,
+              const QString& filter);
 
-	void update( void );
+    void update(void);
 
-	inline QString fullName( QString path = QString::null )
-	{
-		if( path == QString::null )
-		{
-			path = m_directories[0];
-		}
-		if( path != QString::null )
-		{
-			path += QDir::separator();
-		}
-		return( QDir::cleanPath( path + text( 0 ) ) +
-							QDir::separator() );
-	}
+    inline QString fullName(QString path = QString::null)
+    {
+        if(path == QString::null)
+        {
+            path = m_directories[0];
+        }
+        if(path != QString::null)
+        {
+            path += QDir::separator();
+        }
+        return (QDir::cleanPath(path + text(0)) + QDir::separator());
+    }
 
-	inline void addDirectory( const QString & dir )
-	{
-		m_directories.push_back( dir );
-	}
+    inline void addDirectory(const QString& dir)
+    {
+        m_directories.push_back(dir);
+    }
 
+  private:
+    void initPixmaps(void);
 
-private:
-	void initPixmaps( void );
+    bool addItems(const QString& path);
 
-	bool addItems( const QString & path );
+    static QPixmap* s_folderPixmap;
+    static QPixmap* s_folderOpenedPixmap;
+    static QPixmap* s_folderLockedPixmap;
 
+    QStringList m_directories;
+    QString     m_filter;
 
-	static QPixmap * s_folderPixmap;
-	static QPixmap * s_folderOpenedPixmap;
-	static QPixmap * s_folderLockedPixmap;
-
-	QStringList m_directories;
-	QString m_filter;
-
-	int m_dirCount;
-
-} ;
-
-
-
+    int m_dirCount;
+};
 
 class FileItem : public QTreeWidgetItem
 {
-public:
-	enum FileTypes
-	{
-		ProjectFile,
-		PresetFile,
-		SampleFile,
-		SoundFontFile,
-		PatchFile,
-		MidiFile,
-		VstPluginFile,
-		UnknownFile,
-		NumFileTypes
-	} ;
+  public:
+    enum FileTypes
+    {
+        ProjectFile,
+        PresetFile,
+        SampleFile,
+        SoundFontFile,
+        PatchFile,
+        MidiFile,
+        VstPluginFile,
+        UnknownFile,
+        NumFileTypes
+    };
 
-	enum FileHandling
-	{
-		NotSupported,
-		LoadAsProject,
-		LoadAsPreset,
-		LoadByPlugin,
-		ImportAsProject
-	} ;
+    enum FileHandling
+    {
+        NotSupported,
+        LoadAsProject,
+        LoadAsPreset,
+        LoadByPlugin,
+        ImportAsProject
+    };
 
+    FileItem(QTreeWidget* parent, const QString& name, const QString& path);
+    FileItem(const QString& name, const QString& path);
 
-	FileItem( QTreeWidget * parent, const QString & name,
-							const QString & path );
-	FileItem( const QString & name, const QString & path );
+    QString fullName() const
+    {
+        return QFileInfo(m_path, text(0)).absoluteFilePath();
+    }
 
-	QString fullName() const
-	{
-		return QFileInfo(m_path, text(0)).absoluteFilePath();
-	}
+    inline FileTypes type(void) const
+    {
+        return (m_type);
+    }
 
-	inline FileTypes type( void ) const
-	{
-		return( m_type );
-	}
+    inline FileHandling handling(void) const
+    {
+        return (m_handling);
+    }
 
-	inline FileHandling handling( void ) const
-	{
-		return( m_handling );
-	}
+    QString        extension(void);
+    static QString extension(const QString& file);
 
-	QString extension( void );
-	static QString extension( const QString & file );
+  private:
+    void initPixmaps(void);
+    void determineFileType(void);
 
+    static QPixmap* s_projectFilePixmap;
+    static QPixmap* s_presetFilePixmap;
+    static QPixmap* s_sampleFilePixmap;
+    static QPixmap* s_soundfontFilePixmap;
+    static QPixmap* s_vstPluginFilePixmap;
+    static QPixmap* s_midiFilePixmap;
+    static QPixmap* s_unknownFilePixmap;
 
-private:
-	void initPixmaps( void );
-	void determineFileType( void );
-
-	static QPixmap * s_projectFilePixmap;
-	static QPixmap * s_presetFilePixmap;
-	static QPixmap * s_sampleFilePixmap;
-	static QPixmap * s_soundfontFilePixmap;
-	static QPixmap * s_vstPluginFilePixmap;
-	static QPixmap * s_midiFilePixmap;
-	static QPixmap * s_unknownFilePixmap;
-
-	QString m_path;
-	FileTypes m_type;
-	FileHandling m_handling;
-
-} ;
-
+    QString      m_path;
+    FileTypes    m_type;
+    FileHandling m_handling;
+};
 
 #endif

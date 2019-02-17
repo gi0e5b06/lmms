@@ -83,6 +83,16 @@ SpaceGDXDialog::SpaceGDXDialog(SpaceGDXControls* controls) :
     leftHighKNB->setText(tr("HIGH"));
     leftHighKNB->setHintText(tr("Left low pass:"), "");
 
+    Knob* dispersionKNB = new Knob(this);
+    dispersionKNB->setModel(&controls->m_dispersionModel);
+    dispersionKNB->setText(tr("DISP"));
+    dispersionKNB->setHintText(tr("Dispersion:"), "");
+
+    Knob* amountKNB = new Knob(this);
+    amountKNB->setModel(&controls->m_amountModel);
+    amountKNB->setText(tr("AMNT"));
+    amountKNB->setHintText(tr("Amount:"), "");
+
     int col = 0, row = 0;  // first row
     mainLOT->addWidget(leftPhaseKNB, row, ++col, 1, 1,
                           Qt::AlignBottom | Qt::AlignHCenter);
@@ -102,8 +112,14 @@ SpaceGDXDialog::SpaceGDXDialog(SpaceGDXControls* controls) :
     mainLOT->addWidget(rightHighKNB, row, ++col, 1, 1,
                           Qt::AlignBottom | Qt::AlignHCenter);
 
+    col=0; row++;
+    mainLOT->addWidget(dispersionKNB, row, ++col, 1, 1,
+                          Qt::AlignBottom | Qt::AlignHCenter);
+    mainLOT->addWidget(amountKNB, row, ++col, 1, 1,
+                          Qt::AlignBottom | Qt::AlignHCenter);
+
     mainLOT->setColumnStretch(5, 1);
-    mainLOT->setRowStretch(2, 1);
+    mainLOT->setRowStretch(3, 1);
 
     setFixedWidth(250);
     setMinimumHeight(((sizeHint().height() - 1) / 50 + 1) * 50);

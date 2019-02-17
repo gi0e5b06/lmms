@@ -28,6 +28,7 @@
 #include "BBTrack.h"
 #include "Engine.h"
 //#include "InstrumentTrack.h"
+#include "MixHelpers.h"
 #include "Mixer.h"
 #include "SampleTrack.h"
 
@@ -38,14 +39,18 @@ SamplePlayHandle::SamplePlayHandle(SampleBuffer* sampleBuffer,
       m_doneMayReturnTrue(true), m_totalFramesPlayed(0),
       m_ownAudioPort(ownAudioPort),
       m_defaultVolumeModel(DefaultVolume, MinVolume, MaxVolume, 1),
-      m_volumeModel(&m_defaultVolumeModel), m_track(NULL), m_bbTrack(NULL)
+      m_volumeModel(&m_defaultVolumeModel), m_track(nullptr),
+      m_bbTrack(nullptr)
 {
     m_frames = m_sampleBuffer->frames();
-
+    setCurrentFrame(0);
     if(ownAudioPort)
+    {
         setAudioPort(new AudioPort("SamplePlayHandle", false, nullptr,
                                    m_volumeModel, nullptr, nullptr, nullptr,
                                    nullptr, nullptr, nullptr, nullptr));
+        setAffinity(Engine::mixer()->thread());
+    }
 }
 
 SamplePlayHandle::SamplePlayHandle(const QString& sampleFile) :
@@ -106,7 +111,7 @@ void SamplePlayHandle::setAutoRepeat(f_cnt_t _a)
 
 void SamplePlayHandle::play(sampleFrame* buffer)
 {
-    // qWarning("SamplePlayHandle::play buffer=%p",buffer);
+    // qInfo("SamplePlayHandle::play buffer=%p", buffer);
 
     const fpp_t fpp = Engine::mixer()->framesPerPeriod();
     // play( 0, _try_parallelizing );
@@ -158,6 +163,9 @@ void SamplePlayHandle::play(sampleFrame* buffer)
     }
 
     m_totalFramesPlayed += frames;
+
+    // if(MixHelpers::isSilent(workingBuffer, fpp))
+    //        qInfo("SamplePlayHandle::play wb is silent");
 }
 
 bool SamplePlayHandle::isFinished() const

@@ -1,5 +1,6 @@
 /*
- * Instrument.cpp - base-class for all instrument-plugins (synths, samplers etc)
+ * Instrument.cpp - base-class for all instrument-plugins (synths, samplers
+ * etc)
  *
  * Copyright (c) 2005-2009 Tobias Doerffel <tobydox/at/users.sourceforge.net>
  *
@@ -23,107 +24,82 @@
  */
 
 #include "Instrument.h"
-#include "InstrumentTrack.h"
+
 #include "DummyInstrument.h"
+#include "InstrumentTrack.h"
 
-
-Instrument::Instrument( InstrumentTrack * _instrument_track,
-                        const Descriptor * _descriptor ) :
-	Plugin( _descriptor, NULL/* _instrument_track*/ ),
-	m_instrumentTrack( _instrument_track ),
-        m_okay( true ),
-        m_noRun( false )
+Instrument::Instrument(InstrumentTrack*  _instrument_track,
+                       const Descriptor* _descriptor) :
+      Plugin(_descriptor, NULL /* _instrument_track*/),
+      m_instrumentTrack(_instrument_track), m_okay(true), m_noRun(false)
 {
 }
-
-
-
 
 Instrument::~Instrument()
 {
-        qInfo("Instrument::~Instrument");
-        m_instrumentTrack=nullptr;
+    qInfo("Instrument::~Instrument");
+    m_instrumentTrack = nullptr;
 }
 
-
-
-
-void Instrument::play( sampleFrame * )
+void Instrument::play(sampleFrame*)
 {
 }
 
-
-
-
-void Instrument::deleteNotePluginData( NotePlayHandle * )
+void Instrument::deleteNotePluginData(NotePlayHandle*)
 {
 }
 
-
-
-
-f_cnt_t Instrument::beatLen( NotePlayHandle * ) const
+f_cnt_t Instrument::beatLen(NotePlayHandle*) const
 {
-	return 0;
+    return 0;
 }
 
-
-
-
-Instrument * Instrument::instantiate( const QString & _plugin_name,
-					InstrumentTrack * _instrument_track )
+Instrument* Instrument::instantiate(const QString&   _plugin_name,
+                                    InstrumentTrack* _instrument_track)
 {
-	Plugin * p = Plugin::instantiate( _plugin_name, _instrument_track,
-							_instrument_track );
-	// check whether instantiated plugin is an instrument
-	if( dynamic_cast<Instrument *>( p ) != NULL )
-	{
-		// everything ok, so return pointer
-		return dynamic_cast<Instrument *>( p );
-	}
+    Plugin* p = Plugin::instantiate(_plugin_name, _instrument_track,
+                                    _instrument_track);
+    // check whether instantiated plugin is an instrument
+    if(dynamic_cast<Instrument*>(p) != NULL)
+    {
+        // everything ok, so return pointer
+        return dynamic_cast<Instrument*>(p);
+    }
 
-	// not quite... so delete plugin and return dummy instrument
-	delete p;
-	return new DummyInstrument( _instrument_track );
+    // not quite... so delete plugin and return dummy instrument
+    delete p;
+    return new DummyInstrument(_instrument_track);
 }
 
-
-
-
-bool Instrument::isFromTrack( const Track * _track ) const
+bool Instrument::isFromTrack(const Track* _track) const
 {
-        qWarning("Instrument::isFromTrack %p %p",m_instrumentTrack,_track);
-	return (m_instrumentTrack == _track);
+    // qWarning("Instrument::isFromTrack %p %p",m_instrumentTrack,_track);
+    return m_instrumentTrack != nullptr && m_instrumentTrack == _track;
 }
 
-
-
-
-void Instrument::applyRelease( sampleFrame * buf, const NotePlayHandle * _n )
+void Instrument::applyRelease(sampleFrame* buf, const NotePlayHandle* _n)
 {
-	const fpp_t frames = _n->framesLeftForCurrentPeriod();
-	const fpp_t fpp = Engine::mixer()->framesPerPeriod();
-	const f_cnt_t fl = _n->framesLeft();
-	if( fl <= desiredReleaseFrames()+fpp )
-	{
-		for( fpp_t f = (fpp_t)( ( fl > desiredReleaseFrames() ) ?
-				( qMax( fpp - desiredReleaseFrames(), 0 ) +
-					fl % fpp ) : 0 ); f < frames; ++f )
-		{
-			const float fac = (float)( fl-f-1 ) /
-							desiredReleaseFrames();
-			for( ch_cnt_t ch = 0; ch < DEFAULT_CHANNELS; ++ch )
-			{
-				buf[f][ch] *= fac;
-			}
-		}
-	}
+    const fpp_t   frames = _n->framesLeftForCurrentPeriod();
+    const fpp_t   fpp    = Engine::mixer()->framesPerPeriod();
+    const f_cnt_t fl     = _n->framesLeft();
+    if(fl <= desiredReleaseFrames() + fpp)
+    {
+        for(fpp_t f = (fpp_t)((fl > desiredReleaseFrames())
+                                      ? (qMax(fpp - desiredReleaseFrames(), 0)
+                                         + fl % fpp)
+                                      : 0);
+            f < frames; ++f)
+        {
+            const float fac = (float)(fl - f - 1) / desiredReleaseFrames();
+            for(ch_cnt_t ch = 0; ch < DEFAULT_CHANNELS; ++ch)
+            {
+                buf[f][ch] *= fac;
+            }
+        }
+    }
 }
-
-
-
 
 QString Instrument::fullDisplayName() const
 {
-	return instrumentTrack()->displayName()+">"+displayName();
+    return instrumentTrack()->displayName() + ">" + displayName();
 }

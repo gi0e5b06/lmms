@@ -206,6 +206,7 @@ opl2instrument::opl2instrument(InstrumentTrack* _instrument_track) :
     // Connect the plugin to the mixer...
     InstrumentPlayHandle* iph
             = new InstrumentPlayHandle(this, _instrument_track);
+    iph->setAffinity(Engine::mixer()->thread());
     Engine::mixer()->addPlayHandle(iph);
 }
 
@@ -214,8 +215,8 @@ opl2instrument::~opl2instrument()
     delete theEmulator;
     Engine::mixer()->removePlayHandlesOfTypes(
             instrumentTrack(),
-            PlayHandle::TypeNotePlayHandle
-                    | PlayHandle::TypeInstrumentPlayHandle);
+            // PlayHandle::TypeNotePlayHandle|
+            PlayHandle::TypeInstrumentPlayHandle);
     delete[] renderbuffer;
 }
 
@@ -540,7 +541,9 @@ void opl2instrument::tuneEqual(int center, frequency_t Hz)
 {
     for(int n = 0; n < 128; ++n)
     {
-        frequency_t tmp = Hz * exp2((n - center) * (1. / 12.) + pitchbend * (1. / 1200.));
+        frequency_t tmp = Hz
+                          * exp2((n - center) * (1. / 12.)
+                                 + pitchbend * (1. / 1200.));
         fnums[n] = Hz2fnum(tmp);
     }
 }

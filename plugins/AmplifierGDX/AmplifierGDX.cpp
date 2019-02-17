@@ -24,6 +24,7 @@
 
 #include "AmplifierGDX.h"
 
+#include "WaveForm.h"
 #include "embed.h"
 #include "lmms_math.h"
 
@@ -76,6 +77,8 @@ bool AmplifierGDXEffect::processAudioBuffer(sampleFrame* buf,
             = m_ampControls.m_leftPanningModel.valueBuffer();
     const ValueBuffer* rightPanningBuf
             = m_ampControls.m_rightPanningModel.valueBuffer();
+    const ValueBuffer* responseBuf
+            = m_ampControls.m_responseModel.valueBuffer();
 
     for(fpp_t f = 0; f < frames; ++f)
     {
@@ -165,6 +168,19 @@ bool AmplifierGDXEffect::processAudioBuffer(sampleFrame* buf,
             s[1] = (1. - right3) / 2. * tmp0 + (1. + right3) / 2. * tmp1;
         }
 
+        // 5th stage: response curve
+        real_t resp = (responseBuf ? responseBuf->value(f)
+                                   : m_ampControls.m_responseModel.value());
+        if(resp!=0.)
+        {
+            if(resp > 0.)
+                    resp = 1. / (1.+3.*resp);
+            else
+                    resp = 1.-3.*resp;
+            s[0] = sign(s[0]) * fastpow(abs(s[0]), resp);
+            s[1] = sign(s[1]) * fastpow(abs(s[1]), resp);
+        }
+
         buf[f][0] = d0 * buf[f][0] + w0 * s[0];
         buf[f][1] = d1 * buf[f][1] + w1 * s[1];
     }
@@ -174,7 +190,7 @@ bool AmplifierGDXEffect::processAudioBuffer(sampleFrame* buf,
     {
         setClipping(false);
         m_ampControls.m_volumeModel.setAutomatedValue(
-          m_ampControls.m_volumeModel.rawValue() * 0.995);
+                m_ampControls.m_volumeModel.rawValue() * 0.995);
     }
     return r;
 }

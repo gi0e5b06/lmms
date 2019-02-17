@@ -33,6 +33,7 @@
 //#include "SerializingObject.h"
 #include "Note.h"
 #include "Song.h"
+#include "InstrumentFunction.h"
 #include "lmms_basics.h"
 //#include "ToolTip.h"
 
@@ -96,6 +97,7 @@ class PianoRoll : public QWidget
                        int            timeout = -1);
     void showVolTextFloat(volume_t vol, const QPoint& pos, int timeout = -1);
     void showPanTextFloat(panning_t pan, const QPoint& pos, int timeout = -1);
+    void showLegTextFloat(bool leg, const QPoint& pos, int timeout = -1);
 
     void setCurrentPattern(Pattern* _pattern);
     void setGhostPattern(Pattern* _pattern);
@@ -198,6 +200,9 @@ class PianoRoll : public QWidget
     // for entering values with dblclick in the vol/pan bars
     void enterValue(NoteVector* nv);
 
+    void markSemiTone(const int                                    i,
+                      const int                                    key,
+                      const InstrumentFunctionNoteStacking::Chord* chord);
   protected slots:
     void play();
     void record();
@@ -224,6 +229,9 @@ class PianoRoll : public QWidget
     void quantizeChanged();
     void quantizeNotes();
 
+    void rootChanged();
+    void scaleChanged();
+    void guessScale();
     void updateSemiToneMarkerMenu();
 
     void changeNoteEditMode(int i);
@@ -255,6 +263,7 @@ class PianoRoll : public QWidget
     {
         NoteEditVolume,
         NoteEditPanning,
+        NoteEditLegato,
         NoteEditCount  // make sure this one is always last
     };
 
@@ -330,6 +339,7 @@ class PianoRoll : public QWidget
     ComboBoxModel m_zoomingXModel;
     ComboBoxModel m_quantizeModel;
     ComboBoxModel m_noteLenModel;
+    ComboBoxModel m_rootModel;
     ComboBoxModel m_scaleModel;
     ComboBoxModel m_chordModel;
 
@@ -381,6 +391,7 @@ class PianoRoll : public QWidget
     MidiTime  m_lenOfNewNotes;
     volume_t  m_lastNoteVolume;
     panning_t m_lastNotePanning;
+    bool      m_lastNoteLegato;
 
     int m_startKey;  // first key when drawing
     int m_lastKey;
@@ -482,8 +493,10 @@ class PianoRollWindow : public Editor, SerializingObject
     ComboBox*    m_zoomingXComboBox;
     ComboBox*    m_quantizeComboBox;
     ComboBox*    m_noteLenComboBox;
+    ComboBox*    m_rootComboBox;
     ComboBox*    m_scaleComboBox;
     ComboBox*    m_chordComboBox;
+    QToolButton* m_guessScaleButton;
     QToolButton* m_clearGhostButton;
 };
 

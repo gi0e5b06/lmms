@@ -63,6 +63,7 @@ GroupBox::Top::Top(const QString& _title,
         m_led->setActiveGraphic(embed::getIconPixmap("led_green"));
         m_led->setInactiveGraphic(embed::getIconPixmap("led_off"));
         gbl->addWidget(m_led, 0, 0, Qt::AlignHCenter | Qt::AlignVCenter);
+        connect(m_led->model(),SIGNAL(dataChanged()),_parent,SIGNAL(enabledChanged()));
     }
     else
         m_led = NULL;
@@ -229,7 +230,7 @@ void GroupBox::setEnabled(bool _b)
     if(m_top->m_led && m_top->m_led->model()->value() != _b)
     {
         m_top->m_led->model()->setValue(_b);
-        emit enabledChanged();
+        //emit enabledChanged();
     }
 }
 

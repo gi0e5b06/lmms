@@ -528,10 +528,12 @@ BBTrack::BBTrack(TrackContainer* tc) : Track(Track::BBTrack, tc)
 
 BBTrack::~BBTrack()
 {
-    Engine::mixer()->removePlayHandlesOfTypes(
-            this, PlayHandle::TypeNotePlayHandle
-                          | PlayHandle::TypeInstrumentPlayHandle
-                          | PlayHandle::TypeSamplePlayHandle);
+    /*
+      Engine::mixer()->removePlayHandlesOfTypes(
+      this, PlayHandle::TypeNotePlayHandle
+      | PlayHandle::TypeInstrumentPlayHandle
+      | PlayHandle::TypeSamplePlayHandle);
+    */
 
     const int bb = s_infoMap[this];
     Engine::getBBTrackContainer()->removeBB(bb);
@@ -629,9 +631,7 @@ bool BBTrack::play(const MidiTime& _start,
             const BBTCO* tco = dynamic_cast<const BBTCO*>(*it);
             if(tco != nullptr)
             {
-                fpp_t nbf = qMin<int>(_frames,
-                                      (stp + len - _start)
-                                      * fpt);
+                fpp_t nbf = qMin<int>(_frames, (stp + len - _start) * fpt);
                 played |= Engine::getBBTrackContainer()->play(
                         _start - stp, nbf, _offset, s_infoMap[this],
                         tco->mask());

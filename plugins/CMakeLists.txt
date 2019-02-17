@@ -69,6 +69,7 @@ IF("${PLUGIN_LIST}" STREQUAL "")
 		CrossoverEQ
 		# csound_instr - not ready
 		Delay
+                DistortorGDX
 		DualFilter
 		dynamics_processor
 		Eq
@@ -122,6 +123,7 @@ IF("${PLUGIN_LIST}" STREQUAL "")
 		vibed
                 VideoLineExport
                 VideoWaveExport
+                VocoderGDX
                 WallGDX
 		xpressive
 		zynaddsubfx

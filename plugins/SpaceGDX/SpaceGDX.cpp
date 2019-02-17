@@ -24,8 +24,10 @@
 
 #include "SpaceGDX.h"
 
+//#include "BufferManager.h"
 #include "MixHelpers.h"
 #include "Ring.h"
+#include "WaveForm.h"
 #include "embed.h"
 #include "lmms_math.h"
 
@@ -51,11 +53,11 @@ SpaceGDXEffect::SpaceGDXEffect(
         Model* parent, const Descriptor::SubPluginFeatures::Key* key) :
       Effect(&spacegdx_plugin_descriptor, parent, key),
       m_gdxControls(this),
-      m_sampleRate(Engine::mixer()->processingSampleRate()),
-      m_ring(48000), m_leftLowFilter(m_sampleRate),
-      m_rightLowFilter(m_sampleRate), m_leftHighFilter(m_sampleRate),
-      m_rightHighFilter(m_sampleRate), m_prevLeftLowFreq(0.),
-      m_prevRightLowFreq(0.), m_prevLeftHighFreq(0.), m_prevRightHighFreq(0.)
+      m_sampleRate(Engine::mixer()->processingSampleRate()), m_ring(48000),
+      m_leftLowFilter(m_sampleRate), m_rightLowFilter(m_sampleRate),
+      m_leftHighFilter(m_sampleRate), m_rightHighFilter(m_sampleRate),
+      m_prevLeftLowFreq(0.), m_prevRightLowFreq(0.), m_prevLeftHighFreq(0.),
+      m_prevRightHighFreq(0.)
 {
     // TODO: move that to startRunning()
     // m_len    = Engine::mixer()->processingSampleRate();
@@ -106,6 +108,19 @@ bool SpaceGDXEffect::processAudioBuffer(sampleFrame* _buf,
             = m_gdxControls.m_leftLowModel.valueBuffer();
     const ValueBuffer* leftHighBuf
             = m_gdxControls.m_leftHighModel.valueBuffer();
+
+    int dispersion = m_gdxControls.m_dispersionModel.value();
+    int amount     = m_gdxControls.m_amountModel.value();
+
+    sampleFrame* out = MM_ALLOC(sampleFrame, _frames);
+    real_t*      nbs = MM_ALLOC(real_t, _frames);
+
+    for(fpp_t f = 0; f < _frames; ++f)
+    {
+        out[f][0] = 0.;
+        out[f][1] = 0.;
+        nbs[f]    = 0.;
+    }
 
     for(fpp_t f = 0; f < _frames; ++f)
     {
@@ -212,10 +227,46 @@ bool SpaceGDXEffect::processAudioBuffer(sampleFrame* _buf,
         }
         curVal[1] = m_rightHighFilter.update(curVal[1], 0);
 
-        _buf[f][0] = d0 * _buf[f][0] + w0 * curVal[0];
-        _buf[f][1] = d1 * _buf[f][1] + w1 * curVal[1];
+        real_t  p = dispersion * WaveForm::sine(real_t(f) / real_t(_frames));
+        f_cnt_t q = qBound(0, int(f + p), _frames - 1);
+
+        p = abs(p) - floor(abs(p));
+        out[q][0] += p * curVal[0];
+        out[q][1] += p * curVal[1];
+        nbs[q] += p;
+        q = qBound(0, q + 1, _frames - 1);
+        p = 1. - p;
+        out[q][0] += p * curVal[0];
+        out[q][1] += p * curVal[1];
+        nbs[q] += p;
+
+        out[f][0] += (101. - amount) * curVal[0];
+        out[f][1] += (101. - amount) * curVal[1];
+        nbs[f] += (101. - amount);
     }
 
+    for(fpp_t f = 0; f < _frames; ++f)
+    {
+        if(nbs[f] > 1)
+        {
+            out[f][0] /= real_t(nbs[f]);
+            out[f][1] /= real_t(nbs[f]);
+        }
+        else if(nbs[f] <= 0)
+            qWarning("SpaceGDX: suspicious");
+    }
+
+    for(fpp_t f = 0; f < _frames; ++f)
+    {
+        real_t w0, d0, w1, d1;
+        computeWetDryLevels(f, _frames, smoothBegin, smoothEnd, w0, d0, w1,
+                            d1);
+        _buf[f][0] = d0 * _buf[f][0] + w0 * out[f][0];
+        _buf[f][1] = d1 * _buf[f][1] + w1 * out[f][1];
+    }
+
+    MM_FREE(nbs);
+    MM_FREE(out);
     return true;
 }
 

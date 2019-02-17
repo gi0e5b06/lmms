@@ -39,7 +39,9 @@ SpaceGDXControls::SpaceGDXControls(SpaceGDXEffect* effect) :
       m_leftPhaseModel(0., 0., 1., 0.0001, this, tr("Phase")),
       m_leftGainModel(1., 0., 1., 0.0001, this, tr("Gain")),
       m_leftLowModel(0., 0., 1., 0.0001, this, tr("Low Pass")),
-      m_leftHighModel(0., 0., 1., 0.0001, this, tr("High Pass"))
+      m_leftHighModel(0., 0., 1., 0.0001, this, tr("High Pass")),
+      m_dispersionModel(0., 0., 100., 1., this, tr("Dispersion")),
+      m_amountModel(1., 0., 100., 1., this, tr("Amount"))
 {
     /*
     connect( &m_distanceModel, SIGNAL( dataChanged() ), this, SLOT(

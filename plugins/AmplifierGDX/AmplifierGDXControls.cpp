@@ -38,7 +38,8 @@ AmplifierGDXControls::AmplifierGDXControls(AmplifierGDXEffect* effect) :
       m_rightVolumeModel(100., 0., 100., 0.1, this, tr("Right volume")),
       m_widthModel(100., -100., 100., 0.1, this, tr("Width")),
       m_leftPanningModel(-100., -100., 100., 0.1, this, tr("Left panning")),
-      m_rightPanningModel(100., -100., 100., 0.1, this, tr("Right panning"))
+      m_rightPanningModel(100., -100., 100., 0.1, this, tr("Right panning")),
+      m_responseModel(0., -1., 1., 0.001, this, tr("Response"))
 {
     /*
       connect( &m_volumeModel, SIGNAL( dataChanged() ), this, SLOT(
@@ -63,6 +64,7 @@ void AmplifierGDXControls::loadSettings(const QDomElement& _this)
     m_widthModel.loadSettings(_this, "width");
     m_leftPanningModel.loadSettings(_this, "left_panning");
     m_rightPanningModel.loadSettings(_this, "right_panning");
+    m_responseModel.loadSettings(_this, "response");
 }
 
 void AmplifierGDXControls::saveSettings(QDomDocument& doc, QDomElement& _this)
@@ -74,4 +76,5 @@ void AmplifierGDXControls::saveSettings(QDomDocument& doc, QDomElement& _this)
     m_widthModel.saveSettings(doc, _this, "width");
     m_leftPanningModel.saveSettings(doc, _this, "left_panning");
     m_rightPanningModel.saveSettings(doc, _this, "right_panning");
+    m_responseModel.saveSettings(doc, _this, "response");
 }

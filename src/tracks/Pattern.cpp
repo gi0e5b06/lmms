@@ -1084,7 +1084,7 @@ void PatternView::paintEvent(QPaintEvent*)
                         = adjustedNoteRange - mappedNoteKey - 1;
 
                 float const noteStartX = x0 + currentNote->pos() * tickLength;
-                float const noteLength = currentNote->length() * tickLength;
+                float const noteLength = qMax<int>(1,currentNote->length()) * tickLength;
 
                 float const noteStartY = invertedMappedNoteKey * noteHeight;
 

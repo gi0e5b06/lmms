@@ -73,6 +73,9 @@ class SpaceGDXControls : public EffectControls
     FloatModel m_leftLowModel;
     FloatModel m_leftHighModel;
 
+    FloatModel m_dispersionModel;
+    FloatModel m_amountModel;
+
     friend class SpaceGDXDialog;
     friend class SpaceGDXEffect;
 };

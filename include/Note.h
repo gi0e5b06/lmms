@@ -26,225 +26,242 @@
 #ifndef NOTE_H
 #define NOTE_H
 
-#include <QVector>
-
-#include "volume.h"
-#include "panning.h"
 #include "MidiTime.h"
 #include "SerializingObject.h"
+#include "panning.h"
+#include "volume.h"
+
+#include <QVector>
 
 class DetuningHelper;
 
-
 enum Keys
 {
-	Key_C = 0,
-	Key_CIS = 1, Key_DES = 1,
-	Key_D = 2,
-	Key_DIS = 3, Key_ES = 3,
-	Key_E = 4, Key_FES = 4,
-	Key_F = 5,
-	Key_FIS = 6, Key_GES = 6,
-	Key_G = 7,
-	Key_GIS = 8, Key_AS = 8,
-	Key_A = 9,
-	Key_AIS = 10, Key_B = 10,
-	Key_H = 11
-} ;
-
+    Key_C   = 0,
+    Key_CIS = 1,
+    Key_DES = 1,
+    Key_D   = 2,
+    Key_DIS = 3,
+    Key_ES  = 3,
+    Key_E   = 4,
+    Key_FES = 4,
+    Key_F   = 5,
+    Key_FIS = 6,
+    Key_GES = 6,
+    Key_G   = 7,
+    Key_GIS = 8,
+    Key_AS  = 8,
+    Key_A   = 9,
+    Key_AIS = 10,
+    Key_B   = 10,
+    Key_H   = 11
+};
 
 enum Octaves
 {
-	Octave_M1,
-	Octave_0,
-	Octave_1,
-	Octave_2,
-	Octave_3,
-	Octave_4, DefaultOctave = Octave_4,
-	Octave_5,
-	Octave_6,
-	Octave_7,
-	Octave_8,
-	Octave_9,
-	Octave_10,
-	NumOctaves
-} ;
-
+    Octave_M1,
+    Octave_0,
+    Octave_1,
+    Octave_2,
+    Octave_3,
+    Octave_4,
+    DefaultOctave = Octave_4,
+    Octave_5,
+    Octave_6,
+    Octave_7,
+    Octave_8,
+    Octave_9,
+    Octave_10,
+    NumOctaves
+};
 
 const int WhiteKeysPerOctave = 7;
 const int BlackKeysPerOctave = 5;
-const int KeysPerOctave = WhiteKeysPerOctave + BlackKeysPerOctave;
-const int NumMidiKeys = 128;
-const int NumKeys = 140; // NumOctaves * KeysPerOctave;
-const int DefaultKey = DefaultOctave*KeysPerOctave + Key_A; // A4 69
+const int KeysPerOctave      = WhiteKeysPerOctave + BlackKeysPerOctave;
+const int NumMidiKeys        = 128;
+const int NumKeys            = 140;  // NumOctaves * KeysPerOctave;
+const int DefaultKey = DefaultOctave * KeysPerOctave + Key_A;  // A4 69
 
 const float MaxDetuning = 4 * 12.0f;
 
-
 class EXPORT Note : public SerializingObject
 {
-public:
-	Note( const MidiTime & length = MidiTime( 0 ),
-	      const MidiTime & pos = MidiTime( 0 ),
-	      int key = DefaultKey,
-	      volume_t volume = DefaultVolume,
-	      panning_t panning = DefaultPanning,
-	      DetuningHelper * detuning = NULL );
-	Note( const Note & note );
-	virtual ~Note();
+  public:
+    Note(const MidiTime& length   = MidiTime(0),
+         const MidiTime& pos      = MidiTime(0),
+         int             key      = DefaultKey,
+         volume_t        volume   = DefaultVolume,
+         panning_t       panning  = DefaultPanning,
+         DetuningHelper* detuning = NULL);
+    Note(const Note& note);
+    virtual ~Note();
 
-	// used by GUI
-	inline void setSelected( const bool selected ) { m_selected = selected; }
-	inline void setOldKey( const int oldKey ) { m_oldKey = oldKey; }
-	inline void setOldPos( const MidiTime & oldPos ) { m_oldPos = oldPos; }
+    // used by GUI
+    inline void setSelected(const bool selected)
+    {
+        m_selected = selected;
+    }
+    inline void setOldKey(const int oldKey)
+    {
+        m_oldKey = oldKey;
+    }
+    inline void setOldPos(const MidiTime& oldPos)
+    {
+        m_oldPos = oldPos;
+    }
 
-	inline void setOldLength( const MidiTime & oldLength )
-	{
-		m_oldLength = oldLength;
-	}
-	inline void setIsPlaying( const bool isPlaying )
-	{
-		m_isPlaying = isPlaying;
-	}
+    inline void setOldLength(const MidiTime& oldLength)
+    {
+        m_oldLength = oldLength;
+    }
+    inline void setIsPlaying(const bool isPlaying)
+    {
+        m_isPlaying = isPlaying;
+    }
 
+    void setLength(const MidiTime& length);
+    void setPos(const MidiTime& pos);
+    void setKey(const int key);
+    void quantizeLength(const int qGrid);
+    void quantizePos(const int qGrid);
 
-	void setLength( const MidiTime & length );
-	void setPos( const MidiTime & pos );
-	void setKey( const int key );
-	virtual void setVolume( volume_t volume );
-	virtual void setPanning( panning_t panning );
-	void quantizeLength( const int qGrid );
-	void quantizePos( const int qGrid );
+    virtual void setVolume(volume_t volume);
+    virtual void setPanning(panning_t panning);
+    virtual void setLegato(bool legato);
 
-	static inline bool lessThan(Note*& a, Note*& b)
-	{
-		// function to compare two notes - must be called explictly when
-		// using qSort
-		//return (bool) ((int) ( *a ).pos() < (int) ( *b ).pos());
-                return a->pos() < b->pos() ||
-                       (a->pos() == b->pos() &&
-                         (a->length() < b->length() ||
-                          (a->length() == b->length() && a->key() < b->key())));
-	}
+    static inline bool lessThan(Note*& a, Note*& b)
+    {
+        // function to compare two notes - must be called explictly when
+        // using qSort
+        // return (bool) ((int) ( *a ).pos() < (int) ( *b ).pos());
+        return a->pos() < b->pos()
+               || (a->pos() == b->pos()
+                   && (a->length() < b->length()
+                       || (a->length() == b->length()
+                           && a->key() < b->key())));
+    }
 
-	inline bool selected() const
-	{
-		return m_selected;
-	}
+    inline bool selected() const
+    {
+        return m_selected;
+    }
 
-	inline int oldKey() const
-	{
-		return m_oldKey;
-	}
+    inline int oldKey() const
+    {
+        return m_oldKey;
+    }
 
-	inline MidiTime oldPos() const
-	{
-		return m_oldPos;
-	}
+    inline MidiTime oldPos() const
+    {
+        return m_oldPos;
+    }
 
-	inline MidiTime oldLength() const
-	{
-		return m_oldLength;
-	}
+    inline MidiTime oldLength() const
+    {
+        return m_oldLength;
+    }
 
-	inline bool isPlaying() const
-	{
-		return m_isPlaying;
-	}
+    inline bool isPlaying() const
+    {
+        return m_isPlaying;
+    }
 
-	inline MidiTime endPos() const
-	{
-		const int l = length();
-		return pos() + l;
-	}
+    inline MidiTime endPos() const
+    {
+        const int l = length();
+        return pos() + l;
+    }
 
-	inline const MidiTime & length() const
-	{
-		return m_length;
-	}
+    inline const MidiTime& length() const
+    {
+        return m_length;
+    }
 
-	inline const MidiTime & pos() const
-	{
-		return m_pos;
-	}
+    inline const MidiTime& pos() const
+    {
+        return m_pos;
+    }
 
-	inline MidiTime pos( MidiTime basePos ) const
-	{
-		const int bp = basePos;
-		return m_pos - bp;
-	}
+    inline MidiTime pos(MidiTime basePos) const
+    {
+        const int bp = basePos;
+        return m_pos - bp;
+    }
 
-	inline int key() const
-	{
-		return m_key;
-	}
+    inline int key() const
+    {
+        return m_key;
+    }
 
-	inline volume_t getVolume() const
-	{
-		return m_volume;
-	}
+    inline volume_t getVolume() const
+    {
+        return m_volume;
+    }
 
-	uint8_t midiVelocity( int midiBaseVelocity ) const
-	{
-		return qMin( MidiMaxVelocity, (uint8_t)(getVolume() * midiBaseVelocity / DefaultVolume ));
-	}
+    uint8_t midiVelocity(int midiBaseVelocity) const
+    {
+        return qMin(MidiMaxVelocity, (uint8_t)(getVolume() * midiBaseVelocity
+                                               / DefaultVolume));
+    }
 
-	inline panning_t getPanning() const
-	{
-		return m_panning;
-	}
+    inline panning_t getPanning() const
+    {
+        return m_panning;
+    }
 
-	static inline const QString classNodeName()
-	{
-		return "note";
-	}
+    inline bool legato() const
+    {
+        return m_legato;
+    }
 
-	virtual QString nodeName() const
-	{
-		return classNodeName();
-	}
+    static inline const QString classNodeName()
+    {
+        return "note";
+    }
 
-	static MidiTime quantized( const MidiTime & m, const int qGrid );
+    virtual QString nodeName() const
+    {
+        return classNodeName();
+    }
 
-	DetuningHelper * detuning() const
-	{
-		return m_detuning;
-	}
-	bool hasDetuningInfo() const;
-	bool withinRange(int tickStart, int tickEnd) const;
+    static MidiTime quantized(const MidiTime& m, const int qGrid);
 
-	void createDetuning();
+    DetuningHelper* detuning() const
+    {
+        return m_detuning;
+    }
+    bool hasDetuningInfo() const;
+    bool withinRange(int tickStart, int tickEnd) const;
 
-        static int findKeyNum(QString& _name); // ex. 70
-        static QString findKeyName(int _num);  // ex. A#4
-        static QString findNoteName(int _num); // ex. A#
+    void createDetuning();
 
+    static int     findKeyNum(QString& _name);  // ex. 70
+    static QString findKeyName(int _num);       // ex. A#4
+    static QString findNoteName(int _num);      // ex. A#
 
-protected:
-	virtual void saveSettings( QDomDocument & doc, QDomElement & parent );
-	virtual void loadSettings( const QDomElement & _this );
+  protected:
+    virtual void saveSettings(QDomDocument& doc, QDomElement& parent);
+    virtual void loadSettings(const QDomElement& _this);
 
+  private:
+    static void buildKeyTables();
 
-private:
-        static void buildKeyTables();
+    // for piano roll editing
+    bool     m_selected;
+    int      m_oldKey;
+    MidiTime m_oldPos;
+    MidiTime m_oldLength;
+    bool     m_isPlaying;
 
-	// for piano roll editing
-	bool m_selected;
-	int m_oldKey;
-	MidiTime m_oldPos;
-	MidiTime m_oldLength;
-	bool m_isPlaying;
-
-	int m_key;
-	volume_t m_volume;
-	panning_t m_panning;
-	MidiTime m_length;
-	MidiTime m_pos;
-	DetuningHelper * m_detuning;
+    int             m_key;
+    volume_t        m_volume;
+    panning_t       m_panning;
+    bool            m_legato;
+    MidiTime        m_length;
+    MidiTime        m_pos;
+    DetuningHelper* m_detuning;
 };
 
-
-typedef QVector<Note *> NoteVector;
-
+typedef QVector<Note*> NoteVector;
 
 #endif

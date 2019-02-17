@@ -74,7 +74,7 @@ OscillatorView::OscillatorView(OscillatorObject* _osc,
     enabledLCB->setPalette(pal);
     */
     enabledLCB->setStyleSheet("background-color:#806060;");
-    enabledLCB->setMinimumSize(14, 249);
+    enabledLCB->setMinimumSize(14, 249+72);
 
     Knob* waveMixKNB = new Knob(this);
     waveMixKNB->setModel(&m_osc->m_waveMixModel);
@@ -328,6 +328,12 @@ OscillatorView::OscillatorView(OscillatorObject* _osc,
     harm7KNB->setPointColor(QColor(0, 36, 218));
     harm7KNB->setText("H7");
 
+    // slope
+    Knob* slopeKNB = new Knob(this);
+    slopeKNB->setModel(&m_osc->m_slopeModel);
+    slopeKNB->setPointColor(QColor("green"));
+    slopeKNB->setText("SLOPE");
+
     // low pass
     Knob* lowPassKNB = new Knob(this);
     lowPassKNB->setModel(&m_osc->m_lowPassModel);
@@ -460,6 +466,8 @@ OscillatorView::OscillatorView(OscillatorObject* _osc,
     mainLayout->addWidget(harm6KNB, row, ++col, 1, 1,
                           Qt::AlignBottom | Qt::AlignHCenter);
     mainLayout->addWidget(harm7KNB, row, ++col, 1, 1,
+                          Qt::AlignBottom | Qt::AlignHCenter);
+    mainLayout->addWidget(slopeKNB, row, ++col, 1, 1,
                           Qt::AlignBottom | Qt::AlignHCenter);
 
     col = 0;

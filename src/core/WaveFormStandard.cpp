@@ -38,7 +38,7 @@ WaveFormStandard::Set::Set()
 {
     for(int b = MAX_BANK - MIN_BANK; b >= 0; --b)
         for(int i = MAX_INDEX - MIN_INDEX; i >= 0; --i)
-            m_stock[b][i] = NULL;
+            m_stock[b][i] = nullptr;
 
     int BANK;
 
@@ -46,38 +46,82 @@ WaveFormStandard::Set::Set()
     // 107 is reserved
     BANK              = 0;
     m_bankNames[BANK] = "Basic";
+    new WaveFormStandard("Sine", 0, 0, nsinf, Linear, 10);
+    new WaveFormStandard("Triangle", 0, 1, trianglef, Exact);
+    new WaveFormStandard("Ramp", 0, 2, rampf, Exact);
+    new WaveFormStandard("Square", 0, 3, squaref, Exact);
+    new WaveFormStandard("Harsh ramp", 0, 4, harshrampf, Exact);
+    new WaveFormStandard("Sq peak", 0, 5, sqpeakf, Linear, 10);
+    new WaveFormStandard("White noise", 0, 6, randf, Discrete, 10);
+    // 7 is reserved
+    new WaveFormStandard(" 0.0", ZERO_BANK, ZERO_INDEX, zerof, Exact);
+    new WaveFormStandard("sqrt()", 20, 12, sqrtf, Linear,
+                         10);  // FLOAT REQUIRED
+    new WaveFormStandard("sharpgauss()", 21, 47, sharpgaussf, Linear, 9);
+
     new WaveFormStandard("Pulse", BANK, 8, pulsef, Exact);
-    new WaveFormStandard("Cb peak", BANK, 15, cbpeakf, Linear);
-    new WaveFormStandard("Moog saw", BANK, 52, moogsawf, Linear);
-    new WaveFormStandard("Moog square", BANK, 53, moogsquaref, Linear);
-    new WaveFormStandard("Octavius saw", BANK, 62, octaviussawf, Linear);
-    new WaveFormStandard("Error saw", BANK, 72, nerf, Linear);
-    new WaveFormStandard("Exponential saw", BANK, 82, expsawf, Linear);
-    new WaveFormStandard("Exp2 saw", BANK, 83, nexp2sawf, Linear);
-    new WaveFormStandard("Sin2 saw", BANK, 90, nsin2f, Linear);
-    new WaveFormStandard("Sin4 saw", BANK, 91, nsin4f, Linear);
-    new WaveFormStandard("Inv saw", BANK, 92, ninvsawf, Linear);
-    new WaveFormStandard("Corner saw", BANK, 93, cornersawf, Linear);
-    new WaveFormStandard("Corner peak", BANK, 98, cornerpeakf, Linear);
-    new WaveFormStandard("Profil peak", BANK, 99, profilpeakf, Linear);
+    new WaveFormStandard("Exponential triangle", BANK, 11, exptrif, Linear);
+    new WaveFormStandard("Sawtooth", BANK, 12, sawtoothf, Exact);
+    new WaveFormStandard("Moog square", BANK, 13, moogsquaref, Linear);
+
+    // tri
+
+    // ramp
+    new WaveFormStandard("Moog ramp", BANK, 50, moogrampf, Linear);
+    new WaveFormStandard("Octavius ramp", BANK, 51, octaviusrampf, Linear);
+    new WaveFormStandard("Error ramp", BANK, 52, nerf, Linear);
+    new WaveFormStandard("Exp2 ramp", BANK, 53, nexp2rampf, Linear);
+    new WaveFormStandard("Sin2 ramp", BANK, 54, nsin2f, Linear);
+    new WaveFormStandard("Sin4 ramp", BANK, 55, nsin4f, Linear);
+    new WaveFormStandard("Inv ramp", BANK, 56, ninvrampf, Linear);
+    new WaveFormStandard("Corner ramp", BANK, 57, cornerrampf, Linear);
+
+    // saw
+    /*
+      (new WaveFormStandard("Moog saw", BANK, 70, moogrampf, Linear))
+      ->setReverse(true);
+      created by createMissing.
+    */
+
+    // square
+
+    // peak
+    new WaveFormStandard("Corner peak", BANK, 117, cornerpeakf, Linear);
+    new WaveFormStandard("Cb peak", BANK, 118, cbpeakf, Linear);
+    new WaveFormStandard("Profil peak", BANK, 119, profilpeakf, Linear);
+
+    createMissing();
 
     // Adjusted
     // 0a/0p versions (minimize the volume at the end and the beginning.
     // 107 is reserved
     BANK              = 1;
     m_bankNames[BANK] = "Adjusted";
-    new WaveFormStandard("Saw tooth 0p", BANK, 2, sawtooth0pf, Exact);
-    new WaveFormStandard("Harsh saw 0p", BANK, 4, harshsaw0pf, Exact);
+    createZeroed(BANK);
+    /*
+    new WaveFormStandard("Ramp 0p", BANK, 2, ramp0pf, Exact);
+    new WaveFormStandard("Harsh ramp 0p", BANK, 4, harshramp0pf, Exact);
     new WaveFormStandard("Sq peak 0p", BANK, 5, sqpeak0pf, Linear);
     new WaveFormStandard("Pulse 0p", BANK, 8, pulse0pf, Exact);
-    new WaveFormStandard("Cb peak 0p", BANK, 15, cbpeak0pf, Linear);
-    new WaveFormStandard("Moog saw 0p", BANK, 52, moogsaw0pf, Linear);
-    new WaveFormStandard("Octavius saw 0p", BANK, 62, octaviussaw0pf, Linear);
+    new WaveFormStandard("Sawtooth 0p", BANK, 12, sawtooth0pf, Exact);
+
+    new WaveFormStandard("Moog ramp 0p", BANK, 50, moogramp0pf, Linear);
+    new WaveFormStandard("Octavius ramp 0p", BANK, 51, octaviusramp0pf,
+                         Linear);
+
+    (new WaveFormStandard("Moog saw 0p", BANK, 70, moogramp0pf, Linear))
+            ->setReverse(true);
+    (new WaveFormStandard("Octavius saw 0p", BANK, 71, octaviusramp0pf,
+                          Linear))
+            ->setReverse(true);
+    new WaveFormStandard("Cb peak 0p", BANK, 128, cbpeak0pf, Linear);
+    */
 
     // Centered (2)
     // Max energy at the center
     BANK              = 2;
     m_bankNames[BANK] = "Centered";
+    createCentered(BANK);
 
     // Dephased (3)
     // Phase - 0.5
@@ -218,6 +262,46 @@ WaveFormStandard::Set::Set()
     }
 }
 
+void WaveFormStandard::Set::createMissing()
+{
+    for(int i = 50; i < 69; i++)
+    {
+        const WaveFormStandard* ramp = get(0, i);
+        if(ramp == nullptr || ramp == get(ZERO_BANK, ZERO_INDEX))
+            continue;
+        // if(get(0,i+20)!=nullptr) continue;
+        QString s = ramp->name();
+        s.replace(" ramp", " saw");
+        (new WaveFormStandard(s, 0, i + 20, ramp))->setReverse(true);
+    }
+}
+
+void WaveFormStandard::Set::createZeroed(int _bank)
+{
+    for(int i = MIN_INDEX; i <= MAX_INDEX; i++)
+    {
+        const WaveFormStandard* w = get(0, i);
+        if(w == nullptr || w == get(ZERO_BANK, ZERO_INDEX) || w->zeroed())
+            continue;
+        // if(get(_bank,i)!=nullptr) continue;
+        QString s = w->name() + " 0p";
+        (new WaveFormStandard(s, _bank, i, w))->setZeroed(true);
+    }
+}
+
+void WaveFormStandard::Set::createCentered(int _bank)
+{
+    for(int i = MIN_INDEX; i <= MAX_INDEX; i++)
+    {
+        const WaveFormStandard* w = get(0, i);
+        if(w == nullptr || w == get(ZERO_BANK, ZERO_INDEX) || w->centered())
+            continue;
+        // if(get(_bank,i)!=nullptr) continue;
+        QString s = w->name() + " C";
+        (new WaveFormStandard(s, _bank, i, w))->setCentered(true);
+    }
+}
+
 void WaveFormStandard::Set::createDegraded(int  _bank,
                                            bool _linear,
                                            int  _quality)
@@ -231,28 +315,36 @@ void WaveFormStandard::Set::createDegraded(int  _bank,
                          _quality);
     new WaveFormStandard(QString("Triangle %1").arg(cat), BANK, 1, trianglef,
                          i, _quality);
-    new WaveFormStandard(QString("Saw tooth %1").arg(cat), BANK, 2, sawtoothf,
-                         i, _quality);
+    new WaveFormStandard(QString("Ramp %1").arg(cat), BANK, 2, rampf, i,
+                         _quality);
     new WaveFormStandard(QString("Square %1").arg(cat), BANK, 3, squaref, i,
                          _quality);
-    new WaveFormStandard(QString("Harsh saw %1").arg(cat), BANK, 4, harshsawf,
-                         i, _quality);
+    new WaveFormStandard(QString("Harsh ramp %1").arg(cat), BANK, 4,
+                         harshrampf, i, _quality);
     new WaveFormStandard(QString("Sq peak %1").arg(cat), BANK, 5, sqpeakf, i,
                          _quality);
     new WaveFormStandard(QString("White noise %1").arg(cat), BANK, 6, randf,
                          i, _quality);
     new WaveFormStandard(QString("Pulse %1").arg(cat), BANK, 8, pulsef, i,
                          _quality);
+    new WaveFormStandard(QString("Sawtooth %1").arg(cat), BANK, 12, sawtoothf,
+                         i, _quality);
     new WaveFormStandard(QString("Cb peak %1").arg(cat), BANK, 15, cbpeakf, i,
                          _quality);
-    new WaveFormStandard(QString("Moog saw %1").arg(cat), BANK, 52, moogsawf,
-                         i, _quality);
+    new WaveFormStandard(QString("Moog ramp %1").arg(cat), BANK, 52,
+                         moogrampf, i, _quality);
     new WaveFormStandard(QString("Moog square %1").arg(cat), BANK, 53,
                          moogsquaref, i, _quality);
-    new WaveFormStandard(QString("Octavius saw %1").arg(cat), BANK, 62,
-                         octaviussawf, i, _quality);
-    new WaveFormStandard(QString("Exponential saw %1").arg(cat), BANK, 82,
-                         expsawf, i, _quality);
+    (new WaveFormStandard(QString("Moog saw %1").arg(cat), BANK, 54,
+                          moogrampf, i, _quality))
+            ->setReverse(true);
+    new WaveFormStandard(QString("Octavius ramp %1").arg(cat), BANK, 62,
+                         octaviusrampf, i, _quality);
+    (new WaveFormStandard(QString("Octavius saw %1").arg(cat), BANK, 64,
+                          octaviusrampf, i, _quality))
+            ->setReverse(true);
+    new WaveFormStandard(QString("Exponential triangle %1").arg(cat), BANK,
+                         82, exptrif, i, _quality);
 }
 
 void WaveFormStandard::Set::createSoften(int _bank, real_t _softness)
@@ -264,86 +356,111 @@ void WaveFormStandard::Set::createSoften(int _bank, real_t _softness)
 
     m_bankNames[BANK] = QString("%1 Soften").arg(cat);
     (new WaveFormStandard(QString("Sine %1").arg(cat), BANK, 0, nsinf, i, q))
-            ;//->setSoftness(_softness);
+            ->setSoftness(_softness);
     (new WaveFormStandard(QString("Triangle %1").arg(cat), BANK, 1, trianglef,
                           i, q))
-            ;//->setSoftness(_softness);
-    (new WaveFormStandard(QString("Saw tooth %1").arg(cat), BANK, 2,
-                          sawtoothf, i, q))
-            ;//->setSoftness(_softness);
+            ->setSoftness(_softness);
+    (new WaveFormStandard(QString("Ramp %1").arg(cat), BANK, 2, rampf, i, q))
+            ->setSoftness(_softness);
     (new WaveFormStandard(QString("Square %1").arg(cat), BANK, 3, squaref, i,
                           q))
-            ;//->setSoftness(_softness);
-    (new WaveFormStandard(QString("Harsh saw %1").arg(cat), BANK, 4,
-                          harshsawf, i, q))
-            ;//->setSoftness(_softness);
+            ->setSoftness(_softness);
+    (new WaveFormStandard(QString("Harsh ramp %1").arg(cat), BANK, 4,
+                          harshrampf, i, q))
+            ->setSoftness(_softness);
     (new WaveFormStandard(QString("Sq peak %1").arg(cat), BANK, 5, sqpeakf, i,
                           q))
-            ;//->setSoftness(_softness);
+            ->setSoftness(_softness);
     (new WaveFormStandard(QString("White noise %1").arg(cat), BANK, 6, randf,
                           i, q))
-            ;//->setSoftness(_softness);
+            ->setSoftness(_softness);
     (new WaveFormStandard(QString("Pulse %1").arg(cat), BANK, 8, pulsef, i,
                           q))
-            ;//->setSoftness(_softness);
+            ->setSoftness(_softness);
+    (new WaveFormStandard(QString("Sawtooth %1").arg(cat), BANK, 12,
+                          sawtoothf, i, q))
+            ->setSoftness(_softness);
     (new WaveFormStandard(QString("Cb peak %1").arg(cat), BANK, 15, cbpeakf,
                           i, q))
-            ;//->setSoftness(_softness);
-    (new WaveFormStandard(QString("Moog saw %1").arg(cat), BANK, 52, moogsawf,
-                          i, q))
-            ;//->setSoftness(_softness);
+            ->setSoftness(_softness);
+    (new WaveFormStandard(QString("Moog ramp %1").arg(cat), BANK, 52,
+                          moogrampf, i, q))
+            ->setSoftness(_softness);
     (new WaveFormStandard(QString("Moog square %1").arg(cat), BANK, 53,
                           moogsquaref, i, q))
-            ;//->setSoftness(_softness);
-    (new WaveFormStandard(QString("Octavius saw %1").arg(cat), BANK, 62,
-                          octaviussawf, i, q))
-            ;//->setSoftness(_softness);
-    (new WaveFormStandard(QString("Exponential saw %1").arg(cat), BANK, 82,
-                          expsawf, i, q))
-            ;//->setSoftness(_softness);
+            ->setSoftness(_softness);
+    (new WaveFormStandard(QString("Moog saw %1").arg(cat), BANK, 62,
+                          moogrampf, i, q))
+            ->setReverse(true)
+            ->setSoftness(_softness);
+    (new WaveFormStandard(QString("Octavius ramp %1").arg(cat), BANK, 54,
+                          octaviusrampf, i, q))
+            ->setSoftness(_softness);
+    (new WaveFormStandard(QString("Octavius saw %1").arg(cat), BANK, 64,
+                          octaviusrampf, i, q))
+            ->setReverse(true)
+            ->setSoftness(_softness);
+    (new WaveFormStandard(QString("Exponential triangle %1").arg(cat), BANK,
+                          82, exptrif, i, q))
+            ->setSoftness(_softness);
 }
 
 WaveFormStandard::Set WaveFormStandard::WAVEFORMS;
 
 // basic waveforms
+const WaveFormStandard* const WaveFormStandard::SINE = WAVEFORMS.get(0, 0);
+const WaveFormStandard* const WaveFormStandard::TRIANGLE
+        = WAVEFORMS.get(0, 1);
+const WaveFormStandard* const WaveFormStandard::RAMP   = WAVEFORMS.get(0, 2);
+const WaveFormStandard* const WaveFormStandard::SQUARE = WAVEFORMS.get(0, 3);
+const WaveFormStandard* const WaveFormStandard::HARSHRAMP
+        = WAVEFORMS.get(0, 4);
+const WaveFormStandard* const WaveFormStandard::SQPEAK = WAVEFORMS.get(0, 5);
+const WaveFormStandard* const WaveFormStandard::WHITENOISE
+        = WAVEFORMS.get(0, 6);
+// 7 is reserved
+const WaveFormStandard* const WaveFormStandard::ZERO
+        = WAVEFORMS.get(ZERO_BANK, ZERO_INDEX);
+const WaveFormStandard* const WaveFormStandard::SQRT = WAVEFORMS.get(20, 12);
+const WaveFormStandard* const WaveFormStandard::SHARPGAUSS
+        = WAVEFORMS.get(21, 47);
+
+/*
 const WaveFormStandard
         WaveFormStandard::SINE("Sine", 0, 0, nsinf, Linear, 10);
 const WaveFormStandard
-        WaveFormStandard::TRIANGLE("Triangle", 0, 1, trianglef, Exact);
-const WaveFormStandard
-        WaveFormStandard::SAWTOOTH("Saw tooth", 0, 2, sawtoothf, Exact);
-const WaveFormStandard
-        WaveFormStandard::SQUARE("Square", 0, 3, squaref, Exact);
-const WaveFormStandard
-        WaveFormStandard::HARSHSAW("Harsh saw", 0, 4, harshsawf, Exact);
-const WaveFormStandard
-                       WaveFormStandard::SQPEAK("Sq peak", 0, 5, sqpeakf, Linear, 10);
-const WaveFormStandard WaveFormStandard::WHITENOISE(
-        "White noise", 0, 6, randf, Discrete, 10);
+                       WaveFormStandard::TRIANGLE("Triangle", 0, 1, trianglef,
+Exact); const WaveFormStandard WaveFormStandard::RAMP("Ramp", 0, 2, rampf,
+Exact); const WaveFormStandard WaveFormStandard::SQUARE("Square", 0, 3,
+squaref, Exact); const WaveFormStandard WaveFormStandard::HARSHRAMP("Harsh
+ramp", 0, 4, harshrampf, Exact); const WaveFormStandard
+                       WaveFormStandard::SQPEAK("Sq peak", 0, 5, sqpeakf,
+Linear, 10); const WaveFormStandard WaveFormStandard::WHITENOISE( "White
+noise", 0, 6, randf, Discrete, 10);
 // 7 is reserved
 const WaveFormStandard
-                       WaveFormStandard::ZERO(" 0.0", ZERO_BANK, ZERO_INDEX, zerof, Exact);
-const WaveFormStandard WaveFormStandard::SQRT(
-        "sqrt()", 20, 12, sqrtf, Linear, 10);  // FLOAT REQUIRED
-const WaveFormStandard WaveFormStandard::SHARPGAUSS(
-        "sharpgauss()", 21, 47, sharpgaussf, Linear, 9);
+                       WaveFormStandard::ZERO(" 0.0", ZERO_BANK, ZERO_INDEX,
+zerof, Exact); const WaveFormStandard WaveFormStandard::SQRT( "sqrt()", 20,
+12, sqrtf, Linear, 10);  // FLOAT REQUIRED const WaveFormStandard
+WaveFormStandard::SHARPGAUSS( "sharpgauss()", 21, 47, sharpgaussf, Linear, 9);
+*/
 
 const wavefunction_t WaveForm::sine
-        = [](const real_t _x) { return WaveFormStandard::SINE.f(_x); };
+        = [](const real_t _x) { return WaveFormStandard::SINE->f(_x); };
 const wavefunction_t WaveForm::triangle
-        = [](const real_t _x) { return WaveFormStandard::TRIANGLE.f(_x); };
-const wavefunction_t WaveForm::sawtooth
-        = [](const real_t _x) { return WaveFormStandard::SAWTOOTH.f(_x); };
+        = [](const real_t _x) { return WaveFormStandard::TRIANGLE->f(_x); };
+const wavefunction_t WaveForm::ramp
+        = [](const real_t _x) { return WaveFormStandard::RAMP->f(_x); };
 const wavefunction_t WaveForm::square
-        = [](const real_t _x) { return WaveFormStandard::SQUARE.f(_x); };
-const wavefunction_t WaveForm::harshsaw
-        = [](const real_t _x) { return WaveFormStandard::HARSHSAW.f(_x); };
+        = [](const real_t _x) { return WaveFormStandard::SQUARE->f(_x); };
+const wavefunction_t WaveForm::harshramp
+        = [](const real_t _x) { return WaveFormStandard::HARSHRAMP->f(_x); };
 const wavefunction_t WaveForm::sqpeak
-        = [](const real_t _x) { return WaveFormStandard::SQPEAK.f(_x); };
+        = [](const real_t _x) { return WaveFormStandard::SQPEAK->f(_x); };
 const wavefunction_t WaveForm::whitenoise
-        = [](const real_t _x) { return WaveFormStandard::WHITENOISE.f(_x); };
+        = [](const real_t _x) { return WaveFormStandard::WHITENOISE->f(_x); };
 const wavefunction_t WaveForm::sqrt
-        = [](const real_t _x) { return WaveFormStandard::SQRT.f(_x); };
+        = [](const real_t _x) { return WaveFormStandard::SQRT->f(_x); };
 
 const WaveFormStandard* WaveFormStandard::Set::get(const int _bank,
                                                    const int _index)
@@ -351,7 +468,7 @@ const WaveFormStandard* WaveFormStandard::Set::get(const int _bank,
     const int b = _bank - MIN_BANK;
     const int i = _index - MIN_INDEX;
     if(_bank < MIN_BANK || _bank > MAX_BANK || _index < MIN_INDEX
-       || _index > MAX_INDEX || m_stock[b][i] == NULL)
+       || _index > MAX_INDEX || m_stock[b][i] == nullptr)
         return m_stock[ZERO_BANK - MIN_BANK][ZERO_INDEX - MIN_INDEX];
 
     return m_stock[b][i];
@@ -397,7 +514,8 @@ void WaveFormStandard::Set::fillIndexModel(ComboBoxModel& _model,
     {
         QString                 text("--");
         const WaveFormStandard* wf = get(_bank, i);
-        if(wf != &ZERO || (_bank == ZERO_BANK && i == ZERO_INDEX))
+        if(wf != get(ZERO_BANK, ZERO_INDEX)
+           || (_bank == ZERO_BANK && i == ZERO_INDEX))
             text = QString("%1")  //("%1 %2")
                                   //.arg(i, 2, 16, QChar('0'))
                            .arg(wf->name())
@@ -504,6 +622,37 @@ WaveFormStandard::WaveFormStandard(const QString&        _name,
     if(m_mode == Exact)
         m_mode = Linear;
     m_built = true;
+}
+
+WaveFormStandard::WaveFormStandard(const QString&          _name,
+                                   const int               _bank,
+                                   const int               _index,
+                                   const WaveFormStandard* _wave) :
+      WaveFormStandard(_name, _bank, _index, _wave->mode(), _wave->quality())
+{
+    m_func  = _wave->m_func;
+    m_file  = _wave->m_file;
+    m_data  = _wave->m_data;
+    m_size  = _wave->m_size;
+    m_built = _wave->m_built;
+
+    if(m_data != nullptr)
+    {
+        m_size = _wave->m_size;
+        m_data = MM_ALLOC(real_t, m_size + 1);
+        for(int f = 0; f < m_size + 1; ++f)
+            m_data[f] = _wave->m_data[f];
+    }
+
+    m_hardness   = _wave->m_hardness;
+    m_softness   = _wave->m_softness;
+    m_absolute   = _wave->m_absolute;
+    m_opposite   = _wave->m_opposite;
+    m_complement = _wave->m_complement;
+    m_reverse    = _wave->m_reverse;
+    m_zero       = _wave->m_zero;
+    m_center     = _wave->m_center;
+    m_phase      = _wave->m_phase;
 }
 
 WaveFormStandard::~WaveFormStandard()

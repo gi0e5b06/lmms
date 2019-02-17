@@ -86,6 +86,11 @@ AmplifierGDXDialog::AmplifierGDXDialog(AmplifierGDXControls* controls) :
     rightPanningKNB->setText(tr("RIGHT"));
     rightPanningKNB->setHintText(tr("Right panning:"), "");
 
+    Knob* responseKNB = new Knob(this);
+    responseKNB->setPointColor(Qt::yellow);
+    responseKNB->setModel(&controls->m_responseModel);
+    responseKNB->setText(tr("RESP"));
+    responseKNB->setHintText(tr("Response:"), "");
 
     m_mainLayout->addWidget(new QLabel("VOL"), 0, 2,
                             Qt::AlignHCenter | Qt::AlignVCenter);
@@ -106,8 +111,10 @@ AmplifierGDXDialog::AmplifierGDXDialog(AmplifierGDXControls* controls) :
                             Qt::AlignHCenter | Qt::AlignVCenter);
     m_mainLayout->addWidget(rightPanningKNB, 2, 4, 1, 1,
                             Qt::AlignHCenter | Qt::AlignVCenter);
+    m_mainLayout->addWidget(responseKNB, 1, 5, 2, 1,
+                            Qt::AlignHCenter | Qt::AlignVCenter);
 
-    m_mainLayout->setColumnStretch(5, 1);
+    m_mainLayout->setColumnStretch(6, 1);
     m_mainLayout->setRowStretch(3, 1);
 
     setFixedWidth(250);

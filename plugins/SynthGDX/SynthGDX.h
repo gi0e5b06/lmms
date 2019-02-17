@@ -129,6 +129,7 @@ class OscillatorObject : public Model
     FloatModel         m_harm7Model;
     FloatModel         m_skewModel;
     FloatModel         m_smoothModel;
+    FloatModel         m_slopeModel;
     FloatModel         m_portamentoModel;
     FloatModel         m_lowPassModel;
     FloatModel         m_highPassModel;

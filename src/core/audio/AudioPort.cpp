@@ -205,7 +205,15 @@ void AudioPort::doProcessing()
                 m_bufferUsage = true;
                 MixHelpers::add(m_portBuffer, buf, fpp);
             }
-
+            /*
+            else if(ph->usesBuffer()
+                    && (ph->type() == PlayHandle::TypeSamplePlayHandle))
+            {
+                if(MixHelpers::isSilent(buf, fpp))
+                    qInfo("AudioPort::doProcessing buf is silent");
+            }
+            */
+            
             // gets rid of playhandle's buffer and sets
             // pointer to null, so if it doesn't get re-acquired we know to
             // skip it next time
@@ -474,7 +482,7 @@ void AudioPort::removePlayHandle(PlayHandle* handle)
         NotePlayHandle* nph = dynamic_cast<NotePlayHandle*>(handle);
         if(nph && !nph->isReleased())
             nph->noteOff(0);
-        m_playHandles.removeOne(handle);
+        m_playHandles.removeAll(handle);//One
     }
     else
     {

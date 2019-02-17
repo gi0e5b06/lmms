@@ -114,6 +114,134 @@ WaveForm::~WaveForm()
         MM_FREE(m_data);
 }
 
+real_t WaveForm::softness() const
+{
+    return m_softness;
+}
+
+WaveForm* WaveForm::setSoftness(real_t _softness)
+{
+    if(m_softness != _softness)
+    {
+        m_softness = _softness;
+        m_built    = false;
+        // if(m_built) rebuild();
+    }
+    return this;
+}
+
+real_t WaveForm::hardness() const
+{
+    return m_hardness;
+}
+
+WaveForm* WaveForm::setHardness(real_t _hardness)
+{
+    if(m_hardness != _hardness)
+    {
+        m_hardness = _hardness;
+        m_built    = false;
+        // if(m_built) rebuild();
+    }
+    return this;
+}
+
+bool WaveForm::absolute() const
+{
+    return m_absolute;
+}
+
+WaveForm* WaveForm::setAbsolute(bool _absolute)
+{
+    if(m_absolute != _absolute)
+    {
+        m_absolute = _absolute;
+        m_built    = false;
+        // if(m_built) rebuild();
+    }
+    return this;
+}
+
+bool WaveForm::complement() const
+{
+    return m_complement;
+}
+
+WaveForm* WaveForm::setComplement(bool _complement)
+{
+    if(m_complement != _complement)
+    {
+        m_complement = _complement;
+        m_built      = false;
+        // if(m_built) rebuild();
+    }
+    return this;
+}
+
+bool WaveForm::opposite() const
+{
+    return m_opposite;
+}
+
+WaveForm* WaveForm::setOpposite(bool _opposite)
+{
+    if(m_opposite != _opposite)
+    {
+        m_opposite = _opposite;
+        m_built    = false;
+        // if(m_built) rebuild();
+    }
+    return this;
+}
+
+bool WaveForm::reverse() const
+{
+    return m_reverse;
+}
+
+WaveForm* WaveForm::setReverse(bool _reverse)
+{
+    if(m_reverse != _reverse)
+    {
+        m_reverse = _reverse;
+        m_built   = false;
+        // if(m_built) rebuild();
+    }
+    return this;
+}
+
+bool WaveForm::zeroed() const
+{
+    return m_zero;
+}
+
+WaveForm* WaveForm::setZeroed(bool _zero)
+{
+    if(m_zero != _zero)
+    {
+        m_zero  = _zero;
+        m_built = false;
+        // if(m_built) rebuild();
+    }
+    return this;
+}
+
+bool WaveForm::centered() const
+{
+    return m_center;
+}
+
+WaveForm* WaveForm::setCentered(bool _center)
+{
+    if(m_center != _center)
+    {
+        m_center = _center;
+        m_built  = false;
+        // if(m_built) rebuild();
+    }
+    return this;
+}
+
 void WaveForm::rebuild()
 {
     m_built = false;
@@ -157,7 +285,7 @@ bool WaveForm::build_frames()
         m_data = MM_ALLOC(real_t, m_size + 1);
         for(int i = m_size; i >= 0; --i)
             m_data[i] = m_func(real_t(i) / real_t(m_size));
-        return true;  // m_built = true;
+        // return true;  // m_built = true;
     }
     else if(m_file != "")
     {
@@ -172,7 +300,7 @@ bool WaveForm::build_frames()
             m_data[f] = data[f][0];
         m_size = size - 1;
         delete sb;
-        return true;  // m_built = true;
+        // return true;  // m_built = true;
     }
     else
     {
@@ -180,6 +308,204 @@ bool WaveForm::build_frames()
         BACKTRACE
         return false;
     }
+
+    if(m_hardness != 0.)
+        harden();
+    if(m_softness != 0.)
+        soften();
+    if(m_absolute || m_opposite || m_complement || m_reverse)
+        acoren();
+    if(m_center)
+        center();
+    if(m_zero)
+        zero();
+    if(m_phase != 0.)
+        dephase();
+
+    return true;
+}
+
+void WaveForm::harden()
+{
+    const int size = m_size + 1;
+    const int bw   = 0.5 * m_hardness * m_size;
+    if(bw == 0)
+        return;
+
+    real_t omin = m_data[0];
+    real_t omax = m_data[0];
+    real_t nmin = omin;
+    real_t nmax = omax;
+
+    real_t* data = MM_ALLOC(real_t, size);
+    for(int f = 0; f < size; ++f)
+    {
+        const real_t ov = m_data[f];
+        if(ov < omin)
+            omin = ov;
+        if(ov > omax)
+            omax = ov;
+
+        const real_t nv = m_data[(f / bw) * bw];
+        if(nv < nmin)
+            nmin = nv;
+        if(nv > nmax)
+            nmax = nv;
+
+        data[f] = nv;
+    }
+
+    real_t os = qMax(abs(omax), abs(omin));
+    real_t ns = qMax(abs(nmax), abs(nmin));
+    if(ns >= SILENCE)
+    {
+        const real_t k = os / ns;
+        if(k != 1.)
+            for(int f = 0; f < size; ++f)
+                data[f] *= k;
+    }
+
+    real_t* old = m_data;
+    m_data      = data;
+    MM_FREE(old);
+}
+
+void WaveForm::soften()
+{
+    const int size = m_size + 1;
+    const int bw   = 0.5 * m_softness * m_size;
+    if(bw == 0)
+        return;
+
+    real_t v0 = 0.;
+    for(int i = -bw; i <= bw; ++i)
+    {
+        const int f = (i + size) % size;
+        v0 += m_data[f];
+    }
+    const real_t n = 1. / real_t(1 + 2 * bw);
+    v0 *= n;
+
+    real_t omin = m_data[0];
+    real_t omax = m_data[0];
+    real_t nmin = v0;
+    real_t nmax = v0;
+
+    real_t* data = MM_ALLOC(real_t, size);
+    data[0]      = v0;
+    for(int f = 1; f < size; ++f)
+    {
+        const real_t ov = m_data[f];
+        if(ov < omin)
+            omin = ov;
+        if(ov > omax)
+            omax = ov;
+
+        const real_t nv = data[f - 1]
+                          + (m_data[(f + bw) % size]
+                             - m_data[(f - bw - 1 + size) % size])
+                                    * n;
+        if(nv < nmin)
+            nmin = nv;
+        if(nv > nmax)
+            nmax = nv;
+
+        data[f] = nv;
+    }
+
+    real_t os = qMax(abs(omax), abs(omin));
+    real_t ns = qMax(abs(nmax), abs(nmin));
+    if(ns >= SILENCE)
+    {
+        const real_t k = os / ns;
+        if(k != 1.)
+            for(int f = 0; f < size; ++f)
+                data[f] *= k;
+    }
+
+    real_t* old = m_data;
+    m_data      = data;
+    MM_FREE(old);
+}
+
+void WaveForm::acoren()
+{
+    const int size = m_size + 1;
+
+    if(m_absolute)
+        for(int f = 0; f < size; ++f)
+            m_data[f] = abs(m_data[f]);
+    if(m_opposite)
+        for(int f = 0; f < size; ++f)
+            m_data[f] = -m_data[f];
+    if(m_complement)
+    {
+    }
+    if(m_reverse)
+    {
+        real_t v;
+        for(int f = m_size / 2 - 1; f >= 0; f--)
+        {
+            v                  = m_data[f];
+            m_data[f]          = m_data[m_size - f];
+            m_data[m_size - f] = v;
+        }
+    }
+}
+
+void WaveForm::zero()
+{
+    const int size = m_size + 1;
+
+    int    f0 = 0;
+    real_t v0 = 1.;
+    for(int f = 0; f < size; ++f)
+    {
+        const real_t v = abs(m_data[f]);
+        if(v < v0)
+        {
+            v0 = v;
+            f0 = f;
+        }
+    }
+    if(f0 > 0)
+        rotate_frames(f0);
+}
+
+void WaveForm::center()
+{
+    const int size = m_size + 1;
+
+    const int n  = size / 2;
+    real_t*   ee = MM_ALLOC(real_t, size);
+    for(int f = 0; f < size; ++f)
+    {
+        real_t e = 0.;
+        for(int g = -50; g <= 50; g++)
+            e += abs(m_data[(f + g + size) % size]) / (1. + 0.01*g);
+        ee[f] = e;
+    }
+
+    int    f0 = 0;
+    real_t e0 = ee[0];
+    for(int f = 0; f < size; ++f)
+    {
+        if(ee[f] > e0)
+        {
+            e0 = ee[f];
+            f0 = f;
+        }
+    }
+    MM_FREE(ee);
+
+    if(f0 > 0)
+        rotate_frames(f0 - n);
+}
+
+void WaveForm::dephase()
+{
+    const int size = m_size + 1;
+    rotate_frames(int(round(m_phase * size)));
 }
 
 bool WaveForm::normalize_frames()
@@ -222,7 +548,7 @@ bool WaveForm::rotate_frames(int _n)
     real_t*   data = MM_ALLOC(real_t, size);
 
     for(int f = 0; f < size; ++f)
-        data[f] = m_data[(f + _n) % size];
+        data[f] = m_data[(f + size + _n) % size];
 
     real_t* old = m_data;
     m_data      = data;

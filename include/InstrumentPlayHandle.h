@@ -36,14 +36,11 @@ class EXPORT InstrumentPlayHandle : public PlayHandle
     MM_OPERATORS
 
   public:
-    BasicFilters<>* m_filter;
+            //BasicFilters<>* m_filter;
 
     InstrumentPlayHandle(Instrument*      instrument,
                          InstrumentTrack* instrumentTrack);
-
-    virtual ~InstrumentPlayHandle()
-    {
-    }
+    virtual ~InstrumentPlayHandle();
 
     virtual void play(sampleFrame* _working_buffer);
     virtual bool isFinished() const;
@@ -66,13 +63,6 @@ class EXPORT InstrumentPlayHandle : public PlayHandle
 
   private:
     Instrument* m_instrument;
-
-    /*
-    f_cnt_t m_envOffset;
-    f_cnt_t m_envTotalFrames;
-    f_cnt_t m_envReleaseBegin;
-    friend class InstrumentSoundShaping;
-    */
 };
 
 #endif

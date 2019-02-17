@@ -580,7 +580,7 @@ real_t AutomationPattern::valueAt(timeMap::const_iterator v,
 
     const WaveFormStandard* wf
             = WaveFormStandard::get(m_waveBank, m_waveIndex);
-    if(wf != &WaveFormStandard::ZERO)
+    if(wf != WaveFormStandard::ZERO)
     {
         if(offset == 0)
         {

@@ -454,13 +454,12 @@ void ControllerConnectionDialog::selectController()
 
 void ControllerConnectionDialog::midiToggled()
 {
-	int enabled = m_midiGroupBox->isEnabled();
-	if( enabled != 0 )
+        //qInfo("ControllerConnectionDialog::midiToggled %d",m_midiGroupBox->isEnabled());
+	bool enabled = m_midiGroupBox->isEnabled();
+	if( enabled )
 	{
 		if( m_userGroupBox->isEnabled() )
-		{
 			m_userGroupBox->setEnabled(false);
-		}
 
 		if( !m_midiController )
 		{
@@ -489,7 +488,8 @@ void ControllerConnectionDialog::midiToggled()
 				m_readablePorts->setModel( &m_midiController->m_midiPort );
 			}
 
-			connect( m_midiController, SIGNAL( controlledValueChanged(float) ), this, SLOT( midiValueChanged() ) );
+			connect( m_midiController, SIGNAL( controlledValueChanged(real_t) ), this, SLOT( midiValueChanged() ) );
+                        //connect( m_midiController, SIGNAL( dataChanged() ), this, SLOT( midiValueChanged() ) );
 		}
 	}
 	m_midiAutoDetect.setValue( enabled );
@@ -512,13 +512,11 @@ void ControllerConnectionDialog::midiToggled()
 
 void ControllerConnectionDialog::userToggled()
 {
-	int enabled = m_userGroupBox->isEnabled();
-	if( enabled != 0 && m_midiGroupBox->isEnabled() )
-	{
+        //qInfo("ControllerConnectionDialog::userToggled %d",m_userGroupBox->isEnabled());
+	bool enabled = m_userGroupBox->isEnabled();
+	if( enabled && m_midiGroupBox->isEnabled() )
 		m_midiGroupBox->setEnabled(false);
-	}
-
-	m_userController->setEnabled( enabled );
+	//m_userController->setEnabled( enabled );
 }
 
 

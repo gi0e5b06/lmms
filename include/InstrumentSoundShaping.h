@@ -33,9 +33,7 @@ class EnvelopeAndLfoParameters;
 class NotePlayHandle;
 class InstrumentPlayHandle;
 
-class InstrumentSoundShaping
-      : public Model
-      , public JournallingObject
+class InstrumentSoundShaping : public Model, public JournallingObject
 {
     Q_OBJECT
   public:
@@ -45,9 +43,17 @@ class InstrumentSoundShaping
     void processAudioBuffer(sampleFrame*    _ab,
                             const fpp_t     _frames,
                             NotePlayHandle* _n);
+    /*
     void processAudioBuffer(sampleFrame*          _ab,
                             const fpp_t           _frames,
                             InstrumentPlayHandle* _n);
+    */
+    void processAudioBuffer(sampleFrame*    buffer,
+                            const fpp_t     frames,
+                            BasicFilters<>* filter,
+                            f_cnt_t         envTotalFrames,
+                            f_cnt_t         envReleaseBegin,
+                            bool            _legato);
 
     enum Targets
     {
@@ -60,6 +66,9 @@ class InstrumentSoundShaping
     f_cnt_t envFrames(const bool _only_vol = false) const;
     f_cnt_t releaseFrames() const;
 
+    f_cnt_t legatoFrames() const;
+    void    setLegatoFrames(f_cnt_t _frames);
+
     real_t volumeLevel(NotePlayHandle* _n, const f_cnt_t _frame);
 
     virtual void saveSettings(QDomDocument& _doc, QDomElement& _parent);
@@ -69,16 +78,10 @@ class InstrumentSoundShaping
         return "eldata";
     }
 
-  protected:
-    void processAudioBuffer(sampleFrame*    buffer,
-                            const fpp_t     frames,
-                            BasicFilters<>* filter,
-                            f_cnt_t         envTotalFrames,
-                            f_cnt_t         envReleaseBegin);
-
   private:
     EnvelopeAndLfoParameters* m_envLfoParameters[NumTargets];
     InstrumentTrack*          m_instrumentTrack;
+    f_cnt_t                   m_legatoFrames;
 
     BoolModel     m_filterEnabledModel;
     ComboBoxModel m_filterModel;

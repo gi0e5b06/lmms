@@ -37,31 +37,35 @@ class WaveFormStandard : public WaveForm
 
   public:
     WaveFormStandard(const QString&        _name,
-             const int             _bank,
-             const int             _index,
-             const wavefunction_t  _func,
-             const interpolation_t _mode    = Exact,
-             const int             _quality = 8);
+                     const int             _bank,
+                     const int             _index,
+                     const wavefunction_t  _func,
+                     const interpolation_t _mode    = Exact,
+                     const int             _quality = 8);
     WaveFormStandard(const QString&        _name,
-             const int             _bank,
-             const int             _index,
-             const QString&        _file,
-             const interpolation_t _mode    = Linear,
-             const int             _quality = 8);
+                     const int             _bank,
+                     const int             _index,
+                     const QString&        _file,
+                     const interpolation_t _mode    = Linear,
+                     const int             _quality = 8);
     WaveFormStandard(const QString&        _name,
-             const int             _bank,
-             const int             _index,
-             real_t*               _data,
-             const int             _size,
-             const interpolation_t _mode    = Linear,
-             const int             _quality = 8);
+                     const int             _bank,
+                     const int             _index,
+                     real_t*               _data,
+                     const int             _size,
+                     const interpolation_t _mode    = Linear,
+                     const int             _quality = 8);
     WaveFormStandard(const QString&        _name,
-             const int             _bank,
-             const int             _index,
-             const sampleFrame*    _data,
-             const int             _size,
-             const interpolation_t _mode    = Linear,
-             const int             _quality = 8);
+                     const int             _bank,
+                     const int             _index,
+                     const sampleFrame*    _data,
+                     const int             _size,
+                     const interpolation_t _mode    = Linear,
+                     const int             _quality = 8);
+    WaveFormStandard(const QString&          _name,
+                     const int               _bank,
+                     const int               _index,
+                     const WaveFormStandard* _wave);
     virtual ~WaveFormStandard();
 
     /*
@@ -109,16 +113,16 @@ class WaveFormStandard : public WaveForm
     static const int MAX_BANK  = 127;
     static const int MAX_INDEX = 127;
 
-    static const WaveFormStandard SINE;
-    static const WaveFormStandard TRIANGLE;
-    static const WaveFormStandard SAWTOOTH;
-    static const WaveFormStandard SQUARE;
-    static const WaveFormStandard HARSHSAW;
-    static const WaveFormStandard SQPEAK;
-    static const WaveFormStandard WHITENOISE;
-    static const WaveFormStandard ZERO;
-    static const WaveFormStandard SQRT;
-    static const WaveFormStandard SHARPGAUSS;
+    static const WaveFormStandard* const SINE;
+    static const WaveFormStandard* const TRIANGLE;
+    static const WaveFormStandard* const RAMP;
+    static const WaveFormStandard* const SQUARE;
+    static const WaveFormStandard* const HARSHRAMP;
+    static const WaveFormStandard* const SQPEAK;
+    static const WaveFormStandard* const WHITENOISE;
+    static const WaveFormStandard* const ZERO;
+    static const WaveFormStandard* const SQRT;
+    static const WaveFormStandard* const SHARPGAUSS;
 
     /*
     static const wavefunction_t sine;
@@ -136,17 +140,22 @@ class WaveFormStandard : public WaveForm
       public:
         Set();
         const WaveFormStandard* get(const int _bank, const int _index);
-        void set(const int _bank, const int _index, const WaveFormStandard* _wf);
-        void fillBankModel(ComboBoxModel& _model);
+        void                    set(const int               _bank,
+                                    const int               _index,
+                                    const WaveFormStandard* _wf);
+        void                    fillBankModel(ComboBoxModel& _model);
         void fillIndexModel(ComboBoxModel& _model, const int _bank);
 
       private:
+        void createMissing();
+        void createZeroed(int _bank);
+        void createCentered(int _bank);
         void createDegraded(int _bank, bool _linear, int _quality);
         void createSoften(int _bank, real_t _bandwidth);
 
-        QString         m_bankNames[MAX_BANK - MIN_BANK + 1];
+        QString                 m_bankNames[MAX_BANK - MIN_BANK + 1];
         const WaveFormStandard* m_stock[MAX_BANK - MIN_BANK + 1]
-                               [MAX_INDEX - MIN_INDEX + 1];
+                                       [MAX_INDEX - MIN_INDEX + 1];
     };
 
     static Set WAVEFORMS;
@@ -173,10 +182,10 @@ class WaveFormStandard : public WaveForm
 
   protected:
     WaveFormStandard(const QString&        _name,
-             const int             _bank,
-             const int             _index,
-             const interpolation_t _mode,
-             const int             _quality);
+                     const int             _bank,
+                     const int             _index,
+                     const interpolation_t _mode,
+                     const int             _quality);
     /*
     real_t hardness();
     real_t softness();
@@ -218,8 +227,8 @@ class WaveFormStandard : public WaveForm
     real_t          m_phase;
     */
 
-    int             m_bank;
-    int             m_index;
+    int m_bank;
+    int m_index;
 };
 
 #endif

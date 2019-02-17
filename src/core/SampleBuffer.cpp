@@ -1224,6 +1224,7 @@ bool SampleBuffer::play(sampleFrame*      _ab,
     {
         f_cnt_t f = _state->m_frameIndex;
 
+        // qInfo("SampleBuffer f=%d",f);
         // const bool exporting = Engine::getSong()->isExporting();
         while(n < _frames)
         {
@@ -1251,6 +1252,12 @@ bool SampleBuffer::play(sampleFrame*      _ab,
             _ab[i][0] = bound(-1., _ab[i][0] * m_amplification, 1.);
             _ab[i][1] = bound(-1., _ab[i][1] * m_amplification, 1.);
         }
+
+    /*
+    qInfo("SampleBuffer amplification=%f", m_amplification);
+    if(MixHelpers::isSilent(_ab, _frames))
+        qInfo("SampleBuffer::play ab is silent");
+    */
 
     return true;
 }
@@ -1320,10 +1327,16 @@ void SampleBuffer::visualize(QPainter&    _p,
         FLOAT   xp    = xr + FLOAT(wr - 1) / FLOAT(nbp - 1) * FLOAT(i);
         FLOAT   ypl   = yr
                     + FLOAT(hr - 1) / 2.
-                * (1. + bound(-1.,m_amplification * m_data[frame][0],1.));
+                              * (1.
+                                 + bound(-1.,
+                                         m_amplification * m_data[frame][0],
+                                         1.));
         FLOAT ypr = yr
                     + FLOAT(hr - 1) / 2.
-                * (1. + bound(-1.,m_amplification * m_data[frame][1],1.));
+                              * (1.
+                                 + bound(-1.,
+                                         m_amplification * m_data[frame][1],
+                                         1.));
         lc[i] = QPointF(xp, ypl);
         rc[i] = QPointF(xp, ypr);
     }
@@ -2250,6 +2263,11 @@ void SampleBuffer::setDataFrame(f_cnt_t _f, sample_t _ch0, sample_t _ch1)
     if(_f < 0 || _f >= m_origFrames)
     {
         // qWarning("SampleBuffer::setDataFrame invalid frame _f=%d",_f);
+        return;
+    }
+    if(m_mmapped)
+    {
+        qWarning("SampleBuffer::setDataFrame mmapped");
         return;
     }
     if(m_origData == nullptr)

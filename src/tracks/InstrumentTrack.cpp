@@ -150,7 +150,8 @@ InstrumentTrack::InstrumentTrack(TrackContainer* tc) :
                   &m_mutedModel,
                   &m_frozenModel,
                   &m_clippingModel),
-      m_instrument(nullptr), m_soundShaping(this), m_piano(this)
+      m_instrument(nullptr), m_soundShaping(this), m_piano(this),
+      m_envFilter(nullptr)
 {
     setColor(QColor("#2BB34E"));
     setUseStyleColor(true);
@@ -255,7 +256,7 @@ void InstrumentTrack::processAudioBuffer(sampleFrame*    buf,
     if(/*tmp isMuted() ||*/
        (song->playMode() != Song::Mode_PlayPattern && nph != nullptr
         && nph->isBbTrackMuted())
-       || !m_instrument)
+       || m_instrument == nullptr)
     {
         memset(buf, 0, frames * BYTES_PER_FRAME);
         return;
@@ -297,31 +298,50 @@ void InstrumentTrack::processAudioBuffer(sampleFrame*    buf,
     // instruments using instrument-play-handles will call this method
     // without any knowledge about notes, so they pass nullptr for n, which
     // is no problem for us since we just bypass the envelopes+LFOs
-    if(nph != nullptr && !m_instrument->isSingleStreamed())
+    if(nph != nullptr)  // && !m_instrument->isSingleStreamed())
     {
         const f_cnt_t offset = nph->noteOffset();
-
         m_soundShaping.processAudioBuffer(buf + offset, frames - offset, nph);
+    }
+    else
+    {
+        if(m_envFilter == nullptr)
+            m_envFilter = new BasicFilters<>(
+                    Engine::mixer()->processingSampleRate());
+        m_soundShaping.processAudioBuffer(
+                buf + m_envOffset, frames - m_envOffset, m_envFilter,
+                m_envTotalFramesPlayed, m_envReleaseBegin, m_envLegato);
+    }
+
+    // if(nph != nullptr)
+    {
 
         if(!m_instrument->isMidiBased() || m_volumeEnabledModel.value()
            || m_panningEnabledModel.value())
         {
             const volume_t vol
                     = m_volumeEnabledModel.value()
-                              ? qBound(MinVolume, nph->getVolume(), MaxVolume)
+                              ? qBound(MinVolume,
+                                       nph == nullptr ? m_envVolume
+                                                      : nph->getVolume(),
+                                       MaxVolume)
                               : DefaultVolume;
             const panning_t pan
                     = m_panningEnabledModel.value()
-                              ? qBound(PanningLeft, nph->getPanning(),
+                              ? qBound(PanningLeft,
+                                       nph == nullptr ? m_envPanning
+                                                      : nph->getPanning(),
                                        PanningRight)
                               : DefaultPanning;
             StereoGain sg = toStereoGain(pan, vol);
 
+            const f_cnt_t offset
+                    = nph == nullptr ? m_envOffset : nph->noteOffset();
             for(f_cnt_t f = offset; f < frames; ++f)
             {
                 for(int c = 0; c < 2; ++c)
                 {
-                    buf[f][c] *= sg.gain[c];
+                        buf[f][c] *= sg.gain[c];
                 }
             }
         }
@@ -569,7 +589,16 @@ void InstrumentTrack::processOutEvent(const MidiEvent& event,
 
 void InstrumentTrack::silenceAllNotes(bool removeIPH)
 {
-    qInfo("InstrumentTrack::silenceAllNotes 1");
+    qInfo("InstrumentTrack::silenceAllNotes 1a");
+    for(int i = 0; i < NumMidiKeys; ++i)
+    {
+        if(m_notes[i] != nullptr || m_runningMidiNotes[i] != 0)
+        {
+            qInfo("InstrumentTrack: silence %d", i);
+            processOutEvent(MidiEvent(MidiNoteOff, -1, i, 0));
+        }
+    }
+    qInfo("InstrumentTrack::silenceAllNotes 1b");
     m_midiNotesMutex.lock();
     for(int i = 0; i < NumMidiKeys; ++i)
     {
@@ -582,19 +611,22 @@ void InstrumentTrack::silenceAllNotes(bool removeIPH)
     lock();
     // invalidate all NotePlayHandles and PresetPreviewHandles linked to this
     // track
-    qInfo("InstrumentTrack::silenceAllNotes 3");
-
+    qInfo("InstrumentTrack::silenceAllNotes 3a");
+    m_sustainedNotes.clear();
+    qInfo("InstrumentTrack::silenceAllNotes 3b");
     m_processHandles.clear();
     qInfo("InstrumentTrack::silenceAllNotes 4");
-
     quint8 flags = PlayHandle::TypeNotePlayHandle
                    | PlayHandle::TypePresetPreviewHandle;
+    Engine::mixer()->emit removePlayHandlesOfTypes(this, flags);
+    qInfo("InstrumentTrack::silenceAllNotes 5");
+    /*
     if(removeIPH)
     {
-        flags |= PlayHandle::TypeInstrumentPlayHandle;
+        flags = PlayHandle::TypeInstrumentPlayHandle;
+        Engine::mixer()->removePlayHandlesOfTypes(this, flags);
     }
-    Engine::mixer()->removePlayHandlesOfTypes(this, flags);
-    qInfo("InstrumentTrack::silenceAllNotes 5");
+    */
     unlock();
     qInfo("InstrumentTrack::silenceAllNotes 6");
 }
@@ -828,7 +860,7 @@ bool InstrumentTrack::play(const MidiTime& _start,
                            const f_cnt_t   _offset,
                            int             _tco_num)
 {
-    if(!m_instrument || !tryLock())
+    if(m_instrument == nullptr || !tryLock())
     {
         return false;
     }

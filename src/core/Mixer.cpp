@@ -32,6 +32,7 @@
 #include "lmmsconfig.h"
 //#include "ConfigManager.h"
 #include "Configuration.h"
+#include "SafeHash.h"
 #include "SamplePlayHandle.h"
 
 // platform-specific audio-interface-classes
@@ -455,7 +456,7 @@ const surroundSampleFrame* Mixer::renderNextBuffer()
     for(PlayHandle* ph: m_playHandlesToRemove)
     {
         if(ph->affinityMatters()
-           && ph->affinity() != QThread::currentThread())
+           && ph->affinity() != thread())  // QThread::currentThread())
             continue;
         toDelete.append(ph);
     }
@@ -530,9 +531,11 @@ const surroundSampleFrame* Mixer::renderNextBuffer()
     toDelete.clear();
     for(PlayHandle* ph: m_playHandles)
     {
+
         if(ph->affinityMatters()
-           && ph->affinity() != QThread::currentThread())
+           && ph->affinity() != thread())  // QThread::currentThread())
             continue;
+
         if(!m_clearSignal && !ph->isFinished())
             continue;
         if(m_clearSignal
@@ -834,12 +837,17 @@ bool Mixer::addPlayHandleInternal(PlayHandle* _ph)
 
     if(criticalXRuns())
     {
-        m_playHandlesToRemove.push_back(_ph);
+        // if(m_playHandles.contains(_ph))
+        // m_playHandlesToRemove.append(_ph);
+        r = false;
+    }
+    else if(m_playHandles.contains(_ph) || m_playHandlesToAdd.contains(_ph))
+    {
         r = false;
     }
     else
     {
-        m_playHandlesToAdd.push_back(_ph);
+        m_playHandlesToAdd.append(_ph);
         // TMP GDX test
         if(_ph->audioPort() == nullptr)
         {
@@ -879,13 +887,15 @@ void Mixer::removePlayHandleInternal(PlayHandle* _ph)
 
     // check thread affinity as we must not delete play-handles
     // which were created in a thread different than mixer thread
-    if(_ph->affinityMatters() && _ph->affinity() == QThread::currentThread())
+    if(_ph->affinityMatters()
+       && _ph->affinity() == thread())  // QThread::currentThread())
     {
         removePlayHandleUnchecked(_ph);
     }
     else
     {
-        m_playHandlesToRemove.push_back(_ph);
+        if(!m_playHandlesToRemove.contains(_ph))
+            m_playHandlesToRemove.append(_ph);
         BACKTRACE
         qInfo("*** Mixer::removePlayHandleInternal wrong thread");
     }
@@ -896,6 +906,13 @@ void Mixer::removePlayHandleUnchecked(PlayHandle* _ph)
     BACKTRACE
     qInfo("*** Mixer::removePlayHandleUnchecked(%p)", _ph);
 
+    /*    const NotePlayHandle* nph = dynamic_cast<const NotePlayHandle*>(_ph);
+    if(nph != nullptr)
+    {
+        for(NotePlayHandle* n: nph->subNotes())
+            removePlayHandleUnchecked(n);
+            }*/
+
     // TMP GDX
     if(_ph->audioPort() == nullptr)
     {
@@ -905,42 +922,44 @@ void Mixer::removePlayHandleUnchecked(PlayHandle* _ph)
     _ph->audioPort()->removePlayHandle(_ph);
     int bx1 = m_playHandlesToAdd.removeAll(_ph);
     int bx2 = m_playHandles.removeAll(_ph);
-    int bx3 = m_playHandlesToRemove.removeAll(_ph);
+    /*int bx3 =*/
+    m_playHandlesToRemove.removeAll(_ph);
     if(bx1 > 0 && bx2 > 0)
     {
         BACKTRACE
         qWarning("Mixer::removePlayHandleUnchecked both");
     }
-    if(bx1 > 0 || bx2 > 0 || bx3 > 0)
+
+    // if(bx1 > 0 || bx2 > 0 || bx3 > 0)
+    //{
+    deletePlayHandleInternal(_ph);
+    /*
+if(_ph->type() == PlayHandle::TypeNotePlayHandle)
+{
+    // TMP
+    NotePlayHandle* nph = dynamic_cast<NotePlayHandle*>(_ph);
+    if(nph == nullptr)
     {
-        deletePlayHandleInternal(_ph);
-        /*
-    if(_ph->type() == PlayHandle::TypeNotePlayHandle)
-    {
-        // TMP
-        NotePlayHandle* nph = dynamic_cast<NotePlayHandle*>(_ph);
-        if(nph == nullptr)
-        {
-            BACKTRACE
-            qWarning("Mixer::removePlayHandle nph==null");
-        }
-        else
-        {
-            NotePlayHandleManager::release((NotePlayHandle*)_ph);
-        }
+        BACKTRACE
+        qWarning("Mixer::removePlayHandle nph==null");
     }
     else
     {
-        delete _ph;
+        NotePlayHandleManager::release((NotePlayHandle*)_ph);
     }
-        */
-    }
-    else
-    {
-        qWarning(
-                "Mixer::removePlayHandleInternal ph not found in any "
-                "list");
-    }
+}
+else
+{
+    delete _ph;
+}
+}
+else
+{
+    qWarning(
+            "Mixer::removePlayHandleInternal ph not found in any "
+            "list");
+}
+    */
 }
 
 void Mixer::removePlayHandlesOfTypes(const Track* _track, const quint8 _types)
@@ -967,18 +986,19 @@ void Mixer::removePlayHandlesOfTypes(const Track* _track, const quint8 _types)
             qWarning("Mixer::removePlayHandlesOfTypes ph is null");
             continue;
         }
-        /*
+
         if(ph->affinityMatters()
-           && ph->affinity() != QThread::currentThread())
-                continue;
-        */
-        if(ph->isFromTrack(_track) && (ph->type() & _types))
+           && ph->affinity() != thread())  // QThread::currentThread())
+            continue;
+
+        if((ph->type() & _types) && ph->isFromTrack(_track))
             toDelete.append(ph);
         //&& !m_playHandlesToRemove.contains(ph))
         // m_playHandlesToRemove.append(ph);
     }
     while(!toDelete.isEmpty())
-        removePlayHandleUnchecked(toDelete.takeFirst());
+        // removePlayHandleUnchecked(toDelete.takeFirst());
+        removePlayHandleInternal(toDelete.takeFirst());
     doneChangeInModel();
 
     /*
@@ -1047,18 +1067,18 @@ ConstNotePlayHandleList Mixer::nphsOfTrack(const Track* _track, bool _all)
         return cnphv;
     }
 
-    //requestChangeInModel();
+    // requestChangeInModel();
     for(PlayHandle* ph: m_playHandles)
     {
-        if(!ph->isFromTrack(_track)
-           || !(ph->type() & PlayHandle::TypeNotePlayHandle))
+        if(!(ph->type() & PlayHandle::TypeNotePlayHandle)
+           || !ph->isFromTrack(_track))
             continue;
         const NotePlayHandle* nph = dynamic_cast<const NotePlayHandle*>(ph);
         if(((nph->isReleased() == false && nph->hasParent() == false)
             || _all == true))
             cnphv.append(nph);
     }
-    //doneChangeInModel();
+    // doneChangeInModel();
     return cnphv;
 }
 
@@ -1078,7 +1098,7 @@ void Mixer::adjustTempo(const bpm_t _tempo)
     doneChangeInModel();
 }
 
-static QHash<QString, bool> s_deleteTracker;
+static SafeHash<QString, bool> s_deleteTracker;
 
 void Mixer::deletePlayHandleInternal(PlayHandle* _ph)
 {
@@ -1107,7 +1127,8 @@ void Mixer::deletePlayHandleInternal(PlayHandle* _ph)
         }
         else
         {
-            NotePlayHandleManager::release((NotePlayHandle*)_ph);
+            NotePlayHandleManager::release(nph);
+            emit playHandleDeleted(_ph);
         }
     }
     else
@@ -1124,6 +1145,7 @@ void Mixer::deletePlayHandleInternal(PlayHandle* _ph)
         s_deleteTracker.insert(_ph->m_debug_uuid, true);
 
         delete _ph;
+        emit playHandleDeleted(_ph);
     }
 }
 

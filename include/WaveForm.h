@@ -32,8 +32,8 @@
 //#include "lmms_math.h"
 #include "interpolation.h"
 
-#include <QObject>
 #include <QDomElement>
+#include <QObject>
 
 // fastnormsinf01 -> WaveForm::sin::f(x)
 
@@ -90,17 +90,44 @@ class WaveForm : public QObject  // public JournallingObject
         return m_name;
     }
 
+    inline const interpolation_t mode() const
+    {
+        return m_mode;
+    }
+
+    inline const int quality() const
+    {
+        return m_quality;
+    }
+
     static const wavefunction_t sine;
     static const wavefunction_t triangle;
-    static const wavefunction_t sawtooth;
+    static const wavefunction_t ramp;
     static const wavefunction_t square;
-    static const wavefunction_t harshsaw;
+    static const wavefunction_t harshramp;
     static const wavefunction_t sqpeak;
     static const wavefunction_t whitenoise;
     static const wavefunction_t sqrt;
 
-  signals:
-    void dataChanged();
+    real_t hardness() const;
+    real_t softness() const;
+    bool   absolute() const;
+    bool   complement() const;
+    bool   opposite() const;
+    bool   reverse() const;
+    bool   zeroed() const;
+    bool   centered() const;
+    real_t phase() const;
+
+    WaveForm* setHardness(real_t _hardness);
+    WaveForm* setSoftness(real_t _softness);
+    WaveForm* setAbsolute(bool _b);
+    WaveForm* setComplement(bool _b);
+    WaveForm* setOpposite(bool _b);
+    WaveForm* setReverse(bool _b);
+    WaveForm* setZeroed(bool _b);
+    WaveForm* setCentered(bool _b);
+    WaveForm* setPhase(real_t _p);
 
     /*
     class Plan
@@ -122,6 +149,9 @@ class WaveForm : public QObject  // public JournallingObject
     static Plan PLAN;
     */
 
+  signals:
+    void dataChanged();
+
   protected:
     WaveForm(const QString&        _name,
              const interpolation_t _mode,
@@ -129,6 +159,23 @@ class WaveForm : public QObject  // public JournallingObject
 
     virtual void rebuild() final;
     virtual void build() final;
+
+    virtual void harden() final;
+    virtual void soften() final;
+    virtual void acoren() final;
+    virtual void zero() final;
+    virtual void center() final;
+    virtual void dephase() final;
+
+    real_t m_hardness;
+    real_t m_softness;
+    bool   m_absolute;
+    bool   m_opposite;
+    bool   m_complement;
+    bool   m_reverse;
+    bool   m_zero;
+    bool   m_center;
+    real_t m_phase;
 
     // internal
     virtual bool build_frames();

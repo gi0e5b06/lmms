@@ -64,7 +64,7 @@ Plugin::Descriptor PLUGIN_EXPORT zynaddsubfx_plugin_descriptor =
 	Plugin::Instrument,
 	new PluginPixmapLoader( "logo" ),
 	"xiz",
-	NULL,
+	nullptr,
 } ;
 
 }
@@ -108,8 +108,8 @@ ZynAddSubFxInstrument::ZynAddSubFxInstrument(
 									InstrumentTrack * _instrumentTrack ) :
 	Instrument( _instrumentTrack, &zynaddsubfx_plugin_descriptor ),
 	m_hasGUI( false ),
-	m_plugin( NULL ),
-	m_remotePlugin( NULL ),
+	m_plugin( nullptr ),
+	m_remotePlugin( nullptr ),
 	m_portamentoModel( 0, 0, 127, 1, this, tr( "Portamento" ) ),
 	m_filterFreqModel( 64, 0, 127, 1, this, tr( "Filter Frequency" ) ),
 	m_filterQModel( 64, 0, 127, 1, this, tr( "Filter Resonance" ) ),
@@ -131,6 +131,7 @@ ZynAddSubFxInstrument::ZynAddSubFxInstrument(
 
 	// now we need a play-handle which cares for calling play()
 	InstrumentPlayHandle * iph = new InstrumentPlayHandle( this, _instrumentTrack );
+        iph->setAffinity(Engine::mixer()->thread());
 	Engine::mixer()->addPlayHandle( iph );
 
 	connect( Engine::mixer(), SIGNAL( sampleRateChanged() ),
@@ -145,15 +146,16 @@ ZynAddSubFxInstrument::ZynAddSubFxInstrument(
 
 ZynAddSubFxInstrument::~ZynAddSubFxInstrument()
 {
+        qInfo("~ZynAddSubFxInstrument it=%p",instrumentTrack());
 	Engine::mixer()->removePlayHandlesOfTypes( instrumentTrack(),
-				PlayHandle::TypeNotePlayHandle
-				| PlayHandle::TypeInstrumentPlayHandle );
+                                                   //PlayHandle::TypeNotePlayHandle|
+                                                   PlayHandle::TypeInstrumentPlayHandle );
 
 	m_pluginMutex.lock();
 	delete m_plugin;
 	delete m_remotePlugin;
-	m_plugin = NULL;
-	m_remotePlugin = NULL;
+	m_plugin = nullptr;
+	m_remotePlugin = nullptr;
 	m_pluginMutex.unlock();
 }
 
@@ -342,7 +344,7 @@ void ZynAddSubFxInstrument::play( sampleFrame * _buf )
 	}
 
 	m_pluginMutex.unlock();
-	instrumentTrack()->processAudioBuffer( _buf, Engine::mixer()->framesPerPeriod(), NULL );
+	instrumentTrack()->processAudioBuffer( _buf, Engine::mixer()->framesPerPeriod(), nullptr );
 }
 
 
@@ -435,8 +437,8 @@ void ZynAddSubFxInstrument::initPlugin()
 	m_pluginMutex.lock();
 	delete m_plugin;
 	delete m_remotePlugin;
-	m_plugin = NULL;
-	m_remotePlugin = NULL;
+	m_plugin = nullptr;
+	m_remotePlugin = nullptr;
 
 	if( m_hasGUI )
 	{

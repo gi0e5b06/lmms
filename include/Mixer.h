@@ -204,10 +204,6 @@ class EXPORT Mixer : public QObject
         return m_midiClient;
     }
 
-    // play-handle stuff
-    bool addPlayHandle(PlayHandle* handle);
-    void removePlayHandle(PlayHandle* handle);
-
     /*
     inline PlayHandleList& playHandles()
     {
@@ -339,10 +335,16 @@ class EXPORT Mixer : public QObject
         return m_displayRing;
     }
 
+  public slots:
+    // play-handle stuff
+    bool addPlayHandle(PlayHandle* handle);
+    void removePlayHandle(PlayHandle* handle);
+
   signals:
     void qualitySettingsChanged();
     void sampleRateChanged();
     // void nextDisplayBuffer( const surroundSampleFrame * buffer );
+    void playHandleDeleted(PlayHandle* handle);
 
   private:
     typedef fifoBuffer<surroundSampleFrame*> fifo;

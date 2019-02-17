@@ -24,12 +24,35 @@
 
 #include "lmms_math.h"
 
+real_t exptrif(const real_t x)
+{
+    if(x < 0.25f)
+        return expm1(8.f * x) * 0.15651764274967f;
+    else if(x < 0.50f)
+        return expm1(4.f - 8.f * x) * 0.15651764274967f;
+    else if(x < 0.75f)
+        return -expm1(8.f * x - 4.f) * 0.15651764274967f;
+    else
+        return -expm1(8.f - 8.f * x) * 0.15651764274967f;
+}
+
+real_t nexpf(const real_t x)
+{
+    return expm1(x) /*(exp(x) - 1.f)*/
+           / 1.718281828459f;
+}
+
+real_t nlogf(const real_t x)
+{
+    return log(x * 1.718281828459f + 1.f);
+}
+
 real_t nexp2f(const real_t x)
 {
         return exp2(x) - 1.;
 }
 
-real_t nexp2sawf(const real_t x)
+real_t nexp2rampf(const real_t x)
 {
     return (exp2(x) - 1.) * 2. - 1.;
 }

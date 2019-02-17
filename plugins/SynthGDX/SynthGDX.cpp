@@ -160,6 +160,8 @@ OscillatorObject::OscillatorObject(Model* _parent, int _idx) :
       m_skewModel(1., 0., 1., 0.001, this, tr("O%1 anti-skew").arg(_idx + 1)),
       m_smoothModel(
               0., 0., 1.999, 0.001, this, tr("O%1 smoothing").arg(_idx + 1)),
+      m_slopeModel(
+              0., -144., 144., 0.00001, this, tr("O%1 slope").arg(_idx + 1)),
       m_portamentoModel(
               0., 0., 0.999, 0.001, this, tr("O%1 portamento").arg(_idx + 1)),
       m_lowPassModel(
@@ -243,7 +245,7 @@ void OscillatorObject::updateWaveRing()
     // const real_t step = 1. / 600.;
     // real_t(Engine::mixer()->framesPerPeriod());
     // for(real_t x = 1. - step; x >= 0.; x -= step)
-    for(int f = rs - 1; f >= 0; f--)
+    for(int f = 0; f < rs; f++)
     {
         real_t      x = real_t(f) / real_t(rs);
         sampleFrame s;
@@ -676,7 +678,7 @@ void OscillatorObject::updateWaves(const fpp_t _f)
     m_opposite2   = m_wave2OppositeModel.value();
     m_complement2 = m_wave2ComplementModel.value();
 
-    m_waveMixBase[0] = m_waveMixModel.value() * 2. - 1;
+    m_waveMixBase[0] = m_waveMixModel.value();  // * 2. - 1;
     m_waveMixBase[1] = m_waveMixBase[0];
 
     m_waveAntialias = m_waveAntialiasModel.value();
@@ -954,6 +956,7 @@ void SynthGDX::saveSettings(QDomDocument& _doc, QDomElement& _this)
         m_osc[i]->m_lfoEnabledModel.saveSettings(_doc, _this,
                                                  "lfo_enabled" + is);
         m_osc[i]->m_lfoTimeModel.saveSettings(_doc, _this, "lfo_time" + is);
+        m_osc[i]->m_slopeModel.saveSettings(_doc, _this, "slope" + is);
         m_osc[i]->m_portamentoModel.saveSettings(_doc, _this,
                                                  "portamento" + is);
     }
@@ -1043,6 +1046,7 @@ void SynthGDX::loadSettings(const QDomElement& _this)
         m_osc[i]->m_pulseWidthModel.loadSettings(_this, "pulse_width" + is);
         m_osc[i]->m_lfoEnabledModel.loadSettings(_this, "lfo_enabled" + is);
         m_osc[i]->m_lfoTimeModel.loadSettings(_this, "lfo_time" + is);
+        m_osc[i]->m_slopeModel.loadSettings(_this, "slope" + is);
         m_osc[i]->m_portamentoModel.loadSettings(_this, "portamento" + is);
     }
 
@@ -1143,12 +1147,18 @@ void SynthGDX::playNote(NotePlayHandle* _n, sampleFrame* _buf)
     {
         for(int o = NB_OSCILLATORS - 1; o >= 0; --o)
         {
+            real_t slope = m_osc[o]->m_slopeModel.value();
+            if(slope != 0.)
+                slope = fastexp2(slope / 12. * (tfp + f - offset)
+                                 / Engine::mixer()->processingSampleRate());
+            else
+                slope = 1.;
             real_t portamento = m_osc[o]->m_portamentoModel.value();
             portamento        = 1.
                          - (1. - portamento) * 44.1
                                    / Engine::mixer()->processingSampleRate();
             real_t ow = m_osc[o]->m_frequencyModel.value();
-            real_t nw = _n->frequency();
+            real_t nw = _n->frequency() * slope;
             if(ow != nw)
             {
                 ow = nw * (1. - portamento) + ow * portamento;
@@ -1157,6 +1167,9 @@ void SynthGDX::playNote(NotePlayHandle* _n, sampleFrame* _buf)
                     qTrace("portamento n=%p p=%f nw=%f ow=%f", _n, portamento,
                            nw, ow);
                 */
+                if(f == 0 && slope != 1.)
+                    qTrace("slope n=%p s=%f nw=%f ow=%f", _n, slope, nw, ow);
+
                 m_osc[o]->m_frequencyModel.setAutomatedValue(ow);
             }
 
