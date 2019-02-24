@@ -77,17 +77,16 @@ LfoControllerDialog::LfoControllerDialog( Controller * _model, QWidget * _parent
 
 
 	m_speedKnob = new TempoSyncKnob( knobBright_26, this );
-	m_speedKnob->setLabel( tr( "SPD" ) );
+	m_speedKnob->setLabel( tr( "T" ) );
 	m_speedKnob->move( CD_LFO_SPEED_CD_KNOB_X, CD_LFO_CD_KNOB_Y );
-	m_speedKnob->setHintText( tr( "LFO-speed:" ), "" );
+	m_speedKnob->setHintText( tr( "Period:" ), "" );
 	m_speedKnob->setWhatsThis(
-		tr( "Use this knob for setting speed of the LFO. The "
-			"bigger this value the faster the LFO oscillates and "
-			"the faster the effect." ) );
+		tr( "Use this knob for setting the period of the LFO. The "
+                    "smaller this value the faster the LFO oscillates." ) );
 
 
 	m_amountKnob = new Knob( knobBright_26, this );
-	m_amountKnob->setLabel( tr( "AMNT" ) );
+	m_amountKnob->setLabel( tr( "AMT" ) );
 	m_amountKnob->move( CD_LFO_AMOUNT_CD_KNOB_X, CD_LFO_CD_KNOB_Y );
 	m_amountKnob->setHintText( tr( "Modulation amount:" ), "" );
 	m_amountKnob->setWhatsThis(

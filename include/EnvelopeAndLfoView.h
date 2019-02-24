@@ -1,6 +1,7 @@
 /*
  * EnvelopeAndLfoView.h - declaration of class EnvelopeAndLfoView which
- *                        is used by envelope/lfo/filter-tab of instrument track
+ *                        is used by envelope/lfo/filter-tab of instrument
+ * track
  *
  * Copyright (c) 2004-2009 Tobias Doerffel <tobydox/at/users.sourceforge.net>
  *
@@ -26,9 +27,9 @@
 #ifndef ENVELOPE_AND_LFO_VIEW_H
 #define ENVELOPE_AND_LFO_VIEW_H
 
-#include <QWidget>
-
 #include "ModelView.h"
+
+#include <QWidget>
 
 class QPaintEvent;
 class QPixmap;
@@ -42,61 +43,56 @@ class LedCheckBox;
 class PixmapButton;
 class TempoSyncKnob;
 
-
-
 class EnvelopeAndLfoView : public QWidget, public ModelView
 {
-	Q_OBJECT
-public:
-	EnvelopeAndLfoView( QWidget * _parent );
-	virtual ~EnvelopeAndLfoView();
+    Q_OBJECT
+  public:
+    EnvelopeAndLfoView(QWidget* _parent);
+    virtual ~EnvelopeAndLfoView();
 
-public slots:
-        virtual void update();
+  public slots:
+    virtual void update();
 
-protected:
-	virtual void modelChanged();
+  protected:
+    virtual void modelChanged();
 
-	virtual void dragEnterEvent( QDragEnterEvent * _dee );
-	virtual void dropEvent( QDropEvent * _de );
-	virtual void mousePressEvent( QMouseEvent * _me );
-	virtual void paintEvent( QPaintEvent * _pe );
+    virtual void dragEnterEvent(QDragEnterEvent* _dee);
+    virtual void dropEvent(QDropEvent* _de);
+    virtual void mousePressEvent(QMouseEvent* _me);
+    virtual void paintEvent(QPaintEvent* _pe);
 
+  protected slots:
+    void lfoUserWaveChanged();
 
-protected slots:
-	void lfoUserWaveChanged();
+  private:
+    QPixmap m_envGraph;
+    QPixmap m_lfoGraph;
 
+    EnvelopeAndLfoParameters* m_params;
 
-private:
-	QPixmap m_envGraph;
-	QPixmap m_lfoGraph;
+    // envelope stuff
+    TempoSyncKnob* m_predelayKnob;
+    TempoSyncKnob* m_attackKnob;
+    TempoSyncKnob* m_holdKnob;
+    TempoSyncKnob* m_decayKnob;
+    Knob*          m_sustainKnob;
+    TempoSyncKnob* m_releaseKnob;
+    Knob*          m_amountKnob;
 
-	EnvelopeAndLfoParameters * m_params;
+    // LFO stuff
+    Knob*          m_lfoPredelayKnob;
+    Knob*          m_lfoAttackKnob;
+    TempoSyncKnob* m_lfoSpeedKnob;
+    Knob*          m_lfoAmountKnob;
+    PixmapButton*  m_userLfoBtn;
+    // automatableButtonGroup * m_lfoWaveBtnGrp;
+    ComboBox* m_lfoWaveBankCMB;
+    ComboBox* m_lfoWaveIndexCMB;
 
-
-	// envelope stuff
-	TempoSyncKnob * m_predelayKnob;
-	TempoSyncKnob * m_attackKnob;
-	TempoSyncKnob * m_holdKnob;
-	TempoSyncKnob * m_decayKnob;
-	Knob *          m_sustainKnob;
-	TempoSyncKnob * m_releaseKnob;
-	Knob *          m_amountKnob;
-
-	// LFO stuff
-	Knob * m_lfoPredelayKnob;
-	Knob * m_lfoAttackKnob;
-	TempoSyncKnob * m_lfoSpeedKnob;
-	Knob * m_lfoAmountKnob;
-	PixmapButton * m_userLfoBtn;
-	//automatableButtonGroup * m_lfoWaveBtnGrp;
-        ComboBox* m_lfoWaveBankCMB;
-        ComboBox* m_lfoWaveIndexCMB;
-
-	LedCheckBox * m_x100Cb;
-	LedCheckBox * m_controlEnvAmountCb;
-
-	//float m_randomGraph;
-} ;
+    LedCheckBox* m_x100Cb;
+    LedCheckBox* m_controlEnvAmountCb;
+    Knob*        m_outKnob;
+    // float m_randomGraph;
+};
 
 #endif

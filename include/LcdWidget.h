@@ -41,14 +41,14 @@ class EXPORT LcdWidget : public Widget
                                                            setTextShadowColor)
 
   public:
-    LcdWidget(QWidget* parent, const QString& name = QString::null);
+    LcdWidget(QWidget* parent, const QString& name = "[lcd widget]");
     LcdWidget(int            numDigits,
               QWidget*       parent,
-              const QString& name = QString::null);
+              const QString& name = "[lcd widget]");
     LcdWidget(int            numDigits,
               const QString& style,
               QWidget*       parent,
-              const QString& name = QString::null);
+              const QString& name = "[lcd widget]");
 
     virtual ~LcdWidget();
 

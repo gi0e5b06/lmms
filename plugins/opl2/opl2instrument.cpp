@@ -417,10 +417,12 @@ bool opl2instrument::handleMidiEvent(const MidiEvent& event,
     return true;
 }
 
+/*
 QString opl2instrument::nodeName() const
 {
-    return (OPL2_plugin_descriptor.name);
+    return OPL2_plugin_descriptor.name;
 }
+*/
 
 PluginView* opl2instrument::instantiateView(QWidget* _parent)
 {

@@ -31,9 +31,9 @@
 #include "ComboBoxModel.h"
 #include "Editor.h"
 //#include "SerializingObject.h"
+#include "InstrumentFunction.h"
 #include "Note.h"
 #include "Song.h"
-#include "InstrumentFunction.h"
 #include "lmms_basics.h"
 //#include "ToolTip.h"
 
@@ -97,7 +97,9 @@ class PianoRoll : public QWidget
                        int            timeout = -1);
     void showVolTextFloat(volume_t vol, const QPoint& pos, int timeout = -1);
     void showPanTextFloat(panning_t pan, const QPoint& pos, int timeout = -1);
-    void showLegTextFloat(bool leg, const QPoint& pos, int timeout = -1);
+    void showLegatoTextFloat(bool b, const QPoint& pos, int timeout = -1);
+    void showMarcatoTextFloat(bool b, const QPoint& pos, int timeout = -1);
+    void showStaccatoTextFloat(bool b, const QPoint& pos, int timeout = -1);
 
     void setCurrentPattern(Pattern* _pattern);
     void setGhostPattern(Pattern* _pattern);
@@ -180,7 +182,6 @@ class PianoRoll : public QWidget
     virtual void wheelEvent(QWheelEvent* we);
     virtual void focusOutEvent(QFocusEvent*);
 
-    int         getKey(int y) const;
     static void drawNoteRect(QPainter&     p,
                              int           x,
                              int           y,
@@ -191,14 +192,16 @@ class PianoRoll : public QWidget
                              const int     noteOpc,
                              const bool    borderless,
                              const bool    drawNoteNames);
-    void        removeSelection();
-    void        selectAll();
-    NoteVector  getSelectedNotes();
-    void        selectNotesOnKey();
-    int         xCoordOfTick(int tick);
+
+    int   getKey(int y) const;
+    void  removeSelection();
+    void  selectAll();
+    Notes getSelectedNotes();
+    void  selectNotesOnKey();
+    int   xCoordOfTick(int tick);
 
     // for entering values with dblclick in the vol/pan bars
-    void enterValue(NoteVector* nv);
+    void enterValue(Notes& _notes);
 
     void markSemiTone(const int                                    i,
                       const int                                    key,
@@ -264,6 +267,8 @@ class PianoRoll : public QWidget
         NoteEditVolume,
         NoteEditPanning,
         NoteEditLegato,
+        NoteEditMarcato,
+        NoteEditStaccato,
         NoteEditCount  // make sure this one is always last
     };
 
@@ -392,6 +397,8 @@ class PianoRoll : public QWidget
     volume_t  m_lastNoteVolume;
     panning_t m_lastNotePanning;
     bool      m_lastNoteLegato;
+    bool      m_lastNoteMarcato;
+    bool      m_lastNoteStaccato;
 
     int m_startKey;  // first key when drawing
     int m_lastKey;
@@ -404,7 +411,7 @@ class PianoRoll : public QWidget
     TimeLineWidget* m_timeLine;
     bool            m_scrollBack;
 
-    void copyToClipboard(const NoteVector& notes) const;
+    void copyToClipboard(const Notes& notes) const;
 
     void drawDetuningInfo(QPainter& _p, const Note* _n, int _x, int _y) const;
     bool mouseOverNote();

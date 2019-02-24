@@ -25,57 +25,76 @@
 #ifndef MODEL_VIEW_H
 #define MODEL_VIEW_H
 
-#include <QPointer>
 #include "Model.h"
 
+#include <QColor>
+#include <QLine>
+#include <QPoint>
+#include <QPointer>
 
 class EXPORT ModelView
 {
- public:
-	ModelView( Model* model, QWidget* widget );
-	virtual ~ModelView();
+  public:
+    ModelView(Model* model, QWidget* widget);
+    virtual ~ModelView();
 
-	virtual void setModel( Model* model, bool isOldModelValid = true );
+    Model* model()
+    {
+        return m_model;
+    }
 
-	Model* model()
-	{
-		return m_model;
-	}
+    const Model* model() const
+    {
+        return m_model;
+    }
 
-	const Model* model() const
-	{
-		return m_model;
-	}
+    virtual void setModel(Model* model, bool isOldModelValid = true);
 
-	template<class T>
-	T* castModel()
-	{
-		return dynamic_cast<T*>( model() );
-	}
+    template <class T>
+    T* castModel()
+    {
+        return dynamic_cast<T*>(model());
+    }
 
-	template<class T>
-	const T* castModel() const
-	{
-		return dynamic_cast<const T*>( model() );
-	}
+    template <class T>
+    const T* castModel() const
+    {
+        return dynamic_cast<const T*>(model());
+    }
 
+    virtual QWidget* widget() const final
+    {
+        return m_widget;
+    }
 
-protected:
-	virtual void doConnections();
+    void setWidget(QWidget* _w)
+    {
+        if(m_widget != _w)
+        {
+            m_widget = _w;
+            doConnections();
+        }
+    }
 
-	// sub-classes can re-implement this to track model-changes
-	virtual void modelChanged();
+    virtual QList<ModelView*> childModelViews() const
+    {
+        return QList<ModelView*>();
+    }
 
-	QWidget* widget()
-	{
-		return m_widget;
-	}
+    virtual QLine  cableFrom() const;
+    virtual QLine  cableTo() const;
+    virtual QColor cableColor() const;
 
-private:
-	QWidget* m_widget;
-	QPointer<Model> m_model;
+  protected:
+    virtual void doConnections();
+    virtual void undoConnections();
 
-} ;
+    // sub-classes can re-implement this to track model-changes
+    virtual void modelChanged();
 
+  private:
+    QWidget*        m_widget;
+    QPointer<Model> m_model;
+};
 
 #endif

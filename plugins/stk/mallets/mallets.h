@@ -2,8 +2,8 @@
  * mallets.h - tuned instruments that one would bang upon
  *
  * Copyright (c) 2006-2008 Danny McRae <khjklujn/at/users.sourceforge.net>
- * 
- * 
+ *
+ *
  * This file is part of LMMS - https://lmms.io
  *
  * This program is free software; you can redistribute it and/or
@@ -23,212 +23,202 @@
  *
  */
 
-
 #ifndef _MALLET_H
 #define _MALLET_H
 
-#include "Instrmnt.h"
-
 #include "ComboBox.h"
+#include "Instrmnt.h"
 #include "Instrument.h"
 #include "InstrumentView.h"
 #include "Knob.h"
-#include "NotePlayHandle.h"
 #include "LedCheckBox.h"
+#include "NotePlayHandle.h"
 
 // As of Stk 4.4 all classes and types have been moved to the namespace "stk".
-// However in older versions this namespace does not exist, therefore declare it
-// so this plugin builds with all versions of Stk.
-namespace stk { } ;
+// However in older versions this namespace does not exist, therefore declare
+// it so this plugin builds with all versions of Stk.
+namespace stk
+{
+};
 using namespace stk;
 
 static const int MALLETS_PRESET_VERSION = 1;
 
 class malletsSynth
 {
-public:
-	// ModalBar
-	malletsSynth( const StkFloat _pitch,
-			const StkFloat _velocity,
-			const StkFloat _control1,
-			const StkFloat _control2,
-			const StkFloat _control4,
-			const StkFloat _control8,
-			const StkFloat _control11,
-			const int _control16,
-			const uint8_t _delay,
-			const sample_rate_t _sample_rate );
+  public:
+    // ModalBar
+    malletsSynth(const StkFloat      _pitch,
+                 const StkFloat      _velocity,
+                 const StkFloat      _control1,
+                 const StkFloat      _control2,
+                 const StkFloat      _control4,
+                 const StkFloat      _control8,
+                 const StkFloat      _control11,
+                 const int           _control16,
+                 const uint8_t       _delay,
+                 const sample_rate_t _sample_rate);
 
-	// TubeBell
-	malletsSynth( const StkFloat _pitch,
-			const StkFloat _velocity,
-			const int _preset,
-			const StkFloat _control1,
-			const StkFloat _control2,
-			const StkFloat _control4,
-			const StkFloat _control11,
-			const StkFloat _control128,
-			const uint8_t _delay,
-			const sample_rate_t _sample_rate );
+    // TubeBell
+    malletsSynth(const StkFloat      _pitch,
+                 const StkFloat      _velocity,
+                 const int           _preset,
+                 const StkFloat      _control1,
+                 const StkFloat      _control2,
+                 const StkFloat      _control4,
+                 const StkFloat      _control11,
+                 const StkFloat      _control128,
+                 const uint8_t       _delay,
+                 const sample_rate_t _sample_rate);
 
-	// BandedWG
-	malletsSynth( const StkFloat _pitch,
-			const StkFloat _velocity,
-			const StkFloat _control2,
-			const StkFloat _control4,
-			const StkFloat _control11,
-			const int _control16,
-			const StkFloat _control64,
-			const StkFloat _control128,
-			const uint8_t _delay,
-			const sample_rate_t _sample_rate );
+    // BandedWG
+    malletsSynth(const StkFloat      _pitch,
+                 const StkFloat      _velocity,
+                 const StkFloat      _control2,
+                 const StkFloat      _control4,
+                 const StkFloat      _control11,
+                 const int           _control16,
+                 const StkFloat      _control64,
+                 const StkFloat      _control128,
+                 const uint8_t       _delay,
+                 const sample_rate_t _sample_rate);
 
-	inline ~malletsSynth()
-	{
-		m_voice->noteOff( 0.0 );
-		delete[] m_delay;
-		delete m_voice;
-	}
+    inline ~malletsSynth()
+    {
+        m_voice->noteOff(0.0);
+        delete[] m_delay;
+        delete m_voice;
+    }
 
-	inline sample_t nextSampleLeft()
-	{
-		if( m_voice == NULL )
-		{
-			return( 0.0f );
-		}
-		else
-		{
-			StkFloat s = m_voice->tick();
-			m_delay[m_delayWrite] = s;
-			m_delayWrite++;
-			return( s );
-		}
-	}
-	
-	inline sample_t nextSampleRight()
-	{
-		StkFloat s = m_delay[m_delayRead];
-		m_delayRead++;
-		return( s );
-	}
+    inline sample_t nextSampleLeft()
+    {
+        if(m_voice == NULL)
+        {
+            return (0.0f);
+        }
+        else
+        {
+            StkFloat s            = m_voice->tick();
+            m_delay[m_delayWrite] = s;
+            m_delayWrite++;
+            return (s);
+        }
+    }
 
-	inline void setFrequency( const StkFloat _pitch )
-	{
-		if( m_voice )
-		{
-			m_voice->setFrequency( _pitch );
-		}
-	}
+    inline sample_t nextSampleRight()
+    {
+        StkFloat s = m_delay[m_delayRead];
+        m_delayRead++;
+        return (s);
+    }
 
+    inline void setFrequency(const StkFloat _pitch)
+    {
+        if(m_voice)
+        {
+            m_voice->setFrequency(_pitch);
+        }
+    }
 
-protected:
-	Instrmnt * m_voice;
+  protected:
+    Instrmnt* m_voice;
 
-	StkFloat * m_delay;
-	uint8_t m_delayRead;
-	uint8_t m_delayWrite;
+    StkFloat* m_delay;
+    uint8_t   m_delayRead;
+    uint8_t   m_delayWrite;
 };
-
-
-
 
 class malletsInstrument : public Instrument
 {
-	Q_OBJECT
-public:
-	malletsInstrument( InstrumentTrack * _instrument_track );
-	virtual ~malletsInstrument();
+    Q_OBJECT
 
-	virtual void playNote( NotePlayHandle * _n,
-						sampleFrame * _working_buffer );
-	virtual void deleteNotePluginData( NotePlayHandle * _n );
+  public:
+    malletsInstrument(InstrumentTrack* _instrument_track);
+    virtual ~malletsInstrument();
 
+    virtual void playNote(NotePlayHandle* _n, sampleFrame* _working_buffer);
+    virtual void deleteNotePluginData(NotePlayHandle* _n);
 
-	virtual void saveSettings( QDomDocument & _doc, QDomElement & _parent );
-	virtual void loadSettings( const QDomElement & _this );
+    virtual void saveSettings(QDomDocument& _doc, QDomElement& _parent);
+    virtual void loadSettings(const QDomElement& _this);
 
-	virtual QString nodeName() const;
+    // virtual QString nodeName() const;
 
-	virtual PluginView * instantiateView( QWidget * _parent );
+    virtual PluginView* instantiateView(QWidget* _parent);
 
+  private:
+    FloatModel m_hardnessModel;
+    FloatModel m_positionModel;
+    FloatModel m_vibratoGainModel;
+    FloatModel m_vibratoFreqModel;
+    FloatModel m_stickModel;
 
-private:
-	FloatModel m_hardnessModel;
-	FloatModel m_positionModel;
-	FloatModel m_vibratoGainModel;
-	FloatModel m_vibratoFreqModel;
-	FloatModel m_stickModel;
+    FloatModel m_modulatorModel;
+    FloatModel m_crossfadeModel;
+    FloatModel m_lfoSpeedModel;
+    FloatModel m_lfoDepthModel;
+    FloatModel m_adsrModel;
 
-	FloatModel m_modulatorModel;
-	FloatModel m_crossfadeModel;
-	FloatModel m_lfoSpeedModel;
-	FloatModel m_lfoDepthModel;
-	FloatModel m_adsrModel;
+    FloatModel m_pressureModel;
+    FloatModel m_motionModel;
+    FloatModel m_vibratoModel;
+    FloatModel m_velocityModel;
 
-	FloatModel m_pressureModel;
-	FloatModel m_motionModel;
-	FloatModel m_vibratoModel;
-	FloatModel m_velocityModel;
+    BoolModel m_strikeModel;
 
-	BoolModel m_strikeModel;
+    ComboBoxModel m_presetsModel;
+    FloatModel    m_spreadModel;
+    IntModel      m_versionModel;
+    BoolModel     m_isOldVersionModel;
 
-	ComboBoxModel m_presetsModel;
-	FloatModel m_spreadModel;
-	IntModel m_versionModel;
-	BoolModel m_isOldVersionModel;
+    QVector<sample_t> m_scalers;
 
-	QVector<sample_t> m_scalers;
+    bool m_filesMissing;
 
-	bool m_filesMissing;
+    friend class malletsInstrumentView;
+};
 
-
-	friend class malletsInstrumentView;
-
-} ;
-
-
-class malletsInstrumentView: public InstrumentView
+class malletsInstrumentView : public InstrumentView
 {
-	Q_OBJECT
-public:
-	malletsInstrumentView( malletsInstrument * _instrument,
-				QWidget * _parent );
-	virtual ~malletsInstrumentView();
+    Q_OBJECT
+  public:
+    malletsInstrumentView(malletsInstrument* _instrument, QWidget* _parent);
+    virtual ~malletsInstrumentView();
 
-public slots:
-	void changePreset();
+  public slots:
+    void changePreset();
 
-private:
-	virtual void modelChanged();
+  private:
+    virtual void modelChanged();
 
-	void setWidgetBackground( QWidget * _widget, const QString & _pic );
-	QWidget * setupModalBarControls( QWidget * _parent );
-	QWidget * setupTubeBellControls( QWidget * _parent );
-	QWidget * setupBandedWGControls( QWidget * _parent );
+    void     setWidgetBackground(QWidget* _widget, const QString& _pic);
+    QWidget* setupModalBarControls(QWidget* _parent);
+    QWidget* setupTubeBellControls(QWidget* _parent);
+    QWidget* setupBandedWGControls(QWidget* _parent);
 
-	QWidget * m_modalBarWidget;
-	Knob * m_hardnessKnob;
-	Knob * m_positionKnob;
-	Knob * m_vibratoGainKnob;
-	Knob * m_vibratoFreqKnob;
-	Knob * m_stickKnob;
+    QWidget* m_modalBarWidget;
+    Knob*    m_hardnessKnob;
+    Knob*    m_positionKnob;
+    Knob*    m_vibratoGainKnob;
+    Knob*    m_vibratoFreqKnob;
+    Knob*    m_stickKnob;
 
-	QWidget * m_tubeBellWidget;
-	Knob * m_modulatorKnob;
-	Knob * m_crossfadeKnob;
-	Knob * m_lfoSpeedKnob;
-	Knob * m_lfoDepthKnob;
-	Knob * m_adsrKnob;
+    QWidget* m_tubeBellWidget;
+    Knob*    m_modulatorKnob;
+    Knob*    m_crossfadeKnob;
+    Knob*    m_lfoSpeedKnob;
+    Knob*    m_lfoDepthKnob;
+    Knob*    m_adsrKnob;
 
-	QWidget * m_bandedWGWidget;
-	Knob * m_pressureKnob;
-//	Knob * m_motionKnob;
-//	Knob * m_vibratoKnob;
-	Knob * m_velocityKnob;
-//	LedCheckBox * m_strikeLED;
+    QWidget* m_bandedWGWidget;
+    Knob*    m_pressureKnob;
+    //	Knob * m_motionKnob;
+    //	Knob * m_vibratoKnob;
+    Knob* m_velocityKnob;
+    //	LedCheckBox * m_strikeLED;
 
-	ComboBox * m_presetsCombo;
-	Knob * m_spreadKnob;
+    ComboBox* m_presetsCombo;
+    Knob*     m_spreadKnob;
 };
 
 #endif

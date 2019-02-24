@@ -192,10 +192,12 @@ void papuInstrument::loadSettings(const QDomElement& _this)
     delete[] dst;
 }
 
+/*
 QString papuInstrument::nodeName() const
 {
-    return (papu_plugin_descriptor.name);
+    return papu_plugin_descriptor.name;
 }
+*/
 
 /*f_cnt_t papuInstrument::desiredReleaseFrames() const
 {

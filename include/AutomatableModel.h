@@ -67,6 +67,7 @@ class EXPORT AutomatableModel : public Model, public JournallingObject
 {
     Q_OBJECT
     MM_OPERATORS
+
   public:
     enum ScaleType
     {
@@ -270,6 +271,8 @@ class EXPORT AutomatableModel : public Model, public JournallingObject
         return !m_linkedModels.empty();
     }
 
+    virtual bool hasCableFrom(Model* _m) const;
+
     /**
      * @brief Saves settings (value, automation links and controller
      * connections) of AutomatableModel into specified DOM element using
@@ -343,8 +346,9 @@ class EXPORT AutomatableModel : public Model, public JournallingObject
     void setAutomatedValue(const real_t value);
     void setControlledValue(const real_t value);
     // void setBuffer(const ValueBuffer* _vb);
-    void         setAutomatedBuffer(const ValueBuffer* _vb);
-    void         setControlledBuffer(const ValueBuffer* _vb);
+    void setAutomatedBuffer(const ValueBuffer* _vb);
+    void setControlledBuffer(const ValueBuffer* _vb);
+
     virtual void reset();
     virtual void unlinkControllerConnection();
     // virtual void onControllerValueChanged();
@@ -373,7 +377,7 @@ class EXPORT AutomatableModel : public Model, public JournallingObject
     void propagateAutomatedBuffer();
 
   private:
-    QString formatNumber(real_t v);
+    // QString formatNumber(real_t v);
 
     virtual void saveSettings(QDomDocument& doc, QDomElement& element)
     {
@@ -473,7 +477,7 @@ class FloatModel : public TypedAutomatableModel<real_t>
                real_t         max                = 0.,
                real_t         step               = 0.,
                Model*         parent             = nullptr,
-               const QString& displayName        = QString(),
+               const QString& displayName        = "[float model]",
                bool           defaultConstructed = false);
     real_t getRoundedValue() const;
     int    getDigitCount() const;
@@ -497,7 +501,7 @@ class IntModel : public TypedAutomatableModel<int>
              int            min                = 0,
              int            max                = 0,
              Model*         parent             = nullptr,
-             const QString& displayName        = QString(),
+             const QString& displayName        = "[int model]",
              bool           defaultConstructed = false) :
           TypedAutomatableModel(
                   val, min, max, 1, parent, displayName, defaultConstructed)
@@ -512,7 +516,7 @@ class BoolModel : public TypedAutomatableModel<bool>
   public:
     BoolModel(const bool     val                = false,
               Model*         parent             = nullptr,
-              const QString& displayName        = QString(),
+              const QString& displayName        = "[bool model]",
               bool           defaultConstructed = false) :
           TypedAutomatableModel(val,
                                 false,

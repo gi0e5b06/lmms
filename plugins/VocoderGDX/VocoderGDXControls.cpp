@@ -29,7 +29,7 @@
 #include <QDomElement>
 
 VocoderGDXControls::VocoderGDXControls(VocoderGDX* effect) :
-      EffectControls(effect), m_effect(effect), m_modeModel(this),
+        EffectControls(effect), m_effect(effect), m_modeModel(this,tr("Mode")),
       m_widthModel(0.15f, 0.f, 1.f, 0.01f, this, tr("Width")),
       m_keyModel(9.f, 0.f, 11.f, 1.f, this, tr("Key")),
       m_ampModel(1.f, 0.f, 10.f, 0.01f, this, tr("Out gain"))

@@ -76,6 +76,8 @@ NotePlayHandle::NotePlayHandle(InstrumentTrack* instrumentTrack,
       m_frequencyNeedsUpdate(false), m_scale(nullptr)
 {
     setLegato(n.legato());
+    setMarcato(n.marcato());
+    setStaccato(n.staccato());
 
     lock();
     if(hasParent() == false)
@@ -104,7 +106,6 @@ NotePlayHandle::NotePlayHandle(InstrumentTrack* instrumentTrack,
     }
 
     updateFrequency();
-
     setFrames(_frames);
 
     // inform attached components about new MIDI note (used for recording in
@@ -488,20 +489,27 @@ void NotePlayHandle::noteOff(const f_cnt_t _s)
 
     m_released = true;
 
-    qInfo("NotePlayHandle::noteOff 1");
+    // qInfo("NotePlayHandle::noteOff 1");
     // first note-off all sub-notes
+    /*
     for(NotePlayHandle* n: m_subNotes.list())
     {
         n->lock();
         n->noteOff(_s);
         n->unlock();
     }
+    */
+    m_subNotes.map([_s](NotePlayHandle* n) {
+        n->lock();
+        n->noteOff(_s);
+        n->unlock();
+    });
 
     // then set some variables indicating release-state
     m_framesBeforeRelease = _s;
     m_releaseFramesToDo   = qMax<f_cnt_t>(0, actualReleaseFramesToDo());
 
-    qInfo("NotePlayHandle::noteOff 2");
+    // qInfo("NotePlayHandle::noteOff 2");
     // if( hasParent() || ! m_instrumentTrack->isArpeggioEnabled()*/ )
     if(m_instrumentTrack != nullptr)
     {
@@ -515,7 +523,7 @@ void NotePlayHandle::noteOff(const f_cnt_t _s)
         }
     }
 
-    qInfo("NotePlayHandle::noteOff 3");
+    // qInfo("NotePlayHandle::noteOff 3");
     // inform attached components about MIDI finished (used for recording in
     // Piano Roll)
     if(!m_instrumentTrack->isSustainPedalPressed())
@@ -527,7 +535,7 @@ void NotePlayHandle::noteOff(const f_cnt_t _s)
             m_instrumentTrack->midiNoteOff(*this);
         }
     }
-    qInfo("NotePlayHandle::noteOff 4");
+    // qInfo("NotePlayHandle::noteOff 4");
 }
 
 f_cnt_t NotePlayHandle::actualReleaseFramesToDo() const
@@ -560,8 +568,11 @@ for(NotePlayHandleList::Iterator it = m_subNotes.begin();
     (*it)->mute();
 }
     */
+    /*
     for(NotePlayHandle* n: m_subNotes.list())
         n->mute();
+    */
+    m_subNotes.map([](NotePlayHandle* n) { n->mute(); });
     m_muted = true;
 }
 
@@ -696,8 +707,11 @@ void NotePlayHandle::updateFrequency()
         (*it)->updateFrequency();
     }
     */
+    /*
     for(NotePlayHandle* n: m_subNotes.list())
         n->updateFrequency();
+    */
+    m_subNotes.map([](NotePlayHandle* n) { n->updateFrequency(); });
 }
 
 void NotePlayHandle::processMidiTime(const MidiTime& time)
@@ -756,8 +770,11 @@ void NotePlayHandle::resize(const bpm_t _newTempo)
         (*it)->resize(_newTempo);
     }
     */
+    /*
     for(NotePlayHandle* n: m_subNotes.list())
         n->resize(_newTempo);
+    */
+    m_subNotes.map([_newTempo](NotePlayHandle* n) { n->resize(_newTempo); });
 }
 
 NotePlayHandle*

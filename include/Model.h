@@ -28,6 +28,7 @@
 #include "export.h"
 
 #include <QObject>
+#include <QHash>
 #include <QString>
 
 class EXPORT Model : public QObject
@@ -36,7 +37,7 @@ class EXPORT Model : public QObject
 
   public:
     Model(Model*  _parent,
-          QString _displayName        = QString::null,
+          const QString& _displayName,
           bool    _defaultConstructed = false);
     virtual ~Model();
 
@@ -51,6 +52,9 @@ class EXPORT Model : public QObject
     }
 
     virtual const QString uuid() final;
+    virtual bool hasUuid() const final;
+    virtual void setUuid(const QString& _uuid) final;
+    virtual void resetUuid() final;
 
     virtual QString displayName() const
     {
@@ -64,6 +68,10 @@ class EXPORT Model : public QObject
     virtual bool frequentlyUpdated() const;
     virtual void setFrequentlyUpdated(const bool _b);
 
+    virtual bool hasCableFrom(Model* _m) const;
+
+    static Model* find(const QString& _uuid);
+
   signals:
     // emitted if actual data of the model (e.g. values) have changed
     void dataChanged();
@@ -72,13 +80,13 @@ class EXPORT Model : public QObject
     // emitted if properties of the model (e.g. ranges) have changed
     void propertiesChanged();
 
-  protected:
-    QString m_uuid;
-
   private:
     QString m_displayName;
     bool    m_defaultConstructed;
     bool    m_frequentlyUpdated;
+    QString m_uuid;
+
+    static QHash<QString,Model*> s_models;
 };
 
 #endif

@@ -26,51 +26,51 @@
 #ifndef DUMMY_INSTRUMENT_H
 #define DUMMY_INSTRUMENT_H
 
+#include "Engine.h"
 #include "Instrument.h"
 #include "InstrumentView.h"
-#include "Engine.h"
 
 //#include <cstring>
 
 #include "Mixer.h"
 
-
 class DummyInstrument : public Instrument
 {
-public:
-	DummyInstrument( InstrumentTrack * _instrument_track ) :
-		Instrument( _instrument_track, NULL )
-	{
-	}
+  public:
+    DummyInstrument(InstrumentTrack* _instrument_track) :
+          Instrument(_instrument_track, nullptr)
+    {
+    }
 
-	virtual ~DummyInstrument()
-	{
-	}
+    virtual ~DummyInstrument()
+    {
+    }
 
-	virtual void playNote( NotePlayHandle *, sampleFrame * buffer )
-	{
-		memset( buffer, 0, sizeof( sampleFrame ) *
-			Engine::mixer()->framesPerPeriod() );
-	}
+    virtual void playNote(NotePlayHandle*, sampleFrame* buffer)
+    {
+        memset(buffer, 0,
+               sizeof(sampleFrame) * Engine::mixer()->framesPerPeriod());
+    }
 
-	virtual void saveSettings( QDomDocument &, QDomElement & )
-	{
-	}
+    virtual void saveSettings(QDomDocument&, QDomElement&)
+    {
+    }
 
-	virtual void loadSettings( const QDomElement & )
-	{
-	}
+    virtual void loadSettings(const QDomElement&)
+    {
+    }
 
-	virtual QString nodeName() const
-	{
-		return "dummyinstrument";
-	}
+    /*
+    virtual QString nodeName() const
+    {
+        return "dummyinstrument";
+    }
+    */
 
-	virtual PluginView * instantiateView( QWidget * _parent )
-	{
-		return new InstrumentView( this, _parent );
-	}
-} ;
-
+    virtual PluginView* instantiateView(QWidget* _parent)
+    {
+        return new InstrumentView(this, _parent);
+    }
+};
 
 #endif

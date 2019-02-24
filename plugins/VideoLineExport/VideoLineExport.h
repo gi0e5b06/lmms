@@ -26,70 +26,27 @@
 #ifndef _VIDEO_LINE_EXPORT_H
 #define _VIDEO_LINE_EXPORT_H
 
-#include <QString>
-
 #include "ExportFilter.h"
 
+#include <QString>
 
-/*
-const int BUFFER_SIZE = 50*1024;
-typedef VideoLineFile::VIDEO_LINETrack<BUFFER_SIZE> MTrack;
-
-struct VideoLineNote
+class VideoLineExport : public ExportFilter
 {
-	int time;
-	uint8_t pitch;
-	int duration;
-	uint8_t volume;
+  public:
+    VideoLineExport();
+    ~VideoLineExport();
 
-	inline bool operator<(const VideoLineNote &b) const
-	{
-		return this->time < b.time;
-	}
-} ;
+    virtual PluginView* instantiateView(QWidget*)
+    {
+        return nullptr;
+    }
 
-typedef std::vector<VideoLineNote> VideoLineNoteVector;
-typedef std::vector<VideoLineNote>::iterator VideoLineNoteIterator;
-*/
+    virtual bool proceed(const QString& _fileName);
 
-
-class VideoLineExport: public ExportFilter
-{
-// 	Q_OBJECT
-public:
-	VideoLineExport();
-	~VideoLineExport();
-
-	virtual PluginView *instantiateView(QWidget *)
-	{
-		return nullptr;
-	}
-
-        /*
-	virtual bool tryExport(const Tracks &tracks,
-                               const Tracks &tracks_BB,
-                               int tempo,
-                               QVector<QPair<tick_t,tick_t>> loops,
-                               const QString &filename);
-        */
-        virtual bool proceed(const QString& _fileName);
-
-private:
-        /*
-	void writePattern(VideoLineNoteVector &pat, QDomNode n,
-                          int base_pitch, double base_volume, int base_time);
-	void writePatternToTrack(MTrack &mtrack, VideoLineNoteVector &nv);
-	void writeBBPattern(VideoLineNoteVector &src, VideoLineNoteVector &dst,
-                            int len, int base, int start, int end);
-	void ProcessBBNotes(VideoLineNoteVector &nv, int cutPos);
-        */
-
-        int posToImg(int tempo,int pos);
-        int imgToPos(int tempo,int img);
-	void error();
-
-
-} ;
-
+  private:
+    int  posToImg(int tempo, int pos);
+    int  imgToPos(int tempo, int img);
+    void error();
+};
 
 #endif

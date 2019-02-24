@@ -58,12 +58,13 @@ extern "C"
 }
 
 OscillatorObject::OscillatorObject(Model* _parent, int _idx) :
-      Model(_parent), m_volumeModel(DefaultVolume / NUM_OF_OSCILLATORS,
-                                    MinVolume,
-                                    MaxVolume,
-                                    1.,
-                                    this,
-                                    tr("Osc %1 volume").arg(_idx + 1)),
+      Model(_parent, QString("3Osc #%1").arg(_idx)),
+      m_volumeModel(DefaultVolume / NUM_OF_OSCILLATORS,
+                    MinVolume,
+                    MaxVolume,
+                    1.,
+                    this,
+                    tr("Osc %1 volume").arg(_idx + 1)),
       m_panModel(DefaultPanning,
                  PanningLeft,
                  PanningRight,
@@ -263,10 +264,12 @@ void TripleOscillator::loadSettings(const QDomElement& _this)
     }
 }
 
+/*
 QString TripleOscillator::nodeName() const
 {
-    return (tripleoscillator_plugin_descriptor.name);
+    return tripleoscillator_plugin_descriptor.name;
 }
+*/
 
 void TripleOscillator::playNote(NotePlayHandle* _n,
                                 sampleFrame*    _working_buffer)

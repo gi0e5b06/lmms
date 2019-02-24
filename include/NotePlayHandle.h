@@ -85,10 +85,12 @@ class EXPORT NotePlayHandle /*final*/
     void done();
     void removeSubNote(NotePlayHandle* _nph);
 
+    /*
     const QList<NotePlayHandle*> subNotes() const
     {
         return m_subNotes.list();
     }
+    */
 
     void* operator new(size_t size, void* p)
     {

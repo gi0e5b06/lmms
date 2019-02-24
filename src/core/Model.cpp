@@ -24,26 +24,72 @@
 
 #include "Model.h"
 
+#include "Backtrace.h"
+
 #include <QUuid>
 
-Model::Model(Model* _parent, QString _displayName, bool _defaultConstructed) :
-      QObject(_parent), m_uuid(""), m_displayName(_displayName),
-      m_defaultConstructed(_defaultConstructed)
+QHash<QString, Model*> Model::s_models;
+
+Model::Model(Model* _parent, const QString& _displayName, bool _defaultConstructed) :
+      QObject(_parent), m_displayName(_displayName),
+      m_defaultConstructed(_defaultConstructed), m_uuid("")
 {
+    if(_displayName.isEmpty())
+    {
+        BACKTRACE
+        qInfo("Model::Model empty display name");
+    }
 }
 
 Model::~Model()
 {
+    if(hasUuid())
+        s_models.remove(m_uuid);
 }
 
 const QString Model::uuid()
 {
-    if(m_uuid.isEmpty())
+    if(!hasUuid())
     {
         m_uuid = QUuid::createUuid().toString().replace("{", "").replace("}",
                                                                          "");
+        s_models.insert(m_uuid, this);
+        qInfo("Model::uuid create uuid for '%s'",
+              qPrintable(fullDisplayName()));
     }
     return m_uuid;
+}
+
+bool Model::hasUuid() const
+{
+    return !m_uuid.isEmpty();
+}
+
+void Model::setUuid(const QString& _uuid)
+{
+    if(hasUuid())
+    {
+        qWarning("Model::setUuid '%s' already has an uuid",
+                 qPrintable(fullDisplayName()));
+        return;
+    }
+
+    m_uuid = _uuid;
+    s_models.insert(m_uuid, this);
+}
+
+void Model::resetUuid()
+{
+    if(hasUuid())
+    {
+        s_models.remove(uuid());
+        m_uuid = "";
+    }
+}
+
+Model* Model::find(const QString& _uuid)
+{
+    return s_models.value(_uuid, nullptr);
 }
 
 void Model::setDisplayName(const QString& _displayName)
@@ -86,4 +132,9 @@ void Model::setFrequentlyUpdated(const bool _b)
         m_frequentlyUpdated = _b;
         emit propertiesChanged();
     }
+}
+
+bool Model::hasCableFrom(Model* _m) const
+{
+    return false;
 }

@@ -32,7 +32,7 @@
 
 LadspaControl::LadspaControl( Model * _parent, port_desc_t * _port,
                               bool _link ) :
-	Model( _parent ),
+	Model( _parent, QString("Ladspa Control %1").arg(_port->name) ),
 	m_link( _link ),
 	m_linkDepth( 0 ),
 	m_port( _port ),

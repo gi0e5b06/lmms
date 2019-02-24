@@ -43,17 +43,14 @@ class InstrumentSoundShaping : public Model, public JournallingObject
     void processAudioBuffer(sampleFrame*    _ab,
                             const fpp_t     _frames,
                             NotePlayHandle* _n);
-    /*
-    void processAudioBuffer(sampleFrame*          _ab,
-                            const fpp_t           _frames,
-                            InstrumentPlayHandle* _n);
-    */
     void processAudioBuffer(sampleFrame*    buffer,
                             const fpp_t     frames,
                             BasicFilters<>* filter,
                             f_cnt_t         envTotalFrames,
                             f_cnt_t         envReleaseBegin,
-                            bool            _legato);
+                            bool            _legato,
+                            bool            _marcato,
+                            bool            _staccato);
 
     enum Targets
     {
@@ -65,9 +62,6 @@ class InstrumentSoundShaping : public Model, public JournallingObject
 
     f_cnt_t envFrames(const bool _only_vol = false) const;
     f_cnt_t releaseFrames() const;
-
-    f_cnt_t legatoFrames() const;
-    void    setLegatoFrames(f_cnt_t _frames);
 
     real_t volumeLevel(NotePlayHandle* _n, const f_cnt_t _frame);
 
@@ -81,7 +75,6 @@ class InstrumentSoundShaping : public Model, public JournallingObject
   private:
     EnvelopeAndLfoParameters* m_envLfoParameters[NumTargets];
     InstrumentTrack*          m_instrumentTrack;
-    f_cnt_t                   m_legatoFrames;
 
     BoolModel     m_filterEnabledModel;
     ComboBoxModel m_filterModel;

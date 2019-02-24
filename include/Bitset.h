@@ -4,25 +4,25 @@
 
 class Bitset /*final*/
 {
- public:
-	//Bitset(unsigned int size);
-	Bitset(unsigned int size, bool initial);
-	Bitset(const Bitset& other);
-	~Bitset();
+  public:
+    // Bitset(unsigned int size);
+    Bitset(unsigned int size, bool initial);
+    Bitset(const Bitset& other);
+    ~Bitset();
 
-        unsigned int size() const;
-	void fill(bool b);
-	bool bit(const unsigned int i) const;
-	void set(const unsigned int i);
-	void unset(const unsigned int i);
-	void toggle(const unsigned int i);
-	int  nextSet(const unsigned int i) const;
-	int  nextUnset(const unsigned int i) const;
+    unsigned int size() const;
+    void         fill(bool b);
+    bool         bit(const unsigned int i) const;
+    void         set(const unsigned int i);
+    void         unset(const unsigned int i);
+    void         toggle(const unsigned int i);
+    int          nextSet(const unsigned int i) const;
+    int          nextUnset(const unsigned int i) const;
 
- private:
-	unsigned int   m_size;
-	unsigned int   m_ints;
-	unsigned int*  m_data;
+  private:
+    unsigned int  m_size;
+    unsigned int  m_ints;
+    unsigned int* m_data;
 };
 
 #endif

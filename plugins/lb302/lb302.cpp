@@ -400,10 +400,12 @@ void lb302Synth::db24Toggled()
     recalcFilter();
 }
 
+/*
 QString lb302Synth::nodeName() const
 {
-    return (lb302_plugin_descriptor.name);
+    return lb302_plugin_descriptor.name;
 }
+*/
 
 // OBSOLETE. Break apart once we get Q_OBJECT to work. >:[
 void lb302Synth::recalcFilter()

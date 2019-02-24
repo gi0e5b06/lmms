@@ -54,7 +54,7 @@ class EXPORT PluginFactory
 
         bool isNull() const
         {
-            return !library;
+            return library==nullptr || descriptor==nullptr;
         }
     };
 

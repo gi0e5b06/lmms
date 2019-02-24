@@ -1,24 +1,23 @@
 /*
  * Note.cpp - implementation of class note
  *
+ * Copyright (c) 2018-2019 gi0e5b06 (on github.com)
  * Copyright (c) 2004-2014 Tobias Doerffel <tobydox/at/users.sourceforge.net>
  *
- * This file is part of LMMS - https://lmms.io
+ * This file is part of LSMM -
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public
- * License along with this program (see COPYING); if not, write to the
- * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
- * Boston, MA 02110-1301 USA.
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
 
@@ -41,7 +40,8 @@ Note::Note(const MidiTime& length,
       m_oldKey(qBound(0, key, NumKeys)), m_oldPos(pos), m_oldLength(length),
       m_isPlaying(false), m_key(qBound(0, key, NumKeys)),
       m_volume(qBound(MinVolume, volume, MaxVolume)),
-      m_panning(qBound(PanningLeft, panning, PanningRight)), m_legato(false),
+      m_panning(qBound(PanningLeft, panning, PanningRight)),
+      m_probability(1.), m_legato(false), m_marcato(false), m_staccato(false),
       m_length(length), m_pos(pos), m_detuning(NULL)
 {
     if(detuning)
@@ -59,8 +59,9 @@ Note::Note(const Note& note) :
       m_oldKey(note.m_oldKey), m_oldPos(note.m_oldPos),
       m_oldLength(note.m_oldLength), m_isPlaying(note.m_isPlaying),
       m_key(note.m_key), m_volume(note.m_volume), m_panning(note.m_panning),
-      m_legato(note.m_legato), m_length(note.m_length), m_pos(note.m_pos),
-      m_detuning(NULL)
+      m_probability(note.m_probability), m_legato(note.m_legato),
+      m_marcato(note.m_marcato), m_staccato(note.m_staccato),
+      m_length(note.m_length), m_pos(note.m_pos), m_detuning(NULL)
 {
     if(note.m_detuning)
     {
@@ -105,9 +106,24 @@ void Note::setPanning(panning_t panning)
     m_panning         = p;
 }
 
+void Note::setProbability(real_t _probability)
+{
+    m_probability = bound(0., _probability, 1.);
+}
+
 void Note::setLegato(bool _legato)
 {
     m_legato = _legato;
+}
+
+void Note::setMarcato(bool _marcato)
+{
+    m_marcato = _marcato;
+}
+
+void Note::setStaccato(bool _staccato)
+{
+    m_staccato = _staccato;
 }
 
 MidiTime Note::quantized(const MidiTime& m, const int qGrid)
@@ -142,8 +158,14 @@ void Note::saveSettings(QDomDocument& doc, QDomElement& parent)
     parent.setAttribute("len", m_length);
     parent.setAttribute("pos", m_pos);
 
+    if(m_probability < 1.)
+        parent.setAttribute("probability", formatNumber(m_probability));
     if(m_legato)
         parent.setAttribute("legato", 1);
+    if(m_marcato)
+        parent.setAttribute("marcato", 1);
+    if(m_staccato)
+        parent.setAttribute("staccato", 1);
 
     if(m_detuning && m_length)
     {
@@ -161,8 +183,18 @@ void Note::loadSettings(const QDomElement& _this)
     m_length  = _this.attribute("len").toInt();
     m_pos     = _this.attribute("pos").toInt();
 
-    if(_this.hasAttribute("legato"))
-        m_legato = _this.attribute("legato").toInt();
+    m_probability = _this.hasAttribute("probability")
+                            ? _this.attribute("probability").toFloat()
+                            : 1.;
+    m_legato = _this.hasAttribute("legato")
+                       ? _this.attribute("legato").toInt()
+                       : false;
+    m_marcato = _this.hasAttribute("marcato")
+                        ? _this.attribute("marcato").toInt()
+                        : false;
+    m_staccato = _this.hasAttribute("staccato")
+                         ? _this.attribute("staccato").toInt()
+                         : false;
 
     if(_this.hasChildNodes())
     {
@@ -188,10 +220,10 @@ bool Note::hasDetuningInfo() const
     return m_detuning && m_detuning->hasAutomation();
 }
 
-bool Note::withinRange(int tickStart, int tickEnd) const
+bool Note::withinRange(tick_t tickStart, tick_t tickEnd) const
 {
-    return pos().getTicks() >= tickStart && pos().getTicks() <= tickEnd
-           && length().getTicks() != 0;
+    tick_t p = pos().getTicks();
+    return p >= tickStart && p <= tickEnd && length().getTicks() != 0;
 }
 
 static QHash<QString, int> MIDI_KEYS_N2I;

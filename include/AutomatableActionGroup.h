@@ -37,7 +37,7 @@ class EXPORT AutomatableActionGroup : public QActionGroup, public IntModelView
 	Q_OBJECT
  public:
 	AutomatableActionGroup( QWidget * _parent,
-				const QString & _name = QString::null  );
+				const QString & _name = "[automatable action group]" );
 	virtual ~AutomatableActionGroup();
 
 	/*

@@ -1,7 +1,7 @@
 /*
  * OutputGDXDialog.cpp - control dialog for audio output properties
  *
- * Copyright (c) 2018 gi0e5b06 (on github.com)
+ * Copyright (c) 2018-2019 gi0e5b06 (on github.com)
  *
  * This file is part of LMMS - https://lmms.io
  *
@@ -46,30 +46,35 @@ OutputGDXDialog::OutputGDXDialog(OutputGDXControls* controls) :
     Knob* leftKNB = new Knob(this);
     leftKNB->setModel(&controls->m_leftModel);
     leftKNB->setPointColor(Qt::white);
+    leftKNB->setInteractive(false);
     leftKNB->setText(tr("LEFT"));
     leftKNB->setHintText(tr("Left:"), "");
 
     Knob* rightKNB = new Knob(this);
     rightKNB->setModel(&controls->m_rightModel);
     rightKNB->setPointColor(Qt::white);
+    rightKNB->setInteractive(false);
     rightKNB->setText(tr("RIGHT"));
     rightKNB->setHintText(tr("Right:"), "");
 
     Knob* rmsKNB = new Knob(this);
     rmsKNB->setModel(&controls->m_rmsModel);
     rmsKNB->setPointColor(Qt::red);
+    rmsKNB->setInteractive(false);
     rmsKNB->setText(tr("RMS"));
     rmsKNB->setHintText(tr("Rms:"), "");
 
     Knob* volKNB = new Knob(this);
     volKNB->setModel(&controls->m_volModel);
     volKNB->setPointColor(Qt::red);
+    volKNB->setInteractive(false);
     volKNB->setText(tr("VOL"));
     volKNB->setHintText(tr("Vol:"), "");
 
     Knob* panKNB = new Knob(this);
     panKNB->setModel(&controls->m_panModel);
     panKNB->setPointColor(Qt::magenta);
+    panKNB->setInteractive(false);
     panKNB->setText(tr("PAN"));
     panKNB->setHintText(tr("Pan:"), "");
 

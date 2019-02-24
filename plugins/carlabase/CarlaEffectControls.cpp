@@ -63,6 +63,8 @@ void CarlaEffectControls::changeControl()
 
 void CarlaEffectControls::loadSettings( const QDomElement& elem )
 {
+        qInfo("CarlaEffectControls::loadSettings start");
+
         for(int i=0;i<NB_KNOBS;i++)
                 m_knobs[i]->loadSettings( elem, QString("knob%1").arg(i) );
         for(int i=0;i<NB_LEDS;i++)
@@ -101,6 +103,8 @@ void CarlaEffectControls::loadSettings( const QDomElement& elem )
 		}
 		node = node.nextSibling();
 	}
+
+        qInfo("CarlaEffectControls::loadSettings end");
 }
 
 

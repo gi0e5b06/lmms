@@ -77,7 +77,9 @@ QPixmap* AutomationEditor::s_toolXFlip  = NULL;
 //{ 0.125f, 0.25f, 0.5f, 1.0f, 2.0f, 4.0f, 8.0f };
 
 AutomationEditor::AutomationEditor() :
-      QWidget(), m_zoomingXModel(), m_zoomingYModel(), m_quantizeModel(),
+      QWidget(), m_zoomingXModel(nullptr, "[zoom x]"),
+      m_zoomingYModel(nullptr, "[zoom y]"),
+      m_quantizeModel(nullptr, "[quantize]"),
       m_patternMutex(QMutex::Recursive), m_pattern(nullptr), m_minLevel(0),
       m_maxLevel(0), m_step(1), m_scrollLevel(0), m_bottomLevel(0),
       m_topLevel(0), m_currentPosition(), m_action(NONE), m_moveStartLevel(0),
@@ -99,13 +101,18 @@ AutomationEditor::AutomationEditor() :
     // keeps the direction of the widget, undepended on the locale
     setLayoutDirection(Qt::LeftToRight);
 
-    m_tensionModel       = new FloatModel(0.f, -10.f, 10.f, 0.01f);
-    m_waveBankModel      = new ComboBoxModel();
-    m_waveIndexModel     = new ComboBoxModel();
-    m_waveRatioModel     = new FloatModel(1.f, 0.f, 1.f, 0.01f);
-    m_waveSkewModel      = new FloatModel(1.f, 0.f, 1.f, 0.01f);
-    m_waveAmplitudeModel = new FloatModel(0.2f, -1.f, 1.f, 0.01f);
-    m_waveRepeatModel    = new FloatModel(0.f, -10.f, 20.f, 0.01f);
+    m_tensionModel
+            = new FloatModel(0.f, -10.f, 10.f, 0.01f, nullptr, tr("Tension"));
+    m_waveBankModel  = new ComboBoxModel(nullptr, tr("Wave bank"));
+    m_waveIndexModel = new ComboBoxModel(nullptr, tr("Wave index"));
+    m_waveRatioModel
+            = new FloatModel(1.f, 0.f, 1.f, 0.01f, nullptr, tr("Wave ratio"));
+    m_waveSkewModel
+            = new FloatModel(1.f, 0.f, 1.f, 0.01f, nullptr, tr("Wave skew"));
+    m_waveAmplitudeModel = new FloatModel(0.2f, -1.f, 1.f, 0.01f, nullptr,
+                                          tr("Wave amplitude"));
+    m_waveRepeatModel    = new FloatModel(0.f, -10.f, 20.f, 0.01f, nullptr,
+                                       tr("Wave repeat"));
 
     WaveFormStandard::fillBankModel(*m_waveBankModel);
     WaveFormStandard::fillIndexModel(*m_waveIndexModel,
@@ -562,11 +569,13 @@ void AutomationEditor::mousePressEvent(QMouseEvent* mouseEvent)
             {
                 m_pattern->addJournalCheckPoint();
                 // Connect the dots
+                /*
                 if(mouseEvent->modifiers() & Qt::ShiftModifier)
                 {
                     drawLine(m_drawLastTick, m_drawLastLevel, pos_ticks,
                              level);
                 }
+                */
                 m_drawLastTick  = pos_ticks;
                 m_drawLastLevel = level;
 
@@ -578,8 +587,9 @@ void AutomationEditor::mousePressEvent(QMouseEvent* mouseEvent)
                     MidiTime value_pos(pos_ticks);
 
                     MidiTime new_time = m_pattern->setDragValue(
-                            value_pos, level, true,
-                            mouseEvent->modifiers() & Qt::ControlModifier);
+                            value_pos, level,
+                            !(mouseEvent->modifiers() & Qt::ControlModifier),
+                            mouseEvent->modifiers() & Qt::ShiftModifier);
 
                     // reset it so that it can be used for
                     // ops (move, resize) after this
@@ -599,7 +609,9 @@ void AutomationEditor::mousePressEvent(QMouseEvent* mouseEvent)
 
                 Engine::getSong()->setModified();
             }
-            else if((mouseEvent->button() == Qt::RightButton
+            else if(((mouseEvent->button() == Qt::MiddleButton
+                      || mouseEvent->button() == Qt::RightButton)
+                     && mouseEvent->modifiers() & Qt::ShiftModifier
                      && m_editMode == DRAW)
                     || m_editMode == ERASE)
             {
@@ -721,17 +733,18 @@ void AutomationEditor::mouseMoveEvent(QMouseEvent* mouseEvent)
                     pos_ticks = 0;
                 }
 
-                drawLine(m_drawLastTick, m_drawLastLevel, pos_ticks, level);
-
+                // drawLine(m_drawLastTick, m_drawLastLevel, pos_ticks,
+                // level);
                 m_drawLastTick  = pos_ticks;
                 m_drawLastLevel = level;
 
                 // we moved the value so the value has to be
                 // moved properly according to new starting-
                 // time in the time map of pattern
-                m_pattern->setDragValue(MidiTime(pos_ticks), level, true,
-                                        mouseEvent->modifiers()
-                                                & Qt::ControlModifier);
+                m_pattern->setDragValue(
+                        MidiTime(pos_ticks), level,
+                        !(mouseEvent->modifiers() & Qt::ControlModifier),
+                        mouseEvent->modifiers() & Qt::ShiftModifier);
             }
 
             Engine::getSong()->setModified();
@@ -743,12 +756,17 @@ void AutomationEditor::mouseMoveEvent(QMouseEvent* mouseEvent)
         {
             // int resolution needed to improve the sensitivity of
             // the erase manoeuvre with zoom levels < 100%
-            int zoom       = m_zoomingXModel.value();
-            int resolution = 1 + zoom * zoom;
-            for(int i = -resolution; i < resolution; ++i)
-            {
+            /*
+              int zoom       = m_zoomingXModel.value();
+              int resolution = 1 + zoom * zoom;
+              for(int i = -resolution; i < resolution; ++i)
+              {
+              m_pattern->removeValue(MidiTime(pos_ticks + i));
+              }
+            */
+            int resolution = MidiTime::ticksPerTact() * 5 / m_ppt;
+            for(int i = -resolution; i <= resolution; ++i)
                 m_pattern->removeValue(MidiTime(pos_ticks + i));
-            }
         }
         else if(mouseEvent->buttons() & Qt::NoButton && m_editMode == DRAW)
         {
@@ -1317,6 +1335,7 @@ void AutomationEditor::paintEvent(QPaintEvent* pe)
         // points
         if(time_map.size() > 0)
         {
+            p.setRenderHints(QPainter::Antialiasing, true);
             timeMap::iterator it = time_map.begin();
             while(it + 1 != time_map.end())
             {
@@ -1369,7 +1388,6 @@ void AutomationEditor::paintEvent(QPaintEvent* pe)
                     nextValue = (it + 1).value();
                 }
 
-                p.setRenderHints(QPainter::Antialiasing, true);
                 QPainterPath path;
                 path.moveTo(
                         QPointF(xCoordOfTick(it.key()), yCoordOfLevel(0)));
@@ -1388,7 +1406,6 @@ void AutomationEditor::paintEvent(QPaintEvent* pe)
                 path.lineTo(
                         QPointF(xCoordOfTick(it.key()), yCoordOfLevel(0)));
                 p.fillPath(path, graphColor());
-                p.setRenderHints(QPainter::Antialiasing, false);
                 delete[] values;
 
                 // Draw circle
@@ -1408,6 +1425,7 @@ void AutomationEditor::paintEvent(QPaintEvent* pe)
             }
             // Draw circle(the last one)
             drawAutomationPoint(p, it);
+            p.setRenderHints(QPainter::Antialiasing, false);
         }
     }
     else
@@ -2069,11 +2087,11 @@ void AutomationEditor::updatePosition(const MidiTime& t)
         }
         else if(t < m_currentPosition)
         {
-            MidiTime t_ = qMax(t
-                                       - w * MidiTime::ticksPerTact()
-                                                 * MidiTime::ticksPerTact()
-                                                 / m_ppt,
-                               0);
+            MidiTime t_ = qMax<MidiTime>(
+                    t
+                            - w * MidiTime::ticksPerTact()
+                                      * MidiTime::ticksPerTact() / m_ppt,
+                    0);
             m_leftRightScroll->setValue(t_.getTact()
                                         * MidiTime::ticksPerTact());
         }

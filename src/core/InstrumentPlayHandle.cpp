@@ -112,8 +112,9 @@ void InstrumentPlayHandle::play(sampleFrame* _working_buffer)
         }
     } while(nphsLeft);
 
-    real_t  ndm=0.;
-    f_cnt_t mintfp = -1;
+    real_t  ndm    = 0.;
+    f_cnt_t maxtfp = -1;
+    f_cnt_t maxfbr=-1;
     for(const NotePlayHandle* cnph: cnphv)
     {
         if(cnph != nullptr && !cnph->isFinished())
@@ -126,20 +127,26 @@ void InstrumentPlayHandle::play(sampleFrame* _working_buffer)
             const f_cnt_t off  = nph->noteOffset();
             const f_cnt_t left = nph->framesLeft();
 
+            /*
             if(tfp <= 256)
-                qInfo("IPH: tfp=%d off=%d br=%d leftfcp=%d left=%d",
-                      tfp, off, fbr, nph->framesLeftForCurrentPeriod(), left);
+                qInfo("IPH: tfp=%d off=%d br=%d leftfcp=%d left=%d", tfp, off,
+                      fbr, nph->framesLeftForCurrentPeriod(), left);
+            */
 
-            if(/*left>0 &&*/ (mintfp == -1 || tfp < mintfp))
+            if(/*left > 0 &&*/ (maxtfp == -1 || tfp > maxtfp
+                                || (tfp==maxtfp && fbr>maxfbr)))
             {
-                mintfp = tfp;
-                track->setEnvOffset(off);
                 track->setEnvTotalFramesPlayed(tfp);
+                track->setEnvOffset(off);
                 track->setEnvReleaseBegin(fbr);
                 track->setEnvLegato(nph->legato());
+                track->setEnvLegato(nph->marcato());
+                track->setEnvLegato(nph->staccato());
                 track->setEnvVolume(nph->getVolume());
                 track->setEnvPanning(nph->getPanning());
-                ndm = cnph->automationDetune() + cnph->effectDetune();
+                ndm    = cnph->automationDetune() + cnph->effectDetune();
+                maxfbr = fbr;
+                maxtfp = tfp;
             }
         }
     }

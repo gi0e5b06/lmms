@@ -58,7 +58,7 @@ class Controller : public Model, public JournallingObject
 
     Controller(ControllerTypes _type,
                Model*          _parent,
-               const QString&  _display_name);
+               const QString&  _displayName);
 
     virtual ~Controller();
 

@@ -2,7 +2,7 @@
  * vestige.h - instrument VeSTige for hosting VST-plugins
  *
  * Copyright (c) 2005-2014 Tobias Doerffel <tobydox/at/users.sourceforge.net>
- * 
+ *
  * This file is part of LMMS - https://lmms.io
  *
  * This program is free software; you can redistribute it and/or
@@ -22,23 +22,19 @@
  *
  */
 
-
 #ifndef _VESTIGE_H
 #define _VESTIGE_H
 
-
-#include <QMutex>
-#include <QLayout>
-#include <QMdiSubWindow>
-#include <QScrollArea>
-
+#include "AutomatableModel.h"
 #include "Instrument.h"
 #include "InstrumentView.h"
-#include "Note.h"
 #include "Knob.h"
+#include "Note.h"
 
-#include "AutomatableModel.h"
-
+#include <QLayout>
+#include <QMdiSubWindow>
+#include <QMutex>
+#include <QScrollArea>
 
 class QPixmap;
 class QPushButton;
@@ -46,143 +42,132 @@ class QPushButton;
 class PixmapButton;
 class VstPlugin;
 
-
 class vestigeInstrument : public Instrument
 {
-	Q_OBJECT
-public:
-	vestigeInstrument( InstrumentTrack * _instrument_track );
-	virtual ~vestigeInstrument();
+    Q_OBJECT
+  public:
+    vestigeInstrument(InstrumentTrack* _instrument_track);
+    virtual ~vestigeInstrument();
 
-	virtual void play( sampleFrame * _working_buffer );
+    virtual void play(sampleFrame* _working_buffer);
 
-	virtual void saveSettings( QDomDocument & _doc, QDomElement & _parent );
-	virtual void loadSettings( const QDomElement & _this );
+    virtual void saveSettings(QDomDocument& _doc, QDomElement& _parent);
+    virtual void loadSettings(const QDomElement& _this);
 
-	virtual QString nodeName() const;
+    // virtual QString nodeName() const;
 
-	virtual void loadFile( const QString & _file );
+    virtual void loadFile(const QString& _file);
 
-	virtual Flags flags() const
-	{
-		return IsSingleStreamed | IsMidiBased;
-	}
+    virtual Flags flags() const
+    {
+        return IsSingleStreamed | IsMidiBased;
+    }
 
-	virtual bool handleMidiEvent( const MidiEvent& event, const MidiTime& time, f_cnt_t offset = 0 );
+    virtual bool handleMidiEvent(const MidiEvent& event,
+                                 const MidiTime&  time,
+                                 f_cnt_t          offset = 0);
 
-	virtual PluginView * instantiateView( QWidget * _parent );
+    virtual PluginView* instantiateView(QWidget* _parent);
 
-protected slots:
-	void setParameter();
+  protected slots:
+    void setParameter();
 
-private:
-	void closePlugin();
+  private:
+    void closePlugin();
 
+    VstPlugin* m_plugin;
+    QMutex     m_pluginMutex;
+    QString    m_pluginDLL;
 
-	VstPlugin * m_plugin;
-	QMutex m_pluginMutex;
-	QString m_pluginDLL;
+    QMdiSubWindow* m_controls;
+    // QScrollArea * m_scrollArea;
+    Knob**       vstKnobs;
+    FloatModel** knobFModel;
+    // QObject * p_subWindow;
+    int paramCount;
 
-	QMdiSubWindow * m_controls;
-	//QScrollArea * m_scrollArea;
-	Knob ** vstKnobs;
-	FloatModel ** knobFModel;
-	//QObject * p_subWindow;
-	int paramCount;
-
-
-	friend class VestigeInstrumentView;
-	friend class manageVestigeInstrumentView;
-
-} ;
+    friend class VestigeInstrumentView;
+    friend class manageVestigeInstrumentView;
+};
 
 // Controls (knobs)
 class manageVestigeInstrumentView : public InstrumentView
 {
-	Q_OBJECT
-public:
-	manageVestigeInstrumentView( Instrument * _instrument, QWidget * _parent, vestigeInstrument * _vi );
-	virtual ~manageVestigeInstrumentView();
+    Q_OBJECT
+  public:
+    manageVestigeInstrumentView(Instrument*        _instrument,
+                                QWidget*           _parent,
+                                vestigeInstrument* _vi);
+    virtual ~manageVestigeInstrumentView();
 
+  protected slots:
+    void syncPlugin();
+    void displayAutomatedOnly();
+    void setParameter();
+    void closeWindow();
 
-protected slots:
-	void syncPlugin();
-	void displayAutomatedOnly();
-	void setParameter();
-	void closeWindow();
+  protected:
+    virtual void dragEnterEvent(QDragEnterEvent* _dee);
+    virtual void dropEvent(QDropEvent* _de);
+    virtual void paintEvent(QPaintEvent* _pe);
 
+  private:
+    static QPixmap* s_artwork;
 
-protected:
-	virtual void dragEnterEvent( QDragEnterEvent * _dee );
-	virtual void dropEvent( QDropEvent * _de );
-	virtual void paintEvent( QPaintEvent * _pe );
+    vestigeInstrument* m_vi;
 
-
-private:
-	static QPixmap * s_artwork;
-
-	vestigeInstrument * m_vi;
-
-	QWidget *widget;
-	QGridLayout * l;
-	QPushButton * m_syncButton;
-	QPushButton * m_displayAutomatedOnly;
-	//QPushButton * m_closeButton;
-
-} ;
-
+    QWidget*     widget;
+    QGridLayout* l;
+    QPushButton* m_syncButton;
+    QPushButton* m_displayAutomatedOnly;
+    // QPushButton * m_closeButton;
+};
 
 class VestigeInstrumentView : public InstrumentView
 {
-	Q_OBJECT
-public:
-	VestigeInstrumentView( Instrument * _instrument, QWidget * _parent );
-	virtual ~VestigeInstrumentView();
+    Q_OBJECT
+  public:
+    VestigeInstrumentView(Instrument* _instrument, QWidget* _parent);
+    virtual ~VestigeInstrumentView();
 
+  protected slots:
+    void updateMenu();
+    void openPlugin();
+    // void managePlugin();
+    void openPreset();
+    void savePreset();
+    void nextProgram();
+    void previousProgram();
+    void selPreset();
+    void toggleControls();
+    void toggleGUI();
+    void noteOffAll();
 
-protected slots:
-	void updateMenu();
-	void openPlugin();
-	//void managePlugin();
-	void openPreset();
-	void savePreset();
-	void nextProgram();
-	void previousProgram();
-	void selPreset();
-	void toggleControls();
-	void toggleGUI();
-	void noteOffAll();
+  protected:
+    virtual void dragEnterEvent(QDragEnterEvent* _dee);
+    virtual void dropEvent(QDropEvent* _de);
+    virtual void paintEvent(QPaintEvent* _pe);
 
+  private:
+    virtual void modelChanged();
 
-protected:
-	virtual void dragEnterEvent( QDragEnterEvent * _dee );
-	virtual void dropEvent( QDropEvent * _de );
-	virtual void paintEvent( QPaintEvent * _pe );
+    static QPixmap* s_artwork;
 
+    vestigeInstrument* m_vi;
 
-private:
-	virtual void modelChanged();
+    int lastPosInMenu;
 
-	static QPixmap * s_artwork;
+    // PixmapButton* m_openPluginButton;
+    PixmapButton* m_openPresetButton;
+    PixmapButton* m_rolLPresetButton;
+    PixmapButton* m_rolRPresetButton;
+    QPushButton*  m_selPresetButton;
+    // QPushButton*  m_toggleGUIButton;
+    // PixmapButton* m_managePluginButton;
+    PixmapButton* m_savePresetButton;
 
-	vestigeInstrument * m_vi;
-
-	int lastPosInMenu;
-
-	//PixmapButton* m_openPluginButton;
-	PixmapButton* m_openPresetButton;
-	PixmapButton* m_rolLPresetButton;
-	PixmapButton* m_rolRPresetButton;
-	QPushButton*  m_selPresetButton;
-	//QPushButton*  m_toggleGUIButton;
-	//PixmapButton* m_managePluginButton;
-	PixmapButton* m_savePresetButton;
-
-	Instrument*   m_instrument2;
-	QWidget*      m_parent2;
-
-} ;
-
-
+    Instrument* m_instrument2;
+    QWidget*    m_parent2;
+};
 
 #endif

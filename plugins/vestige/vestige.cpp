@@ -218,10 +218,12 @@ void vestigeInstrument::saveSettings(QDomDocument& _doc, QDomElement& _this)
     m_pluginMutex.unlock();
 }
 
+/*
 QString vestigeInstrument::nodeName(void) const
 {
-    return (vestige_plugin_descriptor.name);
+    return vestige_plugin_descriptor.name;
 }
+*/
 
 void vestigeInstrument::loadFile(const QString& _file)
 {
@@ -631,7 +633,9 @@ void VestigeInstrumentView::openPlugin()
 
     // set filters
     QStringList types;
-    types << tr("DLL-files (*.dll)") << tr("EXE-files (*.exe)");
+    types << tr("DLL-files (*.dll)")
+          << tr("EXE-files (*.exe)")
+          << tr("SO-files (*.so)");
     ofd.setNameFilters(types);
 
     if(m_vi->m_pluginDLL != "")

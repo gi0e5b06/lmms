@@ -74,6 +74,7 @@ IF("${PLUGIN_LIST}" STREQUAL "")
 		dynamics_processor
 		Eq
 		Flanger
+                Format12Export
                 FrequencyGDX
 		GigPlayer
 		HydrogenImport
@@ -87,8 +88,9 @@ IF("${PLUGIN_LIST}" STREQUAL "")
 		MidiExport
 		MultitapEcho
 		monstro
-                NormalizeGDX
 		nes
+                NormalizeGDX
+                NoteCrazyGDX
 		opl2
 		organic
                 OscilloscopeGDX
@@ -104,6 +106,7 @@ IF("${PLUGIN_LIST}" STREQUAL "")
 		sf2_player
 		sfxr
                 ShaperGDX
+                ShifterGDX
 		sid
                 SmashGDX
                 SpaceGDX

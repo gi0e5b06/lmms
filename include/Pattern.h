@@ -72,21 +72,23 @@ class EXPORT Pattern : public TrackContentObject
 
     // note management
     Note* addNote(const Note& _new_note, const bool _quant_pos = true);
-
-    void removeNote(Note* _note_to_del);
-
-    Note* noteAtStep(int _step);
+    void  removeNote(Note* _note_to_del);
 
     void rearrangeAllNotes();
     void clearNotes();
 
-    inline const NoteVector& notes() const
+    inline const Notes& notes() const
     {
         return m_notes;
     }
 
+    Note* noteAtStep(int _step);
     Note* addStepNote(int step);
-    void  setStep(int step, bool enabled);
+    void  removeStepNote(int step);
+    void  toggleStepNote(int step);
+    void  setStepNote(int step, bool enabled);
+
+    virtual void rotate(tick_t _ticks);
 
     // pattern-type stuff
     inline PatternTypes type() const
@@ -101,6 +103,7 @@ class EXPORT Pattern : public TrackContentObject
     // settings-management
     virtual void saveSettings(QDomDocument& _doc, QDomElement& _parent);
     virtual void loadSettings(const QDomElement& _this);
+
     inline virtual QString nodeName() const
     {
         return "pattern";
@@ -113,14 +116,17 @@ class EXPORT Pattern : public TrackContentObject
 
     virtual TrackContentObjectView* createView(TrackView* _tv);
 
-    using Model::dataChanged;
+    // signals:
+    // using Model::dataChanged(); <-- not working
+    // void dataChanged(); <-- not needed
 
   public slots:
     virtual void clear();
+    virtual void flipHorizontally();
+    virtual void flipVertically();
 
   protected:
     // void updateBBTrack();
-    virtual void rotate(tick_t _ticks);
 
   protected slots:
     void changeTimeSignature();
@@ -138,20 +144,14 @@ class EXPORT Pattern : public TrackContentObject
     */
 
   private:
-    void setType(PatternTypes _new_pattern_type);
-    void checkType();
-
-    void resizeToFirstTrack();
+    void     setType(PatternTypes _new_pattern_type);
+    void     checkType();
+    void     resizeToFirstTrack();
+    Pattern* adjacentPatternByOffset(int offset) const;
 
     InstrumentTrack* m_instrumentTrack;
-
-    PatternTypes m_patternType;
-
-    // data-stuff
-    // NoteVector m_notes;
-    QVector<Note*> m_notes;
-
-    Pattern* adjacentPatternByOffset(int offset) const;
+    PatternTypes     m_patternType;
+    Notes            m_notes;
 
     friend class PatternView;
     friend class BBTrackContainerView;

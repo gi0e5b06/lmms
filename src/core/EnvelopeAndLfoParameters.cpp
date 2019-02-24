@@ -1,6 +1,7 @@
 /*
  * EnvelopeAndLfoParameters.cpp - class EnvelopeAndLfoParameters
  *
+ * Copyright (c) 2019      gi0e5b06 (on github.com)
  * Copyright (c) 2004-2014 Tobias Doerffel <tobydox/at/users.sourceforge.net>
  *
  * This file is part of LMMS - https://lmms.io
@@ -30,6 +31,7 @@
 #include "WaveFormStandard.h"
 
 #include <QDomElement>
+#include <QTimer>
 
 // minimum number of frames for ENV/LFO stages that mustn't be '0'
 const f_cnt_t minimumFrames = 1;
@@ -74,73 +76,77 @@ void EnvelopeAndLfoParameters::LfoInstances::remove(
 
 EnvelopeAndLfoParameters::EnvelopeAndLfoParameters(
         real_t _value_for_zero_amount, Model* _parent) :
-      Model(_parent),
-      m_used(false), m_predelayModel(0.0,
-                                     0.0,
-                                     2.0,
+      Model(_parent, "Envelope"),
+      m_used(false), m_predelayModel(0.,
+                                     0.,
+                                     2.,
                                      0.001,
-                                     SECS_PER_ENV_SEGMENT * 1000.0,
+                                     SECS_PER_ENV_SEGMENT * 1000.,
                                      this,
                                      tr("Predelay")),
       m_attackModel(0.04,
-                    0.0,
-                    2.0,
+                    0.,
+                    2.,
                     0.001,
-                    SECS_PER_ENV_SEGMENT * 1000.0,
+                    SECS_PER_ENV_SEGMENT * 1000.,
                     this,
                     tr("Attack")),
       m_holdModel(0.25,
-                  0.0,
-                  2.0,
+                  0.,
+                  2.,
                   0.001,
-                  SECS_PER_ENV_SEGMENT * 1000.0,
+                  SECS_PER_ENV_SEGMENT * 1000.,
                   this,
                   tr("Hold")),
       m_decayModel(0.5,
-                   0.0,
-                   2.0,
+                   0.,
+                   2.,
                    0.001,
-                   SECS_PER_ENV_SEGMENT * 1000.0,
+                   SECS_PER_ENV_SEGMENT * 1000.,
                    this,
                    tr("Decay")),
-      m_sustainModel(0.5, 0.0, 1.0, 0.001, this, tr("Sustain")),
+      m_sustainModel(0.5, 0., 1., 0.001, this, tr("Sustain")),
       m_releaseModel(0.1,
-                     0.0,
-                     2.0,
+                     0.,
+                     2.,
                      0.001,
-                     SECS_PER_ENV_SEGMENT * 1000.0,
+                     SECS_PER_ENV_SEGMENT * 1000.,
                      this,
                      tr("Release")),
-      m_amountModel(0.0, -1.0, 1.0, 0.005, this, tr("Modulation")),
+      m_amountModel(0., -1., 1., 0.005, this, tr("Modulation")),
       m_valueForZeroAmount(_value_for_zero_amount), m_pahdFrames(0),
-      m_rFrames(0), m_pahdEnv(NULL), m_rEnv(NULL), m_pahdBufSize(0),
+      m_rFrames(0), m_pahdEnv(nullptr), m_rEnv(nullptr), m_pahdBufSize(0),
       m_rBufSize(0),
-      m_lfoPredelayModel(0.0, 0.0, 1.0, 0.001, this, tr("LFO Predelay")),
-      m_lfoAttackModel(0.0, 0.0, 1.0, 0.001, this, tr("LFO Attack")),
+      m_lfoPredelayModel(0., 0., 1., 0.001, this, tr("LFO Predelay")),
+      m_lfoAttackModel(0., 0., 1., 0.001, this, tr("LFO Attack")),
       m_lfoSpeedModel(0.1,
                       0.0001,
-                      1.0,
+                      1.,
                       0.0001,
-                      SECS_PER_LFO_OSCILLATION * 1000.0,
+                      SECS_PER_LFO_OSCILLATION * 1000.,
                       this,
                       tr("LFO speed")),
-      m_lfoAmountModel(0.0, -1.0, 1.0, 0.005, this, tr("LFO Modulation")),
+      m_lfoAmountModel(0., -1., 1., 0.005, this, tr("LFO Modulation")),
       // m_lfoWaveModel( SineWave, 0, NumLfoShapes, this, tr( "LFO Wave Shape"
       // ) ),
       m_lfoWaveBankModel(this, tr("LFO Wave Bank")),
       m_lfoWaveIndexModel(this, tr("LFO Wave Index")),
       m_x100Model(false, this, tr("Freq x 100")),
-      m_controlEnvAmountModel(false, this, tr("Modulate Env-Amount")),
-      m_lfoFrame(0), m_lfoAmountIsZero(false), m_lfoShapeData(NULL)
+      m_controlEnvAmountModel(false, this, tr("Modulate Envelope")),
+      m_outModel(0., -1, 1., 0.0001, this, tr("Envelope Out")),
+      m_outBuffer(Engine::mixer()->framesPerPeriod()), m_lfoFrame(0),
+      m_lfoAmountIsZero(false), m_lfoShapeData(nullptr)
 {
     WaveFormStandard::fillBankModel(m_lfoWaveBankModel);
     WaveFormStandard::fillIndexModel(m_lfoWaveIndexModel,
                                      m_lfoWaveBankModel.value());
 
+    m_outModel.setFrequentlyUpdated(true);
+
     m_amountModel.setCenterValue(0);
     m_lfoAmountModel.setCenterValue(0);
 
-    if(s_lfoInstances == NULL)
+    if(s_lfoInstances == nullptr)
     {
         s_lfoInstances = new LfoInstances();
     }
@@ -179,6 +185,9 @@ EnvelopeAndLfoParameters::EnvelopeAndLfoParameters(
     connect(&m_x100Model, SIGNAL(dataChanged()), this,
             SLOT(updateSampleVars()));
 
+    connect(this, SIGNAL(sendOut(const ValueBuffer*)), &m_outModel,
+            SLOT(setAutomatedBuffer(const ValueBuffer*)));
+
     connect(Engine::mixer(), SIGNAL(sampleRateChanged()), this,
             SLOT(updateSampleVars()));
 
@@ -214,7 +223,7 @@ EnvelopeAndLfoParameters::~EnvelopeAndLfoParameters()
     if(instances()->isEmpty())
     {
         delete instances();
-        s_lfoInstances = NULL;
+        s_lfoInstances = nullptr;
     }
 }
 
@@ -304,25 +313,36 @@ inline void EnvelopeAndLfoParameters::fillLfoLevel(real_t*     _buf,
 
 void EnvelopeAndLfoParameters::fillLevel(real_t*       _buf,
                                          f_cnt_t       _frame,
-                                         const f_cnt_t _release_begin,
+                                         const f_cnt_t _releaseBegin,
                                          const fpp_t   _frames,
-                                         const bool    _legato)
+                                         const bool    _legato,
+                                         const bool    _marcato,
+                                         const bool    _staccato)
 {
     QMutexLocker m(&m_paramMutex);
 
-    if(_frame < 0 || _release_begin < 0)
-    {
+    if(_frame < 0 || _releaseBegin < 0)
         return;
-    }
 
     fillLfoLevel(_buf, _frame, _frames);
+
+    m_outBuffer.fill(0.);
+
+    f_cnt_t sustainBegin = m_pahdFrames;
+    f_cnt_t releaseBegin = _releaseBegin;
+
+    if(_legato)
+        sustainBegin = 0;
+    if(_staccato)
+        releaseBegin
+                = qMin(qMax(sustainBegin, releaseBegin / 2), releaseBegin);
 
     for(fpp_t offset = 0; offset < _frames; ++offset, ++_buf, ++_frame)
     {
         real_t env_level;
-        if(_frame < _release_begin)
+        if(_frame < releaseBegin)
         {
-            if(!_legato && _frame < m_pahdFrames)
+            if(_frame < sustainBegin)
             {
                 env_level = m_pahdEnv[_frame];
             }
@@ -330,12 +350,15 @@ void EnvelopeAndLfoParameters::fillLevel(real_t*       _buf,
             {
                 env_level = m_sustainLevel;
             }
+
+            if(_marcato)
+                env_level *= 1. + 2. * (releaseBegin - _frame) / releaseBegin;
         }
-        else if((_frame - _release_begin) < m_rFrames)
+        else if((_frame - releaseBegin) < m_rFrames)
         {
-            env_level = m_rEnv[_frame - _release_begin]
-                        * ((_release_begin < m_pahdFrames)
-                                   ? m_pahdEnv[_release_begin]
+            env_level = m_rEnv[_frame - releaseBegin]
+                        * ((releaseBegin < m_pahdFrames)
+                                   ? m_pahdEnv[releaseBegin]
                                    : m_sustainLevel);
         }
         else
@@ -344,9 +367,16 @@ void EnvelopeAndLfoParameters::fillLevel(real_t*       _buf,
         }
 
         // at this point, *_buf is LFO level
-        *_buf = m_controlEnvAmountModel.value() ? env_level * (0.5 + *_buf)
-                                                : env_level + *_buf;
+        *_buf = bound(-1.,
+                      m_controlEnvAmountModel.value()
+                              ? env_level * (1. + *_buf)
+                              : env_level + *_buf,
+                      1.);
+        if(offset < m_outBuffer.length())
+            m_outBuffer.set(offset, *_buf);
     }
+
+    emit sendOut(&m_outBuffer);
 }
 
 void EnvelopeAndLfoParameters::saveSettings(QDomDocument& _doc,
@@ -365,6 +395,8 @@ void EnvelopeAndLfoParameters::saveSettings(QDomDocument& _doc,
     m_lfoAmountModel.saveSettings(_doc, _parent, "lamt");
     m_x100Model.saveSettings(_doc, _parent, "x100");
     m_controlEnvAmountModel.saveSettings(_doc, _parent, "ctlenvamt");
+    m_outModel.saveSettings(_doc, _parent, "out");
+
     _parent.setAttribute("userwavefile", m_userWave.audioFile());
 
     m_lfoWaveBankModel.saveSettings(_doc, _parent, "lfo_wave_bank");
@@ -387,6 +419,7 @@ void EnvelopeAndLfoParameters::loadSettings(const QDomElement& _this)
     m_lfoAmountModel.loadSettings(_this, "lamt");
     m_x100Model.loadSettings(_this, "x100");
     m_controlEnvAmountModel.loadSettings(_this, "ctlenvamt");
+    m_outModel.loadSettings(_this, "out", false);
 
     if(_this.hasAttribute("lfo_wave_bank"))
         m_lfoWaveBankModel.loadSettings(_this, "lfo_wave_bank");
@@ -550,7 +583,8 @@ void EnvelopeAndLfoParameters::updateSampleVars()
     {
         m_lfoOscillationFrames /= 100;
     }
-    m_lfoAmount = m_lfoAmountModel.value() * 0.5;
+
+    m_lfoAmount = m_lfoAmountModel.value();  // why O.5? * 0.5;
 
     m_used = true;
     if(static_cast<int>(floor(m_lfoAmount * 1000.)) == 0)

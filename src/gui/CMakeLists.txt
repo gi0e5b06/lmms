@@ -17,6 +17,8 @@ SET(LMMS_SRCS
 	gui/AudioDeviceSetupWidget.cpp
 	gui/AutomatableModelView.cpp
 	gui/AutomationPatternView.cpp
+        gui/CableOverlay.cpp
+        gui/CableView.cpp
 	gui/ControllerConnectionDialog.cpp
 	gui/ControllerDialog.cpp
 	gui/EffectControlDialog.cpp

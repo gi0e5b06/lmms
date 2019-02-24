@@ -66,24 +66,24 @@ AudioPort::AudioPort(const QString& _name,
 
 AudioPort::~AudioPort()
 {
-    qWarning("AudioPort::~AudioPort 1");
+    // qInfo("AudioPort::~AudioPort 1");
     setExtOutputEnabled(false);
 
-    qWarning("AudioPort::~AudioPort 2");
+    // qInfo("AudioPort::~AudioPort 2");
     Engine::mixer()->removeAudioPort(this);
 
-    qWarning("AudioPort::~AudioPort 3");
+    // qInfo("AudioPort::~AudioPort 3");
     if(m_effects)
         delete m_effects;
 
-    qWarning("AudioPort::~AudioPort 4");
+    // qInfo("AudioPort::~AudioPort 4");
     BufferManager::release(m_portBuffer);
 
-    qWarning("AudioPort::~AudioPort 5");
+    // qInfo("AudioPort::~AudioPort 5");
     if(m_frozenBuf)
         delete m_frozenBuf;
 
-    qWarning("AudioPort::~AudioPort 6");
+    // qInfo("AudioPort::~AudioPort 6");
 }
 
 void AudioPort::setExtOutputEnabled(bool _enabled)
@@ -213,7 +213,7 @@ void AudioPort::doProcessing()
                     qInfo("AudioPort::doProcessing buf is silent");
             }
             */
-            
+
             // gets rid of playhandle's buffer and sets
             // pointer to null, so if it doesn't get re-acquired we know to
             // skip it next time
@@ -482,7 +482,7 @@ void AudioPort::removePlayHandle(PlayHandle* handle)
         NotePlayHandle* nph = dynamic_cast<NotePlayHandle*>(handle);
         if(nph && !nph->isReleased())
             nph->noteOff(0);
-        m_playHandles.removeAll(handle);//One
+        m_playHandles.removeAll(handle);  // One
     }
     else
     {

@@ -49,8 +49,8 @@ SubWindow* SubWindow::putWidgetOnWorkspace(QWidget* _widget,
                             _maximizable, _frameless);
     gui->mainWindow()->workspace()->addSubWindow(win);
 
-    //win->setOption(QMdiSubWindow::RubberBandResize, true);
-    //win->setOption(QMdiSubWindow::RubberBandMove, true);
+    // win->setOption(QMdiSubWindow::RubberBandResize, true);
+    // win->setOption(QMdiSubWindow::RubberBandMove, true);
 
     connect(win->mdiArea(), SIGNAL(subWindowActivated(QMdiSubWindow*)), win,
             SLOT(focusChanged(QMdiSubWindow*)));
@@ -75,6 +75,7 @@ SubWindow::SubWindow(QWidget* _child,
     // setParent( gui->mainWindow()->workspace()->viewport() );
     // setWindowFlags( _flags );
     setAttribute(Qt::WA_DeleteOnClose, _deleteOnClose);
+    //setAttribute(Qt::WA_OpaquePaintEvent, true);
 
     if(gui->mainWindow()->isTabbed())
     {
@@ -357,7 +358,7 @@ void SubWindow::adjustTitleBar()
     // set the buttons on their positions.
     // the close button is always needed and on the rightButtonPos
     if(m_closeBtn)
-            m_closeBtn->move(rightButtonPos);
+        m_closeBtn->move(rightButtonPos);
 
     // here we ask: is the Subwindow maximizable and
     // then we set the buttons and show them if needed

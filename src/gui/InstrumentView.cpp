@@ -24,52 +24,69 @@
 
 #include "InstrumentView.h"
 
-#include "InstrumentTrack.h" // REQUIRED
+#include "InstrumentTrack.h"  // REQUIRED
 //#include "StringPairDrag.h"
 
-#include "embed.h" // REQUIRED
+#include "embed.h"  // REQUIRED
 
-#include <QIcon> // REQUIRED
+#include <QIcon>  // REQUIRED
 
-
-InstrumentView::InstrumentView( Instrument * _Instrument, QWidget * _parent ) :
-	PluginView( _Instrument, _parent )
+InstrumentView::InstrumentView(Instrument* _Instrument, QWidget* _parent) :
+      PluginView(_Instrument, _parent)
 {
-	setModel( _Instrument );
-	setFixedSize( 250, 250 );
-	setAttribute( Qt::WA_DeleteOnClose, true );
+    setModel(_Instrument);
+    setFixedSize(250, 250);
+    setAttribute(Qt::WA_DeleteOnClose, true);
 }
-
-
-
 
 InstrumentView::~InstrumentView()
 {
-	if( instrumentTrackWindow() )
-	{
-		instrumentTrackWindow()->m_instrumentView = NULL;
-	}
+    if(instrumentTrackWindow())
+    {
+        instrumentTrackWindow()->m_instrumentView = NULL;
+    }
 }
 
-
-
-
-void InstrumentView::setModel( Model * _model, bool )
+void InstrumentView::setModel(Model* _model, bool)
 {
-	if( dynamic_cast<Instrument *>( _model ) != NULL )
-	{
-		ModelView::setModel( _model );
-		instrumentTrackWindow()->setWindowIcon( model()->descriptor()->logo->pixmap() );
-		connect( model(), SIGNAL( destroyed( QObject * ) ), this, SLOT( close() ) );
-	}
+    if(dynamic_cast<Instrument*>(_model) != NULL)
+    {
+        ModelView::setModel(_model);
+        instrumentTrackWindow()->setWindowIcon(
+                model()->descriptor()->logo()->pixmap());
+        connect(model(), SIGNAL(destroyed(QObject*)), this, SLOT(close()));
+    }
 }
 
-
-
-
-InstrumentTrackWindow * InstrumentView::instrumentTrackWindow( void )
+InstrumentTrackWindow* InstrumentView::instrumentTrackWindow(void)
 {
-	return( dynamic_cast<InstrumentTrackWindow *>(
-					parentWidget()->parentWidget() ) );
+    return (dynamic_cast<InstrumentTrackWindow*>(
+            parentWidget()->parentWidget()));
 }
 
+QLine InstrumentView::cableTo() const
+{
+    QWidget* w = widget();
+    if(w == nullptr)
+        return QLine();
+
+    QPoint p(w->width() / 2, -100);
+    return QLine(p, p + QPoint(0, -50));
+}
+
+QLine InstrumentView::cableFrom() const
+{
+    QWidget* w = widget();
+    if(w == nullptr)
+        return QLine();
+
+    QPoint p(w->width() / 2, w->height());
+    return QLine(p, p + QPoint(0, 50));
+}
+
+QColor InstrumentView::cableColor() const
+{
+    const Instrument*      m = model();
+    const InstrumentTrack* t = m->instrumentTrack();
+    return t->color();
+}

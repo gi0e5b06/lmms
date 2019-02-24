@@ -366,10 +366,12 @@ f_cnt_t CarlaInstrument::desiredReleaseFrames() const
     return 0;
 }
 
+/*
 QString CarlaInstrument::nodeName() const
 {
     return descriptor()->name;
 }
+*/
 
 void CarlaInstrument::saveSettings(QDomDocument& doc, QDomElement& parent)
 {
@@ -511,6 +513,8 @@ void CarlaInstrument::paramModelChanged(uint32_t index)
 
 void CarlaInstrument::loadSettings(const QDomElement& elem)
 {
+    qInfo("CarlaInstrument::loadSettings start");
+
     for(int i = 0; i < NB_MIDI_KNOBS; i++)
         m_midiKnobs[i]->loadSettings(elem, QString("knob%1").arg(i));
     /*
@@ -544,6 +548,8 @@ void CarlaInstrument::loadSettings(const QDomElement& elem)
 
     // settingsElem = const_cast<QDomElement&>(elem);
     refreshParams(false, &elem);
+
+    qInfo("CarlaInstrument::loadSettings end");
 }
 
 void CarlaInstrument::play(sampleFrame* workingBuffer)

@@ -100,7 +100,7 @@ class organicInstrument : public Instrument
     virtual void saveSettings(QDomDocument& _doc, QDomElement& _parent);
     virtual void loadSettings(const QDomElement& _this);
 
-    virtual QString nodeName() const;
+    // virtual QString nodeName() const;
 
     int intRand(int min, int max);
 

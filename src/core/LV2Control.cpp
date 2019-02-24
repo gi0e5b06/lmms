@@ -29,7 +29,7 @@
 
 
 LV2Control::LV2Control( Model * _parent, lv2_port_desc_t * _port, bool _link ) :
-	Model( _parent ),
+	Model( _parent,QString("LV2 Control %1").arg(_port->name) ),
 	m_link( _link ),
 	m_port( _port ),
 	m_linkEnabledModel( _link, this, tr( "Link channels" ) ),

@@ -23,216 +23,203 @@
  *
  */
 
-
 #ifndef BB_TRACK_H_
 #define BB_TRACK_H_
 
-#include "Track.h"
 #include "Bitset.h"
+#include "Track.h"
 
-#include <QObject>
 #include <QAction>
 #include <QMap>
+#include <QObject>
 #include <QStaticText>
 
 class TrackLabelButton;
 class TrackContainer;
 
-
 class BBTCO : public TrackContentObject
 {
- public:
-	BBTCO( Track * _track );
-	BBTCO( const BBTCO& _other );
-	virtual ~BBTCO();
+  public:
+    BBTCO(Track* _track);
+    BBTCO(const BBTCO& _other);
+    virtual ~BBTCO();
 
-	int bbTrackIndex() const;
-        virtual bool isEmpty() const;
+    int          bbTrackIndex() const;
+    virtual bool isEmpty() const;
 
-        virtual tick_t unitLength() const;
+    virtual tick_t unitLength() const;
 
-	virtual void saveSettings( QDomDocument & _doc, QDomElement & _parent );
-	virtual void loadSettings( const QDomElement & _this );
+    virtual void saveSettings(QDomDocument& _doc, QDomElement& _parent);
+    virtual void loadSettings(const QDomElement& _this);
 
-	inline virtual QString nodeName() const
-	{
-		return "bbtco";
-	}
+    inline virtual QString nodeName() const
+    {
+        return "bbtco";
+    }
 
-        virtual const Bitset* mask() const
-        {
-                return m_mask;
-        }
+    virtual const Bitset* mask() const
+    {
+        return m_mask;
+    }
 
-	virtual TrackContentObjectView * createView( TrackView * _tv );
+    virtual TrackContentObjectView* createView(TrackView* _tv);
 
- protected:
-        virtual Bitset* mask()
-        {
-                return m_mask;
-        }
+  protected:
+    virtual Bitset* mask()
+    {
+        return m_mask;
+    }
 
- private:
-        Bitset* m_mask;
+  private:
+    Bitset* m_mask;
 
-	friend class BBTCOView;
-
-} ;
-
-
+    friend class BBTCOView;
+};
 
 class BBTCOView : public TrackContentObjectView
 {
-	Q_OBJECT
-public:
-	BBTCOView( TrackContentObject * _tco, TrackView * _tv );
-	virtual ~BBTCOView();
+    Q_OBJECT
+  public:
+    // BBTCOView( TrackContentObject * _tco, TrackView * _tv );
+    BBTCOView(BBTCO* _tco, TrackView* _tv);
+    virtual ~BBTCOView();
 
-        /*
-	QColor color() const
-	{
-		return( m_bbTCO->m_color );
-	}
-	void setColor( QColor _new_color );
-        */
+    /*
+    QColor color() const
+    {
+            return( m_bbTCO->m_color );
+    }
+    void setColor( QColor _new_color );
+    */
 
-public slots:
-	virtual void update();
+  public slots:
+    virtual void update();
 
-protected slots:
-	void openInBBEditor();
-	//void resetName();
-	//void changeName();
-	//void changeColor();
-	//void resetColor();
-        void toggleMask(QAction* _action);
+  protected slots:
+    void openInBBEditor();
+    // void resetName();
+    // void changeName();
+    // void changeColor();
+    // void resetColor();
+    void toggleMask(QAction* _action);
 
-protected:
-	virtual QMenu* buildContextMenu();
-        virtual void addMuteMenu(QMenu* _cm, bool _enabled);
+  protected:
+    virtual QMenu* buildContextMenu();
+    virtual void   addMuteMenu(QMenu* _cm, bool _enabled);
 
-        virtual void paintEvent( QPaintEvent * pe );
-	virtual void mouseDoubleClickEvent( QMouseEvent * _me );
+    virtual void paintEvent(QPaintEvent* pe);
+    virtual void mouseDoubleClickEvent(QMouseEvent* _me);
 
-private:
-	BBTCO * m_bbTCO;
-	QPixmap m_paintPixmap;
+  private:
+    BBTCO*  m_bbTCO;
+    QPixmap m_paintPixmap;
 
-	QStaticText m_staticTextName;
-} ;
-
-
-
+    QStaticText m_staticTextName;
+};
 
 class EXPORT BBTrack : public Track
 {
-	Q_OBJECT
-public:
-	BBTrack( TrackContainer* tc );
-	virtual ~BBTrack();
+    Q_OBJECT
+  public:
+    BBTrack(TrackContainer* tc);
+    virtual ~BBTrack();
 
-	virtual QString defaultName() const;
+    virtual QString defaultName() const;
 
-	virtual bool play( const MidiTime & _start, const fpp_t _frames,
-                           const f_cnt_t _frame_base, int _tco_num = -1 );
+    virtual bool play(const MidiTime& _start,
+                      const fpp_t     _frames,
+                      const f_cnt_t   _frame_base,
+                      int             _tco_num = -1);
 
-	virtual TrackView * createView( TrackContainerView* tcv );
-	virtual TrackContentObject * createTCO( const MidiTime & _pos );
+    virtual TrackView*          createView(TrackContainerView* tcv);
+    virtual TrackContentObject* createTCO(const MidiTime& _pos);
 
-	virtual void saveTrackSpecificSettings( QDomDocument & _doc,
-							QDomElement & _parent );
-	virtual void loadTrackSpecificSettings( const QDomElement & _this );
+    virtual void saveTrackSpecificSettings(QDomDocument& _doc,
+                                           QDomElement&  _parent);
+    virtual void loadTrackSpecificSettings(const QDomElement& _this);
 
-	int index() const
-	{
-		return s_infoMap.value(this);
-	}
+    int index() const
+    {
+        return s_infoMap.value(this);
+    }
 
-	bool automationDisabled( Track * _track )
-	{
-		return( m_disabledTracks.contains( _track ) );
-	}
-	void disableAutomation( Track * _track )
-	{
-		m_disabledTracks.append( _track );
-	}
-	void enableAutomation( Track * _track )
-	{
-		m_disabledTracks.removeAll( _track );
-	}
+    bool automationDisabled(Track* _track)
+    {
+        return m_disabledTracks.contains(_track);
+    }
+    void disableAutomation(Track* _track)
+    {
+        m_disabledTracks.append(_track);
+    }
+    void enableAutomation(Track* _track)
+    {
+        m_disabledTracks.removeAll(_track);
+    }
 
-        /*
-	static void setLastTCOColor( const QColor & c )
-	{
-		if( ! s_lastTCOColor )
-		{
-			s_lastTCOColor = new QColor( c );
-		}
-		else
-		{
-			*s_lastTCOColor = QColor( c );
-		}
-	}
+    /*
+    static void setLastTCOColor( const QColor & c )
+    {
+            if( ! s_lastTCOColor )
+            {
+                    s_lastTCOColor = new QColor( c );
+            }
+            else
+            {
+                    *s_lastTCOColor = QColor( c );
+            }
+    }
 
-	static void clearLastTCOColor()
-	{
-		if( s_lastTCOColor )
-		{
-			delete s_lastTCOColor;
-		}
-		s_lastTCOColor = NULL;
-	}
-        */
+    static void clearLastTCOColor()
+    {
+            if( s_lastTCOColor )
+            {
+                    delete s_lastTCOColor;
+            }
+            s_lastTCOColor = NULL;
+    }
+    */
 
-	static BBTrack * findBBTrack( int _bb_num );
-	static void swapBBTracks( Track * _track1, Track * _track2 );
+    static BBTrack* findBBTrack(int _bb_num);
+    static void     swapBBTracks(Track* _track1, Track* _track2);
 
-protected:
-	inline virtual QString nodeName() const
-	{
-		return "bbtrack";
-	}
+  protected:
+    inline virtual QString nodeName() const
+    {
+        return "bbtrack";
+    }
 
+  private:
+    QList<Track*> m_disabledTracks;
 
-private:
-	QList<Track *> m_disabledTracks;
+    typedef QMap<const BBTrack*, int> infoMap;
+    static infoMap                    s_infoMap;
 
-	typedef QMap<const BBTrack *, int> infoMap;
-	static infoMap s_infoMap;
+    // static QColor * s_lastTCOColor;
 
-	//static QColor * s_lastTCOColor;
-
-	friend class BBTrackView;
-
-} ;
-
-
+    friend class BBTrackView;
+};
 
 class BBTrackView : public TrackView
 {
-	Q_OBJECT
-public:
-	BBTrackView( BBTrack* bbt, TrackContainerView* tcv );
-	virtual ~BBTrackView();
+    Q_OBJECT
 
-	virtual bool close();
+  public:
+    BBTrackView(BBTrack* bbt, TrackContainerView* tcv);
+    virtual ~BBTrackView();
 
-	const BBTrack * getBBTrack() const
-	{
-		return( m_bbTrack );
-	}
+    virtual bool close();
 
+    const BBTrack* getBBTrack() const
+    {
+        return m_bbTrack;
+    }
 
-public slots:
-	void clickedTrackLabel();
+  public slots:
+    void clickedTrackLabel();
 
-
-private:
-	BBTrack * m_bbTrack;
-	TrackLabelButton * m_trackLabel;
-
-} ;
-
-
+  private:
+    BBTrack*          m_bbTrack;
+    TrackLabelButton* m_trackLabel;
+};
 
 #endif

@@ -245,12 +245,13 @@ class smfMidiChannel
         if(!p || n.pos() > lastEnd + DefaultTicksPerTact)
         {
             MidiTime pPos = MidiTime(n.pos().getTact(), 0);
-            p             = dynamic_cast<Pattern*>(it->createTCO(0));
+
+            p = dynamic_cast<Pattern*>(it->createTCO(0));
             p->movePosition(pPos);
         }
         hasNotes = true;
         lastEnd  = n.pos() + n.length();
-        n.setPos(n.pos(p->startPosition()));
+        n.setPos(n.pos() - p->startPosition());
         p->addNote(n, false);
     }
 };

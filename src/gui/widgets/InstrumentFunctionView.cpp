@@ -1,7 +1,7 @@
 /*
  * InstrumentFunctionViews.cpp - view for instrument-functions-tab
  *
- * Copyright (c) 2017-2018 gi0e5b06
+ * Copyright (c) 2017-2019 gi0e5b06
  * Copyright (c) 2004-2014 Tobias Doerffel <tobydox/at/users.sourceforge.net>
  *
  * This file is part of LMMS - https://lmms.io
@@ -488,7 +488,7 @@ InstrumentFunctionNoteOuttingView::InstrumentFunctionNoteOuttingView(
       InstrumentFunctionView(cc, tr("OUTTING"), parent),
       m_cc(cc), m_volumeKnob(new Knob(knobBright_26)),
       m_panKnob(new Knob(knobBright_26)), m_keyKnob(new Knob(knobBright_26)),
-      m_noteKnob(new Knob(knobBright_26))
+      m_noteKnob(new Knob()), m_modKnob(new Knob())
 {
     QGridLayout* mainLayout = new QGridLayout(m_panel);
     mainLayout->setContentsMargins(6, 2, 2, 2);
@@ -500,16 +500,25 @@ InstrumentFunctionNoteOuttingView::InstrumentFunctionNoteOuttingView(
     m_panKnob->setLabel(tr("PAN"));
     m_keyKnob->setLabel(tr("KEY"));
     m_noteKnob->setLabel(tr("NOTE"));
+    m_modKnob->setLabel(tr("MOD"));
 
     m_volumeKnob->setPointColor(Qt::red);
     m_panKnob->setPointColor(Qt::magenta);
     m_keyKnob->setPointColor(Qt::cyan);
     m_noteKnob->setPointColor(Qt::darkCyan);
+    m_modKnob->setPointColor(Qt::darkCyan);
+
+    m_volumeKnob->setInteractive(false);
+    m_panKnob->setInteractive(false);
+    m_keyKnob->setInteractive(false);
+    m_noteKnob->setInteractive(false);
+    m_modKnob->setInteractive(false);
 
     mainLayout->addWidget(m_volumeKnob, 0, 0, 1, 1, Qt::AlignHCenter);
     mainLayout->addWidget(m_panKnob, 0, 1, 1, 1, Qt::AlignHCenter);
     mainLayout->addWidget(m_keyKnob, 0, 2, 1, 1, Qt::AlignHCenter);
     mainLayout->addWidget(m_noteKnob, 0, 3, 1, 1, Qt::AlignHCenter);
+    mainLayout->addWidget(m_modKnob, 0, 4, 1, 1, Qt::AlignHCenter);
 }
 
 InstrumentFunctionNoteOuttingView::~InstrumentFunctionNoteOuttingView()
@@ -525,6 +534,7 @@ void InstrumentFunctionNoteOuttingView::modelChanged()
     m_panKnob->setModel(&m_cc->m_panModel);
     m_keyKnob->setModel(&m_cc->m_keyModel);
     m_noteKnob->setModel(&m_cc->m_noteModel);
+    m_modKnob->setModel(&m_cc->m_modModel);
 }
 
 InstrumentFunctionGlissandoView::InstrumentFunctionGlissandoView(

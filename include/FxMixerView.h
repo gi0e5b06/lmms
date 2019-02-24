@@ -2,7 +2,7 @@
  * FxMixerView.h - effect-mixer-view for LMMS
  *
  * Copyright (c) 2008-2014 Tobias Doerffel <tobydox/at/users.sourceforge.net>
- * 
+ *
  * This file is part of LMMS - https://lmms.io
  *
  * This program is free software; you can redistribute it and/or
@@ -25,11 +25,6 @@
 #ifndef FX_MIXER_VIEW_H
 #define FX_MIXER_VIEW_H
 
-//#include <QWidget>
-#include <QHBoxLayout>
-#include <QStackedLayout>
-#include <QScrollArea>
-
 //#include "ModelView.h"
 //#include "Engine.h"
 //#include "Effect.h"
@@ -40,104 +35,115 @@
 //#include "embed.h"
 #include "EffectRackView.h"
 
+//#include <QWidget>
+#include <QHBoxLayout>
+#include <QLine>
+#include <QScrollArea>
+#include <QStackedLayout>
+
 class QButtonGroup;
 class FxLine;
 
-class EXPORT FxMixerView : public QWidget, public ModelView,
-					public SerializingObjectHook
+class EXPORT FxMixerView :
+      public QWidget,
+      public ModelView,
+      public SerializingObjectHook
 {
-	Q_OBJECT
-public:
-	class FxChannelView
-	{
-	public:
-		FxChannelView(QWidget * _parent, FxMixerView * _mv, int _chIndex );
+    Q_OBJECT
 
-		void setChannelIndex( int index );
+  public:
+    class FxChannelView : public ModelView
+    {
+      public:
+        FxChannelView(QWidget* _parent, FxMixerView* _mv, int _chIndex);
 
-                PixmapButton* m_frozenBtn;
-                PixmapButton* m_clippingBtn;
+        void setChannelIndex(int index);
 
-		PixmapButton* m_eqEnableBtn;
-		Knob*         m_eqHighKnob;
-		Knob*         m_eqMediumKnob;
-		Knob*         m_eqLowKnob;
+        virtual QLine  cableFrom() const;
+        virtual QLine  cableTo() const;
+        virtual QColor cableColor() const;
 
-		FxLine * m_fxLine;
-		PixmapButton * m_muteBtn;
-		PixmapButton * m_soloBtn;
-		Fader * m_fader;
-		EffectRackView * m_rackView;
-	};
+        PixmapButton* m_frozenBtn;
+        PixmapButton* m_clippingBtn;
 
+        PixmapButton* m_eqEnableBtn;
+        Knob*         m_eqHighKnob;
+        Knob*         m_eqMediumKnob;
+        Knob*         m_eqLowKnob;
 
-	FxMixerView();
-	virtual ~FxMixerView();
+        FxLine*         m_fxLine;
+        PixmapButton*   m_muteBtn;
+        PixmapButton*   m_soloBtn;
+        Fader*          m_fader;
+        EffectRackView* m_rackView;
+    };
 
-	virtual void keyPressEvent(QKeyEvent * e);
+    FxMixerView();
+    virtual ~FxMixerView();
 
-	virtual void saveSettings( QDomDocument & _doc, QDomElement & _this );
-	virtual void loadSettings( const QDomElement & _this );
+    virtual void keyPressEvent(QKeyEvent* e);
 
-	inline FxLine * currentFxLine()
-	{
-		return m_currentFxLine;
-	}
+    virtual void saveSettings(QDomDocument& _doc, QDomElement& _this);
+    virtual void loadSettings(const QDomElement& _this);
 
-	inline FxChannelView * channelView(int index)
-	{
-		return m_fxChannelViews[index];
-	}
+    inline FxLine* currentFxLine()
+    {
+        return m_currentFxLine;
+    }
 
+    inline FxChannelView* channelView(int index)
+    {
+        return m_fxChannelViews[index];
+    }
 
-	void setCurrentFxLine( FxLine * _line );
-	void setCurrentFxLine( int _line );
+    void setCurrentFxLine(FxLine* _line);
+    void setCurrentFxLine(int _line);
 
-	void clear();
+    void clear();
 
+    // display the send button and knob correctly
+    void updateFxLine(int index);
 
-	// display the send button and knob correctly
-	void updateFxLine(int index);
+    // notify the view that an fx channel was deleted
+    void deleteChannel(int index);
 
-	// notify the view that an fx channel was deleted
-	void deleteChannel(int index);
+    // delete all unused channels
+    void deleteUnusedChannels();
 
-	// delete all unused channels
-	void deleteUnusedChannels();
+    // move the channel to the left or right
+    void moveChannelLeft(int index);
+    void moveChannelLeft(int index, int focusIndex);
+    void moveChannelRight(int index);
 
-	// move the channel to the left or right
-	void moveChannelLeft(int index);
-	void moveChannelLeft(int index, int focusIndex);
-	void moveChannelRight(int index);
+    // make sure the display syncs up with the fx mixer.
+    // useful for loading projects
+    void refreshDisplay();
 
-	// make sure the display syncs up with the fx mixer.
-	// useful for loading projects
-	void refreshDisplay();
+    virtual QList<ModelView*> childModelViews() const;
 
-public slots:
-	int addNewChannel();
+  public slots:
+    int addNewChannel();
 
-protected:
-	virtual void closeEvent(QCloseEvent* _ce);
+  protected:
+    virtual void closeEvent(QCloseEvent* _ce);
 
-private slots:
-	void updateFaders();
-	void toggledSolo();
+  private slots:
+    void updateFaders();
+    void toggledSolo();
 
-private:
+  private:
+    QVector<FxChannelView*> m_fxChannelViews;
 
-	QVector<FxChannelView*> m_fxChannelViews;
+    FxLine*         m_currentFxLine;
+    QScrollArea*    channelArea;
+    QHBoxLayout*    chLayout;
+    QWidget*        m_channelAreaWidget;
+    QStackedLayout* m_racksLayout;
+    QWidget*        m_racksWidget;
 
-	FxLine*         m_currentFxLine;
-	QScrollArea*    channelArea;
-	QHBoxLayout*    chLayout;
-	QWidget*        m_channelAreaWidget;
-	QStackedLayout* m_racksLayout;
-	QWidget*        m_racksWidget;
+    void updateMaxChannelSelector();
 
-	void updateMaxChannelSelector();
-
-	friend class FxChannelView;
-} ;
+    friend class FxChannelView;
+};
 
 #endif

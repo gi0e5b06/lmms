@@ -59,7 +59,7 @@ EffectSelectDialog::EffectSelectDialog(QWidget* _parent) :
         }
         else
         {
-            m_effectKeys << EffectKey(desc, desc->name);
+            m_effectKeys << EffectKey(desc, desc->name());
         }
     }
 
@@ -77,11 +77,11 @@ EffectSelectDialog::EffectSelectDialog(QWidget* _parent) :
         if((*it).desc->subPluginFeatures)
         {
             name = (*it).name;
-            type = (*it).desc->displayName;
+            type = (*it).desc->displayName();
         }
         else
         {
-            name = (*it).desc->displayName;
+            name = (*it).desc->displayName();
             type = "LMMS";
         }
         m_sourceModel.setItem(row, 0, new QStandardItem(name));
@@ -144,8 +144,8 @@ Effect* EffectSelectDialog::instantiateSelectedPlugin(EffectChain* _parent)
     if(!m_currentSelection.name.isEmpty() && m_currentSelection.desc)
     {
         qWarning("EffectSelectDialog::instantiateSelectedPlugin %s",
-                 qPrintable(m_currentSelection.desc->name));
-        return Effect::instantiate(m_currentSelection.desc->name, _parent,
+                 qPrintable(m_currentSelection.desc->name()));
+        return Effect::instantiate(m_currentSelection.desc->name(), _parent,
                                    &m_currentSelection);
     }
     return NULL;
@@ -182,10 +182,10 @@ void EffectSelectDialog::rowChanged(const QModelIndex& _idx,
 
         Plugin::Descriptor const& descriptor = *(m_currentSelection.desc);
 
-        if(descriptor.logo)
+        if(descriptor.logo())
         {
             QLabel* logoLabel = new QLabel(m_descriptionWidget);
-            logoLabel->setPixmap(descriptor.logo->pixmap());
+            logoLabel->setPixmap(descriptor.logo()->pixmap());
             logoLabel->setSizePolicy(QSizePolicy::Minimum,
                                      QSizePolicy::Minimum);
 
@@ -224,13 +224,13 @@ void EffectSelectDialog::rowChanged(const QModelIndex& _idx,
             QLabel* label = new QLabel(m_descriptionWidget);
             QString labelText
                     = QString("<p>") + "<b>" + tr("Name") + ":</b> "
-                      + /*QString::fromUtf8*/ (descriptor.displayName)
+                      + /*QString::fromUtf8*/ (descriptor.displayName())
                       + "<br/>" + "<b>" + tr("Description") + ":</b> "
                       + qApp->translate(
                                 "pluginBrowser",
-                                descriptor.description.toUtf8().constData())
+                                descriptor.description().toUtf8().constData())
                       + "<br/>" + "<b>" + tr("Author") + ":</b> "
-                      + /*QString::fromUtf8*/ (descriptor.author) + "</p>";
+                      + /*QString::fromUtf8*/ (descriptor.author()) + "</p>";
             label->setText(labelText);
             textWidgetLayout->addWidget(label);
         }

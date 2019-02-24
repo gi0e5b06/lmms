@@ -25,39 +25,35 @@
 #ifndef INSTRUMENT_CONTROLS_H
 #define INSTRUMENT_CONTROLS_H
 
-#include "Model.h"
-#include "JournallingObject.h"
 #include "Instrument.h"
+#include "JournallingObject.h"
+#include "Model.h"
 
 class InstrumentControlDialog;
 
-
 class InstrumentControls : public JournallingObject, public Model
 {
- public:
-        InstrumentControls( Instrument* _instrument ) :
-	        JournallingObject(),
-		Model( _instrument ),
-		m_instrument( _instrument )
-		{
-		}
+  public:
+    InstrumentControls(Instrument* _instrument) :
+          JournallingObject(), Model(_instrument, "Instrument controls"),
+          m_instrument(_instrument)
+    {
+    }
 
-	virtual ~InstrumentControls()
-	{
-	}
+    virtual ~InstrumentControls()
+    {
+    }
 
-	virtual int controlCount() = 0;
-	virtual InstrumentControlDialog * createView() = 0;
+    virtual int                      controlCount() = 0;
+    virtual InstrumentControlDialog* createView()   = 0;
 
-	Instrument* instrument()
-	{
-		return m_instrument;
-	}
+    Instrument* instrument()
+    {
+        return m_instrument;
+    }
 
-
-private:
-	Instrument* m_instrument;
-
-} ;
+  private:
+    Instrument* m_instrument;
+};
 
 #endif

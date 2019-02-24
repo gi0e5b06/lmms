@@ -63,7 +63,7 @@ class PadsGDX : public Instrument
         virtual void loadSFZ(const QString& _file);
         virtual void saveSFZ(const QString& _file);
 
-	virtual QString nodeName() const;
+	//virtual QString nodeName() const;
 
 	virtual int getBeatLen(NotePlayHandle* _n) const;
 

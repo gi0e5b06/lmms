@@ -218,10 +218,12 @@ void bitInvader::normalize()
     m_normalizeFactor = 1. / fmax;
 }
 
+/*
 QString bitInvader::nodeName() const
 {
-    return (bitinvader_plugin_descriptor.name);
+    return bitinvader_plugin_descriptor.name;
 }
+*/
 
 void bitInvader::playNote(NotePlayHandle* _n, sampleFrame* _working_buffer)
 {

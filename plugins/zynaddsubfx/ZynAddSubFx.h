@@ -25,15 +25,14 @@
 #ifndef ZYNADDSUBFX_H
 #define ZYNADDSUBFX_H
 
-#include <QMap>
-#include <QMutex>
-
 #include "AutomatableModel.h"
 #include "Instrument.h"
 #include "InstrumentView.h"
 #include "RemotePlugin.h"
 #include "zynaddsubfx/src/globals.h"
 
+#include <QMap>
+#include <QMutex>
 
 class QPushButton;
 
@@ -43,126 +42,110 @@ class NotePlayHandle;
 class Knob;
 class LedCheckBox;
 
-
 class ZynAddSubFxRemotePlugin : public RemotePlugin
 {
-	Q_OBJECT
-public:
-	ZynAddSubFxRemotePlugin();
-	virtual ~ZynAddSubFxRemotePlugin();
+    Q_OBJECT
+  public:
+    ZynAddSubFxRemotePlugin();
+    virtual ~ZynAddSubFxRemotePlugin();
 
-	virtual bool processMessage( const message & _m );
+    virtual bool processMessage(const message& _m);
 
-
-signals:
-	void clickedCloseButton();
-
-} ;
-
-
+  signals:
+    void clickedCloseButton();
+};
 
 class ZynAddSubFxInstrument : public Instrument
 {
-	Q_OBJECT
-public:
-	ZynAddSubFxInstrument( InstrumentTrack * _instrument_track );
-	virtual ~ZynAddSubFxInstrument();
+    Q_OBJECT
 
-	virtual void play( sampleFrame * _working_buffer );
+  public:
+    ZynAddSubFxInstrument(InstrumentTrack* _instrument_track);
+    virtual ~ZynAddSubFxInstrument();
 
-	virtual bool handleMidiEvent( const MidiEvent& event, const MidiTime& time = MidiTime(), f_cnt_t offset = 0 );
+    virtual void play(sampleFrame* _working_buffer);
 
-	virtual void saveSettings( QDomDocument & _doc, QDomElement & _parent );
-	virtual void loadSettings( const QDomElement & _this );
+    virtual bool handleMidiEvent(const MidiEvent& event,
+                                 const MidiTime&  time   = MidiTime(),
+                                 f_cnt_t          offset = 0);
 
-	virtual void loadFile( const QString & _file );
+    virtual void saveSettings(QDomDocument& _doc, QDomElement& _parent);
+    virtual void loadSettings(const QDomElement& _this);
+    virtual void loadFile(const QString& _file);
+    // virtual QString nodeName() const;
 
+    virtual Flags flags() const
+    {
+        return IsSingleStreamed | IsMidiBased;
+    }
 
-	virtual QString nodeName() const;
+    virtual PluginView* instantiateView(QWidget* _parent);
 
-	virtual Flags flags() const
-	{
-		return IsSingleStreamed | IsMidiBased;
-	}
+  private slots:
+    void reloadPlugin();
 
-	virtual PluginView * instantiateView( QWidget * _parent );
+    void updateBendingRange();
 
+    void updatePortamento();
+    void updateFilterFreq();
+    void updateFilterQ();
+    void updateBandwidth();
+    void updateFmGain();
+    void updateResCenterFreq();
+    void updateResBandwidth();
 
-private slots:
-	void reloadPlugin();
+  private:
+    void initPlugin();
+    void sendControlChange(MidiControllers midiCtl, float value);
 
-	void updateBendingRange();
+    bool                     m_hasGUI;
+    QMutex                   m_pluginMutex;
+    LocalZynAddSubFx*        m_plugin;
+    ZynAddSubFxRemotePlugin* m_remotePlugin;
 
-	void updatePortamento();
-	void updateFilterFreq();
-	void updateFilterQ();
-	void updateBandwidth();
-	void updateFmGain();
-	void updateResCenterFreq();
-	void updateResBandwidth();
+    FloatModel m_portamentoModel;
+    FloatModel m_filterFreqModel;
+    FloatModel m_filterQModel;
+    FloatModel m_bandwidthModel;
+    FloatModel m_fmGainModel;
+    FloatModel m_resCenterFreqModel;
+    FloatModel m_resBandwidthModel;
+    BoolModel  m_forwardMidiCcModel;
 
+    QMap<int, bool> m_modifiedControllers;
 
-private:
-	void initPlugin();
-	void sendControlChange( MidiControllers midiCtl, float value );
+    friend class ZynAddSubFxView;
 
-	bool m_hasGUI;
-	QMutex m_pluginMutex;
-	LocalZynAddSubFx * m_plugin;
-	ZynAddSubFxRemotePlugin * m_remotePlugin;
-
-	FloatModel m_portamentoModel;
-	FloatModel m_filterFreqModel;
-	FloatModel m_filterQModel;
-	FloatModel m_bandwidthModel;
-	FloatModel m_fmGainModel;
-	FloatModel m_resCenterFreqModel;
-	FloatModel m_resBandwidthModel;
-	BoolModel m_forwardMidiCcModel;
-
-	QMap<int, bool> m_modifiedControllers;
-
-	friend class ZynAddSubFxView;
-
-
-signals:
-	void settingsChanged();
-
-} ;
-
-
+  signals:
+    void settingsChanged();
+};
 
 class ZynAddSubFxView : public InstrumentView
 {
-	Q_OBJECT
-public:
-	ZynAddSubFxView( Instrument * _instrument, QWidget * _parent );
-	virtual ~ZynAddSubFxView();
+    Q_OBJECT
+  public:
+    ZynAddSubFxView(Instrument* _instrument, QWidget* _parent);
+    virtual ~ZynAddSubFxView();
 
+  protected:
+    virtual void dragEnterEvent(QDragEnterEvent* _dee);
+    virtual void dropEvent(QDropEvent* _de);
 
-protected:
-	virtual void dragEnterEvent( QDragEnterEvent * _dee );
-	virtual void dropEvent( QDropEvent * _de );
+  private:
+    void modelChanged();
 
+    QPushButton* m_toggleUIButton;
+    Knob*        m_portamento;
+    Knob*        m_filterFreq;
+    Knob*        m_filterQ;
+    Knob*        m_bandwidth;
+    Knob*        m_fmGain;
+    Knob*        m_resCenterFreq;
+    Knob*        m_resBandwidth;
+    LedCheckBox* m_forwardMidiCC;
 
-private:
-	void modelChanged();
-
-	QPushButton * m_toggleUIButton;
-	Knob * m_portamento;
-	Knob * m_filterFreq;
-	Knob * m_filterQ;
-	Knob * m_bandwidth;
-	Knob * m_fmGain;
-	Knob * m_resCenterFreq;
-	Knob * m_resBandwidth;
-	LedCheckBox * m_forwardMidiCC;
-
-
-private slots:
-	void toggleUI();
-
-} ;
-
+  private slots:
+    void toggleUI();
+};
 
 #endif

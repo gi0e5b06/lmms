@@ -35,7 +35,7 @@ class EXPORT PixmapButton : public AutomatableButton
 {
 	Q_OBJECT
 public:
-	PixmapButton(QWidget* _parent,const QString& _name=QString::null);
+	PixmapButton(QWidget* _parent,const QString& _name="[pixmap button]");
 	virtual ~PixmapButton();
 
 	void setActiveGraphic( const QPixmap & _pm, bool _update = true );

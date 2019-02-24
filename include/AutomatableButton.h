@@ -39,7 +39,7 @@ class EXPORT AutomatableButton : public QPushButton, public BoolModelView
 	Q_OBJECT
 public:
 	AutomatableButton( QWidget * _parent, const QString & _name
-			= QString::null );
+			= "[automatable button]" );
 	virtual ~AutomatableButton();
 
 	inline void setCheckable( bool _on )

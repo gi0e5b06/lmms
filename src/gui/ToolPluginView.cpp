@@ -41,7 +41,7 @@ ToolPluginView::ToolPluginView( ToolPlugin * _toolPlugin ) :
 	//parentWidget()->setAttribute( Qt::WA_DeleteOnClose, false );
 	SubWindow::putWidgetOnWorkspace(this,false,false,false);
 	setWindowTitle( _toolPlugin->displayName() );
-	setWindowIcon( _toolPlugin->descriptor()->logo->pixmap() );
+	setWindowIcon( _toolPlugin->descriptor()->logo()->pixmap() );
 }
 
 

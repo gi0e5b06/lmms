@@ -146,7 +146,7 @@ class WatsynInstrument : public Instrument
     virtual void saveSettings(QDomDocument& _doc, QDomElement& _this);
     virtual void loadSettings(const QDomElement& _this);
 
-    virtual QString nodeName() const;
+    // virtual QString nodeName() const;
 
     virtual f_cnt_t desiredReleaseFrames() const
     {

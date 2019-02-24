@@ -213,21 +213,21 @@ InstrumentTrack::InstrumentTrack(TrackContainer* tc) :
 
 InstrumentTrack::~InstrumentTrack()
 {
-    qWarning("InstrumentTrack::~InstrumentTrack 1");
+    // qInfo("InstrumentTrack::~InstrumentTrack 1");
     // kill all running notes and the iph
     silenceAllNotes(true);
 
-    qWarning("InstrumentTrack::~InstrumentTrack 2");
+    // qInfo("InstrumentTrack::~InstrumentTrack 2");
     // now we're save deleting the instrument
     Instrument* old = m_instrument;
     if(old)
     {
-        qWarning("InstrumentTrack::~InstrumentTrack 3");
+        // qInfo("InstrumentTrack::~InstrumentTrack 3");
         m_instrument = nullptr;
         delete old;
-        qWarning("InstrumentTrack::~InstrumentTrack 4");
+        // qInfo("InstrumentTrack::~InstrumentTrack 4");
     }
-    qWarning("InstrumentTrack::~InstrumentTrack 5");
+    // qInfo("InstrumentTrack::~InstrumentTrack 5");
 }
 
 QString InstrumentTrack::defaultName() const
@@ -310,7 +310,8 @@ void InstrumentTrack::processAudioBuffer(sampleFrame*    buf,
                     Engine::mixer()->processingSampleRate());
         m_soundShaping.processAudioBuffer(
                 buf + m_envOffset, frames - m_envOffset, m_envFilter,
-                m_envTotalFramesPlayed, m_envReleaseBegin, m_envLegato);
+                m_envTotalFramesPlayed, m_envReleaseBegin, m_envLegato,
+                m_envMarcato, m_envStaccato);
     }
 
     // if(nph != nullptr)
@@ -341,7 +342,7 @@ void InstrumentTrack::processAudioBuffer(sampleFrame*    buf,
             {
                 for(int c = 0; c < 2; ++c)
                 {
-                        buf[f][c] *= sg.gain[c];
+                    buf[f][c] *= sg.gain[c];
                 }
             }
         }
@@ -589,16 +590,16 @@ void InstrumentTrack::processOutEvent(const MidiEvent& event,
 
 void InstrumentTrack::silenceAllNotes(bool removeIPH)
 {
-    qInfo("InstrumentTrack::silenceAllNotes 1a");
+    // qInfo("InstrumentTrack::silenceAllNotes 1a");
     for(int i = 0; i < NumMidiKeys; ++i)
     {
         if(m_notes[i] != nullptr || m_runningMidiNotes[i] != 0)
         {
-            qInfo("InstrumentTrack: silence %d", i);
+            // qInfo("InstrumentTrack: silence %d", i);
             processOutEvent(MidiEvent(MidiNoteOff, -1, i, 0));
         }
     }
-    qInfo("InstrumentTrack::silenceAllNotes 1b");
+    // qInfo("InstrumentTrack::silenceAllNotes 1b");
     m_midiNotesMutex.lock();
     for(int i = 0; i < NumMidiKeys; ++i)
     {
@@ -606,20 +607,20 @@ void InstrumentTrack::silenceAllNotes(bool removeIPH)
         m_runningMidiNotes[i] = 0;
     }
     m_midiNotesMutex.unlock();
-    qInfo("InstrumentTrack::silenceAllNotes 2");
+    // qInfo("InstrumentTrack::silenceAllNotes 2");
 
     lock();
     // invalidate all NotePlayHandles and PresetPreviewHandles linked to this
     // track
-    qInfo("InstrumentTrack::silenceAllNotes 3a");
+    // qInfo("InstrumentTrack::silenceAllNotes 3a");
     m_sustainedNotes.clear();
-    qInfo("InstrumentTrack::silenceAllNotes 3b");
+    // qInfo("InstrumentTrack::silenceAllNotes 3b");
     m_processHandles.clear();
-    qInfo("InstrumentTrack::silenceAllNotes 4");
+    // qInfo("InstrumentTrack::silenceAllNotes 4");
     quint8 flags = PlayHandle::TypeNotePlayHandle
                    | PlayHandle::TypePresetPreviewHandle;
     Engine::mixer()->emit removePlayHandlesOfTypes(this, flags);
-    qInfo("InstrumentTrack::silenceAllNotes 5");
+    // qInfo("InstrumentTrack::silenceAllNotes 5");
     /*
     if(removeIPH)
     {
@@ -628,7 +629,7 @@ void InstrumentTrack::silenceAllNotes(bool removeIPH)
     }
     */
     unlock();
-    qInfo("InstrumentTrack::silenceAllNotes 6");
+    // qInfo("InstrumentTrack::silenceAllNotes 6");
 }
 
 f_cnt_t InstrumentTrack::beatLen(NotePlayHandle* _n) const
@@ -662,12 +663,12 @@ void InstrumentTrack::playNote(NotePlayHandle* _nph,
 
     if(_nph->isMasterNote() == false && m_instrument != nullptr)
     {
-        // qWarning("InstrumentTrack::play n.key=%d
+        // qInfo("InstrumentTrack::play n.key=%d
         // g=%d",_nph->key(),_nph->generation());
         // all is done, so now lets play the note!
         m_instrument->playNote(_nph, _workingBuffer);
     }
-    // else qWarning("InstrumentTrack::play SKIP n.key=%d
+    // else qInfo("InstrumentTrack::play SKIP n.key=%d
     // g=%d",_nph->key(),_nph->generation());
 }
 
@@ -939,9 +940,9 @@ bool InstrumentTrack::play(const MidiTime& _start,
             }
 
             // get all notes from the given pattern...
-            const NoteVector& notes = p->notes();
+            const Notes& notes = p->notes();
             // ...and set our index to zero
-            NoteVector::ConstIterator nit = notes.begin();
+            Notes::ConstIterator nit = notes.begin();
 
             // very effective algorithm for playing notes that are
             // posated within the current sample-frame
@@ -1015,7 +1016,7 @@ void InstrumentTrack::saveTrackSpecificSettings(QDomDocument& doc,
     if(m_instrument != nullptr)
     {
         QDomElement i = doc.createElement("instrument");
-        i.setAttribute("name", m_instrument->descriptor()->name);
+        i.setAttribute("name", m_instrument->descriptor()->name());
         m_instrument->saveState(doc, i);
         thisElement.appendChild(i);
     }
@@ -1069,6 +1070,8 @@ void InstrumentTrack::loadTrackSpecificSettings(
 
     // clear effect-chain just in case we load an old preset without FX-data
     m_audioPort.effects()->clear();
+
+    QStringList errors;
 
     QDomNode node = thisElement.firstChild();
     while(!node.isNull())
@@ -1141,14 +1144,46 @@ void InstrumentTrack::loadTrackSpecificSettings(
                                != node.nodeName()
                     && !node.toElement().hasAttribute("id"))
             {
-                delete m_instrument;
-                m_instrument = nullptr;
-                m_instrument = Instrument::instantiate(node.nodeName(), this);
-                if(m_instrument->nodeName() == node.nodeName())
+                /*
+                  delete m_instrument;
+                  m_instrument = nullptr;
+                  m_instrument = Instrument::instantiate(node.nodeName(),
+                  this); if(m_instrument->nodeName() == node.nodeName())
+                  {
+                  m_instrument->restoreState(node.toElement());
+                  }
+                  emit instrumentChanged();
+                */
+
+                qWarning(
+                        "Notice: unknown tag '%s': trying loading as a "
+                        "plugin",
+                        qPrintable(node.nodeName()));
+
+                Plugin* p = Plugin::instantiate(node.nodeName(), this, this,
+                                                false);
+                if(dynamic_cast<Instrument*>(p) != nullptr
+                   && p->nodeName() == node.nodeName())
                 {
+                    delete m_instrument;
+                    m_instrument = dynamic_cast<Instrument*>(p);
                     m_instrument->restoreState(node.toElement());
+                    emit instrumentChanged();
                 }
-                emit instrumentChanged();
+                else if(dynamic_cast<InstrumentFunction*>(p) != nullptr
+                        && p->nodeName() == node.nodeName())
+                {
+                    InstrumentFunction* f
+                            = dynamic_cast<InstrumentFunction*>(p);
+                    f->restoreState(node.toElement());
+                    m_noteFunctions.append(f);
+                    emit instrumentFunctionAdded(f);
+                }
+                else
+                {
+                    errors << node.nodeName();
+                    delete p;
+                }
             }
         }
         node = node.nextSibling();
@@ -1156,6 +1191,23 @@ void InstrumentTrack::loadTrackSpecificSettings(
 
     updateBendingRange();
     unlock();
+
+    if(!errors.isEmpty())
+    {
+        errors.removeDuplicates();
+        QString s = errors.join("\n");
+        if(gui)
+        {
+            QMessageBox::information(
+                    nullptr, tr("Plugins not found"),
+                    tr("Some plugins were not found:\n%1").arg(s),
+                    QMessageBox::Ok | QMessageBox::Default);
+        }
+        else
+        {
+            qWarning("Some plugins were not found:\n%s", qPrintable(s));
+        }
+    }
 }
 
 void InstrumentTrack::setPreviewMode(const bool value)
@@ -2087,8 +2139,11 @@ void InstrumentTrackWindow::updateInstrumentView()
         m_ssView->setFunctionsHidden(
                 m_track->m_instrument->isSingleStreamed());
 
-        modelChanged();          // Get the instrument window to refresh
-        m_track->dataChanged();  // Get the text on the trackButton to change
+        // Get the instrument window to refresh
+        modelChanged();
+
+        // Get the text on the trackButton to change
+        m_track->emit dataChanged();
     }
 }
 
@@ -2147,43 +2202,43 @@ void InstrumentTrackWindow::dragEnterEvent(QDragEnterEvent* event)
 
 void InstrumentTrackWindow::dropEvent(QDropEvent* event)
 {
-    qInfo("InstrumentTrackWindow::dropEvent event=%p", event);
+    // qInfo("InstrumentTrackWindow::dropEvent event=%p", event);
 
     QString type  = StringPairDrag::decodeKey(event);
     QString value = StringPairDrag::decodeValue(event);
 
-    qInfo("InstrumentTrackWindow::dropEvent #2");
+    // qInfo("InstrumentTrackWindow::dropEvent #2");
     if(type == "instrument")
     {
-        qInfo("InstrumentTrackWindow::dropEvent #instrument");
+        // qInfo("InstrumentTrackWindow::dropEvent #instrument");
+
         m_track->loadInstrument(value);
 
         Engine::getSong()->setModified();
-
         event->accept();
         setFocus();
     }
     else if(type == "presetfile")
     {
-        qInfo("InstrumentTrackWindow::dropEvent #preset");
+        // qInfo("InstrumentTrackWindow::dropEvent #preset");
+
         DataFile dataFile(value);
         InstrumentTrack::removeMidiPortNode(dataFile);
         m_track->setSimpleSerializing();
         m_track->loadSettings(dataFile.content().toElement());
 
         Engine::getSong()->setModified();
-
         event->accept();
         setFocus();
     }
     else if(type == "pluginpresetfile")
     {
-        qInfo("InstrumentTrackWindow::dropEvent #plugin");
+        // qInfo("InstrumentTrackWindow::dropEvent #plugin");
 
         const QString ext = FileItem::extension(value);
         Instrument*   i   = m_track->instrument();
 
-        qInfo("InstrumentTrackWindow::dropEvent i=%p", i);
+        // qInfo("InstrumentTrackWindow::dropEvent i=%p", i);
 
         if((i == nullptr) || !i->descriptor()->supportsFileType(ext))
         {
@@ -2192,7 +2247,10 @@ void InstrumentTrackWindow::dropEvent(QDropEvent* event)
         }
 
         if(i != nullptr)
+        {
             i->loadFile(value);
+            Engine::getSong()->setModified();
+        }
 
         event->accept();
         setFocus();

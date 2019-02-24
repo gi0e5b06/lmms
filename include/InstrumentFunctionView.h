@@ -37,9 +37,7 @@ class Knob;
 class TempoSyncKnob;
 class LedCheckBox;
 
-class InstrumentFunctionView
-      : public GroupBox
-      , public ModelView
+class InstrumentFunctionView : public GroupBox, public ModelView
 {
     Q_OBJECT
 
@@ -125,8 +123,8 @@ class InstrumentFunctionNoteHumanizingView : public InstrumentFunctionView
     Knob* m_shortenStepKnob;
 };
 
-class InstrumentFunctionNoteDuplicatesRemovingView
-      : public InstrumentFunctionView
+class InstrumentFunctionNoteDuplicatesRemovingView :
+      public InstrumentFunctionView
 {
     Q_OBJECT
 
@@ -200,10 +198,12 @@ class InstrumentFunctionNoteOuttingView : public InstrumentFunctionView
 
   private:
     InstrumentFunctionNoteOutting* m_cc;
-    Knob*                          m_volumeKnob;
-    Knob*                          m_panKnob;
-    Knob*                          m_keyKnob;
-    Knob*                          m_noteKnob;
+
+    Knob* m_volumeKnob;
+    Knob* m_panKnob;
+    Knob* m_keyKnob;
+    Knob* m_noteKnob;
+    Knob* m_modKnob;
 };
 
 class InstrumentFunctionGlissandoView : public InstrumentFunctionView

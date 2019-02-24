@@ -298,10 +298,12 @@ void audioFileProcessor::loadFile(const QString& _file)
     setAudioFile(_file);
 }
 
+/*
 QString audioFileProcessor::nodeName(void) const
 {
     return audiofileprocessor_plugin_descriptor.name;
 }
+*/
 
 int audioFileProcessor::getBeatLen(NotePlayHandle* _n) const
 {

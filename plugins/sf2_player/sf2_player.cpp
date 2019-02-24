@@ -275,10 +275,12 @@ AutomatableModel* sf2Instrument::childModel(const QString& _modelName)
     return NULL;
 }
 
+/*
 QString sf2Instrument::nodeName() const
 {
     return sf2player_plugin_descriptor.name;
 }
+*/
 
 void sf2Instrument::freeFont()
 {

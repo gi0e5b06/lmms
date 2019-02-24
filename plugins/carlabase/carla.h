@@ -84,7 +84,7 @@ class PLUGIN_EXPORT CarlaInstrument : public Instrument
     // LMMS functions
     virtual Flags       flags() const;
     virtual f_cnt_t     desiredReleaseFrames() const;
-    virtual QString     nodeName() const;
+    //virtual QString     nodeName() const;
     virtual void        saveSettings(QDomDocument& doc, QDomElement& parent);
     virtual void        loadSettings(const QDomElement& elem);
     virtual void        play(sampleFrame* workingBuffer);

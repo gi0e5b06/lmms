@@ -36,12 +36,12 @@ class EXPORT LcdSpinBox
   public:
     LcdSpinBox(int            numDigits,
                QWidget*       parent,
-               const QString& name = QString::null);
+               const QString& name = "[lcd spinbox]");
 
     LcdSpinBox(int            numDigits,
                const QString& style,
                QWidget*       parent,
-               const QString& name = QString::null);
+               const QString& name = "[lcd spinbox]");
 
     virtual ~LcdSpinBox();
 

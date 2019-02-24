@@ -357,7 +357,7 @@ const surroundSampleFrame* Mixer::renderNextBuffer()
        &&
        // p != last_metro_pos &&
        // Stop crash with metronome if empty project
-       Engine::getSong()->countTracks())
+       Engine::getSong()->hasTracks())  // countTracks())
     {
         if(!s_metronome1)
             s_metronome1 = sharedObject::ref(
@@ -581,7 +581,7 @@ const surroundSampleFrame* Mixer::renderNextBuffer()
 
 void Mixer::clear()
 {
-    qInfo("Mixer::clear");
+    // qInfo("Mixer::clear");
     m_clearSignal = true;
 }
 
@@ -630,7 +630,7 @@ void Mixer::clearInternal()
 {
     // TODO: m_midiClient->noteOffAll();
 
-    qInfo("Mixer::clearInternal");
+    // qInfo("Mixer::clearInternal");
     // requestChangeInModel();
     for(PlayHandle* ph: m_playHandles)
         if(ph->type() != PlayHandle::TypeInstrumentPlayHandle)
@@ -708,7 +708,7 @@ void Mixer::setAudioDevice(AudioDevice* _dev)
 {
     stopProcessing();
 
-    qInfo("Mixer::setAudioDevice p=%p", _dev);
+    // qInfo("Mixer::setAudioDevice p=%p", _dev);
 
     if(_dev == nullptr)
     {
@@ -737,7 +737,7 @@ void Mixer::setAudioDevice(AudioDevice*                  _dev,
 
     m_qualitySettings = _qs;
 
-    qInfo("Mixer::setAudioDevice p=%p", _dev);
+    // qInfo("Mixer::setAudioDevice p=%p", _dev);
 
     if(_dev == nullptr)
     {
@@ -783,7 +783,7 @@ void Mixer::restoreAudioDevice()
 
 void Mixer::addAudioPort(AudioPort* _port)
 {
-    qInfo("Mixer::addAudioPort");
+    // qInfo("Mixer::addAudioPort");
     requestChangeInModel();
     m_audioPorts.append(_port);
     doneChangeInModel();
@@ -791,7 +791,7 @@ void Mixer::addAudioPort(AudioPort* _port)
 
 void Mixer::removeAudioPort(AudioPort* _port)
 {
-    qInfo("Mixer::removeAudioPort 1");
+    // qInfo("Mixer::removeAudioPort 1");
     requestChangeInModel();
     /*
     QVector<AudioPort*>::Iterator it
@@ -801,11 +801,11 @@ void Mixer::removeAudioPort(AudioPort* _port)
         m_audioPorts.erase(it);
     }
     */
-    qInfo("Mixer::removeAudioPort 2");
+    // qInfo("Mixer::removeAudioPort 2");
     m_audioPorts.removeOne(_port);
-    qInfo("Mixer::removeAudioPort 3");
+    // qInfo("Mixer::removeAudioPort 3");
     doneChangeInModel();
-    qInfo("Mixer::removeAudioPort 4");
+    // qInfo("Mixer::removeAudioPort 4");
 }
 
 bool Mixer::addPlayHandle(PlayHandle* _ph)
@@ -896,22 +896,15 @@ void Mixer::removePlayHandleInternal(PlayHandle* _ph)
     {
         if(!m_playHandlesToRemove.contains(_ph))
             m_playHandlesToRemove.append(_ph);
-        BACKTRACE
+        // BACKTRACE
         qInfo("*** Mixer::removePlayHandleInternal wrong thread");
     }
 }
 
 void Mixer::removePlayHandleUnchecked(PlayHandle* _ph)
 {
-    BACKTRACE
-    qInfo("*** Mixer::removePlayHandleUnchecked(%p)", _ph);
-
-    /*    const NotePlayHandle* nph = dynamic_cast<const NotePlayHandle*>(_ph);
-    if(nph != nullptr)
-    {
-        for(NotePlayHandle* n: nph->subNotes())
-            removePlayHandleUnchecked(n);
-            }*/
+    // BACKTRACE
+    // qInfo("*** Mixer::removePlayHandleUnchecked(%p)", _ph);
 
     // TMP GDX
     if(_ph->audioPort() == nullptr)
@@ -976,7 +969,7 @@ void Mixer::removePlayHandlesOfTypes(const Track* _track, const quint8 _types)
         return;
     }
 
-    qWarning("Mixer::removePlayHandlesOfTypes %p %d", _track, _types);
+    // qWarning("Mixer::removePlayHandlesOfTypes %p %d", _track, _types);
     requestChangeInModel();
     PlayHandleList toDelete;
     for(PlayHandle* ph: m_playHandles)
@@ -987,9 +980,11 @@ void Mixer::removePlayHandlesOfTypes(const Track* _track, const quint8 _types)
             continue;
         }
 
-        if(ph->affinityMatters()
+        /*
+          if(ph->affinityMatters()
            && ph->affinity() != thread())  // QThread::currentThread())
             continue;
+        */
 
         if((ph->type() & _types) && ph->isFromTrack(_track))
             toDelete.append(ph);
@@ -1207,16 +1202,17 @@ AudioDevice* Mixer::tryAudioDevices()
     // BACKTRACE
 
 #ifdef LMMS_HAVE_ALSA
-    qInfo("Mixer::tryAudioDevices trying device '%s'", qPrintable(dev_name));
+    // qInfo("Mixer::tryAudioDevices trying device '%s'",
+    // qPrintable(dev_name));
 
     if(dev_name == AudioAlsaGdx::name() || dev_name == "")
     {
-        qInfo("Mixer::tryAudioDevices #2");
+        // qInfo("Mixer::tryAudioDevices #2");
 
         dev = new AudioAlsaGdx(success_ful, this);
         if(success_ful)
         {
-            qInfo("Mixer::tryAudioDevices #3");
+            // qInfo("Mixer::tryAudioDevices #3");
 
             m_audioDevName = AudioAlsaGdx::name();
             return dev;
@@ -1229,8 +1225,7 @@ AudioDevice* Mixer::tryAudioDevices()
         dev = new AudioAlsa(success_ful, this);
         if(success_ful)
         {
-            qInfo("Mixer::tryAudioDevices #4");
-
+            // qInfo("Mixer::tryAudioDevices #4");
             m_audioDevName = AudioAlsa::name();
             return dev;
         }

@@ -1,8 +1,8 @@
 /*
  * SongEditor.cpp - basic window for song-editing
  *
+ * Copyright (c) 2018-2019 gi0e5b06 (on github.com)
  * Copyright (c) 2004-2014 Tobias Doerffel <tobydox/at/users.sourceforge.net>
- * Copyright (c) 2018 gi0e5b06 (on github.com)
  *
  * This file is part of LMMS - https://lmms.io
  *
@@ -731,23 +731,31 @@ void SongEditor::dividePatterns()
                 newp2->setJournalling(false);
                 newp2->movePosition(p->startPosition());
 
-                NoteVector todelete;
-                for(Note* n: newp2->notes())
+                if(!newp2->isEmpty())
                 {
-                    if(newp2->startPosition() + n->pos() >= splitPos)
+                    if(newp2->autoRepeat())
+                        newp2->rotate(-(splitPos - p->startPosition())
+                                      % newp2->unitLength());
+
+                    Notes todelete;
+                    for(Note* n: newp2->notes())
                     {
-                        // qInfo("p2 pos: s=%d n=%d r=%d k=%d move note",
+                        if(newp2->autoRepeat()
+                           || (newp2->startPosition() + n->pos() >= splitPos))
+                        {
+                            // qInfo("p2 pos: s=%d n=%d r=%d k=%d move note",
+                            //  (int)newp2->startPosition(),(int)n->pos(),splitPos,n->key());
+                            n->setPos(n->pos() + newp2->startPosition()
+                                      - splitPos);
+                            continue;
+                        }
+                        // qInfo("p2 pos: s=%d n=%d r=%d k=%d remove note",
                         //  (int)newp2->startPosition(),(int)n->pos(),splitPos,n->key());
-                        n->setPos(n->pos() + newp2->startPosition()
-                                  - splitPos);
-                        continue;
+                        todelete << n;
                     }
-                    // qInfo("p2 pos: s=%d n=%d r=%d k=%d remove note",
-                    //  (int)newp2->startPosition(),(int)n->pos(),splitPos,n->key());
-                    todelete << n;
+                    for(Note* n: todelete)
+                        newp2->removeNote(n);
                 }
-                for(Note* n: todelete)
-                    newp2->removeNote(n);
                 newp2->movePosition(splitPos);
                 newp2->changeLength(p->endPosition() - splitPos);
 
@@ -900,11 +908,19 @@ void SongEditor::dividePatterns()
                 newp1->movePosition(p->startPosition());
                 newp1->changeLength(splitPos - p->startPosition());
 
+                qInfo("SE: newp1->track=%p (t=%p)", newp1->getTrack(), t);
+                qInfo("SE: origp: p=%d l=%d", p->startPosition().getTicks(),
+                      p->length().getTicks());
+                qInfo("SE: newp1: p=%d l=%d",
+                      newp1->startPosition().getTicks(),
+                      newp1->length().getTicks());
+
                 BBTCO* newp2 = new BBTCO(*p);  // 2 right, after
                 newp2->setJournalling(false);
                 newp2->movePosition(splitPos);
                 newp2->changeLength(p->endPosition() - splitPos);
 
+                // p->deleteLater instead?
                 tcov->remove();
 
                 newp1->setJournalling(true);
@@ -914,60 +930,69 @@ void SongEditor::dividePatterns()
             }
             // qInfo("  end of bb track");
         }
-        /*
-          NOT SUPPORTED FOR NOW
-        else
-        if(t->type()==Track::SampleTrack)
+        else if(t->type() == Track::SampleTrack)
         {
-                qInfo("Divide: sample track %p",t);
-                for( QVector<SelectableObject *>::iterator
-                             it = so.begin();
-                     it != so.end(); ++it )
+            qInfo("Divide: sample track %p", t);
+            for(QVector<SelectableObject*>::iterator it = so.begin();
+                it != so.end(); ++it)
+            {
+                TrackContentObjectView* tcov
+                        = dynamic_cast<TrackContentObjectView*>(*it);
+                // tcov->remove();
+                if(!tcov)
                 {
-                        TrackContentObjectView* tcov=
-                                dynamic_cast<TrackContentObjectView*>(*it);
-                        //tcov->remove();
-                        if(!tcov) { qCritical("Divide: tcov null"); continue;
-        } TrackContentObject* tco=tcov->getTrackContentObject(); if(!tco) {
-        qCritical("Divide: tco null"); continue; } if(tco->getTrack()!=t)
-        continue; SampleTCO* p=dynamic_cast<SampleTCO*>(tco); if(!p) {
-        qCritical("Divide: p null"); continue; }
-
-                        //qInfo("pos: s=%d e=%d r=%d",
-                        //
-        (int)p->startPosition(),(int)p->endPosition(),splitPos);
-                        if(p->startPosition()>=splitPos) continue;
-                        if(p->endPosition()  <=splitPos) continue;
-
-                        if(first)
-                        {
-                                t->addJournalCheckPoint();
-                                first=false;
-                        }
-
-                        SampleTCO* newp1=new SampleTCO(*p); // 1 left, before
-                        newp1->setJournalling(false);
-                        newp1->movePosition(p->startPosition());
-                        newp1->changeLength(splitPos-p->startPosition());
-
-                        SampleTCO* newp2=new SampleTCO(*p); // 2 right, after
-                        newp2->setJournalling(false);
-                        newp2->movePosition(splitPos);
-                        newp2->changeLength(p->endPosition()-splitPos);
-
-                        newp2->setInitialPlayTick
-                                (newp2->initialPlayTick()+(splitPos-p->startPosition()));
-
-                        tcov->remove();
-
-                        newp1->setJournalling(true);
-                        newp2->setJournalling(true);
-                        newp1->emit dataChanged();
-                        newp2->emit dataChanged();
+                    qCritical("Divide: tcov null");
+                    continue;
                 }
-                qInfo("  end of sample track");
+                TrackContentObject* tco = tcov->getTrackContentObject();
+                if(!tco)
+                {
+                    qCritical("Divide: tco null");
+                    continue;
+                }
+                if(tco->getTrack() != t)
+                    continue;
+                SampleTCO* p = dynamic_cast<SampleTCO*>(tco);
+                if(!p)
+                {
+                    qCritical("Divide: p null");
+                    continue;
+                }
+
+                qInfo("pos: s=%d e=%d r=%d", (int)p->startPosition(),
+                      (int)p->endPosition(), splitPos);
+                if(p->startPosition() >= splitPos)
+                    continue;
+                if(p->endPosition() <= splitPos)
+                    continue;
+
+                if(first)
+                {
+                    t->addJournalCheckPoint();
+                    first = false;
+                }
+
+                SampleTCO* newp1 = new SampleTCO(*p);  // 1 left, before
+                newp1->setJournalling(false);
+                newp1->movePosition(p->startPosition());
+                newp1->changeLength(splitPos - p->startPosition());
+
+                SampleTCO* newp2 = new SampleTCO(*p);  // 2 right, after
+                newp2->setJournalling(false);
+                newp2->movePosition(splitPos);
+                newp2->changeLength(p->endPosition() - splitPos);
+                newp2->setInitialPlayTick(newp2->initialPlayTick()
+                                          + (splitPos - p->startPosition()));
+
+                tcov->remove();
+
+                newp1->setJournalling(true);
+                newp2->setJournalling(true);
+                newp1->emit dataChanged();
+                newp2->emit dataChanged();
+            }
+            qInfo("Divide: end of sample track");
         }
-        */
     }
 }
 
@@ -1195,8 +1220,9 @@ void SongEditor::updatePosition(const MidiTime& t)
                       - contentWidget()
                                 ->verticalScrollBar()
                                 ->width();  // width of right scrollbar
-        const MidiTime e = m_currentPosition
-                           + w * MidiTime::ticksPerTact() / pixelsPerTact();
+        const MidiTime e
+                = m_currentPosition
+                  + qRound(w * MidiTime::ticksPerTact() / pixelsPerTact());
         if(t >= e - 2)
         {
             animateScroll(m_leftRightScroll, t.getTact(), m_smoothScroll);

@@ -145,10 +145,12 @@ AutomatableModel* GigInstrument::childModel(const QString& _modelName)
     return NULL;
 }
 
+/*
 QString GigInstrument::nodeName() const
 {
     return gigplayer_plugin_descriptor.name;
 }
+*/
 
 void GigInstrument::freeInstance()
 {

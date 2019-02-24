@@ -41,7 +41,7 @@ ScarifierGDXDialog::ScarifierGDXDialog(ScarifierGDXControls* controls) :
 
     setAutoFillBackground(true);
     QPalette pal;
-    pal.setBrush(backgroundRole(), embed::getIconPixmap("plugin_bg"));
+    pal.setBrush(backgroundRole(), embed::getIconPixmap("plugin_beta_bg"));
     setPalette(pal);
 
     QGridLayout* mainLayout = new QGridLayout(this);

@@ -393,6 +393,7 @@ class InstrumentFunctionNoteOutting : public InstrumentFunction
     FloatModel m_panModel;
     FloatModel m_keyModel;
     FloatModel m_noteModel;
+    FloatModel m_modModel;
 
     friend class InstrumentFunctionNoteOuttingView;
 };

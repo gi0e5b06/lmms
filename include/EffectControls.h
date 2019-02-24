@@ -25,53 +25,48 @@
 #ifndef EFFECT_CONTROLS_H
 #define EFFECT_CONTROLS_H
 
-#include "Model.h"
-#include "JournallingObject.h"
 #include "Effect.h"
+#include "JournallingObject.h"
+#include "Model.h"
 
 class EffectControlDialog;
 
-
 class EffectControls : public JournallingObject, public Model
 {
- public:
-        EffectControls( Effect* _effect ) :
-	        JournallingObject(),
-		Model( _effect ),
-		m_effect( _effect )//,
-	//m_viewVisible( false )
-		{
-		}
+  public:
+    EffectControls(Effect* _effect) :
+          JournallingObject(), Model(_effect, "Effect controls"),
+          m_effect(_effect)  //, m_viewVisible( false )
+    {
+    }
 
-	virtual ~EffectControls()
-	{
-	}
+    virtual ~EffectControls()
+    {
+    }
 
-	virtual int controlCount() = 0;
-	virtual EffectControlDialog * createView() = 0;
+    virtual int                  controlCount() = 0;
+    virtual EffectControlDialog* createView()   = 0;
 
-	/*
-	void setViewVisible( bool _visible )
-	{
-		m_viewVisible = _visible;
-	}
+    /*
+    void setViewVisible( bool _visible )
+    {
+            m_viewVisible = _visible;
+    }
 
-	bool isViewVisible() const
-	{
-		return m_viewVisible;
-	}
-	*/
+    bool isViewVisible() const
+    {
+            return m_viewVisible;
+    }
+    */
 
-	Effect* effect()
-	{
-		return m_effect;
-	}
+    Effect* effect()
+    {
+        return m_effect;
+    }
 
-
-private:
-	Effect* m_effect;
-	//bool    m_viewVisible;
-
-} ;
+  private:
+    Effect* m_effect;
+    // bool    m_viewVisible;
+};
 
 #endif

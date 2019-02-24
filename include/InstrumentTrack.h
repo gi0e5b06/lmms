@@ -2,7 +2,7 @@
  * InstrumentTrack.h - declaration of class InstrumentTrack, a track + window
  *                     which holds an instrument-plugin
  *
- * Copyright (c) 2017-2018 gi0e5b06 (on github.com)
+ * Copyright (c) 2017-2019 gi0e5b06 (on github.com)
  * Copyright (c) 2004-2014 Tobias Doerffel <tobydox/at/users.sourceforge.net>
  *
  * This file is part of LMMS - https://lmms.io
@@ -266,16 +266,6 @@ class EXPORT InstrumentTrack : public Track, public MidiEventProcessor
         return &m_effectChannelModel;
     }
 
-    f_cnt_t legatoFrames() const
-    {
-        return m_soundShaping.legatoFrames();
-    }
-
-    void setLegatoFrames(f_cnt_t _frames)
-    {
-        m_soundShaping.setLegatoFrames(_frames);
-    }
-
     void setPreviewMode(const bool);
 
     virtual void cleanFrozenBuffer();
@@ -302,6 +292,16 @@ class EXPORT InstrumentTrack : public Track, public MidiEventProcessor
         m_envLegato = _legato;
     }
 
+    void setEnvMarcato(bool _marcato)
+    {
+        m_envMarcato = _marcato;
+    }
+
+    void setEnvStaccato(bool _staccato)
+    {
+        m_envStaccato = _staccato;
+    }
+
     void setEnvVolume(volume_t _v)
     {
         m_envVolume = _v;
@@ -314,6 +314,7 @@ class EXPORT InstrumentTrack : public Track, public MidiEventProcessor
 
   signals:
     void instrumentChanged();
+    void instrumentFunctionAdded(InstrumentFunction* _f);
     void midiNoteOn(const Note&);
     void midiNoteOff(const Note&);
     // void nameChanged();
@@ -393,6 +394,8 @@ class EXPORT InstrumentTrack : public Track, public MidiEventProcessor
     f_cnt_t         m_envTotalFramesPlayed;
     f_cnt_t         m_envReleaseBegin;
     bool            m_envLegato;
+    bool            m_envMarcato;
+    bool            m_envStaccato;
     volume_t        m_envVolume;
     panning_t       m_envPanning;
     // friend class InstrumentSoundShaping;

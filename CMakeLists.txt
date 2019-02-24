@@ -14,7 +14,7 @@ IF(COMMAND CMAKE_POLICY)
 	IF (CMAKE_MAJOR_VERSION GREATER 2)
 		#CMAKE_POLICY(SET CMP0026 OLD)
 		CMAKE_POLICY(SET CMP0045 NEW)
-		#CMAKE_POLICY(SET CMP0050 OLD)
+		CMAKE_POLICY(SET CMP0050 OLD) # Add custom op
 	        CMAKE_POLICY(SET CMP0072 NEW) # OpenGL
 	ENDIF()
 ENDIF(COMMAND CMAKE_POLICY)
@@ -70,8 +70,8 @@ OPTION(WANT_GIG		"Include GIG player plugin" ON)
 OPTION(WANT_STK		"Include Stk (Synthesis Toolkit) support" ON)
 OPTION(WANT_SWH		"Include Steve Harris's LADSPA plugins" ON)
 OPTION(WANT_TAP		"Include Tom's Audio Processing LADSPA plugins" ON)
-OPTION(WANT_VST		"Include VST support" OFF)
-OPTION(WANT_VST_NOWINE	"Include partial VST support (without wine)" OFF)
+OPTION(WANT_VST         "Include VST support" ON)
+OPTION(WANT_WINE	"Include Wine support (for VST)" ON)
 OPTION(WANT_WINMM	"Include WinMM MIDI support" OFF)
 OPTION(WANT_QT5		"Build with Qt5" ON)
 OPTION(WANT_DEBUG_FPE	"Debug floating point exceptions" ON)
@@ -83,6 +83,7 @@ IF(LMMS_BUILD_APPLE)
 	SET(WANT_OSS OFF)
 	SET(WANT_PULSEAUDIO OFF)
 	SET(WANT_VST OFF)
+	SET(WANT_WINE OFF)
 	SET(STATUS_ALSA "   <not supported on this platform>")
 	SET(STATUS_OSS "   <not supported on this platform>")
 	SET(STATUS_PULSEAUDIO "   <not supported on this platform>")
@@ -98,6 +99,7 @@ IF(LMMS_BUILD_WIN32)
 	SET(WANT_OSS OFF)
 	SET(WANT_PULSEAUDIO OFF)
 	SET(WANT_SOUNDIO OFF)
+        SET(WANT_WINE OFF)
 	SET(WANT_WINMM ON)
 	SET(LMMS_HAVE_WINMM TRUE)
 	SET(STATUS_ALSA "   <not supported on this platform>")
@@ -117,8 +119,8 @@ IF(LMMS_BUILD_MSYS AND CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
 	SET(WANT_GIG OFF)
 	SET(WANT_STK OFF)
 	SET(WANT_SWH OFF)
-	SET(STATUS_GIG "not built as requested")
-	SET(STATUS_STK "not built as requested")
+	SET(STATUS_GIG "   <not built as requested>")
+	SET(STATUS_STK "   <not built as requested>")
 ENDIF()
 
 
@@ -527,24 +529,32 @@ ENDIF(WANT_SOUNDIO)
 
 
 # check for WINE
+IF(WANT_WINE)
+  FIND_PACKAGE(Wine)
+  IF(WINE_FOUND)
+    SET(LMMS_SUPPORT_WINE TRUE)
+    SET(STATUS_WINE "OK")
+  ELSE(WINE_FOUND)
+    SET(STATUS_WINE "?? <not found, please install (lib)wine-dev "
+      "(or similar) - 64 bit systems additionally need "
+      "gcc-multilib and g++-multilib>")
+  ENDIF(WINE_FOUND)
+ENDIF(WANT_WINE)
+
 IF(WANT_VST)
-	FIND_PACKAGE(Wine)
-	IF(WINE_FOUND)
-		SET(LMMS_SUPPORT_VST TRUE)
-		SET(STATUS_VST "OK")
-	ELSEIF(WANT_VST_NOWINE)
-		SET(LMMS_SUPPORT_VST TRUE)
-		SET(STATUS_VST "OK")
-	ELSE(WINE_FOUND)
-	  SET(STATUS_VST "?? <not found, please install (lib)wine-dev "
-            "(or similar) - 64 bit systems additionally need "
-            "gcc-multilib and g++-multilib>")
-	ENDIF(WINE_FOUND)
+  IF(LMMS_BUILD_WIN32)
+    SET(LMMS_SUPPORT_VST TRUE)
+    SET(STATUS_VST "OK")
+  ENDIF(LMMS_BUILD_WIN32)
+  IF(LMMS_BUILD_LINUX)
+    IF(LMMS_SUPPORT_WINE)
+      SET(LMMS_SUPPORT_VST TRUE)
+      SET(STATUS_VST "OK")
+    ELSE(LMMS_SUPPORT_WINE)
+          SET(STATUS_VST "?? <not available, wine is required>")
+    ENDIF(LMMS_SUPPORT_WINE)
+  ENDIF(LMMS_BUILD_LINUX)
 ENDIF(WANT_VST)
-IF(LMMS_BUILD_WIN32)
-	SET(LMMS_SUPPORT_VST TRUE)
-	SET(STATUS_VST "OK")
-ENDIF(LMMS_BUILD_WIN32)
 
 IF(WANT_DEBUG_FPE)
 	IF(LMMS_BUILD_LINUX)
@@ -750,8 +760,8 @@ MESSAGE(
 "* SoundFont2 player           : ${STATUS_FLUIDSYNTH}\n"
 "* GIG player                  : ${STATUS_GIG}\n"
 "* Stk Mallets                 : ${STATUS_STK}\n"
-"* VST-instrument hoster       : ${STATUS_VST}\n"
-"* VST-effect hoster           : ${STATUS_VST}\n"
+"* Wine                        : ${STATUS_WINE}\n"
+"* VST host                    : ${STATUS_VST}\n"
 "* CALF LADSPA plugins         : ${STATUS_CALF}\n"
 "* CAPS LADSPA plugins         : ${STATUS_CAPS}\n"
 "* CMT LADSPA plugins          : ${STATUS_CMT}\n"

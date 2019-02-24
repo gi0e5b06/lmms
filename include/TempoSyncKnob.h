@@ -26,58 +26,54 @@
 #ifndef TEMPO_SYNC_KNOB_H
 #define TEMPO_SYNC_KNOB_H
 
-#include <QPixmap>
-#include <QPointer>
-
 #include "Knob.h"
 #include "TempoSyncKnobModel.h"
+
+#include <QPixmap>
+#include <QPointer>
 
 class MeterDialog;
 
 class EXPORT TempoSyncKnob : public Knob
 {
-	Q_OBJECT
-public:
-	TempoSyncKnob( QWidget* parent = NULL, const QString& name = QString() );
-	TempoSyncKnob( knobTypes knobNum, QWidget* parent = NULL, const QString& name = QString() );
-	virtual ~TempoSyncKnob();
+    Q_OBJECT
+  public:
+    TempoSyncKnob(QWidget*       parent = nullptr,
+                  const QString& name   = "[tempo knob]");
+    TempoSyncKnob(knobTypes      knobNum,
+                  QWidget*       parent = nullptr,
+                  const QString& name   = "[tempo knob]");
+    virtual ~TempoSyncKnob();
 
-	const QString & syncDescription();
-	void setSyncDescription( const QString & _new_description );
+    const QString& syncDescription();
+    void           setSyncDescription(const QString& _new_description);
 
-	const QPixmap & syncIcon();
-	void setSyncIcon( const QPixmap & _new_pix );
+    const QPixmap& syncIcon();
+    void           setSyncIcon(const QPixmap& _new_pix);
 
-	TempoSyncKnobModel * model()
-	{
-		return castModel<TempoSyncKnobModel>();
-	}
+    TempoSyncKnobModel* model()
+    {
+        return castModel<TempoSyncKnobModel>();
+    }
 
-	virtual void modelChanged();
+    virtual void modelChanged();
 
+  signals:
+    void syncDescriptionChanged(const QString& _new_description);
+    void syncIconChanged();
 
-signals:
-	void syncDescriptionChanged( const QString & _new_description );
-	void syncIconChanged();
+  protected:
+    virtual void contextMenuEvent(QContextMenuEvent* _me);
 
+  protected slots:
+    void updateDescAndIcon();
+    void showCustom();
 
-protected:
-	virtual void contextMenuEvent( QContextMenuEvent * _me );
+  private:
+    QPixmap m_tempoSyncIcon;
+    QString m_tempoSyncDescription;
 
-
-protected slots:
-	void updateDescAndIcon();
-	void showCustom();
-
-
-private:
-	QPixmap m_tempoSyncIcon;
-	QString m_tempoSyncDescription;
-
-	QPointer<MeterDialog> m_custom;
-
-} ;
-
-
+    QPointer<MeterDialog> m_custom;
+};
 
 #endif

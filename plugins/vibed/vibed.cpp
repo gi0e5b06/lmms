@@ -53,8 +53,8 @@ extern "C"
                0x0100,
                Plugin::Instrument,
                new PluginPixmapLoader("logo"),
-               NULL,
-               NULL};
+               nullptr,
+               nullptr};
 }
 
 vibed::vibed(InstrumentTrack* _instrumentTrack) :
@@ -236,14 +236,16 @@ void vibed::loadSettings(const QDomElement& _this)
     //	update();
 }
 
+/*
 QString vibed::nodeName() const
 {
-    return (vibedstrings_plugin_descriptor.name);
+    return vibedstrings_plugin_descriptor.name;
 }
+*/
 
 void vibed::playNote(NotePlayHandle* _n, sampleFrame* _working_buffer)
 {
-    if(_n->totalFramesPlayed() == 0 || _n->m_pluginData == NULL)
+    if(_n->totalFramesPlayed() == 0 || _n->m_pluginData == nullptr)
     {
         _n->m_pluginData = new stringContainer(
                 _n->frequency(), Engine::mixer()->processingSampleRate(),

@@ -127,7 +127,7 @@ const PluginFactory::PluginInfo PluginFactory::pluginInfo(
     for(const PluginInfo& info: m_infos)
     {
         // if(qstrcmp(info.descriptor->name, name) == 0)
-        if(info.descriptor->name == name)
+        if(info.descriptor->name() == name)
             return info;
     }
     return PluginInfo();
@@ -178,7 +178,7 @@ void PluginFactory::discoverLmmsPlugins()
 
         auto library = std::make_shared<QLibrary>(ap);
 
-        if(!library->load())
+        if(library == nullptr || !library->load())
         {
             m_errors[file.baseName()] = library->errorString();
             qWarning("Warning: %s", qPrintable(library->errorString()));
@@ -208,11 +208,11 @@ void PluginFactory::discoverLmmsPlugins()
         }
 
         qInfo("LMMS:   '%s' %s [%s]",
-              qPrintable(pluginDescriptor->displayName), qPrintable(ap),
+              qPrintable(pluginDescriptor->displayName()), qPrintable(ap),
               "_type_");  // TYPES[plugIn->type]);
 
         // qInfo("Factory: lmms: %s", pluginDescriptor->name);
-        m_descriptors.insert(pluginDescriptor->type, pluginDescriptor);
+        m_descriptors.insert(pluginDescriptor->type(), pluginDescriptor);
 
         PluginInfo info;
         info.file       = file;
@@ -222,7 +222,7 @@ void PluginFactory::discoverLmmsPlugins()
         m_infos.insert(ap, info);
 
         for(const QString& ext:
-            QString(info.descriptor->supportedFileTypes).split(','))
+            info.descriptor->supportedFileTypes().split(','))
         {
             // tmp: only keep the first one
             if(!m_pluginByExt.contains(ext))
@@ -277,5 +277,5 @@ void PluginFactory::discoverLV2Plugins()
 
 const QString PluginFactory::PluginInfo::name() const
 {
-    return descriptor ? descriptor->name : QString();
+    return descriptor ? descriptor->name() : QString();
 }

@@ -1,5 +1,5 @@
 /*
- * AutomatableToolButton.h - 
+ * AutomatableToolButton.h -
  *
  * Copyright (c) 2017
  *
@@ -22,41 +22,36 @@
  *
  */
 
-
 #ifndef AUTOMATABLE_TOOL_BUTTON_H
 #define AUTOMATABLE_TOOL_BUTTON_H
 
-#include <QToolButton>
-
 #include "AutomatableModelView.h"
 
-
-
+#include <QToolButton>
 
 class EXPORT AutomatableToolButton : public QToolButton, public BoolModelView
 {
-	Q_OBJECT
-public:
-	AutomatableToolButton( QWidget * _parent, const QString & _name
-			= QString::null );
-	virtual ~AutomatableToolButton();
+    Q_OBJECT
 
-	virtual bool isChecked();
-	virtual void setCheckable( bool _on );
+  public:
+    AutomatableToolButton(QWidget*       _parent,
+                          const QString& _name = "[automatable tool button]");
+    virtual ~AutomatableToolButton();
 
-public slots:
-	virtual void modelChanged();
-	virtual void update();
-	virtual void setChecked( bool _on );
-	//virtual void toggle();
+    virtual bool isChecked();
+    virtual void setCheckable(bool _on);
 
+  public slots:
+    virtual void modelChanged();
+    virtual void update();
+    virtual void setChecked(bool _on);
+    // virtual void toggle();
 
-
-protected:
-	virtual void contextMenuEvent( QContextMenuEvent * _me );
-	virtual void dropEvent( QDropEvent * _de );
-	virtual void mousePressEvent( QMouseEvent * _me );
-	//virtual void mouseReleaseEvent( QMouseEvent * _me );
-} ;
+  protected:
+    virtual void contextMenuEvent(QContextMenuEvent* _me);
+    virtual void dropEvent(QDropEvent* _de);
+    virtual void mousePressEvent(QMouseEvent* _me);
+    // virtual void mouseReleaseEvent( QMouseEvent * _me );
+};
 
 #endif

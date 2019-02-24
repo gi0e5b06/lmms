@@ -154,6 +154,8 @@ QMenu* AutomationPatternView::buildContextMenu()
     addRemoveMuteClearMenu(cm, true, true, m_pat->hasAutomation());
     cm->addSeparator();
     addCutCopyPasteMenu(cm, true, true, true);
+    cm->addSeparator();
+    addFlipMenu(cm,!m_pat->isEmpty(),!m_pat->isEmpty());
 
     if(isFixed())
     {
@@ -165,10 +167,12 @@ QMenu* AutomationPatternView::buildContextMenu()
     cm->addSeparator();
     cm->addAction(embed::getIconPixmap("record"), tr("Set/clear record"),
                   this, SLOT(toggleRecording()));
+    /*
     cm->addAction(embed::getIconPixmap("flip_y"),
                   tr("Flip Vertically (Visible)"), this, SLOT(flipY()));
     cm->addAction(embed::getIconPixmap("flip_x"),
                   tr("Flip Horizontally (Visible)"), this, SLOT(flipX()));
+    */
     // if( !m_pat->m_objects.isEmpty() )
     {
         bool smce = (!m_pat->m_objects.isEmpty());

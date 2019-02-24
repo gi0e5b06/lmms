@@ -22,39 +22,42 @@
  *
  */
 
-
 #ifndef INSTRUMENT_VIEW_H
 #define INSTRUMENT_VIEW_H
 
-#include "PluginView.h"
 #include "Instrument.h"
+
+#include "PluginView.h"
+#include <QColor>
+#include <QLine>
 
 class InstrumentTrackWindow;
 
-
 class EXPORT InstrumentView : public PluginView
 {
-        Q_OBJECT
+    Q_OBJECT
 
- public:
-	InstrumentView( Instrument * _instrument, QWidget * _parent );
-	virtual ~InstrumentView();
+  public:
+    InstrumentView(Instrument* _instrument, QWidget* _parent);
+    virtual ~InstrumentView();
 
-	Instrument * model()
-	{
-		return( castModel<Instrument>() );
-	}
+    Instrument* model()
+    {
+        return castModel<Instrument>();
+    }
 
-	const Instrument * model() const
-	{
-		return( castModel<Instrument>() );
-	}
+    const Instrument* model() const
+    {
+        return castModel<Instrument>();
+    }
 
-	virtual void setModel( Model * _model, bool = false );
+    virtual void setModel(Model* _model, bool = false);
 
-	InstrumentTrackWindow * instrumentTrackWindow();
+    InstrumentTrackWindow* instrumentTrackWindow();
 
-} ;
-
+    virtual QLine  cableFrom() const;
+    virtual QLine  cableTo() const;
+    virtual QColor cableColor() const;
+};
 
 #endif

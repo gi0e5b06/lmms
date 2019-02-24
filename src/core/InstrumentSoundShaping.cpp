@@ -54,9 +54,9 @@ const QString InstrumentSoundShaping::targetNames
 
 InstrumentSoundShaping::InstrumentSoundShaping(
         InstrumentTrack* _instrument_track) :
-      Model(_instrument_track, tr("Envelopes/LFOs")),
-      m_instrumentTrack(_instrument_track), m_legatoFrames(0),
-      m_filterEnabledModel(false, this),
+      Model(_instrument_track, tr("Sound shaping")),
+      m_instrumentTrack(_instrument_track),
+      m_filterEnabledModel(false, this, tr("Filter enabled")),
       m_filterModel(this, tr("Filter type")),
       m_filterCutModel(BasicFilters<>::maxFreq(),
                        BasicFilters<>::minFreq(),
@@ -135,19 +135,10 @@ real_t InstrumentSoundShaping::volumeLevel(NotePlayHandle* n,
 
     real_t level;
     m_envLfoParameters[Volume]->fillLevel(&level, frame, envReleaseBegin, 1,
-                                          n->legato());
+                                          n->legato(), n->marcato(),
+                                          n->staccato());
 
     return level;
-}
-
-f_cnt_t InstrumentSoundShaping::legatoFrames() const
-{
-    return m_legatoFrames;
-}
-
-void InstrumentSoundShaping::setLegatoFrames(f_cnt_t _frames)
-{
-    m_legatoFrames = _frames;
 }
 
 void InstrumentSoundShaping::processAudioBuffer(sampleFrame*    buffer,
@@ -158,13 +149,6 @@ void InstrumentSoundShaping::processAudioBuffer(sampleFrame*    buffer,
 
     f_cnt_t envReleaseBegin = envTotalFrames - nph->releaseFramesDone()
                               + nph->framesBeforeRelease();
-    /*
-    if(nph->legato())
-            //envReleaseBegin = qMax(0,envReleaseBegin - legatoFrames());
-            envTotalFrames=qMax(envTotalFrames,legatoFrames());
-    qInfo("Legato %d %d %d %d", nph->legato(), legatoFrames(), envTotalFrames,
-          envReleaseBegin);
-    */
     if(!nph->isReleased()
        || (nph->instrumentTrack()->isSustainPedalPressed()
            && !nph->isReleaseStarted()))
@@ -178,36 +162,18 @@ void InstrumentSoundShaping::processAudioBuffer(sampleFrame*    buffer,
                 = new BasicFilters<>(Engine::mixer()->processingSampleRate());
     }
     processAudioBuffer(buffer, frames, nph->m_filter, envTotalFrames,
-                       envReleaseBegin, nph->legato());
+                       envReleaseBegin, nph->legato(), nph->marcato(),
+                       nph->staccato());
 }
-
-/*
-void InstrumentSoundShaping::processAudioBuffer(sampleFrame*          buffer,
-                                                const fpp_t           frames,
-                                                InstrumentPlayHandle* iph)
-{
-    if(!iph->envActive())
-        return;
-
-    const f_cnt_t envTotalFrames  = iph->envTotalFramesPlayed();
-    f_cnt_t       envReleaseBegin = iph->envReleaseBegin();
-
-    if(iph->m_filter == nullptr && m_filterEnabledModel.value())
-    {
-        iph->m_filter
-                = new BasicFilters<>(Engine::mixer()->processingSampleRate());
-    }
-    processAudioBuffer(buffer, frames, iph->m_filter, envTotalFrames,
-                       envReleaseBegin, false);
-}
-*/
 
 void InstrumentSoundShaping::processAudioBuffer(sampleFrame*    buffer,
                                                 const fpp_t     frames,
                                                 BasicFilters<>* filter,
                                                 f_cnt_t envTotalFrames,
                                                 f_cnt_t envReleaseBegin,
-                                                bool    _legato)
+                                                bool    _legato,
+                                                bool    _marcato,
+                                                bool    _staccato)
 {
     // because of optimizations, there's special code for several cases:
     // 	- cut- and res-lfo/envelope active
@@ -231,13 +197,13 @@ void InstrumentSoundShaping::processAudioBuffer(sampleFrame*    buffer,
         {
             m_envLfoParameters[Cut]->fillLevel(cutBuffer, envTotalFrames,
                                                envReleaseBegin, frames,
-                                               _legato);
+                                               _legato, _marcato, _staccato);
         }
         if(m_envLfoParameters[Resonance]->isUsed())
         {
             m_envLfoParameters[Resonance]->fillLevel(
                     resBuffer, envTotalFrames, envReleaseBegin, frames,
-                    _legato);
+                    _legato, _marcato, _staccato);
         }
 
         const real_t fcv = m_filterCutModel.value();
@@ -326,8 +292,9 @@ void InstrumentSoundShaping::processAudioBuffer(sampleFrame*    buffer,
     if(m_envLfoParameters[Volume]->isUsed())
     {
         real_t volBuffer[frames];
-        m_envLfoParameters[Volume]->fillLevel(
-                volBuffer, envTotalFrames, envReleaseBegin, frames, _legato);
+        m_envLfoParameters[Volume]->fillLevel(volBuffer, envTotalFrames,
+                                              envReleaseBegin, frames,
+                                              _legato, _marcato, _staccato);
 
         for(fpp_t frame = 0; frame < frames; ++frame)
         {

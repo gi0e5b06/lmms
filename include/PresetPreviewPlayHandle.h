@@ -28,11 +28,15 @@
 
 #include "NotePlayHandle.h"
 
+#include <QObject>
+
 class InstrumentTrack;
 class PreviewTrackContainer;
 
-class EXPORT PresetPreviewPlayHandle : public PlayHandle
+class EXPORT PresetPreviewPlayHandle : public QObject, public PlayHandle
 {
+    Q_OBJECT
+
   public:
     PresetPreviewPlayHandle(const QString& presetFile,
                             bool           loadByPlugin = false,
@@ -41,7 +45,7 @@ class EXPORT PresetPreviewPlayHandle : public PlayHandle
 
     virtual inline bool affinityMatters() const
     {
-            return true;
+        return true;
     }
 
     virtual void play(sampleFrame* buffer);
@@ -56,6 +60,9 @@ class EXPORT PresetPreviewPlayHandle : public PlayHandle
             nphsOfInstrumentTrack(const InstrumentTrack* instrumentTrack);
 
     static bool isPreviewing();
+
+  public slots:
+    void onPlayHandleDeleted(PlayHandle* handle);
 
   private:
     static PreviewTrackContainer* s_previewTC;

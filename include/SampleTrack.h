@@ -58,6 +58,9 @@ class SampleTCO : public TrackContentObject
 
     // virtual void changeLength( const MidiTime & _length );
 
+    virtual void resizeLeft(const MidiTime& pos, const MidiTime& len);
+    //virtual void resizeRight(const MidiTime& pos, const MidiTime& len);
+
     // settings-management
     virtual void saveSettings(QDomDocument& _doc, QDomElement& _parent);
     virtual void loadSettings(const QDomElement& _this);
@@ -91,6 +94,7 @@ class SampleTCO : public TrackContentObject
     void updateTrackTcos();
 
   protected:
+    virtual void split(tick_t _ticks);
     virtual void doConnections();
 
   private:

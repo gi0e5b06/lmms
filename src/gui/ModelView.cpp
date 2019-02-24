@@ -37,10 +37,10 @@ ModelView::ModelView(Model* model, QWidget* widget) :
 
 ModelView::~ModelView()
 {
-    if(m_model != NULL && m_model->isDefaultConstructed())
-    {
+    undoConnections();
+
+    if(m_model != nullptr && m_model->isDefaultConstructed())
         delete m_model;
-    }
 }
 
 void ModelView::setModel(Model* model, bool isOldModelValid)
@@ -50,7 +50,7 @@ void ModelView::setModel(Model* model, bool isOldModelValid)
 
     if(model != m_model)
     {
-        if(isOldModelValid && m_model != NULL)
+        if(isOldModelValid && m_model != nullptr)
         {
             if(m_model->isDefaultConstructed())
                 delete m_model;
@@ -82,4 +82,42 @@ void ModelView::doConnections()
         QObject::connect(m_model, SIGNAL(propertiesChanged()), widget(),
                          SLOT(update()));
     }
+}
+
+void ModelView::undoConnections()
+{
+    if(m_model && widget())
+    {
+        // qWarning("ModelView::doConnections m_model=%p",m_model);
+        // m_model->disconnect(widget());
+        QObject::disconnect(m_model, SIGNAL(dataChanged()), widget(),
+                            SLOT(update()));
+        QObject::disconnect(m_model, SIGNAL(propertiesChanged()), widget(),
+                            SLOT(update()));
+    }
+}
+
+QLine ModelView::cableFrom() const
+{
+    QWidget* w = widget();
+    if(w == nullptr)
+        return QLine();
+
+    QPoint p(w->width() - 1, w->height() / 2);
+    return QLine(p, p + QPoint(50, 0));
+}
+
+QLine ModelView::cableTo() const
+{
+    QWidget* w = widget();
+    if(w == nullptr)
+        return QLine();
+
+    QPoint p(0, w->height() / 2);
+    return QLine(p, p + QPoint(-50, 0));
+}
+
+QColor ModelView::cableColor() const
+{
+    return Qt::yellow;
 }

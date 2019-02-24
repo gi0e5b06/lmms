@@ -41,7 +41,7 @@ VocoderGDXDialog::VocoderGDXDialog(VocoderGDXControls* controls) :
 
     setAutoFillBackground(true);
     QPalette pal;
-    pal.setBrush(backgroundRole(), embed::getIconPixmap("plugin_bg"));
+    pal.setBrush(backgroundRole(), embed::getIconPixmap("plugin_alpha_bg"));
     setPalette(pal);
 
     QGridLayout* mainLayout = new QGridLayout(this);

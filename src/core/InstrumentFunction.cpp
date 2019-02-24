@@ -1,7 +1,7 @@
 /*
  * InstrumentFunction.cpp - models for instrument-function-tab
  *
- * Copyright (c) 2017-2018 gi0e5b06 (on github.com)
+ * Copyright (c) 2017-2019 gi0e5b06 (on github.com)
  * Copyright (c) 2004-2014 Tobias Doerffel <tobydox/at/users.sourceforge.net>
  *
  * This file is part of LMMS - https://lmms.io
@@ -41,7 +41,7 @@
 #include <time.h>
 
 InstrumentFunction::InstrumentFunction(Model* _parent, QString _name) :
-      Model(_parent, _name), m_enabledModel(false, this),
+      Model(_parent, _name), m_enabledModel(false, this, tr("Enabled")),
       m_minNoteGenerationModel(0, 0, 9, this, tr("Min")),
       m_maxNoteGenerationModel(0, 0, 9, this, tr("Max"))
 {
@@ -400,12 +400,13 @@ bool InstrumentFunctionNoteStacking::processNote(NotePlayHandle* _n)
 
                     // create sub-note-play-handle, only note is
                     // different
-                    Engine::mixer()->addPlayHandle(
-                            NotePlayHandleManager::acquire(
-                                    _n->instrumentTrack(), _n->offset(),
-                                    _n->frames(), subnote, _n, -1,
-                                    NotePlayHandle::OriginNoteStacking,
-                                    _n->generation() + 1));
+                    NotePlayHandle* nph = NotePlayHandleManager::acquire(
+                            _n->instrumentTrack(), _n->offset(), _n->frames(),
+                            subnote, _n, -1,
+                            NotePlayHandle::OriginNoteStacking,
+                            _n->generation() + 1);
+                    nph->setAffinity(Engine::mixer()->thread());
+                    Engine::mixer()->addPlayHandle(nph);
                 }
             }
         }
@@ -564,7 +565,7 @@ bool InstrumentFunctionArpeggio::processNote(NotePlayHandle* _n)
         if(m_arpModeModel.value() == SortMode
            && ((cur_frame / arp_frames) % total_range) / range
                       != cnphv.indexOf(_n))
-                //(f_cnt_t)_n->index()) // <-- suspicious
+        //(f_cnt_t)_n->index()) // <-- suspicious
         {
             // Set master note if not playing arp note or it will play as an
             // ordinary note
@@ -682,10 +683,12 @@ bool InstrumentFunctionArpeggio::processNote(NotePlayHandle* _n)
 
             // create sub-note-play-handle, only ptr to note is different
             // and is_arp_note=true
-            Engine::mixer()->addPlayHandle(NotePlayHandleManager::acquire(
+            NotePlayHandle* nph = NotePlayHandleManager::acquire(
                     _n->instrumentTrack(), frames_processed, gated_frames,
                     subnote, _n, -1, NotePlayHandle::OriginArpeggio,
-                    _n->generation() + 1));
+                    _n->generation() + 1);
+            nph->setAffinity(Engine::mixer()->thread());
+            Engine::mixer()->addPlayHandle(nph);
         }
 
         // update counters
@@ -1217,7 +1220,8 @@ InstrumentFunctionNoteOutting::InstrumentFunctionNoteOutting(Model* _parent) :
       m_volumeModel(0., 0., 200., 0.1, this, tr("Volume")),
       m_panModel(0., -100., 100., 0.1, this, tr("Pan")),
       m_keyModel(DefaultKey, 0., 127., 1., this, tr("Key")),
-      m_noteModel(DefaultKey % 12, 0., 11., 1., this, tr("Note"))
+      m_noteModel(DefaultKey % 12, 0., 11., 1., this, tr("Note")),
+      m_modModel(0., -1., 1., 0.001, this, tr("Mod"))
 {
 }
 
@@ -1236,8 +1240,10 @@ bool InstrumentFunctionNoteOutting::processNote(NotePlayHandle* _n)
     m_panModel.setValue(_n->getPanning());
     m_keyModel.setValue(_n->key());
     m_noteModel.setValue(_n->key() % 12);
+    m_modModel.setValue(
+            bound(-1., (_n->key() - DefaultKey) / DefaultKey, 1.));
 
-    // qInfo("InstrumentFunctionNoteOutting::process Note");
+    qInfo("InstrumentFunctionNoteOutting::process Note");
     return true;
 }
 
@@ -1519,10 +1525,12 @@ bool InstrumentFunctionGlissando::processNote(NotePlayHandle* _n)
 
         // create sub-note-play-handle, only ptr to note is different
         // and is_gli_note=true
-        Engine::mixer()->addPlayHandle(NotePlayHandleManager::acquire(
+        NotePlayHandle* nph = NotePlayHandleManager::acquire(
                 _n->instrumentTrack(), frames_processed, gated_frames,
                 subnote, _n, -1, NotePlayHandle::OriginGlissando,
-                _n->generation() + 1));
+                _n->generation() + 1);
+        nph->setAffinity(Engine::mixer()->thread());
+        Engine::mixer()->addPlayHandle(nph);
 
         // update counters
         frames_processed += note_frames;
@@ -1552,11 +1560,12 @@ bool InstrumentFunctionGlissando::processNote(NotePlayHandle* _n)
     Note note(_n->length(), _n->pos(), _n->key(), _n->getVolume(),
               _n->getPanning(), _n->detuning());
 
-    Engine::mixer()->addPlayHandle(NotePlayHandleManager::acquire(
+    NotePlayHandle* nph = NotePlayHandleManager::acquire(
             _n->instrumentTrack(), frames_processed,
             _n->frames() - total_frames, note, NULL, -1,
-            NotePlayHandle::OriginGlissando, _n->generation()));
-
+            NotePlayHandle::OriginGlissando, _n->generation());
+    nph->setAffinity(Engine::mixer()->thread());
+    Engine::mixer()->addPlayHandle(nph);
     return false;
 }
 

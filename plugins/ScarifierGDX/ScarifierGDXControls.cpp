@@ -29,15 +29,15 @@
 #include <QDomElement>
 
 ScarifierGDXControls::ScarifierGDXControls(ScarifierGDX* effect) :
-      EffectControls(effect), m_effect(effect), m_modeModel(this),
+      EffectControls(effect), m_effect(effect), m_modeModel(this, tr("Mode")),
       m_widthModel(1.f, 0.f, 5.f, 0.01f, this, tr("Width")),
       m_keyModel(9.f, 0.f, 11.f, 1.f, this, tr("Key")),
       m_ampModel(1.f, 0.f, 10.f, 0.01f, this, tr("Out gain"))
 {
-        m_modeModel.addItem("Scar");
-        m_modeModel.addItem("Select");
-        m_modeModel.addItem("Boost");
-        m_keyModel.setStrictStepSize(true);
+    m_modeModel.addItem("Scar");
+    m_modeModel.addItem("Select");
+    m_modeModel.addItem("Boost");
+    m_keyModel.setStrictStepSize(true);
 }
 
 ScarifierGDXControls::~ScarifierGDXControls()
@@ -56,7 +56,8 @@ void ScarifierGDXControls::loadSettings(const QDomElement& _this)
     m_ampModel.loadSettings(_this, "amp");
 }
 
-void ScarifierGDXControls::saveSettings(QDomDocument& _doc, QDomElement& _this)
+void ScarifierGDXControls::saveSettings(QDomDocument& _doc,
+                                        QDomElement&  _this)
 {
     m_modeModel.saveSettings(_doc, _this, "mode");
     m_widthModel.saveSettings(_doc, _this, "width");

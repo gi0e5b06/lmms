@@ -2,7 +2,7 @@
  * AutomationPattern.h - declaration of class AutomationPattern, which
  * contains all information about an automation pattern
  *
- * Copyright (c) 2018      gi0e5b06 (on github.com)
+ * Copyright (c) 2018-2019 gi0e5b06 (on github.com)
  * Copyright (c) 2008-2014 Tobias Doerffel <tobydox/at/users.sourceforge.net>
  * Copyright (c) 2006-2008 Javier Serrano Polo
  * <jasp00/at/users.sourceforge.net>
@@ -220,6 +220,8 @@ class EXPORT AutomationPattern : public TrackContentObject
 
   public slots:
     virtual void clear();
+    virtual void flipHorizontally();
+    virtual void flipVertically();
 
     void objectDestroyed(jo_id_t);
     void flipY(int min, int max);

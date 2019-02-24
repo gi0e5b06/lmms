@@ -26,7 +26,6 @@
 #define CONFIGURATION_H
 
 #include "ConfigManager.h"
-
 #include "debug.h"
 
 #include <QVariant>
@@ -45,15 +44,15 @@
 #define CONFIG_GET_FLOAT(s) Configuration<float>::get(s)
 #define CONFIG_GET_STRING(s) Configuration<QString>::get(s)
 
-#define CONFIG_SET_BOOL(s,v) Configuration<bool>::set(s,v)
-#define CONFIG_SET_INT(s,v) Configuration<int>::set(s,v)
-#define CONFIG_SET_FLOAT(s,v) Configuration<float>::set(s,v)
-#define CONFIG_SET_STRING(s,v) Configuration<QString>::set(s,v)
+#define CONFIG_SET_BOOL(s, v) Configuration<bool>::set(s, v)
+#define CONFIG_SET_INT(s, v) Configuration<int>::set(s, v)
+#define CONFIG_SET_FLOAT(s, v) Configuration<float>::set(s, v)
+#define CONFIG_SET_STRING(s, v) Configuration<QString>::set(s, v)
 
-#define DEFAULT_BOOL(s,v) Configuration<bool>::setDefault(s,v)
-#define DEFAULT_INT(s,v) Configuration<int>::setDefault(s,v)
-#define DEFAULT_FLOAT(s,v) Configuration<float>::setDefault(s,v)
-#define DEFAULT_STRING(s,v) Configuration<QString>::setDefault(s,v)
+#define DEFAULT_BOOL(s, v) Configuration<bool>::setDefault(s, v)
+#define DEFAULT_INT(s, v) Configuration<int>::setDefault(s, v)
+#define DEFAULT_FLOAT(s, v) Configuration<float>::setDefault(s, v)
+#define DEFAULT_STRING(s, v) Configuration<QString>::setDefault(s, v)
 
 void lmms_default_configuration();
 
@@ -67,7 +66,7 @@ class Configuration
     static void setDefault(const QString& _s, T _v);
 
   private:
-    //Configuration();
+    // Configuration();
     //~Configuration();
 
     QHash<QString, T> m_table;
@@ -80,7 +79,6 @@ template <typename T>
 Configuration<T> Configuration<T>::s_instance;
 template <typename T>
 Configuration<T> Configuration<T>::s_default;
-
 
 template <typename T>
 T Configuration<T>::get(const QString& _s)
@@ -96,9 +94,10 @@ T Configuration<T>::get(const QString& _s)
     else
     {
         const QString c = _s.left(p);
-        const QString k = _s.mid(p+1);
-        qInfo("Configuration::get c='%s' k='%s'",qPrintable(c),qPrintable(k));
-        QString       v = ConfigManager::inst()->value(c, k, "");
+        const QString k = _s.mid(p + 1);
+        // qInfo("Configuration::get c='%s'
+        // k='%s'",qPrintable(c),qPrintable(k));
+        QString v = ConfigManager::inst()->value(c, k, "");
         if(v != "")
         {
             T r = QVariant(v).value<T>();
@@ -133,7 +132,7 @@ void Configuration<T>::set(const QString& _s, T _v)
     else
     {
         const QString c = _s.left(p);
-        const QString k = _s.mid(p+1);
+        const QString k = _s.mid(p + 1);
         ConfigManager::inst()->setValue(c, k, QVariant(_v).toString());
     }
 }

@@ -1,0 +1,5 @@
+INCLUDE(BuildPlugin)
+INCLUDE_DIRECTORIES(${FFTW3F_INCLUDE_DIRS})
+LINK_DIRECTORIES(${FFTW3F_LIBRARY_DIRS})
+LINK_LIBRARIES(${FFTW3F_LIBRARIES})
+BUILD_PLUGIN(shiftergdx ShifterGDX.cpp ShifterGDXControls.cpp ShifterGDXDialog.cpp ShifterGDXControls.h ShifterGDXDialog.h MOCFILES ShifterGDXControls.h ShifterGDXDialog.h EMBEDDED_RESOURCES logo.png)

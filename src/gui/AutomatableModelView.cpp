@@ -61,34 +61,30 @@ void AutomatableModelView::addDefaultActions(QMenu* menu)
             = new AutomatableModelViewSlots(this, menu);
 
     menu->addAction(embed::getIconPixmap("edit_rename"),
-                    AutomatableModel::tr("Enter &Value"),
-                    amvSlots,
+                    AutomatableModel::tr("Enter &Value"), amvSlots,
                     SLOT(enterValue()));
 
     menu->addAction(
             embed::getIconPixmap("reload"),
             AutomatableModel::tr("&Reset (%1%2)")
-            .arg(model->displayValue(model->initValue<float>()))
-            .arg(m_unit),
-            model,
-            SLOT(reset()));
+                    .arg(model->displayValue(model->initValue<float>()))
+                    .arg(m_unit),
+            model, SLOT(reset()));
 
-    FloatModel* fm=dynamic_cast<FloatModel*>(modelUntyped());
+    FloatModel* fm = dynamic_cast<FloatModel*>(modelUntyped());
     if(fm != nullptr)
         menu->addAction(embed::getIconPixmap("edit_rename"),
                         AutomatableModel::tr("Edit &Randomization (%1%2)")
-                        .arg(fm->randomRatio()*100.)
-                        .arg("%"),
-                        amvSlots,
-                        SLOT(editRandomization()));
+                                .arg(fm->randomRatio() * 100.)
+                                .arg("%"),
+                        amvSlots, SLOT(editRandomization()));
 
     menu->addSeparator();
     menu->addAction(embed::getIconPixmap("edit_copy"),
                     AutomatableModel::tr("&Copy value (%1%2)")
-                    .arg(model->displayValue(model->value<float>()))
-                    .arg(m_unit),
-                    amvSlots,
-                    SLOT(copyToClipboard()));
+                            .arg(model->displayValue(model->value<float>()))
+                            .arg(m_unit),
+                    amvSlots, SLOT(copyToClipboard()));
 
     bool          canPaste     = true;
     const float   valueToPaste = floatFromClipboard(&canPaste);
@@ -182,6 +178,23 @@ void AutomatableModelView::mousePressEvent(QMouseEvent* event)
     {
         modelUntyped()->reset();
     }
+}
+
+QColor AutomatableModelView::cableColor() const
+{
+    const AutomatableModel* m = modelUntyped();
+    QColor                  r(255, 255, 255);
+
+    if(!m)
+        r = QColor(128, 128, 128);  // no model...
+    else if(m->isAutomated())
+        r = QColor(128, 128, 255);  // automation pattern
+    else if(m->isControlled())
+        r = QColor(255, 192, 0);  // midi
+    else if(m->hasLinkedModels())
+        r = QColor(128, 128, 255);  // link
+
+    return r;
 }
 
 AutomatableModelViewSlots::AutomatableModelViewSlots(

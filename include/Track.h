@@ -82,8 +82,6 @@ class TrackContentObject : public Model, public JournallingObject
     mapPropertyFromModel(bool, isSolo, setSolo, m_soloModel);
 
   public:
-    TrackContentObject(Track* track);
-    TrackContentObject(const TrackContentObject& _other);
     virtual ~TrackContentObject();
 
     virtual void saveSettings(QDomDocument& doc, QDomElement& element);
@@ -147,7 +145,8 @@ class TrackContentObject : public Model, public JournallingObject
         if(r != m_autoResize)
         {
             m_autoResize = r;
-            if(r) updateLength();
+            if(r)
+                updateLength();
             emit dataChanged();
         }
     }
@@ -169,7 +168,15 @@ class TrackContentObject : public Model, public JournallingObject
     virtual void movePosition(const MidiTime& pos);
     virtual void changeLength(const MidiTime& length);
     virtual void updateLength();
+
+    virtual void resizeLeft(const MidiTime& pos, const MidiTime& len);
+    virtual void resizeRight(const MidiTime& pos, const MidiTime& len);
+
     virtual void rotate(tick_t _ticks)
+    {
+    }  //= 0;
+
+    virtual void split(tick_t _ticks)
     {
     }  //= 0;
 
@@ -210,12 +217,22 @@ class TrackContentObject : public Model, public JournallingObject
     virtual void paste();
     virtual void toggleMute() final;
 
+    virtual void flipHorizontally()
+    {
+    }  //= 0;
+    virtual void flipVertically()
+    {
+    }  //= 0;
+
   signals:
     void lengthChanged();
     void positionChanged();
     void destroyedTCO();
 
   protected:
+    TrackContentObject(Track* track, const QString& _displayName);
+    TrackContentObject(const TrackContentObject& _other);
+
     void     updateBBTrack();
     void     setStepResolution(int _res);
     int      stepsPerTact() const;
@@ -238,6 +255,8 @@ class TrackContentObject : public Model, public JournallingObject
     void rotateOneBarRight();
     void rotateOneBeatRight();
     void rotateOneStepRight();
+    void splitAfterEveryBar();
+    void splitAfterEveryFourthBar();
 
   private:
     /*
@@ -361,6 +380,8 @@ class TrackContentObjectView : public SelectableObject, public ModelView
                                        bool   _cut,
                                        bool   _copy,
                                        bool   _paste) final;
+    virtual void   addSplitMenu(QMenu* _cm, bool _one, bool _four) final;
+    virtual void   addFlipMenu(QMenu* _cm, bool _x, bool _y) final;
     virtual void   addRotateMenu(QMenu* _cm,
                                  bool   _bar,
                                  bool   _beat,
@@ -443,8 +464,8 @@ class TrackContentObjectView : public SelectableObject, public ModelView
     QColor m_textShadowColor;
     QColor m_BBPatternBackground;
     // bool m_gradient;
+    bool m_needsUpdate;
 
-    bool        m_needsUpdate;
     inline void setInitialMousePos(QPoint pos)
     {
         m_initialMousePos       = pos;
@@ -675,19 +696,19 @@ class EXPORT Track : public Model, public JournallingObject
   public:
     typedef QVector<TrackContentObject*> tcoVector;
 
-    enum TrackTypes
+    enum TrackType
     {
         InstrumentTrack,
         BBTrack,
         SampleTrack,
-        EventTrack,
-        VideoTrack,
+        EventTrack, // not used but must be kept
+        VideoTrack, // not used but must be kept
         AutomationTrack,
         HiddenAutomationTrack,
-        NumTrackTypes
     };
+    // NumTrackType
 
-    Track(TrackTypes type, TrackContainer* tc);
+    Track(TrackType type, TrackContainer* tc);
     virtual ~Track();
 
     bool   isFixed() const;
@@ -696,12 +717,11 @@ class EXPORT Track : public Model, public JournallingObject
     QColor color() const;
     void   setColor(const QColor& _newColor);
 
-    static Track* create(TrackTypes tt, TrackContainer* tc);
+    static Track* create(TrackType tt, TrackContainer* tc);
     static Track* create(const QDomElement& element, TrackContainer* tc);
     Track*        clone();
 
-    // pure virtual functions
-    TrackTypes type() const
+    virtual TrackType type() const final
     {
         return m_type;
     }
@@ -748,6 +768,8 @@ class EXPORT Track : public Model, public JournallingObject
     void swapPositionOfTCOs(int tcoNum1, int tcoNum2);
 
     void createTCOsForBB(int bb);
+    void deleteUnusedTCOsForBB();
+    void fixOverlappingTCOs();
 
     void insertTact(const MidiTime& pos);
     void removeTact(const MidiTime& pos);
@@ -771,8 +793,6 @@ class EXPORT Track : public Model, public JournallingObject
     }
 
     virtual QString defaultName() const = 0;
-
-    using Model::dataChanged;
 
     inline int getHeight()
     {
@@ -816,6 +836,10 @@ class EXPORT Track : public Model, public JournallingObject
     virtual void readFrozenBuffer();
     virtual void writeFrozenBuffer();
 
+    // signals:
+    // using Model::dataChanged(); <-- not working
+    // void dataChanged(); <-- not needed
+
   public slots:
     virtual void setName(const QString& newName)
     {
@@ -834,7 +858,7 @@ class EXPORT Track : public Model, public JournallingObject
 
   private:
     TrackContainer* m_trackContainer;
-    TrackTypes      m_type;
+    TrackType       m_type;
     QString         m_name;
     int             m_height;
     QColor          m_color;
@@ -861,6 +885,8 @@ class TrackView : public QWidget, public ModelView, public JournallingObject
   public:
     TrackView(Track* _track, TrackContainerView* tcv);
     virtual ~TrackView();
+
+    virtual QColor cableColor() const;
 
     bool   isFixed() const;
     real_t pixelsPerTact();

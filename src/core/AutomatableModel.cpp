@@ -26,6 +26,7 @@
 #include "AutomatableModel.h"
 
 #include "AutomationPattern.h"
+#include "Backtrace.h"
 #include "ControllerConnection.h"
 #include "Engine.h"
 #include "Mixer.h"
@@ -85,6 +86,7 @@ bool AutomatableModel::isAutomated() const
     return AutomationPattern::isAutomated(this);
 }
 
+/*
 QString AutomatableModel::formatNumber(real_t v)
 {
 #ifdef REAL_IS_FLOAT
@@ -100,6 +102,7 @@ QString AutomatableModel::formatNumber(real_t v)
     }
     return r;
 }
+*/
 
 void AutomatableModel::saveSettings(QDomDocument&  doc,
                                     QDomElement&   element,
@@ -111,7 +114,7 @@ void AutomatableModel::saveSettings(QDomDocument&  doc,
     bool    mustQuote = (reg1.indexIn(name) < 0) || (reg2.indexIn(name) >= 0);
 
     if(mustQuote || isAutomated() || m_scaleType != Linear
-       || m_randomRatio != 0.)
+       || m_randomRatio != 0. || hasLinkedModels())
     {
         // TODO: check for unicity
 #ifdef DEBUG_LMMS
@@ -156,6 +159,7 @@ void AutomatableModel::saveSettings(QDomDocument&  doc,
         QDomElement me = doc.createElement(
                 mustQuote ? QString("automatablemodel") : name);
 
+        element.appendChild(me);
         me.setAttribute("id", ProjectJournal::idToSave(id()));
         me.setAttribute("value", formatNumber(m_value));
         me.setAttribute("scale_type",
@@ -167,7 +171,27 @@ void AutomatableModel::saveSettings(QDomDocument&  doc,
         if(mustQuote)
             me.setAttribute("nodename", name);
 
-        element.appendChild(me);
+        if(hasLinkedModels())
+        {
+            if(!hasUuid())
+                qWarning(
+                        "AutomatableModel::saveSettings Strange: '%s' has "
+                        "linked models but no uuid.",
+                        qPrintable(fullDisplayName()));
+
+            QDomElement linksElement = doc.createElement("links");
+            me.appendChild(linksElement);
+            for(AutomatableModel* m: m_linkedModels)
+            {
+                QDomElement linkElement = doc.createElement("link");
+                linksElement.appendChild(linkElement);
+                linkElement.setAttribute("target", m->uuid());
+                // other properties will come here
+            }
+        }
+
+        if(hasUuid())
+            me.setAttribute("uuid", uuid());
     }
     else
     {
@@ -200,10 +224,9 @@ void AutomatableModel::saveSettings(QDomDocument&  doc,
             element.appendChild(controllerElement);
         }
 
-        QDomElement element = doc.createElement(name);
-        m_controllerConnection->saveSettings(doc, element);
-
-        controllerElement.appendChild(element);
+        QDomElement connectionElement = doc.createElement(name);
+        m_controllerConnection->saveSettings(doc, connectionElement);
+        controllerElement.appendChild(connectionElement);
     }
 }
 
@@ -211,6 +234,18 @@ void AutomatableModel::loadSettings(const QDomElement& element,
                                     const QString&     name,
                                     const bool         required)
 {
+    if(element.isNull())
+    {
+        BACKTRACE
+        qWarning("AutomatableModel::loadSettings ERROR element is null");
+    }
+
+    if(name.isEmpty())
+    {
+        BACKTRACE
+        qWarning("AutomatableModel::loadSettings ERROR name is empty");
+    }
+
     // compat code
     QDomNode node = element.namedItem(AutomationPattern::classNodeName());
     if(node.isElement())
@@ -242,7 +277,7 @@ void AutomatableModel::loadSettings(const QDomElement& element,
         if(thisConnection.isElement())
         {
             setControllerConnection(
-                    new ControllerConnection((Controller*)NULL));
+                    new ControllerConnection((Controller*)nullptr));
             m_controllerConnection->loadSettings(thisConnection.toElement());
             // m_controllerConnection->setTargetName( displayName() );
         }
@@ -276,9 +311,14 @@ void AutomatableModel::loadSettings(const QDomElement& element,
 
     if(node.isElement())
     {
-        changeID(node.toElement().attribute("id").toInt());
+        QDomElement me = node.toElement();
 
-        QString v = node.toElement().attribute("value");
+        if(me.hasAttribute("uuid"))
+            setUuid(me.attribute("uuid"));
+
+        changeID(me.attribute("id").toInt());
+
+        QString v = me.attribute("value");
         v.replace(',', '.');
 #ifdef REAL_IS_FLOAT
         setValue(v.toFloat());
@@ -287,20 +327,52 @@ void AutomatableModel::loadSettings(const QDomElement& element,
         setValue(v.toDouble());
 #endif
 
-        if(node.toElement().hasAttribute("scale_type"))
+        if(me.hasAttribute("scale_type"))
         {
-            if(node.toElement().attribute("scale_type") == "linear")
+            if(me.attribute("scale_type") == "linear")
             {
                 setScaleType(Linear);
             }
-            else if(node.toElement().attribute("scale_type") == "log")
+            else if(me.attribute("scale_type") == "log")
             {
                 setScaleType(Logarithmic);
+            }
+        }
+
+        QDomNode linksNode = me.namedItem("links");
+        if(linksNode.isElement())
+        {
+            QDomElement linkElement
+                    = linksNode.toElement().firstChildElement("link");
+            while(!linkElement.isNull())
+            {
+                QString target = linkElement.attribute("target");
+
+                AutomatableModel* m = dynamic_cast<AutomatableModel*>(
+                        Model::find(target));
+                if(m != nullptr)
+                {
+                    linkModels(this, m);
+                    qInfo("AutomatableModel::loadSettings target found '%s' "
+                          "for '%s'",
+                          qPrintable(m->fullDisplayName()),
+                          qPrintable(fullDisplayName()));
+                }
+                else
+                {
+                    qInfo("AutomatableModel::loadSettings target NOT found "
+                          "'%s' for '%s'",
+                          qPrintable(target), qPrintable(fullDisplayName()));
+                }
+                linkElement = linkElement.nextSiblingElement();
             }
         }
     }
     else
     {
+        if(element.hasAttribute("uuid"))
+            setUuid(element.attribute("uuid"));
+
         setScaleType(Linear);
 
         if(element.hasAttribute(name))
@@ -318,10 +390,13 @@ void AutomatableModel::loadSettings(const QDomElement& element,
         else
         {
             if(required)
+            {
+                BACKTRACE
                 qWarning(
                         "AutomatableModel: missing value for "
                         "attribute '%s' in element '%s'",
                         qPrintable(name), qPrintable(element.tagName()));
+            }
             reset();
         }
     }
@@ -638,9 +713,15 @@ void AutomatableModel::randomizeValues(ValueBuffer* _vb) const
 
 void AutomatableModel::linkModel(AutomatableModel* model, bool propagate)
 {
+    if(!hasUuid())
+        uuid();
+
     if(model && !m_linkedModels.contains(model) && model != this)
     {
-        m_linkedModels.push_back(model);
+        if(!model->hasUuid())
+            model->uuid();
+
+        m_linkedModels.append(model);
 
         if(!model->hasLinkedModels())  // ???
         {
@@ -695,6 +776,23 @@ void AutomatableModel::unlinkAllModels()
     {
         unlinkModels(this, model);
     }
+}
+
+bool AutomatableModel::hasCableFrom(Model* _m) const
+{
+    AutomatableModel* am = dynamic_cast<AutomatableModel*>(_m);
+    if(am != nullptr && m_linkedModels.contains(am)
+       && fullDisplayName() < am->fullDisplayName())
+        return true;
+
+    Controller* cm = m_controllerConnection != nullptr
+                             ? m_controllerConnection->getController()
+                             : nullptr;
+    if(cm != nullptr && cm->type() != Controller::DummyController
+       && cm == _m)  //>hasModel(_m))
+        return true;
+
+    return false;
 }
 
 void AutomatableModel::setControllerConnection(ControllerConnection* c)

@@ -51,7 +51,7 @@ class audioFileProcessor : public Instrument
 
     virtual void loadFile(const QString& _file);
 
-    virtual QString nodeName() const;
+    //virtual QString nodeName() const;
 
     virtual int getBeatLen(NotePlayHandle* _n) const;
 

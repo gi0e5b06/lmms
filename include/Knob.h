@@ -1,6 +1,7 @@
 /*
  * Knob.h - powerful knob-widget
  *
+ * Copyright (c) 2017-2019 gi0e5b06 (on github.com)
  * Copyright (c) 2004-2008 Tobias Doerffel <tobydox/at/users.sourceforge.net>
  *
  * This file is part of LMMS - https://lmms.io
@@ -30,6 +31,7 @@
 //#include "PaintCacheable.h"
 //#include "templates.h"
 
+#include <QLine>
 #include <QPoint>
 //#include <QWidget>
 
@@ -45,9 +47,7 @@ enum knobTypes
     knobStyled
 };
 
-class EXPORT Knob
-      : public Widget
-      , public FloatModelView
+class EXPORT Knob : public Widget, public FloatModelView
 {
     Q_OBJECT
     Q_ENUMS(knobTypes)
@@ -74,10 +74,10 @@ class EXPORT Knob
     mapPropertyFromModel(float, volumeRatio, setVolumeRatio, m_volumeRatio);
 
     Knob(knobTypes      _knob_num,
-         QWidget*       _parent = NULL,
-         const QString& _name   = QString());
-    Knob(QWidget*       _parent = NULL,
-         const QString& _name   = QString());  //!< default ctor
+         QWidget*       _parent = nullptr,
+         const QString& _name   = "[knob]");
+    Knob(QWidget*       _parent = nullptr,
+         const QString& _name   = "[knob]");  //!< default ctor
     virtual ~Knob();
 
     void initUi(const QString& _name);  //!< to be called by ctors
@@ -97,6 +97,9 @@ class EXPORT Knob
 
     QString text() const;
     void    setText(const QString& _s);
+
+    bool isInteractive() const;
+    void setInteractive(bool _b);
 
     void setTotalAngle(float angle);
 
@@ -129,6 +132,10 @@ class EXPORT Knob
     void   setPointColor(const QColor& c);
     QColor textColor() const;
     void   setTextColor(const QColor& c);
+
+    virtual QLine  cableFrom() const;
+    virtual QLine  cableTo() const;
+    virtual QColor cableColor() const;
 
   signals:
     void sliderPressed();
@@ -196,6 +203,7 @@ class EXPORT Knob
     bool   m_pressLeft;   // true when left button pressed
 
     QString m_label;
+    bool    m_interactive;
 
     QPixmap*   m_knobPixmap;
     BoolModel  m_volumeKnob;

@@ -2,24 +2,23 @@
  * Note.h - declaration of class note which contains all informations about a
  *          note + definitions of several constants and enums
  *
+ * Copyright (c) 2018-2019 gi0e5b06 (on github.com)
  * Copyright (c) 2004-2014 Tobias Doerffel <tobydox/at/users.sourceforge.net>
  *
- * This file is part of LMMS - https://lmms.io
+ * This file is part of LSMM -
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public
- * License along with this program (see COPYING); if not, write to the
- * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
- * Boston, MA 02110-1301 USA.
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
 
@@ -125,9 +124,12 @@ class EXPORT Note : public SerializingObject
     void quantizeLength(const int qGrid);
     void quantizePos(const int qGrid);
 
-    virtual void setVolume(volume_t volume);
-    virtual void setPanning(panning_t panning);
-    virtual void setLegato(bool legato);
+    virtual void setVolume(volume_t _volume);
+    virtual void setPanning(panning_t _panning);
+    virtual void setProbability(real_t _probability);
+    virtual void setLegato(bool _legato);
+    virtual void setMarcato(bool _marcato);
+    virtual void setStaccato(bool _staccato);
 
     static inline bool lessThan(Note*& a, Note*& b)
     {
@@ -182,11 +184,14 @@ class EXPORT Note : public SerializingObject
         return m_pos;
     }
 
+    // useless and confusing
+    /*
     inline MidiTime pos(MidiTime basePos) const
     {
-        const int bp = basePos;
-        return m_pos - bp;
+        // const int bp = basePos;
+        return m_pos - basePos;  // bp;
     }
+    */
 
     inline int key() const
     {
@@ -209,9 +214,24 @@ class EXPORT Note : public SerializingObject
         return m_panning;
     }
 
+    inline bool probability() const
+    {
+        return m_probability;
+    }
+
     inline bool legato() const
     {
         return m_legato;
+    }
+
+    inline bool marcato() const
+    {
+        return m_marcato;
+    }
+
+    inline bool staccato() const
+    {
+        return m_staccato;
     }
 
     static inline const QString classNodeName()
@@ -231,7 +251,7 @@ class EXPORT Note : public SerializingObject
         return m_detuning;
     }
     bool hasDetuningInfo() const;
-    bool withinRange(int tickStart, int tickEnd) const;
+    bool withinRange(tick_t tickStart, tick_t tickEnd) const;
 
     void createDetuning();
 
@@ -256,12 +276,16 @@ class EXPORT Note : public SerializingObject
     int             m_key;
     volume_t        m_volume;
     panning_t       m_panning;
+    real_t          m_probability;
     bool            m_legato;
+    bool            m_marcato;
+    bool            m_staccato;
     MidiTime        m_length;
     MidiTime        m_pos;
     DetuningHelper* m_detuning;
 };
 
-typedef QVector<Note*> NoteVector;
+//typedef QVector<Note*> NoteVector;
+typedef QVector<Note*> Notes;
 
 #endif

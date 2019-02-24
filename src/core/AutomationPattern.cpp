@@ -2,7 +2,7 @@
  * AutomationPattern.cpp - implementation of class AutomationPattern which
  *                         holds dynamic values
  *
- * Copyright (c) 2018      gi0e5b06 (on github.com)
+ * Copyright (c) 2018-2019 gi0e5b06 (on github.com)
  * Copyright (c) 2008-2014 Tobias Doerffel <tobydox/at/users.sourceforge.net>
  * Copyright (c) 2006-2008 Javier Serrano Polo
  * <jasp00/at/users.sourceforge.net>
@@ -45,8 +45,9 @@ const real_t AutomationPattern::DEFAULT_MIN_VALUE = 0.;
 const real_t AutomationPattern::DEFAULT_MAX_VALUE = 1.;
 
 AutomationPattern::AutomationPattern(AutomationTrack* _auto_track) :
-      TrackContentObject(_auto_track), m_autoTrack(_auto_track), m_objects(),
-      m_tension(1.), m_waveBank(WaveFormStandard::ZERO_BANK),
+      TrackContentObject(_auto_track, "Automation tile"),
+      m_autoTrack(_auto_track), m_objects(), m_tension(1.),
+      m_waveBank(WaveFormStandard::ZERO_BANK),
       m_waveIndex(WaveFormStandard::ZERO_INDEX), m_waveRatio(0.5),
       m_waveSkew(0.), m_waveAmplitude(0.1), m_waveRepeat(0.),
       m_progressionType(DiscreteProgression), m_dragging(false),
@@ -56,17 +57,16 @@ AutomationPattern::AutomationPattern(AutomationTrack* _auto_track) :
     setAutoResize(false);
 }
 
-AutomationPattern::AutomationPattern(const AutomationPattern& _pat_to_copy) :
-      TrackContentObject(_pat_to_copy.m_autoTrack),
-      m_autoTrack(_pat_to_copy.m_autoTrack),
-      m_objects(_pat_to_copy.m_objects), m_tension(_pat_to_copy.m_tension),
-      m_progressionType(_pat_to_copy.m_progressionType)
+AutomationPattern::AutomationPattern(const AutomationPattern& _other) :
+        TrackContentObject(_other.m_autoTrack, _other.displayName()),
+      m_autoTrack(_other.m_autoTrack), m_objects(_other.m_objects),
+      m_tension(_other.m_tension), m_progressionType(_other.m_progressionType)
 {
-    for(timeMap::const_iterator it = _pat_to_copy.m_timeMap.begin();
-        it != _pat_to_copy.m_timeMap.end(); ++it)
+    for(timeMap::const_iterator it = _other.m_timeMap.begin();
+        it != _other.m_timeMap.end(); ++it)
     {
         m_timeMap[it.key()]  = it.value();
-        m_tangents[it.key()] = _pat_to_copy.m_tangents[it.key()];
+        m_tangents[it.key()] = _other.m_tangents[it.key()];
     }
 
     switch(getTrack()->trackContainer()->type())
@@ -122,8 +122,10 @@ bool AutomationPattern::addObject(AutomatableModel* _obj, bool _search_dup)
     if(m_objects.isEmpty() && hasAutomation() == false)
     {
         // then initialize first value
-        putValue(MidiTime(0), _obj->inverseScaledValue(_obj->value<real_t>()),
-                 false);
+        // putValue(MidiTime(0),
+        // _obj->inverseScaledValue(_obj->value<real_t>()), false);
+        putValue(MidiTime(0),
+                 _obj->inverseScaledValue(_obj->rawValue<real_t>()));
     }
 
     m_objects += QPointer<AutomatableModel>(_obj);
@@ -226,9 +228,7 @@ const AutomatableModel* AutomationPattern::firstObject() const
 {
     AutomatableModel* m;
     if(!m_objects.isEmpty() && (m = m_objects.first()) != nullptr)
-    {
         return m;
-    }
 
     static FloatModel _fm(0, DEFAULT_MIN_VALUE, DEFAULT_MAX_VALUE, 0.001);
     return &_fm;
@@ -244,12 +244,17 @@ MidiTime AutomationPattern::timeMapLength() const
     if(m_timeMap.isEmpty())
         return 0;
     timeMap::const_iterator it = m_timeMap.end();
-    return MidiTime(MidiTime((it - 1).key()).nextFullTact(), 0);
+    // return MidiTime(MidiTime((it - 1).key()).nextFullTact(), 0);
+    tick_t t = (it - 1).key();
+    tick_t n = MidiTime::ticksPerTact() / 8;
+    return qMax(n, t);
 }
 
 tick_t AutomationPattern::unitLength() const
 {
-    return qMax(MidiTime::ticksPerTact() / 8, timeMapLength().getTicks());
+    tick_t t = timeMapLength().getTicks();
+    tick_t n = MidiTime::ticksPerTact() / 8;
+    return qMax(n, t);
 }
 
 /*
@@ -294,15 +299,15 @@ void AutomationPattern::updateBBTrack()
 MidiTime AutomationPattern::putValue(const MidiTime& time,
                                      const real_t    value,
                                      const bool      quantPos,
-                                     const bool      ignoreSurroundingPoints)
+                                     const bool      ignoreSurrounding)
 {
     cleanObjects();
 
-    const int q = quantization();
-    const int t = quantPos ? Note::quantized(time, q) : time;
+    const int    q = quantization();
+    const tick_t t = quantPos ? Note::quantized(time, q) : time;
 
     /*
-    if((t > 0) && !ignoreSurroundingPoints && (valueAt(t - 1) ==
+    if((t > 0) && !ignoreSurrounding && (valueAt(t - 1) ==
     value))
     {
         if(m_timeMap.contains(t))
@@ -313,10 +318,10 @@ MidiTime AutomationPattern::putValue(const MidiTime& time,
 
     // Remove control points that are covered by the new points
     // quantization value. Control Key to override
-    if(quantPos && !ignoreSurroundingPoints)
+    if(quantPos && !ignoreSurrounding)
     {
         // qInfo("putval q=%d t=%d", q, t);
-        for(int i = t - q + 1; i < t + q; ++i)
+        for(tick_t i = t - q + 1; i < t + q; ++i)
         {
             // AutomationPattern::removeValue(i);
             if(m_timeMap.contains(i))
@@ -338,12 +343,9 @@ MidiTime AutomationPattern::putValue(const MidiTime& time,
     // we need to maximize our length in case we're part of a hidden
     // automation track as the user can't resize this pattern
     if(getTrack() && getTrack()->type() == Track::HiddenAutomationTrack)
-    {
         updateLength();
-    }
 
     emit dataChanged();
-
     return t;
 }
 
@@ -361,9 +363,7 @@ void AutomationPattern::removeValue(const MidiTime& time)
     generateTangents(it, 3);
 
     if(getTrack() && getTrack()->type() == Track::HiddenAutomationTrack)
-    {
         updateLength();
-    }
 
     emit dataChanged();
 }
@@ -404,7 +404,7 @@ void AutomationPattern::onRecordValue(MidiTime time, real_t value)
 MidiTime AutomationPattern::setDragValue(const MidiTime& time,
                                          const real_t    value,
                                          const bool      quantPos,
-                                         const bool      controlKey)
+                                         const bool      ignoreSurrounding)
 {
     if(m_dragging == false)
     {
@@ -424,7 +424,7 @@ MidiTime AutomationPattern::setDragValue(const MidiTime& time,
         generateTangents(it, 3);
     }
 
-    return this->putValue(time, value, quantPos, controlKey);
+    return /*this->*/ putValue(time, value, quantPos, ignoreSurrounding);
 }
 
 /**
@@ -648,6 +648,66 @@ real_t* AutomationPattern::valuesAfter(const MidiTime& _time) const
     return ret;
 }
 
+void AutomationPattern::flipHorizontally()
+{
+    if(isEmpty())
+        return;
+
+    timeMap tempMap;
+    // instrumentTrack()->lock();
+    tick_t len = autoRepeat() ? unitLength() : timeMapLength().getTicks();
+    bool   modified = false;
+    for(tick_t p: m_timeMap.keys())
+    {
+        real_t v = m_timeMap.value(p);
+        // p = (len - p) % (len+1);
+        // if(p < 0) p += len;
+        p = len - p;
+        tempMap.insert(p, v);
+        modified = true;
+    }
+    if(modified)
+    {
+        m_timeMap.clear();
+        m_timeMap = tempMap;
+        updateLength();
+        generateTangents();
+        emit dataChanged();
+        Engine::getSong()->setModified();
+    }
+}
+
+void AutomationPattern::flipVertically()
+{
+    if(isEmpty())
+        return;
+
+    const AutomatableModel* m    = firstObject();
+    const real_t            vmin = m->minValue<real_t>();
+    const real_t            vmax = m->maxValue<real_t>();
+
+    timeMap tempMap;
+    bool    modified = false;
+    for(tick_t p: m_timeMap.keys())
+    {
+        real_t v = m_timeMap.value(p);
+        // p = (len - p) % (len+1);
+        // if(p < 0) p += len;
+        v = vmax - (v - vmin);
+        tempMap.insert(p, v);
+        modified = true;
+    }
+    if(modified)
+    {
+        m_timeMap.clear();
+        m_timeMap = tempMap;
+        // updateLength();
+        generateTangents();
+        emit dataChanged();
+        Engine::getSong()->setModified();
+    }
+}
+
 void AutomationPattern::flipY(int min, int max)
 {
     timeMap                tempMap   = m_timeMap;
@@ -749,7 +809,6 @@ void AutomationPattern::flipX(int length)
     }
 
     m_timeMap.clear();
-
     m_timeMap = tempMap;
 
     generateTangents();
@@ -1012,7 +1071,7 @@ void AutomationPattern::resolveAllIDs()
                         }
                     }
                     a->m_idsToResolve.clear();
-                    a->dataChanged();
+                    a->emit dataChanged();
                 }
             }
         }

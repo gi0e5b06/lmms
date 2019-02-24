@@ -49,8 +49,9 @@ class EXPORT Plugin : public Model, public JournallingObject
   public:
     enum PluginTypes
     {
-        Instrument,    // instrument being used in channel-track
-        Effect,        // audio effect-plugin for effect-board
+        Instrument,    // musical instrument (notes to sound)
+        Effect,        // audio effect (sound to sound)
+        NoteEffect,    // plugin to modify playing notes (note to note)
         ImportFilter,  // filter for importing a file
         ExportFilter,  // filter for exporting a file
         Tool,          // additional tool (level-meter etc)
@@ -66,20 +67,58 @@ class EXPORT Plugin : public Model, public JournallingObject
     // the plugin-loader is able to access information about the plugin
     struct Descriptor
     {
-        QString             name;         // const char*
-        QString             displayName;  // const char*
-        QString             description;  // const char*
-        QString             author;       // const char*
-        int                 version;
-        PluginTypes         type;
-        const PixmapLoader* logo;
-        QString             supportedFileTypes;  // const char*
+        const char*         m_name;
+        const char*         m_displayName;
+        const char*         m_description;
+        const char*         m_author;
+        int                 m_version;
+        PluginTypes         m_type;
+        const PixmapLoader* m_logo;
+        const char*         m_supportedFileTypes;
+
+        const QString name() const
+        {
+            return m_name;
+        }
+
+        const QString displayName() const
+        {
+            return m_displayName;
+        }
+
+        const QString description() const
+        {
+            return m_description;
+        }
+
+        const QString author() const
+        {
+            return m_author;
+        }
+
+        const int version() const
+        {
+            return m_version;
+        }
+
+        const PluginTypes type() const
+        {
+            return m_type;
+        }
+
+        const PixmapLoader* logo() const
+        {
+            return m_logo;
+        }
+
+        const QString supportedFileTypes() const
+        {
+            return m_supportedFileTypes;
+        }
 
         inline bool supportsFileType(const QString& extension) const
         {
-            return QString(supportedFileTypes)
-                    .split(QChar(','))
-                    .contains(extension);
+            return supportedFileTypes().split(QChar(',')).contains(extension);
         }
 
         class EXPORT SubPluginFeatures
@@ -146,14 +185,20 @@ class EXPORT Plugin : public Model, public JournallingObject
     // returns display-name out of descriptor
     virtual QString displayName() const
     {
-        return Model::displayName().isEmpty() ? m_descriptor->displayName
-                                              : Model::displayName();
+        // return Model::displayName().isEmpty() ? m_descriptor->displayName()
+        //   : Model::displayName();
+        QString r = "";
+        if(m_descriptor != nullptr)
+            r = m_descriptor->displayName();
+        if(r.isEmpty())
+            r = Model::displayName();
+        return r;
     }
 
     // return plugin-type
     inline PluginTypes type() const
     {
-        return m_descriptor->type;
+        return m_descriptor->type();
     }
 
     // return plugin-descriptor for further information
@@ -161,6 +206,8 @@ class EXPORT Plugin : public Model, public JournallingObject
     {
         return m_descriptor;
     }
+
+    virtual QString nodeName() const = 0;
 
     // can be called if a file matching supportedFileTypes should be
     // loaded/processed with the help of this plugin
@@ -172,8 +219,10 @@ class EXPORT Plugin : public Model, public JournallingObject
 
     // returns an instance of a plugin whose name matches to given one
     // if specified plugin couldn't be loaded, it creates a dummy-plugin
-    static Plugin*
-            instantiate(const QString& pluginName, Model* parent, void* data);
+    static Plugin* instantiate(const QString& pluginName,
+                               Model*         parent,
+                               void*          data,
+                               bool           showErrors = true);
 
     // create a view for the model
     PluginView* createView(QWidget* parent);

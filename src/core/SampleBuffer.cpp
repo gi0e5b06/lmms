@@ -416,15 +416,17 @@ samplerate );
         {
             if(MixHelpers::sanitize(m_data, m_frames))
                 qInfo("Sanitized sample 2");
-            // qInfo("calling normalizeSampleRate this=%p
-            // sr=%d",this,samplerate);
+            // qInfo("calling normalizeSampleRate this=%p sr=%d {%s}", this,
+            //   samplerate, qPrintable(filename));
             normalizeSampleRate(samplerate, _keepSettings);
 
-            if(!m_audioFile.isEmpty() && !filename.endsWith(cchext) &&
-               //(m_frames>102400) &&             // only for big samples?
-               QFileInfo(filename + cchext).isWritable())
+            if(!m_audioFile.isEmpty() && !filename.endsWith(cchext)
+               && (m_frames > 102400) &&  // only for big samples?
+               (!QFile(filename + cchext).exists()
+                || QFileInfo(filename + cchext).isWritable()))
             {
-                qInfo("SampleBuffer: Write cache %s", qPrintable(filename));
+                // qInfo("SampleBuffer: Write cache for %s",
+                // qPrintable(filename));
 
                 if(m_origData)
                     qFatal("SampleBuffer::update in write cache origData=%p",
@@ -1283,6 +1285,11 @@ f_cnt_t SampleBuffer::findClosestZero(f_cnt_t _index)
     if(right - _index > _index - left)
         return left;
     return right;
+}
+
+void SampleBuffer::visualize(QPainter& _p, const QRect& _dr)
+{
+    visualize(_p, _dr, _dr, 0, m_frames);
 }
 
 // fully rewriten. gi0e5b06

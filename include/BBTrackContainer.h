@@ -22,74 +22,75 @@
  *
  */
 
-
 #ifndef BB_TRACK_CONTAINER_H
 #define BB_TRACK_CONTAINER_H
 
-#include "TrackContainer.h"
-#include "ComboBoxModel.h"
 #include "Bitset.h"
+#include "ComboBoxModel.h"
+#include "TrackContainer.h"
 
 class EXPORT BBTrackContainer : public TrackContainer
 {
-	Q_OBJECT
-	mapPropertyFromModel(int,currentBB,setCurrentBB,m_bbComboBoxModel);
-public:
-	BBTrackContainer();
-	virtual ~BBTrackContainer();
+    Q_OBJECT
+    mapPropertyFromModel(int, currentBB, setCurrentBB, m_bbComboBoxModel);
 
-        virtual bool isFixed() const
-        {
-                return true;
-        }
+  public:
+    BBTrackContainer();
+    virtual ~BBTrackContainer();
 
-	//virtual bool play( MidiTime _start, const fpp_t _frames,
-        //                   const f_cnt_t _frame_base, int _tco_num = -1 );
-	virtual bool play( MidiTime _start, const fpp_t _frames,
-                           const f_cnt_t _frame_base,
-                           int _tco_num, const Bitset* _mask );
+    virtual bool isFixed() const
+    {
+        return true;
+    }
 
-	virtual void updateAfterTrackAdd() /*override*/;
+    // virtual bool play( MidiTime _start, const fpp_t _frames,
+    //                   const f_cnt_t _frame_base, int _tco_num = -1 );
+    virtual bool play(MidiTime      _start,
+                      const fpp_t   _frames,
+                      const f_cnt_t _frame_base,
+                      int           _tco_num,
+                      const Bitset* _mask);
 
-	inline virtual QString nodeName() const /*override*/
-	{
-		return "bbtrackcontainer";
-	}
+    virtual void updateAfterTrackAdd() /*override*/;
 
-	tact_t lengthOfBB( int _bb ) const;
-	inline tact_t lengthOfCurrentBB()
-	{
-		return lengthOfBB( currentBB() );
-	}
+    inline virtual QString nodeName() const /*override*/
+    {
+        return "bbtrackcontainer";
+    }
 
-        tick_t beatLengthOfBB( int _bb ) const;
+    tact_t        lengthOfBB(int _bb) const;
+    inline tact_t lengthOfCurrentBB()
+    {
+        return lengthOfBB(currentBB());
+    }
 
-	int numOfBBs() const;
-	void removeBB( int _bb );
+    tick_t beatLengthOfBB(int _bb) const;
 
-	void swapBB( int _bb1, int _bb2 );
+    int  numOfBBs() const;
+    void removeBB(int _bb);
 
-	void updateBBTrack( TrackContentObject * _tco );
-	void fixIncorrectPositions();
-	void createTCOsForBB( int _bb );
+    void swapBB(int _bb1, int _bb2);
 
-	virtual //AutomatedValueMap
-          void automatedValuesAt(MidiTime time, int tcoNum, AutomatedValueMap& _map) const override;
+    void updateBBTrack(TrackContentObject* _tco);
+    void fixIncorrectPositions();
+    void createTCOsForBB(int _bb);
 
-public slots:
-	void play();
-	void stop();
-	void updateComboBox();
-	void currentBBChanged();
+    virtual  // AutomatedValueMap
+            void
+            automatedValuesAt(MidiTime           time,
+                              int                tcoNum,
+                              AutomatedValueMap& _map) const override;
 
+  public slots:
+    void play();
+    void stop();
+    void updateComboBox();
+    void currentBBChanged();
 
-private:
-	ComboBoxModel m_bbComboBoxModel;
+  private:
+    ComboBoxModel m_bbComboBoxModel;
 
-
-	friend class BBEditor;
-
-} ;
-
+    friend class BBEditor;
+};
 
 #endif

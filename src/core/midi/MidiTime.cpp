@@ -94,6 +94,39 @@ MidiTime& MidiTime::operator-=( const MidiTime& time )
 }
 
 
+MidiTime& MidiTime::operator+=( const tick_t _ticks )
+{
+	m_ticks += _ticks;
+	return *this;
+}
+
+
+MidiTime& MidiTime::operator-=( const tick_t _ticks )
+{
+	m_ticks -= _ticks;
+	return *this;
+}
+
+MidiTime MidiTime::operator+( const MidiTime& time ) const
+{
+	return MidiTime(m_ticks+time.m_ticks);
+}
+
+MidiTime MidiTime::operator-( const MidiTime& time ) const
+{
+	return MidiTime(m_ticks-time.m_ticks);
+}
+
+MidiTime MidiTime::operator+( const tick_t _ticks ) const
+{
+	return MidiTime(m_ticks+_ticks);
+}
+
+MidiTime MidiTime::operator-( const tick_t _ticks ) const
+{
+	return MidiTime(m_ticks-_ticks);
+}
+
 tact_t MidiTime::getTact() const
 {
 	return m_ticks / s_ticksPerTact;

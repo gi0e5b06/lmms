@@ -617,10 +617,12 @@ void WatsynInstrument::loadSettings(const QDomElement& _this)
     /*	m_selectedGraph.loadSettings( _this, "selgraph" );*/
 }
 
+/*
 QString WatsynInstrument::nodeName() const
 {
-    return (watsyn_plugin_descriptor.name);
+    return watsyn_plugin_descriptor.name;
 }
+*/
 
 PluginView* WatsynInstrument::instantiateView(QWidget* _parent)
 {

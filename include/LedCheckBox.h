@@ -49,10 +49,10 @@ class EXPORT LedCheckBox : public AutomatableButton
 
     LedCheckBox(const QString& _txt,
                 QWidget*       _parent,
-                const QString& _name  = QString::null,
+                const QString& _name  = "[led checkbox]",
                 LedColors      _color = Yellow);
     LedCheckBox(QWidget*       _parent,
-                const QString& _name  = QString::null,
+                const QString& _name  = "[led checkbox]",
                 LedColors      _color = Yellow);
     LedCheckBox(QWidget* _parent, LedColors _color);
 

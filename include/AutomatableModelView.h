@@ -67,6 +67,8 @@ public:
 		m_unit = unit;
 	}
 
+        QColor cableColor() const;
+
 	virtual void addDefaultActions( QMenu* menu );
         virtual void enterValue();
         virtual void editRandomization();

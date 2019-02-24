@@ -208,7 +208,12 @@ static inline real_t folding(const real_t _x)
 static inline real_t
         bound(const real_t _min, const real_t _val, const real_t _max)
 {
-    return _val <= _min ? _min : (_val >= _max ? _max : _val);
+    real_t r = _val;
+    if(r <= _min)
+        r = _min;
+    if(r >= _max)
+        r = _max;
+    return r;
 }
 
 static inline real_t

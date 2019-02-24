@@ -85,7 +85,7 @@ extern "C"
 }
 
 voiceObject::voiceObject(Model* _parent, int _idx) :
-      Model(_parent),
+      Model(_parent, QString("sid voice #%1").arg(_idx)),
       m_pulseWidthModel(2048.,
                         0.,
                         4095.,
@@ -210,10 +210,12 @@ void sidInstrument::loadSettings(const QDomElement& _this)
     m_chipModel.loadSettings(_this, "chipModel");
 }
 
+/*
 QString sidInstrument::nodeName() const
 {
-    return (sid_plugin_descriptor.name);
+    return sid_plugin_descriptor.name;
 }
+*/
 
 f_cnt_t sidInstrument::desiredReleaseFrames() const
 {

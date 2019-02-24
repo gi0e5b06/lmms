@@ -1,6 +1,7 @@
 /*
  * Pattern.cpp - implementation of class pattern which holds notes
  *
+ * Copyright (c) 2018-2019 gi0e5b06 (on github.com)
  * Copyright (c) 2004-2014 Tobias Doerffel <tobydox/at/users.sourceforge.net>
  * Copyright (c) 2005-2007 Danny McRae <khjklujn/at/yahoo.com>
  *
@@ -54,7 +55,7 @@ QPixmap* PatternView::s_stepBtnOff      = NULL;
 QPixmap* PatternView::s_stepBtnOffLight = NULL;
 
 Pattern::Pattern(InstrumentTrack* _instrument_track) :
-      TrackContentObject(_instrument_track),
+      TrackContentObject(_instrument_track, "Pattern tile"),
       m_instrumentTrack(_instrument_track), m_patternType(MelodyPattern)
 {
     setName(_instrument_track->name());
@@ -67,13 +68,13 @@ Pattern::Pattern(InstrumentTrack* _instrument_track) :
     setAutoRepeat(!isFixed());
 }
 
-Pattern::Pattern(const Pattern& other) :
-      TrackContentObject(other.m_instrumentTrack),
-      m_instrumentTrack(other.m_instrumentTrack),
-      m_patternType(other.m_patternType)
+Pattern::Pattern(const Pattern& _other) :
+      TrackContentObject(_other.m_instrumentTrack, _other.displayName()),
+      m_instrumentTrack(_other.m_instrumentTrack),
+      m_patternType(_other.m_patternType)
 {
-    for(NoteVector::ConstIterator it = other.m_notes.begin();
-        it != other.m_notes.end(); ++it)
+    for(Notes::ConstIterator it = _other.m_notes.begin();
+        it != _other.m_notes.end(); ++it)
     {
         m_notes.push_back(new Note(**it));
     }
@@ -81,8 +82,8 @@ Pattern::Pattern(const Pattern& other) :
     // if(isFixed())
     //        m_patternType = BeatPattern;
     init();
-    setAutoResize(other.autoResize() && !isFixed());
-    setAutoRepeat(other.autoRepeat() && !isFixed());
+    setAutoResize(_other.autoResize() && !isFixed());
+    setAutoRepeat(_other.autoRepeat() && !isFixed());
 }
 
 Pattern::~Pattern()
@@ -90,7 +91,7 @@ Pattern::~Pattern()
     emit destroyedPattern(this);
 
     // clearNotes();
-    for(NoteVector::Iterator it = m_notes.begin(); it != m_notes.end(); ++it)
+    for(Notes::Iterator it = m_notes.begin(); it != m_notes.end(); ++it)
     {
         delete *it;
     }
@@ -99,8 +100,7 @@ Pattern::~Pattern()
 
 bool Pattern::isEmpty() const
 {
-    for(NoteVector::ConstIterator it = m_notes.begin(); it != m_notes.end();
-        ++it)
+    for(Notes::ConstIterator it = m_notes.begin(); it != m_notes.end(); ++it)
     {
         if((*it)->length() != 0)
         {
@@ -183,8 +183,8 @@ Note* Pattern::addNote(const Note& _new_note, const bool _quant_pos)
         // maybe it could be optimized by starting in the middle and
         // going forward or backward but note-inserting isn't that
         // time-critical since it is usually not done while playing...
-        long                 new_note_abs_time = new_note->pos();
-        NoteVector::Iterator it                = m_notes.begin();
+        long            new_note_abs_time = new_note->pos();
+        Notes::Iterator it                = m_notes.begin();
 
         while(it != m_notes.end() && (*it)->pos() < new_note_abs_time)
         {
@@ -197,7 +197,6 @@ Note* Pattern::addNote(const Note& _new_note, const bool _quant_pos)
 
     checkType();
     updateLength();
-
     emit dataChanged();
 
     return new_note;
@@ -206,7 +205,7 @@ Note* Pattern::addNote(const Note& _new_note, const bool _quant_pos)
 void Pattern::removeNote(Note* _note_to_del)
 {
     instrumentTrack()->lock();
-    NoteVector::Iterator it = m_notes.begin();
+    Notes::Iterator it = m_notes.begin();
     while(it != m_notes.end())
     {
         if(*it == _note_to_del)
@@ -221,7 +220,6 @@ void Pattern::removeNote(Note* _note_to_del)
 
     checkType();
     updateLength();
-
     emit dataChanged();
 }
 
@@ -230,14 +228,14 @@ void Pattern::removeNote(Note* _note_to_del)
 
 Note* Pattern::noteAtStep(int _step)
 {
-    for(NoteVector::Iterator it = m_notes.begin(); it != m_notes.end(); ++it)
+    for(Notes::Iterator it = m_notes.begin(); it != m_notes.end(); ++it)
     {
         if((*it)->pos() == stepPosition(_step) && (*it)->length() < 0)
         {
             return *it;
         }
     }
-    return NULL;
+    return nullptr;
 }
 
 void Pattern::rearrangeAllNotes()
@@ -253,8 +251,7 @@ void Pattern::clearNotes()
         // BACKTRACE
         if(instrumentTrack())
             instrumentTrack()->lock();
-        for(NoteVector::Iterator it = m_notes.begin(); it != m_notes.end();
-            ++it)
+        for(Notes::Iterator it = m_notes.begin(); it != m_notes.end(); ++it)
         {
             // qInfo("deleting note %p pattern %p",*it,this);
             delete *it;
@@ -271,25 +268,34 @@ void Pattern::clearNotes()
 
 Note* Pattern::addStepNote(int step)
 {
-    return addNote(Note(MidiTime(-DefaultTicksPerTact), stepPosition(step)),
-                   false);
+    Note* note = noteAtStep(step);
+    return note == nullptr ? addNote(Note(MidiTime(-DefaultTicksPerTact),
+                                          stepPosition(step)),
+                                     false)
+                           : note;
 }
 
-void Pattern::setStep(int step, bool enabled)
+void Pattern::removeStepNote(int step)
+{
+    while(Note* note = noteAtStep(step))
+        removeNote(note);
+}
+
+void Pattern::toggleStepNote(int step)
+{
+    Note* note = noteAtStep(step);
+    if(note != nullptr)
+        removeStepNote(step);
+    else
+        addStepNote(step);
+}
+
+void Pattern::setStepNote(int step, bool enabled)
 {
     if(enabled)
-    {
-        if(!noteAtStep(step))
-        {
-            addStepNote(step);
-        }
-        return;
-    }
-
-    while(Note* note = noteAtStep(step))
-    {
-        removeNote(note);
-    }
+        addStepNote(step);
+    else
+        removeStepNote(step);
 }
 
 void Pattern::setType(PatternTypes _new_pattern_type)
@@ -305,7 +311,7 @@ void Pattern::setType(PatternTypes _new_pattern_type)
 
 void Pattern::checkType()
 {
-    NoteVector::Iterator it = m_notes.begin();
+    Notes::Iterator it = m_notes.begin();
     while(it != m_notes.end())
     {
         if((*it)->length() > 0)
@@ -318,13 +324,77 @@ void Pattern::checkType()
     setType(isFixed() ? BeatPattern : MelodyPattern);
 }
 
-void Pattern::rotate(tick_t _ticks)
+void Pattern::flipHorizontally()
 {
-    if(_ticks == 0)
+    if(isEmpty())
         return;
 
     instrumentTrack()->lock();
-    tick_t len      = length();
+    tick_t len      = autoRepeat() ? unitLength() : length().getTicks();
+    bool   modified = false;
+    for(Note* note: m_notes)
+    {
+        tick_t p = (len - note->endPos()) % len;
+        if(p < 0)
+            p += len;
+        note->setPos(p);
+        modified = true;
+    }
+    if(modified)
+        rearrangeAllNotes();
+    instrumentTrack()->unlock();
+
+    // checkType();
+    updateLength();  // not needed?
+    emit dataChanged();
+    if(modified)
+        Engine::getSong()->setModified();
+}
+
+void Pattern::flipVertically()
+{
+    if(isEmpty())
+        return;
+
+    instrumentTrack()->lock();
+    bool modified = false;
+    int  minkey   = -1;
+    int  maxkey   = -1;
+    for(Note* note: m_notes)
+    {
+        if(minkey == -1 || minkey > note->key())
+            minkey = note->key();
+        if(maxkey == -1 || maxkey < note->key())
+            maxkey = note->key();
+    }
+    for(Note* note: m_notes)
+    {
+        int ko = note->key();
+        int kn = maxkey - (ko - minkey);
+        if(ko != kn)
+        {
+            note->setKey(kn);
+            modified = true;
+        }
+    }
+    if(modified)
+        rearrangeAllNotes();
+    instrumentTrack()->unlock();
+
+    // checkType();
+    // updateLength();
+    emit dataChanged();
+    if(modified)
+        Engine::getSong()->setModified();
+}
+
+void Pattern::rotate(tick_t _ticks)
+{
+    if(_ticks == 0 || isEmpty())
+        return;
+
+    instrumentTrack()->lock();
+    tick_t len      = autoRepeat() ? unitLength() : length().getTicks();
     bool   modified = false;
     for(Note* note: m_notes)
     {
@@ -334,11 +404,12 @@ void Pattern::rotate(tick_t _ticks)
         note->setPos(p);
         modified = true;
     }
+    if(modified)
+        rearrangeAllNotes();
     instrumentTrack()->unlock();
 
-    checkType();
+    // checkType();
     updateLength();
-
     emit dataChanged();
     if(modified)
         Engine::getSong()->setModified();
@@ -376,7 +447,7 @@ void Pattern::saveSettings(QDomDocument& _doc, QDomElement& _this)
     _this.setAttribute("stepres", m_stepResolution);
 
     // now save settings of all notes
-    for(NoteVector::Iterator it = m_notes.begin(); it != m_notes.end(); ++it)
+    for(Notes::Iterator it = m_notes.begin(); it != m_notes.end(); ++it)
     {
         (*it)->saveState(_doc, _this);
     }
@@ -466,7 +537,7 @@ void Pattern::cloneSteps()
         Note* toCopy = noteAtStep(i);
         if(toCopy)
         {
-            setStep(oldLength + i, true);
+            setStepNote(oldLength + i, true);
             Note* newNote = noteAtStep(oldLength + i);
             newNote->setKey(toCopy->key());
             newNote->setLength(toCopy->length());
@@ -503,8 +574,7 @@ tick_t Pattern::unitLength() const
 {
     tick_t len = MidiTime::ticksPerTact();
 
-    for(NoteVector::ConstIterator it = m_notes.begin(); it != m_notes.end();
-        ++it)
+    for(Notes::ConstIterator it = m_notes.begin(); it != m_notes.end(); ++it)
     {
         if((*it)->length() > 0)
         {
@@ -532,7 +602,7 @@ void Pattern::updateLength()
 void Pattern::changeTimeSignature()
 {
     MidiTime last_pos = MidiTime::ticksPerTact() - 1;
-    for(NoteVector::ConstIterator cit = m_notes.begin(); cit != m_notes.end();
+    for(Notes::ConstIterator cit = m_notes.begin(); cit != m_notes.end();
         ++cit)
     {
         if((*cit)->length() < 0 && (*cit)->pos() > last_pos)
@@ -656,6 +726,7 @@ QMenu* PatternView::buildContextMenu()
     */
 
     cm->addSeparator();
+    addFlipMenu(cm, !m_pat->isEmpty(), !m_pat->isEmpty());
     addRotateMenu(cm, m_pat->length() >= MidiTime::ticksPerTact(), true,
                   isFixed());
 
@@ -670,11 +741,12 @@ QMenu* PatternView::buildContextMenu()
     }
 
     cm->addSeparator();
-    addPropertiesMenu(cm, !isFixed(), !isFixed());
+    addPropertiesMenu(cm,
+                      !isFixed(),
+                      !isFixed());
 
-    a = cm->addAction(embed::getIconPixmap("ghost_note"),
-                      tr("Set as ghost in piano-roll"), this,
-                      SLOT(setGhostInPianoRoll()));
+    a = cm->addAction(embed::getIconPixmap("ghost_note"), tr("Ghost notes"),
+                      this, SLOT(setGhostInPianoRoll()));
     a->setEnabled(gui->pianoRoll()->currentPattern()
                   && gui->pianoRoll()->currentPattern() != m_pat
                   && !m_pat->empty());
@@ -788,25 +860,13 @@ void PatternView::mousePressEvent(QMouseEvent* _me)
         if(step < 0 || step >= m_pat->m_steps)
             return;
 
-        Note* n = m_pat->noteAtStep(step);
-
-        if(n == NULL)
-        {
-            m_pat->addStepNote(step);
-        }
-        else  // note at step found
-        {
-            m_pat->addJournalCheckPoint();
-            m_pat->setStep(step, false);
-        }
-
+        m_pat->addJournalCheckPoint();
+        m_pat->toggleStepNote(step);
         Engine::getSong()->setModified();
         update();
 
         if(gui->pianoRoll()->currentPattern() == m_pat)
-        {
             gui->pianoRoll()->update();
-        }
     }
     else
 
@@ -978,7 +1038,7 @@ void PatternView::paintEvent(QPaintEvent*)
     const float tickLength = 1. / m_pat->length();
 
     // melody pattern paint event
-    NoteVector const& noteCollection = m_pat->m_notes;
+    Notes const& noteCollection = m_pat->m_notes;
     if(m_pat->m_patternType == Pattern::MelodyPattern
        && !noteCollection.empty())
     {
@@ -1084,7 +1144,8 @@ void PatternView::paintEvent(QPaintEvent*)
                         = adjustedNoteRange - mappedNoteKey - 1;
 
                 float const noteStartX = x0 + currentNote->pos() * tickLength;
-                float const noteLength = qMax<int>(1,currentNote->length()) * tickLength;
+                float const noteLength
+                        = qMax<int>(1, currentNote->length()) * tickLength;
 
                 float const noteStartY = invertedMappedNoteKey * noteHeight;
 

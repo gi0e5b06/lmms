@@ -35,9 +35,7 @@ class AutomationPattern;
 class InstrumentTrack;
 class TrackContainerView;
 
-class EXPORT TrackContainer
-      : public Model
-      , public JournallingObject
+class EXPORT TrackContainer : public Model, public JournallingObject
 {
     Q_OBJECT
   public:
@@ -47,7 +45,7 @@ class EXPORT TrackContainer
         SongContainer
     };
 
-    TrackContainer();
+    TrackContainer(Model* _parent, const QString& _displayName);
     virtual ~TrackContainer();
 
     virtual void saveSettings(QDomDocument& _doc, QDomElement& _parent);
@@ -63,7 +61,9 @@ class EXPORT TrackContainer
         return NULL;
     }
 
-    int countTracks(Track::TrackTypes _tt = Track::NumTrackTypes) const;
+    bool hasTracks() const;
+    int  countTracks(Track::TrackType _tt) const;
+    // = Track::NumTrackType) const;
 
     void addTrack(Track* _track);
     void removeTrack(Track* _track);

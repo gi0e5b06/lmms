@@ -2,6 +2,7 @@
  * EnvelopeAndLfoView.cpp - widget which is m_used by envelope/lfo/filter-
  *                          tab of instrument track window
  *
+ * Copyright (c) 2019      gi0e5b06 (on github.com)
  * Copyright (c) 2004-2014 Tobias Doerffel <tobydox/at/users.sourceforge.net>
  *
  * This file is part of LMMS - https://lmms.io
@@ -72,8 +73,8 @@ const int LFO_PREDELAY_KNOB_X = LFO_GRAPH_X;          // + 92; //100;
 const int LFO_ATTACK_KNOB_X   = LFO_PREDELAY_KNOB_X + KNOB_X_SPACING;
 const int LFO_SPEED_KNOB_X    = LFO_ATTACK_KNOB_X + KNOB_X_SPACING;
 const int LFO_AMOUNT_KNOB_X   = LFO_SPEED_KNOB_X + KNOB_X_SPACING;
-const int LFO_SHAPES_X = LFO_GRAPH_X;            // PREDELAY_KNOB_X;
-const int LFO_SHAPES_Y = LFO_GRAPH_Y + 61 + 39;  // 50
+const int LFO_SHAPES_X        = LFO_GRAPH_X;            // PREDELAY_KNOB_X;
+const int LFO_SHAPES_Y        = LFO_GRAPH_Y + 61 + 39;  // 50
 
 EnvelopeAndLfoView::EnvelopeAndLfoView(QWidget* _parent) :
       QWidget(_parent), ModelView(NULL, this), m_params(NULL)
@@ -82,7 +83,7 @@ EnvelopeAndLfoView::EnvelopeAndLfoView(QWidget* _parent) :
     m_lfoGraph = embed::getPixmap("lfo_bigger_graph");
 
     m_predelayKnob = new TempoSyncKnob(knobBright_26, this);
-    m_predelayKnob->setLabel(tr("DEL"));
+    m_predelayKnob->setLabel(tr("PRE"));
     m_predelayKnob->move(PREDELAY_KNOB_X, ENV_KNOBS_Y);
     m_predelayKnob->setHintText(tr("Predelay:"), "");
     m_predelayKnob->setWhatsThis(
@@ -165,20 +166,19 @@ EnvelopeAndLfoView::EnvelopeAndLfoView(QWidget* _parent) :
     m_lfoAttackKnob = new Knob(knobBright_26, this);
     m_lfoAttackKnob->setLabel(tr("ATT"));
     m_lfoAttackKnob->move(LFO_ATTACK_KNOB_X, LFO_KNOB_Y);
-    m_lfoAttackKnob->setHintText(tr("LFO- attack:"), "");
+    m_lfoAttackKnob->setHintText(tr("LFO attack:"), "");
     m_lfoAttackKnob->setWhatsThis(
             tr("Use this knob for setting attack-time of the current LFO. "
                "The bigger this value the longer the LFO needs to "
                "increase its amplitude to maximum."));
 
     m_lfoSpeedKnob = new TempoSyncKnob(knobBright_26, this);
-    m_lfoSpeedKnob->setLabel(tr("SPD"));
+    m_lfoSpeedKnob->setLabel(tr("T"));
     m_lfoSpeedKnob->move(LFO_SPEED_KNOB_X, LFO_KNOB_Y);
-    m_lfoSpeedKnob->setHintText(tr("LFO speed:"), "");
+    m_lfoSpeedKnob->setHintText(tr("LFO period:"), "");
     m_lfoSpeedKnob->setWhatsThis(
-            tr("Use this knob for setting speed of the current LFO. The "
-               "bigger this value the faster the LFO oscillates and "
-               "the faster will be your effect."));
+            tr("Use this knob for setting the period of the current LFO. The "
+               "smaller this value the faster the LFO oscillates."));
 
     m_lfoAmountKnob = new Knob(knobBright_26, this);
     m_lfoAmountKnob->setLabel(tr("AMT"));
@@ -259,7 +259,7 @@ EnvelopeAndLfoView::EnvelopeAndLfoView(QWidget* _parent) :
     m_lfoWaveBtnGrp->addButton( random_lfo_btn );
     */
 
-    m_x100Cb = new LedCheckBox(tr("FREQ x 100"), this);
+    m_x100Cb = new LedCheckBox(tr("Frequency x 100"), this);
     m_x100Cb->setFont(pointSizeF(m_x100Cb->font(), 6.5));
     // m_x100Cb->move( LFO_PREDELAY_KNOB_X, LFO_GRAPH_Y + 36 );
     m_x100Cb->move(LFO_AMOUNT_KNOB_X + 29, LFO_KNOB_Y);
@@ -268,9 +268,10 @@ EnvelopeAndLfoView::EnvelopeAndLfoView(QWidget* _parent) :
                "multiplied by 100."));
     ToolTip::add(m_x100Cb, tr("multiply LFO-frequency by 100"));
 
-    m_controlEnvAmountCb = new LedCheckBox(tr("MODULATE ENV-AMOUNT"), this);
+    m_controlEnvAmountCb = new LedCheckBox(tr("Modulate envel."), this);
     // m_controlEnvAmountCb->move( LFO_PREDELAY_KNOB_X, LFO_GRAPH_Y + 52 );
-    m_controlEnvAmountCb->move(LFO_SHAPES_X + 94, LFO_SHAPES_Y);
+    // m_controlEnvAmountCb->move(LFO_SHAPES_X + 94, LFO_SHAPES_Y);
+    m_controlEnvAmountCb->move(LFO_AMOUNT_KNOB_X + 29, LFO_KNOB_Y + 18);
     m_controlEnvAmountCb->setFont(
             pointSizeF(m_controlEnvAmountCb->font(), 6.5));
     m_controlEnvAmountCb->setWhatsThis(
@@ -283,7 +284,15 @@ EnvelopeAndLfoView::EnvelopeAndLfoView(QWidget* _parent) :
     m_lfoWaveBankCMB->setGeometry(LFO_SHAPES_X, LFO_SHAPES_Y, 89, 18);
 
     m_lfoWaveIndexCMB = new ComboBox(this);
-    m_lfoWaveIndexCMB->setGeometry(LFO_SHAPES_X, LFO_SHAPES_Y + 24, 224, 18);
+    m_lfoWaveIndexCMB->setGeometry(LFO_SHAPES_X, LFO_SHAPES_Y + 24, 185, 18);
+
+    m_outKnob = new Knob(this);
+    m_outKnob->setLabel(tr("OUT"));
+    m_outKnob->setPointColor(Qt::red);
+    m_outKnob->setInteractive(false);
+    m_outKnob->move(LFO_SHAPES_X + 185 + 8, LFO_SHAPES_Y +5 );
+    m_outKnob->setHintText(tr("Out:"), "");
+    //m_outKnob->setWhatsThis(tr(""));
 
     setAcceptDrops(true);
 }
@@ -312,6 +321,7 @@ void EnvelopeAndLfoView::modelChanged()
     m_lfoWaveIndexCMB->setModel(&m_params->m_lfoWaveIndexModel);
     m_x100Cb->setModel(&m_params->m_x100Model);
     m_controlEnvAmountCb->setModel(&m_params->m_controlEnvAmountModel);
+    m_outKnob->setModel(&m_params->m_outModel);
 
     connect(m_params, SIGNAL(dataChanged()), this, SLOT(update()));
 }

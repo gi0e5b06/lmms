@@ -1,5 +1,6 @@
 
 #include "Bitset.h"
+#include "MemoryManager.h"
 
 #include <cassert>
 #include <cstring>
@@ -16,7 +17,7 @@ Bitset::Bitset(unsigned int _size, bool _initial)
 	assert(sizeof(unsigned int)>=4); //32 bits
 	m_size=_size;
 	m_ints=_size/sizeof(unsigned int)+1;
-	m_data=new unsigned int[m_ints];
+	m_data=MM_ALLOC(unsigned int,m_ints);//new unsigned int[m_ints];
 	fill(_initial);
 }
 
@@ -24,13 +25,13 @@ Bitset::Bitset(const Bitset& _other)
 {
 	m_size=_other.m_size;
 	m_ints=_other.m_ints;
-	m_data=new unsigned int[m_ints];
+	m_data=MM_ALLOC(unsigned int,m_ints);//new unsigned int[m_ints];
 	memcpy(m_data,_other.m_data,m_ints);
 }
 
 Bitset::~Bitset()
 {
-	delete m_data;
+	MM_FREE(m_data);//delete m_data;
 }
 
 unsigned int Bitset::size() const

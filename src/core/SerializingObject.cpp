@@ -22,92 +22,85 @@
  *
  */
 
-#include <QDomElement>
-
 #include "SerializingObject.h"
 
+#include <QRegExp>
+#include <QDomElement>
 
-
-SerializingObject::SerializingObject() :
-	m_hook( nullptr )
+SerializingObject::SerializingObject() : m_hook(nullptr)
 {
 }
-
-
-
 
 SerializingObject::~SerializingObject()
 {
-	if( m_hook )
-	{
-		m_hook->m_hookedIn = nullptr;
-	}
+    if(m_hook)
+    {
+        m_hook->m_hookedIn = nullptr;
+    }
 }
 
-
-
-
-QDomElement SerializingObject::saveState( QDomDocument& doc, QDomElement& parent )
+QDomElement SerializingObject::saveState(QDomDocument& doc,
+                                         QDomElement&  parent)
 {
-	QDomElement element = doc.createElement( nodeName() );
-	parent.appendChild( element );
+    QDomElement element = doc.createElement(nodeName());
+    parent.appendChild(element);
 
-	saveSettings( doc, element );
+    saveSettings(doc, element);
 
-	if( hook() )
-	{
-		hook()->saveSettings( doc, element );
-	}
+    if(hook())
+    {
+        hook()->saveSettings(doc, element);
+    }
 
-	return element;
+    return element;
 }
 
-
-
-
-void SerializingObject::restoreState( const QDomElement& element )
+void SerializingObject::restoreState(const QDomElement& element)
 {
-	loadSettings( element );
+    loadSettings(element);
 
-	if( hook() )
-	{
-		hook()->loadSettings( element );
-	}
+    if(hook())
+    {
+        hook()->loadSettings(element);
+    }
 }
 
-
-
-
-void SerializingObject::setHook( SerializingObjectHook* hook )
+void SerializingObject::setHook(SerializingObjectHook* hook)
 {
-	if( m_hook )
-	{
-		m_hook->m_hookedIn = NULL;
-	}
+    if(m_hook)
+    {
+        m_hook->m_hookedIn = NULL;
+    }
 
-	m_hook = hook;
+    m_hook = hook;
 
-	if( m_hook )
-	{
-		m_hook->m_hookedIn = this;
-	}
+    if(m_hook)
+    {
+        m_hook->m_hookedIn = this;
+    }
 }
 
-
-
-
-void SerializingObject::saveSettings( QDomDocument& doc, QDomElement& element )
+void SerializingObject::saveSettings(QDomDocument& doc, QDomElement& element)
 {
-	Q_UNUSED(doc)
-	Q_UNUSED(element)
+    Q_UNUSED(doc)
+    Q_UNUSED(element)
 }
 
+void SerializingObject::loadSettings(const QDomElement& element){
+        Q_UNUSED(element)}
 
-
-
-void SerializingObject::loadSettings( const QDomElement& element )
+QString SerializingObject::formatNumber(real_t v)
 {
-	Q_UNUSED(element)
+#ifdef REAL_IS_FLOAT
+    QString r = QString::number(v, 'f', 9);
+#endif
+#ifdef REAL_IS_DOUBLE
+    QString r = QString::number(v, 'f', 17);
+#endif
+    if(r.indexOf(QChar('.')) >= 0)
+    {
+        r.replace(QRegExp("0*$"), "");
+        r.replace(QRegExp("[.]$"), "");
+    }
+    return r;
 }
-
-

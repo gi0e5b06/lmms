@@ -218,7 +218,8 @@ void InstrumentMidiIOView::modelChanged()
 }
 
 InstrumentMiscView::InstrumentMiscView(InstrumentTrack* it, QWidget* parent) :
-      QWidget(parent), m_track(it)
+        QWidget(parent), m_track(it), m_scaleBankModel(it,tr("Scale bank")),
+        m_scaleIndexModel(it,tr("Scale index"))
 {
     setAutoFillBackground(true);
     QVBoxLayout* layout = new QVBoxLayout(this);
@@ -288,11 +289,11 @@ InstrumentMiscView::InstrumentMiscView(InstrumentTrack* it, QWidget* parent) :
     m_scaleGBX->setContentWidget(ScalePNL);
 
     // add scale combo boxes
-    ComboBox* bankCMB = new ComboBox(this);
+    ComboBox* bankCMB = new ComboBox();
     bankCMB->setModel(&m_scaleBankModel);
     bankCMB->setMinimumWidth(3 * 27 + 4);
 
-    ComboBox* indexCMB = new ComboBox(this);
+    ComboBox* indexCMB = new ComboBox();
     indexCMB->setModel(&m_scaleIndexModel);
     indexCMB->setMinimumWidth(7 * 27 + 12);
 

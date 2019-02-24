@@ -1,7 +1,7 @@
 /*
  * Knob.cpp - knob widget
  *
- * Copyright (c) 2017-2018 gi0e5b06
+ * Copyright (c) 2017-2019 gi0e5b06 (on github.com)
  * Copyright (c) 2004-2014 Tobias Doerffel <tobydox/at/users.sourceforge.net>
  *
  * This file is part of LMMS - https://lmms.io
@@ -54,9 +54,9 @@
 #include <QPainter>
 #include <QWhatsThis>
 
-TextFloat* Knob::s_textFloat = NULL;
+TextFloat* Knob::s_textFloat = nullptr;
 
-// new FloatModel(0.7f,0.f,1.f,0.01f, NULL, _name, true ), this ),
+// new FloatModel(0.7f,0.f,1.f,0.01f, nullptr, _name, true ), this ),
 
 Knob::Knob(QWidget* _parent, const QString& _name) :
       Knob(knobBright_26, _parent, _name)
@@ -64,10 +64,12 @@ Knob::Knob(QWidget* _parent, const QString& _name) :
 }
 
 Knob::Knob(knobTypes _knob_num, QWidget* _parent, const QString& _name) :
-      Widget(_parent), FloatModelView(NULL, this), m_pressLeft(false),
-      m_label(""), m_knobPixmap(NULL), m_volumeKnob(false),
-      m_volumeRatio(100.0, 0.0, 1000000.0), m_angle(-1000.f),
-      // m_cache( NULL ),
+      Widget(_parent), FloatModelView(nullptr, this), m_pressLeft(false),
+      m_label(""), m_interactive(true), m_knobPixmap(nullptr),
+      m_volumeKnob(false, nullptr, "[volume knob]"),
+      m_volumeRatio(100., 0., 1000000., 0., nullptr, "[volume ratio]"),
+      m_angle(-1000.f),
+      // m_cache( nullptr ),
       m_lineWidth(0.f), m_textColor(255, 255, 255), m_knobNum(_knob_num)
 {
     initUi(_name);
@@ -77,7 +79,7 @@ void Knob::initUi(const QString& _name)
 {
     qRegisterMetaType<knobTypes>("knobTypes");
 
-    if(s_textFloat == NULL)
+    if(s_textFloat == nullptr)
     {
         s_textFloat = new TextFloat;
     }
@@ -194,6 +196,20 @@ void Knob::setText(const QString& txt)
         resize(w, h);
     }
     m_label = txt;
+    update();
+}
+
+bool Knob::isInteractive() const
+{
+    return m_interactive;
+}
+
+void Knob::setInteractive(bool _b)
+{
+    if(m_interactive == _b)
+        return;
+
+    m_interactive = _b;
     update();
 }
 
@@ -535,8 +551,25 @@ void Knob::drawKnob(QPainter& _p)
                           arcRectSize),
                    16.f * (90.f - centerAngle),
                    -16.f * (m_angle - centerAngle));
-        _p.setBrush(pc);
-        _p.drawEllipse(QRectF(mid.x() - 1.f, mid.y() - 1.f, 3.f, 3.f));
+
+        if(isInteractive())
+        {
+            _p.setBrush(pc);
+            _p.drawEllipse(QRectF(mid.x() - 1.f, mid.y() - 1.f, 3.f, 3.f));
+        }
+        else
+        {
+            _p.setBrush(m_statusColor);
+            _p.setPen(m_statusColor);
+            re = 9.f;
+            _p.drawEllipse(
+                    QRectF(mid.x() - re / 2.f, mid.y() - re / 2.f, re, re));
+            _p.setBrush(Qt::black);
+            _p.setPen(Qt::black);
+            re = 7.f;
+            _p.drawEllipse(
+                    QRectF(mid.x() - re / 2.f, mid.y() - re / 2.f, re, re));
+        }
     }
 }
 
@@ -700,7 +733,7 @@ void Knob::contextMenuEvent(QContextMenuEvent*)
     // button, the context-menu appears while mouse-cursor is still hidden
     // and it isn't shown again until user does something which causes
     // an QApplication::restoreOverrideCursor()-call...
-    // mouseReleaseEvent( NULL );
+    // mouseReleaseEvent( nullptr );
 
     CaptionMenu contextMenu(model()->displayName(), this);
     addDefaultActions(&contextMenu);
@@ -779,7 +812,7 @@ void Knob::dropEvent(QDropEvent* _de)
 void Knob::mousePressEvent(QMouseEvent* _me)
 {
     FloatModel* m = model();
-    if(!m)
+    if(!m || !isInteractive())
         return;
 
     if(_me->button() == Qt::LeftButton
@@ -827,7 +860,7 @@ void Knob::mousePressEvent(QMouseEvent* _me)
 void Knob::mouseMoveEvent(QMouseEvent* _me)
 {
     FloatModel* m = model();
-    if(!m)
+    if(!m || !isInteractive())
         return;
 
     if(m_pressLeft && _me->pos() != m_pressPos)  // m_origMousePos )
@@ -845,7 +878,7 @@ void Knob::mouseMoveEvent(QMouseEvent* _me)
 void Knob::mouseReleaseEvent(QMouseEvent* event)
 {
     FloatModel* m = model();
-    if(!m)
+    if(!m || !isInteractive())
         return;
 
     if(event && event->button() == Qt::LeftButton)
@@ -867,7 +900,7 @@ void Knob::mouseReleaseEvent(QMouseEvent* event)
 void Knob::focusOutEvent(QFocusEvent* _fe)
 {
     // make sure we don't loose mouse release event
-    mouseReleaseEvent(NULL);
+    mouseReleaseEvent(nullptr);
     QWidget::focusOutEvent(_fe);
 }
 
@@ -888,7 +921,7 @@ void Knob::paintEvent(QPaintEvent* _pe)
 void Knob::wheelEvent(QWheelEvent* _we)
 {
     FloatModel* m = model();
-    if(!m)
+    if(!m || !isInteractive())
         return;
 
     if(_we->modifiers() & Qt::ShiftModifier)
@@ -916,7 +949,7 @@ void Knob::wheelEvent(QWheelEvent* _we)
 void Knob::enterValue()
 {
     FloatModel* m = model();
-    if(!m)
+    if(!m || !isInteractive())
         return;
 
     bool   ok;
@@ -961,7 +994,7 @@ void Knob::enterValue()
 void Knob::editRandomization()
 {
     FloatModel* m = model();
-    if(m == nullptr)
+    if(!m || !isInteractive())
         return;
 
     bool   ok;
@@ -1023,7 +1056,7 @@ void Knob::friendlyUpdate()
         FloatModel* m = model();
         // qInfo("Knob::friendlyRefresh 1");
         if(!m->isAutomated() || !m->isControlled() ||  //????
-           !m->frequentlyUpdated() || m->controllerConnection() == NULL
+           !m->frequentlyUpdated() || m->controllerConnection() == nullptr
            || m->controllerConnection()->getController()->frequentlyUpdated()
                       == false
            ||
@@ -1089,4 +1122,35 @@ void Knob::doConnections()
 void Knob::displayHelp()
 {
     QWhatsThis::showText(mapToGlobal(rect().bottomRight()), whatsThis());
+}
+
+QLine Knob::cableFrom() const
+{
+    if(m_knobPixmap)
+    {
+        int    w = m_knobPixmap->width();
+        int    h = m_knobPixmap->height();
+        QPoint p(w / 2, h / 2);
+        return QLine(p, p + QPoint(0, 50));
+    }
+
+    return QLine();
+}
+
+QLine Knob::cableTo() const
+{
+    if(m_knobPixmap)
+    {
+        int    w = m_knobPixmap->width() + 1;
+        int    h = m_knobPixmap->height() + 1;
+        QPoint p(w / 2, h / 2);
+        return QLine(p, p + QPoint(0, 60));
+    }
+
+    return QLine();
+}
+
+QColor Knob::cableColor() const
+{
+    return m_pointColor;
 }

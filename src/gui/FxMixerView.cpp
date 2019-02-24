@@ -31,10 +31,6 @@
 #include <QLayout>
 //#include <QMdiArea>
 //#include <QPainter>
-#include <QPushButton>
-#include <QScrollArea>
-#include <QStyle>
-
 #include "BBTrackContainer.h"
 #include "EffectControlDialog.h"
 #include "EffectControls.h"
@@ -48,8 +44,11 @@
 #include "Song.h"
 #include "SubWindow.h"
 #include "ToolTip.h"
-
 #include "embed.h"
+
+#include <QPushButton>
+#include <QScrollArea>
+#include <QStyle>
 //#include "gui_templates.h"
 //#include "lmms_math.h"
 
@@ -141,8 +140,8 @@ FxMixerView::FxMixerView() :
     QPushButton* newChannelBtn = new QPushButton(
             embed::getIconPixmap("new_channel"), QString::null, this);
     newChannelBtn->setObjectName("newChannelBtn");
-    const int wpb=fxLineSize.width();
-    newChannelBtn->setFixedSize(wpb,wpb);
+    const int wpb = fxLineSize.width();
+    newChannelBtn->setFixedSize(wpb, wpb);
     connect(newChannelBtn, SIGNAL(clicked()), this, SLOT(addNewChannel()));
     ml->addWidget(newChannelBtn, 0, Qt::AlignTop);
 
@@ -278,13 +277,48 @@ void FxMixerView::loadSettings(const QDomElement& _this)
     MainWindow::restoreWidgetState(this, _this);
 }
 
+QList<ModelView*> FxMixerView::childModelViews() const
+{
+    QList<ModelView*> r;
+    for(FxChannelView* chv: m_fxChannelViews)
+        r.append(chv);
+    return r;
+}
+
+QLine FxMixerView::FxChannelView::cableFrom() const
+{
+    QWidget* w = widget();
+    if(w == nullptr)
+        return QLine();
+
+    QPoint p(w->width() / 2, 0);
+    return QLine(p, p + QPoint(0, -50));
+}
+
+QLine FxMixerView::FxChannelView::cableTo() const
+{
+    QWidget* w = widget();
+    if(w == nullptr)
+        return QLine();
+
+    QPoint p(w->width() / 2, w->height());
+    return QLine(p, p + QPoint(0, 50));
+}
+
+QColor FxMixerView::FxChannelView::cableColor() const
+{
+    return Qt::white;
+}
+
 FxMixerView::FxChannelView::FxChannelView(QWidget*     _parent,
                                           FxMixerView* _mv,
-                                          int          channelIndex)
+                                          int          channelIndex) :
+      ModelView(nullptr, nullptr)
 {
     m_fxLine = new FxLine(_parent, _mv, channelIndex);
-
+    setWidget(m_fxLine);  // GDX
     FxChannel* fxChannel = Engine::fxMixer()->effectChannel(channelIndex);
+    setModel(fxChannel);  // GDX
 
     m_fader = new Fader(&fxChannel->m_volumeModel,
                         tr("FX Fader %1").arg(channelIndex), m_fxLine);
@@ -295,10 +329,10 @@ FxMixerView::FxChannelView::FxChannelView(QWidget*     _parent,
     m_fader->move(16 - m_fader->width() / 2,
                   m_fxLine->height() - m_fader->height() - 5);
 
-    int XF=9;
-    int YF=m_fader->y();
+    int XF = 9;
+    int YF = m_fader->y();
 
-    YF-=16;
+    YF -= 16;
     m_soloBtn = new PixmapButton(m_fxLine, tr("Solo"));
     m_soloBtn->setModel(&fxChannel->m_soloModel);
     m_soloBtn->setActiveGraphic(embed::getIconPixmap("led_magenta"));
@@ -309,7 +343,7 @@ FxMixerView::FxChannelView::FxChannelView(QWidget*     _parent,
             SLOT(toggledSolo()));
     ToolTip::add(m_soloBtn, tr("Solo"));
 
-    YF-=14;
+    YF -= 14;
     m_muteBtn = new PixmapButton(m_fxLine, tr("Mute"));
     m_muteBtn->setModel(&fxChannel->m_mutedModel);
     m_muteBtn->setActiveGraphic(embed::getIconPixmap("led_off"));
@@ -318,7 +352,7 @@ FxMixerView::FxChannelView::FxChannelView(QWidget*     _parent,
     m_muteBtn->move(XF, YF);
     ToolTip::add(m_muteBtn, tr("Mute"));
 
-    YF-=116;
+    YF -= 116;
     if(channelIndex == 0)
     {
         m_eqEnableBtn  = NULL;
@@ -365,9 +399,9 @@ FxMixerView::FxChannelView::FxChannelView(QWidget*     _parent,
                     m_eqMediumKnob->setPointColor(Qt::yellow);
                     m_eqLowKnob->setPointColor(Qt::yellow);
 
-                    m_eqHighKnob->move(XF-6, m_eqEnableBtn->y() + 17);
-                    m_eqMediumKnob->move(XF-6, m_eqEnableBtn->y() + 47);
-                    m_eqLowKnob->move(XF-6, m_eqEnableBtn->y() + 77);
+                    m_eqHighKnob->move(XF - 6, m_eqEnableBtn->y() + 17);
+                    m_eqMediumKnob->move(XF - 6, m_eqEnableBtn->y() + 47);
+                    m_eqLowKnob->move(XF - 6, m_eqEnableBtn->y() + 77);
 
                     m_eqHighKnob->model()->setRange(-100.f, 0.f, 0.5f);
                     m_eqMediumKnob->model()->setRange(-100.f, 0.f, 0.5f);
@@ -401,7 +435,7 @@ FxMixerView::FxChannelView::FxChannelView(QWidget*     _parent,
         */
     }
 
-    YF-=14;
+    YF -= 14;
     m_frozenBtn = new PixmapButton(m_fxLine, tr("Frozen"));
     m_frozenBtn->setModel(&fxChannel->m_frozenModel);
     m_frozenBtn->setActiveGraphic(embed::getIconPixmap("led_blue"));
@@ -410,20 +444,20 @@ FxMixerView::FxChannelView::FxChannelView(QWidget*     _parent,
     m_frozenBtn->move(XF, YF);
     ToolTip::add(m_frozenBtn, tr("Frozen"));
 
-    YF-=14;
+    YF -= 14;
     m_clippingBtn = new PixmapButton(m_fxLine, tr("Clipping"));
     m_clippingBtn->setModel(&fxChannel->m_clippingModel);
     m_clippingBtn->setActiveGraphic(embed::getIconPixmap("led_red"));
     m_clippingBtn->setInactiveGraphic(embed::getIconPixmap("led_off"));
     m_clippingBtn->setCheckable(true);
     m_clippingBtn->setBlinking(true);
-    m_clippingBtn->move(XF,YF);
+    m_clippingBtn->move(XF, YF);
     ToolTip::add(m_clippingBtn, tr("Clipping alert"));
 
     // Create EffectRack for the channel
     m_rackView
             = new EffectRackView(&fxChannel->m_fxChain, _mv->m_racksWidget);
-    //m_rackView->setFixedSize(250, FxLine::FxLineHeight);
+    // m_rackView->setFixedSize(250, FxLine::FxLineHeight);
     m_rackView->setFixedHeight(FxLine::FxLineHeight);
 }
 
@@ -541,7 +575,7 @@ void FxMixerView::deleteUnusedChannels()
     {
         // check if an instrument references to the current channel
         bool empty = true;
-        for(Track* t : tracks)
+        for(Track* t: tracks)
         {
             if(t->type() == Track::InstrumentTrack)
             {
@@ -662,8 +696,8 @@ void FxMixerView::updateFaders()
     FxMixer* m = Engine::fxMixer();
 
     // apply master gain
-    //m->effectChannel(0)->m_peakLeft *= Engine::mixer()->masterGain();
-    //m->effectChannel(0)->m_peakRight *= Engine::mixer()->masterGain();
+    // m->effectChannel(0)->m_peakLeft *= Engine::mixer()->masterGain();
+    // m->effectChannel(0)->m_peakRight *= Engine::mixer()->masterGain();
 
     for(int i = 0; i < m_fxChannelViews.size(); ++i)
     {
@@ -693,7 +727,7 @@ void FxMixerView::updateFaders()
             m_fxChannelViews[i]->m_fader->setPeak_R(opr / fall_off);
         }
 
-        //if(m_fxChannelViews[i]->m_fader->needsUpdate())
+        // if(m_fxChannelViews[i]->m_fader->needsUpdate())
         //    m_fxChannelViews[i]->m_fader->update();
     }
 }

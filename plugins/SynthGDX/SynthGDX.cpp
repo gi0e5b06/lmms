@@ -56,7 +56,7 @@ extern "C"
 }
 
 OscillatorObject::OscillatorObject(Model* _parent, int _idx) :
-      Model(_parent),
+      Model(_parent, QString("SynthGDX Osc #%1").arg(_idx)),
       m_enabledModel(_idx == 0, this, tr("O%1 active").arg(_idx + 1)),
       m_wave1SymetricModel(
               false, this, tr("O%1 symetric wave").arg(_idx + 1)),
@@ -764,7 +764,7 @@ void OscillatorObject::updatePhaseOffsets(const fpp_t _f)
 }
 
 ModulatorObject::ModulatorObject(Model* _parent, int _idx) :
-      Model(_parent),
+      Model(_parent, QString("SynthGDX Mod #%1").arg(_idx)),
       m_enabledModel(false, this, tr("M%1 active").arg(_idx + 1)),
       m_algoModel(this, tr("M%1 type").arg(_idx + 1)),
       m_modulatedModel(this, tr("Modulated oscillator")),  //.arg(_idx + 1)),
@@ -1060,10 +1060,12 @@ void SynthGDX::loadSettings(const QDomElement& _this)
     }
 }
 
+/*
 QString SynthGDX::nodeName() const
 {
     return synthgdx_plugin_descriptor.name;
 }
+*/
 
 void SynthGDX::playNote(NotePlayHandle* _n, sampleFrame* _buf)
 {

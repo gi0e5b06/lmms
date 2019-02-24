@@ -28,6 +28,7 @@
 #include "AudioDummy.h"
 #include "AutomationEditor.h"  // REQUIRED
 #include "BBEditor.h"          // REQUIRED
+#include "CableOverlay.h"
 #include "Configuration.h"
 #include "ControllerRackView.h"
 #include "Engine.h"
@@ -74,7 +75,11 @@ MainWindow::MainWindow() :
 {
     setAttribute(Qt::WA_DeleteOnClose);
 
-    QWidget*     main_widget = new QWidget(this);
+    QWidget*        root_widget = new QWidget(this);
+    QStackedLayout* stlo        = new QStackedLayout(root_widget);
+    stlo->setStackingMode(QStackedLayout::StackAll);
+
+    QWidget*     main_widget = new QWidget(root_widget);
     QVBoxLayout* vbox        = new QVBoxLayout(main_widget);
     vbox->setSpacing(0);
     vbox->setMargin(0);
@@ -86,7 +91,8 @@ MainWindow::MainWindow() :
     hbox->setMargin(0);
 
     // SideBar * sideBar = new SideBar( Qt::Vertical, w );
-    SideBar* sideBar = new SideBar(Qt::Vertical, main_widget);
+    SideBar* sideBar = new SideBar(Qt::Vertical,
+                                   w);  // main_widget); // tmp, will be w
 
     QSplitter* splitter = new QSplitter(Qt::Horizontal, w);
     splitter->setChildrenCollapsible(false);
@@ -136,7 +142,7 @@ MainWindow::MainWindow() :
 
 #if !defined(LMMS_BUILD_APPLE)
     QFileInfoList drives = QDir::drives();
-    for(const QFileInfo& drive : drives)
+    for(const QFileInfo& drive: drives)
     {
         root_paths += drive.absolutePath();
     }
@@ -242,7 +248,11 @@ MainWindow::MainWindow() :
 
     vbox->addWidget(m_toolBar);
     vbox->addWidget(w);
-    setCentralWidget(main_widget);
+
+    // CableOverlay* cable_overlay = new CableOverlay(root_widget);
+    // stlo->addWidget(cable_overlay);
+    stlo->addWidget(main_widget);
+    setCentralWidget(root_widget);
 
     // fps
     connect(&m_updateTimer, SIGNAL(timeout()), this, SLOT(onTimeout()));
@@ -276,7 +286,7 @@ MainWindow::MainWindow() :
 
 MainWindow::~MainWindow()
 {
-    for(PluginView* view : m_tools)
+    for(PluginView* view: m_tools)
     {
         delete view->model();
         delete view;
@@ -374,6 +384,9 @@ void MainWindow::finalize()
     project_menu->addAction(embed::getIconPixmap("midi_file"),
                             tr("&Export MIDI..."), Engine::getSong(),
                             SLOT(exportProjectMidi()), Qt::CTRL + Qt::Key_M);
+    project_menu->addAction(embed::getIconPixmap("project_export"),
+                            tr("Export to LMMS 1.&2..."), Engine::getSong(),
+                            SLOT(exportProjectFormat12()));
 
 // Prevent dangling separator at end of menu per
 // https://bugreports.qt.io/browse/QTBUG-40071
@@ -438,12 +451,12 @@ void MainWindow::finalize()
             SLOT(updateConfig(QAction*)));
 
     m_toolsMenu = new QMenu(this);
-    for(const Plugin::Descriptor* desc :
+    for(const Plugin::Descriptor* desc:
         pluginFactory->descriptors(Plugin::Tool))
     {
-        m_toolsMenu->addAction(desc->logo->pixmap(), desc->displayName);
+        m_toolsMenu->addAction(desc->logo()->pixmap(), desc->displayName());
         m_tools.push_back(
-                ToolPlugin::instantiate(desc->name, /*this*/ nullptr)
+                ToolPlugin::instantiate(desc->name(), /*this*/ nullptr)
                         ->createView(this));
     }
     if(!m_toolsMenu->isEmpty())
@@ -642,7 +655,7 @@ void MainWindow::finalize()
     }
 
     // Add editor subwindows
-    for(Editor* editor :
+    for(Editor* editor:
         std::list<Editor*>{gui->songEditor(), gui->getBBEditor(),
                            gui->pianoRoll(), gui->automationEditor()})
     {
@@ -655,7 +668,7 @@ void MainWindow::finalize()
         toggleWindow(editor, false);
     }
 
-    for(QWidget* widget :
+    for(QWidget* widget:
         std::list<QWidget*>{gui->fxMixerView(), gui->getProjectNotes(),
                             gui->getControllerRackView()})
         toggleWindow(widget, false);
@@ -688,7 +701,7 @@ void MainWindow::finalize()
 
     // reset window title every time we change the state of a subwindow to
     // show the correct title
-    for(const QMdiSubWindow* subWindow : workspace()->subWindowList())
+    for(const QMdiSubWindow* subWindow: workspace()->subWindowList())
     {
         connect(subWindow,
                 SIGNAL(windowStateChanged(Qt::WindowStates,
@@ -1430,7 +1443,7 @@ void MainWindow::reorganizeWindows()
 {
     if(isTabbed())
     {
-        for(QMdiSubWindow* win : m_workspace->subWindowList())
+        for(QMdiSubWindow* win: m_workspace->subWindowList())
             if(win->isHidden())
             {
                 bool doc = win->testAttribute(Qt::WA_DeleteOnClose);
@@ -1464,7 +1477,7 @@ void MainWindow::reorganizeWindows()
     */
 
     int yt = 0;
-    for(QMdiSubWindow* win : m_workspace->subWindowList())
+    for(QMdiSubWindow* win: m_workspace->subWindowList())
     {
         if(win->isHidden())
             continue;
@@ -1832,7 +1845,7 @@ void MainWindow::updateActions(const bool            _active,
                                QHash<QString, bool>& _table)
 {
     QMdiSubWindow* asw = workspace()->currentSubWindow();
-    for(const QMdiSubWindow* subWindow : workspace()->subWindowList())
+    for(const QMdiSubWindow* subWindow: workspace()->subWindowList())
     {
         if(asw == subWindow)
             continue;
@@ -1850,7 +1863,7 @@ void MainWindow::updateActions(const bool            _active,
         if(e)
             e->updateActions(_active, _table);
     }
-    for(const QString& s : _table.keys())
+    for(const QString& s: _table.keys())
     {
         QAction* a = action(s);
         if(a)

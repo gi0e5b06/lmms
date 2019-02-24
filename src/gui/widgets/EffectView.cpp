@@ -1,7 +1,7 @@
 /*
  * EffectView.cpp - view-component for an effect
  *
- * Copyright (c) 2018 gi0e5b06 (on github.com)
+ * Copyright (c) 2018-2019 gi0e5b06 (on github.com)
  * Copyright (c) 2006-2007 Danny McRae <khjklujn/at/users.sourceforge.net>
  * Copyright (c) 2007-2014 Tobias Doerffel <tobydox/at/users.sourceforge.net>
  *
@@ -63,7 +63,7 @@ EffectView::EffectView(Effect* _model, QWidget* _parent) :
 
     // Disable effects that are of type "DummyEffect"
     bool isEnabled = !dynamic_cast<DummyEffect*>(effect());
-    m_enabledLCB   = new LedCheckBox(this, "", LedCheckBox::Green);
+    m_enabledLCB   = new LedCheckBox(this, "Enabled", LedCheckBox::Green);
     m_enabledLCB->move(19 + 3, 3);
     // m_enabledLCB->setGeometry(0,0,19,19);
     // m_enabledLCB->setText(tr("ON"));
@@ -73,7 +73,7 @@ EffectView::EffectView(Effect* _model, QWidget* _parent) :
     m_enabledLCB->setWhatsThis(tr("Toggles the effect on or off."));
     ToolTip::add(m_enabledLCB, tr("On/Off"));
 
-    m_clippingLCB = new LedCheckBox(this, LedCheckBox::Red);
+    m_clippingLCB = new LedCheckBox(this, "Clipping", LedCheckBox::Red);
     m_clippingLCB->move(19 + 3, 17);
     // m_clippingLCB->setGeometry(0,30,19,19);
     m_clippingLCB->setBlinking(true);
@@ -81,7 +81,7 @@ EffectView::EffectView(Effect* _model, QWidget* _parent) :
     // m_clippingLCB->setTextAnchorPoint(Qt::AnchorBottom);
     // m_clippingLCB->setWhatsThis( tr( "Toggles the effect on or off." ) );
 
-    m_runningLCB = new LedCheckBox(this, "", LedCheckBox::Yellow);
+    m_runningLCB = new LedCheckBox(this, "Running", LedCheckBox::Yellow);
     m_runningLCB->move(19 + 3, 31);
     // m_runningLCB->setGeometry(0,0,19,19);
     // m_runningLCB->setText(tr("ON"));

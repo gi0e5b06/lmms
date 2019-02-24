@@ -45,7 +45,8 @@
 
 BBTrack::infoMap BBTrack::s_infoMap;
 
-BBTCO::BBTCO(Track* _track) : TrackContentObject(_track), m_mask(nullptr)
+BBTCO::BBTCO(Track* _track) :
+      TrackContentObject(_track, "Beat tile"), m_mask(nullptr)
 {
     tact_t t = Engine::getBBTrackContainer()->lengthOfBB(bbTrackIndex());
     if(t > 0)
@@ -202,13 +203,19 @@ void BBTCO::loadSettings(const QDomElement& element)
 
 TrackContentObjectView* BBTCO::createView(TrackView* _tv)
 {
+    // qInfo("BBTCO::createView tv=%p", _tv);
     return new BBTCOView(this, _tv);
 }
 
+/*
 BBTCOView::BBTCOView(TrackContentObject* _tco, TrackView* _tv) :
       TrackContentObjectView(_tco, _tv), m_bbTCO(dynamic_cast<BBTCO*>(_tco)),
       m_paintPixmap()
+*/
+BBTCOView::BBTCOView(BBTCO* _tco, TrackView* _tv) :
+      TrackContentObjectView(_tco, _tv), m_bbTCO(_tco), m_paintPixmap()
 {
+    // qInfo("BBTCOView::BBTCOView %p", _tco);
     connect(_tco->getTrack(), SIGNAL(dataChanged()), this, SLOT(update()));
 
     setStyle(QApplication::style());
@@ -275,7 +282,7 @@ void BBTCOView::addMuteMenu(QMenu* _cm, bool _enabled)
 void BBTCOView::toggleMask(QAction* _a)
 {
     const int index = _a->data().toInt();
-    qInfo("BBTCOView::setMask %d", index);
+    // qInfo("BBTCOView::setMask %d", index);
     Bitset* mask = m_bbTCO->mask();
     if(mask == nullptr)
     {
@@ -749,8 +756,8 @@ void BBTrack::swapBBTracks(Track* _track1, Track* _track2)
     }
 }
 
-BBTrackView::BBTrackView(BBTrack* _bbt, TrackContainerView* tcv) :
-      TrackView(_bbt, tcv), m_bbTrack(_bbt)
+BBTrackView::BBTrackView(BBTrack* _bbt, TrackContainerView* _tcv) :
+      TrackView(_bbt, _tcv), m_bbTrack(_bbt)
 {
     setFixedHeight(32);
     // drag'n'drop with bb-tracks only causes troubles (and makes no sense

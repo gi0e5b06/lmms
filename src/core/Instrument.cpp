@@ -37,7 +37,7 @@ Instrument::Instrument(InstrumentTrack*  _instrument_track,
 
 Instrument::~Instrument()
 {
-    qInfo("Instrument::~Instrument");
+    // qInfo("Instrument::~Instrument");
     m_instrumentTrack = nullptr;
 }
 

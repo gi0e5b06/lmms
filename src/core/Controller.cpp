@@ -28,111 +28,101 @@
 #include <QObject>
 #include <QVector>
 
-
 //#include "Song.h"
-#include "Engine.h"
-#include "Mixer.h"
 #include "ControllerConnection.h"
 #include "ControllerDialog.h"
+#include "Engine.h"
 #include "LfoController.h"
 #include "MidiController.h"
+#include "Mixer.h"
 #include "PeakController.h"
 
+long                 Controller::s_periods = 0;
+QVector<Controller*> Controller::s_controllers;
 
-long Controller::s_periods = 0;
-QVector<Controller *> Controller::s_controllers;
-
-
-
-Controller::Controller( ControllerTypes _type, Model * _parent,
-					const QString & _display_name ) :
-	Model( _parent, _display_name ),
-	JournallingObject(),
-	m_valueBuffer( Engine::mixer()->framesPerPeriod() ),
-	m_lastUpdatedPeriod( -1 ),
-        //m_hasChanged( true ),
-	m_connectionCount( 0 ),
-	m_type( _type ),
-	m_enabledModel( true, this, tr( "Controller enabled" ) )
+Controller::Controller(ControllerTypes _type,
+                       Model*          _parent,
+                       const QString&  _display_name) :
+      Model(_parent, _display_name),
+      JournallingObject(), m_valueBuffer(Engine::mixer()->framesPerPeriod()),
+      m_lastUpdatedPeriod(-1),
+      // m_hasChanged( true ),
+      m_connectionCount(0), m_type(_type),
+      m_enabledModel(true, this, tr("Controller enabled"))
 {
-	if( _type != DummyController && _type != MidiController )
-	{
-		s_controllers.append( this );
-		// Determine which name to use
-		for ( uint i=s_controllers.size(); ; i++ )
-		{
-			QString new_name = QString( tr( "Controller %1" ) )
-					.arg( i );
+    if(_type != DummyController && _type != MidiController)
+    {
+        s_controllers.append(this);
+        // Determine which name to use
+        for(uint i = s_controllers.size();; i++)
+        {
+            QString new_name = QString(tr("Controller %1")).arg(i);
 
-			// Check if name is already in use
-			bool name_used = false;
-			for (Controller * controller : s_controllers)
- 			{
-				if ( controller->name() == new_name )
-				{
-					name_used = true;
-					break;
-				}
-			}
-			if ( ! name_used )
-			{
-				m_name = new_name;
-				break;
-			}
-		}
-	}
-	updateValueBuffer();
+            // Check if name is already in use
+            bool name_used = false;
+            for(Controller* controller: s_controllers)
+            {
+                if(controller->name() == new_name)
+                {
+                    name_used = true;
+                    break;
+                }
+            }
+            if(!name_used)
+            {
+                m_name = new_name;
+                break;
+            }
+        }
+    }
+    updateValueBuffer();
 }
-
-
 
 Controller::~Controller()
 {
-	int idx = s_controllers.indexOf( this );
-	if( idx >= 0 )
-	{
-		s_controllers.remove( idx );
-	}
+    int idx = s_controllers.indexOf(this);
+    if(idx >= 0)
+    {
+        s_controllers.remove(idx);
+    }
 
-	m_valueBuffer.clear();
-	// Remove connections by destroyed signal
+    m_valueBuffer.clear();
+    // Remove connections by destroyed signal
 }
 
-
-
-// Get current value, with an offset into the current buffer for sample exactness
-real_t Controller::currentValue( int _offset )
+// Get current value, with an offset into the current buffer for sample
+// exactness
+real_t Controller::currentValue(int _offset)
 {
-	if(isEnabled() && ( _offset == 0 || isSampleExact() ))
-	{
-		m_currentValue = fittedValue( value( _offset ) );
-	}
+    if(isEnabled() && (_offset == 0 || isSampleExact()))
+    {
+        m_currentValue = fittedValue(value(_offset));
+    }
 
-	return m_currentValue;
+    return m_currentValue;
 }
 
-
-
-real_t Controller::value( int offset )
+real_t Controller::value(int offset)
 {
-	if(isEnabled())
-	{
-		//if( m_lastUpdatedPeriod != s_periods )
-                updateValueBuffer();
+    if(isEnabled())
+    {
+        // if( m_lastUpdatedPeriod != s_periods )
+        updateValueBuffer();
 
-		return m_valueBuffer.value(offset);
-	}
-	else return m_currentValue;
+        return m_valueBuffer.value(offset);
+    }
+    else
+        return m_currentValue;
 }
 
 /*
 ValueBuffer * Controller::valueBuffer()
 {
-	if( m_lastUpdatedPeriod != s_periods )
-	{
-		updateValueBuffer();
-	}
-	return &m_valueBuffer;
+        if( m_lastUpdatedPeriod != s_periods )
+        {
+                updateValueBuffer();
+        }
+        return &m_valueBuffer;
 }
 
 
@@ -144,204 +134,175 @@ bool Controller::hasChanged() const
 
 void Controller::updateValueBuffer()
 {
-	if( m_lastUpdatedPeriod != s_periods )
-        {
-                fillValueBuffer();
-                m_lastUpdatedPeriod = s_periods;
-                emit controlledBufferChanged(&m_valueBuffer);
-        }
+    if(m_lastUpdatedPeriod != s_periods)
+    {
+        fillValueBuffer();
+        m_lastUpdatedPeriod = s_periods;
+        emit controlledBufferChanged(&m_valueBuffer);
+    }
 }
-
 
 void Controller::fillValueBuffer()
 {
-        m_valueBuffer.fill(0.5);
+    m_valueBuffer.fill(0.5);
 }
-
 
 // Get position in frames
 unsigned int Controller::runningFrames()
 {
-	return s_periods * Engine::mixer()->framesPerPeriod();
+    return s_periods * Engine::mixer()->framesPerPeriod();
 }
-
-
 
 // Get position in seconds
 real_t Controller::runningTime()
 {
-	return runningFrames() / Engine::mixer()->processingSampleRate();
+    return runningFrames() / Engine::mixer()->processingSampleRate();
 }
-
-
 
 void Controller::triggerFrameCounter()
 {
-	for (Controller * controller : s_controllers)
-	{
-		// This signal is for updating values for both stubborn knobs and for
-		// painting.  If we ever get all the widgets to use or at least check
-		// currentValue() then we can throttle the signal and only use it for
-		// GUI.
-		emit controller->controlledValueChanged(controller->currentValue());
-	}
-	s_periods ++;
-	//emit s_signaler.triggerValueChanged();
+    for(Controller* controller: s_controllers)
+    {
+        // This signal is for updating values for both stubborn knobs and for
+        // painting.  If we ever get all the widgets to use or at least check
+        // currentValue() then we can throttle the signal and only use it for
+        // GUI.
+        emit controller->controlledValueChanged(controller->currentValue());
+    }
+    s_periods++;
+    // emit s_signaler.triggerValueChanged();
 }
-
-
 
 void Controller::resetFrameCounter()
 {
-	for (Controller * controller : s_controllers)
-	{
-		controller->m_lastUpdatedPeriod = 0;
-	}
-	s_periods = 0;
+    for(Controller* controller: s_controllers)
+    {
+        controller->m_lastUpdatedPeriod = 0;
+    }
+    s_periods = 0;
 }
 
-
-
-Controller * Controller::create( ControllerTypes _ct, Model * _parent )
+Controller* Controller::create(ControllerTypes _ct, Model* _parent)
 {
-	static Controller * dummy = NULL;
-	Controller * c = NULL;
+    static Controller* dummy = nullptr;
+    Controller*        c     = nullptr;
 
-	switch( _ct )
-	{
-		case Controller::DummyController:
-			if( !dummy )
-				dummy = new Controller( DummyController, NULL,
-                                                        QString() );
-                        c = dummy;
-			break;
+    switch(_ct)
+    {
+        case Controller::DummyController:
+            if(!dummy)
+                dummy = new Controller(DummyController, nullptr,
+                                       "[dummy controller]");
+            c = dummy;
+            break;
 
-		case Controller::LfoController:
-			c = new ::LfoController( _parent );
-			break;
+        case Controller::LfoController:
+            c = new ::LfoController(_parent);
+            break;
 
-		case Controller::PeakController:
-			//Already instantiated in EffectChain::loadSettings()
-			Q_ASSERT( false );
-			break;
+        case Controller::PeakController:
+            // Already instantiated in EffectChain::loadSettings()
+            Q_ASSERT(false);
+            break;
 
-		case Controller::MidiController:
-			c = new ::MidiController( _parent );
-			break;
+        case Controller::MidiController:
+            c = new ::MidiController(_parent);
+            break;
 
-		default:
-			break;
-	}
+        default:
+            break;
+    }
 
-	return c;
+    return c;
 }
 
-
-
-Controller * Controller::create( const QDomElement & _this, Model * _parent )
+Controller* Controller::create(const QDomElement& _this, Model* _parent)
 {
-	Controller * c;
-	if( _this.attribute( "type" ).toInt() == Controller::PeakController )
-	{
-		c = PeakController::getControllerBySetting( _this );
-	}
-	else
-	{
-		c = create(
-			static_cast<ControllerTypes>( _this.attribute( "type" ).toInt() ),
-										_parent );
-	}
+    Controller* c;
+    if(_this.attribute("type").toInt() == Controller::PeakController)
+    {
+        c = PeakController::getControllerBySetting(_this);
+    }
+    else
+    {
+        c = create(
+                static_cast<ControllerTypes>(_this.attribute("type").toInt()),
+                _parent);
+    }
 
-	if( c != NULL )
-	{
-		c->restoreState( _this );
-	}
+    if(c != nullptr)
+    {
+        c->restoreState(_this);
+    }
 
-	return c;
+    return c;
 }
 
-
-
-bool Controller::hasModel( const Model * m ) const
+bool Controller::hasModel(const Model* m) const
 {
-	for (QObject * c : children())
-	{
-		AutomatableModel * am = qobject_cast<AutomatableModel*>(c);
-		if( am != NULL )
-		{
-			if( am == m )
-			{
-				return true;
-			}
+    for(QObject* c: children())
+    {
+        AutomatableModel* am = qobject_cast<AutomatableModel*>(c);
+        if(am != nullptr)
+        {
+            if(am == m)
+            {
+                return true;
+            }
 
-			ControllerConnection * cc = am->controllerConnection();
-			if( cc != NULL && cc->getController()->hasModel( m ) )
-			{
-                                return true;
-                        }
-		}
-	}
+            ControllerConnection* cc = am->controllerConnection();
+            if(cc != nullptr && cc->getController()->hasModel(m))
+            {
+                return true;
+            }
+        }
+    }
 
-	return false;
+    return false;
 }
 
-
-
-void Controller::saveSettings( QDomDocument & _doc, QDomElement & _this )
+void Controller::saveSettings(QDomDocument& _doc, QDomElement& _this)
 {
-	_this.setAttribute( "type", type() );
-	_this.setAttribute( "name", name() );
+    _this.setAttribute("type", type());
+    _this.setAttribute("name", name());
 }
 
-
-
-void Controller::loadSettings( const QDomElement & _this )
+void Controller::loadSettings(const QDomElement& _this)
 {
-	if( _this.attribute( "type" ).toInt() != type() )
-	{
-		qWarning( "controller-type does not match controller-type of "
-							"settings-node!\n" );
-	}
+    if(_this.attribute("type").toInt() != type())
+    {
+        qWarning(
+                "controller-type does not match controller-type of "
+                "settings-node!\n");
+    }
 
-	setName( _this.attribute( "name" ) );
+    setName(_this.attribute("name"));
 }
-
 
 QString Controller::nodeName() const
 {
-	return "Controller";
+    return "Controller";
 }
 
-
-
-ControllerDialog * Controller::createDialog( QWidget * _parent )
+ControllerDialog* Controller::createDialog(QWidget* _parent)
 {
-	ControllerDialog * d = new ControllerDialog( this, _parent );
+    ControllerDialog* d = new ControllerDialog(this, _parent);
 
-	return d;
+    return d;
 }
 
-
-
-
-void Controller::addConnection( ControllerConnection * )
+void Controller::addConnection(ControllerConnection*)
 {
-	m_connectionCount++;
+    m_connectionCount++;
 }
 
-
-
-
-void Controller::removeConnection( ControllerConnection * )
+void Controller::removeConnection(ControllerConnection*)
 {
-	m_connectionCount--;
-	Q_ASSERT( m_connectionCount >= 0 );
+    m_connectionCount--;
+    Q_ASSERT(m_connectionCount >= 0);
 }
-
-
-
 
 int Controller::connectionCount() const
 {
-	return m_connectionCount;
+    return m_connectionCount;
 }

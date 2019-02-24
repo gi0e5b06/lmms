@@ -25,79 +25,72 @@
 #ifndef JOURNALLING_OBJECT_H
 #define JOURNALLING_OBJECT_H
 
-#include <QStack>
-
-#include "lmms_basics.h"
 #include "SerializingObject.h"
+#include "lmms_basics.h"
 
+#include <QStack>
 
 class EXPORT JournallingObject : public SerializingObject
 {
-public:
-	JournallingObject();
-	virtual ~JournallingObject();
+  public:
+    JournallingObject();
+    virtual ~JournallingObject();
 
-	inline jo_id_t id() const
-	{
-		return m_id;
-	}
+    inline jo_id_t id() const
+    {
+        return m_id;
+    }
 
-	void saveJournallingState( const bool newState )
-	{
-		m_journallingStateStack.push( m_journalling );
-		m_journalling = newState;
-	}
+    void saveJournallingState(const bool newState)
+    {
+        m_journallingStateStack.push(m_journalling);
+        m_journalling = newState;
+    }
 
-	void restoreJournallingState()
-	{
-		if( !isJournallingStateStackEmpty())
-		{
-			m_journalling = m_journallingStateStack.pop();
-		}
-	}
+    void restoreJournallingState()
+    {
+        if(!isJournallingStateStackEmpty())
+        {
+            m_journalling = m_journallingStateStack.pop();
+        }
+    }
 
-	void addJournalCheckPoint();
+    void addJournalCheckPoint();
 
-	virtual QDomElement saveState( QDomDocument & _doc,
-									QDomElement & _parent );
+    virtual QDomElement saveState(QDomDocument& _doc, QDomElement& _parent);
 
-	virtual void restoreState( const QDomElement & _this );
+    virtual void restoreState(const QDomElement& _this);
 
-	inline bool isJournalling() const
-	{
-		return m_journalling;
-	}
+    inline bool isJournalling() const
+    {
+        return m_journalling;
+    }
 
-	inline void setJournalling( const bool _sr )
-	{
-		m_journalling = _sr;
-	}
+    inline void setJournalling(const bool _sr)
+    {
+        m_journalling = _sr;
+    }
 
-	inline bool testAndSetJournalling( const bool newState )
-	{
-		const bool oldJournalling = m_journalling;
-		m_journalling = newState;
-		return oldJournalling;
-	}
+    inline bool testAndSetJournalling(const bool newState)
+    {
+        const bool oldJournalling = m_journalling;
+        m_journalling             = newState;
+        return oldJournalling;
+    }
 
-	bool isJournallingStateStackEmpty() const
-	{
-		return m_journallingStateStack.isEmpty();
-	}
+    bool isJournallingStateStackEmpty() const
+    {
+        return m_journallingStateStack.isEmpty();
+    }
 
-protected:
-	void changeID( jo_id_t _id );
+  protected:
+    void changeID(jo_id_t _id);
 
+  private:
+    jo_id_t m_id;
+    bool    m_journalling;
 
-private:
-	jo_id_t m_id;
-
-	bool m_journalling;
-
-	QStack<bool> m_journallingStateStack;
-
-} ;
-
+    QStack<bool> m_journallingStateStack;
+};
 
 #endif
-

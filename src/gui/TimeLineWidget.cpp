@@ -33,16 +33,15 @@
 #include "Song.h"
 #include "SongEditor.h"
 #include "TextFloat.h"
-
 #include "embed.h"
 
+#include <QDomElement>
 #include <QMenu>
 #include <QMouseEvent>
 #include <QPainter>
+#include <QTimer>
 #include <QToolBar>
 #include <QToolButton>
-#include <QDomElement>
-#include <QTimer>
 //#include <QApplication>
 //#include <QLayout>
 
@@ -195,8 +194,9 @@ void TimeLineWidget::addLoopMarkButtons(QToolBar* _tool_bar)
 
     for(int i = 0; i < NB_LOOPS; i++)
     {
-        AutomatableToolButton* b = new AutomatableToolButton(_tool_bar);
-        QAction*               a = new QAction(QString((char)(65 + i)),
+        AutomatableToolButton* b
+                = new AutomatableToolButton(_tool_bar, "Loop mark");
+        QAction* a = new QAction(QString((char)(65 + i)),
                                  b);  //.append(QString(" loop")));
         b->setDefaultAction(a);
         a->setData(QVariant(i));
@@ -240,7 +240,8 @@ void TimeLineWidget::addLoopSizeButtons(QToolBar* _tool_bar)
 
     for(int i = 0; i < NB_LOOP_SIZES; i++)
     {
-        AutomatableToolButton* b = new AutomatableToolButton(_tool_bar);
+        AutomatableToolButton* b
+                = new AutomatableToolButton(_tool_bar, "Loop size");
         // QAction* a=new QAction(labels[i],b);
         QAction* a = new QAction(embed::getIconPixmap(icons[i]), "", b);
         b->setDefaultAction(a);
@@ -373,7 +374,7 @@ void TimeLineWidget::resizeLoop(QAction* _a)
     {
         int n = m_currentLoop;
         m_loopPos[2 * n + 1]
-                = m_loopPos[2 * n + 0] + s * MidiTime::ticksPerTact();
+                = m_loopPos[2 * n + 0] + qRound(s * MidiTime::ticksPerTact());
     }
     else
     {
@@ -387,17 +388,17 @@ void TimeLineWidget::resizeLoop(QAction* _a)
                                * s * MidiTime::ticksPerTact();
 
         m_loopPos[2 * n + 1]
-                = m_loopPos[2 * n + 0] + s * MidiTime::ticksPerTact();
+                = m_loopPos[2 * n + 0] + qRound(s * MidiTime::ticksPerTact());
 
         while(t > m_loopPos[2 * n + 1])
         {
-            m_loopPos[2 * n + 0] += s * MidiTime::ticksPerTact();
-            m_loopPos[2 * n + 1] += s * MidiTime::ticksPerTact();
+            m_loopPos[2 * n + 0] += qRound(s * MidiTime::ticksPerTact());
+            m_loopPos[2 * n + 1] += qRound(s * MidiTime::ticksPerTact());
         }
         while(t < m_loopPos[2 * n + 0])
         {
-            m_loopPos[2 * n + 0] -= s * MidiTime::ticksPerTact();
-            m_loopPos[2 * n + 1] -= s * MidiTime::ticksPerTact();
+            m_loopPos[2 * n + 0] -= qRound(s * MidiTime::ticksPerTact());
+            m_loopPos[2 * n + 1] -= qRound(s * MidiTime::ticksPerTact());
         }
     }
 
@@ -417,9 +418,10 @@ void TimeLineWidget::setLoopStart(int _n, int _x)
 
     MidiTime t = m_begin
                  + static_cast<int>(_x * MidiTime::ticksPerTact() / m_ppt);
-    t              = t.toNearestTact();
-    const tick_t d = qMax(m_loopPos[2 * _n + 1] - m_loopPos[2 * _n + 0],
-                          MidiTime::ticksPerTact() / 32);
+    t = t.toNearestTact();
+    const tick_t d
+            = qMax<tick_t>(m_loopPos[2 * _n + 1] - m_loopPos[2 * _n + 0],
+                           MidiTime::ticksPerTact() / 32);
     m_loopPos[2 * _n + 0] = t;
     m_loopPos[2 * _n + 1] = t + d;
 
@@ -820,8 +822,10 @@ void TimeLineWidget::mouseMoveEvent(QMouseEvent* event)
             else
                 t = t.toNearestTact();
 
-            MidiTime d = qMax(m_loopPos[2 * n + 1] - m_loopPos[2 * n + 0],
-                              MidiTime::ticksPerTact() / 32);
+            tick_t d = qMax<tick_t>(m_loopPos[2 * n + 1]
+                                            - m_loopPos[2 * n + 0],
+                                    MidiTime::ticksPerTact() / 32);
+
             m_loopPos[2 * n + 0] = t;
             m_loopPos[2 * n + 1] = t + d;
 

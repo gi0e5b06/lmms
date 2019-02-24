@@ -196,10 +196,12 @@ void organicInstrument::loadSettings(const QDomElement& _this)
     m_fx1Model.loadSettings(_this, "foldback");
 }
 
+/*
 QString organicInstrument::nodeName() const
 {
-    return (organic_plugin_descriptor.name);
+    return organic_plugin_descriptor.name;
 }
+*/
 
 void organicInstrument::playNote(NotePlayHandle* _n,
                                  sampleFrame*    _working_buffer)
@@ -507,7 +509,7 @@ void organicInstrumentView::updateKnobHint()
 }
 
 OscillatorObject::OscillatorObject(Model* _parent, int _index) :
-      Model(_parent),
+      Model(_parent, QString("organic Osc #%1").arg(_index)),
       m_waveShape(
               Oscillator::SineWave, 0, Oscillator::NumWaveShapes - 1, this),
       m_oscModel(0., 0., 5., 1., this, tr("Osc %1 waveform").arg(_index + 1)),

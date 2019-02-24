@@ -75,7 +75,7 @@ const QVector<tick_t> Editor::LENGTH_LEVELS = {
 
 void Editor::fillLengthLevels(ComboBoxModel& _cbm)
 {
-    _cbm.addItem("4/1", new PixmapLoader("note_tact"));
+    _cbm.addItem("4/1", new PixmapLoader("note_four_whole"));
     _cbm.addItem("2/1", new PixmapLoader("note_double_whole"));
     _cbm.addItem("1/1", new PixmapLoader("note_whole"));
     _cbm.addItem("1/2", new PixmapLoader("note_half"));

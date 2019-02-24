@@ -69,8 +69,13 @@ kickerInstrument::kickerInstrument(InstrumentTrack* _instrument_track) :
       m_phaseFactorModel(1., 0.125, 8., 0.001, this, tr("Phase Factor")),
       m_startNoteModel(true, this, tr("Start from note")),
       m_endNoteModel(false, this, tr("End to note")),
-      m_versionModel(
-              KICKER_PRESET_VERSION, 0, KICKER_PRESET_VERSION, this, "")
+      m_versionModel(KICKER_PRESET_VERSION,
+                     0,
+                     KICKER_PRESET_VERSION,
+                     this,
+                     "[kicker version]"),
+      m_sinBankModel(this, "Bank 1"), m_sinIndexModel(this, "Index 1"),
+      m_whnBankModel(this, "Bank 2"), m_whnIndexModel(this, "Index 2")
 {
     WaveFormStandard::fillBankModel(m_sinBankModel);
     WaveFormStandard::fillBankModel(m_whnBankModel);
@@ -180,10 +185,12 @@ void kickerInstrument::loadSettings(const QDomElement& _this)
     m_versionModel.setValue(KICKER_PRESET_VERSION);
 }
 
+/*
 QString kickerInstrument::nodeName() const
 {
     return kicker_plugin_descriptor.name;
 }
+*/
 
 typedef DspEffectLibrary::Distortion                             DistFX;
 typedef KickerOsc<DspEffectLibrary::MonoToStereoAdaptor<DistFX>> SweepOsc;

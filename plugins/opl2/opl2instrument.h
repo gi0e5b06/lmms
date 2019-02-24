@@ -47,7 +47,7 @@ class opl2instrument : public Instrument
     opl2instrument(InstrumentTrack* _instrument_track);
     virtual ~opl2instrument();
 
-    virtual QString     nodeName() const;
+    // virtual QString nodeName() const;
     virtual PluginView* instantiateView(QWidget* _parent);
 
     virtual Flags flags() const
@@ -133,8 +133,8 @@ class opl2instrument : public Instrument
     int popVoice();
     int pushVoice(int v);
 
-    int    Hz2fnum(frequency_t Hz);
-    void   setVoiceVelocity(int voice, int vel);
+    int  Hz2fnum(frequency_t Hz);
+    void setVoiceVelocity(int voice, int vel);
 
     // Pitch bend range comes through RPNs.
     int RPNcoarse, RPNfine;

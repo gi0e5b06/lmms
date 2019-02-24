@@ -1423,10 +1423,12 @@ void MonstroInstrument::loadSettings(const QDomElement& _this)
     m_sub3lfo2.loadSettings(_this, "s3l2");
 }
 
+/*
 QString MonstroInstrument::nodeName() const
 {
     return monstro_plugin_descriptor.name;
 }
+*/
 
 f_cnt_t MonstroInstrument::desiredReleaseFrames() const
 {

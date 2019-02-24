@@ -61,7 +61,7 @@ class EXPORT Effect : public Plugin
         return "effect";
     }
 
-    virtual QString nodeName() const
+    virtual QString nodeName() const final
     {
         return classNodeName();
     }

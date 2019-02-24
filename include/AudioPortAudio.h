@@ -25,87 +25,90 @@
 #ifndef AUDIO_PORTAUDIO_H
 #define AUDIO_PORTAUDIO_H
 
+#include "ComboBoxModel.h"
+#include "lmmsconfig.h"
+
 #include <QObject>
 
-#include "lmmsconfig.h"
-#include "ComboBoxModel.h"
-
-class AudioPortAudioSetupUtil : public QObject
+class AudioPortAudioSetupUtil : public Model  // QObject
 {
-	Q_OBJECT
-public slots:
-	void updateDevices();
-	void updateChannels();
+    Q_OBJECT
 
-public:
-	ComboBoxModel m_backendModel;
-	ComboBoxModel m_deviceModel;
-} ;
+  public:
+    AudioPortAudioSetupUtil() :
+          Model(nullptr, "PortAudio setup"),
+          m_backendModel(this, "PortAudio backend"),
+          m_deviceModel(this, "PortAudio device")
+    {
+    }
 
+    ComboBoxModel m_backendModel;
+    ComboBoxModel m_deviceModel;
+
+  public slots:
+    void updateDevices();
+    void updateChannels();
+};
 
 #ifdef LMMS_HAVE_PORTAUDIO
-
-#include <portaudio.h>
-
-#include <QSemaphore>
 
 #include "AudioDevice.h"
 #include "AudioDeviceSetupWidget.h"
 
-#if defined paNeverDropInput || defined paNonInterleaved
-#	define PORTAUDIO_V19
-#else
-#	define PORTAUDIO_V18
-#endif
+#include <QSemaphore>
 
+#include <portaudio.h>
+
+#if defined paNeverDropInput || defined paNonInterleaved
+#define PORTAUDIO_V19
+#else
+#define PORTAUDIO_V18
+#endif
 
 class ComboBox;
 class LcdSpinBox;
 
-
 class AudioPortAudio : public AudioDevice
 {
-public:
-	AudioPortAudio( bool & _success_ful, Mixer* mixer );
-	virtual ~AudioPortAudio();
+  public:
+    AudioPortAudio(bool& _success_ful, Mixer* mixer);
+    virtual ~AudioPortAudio();
 
-	inline static QString name()
-	{
-		return QT_TRANSLATE_NOOP( "setupWidget", "PortAudio" );
-	}
+    inline static QString name()
+    {
+        return QT_TRANSLATE_NOOP("setupWidget", "PortAudio");
+    }
 
+    int process_callback(const float*  _inputBuffer,
+                         float*        _outputBuffer,
+                         unsigned long _framesPerBuffer);
 
-	int process_callback( const float *_inputBuffer,
-		float * _outputBuffer,
-		unsigned long _framesPerBuffer );
+    class setupWidget : public AudioDeviceSetupWidget
+    {
+      public:
+        setupWidget(QWidget* _parent);
+        virtual ~setupWidget();
 
+        virtual void saveSettings();
 
-	class setupWidget : public AudioDeviceSetupWidget
-	{
-	public:
-		setupWidget( QWidget * _parent );
-		virtual ~setupWidget();
+      private:
+        ComboBox*               m_backend;
+        ComboBox*               m_device;
+        AudioPortAudioSetupUtil m_setupUtil;
+    };
 
-		virtual void saveSettings();
-
-	private:
-		ComboBox * m_backend;
-		ComboBox * m_device;
-		AudioPortAudioSetupUtil m_setupUtil;
-
-	} ;
-
-private:
-	virtual void startProcessing();
-	virtual void stopProcessing();
-	virtual void applyQualitySettings();
+  private:
+    virtual void startProcessing();
+    virtual void stopProcessing();
+    virtual void applyQualitySettings();
 
 #ifdef PORTAUDIO_V19
-	static int _process_callback( const void *_inputBuffer, void * _outputBuffer,
-		unsigned long _framesPerBuffer,
-		const PaStreamCallbackTimeInfo * _timeInfo,
-		PaStreamCallbackFlags _statusFlags,
-		void *arg );
+    static int _process_callback(const void*   _inputBuffer,
+                                 void*         _outputBuffer,
+                                 unsigned long _framesPerBuffer,
+                                 const PaStreamCallbackTimeInfo* _timeInfo,
+                                 PaStreamCallbackFlags           _statusFlags,
+                                 void*                           arg);
 
 #else
 
@@ -116,38 +119,39 @@ private:
 #define Pa_GetDefaultOutputDevice Pa_GetDefaultOutputDeviceID
 #define Pa_IsStreamActive Pa_StreamActive
 
-	static int _process_callback( void * _inputBuffer, void * _outputBuffer,
-		unsigned long _framesPerBuffer, PaTimestamp _outTime, void * _arg );
+    static int _process_callback(void*         _inputBuffer,
+                                 void*         _outputBuffer,
+                                 unsigned long _framesPerBuffer,
+                                 PaTimestamp   _outTime,
+                                 void*         _arg);
 
+    typedef double     PaTime;
+    typedef PaDeviceID PaDeviceIndex;
 
-	typedef double PaTime;
-	typedef PaDeviceID PaDeviceIndex;
+    typedef struct PaStreamParameters
+    {
+        PaDeviceIndex  device;
+        int            channelCount;
+        PaSampleFormat sampleFormat;
+        PaTime         suggestedLatency;
+        void*          hostApiSpecificStreamInfo;
 
-	typedef struct PaStreamParameters
-	{
-		PaDeviceIndex device;
-		int channelCount;
-		PaSampleFormat sampleFormat;
-		PaTime suggestedLatency;
-		void *hostApiSpecificStreamInfo;
-
-	} PaStreamParameters;
+    } PaStreamParameters;
 #endif
 
-	PaStream * m_paStream;
-	PaStreamParameters m_outputParameters;
-	PaStreamParameters m_inputParameters;
+    PaStream*          m_paStream;
+    PaStreamParameters m_outputParameters;
+    PaStreamParameters m_inputParameters;
 
-	bool m_wasPAInitError;
+    bool m_wasPAInitError;
 
-	surroundSampleFrame * m_outBuf;
-	int m_outBufPos;
-	int m_outBufSize;
+    surroundSampleFrame* m_outBuf;
+    int                  m_outBufPos;
+    int                  m_outBufSize;
 
-	bool m_stopped;
-	QSemaphore m_stopSemaphore;
-
-} ;
+    bool       m_stopped;
+    QSemaphore m_stopSemaphore;
+};
 
 #endif
 

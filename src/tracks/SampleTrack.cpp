@@ -86,7 +86,7 @@ const char* STVOLHELP = QT_TRANSLATE_NOOP("SampleTrack",
                                           "channel.");
 
 SampleTCO::SampleTCO(Track* _track) :
-      TrackContentObject(_track), m_initialPlayTick(0),
+      TrackContentObject(_track, "Sample tile"), m_initialPlayTick(0),
       m_sampleBuffer(new SampleBuffer()), m_isPlaying(false)
 {
     saveJournallingState(false);
@@ -102,7 +102,7 @@ SampleTCO::SampleTCO(Track* _track) :
 }
 
 SampleTCO::SampleTCO(const SampleTCO& _other) :
-      TrackContentObject(_other.getTrack()),
+      TrackContentObject(_other.getTrack(), _other.displayName()),
       m_initialPlayTick(_other.m_initialPlayTick),
       m_sampleBuffer(new SampleBuffer(*_other.m_sampleBuffer)),
       m_isPlaying(false)
@@ -138,6 +138,68 @@ QString SampleTCO::defaultName() const
 {
     QString r = m_sampleBuffer->audioFile();
     return r.isEmpty() ? getTrack()->name() : r;
+}
+
+void SampleTCO::resizeLeft(const MidiTime& pos, const MidiTime& len)
+{
+    const MidiTime& sp = startPosition();
+
+    MidiTime np = pos;
+    tick_t   dp = sp - pos;
+    tick_t   it = initialPlayTick();
+
+    if(it >= dp)
+    {
+        it -= dp;
+    }
+    else
+    {
+        np = sp - it;
+        it = 0;
+    }
+
+    setInitialPlayTick(it);
+    TrackContentObject::resizeLeft(np, len);
+}
+
+void SampleTCO::split(tick_t _ticks)
+{
+    qInfo("SampleTCO::split %d ticks", _ticks);
+    Track* t = track();
+    if(t == nullptr)
+    {
+        qWarning("SampleTCO::split track is null");
+        return;
+    }
+
+    bool     first = true;
+    MidiTime sp    = startPosition();
+    MidiTime ep    = endPosition();
+    tick_t   it    = initialPlayTick();
+    int      n     = 1;
+    while(sp < ep)
+    {
+        if(first)
+        {
+            t->addJournalCheckPoint();
+            first = false;
+        }
+
+        SampleTCO* newp = new SampleTCO(*this);
+        newp->setJournalling(false);
+        newp->setAutoResize(false);
+        newp->setInitialPlayTick(it);
+        newp->movePosition(sp);
+        newp->changeLength(_ticks);
+        newp->setName(QString::number(n));
+        newp->setJournalling(true);
+        newp->emit dataChanged();
+
+        sp += _ticks;
+        it += _ticks;
+        n++;
+    }
+    deleteLater();  // t->removeTCO(this);
 }
 
 void SampleTCO::doConnections()
@@ -473,6 +535,12 @@ QMenu* SampleTCOView::buildContextMenu()
         addStepMenu(cm, m_tco->length() >= MidiTime::ticksPerTact(), true,
                     true);
     }
+    else
+    {
+        cm->addSeparator();
+        addSplitMenu(cm, m_tco->length() > MidiTime::ticksPerTact(),
+                     m_tco->length() > 4 * MidiTime::ticksPerTact());
+    }
 
     cm->addSeparator();
     a = cm->addAction(embed::getIconPixmap("sample_file"), tr("Load sample"),
@@ -650,7 +718,11 @@ void SampleTCOView::paintEvent(QPaintEvent* pe)
                 x0, spacing,
                 qMax(static_cast<int>(m_tco->sampleLength() * ppTick), 1),
                 rect().bottom() - 2 * spacing);
-        m_tco->m_sampleBuffer->visualize(p, r);  //, pe->rect() );
+
+        f_cnt_t fstart = m_tco->initialPlayTick() * Engine::framesPerTick();
+        f_cnt_t fend   = m_tco->m_sampleBuffer->frames() - fstart;
+        // m_tco->m_sampleBuffer->visualize(p, r);  //, pe->rect() );
+        m_tco->m_sampleBuffer->visualize(p, r, r, fstart, fend);
 
         if(!m_tco->autoRepeat())
             break;
@@ -663,10 +735,13 @@ void SampleTCOView::paintEvent(QPaintEvent* pe)
 
     paintTileTacts(false, m_tco->length().nextFullTact(), 1, bgcolor, p);
 
-    // TODO: use m_name
-    QFileInfo fileInfo(m_tco->m_sampleBuffer->audioFile());
-    QString   filename = fileInfo.fileName();
-    paintTextLabel(filename, bgcolor, p);
+    QString name = m_tco->name();
+    if(name.isEmpty() && !m_tco->m_sampleBuffer->audioFile().isEmpty())
+    {
+        QFileInfo fileInfo(m_tco->m_sampleBuffer->audioFile());
+        name = fileInfo.fileName();
+    }
+    paintTextLabel(name, bgcolor, p);
 
     // disable antialiasing for borders, since its not needed
     // p.setRenderHint( QPainter::Antialiasing, false );
@@ -924,6 +999,7 @@ qInfo("sampleStart=%d samplePlayLength=%d",
 
             handle->setOffset(_offset);
             // send it to the mixer
+            handle->setAffinity(Engine::mixer()->thread());
             Engine::mixer()->addPlayHandle(handle);
             played_a_note = true;
         }

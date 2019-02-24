@@ -46,9 +46,7 @@
 class QPainter;
 class QRect;
 
-class EXPORT SampleBuffer
-      : public QObject
-      , public sharedObject
+class EXPORT SampleBuffer : public QObject, public sharedObject
 {
     Q_OBJECT
     MM_OPERATORS
@@ -102,7 +100,7 @@ class EXPORT SampleBuffer
         const bool m_varyingPitch;
         int        m_quality;
         bool       m_isBackwards;
-        //SRC_STATE* m_resamplingData;
+        // SRC_STATE* m_resamplingData;
 
         friend class SampleBuffer;
     };
@@ -128,16 +126,12 @@ class EXPORT SampleBuffer
               const bool        _released        = false,
               const LoopMode    _releaseLoopmode = LoopOff);
 
+    void visualize(QPainter& _p, const QRect& _dr);
     void visualize(QPainter&    _p,
                    const QRect& _dr,
                    const QRect& _clip,
                    f_cnt_t      _from_frame,
                    f_cnt_t      _to_frame);
-
-    inline void visualize(QPainter& _p, const QRect& _dr)
-    {
-        visualize(_p, _dr, _dr, 0, m_frames);
-    }
 
     inline const QString& audioFile() const
     {
@@ -341,8 +335,8 @@ class EXPORT SampleBuffer
     f_cnt_t        m_loopStartFrame;
     f_cnt_t        m_loopEndFrame;
     real_t         m_stretching;
-    real_t         m_predelay; // ms
-    real_t         m_postdelay; // ms
+    real_t         m_predelay;   // ms
+    real_t         m_postdelay;  // ms
     real_t         m_amplification;
     bool           m_reversed;
     frequency_t    m_frequency;

@@ -25,76 +25,69 @@
 #ifndef SERIALIZING_OBJECT_H_
 #define SERIALIZING_OBJECT_H_
 
-#include <QString>
-
 #include "export.h"
+#include "lmms_basics.h"
 
+#include <QString>
 
 class QDomDocument;
 class QDomElement;
 
 class SerializingObjectHook;
 
-
 class EXPORT SerializingObject
 {
-public:
-	SerializingObject();
-	virtual ~SerializingObject();
+  public:
+    SerializingObject();
+    virtual ~SerializingObject();
 
-	virtual QDomElement saveState( QDomDocument & _doc, QDomElement & _parent );
+    virtual QDomElement saveState(QDomDocument& _doc, QDomElement& _parent);
 
-	virtual void restoreState( const QDomElement & _this );
+    virtual void restoreState(const QDomElement& _this);
 
+    // to be implemented by actual object
+    virtual QString nodeName() const = 0;
 
-	// to be implemented by actual object
-	virtual QString nodeName() const = 0;
+    void setHook(SerializingObjectHook* _hook);
 
-	void setHook( SerializingObjectHook * _hook );
+    SerializingObjectHook* hook()
+    {
+        return m_hook;
+    }
 
-	SerializingObjectHook* hook()
-	{
-		return m_hook;
-	}
+  protected:
+    // to be implemented by sub-objects
+    virtual void saveSettings(QDomDocument& doc, QDomElement& element) = 0;
+    virtual void loadSettings(const QDomElement& element)              = 0;
 
+    static QString formatNumber(real_t _v);
 
-protected:
-	// to be implemented by sub-objects
-	virtual void saveSettings( QDomDocument& doc, QDomElement& element ) = 0;
-	virtual void loadSettings( const QDomElement& element ) = 0;
-
-
-private:
-	SerializingObjectHook * m_hook;
-
-} ;
-
+  private:
+    SerializingObjectHook* m_hook;
+};
 
 class SerializingObjectHook
 {
-public:
-	SerializingObjectHook() :
-		m_hookedIn( NULL )
-	{
-	}
-	virtual ~SerializingObjectHook()
-	{
-		if( m_hookedIn != NULL )
-		{
-			m_hookedIn->setHook( NULL );
-		}
-	}
+  public:
+    SerializingObjectHook() : m_hookedIn(NULL)
+    {
+    }
 
-	virtual void saveSettings( QDomDocument & _doc, QDomElement & _this ) = 0;
-	virtual void loadSettings( const QDomElement & _this ) = 0;
+    virtual ~SerializingObjectHook()
+    {
+        if(m_hookedIn != NULL)
+        {
+            m_hookedIn->setHook(NULL);
+        }
+    }
 
-private:
-	SerializingObject * m_hookedIn;
+    virtual void saveSettings(QDomDocument& _doc, QDomElement& _this) = 0;
+    virtual void loadSettings(const QDomElement& _this)               = 0;
 
-	friend class SerializingObject;
+  private:
+    SerializingObject* m_hookedIn;
 
-} ;
-
+    friend class SerializingObject;
+};
 
 #endif
-

@@ -33,7 +33,7 @@
 //#include <QObject>
 
 LfoController::LfoController( Model * _parent ) :
-	Controller( Controller::LfoController, _parent, tr( "LFO" ) ),
+	Controller( Controller::LfoController, _parent, tr( "LFO Controller" ) ),
 	m_baseModel( 0.5, 0.0, 1.0, 0.001, this, tr( "Base value" ) ),
 	m_speedModel( 2.0, 0.01, 20.0, 0.0001, 20000.0, this, tr( "Oscillator speed" ) ),
 	m_amountModel( 1.0, -1.0, 1.0, 0.005, this, tr( "Oscillator amount" ) ),

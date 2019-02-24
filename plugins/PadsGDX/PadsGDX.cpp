@@ -221,10 +221,12 @@ void PadsGDX::loadFile(const QString& _file)
     setAudioFile(_file);
 }
 
+/*
 QString PadsGDX::nodeName(void) const
 {
     return padsgdx_plugin_descriptor.name;
 }
+*/
 
 int PadsGDX::getBeatLen(NotePlayHandle* _n) const
 {

@@ -58,7 +58,7 @@ LedCheckBox::LedCheckBox(QWidget*       _parent,
 }
 
 LedCheckBox::LedCheckBox(QWidget* _parent, LedColors _color) :
-      LedCheckBox("", _parent, QString::null, _color)
+      LedCheckBox("", _parent, "[led checkbox]", _color)
 {
 }
 

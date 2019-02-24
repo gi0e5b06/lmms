@@ -26,13 +26,13 @@
 #ifndef INSTRUMENT_H
 #define INSTRUMENT_H
 
-#include <QObject>
-#include <QString>
-
+#include "InstrumentTrack.h"
+#include "Plugin.h"
 #include "export.h"
 #include "lmms_basics.h"
 
-#include "Plugin.h"
+#include <QObject>
+#include <QString>
 //#include "Engine.h"
 //#include "Mixer.h"
 //#include "AutomatableModel.h"
@@ -40,165 +40,177 @@
 #include "MemoryManager.h"
 #include "MidiTime.h"
 
-
 // forward-declarations
-class InstrumentTrack;
+// class InstrumentTrack;
 class MidiEvent;
 class NotePlayHandle;
 class Track;
 
-
 class EXPORT Instrument : public Plugin
 {
-        Q_OBJECT
-	MM_OPERATORS
+    Q_OBJECT
+    MM_OPERATORS
 
- public:
-	enum Flag
-	{
-		NoFlags = 0x00,
-		IsSingleStreamed = 0x01, /*! Instrument provides a single audio stream for all notes */
-		IsMidiBased = 0x02,      /*! Instrument is controlled by MIDI events rather than NotePlayHandles */
-		IsNotBendable = 0x04,    /*! Instrument can't react to pitch bend changes */
-                IsMonophonic = 0x08,     /*! All channels have the same stream */
-	};
+  public:
+    enum Flag
+    {
+        NoFlags = 0x00,
+        IsSingleStreamed
+        = 0x01, /*! Instrument provides a single audio stream for all notes */
+        IsMidiBased = 0x02, /*! Instrument is controlled by MIDI events rather
+                               than NotePlayHandles */
+        IsNotBendable
+        = 0x04, /*! Instrument can't react to pitch bend changes */
+        IsMonophonic = 0x08, /*! All channels have the same stream */
+    };
 
-	Q_DECLARE_FLAGS(Flags, Flag);
+    Q_DECLARE_FLAGS(Flags, Flag);
 
-	Instrument( InstrumentTrack * _instrument_track,
-					const Descriptor * _descriptor );
-	virtual ~Instrument();
+    Instrument(InstrumentTrack*  _instrument_track,
+               const Descriptor* _descriptor);
+    virtual ~Instrument();
 
-	// --------------------------------------------------------------------
-	// functions that can/should be re-implemented:
-	// --------------------------------------------------------------------
+    // --------------------------------------------------------------------
+    // functions that can/should be re-implemented:
+    // --------------------------------------------------------------------
 
-	// if the plugin doesn't play each note, it can create an instrument-
-	// play-handle and re-implement this method, so that it mixes its
-	// output buffer only once per mixer-period
-	virtual void play( sampleFrame * _working_buffer );
+    // if the plugin doesn't play each note, it can create an instrument-
+    // play-handle and re-implement this method, so that it mixes its
+    // output buffer only once per mixer-period
+    virtual void play(sampleFrame* _working_buffer);
 
-	// to be implemented by actual plugin
-	virtual void playNote( NotePlayHandle * /* _note_to_play */,
-					sampleFrame * /* _working_buf */ )
-	{
-	}
+    // to be implemented by actual plugin
+    virtual void playNote(NotePlayHandle* /* _note_to_play */,
+                          sampleFrame* /* _working_buf */)
+    {
+    }
 
-	// needed for deleting plugin-specific-data of a note - plugin has to
-	// cast void-ptr so that the plugin-data is deleted properly
-	// (call of dtor if it's a class etc.)
-	virtual void deleteNotePluginData( NotePlayHandle * _note_to_play );
+    // needed for deleting plugin-specific-data of a note - plugin has to
+    // cast void-ptr so that the plugin-data is deleted properly
+    // (call of dtor if it's a class etc.)
+    virtual void deleteNotePluginData(NotePlayHandle* _note_to_play);
 
-	// Get number of sample-frames that should be used when playing beat
-	// (note with unspecified length)
-	// Per default this function returns 0. In this case, channel is using
-	// the length of the longest envelope (if one active).
-	virtual f_cnt_t beatLen( NotePlayHandle * _n ) const;
+    // Get number of sample-frames that should be used when playing beat
+    // (note with unspecified length)
+    // Per default this function returns 0. In this case, channel is using
+    // the length of the longest envelope (if one active).
+    virtual f_cnt_t beatLen(NotePlayHandle* _n) const;
 
+    // some instruments need a certain number of release-frames even
+    // if no envelope is active - such instruments can re-implement this
+    // method for returning how many frames they at least like to have for
+    // release
+    virtual f_cnt_t desiredReleaseFrames() const
+    {
+        return 0;
+    }
 
-	// some instruments need a certain number of release-frames even
-	// if no envelope is active - such instruments can re-implement this
-	// method for returning how many frames they at least like to have for
-	// release
-	virtual f_cnt_t desiredReleaseFrames() const
-	{
-		return 0;
-	}
+    // convenient accessors
+    inline virtual bool isBendable() const final
+    {
+        return !flags().testFlag(Instrument::IsNotBendable);
+    }
+    inline virtual bool isMidiBased() const final
+    {
+        return flags().testFlag(Instrument::IsMidiBased);
+    }
+    inline virtual bool isMonophonic() const final
+    {
+        return flags().testFlag(Instrument::IsMonophonic);
+    }
+    inline virtual bool isSingleStreamed() const final
+    {
+        return flags().testFlag(Instrument::IsSingleStreamed);
+    }
 
-        // convenient accessors
-        inline virtual bool isBendable() const final
-        {
-                return !flags().testFlag(Instrument::IsNotBendable);
-        }
-        inline virtual bool isMidiBased() const final
-        {
-                return flags().testFlag(Instrument::IsMidiBased);
-        }
-        inline virtual bool isMonophonic() const final
-        {
-                return flags().testFlag(Instrument::IsMonophonic);
-        }
-        inline virtual bool isSingleStreamed() const final
-        {
-                return flags().testFlag(Instrument::IsSingleStreamed);
-        }
+    // sub-classes can re-implement this for receiving all incoming
+    // MIDI-events
+    inline virtual bool handleMidiEvent(const MidiEvent&,
+                                        const MidiTime& = MidiTime(),
+                                        f_cnt_t offset  = 0)
+    {
+        return true;
+    }
 
-	// sub-classes can re-implement this for receiving all incoming
-	// MIDI-events
-	inline virtual bool handleMidiEvent( const MidiEvent&, const MidiTime& = MidiTime(), f_cnt_t offset = 0 )
-	{
-		return true;
-	}
+    virtual QString nodeName() const final
+    {
+        const Descriptor* d = descriptor();
+        return (d == nullptr) ? "dummyinstrument" : d->name();
+    }
 
-	virtual QString fullDisplayName() const;
+    virtual QString fullDisplayName() const;
 
+    // !!! GDX added methods like for an effect
 
-        // !!! GDX added methods like for an effect
+    inline ch_cnt_t processorCount() const
+    {
+        return 1;
+    }
 
-	inline ch_cnt_t processorCount() const
-	{
-		return 1;
-	}
+    // should be replaced by Runnable
+    inline bool dontRun() const
+    {
+        return m_noRun;
+    }
 
-	// should be replaced by Runnable
-	inline bool dontRun() const
-	{
-		return m_noRun;
-	}
+    inline void setDontRun(bool _state)
+    {
+        m_noRun = _state;
+    }
 
-	inline void setDontRun( bool _state )
-	{
-		m_noRun = _state;
-	}
+    inline bool isOkay() const
+    {
+        return m_okay;
+    }
 
-        inline bool isOkay() const
-	{
-		return m_okay;
-	}
+    inline void setOkay(bool _state)
+    {
+        m_okay = _state;
+    }
 
-	inline void setOkay( bool _state )
-	{
-		m_okay = _state;
-	}
+    // --------------------------------------------------------------------
+    // provided functions:
+    // --------------------------------------------------------------------
 
-	// --------------------------------------------------------------------
-	// provided functions:
-	// --------------------------------------------------------------------
+    // instantiate instrument-plugin with given name or return NULL
+    // on failure
+    static Instrument* instantiate(const QString&   _plugin_name,
+                                   InstrumentTrack* _instrument_track);
 
-	// instantiate instrument-plugin with given name or return NULL
-	// on failure
-	static Instrument * instantiate( const QString & _plugin_name,
-                                         InstrumentTrack * _instrument_track );
+    virtual bool isFromTrack(const Track* _track) const final;
 
-	virtual bool isFromTrack( const Track * _track ) const final;
+    inline InstrumentTrack* instrumentTrack() const
+    {
+        return m_instrumentTrack;
+    }
 
-	inline InstrumentTrack * instrumentTrack() const
-	{
-		return m_instrumentTrack;
-	}
+    virtual bool hasCableFrom(Model* _m) const
+    {
+        return _m != nullptr && _m == dynamic_cast<Model*>(m_instrumentTrack);
+    }
 
- signals:
-        // none
+  signals:
+    // none
 
- public slots:
-         // none
+  public slots:
+    // none
 
-protected:
-	// instruments may use this to apply a soft fade out at the end of
-	// notes - method does this only if really less or equal
-	// desiredReleaseFrames() frames are left
-	void applyRelease( sampleFrame * buf, const NotePlayHandle * _n );
+  protected:
+    // instruments may use this to apply a soft fade out at the end of
+    // notes - method does this only if really less or equal
+    // desiredReleaseFrames() frames are left
+    void applyRelease(sampleFrame* buf, const NotePlayHandle* _n);
 
-	virtual Flags flags() const
-	{
-		return NoFlags;
-	}
+    virtual Flags flags() const
+    {
+        return NoFlags;
+    }
 
-private:
-	InstrumentTrack * m_instrumentTrack;
-        bool m_okay;
-	bool m_noRun;
-} ;
+  private:
+    InstrumentTrack* m_instrumentTrack;
+    bool             m_okay;
+    bool             m_noRun;
+};
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(Instrument::Flags)
 

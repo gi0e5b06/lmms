@@ -251,7 +251,7 @@ public:
 
 	virtual AutomatableModel * childModel( const QString & _modelName );
 
-	virtual QString nodeName() const;
+	//virtual QString nodeName() const;
 
         /* 0 0 is the default
 	virtual f_cnt_t desiredReleaseFrames() const

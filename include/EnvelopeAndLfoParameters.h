@@ -90,7 +90,9 @@ class EXPORT EnvelopeAndLfoParameters : public Model, public JournallingObject
                    f_cnt_t       _frame,
                    const f_cnt_t _release_begin,
                    const fpp_t   _frames,
-                   const bool    _legato);
+                   const bool    _legato,
+                   const bool    _marcato,
+                   const bool    _staccato);
 
     inline bool isUsed() const
     {
@@ -113,6 +115,9 @@ class EXPORT EnvelopeAndLfoParameters : public Model, public JournallingObject
     {
         return m_rFrames;
     }
+
+  signals:
+    void sendOut(const ValueBuffer* _v);
 
   public slots:
     void updateSampleVars();
@@ -153,8 +158,10 @@ class EXPORT EnvelopeAndLfoParameters : public Model, public JournallingObject
     ComboBoxModel m_lfoWaveBankModel;
     ComboBoxModel m_lfoWaveIndexModel;
 
-    BoolModel m_x100Model;
-    BoolModel m_controlEnvAmountModel;
+    BoolModel   m_x100Model;
+    BoolModel   m_controlEnvAmountModel;
+    FloatModel  m_outModel;
+    ValueBuffer m_outBuffer;
 
     f_cnt_t      m_lfoPredelayFrames;
     f_cnt_t      m_lfoAttackFrames;

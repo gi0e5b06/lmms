@@ -183,8 +183,8 @@ void RenderManager::renderTracks()
     // find all currently unnmuted tracks -- we want to render these.
     for(auto it = tl.begin(); it != tl.end(); ++it)
     {
-        Track*            tk   = (*it);
-        Track::TrackTypes type = tk->type();
+        Track*           tk   = (*it);
+        Track::TrackType type = tk->type();
 
         // Don't mute automation tracks
         if(tk->isMuted() == false

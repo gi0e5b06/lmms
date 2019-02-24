@@ -171,8 +171,8 @@ void Expressive::loadSettings(const QDomElement& _this)
     m_panning2.loadSettings(_this, "PAN2");
     m_relTransition.loadSettings(_this, "RELTRANS");
 
-    FLOAT* dst  = nullptr;
-    
+    FLOAT* dst = nullptr;
+
     base64::decodeFloats(_this.attribute("W1sample"), &dst);
     m_rawgraphW1.setSamples(dst);
     delete[] dst;
@@ -193,10 +193,12 @@ void Expressive::loadSettings(const QDomElement& _this)
     m_W3.copyFrom(&m_graphW3);
 }
 
+/*
 QString Expressive::nodeName() const
 {
-    return (xpressive_plugin_descriptor.name);
+    return xpressive_plugin_descriptor.name;
 }
+*/
 
 void Expressive::playNote(NotePlayHandle* nph, sampleFrame* working_buffer)
 {
