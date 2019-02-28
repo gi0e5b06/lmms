@@ -307,9 +307,13 @@ class PianoRoll : public QWidget
     void shiftSemiTone(int amount);
     bool isSelection() const;
     int  selectionCount() const;
-    void testPlayNote(Note* n);
-    void testPlayKey(int _key, int _vol, int _pan);
-    void pauseTestNotes(bool pause = true);
+    void playTestNote(Note* n);
+    void stopTestNote(Note* n);
+    void stopTestNotes();
+    void playTestKey(int _midiKey, int _midiVelocity, int _midiPanning);
+    void stopTestKey();
+    void suspendTestNotes();
+    void resumeTestNotes();
 
     QList<int> getAllOctavesForKey(int keyToMirror) const;
 

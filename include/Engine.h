@@ -146,8 +146,9 @@ class EXPORT LmmsCore : public QObject
     static inline void deleteHelper(T** ptr)
     {
         T* tmp = *ptr;
-        *ptr   = NULL;
-        delete tmp;
+        *ptr   = nullptr;
+        if(tmp != nullptr)
+            delete tmp;
     }
 
     static real_t s_framesPerTick;

@@ -28,16 +28,16 @@
 #include "DummyInstrument.h"
 #include "InstrumentTrack.h"
 
-Instrument::Instrument(InstrumentTrack*  _instrument_track,
+Instrument::Instrument(InstrumentTrack*  _instrumentTrack,
                        const Descriptor* _descriptor) :
-      Plugin(_descriptor, NULL /* _instrument_track*/),
-      m_instrumentTrack(_instrument_track), m_okay(true), m_noRun(false)
+      Plugin(_descriptor, NULL /* _instrumentTrack*/),
+      m_instrumentTrack(_instrumentTrack), m_okay(true), m_noRun(false)
 {
 }
 
 Instrument::~Instrument()
 {
-    // qInfo("Instrument::~Instrument");
+    qInfo("Instrument::~Instrument [%s]", qPrintable(displayName()));
     m_instrumentTrack = nullptr;
 }
 

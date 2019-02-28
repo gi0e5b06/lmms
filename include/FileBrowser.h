@@ -28,6 +28,7 @@
 #include "SideBarWidget.h"
 
 #include <QDir>
+#include <QLabel>
 #include <QMutex>
 #include <QTreeWidget>
 
@@ -53,6 +54,9 @@ class FileBrowser : public SideBarWidget
                 bool           recurse       = false);
     virtual ~FileBrowser();
 
+  public slots:
+    void updateInfo(QString _s);
+
   private slots:
     void reloadTree();
     void expandItems(QTreeWidgetItem* _item = nullptr, bool _all = false);
@@ -67,8 +71,8 @@ class FileBrowser : public SideBarWidget
     void addItems(const QString& path);
 
     FileBrowserTreeWidget* m_fileBrowserTreeWidget;
-
-    QLineEdit* m_filterEdit;
+    QLineEdit*             m_filterEdit;
+    QLabel*                m_infoBox;
 
     QString m_directories;
     QString m_filter;
@@ -80,12 +84,16 @@ class FileBrowser : public SideBarWidget
 class FileBrowserTreeWidget : public QTreeWidget
 {
     Q_OBJECT
+
   public:
     FileBrowserTreeWidget(QWidget* parent);
     virtual ~FileBrowserTreeWidget();
 
   public slots:
     void onPlayHandleDeleted(PlayHandle* handle);
+
+  signals:
+    void sendInfo(QString _s);
 
   protected:
     virtual void contextMenuEvent(QContextMenuEvent* e);

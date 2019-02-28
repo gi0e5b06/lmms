@@ -1,7 +1,7 @@
 /*
  * kicker.cpp - drum synthesizer
  *
- * Copyright (c) 2018      gi0e5b06 (on github.com)
+ * Copyright (c) 2018-2019 gi0e5b06 (on github.com)
  * Copyright (c) 2014      grejppi <grejppi/at/gmail.com>
  * Copyright (c) 2006-2009 Tobias Doerffel <tobydox/at/users.sourceforge.net>
  *
@@ -26,6 +26,7 @@
 
 #include "kicker.h"
 
+#include "Backtrace.h"
 #include "Engine.h"
 #include "InstrumentTrack.h"
 #include "KickerOsc.h"
@@ -49,8 +50,8 @@ extern "C"
             0x0100,
             Plugin::Instrument,
             new PluginPixmapLoader("logo"),
-            NULL,
-            NULL};
+            nullptr,
+            nullptr};
 }
 
 kickerInstrument::kickerInstrument(InstrumentTrack* _instrument_track) :
@@ -196,7 +197,7 @@ typedef DspEffectLibrary::Distortion                             DistFX;
 typedef KickerOsc<DspEffectLibrary::MonoToStereoAdaptor<DistFX>> SweepOsc;
 
 void kickerInstrument::playNote(NotePlayHandle* _n,
-                                sampleFrame*    _working_buffer)
+                                sampleFrame*    _workingBuffer)
 {
     const fpp_t   frames = _n->framesLeftForCurrentPeriod();
     const f_cnt_t offset = _n->noteOffset();
@@ -230,11 +231,22 @@ void kickerInstrument::playNote(NotePlayHandle* _n,
     // if(!_n->isReleased())
     {
         SweepOsc* so = static_cast<SweepOsc*>(_n->m_pluginData);
-        if(!so)
-            qWarning("kickerInstrument::playNote null pluginData");
-        else
-            so->update(_working_buffer + offset, frames,
+        if(so != nullptr)
+        {
+            so->update(_workingBuffer + offset, frames,
                        Engine::mixer()->processingSampleRate());
+        }
+        /*
+        else
+        {
+            qWarning(
+                    "kickerInstrument::playNote null pluginData"
+                    " isReleased=%d isFinished=%d frames=%d (tfp > decfr)=%d "
+                    "left=%d",
+                    _n->isReleased(), _n->isFinished(), frames, (tfp > decfr),
+                    _n->framesLeft());
+        }
+        */
     }
 
     if(_n->isReleased())
@@ -246,22 +258,29 @@ void kickerInstrument::playNote(NotePlayHandle* _n,
             const real_t fac = (done + real_t(f) < desired)
                                        ? (1. - ((done + real_t(f)) / desired))
                                        : 0.;
-            _working_buffer[f + offset][0] *= fac;
-            _working_buffer[f + offset][1] *= fac;
+            _workingBuffer[f + offset][0] *= fac;
+            _workingBuffer[f + offset][1] *= fac;
         }
     }
 
-    instrumentTrack()->processAudioBuffer(_working_buffer, frames + offset,
+    instrumentTrack()->processAudioBuffer(_workingBuffer, frames + offset,
                                           _n);
 }
 
 void kickerInstrument::deleteNotePluginData(NotePlayHandle* _n)
 {
     SweepOsc* so = static_cast<SweepOsc*>(_n->m_pluginData);
-    if(so)
+    if(so != nullptr)
     {
+        /*
+        const f_cnt_t tfp = _n->totalFramesPlayed();
+        qWarning(
+                "kickerInstrument::deleteNotePluginData null pluginData"
+                " isReleased=%d isFinished=%d tfp=%d left=%d",
+                _n->isReleased(), _n->isFinished(), tfp, _n->framesLeft());
+        */
         delete so;
-        _n->m_pluginData = NULL;
+        _n->m_pluginData = nullptr;
     }
 }
 
@@ -363,10 +382,12 @@ kickerInstrumentView::kickerInstrumentView(Instrument* _instrument,
     m_distEndKnob->setHintText(tr("Distortion End:"), "");
     m_distEndKnob->move(COL5, ROW2);
 
-    m_startNoteToggle = new LedCheckBox("", this, "", LedCheckBox::Green);
+    m_startNoteToggle = new LedCheckBox("", this, "[kicker start note]",
+                                        LedCheckBox::Green);
     m_startNoteToggle->move(COL1 + 8, LED_ROW);
 
-    m_endNoteToggle = new LedCheckBox("", this, "", LedCheckBox::Green);
+    m_endNoteToggle = new LedCheckBox("", this, "[kicker end note]",
+                                      LedCheckBox::Green);
     m_endNoteToggle->move(END_COL + 8, LED_ROW);
 
     m_sinBankCMB  = new ComboBox(this);

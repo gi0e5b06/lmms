@@ -82,7 +82,7 @@ IF("${PLUGIN_LIST}" STREQUAL "")
 		# ladspa_browser - not needed
 		LadspaEffect
 		lb302
-                lvst2instrument
+                # lvst2instrument
                 # MatrixGDX
 		MidiImport
 		MidiExport

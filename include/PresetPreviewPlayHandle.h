@@ -43,14 +43,15 @@ class EXPORT PresetPreviewPlayHandle : public QObject, public PlayHandle
                             DataFile*      dataFile     = 0);
     virtual ~PresetPreviewPlayHandle();
 
+    /*
     virtual inline bool affinityMatters() const
     {
         return true;
     }
+    */
 
     virtual void play(sampleFrame* buffer);
     virtual bool isFinished() const;
-
     virtual bool isFromTrack(const Track* _track) const;
 
     static void init();

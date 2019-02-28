@@ -3,21 +3,41 @@
 
 #include <QList>
 #include <QMutex>
-//#include <functional>
+
+#include <functional>
 
 template <class T>
 class SafeList
 {
   public:
+    SafeList()
+    {
+    }
+
+    SafeList(const SafeList<T>& _other) : m_list(_other.m_list)
+    {
+    }
+
     void append(T _e)
     {
         QMutexLocker lock(&m_mutex);
         m_list.append(_e);
     }
+    void appendUnique(T _e)
+    {
+        QMutexLocker lock(&m_mutex);
+        if(!m_list.contains(_e))
+            m_list.append(_e);
+    }
     void clear()
     {
         QMutexLocker lock(&m_mutex);
         m_list.clear();
+    }
+    bool contains(T _e) const
+    {
+        QMutexLocker lock(const_cast<QMutex*>(&m_mutex));
+        return m_list.contains(_e);
     }
     bool isEmpty() const
     {
@@ -66,11 +86,13 @@ class SafeList
             _f(e);
     }
     */
-    void map(const std::function<void(T)>& _f)
+    void map(const std::function<void(T)>& _f, bool _clear = false)
     {
         QMutexLocker lock(&m_mutex);
         for(T e: m_list)
             _f(e);
+        if(_clear)
+            m_list.clear();
     }
 
   private:

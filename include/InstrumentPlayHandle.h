@@ -36,7 +36,7 @@ class EXPORT InstrumentPlayHandle : public PlayHandle
     MM_OPERATORS
 
   public:
-            //BasicFilters<>* m_filter;
+    // BasicFilters<>* m_filter;
 
     InstrumentPlayHandle(Instrument*      instrument,
                          InstrumentTrack* instrumentTrack);
@@ -62,7 +62,8 @@ class EXPORT InstrumentPlayHandle : public PlayHandle
     */
 
   private:
-    Instrument* m_instrument;
+    Instrument*      m_instrument;
+    InstrumentTrack* m_track;
 };
 
 #endif

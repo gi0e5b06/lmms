@@ -301,6 +301,8 @@ class AutomationEditorWindow : public Editor
     AutomationEditorWindow();
     ~AutomationEditorWindow();
 
+    void reset();
+
     void                     setCurrentPattern(AutomationPattern* pattern);
     const AutomationPattern* currentPattern();
 

@@ -436,7 +436,7 @@ TripleOscillatorView::TripleOscillatorView(Instrument* _instrument,
                                  "modulating oscillator 1 with "
                                  "oscillator 2"));
 
-    m_mod1BtnGrp = new automatableButtonGroup(this);
+    m_mod1BtnGrp = new automatableButtonGroup(this, "[modulation 1]");
     m_mod1BtnGrp->addButton(pm_osc1_btn);
     m_mod1BtnGrp->addButton(am_osc1_btn);
     m_mod1BtnGrp->addButton(mix_osc1_btn);
@@ -486,7 +486,7 @@ TripleOscillatorView::TripleOscillatorView(Instrument* _instrument,
                                  "modulating oscillator 2 with "
                                  "oscillator 3"));
 
-    m_mod2BtnGrp = new automatableButtonGroup(this);
+    m_mod2BtnGrp = new automatableButtonGroup(this, "[modulation 2]");
 
     m_mod2BtnGrp->addButton(pm_osc2_btn);
     m_mod2BtnGrp->addButton(am_osc2_btn);
@@ -659,7 +659,8 @@ TripleOscillatorView::TripleOscillatorView(Instrument* _instrument,
         ToolTip::add(uwb, tr("Use a user-defined "
                              "waveform for current oscillator."));
 
-        automatableButtonGroup* wsbg = new automatableButtonGroup(this);
+        automatableButtonGroup* wsbg
+                = new automatableButtonGroup(this, "[shape selection]");
 
         wsbg->addButton(sin_wave_btn);
         wsbg->addButton(triangle_wave_btn);

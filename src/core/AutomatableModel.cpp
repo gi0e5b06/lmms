@@ -391,7 +391,7 @@ void AutomatableModel::loadSettings(const QDomElement& element,
         {
             if(required)
             {
-                BACKTRACE
+                // BACKTRACE
                 qWarning(
                         "AutomatableModel: missing value for "
                         "attribute '%s' in element '%s'",

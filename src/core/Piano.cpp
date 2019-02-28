@@ -40,6 +40,8 @@
 
 #include "InstrumentTrack.h"
 
+#include <QMutexLocker>
+
 /*! The black / white order of keys as they appear on the keyboard.
  */
 static const Piano::KeyTypes KEY_ORDER[] = {
@@ -56,11 +58,10 @@ static const Piano::KeyTypes KEY_ORDER[] = {
  */
 Piano::Piano(InstrumentTrack* _track) :
       Model(nullptr, "Piano"), /*!< base class ctor */
-      m_instrumentTrack(_track),
+      m_mutex(QMutex::Recursive), m_instrumentTrack(_track),
       m_midiEvProc(_track) /*!< the InstrumentTrack Model */
 {
-    for(int i = 0; i < NumKeys; ++i)
-        m_pressedKeys[i] = false;
+    reset();
 }
 
 /*! \brief Destroy this new keyboard display
@@ -70,19 +71,83 @@ Piano::~Piano()
 {
 }
 
+void Piano::reset()
+{
+    QMutexLocker lock(&m_mutex);
+    for(int i = 0; i < NumKeys; ++i)
+    {
+        m_pressedKeys[i] = 0;
+        if(i < NumMidiKeys)
+            m_midiEvProc->processInEvent(MidiEvent(MidiNoteOff, -1, i, 0));
+    }
+    emit dataChanged();
+}
+
 /*! \brief Turn a key on or off
  *
  *  \param key the key number to change
  *  \param state the state to set the key to
  */
+/*
 void Piano::setKeyState(int key, bool state)
 {
+    bool changed = false;
     if(isValidKey(key))
     {
-        m_pressedKeys[key] = state;
-
-        emit dataChanged();
+        QMutexLocker lock(&m_mutex);
+        // if(m_pressedKeys[key] != state)
+        if(state)
+        {
+            m_pressedKeys[key] = 1;  //++;
+            changed            = (m_pressedKeys[key] == 1);
+        }
+        else if(m_pressedKeys[key] > 0)
+        {
+            m_pressedKeys[key]--;
+            changed = (m_pressedKeys[key] == 0);
+        }
     }
+    // if(changed)
+    Q_UNUSED(changed)
+    emit dataChanged();
+}
+*/
+
+void Piano::pressKey(int key)
+{
+    bool changed = false;
+    if(isValidKey(key))
+    {
+        QMutexLocker lock(&m_mutex);
+        m_pressedKeys[key]++;
+        if(m_pressedKeys[key] == 1)
+            changed = true;
+    }
+    if(changed)
+        emit dataChanged();
+}
+
+void Piano::releaseKey(int key)
+{
+    bool changed = false;
+    if(isValidKey(key))
+    {
+        QMutexLocker lock(&m_mutex);
+        if(m_pressedKeys[key] > 0)
+        {
+            m_pressedKeys[key]--;
+            if(m_pressedKeys[key] == 0)
+                changed = true;
+        }
+    }
+    if(changed)
+        emit dataChanged();
+}
+
+bool Piano::isKeyPressed(int key) const
+{
+    QMutexLocker lock(const_cast<QMutex*>(&m_mutex));
+    return isValidKey(key) ? (m_pressedKeys[key] > 0) : false;
 }
 
 /*! \brief Handle a note being pressed on our keyboard display
@@ -91,15 +156,24 @@ void Piano::setKeyState(int key, bool state)
  */
 void Piano::handleKeyPress(int key, int midiVelocity)
 {
+    if(!isValidKey(key))
+        return;
+
     if(midiVelocity == -1)
-    {
         midiVelocity = m_instrumentTrack->midiPort()->baseVelocity();
-    }
-    if(isValidKey(key))
+
+    bool         changed = false;
+    QMutexLocker lock(&m_mutex);
+    m_pressedKeys[key]++;
+    if(m_pressedKeys[key] == 1)
+        changed = true;
+
+    if(changed)
     {
-        m_midiEvProc->processInEvent(
-                MidiEvent(MidiNoteOn, -1, key, midiVelocity));
-        m_pressedKeys[key] = true;
+        if(key < NumMidiKeys)
+            m_midiEvProc->processInEvent(
+                    MidiEvent(MidiNoteOn, -1, key, midiVelocity));
+        emit dataChanged();
     }
 }
 
@@ -109,11 +183,37 @@ void Piano::handleKeyPress(int key, int midiVelocity)
  */
 void Piano::handleKeyRelease(int key)
 {
-    if(isValidKey(key))
+    if(!isValidKey(key))
+        return;
+
+    bool         changed = false;
+    QMutexLocker lock(&m_mutex);
+    if(m_pressedKeys[key] > 0)
     {
-        m_midiEvProc->processInEvent(MidiEvent(MidiNoteOff, -1, key, 0));
-        m_pressedKeys[key] = false;
+        m_pressedKeys[key]--;
+        if(m_pressedKeys[key] == 0)
+            changed = true;
     }
+    // if(changed)
+    Q_UNUSED(changed)
+    {
+        if(key < NumMidiKeys)
+            m_midiEvProc->processInEvent(MidiEvent(MidiNoteOff, -1, key, 0));
+        emit dataChanged();
+    }
+}
+
+void Piano::handleKeyPressure(int key, int midiVelocity)
+{
+    if(!isValidKey(key) || !isKeyPressed(key))
+        return;
+
+    if(midiVelocity == -1)
+        midiVelocity = m_instrumentTrack->midiPort()->baseVelocity();
+
+    if(key < NumMidiKeys)
+        midiEventProcessor()->processInEvent(
+                MidiEvent(MidiKeyPressure, -1, key, midiVelocity));
 }
 
 bool Piano::isBlackKey(int key)

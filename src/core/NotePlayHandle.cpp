@@ -61,8 +61,8 @@ NotePlayHandle::NotePlayHandle(InstrumentTrack* instrumentTrack,
       m_pluginData(NULL), m_filter(NULL), m_instrumentTrack(instrumentTrack),
       m_frames(0), m_totalFramesPlayed(0), m_framesBeforeRelease(0),
       m_releaseFramesToDo(0), m_releaseFramesDone(0), m_subNotes(),
-      m_released(false), m_releaseStarted(false), m_hasParent(parent != NULL),
-      m_parent(parent), m_hadChildren(false), m_muted(false), m_bbTrack(NULL),
+      m_released(false), m_releaseStarted(false), m_parent(parent),
+      m_isMasterNote(false), m_muted(false), m_bbTrack(NULL),
       m_origTempo(Engine::getSong()->getTempo()),
       m_origBaseNote(instrumentTrack->baseNote()), m_frequency(0),
       m_unpitchedFrequency(0),
@@ -98,11 +98,9 @@ NotePlayHandle::NotePlayHandle(InstrumentTrack* instrumentTrack,
                                       : 0.f);
 
         parent->m_subNotes.append(this);
-        parent->m_hadChildren = true;
-
+        parent->m_isMasterNote = true;
+        // parent->setUsesBuffer(false);
         m_bbTrack = parent->m_bbTrack;
-
-        parent->setUsesBuffer(false);
     }
 
     updateFrequency();
@@ -127,8 +125,8 @@ NotePlayHandle::NotePlayHandle(InstrumentTrack* instrumentTrack,
     }
     else if(m_instrumentTrack->instrument()->isSingleStreamed())
     {
-        // setUsesBuffer( false );
-        m_usesBuffer = false;
+        setUsesBuffer(false);
+        // m_usesBuffer = false;
     }
 
     setAudioPort(instrumentTrack->audioPort());
@@ -140,39 +138,32 @@ NotePlayHandle::~NotePlayHandle()
 {
 }
 
-void NotePlayHandle::removeSubNote(NotePlayHandle* _nph)
-{
-    if(_nph)
-    {
-        if(tryLock())
-        {
-            m_subNotes.removeAll(_nph);
-            unlock();
-        }
-        else
-            qWarning("NotePlayHandle::removeSubNote fail");
-    }
-}
-
 static QHash<QString, bool> s_releaseTracker;
 
-void NotePlayHandle::done()
+bool NotePlayHandle::done1()
 {
-    lock();
-
     if(s_releaseTracker.contains(m_debug_uuid))
     {
-        BACKTRACE
+        // BACKTRACE
         qCritical(
                 "NotePlayHandleManager::release %p was "
-                "already released",
-                this);
-        return;
+                "already released parent=%p finished=%d subnotes=%d\n"
+                "uuid=%s",
+                this, m_parent, m_finished, m_subNotes.size(),
+                qPrintable(m_debug_uuid));
+        unlock();
+        return false;
     }
     s_releaseTracker.insert(m_debug_uuid, true);
 
+    lock();
+
+    if(m_parent != nullptr)
+        m_parent->removeSubNote(this);
+
     noteOff(0);
 
+    /*
     if(hasParent())
     {
         // if(m_parent->m_subNotes.contains(this)) //tmp test SIGSEGV
@@ -187,9 +178,21 @@ void NotePlayHandle::done()
         }
         else
         {
-            m_parent->removeSubNote(this);
-            m_parent = nullptr;
+            m_parent->m_subNotes.removeAll(this);  // SubNote(this);
+            // m_parent = nullptr;
         }
+    }
+    */
+
+    if(m_parent != nullptr)
+    {
+        BACKTRACE
+        qCritical("NotePlayHandle::done nph still has parent.");
+    }
+
+    if(m_subNotes.size() > 0)
+    {
+        qCritical("NotePlayHandle::done nph still have subnotes.");
     }
 
     // if(hasParent() == false)
@@ -198,7 +201,7 @@ void NotePlayHandle::done()
         m_instrumentTrack->m_processHandles.removeAll(this);
     }
 
-    if(m_pluginData != NULL)
+    if(m_pluginData != nullptr)
     {
         m_instrumentTrack->deleteNotePluginData(this);
     }
@@ -208,14 +211,41 @@ void NotePlayHandle::done()
         m_instrumentTrack->m_notes[key()] = nullptr;
     }
 
-    m_subNotes.clear();
-
     delete m_filter;
 
     if(buffer())
         releaseBuffer();
 
     m_instrumentTrack = nullptr;
+    unlock();
+
+    return true;
+}
+
+void NotePlayHandle::removeSubNote(NotePlayHandle* _nph)
+{
+    lock();
+    if(_nph->m_parent != this)
+        qWarning("NotePlayHandle::removeSubNote parent!=this");
+    else
+    {
+        m_subNotes.removeAll(_nph);
+        _nph->m_parent = nullptr;
+    }
+    unlock();
+}
+
+void NotePlayHandle::finishSubNotes()
+{
+    lock();
+    m_subNotes.map(
+            [](NotePlayHandle* snph) {
+                snph->lock();
+                snph->m_parent = nullptr;
+                snph->setFinished();
+                snph->unlock();
+            },
+            true);
     unlock();
 }
 
@@ -275,12 +305,20 @@ int NotePlayHandle::midiKey() const
     return key() - m_origBaseNote + m_instrumentTrack->baseNote();
 }
 
-void NotePlayHandle::play(sampleFrame* _working_buffer)
+void NotePlayHandle::play(sampleFrame* _workingBuffer)
 {
     if(m_muted)
     {
         return;
     }
+
+    /*
+    if(_workingBuffer == nullptr)
+    {
+        BACKTRACE
+        qInfo("NotePlayHandle::play _workingBuffer is null");
+    }
+    */
 
     // if the note offset falls over to next period, then don't start playback
     // yet
@@ -354,10 +392,10 @@ void NotePlayHandle::play(sampleFrame* _working_buffer)
            && !(m_instrumentTrack->instrument()
                 && m_instrumentTrack->instrument()->isSingleStreamed()))
         {
-            memset(_working_buffer, 0, sizeof(sampleFrame) * offset());
+            memset(_workingBuffer, 0, sizeof(sampleFrame) * offset());
         }
         // play note!
-        m_instrumentTrack->playNote(this, _working_buffer);
+        m_instrumentTrack->playNote(this, _workingBuffer);
     }
 
     if(m_released
@@ -457,6 +495,12 @@ fpp_t NotePlayHandle::framesLeftForCurrentPeriod() const
                                 Engine::mixer()->framesPerPeriod());
 }
 
+bool NotePlayHandle::isFinished() const
+{
+    return m_finished || (m_released && framesLeft() <= 0)
+           || (m_parent != nullptr && m_parent->isFinished());
+}
+
 bool NotePlayHandle::isFromTrack(const Track* _track) const
 {
     return m_instrumentTrack == _track || m_bbTrack == _track;
@@ -499,6 +543,7 @@ void NotePlayHandle::noteOff(const f_cnt_t _s)
         n->unlock();
     }
     */
+    // if(!isFinished())
     m_subNotes.map([_s](NotePlayHandle* n) {
         n->lock();
         n->noteOff(_s);
@@ -535,6 +580,7 @@ void NotePlayHandle::noteOff(const f_cnt_t _s)
             m_instrumentTrack->midiNoteOff(*this);
         }
     }
+
     // qInfo("NotePlayHandle::noteOff 4");
 }
 
@@ -797,81 +843,23 @@ NotePlayHandle*
 
 void NotePlayHandleManager::release(NotePlayHandle* _nph)
 {
-    _nph->done();
-    //_nph->~NotePlayHandle();
-    // s_singleton->deallocate(_nph);
-    // NotePlayHandleManager::free(_nph);
-    MM_FREE(_nph);
+    if(!Engine::mixer()->isHM())
+    {
+        BACKTRACE
+        qWarning("NotePlayHandleManager::release not HM thread");
+    }
+
+    if(!_nph->isFinished())
+    {
+        BACKTRACE
+        qWarning("NotePlayHandleManager::release nph not finished");
+    }
+
+    if(_nph->done1())
+    {
+        //_nph->~NotePlayHandle();
+        // s_singleton->deallocate(_nph);
+        // NotePlayHandleManager::free(_nph);
+        MM_FREE(_nph);
+    }
 }
-
-/*
-NotePlayHandle ** NotePlayHandleManager::s_available;
-QReadWriteLock NotePlayHandleManager::s_mutex;
-AtomicInt NotePlayHandleManager::s_availableIndex;
-int NotePlayHandleManager::s_size;
-
-
-void NotePlayHandleManager::init()
-{
-        s_available = MM_ALLOC( NotePlayHandle*, INITIAL_NPH_CACHE );
-
-        NotePlayHandle * n = MM_ALLOC( NotePlayHandle, INITIAL_NPH_CACHE );
-
-        for( int i=0; i < INITIAL_NPH_CACHE; ++i )
-        {
-                s_available[ i ] = n;
-                ++n;
-        }
-        s_availableIndex = INITIAL_NPH_CACHE - 1;
-        s_size = INITIAL_NPH_CACHE;
-}
-
-
-NotePlayHandle * NotePlayHandleManager::acquire(InstrumentTrack*
-instrumentTrack, const f_cnt_t offset, const f_cnt_t frames, const Note&
-noteToPlay, NotePlayHandle* parent, const int midiEventChannel, const
-NotePlayHandle::Origin origin, const int generation)
-{
-        if( s_availableIndex < 0 )
-        {
-                s_mutex.lockForWrite();
-                if( s_availableIndex < 0 ) extend( NPH_CACHE_INCREMENT );
-                s_mutex.unlock();
-        }
-        s_mutex.lockForRead();
-        NotePlayHandle * nph = s_available[
-s_availableIndex.fetchAndAddOrdered( -1 ) ]; s_mutex.unlock();
-
-        new( (void*)nph ) NotePlayHandle( instrumentTrack, offset, frames,
-noteToPlay, parent, midiEventChannel, origin ); return nph;
-}
-
-
-void NotePlayHandleManager::release( NotePlayHandle * nph )
-{
-        nph->done();
-        s_mutex.lockForRead();
-        s_available[ s_availableIndex.fetchAndAddOrdered( 1 ) + 1 ] = nph;
-        s_mutex.unlock();
-}
-
-
-void NotePlayHandleManager::extend( int c )
-{
-        if(c<=0) return;
-
-        s_size += c;
-        NotePlayHandle ** tmp = MM_ALLOC( NotePlayHandle*, s_size );
-        MM_FREE( s_available );
-        s_available = tmp;
-
-        NotePlayHandle * n = MM_ALLOC( NotePlayHandle, c );
-
-        for( int i=0; i < c; ++i )
-        {
-                s_available[ s_availableIndex.fetchAndAddOrdered( 1 ) + 1 ] =
-n;
-                ++n;
-        }
-}
-*/

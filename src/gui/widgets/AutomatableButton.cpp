@@ -35,8 +35,8 @@
 
 AutomatableButton::AutomatableButton(QWidget* _parent, const QString& _name) :
       QPushButton(_parent),
-      BoolModelView(new BoolModel(false, NULL, _name, true), this),
-      m_group(NULL)
+      BoolModelView(new BoolModel(false, nullptr, _name, true), this),
+      m_group(nullptr)
 {
     setWindowTitle(_name);
     doConnections();
@@ -45,7 +45,7 @@ AutomatableButton::AutomatableButton(QWidget* _parent, const QString& _name) :
 
 AutomatableButton::~AutomatableButton()
 {
-    if(m_group != NULL)
+    if(m_group != nullptr)
     {
         m_group->removeButton(this);
     }
@@ -74,9 +74,9 @@ void AutomatableButton::contextMenuEvent(QContextMenuEvent* _me)
     // button, the context-menu appears while mouse-cursor is still hidden
     // and it isn't shown again until user does something which causes
     // an QApplication::restoreOverrideCursor()-call...
-    mouseReleaseEvent(NULL);
+    mouseReleaseEvent(nullptr);
 
-    if(m_group != NULL)
+    if(m_group != nullptr)
     {
         CaptionMenu contextMenu(m_group->model()->displayName());
         m_group->addDefaultActions(&contextMenu);
@@ -147,7 +147,7 @@ void AutomatableButton::dropEvent(QDropEvent* _de)
     {
         AutomatableModel* mod = dynamic_cast<AutomatableModel*>(
                 Engine::projectJournal()->journallingObject(val.toInt()));
-        if(mod != NULL)
+        if(mod != nullptr)
         {
             AutomatableModel::linkModels(model(), mod);
             mod->setValue(model()->rawValue());
@@ -157,7 +157,7 @@ void AutomatableButton::dropEvent(QDropEvent* _de)
 
 void AutomatableButton::toggle()
 {
-    if(isCheckable() && m_group != NULL)
+    if(isCheckable() && m_group != nullptr)
     {
         if(model()->rawValue() == false)
         {
@@ -198,7 +198,7 @@ void AutomatableButton::enterValue()
 automatableButtonGroup::automatableButtonGroup(QWidget*       _parent,
                                                const QString& _name) :
       QWidget(_parent),
-      IntModelView(new IntModel(0, 0, 0, NULL, _name, true), this)
+      IntModelView(new IntModel(0, 0, 0, nullptr, _name, true), this)
 {
     hide();
     setWindowTitle(_name);
@@ -209,7 +209,7 @@ automatableButtonGroup::~automatableButtonGroup()
     for(QList<AutomatableButton*>::iterator it = m_buttons.begin();
         it != m_buttons.end(); ++it)
     {
-        (*it)->m_group = NULL;
+        (*it)->m_group = nullptr;
     }
 }
 
@@ -230,7 +230,7 @@ void automatableButtonGroup::addButton(AutomatableButton* _btn)
 void automatableButtonGroup::removeButton(AutomatableButton* _btn)
 {
     m_buttons.erase(qFind(m_buttons.begin(), m_buttons.end(), _btn));
-    _btn->m_group = NULL;
+    _btn->m_group = nullptr;
 }
 
 void automatableButtonGroup::activateButton(AutomatableButton* _btn)
@@ -239,7 +239,7 @@ void automatableButtonGroup::activateButton(AutomatableButton* _btn)
        && m_buttons.indexOf(_btn) != -1)
     {
         model()->setValue(m_buttons.indexOf(_btn));
-        for(AutomatableButton* btn : m_buttons)
+        for(AutomatableButton* btn: m_buttons)
         {
             btn->update();
         }
@@ -257,7 +257,7 @@ void automatableButtonGroup::updateButtons()
 {
     model()->setRange(0, m_buttons.size() - 1);
     int i = 0;
-    for(AutomatableButton* btn : m_buttons)
+    for(AutomatableButton* btn: m_buttons)
     {
         btn->model()->setValue(i == model()->rawValue());
         ++i;

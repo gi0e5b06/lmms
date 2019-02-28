@@ -55,7 +55,7 @@ Effect::Effect(const Plugin::Descriptor*                 _desc,
       m_autoQuitModel(1000., 1., 8000., 1., 8000., this, tr("Decay")),
       m_gateModel(0.000001, 0.000001, 1., 0.000001, this, tr("Gate")),
       m_balanceModel(0., -1., 1., 0.01, this, tr("Balance")),
-      m_color(59,66,74), //#3B424A
+      m_color(59, 66, 74),  //#3B424A
       m_useStyleColor(true)
 // m_autoQuitDisabled( false )
 {
@@ -122,7 +122,10 @@ void Effect::loadSettings(const QDomElement& _this)
 {
     m_enabledModel.loadSettings(_this, "on");
     m_wetDryModel.loadSettings(_this, "wet");
-    m_autoQuitModel.loadSettings(_this, "autoquit");
+    if(_this.hasAttribute("autoquit"))
+        m_autoQuitModel.loadSettings(_this, "autoquit");
+    else
+        m_autoQuitModel.setValue(1000);
     m_gateModel.loadSettings(_this, "gate");
     m_balanceModel.loadSettings(_this, "balance");
 

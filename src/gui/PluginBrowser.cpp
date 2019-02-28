@@ -38,7 +38,6 @@
 #include <QScrollArea>
 #include <QStyleOption>
 
-/*
 static bool pluginLessThan(const Plugin::Descriptor* d1,
                            const Plugin::Descriptor* d2)
 {
@@ -48,14 +47,14 @@ static bool pluginLessThan(const Plugin::Descriptor* d1,
     if(d1 == nullptr || d2 == nullptr)
     {
         // BACKTRACE
-        qWarning("PluginBrowser: d1=%p d2=%p", d1, d2);
-        return d1==nullptr;
+        // qWarning("PluginBrowser: d1=%p d2=%p", d1, d2);
+        return d1 == nullptr;
     }
 
-    return QString::compare(d1->displayName, d2->displayName,
-                            Qt::CaseInsensitive);
+    return d1->displayName() < d2->displayName();
+    // return QString::compare(d1->displayName(), d2->displayName(),
+    //  Qt::CaseInsensitive);
 }
-*/
 
 PluginBrowser::PluginBrowser(QWidget* _parent) :
       SideBarWidget(tr("Instrument Plugins"),
@@ -98,20 +97,24 @@ PluginDescList::PluginDescList(QWidget* parent) : QWidget(parent)
 {
     QVBoxLayout* layout = new QVBoxLayout(this);
 
-    QList<Plugin::Descriptor*> descs
-            = pluginFactory->descriptors(Plugin::Instrument);
-    // TMP GDX
-    // std::sort(descs.begin(), descs.end(), pluginLessThan);
-    for(const Plugin::Descriptor* desc: descs)
+    QString                    previous = "[first]";
+    QList<Plugin::Descriptor*> descs;
+    for(Plugin::Descriptor* d: pluginFactory->descriptors(Plugin::Instrument))
     {
-        // TMP GDX
-        if(desc == nullptr)
+        if(d == nullptr)
         {
             // BACKTRACE
-            qWarning("PluginDescList: null descriptor");
+            qWarning("PluginDescList: null descriptor after %s",
+                     qPrintable(previous));
             continue;
         }
+        descs.append(d);
+        previous = d->displayName();
+    }
+    std::sort(descs.begin(), descs.end(), pluginLessThan);
 
+    for(const Plugin::Descriptor* desc: descs)
+    {
         PluginDescWidget* p = new PluginDescWidget(*desc, this);
         p->show();
         layout->addWidget(p);

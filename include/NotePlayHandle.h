@@ -42,6 +42,7 @@
 
 class InstrumentTrack;
 class NotePlayHandle;
+class NotePlayHandleManager;
 class Scale;
 
 typedef QList<NotePlayHandle*>       NotePlayHandleList;
@@ -71,31 +72,6 @@ class EXPORT NotePlayHandle /*final*/
     };
     // typedef Origins Origin;
     typedef int Origin;
-
-    NotePlayHandle(InstrumentTrack* instrumentTrack,
-                   const f_cnt_t    offset,
-                   const f_cnt_t    frames,
-                   const Note&      noteToPlay,
-                   NotePlayHandle*  parent           = NULL,
-                   const int        midiEventChannel = -1,
-                   const Origin     origin           = OriginPattern,
-                   const int        generation       = 0);
-    virtual ~NotePlayHandle();
-
-    void done();
-    void removeSubNote(NotePlayHandle* _nph);
-
-    /*
-    const QList<NotePlayHandle*> subNotes() const
-    {
-        return m_subNotes.list();
-    }
-    */
-
-    void* operator new(size_t size, void* p)
-    {
-        return p;
-    }
 
     virtual void setVolume(volume_t _volume);
     virtual void setPanning(panning_t _panning);
@@ -132,10 +108,7 @@ class EXPORT NotePlayHandle /*final*/
 
     /*! Returns whether playback of note is finished and thus handle can be
      * deleted */
-    virtual bool isFinished() const
-    {
-        return m_released && framesLeft() <= 0;
-    }
+    virtual bool isFinished() const;
 
     /*! Returns whether the play handle plays on a certain track */
     virtual bool isFromTrack(const Track* _track) const;
@@ -211,11 +184,10 @@ class EXPORT NotePlayHandle /*final*/
     /*! Releases the note (and plays release frames */
     void noteOff(const f_cnt_t offset = 0);
 
-    /*! Returns whether note has a parent, e.g. is not part of an arpeggio or
-     * a chord */
+    /*! Returns whether note has a parent */
     bool hasParent() const
     {
-        return m_hasParent;
+        return m_parent != nullptr;
     }
 
     /*! Returns origin of note */
@@ -243,12 +215,12 @@ class EXPORT NotePlayHandle /*final*/
     /*! Returns whether note has children */
     bool isMasterNote() const
     {
-        return m_subNotes.size() > 0 || m_hadChildren;
+        return m_subNotes.size() > 0;  // || m_isMasterNote;
     }
 
     void setMasterNote()
     {
-        m_hadChildren = true;
+        // m_isMasterNote = true;
         setUsesBuffer(false);
     }
 
@@ -346,6 +318,27 @@ class EXPORT NotePlayHandle /*final*/
     const Scale* scale() const;
     void         setScale(const Scale* _scale);
 
+  protected:
+    NotePlayHandle(InstrumentTrack* instrumentTrack,
+                   const f_cnt_t    offset,
+                   const f_cnt_t    frames,
+                   const Note&      noteToPlay,
+                   NotePlayHandle*  parent           = NULL,
+                   const int        midiEventChannel = -1,
+                   const Origin     origin           = OriginPattern,
+                   const int        generation       = 0);
+    virtual ~NotePlayHandle();
+
+    bool done1();
+    void removeSubNote(NotePlayHandle* _nph);
+    // only used by Mixer to delete
+    void finishSubNotes();
+
+    void* operator new(size_t size, void* p)
+    {
+        return p;
+    }
+
   private:
     void updateFrequency();
 
@@ -389,13 +382,12 @@ class EXPORT NotePlayHandle /*final*/
     // NotePlayHandleList
     SafeList<NotePlayHandle*> m_subNotes;  // used for chords and arpeggios
 
-    volatile bool   m_released;  // indicates whether note is released
-    bool            m_releaseStarted;
-    bool            m_hasParent;  // indicates whether note has parent
-    NotePlayHandle* m_parent;     // parent note
-    bool            m_hadChildren;
-    bool            m_muted;    // indicates whether note is muted
-    Track*          m_bbTrack;  // related BB track
+    volatile bool   m_released;        // indicates whether note is released
+    bool            m_releaseStarted;  //
+    NotePlayHandle* m_parent;          // parent note
+    bool            m_isMasterNote;    //
+    bool            m_muted;           // indicates whether note is muted
+    Track*          m_bbTrack;         // related BB track
 
     // tempo reaction
     bpm_t   m_origTempo;   // original tempo
@@ -418,6 +410,9 @@ class EXPORT NotePlayHandle /*final*/
     bool m_frequencyNeedsUpdate;  // used to update pitch
 
     const Scale* m_scale;
+
+    friend class NotePlayHandleManager;
+    friend class Mixer;
 };
 
 // const int INITIAL_NPH_CACHE = 256;

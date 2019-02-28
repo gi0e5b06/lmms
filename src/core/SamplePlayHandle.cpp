@@ -170,7 +170,9 @@ void SamplePlayHandle::play(sampleFrame* buffer)
 
 bool SamplePlayHandle::isFinished() const
 {
-    return framesDone() >= frames() && m_doneMayReturnTrue == true;  // total
+    return m_finished
+           || (framesDone() >= frames()
+               && m_doneMayReturnTrue == true);  // total
 }
 
 bool SamplePlayHandle::isFromTrack(const Track* _track) const

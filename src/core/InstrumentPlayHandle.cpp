@@ -33,15 +33,17 @@
 InstrumentPlayHandle::InstrumentPlayHandle(Instrument*      instrument,
                                            InstrumentTrack* instrumentTrack) :
       PlayHandle(TypeInstrumentPlayHandle),
-      m_instrument(instrument)
+      m_instrument(instrument), m_track(instrumentTrack)
 {
     setAudioPort(instrumentTrack->audioPort());
 }
 
 InstrumentPlayHandle::~InstrumentPlayHandle()
 {
+    qInfo("~InstrumentPlayHandle");
     setAudioPort(nullptr);
     m_instrument = nullptr;
+    m_track      = nullptr;
 }
 
 void InstrumentPlayHandle::play(sampleFrame* _working_buffer)
@@ -114,7 +116,7 @@ void InstrumentPlayHandle::play(sampleFrame* _working_buffer)
 
     real_t  ndm    = 0.;
     f_cnt_t maxtfp = -1;
-    f_cnt_t maxfbr=-1;
+    f_cnt_t maxfbr = -1;
     for(const NotePlayHandle* cnph: cnphv)
     {
         if(cnph != nullptr && !cnph->isFinished())
@@ -124,8 +126,8 @@ void InstrumentPlayHandle::play(sampleFrame* _working_buffer)
             const f_cnt_t tfp = nph->totalFramesPlayed();
             const f_cnt_t fbr = tfp - nph->releaseFramesDone()
                                 + nph->framesBeforeRelease();
-            const f_cnt_t off  = nph->noteOffset();
-            const f_cnt_t left = nph->framesLeft();
+            const f_cnt_t off = nph->noteOffset();
+            // const f_cnt_t left = nph->framesLeft();
 
             /*
             if(tfp <= 256)
@@ -134,7 +136,7 @@ void InstrumentPlayHandle::play(sampleFrame* _working_buffer)
             */
 
             if(/*left > 0 &&*/ (maxtfp == -1 || tfp > maxtfp
-                                || (tfp==maxtfp && fbr>maxfbr)))
+                                || (tfp == maxtfp && fbr > maxfbr)))
             {
                 track->setEnvTotalFramesPlayed(tfp);
                 track->setEnvOffset(off);
@@ -168,23 +170,39 @@ void InstrumentPlayHandle::play(sampleFrame* _working_buffer)
 
 bool InstrumentPlayHandle::isFinished() const
 {
-    return m_instrument == nullptr
-           || m_instrument->instrumentTrack() == nullptr;  // false;
+    return m_finished || m_track == nullptr || m_instrument == nullptr;
+    // || m_instrument->instrumentTrack() == nullptr;
 }
 
 bool InstrumentPlayHandle::isFromTrack(const Track* _track) const
 {
-    if(m_instrument == nullptr)
-    {
-        qWarning("InstrumentPlayHandle::isFromTrack m_instrument is null");
-        return false;
-    }
-    if(_track == nullptr)
-    {
-        qWarning("InstrumentPlayHandle::isFromTrack _track is null");
-        return false;
-    }
-    // qWarning("InstrumentPlayHandle::isFromTrack %p %p", m_instrument,
-    // _track);
-    return m_instrument->isFromTrack(_track);
+    qInfo("IPH: isFromTrack finished=%d result=%d", isFinished(),
+          (m_track == _track));
+    return m_track == _track;
+
+    /*
+if(m_instrument == nullptr)
+{
+    qWarning("InstrumentPlayHandle::isFromTrack m_instrument is null");
+    return false;
+}
+
+if(_track == nullptr)
+{
+    qWarning("InstrumentPlayHandle::isFromTrack _track is null");
+    return false;
+}
+
+qInfo("IPH: isFromTrack finished=%d i=%p (%s) it=%p (%s) tt=%p (%s) --> "
+      "%d",
+      m_finished, m_instrument, qPrintable(m_instrument->displayName()),
+      m_instrument->instrumentTrack(),
+      qPrintable(m_instrument->instrumentTrack()->name()), _track,
+      qPrintable(_track->name()), m_instrument->isFromTrack(_track));
+
+qInfo("IPH (new) test=%d",_track==m_track);
+// qWarning("InstrumentPlayHandle::isFromTrack %p %p", m_instrument,
+// _track);
+return m_instrument->isFromTrack(_track);
+    */
 }

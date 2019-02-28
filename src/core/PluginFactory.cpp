@@ -172,6 +172,7 @@ void PluginFactory::discoverLmmsPlugins()
         }
 
         if(descriptorName == "carlabase_plugin_descriptor"
+           || descriptorName == "vstbase_plugin_descriptor"
            || descriptorName == "jalv_plugin_descriptor"
            || descriptorName == "ZynAddSubFxCore_plugin_descriptor")
             continue;

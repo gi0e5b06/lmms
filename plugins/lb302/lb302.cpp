@@ -323,13 +323,15 @@ lb302Synth::lb302Synth(InstrumentTrack* _instrumentTrack) :
 
     InstrumentPlayHandle* iph
             = new InstrumentPlayHandle(this, _instrumentTrack);
-    iph->setAffinity(Engine::mixer()->thread());
-    Engine::mixer()->addPlayHandle(iph);
+    // iph->setAffinity(Engine::mixer()->thread());
+    // Engine::mixer()->addPlayHandle(iph);
+    Engine::mixer()->emit playHandleToAdd(iph);
 }
 
 lb302Synth::~lb302Synth()
 {
-    Engine::mixer()->removePlayHandlesOfTypes(
+    Engine::mixer()->emit playHandlesOfTypesToRemove(
+            // removePlayHandlesOfTypes(
             instrumentTrack(),
             // PlayHandle::TypeNotePlayHandle|
             PlayHandle::TypeInstrumentPlayHandle);
@@ -837,7 +839,7 @@ void lb302Synth::deleteNotePluginData(NotePlayHandle* _n)
 
 PluginView* lb302Synth::instantiateView(QWidget* _parent)
 {
-    return (new lb302SynthView(this, _parent));
+    return new lb302SynthView(this, _parent);
 }
 
 lb302SynthView::lb302SynthView(Instrument* _instrument, QWidget* _parent) :
@@ -995,7 +997,7 @@ lb302SynthView::lb302SynthView(Instrument* _instrument, QWidget* _parent) :
     ToolTip::add(blMoogWaveBtn,
                  tr("Click here for bandlimited moog saw wave."));
 
-    m_waveBtnGrp = new automatableButtonGroup(this);
+    m_waveBtnGrp = new automatableButtonGroup(this, "[shape selection]");
     m_waveBtnGrp->addButton(sawWaveBtn);
     m_waveBtnGrp->addButton(triangleWaveBtn);
     m_waveBtnGrp->addButton(sqrWaveBtn);

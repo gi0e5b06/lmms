@@ -74,7 +74,7 @@ extern "C"
     // necessary for getting instance out of shared lib
     Plugin* PLUGIN_EXPORT lmms_plugin_main(Model*, void* _data)
     {
-        return (new opl2instrument(static_cast<InstrumentTrack*>(_data)));
+        return new opl2instrument(static_cast<InstrumentTrack*>(_data));
     }
 }
 
@@ -206,14 +206,16 @@ opl2instrument::opl2instrument(InstrumentTrack* _instrument_track) :
     // Connect the plugin to the mixer...
     InstrumentPlayHandle* iph
             = new InstrumentPlayHandle(this, _instrument_track);
-    iph->setAffinity(Engine::mixer()->thread());
-    Engine::mixer()->addPlayHandle(iph);
+    // iph->setAffinity(Engine::mixer()->thread());
+    // Engine::mixer()->addPlayHandle(iph);
+    Engine::mixer()->emit playHandleToAdd(iph);
 }
 
 opl2instrument::~opl2instrument()
 {
     delete theEmulator;
-    Engine::mixer()->removePlayHandlesOfTypes(
+    Engine::mixer()->emit playHandlesOfTypesToRemove(
+            // removePlayHandlesOfTypes(
             instrumentTrack(),
             // PlayHandle::TypeNotePlayHandle|
             PlayHandle::TypeInstrumentPlayHandle);

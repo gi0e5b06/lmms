@@ -32,11 +32,15 @@
 #include "AutomatableModel.h"
 #include "MemoryManager.h"
 #include "PlayHandle.h"
+#include "SafeList.h"
 
+class AudioPort;
 class EffectChain;
 // class FloatModel;
 // class BoolModel;
 class SampleBuffer;
+
+typedef SafeList<AudioPort*> AudioPorts;
 
 class AudioPort : public ThreadableJob
 {
@@ -52,7 +56,7 @@ class AudioPort : public ThreadableJob
               FloatModel*    bendingModel,         // = nullptr,
               BoolModel*     mutedModel,           // = nullptr,
               BoolModel*     frozenModel,          // = nullptr,
-              BoolModel*     clippingModel);       // = nullptr);
+              BoolModel*     clippingModel);           // = nullptr);
     virtual ~AudioPort();
 
     inline sampleFrame* buffer()
@@ -132,8 +136,9 @@ class AudioPort : public ThreadableJob
 
     EffectChain* m_effects;
 
-    PlayHandleList m_playHandles;
-    QMutex         m_playHandleLock;
+    // PlayHandleList
+    SafeList<PlayHandle*> m_playHandles;
+    //QMutex                m_playHandleLock;
 
     BoolModel*  m_volumeEnabledModel;
     FloatModel* m_volumeModel;

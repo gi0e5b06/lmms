@@ -104,6 +104,13 @@ FileBrowser::FileBrowser(const QString& directories,
     m_fileBrowserTreeWidget = new FileBrowserTreeWidget(contentParent());
     addContentWidget(m_fileBrowserTreeWidget);
 
+    m_infoBox = new QLabel();
+    m_infoBox->setWordWrap(true);
+    m_infoBox->setMinimumHeight(50);
+    addContentWidget(m_infoBox);
+    connect(m_fileBrowserTreeWidget, SIGNAL(sendInfo(QString)), this,
+            SLOT(updateInfo(QString)));
+
     // Whenever the FileBrowser has focus, Ctrl+F should direct focus to its
     // filter box.
     QShortcut* filterFocusShortcut
@@ -117,6 +124,11 @@ FileBrowser::FileBrowser(const QString& directories,
 
 FileBrowser::~FileBrowser()
 {
+}
+
+void FileBrowser::updateInfo(QString _s)
+{
+    m_infoBox->setText(_s);
 }
 
 bool FileBrowser::filterItems(const QString& filter, QTreeWidgetItem* item)
@@ -391,7 +403,53 @@ void FileBrowserTreeWidget::mousePressEvent(QMouseEvent* me)
     FileItem* f = dynamic_cast<FileItem*>(i);
     if((f != nullptr) && !PresetPreviewPlayHandle::isPreviewing())
     {
+        {
+            QString prp = f->fullName();
+            prp.replace(QRegExp("[.][^.]*$"), ".prp");
+            QFileInfo fi(prp);
+
+            QString prpName(tr("Unknown name"));
+            QString prpAuthor(tr("unknown author"));
+            QString prpLicense(tr("Unknown license"));
+            QString prpYear("");
+
+            if(fi.exists())
+            {
+                // qInfo("FileBrowser: prp=%s", qPrintable(prp));
+                QFile fin(prp);
+                if(fin.open(QIODevice::ReadOnly | QIODevice::Text))
+                {
+                    QTextStream sin(&fin);
+                    while(!sin.atEnd())
+                    {
+                        QString s(sin.readLine());
+                        QString k = s.section(':', 0, 0);
+                        QString v = s.section(':', 1, -1);
+                        if(k == "Original-Name")
+                            prpName = v;
+                        if(k == "Author")
+                            prpAuthor = v;
+                        if(k == "License")
+                            prpLicense = v;
+                        if(k == "Updated")
+                            prpYear = v.section('-', 0, 0);
+                    }
+                }
+                fin.close();
+            }
+
+            QString txt("");
+            txt.append(QString("<b>%1</b><br/>\n").arg(prpName));
+            txt.append(QString("by %1<br/>\n").arg(prpAuthor));
+            txt.append(QString("%1 %2<br/>\n")
+                               .arg(prpYear)
+                               .arg(prpLicense)
+                               .trimmed());
+            emit sendInfo(txt);
+        }
+
         m_pphMutex.lock();
+
         if(m_previewPlayHandle != nullptr)
         {
             // TMP GDX
@@ -463,14 +521,18 @@ void FileBrowserTreeWidget::mousePressEvent(QMouseEvent* me)
         if(m_previewPlayHandle != nullptr)
         {
             // m_previewPlayHandle->setAffinity(Engine::mixer()->thread());
-            if(!Engine::mixer()->addPlayHandle(m_previewPlayHandle))
-            {
-                qWarning("FileBrowser: BAD previewPlayHandle not added");
-                // m_previewPlayHandle->setAffinity(QThread::currentThread());
-                Engine::mixer()->removePlayHandle(m_previewPlayHandle);
-                // delete m_previewPlayHandle;
-                m_previewPlayHandle = nullptr;
-            }
+
+            Engine::mixer()->emit playHandleToAdd(m_previewPlayHandle);
+            /*
+        if(!Engine::mixer()->addPlayHandle(m_previewPlayHandle))
+        {
+            qWarning("FileBrowser: BAD previewPlayHandle not added");
+            // m_previewPlayHandle->setAffinity(QThread::currentThread());
+            Engine::mixer()->removePlayHandle(m_previewPlayHandle);
+            // delete m_previewPlayHandle;
+            m_previewPlayHandle = nullptr;
+        }
+            */
             // else qInfo("FileBrowser: OK previewPlayHandle added");
         }
 
@@ -576,8 +638,9 @@ void FileBrowserTreeWidget::mouseReleaseEvent(QMouseEvent* me)
 
         qInfo("FileBrowserTreeWidget::mouseReleaseEvent 1");
         // m_previewPlayHandle->setAffinity(QThread::currentThread());
-        Engine::mixer()->removePlayHandle(m_previewPlayHandle);
-        // qInfo("FileBrowserTreeWidget::mouseReleaseEvent 2");
+        m_previewPlayHandle->setFinished();
+        //Engine::mixer()->emit playHandleToRemove(m_previewPlayHandle);
+        qInfo("FileBrowserTreeWidget::mouseReleaseEvent 2");
         // delete m_previewPlayHandle;
         // qInfo("FileBrowserTreeWidget::mouseReleaseEvent 3");
         m_previewPlayHandle = nullptr;
@@ -628,6 +691,10 @@ void FileBrowserTreeWidget::handleFile(FileItem* f, InstrumentTrack* it)
             InstrumentTrack::removeMidiPortNode(dataFile);
             it->setSimpleSerializing();
             it->loadSettings(dataFile.content().toElement());
+            if(it->volumeModel()->value()==MinVolume)
+                    it->volumeModel()->setValue(DefaultVolume);
+            if(it->isMuted())
+                    it->setMuted(false);
             break;
         }
 

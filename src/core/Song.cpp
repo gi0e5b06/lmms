@@ -100,9 +100,12 @@ Song::Song() :
 
 Song::~Song()
 {
+    qInfo("Song::~Song 1");
     m_playing = false;
     MM_ACTIVE(false)
+    qInfo("Song::~Song 2");
     delete m_globalAutomationTrack;
+    qInfo("Song::~Song 3");
 }
 
 void Song::masterVolumeChanged()
@@ -801,6 +804,12 @@ void Song::clearProject()
         setPlayPos(0, (PlayModes)i);
     }
 
+    qInfo("Song::clearProject 1");
+
+    Engine::mixer()->clearAllPlayHandles();
+
+    qInfo("Song::clearProject 2");
+
     Engine::mixer()->requestChangeInModel();
 
     if(gui && gui->getBBEditor())
@@ -815,28 +824,52 @@ void Song::clearProject()
     {
         gui->fxMixerView()->clear();
     }
+
+    Engine::mixer()->doneChangeInModel();
+
     QCoreApplication::sendPostedEvents();
+
+    Engine::mixer()->requestChangeInModel();
+
+    qInfo("Song::clearProject 3");
     Engine::getBBTrackContainer()->clearAllTracks();
     clearAllTracks();
     clearSongMetaData();
+    qInfo("Song::clearProject 4");
+
+    Engine::mixer()->doneChangeInModel();
+
+    QCoreApplication::sendPostedEvents();
+
+    qInfo("Song::clearProject 5");
+
+    Engine::mixer()->requestChangeInModel();
 
     Engine::fxMixer()->clear();
 
+    qInfo("Song::clearProject 6");
+
     if(gui && gui->automationEditor())
     {
-        gui->automationEditor()->setCurrentPattern(NULL);
+        gui->automationEditor()->reset();
     }
+
+    qInfo("Song::clearProject 7");
 
     if(gui && gui->pianoRoll())
     {
         gui->pianoRoll()->reset();
     }
 
+    qInfo("Song::clearProject 8");
+
     m_tempoModel.reset();
     m_masterVolumeModel.reset();
     m_masterPitchModel.reset();
     m_masterPanningModel.reset();
     m_timeSigModel.reset();
+
+    qInfo("Song::clearProject 9");
 
     AutomationPattern::globalAutomationPattern(&m_tempoModel)->clear();
     AutomationPattern::globalAutomationPattern(&m_masterVolumeModel)->clear();
@@ -845,6 +878,8 @@ void Song::clearProject()
             ->clear();
 
     Engine::mixer()->doneChangeInModel();
+
+    qInfo("Song::clearProject 10");
 
     if(gui && gui->getProjectNotes())
     {
@@ -855,13 +890,21 @@ void Song::clearProject()
 
     SampleBuffer::clearMMap();
 
+    qInfo("Song::clearProject 11");
+
     emit dataChanged();
+
+    qInfo("Song::clearProject 12");
 
     Engine::projectJournal()->clearJournal();
 
     Engine::projectJournal()->setJournalling(true);
 
+    qInfo("Song::clearProject 13");
+
     InstrumentTrackView::cleanupWindowCache();
+
+    qInfo("Song::clearProject 14");
 }
 
 // create new file
@@ -1064,8 +1107,8 @@ void Song::loadProject(const QString& fileName)
         {
             if(node.isElement())
             {
-                    // qInfo("Song::loadProject tag %s start",
-                    //   qPrintable(node.nodeName()));
+                // qInfo("Song::loadProject tag %s start",
+                //   qPrintable(node.nodeName()));
 
                 if(node.nodeName() == "trackcontainer")
                 {

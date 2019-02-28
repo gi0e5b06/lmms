@@ -534,7 +534,7 @@ AudioFileProcessorView::AudioFileProcessorView(Instrument* _instrument,
             "The sample loops backwards and forwards between the end point "
             "and the loop point."));
 
-    m_loopGroup = new automatableButtonGroup(this);
+    m_loopGroup = new automatableButtonGroup(this,"[looping mode]");
     m_loopGroup->addButton(m_loopOffButton);
     m_loopGroup->addButton(m_loopOnButton);
     m_loopGroup->addButton(m_loopPingPongButton);

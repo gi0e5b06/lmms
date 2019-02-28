@@ -32,6 +32,7 @@
 #include "Knob.h"
 #include "LedCheckBox.h"
 #include "TempoSyncKnob.h"
+#include "MemoryManager.h"
 
 #include <QObject>
 
@@ -43,7 +44,9 @@ class NotePlayHandle;
 class kickerInstrument : public Instrument
 {
     Q_OBJECT
-  public:
+    MM_OPERATORS
+
+ public:
     kickerInstrument(InstrumentTrack* _instrument_track);
     virtual ~kickerInstrument();
 

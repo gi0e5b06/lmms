@@ -26,6 +26,7 @@
 #define PLAY_HANDLE_H
 
 #include "MemoryManager.h"
+#include "SafeList.h"
 #include "ThreadableJob.h"
 #include "lmms_basics.h"
 
@@ -65,19 +66,31 @@ class PlayHandle : public ThreadableJob
         return false;
     }
 
+    /*
     const QThread* affinity() const
     {
         return m_affinity;
     }
+    */
 
     void setAffinity(QThread* _thread)
     {
-        m_affinity = _thread;
+        // m_affinity = _thread;
     }
 
     Type type() const
     {
         return m_type;
+    }
+
+    inline AudioPort* audioPort() const
+    {
+        return m_audioPort;
+    }
+
+    inline void setAudioPort(AudioPort* port)
+    {
+        m_audioPort = port;
     }
 
     // required for ThreadableJob
@@ -104,12 +117,13 @@ class PlayHandle : public ThreadableJob
     }
 
     virtual void play(sampleFrame* buffer)              = 0;
-    virtual bool isFinished() const                     = 0;
     virtual bool isFromTrack(const Track* _track) const = 0;
+    virtual bool isFinished() const = 0;
+    virtual void setFinished() final;
 
     // returns the frameoffset at the start of the playhandle,
-    // ie. how many empty frames should be inserted at the start of the first
-    // period
+    // ie. how many empty frames should be inserted at the start of
+    // the first period
     virtual f_cnt_t offset() const final
     {
         return m_offset;
@@ -130,19 +144,9 @@ class PlayHandle : public ThreadableJob
         m_usesBuffer = b;
     }
 
-    inline AudioPort* audioPort() const
-    {
-        return m_audioPort;
-    }
+    virtual void releaseBuffer() final;
 
-    inline void setAudioPort(AudioPort* port)
-    {
-        m_audioPort = port;
-    }
-
-    void releaseBuffer();
-
-    sampleFrame* buffer();
+    virtual sampleFrame* buffer() final;
 
   protected:
     PlayHandle(const Type type, f_cnt_t offset = 0);
@@ -159,19 +163,22 @@ class PlayHandle : public ThreadableJob
     }
     */
 
-    bool       m_usesBuffer;
     AudioPort* m_audioPort;
+    bool       m_finished;
 
   private:
     Type         m_type;
     f_cnt_t      m_offset;
-    QThread*     m_affinity;
     QMutex       m_processingLock;
+    bool         m_usesBuffer;
     sampleFrame* m_playHandleBuffer;
     bool         m_bufferReleased;
+    // QThread*     m_affinity;
 };
 
-typedef QList<PlayHandle*>       PlayHandleList;
-typedef QList<const PlayHandle*> ConstPlayHandleList;
+// typedef QList<PlayHandle*>       PlayHandleList;
+// typedef QList<const PlayHandle*> ConstPlayHandleList;
+typedef SafeList<PlayHandle*>       PlayHandleList;
+typedef SafeList<const PlayHandle*> ConstPlayHandleList;
 
 #endif

@@ -58,7 +58,7 @@ extern "C"
 
     Plugin::Descriptor PLUGIN_EXPORT sfxr_plugin_descriptor
             = {STRINGIFY(PLUGIN_NAME),
-               "sfxr",
+               "SFXR",
                QT_TRANSLATE_NOOP("pluginBrowser", "LMMS port of sfxr"),
                "Wong Cho Ching",
                0x0100,

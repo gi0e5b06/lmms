@@ -185,7 +185,7 @@ PresetPreviewPlayHandle::PresetPreviewPlayHandle(const QString& _preset_file,
     s_previewTC->previewInstrumentTrack()->midiPort()->setMode(
             MidiPort::Disabled);
     setAudioPort(s_previewTC->previewInstrumentTrack()->audioPort());
-    setAffinity(Engine::mixer()->thread());
+    // setAffinity(Engine::mixer()->thread());
 
     if(s_previewTC->previewInstrumentTrack()->getVolume() > DefaultVolume)
         s_previewTC->previewInstrumentTrack()->setVolume(DefaultVolume);
@@ -198,9 +198,10 @@ PresetPreviewPlayHandle::PresetPreviewPlayHandle(const QString& _preset_file,
             s_previewTC->previewInstrumentTrack(), 0,
             std::numeric_limits<f_cnt_t>::max() / 2,
             Note(0, 0, DefaultKey, 100));
-    m_previewNPH->setAffinity(Engine::mixer()->thread());
+    // m_previewNPH->setAffinity(Engine::mixer()->thread());
 
     // qInfo("PresetPreviewPlayHandle::PresetPreviewPlayHandle 7");
+    /*
     if(!Engine::mixer()->addPlayHandle(m_previewNPH))
     {
         qWarning(
@@ -211,6 +212,8 @@ PresetPreviewPlayHandle::PresetPreviewPlayHandle(const QString& _preset_file,
         m_previewNPH = nullptr;
     }
     else
+    */
+    Engine::mixer()->emit playHandleToAdd(m_previewNPH);
     {
         s_previewTC->setPreviewNote(m_previewNPH);
         // qInfo("PresetPreviewPlayHandle::play OK previewPlayHandle added");
@@ -231,12 +234,13 @@ PresetPreviewPlayHandle::~PresetPreviewPlayHandle()
     if(m_previewNPH != nullptr)
     {
         qInfo("PresetPreviewPlayHandle::~PresetPreviewPlayHandle 0");
-        m_previewNPH->setAffinity(QThread::currentThread());
-        m_previewNPH->noteOff();
+        // m_previewNPH->setAffinity(QThread::currentThread());
+        // m_previewNPH->noteOff();
         // qInfo("PresetPreviewPlayHandle::~PresetPreviewPlayHandle 1a");
-        m_previewNPH->mute();
+        // m_previewNPH->mute();
         // qInfo("PresetPreviewPlayHandle::~PresetPreviewPlayHandle 1b");
-        Engine::mixer()->removePlayHandle(m_previewNPH);
+        m_previewNPH->setFinished();
+        // Engine::mixer()->emit playHandleToRemove(m_previewNPH);
         // qInfo("PresetPreviewPlayHandle::~PresetPreviewPlayHandle 2");
         m_previewNPH = nullptr;
     }
@@ -264,7 +268,7 @@ void PresetPreviewPlayHandle::play(sampleFrame* _working_buffer)
 
 bool PresetPreviewPlayHandle::isFinished() const
 {
-    return m_previewNPH == nullptr || m_previewNPH->isMuted();
+    return m_finished || m_previewNPH == nullptr || m_previewNPH->isMuted();
 }
 
 bool PresetPreviewPlayHandle::isFromTrack(const Track* _track) const

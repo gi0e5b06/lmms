@@ -60,6 +60,7 @@
 #include "PluginFactory.h"
 #include "PluginView.h"
 //#include "SamplePlayHandle.h"
+#include "Backtrace.h"
 #include "Scale.h"
 #include "Song.h"
 #include "StringPairDrag.h"
@@ -95,7 +96,6 @@ const int INSTRUMENT_HEIGHT            = INSTRUMENT_WIDTH;
 const int PIANO_HEIGHT                 = 80;
 const int INSTRUMENT_WINDOW_CACHE_SIZE = 8;
 
-// #### IT:
 InstrumentTrack::InstrumentTrack(TrackContainer* tc) :
       Track(Track::InstrumentTrack, tc), MidiEventProcessor(),
       m_midiPort(tr("Instrument track"),
@@ -213,16 +213,17 @@ InstrumentTrack::InstrumentTrack(TrackContainer* tc) :
 
 InstrumentTrack::~InstrumentTrack()
 {
-    // qInfo("InstrumentTrack::~InstrumentTrack 1");
+    qInfo("InstrumentTrack::~InstrumentTrack [%s]", qPrintable(name()));
+
     // kill all running notes and the iph
     silenceAllNotes(true);
 
     // qInfo("InstrumentTrack::~InstrumentTrack 2");
     // now we're save deleting the instrument
     Instrument* old = m_instrument;
-    if(old)
+    if(old != nullptr)
     {
-        // qInfo("InstrumentTrack::~InstrumentTrack 3");
+        qInfo("~InstrumentTrack delete instrument [%s]", qPrintable(name()));
         m_instrument = nullptr;
         delete old;
         // qInfo("InstrumentTrack::~InstrumentTrack 4");
@@ -389,55 +390,72 @@ void InstrumentTrack::processInEvent(const MidiEvent& event,
         case MidiNoteOn:
             if(event.velocity() > 0)
             {
-                if(m_notes[event.key()] == nullptr)
+                Engine::mixer()->requestChangeInModel();
                 {
-                    NotePlayHandle* nph = NotePlayHandleManager::acquire(
-                            this, offset,
-                            std::numeric_limits<f_cnt_t>::max() / 2,
-                            Note(MidiTime(), MidiTime(), event.key(),
-                                 event.volume(midiPort()->baseVelocity())),
-                            nullptr, event.channel(),
-                            NotePlayHandle::OriginMidiInput);
-                    m_notes[event.key()] = nph;
-                    if(!Engine::mixer()->addPlayHandle(nph))
+                    m_midiNotesMutex.lock();
+                    NotePlayHandle* n = m_notes[event.key()];
+                    if(n == nullptr)
                     {
-                        m_notes[event.key()] = nullptr;
+                        n = NotePlayHandleManager::acquire(
+                                this, offset,
+                                std::numeric_limits<f_cnt_t>::max() / 2,
+                                Note(MidiTime(), MidiTime(), event.key(),
+                                     event.volume(
+                                             midiPort()->baseVelocity())),
+                                nullptr, event.channel(),
+                                NotePlayHandle::OriginMidiInput);
+                        m_notes[event.key()] = n;
+                        Engine::mixer()->emit playHandleToAdd(n);
                     }
+                    m_midiNotesMutex.unlock();
                 }
+                Engine::mixer()->doneChangeInModel();
                 eventHandled = true;
                 break;
             }
 
         case MidiNoteOff:
-            if(m_notes[event.key()] != nullptr)
+            Engine::mixer()->requestChangeInModel();
             {
-                // do actual note off and remove internal reference to
-                // NotePlayHandle (which itself will be deleted later
-                // automatically)
-                Engine::mixer()->requestChangeInModel();
-                m_notes[event.key()]->noteOff(offset);
-
-                if(isSustainPedalPressed()
-                   && m_notes[event.key()]->origin()
-                              == m_notes[event.key()]->OriginMidiInput)
-                {
-                    m_sustainedNotes << m_notes[event.key()];
-                }
+                m_midiNotesMutex.lock();
+                NotePlayHandle* n    = m_notes[event.key()];
                 m_notes[event.key()] = nullptr;
+                m_midiNotesMutex.unlock();
 
-                Engine::mixer()->doneChangeInModel();
+                if(n != nullptr)
+                {
+                    // do actual note off and remove internal reference to
+                    // NotePlayHandle (which itself will be deleted later
+                    // automatically)
+                    n->lock();
+                    n->noteOff(offset);
+                    n->unlock();
+
+                    if(isSustainPedalPressed()
+                       && n->origin() == n->OriginMidiInput)
+                        m_sustainedNotes << n;
+                }
             }
+            Engine::mixer()->doneChangeInModel();
             eventHandled = true;
             break;
 
         case MidiKeyPressure:
-            if(m_notes[event.key()] != nullptr)
+            Engine::mixer()->requestChangeInModel();
             {
-                // setVolume() calls processOutEvent() with MidiKeyPressure so
-                // the attached instrument will receive the event as well
-                m_notes[event.key()]->setVolume(
-                        event.volume(midiPort()->baseVelocity()));
+                m_midiNotesMutex.lock();
+                NotePlayHandle* n = m_notes[event.key()];
+                m_midiNotesMutex.unlock();
+
+                if(n != nullptr)
+                {
+                    // setVolume() calls processOutEvent() with
+                    // MidiKeyPressure so the attached instrument will receive
+                    // the event as well
+                    n->setVolume(event.volume(midiPort()->baseVelocity()));
+                }
             }
+            Engine::mixer()->doneChangeInModel();
             eventHandled = true;
             break;
 
@@ -492,11 +510,15 @@ void InstrumentTrack::processInEvent(const MidiEvent& event,
             switch(event.metaEvent())
             {
                 case MidiNotePanning:
+                    Engine::mixer()->requestChangeInModel();
+                    m_midiNotesMutex.lock();
                     if(m_notes[event.key()] != nullptr)
                     {
                         eventHandled = true;
                         m_notes[event.key()]->setPanning(event.panning());
                     }
+                    m_midiNotesMutex.unlock();
+                    Engine::mixer()->doneChangeInModel();
                     break;
                 default:
                     qWarning("InstrumentTrack: unhandled MIDI meta event: %i",
@@ -532,9 +554,6 @@ void InstrumentTrack::processOutEvent(const MidiEvent& event,
     {
         case MidiNoteOn:
             m_midiNotesMutex.lock();
-            m_piano.setKeyState(event.key(),
-                                true);  // event.key() = original key
-
             if(key >= 0 && key < NumMidiKeys)
             {
                 while(m_runningMidiNotes[key] > 0)
@@ -552,15 +571,16 @@ void InstrumentTrack::processOutEvent(const MidiEvent& event,
                                   key, event.velocity()),
                         time, offset);
             }
+
+            // event.key() = original key
+            // m_piano.setKeyState(event.key(), true);
+            m_piano.pressKey(event.key());
             m_midiNotesMutex.unlock();
             emit newNote();
             break;
 
         case MidiNoteOff:
             m_midiNotesMutex.lock();
-            m_piano.setKeyState(event.key(),
-                                false);  // event.key() = original key
-
             if(key >= 0 && key < NumMidiKeys)
             {
                 while(m_runningMidiNotes[key] > 0)
@@ -576,6 +596,10 @@ void InstrumentTrack::processOutEvent(const MidiEvent& event,
                 m_notePanningModel.setAutomatedValue(0.);
                 m_noteBendingModel.setAutomatedValue(0.);
             }
+
+            // event.key() = original key
+            // m_piano.setKeyState(event.key(), false);
+            m_piano.releaseKey(event.key());
             m_midiNotesMutex.unlock();
             break;
 
@@ -590,6 +614,7 @@ void InstrumentTrack::processOutEvent(const MidiEvent& event,
 
 void InstrumentTrack::silenceAllNotes(bool removeIPH)
 {
+    Engine::mixer()->requestChangeInModel();
     // qInfo("InstrumentTrack::silenceAllNotes 1a");
     for(int i = 0; i < NumMidiKeys; ++i)
     {
@@ -607,6 +632,7 @@ void InstrumentTrack::silenceAllNotes(bool removeIPH)
         m_runningMidiNotes[i] = 0;
     }
     m_midiNotesMutex.unlock();
+
     // qInfo("InstrumentTrack::silenceAllNotes 2");
 
     lock();
@@ -616,20 +642,28 @@ void InstrumentTrack::silenceAllNotes(bool removeIPH)
     m_sustainedNotes.clear();
     // qInfo("InstrumentTrack::silenceAllNotes 3b");
     m_processHandles.clear();
+    // qInfo("InstrumentTrack::silenceAllNotes 3c");
+    unlock();
+
     // qInfo("InstrumentTrack::silenceAllNotes 4");
     quint8 flags = PlayHandle::TypeNotePlayHandle
                    | PlayHandle::TypePresetPreviewHandle;
-    Engine::mixer()->emit removePlayHandlesOfTypes(this, flags);
+    Engine::mixer()->emit playHandlesOfTypesToRemove(this, flags);
     // qInfo("InstrumentTrack::silenceAllNotes 5");
-    /*
+
     if(removeIPH)
     {
+        qInfo("InstrumentTrack::silenceAllNotes removeIPH t=%s",
+              qPrintable(name()));
         flags = PlayHandle::TypeInstrumentPlayHandle;
-        Engine::mixer()->removePlayHandlesOfTypes(this, flags);
+        Engine::mixer()->emit playHandlesOfTypesToRemove(this, flags);
     }
-    */
-    unlock();
     // qInfo("InstrumentTrack::silenceAllNotes 6");
+    Engine::mixer()->doneChangeInModel();
+
+    QThread::yieldCurrentThread();
+    QCoreApplication::sendPostedEvents();
+    QThread::yieldCurrentThread();
 }
 
 f_cnt_t InstrumentTrack::beatLen(NotePlayHandle* _n) const
@@ -961,20 +995,19 @@ bool InstrumentTrack::play(const MidiTime& _start,
             {
                 const f_cnt_t note_frames = cur_note->length().frames(fpt);
 
-                NotePlayHandle* notePlayHandle
-                        = NotePlayHandleManager::acquire(
-                                this, _offset, note_frames, *cur_note);
-                notePlayHandle->setBBTrack(bb_track);
+                NotePlayHandle* nph = NotePlayHandleManager::acquire(
+                        this, _offset, note_frames, *cur_note);
+                nph->setBBTrack(bb_track);
                 // are we playing global song?
                 if(_tco_num < 0)
                 {
                     // then set song-global offset of pattern in order to
                     // properly perform the note detuning
-                    notePlayHandle->setSongGlobalParentOffset(
-                            p->startPosition());
+                    nph->setSongGlobalParentOffset(p->startPosition());
                 }
 
-                Engine::mixer()->addPlayHandle(notePlayHandle);
+                // Engine::mixer()->addPlayHandle(nph);
+                Engine::mixer()->emit playHandleToAdd(nph);
                 played_a_note = true;
                 ++nit;
             }
@@ -2052,8 +2085,8 @@ void InstrumentTrackWindow::modelChanged()
     {
         m_bendingKnob->hide();
         // m_pitchLabel->hide();
-        m_bendingKnob->setModel(new FloatModel(0., 0., 0., 0.01, nullptr, "",
-                                               true));  //(nullptr);
+        m_bendingKnob->setModel(
+                new FloatModel(0., 0., 0., 0.01, nullptr, "[bending]", true));
         m_bendingRangeSpinBox->hide();
         // m_bendingRangeLabel->hide();
     }

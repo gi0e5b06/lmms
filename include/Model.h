@@ -85,6 +85,7 @@ class EXPORT Model : public QObject
     bool    m_defaultConstructed;
     bool    m_frequentlyUpdated;
     QString m_uuid;
+    QString m_debug_uuid;
 
     static QHash<QString,Model*> s_models;
 };

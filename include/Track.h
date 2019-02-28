@@ -701,8 +701,8 @@ class EXPORT Track : public Model, public JournallingObject
         InstrumentTrack,
         BBTrack,
         SampleTrack,
-        EventTrack, // not used but must be kept
-        VideoTrack, // not used but must be kept
+        EventTrack,  // not used but must be kept
+        VideoTrack,  // not used but must be kept
         AutomationTrack,
         HiddenAutomationTrack,
     };
@@ -808,10 +808,12 @@ class EXPORT Track : public Model, public JournallingObject
     {
         m_processingLock.lock();
     }
+
     void unlock()
     {
         m_processingLock.unlock();
     }
+
     bool tryLock()
     {
         return m_processingLock.tryLock();
@@ -835,6 +837,8 @@ class EXPORT Track : public Model, public JournallingObject
     virtual void cleanFrozenBuffer();
     virtual void readFrozenBuffer();
     virtual void writeFrozenBuffer();
+
+    void clearAllTrackPlayHandles();
 
     // signals:
     // using Model::dataChanged(); <-- not working

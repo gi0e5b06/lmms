@@ -25,6 +25,15 @@
 #ifndef MIXER_H
 #define MIXER_H
 
+//#include "LocklessList.h"
+#include "AudioPort.h"
+#include "Configuration.h"
+#include "MemoryManager.h"
+#include "MixerProfiler.h"
+#include "Note.h"
+#include "NotePlayHandle.h"
+#include "Ring.h"
+#include "fifo_buffer.h"
 #include "lmms_basics.h"
 
 #include <QMutex>
@@ -33,14 +42,6 @@
 #include <QWaitCondition>
 
 #include <samplerate.h>
-//#include "LocklessList.h"
-#include "Configuration.h"
-#include "MemoryManager.h"
-#include "MixerProfiler.h"
-#include "Note.h"
-#include "NotePlayHandle.h"
-#include "Ring.h"
-#include "fifo_buffer.h"
 
 class AudioDevice;
 class MidiClient;
@@ -68,12 +69,53 @@ const Octaves BaseOctave = DefaultOctave;
 
 #include "PlayHandle.h"
 
+class Mixer;
 class MixerWorkerThread;
+
+typedef fifoBuffer<surroundSampleFrame*> fifo;
+
+class HandleManager : public QThread
+{
+    Q_OBJECT
+
+  public:
+    HandleManager(Mixer* _mixer);
+    ~HandleManager();
+
+  public slots:
+    void addPlayHandleHM(PlayHandle* handle);
+    void removePlayHandleHM(PlayHandle* handle);
+    void removePlayHandlesOfTypesHM(const Track* _track, const quint8 _types);
+    void removeAllPlayHandlesHM();
+
+  private:
+    Mixer* m_mixer;
+};
+
+class FifoWriter : public QThread
+{
+    Q_OBJECT
+
+  public:
+    FifoWriter(Mixer* _mixer, fifo* _fifo);
+
+    void finish();
+
+  private:
+    Mixer*        m_mixer;
+    fifo*         m_fifo;
+    volatile bool m_writing;
+
+    virtual void run();
+
+    void write(surroundSampleFrame* buffer);
+};
 
 class EXPORT Mixer : public QObject
 {
-    MM_OPERATORS
     Q_OBJECT
+    MM_OPERATORS
+
   public:
     struct qualitySettings
     {
@@ -163,6 +205,7 @@ class EXPORT Mixer : public QObject
     void initDevices();
     void clear();
     void clearPlayHandlesToAdd();
+    void clearAllPlayHandles();
 
     // audio-device-stuff
 
@@ -180,7 +223,7 @@ class EXPORT Mixer : public QObject
     void setAudioDevice(AudioDevice* _dev);
     void setAudioDevice(AudioDevice*                  _dev,
                         const struct qualitySettings& _qs,
-                        bool                          _needs_fifo);
+                        bool                          _needsFifo);
     void storeAudioDevice();
     void restoreAudioDevice();
 
@@ -210,8 +253,6 @@ class EXPORT Mixer : public QObject
         return m_playHandles;
     }
     */
-
-    void removePlayHandlesOfTypes(const Track* _track, const quint8 types);
 
     ConstNotePlayHandleList  // QList<const NotePlayHandle*>
             nphsOfTrack(const Track* _track, bool _all = false);
@@ -296,7 +337,7 @@ class EXPORT Mixer : public QObject
 
     inline bool hasFifoWriter() const
     {
-        return m_fifoWriter != NULL;
+        return m_fifoWriter != nullptr;
     }
 
     void pushInputFrames(sampleFrame* _ab, const f_cnt_t _frames);
@@ -335,41 +376,26 @@ class EXPORT Mixer : public QObject
         return m_displayRing;
     }
 
-  public slots:
-    // play-handle stuff
-    bool addPlayHandle(PlayHandle* handle);
-    void removePlayHandle(PlayHandle* handle);
+    bool isHM()
+    {
+        return QThread::currentThread() == m_handleManager;
+    }
 
   signals:
     void qualitySettingsChanged();
     void sampleRateChanged();
     // void nextDisplayBuffer( const surroundSampleFrame * buffer );
     void playHandleDeleted(PlayHandle* handle);
+    void playHandleToAdd(PlayHandle* handle);
+    void playHandleToRemove(PlayHandle* handle);
+    void playHandlesOfTypesToRemove(const Track* _track, const quint8 _types);
+    void allPlayHandlesRemoval();
 
   private:
-    typedef fifoBuffer<surroundSampleFrame*> fifo;
-
-    class fifoWriter : public QThread
-    {
-      public:
-        fifoWriter(Mixer* _mixer, fifo* _fifo);
-
-        void finish();
-
-      private:
-        Mixer*        m_mixer;
-        fifo*         m_fifo;
-        volatile bool m_writing;
-
-        virtual void run();
-
-        void write(surroundSampleFrame* buffer);
-    };
-
     Mixer(bool renderOnly);
     virtual ~Mixer();
 
-    void startProcessing(bool _needs_fifo = true);
+    void startProcessing(bool _needsFifo = true);
     void stopProcessing();
 
     AudioDevice* tryAudioDevices();
@@ -377,16 +403,18 @@ class EXPORT Mixer : public QObject
 
     const surroundSampleFrame* renderNextBuffer();
 
-    // void clearInternal();
-    bool addPlayHandleInternal(PlayHandle* _ph);
-    void removePlayHandleInternal(PlayHandle* _ph);
-    void removePlayHandleUnchecked(PlayHandle* _ph);
-    void deletePlayHandleInternal(PlayHandle* _ph);
+    void addPlayHandle1(PlayHandle* handle);
+    void removePlayHandle1(PlayHandle* handle);
+    void deletePlayHandle1(PlayHandle* _ph);
+    void removePlayHandlesOfTypes1(const Track* _track, const quint8 types);
+    void removeAllPlayHandles1();
+
     void runChangesInModel();
 
     bool m_renderOnly;
 
-    QVector<AudioPort*> m_audioPorts;
+    // QVector<AudioPort*>
+    AudioPorts m_audioPorts;
 
     fpp_t m_framesPerPeriod;
     // long  m_periodCounter;
@@ -437,13 +465,12 @@ class EXPORT Mixer : public QObject
 
     // FIFO stuff
     fifo*       m_fifo;
-    fifoWriter* m_fifoWriter;
+    FifoWriter* m_fifoWriter;
 
-    MixerProfiler m_profiler;
-
-    bool m_metronomeActive;
-
-    bool m_clearSignal;
+    HandleManager* m_handleManager;
+    MixerProfiler  m_profiler;
+    bool           m_metronomeActive;
+    bool           m_clearSignal;
 
     bool           m_changesSignal;
     unsigned int   m_changes;
@@ -458,6 +485,8 @@ class EXPORT Mixer : public QObject
     friend class LmmsCore;
     friend class MixerWorkerThread;
     friend class ProjectRenderer;
+    friend class HandleManager;
+    friend class FifoWriter;
 };
 
 #endif

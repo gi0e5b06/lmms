@@ -184,13 +184,15 @@ sf2Instrument::sf2Instrument(InstrumentTrack* _instrument_track) :
 
     InstrumentPlayHandle* iph
             = new InstrumentPlayHandle(this, _instrument_track);
-    iph->setAffinity(Engine::mixer()->thread());
-    Engine::mixer()->addPlayHandle(iph);
+    // iph->setAffinity(Engine::mixer()->thread());
+    // Engine::mixer()->addPlayHandle(iph);
+    Engine::mixer()->emit playHandleToAdd(iph);
 }
 
 sf2Instrument::~sf2Instrument()
 {
-    Engine::mixer()->removePlayHandlesOfTypes(
+    Engine::mixer()->emit playHandlesOfTypesToRemove(
+            // removePlayHandlesOfTypes(
             instrumentTrack(),
             // PlayHandle::TypeNotePlayHandle|
             PlayHandle::TypeInstrumentPlayHandle);

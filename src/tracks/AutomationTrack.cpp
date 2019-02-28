@@ -3,7 +3,8 @@
  *                       a track
  *
  * Copyright (c) 2008-2014 Tobias Doerffel <tobydox/at/users.sourceforge.net>
- * Copyright (c) 2006-2008 Javier Serrano Polo <jasp00/at/users.sourceforge.net>
+ * Copyright (c) 2006-2008 Javier Serrano Polo
+ * <jasp00/at/users.sourceforge.net>
  *
  * This file is part of LMMS - https://lmms.io
  *
@@ -25,160 +26,133 @@
  */
 
 #include "AutomationTrack.h"
+
 #include "AutomationPattern.h"
 #include "Engine.h"
-#include "embed.h"
 #include "ProjectJournal.h"
 #include "StringPairDrag.h"
 #include "TrackContainerView.h"
 #include "TrackLabelButton.h"
+#include "embed.h"
 
-
-AutomationTrack::AutomationTrack( TrackContainer* tc, bool _hidden ) :
-	Track( _hidden ? HiddenAutomationTrack : Track::AutomationTrack, tc )
+AutomationTrack::AutomationTrack(TrackContainer* tc, bool _hidden) :
+      Track(_hidden ? HiddenAutomationTrack : Track::AutomationTrack, tc)
 {
-	setName( tr( "Automation track" ) );
-        setColor(QColor("#5F30A4"));
+    setName(tr("Automation track"));
+    setColor(QColor("#5F30A4"));
 }
-
-
-
 
 AutomationTrack::~AutomationTrack()
 {
+    qInfo("AutomationTrack::~AutomationTrack");
+    if(type() == HiddenAutomationTrack)
+        qInfo("~AutomationTrack HIDDEN");
 }
-
-
-
 
 QString AutomationTrack::defaultName() const
 {
-        QString r="";
-	for(const TrackContentObject* tco: getTCOs())
-                if(!tco->isEmpty())
-                {
-                        r=tco->name();
-                        r=r.right(r.indexOf(QChar('>')));
-                        break;
-                }
-        if(r.isEmpty()) r=tr( "Automation track" );
-        return r;
+    QString r = "";
+    for(const TrackContentObject* tco: getTCOs())
+        if(!tco->isEmpty())
+        {
+            r = tco->name();
+            r = r.right(r.indexOf(QChar('>')));
+            break;
+        }
+    if(r.isEmpty())
+        r = tr("Automation track");
+    return r;
 }
 
-
-
-
-bool AutomationTrack::play( const MidiTime & time_start, const fpp_t _frames,
-                            const f_cnt_t _frame_base, int _tco_num )
+bool AutomationTrack::play(const MidiTime& time_start,
+                           const fpp_t     _frames,
+                           const f_cnt_t   _frame_base,
+                           int             _tco_num)
 {
-	return false;
+    return false;
 }
 
-
-
-
-TrackView * AutomationTrack::createView( TrackContainerView* tcv )
+TrackView* AutomationTrack::createView(TrackContainerView* tcv)
 {
-	return new AutomationTrackView( this, tcv );
+    return new AutomationTrackView(this, tcv);
 }
 
-
-
-
-TrackContentObject * AutomationTrack::createTCO( const MidiTime & )
+TrackContentObject* AutomationTrack::createTCO(const MidiTime&)
 {
-	return new AutomationPattern( this );
+    return new AutomationPattern(this);
 }
 
-
-
-
-void AutomationTrack::saveTrackSpecificSettings( QDomDocument & _doc,
-							QDomElement & _this )
+void AutomationTrack::saveTrackSpecificSettings(QDomDocument& _doc,
+                                                QDomElement&  _this)
 {
 }
 
-
-
-
-void AutomationTrack::loadTrackSpecificSettings( const QDomElement & _this )
+void AutomationTrack::loadTrackSpecificSettings(const QDomElement& _this)
 {
-	// just in case something somehow wrent wrong...
-	if( type() == HiddenAutomationTrack )
-	{
-		setMuted( false );
-	}
+    // just in case something somehow wrent wrong...
+    if(type() == HiddenAutomationTrack)
+    {
+        setMuted(false);
+    }
 }
 
-
-
-
-
-AutomationTrackView::AutomationTrackView( AutomationTrack * _at, TrackContainerView* tcv ) :
-	TrackView( _at, tcv )
+AutomationTrackView::AutomationTrackView(AutomationTrack*    _at,
+                                         TrackContainerView* tcv) :
+      TrackView(_at, tcv)
 {
-        setFixedHeight( 32 );
-	TrackLabelButton * tlb = new TrackLabelButton( this,
-						getTrackSettingsWidget() );
-	tlb->setIcon( embed::getIconPixmap( "automation_track" ) );
-	tlb->move( 3, 1 );
-	tlb->show();
-	setModel( _at );
+    setFixedHeight(32);
+    TrackLabelButton* tlb
+            = new TrackLabelButton(this, getTrackSettingsWidget());
+    tlb->setIcon(embed::getIconPixmap("automation_track"));
+    tlb->move(3, 1);
+    tlb->show();
+    setModel(_at);
 }
-
-
-
 
 AutomationTrackView::~AutomationTrackView()
 {
 }
 
-
-
-
-void AutomationTrackView::dragEnterEvent( QDragEnterEvent * _dee )
+void AutomationTrackView::dragEnterEvent(QDragEnterEvent* _dee)
 {
-	StringPairDrag::processDragEnterEvent( _dee, "automatable_model" );
+    StringPairDrag::processDragEnterEvent(_dee, "automatable_model");
 }
 
-
-
-
-void AutomationTrackView::dropEvent( QDropEvent * _de )
+void AutomationTrackView::dropEvent(QDropEvent* _de)
 {
-	QString type = StringPairDrag::decodeKey( _de );
-	QString val = StringPairDrag::decodeValue( _de );
-	if( type == "automatable_model" )
-	{
-		AutomatableModel * mod = dynamic_cast<AutomatableModel *>(
-				Engine::projectJournal()->
-					journallingObject( val.toInt() ) );
-		if( mod != NULL )
-		{
-			MidiTime pos = MidiTime( trackContainerView()->
-							currentPosition() +
-				( _de->pos().x() -
-					getTrackContentWidget()->x() ) *
-						MidiTime::ticksPerTact() /
-		static_cast<int>( trackContainerView()->pixelsPerTact() ) )
-				.toAbsoluteTact();
+    QString type = StringPairDrag::decodeKey(_de);
+    QString val  = StringPairDrag::decodeValue(_de);
+    if(type == "automatable_model")
+    {
+        AutomatableModel* mod = dynamic_cast<AutomatableModel*>(
+                Engine::projectJournal()->journallingObject(val.toInt()));
+        if(mod != NULL)
+        {
+            MidiTime pos
+                    = MidiTime(trackContainerView()->currentPosition()
+                               + (_de->pos().x()
+                                  - getTrackContentWidget()->x())
+                                         * MidiTime::ticksPerTact()
+                                         / static_cast<int>(
+                                                   trackContainerView()
+                                                           ->pixelsPerTact()))
+                              .toAbsoluteTact();
 
-			if( pos.getTicks() < 0 )
-			{
-				pos.setTicks( 0 );
-			}
+            if(pos.getTicks() < 0)
+            {
+                pos.setTicks(0);
+            }
 
-			TrackContentObject * tco = getTrack()->createTCO( pos );
-			AutomationPattern * pat = dynamic_cast<AutomationPattern *>( tco );
-			pat->addObject( mod );
-			pat->movePosition( pos );
+            TrackContentObject* tco = getTrack()->createTCO(pos);
+            AutomationPattern*  pat = dynamic_cast<AutomationPattern*>(tco);
+            pat->addObject(mod);
+            pat->movePosition(pos);
 
-                        //mod->emit propertiesChanged();
-                        mod->emit dataChanged();//controlledValueChanged(mod->currentValue(0));
-		}
-	}
+            // mod->emit propertiesChanged();
+            mod->emit
+                    dataChanged();  // controlledValueChanged(mod->currentValue(0));
+        }
+    }
 
-	update();
+    update();
 }
-
-

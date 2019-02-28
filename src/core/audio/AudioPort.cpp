@@ -25,10 +25,12 @@
 #include "AudioPort.h"
 
 #include "AudioDevice.h"
+#include "Backtrace.h"
 #include "BufferManager.h"
 #include "EffectChain.h"
 #include "Engine.h"
 #include "FxMixer.h"
+#include "InstrumentPlayHandle.h"
 #include "MixHelpers.h"
 #include "Mixer.h"
 #include "NotePlayHandle.h"
@@ -66,21 +68,34 @@ AudioPort::AudioPort(const QString& _name,
 
 AudioPort::~AudioPort()
 {
-    // qInfo("AudioPort::~AudioPort 1");
+    qInfo("AudioPort::~AudioPort");
     setExtOutputEnabled(false);
-
     // qInfo("AudioPort::~AudioPort 2");
     Engine::mixer()->removeAudioPort(this);
 
+    if(!m_playHandles.isEmpty())
+    {
+        qInfo("AudioPort::~AudioPort still has %d playhandles",
+              m_playHandles.size());
+        m_playHandles.map(
+                [](PlayHandle* ph) {
+                    InstrumentPlayHandle* iph
+                            = dynamic_cast<InstrumentPlayHandle*>(ph);
+                    qInfo("  type=%d is_iph=%d", ph->type(),
+                          (iph != nullptr));
+                },
+                true);
+    }
+
     // qInfo("AudioPort::~AudioPort 3");
-    if(m_effects)
+    if(m_effects != nullptr)
         delete m_effects;
 
     // qInfo("AudioPort::~AudioPort 4");
     BufferManager::release(m_portBuffer);
 
     // qInfo("AudioPort::~AudioPort 5");
-    if(m_frozenBuf)
+    if(m_frozenBuf != nullptr)
         delete m_frozenBuf;
 
     // qInfo("AudioPort::~AudioPort 6");
@@ -187,39 +202,48 @@ void AudioPort::doProcessing()
 
     // qInfo("AudioPort::doProcessing #1");
     // qDebug( "Playhandles: %d", m_playHandles.size() );
-    m_playHandleLock.lock();
-    PlayHandleList tmp = m_playHandles;
-    m_playHandleLock.unlock();
+    // m_playHandleLock.lock();
     // now we mix all playhandle buffers into the audioport buffer
-    for(PlayHandle* ph: tmp)
-    {
-        sampleFrame* buf = ph->buffer();
-        if(buf)
+    // for(PlayHandle* ph: m_playHandles)
+    m_playHandles.map([this, fpp](PlayHandle* ph) {
+        /*
+          if(ph->isFinished())
+          {
+          qInfo("AudioPort::doProcessing skip finished ph");
+          }
+          else
+        */
         {
-            // if(ph->type() == PlayHandle::TypeInstrumentPlayHandle)
-            // qWarning("ph->type() == PlayHandle::TypeInstrumentPlayHandle");
-            if(ph->usesBuffer()
-               && (ph->type() == PlayHandle::TypeNotePlayHandle
-                   || !MixHelpers::isSilent(buf, fpp)))
+            sampleFrame* buf = ph->buffer();
+            if(buf)
             {
-                m_bufferUsage = true;
-                MixHelpers::add(m_portBuffer, buf, fpp);
-            }
-            /*
-            else if(ph->usesBuffer()
-                    && (ph->type() == PlayHandle::TypeSamplePlayHandle))
-            {
-                if(MixHelpers::isSilent(buf, fpp))
-                    qInfo("AudioPort::doProcessing buf is silent");
-            }
-            */
+                // if(ph->type() == PlayHandle::TypeInstrumentPlayHandle)
+                // qWarning("ph->type() ==
+                // PlayHandle::TypeInstrumentPlayHandle");
+                if(ph->usesBuffer()
+                   && (ph->type() == PlayHandle::TypeNotePlayHandle
+                       || !MixHelpers::isSilent(buf, fpp)))
+                {
+                    this->m_bufferUsage = true;
+                    MixHelpers::add(this->m_portBuffer, buf, fpp);
+                }
+                /*
+                else if(ph->usesBuffer()
+                        && (ph->type() == PlayHandle::TypeSamplePlayHandle))
+                {
+                    if(MixHelpers::isSilent(buf, fpp))
+                        qInfo("AudioPort::doProcessing buf is silent");
+                }
+                */
 
-            // gets rid of playhandle's buffer and sets
-            // pointer to null, so if it doesn't get re-acquired we know to
-            // skip it next time
-            ph->releaseBuffer();
+                // gets rid of playhandle's buffer and sets
+                // pointer to null, so if it doesn't get re-acquired we know
+                // to skip it next time
+                ph->releaseBuffer();
+            }
         }
-    }
+    });
+    // m_playHandleLock.unlock();
 
     // qInfo("AudioPort::doProcessing #2");
     if(m_bufferUsage)
@@ -452,54 +476,90 @@ void AudioPort::doProcessing()
     }
 }
 
-void AudioPort::addPlayHandle(PlayHandle* handle)
+void AudioPort::addPlayHandle(PlayHandle* _ph)
 {
-    if(handle == nullptr)
+    if(_ph == nullptr)
     {
         qWarning("AudioPort::addPlayHandle(null)");
         return;
     }
 
-    m_playHandleLock.lock();
-    if(m_playHandles.contains(handle))
-        qWarning("AudioPort::addPlayHandle handle already listed");
-    else
-        m_playHandles.append(handle);
-    m_playHandleLock.unlock();
+    if(_ph->isFinished())
+    {
+        qWarning("AudioPort::addPlayHandle ph is finished");
+        return;
+    }
+
+    if(!Engine::mixer()->isHM())
+    {
+        BACKTRACE
+        qWarning("AudioPort::addPlayHandle not HM thread");
+    }
+
+    if(m_playHandles.contains(_ph))
+    {
+        BACKTRACE
+        qWarning("AudioPort::addPlayHandle already contains ph");
+    }
+
+    // m_playHandleLock.lock();
+
+    m_playHandles.appendUnique(_ph);
+
+    // m_playHandleLock.unlock();
 }
 
-void AudioPort::removePlayHandle(PlayHandle* handle)
+void AudioPort::removePlayHandle(PlayHandle* _ph)
 {
-    if(handle == nullptr)
+    if(_ph == nullptr)
     {
         qWarning("AudioPort::removePlayHandle(null)");
         return;
     }
 
-    m_playHandleLock.lock();
-    if(m_playHandles.contains(handle))
+    if(!_ph->isFinished())
     {
-        NotePlayHandle* nph = dynamic_cast<NotePlayHandle*>(handle);
-        if(nph && !nph->isReleased())
-            nph->noteOff(0);
-        m_playHandles.removeAll(handle);  // One
+        qWarning("AudioPort::removePlayHandle ph is NOT finished");
+        return;
     }
-    else
+
+    if(_ph->type() == 2)
+        qInfo("AudioPort::removePlayHandle(IPH)");
+
+    if(!Engine::mixer()->isHM())
     {
-        qWarning("AudioPort::removePlayHandle handle not found");
+        BACKTRACE
+        qWarning("AudioPort::removePlayHandle not HM thread");
     }
+
+    // m_playHandleLock.lock();
+
     /*
-      PlayHandleList::Iterator it
-            = qFind(m_playHandles.begin(), m_playHandles.end(), handle);
-    if(it != m_playHandles.end())
+    NotePlayHandle* nph = dynamic_cast<NotePlayHandle*>(_ph);
+    if(nph && !nph->isReleased())
     {
-        NotePlayHandle* nph = dynamic_cast<NotePlayHandle*>(*it);
-        if(nph && !nph->isReleased())
-            nph->noteOff(0);
-        m_playHandles.erase(it);
+        qWarning("AudioPort::removePlayHandle calling noteOff?");
+        nph->noteOff(0);
     }
     */
-    m_playHandleLock.unlock();
+
+    if(_ph->type() == 2)
+        qInfo("AudioPort: ready to remove");
+
+    int nh = m_playHandles.removeAll(_ph);
+    if(nh == 0)  // One
+        qWarning("AudioPort::removePlayHandle handle not found type=%d",
+                 _ph->type());
+    else if(nh > 1)
+        qWarning(
+                "AudioPort::removePlayHandle handle found more than once "
+                "type=%d nh=%d",
+                _ph->type(), nh);
+
+    // m_playHandleLock.unlock();
+
+    if(_ph->type() == 2)
+        qInfo("AudioPort: removePlayHandle(IPH) DONE!");
 }
 
 void AudioPort::updateFrozenBuffer(f_cnt_t _len)

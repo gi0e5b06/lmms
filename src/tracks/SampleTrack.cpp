@@ -281,7 +281,8 @@ void SampleTCO::toggleRecord()
 
 void SampleTCO::playbackPositionChanged()
 {
-    Engine::mixer()->removePlayHandlesOfTypes(
+    Engine::mixer()->emit playHandlesOfTypesToRemove(
+            // removePlayHandlesOfTypes(
             getTrack(), PlayHandle::TypeSamplePlayHandle);
     SampleTrack* st = dynamic_cast<SampleTrack*>(getTrack());
     st->setPlayingTcos(false);
@@ -827,7 +828,8 @@ SampleTrack::SampleTrack(TrackContainer* tc) :
 
 SampleTrack::~SampleTrack()
 {
-    Engine::mixer()->removePlayHandlesOfTypes(
+    Engine::mixer()->emit playHandlesOfTypesToRemove(
+            // removePlayHandlesOfTypes(
             this, PlayHandle::TypeSamplePlayHandle);
 }
 
@@ -999,8 +1001,9 @@ qInfo("sampleStart=%d samplePlayLength=%d",
 
             handle->setOffset(_offset);
             // send it to the mixer
-            handle->setAffinity(Engine::mixer()->thread());
-            Engine::mixer()->addPlayHandle(handle);
+            // handle->setAffinity(Engine::mixer()->thread());
+            // Engine::mixer()->addPlayHandle(handle);
+            Engine::mixer()->emit playHandleToAdd(handle);
             played_a_note = true;
         }
 
@@ -1061,7 +1064,8 @@ void SampleTrack::loadTrackSpecificSettings(const QDomElement& thisElement)
 
 void SampleTrack::updateTcos()
 {
-    Engine::mixer()->removePlayHandlesOfTypes(
+    Engine::mixer()->emit playHandlesOfTypesToRemove(
+            // removePlayHandlesOfTypes(
             this, PlayHandle::TypeSamplePlayHandle);
     setPlayingTcos(false);
 }

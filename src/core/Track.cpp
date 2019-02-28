@@ -3340,6 +3340,7 @@ Track::Track(TrackType type, TrackContainer* tc) :
  */
 Track::~Track()
 {
+    clearAllTrackPlayHandles();
     lock();
     emit destroyedTrack();
     deleteTCOs();
@@ -3953,6 +3954,22 @@ void Track::readFrozenBuffer()
 
 void Track::writeFrozenBuffer()
 {
+}
+
+void Track::clearAllTrackPlayHandles()
+{
+    if(QThread::currentThread() != thread())
+        qWarning("Mixer::cleanHandles not in the main thread");
+
+    if(Engine::mixer() != nullptr)
+    {
+        quint8                types = 0xFF;
+        Engine::mixer()->emit playHandlesOfTypesToRemove(this, types);
+        QThread::yieldCurrentThread();
+        QCoreApplication::sendPostedEvents();
+        QThread::yieldCurrentThread();
+    }
+    else qInfo("Track::clearAllTrackPlayHandles no mixer");
 }
 
 // ===========================================================================

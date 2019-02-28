@@ -25,9 +25,12 @@
 #ifndef MIXER_WORKER_THREAD_H
 #define MIXER_WORKER_THREAD_H
 
-#include <AtomicInt.h>
+#include "SafeList.h"
+
 #include <QAtomicPointer>
 #include <QThread>
+
+#include <AtomicInt.h>
 
 class QWaitCondition;
 class Mixer;
@@ -35,83 +38,78 @@ class ThreadableJob;
 
 class MixerWorkerThread : public QThread
 {
-public:
-	// internal representation of the job queue - all functions are thread-safe
-	class JobQueue
-	{
-	public:
-		enum OperationMode
-		{
-			Static,	// no jobs added while processing queue
-			Dynamic	// jobs can be added while processing queue
-		} ;
+  public:
+    // internal representation of the job queue - all functions are
+    // thread-safe
+    class JobQueue
+    {
+      public:
+        enum OperationMode
+        {
+            Static,  // no jobs added while processing queue
+            Dynamic  // jobs can be added while processing queue
+        };
 
-		JobQueue() :
-			m_items(),
-			m_queueSize( 0 ),
-			m_itemsDone( 0 ),
-			m_opMode( Static )
-		{
-		}
+        JobQueue() :
+              m_items(), m_queueSize(0), m_itemsDone(0), m_opMode(Static)
+        {
+        }
 
-		void reset( OperationMode _opMode );
+        void reset(OperationMode _opMode);
 
-		void addJob( ThreadableJob * _job );
+        void addJob(ThreadableJob* _job);
 
-		void run();
-		void wait();
+        void run();
+        void wait();
 
-	private:
+      private:
 #define JOB_QUEUE_SIZE 2048
-		QAtomicPointer<ThreadableJob> m_items[JOB_QUEUE_SIZE];
-		AtomicInt m_queueSize;
-		AtomicInt m_itemsDone;
-		OperationMode m_opMode;
+        QAtomicPointer<ThreadableJob> m_items[JOB_QUEUE_SIZE];
+        AtomicInt                     m_queueSize;
+        AtomicInt                     m_itemsDone;
+        OperationMode                 m_opMode;
+    };
 
-	} ;
+    MixerWorkerThread(Mixer* mixer);
+    virtual ~MixerWorkerThread();
 
+    virtual void quit();
 
-	MixerWorkerThread( Mixer* mixer );
-	virtual ~MixerWorkerThread();
+    static void resetJobQueue(JobQueue::OperationMode _opMode
+                              = JobQueue::Static)
+    {
+        globalJobQueue.reset(_opMode);
+    }
 
-	virtual void quit();
+    static void addJob(ThreadableJob* _job)
+    {
+        globalJobQueue.addJob(_job);
+    }
 
-	static void resetJobQueue( JobQueue::OperationMode _opMode = JobQueue::Static )
-	{
-		globalJobQueue.reset( _opMode );
-	}
+    // a convenient helper function allowing to pass a container with pointers
+    // to ThreadableJob objects
+    template <typename T>
+    static void fillJobQueue(SafeList<T>&            _vec,
+                             JobQueue::OperationMode _opMode
+                             = JobQueue::Static)
+    {
+        resetJobQueue(_opMode);
+        // for( typename T::ConstIterator it = _vec.begin(); it != _vec.end();
+        // ++it )
+        //  addJob( *it );
+        _vec.map([](T _e) { MixerWorkerThread::addJob(_e); });
+    }
 
-	static void addJob( ThreadableJob * _job )
-	{
-		globalJobQueue.addJob( _job );
-	}
+    static void startAndWaitForJobs();
 
-	// a convenient helper function allowing to pass a container with pointers
-	// to ThreadableJob objects
-	template<typename T>
-	static void fillJobQueue( const T & _vec,
-				  JobQueue::OperationMode _opMode = JobQueue::Static )
-	{
-		resetJobQueue( _opMode );
-		for( typename T::ConstIterator it = _vec.begin(); it != _vec.end(); ++it )
-		{
-			addJob( *it );
-		}
-	}
+  private:
+    virtual void run();
 
-	static void startAndWaitForJobs();
+    static JobQueue                  globalJobQueue;
+    static QWaitCondition*           queueReadyWaitCond;
+    static QList<MixerWorkerThread*> workerThreads;
 
-
-private:
-	virtual void run();
-
-	static JobQueue globalJobQueue;
-	static QWaitCondition * queueReadyWaitCond;
-	static QList<MixerWorkerThread *> workerThreads;
-
-	volatile bool m_quit;
-
-} ;
-
+    volatile bool m_quit;
+};
 
 #endif

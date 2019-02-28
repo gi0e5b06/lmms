@@ -26,64 +26,64 @@
 #ifndef _LADSPA_EFFECT_H
 #define _LADSPA_EFFECT_H
 
-#include <QMutex>
-
 #include "Effect.h"
 #include "LadspaBase.h"
 #include "LadspaControls.h"
 
+#include <QMutex>
 
-typedef QVector<port_desc_t *> multi_proc_t;
+typedef QVector<port_desc_t*> multi_proc_t;
 
 class LadspaEffect : public Effect
 {
-	Q_OBJECT
-public:
-	LadspaEffect( Model * _parent,
-			const Descriptor::SubPluginFeatures::Key * _key );
-	virtual ~LadspaEffect();
+    Q_OBJECT
 
-	virtual bool processAudioBuffer( sampleFrame * _buf,
-					 const fpp_t _frames );
+  public:
+    LadspaEffect(Model*                                    _parent,
+                 const Descriptor::SubPluginFeatures::Key* _key);
+    virtual ~LadspaEffect();
 
-	void setControl( int _control, LADSPA_Data _data );
+    virtual bool processAudioBuffer(sampleFrame* _buf, const fpp_t _frames);
 
-	virtual EffectControls * controls()
-	{
-		return m_controls;
-	}
+    void setControl(int _control, LADSPA_Data _data);
 
-	inline const multi_proc_t & getPortControls()
-	{
-		return m_portControls;
-	}
+    virtual EffectControls* controls()
+    {
+        return m_controls;
+    }
 
+    inline const multi_proc_t& getPortControls()
+    {
+        return m_portControls;
+    }
 
-private slots:
-	void changeSampleRate();
+    virtual QString displayName() const
+    {
+        return Model::displayName();
+    }
 
+  private slots:
+    void changeSampleRate();
 
-private:
-	void pluginInstantiation();
-	void pluginDestruction();
+  private:
+    void pluginInstantiation();
+    void pluginDestruction();
 
-	static sample_rate_t maxSamplerate( const QString & _name );
+    static sample_rate_t maxSamplerate(const QString& _name);
 
+    QMutex          m_pluginMutex;
+    LadspaControls* m_controls;
 
-	QMutex m_pluginMutex;
-	LadspaControls * m_controls;
+    sample_rate_t m_maxSampleRate;
+    ladspa_key_t  m_key;
+    int           m_portCount;
+    bool          m_inPlaceBroken;
 
-	sample_rate_t m_maxSampleRate;
-	ladspa_key_t m_key;
-	int m_portCount;
-	bool m_inPlaceBroken;
+    const LADSPA_Descriptor* m_descriptor;
+    QVector<LADSPA_Handle>   m_handles;
 
-	const LADSPA_Descriptor * m_descriptor;
-	QVector<LADSPA_Handle> m_handles;
-
-	QVector<multi_proc_t> m_ports;
-	multi_proc_t m_portControls;
-
-} ;
+    QVector<multi_proc_t> m_ports;
+    multi_proc_t          m_portControls;
+};
 
 #endif

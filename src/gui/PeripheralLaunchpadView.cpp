@@ -3,7 +3,7 @@
  * widget (like the APCmini) used in the instrument track window for testing +
  * according model class
  *
- * Copyright (c) 2018 gi0e5b06 (on github.com)
+ * Copyright (c) 2018-2019 gi0e5b06 (on github.com)
  * Copyright (c) 2004-2014 Tobias Doerffel <tobydox/at/users.sourceforge.net>
  *
  * This file is part of LMMS - https://lmms.io
@@ -56,10 +56,10 @@
 
 #include <cmath>
 
-// QPixmap * PeripheralLaunchpadView::s_padPm = NULL;           /*!< A pad
+// QPixmap * PeripheralLaunchpadView::s_padPm = nullptr;           /*!< A pad
 // released
-// */ QPixmap * PeripheralLaunchpadView::s_padPressedPm = NULL;    /*!< A pad
-// pressed */
+// */ QPixmap * PeripheralLaunchpadView::s_padPressedPm = nullptr;    /*!< A
+// pad pressed */
 
 // const int PIANO_BASE = 11;          /*!< The height of the root note
 // display */ const int PW_WHITE_KEY_WIDTH = 10;  /*!< The width of a white
@@ -122,7 +122,7 @@ PeripheralLaunchpadView::~PeripheralLaunchpadView()
 void PeripheralLaunchpadView::modelChanged()
 {
         m_piano = castModel<Piano>();
-        if( m_piano != NULL )
+        if( m_piano != nullptr )
         {
                 connect( m_piano->instrumentTrack()->baseNoteModel(), SIGNAL(
 dataChanged() ), this, SLOT( update() ) );
@@ -235,17 +235,19 @@ void PeripheralLaunchpadView::mousePressEvent(QMouseEvent* _me)
                                    QPixmap(), this);
                 _me->accept();
             }
-            else if(m_piano != NULL)
+            else if(m_piano != nullptr)
             {
                 int velocity = m_piano->instrumentTrack()
                                        ->midiPort()
                                        ->baseVelocity();
                 // set note on
+                /*
                 m_piano->midiEventProcessor()->processInEvent(
                         MidiEvent(MidiNoteOn, -1, keyNum, velocity));
                 m_piano->setKeyState(keyNum, true);
+                */
+                m_piano->handleKeyPress(keyNum, velocity);
                 m_lastKey = keyNum;
-
                 emit keyPressed(keyNum);
             }
         }
@@ -264,11 +266,14 @@ void PeripheralLaunchpadView::mouseReleaseEvent(QMouseEvent*)
 {
     if(m_lastKey != -1)
     {
-        if(m_piano != NULL)
+        if(m_piano != nullptr)
         {
+            /*
             m_piano->midiEventProcessor()->processInEvent(
                     MidiEvent(MidiNoteOff, -1, m_lastKey, 0));
             m_piano->setKeyState(m_lastKey, false);
+            */
+            m_piano->handleKeyRelease(m_lastKey);
         }
 
         // and let the user see that he released a key... :)
@@ -294,7 +299,7 @@ void PeripheralLaunchpadView::mouseReleaseEvent(QMouseEvent*)
  */
 void PeripheralLaunchpadView::mouseMoveEvent(QMouseEvent* _me)
 {
-    if(m_piano == NULL)
+    if(m_piano == nullptr)
     {
         return;
     }
@@ -371,7 +376,7 @@ void PeripheralLaunchpadView::keyPressEvent(QKeyEvent* _ke)
 
     if(_ke->isAutoRepeat() == false && keyNum > -1)
     {
-        if(m_piano != NULL)
+        if(m_piano != nullptr)
         {
             m_piano->handleKeyPress(keyNum);
             _ke->accept();
@@ -396,7 +401,7 @@ void PeripheralLaunchpadView::keyReleaseEvent(QKeyEvent* _ke)
             = getKeyFromKeyEvent(_ke) + (DefaultOctave - 1) * KeysPerOctave;
     if(_ke->isAutoRepeat() == false && keyNum > -1)
     {
-        if(m_piano != NULL)
+        if(m_piano != nullptr)
         {
             m_piano->handleKeyRelease(keyNum);
             _ke->accept();
@@ -417,7 +422,7 @@ void PeripheralLaunchpadView::keyReleaseEvent(QKeyEvent* _ke)
  */
 void PeripheralLaunchpadView::focusOutEvent(QFocusEvent*)
 {
-    if(m_piano == NULL)
+    if(m_piano == nullptr)
     {
         return;
     }
@@ -425,7 +430,7 @@ void PeripheralLaunchpadView::focusOutEvent(QFocusEvent*)
     // focus just switched to another control inside the instrument track
     // window we live in?
     if(parentWidget()->parentWidget()->focusWidget() != this
-       && parentWidget()->parentWidget()->focusWidget() != NULL
+       && parentWidget()->parentWidget()->focusWidget() != nullptr
        && !(parentWidget()->parentWidget()->focusWidget()->inherits(
                     "QLineEdit")
             || parentWidget()->parentWidget()->focusWidget()->inherits(
@@ -439,6 +444,7 @@ void PeripheralLaunchpadView::focusOutEvent(QFocusEvent*)
     // if we loose focus, we HAVE to note off all running notes because
     // we don't receive key-release-events anymore and so the notes would
     // hang otherwise
+    /*
     for(int i = 0; i < NumKeys; ++i)
     {
         if(i < NumMidiKeys)
@@ -447,6 +453,8 @@ void PeripheralLaunchpadView::focusOutEvent(QFocusEvent*)
 
         m_piano->setKeyState(i, false);
     }
+    */
+    m_piano->reset();
     update();
 }
 
@@ -483,7 +491,7 @@ void PeripheralLaunchpadView::paintEvent(QPaintEvent*)
     p.setPen(Qt::white);
 
     const int baseKey
-            = (m_piano != NULL)
+            = (m_piano != nullptr)
                       ? m_piano->instrumentTrack()->baseNoteModel()->value()
                       : 0;
 

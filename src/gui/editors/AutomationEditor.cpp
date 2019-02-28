@@ -2521,6 +2521,11 @@ AutomationEditorWindow::~AutomationEditorWindow()
 {
 }
 
+void AutomationEditorWindow::reset()
+{
+    setCurrentPattern(nullptr);
+}
+
 void AutomationEditorWindow::setCurrentPattern(AutomationPattern* pattern)
 {
     // Disconnect our old pattern

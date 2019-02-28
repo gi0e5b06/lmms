@@ -1245,14 +1245,12 @@ int main(int argc, char** argv)
     // TODO: use aboutToQuit() signal
 
     if(destroyEngine)
-    {
         Engine::destroy();
-    }
 
-    // qWarning("Cleanup Start");
+    qInfo("Cleanup Start");
     // cleanup memory managers
     MM_CLEANUP
     // MemoryManager::cleanup();
-    // qWarning("Cleanup End");
+    qInfo("Cleanup End");
     return ret;
 }

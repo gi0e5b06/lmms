@@ -27,24 +27,40 @@
 #include "Backtrace.h"
 
 #include <QUuid>
+#include <QHash>
 
 QHash<QString, Model*> Model::s_models;
 
-Model::Model(Model* _parent, const QString& _displayName, bool _defaultConstructed) :
-      QObject(_parent), m_displayName(_displayName),
-      m_defaultConstructed(_defaultConstructed), m_uuid("")
+Model::Model(Model*         _parent,
+             const QString& _displayName,
+             bool           _defaultConstructed) :
+      QObject(_parent),
+      m_displayName(_displayName), m_defaultConstructed(_defaultConstructed),
+      m_uuid("")
 {
     if(_displayName.isEmpty())
     {
         BACKTRACE
         qInfo("Model::Model empty display name");
     }
+    m_debug_uuid = QUuid::createUuid().toString();
 }
+
+static QHash<QString, bool> s_destructorTracker;
 
 Model::~Model()
 {
     if(hasUuid())
         s_models.remove(m_uuid);
+
+    if(s_destructorTracker.contains(m_debug_uuid))
+    {
+        BACKTRACE
+        qCritical("Model::~Model %s destroyed twice",
+                  qPrintable(fullDisplayName()));
+        return;
+    }
+    s_destructorTracker.insert(m_debug_uuid, true);
 }
 
 const QString Model::uuid()

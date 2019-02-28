@@ -236,8 +236,7 @@ void InstrumentFunctionArpeggioView::modelChanged()
 InstrumentFunctionNoteHumanizingView::InstrumentFunctionNoteHumanizingView(
         InstrumentFunctionNoteHumanizing* cc, QWidget* parent) :
       InstrumentFunctionView(cc, tr("HUMANIZING"), parent),
-      m_cc(cc),
-      m_volumeRangeKnob(new Knob(knobBright_26)),
+      m_cc(cc), m_volumeRangeKnob(new Knob(knobBright_26)),
       m_panRangeKnob(new Knob(knobBright_26)),
       m_tuneRangeKnob(new Knob(knobBright_26)),
       m_offsetRangeKnob(new Knob(knobBright_26)),
@@ -276,7 +275,8 @@ InstrumentFunctionNoteHumanizingView::InstrumentFunctionNoteHumanizingView(
 
     m_shortenRangeKnob->setLabel(tr("SHORT%"));
     m_shortenRangeKnob->setHintText(tr("Shortening:"), "%");
-    m_shortenRangeKnob->setWhatsThis(tr("Use this knob for shortening in %."));
+    m_shortenRangeKnob->setWhatsThis(
+            tr("Use this knob for shortening in %."));
 
     m_volumeStepKnob->setLabel(tr("STEP"));
     m_volumeStepKnob->setHintText(tr("Volume step:"), "");
@@ -300,7 +300,8 @@ InstrumentFunctionNoteHumanizingView::InstrumentFunctionNoteHumanizingView(
 
     m_shortenStepKnob->setLabel(tr("STEP"));
     m_shortenStepKnob->setHintText(tr("Shortening step:"), "");
-    m_shortenStepKnob->setWhatsThis(tr("Use this knob for the shortening step."));
+    m_shortenStepKnob->setWhatsThis(
+            tr("Use this knob for the shortening step."));
 
     mainLayout->addWidget(m_volumeRangeKnob, 0, 0, 1, 1, Qt::AlignHCenter);
     mainLayout->addWidget(m_panRangeKnob, 0, 1, 1, 1, Qt::AlignHCenter);
@@ -341,8 +342,7 @@ InstrumentFunctionNoteDuplicatesRemovingView::
         InstrumentFunctionNoteDuplicatesRemovingView(
                 InstrumentFunctionNoteDuplicatesRemoving* cc,
                 QWidget*                                  parent) :
-      InstrumentFunctionView(
-              cc, tr("DUPLICATES REMOVING"), parent, false),
+      InstrumentFunctionView(cc, tr("DUPLICATES REMOVING"), parent, false),
       m_cc(cc)
 {
     QGridLayout* mainLayout = new QGridLayout(m_panel);
@@ -380,8 +380,9 @@ InstrumentFunctionNoteFilteringView::InstrumentFunctionNoteFilteringView(
 
     for(int i = 0; i < 12; ++i)
     {
-        m_noteSelectionLed[i] = new LedCheckBox
-                (Note::findNoteName(i), NULL, "");
+        m_noteSelectionLed[i]
+                = new LedCheckBox(Note::findNoteName(i), nullptr,
+                                  QString("[note %1]").arg(i + 1));
         mainLayout->addWidget(m_noteSelectionLed[i], i / 4 + 1, i % 4, 1, 1);
     }
 }
@@ -614,17 +615,17 @@ void InstrumentFunctionGlissandoView::modelChanged()
 InstrumentFunctionNoteSustainingView::InstrumentFunctionNoteSustainingView(
         InstrumentFunctionNoteSustaining* cc, QWidget* parent) :
       InstrumentFunctionView(cc, tr("SUSTAINING"), parent),
-      m_cc(cc)/*,
-      m_volumeRangeKnob(new Knob(knobBright_26)),
-      m_panRangeKnob(new Knob(knobBright_26)),
-      m_tuneRangeKnob(new Knob(knobBright_26)),
-      m_offsetRangeKnob(new Knob(knobBright_26)),
-      m_shortenRangeKnob(new Knob(knobBright_26)),
-      m_volumeStepKnob(new Knob(knobBright_26)),
-      m_panStepKnob(new Knob(knobBright_26)),
-      m_tuneStepKnob(new Knob(knobBright_26)),
-      m_offsetStepKnob(new Knob(knobBright_26)),
-      m_shortenStepKnob(new Knob(knobBright_26))*/
+      m_cc(cc) /*,
+       m_volumeRangeKnob(new Knob(knobBright_26)),
+       m_panRangeKnob(new Knob(knobBright_26)),
+       m_tuneRangeKnob(new Knob(knobBright_26)),
+       m_offsetRangeKnob(new Knob(knobBright_26)),
+       m_shortenRangeKnob(new Knob(knobBright_26)),
+       m_volumeStepKnob(new Knob(knobBright_26)),
+       m_panStepKnob(new Knob(knobBright_26)),
+       m_tuneStepKnob(new Knob(knobBright_26)),
+       m_offsetStepKnob(new Knob(knobBright_26)),
+       m_shortenStepKnob(new Knob(knobBright_26))*/
 {
     QGridLayout* mainLayout = new QGridLayout(m_panel);
     mainLayout->setContentsMargins(6, 2, 2, 2);
@@ -654,7 +655,8 @@ InstrumentFunctionNoteSustainingView::InstrumentFunctionNoteSustainingView(
 
     m_shortenRangeKnob->setLabel(tr("SHORT%"));
     m_shortenRangeKnob->setHintText(tr("Shortening:"), "%");
-    m_shortenRangeKnob->setWhatsThis(tr("Use this knob for shortening in %."));
+    m_shortenRangeKnob->setWhatsThis(tr("Use this knob for shortening in
+    %."));
 
     m_volumeStepKnob->setLabel(tr("STEP"));
     m_volumeStepKnob->setHintText(tr("Volume step:"), "");
@@ -678,7 +680,8 @@ InstrumentFunctionNoteSustainingView::InstrumentFunctionNoteSustainingView(
 
     m_shortenStepKnob->setLabel(tr("STEP"));
     m_shortenStepKnob->setHintText(tr("Shortening step:"), "");
-    m_shortenStepKnob->setWhatsThis(tr("Use this knob for the shortening step."));
+    m_shortenStepKnob->setWhatsThis(tr("Use this knob for the shortening
+    step."));
 
     mainLayout->addWidget(m_volumeRangeKnob, 0, 0, 1, 1, Qt::AlignHCenter);
     mainLayout->addWidget(m_panRangeKnob, 0, 1, 1, 1, Qt::AlignHCenter);
@@ -717,4 +720,3 @@ void InstrumentFunctionNoteSustainingView::modelChanged()
     m_shortenStepKnob->setModel(&m_cc->m_shortenStepModel);
     */
 }
-
