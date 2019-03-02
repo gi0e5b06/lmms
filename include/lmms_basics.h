@@ -115,4 +115,13 @@ typedef sampleFrame surroundSampleFrame;
 #define STRINGIFY(s) STR(s)
 #define STR(PN) #PN
 
+#define DELETE_HELPER(x)     \
+    {                        \
+        qInfo("delete " #x); \
+        auto tmp = x;        \
+        x        = nullptr;  \
+        if(tmp != nullptr)   \
+            delete x;        \
+    }
+
 #endif

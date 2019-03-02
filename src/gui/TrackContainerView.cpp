@@ -454,12 +454,15 @@ void TrackContainerView::computeBarViews()
 
 void TrackContainerView::clearAllTracks()
 {
+    // GDX ...
     while(!m_trackViews.empty())
     {
         TrackView* tv = m_trackViews.takeLast();
         Track*     t  = tv->getTrack();
+        qInfo("TrackContainerView::clearAllTrack views [%s]",
+              qPrintable(t->name()));
         delete tv;
-        delete t;
+        // delete t;
     }
 
     requireActionUpdate();

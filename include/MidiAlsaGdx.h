@@ -31,6 +31,7 @@
 #include <alsa/asoundlib.h>
 
 #include <QMutex>
+#include <QQueue>
 #include <QThread>
 #include <QTimer>
 
@@ -152,6 +153,7 @@ private:
 
 	int m_pipe[2];
 
+        QQueue<snd_seq_event_t> m_evqueue;
 
 signals:
 	void readablePortsChanged();

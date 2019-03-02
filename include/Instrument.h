@@ -66,7 +66,7 @@ class EXPORT Instrument : public Plugin
 
     Q_DECLARE_FLAGS(Flags, Flag);
 
-    Instrument(InstrumentTrack*  _instrument_track,
+    Instrument(InstrumentTrack*  _instrumentTrack,
                const Descriptor* _descriptor);
     virtual ~Instrument();
 

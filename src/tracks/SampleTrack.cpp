@@ -1001,8 +1001,6 @@ qInfo("sampleStart=%d samplePlayLength=%d",
 
             handle->setOffset(_offset);
             // send it to the mixer
-            // handle->setAffinity(Engine::mixer()->thread());
-            // Engine::mixer()->addPlayHandle(handle);
             Engine::mixer()->emit playHandleToAdd(handle);
             played_a_note = true;
         }

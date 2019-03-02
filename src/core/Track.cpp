@@ -3340,12 +3340,16 @@ Track::Track(TrackType type, TrackContainer* tc) :
  */
 Track::~Track()
 {
+    qInfo("Track::~Track 1 [%s]", qPrintable(name()));
     clearAllTrackPlayHandles();
     lock();
     emit destroyedTrack();
+    qInfo("Track::~Track 2");
     deleteTCOs();
+    qInfo("Track::~Track 3");
     m_trackContainer->removeTrack(this);
     unlock();
+    qInfo("Track::~Track 4");
 }
 
 bool Track::isFixed() const
@@ -3969,7 +3973,8 @@ void Track::clearAllTrackPlayHandles()
         QCoreApplication::sendPostedEvents();
         QThread::yieldCurrentThread();
     }
-    else qInfo("Track::clearAllTrackPlayHandles no mixer");
+    else
+        qInfo("Track::clearAllTrackPlayHandles no mixer");
 }
 
 // ===========================================================================

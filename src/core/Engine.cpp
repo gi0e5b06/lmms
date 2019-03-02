@@ -208,10 +208,6 @@ void LmmsCore::init7()
     s_bbTrackContainer = new BBTrackContainer();
 }
 
-#define DELETE_HELPER(x)         \
-    qInfo("Engine: delete " #x); \
-    deleteHelper(x);
-
 void LmmsCore::destroy()
 {
     qWarning("Engine::destroy begin");
@@ -224,14 +220,14 @@ void LmmsCore::destroy()
 
     s_song->clearProject();
 
-    DELETE_HELPER(&s_bbTrackContainer);
-    DELETE_HELPER(&s_dummyTC);
-    DELETE_HELPER(&s_fxMixer);
-    DELETE_HELPER(&s_mixer);
-    DELETE_HELPER(&s_ladspaManager);
+    DELETE_HELPER(s_bbTrackContainer);
+    DELETE_HELPER(s_dummyTC);
+    DELETE_HELPER(s_fxMixer);
+    DELETE_HELPER(s_mixer);
+    DELETE_HELPER(s_ladspaManager);
     // delete ConfigManager::inst();
-    DELETE_HELPER(&s_projectJournal);
-    DELETE_HELPER(&s_song);
+    DELETE_HELPER(s_projectJournal);
+    DELETE_HELPER(s_song);
 
     qInfo("ConfigManager::deinit");
     // delete ConfigManager::inst();

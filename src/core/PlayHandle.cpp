@@ -38,7 +38,6 @@ PlayHandle::PlayHandle(const Type type, f_cnt_t offset) :
       m_audioPort(nullptr), m_finished(false), m_type(type), m_offset(offset),
       m_usesBuffer(true), m_playHandleBuffer(nullptr), m_bufferReleased(true)
 {
-    // m_affinity(QThread::currentThread()),
     // BufferManager::acquire()),
     m_debug_uuid = QUuid::createUuid().toString();
 }

@@ -49,7 +49,9 @@ TrackContainer::TrackContainer(Model* _parent, const QString& _displayName) :
 
 TrackContainer::~TrackContainer()
 {
+    qInfo("TrackContainer::~TrackContainer 1");
     clearAllTracks();
+    qInfo("TrackContainer::~TrackContainer 2");
 }
 
 void TrackContainer::saveSettings(QDomDocument& _doc, QDomElement& _this)
@@ -218,10 +220,17 @@ void TrackContainer::removeTrack(Track* _track)
     if(_track->trackContainer() == this)
     {
         if(_track->isSolo())
+        {
+            qInfo("TrackContainer::removeTrack before solo");
             _track->setSolo(false);
+            qInfo("TrackContainer::removeTrack after solo");
+        }
 
         m_tracksMutex.lockForWrite();
-        bool modified = m_tracks.removeOne(_track);
+        int nbt = m_tracks.removeAll(_track);
+        if(nbt > 1)
+            qCritical("TrackContainer::removeTrack more than once");
+        bool modified = (nbt > 0);
         m_tracksMutex.unlock();
 
         if(modified)
@@ -243,8 +252,17 @@ void TrackContainer::updateAfterTrackAdd()
 
 void TrackContainer::clearAllTracks()
 {
+    qInfo("TrackContainer::clearAllTracks START");
     while(!m_tracks.isEmpty())
-        delete m_tracks.last();
+    {
+        qInfo("TrackContainer::clearAllTracks last");
+        Track* t = m_tracks.last();
+        qInfo("TrackContainer::clearAllTracks delete track [%s]",
+              qPrintable(t->name()));
+        delete t;
+        qInfo("TrackContainer::clearAllTracks after delete");
+    }
+    qInfo("TrackContainer::clearAllTracks END");
 }
 
 bool TrackContainer::isEmpty() const

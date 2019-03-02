@@ -808,7 +808,7 @@ void Song::clearProject()
 
     Engine::mixer()->clearAllPlayHandles();
 
-    qInfo("Song::clearProject 2");
+    qInfo("Song::clearProject 2a");
 
     Engine::mixer()->requestChangeInModel();
 
@@ -816,10 +816,16 @@ void Song::clearProject()
     {
         gui->getBBEditor()->trackContainerView()->clearAllTracks();
     }
+
+    qInfo("Song::clearProject 2b");
+
     if(gui && gui->songEditor())
     {
         gui->songEditor()->m_editor->clearAllTracks();
     }
+
+    qInfo("Song::clearProject 2c");
+
     if(gui && gui->fxMixerView())
     {
         gui->fxMixerView()->clear();
@@ -831,9 +837,11 @@ void Song::clearProject()
 
     Engine::mixer()->requestChangeInModel();
 
-    qInfo("Song::clearProject 3");
+    qInfo("Song::clearProject 3a");
     Engine::getBBTrackContainer()->clearAllTracks();
+    qInfo("Song::clearProject 3b");
     clearAllTracks();
+    qInfo("Song::clearProject 3c");
     clearSongMetaData();
     qInfo("Song::clearProject 4");
 

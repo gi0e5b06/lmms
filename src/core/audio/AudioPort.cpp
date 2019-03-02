@@ -52,25 +52,27 @@ AudioPort::AudioPort(const QString& _name,
                      BoolModel*     clippingModel) :
       m_bufferUsage(false),
       m_portBuffer(BufferManager::acquire()), m_extOutputEnabled(false),
-      m_nextFxChannel(0), m_name("unnamed port"),
+      m_nextFxChannel(0), m_name(_name),
       m_effects(_has_effect_chain ? new EffectChain(nullptr) : nullptr),
-      m_volumeEnabledModel(volumeEnabledModel), m_volumeModel(volumeModel),
-      m_panningEnabledModel(panningEnabledModel),
+      m_playHandles(true), m_volumeEnabledModel(volumeEnabledModel),
+      m_volumeModel(volumeModel), m_panningEnabledModel(panningEnabledModel),
       m_panningModel(panningModel),
       m_bendingEnabledModel(bendingEnabledModel),
       m_bendingModel(bendingModel), m_mutedModel(mutedModel),
       m_frozenModel(frozenModel), m_clippingModel(clippingModel),
       m_frozenBuf(nullptr)
 {
+    if(m_name.isEmpty())
+        m_name = "[unnamed audio port]";
     Engine::mixer()->addAudioPort(this);
     setExtOutputEnabled(true);
 }
 
 AudioPort::~AudioPort()
 {
-    qInfo("AudioPort::~AudioPort");
+    qInfo("AudioPort::~AudioPort '%s'", qPrintable(name()));
     setExtOutputEnabled(false);
-    // qInfo("AudioPort::~AudioPort 2");
+    qInfo("AudioPort::~AudioPort 2");
     Engine::mixer()->removeAudioPort(this);
 
     if(!m_playHandles.isEmpty())
@@ -87,18 +89,18 @@ AudioPort::~AudioPort()
                 true);
     }
 
-    // qInfo("AudioPort::~AudioPort 3");
-    if(m_effects != nullptr)
-        delete m_effects;
+    qInfo("AudioPort::~AudioPort 3");
+    // if(m_effects != nullptr)
+    DELETE_HELPER(m_effects);
 
-    // qInfo("AudioPort::~AudioPort 4");
+    qInfo("AudioPort::~AudioPort 4");
     BufferManager::release(m_portBuffer);
 
-    // qInfo("AudioPort::~AudioPort 5");
-    if(m_frozenBuf != nullptr)
-        delete m_frozenBuf;
+    qInfo("AudioPort::~AudioPort 5");
+    // if(m_frozenBuf != nullptr)
+    DELETE_HELPER(m_frozenBuf);
 
-    // qInfo("AudioPort::~AudioPort 6");
+    qInfo("AudioPort::~AudioPort 6");
 }
 
 void AudioPort::setExtOutputEnabled(bool _enabled)

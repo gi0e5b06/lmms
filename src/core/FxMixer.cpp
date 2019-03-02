@@ -604,6 +604,8 @@ void FxMixer::toggledSolo()
 
 void FxMixer::deleteChannel(int index)
 {
+    qInfo("FxMixer::deleteChannel index=%d", index);
+
     // channel deletion is performed between mixer rounds
     Engine::mixer()->requestChangeInModel();
 

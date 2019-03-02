@@ -76,12 +76,14 @@
 static __thread bool s_renderingThread;
 
 Mixer::Mixer(bool renderOnly) :
-      m_renderOnly(renderOnly), m_framesPerPeriod(DEFAULT_BUFFER_SIZE),
+      m_renderOnly(renderOnly), m_audioPorts(true),
+      m_framesPerPeriod(DEFAULT_BUFFER_SIZE),
       // m_periodCounter(0),
       m_inputBufferRead(0), m_inputBufferWrite(1), m_readBuf(nullptr),
       m_writeBuf(nullptr), m_displayRing(nullptr), m_workers(),
       m_numWorkers(QThread::idealThreadCount() * 2 - 1),  // tmp GDX
-      // m_playHandlesToAdd(),  // PlayHandle::MaxNumber ),
+      m_playHandles(true), m_playHandlesToAdd(true),
+      m_playHandlesToRemove(true),
       m_qualitySettings(qualitySettings::Mode_Draft), m_masterVolumeGain(1.),
       m_masterPanningGain(0.), m_isProcessing(false), m_audioDev(nullptr),
       m_oldAudioDev(nullptr), m_audioDevStartFailed(false),
@@ -716,6 +718,13 @@ void Mixer::getPeakValues(const surroundSampleFrame* _ab,
 }
 #endif
 
+const surroundSampleFrame* Mixer::nextBuffer()
+{
+    // TODO: process out MTC
+
+    return hasFifoWriter() ? m_fifo->read() : renderNextBuffer();
+}
+
 void Mixer::changeQuality(const struct qualitySettings& _qs)
 {
     // don't delete the audio-device
@@ -937,9 +946,9 @@ void Mixer::deletePlayHandle1(PlayHandle* _ph)
         qWarning("Mixer::removePlayHandleUnchecked null audio port");
     }
 
-    int bx1 = m_playHandlesToAdd.removeAll(_ph);
-    int bx2 = m_playHandles.removeAll(_ph);
-    int bx3 = m_playHandlesToRemove.removeAll(_ph);
+    int bx1 = m_playHandlesToAdd.removeAll(_ph, false);
+    int bx2 = m_playHandles.removeAll(_ph, false);
+    int bx3 = m_playHandlesToRemove.removeAll(_ph, false);
     if(bx1 > 0 && bx2 > 0)
     {
         BACKTRACE
@@ -1040,7 +1049,7 @@ void Mixer::removePlayHandlesOfTypes1(const Track* _track,
     }
 
     // qInfo("Mixer::removePlayHandlesOfTypes START %p %d", _track, _types);
-    SafeList<PlayHandle*> r;
+    SafeList<PlayHandle*> r(false);
     requestChangeInModel();
 
     m_playHandles.map([&r, _types, _track](PlayHandle* ph) {
@@ -1078,7 +1087,7 @@ void Mixer::removeAllPlayHandles1()
 {
     qInfo("Mixer::removeAllPlayHandles1 1");
 
-    SafeList<PlayHandle*> r;
+    SafeList<PlayHandle*> r(false);
     requestChangeInModel();
 
     m_playHandles.map([&r](PlayHandle* ph) { r.appendUnique(ph); });

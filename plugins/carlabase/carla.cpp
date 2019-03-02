@@ -240,8 +240,6 @@ CarlaInstrument::CarlaInstrument(InstrumentTrack* const  instrumentTrack,
     // we need a play-handle which cares for calling play()
     InstrumentPlayHandle* iph
             = new InstrumentPlayHandle(this, instrumentTrack);
-    // iph->setAffinity(Engine::mixer()->thread());
-    // Engine::mixer()->addPlayHandle(iph);
     Engine::mixer()->emit playHandleToAdd(iph);
 
     connect(Engine::mixer(), SIGNAL(sampleRateChanged()), this,
@@ -251,11 +249,6 @@ CarlaInstrument::CarlaInstrument(InstrumentTrack* const  instrumentTrack,
 CarlaInstrument::~CarlaInstrument()
 {
     qInfo("CarlaInstrument::~CarlaInstrument START");
-    Engine::mixer()->emit playHandlesOfTypesToRemove(
-            // removePlayHandlesOfTypes(
-            instrumentTrack(),
-            // PlayHandle::TypeNotePlayHandle|
-            PlayHandle::TypeInstrumentPlayHandle);
 
     paramModels.clear();
 

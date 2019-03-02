@@ -51,8 +51,8 @@ extern "C"
             0x0100,
             Plugin::Instrument,
             new PluginPixmapLoader("logo"),
-            NULL,
-            NULL};
+            nullptr,
+            nullptr};
 }
 
 malletsInstrument::malletsInstrument(InstrumentTrack* _instrument_track) :
@@ -71,7 +71,8 @@ malletsInstrument::malletsInstrument(InstrumentTrack* _instrument_track) :
       m_motionModel(64.0f, 0.0f, 128.0f, 0.1f, this, tr("Motion")),
       //	TODO: m_vibratoModel
       m_velocityModel(64.0f, 0.1f, 128.0f, 0.1f, this, tr("Speed")),
-      m_strikeModel(true, this, tr("Bowed")), m_presetsModel(this, tr("Presets")),
+      m_strikeModel(true, this, tr("Bowed")),
+      m_presetsModel(this, tr("Presets")),
       m_spreadModel(0, 0, 255, 1, this, tr("Spread")),
       m_versionModel(MALLETS_PRESET_VERSION,
                      0,
@@ -121,6 +122,7 @@ malletsInstrument::malletsInstrument(InstrumentTrack* _instrument_track) :
 
 malletsInstrument::~malletsInstrument()
 {
+    qInfo("malletsInstrument::~malletsInstrument");
 }
 
 void malletsInstrument::saveSettings(QDomDocument& _doc, QDomElement& _this)
@@ -272,7 +274,7 @@ void malletsInstrument::playNote(NotePlayHandle* _n,
     int p = m_presetsModel.value();
 
     const float freq = _n->frequency();
-    if(_n->totalFramesPlayed() == 0 || _n->m_pluginData == NULL)
+    if(_n->totalFramesPlayed() == 0 || _n->m_pluginData == nullptr)
     {
         // If newer projects, adjust velocity to within stk's limits
         float velocityAdjust = m_isOldVersionModel.value() ? 100.0 : 200.0;
@@ -379,7 +381,7 @@ malletsInstrumentView::malletsInstrumentView(malletsInstrument* _instrument,
     m_spreadKnob->setHintText(tr("Spread:"), "");
 
     // try to inform user about missing Stk-installation
-    if(_instrument->m_filesMissing && gui != NULL)
+    if(_instrument->m_filesMissing && gui != nullptr)
     {
         QMessageBox::information(0, tr("Missing files"),
                                  tr("Your Stk-installation seems to be "
@@ -586,7 +588,7 @@ malletsSynth::malletsSynth(const StkFloat      _pitch,
     }
     catch(...)
     {
-        m_voice = NULL;
+        m_voice = nullptr;
     }
 
     m_delay      = new StkFloat[256];
@@ -633,7 +635,7 @@ malletsSynth::malletsSynth(const StkFloat      _pitch,
     }
     catch(...)
     {
-        m_voice = NULL;
+        m_voice = nullptr;
     }
 
     m_delay      = new StkFloat[256];
@@ -682,7 +684,7 @@ malletsSynth::malletsSynth(const StkFloat      _pitch,
     }
     catch(...)
     {
-        m_voice = NULL;
+        m_voice = nullptr;
     }
 
     m_delay      = new StkFloat[256];
@@ -692,6 +694,17 @@ malletsSynth::malletsSynth(const StkFloat      _pitch,
     {
         m_delay[i] = 0.0;
     }
+}
+
+malletsSynth::~malletsSynth()  // inline
+{
+    qInfo("~malletsSynth 1");
+    m_voice->noteOff(0.0);
+    qInfo("~malletsSynth 2");
+    delete[] m_delay;
+    qInfo("~malletsSynth 3");
+    delete m_voice;
+    qInfo("~malletsSynth 4");
 }
 
 extern "C"

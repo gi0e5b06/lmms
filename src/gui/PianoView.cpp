@@ -290,8 +290,12 @@ void PianoView::mousePressEvent(QMouseEvent* _me)
 
             m_piano->setKeyState(keyNum, true);
             */
-            m_piano->handleKeyPress(keyNum, velocity);
-            m_lastKey = keyNum;
+            if(keyNum != m_lastKey)
+            {
+                m_piano->handleKeyRelease(m_lastKey);
+                m_piano->handleKeyPress(keyNum, velocity);
+                m_lastKey = keyNum;
+            }
             emit keyPressed(keyNum);
         }
         else
@@ -416,7 +420,7 @@ void PianoView::mouseMoveEvent(QMouseEvent* _me)
 
                 m_piano->setKeyState(keyNum, true);
                 */
-                m_piano->handleKeyPress(m_lastKey, velocity);
+                m_piano->handleKeyPress(keyNum, velocity);
                 m_lastKey = keyNum;
             }
             else

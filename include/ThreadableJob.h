@@ -29,61 +29,57 @@
 
 //#include "lmms_basics.h"
 
-
 class ThreadableJob
 {
-public:
+  public:
+    enum ProcessingState
+    {
+        Unstarted,
+        Queued,
+        InProgress,
+        Done
+    };
 
-	enum ProcessingState
-	{
-		Unstarted,
-		Queued,
-		InProgress,
-		Done
-	};
+    ThreadableJob() : m_state(ThreadableJob::Unstarted)
+    {
+    }
 
-	ThreadableJob() :
-		m_state( ThreadableJob::Unstarted )
-	{
-	}
+    virtual ProcessingState state() const final
+    {
+        return static_cast<ProcessingState>((int)m_state);
+    }
 
-	inline ProcessingState state() const
-	{
-		return static_cast<ProcessingState>( (int) m_state );
-	}
+    virtual void reset() final
+    {
+        m_state = Unstarted;
+    }
 
-	inline void reset()
-	{
-		m_state = Unstarted;
-	}
+    virtual void queue() final
+    {
+        m_state = Queued;
+    }
 
-	inline void queue()
-	{
-		m_state = Queued;
-	}
+    virtual void done() final
+    {
+        m_state = Done;
+    }
 
-	inline void done()
-	{
-		m_state = Done;
-	}
+    virtual void process() final
+    {
+        if(m_state.testAndSetOrdered(Queued, InProgress))
+        {
+            doProcessing();
+            m_state = Done;
+        }
+    }
 
-	void process()
-	{
-		if( m_state.testAndSetOrdered( Queued, InProgress ) )
-		{
-			doProcessing();
-			m_state = Done;
-		}
-	}
+    virtual bool requiresProcessing() const = 0;
 
-	virtual bool requiresProcessing() const = 0;
+  protected:
+    virtual void doProcessing() = 0;
 
-
-protected:
-	virtual void doProcessing() = 0;
-
-	AtomicInt m_state;
-
-} ;
+  private:
+    AtomicInt m_state;
+};
 
 #endif

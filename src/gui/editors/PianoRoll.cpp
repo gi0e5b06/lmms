@@ -1317,8 +1317,9 @@ void PianoRoll::keyPressEvent(QKeyEvent* ke)
 
         if(!ke->isAutoRepeat() && key_num > -1)
         {
-            m_pattern->instrumentTrack()->pianoModel()->handleKeyPress(
-                    key_num);
+            // m_pattern->instrumentTrack()->pianoModel()->handleKeyPress(
+            //    key_num);
+            playTestKey(key_num, MidiDefaultVelocity, 0);
             ke->accept();
         }
     }
@@ -1524,8 +1525,9 @@ void PianoRoll::keyReleaseEvent(QKeyEvent* ke)
 
         if(!ke->isAutoRepeat() && key_num > -1)
         {
-            m_pattern->instrumentTrack()->pianoModel()->handleKeyRelease(
-                    key_num);
+            stopTestKey();  // key_num);
+            // m_pattern->instrumentTrack()->pianoModel()->handleKeyRelease(
+            //    key_num);
             ke->accept();
         }
     }
@@ -1965,8 +1967,10 @@ void PianoRoll::mousePressEvent(QMouseEvent* me)
                 // left click - play the note
                 int v = ((float)x) / ((float)WHITE_KEY_WIDTH)
                         * MidiDefaultVelocity;
-                m_pattern->instrumentTrack()->pianoModel()->handleKeyPress(
-                        key_num, v);
+                stopTestNotes();
+                stopTestKey();
+                // m_pattern->instrumentTrack()->pianoModel()->handleKeyPress(
+                playTestKey(key_num, v, 0);
             }
         }
         else
@@ -2068,7 +2072,7 @@ void PianoRoll::stopTestNotes()
     if(hasValidPattern())
         for(Note* n: m_pattern->notes())
             stopTestNote(n);
-    m_lastKey = -1;
+    // m_lastKey = -1;
 }
 
 void PianoRoll::stopTestNote(Note* n)
@@ -2084,7 +2088,7 @@ void PianoRoll::stopTestNote(Note* n)
 
 void PianoRoll::playTestNote(Note* n)
 {
-    m_lastKey = n->key();
+    // m_lastKey = n->key();
 
     if(!n->isPlaying() && !m_recording)
     {
@@ -2279,6 +2283,7 @@ void PianoRoll::mouseReleaseEvent(QMouseEvent* me)
         // m_pattern->instrumentTrack()->pianoModel()->handleKeyRelease(
         //   m_lastKey);
     }
+    stopTestKey();
 
     // if(m_currentNote != nullptr)
     //  stopTestNote(m_currentNote);
@@ -2339,6 +2344,7 @@ void PianoRoll::mouseMoveEvent(QMouseEvent* me)
             // clicked on a key, play the note
             stopTestNotes();
             stopTestKey();
+            // m_pattern->instrumentTrack()->pianoModel()->handleKeyPress(
             playTestKey(key_num,
                         ((float)x) / ((float)WHITE_KEY_WIDTH)
                                 * MidiDefaultVelocity,
@@ -3266,22 +3272,24 @@ void PianoRoll::paintEvent(QPaintEvent* pe)
     {
         int q, x, tick;
 
-        if(m_zoomingXModel.value() > 3)
+        q = quantization();
+        if(m_zoomingXModel.value() <= 3)
         {
-            // If we're over 100% zoom, we allow all quantization level grids
-            q = quantization();
-        }
-        else if(quantization() % 3 != 0)
-        {
-            // If we're under 100% zoom, we allow quantization grid up to 1/24
-            // for triplets to ensure a dense doesn't fill out the background
-            q = quantization() < 8 ? 8 : quantization();
-        }
-        else
-        {
-            // If we're under 100% zoom, we allow quantization grid up to 1/32
-            // for normal notes
-            q = quantization() < 6 ? 6 : quantization();
+            if(q % 3 != 0)
+            {
+                // If we're under 100% zoom, we allow quantization grid up to
+                // 1/24 for triplets to ensure a dense doesn't fill out the
+                // background
+                if(q < 8)
+                    q = 8;  // ticks
+            }
+            else
+            {
+                // If we're under 100% zoom, we allow quantization grid up to
+                // 1/32 for normal notes
+                if(q < 6)
+                    q = 6;  // ticks
+            }
         }
 
         // First we draw the vertical quantization lines
@@ -4497,6 +4505,7 @@ tick_t PianoRoll::quantization() const
     // QString text = m_quantizeModel.currentText();
     // return DefaultTicksPerTact / text.right( text.length() - 2
     // ).toInt();
+
     return Editor::QUANTIZE_LEVELS[v - 1];
 }
 
@@ -4558,7 +4567,7 @@ MidiTime PianoRoll::newNoteLen() const
 
     // QString text = m_noteLenModel.currentText();
     // return DefaultTicksPerTact / text.right(text.length() - 2).toInt();
-    return Editor::LENGTH_LEVELS[v];
+    return Editor::LENGTH_LEVELS[v - 1];
 }
 
 bool PianoRoll::mouseOverNote()

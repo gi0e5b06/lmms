@@ -79,8 +79,6 @@ GigInstrument::GigInstrument(InstrumentTrack* _instrument_track) :
 {
     InstrumentPlayHandle* iph
             = new InstrumentPlayHandle(this, _instrument_track);
-    // iph->setAffinity(Engine::mixer()->thread());
-    // Engine::mixer()->addPlayHandle(iph);
     Engine::mixer()->emit playHandleToAdd(iph);
 
     updateSampleRate();
@@ -93,11 +91,6 @@ GigInstrument::GigInstrument(InstrumentTrack* _instrument_track) :
 
 GigInstrument::~GigInstrument()
 {
-    Engine::mixer()->emit playHandlesOfTypesToRemove(
-            // removePlayHandlesOfTypes(
-            instrumentTrack(),
-            // PlayHandle::TypeNotePlayHandle|
-            PlayHandle::TypeInstrumentPlayHandle);
     freeInstance();
 }
 

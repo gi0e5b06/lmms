@@ -471,7 +471,6 @@ void FileBrowserTreeWidget::mousePressEvent(QMouseEvent* me)
                     embed::getIconPixmap("sample_file", 24, 24), 0);
             // qApp->processEvents(QEventLoop::ExcludeUserInputEvents);
             SamplePlayHandle* s = new SamplePlayHandle(f->fullName());
-            s->setAffinity(Engine::mixer()->thread());
             // s->setDoneMayReturnTrue(false);
             m_previewPlayHandle = s;
             delete tf;
@@ -519,22 +518,7 @@ void FileBrowserTreeWidget::mousePressEvent(QMouseEvent* me)
         }
 
         if(m_previewPlayHandle != nullptr)
-        {
-            // m_previewPlayHandle->setAffinity(Engine::mixer()->thread());
-
             Engine::mixer()->emit playHandleToAdd(m_previewPlayHandle);
-            /*
-        if(!Engine::mixer()->addPlayHandle(m_previewPlayHandle))
-        {
-            qWarning("FileBrowser: BAD previewPlayHandle not added");
-            // m_previewPlayHandle->setAffinity(QThread::currentThread());
-            Engine::mixer()->removePlayHandle(m_previewPlayHandle);
-            // delete m_previewPlayHandle;
-            m_previewPlayHandle = nullptr;
-        }
-            */
-            // else qInfo("FileBrowser: OK previewPlayHandle added");
-        }
 
         m_pphMutex.unlock();
     }
@@ -637,12 +621,8 @@ void FileBrowserTreeWidget::mouseReleaseEvent(QMouseEvent* me)
         */
 
         qInfo("FileBrowserTreeWidget::mouseReleaseEvent 1");
-        // m_previewPlayHandle->setAffinity(QThread::currentThread());
         m_previewPlayHandle->setFinished();
-        //Engine::mixer()->emit playHandleToRemove(m_previewPlayHandle);
         qInfo("FileBrowserTreeWidget::mouseReleaseEvent 2");
-        // delete m_previewPlayHandle;
-        // qInfo("FileBrowserTreeWidget::mouseReleaseEvent 3");
         m_previewPlayHandle = nullptr;
     }
     m_pphMutex.unlock();

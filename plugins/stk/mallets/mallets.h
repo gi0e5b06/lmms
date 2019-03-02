@@ -82,26 +82,21 @@ class malletsSynth
                  const StkFloat      _control128,
                  const uint8_t       _delay,
                  const sample_rate_t _sample_rate);
-
-    inline ~malletsSynth()
-    {
-        m_voice->noteOff(0.0);
-        delete[] m_delay;
-        delete m_voice;
-    }
+    ~malletsSynth();
 
     inline sample_t nextSampleLeft()
     {
-        if(m_voice == NULL)
+        if(m_voice == nullptr)
         {
-            return (0.0f);
+            return 0.f;
         }
         else
         {
-            StkFloat s            = m_voice->tick();
+            StkFloat s = m_voice->tick();
+
             m_delay[m_delayWrite] = s;
             m_delayWrite++;
-            return (s);
+            return s;
         }
     }
 
@@ -109,20 +104,17 @@ class malletsSynth
     {
         StkFloat s = m_delay[m_delayRead];
         m_delayRead++;
-        return (s);
+        return s;
     }
 
     inline void setFrequency(const StkFloat _pitch)
     {
         if(m_voice)
-        {
             m_voice->setFrequency(_pitch);
-        }
     }
 
   protected:
     Instrmnt* m_voice;
-
     StkFloat* m_delay;
     uint8_t   m_delayRead;
     uint8_t   m_delayWrite;

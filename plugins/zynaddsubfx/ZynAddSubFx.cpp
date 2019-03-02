@@ -121,8 +121,6 @@ ZynAddSubFxInstrument::ZynAddSubFxInstrument(
     // now we need a play-handle which cares for calling play()
     InstrumentPlayHandle* iph
             = new InstrumentPlayHandle(this, _instrumentTrack);
-    // iph->setAffinity(Engine::mixer()->thread());
-    // Engine::mixer()->addPlayHandle(iph);
     Engine::mixer()->emit playHandleToAdd(iph);
 
     connect(Engine::mixer(), SIGNAL(sampleRateChanged()), this,
@@ -135,11 +133,6 @@ ZynAddSubFxInstrument::ZynAddSubFxInstrument(
 ZynAddSubFxInstrument::~ZynAddSubFxInstrument()
 {
     qInfo("~ZynAddSubFxInstrument it=%p", instrumentTrack());
-    Engine::mixer()->emit playHandlesOfTypesToRemove(
-            // removePlayHandlesOfTypes(
-            instrumentTrack(),
-            // PlayHandle::TypeNotePlayHandle|
-            PlayHandle::TypeInstrumentPlayHandle);
 
     m_pluginMutex.lock();
     delete m_plugin;

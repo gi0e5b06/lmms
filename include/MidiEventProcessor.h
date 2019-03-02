@@ -25,27 +25,33 @@
 #ifndef MIDI_EVENT_PROCESSOR_H
 #define MIDI_EVENT_PROCESSOR_H
 
+// #include "MemoryManager.h"
 #include "MidiEvent.h"
 #include "MidiTime.h"
-#include "MemoryManager.h"
 
-// all classes being able to process MIDI-events should inherit from this
+// All classes being able to process MIDI-events should inherit from this
 class MidiEventProcessor
 {
-	MM_OPERATORS
-public:
-	MidiEventProcessor()
-	{
-	}
+    // MM_OPERATORS
 
-	virtual ~MidiEventProcessor()
-	{
-	}
+  public:
+    MidiEventProcessor()
+    {
+    }
 
-	// to be implemented by inheriting classes
-	virtual void processInEvent( const MidiEvent& event, const MidiTime& time = MidiTime(), f_cnt_t offset = 0 ) = 0;
-	virtual void processOutEvent( const MidiEvent& event, const MidiTime& time = MidiTime(), f_cnt_t offset = 0 ) = 0;
+    virtual ~MidiEventProcessor()
+    {
+    }
 
-} ;
+    // to be implemented by inheriting classes
+    virtual void processInEvent(const MidiEvent& event,
+                                const MidiTime&  time   = MidiTime(),
+                                f_cnt_t          offset = 0)
+            = 0;
+    virtual void processOutEvent(const MidiEvent& event,
+                                 const MidiTime&  time   = MidiTime(),
+                                 f_cnt_t          offset = 0)
+            = 0;
+};
 
 #endif

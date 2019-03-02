@@ -27,10 +27,11 @@
 
 #include "DummyInstrument.h"
 #include "InstrumentTrack.h"
+#include <QCoreApplication>
 
 Instrument::Instrument(InstrumentTrack*  _instrumentTrack,
                        const Descriptor* _descriptor) :
-      Plugin(_descriptor, NULL /* _instrumentTrack*/),
+      Plugin(_descriptor, nullptr /* _instrumentTrack*/),
       m_instrumentTrack(_instrumentTrack), m_okay(true), m_noRun(false)
 {
 }
@@ -38,6 +39,12 @@ Instrument::Instrument(InstrumentTrack*  _instrumentTrack,
 Instrument::~Instrument()
 {
     qInfo("Instrument::~Instrument [%s]", qPrintable(displayName()));
+    Engine::mixer()->emit playHandlesOfTypesToRemove(
+            m_instrumentTrack,
+            PlayHandle::TypeInstrumentPlayHandle);
+    QCoreApplication::sendPostedEvents();
+    QThread::yieldCurrentThread();
+
     m_instrumentTrack = nullptr;
 }
 
@@ -60,7 +67,7 @@ Instrument* Instrument::instantiate(const QString&   _plugin_name,
     Plugin* p = Plugin::instantiate(_plugin_name, _instrument_track,
                                     _instrument_track);
     // check whether instantiated plugin is an instrument
-    if(dynamic_cast<Instrument*>(p) != NULL)
+    if(dynamic_cast<Instrument*>(p) != nullptr)
     {
         // everything ok, so return pointer
         return dynamic_cast<Instrument*>(p);

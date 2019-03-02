@@ -206,19 +206,12 @@ opl2instrument::opl2instrument(InstrumentTrack* _instrument_track) :
     // Connect the plugin to the mixer...
     InstrumentPlayHandle* iph
             = new InstrumentPlayHandle(this, _instrument_track);
-    // iph->setAffinity(Engine::mixer()->thread());
-    // Engine::mixer()->addPlayHandle(iph);
     Engine::mixer()->emit playHandleToAdd(iph);
 }
 
 opl2instrument::~opl2instrument()
 {
     delete theEmulator;
-    Engine::mixer()->emit playHandlesOfTypesToRemove(
-            // removePlayHandlesOfTypes(
-            instrumentTrack(),
-            // PlayHandle::TypeNotePlayHandle|
-            PlayHandle::TypeInstrumentPlayHandle);
     delete[] renderbuffer;
 }
 

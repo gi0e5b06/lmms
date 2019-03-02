@@ -323,19 +323,11 @@ lb302Synth::lb302Synth(InstrumentTrack* _instrumentTrack) :
 
     InstrumentPlayHandle* iph
             = new InstrumentPlayHandle(this, _instrumentTrack);
-    // iph->setAffinity(Engine::mixer()->thread());
-    // Engine::mixer()->addPlayHandle(iph);
     Engine::mixer()->emit playHandleToAdd(iph);
 }
 
 lb302Synth::~lb302Synth()
 {
-    Engine::mixer()->emit playHandlesOfTypesToRemove(
-            // removePlayHandlesOfTypes(
-            instrumentTrack(),
-            // PlayHandle::TypeNotePlayHandle|
-            PlayHandle::TypeInstrumentPlayHandle);
-
     for(int i = 0; i < NUM_FILTERS; ++i)
     {
         delete vcfs[i];

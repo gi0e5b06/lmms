@@ -61,23 +61,6 @@ class PlayHandle : public ThreadableJob
 
     virtual ~PlayHandle();
 
-    virtual bool affinityMatters() const
-    {
-        return false;
-    }
-
-    /*
-    const QThread* affinity() const
-    {
-        return m_affinity;
-    }
-    */
-
-    void setAffinity(QThread* _thread)
-    {
-        // m_affinity = _thread;
-    }
-
     Type type() const
     {
         return m_type;
@@ -156,7 +139,6 @@ class PlayHandle : public ThreadableJob
     {
         m_type       = p.m_type;
         m_offset     = p.m_offset;
-        m_affinity   = p.m_affinity;
         m_usesBuffer = p.m_usesBuffer;
         m_audioPort  = p.m_audioPort;
         return *this;
@@ -173,7 +155,6 @@ class PlayHandle : public ThreadableJob
     bool         m_usesBuffer;
     sampleFrame* m_playHandleBuffer;
     bool         m_bufferReleased;
-    // QThread*     m_affinity;
 };
 
 // typedef QList<PlayHandle*>       PlayHandleList;

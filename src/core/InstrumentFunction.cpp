@@ -405,8 +405,6 @@ bool InstrumentFunctionNoteStacking::processNote(NotePlayHandle* _n)
                             subnote, _n, -1,
                             NotePlayHandle::OriginNoteStacking,
                             _n->generation() + 1);
-                    // nph->setAffinity(Engine::mixer()->thread());
-                    // Engine::mixer()->addPlayHandle(nph);
                     Engine::mixer()->emit playHandleToAdd(nph);
                 }
             }
@@ -688,8 +686,6 @@ bool InstrumentFunctionArpeggio::processNote(NotePlayHandle* _n)
                     _n->instrumentTrack(), frames_processed, gated_frames,
                     subnote, _n, -1, NotePlayHandle::OriginArpeggio,
                     _n->generation() + 1);
-            // nph->setAffinity(Engine::mixer()->thread());
-            // Engine::mixer()->addPlayHandle(nph);
             Engine::mixer()->emit playHandleToAdd(nph);
         }
 
@@ -1531,8 +1527,6 @@ bool InstrumentFunctionGlissando::processNote(NotePlayHandle* _n)
                 _n->instrumentTrack(), frames_processed, gated_frames,
                 subnote, _n, -1, NotePlayHandle::OriginGlissando,
                 _n->generation() + 1);
-        // nph->setAffinity(Engine::mixer()->thread());
-        // Engine::mixer()->addPlayHandle(nph);
         Engine::mixer()->emit playHandleToAdd(nph);
 
         // update counters
@@ -1567,8 +1561,6 @@ bool InstrumentFunctionGlissando::processNote(NotePlayHandle* _n)
             _n->instrumentTrack(), frames_processed,
             _n->frames() - total_frames, note, NULL, -1,
             NotePlayHandle::OriginGlissando, _n->generation());
-    // nph->setAffinity(Engine::mixer()->thread());
-    // Engine::mixer()->addPlayHandle(nph);
     Engine::mixer()->emit playHandleToAdd(nph);
 
     return false;

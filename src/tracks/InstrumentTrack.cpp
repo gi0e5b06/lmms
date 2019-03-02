@@ -390,7 +390,7 @@ void InstrumentTrack::processInEvent(const MidiEvent& event,
         case MidiNoteOn:
             if(event.velocity() > 0)
             {
-                Engine::mixer()->requestChangeInModel();
+                // Engine::mixer()->requestChangeInModel();
                 {
                     m_midiNotesMutex.lock();
                     NotePlayHandle* n = m_notes[event.key()];
@@ -409,17 +409,19 @@ void InstrumentTrack::processInEvent(const MidiEvent& event,
                     }
                     m_midiNotesMutex.unlock();
                 }
-                Engine::mixer()->doneChangeInModel();
+                // Engine::mixer()->doneChangeInModel();
                 eventHandled = true;
                 break;
             }
 
         case MidiNoteOff:
-            Engine::mixer()->requestChangeInModel();
+            // Engine::mixer()->requestChangeInModel();
             {
                 m_midiNotesMutex.lock();
                 NotePlayHandle* n    = m_notes[event.key()];
                 m_notes[event.key()] = nullptr;
+                if(n != nullptr)
+                    n->lock();
                 m_midiNotesMutex.unlock();
 
                 if(n != nullptr)
@@ -427,21 +429,19 @@ void InstrumentTrack::processInEvent(const MidiEvent& event,
                     // do actual note off and remove internal reference to
                     // NotePlayHandle (which itself will be deleted later
                     // automatically)
-                    n->lock();
                     n->noteOff(offset);
-                    n->unlock();
-
                     if(isSustainPedalPressed()
                        && n->origin() == n->OriginMidiInput)
                         m_sustainedNotes << n;
+                    n->unlock();
                 }
             }
-            Engine::mixer()->doneChangeInModel();
+            // Engine::mixer()->doneChangeInModel();
             eventHandled = true;
             break;
 
         case MidiKeyPressure:
-            Engine::mixer()->requestChangeInModel();
+            // Engine::mixer()->requestChangeInModel();
             {
                 m_midiNotesMutex.lock();
                 NotePlayHandle* n = m_notes[event.key()];
@@ -455,7 +455,7 @@ void InstrumentTrack::processInEvent(const MidiEvent& event,
                     n->setVolume(event.volume(midiPort()->baseVelocity()));
                 }
             }
-            Engine::mixer()->doneChangeInModel();
+            // Engine::mixer()->doneChangeInModel();
             eventHandled = true;
             break;
 
@@ -510,7 +510,7 @@ void InstrumentTrack::processInEvent(const MidiEvent& event,
             switch(event.metaEvent())
             {
                 case MidiNotePanning:
-                    Engine::mixer()->requestChangeInModel();
+                    // Engine::mixer()->requestChangeInModel();
                     m_midiNotesMutex.lock();
                     if(m_notes[event.key()] != nullptr)
                     {
@@ -518,7 +518,7 @@ void InstrumentTrack::processInEvent(const MidiEvent& event,
                         m_notes[event.key()]->setPanning(event.panning());
                     }
                     m_midiNotesMutex.unlock();
-                    Engine::mixer()->doneChangeInModel();
+                    // Engine::mixer()->doneChangeInModel();
                     break;
                 default:
                     qWarning("InstrumentTrack: unhandled MIDI meta event: %i",
@@ -644,6 +644,7 @@ void InstrumentTrack::silenceAllNotes(bool removeIPH)
     m_processHandles.clear();
     // qInfo("InstrumentTrack::silenceAllNotes 3c");
     unlock();
+    Engine::mixer()->doneChangeInModel();
 
     // qInfo("InstrumentTrack::silenceAllNotes 4");
     quint8 flags = PlayHandle::TypeNotePlayHandle
@@ -659,8 +660,8 @@ void InstrumentTrack::silenceAllNotes(bool removeIPH)
         Engine::mixer()->emit playHandlesOfTypesToRemove(this, flags);
     }
     // qInfo("InstrumentTrack::silenceAllNotes 6");
-    Engine::mixer()->doneChangeInModel();
 
+    QCoreApplication::sendPostedEvents();
     QThread::yieldCurrentThread();
     QCoreApplication::sendPostedEvents();
     QThread::yieldCurrentThread();

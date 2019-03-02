@@ -185,7 +185,6 @@ PresetPreviewPlayHandle::PresetPreviewPlayHandle(const QString& _preset_file,
     s_previewTC->previewInstrumentTrack()->midiPort()->setMode(
             MidiPort::Disabled);
     setAudioPort(s_previewTC->previewInstrumentTrack()->audioPort());
-    // setAffinity(Engine::mixer()->thread());
 
     if(s_previewTC->previewInstrumentTrack()->getVolume() > DefaultVolume)
         s_previewTC->previewInstrumentTrack()->setVolume(DefaultVolume);
@@ -198,7 +197,6 @@ PresetPreviewPlayHandle::PresetPreviewPlayHandle(const QString& _preset_file,
             s_previewTC->previewInstrumentTrack(), 0,
             std::numeric_limits<f_cnt_t>::max() / 2,
             Note(0, 0, DefaultKey, 100));
-    // m_previewNPH->setAffinity(Engine::mixer()->thread());
 
     // qInfo("PresetPreviewPlayHandle::PresetPreviewPlayHandle 7");
     /*
@@ -234,7 +232,6 @@ PresetPreviewPlayHandle::~PresetPreviewPlayHandle()
     if(m_previewNPH != nullptr)
     {
         qInfo("PresetPreviewPlayHandle::~PresetPreviewPlayHandle 0");
-        // m_previewNPH->setAffinity(QThread::currentThread());
         // m_previewNPH->noteOff();
         // qInfo("PresetPreviewPlayHandle::~PresetPreviewPlayHandle 1a");
         // m_previewNPH->mute();
@@ -285,8 +282,9 @@ void PresetPreviewPlayHandle::init()
 
 void PresetPreviewPlayHandle::cleanup()
 {
-    delete s_previewTC;
-    s_previewTC = nullptr;
+    DELETE_HELPER(s_previewTC);
+    // delete s_previewTC;
+    // s_previewTC = nullptr;
 }
 
 ConstNotePlayHandleList PresetPreviewPlayHandle::nphsOfInstrumentTrack(

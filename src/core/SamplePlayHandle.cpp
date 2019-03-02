@@ -46,10 +46,10 @@ SamplePlayHandle::SamplePlayHandle(SampleBuffer* sampleBuffer,
     setCurrentFrame(0);
     if(ownAudioPort)
     {
-        setAudioPort(new AudioPort("SamplePlayHandle", false, nullptr,
-                                   m_volumeModel, nullptr, nullptr, nullptr,
-                                   nullptr, nullptr, nullptr, nullptr));
-        setAffinity(Engine::mixer()->thread());
+        setAudioPort(new AudioPort("[SamplePlayHandle AudioPort]", false,
+                                   nullptr, m_volumeModel, nullptr, nullptr,
+                                   nullptr, nullptr, nullptr, nullptr,
+                                   nullptr));
     }
 }
 
@@ -84,6 +84,7 @@ SamplePlayHandle::~SamplePlayHandle()
         else
         {
             qWarning("SamplePlayHandle::~SamplePlayHandle delete");
+            setAudioPort(nullptr);
             delete ap;
         }
     }

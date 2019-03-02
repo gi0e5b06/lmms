@@ -26,8 +26,8 @@
 
 #include "Backtrace.h"
 
-#include <QUuid>
 #include <QHash>
+#include <QUuid>
 
 QHash<QString, Model*> Model::s_models;
 
@@ -57,7 +57,7 @@ Model::~Model()
     {
         BACKTRACE
         qCritical("Model::~Model %s destroyed twice",
-                  qPrintable(fullDisplayName()));
+                  qPrintable(m_displayName));
         return;
     }
     s_destructorTracker.insert(m_debug_uuid, true);

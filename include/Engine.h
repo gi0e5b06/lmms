@@ -140,17 +140,6 @@ class EXPORT LmmsCore : public QObject
     static void init5();
     static void init7();
 
-    // small helper function which sets the pointer to NULL before
-    // actually deleting the object it refers to
-    template <class T>
-    static inline void deleteHelper(T** ptr)
-    {
-        T* tmp = *ptr;
-        *ptr   = nullptr;
-        if(tmp != nullptr)
-            delete tmp;
-    }
-
     static real_t s_framesPerTick;
 
     // core

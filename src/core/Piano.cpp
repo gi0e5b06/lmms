@@ -73,13 +73,15 @@ Piano::~Piano()
 
 void Piano::reset()
 {
-    QMutexLocker lock(&m_mutex);
-    for(int i = 0; i < NumKeys; ++i)
     {
-        m_pressedKeys[i] = 0;
+        QMutexLocker lock(&m_mutex);
+        for(int i = 0; i < NumKeys; ++i)
+            m_pressedKeys[i] = 0;
+    }
+    for(int i = 0; i < NumKeys; ++i)
         if(i < NumMidiKeys)
             m_midiEvProc->processInEvent(MidiEvent(MidiNoteOff, -1, i, 0));
-    }
+
     emit dataChanged();
 }
 
@@ -140,8 +142,9 @@ void Piano::releaseKey(int key)
                 changed = true;
         }
     }
-    if(changed)
-        emit dataChanged();
+    // if(changed)
+    Q_UNUSED(changed)
+    emit dataChanged();
 }
 
 bool Piano::isKeyPressed(int key) const
@@ -162,12 +165,13 @@ void Piano::handleKeyPress(int key, int midiVelocity)
     if(midiVelocity == -1)
         midiVelocity = m_instrumentTrack->midiPort()->baseVelocity();
 
-    bool         changed = false;
-    QMutexLocker lock(&m_mutex);
-    m_pressedKeys[key]++;
-    if(m_pressedKeys[key] == 1)
-        changed = true;
-
+    bool changed = false;
+    {
+        QMutexLocker lock(&m_mutex);
+        m_pressedKeys[key]++;
+        if(m_pressedKeys[key] == 1)
+            changed = true;
+    }
     if(changed)
     {
         if(key < NumMidiKeys)
@@ -186,13 +190,15 @@ void Piano::handleKeyRelease(int key)
     if(!isValidKey(key))
         return;
 
-    bool         changed = false;
-    QMutexLocker lock(&m_mutex);
-    if(m_pressedKeys[key] > 0)
+    bool changed = false;
     {
-        m_pressedKeys[key]--;
-        if(m_pressedKeys[key] == 0)
-            changed = true;
+        QMutexLocker lock(&m_mutex);
+        if(m_pressedKeys[key] > 0)
+        {
+            m_pressedKeys[key]--;
+            if(m_pressedKeys[key] == 0)
+                changed = true;
+        }
     }
     // if(changed)
     Q_UNUSED(changed)

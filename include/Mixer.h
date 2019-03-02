@@ -352,10 +352,7 @@ class EXPORT Mixer : public QObject
         return m_inputBufferFrames[m_inputBufferRead];
     }
 
-    inline const surroundSampleFrame* nextBuffer()
-    {
-        return hasFifoWriter() ? m_fifo->read() : renderNextBuffer();
-    }
+    const surroundSampleFrame* nextBuffer();
 
     void changeQuality(const struct qualitySettings& _qs);
 

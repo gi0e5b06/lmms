@@ -222,7 +222,7 @@ void MidiAlsaSeq::processOutEvent( const MidiEvent& event, const MidiTime& time,
 			break;
 
 		default:
-			qWarning( "MidiAlsaSeq: unhandled output event %d\n", (int) event.type() );
+			qWarning( "MidiAlsaSeq: unhandled output event %d", (int) event.type() );
 			return;
 	}
 
