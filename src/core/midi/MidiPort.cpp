@@ -25,448 +25,424 @@
 
 #include "MidiPort.h"
 
-#include <QDomElement>
-
 #include "MidiClient.h"
 #include "MidiDummy.h"
 #include "MidiEventProcessor.h"
 #include "Note.h"
 #include "Song.h"
 
+#include <QDomElement>
 
 static MidiDummy s_dummyClient;
 
-
-MidiPort::MidiPort( const QString& name,
-		    MidiClient* client,
-		    MidiEventProcessor* eventProcessor,
-		    Model* parent,
-		    Mode mode ) :
-	Model( parent, QString("Midi port ")+name ),
-	m_readablePortsMenu( NULL ),
-	m_writablePortsMenu( NULL ),
-	m_midiClient( client ),
-	m_midiEventProcessor( eventProcessor ),
-	m_mode( mode ),
-	m_inputChannelModel( 0, 0, MidiChannelCount, this, tr( "Input channel" ) ),
-	m_outputChannelModel( 1, 1, MidiChannelCount, this, tr( "Output channel" ) ),
-	m_inputControllerModel( 0, 0, MidiControllerCount, this, tr( "Input controller" ) ),
-	m_outputControllerModel( 0, 0, MidiControllerCount, this, tr( "Output controller" ) ),
-	m_fixedInputVelocityModel( -1, -1, MidiMaxVelocity, this, tr( "Fixed input velocity" ) ),
-	m_fixedOutputVelocityModel( -1, -1, MidiMaxVelocity, this, tr( "Fixed output velocity" ) ),
-	m_fixedOutputNoteModel( -1, -1, MidiMaxKey, this, tr( "Fixed output note" ) ),
-	m_outputProgramModel( 1, 1, MidiProgramCount, this, tr( "Output MIDI program" ) ),
-	m_baseVelocityModel( MidiMaxVelocity/2, 1, MidiMaxVelocity, this, tr( "Base velocity" ) ),
-	m_readableModel( false, this, tr( "Receive MIDI-events" ) ),
-	m_writableModel( false, this, tr( "Send MIDI-events" ) ),
-	m_widgetTypeModel     ( this, tr( "Widget type" ) ),
-        m_minInputValueModel  (  0, 0, 127, this, tr( "Min input value" ) ),
-        m_maxInputValueModel  (127, 0, 127, this, tr( "Max input value" ) ),
-        m_stepInputValueModel (  1, 1, 127, this, tr( "Step input value" ) ),
-        m_baseInputValueModel (  0, 0, 127, this, tr( "Base input value" ) ),
-        m_slopeInputValueModel(  1, 1,   7, this, tr( "Slope input value" ) ),
-        m_deltaInputValueModel(  0, 0, 127, this, tr( "Delta input value" ) )
+MidiPort::MidiPort(const QString&      name,
+                   MidiClient*         client,
+                   MidiEventProcessor* eventProcessor,
+                   Model*              parent,
+                   Mode                mode) :
+      Model(parent, name.isEmpty() ? "[midi port]" : name),
+      m_readablePortsMenu(NULL), m_writablePortsMenu(NULL),
+      m_midiClient(client), m_midiEventProcessor(eventProcessor),
+      m_mode(mode),
+      m_inputChannelModel(0, 0, MidiChannelCount, this, tr("Input channel")),
+      m_outputChannelModel(
+              1, 1, MidiChannelCount, this, tr("Output channel")),
+      m_inputControllerModel(
+              0, 0, MidiControllerCount, this, tr("Input controller")),
+      m_outputControllerModel(
+              0, 0, MidiControllerCount, this, tr("Output controller")),
+      m_fixedInputVelocityModel(
+              -1, -1, MidiMaxVelocity, this, tr("Fixed input velocity")),
+      m_fixedOutputVelocityModel(
+              -1, -1, MidiMaxVelocity, this, tr("Fixed output velocity")),
+      m_fixedOutputNoteModel(
+              -1, -1, MidiMaxKey, this, tr("Fixed output note")),
+      m_outputProgramModel(
+              1, 1, MidiProgramCount, this, tr("Output MIDI program")),
+      m_baseVelocityModel(MidiMaxVelocity / 2,
+                          1,
+                          MidiMaxVelocity,
+                          this,
+                          tr("Base velocity")),
+      m_readableModel(false, this, tr("Receive MIDI-events")),
+      m_writableModel(false, this, tr("Send MIDI-events")),
+      m_widgetTypeModel(this, tr("Widget type")),
+      m_minInputValueModel(0, 0, 127, this, tr("Min input value")),
+      m_maxInputValueModel(127, 0, 127, this, tr("Max input value")),
+      m_stepInputValueModel(1, 1, 127, this, tr("Step input value")),
+      m_baseInputValueModel(0, 0, 127, this, tr("Base input value")),
+      m_slopeInputValueModel(1, 1, 7, this, tr("Slope input value")),
+      m_deltaInputValueModel(0, 0, 127, this, tr("Delta input value"))
 {
-	m_widgetTypeModel.addItem("Ignored");
-	m_widgetTypeModel.addItem("Open Relay");
-	m_widgetTypeModel.addItem("Close Relay");
-	m_widgetTypeModel.addItem("Switch");
-	m_widgetTypeModel.addItem("Knob/Fader");
-	m_widgetTypeModel.addItem("Pad/Key");
-	m_widgetTypeModel.addItem("PitchBend");
-	m_widgetTypeModel.setInitValue(4);
+    m_widgetTypeModel.addItem("Ignored");
+    m_widgetTypeModel.addItem("Open Relay");
+    m_widgetTypeModel.addItem("Close Relay");
+    m_widgetTypeModel.addItem("Switch");
+    m_widgetTypeModel.addItem("Knob/Fader");
+    m_widgetTypeModel.addItem("Pad/Key");
+    m_widgetTypeModel.addItem("PitchBend");
+    m_widgetTypeModel.setInitValue(4);
 
-	m_midiClient->addPort( this );
+    m_midiClient->addPort(this);
 
-	m_readableModel.setValue( m_mode == Input || m_mode == Duplex );
-	m_writableModel.setValue( m_mode == Output || m_mode == Duplex );
+    m_readableModel.setValue(m_mode == Input || m_mode == Duplex);
+    m_writableModel.setValue(m_mode == Output || m_mode == Duplex);
 
-	connect( &m_readableModel, SIGNAL( dataChanged() ), this, SLOT( updateMidiPortMode() ) );
-	connect( &m_writableModel, SIGNAL( dataChanged() ), this, SLOT( updateMidiPortMode() ) );
-	connect( &m_outputProgramModel, SIGNAL( dataChanged() ), this, SLOT( updateOutputProgram() ) );
+    connect(&m_readableModel, SIGNAL(dataChanged()), this,
+            SLOT(updateMidiPortMode()));
+    connect(&m_writableModel, SIGNAL(dataChanged()), this,
+            SLOT(updateMidiPortMode()));
+    connect(&m_outputProgramModel, SIGNAL(dataChanged()), this,
+            SLOT(updateOutputProgram()));
 
+    // when using with non-raw-clients we can provide buttons showing
+    // our port-menus when being clicked
+    if(m_midiClient->isRaw() == false)
+    {
+        updateReadablePorts();
+        updateWritablePorts();
 
-	// when using with non-raw-clients we can provide buttons showing
-	// our port-menus when being clicked
-	if( m_midiClient->isRaw() == false )
-	{
-		updateReadablePorts();
-		updateWritablePorts();
+        // we want to get informed about port-changes!
+        m_midiClient->connectRPChanged(this, SLOT(updateReadablePorts()));
+        m_midiClient->connectWPChanged(this, SLOT(updateWritablePorts()));
+    }
 
-		// we want to get informed about port-changes!
-		m_midiClient->connectRPChanged( this, SLOT( updateReadablePorts() ) );
-		m_midiClient->connectWPChanged( this, SLOT( updateWritablePorts() ) );
-	}
-
-	updateMidiPortMode();
+    updateMidiPortMode();
 }
-
-
-
 
 MidiPort::~MidiPort()
 {
-	// unsubscribe ports
-	m_readableModel.setValue( false );
-	m_writableModel.setValue( false );
+    // unsubscribe ports
+    m_readableModel.setValue(false);
+    m_writableModel.setValue(false);
 
-	// and finally unregister ourself
-	m_midiClient->removePort( this );
+    // and finally unregister ourself
+    m_midiClient->removePort(this);
 }
 
-
-
-
-void MidiPort::setName( const QString& name )
+void MidiPort::setName(const QString& name)
 {
-	setDisplayName( name );
-	m_midiClient->applyPortName( this );
+    setDisplayName(name);
+    m_midiClient->applyPortName(this);
 }
 
-
-
-
-void MidiPort::setMode( Mode mode )
+void MidiPort::setMode(Mode mode)
 {
-	m_mode = mode;
-	m_midiClient->applyPortMode( this );
+    m_mode = mode;
+    m_midiClient->applyPortMode(this);
 }
 
-
-
-
-void MidiPort::processInEvent( const MidiEvent& event, const MidiTime& time )
+void MidiPort::processInEvent(const MidiEvent& event, const MidiTime& time)
 {
-	// mask event
-	if( isInputEnabled() &&
-            ( inputChannel() == 0 || inputChannel()-1 == event.channel() ) )
-	{
-		MidiEvent inEvent = event;
-		/* not the place to filter or to fix the velocity
-		if( event.type() == MidiNoteOn ||
-		    event.type() == MidiNoteOff ||
-		    event.type() == MidiKeyPressure )
-		{
-			if( inEvent.key() < 0 || inEvent.key() >= NumMidiKeys )
-			{
-                          //return; //GDX
-			}
-                        //GDX
-                        if( fixedInputVelocity() >= 0 && inEvent.velocity() > 0 )
-                        {
-                          inEvent.setVelocity( fixedInputVelocity() );
-                        }
-		}
-		*/
-		/*
-		static MidiEvent prev;
-		static tick_t    prtime;
-		if((prev == inEvent)&&(abs(prtime-time.getTicks())<16))
-		{
-			qWarning("MidiPort: skip duplicate in event");
-		}
-		else
-		*/
-		{
-			//qInfo("MidiPort: process in event t=%d pt=%d",time.getTicks(),prtime);
-                        //qInfo("MidiPort: process in event");
-			//prev=inEvent;
-			//prtime=time.getTicks();
-			m_midiEventProcessor->processInEvent( inEvent, time );
-		}
-	}
+    // mask event
+    if(isInputEnabled()
+       && (inputChannel() == 0 || inputChannel() - 1 == event.channel()))
+    {
+        MidiEvent inEvent = event;
+        /* not the place to filter or to fix the velocity
+        if( event.type() == MidiNoteOn ||
+            event.type() == MidiNoteOff ||
+            event.type() == MidiKeyPressure )
+        {
+                if( inEvent.key() < 0 || inEvent.key() >= NumMidiKeys )
+                {
+                  //return; //GDX
+                }
+                //GDX
+                if( fixedInputVelocity() >= 0 && inEvent.velocity() > 0 )
+                {
+                  inEvent.setVelocity( fixedInputVelocity() );
+                }
+        }
+        */
+        /*
+        static MidiEvent prev;
+        static tick_t    prtime;
+        if((prev == inEvent)&&(abs(prtime-time.getTicks())<16))
+        {
+                qWarning("MidiPort: skip duplicate in event");
+        }
+        else
+        */
+        {
+            // qInfo("MidiPort: process in event t=%d
+            // pt=%d",time.getTicks(),prtime); qInfo("MidiPort: process in
+            // event"); prev=inEvent; prtime=time.getTicks();
+            if(m_midiEventProcessor != nullptr)
+                m_midiEventProcessor->processInEvent(inEvent, time);
+        }
+    }
 }
 
-
-
-
-void MidiPort::processOutEvent( const MidiEvent& event, const MidiTime& time )
+void MidiPort::processOutEvent(const MidiEvent& event, const MidiTime& time)
 {
-	// mask event
-	if( isOutputEnabled() &&
-	    ( outputChannel() == 0 || outputChannel()-1 == event.channel() ) )
-	{
-		MidiEvent outEvent = event;
-		//Same: fixing velocity probably not at the right place
-		if( fixedOutputVelocity() >= 0 && event.velocity() > 0 &&
-			( event.type() == MidiNoteOn ||
-			  event.type() == MidiKeyPressure ) )
-		{
-			outEvent.setVelocity( fixedOutputVelocity() );
-		}
+    // mask event
+    if(isOutputEnabled()
+       && (outputChannel() == 0 || outputChannel() - 1 == event.channel()))
+    {
+        MidiEvent outEvent = event;
+        // Same: fixing velocity probably not at the right place
+        if(fixedOutputVelocity() >= 0 && event.velocity() > 0
+           && (event.type() == MidiNoteOn || event.type() == MidiKeyPressure))
+        {
+            outEvent.setVelocity(fixedOutputVelocity());
+        }
 
-		m_midiClient->processOutEvent( outEvent, time, this );
-	}
+        m_midiClient->processOutEvent(outEvent, time, this);
+    }
 }
 
-
-
-
-void MidiPort::saveSettings( QDomDocument& doc, QDomElement& thisElement )
+void MidiPort::saveSettings(QDomDocument& doc, QDomElement& thisElement)
 {
-	m_inputChannelModel.saveSettings( doc, thisElement, "inputchannel" );
-	m_outputChannelModel.saveSettings( doc, thisElement, "outputchannel" );
-	m_inputControllerModel.saveSettings( doc, thisElement, "inputcontroller" );
-	m_outputControllerModel.saveSettings( doc, thisElement, "outputcontroller" );
-	m_fixedInputVelocityModel.saveSettings( doc, thisElement, "fixedinputvelocity" );
-	m_fixedOutputVelocityModel.saveSettings( doc, thisElement, "fixedoutputvelocity" );
-	m_fixedOutputNoteModel.saveSettings( doc, thisElement, "fixedoutputnote" );
-	m_outputProgramModel.saveSettings( doc, thisElement, "outputprogram" );
-	m_baseVelocityModel.saveSettings( doc, thisElement, "basevelocity" );
-	m_readableModel.saveSettings( doc, thisElement, "readable" );
-	m_writableModel.saveSettings( doc, thisElement, "writable" );
+    m_inputChannelModel.saveSettings(doc, thisElement, "inputchannel");
+    m_outputChannelModel.saveSettings(doc, thisElement, "outputchannel");
+    m_inputControllerModel.saveSettings(doc, thisElement, "inputcontroller");
+    m_outputControllerModel.saveSettings(doc, thisElement,
+                                         "outputcontroller");
+    m_fixedInputVelocityModel.saveSettings(doc, thisElement,
+                                           "fixedinputvelocity");
+    m_fixedOutputVelocityModel.saveSettings(doc, thisElement,
+                                            "fixedoutputvelocity");
+    m_fixedOutputNoteModel.saveSettings(doc, thisElement, "fixedoutputnote");
+    m_outputProgramModel.saveSettings(doc, thisElement, "outputprogram");
+    m_baseVelocityModel.saveSettings(doc, thisElement, "basevelocity");
+    m_readableModel.saveSettings(doc, thisElement, "readable");
+    m_writableModel.saveSettings(doc, thisElement, "writable");
 
-	m_widgetTypeModel     .saveSettings( doc, thisElement, "ivtype"  );
-	m_minInputValueModel  .saveSettings( doc, thisElement, "ivmin"   );
-	m_maxInputValueModel  .saveSettings( doc, thisElement, "ivmax"   );
-	m_stepInputValueModel .saveSettings( doc, thisElement, "ivstep"  );
-	m_baseInputValueModel .saveSettings( doc, thisElement, "ivbase"  );
-	m_slopeInputValueModel.saveSettings( doc, thisElement, "ivslope" );
-	m_deltaInputValueModel.saveSettings( doc, thisElement, "ivdelta" );
+    m_widgetTypeModel.saveSettings(doc, thisElement, "ivtype");
+    m_minInputValueModel.saveSettings(doc, thisElement, "ivmin");
+    m_maxInputValueModel.saveSettings(doc, thisElement, "ivmax");
+    m_stepInputValueModel.saveSettings(doc, thisElement, "ivstep");
+    m_baseInputValueModel.saveSettings(doc, thisElement, "ivbase");
+    m_slopeInputValueModel.saveSettings(doc, thisElement, "ivslope");
+    m_deltaInputValueModel.saveSettings(doc, thisElement, "ivdelta");
 
-	if( isInputEnabled() )
-	{
-		QString rp;
-		for( Map::ConstIterator it = m_readablePorts.begin(); it != m_readablePorts.end(); ++it )
-		{
-			if( it.value() )
-			{
-				rp += it.key() + ",";
-			}
-		}
-		// cut off comma
-		if( rp.length() > 0 )
-		{
-			rp.truncate( rp.length() - 1 );
-		}
-		thisElement.setAttribute( "inports", rp );
-	}
+    if(isInputEnabled())
+    {
+        QString rp;
+        for(Map::ConstIterator it = m_readablePorts.begin();
+            it != m_readablePorts.end(); ++it)
+        {
+            if(it.value())
+            {
+                rp += it.key() + ",";
+            }
+        }
+        // cut off comma
+        if(rp.length() > 0)
+        {
+            rp.truncate(rp.length() - 1);
+        }
+        thisElement.setAttribute("inports", rp);
+    }
 
-	if( isOutputEnabled() )
-	{
-		QString wp;
-		for( Map::ConstIterator it = m_writablePorts.begin(); it != m_writablePorts.end(); ++it )
-		{
-			if( it.value() )
-			{
-				wp += it.key() + ",";
-			}
-		}
-		// cut off comma
-		if( wp.length() > 0 )
-		{
-			wp.truncate( wp.length() - 1 );
-		}
-		thisElement.setAttribute( "outports", wp );
-	}
+    if(isOutputEnabled())
+    {
+        QString wp;
+        for(Map::ConstIterator it = m_writablePorts.begin();
+            it != m_writablePorts.end(); ++it)
+        {
+            if(it.value())
+            {
+                wp += it.key() + ",";
+            }
+        }
+        // cut off comma
+        if(wp.length() > 0)
+        {
+            wp.truncate(wp.length() - 1);
+        }
+        thisElement.setAttribute("outports", wp);
+    }
 }
 
-
-
-
-void MidiPort::loadSettings( const QDomElement& thisElement )
+void MidiPort::loadSettings(const QDomElement& thisElement)
 {
-	m_inputChannelModel.loadSettings( thisElement, "inputchannel" );
-	m_outputChannelModel.loadSettings( thisElement, "outputchannel" );
-	m_inputControllerModel.loadSettings( thisElement, "inputcontroller" );
-	m_outputControllerModel.loadSettings( thisElement, "outputcontroller" );
-	m_fixedInputVelocityModel.loadSettings( thisElement, "fixedinputvelocity" );
-	m_fixedOutputVelocityModel.loadSettings( thisElement, "fixedoutputvelocity" );
-	m_outputProgramModel.loadSettings( thisElement, "outputprogram" );
-	m_baseVelocityModel.loadSettings( thisElement, "basevelocity" );
-	m_readableModel.loadSettings( thisElement, "readable" );
-	m_writableModel.loadSettings( thisElement, "writable" );
+    m_inputChannelModel.loadSettings(thisElement, "inputchannel");
+    m_outputChannelModel.loadSettings(thisElement, "outputchannel");
+    m_inputControllerModel.loadSettings(thisElement, "inputcontroller");
+    m_outputControllerModel.loadSettings(thisElement, "outputcontroller");
+    m_fixedInputVelocityModel.loadSettings(thisElement, "fixedinputvelocity");
+    m_fixedOutputVelocityModel.loadSettings(thisElement,
+                                            "fixedoutputvelocity");
+    m_outputProgramModel.loadSettings(thisElement, "outputprogram");
+    m_baseVelocityModel.loadSettings(thisElement, "basevelocity");
+    m_readableModel.loadSettings(thisElement, "readable");
+    m_writableModel.loadSettings(thisElement, "writable");
 
-	m_widgetTypeModel     .loadSettings( thisElement, "ivtype"  );
-	m_minInputValueModel  .loadSettings( thisElement, "ivmin"   );
-	m_maxInputValueModel  .loadSettings( thisElement, "ivmax"   );
-	m_stepInputValueModel .loadSettings( thisElement, "ivstep"  );
-	m_baseInputValueModel .loadSettings( thisElement, "ivbase"  );
-	m_slopeInputValueModel.loadSettings( thisElement, "ivslope" );
-	m_deltaInputValueModel.loadSettings( thisElement, "ivdelta" );
+    m_widgetTypeModel.loadSettings(thisElement, "ivtype");
+    m_minInputValueModel.loadSettings(thisElement, "ivmin");
+    m_maxInputValueModel.loadSettings(thisElement, "ivmax");
+    m_stepInputValueModel.loadSettings(thisElement, "ivstep");
+    m_baseInputValueModel.loadSettings(thisElement, "ivbase");
+    m_slopeInputValueModel.loadSettings(thisElement, "ivslope");
+    m_deltaInputValueModel.loadSettings(thisElement, "ivdelta");
 
-	// restore connections
+    // restore connections
 
-	if( isInputEnabled() )
-	{
-		QStringList rp = thisElement.attribute( "inports" ).split( ',' );
-		for( Map::ConstIterator it = m_readablePorts.begin(); it != m_readablePorts.end(); ++it )
-		{
-			if( it.value() != ( rp.indexOf( it.key() ) != -1 ) )
-			{
-				subscribeReadablePort( it.key() );
-			}
-		}
-		emit readablePortsChanged();
-	}
+    if(isInputEnabled())
+    {
+        QStringList rp = thisElement.attribute("inports").split(',');
+        for(Map::ConstIterator it = m_readablePorts.begin();
+            it != m_readablePorts.end(); ++it)
+        {
+            if(it.value() != (rp.indexOf(it.key()) != -1))
+            {
+                subscribeReadablePort(it.key());
+            }
+        }
+        emit readablePortsChanged();
+    }
 
-	if( isOutputEnabled() )
-	{
-		QStringList wp = thisElement.attribute( "outports" ).split( ',' );
-		for( Map::ConstIterator it = m_writablePorts.begin(); it != m_writablePorts.end(); ++it )
-		{
-			if( it.value() != ( wp.indexOf( it.key() ) != -1 ) )
-			{
-				subscribeWritablePort( it.key() );
-			}
-		}
-		emit writablePortsChanged();
-	}
+    if(isOutputEnabled())
+    {
+        QStringList wp = thisElement.attribute("outports").split(',');
+        for(Map::ConstIterator it = m_writablePorts.begin();
+            it != m_writablePorts.end(); ++it)
+        {
+            if(it.value() != (wp.indexOf(it.key()) != -1))
+            {
+                subscribeWritablePort(it.key());
+            }
+        }
+        emit writablePortsChanged();
+    }
 
-	if( thisElement.hasAttribute( "basevelocity" ) == false )
-	{
-		// for projects created by LMMS < 0.9.92 there's no value for the base
-		// velocity and for compat reasons we have to stick with maximum velocity
-		// which did not allow note volumes > 100%
-		m_baseVelocityModel.setValue( MidiMaxVelocity );
-	}
+    if(thisElement.hasAttribute("basevelocity") == false)
+    {
+        // for projects created by LMMS < 0.9.92 there's no value for the base
+        // velocity and for compat reasons we have to stick with maximum
+        // velocity which did not allow note volumes > 100%
+        m_baseVelocityModel.setValue(MidiMaxVelocity);
+    }
 }
 
-
-
-
-
-void MidiPort::subscribeReadablePort( const QString& port, bool subscribe )
+void MidiPort::subscribeReadablePort(const QString& port, bool subscribe)
 {
-	m_readablePorts[port] = subscribe;
+    m_readablePorts[port] = subscribe;
 
-	// make sure, MIDI-port is configured for input
-	if( subscribe == true && !isInputEnabled() )
-	{
-		m_readableModel.setValue( true );
-	}
+    // make sure, MIDI-port is configured for input
+    if(subscribe == true && !isInputEnabled())
+    {
+        m_readableModel.setValue(true);
+    }
 
-	m_midiClient->subscribeReadablePort( this, port, subscribe );
+    m_midiClient->subscribeReadablePort(this, port, subscribe);
 }
 
-
-
-
-void MidiPort::subscribeWritablePort( const QString& port, bool subscribe )
+void MidiPort::subscribeWritablePort(const QString& port, bool subscribe)
 {
-	m_writablePorts[port] = subscribe;
+    m_writablePorts[port] = subscribe;
 
-	// make sure, MIDI-port is configured for output
-	if( subscribe == true && !isOutputEnabled() )
-	{
-		m_writableModel.setValue( true );
-	}
-        qInfo("MidiPort::subscribeWritablePort dest=%s subscribe=%d",qPrintable(port),subscribe);
-	m_midiClient->subscribeWritablePort( this, port, subscribe );
+    // make sure, MIDI-port is configured for output
+    if(subscribe == true && !isOutputEnabled())
+    {
+        m_writableModel.setValue(true);
+    }
+    qInfo("MidiPort::subscribeWritablePort dest=%s subscribe=%d",
+          qPrintable(port), subscribe);
+    m_midiClient->subscribeWritablePort(this, port, subscribe);
 }
-
-
-
 
 void MidiPort::updateMidiPortMode()
 {
-	// this small lookup-table makes everything easier
-	static const Modes modeTable[2][2] =
-	{
-		{ Disabled, Output },
-		{ Input, Duplex }
-	} ;
-	setMode( modeTable[m_readableModel.value()][m_writableModel.value()] );
+    // this small lookup-table makes everything easier
+    static const Modes modeTable[2][2]
+            = {{Disabled, Output}, {Input, Duplex}};
+    setMode(modeTable[m_readableModel.value()][m_writableModel.value()]);
 
-	// check whether we have to dis-check items in connection-menu
-	if( !isInputEnabled() )
-	{
-		for( Map::ConstIterator it = m_readablePorts.begin(); it != m_readablePorts.end(); ++it )
-		{
-			// subscribed?
-			if( it.value() )
-			{
-				subscribeReadablePort( it.key(), false );
-			}
-		}
-	}
+    // check whether we have to dis-check items in connection-menu
+    if(!isInputEnabled())
+    {
+        for(Map::ConstIterator it = m_readablePorts.begin();
+            it != m_readablePorts.end(); ++it)
+        {
+            // subscribed?
+            if(it.value())
+            {
+                subscribeReadablePort(it.key(), false);
+            }
+        }
+    }
 
-	if( !isOutputEnabled() )
-	{
-		for( Map::ConstIterator it = m_writablePorts.begin(); it != m_writablePorts.end(); ++it )
-		{
-			// subscribed?
-			if( it.value() )
-			{
-				subscribeWritablePort( it.key(), false );
-			}
-		}
-	}
+    if(!isOutputEnabled())
+    {
+        for(Map::ConstIterator it = m_writablePorts.begin();
+            it != m_writablePorts.end(); ++it)
+        {
+            // subscribed?
+            if(it.value())
+            {
+                subscribeWritablePort(it.key(), false);
+            }
+        }
+    }
 
-	emit readablePortsChanged();
-	emit writablePortsChanged();
-	emit modeChanged();
+    emit readablePortsChanged();
+    emit writablePortsChanged();
+    emit modeChanged();
 
-	if( Engine::getSong() )
-	{
-		Engine::getSong()->setModified();
-	}
+    if(Engine::getSong())
+    {
+        Engine::getSong()->setModified();
+    }
 }
-
-
-
 
 void MidiPort::updateReadablePorts()
 {
-	// first save all selected ports
-	QStringList selectedPorts;
-	for( Map::ConstIterator it = m_readablePorts.begin(); it != m_readablePorts.end(); ++it )
-	{
-		if( it.value() )
-		{
-			selectedPorts.push_back( it.key() );
-		}
-	}
+    // first save all selected ports
+    QStringList selectedPorts;
+    for(Map::ConstIterator it = m_readablePorts.begin();
+        it != m_readablePorts.end(); ++it)
+    {
+        if(it.value())
+        {
+            selectedPorts.push_back(it.key());
+        }
+    }
 
-	m_readablePorts.clear();
-	const QStringList& wp = m_midiClient->readablePorts();
-	// now insert new ports and restore selections
-	for( QStringList::ConstIterator it = wp.begin(); it != wp.end(); ++it )
-	{
-		m_readablePorts[*it] = ( selectedPorts.indexOf( *it ) != -1 );
-	}
+    m_readablePorts.clear();
+    const QStringList& wp = m_midiClient->readablePorts();
+    // now insert new ports and restore selections
+    for(QStringList::ConstIterator it = wp.begin(); it != wp.end(); ++it)
+    {
+        m_readablePorts[*it] = (selectedPorts.indexOf(*it) != -1);
+    }
 
-	emit readablePortsChanged();
+    emit readablePortsChanged();
 }
-
-
-
 
 void MidiPort::updateWritablePorts()
 {
-	// first save all selected ports
-	QStringList selectedPorts;
-	for( Map::ConstIterator it = m_writablePorts.begin(); it != m_writablePorts.end(); ++it )
-	{
-		if( it.value() )
-		{
-			selectedPorts.push_back( it.key() );
-		}
-	}
+    // first save all selected ports
+    QStringList selectedPorts;
+    for(Map::ConstIterator it = m_writablePorts.begin();
+        it != m_writablePorts.end(); ++it)
+    {
+        if(it.value())
+        {
+            selectedPorts.push_back(it.key());
+        }
+    }
 
-	m_writablePorts.clear();
-	const QStringList & wp = m_midiClient->writablePorts();
-	// now insert new ports and restore selections
-	for( QStringList::ConstIterator it = wp.begin(); it != wp.end(); ++it )
-	{
-		m_writablePorts[*it] = ( selectedPorts.indexOf( *it ) != -1 );
-	}
+    m_writablePorts.clear();
+    const QStringList& wp = m_midiClient->writablePorts();
+    // now insert new ports and restore selections
+    for(QStringList::ConstIterator it = wp.begin(); it != wp.end(); ++it)
+    {
+        m_writablePorts[*it] = (selectedPorts.indexOf(*it) != -1);
+    }
 
-	emit writablePortsChanged();
+    emit writablePortsChanged();
 }
-
-
-
 
 void MidiPort::updateOutputProgram()
 {
-	processOutEvent( MidiEvent( MidiProgramChange, outputChannel()-1, outputProgram()-1 ) );
+    processOutEvent(MidiEvent(MidiProgramChange, outputChannel() - 1,
+                              outputProgram() - 1));
 }
-
-
-
 
 void MidiPort::invalidateClient()
 {
-	m_midiClient = &s_dummyClient;
+    m_midiClient = &s_dummyClient;
 }

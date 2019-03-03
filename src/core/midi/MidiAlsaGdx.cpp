@@ -295,14 +295,14 @@ void MidiAlsaGdx::setFD(const MidiPort* _port, int _i, int _v)
 static QString TYPICAL_CLIENT_NAME[16]
         = {"MPKmini2", "Inst2",        "APC MINI",        "Inst4",
            "Mixxx",    "LMMS:ch5",     "Inst7",           "Inst8",
-           "Inst9",    "MPD218",       "Inst11",          "Inst12",
+           "Inst9",    "MPD218",       "Inst11",          ":MTC",
            "MIDI Mix", "Midi Through", "System:Announce", "System:Timer"};
 void MidiAlsaGdx::createLmmsPorts()
 {
     for(int _num = 0; _num < 16; _num++)
     {
         QString name = QString("LMMS %1").arg(
-                TYPICAL_CLIENT_NAME[_num]);  //.section(':',0,0));
+                TYPICAL_CLIENT_NAME[_num].replace(':', ' ').trimmed());
         s_lmmsPorts[_num]
                 = new MidiPort(name, this, this, nullptr, MidiPort::Duplex);
     }
@@ -311,9 +311,9 @@ void MidiAlsaGdx::createLmmsPorts()
     {
         int     caps = SND_SEQ_PORT_CAP_READ | SND_SEQ_PORT_CAP_SUBS_READ;
         QString name = QString("out to %1")
-                               .arg(TYPICAL_CLIENT_NAME
-                                            [_num]);  //.section(':',0,0));
-
+                               .arg(TYPICAL_CLIENT_NAME[_num]
+                                            .replace(':', ' ')
+                                            .trimmed());
         int pout = snd_seq_create_simple_port(
                 m_seqHandle, qPrintable(name), caps,
                 SND_SEQ_PORT_TYPE_MIDI_GENERIC
@@ -335,9 +335,9 @@ void MidiAlsaGdx::createLmmsPorts()
     {
         int     caps = SND_SEQ_PORT_CAP_WRITE | SND_SEQ_PORT_CAP_SUBS_WRITE;
         QString name = QString("in from %1")
-                               .arg(TYPICAL_CLIENT_NAME
-                                            [_num]);  //.section(':',0,0));
-
+                               .arg(TYPICAL_CLIENT_NAME[_num]
+                                            .replace(':', ' ')
+                                            .trimmed());
         int pin = snd_seq_create_simple_port(
                 m_seqHandle, qPrintable(name), caps,
                 SND_SEQ_PORT_TYPE_MIDI_GENERIC
@@ -379,12 +379,22 @@ void MidiAlsaGdx::destroyLmmsPorts()
 
 void MidiAlsaGdx::alsaConnectOut(int _pout, QString _pextin)
 {
-    // qInfo("MidiAlsaGdx::alsaConnectOut %d %s",_pout,qPrintable(_pextin));
+    qInfo("MidiAlsaGdx::alsaConnectOut %d %s", _pout, qPrintable(_pextin));
 
     // 20:0 MIDI Mix:MIDI Mix MIDI 1
     // MIDI Mix:MIDI Mix MIDI 1
     // MIDI Mix
     // MIDI Mix MIDI 1
+
+    if(!s_alsaReadablePorts.contains(_pextin))
+    {
+        for(QString s: s_alsaReadablePorts.keys())
+            if(s.indexOf(_pextin) >= 0)
+            {
+                _pextin = s;
+                break;
+            }
+    }
 
     if(!s_alsaReadablePorts.contains(_pextin))
     {
@@ -415,6 +425,16 @@ void MidiAlsaGdx::alsaConnectOut(int _pout, QString _pextin)
 void MidiAlsaGdx::alsaConnectIn(int _pin, QString _pextout)
 {
     // qInfo("MidiAlsaGdx::alsaConnectIn %d %s",_pin,qPrintable(_pextout));
+
+    if(!s_alsaWritablePorts.contains(_pextout))
+    {
+        for(QString s: s_alsaWritablePorts.keys())
+            if(s.indexOf(_pextout) >= 0)
+            {
+                _pextout = s;
+                break;
+            }
+    }
 
     if(!s_alsaWritablePorts.contains(_pextout))
     {
@@ -1315,6 +1335,88 @@ void MidiAlsaGdx::processOutEvent(const MidiEvent& event,
     }
 }
 
+void MidiAlsaGdx::sendBytes(const uint8_t*  bytes,
+                                const int       size,
+                                const MidiTime& time,
+                                const MidiPort* port)
+{
+    if(port == nullptr)
+    {
+        qFatal("MidiAlsaGdx::sendFourBytes port is null");
+    }
+
+    if(port->mode() == MidiPort::Disabled)
+    {
+        // qInfo("MidiAlsaGdx::run skip disabled port");
+        return;  // not output, not duplex
+    }
+
+    if(port->mode() == MidiPort::Input)
+    {
+        // qInfo("MidiAlsaGdx::run skip read-only port");
+        return;  // not output, not duplex
+    }
+
+    // HACK!!! - need a better solution which isn't that easy since we
+    // cannot store const-ptrs in our map because we need to call non-const
+    // methods of MIDI-port - it's a mess...
+    MidiPort* p = const_cast<MidiPort*>(port);
+    // Q_UNUSED(p);
+
+    // qInfo("  %p mode=%d name=%s", port, port->mode(),
+    //      qPrintable(port->displayName()));
+    // SHOW_MIDI_MAP();
+    // int p1=getFD(port,1);
+    // qInfo("MidiAlsaGdx::processOutEvent #1 p1=%d",p1);
+    // if((p1==-1)&&(port->mode()==MidiPort::Duplex)) p1=getFD(port,0);
+    // qInfo("MidiAlsaGdx::processOutEvent #2 p1=%d",p1);
+
+    QList<snd_seq_addr_t> addrs = m_mapWriteSubs.values(p);
+    if(addrs.size() == 0)
+    {
+        if(port->displayName().indexOf("MTC") >= 0)
+        {
+            SHOW_MIDI_MAP();
+            qInfo("MidiAlsaGdx::sendFourBytes no alsa output (p=%s)",
+                  qPrintable(p->displayName()));
+        }
+        return;
+    }
+
+    foreach(const snd_seq_addr_t a, addrs)
+    {
+        int p1 = a.port;  // getFD(port,1);
+        qInfo(" out ev a.client=%d a.port=%d p1=%d", a.client, a.port, p1);
+
+        if(p1 < 0)
+        {
+            qCritical("MidiAlsaGdx::sendFourBytes bad port %d:%d", a.client,
+                      a.port);
+            continue;
+        }
+
+        snd_seq_event_t ev;
+        snd_seq_ev_clear(&ev);
+        snd_seq_ev_set_source(&ev, p1);
+        //( m_portIDs[p][1] != -1 ) ?	m_portIDs[p][1] : m_portIDs[p][0] );
+        snd_seq_ev_set_subs(&ev);
+        snd_seq_ev_schedule_tick(&ev, m_queueID, 1, static_cast<int>(time));
+        ev.queue = m_queueID;
+
+        snd_midi_event_t* dev;
+        qInfo("snd_midi_event_new -> %d", snd_midi_event_new(64, &dev));
+        snd_midi_event_init(dev);
+        qInfo("snd_midi_event_new -> %ld",
+              snd_midi_event_encode(dev, bytes, size, &ev));
+        snd_midi_event_free(dev);
+
+        m_seqMutex.lock();
+        snd_seq_event_output(m_seqHandle, &ev);
+        snd_seq_drain_output(m_seqHandle);
+        m_seqMutex.unlock();
+    }
+}
+
 void MidiAlsaGdx::changeQueueTempo(bpm_t _bpm)
 {
     m_seqMutex.lock();
@@ -1408,18 +1510,20 @@ void MidiAlsaGdx::updatePortList()
     for(int _num = 0; _num < 16; _num++)
     {
         MidiPort* mp = s_lmmsPorts[_num];
-        readablePorts.push_back(
-                QString("%1:%2 %3:in from %4")
-                        .arg(128)  // m_clientID)
-                        .arg(getFD(mp, 0))
-                        .arg("LMMS")  // m_clientName)
-                        .arg(TYPICAL_CLIENT_NAME[_num].replace(':', ' ')));
-        writablePorts.push_back(
-                QString("%1:%2 %3:out to %4")
-                        .arg(128)  // m_clientID)
-                        .arg(getFD(mp, 1))
-                        .arg("LMMS")  // m_clientName)
-                        .arg(TYPICAL_CLIENT_NAME[_num].replace(':', ' ')));
+        readablePorts.push_back(QString("%1:%2 %3:in from %4")
+                                        .arg(128)  // m_clientID)
+                                        .arg(getFD(mp, 0))
+                                        .arg("LMMS")  // m_clientName)
+                                        .arg(TYPICAL_CLIENT_NAME[_num]
+                                                     .replace(':', ' ')
+                                                     .trimmed()));
+        writablePorts.push_back(QString("%1:%2 %3:out to %4")
+                                        .arg(128)  // m_clientID)
+                                        .arg(getFD(mp, 1))
+                                        .arg("LMMS")  // m_clientName)
+                                        .arg(TYPICAL_CLIENT_NAME[_num]
+                                                     .replace(':', ' ')
+                                                     .trimmed()));
     }
 
     if(m_readablePorts != readablePorts)
@@ -1454,11 +1558,13 @@ void MidiAlsaGdx::SHOW_MIDI_MAP()
         qInfo("mp1 %p p0=%d p1=%d mode=%d name=%s", mp, p0, p1, mp->mode(),
               qPrintable(mp->displayName()));
     }
+    /*
     qInfo("ALSA");
     foreach(const QString& p, m_writablePorts)
         qInfo("writable %s", qPrintable(p));
     foreach(const QString& p, m_readablePorts)
         qInfo("readable %s", qPrintable(p));
+    */
     qInfo("SUBSCRIPTIONS");
     foreach(const snd_seq_addr_t& a, m_mapReadSubs.uniqueKeys())
     {

@@ -33,6 +33,7 @@
 //#include "MidiEventProcessor.h"
 #include "MidiTime.h"
 //#include "TabWidget.h"
+#include "Song.h"
 
 class MidiPort;
 
@@ -51,6 +52,14 @@ class MidiClient
 
     virtual void processOutEventOnAllPorts(const MidiEvent& _me,
                                            const MidiTime&  _time) final;
+
+    virtual void sendBytes(const uint8_t*  bytes,
+                           const int       size,
+                           const MidiTime& time,
+                           const MidiPort* port)
+            = 0;
+
+    virtual void sendMTC() final;
 
     // inheriting classes can re-implement this for being able to update
     // their internal port-structures etc.
@@ -120,10 +129,19 @@ class MidiClientRaw : public MidiClient
     virtual ~MidiClientRaw();
 
     // we are raw-clients for sure!
-    virtual bool isRaw() const
+    virtual bool isRaw() const final
     {
         return true;
     }
+
+    virtual void processOutEvent(const MidiEvent& event,
+                                 const MidiTime&  time,
+                                 const MidiPort*  port);
+
+    virtual void sendBytes(const uint8_t*  _bytes,
+                           const int       _size,
+                           const MidiTime& _time,
+                           const MidiPort* _port);
 
   protected:
     // generic raw-MIDI-parser which generates appropriate MIDI-events
@@ -134,11 +152,7 @@ class MidiClientRaw : public MidiClient
 
   private:
     // this does MIDI-event-process
-    void         processParsedEvent();
-    virtual void processOutEvent(const MidiEvent& event,
-                                 const MidiTime&  time,
-                                 const MidiPort*  port);
-
+    void processParsedEvent();
     // small helper function returning length of a certain event - this
     // is necessary for parsing raw-MIDI-data
     static int eventLength(const unsigned char event);

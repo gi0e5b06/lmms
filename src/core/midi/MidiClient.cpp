@@ -90,13 +90,104 @@ void MidiClient::processOutEventOnAllPorts(const MidiEvent& _me,
         processOutEvent(_me, _time, port);
 }
 
-/*
 void MidiClient::sendMTC()
 {
-        uint8_t bytes[4];
-        bytes[0]=(0x03<<5); // 30 FPS
+    Song* song = Engine::getSong();
+    if(song != nullptr)
+    {
+        int    rr = CONFIG_GET_INT("midi.mtc_video_fps");
+        double vfps;
+        switch(rr)
+        {
+            case 0:
+                vfps = 24.;
+                break;
+            case 1:
+                vfps = 25.;
+                break;
+            case 3:
+                vfps = 30.;
+                break;
+            default:
+                rr   = 2;
+                vfps = 29.97;
+                break;
+        }
+
+        /*
+        if(vfps != 30.f)
+            tt = tt * (vfps / 30.f);  // REQUIRED
+        */
+
+        int     tt = song->getMilliseconds();
+        uint8_t ff = ((tt % 1000) * vfps) / 1000;
+        uint8_t ss = (tt / 1000) % 60;
+        uint8_t mm = (tt / 60000) % 60;
+        uint8_t hh = (tt / 3600000) % 24;
+
+        static int previous = -1;
+        const int  present  = ((hh * 60 + mm) * 60 + ss) * 100 + ff;
+        static int part     = 0;
+        if(previous != present)
+        {
+            if((previous + 1 != present)
+               && (ff == 0 && previous / 100 + 1 != present / 100))
+            {
+                qInfo("Full MTC %02d:%02d:%02d.%02d", hh, mm, ss, ff);
+                uint8_t bytes[10] = {0xF0, 0x7F, 0x7F, 0x01, 0x01,
+                                     hh,   mm,   ss,   ff,   0xF7};
+                for(MidiPort* port: m_midiPorts)
+                    if(port->mode() == MidiPort::Output
+                       || port->mode() == MidiPort::Duplex)
+                        sendBytes(bytes, 10, 0, port);
+                part = 0;
+            }
+            int maxi = ((!song->isPlaying() && part == 0) ? 8 : 1);
+            for(int i = 0; i < maxi; i++)
+            {
+                qInfo("Part %d MTC %02d:%02d:%02d.%02d (%f vfps)", part, hh,
+                      mm, ss, ff, vfps);
+                uint8_t data = part << 4;
+                switch(part)
+                {
+                    case 0:
+                        data |= ff % 16;
+                        break;
+                    case 1:
+                        data |= ff / 16;
+                        break;
+                    case 2:
+                        data |= ss % 16;
+                        break;
+                    case 3:
+                        data |= ss / 16;
+                        break;
+                    case 4:
+                        data |= mm % 16;
+                        break;
+                    case 5:
+                        data |= mm / 16;
+                        break;
+                    case 6:
+                        data |= hh % 16;
+                        break;
+                    case 7:
+                        data |= (rr < 1) | hh / 16;
+                        break;
+                }
+                uint8_t bytes[2] = {0xF1, data};
+                for(MidiPort* port: m_midiPorts)
+                    if(port->mode() == MidiPort::Output
+                       || port->mode() == MidiPort::Duplex)
+                        sendBytes(bytes, 2, 0, port);
+                part++;
+                if(part == 8)
+                    part = 0;
+            }
+        }
+        previous = present;
+    }
 }
-*/
 
 MidiClientRaw::MidiClientRaw()
 {
@@ -272,7 +363,7 @@ void MidiClientRaw::processOutEvent(const MidiEvent& event,
         case MidiNoteOff:
         case MidiKeyPressure:
             sendByte(event.type() | event.channel());
-            sendByte(event.key()); // + KeysPerOctave);
+            sendByte(event.key());  // + KeysPerOctave);
             sendByte(event.velocity());
             break;
 
@@ -281,6 +372,15 @@ void MidiClientRaw::processOutEvent(const MidiEvent& event,
                      (int)event.type());
             break;
     }
+}
+
+void MidiClientRaw::sendBytes(const uint8_t*  _bytes,
+                              const int       _size,
+                              const MidiTime& _time,
+                              const MidiPort* _port)
+{
+    for(int i = 0; i < _size; i++)
+        sendByte(_bytes[i]);
 }
 
 // Taken from Nagano Daisuke's USB-MIDI driver

@@ -720,7 +720,12 @@ void Mixer::getPeakValues(const surroundSampleFrame* _ab,
 
 const surroundSampleFrame* Mixer::nextBuffer()
 {
-    // TODO: process out MTC
+    if(CONFIG_GET_BOOL("midi.mtc_enabled"))
+    {
+        MidiClient* m = midiClient();
+        if(m != nullptr)
+            m->sendMTC();
+    }
 
     return hasFifoWriter() ? m_fifo->read() : renderNextBuffer();
 }
@@ -1380,7 +1385,7 @@ MidiClient* Mixer::tryMidiClients()
 
     if(client_name == MidiAlsaSeq::name() || client_name == "")
     {
-        MidiAlsaSeq* malsas = new MidiAlsaSeq;
+        MidiAlsaSeq* malsas = new MidiAlsaSeq();
         if(malsas->isRunning())
         {
             m_midiClientName = MidiAlsaSeq::name();
@@ -1391,7 +1396,7 @@ MidiClient* Mixer::tryMidiClients()
 
     if(client_name == MidiAlsaRaw::name() || client_name == "")
     {
-        MidiAlsaRaw* malsar = new MidiAlsaRaw;
+        MidiAlsaRaw* malsar = new MidiAlsaRaw();
         if(malsar->isRunning())
         {
             m_midiClientName = MidiAlsaRaw::name();
@@ -1404,7 +1409,7 @@ MidiClient* Mixer::tryMidiClients()
 #ifdef LMMS_HAVE_JACK
     if(client_name == MidiJack::name() || client_name == "")
     {
-        MidiJack* mjack = new MidiJack;
+        MidiJack* mjack = new MidiJack();
         if(mjack->isRunning())
         {
             m_midiClientName = MidiJack::name();
@@ -1417,7 +1422,7 @@ MidiClient* Mixer::tryMidiClients()
 #ifdef LMMS_HAVE_OSS
     if(client_name == MidiOss::name() || client_name == "")
     {
-        MidiOss* moss = new MidiOss;
+        MidiOss* moss = new MidiOss();
         if(moss->isRunning())
         {
             m_midiClientName = MidiOss::name();
@@ -1430,7 +1435,7 @@ MidiClient* Mixer::tryMidiClients()
 #ifdef LMMS_HAVE_SNDIO
     if(client_name == MidiSndio::name() || client_name == "")
     {
-        MidiSndio* msndio = new MidiSndio;
+        MidiSndio* msndio = new MidiSndio();
         if(msndio->isRunning())
         {
             m_midiClientName = MidiSndio::name();
@@ -1443,8 +1448,8 @@ MidiClient* Mixer::tryMidiClients()
 #ifdef LMMS_BUILD_WIN32
     if(client_name == MidiWinMM::name() || client_name == "")
     {
-        MidiWinMM* mwmm = new MidiWinMM;
-        //		if( moss->isRunning() )
+        MidiWinMM* mwmm = new MidiWinMM();
+        // if( moss->isRunning() )
         {
             m_midiClientName = MidiWinMM::name();
             return mwmm;
@@ -1457,7 +1462,7 @@ MidiClient* Mixer::tryMidiClients()
     printf("trying midi apple...\n");
     if(client_name == MidiApple::name() || client_name == "")
     {
-        MidiApple* mapple = new MidiApple;
+        MidiApple* mapple = new MidiApple();
         m_midiClientName  = MidiApple::name();
         printf("Returning midi apple\n");
         return mapple;

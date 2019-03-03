@@ -51,11 +51,15 @@ void lmms_default_configuration()
 
     DEFAULT_BOOL("tooltips.disabled", false);
 
-    DEFAULT_INT("mixer.samplerate",48000);//44100);
+    DEFAULT_INT("mixer.samplerate", 48000);  // 44100);
     DEFAULT_INT("mixer.framesperaudiobuffer", 1024);
     DEFAULT_BOOL("mixer.hqaudio", false);
-    DEFAULT_STRING("mixer.audiodev","");
-    DEFAULT_STRING("mixer.mididev","");
+    DEFAULT_STRING("mixer.audiodev", "");
+    DEFAULT_STRING("mixer.mididev", "");
+
+    DEFAULT_BOOL("midi.mtc_enabled", false);
+    DEFAULT_BOOL("midi.mtc_extra_port", true);
+    DEFAULT_INT("midi.mtc_video_fps", 3);
 }
 
 /*

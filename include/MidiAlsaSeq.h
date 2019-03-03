@@ -28,129 +28,129 @@
 #include "lmmsconfig.h"
 
 #ifdef LMMS_HAVE_ALSA
-#include <alsa/asoundlib.h>
+#include "MidiClient.h"
 
-#include <QMutex>
 #include <QMap>
+#include <QMutex>
 #include <QThread>
 #include <QTimer>
 
-
-#include "MidiClient.h"
-
+#include <alsa/asoundlib.h>
 
 struct pollfd;
 class QLineEdit;
 
-
 class MidiAlsaSeq : public QThread, public MidiClient
 {
-	Q_OBJECT
-public:
-	MidiAlsaSeq();
-	virtual ~MidiAlsaSeq();
+    Q_OBJECT
+  public:
+    MidiAlsaSeq();
+    virtual ~MidiAlsaSeq();
 
-	static QString probeDevice();
+    static QString probeDevice();
 
+    inline static QString name()
+    {
+        return QT_TRANSLATE_NOOP("MidiSetupWidget",
+                                 "ALSA-Sequencer (Advanced Linux Sound "
+                                 "Architecture)");
+    }
 
-	inline static QString name()
-	{
-		return QT_TRANSLATE_NOOP( "MidiSetupWidget",
-			"ALSA-Sequencer (Advanced Linux Sound "
-							"Architecture)" );
-	}
+    inline static QString configSection()
+    {
+        return "Midialsaseq";
+    }
 
-	inline static QString configSection()
-	{
-		return "Midialsaseq";
-	}
+    virtual void processOutEvent(const MidiEvent& _me,
+                                 const MidiTime&  _time,
+                                 const MidiPort*  _port);
 
+    virtual void sendBytes(const uint8_t*  _bytes,
+                           const int       _size,
+                           const MidiTime& _time,
+                           const MidiPort* _port);
 
+    virtual void applyPortMode(MidiPort* _port);
+    virtual void applyPortName(MidiPort* _port);
 
-	virtual void processOutEvent( const MidiEvent & _me,
-						const MidiTime & _time,
-						const MidiPort * _port );
+    virtual void removePort(MidiPort* _port);
 
-	virtual void applyPortMode( MidiPort * _port );
-	virtual void applyPortName( MidiPort * _port );
+    // list seq-ports from ALSA
+    virtual QStringList readablePorts() const
+    {
+        return m_readablePorts;
+    }
 
-	virtual void removePort( MidiPort * _port );
+    virtual QStringList writablePorts() const
+    {
+        return m_writablePorts;
+    }
 
+    // return name of port which specified MIDI event came from
+    virtual QString sourcePortName(const MidiEvent&) const;
 
-	// list seq-ports from ALSA
-	virtual QStringList readablePorts() const
-	{
-		return m_readablePorts;
-	}
+    // (un)subscribe given MidiPort to/from destination-port
+    virtual void subscribeReadablePort(MidiPort*      _port,
+                                       const QString& _dest,
+                                       bool           _subscribe = true);
+    virtual void subscribeWritablePort(MidiPort*      _port,
+                                       const QString& _dest,
+                                       bool           _subscribe = true);
+    virtual void connectRPChanged(QObject* _receiver, const char* _member)
+    {
+        connect(this, SIGNAL(readablePortsChanged()), _receiver, _member);
+    }
 
-	virtual QStringList writablePorts() const
-	{
-		return m_writablePorts;
-	}
+    virtual void connectWPChanged(QObject* _receiver, const char* _member)
+    {
+        connect(this, SIGNAL(writablePortsChanged()), _receiver, _member);
+    }
 
-	// return name of port which specified MIDI event came from
-	virtual QString sourcePortName( const MidiEvent & ) const;
+  private slots:
+    void changeQueueTempo(bpm_t _bpm);
+    void updatePortList();
 
-	// (un)subscribe given MidiPort to/from destination-port
-	virtual void subscribeReadablePort( MidiPort * _port,
-						const QString & _dest,
-						bool _subscribe = true );
-	virtual void subscribeWritablePort( MidiPort * _port,
-						const QString & _dest,
-						bool _subscribe = true );
-	virtual void connectRPChanged( QObject * _receiver,
-							const char * _member )
-	{
-		connect( this, SIGNAL( readablePortsChanged() ),
-							_receiver, _member );
-	}
-
-	virtual void connectWPChanged( QObject * _receiver,
-							const char * _member )
-	{
-		connect( this, SIGNAL( writablePortsChanged() ),
-							_receiver, _member );
-	}
-
-
-private slots:
-	void changeQueueTempo( bpm_t _bpm );
-	void updatePortList();
-
-
-private:
-	virtual void run();
+  private:
+    virtual void run();
 
 #ifdef LMMS_HAVE_ALSA
-	QMutex m_seqMutex;
-	snd_seq_t * m_seqHandle;
-	struct Ports
-	{
-		Ports() { p[0] = -1; p[1] = -1; }
-		int & operator[]( const int _i ) { return p[_i]; }
-		private: int p[2];
-	} ;
-	QMap<MidiPort *, Ports> m_portIDs;
+    QMutex     m_seqMutex;
+    snd_seq_t* m_seqHandle;
+    struct Ports
+    {
+        Ports()
+        {
+            p[0] = -1;
+            p[1] = -1;
+        }
+        int& operator[](const int _i)
+        {
+            return p[_i];
+        }
+
+      private:
+        int p[2];
+    };
+    QMap<MidiPort*, Ports> m_portIDs;
 #endif
 
-	int m_queueID;
+    MidiPort* m_mtcPort;
 
-	volatile bool m_quit;
+    int m_queueID;
 
-	QTimer m_portListUpdateTimer;
-	QStringList m_readablePorts;
-	QStringList m_writablePorts;
+    volatile bool m_quit;
 
-	int m_pipe[2];
+    QTimer      m_portListUpdateTimer;
+    QStringList m_readablePorts;
+    QStringList m_writablePorts;
 
+    int m_pipe[2];
 
-signals:
-	void readablePortsChanged();
-	void writablePortsChanged();
-
-} ;
-
-#endif
+  signals:
+    void readablePortsChanged();
+    void writablePortsChanged();
+};
 
 #endif
 
+#endif
