@@ -729,6 +729,7 @@ void PianoRoll::setCurrentPattern(Pattern* newPattern)
 {
     if(hasValidPattern())
     {
+        m_pattern->disconnect(this);
         m_pattern->instrumentTrack()->disconnect(this);
     }
 
@@ -798,6 +799,9 @@ void PianoRoll::setCurrentPattern(Pattern* newPattern)
 
 void PianoRoll::setGhostPattern(Pattern* _pattern)
 {
+    if(m_ghostPattern != nullptr)
+        m_ghostPattern->disconnect(this);
+
     m_ghostPattern = _pattern;
     if(_pattern != nullptr)
     {

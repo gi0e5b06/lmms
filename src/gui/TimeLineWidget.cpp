@@ -196,6 +196,7 @@ void TimeLineWidget::addLoopMarkButtons(QToolBar* _tool_bar)
     {
         AutomatableToolButton* b
                 = new AutomatableToolButton(_tool_bar, "Loop mark");
+        b->setMinimumSize(32,32);
         QAction* a = new QAction(QString((char)(65 + i)),
                                  b);  //.append(QString(" loop")));
         b->setDefaultAction(a);

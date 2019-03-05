@@ -37,16 +37,16 @@ const QVector<real_t> Editor::ZOOM_LEVELS
 
 void Editor::fillZoomLevels(ComboBoxModel& _cbm)
 {
-    for(const real_t& zoomLevel : Editor::ZOOM_LEVELS)
+    for(const real_t& zoomLevel: Editor::ZOOM_LEVELS)
     {
         _cbm.addItem(QString("%1\%").arg(zoomLevel * 100));
     }
 }
 
-const QVector<tick_t> Editor::QUANTIZE_LEVELS = {
-        4 * 192,  2 * 192,   1 * 192,  192 / 2,   192 / 4, 192 / 8,
-        192 / 16, 192 / 32, 192 / 64, 192 / 3, 192 / 6,
-        192 / 12, 192 / 24, 192 / 48, 192 / 96,  1 };
+const QVector<tick_t> Editor::QUANTIZE_LEVELS
+        = {4 * 192,  2 * 192,  1 * 192,  192 / 2, 192 / 4, 192 / 8,
+           192 / 16, 192 / 32, 192 / 64, 192 / 3, 192 / 6, 192 / 12,
+           192 / 24, 192 / 48, 192 / 96, 1};
 
 void Editor::fillQuantizeLevels(ComboBoxModel& _cbm)
 {
@@ -68,10 +68,10 @@ void Editor::fillQuantizeLevels(ComboBoxModel& _cbm)
     _cbm.addItem("1/192");
 }
 
-const QVector<tick_t> Editor::LENGTH_LEVELS = {
-        4 * 192,  2 * 192,   1 * 192,  192 / 2,   192 / 4, 192 / 8,
-        192 / 16, 192 / 32, 192 / 64, 192 / 3, 192 / 6,
-        192 / 12, 192 / 24, 192 / 48, 192 / 96,  1};
+const QVector<tick_t> Editor::LENGTH_LEVELS
+        = {4 * 192,  2 * 192,  1 * 192,  192 / 2, 192 / 4, 192 / 8,
+           192 / 16, 192 / 32, 192 / 64, 192 / 3, 192 / 6, 192 / 12,
+           192 / 24, 192 / 48, 192 / 96, 1};
 
 void Editor::fillLengthLevels(ComboBoxModel& _cbm)
 {
@@ -180,6 +180,7 @@ Editor::Editor(bool record) :
 
 Editor::~Editor()
 {
+    qInfo("Editor::~Editor");
 }
 
 QAction* Editor::playAction() const

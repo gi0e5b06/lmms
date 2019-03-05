@@ -210,7 +210,8 @@ void LmmsCore::init7()
 
 void LmmsCore::destroy()
 {
-    qWarning("Engine::destroy begin");
+    qWarning("Engine::destroy START");
+
     s_projectJournal->stopAllJournalling();
     transport()->transportStop();
     s_mixer->stopProcessing();
@@ -232,7 +233,8 @@ void LmmsCore::destroy()
     qInfo("ConfigManager::deinit");
     // delete ConfigManager::inst();
     ConfigManager::deinit();
-    qWarning("Engine::destroy end");
+
+    qInfo("Engine::destroy END");
 }
 
 void LmmsCore::updateFramesPerTick()
