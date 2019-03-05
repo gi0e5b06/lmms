@@ -36,7 +36,7 @@ class ChartSeries : QObject
 
   public:
     ChartSeries(QVector<QPointF>& _points, QColor& _foreground);
-    ~ChartSeries();
+    virtual ~ChartSeries();
 
     QVector<QPointF>& points();
     QColor&           foreground();

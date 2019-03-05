@@ -51,7 +51,7 @@ class EXPORT EnvelopeAndLfoParameters : public Model, public JournallingObject
         {
         }
 
-        ~LfoInstances()
+        virtual ~LfoInstances()
         {
         }
 

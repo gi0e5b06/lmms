@@ -34,7 +34,7 @@ class MixerProfiler
 {
   public:
     MixerProfiler();
-    ~MixerProfiler();
+    virtual ~MixerProfiler();
 
     void startPeriod()
     {

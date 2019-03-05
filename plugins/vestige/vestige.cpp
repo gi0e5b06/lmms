@@ -295,11 +295,12 @@ bool vestigeInstrument::handleMidiEvent(const MidiEvent& event,
                                         const MidiTime&  time,
                                         f_cnt_t          offset)
 {
-    m_pluginMutex.lock();
+    if(!m_pluginMutex.tryLock(Engine::getSong()->isExporting() ? -1 : 0))
+        return true;
+
     if(m_plugin != nullptr)
-    {
         m_plugin->processMidiEvent(event, offset);
-    }
+
     m_pluginMutex.unlock();
 
     return true;
@@ -381,7 +382,7 @@ VestigeInstrumentView::VestigeInstrumentView(Instrument* _instrument,
         s_artwork = new QPixmap(PLUGIN_NAME::getIconPixmap("artwork"));
     }
 
-    m_rolLPresetButton = new PixmapButton(this, "");
+    m_rolLPresetButton = new PixmapButton(this, "[previous preset]");
     m_rolLPresetButton->setCheckable(false);
     m_rolLPresetButton->setCursor(Qt::PointingHandCursor);
     m_rolLPresetButton->move(155, 201);
@@ -399,7 +400,7 @@ VestigeInstrumentView::VestigeInstrumentView(Instrument* _instrument,
             tr("Click here, if you want to switch to another VST-plugin "
                "preset program."));
 
-    m_rolRPresetButton = new PixmapButton(this, "");
+    m_rolRPresetButton = new PixmapButton(this, "[next preset]");
     m_rolRPresetButton->setCheckable(false);
     m_rolRPresetButton->setCursor(Qt::PointingHandCursor);
     m_rolRPresetButton->move(173, 201);
@@ -425,7 +426,7 @@ VestigeInstrumentView::VestigeInstrumentView(Instrument* _instrument,
     connect(menu, SIGNAL(aboutToShow()), this, SLOT(updateMenu()));
     m_selPresetButton->setMenu(menu);
 
-    m_openPresetButton = new PixmapButton(this, "");
+    m_openPresetButton = new PixmapButton(this, "[open preset]");
     m_openPresetButton->setCheckable(false);
     m_openPresetButton->setCursor(Qt::PointingHandCursor);
     m_openPresetButton->move(209, 201);
@@ -439,7 +440,7 @@ VestigeInstrumentView::VestigeInstrumentView(Instrument* _instrument,
             tr("Click here, if you want to open another *.fxp, *.fxb "
                "VST-plugin preset."));
 
-    m_savePresetButton = new PixmapButton(this, "");
+    m_savePresetButton = new PixmapButton(this, "[save preset]");
     m_savePresetButton->setCheckable(false);
     m_savePresetButton->setCursor(Qt::PointingHandCursor);
     m_savePresetButton->move(227, 201);
@@ -629,7 +630,7 @@ void VestigeInstrumentView::openPlugin()
     // set filters
     QStringList types;
     types << tr("DLL-files (*.dll)") << tr("EXE-files (*.exe)")
-          << tr("SO-files (*.so)");
+            /*<< tr("SO-files (*.so)")*/;
     ofd.setNameFilters(types);
 
     if(m_vi->m_pluginDLL != "")
@@ -774,16 +775,20 @@ void VestigeInstrumentView::toggleGUI()
 
 void VestigeInstrumentView::noteOffAll(void)
 {
-    m_vi->m_pluginMutex.lock();
     if(m_vi->m_plugin != nullptr)
     {
         for(int key = 0; key <= MidiMaxKey; ++key)
         {
+            if(!m_vi->m_pluginMutex.tryLock(
+                       Engine::getSong()->isExporting() ? -1 : 0))
+                return;
+
             m_vi->m_plugin->processMidiEvent(
                     MidiEvent(MidiNoteOff, 0, key, 0), 0);
+
+            m_vi->m_pluginMutex.unlock();
         }
     }
-    m_vi->m_pluginMutex.unlock();
 }
 
 void VestigeInstrumentView::dragEnterEvent(QDragEnterEvent* _dee)

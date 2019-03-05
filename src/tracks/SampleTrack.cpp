@@ -281,9 +281,11 @@ void SampleTCO::toggleRecord()
 
 void SampleTCO::playbackPositionChanged()
 {
-    Engine::mixer()->emit playHandlesOfTypesToRemove(
-            // removePlayHandlesOfTypes(
-            getTrack(), PlayHandle::TypeSamplePlayHandle);
+    /*
+      Engine::mixer()->emit playHandlesOfTypesToRemove(
+      // removePlayHandlesOfTypes(
+      getTrack(), PlayHandle::TypeSamplePlayHandle);
+    */
     SampleTrack* st = dynamic_cast<SampleTrack*>(getTrack());
     st->setPlayingTcos(false);
 }

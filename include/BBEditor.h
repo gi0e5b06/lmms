@@ -2,7 +2,7 @@
  * BBEditor.h - view-component of BB-Editor
  *
  * Copyright (c) 2004-2014 Tobias Doerffel <tobydox/at/users.sourceforge.net>
- * 
+ *
  * This file is part of LMMS - https://lmms.io
  *
  * This program is free software; you can redistribute it and/or
@@ -22,13 +22,11 @@
  *
  */
 
-
 #ifndef BB_EDITOR_H
 #define BB_EDITOR_H
 
 #include "Editor.h"
 #include "TrackContainerView.h"
-
 
 class BBTrackContainer;
 class ComboBox;
@@ -37,73 +35,73 @@ class BBTrackContainerView;
 
 class BBEditor : public Editor
 {
-	Q_OBJECT
-public:
-	BBEditor( BBTrackContainer * _tc );
-	~BBEditor();
+    Q_OBJECT
 
-	QSize sizeHint() const;
+  public:
+    BBEditor(BBTrackContainer* _tc);
+    virtual ~BBEditor();
 
-	const BBTrackContainerView* trackContainerView() const {
-		return m_trackContainerView;
-	}
-	BBTrackContainerView* trackContainerView() {
-		return m_trackContainerView;
-	}
+    QSize sizeHint() const;
 
-	void removeBBView( int bb );
+    const BBTrackContainerView* trackContainerView() const
+    {
+        return m_trackContainerView;
+    }
+    BBTrackContainerView* trackContainerView()
+    {
+        return m_trackContainerView;
+    }
 
-public slots:
-	void play();
-	void stop();
+    void removeBBView(int bb);
 
-private:
-	BBTrackContainerView* m_trackContainerView;
-	ComboBox * m_bbComboBox;
-} ;
+  public slots:
+    void play();
+    void stop();
 
-
+  private:
+    BBTrackContainerView* m_trackContainerView;
+    ComboBox*             m_bbComboBox;
+};
 
 class BBTrackContainerView : public TrackContainerView
 {
-	Q_OBJECT
+    Q_OBJECT
 
- public:
-	BBTrackContainerView(BBTrackContainer* tc);
+  public:
+    BBTrackContainerView(BBTrackContainer* tc);
 
-	virtual bool isFixed() const //fixedTCOs() 
-	{
-		return true;
-	}
+    virtual bool isFixed() const  // fixedTCOs()
+    {
+        return true;
+    }
 
-        float pixelsPerTact() const;
+    float pixelsPerTact() const;
 
-	void removeBBView(int bb);
+    void removeBBView(int bb);
 
-	void saveSettings(QDomDocument& doc, QDomElement& element);
-	void loadSettings(const QDomElement& element);
+    void saveSettings(QDomDocument& doc, QDomElement& element);
+    void loadSettings(const QDomElement& element);
 
- public slots:
-	void addSteps();
-	void cloneSteps();
-	void removeSteps();
-	void addInstrumentTrack();
-	void addSampleTrack();
-	void addAutomationTrack();
-        void rotateOneStepLeft();
-        void rotateOneStepRight();
+  public slots:
+    void addSteps();
+    void cloneSteps();
+    void removeSteps();
+    void addInstrumentTrack();
+    void addSampleTrack();
+    void addAutomationTrack();
+    void rotateOneStepLeft();
+    void rotateOneStepRight();
 
- protected slots:
-	void dropEvent(QDropEvent * de );
-	void updatePosition();
+  protected slots:
+    void dropEvent(QDropEvent* de);
+    void updatePosition();
 
- protected:
-        int highestStepResolution();
+  protected:
+    int highestStepResolution();
 
- private:
-	BBTrackContainer * m_bbtc;
-	void makeSteps( bool clone );
+  private:
+    BBTrackContainer* m_bbtc;
+    void              makeSteps(bool clone);
 };
-
 
 #endif

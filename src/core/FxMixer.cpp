@@ -520,6 +520,7 @@ FxMixer::FxMixer() :
 
 FxMixer::~FxMixer()
 {
+    qInfo("FxMixer::~FxMixer START");
     while(!m_fxRoutes.isEmpty())
     {
         deleteChannelSend(m_fxRoutes.first());
@@ -530,6 +531,7 @@ FxMixer::~FxMixer()
         m_fxChannels.pop_back();
         delete f;
     }
+    qInfo("FxMixer::~FxMixer END");
 }
 
 int FxMixer::createChannel()

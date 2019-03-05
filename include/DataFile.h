@@ -23,137 +23,130 @@
  *
  */
 
-
 #ifndef DATA_FILE_H
 #define DATA_FILE_H
 
-#include <QDomDocument>
-
-#include "export.h"
 #include "MemoryManager.h"
+#include "export.h"
+
+#include <QDomDocument>
 
 class QTextStream;
 
 class EXPORT DataFile : public QDomDocument
 {
-	MM_OPERATORS
-public:
-	enum Types
-	{
-		UnknownType,
-		SongProject,
-		SongProjectTemplate,
-		InstrumentTrackSettings,
-		DragNDropData,
-		ClipboardData,
-		JournalData,
-		EffectSettings,
-		InstrumentSettings,
-		TypeCount
-	} ;
-	typedef Types Type;
+    MM_OPERATORS
+  public:
+    enum Types
+    {
+        UnknownType,
+        SongProject,
+        SongProjectTemplate,
+        InstrumentTrackSettings,
+        DragNDropData,
+        ClipboardData,
+        JournalData,
+        EffectSettings,
+        InstrumentSettings,
+        TypeCount
+    };
+    typedef Types Type;
 
-	static int seed_count;
+    static int seed_count;
 
-	DataFile( const QString& fileName );
-	DataFile( const QByteArray& data );
-	DataFile( Type type );
+    DataFile(const QString& fileName);
+    DataFile(const QByteArray& data);
+    DataFile(Type type);
 
-	virtual ~DataFile();
+    virtual ~DataFile();
 
-	///
-	/// \brief validate
-	/// performs basic validation, compared to file extension.
-	///
-	bool validate( QString extension );
+    ///
+    /// \brief validate
+    /// performs basic validation, compared to file extension.
+    ///
+    bool validate(QString extension);
 
-	QString nameWithExtension( const QString& fn ) const;
+    QString nameWithExtension(const QString& fn) const;
 
-	void write( QTextStream& strm );
-	bool writeFile( const QString& fn );
+    void write(QTextStream& strm);
+    bool writeFile(const QString& fn);
 
-	QDomElement& content()
-	{
-		return m_content;
-	}
+    QDomElement& content()
+    {
+        return m_content;
+    }
 
-	QDomElement& head()
-	{
-		return m_head;
-	}
+    QDomElement& head()
+    {
+        return m_head;
+    }
 
-	Type type() const
-	{
-		return m_type;
-	}
+    Type type() const
+    {
+        return m_type;
+    }
 
-	// small helper class for adjusting application's locale settings
-	// when loading or saving floating point values rendered to strings
-	class LocaleHelper
-	{
-	public:
-		enum Modes
-		{
-			ModeLoad,
-			ModeSave,
-			ModeCount
-		};
-		typedef Modes Mode;
+    // small helper class for adjusting application's locale settings
+    // when loading or saving floating point values rendered to strings
+    class LocaleHelper
+    {
+      public:
+        enum Modes
+        {
+            ModeLoad,
+            ModeSave,
+            ModeCount
+        };
+        typedef Modes Mode;
 
-		LocaleHelper( Mode mode );
-		~LocaleHelper();
+        LocaleHelper(Mode mode);
+        virtual ~LocaleHelper();
+    };
 
-	};
+  private:
+    static Type    type(const QString& typeName);
+    static QString typeName(Type type);
 
+    void cleanMetaNodes(QDomElement de);
 
-private:
-	static Type type( const QString& typeName );
-	static QString typeName( Type type );
+    // helper upgrade routines
+    void upgrade_0_2_1_20070501();
+    void upgrade_0_2_1_20070508();
+    void upgrade_0_3_0_rc2();
+    void upgrade_0_3_0();
+    void upgrade_0_4_0_20080104();
+    void upgrade_0_4_0_20080118();
+    void upgrade_0_4_0_20080129();
+    void upgrade_0_4_0_20080409();
+    void upgrade_0_4_0_20080607();
+    void upgrade_0_4_0_20080622();
+    void upgrade_0_4_0_beta1();
+    void upgrade_0_4_0_rc2();
+    void upgrade_1_0_99();
+    void upgrade_1_1_0();
+    void upgrade_1_1_91();
+    void upgrade_1_2_0_rc3();
+    void upgrade_1_2_0_rc2_42();
 
-	void cleanMetaNodes( QDomElement de );
+    void upgrade();
 
-	// helper upgrade routines
-	void upgrade_0_2_1_20070501();
-	void upgrade_0_2_1_20070508();
-	void upgrade_0_3_0_rc2();
-	void upgrade_0_3_0();
-	void upgrade_0_4_0_20080104();
-	void upgrade_0_4_0_20080118();
-	void upgrade_0_4_0_20080129();
-	void upgrade_0_4_0_20080409();
-	void upgrade_0_4_0_20080607();
-	void upgrade_0_4_0_20080622();
-	void upgrade_0_4_0_beta1();
-	void upgrade_0_4_0_rc2();
-	void upgrade_1_0_99();
-	void upgrade_1_1_0();
-	void upgrade_1_1_91();
-	void upgrade_1_2_0_rc3();
-	void upgrade_1_2_0_rc2_42();
+    void loadData(const QByteArray& _data, const QString& _sourceFile);
 
-	void upgrade();
+    struct EXPORT typeDescStruct
+    {
+        Type    m_type;
+        QString m_name;
+    };
+    static typeDescStruct s_types[TypeCount];
 
-	void loadData( const QByteArray & _data, const QString & _sourceFile );
+    QDomElement m_content;
+    QDomElement m_head;
+    Type        m_type;
+};
 
-
-	struct EXPORT typeDescStruct
-	{
-		Type m_type;
-		QString m_name;
-	} ;
-	static typeDescStruct s_types[TypeCount];
-
-	QDomElement m_content;
-	QDomElement m_head;
-	Type m_type;
-
-} ;
-
-
-const int LDF_MAJOR_VERSION = 1;
-const int LDF_MINOR_VERSION = 0;
-const QString LDF_VERSION_STRING = QString::number( LDF_MAJOR_VERSION ) + "." + QString::number( LDF_MINOR_VERSION );
-
+const int     LDF_MAJOR_VERSION  = 1;
+const int     LDF_MINOR_VERSION  = 0;
+const QString LDF_VERSION_STRING = QString::number(LDF_MAJOR_VERSION) + "."
+                                   + QString::number(LDF_MINOR_VERSION);
 
 #endif
-

@@ -71,7 +71,7 @@ class SongEditor
     };
 
     SongEditor(Song* song);
-    ~SongEditor();
+    virtual ~SongEditor();
 
     tick_t quantization() const;
 

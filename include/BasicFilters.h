@@ -835,7 +835,7 @@ class BasicFilters
             m_rcc = f / (f + sr);
 
             // Stretch Q/resonance, as self-oscillation reliably starts at a q
-            // of ~2.5 - ~2.6
+            // of [2.5,2.6]
             m_rcq = _q * 0.25;
             return;
         }

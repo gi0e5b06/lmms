@@ -203,7 +203,7 @@ bool EqEffect::processAudioBuffer(sampleFrame* buf, const fpp_t frames)
     }
     else
     {
-        m_eqControls.m_inFftBands.clear();
+        // m_eqControls.m_inFftBands.clear();
     }
 
     gain(buf, frames, m_inGain, &m_inPeak);
@@ -363,7 +363,7 @@ bool EqEffect::processAudioBuffer(sampleFrame* buf, const fpp_t frames)
     }
     else
     {
-        m_eqControls.m_outFftBands.clear();
+        // m_eqControls.m_outFftBands.clear();
     }
 
     m_eqControls.m_inProgress = false;
@@ -371,7 +371,10 @@ bool EqEffect::processAudioBuffer(sampleFrame* buf, const fpp_t frames)
     return true;
 }
 
-real_t EqEffect::peakBand(frequency_t minF, frequency_t maxF, EqAnalyser* fft, sample_rate_t sr)
+real_t EqEffect::peakBand(frequency_t   minF,
+                          frequency_t   maxF,
+                          EqAnalyser*   fft,
+                          sample_rate_t sr)
 {
     real_t peak = -60;
     FLOAT* b    = fft->m_bands;

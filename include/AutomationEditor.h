@@ -299,7 +299,7 @@ class AutomationEditorWindow : public Editor
 
   public:
     AutomationEditorWindow();
-    ~AutomationEditorWindow();
+    virtual ~AutomationEditorWindow();
 
     void reset();
 

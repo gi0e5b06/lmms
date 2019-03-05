@@ -992,7 +992,7 @@ InstrumentFunctionNoteFiltering::InstrumentFunctionNoteFiltering(
         Model* _parent) :
       InstrumentFunction(_parent, tr("NoteFiltering")),
       // m_enabledModel( false, this ),
-      m_configModel(this, tr("Configuration"))
+      m_configModel(this, tr("Filtering set"))
 {
     for(int j = 0; j < 4; j++)
     {
@@ -1035,8 +1035,6 @@ bool InstrumentFunctionNoteFiltering::processNote(NotePlayHandle* _n)
             return true;
     }
 
-    _n->setMasterNote();
-
     const int action = m_actionModel[j]->value();
 
     if(action == 1)  // Up
@@ -1068,6 +1066,10 @@ bool InstrumentFunctionNoteFiltering::processNote(NotePlayHandle* _n)
                 return true;
             }
         }
+    }
+    else
+    {
+        _n->setMasterNote();
     }
 
     return false;

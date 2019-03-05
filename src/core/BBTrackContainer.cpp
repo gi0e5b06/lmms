@@ -44,6 +44,7 @@ BBTrackContainer::BBTrackContainer() :
 
 BBTrackContainer::~BBTrackContainer()
 {
+    qInfo("BBTrackContainer::~BBTrackContainer");
 }
 
 bool BBTrackContainer::play(MidiTime      _start,
@@ -199,7 +200,8 @@ void BBTrackContainer::fixIncorrectPositions()
             tco->movePosition(MidiTime(i, 0));
             tco->setAutoResize(false);
             tco->setAutoRepeat(false);
-            tco->changeLength(qMin(tco->unitLength(),tco->length().getTicks()));
+            tco->changeLength(
+                    qMin(tco->unitLength(), tco->length().getTicks()));
         }
 }
 

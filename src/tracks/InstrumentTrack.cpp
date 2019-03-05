@@ -213,22 +213,35 @@ InstrumentTrack::InstrumentTrack(TrackContainer* tc) :
 
 InstrumentTrack::~InstrumentTrack()
 {
-    qInfo("InstrumentTrack::~InstrumentTrack [%s]", qPrintable(name()));
+    qInfo("InstrumentTrack::~InstrumentTrack [%s] START", qPrintable(name()));
 
     // kill all running notes and the iph
     silenceAllNotes(true);
 
-    // qInfo("InstrumentTrack::~InstrumentTrack 2");
+    qInfo("InstrumentTrack::~InstrumentTrack 2");
     // now we're save deleting the instrument
     Instrument* old = m_instrument;
     if(old != nullptr)
     {
-        qInfo("~InstrumentTrack delete instrument [%s]", qPrintable(name()));
+        qInfo("~InstrumentTrack delete instrument START [%s]",
+              qPrintable(name()));
         m_instrument = nullptr;
         delete old;
-        // qInfo("InstrumentTrack::~InstrumentTrack 4");
+        qInfo("~InstrumentTrack delete instrument END [%s]",
+              qPrintable(name()));
     }
-    // qInfo("InstrumentTrack::~InstrumentTrack 5");
+
+    DELETE_HELPER(m_envFilter)
+
+    qInfo("InstrumentTrack::~InstrumentTrack [%s] END", qPrintable(name()));
+
+    qInfo("InstrumentTrack::~InstrumentTrack CHILDREN");
+    for(QObject* o: children())
+    {
+        qInfo("  - child %p", o);
+        qInfo("          '%s' '%s'", qPrintable(o->objectName()),
+              typeid(o).name());
+    }
 }
 
 QString InstrumentTrack::defaultName() const
@@ -615,16 +628,16 @@ void InstrumentTrack::processOutEvent(const MidiEvent& event,
 void InstrumentTrack::silenceAllNotes(bool removeIPH)
 {
     Engine::mixer()->requestChangeInModel();
-    // qInfo("InstrumentTrack::silenceAllNotes 1a");
+    qInfo("InstrumentTrack::silenceAllNotes 1a");
     for(int i = 0; i < NumMidiKeys; ++i)
     {
         if(m_notes[i] != nullptr || m_runningMidiNotes[i] != 0)
         {
-            // qInfo("InstrumentTrack: silence %d", i);
+            qInfo("InstrumentTrack: silence %d", i);
             processOutEvent(MidiEvent(MidiNoteOff, -1, i, 0));
         }
     }
-    // qInfo("InstrumentTrack::silenceAllNotes 1b");
+    qInfo("InstrumentTrack::silenceAllNotes 1b");
     m_midiNotesMutex.lock();
     for(int i = 0; i < NumMidiKeys; ++i)
     {
@@ -633,38 +646,39 @@ void InstrumentTrack::silenceAllNotes(bool removeIPH)
     }
     m_midiNotesMutex.unlock();
 
-    // qInfo("InstrumentTrack::silenceAllNotes 2");
+    qInfo("InstrumentTrack::silenceAllNotes 2");
 
     lock();
     // invalidate all NotePlayHandles and PresetPreviewHandles linked to this
     // track
-    // qInfo("InstrumentTrack::silenceAllNotes 3a");
+    qInfo("InstrumentTrack::silenceAllNotes 3a");
     m_sustainedNotes.clear();
-    // qInfo("InstrumentTrack::silenceAllNotes 3b");
+    qInfo("InstrumentTrack::silenceAllNotes 3b");
     m_processHandles.clear();
-    // qInfo("InstrumentTrack::silenceAllNotes 3c");
+    qInfo("InstrumentTrack::silenceAllNotes 3c");
     unlock();
     Engine::mixer()->doneChangeInModel();
 
-    // qInfo("InstrumentTrack::silenceAllNotes 4");
-    quint8 flags = PlayHandle::TypeNotePlayHandle
+    qInfo("InstrumentTrack::silenceAllNotes 4");
+    quint8 types = PlayHandle::TypeNotePlayHandle
                    | PlayHandle::TypePresetPreviewHandle;
-    Engine::mixer()->emit playHandlesOfTypesToRemove(this, flags);
-    // qInfo("InstrumentTrack::silenceAllNotes 5");
-
     if(removeIPH)
     {
         qInfo("InstrumentTrack::silenceAllNotes removeIPH t=%s",
               qPrintable(name()));
-        flags = PlayHandle::TypeInstrumentPlayHandle;
-        Engine::mixer()->emit playHandlesOfTypesToRemove(this, flags);
+        types |= PlayHandle::TypeInstrumentPlayHandle
+                 | PlayHandle::TypePresetPreviewHandle;
     }
-    // qInfo("InstrumentTrack::silenceAllNotes 6");
 
+    lock();
+    Engine::mixer()->emit playHandlesOfTypesToRemove(this, types);
+    qInfo("InstrumentTrack::silenceAllNotes 5");
     QCoreApplication::sendPostedEvents();
-    QThread::yieldCurrentThread();
-    QCoreApplication::sendPostedEvents();
-    QThread::yieldCurrentThread();
+    // QThread::yieldCurrentThread();
+    Engine::mixer()->waitUntilNoPlayHandle(this, types);
+    unlock();
+
+    qInfo("InstrumentTrack::silenceAllNotes 6");
 }
 
 f_cnt_t InstrumentTrack::beatLen(NotePlayHandle* _n) const
@@ -2036,7 +2050,8 @@ InstrumentTrackWindow::~InstrumentTrackWindow()
 {
     InstrumentTrackView::s_windowCache.removeAll(this);
 
-    delete m_instrumentView;
+    DELETE_HELPER(m_peripheralView)
+    DELETE_HELPER(m_instrumentView)
 
     if(gui->mainWindow()->workspace())
     {

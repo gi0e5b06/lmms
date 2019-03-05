@@ -57,7 +57,7 @@ static const Piano::KeyTypes KEY_ORDER[] = {
  *  \param _it the InstrumentTrack window to attach to
  */
 Piano::Piano(InstrumentTrack* _track) :
-      Model(nullptr, "Piano"), /*!< base class ctor */
+        Model(_track, "Piano", true), /*!< base class ctor */
       m_mutex(QMutex::Recursive), m_instrumentTrack(_track),
       m_midiEvProc(_track) /*!< the InstrumentTrack Model */
 {
@@ -69,6 +69,9 @@ Piano::Piano(InstrumentTrack* _track) :
  */
 Piano::~Piano()
 {
+    qInfo("Piano::~Piano");
+    m_instrumentTrack = nullptr;
+    m_midiEvProc      = nullptr;
 }
 
 void Piano::reset()

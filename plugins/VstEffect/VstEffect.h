@@ -25,52 +25,49 @@
 #ifndef _VST_EFFECT_H
 #define _VST_EFFECT_H
 
-#include <QMutex>
-
 #include "Effect.h"
-#include "VstPlugin.h"
 #include "VstEffectControlDialog.h"
 #include "VstEffectControls.h"
+#include "VstPlugin.h"
 
+#include <QMutex>
 
 class VstEffect : public Effect
 {
-public:
-	VstEffect( Model * _parent,
-			const Descriptor::SubPluginFeatures::Key * _key );
-	virtual ~VstEffect();
+  public:
+    VstEffect(Model* _parent, const Descriptor::SubPluginFeatures::Key* _key);
+    virtual ~VstEffect();
 
-	virtual bool processAudioBuffer( sampleFrame * _buf,
-							const fpp_t _frames );
+    virtual bool processAudioBuffer(sampleFrame* _buf, const fpp_t _frames);
 
-	virtual EffectControls * controls()
-	{
-		return &m_vstControls;
-	}
+    virtual EffectControls* controls()
+    {
+        return &m_vstControls;
+    }
 
-	virtual inline QString publicName() const
-	{
-		return m_plugin->name();
-	}
+    virtual inline QString publicName() const
+    {
+        return m_plugin->name();
+    }
 
+    virtual QString displayName() const
+    {
+        return Model::displayName();
+    }
 
-private:
-	void openPlugin( const QString & _plugin );
-	void closePlugin();
+  private:
+    void openPlugin(const QString& _plugin);
+    void closePlugin();
 
-	VstPlugin * m_plugin;
-	QMutex m_pluginMutex;
-	EffectKey m_key;
+    VstPlugin* m_plugin;
+    QMutex     m_pluginMutex;
+    EffectKey  m_key;
 
-	VstEffectControls m_vstControls;
+    VstEffectControls m_vstControls;
 
-
-	friend class VstEffectControls;
-	friend class VstEffectControlDialog;
-	friend class manageVSTEffectView;
-
-} ;
-
-
+    friend class VstEffectControls;
+    friend class VstEffectControlDialog;
+    friend class manageVSTEffectView;
+};
 
 #endif

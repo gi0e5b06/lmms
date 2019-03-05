@@ -41,7 +41,7 @@ class EXPORT ValueBuffer  //: public std::vector<real_t>
     ValueBuffer(const ValueBuffer* _vb);
     ValueBuffer(const ValueBuffer& _vb);
     ValueBuffer(int _length);
-    ~ValueBuffer();
+    virtual ~ValueBuffer();
 
     inline real_t value(int _offset) const
     {

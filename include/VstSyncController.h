@@ -26,74 +26,71 @@
 #ifndef VST_SYNC_CONTROLLER_H
 #define VST_SYNC_CONTROLLER_H
 
+#include "VstSyncData.h"
+
 #include <QObject>
 #include <QSharedMemory>
 
-#include "VstSyncData.h"
-
-
 class VstSyncController : public QObject
 {
-	Q_OBJECT
-public:
-	VstSyncController();
-	~VstSyncController();
+    Q_OBJECT
 
-	void setAbsolutePosition( int ticks );
+  public:
+    VstSyncController();
+    virtual ~VstSyncController();
 
-	void setPlaybackState( bool enabled )
-	{
-		m_syncData->isPlaying = enabled;
-	}
+    void setAbsolutePosition(int ticks);
 
-	void setTempo( int newTempo );
+    void setPlaybackState(bool enabled)
+    {
+        m_syncData->isPlaying = enabled;
+    }
 
-	void setTimeSignature( int num, int denom )
-	{
-		m_syncData->timeSigNumer = num;
-		m_syncData->timeSigDenom = denom;
-	}
+    void setTempo(int newTempo);
 
-	void startCycle( int startTick, int endTick );
+    void setTimeSignature(int num, int denom)
+    {
+        m_syncData->timeSigNumer = num;
+        m_syncData->timeSigDenom = denom;
+    }
 
-	void stopCycle()
-	{
-		m_syncData->isCycle = false;
-	}
+    void startCycle(int startTick, int endTick);
 
-	void update();
+    void stopCycle()
+    {
+        m_syncData->isCycle = false;
+    }
 
+    void update();
 
-private slots:
-	void updateSampleRate();
+  private slots:
+    void updateSampleRate();
 
-
-private:
-	struct VstSyncData
-	{
-		bool isPlaying;
-		FLOAT ppqPos;
-		int timeSigNumer;
-		int timeSigDenom;
-		bool isCycle;
-		bool hasSHM;
-		FLOAT cycleStart;
-		FLOAT cycleEnd;
-		int m_bufferSize;
-		int m_sampleRate;
-		int m_bpm;
+  private:
+    struct VstSyncData
+    {
+        bool  isPlaying;
+        FLOAT ppqPos;
+        int   timeSigNumer;
+        int   timeSigDenom;
+        bool  isCycle;
+        bool  hasSHM;
+        FLOAT cycleStart;
+        FLOAT cycleEnd;
+        int   m_bufferSize;
+        int   m_sampleRate;
+        int   m_bpm;
 
 #ifdef VST_SNC_LATENCY
-		FLOAT m_latency;
+        FLOAT m_latency;
 #endif
-	} ;
+    };
 
-	VstSyncData* m_syncData;
+    VstSyncData* m_syncData;
 
-	int m_shmID;
+    int m_shmID;
 
-	QSharedMemory m_shm;
-
+    QSharedMemory m_shm;
 };
 
 #endif

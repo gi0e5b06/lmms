@@ -46,7 +46,7 @@ class EXPORT GuiApplication : public QObject
 	Q_OBJECT;
 public:
 	explicit GuiApplication(bool showSplashScreen = true);
-	~GuiApplication();
+	virtual ~GuiApplication();
 
 	static GuiApplication* instance();
 

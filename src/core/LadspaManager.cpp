@@ -115,11 +115,13 @@ LadspaManager::LadspaManager()
 
 LadspaManager::~LadspaManager()
 {
+    qInfo("LadspaManager::~LadspaManager START");
     for(ladspaManagerMapType::iterator it = m_ladspaManagerMap.begin();
         it != m_ladspaManagerMap.end(); ++it)
     {
         delete it.value();
     }
+    qInfo("LadspaManager::~LadspaManager END");
 }
 
 ladspaManagerDescription*

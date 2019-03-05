@@ -139,6 +139,7 @@ class WaveFormStandard : public WaveForm
     {
       public:
         Set();
+        virtual ~Set();
         const WaveFormStandard* get(const int _bank, const int _index);
         void                    set(const int               _bank,
                                     const int               _index,
@@ -165,7 +166,7 @@ class WaveFormStandard : public WaveForm
     {
       public:
         Plan();
-        ~Plan();
+        virtual ~Plan();
         void build(WaveFormStandard& _wf);
 
     private:

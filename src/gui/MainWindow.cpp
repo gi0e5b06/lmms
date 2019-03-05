@@ -295,8 +295,11 @@ MainWindow::~MainWindow()
     // dependencies are such that the editors must be destroyed BEFORE Song is
     // deletect in Engine::destroy
     //   see issue #2015 on github
+    qInfo("delete gui->automationEditor();");
     delete gui->automationEditor();
+    qInfo("delete gui->pianoRoll();");
     delete gui->pianoRoll();
+    qInfo("delete gui->songEditor();");
     delete gui->songEditor();
     // destroy engine which will do further cleanups etc.
     Engine::destroy();

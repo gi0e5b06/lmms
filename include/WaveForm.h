@@ -134,7 +134,7 @@ class WaveForm : public QObject  // public JournallingObject
     {
       public:
         Plan();
-        ~Plan();
+        virtual ~Plan();
         void build(WaveForm& _wf);
 
     private:

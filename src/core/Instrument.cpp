@@ -38,14 +38,18 @@ Instrument::Instrument(InstrumentTrack*  _instrumentTrack,
 
 Instrument::~Instrument()
 {
-    qInfo("Instrument::~Instrument [%s]", qPrintable(displayName()));
+    qInfo("Instrument::~Instrument [%s] START", qPrintable(displayName()));
+    /*
     Engine::mixer()->emit playHandlesOfTypesToRemove(
             m_instrumentTrack,
-            PlayHandle::TypeInstrumentPlayHandle);
+            0xFF);
     QCoreApplication::sendPostedEvents();
     QThread::yieldCurrentThread();
-
+    QCoreApplication::sendPostedEvents();
+    QThread::yieldCurrentThread();
+    */
     m_instrumentTrack = nullptr;
+    qInfo("Instrument::~Instrument [%s] END", qPrintable(displayName()));
 }
 
 void Instrument::play(sampleFrame*)

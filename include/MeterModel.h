@@ -38,7 +38,7 @@ class MeterModel : public Model
 
   public:
     MeterModel(Model* _parent);
-    ~MeterModel();
+    virtual ~MeterModel();
 
     void saveSettings(QDomDocument&  _doc,
                       QDomElement&   _this,

@@ -67,7 +67,7 @@ class Configuration
 
   private:
     // Configuration();
-    //~Configuration();
+    // virtual ~Configuration();
 
     QHash<QString, T> m_table;
 
@@ -170,7 +170,7 @@ class Configuration
 
   private:
     Configuration();
-    ~Configuration();
+    virtual ~Configuration();
 
     QHash<QString, bool>    m_bools;
     QHash<QString, int>     m_ints;

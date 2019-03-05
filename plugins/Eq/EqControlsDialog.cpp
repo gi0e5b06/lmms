@@ -215,8 +215,9 @@ EqControlsDialog::EqControlsDialog( EqControls *controls ) :
 
 void EqControlsDialog::mouseDoubleClickEvent(QMouseEvent *event)
 {
-	m_originalHeight = parentWidget()->height() == 283 ? m_originalHeight : parentWidget()->height() ;
-	parentWidget()->setFixedHeight( parentWidget()->height() == m_originalHeight ? 283 : m_originalHeight  );
+	m_originalHeight = parentWidget()->height() == 289 ? m_originalHeight : parentWidget()->height() ;
+	parentWidget()->setFixedHeight( parentWidget()->height() == m_originalHeight ? 289 : m_originalHeight  );
+        setFixedHeight(parentWidget()->height()-27);
 	update();
 }
 

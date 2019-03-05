@@ -26,87 +26,97 @@
 #ifndef FX_LINE_H
 #define FX_LINE_H
 
-#include <QGraphicsView>
-#include <QLineEdit>
-#include <QWidget>
-
 #include "Knob.h"
 #include "LcdWidget.h"
 #include "SendButtonIndicator.h"
 
-
+#include <QGraphicsView>
+#include <QLineEdit>
+#include <QWidget>
 
 class FxMixerView;
 class SendButtonIndicator;
 
 class FxLine : public QWidget
 {
-	Q_OBJECT
-public:
-	Q_PROPERTY( QBrush backgroundActive READ backgroundActive WRITE setBackgroundActive )
-	Q_PROPERTY( QColor strokeOuterActive READ strokeOuterActive WRITE setStrokeOuterActive )
-	Q_PROPERTY( QColor strokeOuterInactive READ strokeOuterInactive WRITE setStrokeOuterInactive )
-	Q_PROPERTY( QColor strokeInnerActive READ strokeInnerActive WRITE setStrokeInnerActive )
-	Q_PROPERTY( QColor strokeInnerInactive READ strokeInnerInactive WRITE setStrokeInnerInactive )
-	FxLine( QWidget * _parent, FxMixerView * _mv, int _channelIndex);
-	~FxLine();
+    Q_OBJECT
+  public:
+    Q_PROPERTY(QBrush backgroundActive READ backgroundActive WRITE
+                                                             setBackgroundActive)
+    Q_PROPERTY(QColor strokeOuterActive READ strokeOuterActive WRITE
+                                                               setStrokeOuterActive)
+    Q_PROPERTY(QColor strokeOuterInactive READ strokeOuterInactive WRITE
+                                                                   setStrokeOuterInactive)
+    Q_PROPERTY(QColor strokeInnerActive READ strokeInnerActive WRITE
+                                                               setStrokeInnerActive)
+    Q_PROPERTY(QColor strokeInnerInactive READ strokeInnerInactive WRITE
+                                                                   setStrokeInnerInactive)
 
-	virtual void paintEvent( QPaintEvent * );
-	virtual void mousePressEvent( QMouseEvent * );
-	virtual void mouseDoubleClickEvent( QMouseEvent * );
-	virtual void contextMenuEvent( QContextMenuEvent * );
+    FxLine(QWidget* _parent, FxMixerView* _mv, int _channelIndex);
+    virtual ~FxLine();
 
-	inline int channelIndex() { return m_channelIndex; }
-	void setChannelIndex(int index);
+    virtual void paintEvent(QPaintEvent*);
+    virtual void mousePressEvent(QMouseEvent*);
+    virtual void mouseDoubleClickEvent(QMouseEvent*);
+    virtual void contextMenuEvent(QContextMenuEvent*);
 
-	Knob*                m_sendKnob;
-	SendButtonIndicator* m_sendBtn;
+    inline int channelIndex()
+    {
+        return m_channelIndex;
+    }
+    void setChannelIndex(int index);
 
-	QBrush backgroundActive() const;
-	void setBackgroundActive( const QBrush & c );
+    Knob*                m_sendKnob;
+    SendButtonIndicator* m_sendBtn;
 
-	QColor strokeOuterActive() const;
-	void setStrokeOuterActive( const QColor & c );
+    QBrush backgroundActive() const;
+    void   setBackgroundActive(const QBrush& c);
 
-	QColor strokeOuterInactive() const;
-	void setStrokeOuterInactive( const QColor & c );
+    QColor strokeOuterActive() const;
+    void   setStrokeOuterActive(const QColor& c);
 
-	QColor strokeInnerActive() const;
-	void setStrokeInnerActive( const QColor & c );
+    QColor strokeOuterInactive() const;
+    void   setStrokeOuterInactive(const QColor& c);
 
-	QColor strokeInnerInactive() const;
-	void setStrokeInnerInactive( const QColor & c );
+    QColor strokeInnerActive() const;
+    void   setStrokeInnerActive(const QColor& c);
 
-	static const int FxLineHeight;
+    QColor strokeInnerInactive() const;
+    void   setStrokeInnerInactive(const QColor& c);
 
-private:
-	void drawFxLine( QPainter* p, const FxLine *fxLine, bool isActive, bool sendToThis, bool receiveFromThis );
-	QString elideName( const QString & name );
+    static const int FxLineHeight;
 
-	FxMixerView*   m_mv;
-	LcdWidget*     m_lcd;
-	int            m_channelIndex;
-	QBrush         m_backgroundActive;
-	QColor         m_strokeOuterActive;
-	QColor         m_strokeOuterInactive;
-	QColor         m_strokeInnerActive;
-	QColor         m_strokeInnerInactive;
-	bool           m_inRename;
-	QLineEdit*     m_renameLineEdit;
-	QGraphicsView* m_view;
+  private:
+    void    drawFxLine(QPainter*     p,
+                       const FxLine* fxLine,
+                       bool          isActive,
+                       bool          sendToThis,
+                       bool          receiveFromThis);
+    QString elideName(const QString& name);
 
-	static QPixmap* s_sendBgArrow;
-	static QPixmap* s_receiveBgArrow;
+    FxMixerView*   m_mv;
+    LcdWidget*     m_lcd;
+    int            m_channelIndex;
+    QBrush         m_backgroundActive;
+    QColor         m_strokeOuterActive;
+    QColor         m_strokeOuterInactive;
+    QColor         m_strokeInnerActive;
+    QColor         m_strokeInnerInactive;
+    bool           m_inRename;
+    QLineEdit*     m_renameLineEdit;
+    QGraphicsView* m_view;
 
- private slots:
-	void renameChannel();
-	void renameFinished();
-	void removeChannel();
-	void removeUnusedChannels();
-	void moveChannelLeft();
-	void moveChannelRight();
-	void displayHelp();
+    static QPixmap* s_sendBgArrow;
+    static QPixmap* s_receiveBgArrow;
+
+  private slots:
+    void renameChannel();
+    void renameFinished();
+    void removeChannel();
+    void removeUnusedChannels();
+    void moveChannelLeft();
+    void moveChannelRight();
+    void displayHelp();
 };
 
-
-#endif // FXLINE_H
+#endif  // FXLINE_H

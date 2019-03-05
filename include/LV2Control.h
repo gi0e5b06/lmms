@@ -42,9 +42,10 @@ typedef struct LV2PortDescription lv2_port_desc_t;
 class EXPORT LV2Control : public Model, public JournallingObject
 {
     Q_OBJECT
+
   public:
     LV2Control(Model* _parent, lv2_port_desc_t* _port, bool _link = false);
-    ~LV2Control();
+    virtual ~LV2Control();
 
     LV2_Data     value();
     ValueBuffer* valueBuffer();

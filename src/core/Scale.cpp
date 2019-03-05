@@ -56,7 +56,9 @@ Scale::Set::Set()
 {
     for(int b = MAX_BANK - MIN_BANK; b >= 0; --b)
         for(int i = MAX_INDEX - MIN_INDEX; i >= 0; --i)
-            m_stock[b][i] = NULL;
+            m_stock[b][i] = nullptr;
+
+    new Scale("ET12", ET12_BANK, ET12_INDEX);
 
     int BANK;
 
@@ -96,7 +98,7 @@ Scale::Set::Set()
         QDir sclrd("../../../lmms/scales", "Scala_*",
                    QDir::Name | QDir::IgnoreCase,
                    QDir::Dirs | QDir::NoDotAndDotDot);
-        for(QString& sclb : sclrd.entryList())
+        for(QString& sclb: sclrd.entryList())
         {
             QDir sclbd(sclrd.absolutePath() + "/" + sclb, "*.scl",
                        QDir::Name | QDir::IgnoreCase,
@@ -108,7 +110,7 @@ Scale::Set::Set()
             m_bankNames[sbank - MIN_BANK] = bankname.trimmed();
 
             int sindex = MIN_INDEX;
-            for(QString& sclf : sclbd.entryList())
+            for(QString& sclf: sclbd.entryList())
             {
                 if(sindex > MAX_INDEX)
                     continue;
@@ -134,7 +136,7 @@ Scale::Set::Set()
         QDir sclrd("../../../lmms/scales", "User_*",
                    QDir::Name | QDir::IgnoreCase,
                    QDir::Dirs | QDir::NoDotAndDotDot);
-        for(QString& sclb : sclrd.entryList())
+        for(QString& sclb: sclrd.entryList())
         {
             QDir sclbd(sclrd.absolutePath() + "/" + sclb, "*.scl",
                        QDir::Name | QDir::IgnoreCase,
@@ -147,7 +149,7 @@ Scale::Set::Set()
             m_bankNames[sbank - MIN_BANK] = bankname.trimmed();
 
             int sindex = MIN_INDEX;
-            for(QString& sclf : sclbd.entryList())
+            for(QString& sclf: sclbd.entryList())
             {
                 if(sindex > MAX_INDEX)
                     continue;
@@ -169,17 +171,27 @@ Scale::Set::Set()
     }
 }
 
+Scale::Set::~Set()
+{
+    qInfo("Scale::Set::~Set START");
+    for(int b = MAX_BANK - MIN_BANK; b >= 0; --b)
+        for(int i = MAX_INDEX - MIN_INDEX; i >= 0; --i)
+            if(m_stock[b][i] != nullptr)  // && m_stock[b][i] != ET12)
+                delete m_stock[b][i];
+    qInfo("Scale::Set::~Set END");
+}
+
 Scale::Set Scale::SCALES;
 
 // basic scales
-const Scale Scale::ET12("ET12", ET12_BANK, ET12_INDEX);
+const Scale* const Scale::ET12 = SCALES.get(ET12_BANK, ET12_INDEX);
 
 const Scale* Scale::Set::get(const int _bank, const int _index)
 {
     const int b = _bank - MIN_BANK;
     const int i = _index - MIN_INDEX;
     if(_bank < MIN_BANK || _bank > MAX_BANK || _index < MIN_INDEX
-       || _index > MAX_INDEX || m_stock[b][i] == NULL)
+       || _index > MAX_INDEX || m_stock[b][i] == nullptr)
         return m_stock[ET12_BANK - MIN_BANK][ET12_INDEX - MIN_INDEX];
 
     return m_stock[b][i];
@@ -191,14 +203,14 @@ void Scale::Set::set(const int _bank, const int _index, const Scale* _scl)
     const int i = _index - MIN_INDEX;
     if(m_stock[b][i] == _scl)
         return;
-    if(m_stock[b][i] != NULL)
+    if(m_stock[b][i] != nullptr)
         qWarning("Warning: replacing scale[%d][%d]", b, i);
     m_stock[b][i] = _scl;
 }
 
 void Scale::Set::fillBankModel(ComboBoxModel& _model)
 {
-    _model.setDisplayName(QString("Banks"));
+    _model.setDisplayName(QString("Scale Banks"));
     _model.clear();
     for(int b = MIN_BANK; b <= MAX_BANK; b++)
     {
@@ -208,7 +220,7 @@ void Scale::Set::fillBankModel(ComboBoxModel& _model)
                                   //.arg(b, 2, 16, QChar('0'))
                            .arg(m_bankNames[b - MIN_BANK])
                            .trimmed();
-        _model.addItem(text, NULL, b);
+        _model.addItem(text, nullptr, b);
     }
 }
 
@@ -221,12 +233,12 @@ void Scale::Set::fillIndexModel(ComboBoxModel& _model, const int _bank)
     {
         QString      text("--");
         const Scale* scl = get(_bank, i);
-        if(scl != &ET12 || (_bank == ET12_BANK && i == ET12_INDEX))
+        if(scl != ET12 || (_bank == ET12_BANK && i == ET12_INDEX))
             text = QString("%1")  //("%1 %2")
                                   //.arg(i, 2, 16, QChar('0'))
                            .arg(scl->name())
                            .trimmed();
-        _model.addItem(text, NULL, i);
+        _model.addItem(text, nullptr, i);
     }
 }
 
@@ -261,7 +273,7 @@ Scale::Scale(const QString& _name,
 {
     m_file = "";
     m_size = -1;
-    m_data = NULL;
+    m_data = nullptr;
 
     SCALES.set(_bank, _index, static_cast<const Scale*>(this));
 }
@@ -277,8 +289,12 @@ Scale::Scale(const QString& _name,
 
 Scale::~Scale()
 {
-    if(m_data != NULL)
+    qInfo("Scale::~Scale");
+    if(m_data != nullptr)
+    {
         MM_FREE(m_data);
+        m_data = nullptr;
+    }
 }
 
 void Scale::rebuild()
@@ -291,10 +307,17 @@ void Scale::build()
 {
     if(m_built)
         return;
+
     static QMutex s_building;
     QMutexLocker  locker(&s_building);
     if(m_built)
         return;
+
+    if(m_data != nullptr)
+    {
+        MM_FREE(m_data);
+        m_data = nullptr;
+    }
 
     if(m_file != "")
     {
@@ -367,9 +390,7 @@ void Scale::build()
         }
 
         int size = degrees.size();
-        if(m_data != nullptr)
-            MM_FREE(m_data);
-        m_data = MM_ALLOC(real_t, size);
+        m_data   = MM_ALLOC(real_t, size);
         for(int i = 0; i < size; i++)
         {
             m_data[i] = degrees.at(i);
@@ -384,7 +405,9 @@ void Scale::build()
         m_built = true;
     }
     else
+    {
         m_built = true;
+    }
 }
 
 // convenient f() for later (curve, waveform)

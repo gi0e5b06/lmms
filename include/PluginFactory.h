@@ -66,7 +66,7 @@ class EXPORT PluginFactory
             PluginDescriptors;
 
     PluginFactory();
-    ~PluginFactory();
+    virtual ~PluginFactory();
 
     /// Returns the singleton instance of PluginFactory. You won't need to
     /// call this directly, use pluginFactory instead.

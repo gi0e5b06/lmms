@@ -7,12 +7,10 @@
 //#include <typeinfo>
 
 //#include <QHash>
-#include <QMutex>
-
 #include "Bitset.h"
-
 #include "export.h"
 
+#include <QMutex>
 
 template <class T>
 class EXPORT ObjectManager
@@ -31,14 +29,14 @@ static void free(T* _ptr);
     */
 
     ObjectManager(const int _nbe, const char* _ref);
-    ~ObjectManager();
+    virtual ~ObjectManager();
 
     bool full();
     T*   allocate();
     bool deallocate(T* _ptr);
 
   private:
-    //static ObjectManager<T>* s_singleton;
+    // static ObjectManager<T>* s_singleton;
 
     QMutex       m_mutex;
     const int    m_nbe;
@@ -50,9 +48,9 @@ static void free(T* _ptr);
     int m_count;
 
     // info
-    int                   m_max;
-    const char*           m_ref;
-    //const std::type_info& m_typeid;
+    int         m_max;
+    const char* m_ref;
+    // const std::type_info& m_typeid;
 };
 
 #endif

@@ -43,7 +43,7 @@ class EXPORT StringPairDrag : public QDrag
 public:
 	StringPairDrag( const QString & _key, const QString & _value,
 					const QPixmap & _icon, QWidget * _w );
-	~StringPairDrag();
+	virtual ~StringPairDrag();
 
 	inline QPixmap grabWidget(QWidget* widget,const QRect &rectangle = QRect( QPoint( 0, 0 ), QSize( -1, -1 ) ))
 	{

@@ -312,14 +312,6 @@ void NotePlayHandle::play(sampleFrame* _workingBuffer)
         return;
     }
 
-    /*
-    if(_workingBuffer == nullptr)
-    {
-        BACKTRACE
-        qInfo("NotePlayHandle::play _workingBuffer is null");
-    }
-    */
-
     // if the note offset falls over to next period, then don't start playback
     // yet
     if(offset() >= Engine::mixer()->framesPerPeriod())
@@ -392,7 +384,8 @@ void NotePlayHandle::play(sampleFrame* _workingBuffer)
            && !(m_instrumentTrack->instrument()
                 && m_instrumentTrack->instrument()->isSingleStreamed()))
         {
-            memset(_workingBuffer, 0, sizeof(sampleFrame) * offset());
+            if(_workingBuffer != nullptr)
+                memset(_workingBuffer, 0, sizeof(sampleFrame) * offset());
         }
         // play note!
         m_instrumentTrack->playNote(this, _workingBuffer);
@@ -696,7 +689,7 @@ const Scale* NotePlayHandle::scale() const
     if(r == nullptr)
         r = m_instrumentTrack->scale();
     if(r == nullptr)
-        r = &Scale::ET12;
+        r = Scale::ET12;
     return r;
 }
 

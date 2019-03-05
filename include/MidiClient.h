@@ -56,8 +56,7 @@ class MidiClient
     virtual void sendBytes(const uint8_t*  bytes,
                            const int       size,
                            const MidiTime& time,
-                           const MidiPort* port)
-            = 0;
+                           const MidiPort* port);  // = 0;
 
     virtual void sendMTC() final;
 

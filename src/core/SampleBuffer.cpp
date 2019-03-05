@@ -1064,6 +1064,13 @@ bool SampleBuffer::play(sampleFrame*      _ab,
     if(_frames == 0)
         return false;
 
+    if(_ab == nullptr)
+    {
+        BACKTRACE
+        qWarning("SampleBuffer::play _ab is null");
+        return false;
+    }
+
     const double freqFactor
             = (_freq == m_frequency
                && m_sampleRate == Engine::mixer()->processingSampleRate())
@@ -1168,9 +1175,22 @@ bool SampleBuffer::play(sampleFrame*      _ab,
                 {
                     case 0:
                     {
-                        const f_cnt_t f1 = f;
-                        _ab[n][0]        = m_data[f1][0];
-                        _ab[n][1]        = m_data[f1][1];
+                        f_cnt_t f1 = f;
+                        if(f1 == m_frames)
+                            f1 = m_frames - 1;
+                        if(m_data == nullptr)
+                        {
+                            qWarning("SampleBuffer::play m_data is null");
+                            return false;
+                        }
+                        if(f1 < 0 || f1 >= m_frames)
+                        {
+                            qWarning("SampleBuffer::play f1=%d m_frames=%d",
+                                     f1, m_frames);
+                            f1 = 0;
+                        }
+                        _ab[n][0] = m_data[f1][0];
+                        _ab[n][1] = m_data[f1][1];
                     }
                     break;
                     case 1:
@@ -1185,20 +1205,24 @@ bool SampleBuffer::play(sampleFrame*      _ab,
                     case 2:
                     case 3:
                     {
-                        const f_cnt_t f1 = f;
-                        f_cnt_t       f2 = f1 + 1;
-                        const real_t  x  = positivefraction(f);
+                        f_cnt_t f1 = f;
+                        if(f1 == m_frames)
+                            f1 = m_frames - 1;
+                        f_cnt_t f2 = f1 + 1;
                         if(f2 == m_frames)
                             f2 = m_frames - 1;
-                        _ab[n][0] = linearInterpolate(m_data[f1][0],
+                        const real_t x = positivefraction(f);
+                        _ab[n][0]      = linearInterpolate(m_data[f1][0],
                                                       m_data[f2][0], x);
-                        _ab[n][1] = linearInterpolate(m_data[f1][1],
+                        _ab[n][1]      = linearInterpolate(m_data[f1][1],
                                                       m_data[f2][1], x);
                     }
                     break;
                     default:
                     {
-                        f_cnt_t f1 = static_cast<f_cnt_t>(f);
+                        f_cnt_t f1 = f;
+                        if(f1 == m_frames)
+                            f1 = m_frames - 1;
                         f_cnt_t f2 = f1 + 1;
                         if(f2 == m_frames)
                             f2 = m_frames - 1;
@@ -1208,12 +1232,13 @@ bool SampleBuffer::play(sampleFrame*      _ab,
                         f_cnt_t f0 = f1 - 1;
                         if(f0 == -1)
                             f0 = 0;
-                        _ab[n][0] = optimal4pInterpolate(
+                        const real_t x = positivefraction(f);
+                        _ab[n][0]      = optimal4pInterpolate(
                                 m_data[f0][0], m_data[f1][0], m_data[f2][0],
-                                m_data[f3][0], positivefraction(f));
+                                m_data[f3][0], x);
                         _ab[n][1] = optimal4pInterpolate(
                                 m_data[f0][1], m_data[f1][1], m_data[f2][1],
-                                m_data[f3][1], positivefraction(f));
+                                m_data[f3][1], x);
                     }
                     break;
                 }

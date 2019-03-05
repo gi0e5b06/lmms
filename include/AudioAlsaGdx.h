@@ -32,78 +32,85 @@
 // older ALSA-versions might require this
 #define ALSA_PCM_NEW_HW_PARAMS_API
 
-#include <alsa/asoundlib.h>
-#include <QThread>
-
 #include "AudioDevice.h"
 
+#include <QThread>
+
+#include <alsa/asoundlib.h>
 
 class AudioAlsaGdx : public AudioDevice, public QThread
 {
-	// Public classes and enums
-public:
-	/**
-	 * @brief Contains the relevant information about available ALSA devices
-	 */
-	class DeviceInfo
-	{
-	public:
-		DeviceInfo(QString const & deviceName, QString const & deviceDescription) :
-			m_deviceName(deviceName),
-			m_deviceDescription(deviceDescription)
-		{}
-		~DeviceInfo() {}
+    // Public classes and enums
+  public:
+    /**
+     * @brief Contains the relevant information about available ALSA devices
+     */
+    class DeviceInfo
+    {
+      public:
+        DeviceInfo(QString const& deviceName,
+                   QString const& deviceDescription) :
+              m_deviceName(deviceName),
+              m_deviceDescription(deviceDescription)
+        {
+        }
+        virtual ~DeviceInfo()
+        {
+        }
 
-		QString const & getDeviceName() const { return m_deviceName; }
-		QString const & getDeviceDescription() const { return m_deviceDescription; }
+        QString const& getDeviceName() const
+        {
+            return m_deviceName;
+        }
+        QString const& getDeviceDescription() const
+        {
+            return m_deviceDescription;
+        }
 
-	private:
-		QString m_deviceName;
-		QString m_deviceDescription;
+      private:
+        QString m_deviceName;
+        QString m_deviceDescription;
+    };
 
-	};
+    typedef std::vector<DeviceInfo> DeviceInfoCollection;
 
-	typedef std::vector<DeviceInfo> DeviceInfoCollection;
+  public:
+    AudioAlsaGdx(bool& _success_ful, Mixer* mixer);
+    virtual ~AudioAlsaGdx();
 
-public:
-	AudioAlsaGdx( bool & _success_ful, Mixer* mixer );
-	virtual ~AudioAlsaGdx();
+    inline static QString name()
+    {
+        return QT_TRANSLATE_NOOP("setupWidget", "ALSA GDX");
+    }
 
-	inline static QString name()
-	{
-		return QT_TRANSLATE_NOOP( "setupWidget",
-			"ALSA GDX" );
-	}
+    static QString probeDevice();
 
-	static QString probeDevice();
+    static DeviceInfoCollection getAvailableDevices();
 
-	static DeviceInfoCollection getAvailableDevices();
+  private:
+    virtual void startProcessing();
+    virtual void stopProcessing();
+    virtual void applyQualitySettings();
+    virtual void run();
+    virtual void runS16();
+    virtual void runF32();
+    virtual void runS32();
 
-private:
-	virtual void startProcessing();
-	virtual void stopProcessing();
-	virtual void applyQualitySettings();
-	virtual void run();
-	virtual void runS16();
-	virtual void runF32();
-	virtual void runS32();
+    int setHWParams(const ch_cnt_t _channels, snd_pcm_access_t _access);
+    int setSWParams();
+    int handleError(int _err);
 
-	int setHWParams( const ch_cnt_t _channels, snd_pcm_access_t _access );
-	int setSWParams();
-	int handleError( int _err );
+    snd_pcm_t* m_outHandle;
 
+    snd_pcm_uframes_t m_bufferSize;
+    snd_pcm_uframes_t m_periodSize;
 
-	snd_pcm_t * m_outHandle;
+    snd_pcm_hw_params_t* m_hwParams;
+    snd_pcm_sw_params_t* m_swParams;
 
-	snd_pcm_uframes_t m_bufferSize;
-	snd_pcm_uframes_t m_periodSize;
-
-	snd_pcm_hw_params_t * m_hwParams;
-	snd_pcm_sw_params_t * m_swParams;
-
-        QString m_pcmFormat;
-	bool m_convertEndian;
-} ;
+    QString m_pcmFormat;
+    bool    m_convertEndian;
+};
 
 #endif
 

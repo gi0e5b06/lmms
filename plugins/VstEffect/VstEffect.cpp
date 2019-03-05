@@ -142,6 +142,8 @@ void VstEffect::openPlugin( const QString & _plugin )
 	delete tf;
 
 	m_key.attributes["file"] = _plugin;
+
+        m_plugin->showEditor(false); //true
 }
 
 

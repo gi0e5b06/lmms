@@ -181,6 +181,8 @@ void TrackContainer::addTrack(Track* _track)
     {
         _track->lock();
         m_tracksMutex.lockForWrite();
+        if(m_tracks.contains(_track))
+            qWarning("TrackContainer::addTrack already contains track");
         m_tracks.append(_track);
         m_tracksMutex.unlock();
         _track->unlock();
@@ -253,12 +255,15 @@ void TrackContainer::updateAfterTrackAdd()
 void TrackContainer::clearAllTracks()
 {
     qInfo("TrackContainer::clearAllTracks START");
-    while(!m_tracks.isEmpty())
+    Tracks tl = m_tracks;
+    for(Track* t: tl)  // while(!m_tracks.isEmpty())
     {
-        qInfo("TrackContainer::clearAllTracks last");
-        Track* t = m_tracks.last();
+        // qInfo("TrackContainer::clearAllTracks last");
+        // Track* t = m_tracks.last();
         qInfo("TrackContainer::clearAllTracks delete track [%s]",
               qPrintable(t->name()));
+        if(t->type() == Track::HiddenAutomationTrack)
+            qInfo(" *** is HiddenAutomationTrack");
         delete t;
         qInfo("TrackContainer::clearAllTracks after delete");
     }
@@ -522,4 +527,9 @@ DummyTrackContainer::DummyTrackContainer() :
     m_dummyInstrumentTrack = dynamic_cast<InstrumentTrack*>(
             Track::create(Track::InstrumentTrack, this));
     m_dummyInstrumentTrack->setJournalling(false);
+}
+
+DummyTrackContainer::~DummyTrackContainer()
+{
+    qInfo("DummyTrackContainer::~DummyTrackContainer");
 }

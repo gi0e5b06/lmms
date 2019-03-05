@@ -33,9 +33,10 @@ class QLineEdit;
 class RenameDialog : public QDialog
 {
     Q_OBJECT
+
   public:
     RenameDialog(QString& _string);
-    ~RenameDialog();
+    virtual ~RenameDialog();
 
   protected:
     void keyPressEvent(QKeyEvent* _ke);

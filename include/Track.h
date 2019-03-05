@@ -640,9 +640,10 @@ class TrackContentWidget : public QWidget, public JournallingObject
 class TrackOperationsWidget : public QWidget
 {
     Q_OBJECT
+
   public:
     TrackOperationsWidget(TrackView* parent);
-    ~TrackOperationsWidget();
+    virtual ~TrackOperationsWidget();
 
   protected:
     virtual void addNameMenu(QMenu* _cm, bool _enabled) final;
@@ -886,6 +887,7 @@ class EXPORT Track : public Model, public JournallingObject
 class TrackView : public QWidget, public ModelView, public JournallingObject
 {
     Q_OBJECT
+
   public:
     TrackView(Track* _track, TrackContainerView* tcv);
     virtual ~TrackView();

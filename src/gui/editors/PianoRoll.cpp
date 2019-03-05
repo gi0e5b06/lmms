@@ -2072,7 +2072,8 @@ void PianoRoll::stopTestNotes()
     if(hasValidPattern())
         for(Note* n: m_pattern->notes())
             stopTestNote(n);
-    // m_lastKey = -1;
+
+    // m_pattern->instrumentTrack()->pianoModel()->reset();
 }
 
 void PianoRoll::stopTestNote(Note* n)
@@ -3437,7 +3438,7 @@ void PianoRoll::paintEvent(QPaintEvent* pe)
                                  y_base - key * KEY_LINE_HEIGHT, note_width,
                                  note,
                                  ghostNoteColor(),  // ghostNoteTextColor(),
-                                 selectedNoteColor(), ghostNoteOpacity(),
+                                 ghostNoteColor(), ghostNoteOpacity(),
                                  ghostNoteBorders(), drawNoteNames);
                 }
             }
@@ -3877,7 +3878,7 @@ void PianoRoll::focusOutEvent(QFocusEvent*)
     {
         if(m_pattern != nullptr && m_pattern->instrumentTrack() != nullptr)
         {
-            m_pattern->instrumentTrack()->silenceAllNotes();
+            // m_pattern->instrumentTrack()->silenceAllNotes();
             m_pattern->instrumentTrack()->pianoModel()->reset();
         }
     }

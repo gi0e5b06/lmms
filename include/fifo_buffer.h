@@ -27,62 +27,53 @@
 
 #include <QSemaphore>
 
-
-template<typename T>
+template <typename T>
 class fifoBuffer
 {
-public:
-	fifoBuffer( int _size ) :
-		m_reader_sem( _size ),
-		m_writer_sem( _size ),
-		m_reader_index( 0 ),
-		m_writer_index( 0 ),
-		m_size( _size )
-	{
-		m_buffer = new T[_size];
-		m_reader_sem.acquire( _size );
-	}
+  public:
+    fifoBuffer(int _size) :
+          m_reader_sem(_size), m_writer_sem(_size), m_reader_index(0),
+          m_writer_index(0), m_size(_size)
+    {
+        m_buffer = new T[_size];
+        m_reader_sem.acquire(_size);
+    }
 
-	~fifoBuffer()
-	{
-		delete[] m_buffer;
-		m_reader_sem.release( m_size );
-	}
+    virtual ~fifoBuffer()
+    {
+        delete[] m_buffer;
+        m_reader_sem.release(m_size);
+    }
 
-	void write( T _element )
-	{
-		m_writer_sem.acquire();
-		m_buffer[m_writer_index++] = _element;
-		m_writer_index %= m_size;
-		m_reader_sem.release();
-	}
+    void write(T _element)
+    {
+        m_writer_sem.acquire();
+        m_buffer[m_writer_index++] = _element;
+        m_writer_index %= m_size;
+        m_reader_sem.release();
+    }
 
-	T read()
-	{
-		m_reader_sem.acquire();
-		T element = m_buffer[m_reader_index++];
-		m_reader_index %= m_size;
-		m_writer_sem.release();
-		return( element );
-	}
+    T read()
+    {
+        m_reader_sem.acquire();
+        T element = m_buffer[m_reader_index++];
+        m_reader_index %= m_size;
+        m_writer_sem.release();
+        return (element);
+    }
 
-	bool available()
-	{
-		return( m_reader_sem.available() );
-	}
+    bool available()
+    {
+        return (m_reader_sem.available());
+    }
 
-
-private:
-	QSemaphore m_reader_sem;
-	QSemaphore m_writer_sem;
-	int m_reader_index;
-	int m_writer_index;
-	int m_size;
-	T * m_buffer;
-
-} ;
-
-
-
+  private:
+    QSemaphore m_reader_sem;
+    QSemaphore m_writer_sem;
+    int        m_reader_index;
+    int        m_writer_index;
+    int        m_size;
+    T*         m_buffer;
+};
 
 #endif

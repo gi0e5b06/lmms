@@ -235,12 +235,14 @@ void VstPlugin::showEditor(bool isEffect, QWidget* _parent)
 #ifdef LMMS_BUILD_WIN32
             // hide sw, plugin window wrapper on win32
             // this is obtained from pluginWidget()
+                /*
             if(isEffect)
             {
                 m_pluginWidget->setWindowFlags(Qt::FramelessWindowHint);
                 m_pluginWidget->setAttribute(Qt::WA_TranslucentBackground);
             }
             else
+                */
             {
                 m_pluginWidget->setWindowFlags(Qt::WindowTitleHint
                                                | Qt::WindowSystemMenuHint
@@ -268,6 +270,7 @@ void VstPlugin::showEditor(bool isEffect, QWidget* _parent)
     // gui->mainWindow()->workspace() ); SubWindow* sw=new
     // VstSubWindow(m_pluginWidget,false,true);
 
+    /*
     if(isEffect)
     {
         // sw->setAttribute( Qt::WA_TranslucentBackground );
@@ -313,6 +316,7 @@ void VstPlugin::showEditor(bool isEffect, QWidget* _parent)
         // m_subWindow->show();
     }
     else
+    */
     {
         /*
           sw->setWindowFlags( Qt::SubWindow | Qt::CustomizeWindowHint |

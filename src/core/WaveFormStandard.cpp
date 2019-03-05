@@ -276,6 +276,14 @@ void WaveFormStandard::Set::createMissing()
     }
 }
 
+WaveFormStandard::Set::~Set()
+{
+    qInfo("WaveFormStandard::Set::~Set");
+    for(int b = MAX_BANK - MIN_BANK; b >= 0; --b)
+        for(int i = MAX_INDEX - MIN_INDEX; i >= 0; --i)
+            DELETE_HELPER(m_stock[b][i])
+}
+
 void WaveFormStandard::Set::createZeroed(int _bank)
 {
     for(int i = MIN_INDEX; i <= MAX_INDEX; i++)
@@ -657,6 +665,11 @@ WaveFormStandard::WaveFormStandard(const QString&          _name,
 
 WaveFormStandard::~WaveFormStandard()
 {
+    if(m_data != nullptr)
+    {
+        MM_FREE(m_data);
+        m_data = nullptr;
+    }
 }
 
 /*

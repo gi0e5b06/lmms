@@ -43,7 +43,7 @@ class EXPORT MemoryManagerArray
     MemoryManagerArray(const int    nbe,
                        const size_t size,
                        const char*  ref = "");
-    ~MemoryManagerArray();
+    virtual ~MemoryManagerArray();
 
     // bool  full();
     void* allocate(size_t size, const char* file, long line);

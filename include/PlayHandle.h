@@ -117,12 +117,12 @@ class PlayHandle : public ThreadableJob
         m_offset = _offset;
     }
 
-    inline bool usesBuffer() const
+    virtual bool usesBuffer() const final
     {
         return m_usesBuffer;
     }
 
-    inline void setUsesBuffer(const bool b)
+    virtual void setUsesBuffer(const bool b) final
     {
         m_usesBuffer = b;
     }

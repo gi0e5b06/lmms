@@ -98,12 +98,13 @@ class Scale
     static const int MAX_BANK   = 127;
     static const int MAX_INDEX  = 127;
 
-    static const Scale ET12;
+    static const Scale* const ET12;
 
     class Set
     {
       public:
         Set();
+        virtual ~Set();
         const Scale* get(const int _bank, const int _index);
         void         set(const int _bank, const int _index, const Scale* _s);
         void         fillBankModel(ComboBoxModel& _model);

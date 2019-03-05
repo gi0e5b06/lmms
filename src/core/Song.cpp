@@ -104,7 +104,8 @@ Song::~Song()
     m_playing = false;
     MM_ACTIVE(false)
     qInfo("Song::~Song 2");
-    delete m_globalAutomationTrack;
+    // HAT deleted by the container
+    // DELETE_HELPER(m_globalAutomationTrack)
     qInfo("Song::~Song 3");
 }
 
@@ -1167,6 +1168,19 @@ void Song::loadProject(const QString& fileName)
                 //   qPrintable(node.nodeName()));
             }
             node = node.nextSibling();
+        }
+    }
+
+    if(gui)
+    {
+        if(gui->pianoRoll()->currentPattern() == nullptr)
+        {
+            // gui->pianoRoll()->parentWidget()->hide();
+        }
+
+        if(gui->automationEditor()->m_editor->currentPattern() == nullptr)
+        {
+            // gui->automationEditor()->hide();
         }
     }
 

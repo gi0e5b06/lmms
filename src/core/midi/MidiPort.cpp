@@ -112,12 +112,16 @@ MidiPort::MidiPort(const QString&      name,
 
 MidiPort::~MidiPort()
 {
+    qInfo("MidiPort::~MidiPort START");
+
     // unsubscribe ports
     m_readableModel.setValue(false);
     m_writableModel.setValue(false);
 
     // and finally unregister ourself
     m_midiClient->removePort(this);
+
+    qInfo("MidiPort::~MidiPort END");
 }
 
 void MidiPort::setName(const QString& name)

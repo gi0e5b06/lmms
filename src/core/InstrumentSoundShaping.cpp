@@ -120,6 +120,11 @@ InstrumentSoundShaping::InstrumentSoundShaping(
 
 InstrumentSoundShaping::~InstrumentSoundShaping()
 {
+    qInfo("InstrumentSoundShaping::~InstrumentSoundShaping START");
+    for(int i = 0; i < NumTargets; ++i)
+        DELETE_HELPER(m_envLfoParameters[i])
+    m_instrumentTrack = nullptr;
+    qInfo("InstrumentSoundShaping::~InstrumentSoundShaping END");
 }
 
 real_t InstrumentSoundShaping::volumeLevel(NotePlayHandle* n,

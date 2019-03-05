@@ -80,7 +80,7 @@ class HandleManager : public QThread
 
   public:
     HandleManager(Mixer* _mixer);
-    ~HandleManager();
+    virtual ~HandleManager();
 
   public slots:
     void addPlayHandleHM(PlayHandle* handle);
@@ -256,6 +256,8 @@ class EXPORT Mixer : public QObject
 
     ConstNotePlayHandleList  // QList<const NotePlayHandle*>
             nphsOfTrack(const Track* _track, bool _all = false);
+
+    void waitUntilNoPlayHandle(const Track* _track, const quint8 _types);
 
     void adjustTempo(const bpm_t _tempo);
 

@@ -130,10 +130,7 @@ class DummyTrackContainer : public TrackContainer
 {
   public:
     DummyTrackContainer();
-
-    virtual ~DummyTrackContainer()
-    {
-    }
+    virtual ~DummyTrackContainer();
 
     virtual QString nodeName() const
     {

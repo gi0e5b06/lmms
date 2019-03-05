@@ -8,7 +8,7 @@ class Bitset /*final*/
     // Bitset(unsigned int size);
     Bitset(unsigned int size, bool initial);
     Bitset(const Bitset& other);
-    ~Bitset();
+    virtual ~Bitset();
 
     unsigned int size() const;
     void         fill(bool b);

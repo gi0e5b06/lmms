@@ -1145,6 +1145,53 @@ ConstNotePlayHandleList Mixer::nphsOfTrack(const Track* _track, bool _all)
     return cnphv;
 }
 
+void Mixer::waitUntilNoPlayHandle(const Track* _track, const quint8 _types)
+{
+    if(_track == nullptr)
+    {
+        qWarning("Mixer::waitUntilNoPlayHandle track is null");
+        return;
+    }
+
+    if(_types == 0)
+    {
+        qWarning("Mixer::waitUntilNoPlayHandle types is 0");
+        return;
+    }
+
+    // qInfo("Mixer::removePlayHandlesOfTypes START %p %d", _track, _types);
+    bool                  again = true;
+    SafeList<PlayHandle*> r(false);
+    while(again)
+    {
+        requestChangeInModel();
+
+        m_playHandles.map([&r, _types, _track](PlayHandle* ph) {
+            if((ph->type() & _types) && ph->isFromTrack(_track))
+                r.appendUnique(ph);
+        });
+        m_playHandlesToAdd.map([&r, _types, _track](PlayHandle* ph) {
+            if((ph->type() & _types) && ph->isFromTrack(_track))
+                r.appendUnique(ph);
+        });
+        m_playHandlesToRemove.map([&r, _types, _track](PlayHandle* ph) {
+            if((ph->type() & _types) && ph->isFromTrack(_track))
+                r.appendUnique(ph);
+        });
+
+        again = !r.isEmpty();
+        doneChangeInModel();
+
+        if(again)
+        {
+            qInfo("Mixer::waitUntilNoPlayHandle still %d playHandles",
+                  r.size());
+            r.clear();
+            QThread::yieldCurrentThread();
+        }
+    }
+}
+
 void Mixer::adjustTempo(const bpm_t _tempo)
 {
     requestChangeInModel();

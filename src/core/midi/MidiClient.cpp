@@ -90,6 +90,14 @@ void MidiClient::processOutEventOnAllPorts(const MidiEvent& _me,
         processOutEvent(_me, _time, port);
 }
 
+void MidiClient::sendBytes(const uint8_t*  bytes,
+                           const int       size,
+                           const MidiTime& time,
+                           const MidiPort* port)
+{
+    qWarning("TODO: This MIDI device doesn't implement sendBytes().");
+}
+
 void MidiClient::sendMTC()
 {
     Song* song = Engine::getSong();

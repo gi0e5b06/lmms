@@ -29,6 +29,8 @@
 #include <QHash>
 #include <QUuid>
 
+#include <typeinfo>
+
 QHash<QString, Model*> Model::s_models;
 
 Model::Model(Model*         _parent,
@@ -50,6 +52,8 @@ static QHash<QString, bool> s_destructorTracker;
 
 Model::~Model()
 {
+    // qInfo("Model::~Model START %s", qPrintable(m_displayName));
+
     if(hasUuid())
         s_models.remove(m_uuid);
 
@@ -61,6 +65,15 @@ Model::~Model()
         return;
     }
     s_destructorTracker.insert(m_debug_uuid, true);
+
+    /*
+    qInfo("Model::~Model CHILDREN");
+    for(QObject* o: children())
+        qInfo("  - child %s %s", qPrintable(o->objectName()),
+              typeid(o).name());
+    */
+
+    // qInfo("Model::~Model END %s", qPrintable(m_displayName));
 }
 
 const QString Model::uuid()

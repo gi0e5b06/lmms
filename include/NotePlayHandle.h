@@ -215,13 +215,12 @@ class EXPORT NotePlayHandle /*final*/
     /*! Returns whether note has children */
     bool isMasterNote() const
     {
-        return m_subNotes.size() > 0;  // || m_isMasterNote;
+        return m_isMasterNote || m_subNotes.size() > 0;
     }
 
     void setMasterNote()
     {
-        // m_isMasterNote = true;
-        setUsesBuffer(false);
+        m_isMasterNote = true;
     }
 
     /*! Returns whether note is muted */

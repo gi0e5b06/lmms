@@ -73,7 +73,7 @@ class InstrumentMiscView : public QWidget
 
   public:
     InstrumentMiscView(InstrumentTrack* it, QWidget* parent);
-    ~InstrumentMiscView();
+    virtual ~InstrumentMiscView();
 
     GroupBox* pitchGroupBox()
     {

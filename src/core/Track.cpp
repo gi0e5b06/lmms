@@ -3967,11 +3967,12 @@ void Track::clearAllTrackPlayHandles()
 
     if(Engine::mixer() != nullptr)
     {
-        quint8                types = 0xFF;
+        quint8 types = 0xFF;
+
         Engine::mixer()->emit playHandlesOfTypesToRemove(this, types);
-        QThread::yieldCurrentThread();
         QCoreApplication::sendPostedEvents();
         QThread::yieldCurrentThread();
+        Engine::mixer()->waitUntilNoPlayHandle(this, types);
     }
     else
         qInfo("Track::clearAllTrackPlayHandles no mixer");
