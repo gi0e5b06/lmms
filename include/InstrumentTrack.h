@@ -312,6 +312,13 @@ class EXPORT InstrumentTrack : public Track, public MidiEventProcessor
         m_envPanning = _p;
     }
 
+    bool isKeyPressed(int _key)
+    {
+        return (_key >= 0 && _key < NumMidiKeys
+                && (m_notes[_key] != nullptr
+                    || m_runningMidiNotes[_key] > 0));
+    }
+
   signals:
     void instrumentChanged();
     void instrumentFunctionAdded(InstrumentFunction* _f);
@@ -342,8 +349,8 @@ class EXPORT InstrumentTrack : public Track, public MidiEventProcessor
   private:
     MidiPort m_midiPort;
 
-    NotePlayHandle*    m_notes[NumMidiKeys];
-    NotePlayHandleList m_sustainedNotes;
+    NotePlayHandle* m_notes[NumMidiKeys];
+    NotePlayHandles m_sustainedNotes;
 
     int    m_runningMidiNotes[NumMidiKeys];
     QMutex m_midiNotesMutex;
@@ -490,6 +497,7 @@ class InstrumentTrackWindow :
       public SerializingObjectHook
 {
     Q_OBJECT
+
   public:
     InstrumentTrackWindow(InstrumentTrackView* _tv);
     virtual ~InstrumentTrackWindow();

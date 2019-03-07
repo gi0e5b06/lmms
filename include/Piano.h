@@ -47,9 +47,8 @@ class Piano : public Model
 
     void reset();
     bool isKeyPressed(int key) const;
-    // void setKeyState(int key, bool state);
-    void pressKey(int key);
-    void releaseKey(int key);
+    // void pressKey(int key);
+    // void releaseKey(int key);
 
     void handleKeyPress(int key, int midiVelocity = -1);
     void handleKeyRelease(int key);
@@ -60,6 +59,7 @@ class Piano : public Model
         return m_instrumentTrack;
     }
 
+    /*
     MidiEventProcessor* midiEventProcessor() const
     {
         return m_midiEvProc;
@@ -74,20 +74,23 @@ class Piano : public Model
     {
         m_mutex.unlock();
     }
+    */
 
     static bool isWhiteKey(int key);
     static bool isBlackKey(int key);
 
   private:
+    /*
     static bool isValidKey(int key)
     {
         return key >= 0 && key < NumKeys;
     }
+    */
 
-    QMutex              m_mutex;
-    InstrumentTrack*    m_instrumentTrack;
-    MidiEventProcessor* m_midiEvProc;
-    int                 m_pressedKeys[NumKeys];
+    // QMutex              m_mutex;
+    InstrumentTrack* m_instrumentTrack;
+    // MidiEventProcessor* m_midiEvProc;
+    // int                 m_pressedKeys[NumKeys];
 };
 
 #endif

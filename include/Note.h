@@ -58,7 +58,7 @@ enum Keys
 
 enum Octaves
 {
-    Octave_M1,
+    Octave_M1 = 0,
     Octave_0,
     Octave_1,
     Octave_2,
@@ -70,8 +70,8 @@ enum Octaves
     Octave_7,
     Octave_8,
     Octave_9,
-    Octave_10,
-    NumOctaves
+    Octave_10
+    // , NumOctaves
 };
 
 const int WhiteKeysPerOctave = 7;

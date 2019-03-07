@@ -187,35 +187,35 @@ bool ShifterGDX::processAudioBuffer(sampleFrame* _buf, const fpp_t _frames)
     }
 
     int    lf = m_gdxControls.m_lowFrequencyModel.value();
-    real_t xf = m_gdxControls.m_factorFrequencyModel.value() / 1000.;
+    real_t xf = m_gdxControls.m_slopeFrequencyModel.value() / 1000.;
     if(lf <= m_size / 2)
     {
-        real_t factor = 1.;
+        real_t slope = 1.;
         for(int f = lf - 1; f >= 0; --f)
         {
-            factor -= xf;
-            if(factor < 0.)
-                factor = 0.;
-            m_cBuf0[f][0] *= factor;
-            m_cBuf0[f][1] *= factor;
-            m_cBuf1[f][0] *= factor;
-            m_cBuf1[f][1] *= factor;
+            slope -= xf;
+            if(slope < 0.)
+                slope = 0.;
+            m_cBuf0[f][0] *= slope;
+            m_cBuf0[f][1] *= slope;
+            m_cBuf1[f][0] *= slope;
+            m_cBuf1[f][1] *= slope;
         }
     }
 
     int hf = m_gdxControls.m_highFrequencyModel.value();
     if(hf <= m_size / 2)
     {
-        real_t factor = 1.;
+        real_t slope = 1.;
         for(int f = hf + 1; f <= m_size / 2; f++)
         {
-            factor -= xf;
-            if(factor < 0.)
-                factor = 0.;
-            m_cBuf0[f][0] *= factor;
-            m_cBuf0[f][1] *= factor;
-            m_cBuf1[f][0] *= factor;
-            m_cBuf1[f][1] *= factor;
+            slope -= xf;
+            if(slope < 0.)
+                slope = 0.;
+            m_cBuf0[f][0] *= slope;
+            m_cBuf0[f][1] *= slope;
+            m_cBuf1[f][0] *= slope;
+            m_cBuf1[f][1] *= slope;
         }
     }
 
@@ -227,6 +227,7 @@ bool ShifterGDX::processAudioBuffer(sampleFrame* _buf, const fpp_t _frames)
     real_t dv = m_gdxControls.m_deltaVolumeModel.value();
     real_t lv = m_gdxControls.m_lowVolumeModel.value();
     real_t hv = m_gdxControls.m_highVolumeModel.value();
+    real_t xv = 1. - m_gdxControls.m_slopeVolumeModel.value();
     // qInfo("Shifter LV=%f HV=%f",lv,hv);
 
     for(fpp_t f = 0; f < _frames; ++f)
@@ -235,8 +236,19 @@ bool ShifterGDX::processAudioBuffer(sampleFrame* _buf, const fpp_t _frames)
         computeWetDryLevels(f, _frames, smoothBegin, smoothEnd, w0, d0, w1,
                             d1);
 
-        sample_t curVal0 = bound(lv, m_oBuf0[start + f] / m_size + dv, hv);
-        sample_t curVal1 = bound(lv, m_oBuf1[start + f] / m_size + dv, hv);
+        sample_t curVal0 = m_oBuf0[start + f] / m_size + dv;
+        if(curVal0 < lv)
+            curVal0 = lv + xv * (curVal0 - lv);
+        if(curVal0 > hv)
+            curVal0 = hv + xv * (curVal0 - hv);
+        curVal0 = bound(-1., curVal0, 1.);
+
+        sample_t curVal1 = m_oBuf1[start + f] / m_size + dv;
+        if(curVal1 < lv)
+            curVal1 = lv + xv * (curVal1 - lv);
+        if(curVal1 > hv)
+            curVal1 = hv + xv * (curVal1 - hv);
+        curVal1 = bound(-1., curVal1, 1.);
 
         _buf[f][0] = d0 * _buf[f][0] + w0 * curVal0;
         _buf[f][1] = d1 * _buf[f][1] + w1 * curVal1;

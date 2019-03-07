@@ -358,6 +358,7 @@ bool ZynAddSubFxInstrument::handleMidiEvent(const MidiEvent& event,
     m_pluginMutex.lock();
     if(m_remotePlugin)
     {
+        qInfo("ZynAddSubFxInstrument::handleMidiEvent key=%d", event.key());
         m_remotePlugin->processMidiEvent(localEvent, 0);
     }
     else

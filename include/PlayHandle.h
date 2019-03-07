@@ -101,7 +101,7 @@ class PlayHandle : public ThreadableJob
 
     virtual void play(sampleFrame* buffer)              = 0;
     virtual bool isFromTrack(const Track* _track) const = 0;
-    virtual bool isFinished() const = 0;
+    virtual bool isFinished() const                     = 0;
     virtual void setFinished() final;
 
     // returns the frameoffset at the start of the playhandle,
@@ -131,6 +131,16 @@ class PlayHandle : public ThreadableJob
 
     virtual sampleFrame* buffer() final;
 
+    virtual void incrRefCount() final
+    {
+        m_refCount++;
+    }
+
+    virtual void decrRefCount() final
+    {
+        m_refCount--;
+    }
+
   protected:
     PlayHandle(const Type type, f_cnt_t offset = 0);
 
@@ -155,6 +165,7 @@ class PlayHandle : public ThreadableJob
     bool         m_usesBuffer;
     sampleFrame* m_playHandleBuffer;
     bool         m_bufferReleased;
+    int          m_refCount;
 };
 
 // typedef QList<PlayHandle*>       PlayHandleList;

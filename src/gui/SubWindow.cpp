@@ -75,7 +75,7 @@ SubWindow::SubWindow(QWidget* _child,
     // setParent( gui->mainWindow()->workspace()->viewport() );
     // setWindowFlags( _flags );
     setAttribute(Qt::WA_DeleteOnClose, _deleteOnClose);
-    //setAttribute(Qt::WA_OpaquePaintEvent, true);
+    // setAttribute(Qt::WA_OpaquePaintEvent, true);
 
     if(gui->mainWindow()->isTabbed())
     {
@@ -379,9 +379,13 @@ void SubWindow::adjustTitleBar()
         m_restoreBtn->setVisible(isMaximized() || isMinimized());
 
     // title QLabel adjustments
+    QWidget* w = widget();
+
     m_windowTitle->setAlignment(Qt::AlignHCenter);
-    m_windowTitle->setFixedWidth(
-            qMax(0, widget()->width() - (menuButtonSpace + buttonBarWidth)));
+    m_windowTitle->setFixedWidth(qMax(
+            0, w == nullptr
+                       ? 0
+                       : w->width() - (menuButtonSpace + buttonBarWidth)));
     m_windowTitle->move(menuButtonSpace,
                         (m_titleBarHeight / 2)
                                 - (m_windowTitle->sizeHint().height() / 2)
@@ -398,7 +402,7 @@ void SubWindow::adjustTitleBar()
     }
 
     // truncate the label string if the window is to small. Adds "..."
-    elideText(m_windowTitle, widget()->windowTitle());
+    elideText(m_windowTitle, w==nullptr ? "" : w->windowTitle());
     m_windowTitle->setTextInteractionFlags(Qt::NoTextInteraction);
     m_windowTitle->adjustSize();
 }

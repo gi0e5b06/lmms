@@ -66,10 +66,11 @@ class ShifterGDXControls : public EffectControls
     FloatModel    m_deltaFrequencyModel;
     FloatModel    m_lowFrequencyModel;
     FloatModel    m_highFrequencyModel;
-    FloatModel    m_factorFrequencyModel;
+    FloatModel    m_slopeFrequencyModel;
     FloatModel    m_deltaVolumeModel;
     FloatModel    m_lowVolumeModel;
     FloatModel    m_highVolumeModel;
+    FloatModel    m_slopeVolumeModel;
 
     friend class ShifterGDXDialog;
     friend class ShifterGDX;

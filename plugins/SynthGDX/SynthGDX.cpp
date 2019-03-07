@@ -1168,9 +1168,9 @@ void SynthGDX::playNote(NotePlayHandle* _n, sampleFrame* _buf)
                 if(f == 0)
                     qTrace("portamento n=%p p=%f nw=%f ow=%f", _n, portamento,
                            nw, ow);
-                */
                 if(f == 0 && slope != 1.)
                     qTrace("slope n=%p s=%f nw=%f ow=%f", _n, slope, nw, ow);
+                */
 
                 m_osc[o]->m_frequencyModel.setAutomatedValue(ow);
             }

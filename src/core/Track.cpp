@@ -603,10 +603,9 @@ TrackContentObjectView::~TrackContentObjectView()
  */
 void TrackContentObjectView::update()
 {
-    if(isFixed())  // fixedTCOs() )
-    {
-        // updateLength(); GDX
-    }
+    if(isFixed())
+        Engine::getBBTrackContainer()->updateBBTrack(m_tco);
+
     m_needsUpdate = true;
     SelectableObject::update();
 }

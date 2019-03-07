@@ -695,6 +695,15 @@ void PatternView::resetName()
 }
 */
 
+void PatternView::setNameFromFirstNote()
+{
+    if(!m_pat->isEmpty())
+    {
+        int k = m_pat->notes().first()->key();
+        m_pat->setName(Note::findKeyName(k));
+    }
+}
+
 void PatternView::changeStepResolution(QAction* _a)
 {
     const int res = _a->data().toInt();
@@ -741,9 +750,7 @@ QMenu* PatternView::buildContextMenu()
     }
 
     cm->addSeparator();
-    addPropertiesMenu(cm,
-                      !isFixed(),
-                      !isFixed());
+    addPropertiesMenu(cm, !isFixed(), !isFixed());
 
     a = cm->addAction(embed::getIconPixmap("ghost_note"), tr("Ghost notes"),
                       this, SLOT(setGhostInPianoRoll()));
@@ -753,6 +760,11 @@ QMenu* PatternView::buildContextMenu()
 
     cm->addSeparator();
     addNameMenu(cm, true);
+
+    a = cm->addAction(tr("Set name from first note"), this,
+                      SLOT(setNameFromFirstNote()));
+    a->setEnabled(!m_pat->empty());
+
     cm->addSeparator();
     addColorMenu(cm, true);
 
@@ -1053,7 +1065,21 @@ void PatternView::paintEvent(QPaintEvent*)
             maxKey        = qMax(maxKey, key);
             minKey        = qMin(minKey, key);
         }
-
+        if(minKey == maxKey)
+        {
+            minKey--;
+            maxKey++;
+        }
+        if(maxKey % 12 != 0)
+            maxKey = maxKey - maxKey % 12 + 12;
+        minKey -= minKey % 12;
+        if(maxKey - minKey <= 12)
+        {
+            if((minKey / 12) % 2 == 1)
+                minKey -= 12;
+            else
+                maxKey += 12;
+        }
         // If needed adjust the note range so that we always have paint a
         // certain interval
         int const minimalNoteRange = 12;  // Always paint at least one octave

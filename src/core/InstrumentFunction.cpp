@@ -761,12 +761,8 @@ InstrumentFunctionNoteHumanizing::InstrumentFunctionNoteHumanizing(
       m_panRangeModel(0., 0., 100., 0.1, this, tr("Pan change")),
       m_tuneRangeModel(0., 0., 100., 0.1, this, tr("Frequency change")),
       m_offsetRangeModel(0., 0., 100., 0.1, this, tr("Start delay")),
-      m_shortenRangeModel(1., 1., 100., 0.1, this, tr("Shortening")),
-      m_volumeStepModel(1., 1., 100., 1., this, tr("Volume step")),
-      m_panStepModel(1., 1., 100., 1., this, tr("Pan step")),
-      m_tuneStepModel(1., 1., 100., 1., this, tr("Frequency step")),
-      m_offsetStepModel(1., 1., 100., 1., this, tr("Start step")),
-      m_shortenStepModel(1., 1., 100., 1., this, tr("Shortening step"))
+      m_shortenRangeModel(0., 0., 100., 0.1, this, tr("Shortening")),
+      m_lengthenRangeModel(0., 0., 100., 0.1, this, tr("Lenghtening"))
 {
 }
 
@@ -785,12 +781,7 @@ bool InstrumentFunctionNoteHumanizing::processNote(NotePlayHandle* _n)
         real_t l = m_volumeRangeModel.value() / 100.;
         if(l > 0.)
         {
-            real_t r = fastrand01inc();
-            real_t s = round(m_volumeStepModel.value());
-            // real_t oldr=r;
-            if(s > 0.)
-                r = round(r * 100. / s) * s / 100.;
-            // qInfo("NH: oldr=%f r=%f s=%f",oldr,r,s);
+            real_t   r = fastrand01inc();
             volume_t o = _n->getVolume();  // 0..200
             volume_t n = bound(0., qRound(o * (1. - l * r)), 200.);
             // qInfo("NH: volume %f->%f",o,n);
@@ -802,10 +793,7 @@ bool InstrumentFunctionNoteHumanizing::processNote(NotePlayHandle* _n)
         real_t l = m_panRangeModel.value() / 100.;
         if(l > 0.)
         {
-            real_t r = fastrand01inc();
-            real_t s = m_panStepModel.value();
-            if(s > 0.)
-                r = round(r * 100. / s) * s / 100.;
+            real_t    r = fastrand01inc();
             panning_t o = _n->getPanning();  // -100..100
             panning_t n = bound(-100., round(o + 200. * l * (r - 0.5)), 100.);
             // qInfo("NH: panning %f->%f",o,n);
@@ -818,10 +806,6 @@ bool InstrumentFunctionNoteHumanizing::processNote(NotePlayHandle* _n)
         if(l > 0.)
         {
             real_t r = fastrand01inc();
-            real_t s = m_tuneStepModel.value();
-            if(s > 0.)
-                r = round(r * 100. / s) * s / 100.;
-            // real_t o = _n->effectDetune();
             real_t n = 12. * (l * (r - 0.5));
             // qInfo("NH: detune %f->%f", o, o + n);
             _n->addEffectDetune(n);
@@ -833,10 +817,7 @@ bool InstrumentFunctionNoteHumanizing::processNote(NotePlayHandle* _n)
         real_t l = m_offsetRangeModel.value() / 100.;
         if(l > 0.)
         {
-            real_t r = fastrand01inc();
-            real_t s = m_offsetStepModel.value();
-            if(s > 0.)
-                r = round(r * 100. / s) * s / 100.;
+            real_t      r   = fastrand01inc();
             f_cnt_t     o   = _n->offset();  // ?
             const fpp_t fpt = Engine::framesPerTick()
                               * Engine::getSong()->ticksPerTact();
@@ -852,14 +833,24 @@ bool InstrumentFunctionNoteHumanizing::processNote(NotePlayHandle* _n)
         real_t l = m_shortenRangeModel.value() / 100.;
         if(l > 0.)
         {
-            real_t r = fastrand01inc();
-            real_t s = m_shortenStepModel.value();
-            if(s > 0.)
-                r = round(r * 100. / s) * s / 100.;
+            real_t  r = fastrand01inc();
             f_cnt_t o = _n->frames();  // ?
             f_cnt_t n = qBound(1, qRound(o * (1. - l * r)), o);
             n         = qBound(1, n, o);
             // qInfo("NH: shorten %d->%d",o,n);
+            _n->setFrames(n);
+        }
+    }
+
+    {
+        real_t l = m_lengthenRangeModel.value() / 100.;
+        if(l > 0.)
+        {
+            real_t  r = fastrand01inc();
+            f_cnt_t o = _n->frames();  // ?
+            f_cnt_t n = qMax(1, qRound(o * (1. + l * r)));
+            n         = qBound(o, n, 2*o);
+            // qInfo("NH: lengthen %d->%d",o,n);
             _n->setFrames(n);
         }
     }
@@ -880,12 +871,7 @@ void InstrumentFunctionNoteHumanizing::saveSettings(QDomDocument& _doc,
     m_tuneRangeModel.saveSettings(_doc, _this, "tune");
     m_offsetRangeModel.saveSettings(_doc, _this, "offset");
     m_shortenRangeModel.saveSettings(_doc, _this, "shorten");
-
-    m_volumeStepModel.saveSettings(_doc, _this, "volume_step");
-    m_panStepModel.saveSettings(_doc, _this, "pan_step");
-    m_tuneStepModel.saveSettings(_doc, _this, "tune_step");
-    m_offsetStepModel.saveSettings(_doc, _this, "offset_step");
-    m_shortenStepModel.saveSettings(_doc, _this, "shorten_step");
+    m_lengthenRangeModel.saveSettings(_doc, _this, "lengthen");
 }
 
 void InstrumentFunctionNoteHumanizing::loadSettings(const QDomElement& _this)
@@ -899,12 +885,7 @@ void InstrumentFunctionNoteHumanizing::loadSettings(const QDomElement& _this)
     m_tuneRangeModel.loadSettings(_this, "tune");
     m_offsetRangeModel.loadSettings(_this, "offset");
     m_shortenRangeModel.loadSettings(_this, "shorten");
-
-    m_volumeStepModel.loadSettings(_this, "volume_step");
-    m_panStepModel.loadSettings(_this, "pan_step");
-    m_tuneStepModel.loadSettings(_this, "tune_step");
-    m_offsetStepModel.loadSettings(_this, "offset_step");
-    m_shortenStepModel.loadSettings(_this, "shorten_step");
+    m_lengthenRangeModel.loadSettings(_this, "lengthen");
 }
 
 InstrumentFunctionView* InstrumentFunctionNoteHumanizing::createView()
@@ -1223,6 +1204,17 @@ InstrumentFunctionNoteOutting::InstrumentFunctionNoteOutting(Model* _parent) :
       m_noteModel(DefaultKey % 12, 0., 11., 1., this, tr("Note")),
       m_modModel(0., -1., 1., 0.001, this, tr("Mod"))
 {
+        m_volumeModel.setJournalling(false);
+        m_panModel.setJournalling(false);
+        m_keyModel.setJournalling(false);
+        m_noteModel.setJournalling(false);
+        m_modModel.setJournalling(false);
+
+        m_volumeModel.setFrequentlyUpdated(true);
+        m_panModel.setFrequentlyUpdated(true);
+        m_keyModel.setFrequentlyUpdated(true);
+        m_noteModel.setFrequentlyUpdated(true);
+        m_modModel.setFrequentlyUpdated(true);
 }
 
 InstrumentFunctionNoteOutting::~InstrumentFunctionNoteOutting()
@@ -1236,14 +1228,13 @@ bool InstrumentFunctionNoteOutting::processNote(NotePlayHandle* _n)
     if(_n->totalFramesPlayed() != 0 || _n->isReleased())
         return true;
 
-    m_volumeModel.setValue(_n->getVolume());
-    m_panModel.setValue(_n->getPanning());
-    m_keyModel.setValue(_n->key());
-    m_noteModel.setValue(_n->key() % 12);
-    m_modModel.setValue(
-            bound(-1., (_n->key() - DefaultKey) / DefaultKey, 1.));
+    m_volumeModel.setAutomatedValue(_n->getVolume());
+    m_panModel.setAutomatedValue(_n->getPanning());
+    m_keyModel.setAutomatedValue(_n->key());
+    m_noteModel.setAutomatedValue(_n->key() % 12);
+    m_modModel.setAutomatedValue(bound(
+            -1., real_t(_n->key() - DefaultKey) / real_t(DefaultKey), 1.));
 
-    qInfo("InstrumentFunctionNoteOutting::process Note");
     return true;
 }
 

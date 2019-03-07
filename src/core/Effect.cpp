@@ -182,6 +182,18 @@ Effect* Effect::instantiate(const QString&                      pluginName,
     return NULL;
 }
 
+int Effect::timeout() const
+{
+    real_t decay = m_autoQuitModel.value();
+    if(decay >= 8000.)
+        decay = 3600000.;  // one hour
+
+    const real_t samples = Engine::mixer()->processingSampleRate()
+                           * m_autoQuitModel.value() / 1000.;
+    return /*1+*/ static_cast<int>(samples
+                                   / Engine::mixer()->framesPerPeriod());
+}
+
 bool Effect::gateHasClosed(real_t&      _rms,
                            sampleFrame* _buf,
                            const fpp_t  _frames)

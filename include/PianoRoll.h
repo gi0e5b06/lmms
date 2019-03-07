@@ -243,6 +243,9 @@ class PianoRoll : public QWidget
     void hidePattern(Pattern* pattern);
     void clearGhostPattern();
 
+    void upChord();
+    void downChord();
+
     void selectRegionFromPixels(int xStart, int xEnd);
 
   signals:

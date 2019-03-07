@@ -64,10 +64,10 @@ ShifterGDXDialog::ShifterGDXDialog(ShifterGDXControls* controls) :
     highFrequencyKNB->setText("HF");
     highFrequencyKNB->setPointColor(Qt::green);
 
-    Knob* factorFrequencyKNB = new Knob(this);
-    factorFrequencyKNB->setModel(&controls->m_factorFrequencyModel);
-    factorFrequencyKNB->setText("XF");
-    factorFrequencyKNB->setPointColor(Qt::green);
+    Knob* slopeFrequencyKNB = new Knob(this);
+    slopeFrequencyKNB->setModel(&controls->m_slopeFrequencyModel);
+    slopeFrequencyKNB->setText("XF");
+    slopeFrequencyKNB->setPointColor(Qt::green);
 
     Knob* deltaVolumeKNB = new Knob(this);
     deltaVolumeKNB->setModel(&controls->m_deltaVolumeModel);
@@ -84,19 +84,26 @@ ShifterGDXDialog::ShifterGDXDialog(ShifterGDXControls* controls) :
     highVolumeKNB->setText("HV");
     highVolumeKNB->setPointColor(Qt::red);
 
+    Knob* slopeVolumeKNB = new Knob(this);
+    slopeVolumeKNB->setModel(&controls->m_slopeVolumeModel);
+    slopeVolumeKNB->setText("XV");
+    slopeVolumeKNB->setPointColor(Qt::red);
+
     mainLayout->addWidget(deltaFrequencyKNB, 0, 0,
                           Qt::AlignBottom | Qt::AlignHCenter);
     mainLayout->addWidget(lowFrequencyKNB, 0, 1,
                           Qt::AlignBottom | Qt::AlignHCenter);
     mainLayout->addWidget(highFrequencyKNB, 0, 2,
                           Qt::AlignBottom | Qt::AlignHCenter);
-    mainLayout->addWidget(factorFrequencyKNB, 0, 3,
+    mainLayout->addWidget(slopeFrequencyKNB, 0, 3,
                           Qt::AlignBottom | Qt::AlignHCenter);
     mainLayout->addWidget(deltaVolumeKNB, 1, 0,
                           Qt::AlignBottom | Qt::AlignHCenter);
     mainLayout->addWidget(lowVolumeKNB, 1, 1,
                           Qt::AlignBottom | Qt::AlignHCenter);
     mainLayout->addWidget(highVolumeKNB, 1, 2,
+                          Qt::AlignBottom | Qt::AlignHCenter);
+    mainLayout->addWidget(slopeVolumeKNB, 1, 3,
                           Qt::AlignBottom | Qt::AlignHCenter);
 
     mainLayout->setColumnStretch(4, 1);

@@ -630,6 +630,13 @@ const surroundSampleFrame* Mixer::renderNextBuffer()
 
     m_profiler.finishPeriod(processingSampleRate(), m_framesPerPeriod);
 
+    /*
+    qInfo("Mixer: running=%d toAdd=%d toRemove=%d",
+          m_playHandles.size(),
+          m_playHandlesToAdd.size(),
+          m_playHandlesToRemove.size());
+    */
+
     return m_readBuf;
 }
 

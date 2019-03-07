@@ -227,6 +227,7 @@ class PatternView : public TrackContentObjectView
 
     void openInPianoRoll();
     void setGhostInPianoRoll();
+    void setNameFromFirstNote();
 
     void changeStepResolution(QAction* _a);
 

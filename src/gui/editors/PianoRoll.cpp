@@ -721,6 +721,104 @@ void PianoRoll::guessScale()
     update();
 }
 
+void PianoRoll::upChord()
+{
+    bool   useAllNotes = !isSelection();
+    tick_t start       = m_pattern->unitLength();
+    tick_t end         = 0;
+    Notes  notes;
+    for(Note* note: m_pattern->notes())
+    {
+        // if none are selected, move all notes, otherwise
+        // only move selected notes
+        if(useAllNotes || note->selected())
+        {
+            notes << note;
+            if(start > note->pos())
+                start = note->pos();
+            if(end < note->endPos())
+                end = note->endPos();
+        }
+    }
+    while(start < end)
+    {
+        Notes chord;
+        int   lowkey  = NumKeys;
+        Note* lownote = nullptr;
+        for(Note* note: notes)
+            if(start >= note->pos() && start < note->endPos())
+            {
+                chord.append(note);
+                if(note->key() < lowkey)
+                {
+                    lowkey  = note->key();
+                    lownote = note;
+                }
+            }
+        if(lownote != nullptr)
+            lownote->setKey(qBound(0, lownote->key() + 12, NumKeys - 1));
+        for(Note* note: chord)
+            notes.removeOne(note);
+        start++;
+    }
+
+    m_pattern->rearrangeAllNotes();
+    m_pattern->emit dataChanged();
+
+    // we modified the song
+    update();
+    gui->songEditor()->update();
+}
+
+void PianoRoll::downChord()
+{
+    bool   useAllNotes = !isSelection();
+    tick_t start       = m_pattern->unitLength();
+    tick_t end         = 0;
+    Notes  notes;
+    for(Note* note: m_pattern->notes())
+    {
+        // if none are selected, move all notes, otherwise
+        // only move selected notes
+        if(useAllNotes || note->selected())
+        {
+            notes << note;
+            if(start > note->pos())
+                start = note->pos();
+            if(end < note->endPos())
+                end = note->endPos();
+        }
+    }
+    while(start < end)
+    {
+        Notes chord;
+        int   highkey  = -1;
+        Note* highnote = nullptr;
+        for(Note* note: notes)
+            if(start >= note->pos() && start < note->endPos())
+            {
+                chord.append(note);
+                if(note->key() > highkey)
+                {
+                    highkey  = note->key();
+                    highnote = note;
+                }
+            }
+        if(highnote != nullptr)
+            highnote->setKey(qBound(0, highnote->key() - 12, NumKeys - 1));
+        for(Note* note: chord)
+            notes.removeOne(note);
+        start++;
+    }
+
+    m_pattern->rearrangeAllNotes();
+    m_pattern->emit dataChanged();
+
+    // we modified the song
+    update();
+    gui->songEditor()->update();
+}
+
 PianoRoll::~PianoRoll()
 {
 }
@@ -1322,7 +1420,7 @@ void PianoRoll::keyPressEvent(QKeyEvent* ke)
         if(!ke->isAutoRepeat() && key_num > -1)
         {
             // m_pattern->instrumentTrack()->pianoModel()->handleKeyPress(
-            //    key_num);
+            //    key_num, MidiDefaultVelocity);
             playTestKey(key_num, MidiDefaultVelocity, 0);
             ke->accept();
         }
@@ -1531,7 +1629,7 @@ void PianoRoll::keyReleaseEvent(QKeyEvent* ke)
         {
             stopTestKey();  // key_num);
             // m_pattern->instrumentTrack()->pianoModel()->handleKeyRelease(
-            //    key_num);
+            //  key_num);
             ke->accept();
         }
     }
@@ -2143,10 +2241,14 @@ void PianoRoll::playTestKey(int key, int midiVelocity, int midiPanning)
     m_lastKey = key;
 
     // play new key
-    m_pattern->instrumentTrack()->pianoModel()->handleKeyPress(key,
-                                                               midiVelocity);
+    m_pattern->instrumentTrack()->pianoModel()->handleKeyPress(
+            key - m_pattern->instrumentTrack()->baseNote() + DefaultKey,
+            midiVelocity);
 
-    MidiEvent event(MidiMetaEvent, -1, key, midiPanning);
+    MidiEvent event(MidiMetaEvent, -1,
+                    key - m_pattern->instrumentTrack()->baseNote()
+                            + DefaultKey,
+                    midiPanning);
     event.setMetaEvent(MidiNotePanning);
     m_pattern->instrumentTrack()->processInEvent(event, 0);
 }
@@ -2156,7 +2258,8 @@ void PianoRoll::stopTestKey()
     if(m_lastKey >= 0)
     {
         m_pattern->instrumentTrack()->pianoModel()->handleKeyRelease(
-                m_lastKey);
+                m_lastKey - m_pattern->instrumentTrack()->baseNote()
+                + DefaultKey);
         m_lastKey = -1;
     }
 }
@@ -3056,8 +3159,8 @@ void PianoRoll::paintEvent(QPaintEvent* pe)
     if(hasValidPattern())
     {
         pianoModel = m_pattern->instrumentTrack()->pianoModel();
-        if(pianoModel != nullptr)
-            pianoModel->lock();
+        // if(pianoModel != nullptr)
+        //    pianoModel->lock();
     }
 
     // draw all white keys...
@@ -3245,8 +3348,8 @@ void PianoRoll::paintEvent(QPaintEvent* pe)
             break;
     }
 
-    if(pianoModel != nullptr)
-        pianoModel->unlock();
+    // if(pianoModel != nullptr)
+    //    pianoModel->unlock();
 
     // qInfo("paintEvent key=%d top=%d",key,PR_TOP_MARGIN);
     bool redline = (key >= NumKeys);
@@ -3878,6 +3981,7 @@ void PianoRoll::wheelEvent(QWheelEvent* we)
 
 void PianoRoll::focusOutEvent(QFocusEvent*)
 {
+    /*
     if(hasValidPattern())
     {
         if(m_pattern != nullptr && m_pattern->instrumentTrack() != nullptr)
@@ -3886,6 +3990,10 @@ void PianoRoll::focusOutEvent(QFocusEvent*)
             m_pattern->instrumentTrack()->pianoModel()->reset();
         }
     }
+    */
+    // stopTestNotes();
+    stopTestKey();
+
     m_editMode = m_ctrlMode;
     update();
 }
@@ -4838,6 +4946,16 @@ PianoRollWindow::PianoRollWindow() : Editor(true), m_editor(new PianoRoll())
     connect(m_editor, SIGNAL(ghostPatternSet(bool)), this,
             SLOT(ghostPatternSet(bool)));
 
+    QToolButton* downChordBTN = new QToolButton(m_toolBar);
+    downChordBTN->setIcon(embed::getIcon("arrow_down"));
+    downChordBTN->setToolTip(tr("Down the selection"));
+    connect(downChordBTN, SIGNAL(clicked()), m_editor, SLOT(downChord()));
+
+    QToolButton* upChordBTN = new QToolButton(m_toolBar);
+    upChordBTN->setIcon(embed::getIcon("arrow_up"));
+    upChordBTN->setToolTip(tr("Up the selection"));
+    connect(upChordBTN, SIGNAL(clicked()), m_editor, SLOT(upChord()));
+
     zoomAndNotesToolBar->addWidget(zoomLBL);
     zoomAndNotesToolBar->addWidget(m_zoomingXComboBox);
 
@@ -4863,6 +4981,9 @@ PianoRollWindow::PianoRollWindow() : Editor(true), m_editor(new PianoRoll())
     // zoomAndNotesToolBar->addSeparator();
     zoomAndNotesToolBar->addWidget(chordLBL);
     zoomAndNotesToolBar->addWidget(m_chordComboBox);
+    zoomAndNotesToolBar->addSeparator();
+    zoomAndNotesToolBar->addWidget(upChordBTN);
+    zoomAndNotesToolBar->addWidget(downChordBTN);
 
     m_zoomingXComboBox->setWhatsThis(
             tr("This controls the magnification of an axis. "

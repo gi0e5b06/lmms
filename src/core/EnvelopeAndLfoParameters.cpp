@@ -141,6 +141,7 @@ EnvelopeAndLfoParameters::EnvelopeAndLfoParameters(
     WaveFormStandard::fillIndexModel(m_lfoWaveIndexModel,
                                      m_lfoWaveBankModel.value());
 
+    m_outModel.setJournalling(false);
     m_outModel.setFrequentlyUpdated(true);
 
     m_amountModel.setCenterValue(0);

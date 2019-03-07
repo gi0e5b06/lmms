@@ -47,6 +47,8 @@ class Scale;
 
 typedef QList<NotePlayHandle*>       NotePlayHandleList;
 typedef QList<const NotePlayHandle*> ConstNotePlayHandleList;
+typedef SafeList<NotePlayHandle*>       NotePlayHandles;
+typedef SafeList<const NotePlayHandle*> ConstNotePlayHandles;
 
 class EXPORT NotePlayHandle /*final*/
       :
@@ -379,7 +381,7 @@ class EXPORT NotePlayHandle /*final*/
                                     // note
 
     // NotePlayHandleList
-    SafeList<NotePlayHandle*> m_subNotes;  // used for chords and arpeggios
+    NotePlayHandles m_subNotes;  // used for chords and arpeggios
 
     volatile bool   m_released;        // indicates whether note is released
     bool            m_releaseStarted;  //

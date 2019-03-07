@@ -171,13 +171,7 @@ class EXPORT Effect : public Plugin
         //! m_autoQuitDisabled;
     }
 
-    inline int timeout() const
-    {
-        const real_t samples = Engine::mixer()->processingSampleRate()
-                               * m_autoQuitModel.value() / 1000.;
-        return /*1+*/ static_cast<int>(samples
-                                       / Engine::mixer()->framesPerPeriod());
-    }
+    int timeout() const;
 
     virtual PluginView* instantiateView(QWidget*);
 
