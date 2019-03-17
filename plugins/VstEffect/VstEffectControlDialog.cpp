@@ -1,29 +1,29 @@
 /*
  * VstEffectControlDialog.cpp - dialog for displaying VST-effect GUI
  *
+ * Copyright (c) 2018-2019 gi0e5b06 (on github.com)
  * Copyright (c) 2006-2011 Tobias Doerffel <tobydox/at/users.sourceforge.net>
  *
- * This file is part of LMMS - https://lmms.io
+ * This file is part of LSMM -
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public
- * License along with this program (see COPYING); if not, write to the
- * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
- * Boston, MA 02110-1301 USA.
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
 
 #include "VstEffectControlDialog.h"
 
+#include "MidiProcessorView.h"
 #include "PixmapButton.h"
 #include "ToolTip.h"
 #include "VstEffect.h"
@@ -41,12 +41,20 @@
 
 VstEffectControlDialog::VstEffectControlDialog(VstEffectControls* _ctl) :
       EffectControlDialog(_ctl),
-      // m_pluginWidget( NULL ),
-      m_plugin(NULL)  //,
-                      // tbLabel( NULL )
+      // m_pluginWidget( nullptr ),
+      m_plugin(nullptr)  //,
+                         // tbLabel( nullptr )
 {
-    if(_ctl != NULL && _ctl->m_effect != NULL
-       && _ctl->m_effect->m_plugin != NULL)
+    setWindowIcon(PLUGIN_NAME::getIcon("logo"));
+
+    setAutoFillBackground(true);
+    QPalette pal;
+    pal.setBrush(backgroundRole(), PLUGIN_NAME::getPixmap("artwork"));
+    // embed::getIconPixmap("plugin_bg"));
+    setPalette(pal);
+
+    if(_ctl != nullptr && _ctl->m_effect != nullptr
+       && _ctl->m_effect->m_plugin != nullptr)
     {
         m_plugin = _ctl->m_effect->m_plugin;
 
@@ -78,8 +86,14 @@ VstEffectControlDialog::VstEffectControlDialog(VstEffectControls* _ctl) :
     }
 
     setWindowTitle(pw->windowTitle());
-    setMinimumHeight(54);
-    setMinimumWidth(250);
+    // setMinimumHeight(54);
+    // setMinimumWidth(250);
+
+    QGridLayout* mainLOT = new QGridLayout(this);
+    mainLOT->setContentsMargins(6, 66, 6, 6);
+    mainLOT->setHorizontalSpacing(0);
+    mainLOT->setVerticalSpacing(6);
+    setLayout(mainLOT);
 
     QToolBar* tb = new QToolBar(this);
     tb->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
@@ -275,15 +289,34 @@ VstEffectControlDialog::VstEffectControlDialog(VstEffectControls* _ctl) :
     tbLabel->setTextFormat(Qt::RichText);
     tbLabel->setAlignment(Qt::AlignTop | Qt::AlignLeft);
 
-    // QGridLayout * l = new QGridLayout( this );
+    QWidget*     midiProcPNL = new QWidget(this);
+    QHBoxLayout* midiProcLOT = new QHBoxLayout(midiProcPNL);
+    midiProcLOT->setContentsMargins(6, 6, 6, 6);
+    midiProcLOT->setSpacing(6);
+    m_midiInProc = new MidiProcessorView(true, _ctl->m_effect, midiProcPNL);
+    // m_midiOutProc = new MidiProcessorView(false, _ctl->m_effect,
+    // midiProcPNL);
+    midiProcLOT->addWidget(m_midiInProc);
+    // midiProcLOT->addWidget(m_midiOutProc);
+
+    /*
     QVBoxLayout* l = new QVBoxLayout(this);
     l->setContentsMargins(6, 6, 6, 6);
     l->setSpacing(6);
     l->addWidget(tb);
     l->addWidget(tbLabel);
     // l->addWidget(pw);
+    */
 
-    setMinimumWidth(250);
+    mainLOT->addWidget(tb, 0, 0);
+    mainLOT->addWidget(tbLabel, 1, 0);
+    mainLOT->addWidget(midiProcPNL, 2, 0, Qt::AlignHCenter);
+
+    mainLOT->setColumnStretch(0, 1);
+    mainLOT->setRowStretch(3, 1);
+
+    setFixedWidth(250);
+    setMinimumHeight(310);
 }
 
 void VstEffectControlDialog::toggleVstWidget()
@@ -316,17 +349,19 @@ void VstEffectControlDialog::toggleVstWidget()
         sw->hide();
 }
 
+/*
 void VstEffectControlDialog::paintEvent(QPaintEvent*)
 {
-    /*
-    if( m_plugin != NULL && tbLabel != NULL )
+    /
+    if( m_plugin != nullptr && tbLabel != nullptr )
     {
             tbLabel->setText( tr( "Effect by: " ) + m_plugin->vendorString() +
                     tr( "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br />" ) +
                     m_plugin->currentProgramName() );
     }
-    */
+    /
 }
+*/
 
 VstEffectControlDialog::~VstEffectControlDialog()
 {

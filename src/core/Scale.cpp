@@ -142,7 +142,7 @@ Scale::Set::Set()
                        QDir::Name | QDir::IgnoreCase,
                        QDir::Files | QDir::NoDotAndDotDot);
 
-            qInfo("bank scale '%s'", qPrintable(sclb));
+            // qInfo("bank scale '%s'", qPrintable(sclb));
             QString bankname = sclb;
             // bankname.replace(QRegExp("^AKSCL_"), "");
             bankname.replace('_', ' ');
@@ -173,12 +173,12 @@ Scale::Set::Set()
 
 Scale::Set::~Set()
 {
-    qInfo("Scale::Set::~Set START");
+    // qInfo("Scale::Set::~Set START");
     for(int b = MAX_BANK - MIN_BANK; b >= 0; --b)
         for(int i = MAX_INDEX - MIN_INDEX; i >= 0; --i)
             if(m_stock[b][i] != nullptr)  // && m_stock[b][i] != ET12)
                 delete m_stock[b][i];
-    qInfo("Scale::Set::~Set END");
+    // qInfo("Scale::Set::~Set END");
 }
 
 Scale::Set Scale::SCALES;
@@ -289,7 +289,7 @@ Scale::Scale(const QString& _name,
 
 Scale::~Scale()
 {
-    qInfo("Scale::~Scale");
+    // qInfo("Scale::~Scale");
     if(m_data != nullptr)
     {
         MM_FREE(m_data);

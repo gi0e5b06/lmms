@@ -24,9 +24,11 @@
 
 namespace lmms
 {
-        void fillRoundedRect(QPainter&     _p,
-                           const QRectF& rect,
-                           qreal         xRadius,
-                           qreal         yRadius,
-                             Qt::SizeMode  mode = Qt::AbsoluteSize);
+
+void fillRoundedRect(QPainter&     _p,
+                     const QRectF& rect,
+                     qreal         xRadius,
+                     qreal         yRadius,
+                     Qt::SizeMode  mode = Qt::AbsoluteSize);
+
 };

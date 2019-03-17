@@ -188,15 +188,13 @@ bool PeakControllerEffect::processAudioBuffer(sampleFrame* _buf,
             break;
     }
 
-    m_lastSample
-            = bound(0., c.m_baseModel.value() + amount * curRMS, 1.);
+    m_lastSample = bound(0., c.m_baseModel.value() + amount * curRMS, 1.);
 
     return true;  // isRunning();
 }
 
 extern "C"
 {
-
     // necessary for getting instance out of shared lib
     Plugin* PLUGIN_EXPORT lmms_plugin_main(Model* _parent, void* _data)
     {

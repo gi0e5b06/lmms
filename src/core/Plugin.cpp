@@ -72,19 +72,20 @@ AutomatableModel* Plugin::childModel(const QString&)
 }
 
 #include "PluginFactory.h"
-Plugin* Plugin::instantiate(const QString& pluginName,
-                            Model*         parent,
-                            void*          data,
-                            bool           showErrors)
+Plugin* Plugin::instantiate(const QString& _pluginName,
+                            Model*         _parent,
+                            void*          _data,
+                            bool           _showErrors)
 {
-    // qInfo("Plugin::instantiate name=%s
-    // data=%p",qPrintable(pluginName),data);
+    qInfo("Plugin::instantiate name=%s data=%p",qPrintable(_pluginName),_data);
+    QString pluginName=_pluginName;
+    if(pluginName=="freeboy") pluginName="papu";
 
     const PluginFactory::PluginInfo& pi
             = pluginFactory->pluginInfo(pluginName.toUtf8());
     if(pi.isNull())
     {
-        if(gui && showErrors)
+        if(gui && _showErrors)
         {
             QMessageBox::information(
                     nullptr, tr("Plugin not found"),
@@ -111,7 +112,7 @@ Plugin* Plugin::instantiate(const QString& pluginName,
         return new DummyPlugin();
     }
 
-    Plugin* inst = instantiationHook(parent, data);
+    Plugin* inst = instantiationHook(_parent, _data);
     return inst;
 }
 

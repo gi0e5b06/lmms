@@ -22,129 +22,129 @@
  *
  */
 
+#include "CarlaEffectControls.h"
+
+#include "CarlaEffect.h"
+#include "CarlaEffectDialog.h"
 
 #include <QDomElement>
-
-#include "CarlaEffectControlDialog.h"
-#include "CarlaEffectControls.h"
-#include "CarlaEffect.h"
 //#include "Engine.h"
 //#include "Song.h"
 
-
-CarlaEffectControls::CarlaEffectControls( CarlaEffect* effect ) :
-	EffectControls( effect ),
-	m_effect( effect )
+CarlaEffectControls::CarlaEffectControls(CarlaEffect* effect) :
+      EffectControls(effect), m_effect(effect)
 {
-    for(int i=0;i<NB_KNOBS;i++)
+    for(int i = 0; i < NB_KNOBS; i++)
     {
-            m_knobs[i]=new FloatModel
-                    (0.f,0.f,127.f,1.f,
-                     NULL,QString("KNB%1").arg(NB_KNOB_START+i),false);
+        m_knobs[i] = new FloatModel(0.f, 0.f, 127.f, 1.f, nullptr,
+                                    QString("KNB%1").arg(NB_KNOB_START + i),
+                                    false);
     }
-    for(int i=0;i<NB_LEDS;i++)
+    for(int i = 0; i < NB_LEDS; i++)
     {
-            m_leds[i]=new BoolModel
-                    (false,NULL,QString("LED%1").arg(NB_LED_START+i),false);
+        m_leds[i] = new BoolModel(false, nullptr,
+                                  QString("LED%1").arg(NB_LED_START + i),
+                                  false);
     }
-    for(int i=0;i<NB_LCDS;i++)
+    for(int i = 0; i < NB_LCDS; i++)
     {
-            m_lcds[i]=new IntModel
-                    (0,0,127,
-                     NULL,QString("LCD%1").arg(NB_LCD_START+i),false);
+        m_lcds[i]
+                = new IntModel(0, 0, 127, nullptr,
+                               QString("LCD%1").arg(NB_LCD_START + i), false);
     }
 }
-
 
 void CarlaEffectControls::changeControl()
 {
 }
 
-
-void CarlaEffectControls::loadSettings( const QDomElement& elem )
+void CarlaEffectControls::loadSettings(const QDomElement& elem)
 {
-        qInfo("CarlaEffectControls::loadSettings start");
+    qInfo("CarlaEffectControls::loadSettings start");
 
-        for(int i=0;i<NB_KNOBS;i++)
-                m_knobs[i]->loadSettings( elem, QString("knob%1").arg(i) );
-        for(int i=0;i<NB_LEDS;i++)
-                m_leds[i]->loadSettings( elem, QString("led%1").arg(i) );
-        for(int i=0;i<NB_LCDS;i++)
-                m_lcds[i]->loadSettings( elem, QString("lcd%1").arg(i) );
+    for(int i = 0; i < NB_KNOBS; i++)
+        m_knobs[i]->loadSettings(elem, QString("knob%1").arg(i));
+    for(int i = 0; i < NB_LEDS; i++)
+        m_leds[i]->loadSettings(elem, QString("led%1").arg(i));
+    for(int i = 0; i < NB_LCDS; i++)
+        m_lcds[i]->loadSettings(elem, QString("lcd%1").arg(i));
 
-        if (m_effect->fHandle == NULL ||
-            m_effect->fDescriptor->set_state == NULL)
+    if(m_effect->fHandle == nullptr
+       || m_effect->fDescriptor->set_state == nullptr)
+    {
+        qWarning(
+                "CarlaEffectControls::loadSettings fHandle or fDescriptor is "
+                "null");
+        return;
+    }
+
+    QDomNode node = elem.firstChild();
+    if(node.isNull())
+    {
+        qWarning("elem first child is null");
+    }
+    while(!node.isNull())
+    {
+        if(!node.isElement())
         {
-                qWarning("CarlaEffectControls::loadSettings fHandle or fDescriptor is null");
-                return;
+            qWarning("elem not an element: %s", qPrintable(node.nodeName()));
         }
-
-	QDomNode node=elem.firstChild();
-        if( node.isNull() )
+        if(node.isElement())
         {
-                qWarning("elem first child is null");
+            // qInfo("node name: %s",qPrintable(node.nodeName()));
+            if(node.nodeName() == "CARLA-PROJECT")
+            {
+                QDomDocument carlaDoc("carla");
+                carlaDoc.appendChild(carlaDoc.importNode(node, true));
+                m_effect->fDescriptor->set_state(
+                        m_effect->fHandle,
+                        carlaDoc.toString(0).toUtf8().constData());
+            }
         }
-	while( !node.isNull() )
-	{
-                if( !node.isElement() )
-                {
-                        qWarning("elem not an element: %s",qPrintable(node.nodeName()));
-                }
-		if( node.isElement() )
-		{
-                        //qInfo("node name: %s",qPrintable(node.nodeName()));
-			if( node.nodeName() == "CARLA-PROJECT" )
-			{
-                                QDomDocument carlaDoc("carla");
-                                carlaDoc.appendChild(carlaDoc.importNode(node, true ));
-                                m_effect->fDescriptor->set_state(m_effect->fHandle,
-                                                                 carlaDoc.toString(0).toUtf8().constData());
-			}
-		}
-		node = node.nextSibling();
-	}
+        node = node.nextSibling();
+    }
 
-        qInfo("CarlaEffectControls::loadSettings end");
+    qInfo("CarlaEffectControls::loadSettings end");
 }
 
-
-void CarlaEffectControls::saveSettings( QDomDocument& doc, QDomElement& parent )
+void CarlaEffectControls::saveSettings(QDomDocument& doc, QDomElement& parent)
 {
-        for(int i=0;i<NB_KNOBS;i++)
-                m_knobs[i]->saveSettings( doc, parent, QString("knob%1").arg(i) );
-        for(int i=0;i<NB_LEDS;i++)
-                m_leds[i]->saveSettings( doc, parent, QString("led%1").arg(i) );
-        for(int i=0;i<NB_LCDS;i++)
-                m_lcds[i]->saveSettings( doc, parent, QString("lcd%1").arg(i) );
+    for(int i = 0; i < NB_KNOBS; i++)
+        m_knobs[i]->saveSettings(doc, parent, QString("knob%1").arg(i));
+    for(int i = 0; i < NB_LEDS; i++)
+        m_leds[i]->saveSettings(doc, parent, QString("led%1").arg(i));
+    for(int i = 0; i < NB_LCDS; i++)
+        m_lcds[i]->saveSettings(doc, parent, QString("lcd%1").arg(i));
 
-        if (m_effect->fHandle == NULL ||
-            m_effect->fDescriptor->get_state == NULL)
-        {
-                qWarning("CarlaEffectControls::saveSettings fHandle or fDescriptor is null");
-                return;
-        }
+    if(m_effect->fHandle == nullptr
+       || m_effect->fDescriptor->get_state == nullptr)
+    {
+        qWarning(
+                "CarlaEffectControls::saveSettings fHandle or fDescriptor is "
+                "null");
+        return;
+    }
 
-        char* const state = m_effect->fDescriptor->get_state(m_effect->fHandle);
+    char* const state = m_effect->fDescriptor->get_state(m_effect->fHandle);
 
-        if (state == NULL)
-        {
-                qWarning("CarlaEffectControls: retrieved state is null");
-                return;
-        }
+    if(state == nullptr)
+    {
+        qWarning("CarlaEffectControls: retrieved state is null");
+        return;
+    }
 
-        QDomDocument carlaDoc("carla");
+    QDomDocument carlaDoc("carla");
 
-        if (carlaDoc.setContent(QString(state)))
-        {
-                QDomNode n = doc.importNode(carlaDoc.documentElement(), true);
-                parent.appendChild(n);
-        }
+    if(carlaDoc.setContent(QString(state)))
+    {
+        QDomNode n = doc.importNode(carlaDoc.documentElement(), true);
+        parent.appendChild(n);
+    }
 
-        std::free(state);
+    std::free(state);
 }
-
 
 EffectControlDialog* CarlaEffectControls::createView()
 {
-        return new CarlaEffectControlDialog(this);
+    return new CarlaEffectDialog(this);
 }

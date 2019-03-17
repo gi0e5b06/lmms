@@ -1,6 +1,5 @@
 /*
- * InstrumentTrack.h - declaration of class InstrumentTrack, a track + window
- *                     which holds an instrument-plugin
+ * InstrumentTrack.h - Track which provides arrangement of notes
  *
  * Copyright (c) 2017-2019 gi0e5b06 (on github.com)
  * Copyright (c) 2004-2014 Tobias Doerffel <tobydox/at/users.sourceforge.net>
@@ -42,7 +41,6 @@
 template <class T>
 class QQueue;
 
-class QLineEdit;
 class InstrumentFunctionNoteFilteringView;
 class InstrumentFunctionNoteHumanizingView;
 class InstrumentFunctionNoteStackingView;
@@ -56,6 +54,7 @@ class InstrumentTrackWindow;
 class InstrumentMidiIOView;
 class InstrumentMiscView;
 class Knob;
+class FxLineLcdSpinBox;
 class LcdSpinBox;
 class LeftRightNav;
 class midiPortMenu;
@@ -64,12 +63,15 @@ class PluginView;
 class TabWidget;
 class TrackLabelButton;
 class LedCheckBox;
+
 class QLabel;
+class QLineEdit;
 
 class EXPORT InstrumentTrack : public Track, public MidiEventProcessor
 {
     Q_OBJECT
     MM_OPERATORS
+
     mapPropertyFromModel(int, getVolume, setVolume, m_volumeModel);
 
   public:
@@ -266,6 +268,11 @@ class EXPORT InstrumentTrack : public Track, public MidiEventProcessor
         return &m_effectChannelModel;
     }
 
+    FloatModel* midiCCModel(const uint8_t _cc)
+    {
+        return m_midiCCModel[_cc];
+    }
+
     void setPreviewMode(const bool);
 
     virtual void cleanFrozenBuffer();
@@ -330,7 +337,7 @@ class EXPORT InstrumentTrack : public Track, public MidiEventProcessor
   public slots:
     virtual void toggleFrozen();
     // silence all running notes played by this track
-    void silenceAllNotes(bool removeIPH = false);
+  void silenceAllNotes(/*bool removeIPH = false*/);
 
   protected:
     virtual QString nodeName() const
@@ -342,6 +349,8 @@ class EXPORT InstrumentTrack : public Track, public MidiEventProcessor
     void updateBaseNote();
     void updateVolume();
     void updatePanning();
+    void updateMidiCC();
+    void updateMidiCC(uint8_t _cc);
     void updateBending();
     void updateBendingRange();
     void updateEffectChannel();
@@ -379,6 +388,8 @@ class EXPORT InstrumentTrack : public Track, public MidiEventProcessor
     FloatModel m_noteBendingModel;  // for midi instr.
     IntModel   m_bendingRangeModel;
 
+    FloatModel* m_midiCCModel[MidiControllerCount];
+
     BoolModel              m_useMasterPitchModel;
     IntModel               m_effectChannelModel;
     AudioPort              m_audioPort;
@@ -396,7 +407,8 @@ class EXPORT InstrumentTrack : public Track, public MidiEventProcessor
 
     Piano m_piano;
 
-    BasicFilters<>* m_envFilter;
+    BasicFilters<>* m_envFilter1;
+    BasicFilters<>* m_envFilter2;
     f_cnt_t         m_envOffset;
     f_cnt_t         m_envTotalFramesPlayed;
     f_cnt_t         m_envReleaseBegin;
@@ -416,6 +428,7 @@ class EXPORT InstrumentTrack : public Track, public MidiEventProcessor
 class InstrumentTrackView : public TrackView
 {
     Q_OBJECT
+
   public:
     InstrumentTrackView(InstrumentTrack* _it, TrackContainerView* _tcv);
     virtual ~InstrumentTrackView();
@@ -433,15 +446,12 @@ class InstrumentTrackView : public TrackView
     }
 
     static InstrumentTrackWindow* topLevelInstrumentTrackWindow();
+    // static void cleanupWindowCache();
 
     QMenu* midiMenu()
     {
         return m_midiMenu;
     }
-
-    void freeInstrumentTrackWindow();
-
-    static void cleanupWindowCache();
 
     // Create a menu for assigning/creating channels for this track
     QMenu* createFxMenu(QString title, QString newFxLabel);
@@ -471,9 +481,11 @@ class InstrumentTrackView : public TrackView
     void createFxLine();
 
   private:
+    void freeInstrumentTrackWindow();
+
     InstrumentTrackWindow* m_window;
 
-    static QQueue<InstrumentTrackWindow*> s_windowCache;
+    // static QQueue<InstrumentTrackWindow*> s_windowCache;
 
     // widgets in track-settings-widget
     TrackLabelButton* m_tlb;
@@ -481,8 +493,7 @@ class InstrumentTrackView : public TrackView
     Knob*             m_panningKnob;
     FadeButton*       m_activityIndicator;
 
-    QMenu* m_midiMenu;
-
+    QMenu*   m_midiMenu;
     QAction* m_midiInputAction;
     QAction* m_midiOutputAction;
 
@@ -554,26 +565,28 @@ class InstrumentTrackWindow :
 
   protected slots:
     void saveSettingsBtnClicked();
+    /*
     void viewNextInstrument();
     void viewPrevInstrument();
+    */
 
   private:
     virtual void modelChanged();
-    void         viewInstrumentInDirection(int d);
+    // void         viewInstrumentInDirection(int d);
 
     InstrumentTrack*     m_track;
     InstrumentTrackView* m_itv;
 
     // widgets on the top of an instrument-track-window
-    QLineEdit*    m_nameLineEdit;
-    LeftRightNav* m_leftRightNav;
-    Knob*         m_volumeKnob;
-    Knob*         m_panningKnob;
-    Knob*         m_bendingKnob;
+    QLineEdit* m_nameLineEdit;
+    // LeftRightNav* m_leftRightNav;
+    Knob* m_volumeKnob;
+    Knob* m_panningKnob;
+    Knob* m_bendingKnob;
     // QLabel*       m_bendingLabel;
     LcdSpinBox* m_bendingRangeSpinBox;
     // QLabel*       m_bendingRangeLabel;
-    LcdSpinBox* m_effectChannelNumber;
+    FxLineLcdSpinBox* m_effectChannelNumber;
 
     // tab-widget with all children
     TabWidget*                  m_tabWidget;

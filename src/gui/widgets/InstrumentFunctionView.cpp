@@ -1,25 +1,23 @@
 /*
  * InstrumentFunctionViews.cpp - view for instrument-functions-tab
  *
- * Copyright (c) 2017-2019 gi0e5b06
+ * Copyright (c) 2017-2019 gi0e5b06 (on github.com)
  * Copyright (c) 2004-2014 Tobias Doerffel <tobydox/at/users.sourceforge.net>
  *
- * This file is part of LMMS - https://lmms.io
+ * This file is part of LSMM -
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public
- * License along with this program (see COPYING); if not, write to the
- * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
- * Boston, MA 02110-1301 USA.
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
 
@@ -77,8 +75,7 @@ InstrumentFunctionView::~InstrumentFunctionView()
 InstrumentFunctionNoteStackingView::InstrumentFunctionNoteStackingView(
         InstrumentFunctionNoteStacking* cc, QWidget* parent) :
       InstrumentFunctionView(cc, tr("STACKING"), parent),
-      m_cc(cc), m_chordsComboBox(new ComboBox()),
-      m_chordRangeKnob(new Knob(knobBright_26))
+      m_cc(cc), m_chordsComboBox(new ComboBox()), m_chordRangeKnob(new Knob())
 {
     QGridLayout* mainLayout = new QGridLayout(m_panel);
     mainLayout->setContentsMargins(6, 2, 2, 2);
@@ -116,14 +113,10 @@ void InstrumentFunctionNoteStackingView::modelChanged()
 InstrumentFunctionArpeggioView::InstrumentFunctionArpeggioView(
         InstrumentFunctionArpeggio* cc, QWidget* parent) :
       InstrumentFunctionView(cc, tr("ARPEGGIO"), parent),
-      m_cc(cc), m_arpComboBox(new ComboBox()),
-      m_arpRangeKnob(new Knob(knobBright_26)),
-      m_arpCycleKnob(new Knob(knobBright_26)),
-      m_arpSkipKnob(new Knob(knobBright_26)),
-      m_arpMissKnob(new Knob(knobBright_26)),
-      m_arpTimeKnob(new TempoSyncKnob(knobBright_26)),
-      m_arpGateKnob(new Knob(knobBright_26)),
-      m_arpDirectionComboBox(new ComboBox()),
+      m_cc(cc), m_arpComboBox(new ComboBox()), m_arpRangeKnob(new Knob()),
+      m_arpCycleKnob(new Knob()), m_arpSkipKnob(new Knob()),
+      m_arpMissKnob(new Knob()), m_arpTimeKnob(new TempoSyncKnob()),
+      m_arpGateKnob(new Knob()), m_arpDirectionComboBox(new ComboBox()),
       m_arpModeComboBox(new ComboBox())
 {
     QGridLayout* mainLayout = new QGridLayout(m_panel);
@@ -236,12 +229,9 @@ void InstrumentFunctionArpeggioView::modelChanged()
 InstrumentFunctionNoteHumanizingView::InstrumentFunctionNoteHumanizingView(
         InstrumentFunctionNoteHumanizing* cc, QWidget* parent) :
       InstrumentFunctionView(cc, tr("HUMANIZING"), parent),
-      m_cc(cc), m_volumeRangeKnob(new Knob(knobBright_26)),
-      m_panRangeKnob(new Knob(knobBright_26)),
-      m_tuneRangeKnob(new Knob(knobBright_26)),
-      m_offsetRangeKnob(new Knob(knobBright_26)),
-      m_shortenRangeKnob(new Knob(knobBright_26)),
-      m_lengthenRangeKnob(new Knob(knobBright_26))
+      m_cc(cc), m_volumeRangeKnob(new Knob()), m_panRangeKnob(new Knob()),
+      m_tuneRangeKnob(new Knob()), m_offsetRangeKnob(new Knob()),
+      m_shortenRangeKnob(new Knob()), m_lengthenRangeKnob(new Knob())
 {
     QGridLayout* mainLayout = new QGridLayout(m_panel);
     mainLayout->setContentsMargins(6, 2, 2, 2);
@@ -393,14 +383,10 @@ void InstrumentFunctionNoteFilteringView::modelChanged()
 InstrumentFunctionNoteKeyingView::InstrumentFunctionNoteKeyingView(
         InstrumentFunctionNoteKeying* cc, QWidget* parent) :
       InstrumentFunctionView(cc, tr("KEYING"), parent),
-      m_cc(cc), m_volumeRangeKnob(new Knob(knobBright_26)),
-      m_volumeBaseKnob(new Knob(knobBright_26)),
-      m_volumeMinKnob(new Knob(knobBright_26)),
-      m_volumeMaxKnob(new Knob(knobBright_26)),
-      m_panRangeKnob(new Knob(knobBright_26)),
-      m_panBaseKnob(new Knob(knobBright_26)),
-      m_panMinKnob(new Knob(knobBright_26)),
-      m_panMaxKnob(new Knob(knobBright_26))
+      m_cc(cc), m_volumeRangeKnob(new Knob()), m_volumeBaseKnob(new Knob()),
+      m_volumeMinKnob(new Knob()), m_volumeMaxKnob(new Knob()),
+      m_panRangeKnob(new Knob()), m_panBaseKnob(new Knob()),
+      m_panMinKnob(new Knob()), m_panMaxKnob(new Knob())
 {
     QGridLayout* mainLayout = new QGridLayout(m_panel);
     mainLayout->setContentsMargins(6, 2, 2, 2);
@@ -462,9 +448,10 @@ void InstrumentFunctionNoteKeyingView::modelChanged()
 InstrumentFunctionNoteOuttingView::InstrumentFunctionNoteOuttingView(
         InstrumentFunctionNoteOutting* cc, QWidget* parent) :
       InstrumentFunctionView(cc, tr("OUTTING"), parent),
-      m_cc(cc), m_volumeKnob(new Knob(knobBright_26)),
-      m_panKnob(new Knob(knobBright_26)), m_keyKnob(new Knob(knobBright_26)),
-      m_noteKnob(new Knob()), m_modKnob(new Knob())
+      m_cc(cc), m_volumeKnob(new Knob()), m_panKnob(new Knob()),
+      m_keyKnob(new Knob()), m_noteKnob(new Knob()),
+      m_modValueKnob(new Knob()), m_modRefKeyKnob(new Knob()),
+      m_modAmountKnob(new Knob()), m_modBaseKnob(new Knob())
 {
     QGridLayout* mainLayout = new QGridLayout(m_panel);
     mainLayout->setContentsMargins(6, 2, 2, 2);
@@ -472,29 +459,37 @@ InstrumentFunctionNoteOuttingView::InstrumentFunctionNoteOuttingView(
     mainLayout->setHorizontalSpacing(6);
     mainLayout->setVerticalSpacing(1);
 
-    m_volumeKnob->setLabel(tr("VOL"));
+    m_volumeKnob->setLabel(tr("VEL"));
     m_panKnob->setLabel(tr("PAN"));
     m_keyKnob->setLabel(tr("KEY"));
     m_noteKnob->setLabel(tr("NOTE"));
-    m_modKnob->setLabel(tr("MOD"));
+    m_modValueKnob->setLabel(tr("MOD"));
 
     m_volumeKnob->setPointColor(Qt::red);
     m_panKnob->setPointColor(Qt::magenta);
     m_keyKnob->setPointColor(Qt::cyan);
     m_noteKnob->setPointColor(Qt::darkCyan);
-    m_modKnob->setPointColor(Qt::darkCyan);
+    m_modValueKnob->setPointColor(Qt::darkCyan);
 
     m_volumeKnob->setInteractive(false);
     m_panKnob->setInteractive(false);
     m_keyKnob->setInteractive(false);
     m_noteKnob->setInteractive(false);
-    m_modKnob->setInteractive(false);
+    m_modValueKnob->setInteractive(false);
+
+    m_modRefKeyKnob->setLabel(tr("REFK"));
+    m_modAmountKnob->setLabel(tr("AMNT"));
+    m_modBaseKnob->setLabel(tr("BASE"));
 
     mainLayout->addWidget(m_volumeKnob, 0, 0, 1, 1, Qt::AlignHCenter);
     mainLayout->addWidget(m_panKnob, 0, 1, 1, 1, Qt::AlignHCenter);
     mainLayout->addWidget(m_keyKnob, 0, 2, 1, 1, Qt::AlignHCenter);
     mainLayout->addWidget(m_noteKnob, 0, 3, 1, 1, Qt::AlignHCenter);
-    mainLayout->addWidget(m_modKnob, 0, 4, 1, 1, Qt::AlignHCenter);
+
+    mainLayout->addWidget(m_modValueKnob, 1, 0, 1, 1, Qt::AlignHCenter);
+    mainLayout->addWidget(m_modRefKeyKnob, 1, 1, 1, 1, Qt::AlignHCenter);
+    mainLayout->addWidget(m_modAmountKnob, 1, 2, 1, 1, Qt::AlignHCenter);
+    mainLayout->addWidget(m_modBaseKnob, 1, 3, 1, 1, Qt::AlignHCenter);
 }
 
 InstrumentFunctionNoteOuttingView::~InstrumentFunctionNoteOuttingView()
@@ -510,16 +505,17 @@ void InstrumentFunctionNoteOuttingView::modelChanged()
     m_panKnob->setModel(&m_cc->m_panModel);
     m_keyKnob->setModel(&m_cc->m_keyModel);
     m_noteKnob->setModel(&m_cc->m_noteModel);
-    m_modKnob->setModel(&m_cc->m_modModel);
+    m_modValueKnob->setModel(&m_cc->m_modValueModel);
+    m_modRefKeyKnob->setModel(&m_cc->m_modRefKeyModel);
+    m_modAmountKnob->setModel(&m_cc->m_modAmountModel);
+    m_modBaseKnob->setModel(&m_cc->m_modBaseModel);
 }
 
 InstrumentFunctionGlissandoView::InstrumentFunctionGlissandoView(
         InstrumentFunctionGlissando* cc, QWidget* parent) :
       InstrumentFunctionView(cc, tr("GLISSANDO"), parent),
-      m_cc(cc), m_gliTimeKnob(new TempoSyncKnob(knobBright_26)),
-      m_gliGateKnob(new Knob(knobBright_26)),
-      m_gliAttenuationKnob(new Knob(knobBright_26)),
-      m_gliUpModeComboBox(new ComboBox()),
+      m_cc(cc), m_gliTimeKnob(new TempoSyncKnob()), m_gliGateKnob(new Knob()),
+      m_gliAttenuationKnob(new Knob()), m_gliUpModeComboBox(new ComboBox()),
       m_gliDownModeComboBox(new ComboBox())
 {
     QGridLayout* mainLayout = new QGridLayout(m_panel);
@@ -593,86 +589,8 @@ void InstrumentFunctionGlissandoView::modelChanged()
 InstrumentFunctionNoteSustainingView::InstrumentFunctionNoteSustainingView(
         InstrumentFunctionNoteSustaining* cc, QWidget* parent) :
       InstrumentFunctionView(cc, tr("SUSTAINING"), parent),
-      m_cc(cc) /*,
-       m_volumeRangeKnob(new Knob(knobBright_26)),
-       m_panRangeKnob(new Knob(knobBright_26)),
-       m_tuneRangeKnob(new Knob(knobBright_26)),
-       m_offsetRangeKnob(new Knob(knobBright_26)),
-       m_shortenRangeKnob(new Knob(knobBright_26)),
-       m_volumeStepKnob(new Knob(knobBright_26)),
-       m_panStepKnob(new Knob(knobBright_26)),
-       m_tuneStepKnob(new Knob(knobBright_26)),
-       m_offsetStepKnob(new Knob(knobBright_26)),
-       m_shortenStepKnob(new Knob(knobBright_26))*/
+      m_cc(cc)
 {
-    QGridLayout* mainLayout = new QGridLayout(m_panel);
-    mainLayout->setContentsMargins(6, 2, 2, 2);
-    mainLayout->setColumnStretch(5, 1);
-    mainLayout->setHorizontalSpacing(6);
-    mainLayout->setVerticalSpacing(1);
-    /*
-    m_volumeRangeKnob->setLabel(tr("VOL%"));
-    m_volumeRangeKnob->setHintText(tr("Volume change:"), "%");
-    m_volumeRangeKnob->setWhatsThis(
-            tr("Use this knob for setting the volume change in %."));
-
-    m_panRangeKnob->setLabel(tr("PAN%"));
-    m_panRangeKnob->setHintText(tr("Pan change:"), "%");
-    m_panRangeKnob->setWhatsThis(
-            tr("Use this knob for setting the pan change in %."));
-
-    m_tuneRangeKnob->setLabel(tr("PITCH%"));
-    m_tuneRangeKnob->setHintText(tr("Pitch change:"), "%");
-    m_tuneRangeKnob->setWhatsThis(
-            tr("Use this knob for setting the tune change in %."));
-
-    m_offsetRangeKnob->setLabel(tr("DELAY%"));
-    m_offsetRangeKnob->setHintText(tr("Start delay:"), "");
-    m_offsetRangeKnob->setWhatsThis(
-            tr("Use this knob for setting the delay."));
-
-    m_shortenRangeKnob->setLabel(tr("SHORT%"));
-    m_shortenRangeKnob->setHintText(tr("Shortening:"), "%");
-    m_shortenRangeKnob->setWhatsThis(tr("Use this knob for shortening in
-    %."));
-
-    m_volumeStepKnob->setLabel(tr("STEP"));
-    m_volumeStepKnob->setHintText(tr("Volume step:"), "");
-    m_volumeStepKnob->setWhatsThis(
-            tr("Use this knob for setting the volume step."));
-
-    m_panStepKnob->setLabel(tr("STEP"));
-    m_panStepKnob->setHintText(tr("Pan step:"), "");
-    m_panStepKnob->setWhatsThis(
-            tr("Use this knob for setting the pan step."));
-
-    m_tuneStepKnob->setLabel(tr("STEP"));
-    m_tuneStepKnob->setHintText(tr("Pitch step:"), "");
-    m_tuneStepKnob->setWhatsThis(
-            tr("Use this knob for setting the tune step."));
-
-    m_offsetStepKnob->setLabel(tr("STEP"));
-    m_offsetStepKnob->setHintText(tr("Start delay step:"), "");
-    m_offsetStepKnob->setWhatsThis(
-            tr("Use this knob for setting the delay step."));
-
-    m_shortenStepKnob->setLabel(tr("STEP"));
-    m_shortenStepKnob->setHintText(tr("Shortening step:"), "");
-    m_shortenStepKnob->setWhatsThis(tr("Use this knob for the shortening
-    step."));
-
-    mainLayout->addWidget(m_volumeRangeKnob, 0, 0, 1, 1, Qt::AlignHCenter);
-    mainLayout->addWidget(m_panRangeKnob, 0, 1, 1, 1, Qt::AlignHCenter);
-    mainLayout->addWidget(m_tuneRangeKnob, 0, 2, 1, 1, Qt::AlignHCenter);
-    mainLayout->addWidget(m_offsetRangeKnob, 0, 3, 1, 1, Qt::AlignHCenter);
-    mainLayout->addWidget(m_shortenRangeKnob, 0, 4, 1, 1, Qt::AlignHCenter);
-
-    mainLayout->addWidget(m_volumeStepKnob, 1, 0, 1, 1, Qt::AlignHCenter);
-    mainLayout->addWidget(m_panStepKnob, 1, 1, 1, 1, Qt::AlignHCenter);
-    mainLayout->addWidget(m_tuneStepKnob, 1, 2, 1, 1, Qt::AlignHCenter);
-    mainLayout->addWidget(m_offsetStepKnob, 1, 3, 1, 1, Qt::AlignHCenter);
-    mainLayout->addWidget(m_shortenStepKnob, 1, 4, 1, 1, Qt::AlignHCenter);
-    */
 }
 
 InstrumentFunctionNoteSustainingView::~InstrumentFunctionNoteSustainingView()
@@ -683,18 +601,67 @@ void InstrumentFunctionNoteSustainingView::modelChanged()
 {
     m_cc = castModel<InstrumentFunctionNoteSustaining>();
     ledButton()->setModel(&m_cc->m_enabledModel);
+}
 
-    /*
-    m_volumeRangeKnob->setModel(&m_cc->m_volumeRangeModel);
-    m_panRangeKnob->setModel(&m_cc->m_panRangeModel);
-    m_tuneRangeKnob->setModel(&m_cc->m_tuneRangeModel);
-    m_offsetRangeKnob->setModel(&m_cc->m_offsetRangeModel);
-    m_shortenRangeKnob->setModel(&m_cc->m_shortenRangeModel);
+InstrumentFunctionNotePlayingView::InstrumentFunctionNotePlayingView(
+        InstrumentFunctionNotePlaying* cc, QWidget* parent) :
+      InstrumentFunctionView(cc, tr("PLAYING"), parent),
+      m_cc(cc), m_gateKnob(new Knob()), m_keyKnob(new Knob()),
+      m_volKnob(new Knob()), m_panKnob(new Knob())
+{
+    QGridLayout* mainLayout = new QGridLayout(m_panel);
+    mainLayout->setContentsMargins(6, 2, 2, 2);
+    mainLayout->setColumnStretch(4, 1);
+    mainLayout->setHorizontalSpacing(6);
+    mainLayout->setVerticalSpacing(1);
 
-    m_volumeStepKnob->setModel(&m_cc->m_volumeStepModel);
-    m_panStepKnob->setModel(&m_cc->m_panStepModel);
-    m_tuneStepKnob->setModel(&m_cc->m_tuneStepModel);
-    m_offsetStepKnob->setModel(&m_cc->m_offsetStepModel);
-    m_shortenStepKnob->setModel(&m_cc->m_shortenStepModel);
-    */
+    setWhatsThis(tr("An automatable note generator."));
+
+    m_gateKnob->setLabel(tr("GATE"));
+    m_gateKnob->setHintText(tr("Gate:"), tr(""));
+    m_gateKnob->setWhatsThis(
+            tr("Use this knob for starting or stopping to play a note."));
+
+    m_keyKnob->setLabel(tr("KEY"));
+    m_keyKnob->setPointColor(Qt::cyan);
+    m_keyKnob->setHintText(tr("Key to play:"), "");
+    m_keyKnob->setWhatsThis(tr(
+            "Use this knob for setting the key of the next note to play."));
+
+    m_volKnob->setLabel(tr("VEL"));
+    m_volKnob->setPointColor(Qt::red);
+    m_volKnob->setHintText(tr("Velocity:"), "");
+    m_volKnob->setWhatsThis(
+            tr("Use this knob for setting the velocity of the next note to "
+               "play."));
+
+    m_panKnob->setLabel(tr("PAN"));
+    m_panKnob->setPointColor(Qt::magenta);
+    m_panKnob->setHintText(tr("Panning:"), "");
+    m_panKnob->setWhatsThis(
+            tr("Use this knob for setting the panning of the next note to "
+               "play."));
+
+    mainLayout->addWidget(m_volKnob, 0, 0, 1, 1,
+                          Qt::AlignTop | Qt::AlignHCenter);
+    mainLayout->addWidget(m_panKnob, 0, 1, 1, 1,
+                          Qt::AlignTop | Qt::AlignHCenter);
+    mainLayout->addWidget(m_keyKnob, 0, 2, 1, 1,
+                          Qt::AlignTop | Qt::AlignHCenter);
+    mainLayout->addWidget(m_gateKnob, 0, 3, 1, 1,
+                          Qt::AlignTop | Qt::AlignHCenter);
+}
+
+InstrumentFunctionNotePlayingView::~InstrumentFunctionNotePlayingView()
+{
+}
+
+void InstrumentFunctionNotePlayingView::modelChanged()
+{
+    m_cc = castModel<InstrumentFunctionNotePlaying>();
+    ledButton()->setModel(&m_cc->m_enabledModel);
+    m_gateKnob->setModel(&m_cc->m_gateModel);
+    m_keyKnob->setModel(&m_cc->m_keyModel);
+    m_volKnob->setModel(&m_cc->m_volModel);
+    m_panKnob->setModel(&m_cc->m_panModel);
 }

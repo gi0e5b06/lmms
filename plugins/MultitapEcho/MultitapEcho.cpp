@@ -1,168 +1,169 @@
 /*
  * MultitapEcho.cpp - a multitap echo delay plugin
  *
- * Copyright (c) 2014 Vesa Kivimäki <contact/dot/diizy/at/nbl/dot/fi>
+ * Copyright (c) 2019      gi0e5b06 (on github.com)
+ * Copyright (c) 2014      Vesa Kivimäki <contact/dot/diizy/at/nbl/dot/fi>
  * Copyright (c) 2008-2014 Tobias Doerffel <tobydox/at/users.sourceforge.net>
  *
- * This file is part of LMMS - https://lmms.io
+ * This file is part of LSMM -
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public
- * License along with this program (see COPYING); if not, write to the
- * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
- * Boston, MA 02110-1301 USA.
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
 
 #include "MultitapEcho.h"
-#include "embed.h"
 
+#include "embed.h"
 
 extern "C"
 {
 
-Plugin::Descriptor PLUGIN_EXPORT multitapecho_plugin_descriptor =
-{
-	STRINGIFY( PLUGIN_NAME ),
-	"Multitap Echo",
-	QT_TRANSLATE_NOOP( "pluginBrowser", "A multitap echo delay plugin" ),
-	"Vesa Kivimäki <contact/dot/diizy/at/nbl/dot/fi>",
-	0x0100,
-	Plugin::Effect,
-	new PluginPixmapLoader( "logo" ),
-	NULL,
-	NULL
-} ;
-
+    Plugin::Descriptor PLUGIN_EXPORT multitapecho_plugin_descriptor
+            = {STRINGIFY(PLUGIN_NAME),
+               "Multitap Echo",
+               QT_TRANSLATE_NOOP("pluginBrowser",
+                                 "A multitap echo delay plugin"),
+               "Vesa Kivimäki <contact/dot/diizy/at/nbl/dot/fi>",
+               0x0100,
+               Plugin::Effect,
+               new PluginPixmapLoader("logo"),
+               nullptr,
+               nullptr};
 }
 
-
-MultitapEchoEffect::MultitapEchoEffect( Model* parent, const Descriptor::SubPluginFeatures::Key* key ) :
-	Effect( &multitapecho_plugin_descriptor, parent, key ),
-	m_stages( 1 ),
-	m_controls( this ),
-	m_buffer( 16100.0f ),
-	m_sampleRate( Engine::mixer()->processingSampleRate() ),
-	m_sampleRatio( 1.0f / m_sampleRate )
+MultitapEchoEffect::MultitapEchoEffect(
+        Model* parent, const Descriptor::SubPluginFeatures::Key* key) :
+      Effect(&multitapecho_plugin_descriptor, parent, key),
+      m_stages(1), m_controls(this),
+      m_sampleRate(Engine::mixer()->processingSampleRate()),
+      m_sampleRatio(1. / DOUBLE(m_sampleRate)), m_buffer(16100.f)
 {
-	m_work = MM_ALLOC( sampleFrame, Engine::mixer()->framesPerPeriod() );
-	m_buffer.reset();
-	m_stages = static_cast<int>( m_controls.m_stages.value() );
-	updateFilters( 0, 19 );
+    m_work = MM_ALLOC(sampleFrame, Engine::mixer()->framesPerPeriod());
+    m_buffer.reset();
+    m_stages = static_cast<int>(m_controls.m_stages.value());
+    updateFilters(0, 19);
 }
-
 
 MultitapEchoEffect::~MultitapEchoEffect()
 {
-	MM_FREE( m_work );
+    MM_FREE(m_work);
 }
 
-
-void MultitapEchoEffect::updateFilters( int begin, int end )
+void MultitapEchoEffect::updateFilters(int begin, int end)
 {
-	for( int i = begin; i <= end; ++i )
-	{
-		for( int s = 0; s < m_stages; ++s )
-		{
-			setFilterFreq( m_lpFreq[i] * m_sampleRatio, m_filter[i][s] );
-		}
-	}
+    for(int i = begin; i <= end; ++i)
+    {
+        for(int s = 0; s < m_stages; ++s)
+        {
+            setFilterFreq(m_lpFreq[i] * m_sampleRatio, m_filter[i][s]);
+        }
+    }
 }
 
-
-void MultitapEchoEffect::runFilter( sampleFrame * dst, sampleFrame * src, StereoOnePole & filter, const fpp_t frames )
+void MultitapEchoEffect::runFilter(sampleFrame*   dst,
+                                   sampleFrame*   src,
+                                   StereoOnePole& filter,
+                                   const fpp_t    frames)
 {
-	for( int f = 0; f < frames; ++f )
-	{
-		dst[f][0] = filter.update( src[f][0], 0 );
-		dst[f][1] = filter.update( src[f][1], 1 );
-	}
+    for(int f = 0; f < frames; ++f)
+    {
+        // dst[f][0] = filter.update(src[f][0], 0);
+        // dst[f][1] = filter.update(src[f][1], 1);
+        dst[f][0] = src[f][0];
+        dst[f][1] = src[f][1];
+        filter.update(dst[f]);
+    }
 }
 
-
-bool MultitapEchoEffect::processAudioBuffer( sampleFrame * _buf, const fpp_t _frames )
+bool MultitapEchoEffect::processAudioBuffer(sampleFrame* _buf,
+                                            const fpp_t  _frames)
 {
-        bool smoothBegin, smoothEnd;
-        if(!shouldProcessAudioBuffer(_buf, _frames, smoothBegin, smoothEnd))
-                return false;
+    bool smoothBegin, smoothEnd;
+    if(!shouldProcessAudioBuffer(_buf, _frames, smoothBegin, smoothEnd))
+        return false;
 
-	// get processing vars
-	const int steps = m_controls.m_steps.value();
-	const float stepLength = m_controls.m_stepLength.value();
-	const float dryGain = dbfsToAmp( m_controls.m_dryGain.value() );
-	const bool swapInputs = m_controls.m_swapInputs.value();
+    // get processing vars
+    const int   steps      = m_controls.m_steps.value();
+    const float stepLength = m_controls.m_stepLength.value();
+    const float dryGain    = dbfsToAmp(m_controls.m_dryGain.value());
+    const bool  swapInputs = m_controls.m_swapInputs.value();
 
-	// check if number of stages has changed
-	if( m_controls.m_stages.isValueChanged() )
-	{
-		m_stages = static_cast<int>( m_controls.m_stages.value() );
-		updateFilters( 0, steps - 1 );
-	}
+    // check if number of stages has changed
+    if(m_controls.m_stages.isValueChanged())
+    {
+        m_stages = static_cast<int>(m_controls.m_stages.value());
+        updateFilters(0, steps - 1);
+    }
 
-	// add dry buffer - never swap inputs for dry
-	m_buffer.writeAddingMultiplied( _buf, 0, _frames, dryGain );
+    // add dry buffer - never swap inputs for dry
+    m_buffer.writeAddingMultiplied(_buf, 0, _frames, dryGain);
 
-	// swapped inputs?
-	if( swapInputs )
-	{
-		float offset = stepLength;
-		for( int i = 0; i < steps; ++i ) // add all steps swapped
-		{
-			for( int s = 0; s < m_stages; ++s )
-			{
-				runFilter( m_work, _buf, m_filter[i][s], _frames );
-			}
-			m_buffer.writeSwappedAddingMultiplied( m_work, offset, _frames, m_amp[i] );
-			offset += stepLength;
-		}
-	}
-	else
-	{
-		float offset = stepLength;
-		for( int i = 0; i < steps; ++i ) // add all steps
-		{
-			for( int s = 0; s < m_stages; ++s )
-			{
-				runFilter( m_work, _buf, m_filter[i][s], _frames );
-			}
-			m_buffer.writeAddingMultiplied( m_work, offset, _frames, m_amp[i] );
-			offset += stepLength;
-		}
-	}
+    // swapped inputs?
+    if(swapInputs)
+    {
+        float offset = stepLength;
+        for(int i = 0; i < steps; ++i)  // add all steps swapped
+        {
+            for(int s = 0; s < m_stages; ++s)
+            {
+                runFilter(m_work, _buf, m_filter[i][s], _frames);
+            }
+            m_buffer.writeSwappedAddingMultiplied(m_work, offset, _frames,
+                                                  m_amp[i]);
+            offset += stepLength;
+        }
+    }
+    else
+    {
+        float offset = stepLength;
+        for(int i = 0; i < steps; ++i)  // add all steps
+        {
+            for(int s = 0; s < m_stages; ++s)
+            {
+                runFilter(m_work, _buf, m_filter[i][s], _frames);
+            }
+            m_buffer.writeAddingMultiplied(m_work, offset, _frames, m_amp[i]);
+            offset += stepLength;
+        }
+    }
 
-	// pop the buffer and mix it into output
-	m_buffer.pop( m_work );
+    // pop the buffer and mix it into output
+    m_buffer.pop(m_work);
 
-	for( int f = 0; f < _frames; ++f )
-	{
-                float w0, d0, w1, d1;
-                computeWetDryLevels(f, _frames, smoothBegin, smoothEnd,
-                                    w0, d0, w1, d1);
+    for(int f = 0; f < _frames; ++f)
+    {
+        float w0, d0, w1, d1;
+        computeWetDryLevels(f, _frames, smoothBegin, smoothEnd, w0, d0, w1,
+                            d1);
 
-                _buf[f][0] = d0 * _buf[f][0] + w0 * m_work[f][0];
-                _buf[f][1] = d1 * _buf[f][1] + w1 * m_work[f][1];
-	}
+        _buf[f][0] = d0 * _buf[f][0] + w0 * m_work[f][0];
+        _buf[f][1] = d1 * _buf[f][1] + w1 * m_work[f][1];
+    }
 
-	return true;
+    return true;
 }
-
 
 extern "C"
 {
 
-// necessary for getting instance out of shared lib
-Plugin * PLUGIN_EXPORT lmms_plugin_main( Model* parent, void* data )
-{
-	return new MultitapEchoEffect( parent, static_cast<const Plugin::Descriptor::SubPluginFeatures::Key *>( data ) );
-}
-
+    // necessary for getting instance out of shared lib
+    Plugin* PLUGIN_EXPORT lmms_plugin_main(Model* parent, void* data)
+    {
+        return new MultitapEchoEffect(
+                parent,
+                static_cast<
+                        const Plugin::Descriptor::SubPluginFeatures::Key*>(
+                        data));
+    }
 }

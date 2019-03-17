@@ -32,9 +32,10 @@
 class BBTrack;
 class SampleTCO;
 class Track;
+class Instrument;
 class AudioPort;
 
-class SamplePlayHandle : public PlayHandle
+class SamplePlayHandle final : public PlayHandle
 {
   public:
     SamplePlayHandle(const QString& sampleFile);
@@ -45,6 +46,7 @@ class SamplePlayHandle : public PlayHandle
     virtual void play(sampleFrame* buffer);
     virtual bool isFinished() const;
     virtual bool isFromTrack(const Track* _track) const;
+    virtual bool isFromInstrument(const Instrument* _instrument) const;
 
     /*! Returns total numbers of frames to play (including release frames = 0)
      */

@@ -139,11 +139,6 @@ class NesObject
         return static_cast<int>(m_samplerate / freq);
     }
 
-    inline float signedPow(float f, float e)
-    {
-        return f < 0 ? powf(qAbs(f), e) * -1.0f : powf(f, e);
-    }
-
     inline int nearestNoiseFreq(float f)
     {
         int n = 15;

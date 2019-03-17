@@ -40,160 +40,198 @@ class MidiEvent;
 class MidiEventProcessor;
 class MidiPortMenu;
 
-
 // class for abstraction of MIDI-port
 class MidiPort final : public Model, public SerializingObject
 {
-	Q_OBJECT
-	mapPropertyFromModel(int,inputChannel,setInputChannel,m_inputChannelModel);
-	mapPropertyFromModel(int,outputChannel,setOutputChannel,m_outputChannelModel);
-	mapPropertyFromModel(int,inputController,setInputController,m_inputControllerModel);
-	mapPropertyFromModel(int,outputController,setOutputController,m_outputControllerModel);
-	mapPropertyFromModel(int,fixedInputVelocity,setFixedInputVelocity,m_fixedInputVelocityModel);
-	mapPropertyFromModel(int,fixedOutputVelocity,setFixedOutputVelocity,m_fixedOutputVelocityModel);
-	mapPropertyFromModel(int,fixedOutputNote,setFixedOutputNote,m_fixedOutputNoteModel);
-	mapPropertyFromModel(int,outputProgram,setOutputProgram,m_outputProgramModel);
-	mapPropertyFromModel(int,baseVelocity,setBaseVelocity,m_baseVelocityModel);
-	mapPropertyFromModel(bool,isReadable,setReadable,m_readableModel);
-	mapPropertyFromModel(bool,isWritable,setWritable,m_writableModel);
+    Q_OBJECT
 
-	mapPropertyFromModel(int,widgetType,setWidgetType,m_widgetTypeModel);
-	mapPropertyFromModel(int,minInputValue,setMinInputValue,m_minInputValueModel);
-	mapPropertyFromModel(int,maxInputValue,setMaxInputValue,m_maxInputValueModel);
-	mapPropertyFromModel(int,stepInputValue,setStepInputValue,m_stepInputValueModel);
-	mapPropertyFromModel(int,baseInputValue,setBaseInputValue,m_baseInputValueModel);
-	mapPropertyFromModel(int,slopeInputValue,setSlopeInputValue,m_slopeInputValueModel);
-	mapPropertyFromModel(int,deltaInputValue,setDeltaInputValue,m_deltaInputValueModel);
+    mapPropertyFromModel(int,
+                         inputChannel,
+                         setInputChannel,
+                         m_inputChannelModel);
+    mapPropertyFromModel(int,
+                         outputChannel,
+                         setOutputChannel,
+                         m_outputChannelModel);
+    mapPropertyFromModel(int,
+                         inputController,
+                         setInputController,
+                         m_inputControllerModel);
+    mapPropertyFromModel(int,
+                         outputController,
+                         setOutputController,
+                         m_outputControllerModel);
+    mapPropertyFromModel(int,
+                         fixedInputVelocity,
+                         setFixedInputVelocity,
+                         m_fixedInputVelocityModel);
+    mapPropertyFromModel(int,
+                         fixedOutputVelocity,
+                         setFixedOutputVelocity,
+                         m_fixedOutputVelocityModel);
+    mapPropertyFromModel(int,
+                         fixedOutputNote,
+                         setFixedOutputNote,
+                         m_fixedOutputNoteModel);
+    mapPropertyFromModel(int,
+                         outputProgram,
+                         setOutputProgram,
+                         m_outputProgramModel);
+    mapPropertyFromModel(int,
+                         baseVelocity,
+                         setBaseVelocity,
+                         m_baseVelocityModel);
+    mapPropertyFromModel(bool, isReadable, setReadable, m_readableModel);
+    mapPropertyFromModel(bool, isWritable, setWritable, m_writableModel);
 
- public:
-	typedef QMap<QString, bool> Map;
+    mapPropertyFromModel(int, widgetType, setWidgetType, m_widgetTypeModel);
+    mapPropertyFromModel(int,
+                         minInputValue,
+                         setMinInputValue,
+                         m_minInputValueModel);
+    mapPropertyFromModel(int,
+                         maxInputValue,
+                         setMaxInputValue,
+                         m_maxInputValueModel);
+    mapPropertyFromModel(int,
+                         stepInputValue,
+                         setStepInputValue,
+                         m_stepInputValueModel);
+    mapPropertyFromModel(int,
+                         baseInputValue,
+                         setBaseInputValue,
+                         m_baseInputValueModel);
+    mapPropertyFromModel(int,
+                         slopeInputValue,
+                         setSlopeInputValue,
+                         m_slopeInputValueModel);
+    mapPropertyFromModel(int,
+                         deltaInputValue,
+                         setDeltaInputValue,
+                         m_deltaInputValueModel);
 
-	enum Modes
-	{
-		Disabled,	// don't route any MIDI-events (default)
-		Input,		// from MIDI-client to MIDI-event-processor
-		Output,		// from MIDI-event-processor to MIDI-client
-		Duplex		// both directions
-	} ;
-	typedef Modes Mode;
+  public:
+    typedef QMap<QString, bool> Map;
 
-	MidiPort( const QString& name,
-			MidiClient* client,
-			MidiEventProcessor* eventProcessor,
-			Model* parent = NULL,
-			Mode mode = Disabled );
-	virtual ~MidiPort();
+    enum Modes
+    {
+        Disabled,  // don't route any MIDI-events (default)
+        Input,     // from MIDI-client to MIDI-event-processor
+        Output,    // from MIDI-event-processor to MIDI-client
+        Duplex     // both directions
+    };
+    typedef Modes Mode;
 
-	void setName( const QString& name );
+    MidiPort(const QString&      name,
+             MidiClient*         client,
+             MidiEventProcessor* eventProcessor,
+             Model*              parent = NULL,
+             Mode                mode   = Disabled);
+    virtual ~MidiPort();
 
-	Mode mode() const
-	{
-		return m_mode;
-	}
+    void setName(const QString& name);
 
-	void setMode( Mode mode );
+    Mode mode() const
+    {
+        return m_mode;
+    }
 
-	bool isInputEnabled() const
-	{
-		return mode() == Input || mode() == Duplex;
-	}
+    void setMode(Mode mode);
 
-	bool isOutputEnabled() const
-	{
-		return mode() == Output || mode() == Duplex;
-	}
+    bool isInputEnabled() const
+    {
+        return mode() == Input || mode() == Duplex;
+    }
 
-	/*
-	int realOutputChannel() const
-	{
-		return outputChannel() - 1;
-	}
-	*/
+    bool isOutputEnabled() const
+    {
+        return mode() == Output || mode() == Duplex;
+    }
 
-	void processInEvent( const MidiEvent& event, const MidiTime& time = MidiTime() );
-	void processOutEvent( const MidiEvent& event, const MidiTime& time = MidiTime() );
+    /*
+    int realOutputChannel() const
+    {
+            return outputChannel() - 1;
+    }
+    */
 
+    void processInEvent(const MidiEvent& event,
+                        const MidiTime&  time = MidiTime());
+    void processOutEvent(const MidiEvent& event,
+                         const MidiTime&  time = MidiTime());
 
-	virtual void saveSettings( QDomDocument& doc, QDomElement& thisElement );
-	virtual void loadSettings( const QDomElement& thisElement );
+    virtual void saveSettings(QDomDocument& doc, QDomElement& thisElement);
+    virtual void loadSettings(const QDomElement& thisElement);
 
-	virtual QString nodeName() const
-	{
-		return "midiport";
-	}
+    virtual QString nodeName() const
+    {
+        return "midiport";
+    }
 
-	void subscribeReadablePort( const QString& port, bool subscribe = true );
-	void subscribeWritablePort( const QString& port, bool subscribe = true );
+    void subscribeReadablePort(const QString& port, bool subscribe = true);
+    void subscribeWritablePort(const QString& port, bool subscribe = true);
 
-	const Map& readablePorts() const
-	{
-		return m_readablePorts;
-	}
+    const Map& readablePorts() const
+    {
+        return m_readablePorts;
+    }
 
-	const Map& writablePorts() const
-	{
-		return m_writablePorts;
-	}
+    const Map& writablePorts() const
+    {
+        return m_writablePorts;
+    }
 
-        void invalidateClient();
+    void invalidateClient();
 
-	MidiPortMenu* m_readablePortsMenu;
-	MidiPortMenu* m_writablePortsMenu;
+    MidiPortMenu* m_readablePortsMenu;
+    MidiPortMenu* m_writablePortsMenu;
 
+  public slots:
+    void updateMidiPortMode();
 
-public slots:
-	void updateMidiPortMode();
+  private slots:
+    void updateReadablePorts();
+    void updateWritablePorts();
+    void updateOutputProgram();
 
+  private:
+    MidiClient*         m_midiClient;
+    MidiEventProcessor* m_midiEventProcessor;
 
-private slots:
-	void updateReadablePorts();
-	void updateWritablePorts();
-	void updateOutputProgram();
+    Mode m_mode;
 
+    IntModel  m_inputChannelModel;
+    IntModel  m_outputChannelModel;
+    IntModel  m_inputControllerModel;
+    IntModel  m_outputControllerModel;
+    IntModel  m_fixedInputVelocityModel;
+    IntModel  m_fixedOutputVelocityModel;
+    IntModel  m_fixedOutputNoteModel;
+    IntModel  m_outputProgramModel;
+    IntModel  m_baseVelocityModel;
+    BoolModel m_readableModel;
+    BoolModel m_writableModel;
 
-private:
-	MidiClient* m_midiClient;
-	MidiEventProcessor* m_midiEventProcessor;
+    ComboBoxModel m_widgetTypeModel;
+    IntModel      m_minInputValueModel;
+    IntModel      m_maxInputValueModel;
+    IntModel      m_stepInputValueModel;
+    IntModel      m_baseInputValueModel;
+    IntModel      m_slopeInputValueModel;
+    IntModel      m_deltaInputValueModel;
 
-	Mode m_mode;
+    Map m_readablePorts;
+    Map m_writablePorts;
 
-	IntModel m_inputChannelModel;
-	IntModel m_outputChannelModel;
-	IntModel m_inputControllerModel;
-	IntModel m_outputControllerModel;
-	IntModel m_fixedInputVelocityModel;
-	IntModel m_fixedOutputVelocityModel;
-	IntModel m_fixedOutputNoteModel;
-	IntModel m_outputProgramModel;
-	IntModel m_baseVelocityModel;
-	BoolModel m_readableModel;
-	BoolModel m_writableModel;
+    friend class ControllerConnectionDialog;
+    friend class InstrumentMidiIOView;
 
-	ComboBoxModel m_widgetTypeModel;
-        IntModel m_minInputValueModel;
-        IntModel m_maxInputValueModel;
-        IntModel m_stepInputValueModel;
-        IntModel m_baseInputValueModel;
-        IntModel m_slopeInputValueModel;
-        IntModel m_deltaInputValueModel;
+  signals:
+    void readablePortsChanged();
+    void writablePortsChanged();
+    void modeChanged();
+};
 
-	Map m_readablePorts;
-	Map m_writablePorts;
-
-
-	friend class ControllerConnectionDialog;
-	friend class InstrumentMidiIOView;
-
-
-signals:
-	void readablePortsChanged();
-	void writablePortsChanged();
-	void modeChanged();
-
-} ;
-
-
-typedef QList<MidiPort *> MidiPortList;
-
+typedef QList<MidiPort*> MidiPortList;
 
 #endif

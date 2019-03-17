@@ -206,3 +206,8 @@ qInfo("IPH (new) test=%d",_track==m_track);
 return m_instrument->isFromTrack(_track);
     */
 }
+
+bool InstrumentPlayHandle::isFromInstrument(const Instrument* _instrument) const
+{
+    return m_instrument == _instrument;
+}

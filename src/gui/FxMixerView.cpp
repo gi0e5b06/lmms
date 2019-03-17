@@ -63,8 +63,8 @@ FxMixerView::FxMixerView() :
     // setPalette( pal );
 
     setAutoFillBackground(true);
-    setWindowTitle(tr("FX-Mixer"));
-    setWindowIcon(embed::getIconPixmap("fx_mixer"));
+    setWindowTitle(tr("Mixer"));
+    setWindowIcon(embed::getIcon("fx_mixer"));
 
     // main-layout
     QHBoxLayout* ml = new QHBoxLayout;

@@ -1,24 +1,22 @@
 /*
  * SpaceGDX.cpp -
  *
- * Copyright (c) 2018 gi0e5b06 (on github.com)
+ * Copyright (c) 2018-2019 gi0e5b06 (on github.com)
  *
- * This file is part of LMMS - https://lmms.io
+ * This file is part of LSMM -
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public
- * License along with this program (see COPYING); if not, write to the
- * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
- * Boston, MA 02110-1301 USA.
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
 
@@ -182,6 +180,7 @@ bool SpaceGDXEffect::processAudioBuffer(sampleFrame* _buf,
         // LEFT EAR
 
         curVal[0] *= leftGain;
+        sampleFrame s0 = {curVal[0], curVal[0]};
 
         const frequency_t leftLowFreq
                 = round(5000. + 115000. * leftLow) / 1000.;
@@ -189,9 +188,10 @@ bool SpaceGDXEffect::processAudioBuffer(sampleFrame* _buf,
         {
             qInfo("Left Low: %f Hz", leftLowFreq);
             m_prevLeftLowFreq = leftLowFreq;
-            m_leftLowFilter.calcFilterCoeffs(leftLowFreq, 0.05);
+            m_leftLowFilter.calcFilterCoeffs(leftLowFreq, 0.05, 0.);
         }
-        curVal[0] = m_leftLowFilter.update(curVal[0], 0);
+        // curVal[0] = m_leftLowFilter.update(curVal[0], 0);
+        m_leftLowFilter.update(s0);
 
         const frequency_t leftHighFreq = qMin<real_t>(
                 m_sampleRate / 2., round(22050. - 11025. * leftHigh));
@@ -199,13 +199,17 @@ bool SpaceGDXEffect::processAudioBuffer(sampleFrame* _buf,
         {
             qInfo("Left High: %f Hz", leftHighFreq);
             m_prevLeftHighFreq = leftHighFreq;
-            m_leftHighFilter.calcFilterCoeffs(leftHighFreq, 0.05);
+            m_leftHighFilter.calcFilterCoeffs(leftHighFreq, 0.05, 0.);
         }
-        curVal[0] = m_leftHighFilter.update(curVal[0], 0);
+        // curVal[0] = m_leftHighFilter.update(curVal[0], 0);
+        m_leftHighFilter.update(s0);
+
+        curVal[0] = s0[0];
 
         // RIGHT EAR
 
         curVal[1] *= rightGain;
+        sampleFrame s1 = {curVal[1], curVal[1]};
 
         const frequency_t rightLowFreq
                 = round(5000. + 115000. * rightLow) / 1000.;
@@ -213,9 +217,10 @@ bool SpaceGDXEffect::processAudioBuffer(sampleFrame* _buf,
         {
             qInfo("Right Low: %f Hz", rightLowFreq);
             m_prevRightLowFreq = rightLowFreq;
-            m_rightLowFilter.calcFilterCoeffs(rightLowFreq, 0.05);
+            m_rightLowFilter.calcFilterCoeffs(rightLowFreq, 0.05, 0.);
         }
-        curVal[1] = m_rightLowFilter.update(curVal[1], 0);
+        // curVal[1] = m_rightLowFilter.update(curVal[1], 0);
+        m_rightLowFilter.update(s1);
 
         const frequency_t rightHighFreq = qMin<frequency_t>(
                 m_sampleRate / 2., round(22050. - 11025. * rightHigh));
@@ -223,9 +228,14 @@ bool SpaceGDXEffect::processAudioBuffer(sampleFrame* _buf,
         {
             qInfo("Right High: %f Hz", rightHighFreq);
             m_prevRightHighFreq = rightHighFreq;
-            m_rightHighFilter.calcFilterCoeffs(rightHighFreq, 0.05);
+            m_rightHighFilter.calcFilterCoeffs(rightHighFreq, 0.05, 0.);
         }
-        curVal[1] = m_rightHighFilter.update(curVal[1], 0);
+        // curVal[1] = m_rightHighFilter.update(curVal[1], 0);
+        m_rightHighFilter.update(s1);
+
+        curVal[1] = s1[1];
+
+        // COMBINE
 
         real_t  p = dispersion * WaveForm::sine(real_t(f) / real_t(_frames));
         f_cnt_t q = qBound(0, int(f + p), _frames - 1);

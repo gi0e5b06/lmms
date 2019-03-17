@@ -1,7 +1,7 @@
 /*
  * AutomatableModel.cpp - some implementations of AutomatableModel-class
  *
- * Copyright (c) 2017-2018 gi0e5b06 (on github.com)
+ * Copyright (c) 2017-2019 gi0e5b06 (on github.com)
  * Copyright (c) 2008-2014 Tobias Doerffel <tobydox/at/users.sourceforge.net>
  *
  * This file is part of LMMS - https://lmms.io
@@ -31,9 +31,12 @@
 #include "Engine.h"
 #include "Mixer.h"
 #include "ProjectJournal.h"
+#include "Song.h"
 #include "WaveFormStandard.h"
 #include "debug.h"
 #include "lmms_math.h"  // REQUIRED
+
+#include <QTimer>
 
 long AutomatableModel::s_periodCounter = 0;
 
@@ -49,7 +52,7 @@ AutomatableModel::AutomatableModel(const real_t   val,
       m_range(max - min), m_centerValue(m_minValue), m_randomRatio(0.),
       m_randomDistribution(nullptr), m_valueChanged(false),
       m_setValueDepth(0), m_hasStrictStepSize(false),
-      m_controllerConnection(NULL),
+      m_controllerConnection(nullptr),
       m_valueBuffer(static_cast<int>(Engine::mixer()->framesPerPeriod())),
       m_lastUpdatedPeriod(-1), m_hasSampleExactData(false)
 
@@ -859,7 +862,7 @@ m_hasStrictStepSize ) v=qRound( v );
                 return v;
         }
 
-        AutomatableModel* lm = NULL;
+        AutomatableModel* lm = nullptr;
         if( hasLinkedModels() )
         {
                 lm = m_linkedModels.first();
@@ -885,7 +888,7 @@ false ) ); else v=fittedValue( lm->m_value );
 ValueBuffer* AutomatableModel::valueBuffer()
 {
     QMutexLocker m(&m_valueBufferMutex);
-    return m_hasSampleExactData ? &m_valueBuffer : NULL;
+    return m_hasSampleExactData ? &m_valueBuffer : nullptr;
 }
 
 /*
@@ -897,7 +900,7 @@ cached buffer if( m_lastUpdatedPeriod == s_periodCounter )
         {
                 return m_hasSampleExactData
                         ? &m_valueBuffer
-                        : NULL;
+                        : nullptr;
         }
 
         real_t oldval = m_value;
@@ -959,7 +962,7 @@ type"); break;
                         return &m_valueBuffer;
                 }
         }
-        AutomatableModel* lm = NULL;
+        AutomatableModel* lm = nullptr;
         if( hasLinkedModels() )
         {
                 lm = m_linkedModels.first();
@@ -1004,12 +1007,12 @@ type"); break;
                 return &m_valueBuffer;
         }
 
-        // if we have no sample-exact source for a ValueBuffer, return NULL to
+        // if we have no sample-exact source for a ValueBuffer, return nullptr to
 signify that no data is available at the moment
         // in which case the recipient knows to use the static value() instead
         m_lastUpdatedPeriod = s_periodCounter;
         m_hasSampleExactData = false;
-        return NULL;
+        return nullptr;
 }
 */
 
@@ -1017,7 +1020,7 @@ signify that no data is available at the moment
 void AutomatableModel::setBuffer(const ValueBuffer* _vb)
 {
         const fpp_t FPP=Engine::mixer()->framesPerPeriod();
-        if(_vb==NULL || _vb->length()!=FPP || m_valueBuffer.length()!=FPP)
+        if(_vb==nullptr || _vb->length()!=FPP || m_valueBuffer.length()!=FPP)
         {
                 qWarning("AutomatableModel::setBuffer");
                 return;
@@ -1036,13 +1039,45 @@ void AutomatableModel::setBuffer(const ValueBuffer* _vb)
 
 void AutomatableModel::setAutomatedBuffer(const ValueBuffer* _vb)
 {
-    if(m_lastUpdatedPeriod == s_periodCounter)
+    long vbp = _vb->period();
+
+    if(Engine::getSong() == nullptr || !Engine::getSong()->isPlaying())
         return;
 
-    const fpp_t FPP = Engine::mixer()->framesPerPeriod();
-    if(_vb == NULL || _vb->length() != FPP || m_valueBuffer.length() != FPP)
+    if(vbp != -1 && vbp > s_periodCounter)
     {
-        qWarning("AutomatableModel::setAutomatedBuffer");
+        postponeUpdate(this, _vb);
+        /*
+        QTimer::singleShot(1, [this, _vb]() {
+            this->setAutomatedBuffer(_vb);
+        });
+        */
+        return;
+    }
+
+    if(vbp != -1 && vbp < s_periodCounter
+       && m_lastUpdatedPeriod == s_periodCounter)
+    {
+        qWarning("AutomatableModel::setAutomatedBuffer old vbp");
+        return;
+    }
+
+    if(m_lastUpdatedPeriod == s_periodCounter)
+    {
+        if(vbp == -1)
+        {
+            qWarning(
+                    "AutomatableModel::setAutomatedBuffer already updated "
+                    "(%s)",
+                    qPrintable(fullDisplayName()));
+        }
+        return;
+    }
+
+    const fpp_t FPP = Engine::mixer()->framesPerPeriod();
+    if(_vb == nullptr || _vb->length() != FPP || m_valueBuffer.length() != FPP)
+    {
+        qWarning("AutomatableModel::setAutomatedBuffer bad length");
         return;
     }
 
@@ -1069,7 +1104,7 @@ void AutomatableModel::setControlledBuffer(const ValueBuffer* _vb)
         return;
 
     const fpp_t FPP = Engine::mixer()->framesPerPeriod();
-    if(_vb == NULL || _vb->length() != FPP || m_valueBuffer.length() != FPP)
+    if(_vb == nullptr || _vb->length() != FPP || m_valueBuffer.length() != FPP)
     {
         qWarning("AutomatableModel::setControlledBuffer");
         return;
@@ -1099,7 +1134,7 @@ void AutomatableModel::unlinkControllerConnection()
         m_controllerConnection->disconnect(this);
     }
 
-    m_controllerConnection = NULL;
+    m_controllerConnection = nullptr;
 }
 
 void AutomatableModel::setInitValue(const real_t value)
@@ -1144,7 +1179,7 @@ real_t AutomatableModel::globalAutomationValueAt(const MidiTime& time)
             }
         }
 
-        AutomationPattern* latestPattern = NULL;
+        AutomationPattern* latestPattern = nullptr;
 
         if(!patternsInRange.isEmpty())
         {
@@ -1185,6 +1220,47 @@ real_t AutomatableModel::globalAutomationValueAt(const MidiTime& time)
         else
             return m_value;
     }
+}
+
+long AutomatableModel::periodCounter()
+{
+    return s_periodCounter;
+}
+
+void AutomatableModel::incrementPeriodCounter()
+{
+    ++s_periodCounter;
+    for(AutomatableModel* m: s_postponedUpdates.keys())
+    {
+        const ValueBuffer* vb = s_postponedUpdates.value(m);
+        if(vb != nullptr)
+        {
+            const long vbp = vb->period();
+            if(vbp == s_periodCounter)
+                // QTimer::singleShot(0, [m, vb]() {
+                // m->setAutomatedBuffer(vb); });
+                QMetaObject::invokeMethod(m, "setAutomatedBuffer",
+                                          Qt::BlockingQueuedConnection,
+                                          Q_ARG(const ValueBuffer*, vb));
+            if(vbp <= s_periodCounter)
+                s_postponedUpdates.remove(m);
+        }
+    }
+    // s_postponedUpdates.clear();
+}
+
+void AutomatableModel::resetPeriodCounter()
+{
+    s_periodCounter = 0;
+}
+
+QHash<AutomatableModel*, const ValueBuffer*>
+        AutomatableModel::s_postponedUpdates;
+
+void AutomatableModel::postponeUpdate(AutomatableModel*  _m,
+                                      const ValueBuffer* _vb)
+{
+    s_postponedUpdates.insert(_m, _vb);
 }
 
 FloatModel::FloatModel(real_t         val,

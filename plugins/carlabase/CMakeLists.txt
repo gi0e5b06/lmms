@@ -5,13 +5,13 @@ if(LMMS_HAVE_CARLA)
         LINK_LIBRARIES(${CARLA_LIBRARIES})
         BUILD_PLUGIN(carlabase
           carla.cpp
-          CarlaEffectControlDialog.cpp
+          CarlaEffectDialog.cpp
           CarlaEffectControls.cpp
           CarlaEffect.cpp
           #CarlaEffectView.cpp
           MOCFILES
           carla.h
-          CarlaEffectControlDialog.h
+          CarlaEffectDialog.h
           CarlaEffectControls.h
           CarlaEffect.h
           #CarlaEffectView.h

@@ -195,7 +195,7 @@ void LcdWidget::drawWidget(QPainter& _p)
         */
         const QFontMetrics mx = _p.fontMetrics();
         int                xt = width() / 2 - mx.width(m_label) / 2;
-        int                yt = m_cellHeight + margin + mx.height() - 4;
+        int                yt = m_cellHeight + margin + mx.height() - 2; // -4
         _p.setPen(textColor());
         _p.drawText(xt, yt, m_label);
         _p.drawText(xt, yt, m_label); // twice for readability

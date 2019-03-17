@@ -4,22 +4,20 @@
  * Copyright (c) 2017-2019 gi0e5b06 (on github.com)
  * Copyright (c) 2004-2014 Tobias Doerffel <tobydox/at/users.sourceforge.net>
  *
- * This file is part of LMMS - https://lmms.io
+ * This file is part of LSMM -
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public
- * License along with this program (see COPYING); if not, write to the
- * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
- * Boston, MA 02110-1301 USA.
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
 
@@ -383,11 +381,11 @@ bool InstrumentFunctionNoteStacking::processNote(NotePlayHandle* _n)
                 // maybe we're out of range -> let's get outta here!
                 // range-checking
                 if(subnote_key >= NumKeys || subnote_key < 0
-                   || Engine::mixer()->criticalXRuns())
+                   || Engine::mixer()->criticalXRuns() || _n->isTrackMuted())
                 {
                     // qInfo("InstrumentFunctionNoteStacking::processNote
                     // subnote break");
-                    break;
+                    continue;
                 }
 
                 // if(MM_SAFE(NotePlayHandle,1))
@@ -664,7 +662,7 @@ bool InstrumentFunctionArpeggio::processNote(NotePlayHandle* _n)
 
         // range-checking
         if(subnote_key >= NumKeys || subnote_key < 0
-           || Engine::mixer()->criticalXRuns())
+           || Engine::mixer()->criticalXRuns() || _n->isTrackMuted())
         {
             // qInfo("InstrumentFunctionArpeggio::processNote subnote break");
             continue;
@@ -849,7 +847,7 @@ bool InstrumentFunctionNoteHumanizing::processNote(NotePlayHandle* _n)
             real_t  r = fastrand01inc();
             f_cnt_t o = _n->frames();  // ?
             f_cnt_t n = qMax(1, qRound(o * (1. + l * r)));
-            n         = qBound(o, n, 2*o);
+            n         = qBound(o, n, 2 * o);
             // qInfo("NH: lengthen %d->%d",o,n);
             _n->setFrames(n);
         }
@@ -1202,19 +1200,25 @@ InstrumentFunctionNoteOutting::InstrumentFunctionNoteOutting(Model* _parent) :
       m_panModel(0., -100., 100., 0.1, this, tr("Pan")),
       m_keyModel(DefaultKey, 0., 127., 1., this, tr("Key")),
       m_noteModel(DefaultKey % 12, 0., 11., 1., this, tr("Note")),
-      m_modModel(0., -1., 1., 0.001, this, tr("Mod"))
+      m_modValueModel(0., -1., 1., 0.001, this, tr("Modulation value")),
+      m_modRefKeyModel(
+              DefaultKey, 0., NumKeys - 1, 1., this, tr("Modulation key")),
+      m_modAmountModel(0., -1., 1., 0.001, this, tr("Modulation amount")),
+      m_modBaseModel(0., -1., 1., 0.001, this, tr("Modulation base"))
 {
-        m_volumeModel.setJournalling(false);
-        m_panModel.setJournalling(false);
-        m_keyModel.setJournalling(false);
-        m_noteModel.setJournalling(false);
-        m_modModel.setJournalling(false);
+    m_modBaseModel.setStrictStepSize(true);
 
-        m_volumeModel.setFrequentlyUpdated(true);
-        m_panModel.setFrequentlyUpdated(true);
-        m_keyModel.setFrequentlyUpdated(true);
-        m_noteModel.setFrequentlyUpdated(true);
-        m_modModel.setFrequentlyUpdated(true);
+    m_volumeModel.setJournalling(false);
+    m_panModel.setJournalling(false);
+    m_keyModel.setJournalling(false);
+    m_noteModel.setJournalling(false);
+    m_modValueModel.setJournalling(false);
+
+    m_volumeModel.setFrequentlyUpdated(true);
+    m_panModel.setFrequentlyUpdated(true);
+    m_keyModel.setFrequentlyUpdated(true);
+    m_noteModel.setFrequentlyUpdated(true);
+    m_modValueModel.setFrequentlyUpdated(true);
 }
 
 InstrumentFunctionNoteOutting::~InstrumentFunctionNoteOutting()
@@ -1232,8 +1236,12 @@ bool InstrumentFunctionNoteOutting::processNote(NotePlayHandle* _n)
     m_panModel.setAutomatedValue(_n->getPanning());
     m_keyModel.setAutomatedValue(_n->key());
     m_noteModel.setAutomatedValue(_n->key() % 12);
-    m_modModel.setAutomatedValue(bound(
-            -1., real_t(_n->key() - DefaultKey) / real_t(DefaultKey), 1.));
+    m_modValueModel.setAutomatedValue(
+            bound(-1.,
+                  real_t(_n->key() - m_modRefKeyModel.value())
+                                  * m_modAmountModel.value()
+                          + m_modBaseModel.value(),
+                  1.));
 
     return true;
 }
@@ -1244,6 +1252,10 @@ void InstrumentFunctionNoteOutting::saveSettings(QDomDocument& _doc,
     m_enabledModel.saveSettings(_doc, _this, "enabled");
     m_minNoteGenerationModel.saveSettings(_doc, _this, "mingen");
     m_maxNoteGenerationModel.saveSettings(_doc, _this, "maxgen");
+
+    m_modRefKeyModel.saveSettings(_doc, _this, "mod_refkey");
+    m_modAmountModel.saveSettings(_doc, _this, "mod_amount");
+    m_modBaseModel.saveSettings(_doc, _this, "mod_base");
 }
 
 void InstrumentFunctionNoteOutting::loadSettings(const QDomElement& _this)
@@ -1251,6 +1263,10 @@ void InstrumentFunctionNoteOutting::loadSettings(const QDomElement& _this)
     m_enabledModel.loadSettings(_this, "enabled");
     m_minNoteGenerationModel.loadSettings(_this, "mingen");
     m_maxNoteGenerationModel.loadSettings(_this, "maxgen");
+
+    m_modRefKeyModel.loadSettings(_this, "mod_refkey");
+    m_modAmountModel.loadSettings(_this, "mod_amount");
+    m_modBaseModel.loadSettings(_this, "mod_base");
 }
 
 InstrumentFunctionView* InstrumentFunctionNoteOutting::createView()
@@ -1511,16 +1527,19 @@ bool InstrumentFunctionGlissando::processNote(NotePlayHandle* _n)
             a *= 1.05;
         a = bound(0., a, 0.99);
 
-        Note subnote(_n->length(), 0, key, _n->getVolume() * (1. - a),
-                     _n->getPanning(), _n->detuning());
+        if(!Engine::mixer()->criticalXRuns() && !_n->isTrackMuted())
+        {
+            Note subnote(_n->length(), 0, key, _n->getVolume() * (1. - a),
+                         _n->getPanning(), _n->detuning());
 
-        // create sub-note-play-handle, only ptr to note is different
-        // and is_gli_note=true
-        NotePlayHandle* nph = NotePlayHandleManager::acquire(
-                _n->instrumentTrack(), frames_processed, gated_frames,
-                subnote, _n, -1, NotePlayHandle::OriginGlissando,
-                _n->generation() + 1);
-        Engine::mixer()->emit playHandleToAdd(nph);
+            // create sub-note-play-handle, only ptr to note is different
+            // and is_gli_note=true
+            NotePlayHandle* nph = NotePlayHandleManager::acquire(
+                    _n->instrumentTrack(), frames_processed, gated_frames,
+                    subnote, _n, -1, NotePlayHandle::OriginGlissando,
+                    _n->generation() + 1);
+            Engine::mixer()->emit playHandleToAdd(nph);
+        }
 
         // update counters
         frames_processed += note_frames;
@@ -1546,15 +1565,18 @@ bool InstrumentFunctionGlissando::processNote(NotePlayHandle* _n)
     //      endTime);
     m_lastTime = endTime;
 
-    // recreate the note
-    Note note(_n->length(), _n->pos(), _n->key(), _n->getVolume(),
-              _n->getPanning(), _n->detuning());
+    if(!Engine::mixer()->criticalXRuns() && !_n->isTrackMuted())
+    {
+        // recreate the note
+        Note note(_n->length(), _n->pos(), _n->key(), _n->getVolume(),
+                  _n->getPanning(), _n->detuning());
 
-    NotePlayHandle* nph = NotePlayHandleManager::acquire(
-            _n->instrumentTrack(), frames_processed,
-            _n->frames() - total_frames, note, NULL, -1,
-            NotePlayHandle::OriginGlissando, _n->generation());
-    Engine::mixer()->emit playHandleToAdd(nph);
+        NotePlayHandle* nph = NotePlayHandleManager::acquire(
+                _n->instrumentTrack(), frames_processed,
+                _n->frames() - total_frames, note, NULL, -1,
+                NotePlayHandle::OriginGlissando, _n->generation());
+        Engine::mixer()->emit playHandleToAdd(nph);
+    }
 
     return false;
 }
@@ -1706,4 +1728,90 @@ void InstrumentFunctionNoteSustaining::loadSettings(const QDomElement& _this)
 InstrumentFunctionView* InstrumentFunctionNoteSustaining::createView()
 {
     return new InstrumentFunctionNoteSustainingView(this);
+}
+
+InstrumentFunctionNotePlaying::InstrumentFunctionNotePlaying(Model* _parent) :
+      InstrumentFunction(_parent, tr("Playing")),
+      m_gateModel(0., 0., 1., 1., this, tr("Gate")),
+      m_keyModel(DefaultKey, 0., NumKeys, 1., this, tr("Key")),
+      m_volModel(100., 0., 200., 0.1, this, tr("Volume")),
+      m_panModel(0., -100., 100., 0.1, this, tr("Pan")),
+      m_currentGeneration(0), m_currentNPH(nullptr)
+{
+    m_gateModel.setStrictStepSize(true);
+
+    //connect(Engine::getSong(), SIGNAL(playbackStateChanged()), this,
+    //        SLOT(reset()));
+    connect(&m_gateModel, SIGNAL(dataChanged()), this, SLOT(onGateChanged()));
+}
+
+InstrumentFunctionNotePlaying::~InstrumentFunctionNotePlaying()
+{
+}
+
+void InstrumentFunctionNotePlaying::reset()
+{
+    qInfo("InstrumentFunctionNotePlaying::reset");
+    if(m_currentNPH != nullptr)
+    {
+        m_currentNPH->decrRefCount();
+        m_currentNPH->noteOff();
+        m_currentNPH = nullptr;
+    }
+}
+
+bool InstrumentFunctionNotePlaying::processNote(NotePlayHandle* _n)
+{
+    return true;
+}
+
+void InstrumentFunctionNotePlaying::onGateChanged()
+{
+    qInfo("InstrumentFunctionNotePlaying::onGateChanged");
+
+    reset();
+
+    InstrumentTrack* track = dynamic_cast<InstrumentTrack*>(parent());
+    if(track == nullptr || track->isMuted() || m_gateModel.value() < 0.5
+       || Engine::mixer()->criticalXRuns())
+        return;
+
+    int  key = m_keyModel.value();
+    Note subnote(192 * 128, 0, key,
+                 m_volModel.value(),
+                 m_panModel.value(), nullptr);  // V,P,B
+
+    const int mingen=m_minNoteGenerationModel.value();
+    const int maxgen=m_maxNoteGenerationModel.value();
+    m_currentGeneration++;
+    if(m_currentGeneration>maxgen || m_currentGeneration<mingen)
+        m_currentGeneration=mingen;
+
+    NotePlayHandle* nph = NotePlayHandleManager::acquire(
+            track, 0, 192 * 128 * Engine::framesPerTick(), subnote, nullptr,
+            -1, NotePlayHandle::OriginPlaying, m_currentGeneration);
+
+    nph->incrRefCount();
+    m_currentNPH=nph;
+    Engine::mixer()->emit playHandleToAdd(nph);
+}
+
+void InstrumentFunctionNotePlaying::saveSettings(QDomDocument& _doc,
+                                                 QDomElement&  _this)
+{
+    m_enabledModel.saveSettings(_doc, _this, "enabled");
+    m_minNoteGenerationModel.saveSettings(_doc, _this, "mingen");
+    m_maxNoteGenerationModel.saveSettings(_doc, _this, "maxgen");
+}
+
+void InstrumentFunctionNotePlaying::loadSettings(const QDomElement& _this)
+{
+    m_enabledModel.loadSettings(_this, "enabled");
+    m_minNoteGenerationModel.loadSettings(_this, "mingen");
+    m_maxNoteGenerationModel.loadSettings(_this, "maxgen");
+}
+
+InstrumentFunctionView* InstrumentFunctionNotePlaying::createView()
+{
+    return new InstrumentFunctionNotePlayingView(this);
 }

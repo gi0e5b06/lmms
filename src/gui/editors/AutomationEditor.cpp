@@ -1438,8 +1438,7 @@ void AutomationEditor::paintEvent(QPaintEvent* pe)
         p.drawText(VALUES_WIDTH + 20, TOP_MARGIN + 40,
                    width() - VALUES_WIDTH - 20 - SCROLLBAR_SIZE,
                    grid_height - 40, Qt::TextWordWrap,
-                   tr("Please open an automation pattern with "
-                      "the context menu of a control!"));
+                   tr("Open an automation tile by double-clicking on it."));
     }
 
     // now draw selection-frame
@@ -2538,15 +2537,10 @@ void AutomationEditorWindow::setCurrentPattern(AutomationPattern* pattern)
 
     m_editor->setCurrentPattern(pattern);
 
-    // Set our window's title
-    if(pattern == nullptr)
-    {
-        setWindowTitle(tr("Automation Editor - no pattern"));
-        return;
-    }
+    updateWindowTitle();
 
-    setWindowTitle(
-            tr("Automation Editor - %1").arg(m_editor->m_pattern->name()));
+    if(pattern == nullptr)
+        return;
 
     switch(m_editor->m_pattern->progressionType())
     {
@@ -2587,6 +2581,13 @@ void AutomationEditorWindow::setCurrentPattern(AutomationPattern* pattern)
 const AutomationPattern* AutomationEditorWindow::currentPattern()
 {
     return m_editor->currentPattern();
+}
+
+void AutomationEditorWindow::updateWindowTitle()
+{
+    const AutomationPattern* p = currentPattern();
+    setWindowTitle(p != nullptr ? tr("Automation - %1").arg(p->name())
+                                : tr("Automation - no tile"));
 }
 
 void AutomationEditorWindow::dropEvent(QDropEvent* _de)
@@ -2648,18 +2649,6 @@ void AutomationEditorWindow::play()
 void AutomationEditorWindow::stop()
 {
     m_editor->stop();
-}
-
-void AutomationEditorWindow::updateWindowTitle()
-{
-    if(m_editor->m_pattern == nullptr)
-    {
-        setWindowTitle(tr("Automation Editor - no pattern"));
-        return;
-    }
-
-    setWindowTitle(
-            tr("Automation Editor - %1").arg(m_editor->m_pattern->name()));
 }
 
 // ActionUpdatable //

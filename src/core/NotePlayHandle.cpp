@@ -2,24 +2,23 @@
  * NotePlayHandle.cpp - implementation of class NotePlayHandle which manages
  *                      playback of a single note by an instrument
  *
+ * Copyright (c) 2018-2019 gi0e5b06 (on github.com)
  * Copyright (c) 2004-2014 Tobias Doerffel <tobydox/at/users.sourceforge.net>
  *
- * This file is part of LMMS - https://lmms.io
+ * This file is part of LSMM -
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public
- * License along with this program (see COPYING); if not, write to the
- * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
- * Boston, MA 02110-1301 USA.
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
 
@@ -58,15 +57,16 @@ NotePlayHandle::NotePlayHandle(InstrumentTrack* instrumentTrack,
            n.getVolume(),
            n.getPanning(),
            n.detuning()),
-      m_pluginData(NULL), m_filter(NULL), m_instrumentTrack(instrumentTrack),
-      m_frames(0), m_totalFramesPlayed(0), m_framesBeforeRelease(0),
-      m_releaseFramesToDo(0), m_releaseFramesDone(0), m_subNotes(true),
-      m_released(false), m_releaseStarted(false), m_parent(parent),
-      m_isMasterNote(false), m_muted(false), m_bbTrack(NULL),
+      m_pluginData(nullptr), m_filter1(nullptr), m_filter2(nullptr),
+      m_instrumentTrack(instrumentTrack), m_frames(0), m_totalFramesPlayed(0),
+      m_framesBeforeRelease(0), m_releaseFramesToDo(0),
+      m_releaseFramesDone(0), m_subNotes(true), m_released(false),
+      m_releaseStarted(false), m_parent(parent), m_isMasterNote(false),
+      m_muted(false), m_bbTrack(nullptr),
       m_origTempo(Engine::getSong()->getTempo()),
       m_origBaseNote(instrumentTrack->baseNote()), m_frequency(0),
       m_unpitchedFrequency(0),
-      // m_baseDetuning( NULL ),
+      // m_baseDetuning( nullptr ),
       m_automationDetune(0.), m_effectDetune(0.), m_songGlobalParentOffset(0),
       m_midiChannel(midiEventChannel >= 0
                             ? midiEventChannel
@@ -211,7 +211,8 @@ bool NotePlayHandle::done1()
         m_instrumentTrack->m_notes[key()] = nullptr;
     }
 
-    delete m_filter;
+    delete m_filter1;
+    delete m_filter2;
 
     if(buffer())
         releaseBuffer();
@@ -308,9 +309,7 @@ int NotePlayHandle::midiKey() const
 void NotePlayHandle::play(sampleFrame* _workingBuffer)
 {
     if(m_muted)
-    {
         return;
-    }
 
     // if the note offset falls over to next period, then don't start playback
     // yet
@@ -499,6 +498,12 @@ bool NotePlayHandle::isFromTrack(const Track* _track) const
     return m_instrumentTrack == _track || m_bbTrack == _track;
 }
 
+bool NotePlayHandle::isFromInstrument(const Instrument* _instrument) const
+{
+    return m_instrumentTrack != nullptr
+           && m_instrumentTrack->instrument() == _instrument;
+}
+
 void NotePlayHandle::noteOn(const f_cnt_t _s)
 {
     // if( hasParent() || ! m_instrumentTrack->isArpeggioEnabled() )
@@ -624,7 +629,7 @@ int NotePlayHandle::index() const
         it != playHandles.end(); ++it)
     {
         const NotePlayHandle* nph = dynamic_cast<const NotePlayHandle*>(*it);
-        if(nph == NULL || nph->m_instrumentTrack != m_instrumentTrack
+        if(nph == nullptr || nph->m_instrumentTrack != m_instrumentTrack
            || nph->isReleased() || nph->hasParent())
         {
             continue;
@@ -651,7 +656,7 @@ ConstNotePlayHandleList
        it != playHandles.end(); ++it)
    {
        const NotePlayHandle* nph = dynamic_cast<const NotePlayHandle*>(*it);
-       if(nph != NULL && nph->m_instrumentTrack == _it
+       if(nph != nullptr && nph->m_instrumentTrack == _it
           && ((nph->isReleased() == false && nph->hasParent() == false)
               || _all_ph == true))
        {
@@ -751,6 +756,12 @@ void NotePlayHandle::updateFrequency()
         n->updateFrequency();
     */
     m_subNotes.map([](NotePlayHandle* n) { n->updateFrequency(); });
+}
+
+bool NotePlayHandle::isTrackMuted() const
+{
+    return (m_instrumentTrack != nullptr && m_instrumentTrack->isMuted())
+           || (m_bbTrack != nullptr && m_bbTrack->isMuted());
 }
 
 void NotePlayHandle::processMidiTime(const MidiTime& time)

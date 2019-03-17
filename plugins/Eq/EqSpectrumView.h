@@ -23,8 +23,9 @@
 #ifndef EQSPECTRUMVIEW_H
 #define EQSPECTRUMVIEW_H
 
-#define FFT_BUFFER_SIZE 22050
-#define MAX_BANDS 22050
+#define FFT_BUFFER_SIZE 11025
+//22050
+#define MAX_BANDS 2750
 //512
 
 //#include "EqControls.h"

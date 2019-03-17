@@ -1,30 +1,29 @@
 /*
  * papu_Instrument.h - GameBoy papu based instrument
  *
- * Copyright (c) 2008 <Attila Herman <attila589/at/gmail.com>
- *				Csaba Hruska <csaba.hruska/at/gmail.com>
+ * Copyright (c) 2019 gi0e5b06 (on github.com)
+ * Copyright (c) 2008 Attila Herman <attila589/at/gmail.com>
+ *				      Csaba Hruska <csaba.hruska/at/gmail.com>
  *
- * This file is part of LMMS - https://lmms.io
+ * This file is part of LSMM -
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public
- * License along with this program (see COPYING); if not, write to the
- * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
- * Boston, MA 02110-1301 USA.
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
 
-#ifndef _PAPU_H
-#define _PAPU_H
+#ifndef PAPU_INSTRUMENT_H
+#define PAPU_INSTRUMENT_H
 
 #include "Graph.h"
 #include "Instrument.h"
@@ -56,9 +55,11 @@ class papuInstrument : public Instrument
 
     virtual PluginView* instantiateView(QWidget* _parent);
 
-    /*public slots:
-            void updateKnobHint();
-            void updateKnobToolTip();*/
+    /*
+      public slots:
+      void updateKnobHint();
+      void updateKnobToolTip();
+    */
 
   private:
     FloatModel m_ch1SweepTimeModel;
@@ -105,6 +106,7 @@ class papuInstrument : public Instrument
 class papuInstrumentView : public InstrumentView
 {
     Q_OBJECT
+
   public:
     papuInstrumentView(Instrument* _instrument, QWidget* _parent);
     virtual ~papuInstrumentView();
@@ -147,9 +149,11 @@ class papuInstrumentView : public InstrumentView
 
     Graph* m_graph;
 
-    /*protected slots:
-            void updateKnobHint();
-            void updateKnobToolTip();*/
+    /*
+      protected slots:
+      void updateKnobHint();
+      void updateKnobToolTip();
+    */
 };
 
 #endif

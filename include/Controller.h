@@ -30,6 +30,7 @@
 //#include "Model.h"
 #include "AutomatableModel.h"
 //#include "JournallingObject.h"
+#include "lmms_math.h"
 #include "templates.h"
 //#include "ValueBuffer.h"
 
@@ -101,7 +102,8 @@ class Controller : public Model, public JournallingObject
 
     inline static real_t fittedValue(real_t _val)
     {
-        return tLimit<real_t>(_val, 0., 1.);
+        return bound(0., _val, 1.);
+        // return tLimit<real_t>(_val, 0., 1.);
     }
 
     static long runningPeriods()

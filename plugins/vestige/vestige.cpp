@@ -456,8 +456,7 @@ VestigeInstrumentView::VestigeInstrumentView(Instrument* _instrument,
 
     const QString CSS_BUTTON = ("text-align: left; padding-left: 3px;");
 
-    QPushButton* m_toggleGUIButton
-            = new QPushButton(tr("Show/hide GUI"), this);
+    QPushButton* m_toggleGUIButton = new QPushButton(tr("Show GUI"), this);
     m_toggleGUIButton->setGeometry(6, 130, 118, 28);
     m_toggleGUIButton->setIcon(embed::getIconPixmap("zoom"));
     m_toggleGUIButton->setFont(pointSize<8>(m_toggleGUIButton->font()));
@@ -468,7 +467,7 @@ VestigeInstrumentView::VestigeInstrumentView(Instrument* _instrument,
                "(GUI) of your VST-plugin."));
 
     QPushButton* note_off_all_btn
-            = new QPushButton(tr("Turn off all notes"), this);
+            = new QPushButton(tr("Turn off"), this);  // all notes
     note_off_all_btn->setGeometry(6, 162, 118, 28);
     note_off_all_btn->setIcon(embed::getIconPixmap("stop"));
     note_off_all_btn->setFont(pointSize<8>(note_off_all_btn->font()));
@@ -476,7 +475,7 @@ VestigeInstrumentView::VestigeInstrumentView(Instrument* _instrument,
     connect(note_off_all_btn, SIGNAL(clicked()), this, SLOT(noteOffAll()));
 
     QPushButton* m_openPluginButton
-            = new QPushButton(tr("Open other VST"), this);  // VST-plugin
+            = new QPushButton(tr("Open"), this);  // other VST
     m_openPluginButton->setGeometry(128, 130, 118, 28);
     m_openPluginButton->setIcon(PLUGIN_NAME::getIconPixmap("select_file"));
     m_openPluginButton->setFont(pointSize<8>(m_openPluginButton->font()));
@@ -501,7 +500,7 @@ VestigeInstrumentView::VestigeInstrumentView(Instrument* _instrument,
     */
 
     QPushButton* m_managePluginButton
-            = new QPushButton(tr("Host controls"), this);
+            = new QPushButton(tr("Parameters"), this);  // Host controls
     m_managePluginButton->setGeometry(128, 162, 118, 28);
     m_managePluginButton->setIcon(PLUGIN_NAME::getIconPixmap("controls"));
     m_managePluginButton->setFont(pointSize<8>(m_managePluginButton->font()));
@@ -1011,7 +1010,7 @@ manageVestigeInstrumentView::manageVestigeInstrumentView(
     */
 
     sa->setWindowTitle(m_vi->instrumentTrack()->name()
-                       + tr(" - VST plugin control"));
+                       + " - "+tr("Parameters"));
     sa->setWindowIcon(PLUGIN_NAME::getIconPixmap("logo"));
     m_vi->m_controls
             = SubWindow::putWidgetOnWorkspace(sa, false, true, false, false);

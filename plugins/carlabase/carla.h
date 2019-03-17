@@ -1,25 +1,23 @@
 /*
  * carla.h - Carla for LMMS
  *
- * Copyright (C) 2014 Filipe Coelho <falktx@falktx.com>
- * Copyright (c) 2018 gi0e5b06 (on github.com)
+ * Copyright (c) 2018-2019 gi0e5b06 (on github.com)
+ * Copyright (C) 2014      Filipe Coelho <falktx@falktx.com>
  *
- * This file is part of LMMS - https://lmms.io
+ * This file is part of LSMM -
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public
- * License along with this program (see COPYING); if not, write to the
- * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
- * Boston, MA 02110-1301 USA.
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
 
@@ -45,15 +43,15 @@ class QHBoxLayout;
 class QLineEdit;
 class QPushButton;
 
-class CarlaParamsView;
+class CarlaInstrumentParamsView;
 
-#define NB_MIDI_KNOBS 128
+//#define NB_MIDI_KNOBS 128
 //#define NB_MIDI_LEDS        8
 //#define NB_MIDI_LCDS        0
-#define NB_MIDI_KNOB_START 0
+//#define NB_MIDI_KNOB_START 0
 //#define NB_MIDI_LED_START  60
 //#define NB_MIDI_LCD_START  70
-#define MIDI_CH 1
+//#define MIDI_CH 1
 
 class PLUGIN_EXPORT CarlaInstrument : public Instrument
 {
@@ -82,9 +80,9 @@ class PLUGIN_EXPORT CarlaInstrument : public Instrument
                               const float                      opt);
 
     // LMMS functions
-    virtual Flags       flags() const;
-    virtual f_cnt_t     desiredReleaseFrames() const;
-    //virtual QString     nodeName() const;
+    virtual Flags   flags() const;
+    virtual f_cnt_t desiredReleaseFrames() const;
+    // virtual QString     nodeName() const;
     virtual void        saveSettings(QDomDocument& doc, QDomElement& parent);
     virtual void        loadSettings(const QDomElement& elem);
     virtual void        play(sampleFrame* workingBuffer);
@@ -121,12 +119,12 @@ class PLUGIN_EXPORT CarlaInstrument : public Instrument
     QStringList m_completerList;
     // QStringListModel m_completerModel;
 
-    FloatModel* m_midiKnobs[NB_MIDI_KNOBS];
+    // FloatModel* m_midiKnobs[NB_MIDI_KNOBS];
     // BoolModel*   m_midiLeds [NB_MIDI_LEDS ];
     // IntModel*    m_midiLcds [NB_MIDI_LCDS ];
 
     friend class CarlaInstrumentView;
-    friend class CarlaParamsView;
+    friend class CarlaInstrumentParamsView;
 };
 
 class CarlaInstrumentView : public InstrumentView
@@ -154,22 +152,22 @@ class CarlaInstrumentView : public InstrumentView
 
     QPushButton* m_toggleUIButton;
 
-    Knob* m_midiKnobs[NB_MIDI_KNOBS];
+    // Knob* m_midiKnobs[NB_MIDI_KNOBS];
     // LedCheckBox* m_midiLeds [NB_MIDI_LEDS ];
     // LcdSpinBox*  m_midiLcds [NB_MIDI_LCDS ];
 
-    CarlaInstrument* m_carlaInstrument;
-    QPushButton*     m_toggleParamsWindowButton;
-    CarlaParamsView* m_paramsView;
+    CarlaInstrument*           m_carlaInstrument;
+    QPushButton*               m_toggleParamsWindowButton;
+    CarlaInstrumentParamsView* m_paramsView;
     // QWidget*         p_parent;
 };
 
-class CarlaParamsView : public QWidget  // InstrumentView
+class CarlaInstrumentParamsView : public QWidget  // InstrumentView
 {
     Q_OBJECT
   public:
-    CarlaParamsView(CarlaInstrument* instrument, QWidget* parent);
-    virtual ~CarlaParamsView();
+    CarlaInstrumentParamsView(CarlaInstrument* instrument, QWidget* parent);
+    virtual ~CarlaInstrumentParamsView();
 
     SubWindow* subWindow()
     {

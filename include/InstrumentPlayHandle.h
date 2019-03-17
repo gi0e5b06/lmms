@@ -45,6 +45,7 @@ class EXPORT InstrumentPlayHandle : public PlayHandle
     virtual void play(sampleFrame* _working_buffer);
     virtual bool isFinished() const;
     virtual bool isFromTrack(const Track* _track) const;
+    virtual bool isFromInstrument(const Instrument* _instrument) const;
 
     /*
     virtual f_cnt_t frames() const;

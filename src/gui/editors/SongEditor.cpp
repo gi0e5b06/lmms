@@ -1324,7 +1324,7 @@ SongEditorWindow::SongEditorWindow(Song* song) :
       m_editor(new SongEditor(song))
 //, m_crtlAction(nullptr)
 {
-    setWindowTitle(tr("Song-Editor"));
+    setWindowTitle(tr("Song"));
     setWindowIcon(embed::getIconPixmap("songeditor"));
 
     setCentralWidget(m_editor);

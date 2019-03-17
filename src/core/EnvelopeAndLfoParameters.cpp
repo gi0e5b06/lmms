@@ -327,7 +327,9 @@ void EnvelopeAndLfoParameters::fillLevel(real_t*       _buf,
 
     fillLfoLevel(_buf, _frame, _frames);
 
-    m_outBuffer.fill(0.);
+    m_outBuffer.lock();
+    if(m_outBuffer.period() <= AutomatableModel::periodCounter())
+        m_outBuffer.fill(0.);
 
     f_cnt_t sustainBegin = m_pahdFrames;
     f_cnt_t releaseBegin = _releaseBegin;
@@ -374,9 +376,13 @@ void EnvelopeAndLfoParameters::fillLevel(real_t*       _buf,
                               : env_level + *_buf,
                       1.);
         if(offset < m_outBuffer.length())
-            m_outBuffer.set(offset, *_buf);
+            m_outBuffer.set(
+                    offset,
+                    bound(-1., *_buf + m_outBuffer.value(offset), 1.));
     }
 
+    m_outBuffer.setPeriod(AutomatableModel::periodCounter()+1);
+    m_outBuffer.unlock();
     emit sendOut(&m_outBuffer);
 }
 

@@ -490,7 +490,8 @@ void EffectView::addRemoveMuteClearMenu(QMenu* _cm,
     QAction* a;
     a = _cm->addAction(
             embed::getIconPixmap("cancel"),
-            tr("Delete"),  // (<%1>+middle click)").arg(UI_SHIFT_KEY),
+            tr("Remove this effect"),  // Delete
+            // (<%1>+middle click)").arg(UI_SHIFT_KEY),
             this, SLOT(removeEffect()));  // remove
     a->setEnabled(_remove);
     a = _cm->addAction(
@@ -587,4 +588,9 @@ void EffectView::modelChanged()
     m_gateInKNB->setModel(&e->m_gateModel);
     m_balanceKNB->setModel(&e->m_balanceModel);
     m_balanceKNB->setVisible(e->isBalanceable());
+
+    m_enabledLCB->setVisible(e->isSwitchable());
+    m_wetDryKNB->setVisible(e->isWetDryable());
+    m_autoQuitKNB->setVisible(e->isGateable());
+    m_gateInKNB->setVisible(e->isGateable());
 }

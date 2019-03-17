@@ -551,76 +551,69 @@ void MainWindow::finalize()
     // window-toolbar
     ToolButton* song_editor_window
             = new ToolButton(embed::getIconPixmap("songeditor"),
-                             tr("Show/hide Song-Editor") + " (F5)", this,
+                             tr("Show/hide the song editor") + " (F5)", this,
                              SLOT(toggleSongEditorWin()), m_toolBar);
     song_editor_window->setShortcut(Qt::Key_F5);
     song_editor_window->setWhatsThis(
             tr("By pressing this button, you can show or hide the "
-               "Song-Editor. With the help of the Song-Editor you can "
-               "edit song-playlist and specify when which track "
-               "should be played. "
-               "You can also insert and move samples (e.g. "
-               "rap samples) directly into the playlist."));
+               "song editor. The song editor is used for creating the "
+               "tracks and how they should be played."));
 
     ToolButton* bb_editor_window
             = new ToolButton(embed::getIconPixmap("bb_track_btn"),
-                             tr("Show/hide Beat+Bassline Editor") + " (F6)",
-                             this, SLOT(toggleBBEditorWin()), m_toolBar);
+                             tr("Show/hide the beat editor") + " (F6)", this,
+                             SLOT(toggleBBEditorWin()), m_toolBar);
     bb_editor_window->setShortcut(Qt::Key_F6);
     bb_editor_window->setWhatsThis(
             tr("By pressing this button, you can show or hide the "
-               "Beat+Bassline Editor. The Beat+Bassline Editor is "
-               "needed for creating beats, and for opening, adding, and "
-               "removing channels, and for cutting, copying and pasting "
-               "beat and bassline-patterns, and for other things like "
-               "that."));
+               "beat editor. The beat editor is used "
+               "for creating beats and basslines."));
 
     ToolButton* piano_roll_window
             = new ToolButton(embed::getIconPixmap("piano"),
-                             tr("Show/hide Piano-Roll") + " (F7)", this,
+                             tr("Show/hide the piano roll") + " (F7)", this,
                              SLOT(togglePianoRollWin()), m_toolBar);
     piano_roll_window->setShortcut(Qt::Key_F7);
     piano_roll_window->setWhatsThis(
-            tr("Click here to show or hide the "
-               "Piano-Roll. With the help of the Piano-Roll "
-               "you can edit melodies in an easy way."));
+            tr("By pressing this button, you can show or hide the "
+               "piano roll. The piano roll is used for creating "
+               "patterns of notes, especially for the melodies."));
 
     ToolButton* automation_editor_window = new ToolButton(
             embed::getIconPixmap("automation"),
-            tr("Show/hide Automation Editor") + " (F8)", this,
+            tr("Show/hide the automation editor") + " (F8)", this,
             SLOT(toggleAutomationEditorWin()), m_toolBar);
     automation_editor_window->setShortcut(Qt::Key_F8);
     automation_editor_window->setWhatsThis(
-            tr("Click here to show or hide the "
-               "Automation Editor. With the help of the "
-               "Automation Editor you can edit dynamic values "
-               "in an easy way."));
+            tr("By pressing this button, you can show or hide the "
+               "automation editor. The automation editor is used "
+               "for creating curves of dynamic values for any parameter."));
 
     ToolButton* fx_mixer_window
             = new ToolButton(embed::getIconPixmap("fx_mixer"),
-                             tr("Show/hide FX Mixer") + " (F9)", this,
+                             tr("Show/hide the mixer") + " (F9)", this,
                              SLOT(toggleFxMixerWin()), m_toolBar);
     fx_mixer_window->setShortcut(Qt::Key_F9);
     fx_mixer_window->setWhatsThis(
-            tr("Click here to show or hide the "
-               "FX Mixer. The FX Mixer is a very powerful tool "
+            tr("By pressing this button, you can show or hide the "
+               "mixer. The mixer is a powerful tool "
                "for managing effects for your song. You can insert "
-               "effects into different effect-channels."));
+               "effects into different channels."));
 
     ToolButton* project_notes_window
             = new ToolButton(embed::getIconPixmap("project_notes"),
-                             tr("Show/hide project notes") + " (F10)", this,
-                             SLOT(toggleProjectNotesWin()), m_toolBar);
+                             tr("Show/hide the project notes") + " (F10)",
+                             this, SLOT(toggleProjectNotesWin()), m_toolBar);
     project_notes_window->setShortcut(Qt::Key_F10);
     project_notes_window->setWhatsThis(
-            tr("Click here to show or hide the "
-               "project notes window. In this window you can put "
-               "down your project notes."));
+            tr("By pressing this button, you can show or hide the "
+               "the editor for the project notes. You can write here "
+               "anything related to your song."));
 
     ToolButton* controllers_window
             = new ToolButton(embed::getIconPixmap("controller"),
-                             tr("Show/hide controller rack") + " (F11)", this,
-                             SLOT(toggleControllerRack()), m_toolBar);
+                             tr("Show/hide the controller rack") + " (F11)",
+                             this, SLOT(toggleControllerRack()), m_toolBar);
     controllers_window->setShortcut(Qt::Key_F11);
 
     ToolButton* reorganize_windows
@@ -1609,11 +1602,11 @@ void MainWindow::keyPressEvent(QKeyEvent* _ke)
             break;
         default:
         {
-            InstrumentTrackWindow* w
+            InstrumentTrackWindow* itw
                     = InstrumentTrackView::topLevelInstrumentTrackWindow();
-            if(w)
+            if(itw != nullptr)
             {
-                w->peripheralView()->keyPressEvent(_ke);
+                itw->peripheralView()->keyPressEvent(_ke);
             }
             if(!_ke->isAccepted())
             {
@@ -1637,11 +1630,11 @@ void MainWindow::keyReleaseEvent(QKeyEvent* _ke)
             m_keyMods.m_alt = false;
             break;
         default:
-            if(InstrumentTrackView::topLevelInstrumentTrackWindow())
+            InstrumentTrackWindow* itw
+                    = InstrumentTrackView::topLevelInstrumentTrackWindow();
+            if(itw != nullptr)
             {
-                InstrumentTrackView::topLevelInstrumentTrackWindow()
-                        ->peripheralView()
-                        ->keyReleaseEvent(_ke);
+                itw->peripheralView()->keyReleaseEvent(_ke);
             }
             if(!_ke->isAccepted())
             {

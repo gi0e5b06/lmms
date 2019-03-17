@@ -2,7 +2,7 @@
  * PeakController.h - peak-controller class
  *
  * Copyright (c) 2008-2009 Paul Giblock <drfaygo/at/gmail.com>
- * 
+ *
  * This file is part of LMMS - https://lmms.io
  *
  * This program is free software; you can redistribute it and/or
@@ -33,70 +33,66 @@ class QWidget;
 
 class PeakControllerEffect;
 
-typedef QVector<PeakControllerEffect *> PeakControllerEffectVector;
-
+typedef QVector<PeakControllerEffect*> PeakControllerEffectVector;
 
 class EXPORT PeakController : public Controller
 {
-	Q_OBJECT
-public:
-	PeakController( Model * _parent,
-		PeakControllerEffect *_peak_effect = NULL );
+    Q_OBJECT
 
+  public:
+    PeakController(Model*                _parent,
+                   PeakControllerEffect* _peak_effect = nullptr);
 
-	virtual ~PeakController();
+    virtual ~PeakController();
 
-	virtual void saveSettings( QDomDocument & _doc, QDomElement & _this );
-	virtual void loadSettings( const QDomElement & _this );
-	virtual QString nodeName() const;
+    virtual void    saveSettings(QDomDocument& _doc, QDomElement& _this);
+    virtual void    loadSettings(const QDomElement& _this);
+    virtual QString nodeName() const;
 
-	static void initGetControllerBySetting();
-	static PeakController * getControllerBySetting( const QDomElement & _this );
+    static void            initGetControllerBySetting();
+    static PeakController* getControllerBySetting(const QDomElement& _this);
 
-	static PeakControllerEffectVector s_effects;
+    static PeakControllerEffectVector s_effects;
 
+  public slots:
+    virtual ControllerDialog* createDialog(QWidget* _parent);
+    void                      handleDestroyedEffect();
+    void                      updateCoeffs();
 
-public slots:
-	virtual ControllerDialog * createDialog( QWidget * _parent );
-	void handleDestroyedEffect( );
-	void updateCoeffs();
+  protected:
+    // The internal per-controller get-value function
+    virtual void fillValueBuffer();
 
-protected:
-	// The internal per-controller get-value function
-	virtual void fillValueBuffer();
+    PeakControllerEffect* m_peakEffect;
 
-	PeakControllerEffect * m_peakEffect;
+    friend class PeakControllerDialog;
 
-	friend class PeakControllerDialog;
+  private:
+    sample_t m_currentSample;
+    // backward compatibility for <= 0.4.15
+    static int  m_getCount;
+    static int  m_loadCount;
+    static bool m_buggedFile;
 
-private:
-	sample_t m_currentSample;
-	//backward compatibility for <= 0.4.15
-	static int m_getCount;
-	static int m_loadCount;
-	static bool m_buggedFile;
-
-	real_t m_attackCoeff;
-	real_t m_decayCoeff;
-	bool m_coeffNeedsUpdate;
-} ;
-
-
+    real_t m_attackCoeff;
+    real_t m_decayCoeff;
+    bool   m_coeffNeedsUpdate;
+};
 
 class PeakControllerDialog : public ControllerDialog
 {
-	Q_OBJECT
-public:
-	PeakControllerDialog( Controller * _controller, QWidget * _parent );
-	virtual ~PeakControllerDialog();
+    Q_OBJECT
 
-protected:
-	virtual void contextMenuEvent( QContextMenuEvent * _me );
-	virtual void paintEvent( QPaintEvent * _pe );
-	virtual void modelChanged();
+  public:
+    PeakControllerDialog(Controller* _controller, QWidget* _parent);
+    virtual ~PeakControllerDialog();
 
-	PeakController * m_peakController;
+  protected:
+    virtual void contextMenuEvent(QContextMenuEvent* _me);
+    virtual void paintEvent(QPaintEvent* _pe);
+    virtual void modelChanged();
 
-} ;
+    PeakController* m_peakController;
+};
 
 #endif

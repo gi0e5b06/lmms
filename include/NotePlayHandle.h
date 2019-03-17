@@ -2,24 +2,23 @@
  * NotePlayHandle.h - declaration of class NotePlayHandle which manages
  *                    playback of a single note by an instrument
  *
+ * Copyright (c) 2018-2019 gi0e5b06 (on github.com)
  * Copyright (c) 2004-2014 Tobias Doerffel <tobydox/at/users.sourceforge.net>
  *
- * This file is part of LMMS - https://lmms.io
+ * This file is part of LSMM -
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public
- * License along with this program (see COPYING); if not, write to the
- * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
- * Boston, MA 02110-1301 USA.
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
 
@@ -45,8 +44,8 @@ class NotePlayHandle;
 class NotePlayHandleManager;
 class Scale;
 
-typedef QList<NotePlayHandle*>       NotePlayHandleList;
-typedef QList<const NotePlayHandle*> ConstNotePlayHandleList;
+typedef QList<NotePlayHandle*>          NotePlayHandleList;
+typedef QList<const NotePlayHandle*>    ConstNotePlayHandleList;
 typedef SafeList<NotePlayHandle*>       NotePlayHandles;
 typedef SafeList<const NotePlayHandle*> ConstNotePlayHandles;
 
@@ -59,7 +58,8 @@ class EXPORT NotePlayHandle /*final*/
 
   public:
     void*           m_pluginData;
-    BasicFilters<>* m_filter;
+    BasicFilters<>* m_filter1;
+    BasicFilters<>* m_filter2;
 
     // specifies origin of NotePlayHandle
     enum Origins
@@ -70,6 +70,7 @@ class EXPORT NotePlayHandle /*final*/
         = 4, /*! created by note stacking instrument function */
         OriginArpeggio  = 8,  /*! created by arpeggio instrument function */
         OriginGlissando = 16, /*! created by glissando instrument function */
+        OriginPlaying   = 32, /*! created by playing instrument function */
         // OriginCount //not used
     };
     // typedef Origins Origin;
@@ -114,6 +115,9 @@ class EXPORT NotePlayHandle /*final*/
 
     /*! Returns whether the play handle plays on a certain track */
     virtual bool isFromTrack(const Track* _track) const;
+
+    /*! Returns whether the play handle plays a certain instrument */
+    virtual bool isFromInstrument(const Instrument* _instrument) const;
 
     /*! Returns number of frames left for playback */
     virtual f_cnt_t framesLeft() const;
@@ -251,12 +255,16 @@ class EXPORT NotePlayHandle /*final*/
     /*! Returns whether given NotePlayHandle instance is equal to *this */
     // bool operator==(const NotePlayHandle& _nph) const;
 
+    bool isTrackMuted() const;
+
     /*! Returns whether NotePlayHandle belongs to BB track and BB track is
      * muted */
+    /*
     bool isBbTrackMuted()
     {
-        return m_bbTrack && m_bbTrack->isMuted();
+        return m_bbTrack != nullptr && m_bbTrack->isMuted();
     }
+    */
 
     /*! Sets attached BB track */
     void setBBTrack(Track* t)
@@ -324,7 +332,7 @@ class EXPORT NotePlayHandle /*final*/
                    const f_cnt_t    offset,
                    const f_cnt_t    frames,
                    const Note&      noteToPlay,
-                   NotePlayHandle*  parent           = NULL,
+                   NotePlayHandle*  parent           = nullptr,
                    const int        midiEventChannel = -1,
                    const Origin     origin           = OriginPattern,
                    const int        generation       = 0);
@@ -448,7 +456,7 @@ static bool safe()
                                    const f_cnt_t    offset,
                                    const f_cnt_t    frames,
                                    const Note&      noteToPlay,
-                                   NotePlayHandle*  parent           = NULL,
+                                   NotePlayHandle*  parent = nullptr,
                                    const int        midiEventChannel = -1,
                                    const NotePlayHandle::Origin origin
                                    = NotePlayHandle::OriginPattern,

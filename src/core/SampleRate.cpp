@@ -1,24 +1,22 @@
 /*
  * SampleRate.cpp -
  *
- * Copyright (c) 2018 gi0e5b06 (on github.com)
+ * Copyright (c) 2018-2019 gi0e5b06 (on github.com)
  *
- * This file is part of LMMS - https://lmms.io
+ * This file is part of LSMM -
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public
- * License along with this program (see COPYING); if not, write to the
- * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
- * Boston, MA 02110-1301 USA.
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
 
@@ -66,7 +64,7 @@ bool SampleRate::resample(const sampleFrame* _srcBuf,
 #endif
 #ifdef REAL_IS_FLOAT
     const FLOAT* srcBuf = _srcBuf[0];
-    FLOAT* dstBuf = _dstBuf[0];
+    FLOAT*       dstBuf = _dstBuf[0];
 #endif
 
     {
@@ -140,7 +138,8 @@ bool SampleRate::resample(const sampleFrame* _srcBuf,
         if(srcSize != 0 && src_data.output_frames_gen == 0)
         {
             qCritical("SampleRate: could not resample, no frames generated");
-            qCritical("srcSize=%d inputFrames=%d frqRatio=%f",srcSize,inputFramesUsed,frqRatio);
+            qCritical("srcSize=%d inputFrames=%d frqRatio=%f", srcSize,
+                      inputFramesUsed, frqRatio);
             return false;
         }
 
@@ -205,3 +204,29 @@ bool SampleRate::resample(const sampleFrame* _srcBuf,
 
     return true;
 }
+
+/*
+bool SampleRate::oversample(const sampleFrame* _srcBuf,
+                            sampleFrame*       _dstBuf,
+                            const f_cnt_t      _srcSize,
+                            const f_cnt_t      _dstSize,
+                            const interpolation_t _quality)  // 0-10
+{
+}
+
+
+
+4 x                                         x
+3                                     -
+2   + -                         x
+1                         -
+0          x    -    x    +
+-1              +
+
+(-y0*0.2 + y1 + y2 + -y3*0.2) / 1.6
+
+
+(-4*0.2+0+0-2*0.2)/1.6 ~= -0.7
+(-0*0.2+0+2-4*0.2)/1.6 ~= +0.7
+
+*/

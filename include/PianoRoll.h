@@ -496,7 +496,7 @@ class PianoRollWindow : public Editor, SerializingObject
     void currentPatternChanged();
 
   private slots:
-    void patternRenamed();
+    void updateWindowTitle();
     void ghostPatternSet(bool state);
 
   private:

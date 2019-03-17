@@ -123,31 +123,29 @@ bool DualFilterEffect::processAudioBuffer(sampleFrame* buf,
         computeWetDryLevels(f, frames, smoothBegin, smoothEnd, w0, d0, w1,
                             d1);
 
-        // get mix amounts for wet signals of both filters
-        const real_t mix2  = ((*mixPtr + 1.) * 0.5);
-        const real_t mix1  = 1. - mix2;
-        const real_t gain1 = *gain1Ptr * 0.01;
-        const real_t gain2 = *gain2Ptr * 0.01;
-        sample_t     s[2]  = {0., 0.};                // mix
-        sample_t     s1[2] = {buf[f][0], buf[f][1]};  // filter 1
-        sample_t     s2[2] = {buf[f][0], buf[f][1]};  // filter 2
+        sample_t s[2] = {0., 0.};
 
         // update filter 1
         if(enabled1)
         {
+            const real_t mix1  = 0.5 * (1. - *mixPtr);
+            const real_t gain1 = *gain1Ptr * 0.01;
+            sample_t     s1[2] = {buf[f][0], buf[f][1]};
+
             // update filter 1 params here
             // recalculate only when necessary: either cut/res is changed, or
             // the changed-flag is set (filter type or samplerate changed)
             if(((*cut1Ptr != m_currentCut1 || *res1Ptr != m_currentRes1))
                || m_filter1changed)
             {
-                m_filter1->calcFilterCoeffs(*cut1Ptr, *res1Ptr);
+                m_filter1->calcFilterCoeffs(*cut1Ptr, *res1Ptr, 0.);
                 m_filter1changed = false;
                 m_currentCut1    = *cut1Ptr;
                 m_currentRes1    = *res1Ptr;
             }
-            s1[0] = m_filter1->update(s1[0], 0);
-            s1[1] = m_filter1->update(s1[1], 1);
+            // s1[0] = m_filter1->update(s1[0], 0);
+            // s1[1] = m_filter1->update(s1[1], 1);
+            m_filter1->update(s1);
 
             // apply gain
             s1[0] *= gain1;
@@ -161,17 +159,22 @@ bool DualFilterEffect::processAudioBuffer(sampleFrame* buf,
         // update filter 2
         if(enabled2)
         {
+            const real_t mix2  = 0.5 * (1. + *mixPtr);
+            const real_t gain2 = *gain2Ptr * 0.01;
+            sample_t     s2[2] = {buf[f][0], buf[f][1]};
+
             // update filter 2 params here
             if(((*cut2Ptr != m_currentCut2 || *res2Ptr != m_currentRes2))
                || m_filter2changed)
             {
-                m_filter2->calcFilterCoeffs(*cut2Ptr, *res2Ptr);
+                m_filter2->calcFilterCoeffs(*cut2Ptr, *res2Ptr, 0.);
                 m_filter2changed = false;
                 m_currentCut2    = *cut2Ptr;
                 m_currentRes2    = *res2Ptr;
             }
-            s2[0] = m_filter2->update(s2[0], 0);
-            s2[1] = m_filter2->update(s2[1], 1);
+            // s2[0] = m_filter2->update(s2[0], 0);
+            // s2[1] = m_filter2->update(s2[1], 1);
+            m_filter2->update(s2);
 
             // apply gain
             s2[0] *= gain2;

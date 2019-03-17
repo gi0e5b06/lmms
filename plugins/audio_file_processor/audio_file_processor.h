@@ -2,24 +2,23 @@
  * audio_file_processor.h - declaration of class audioFileProcessor
  *                          (instrument-plugin for using audio-files)
  *
+ * Copyright (c) 2017-2019 gi0e5b06 (on github.com)
  * Copyright (c) 2004-2014 Tobias Doerffel <tobydox/at/users.sourceforge.net>
  *
- * This file is part of LMMS - https://lmms.io
+ * This file is part of LSMM -
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public
- * License along with this program (see COPYING); if not, write to the
- * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
- * Boston, MA 02110-1301 USA.
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
 
@@ -51,7 +50,7 @@ class audioFileProcessor : public Instrument
 
     virtual void loadFile(const QString& _file);
 
-    //virtual QString nodeName() const;
+    // virtual QString nodeName() const;
 
     virtual int getBeatLen(NotePlayHandle* _n) const;
 
@@ -134,18 +133,19 @@ class AudioFileProcessorView : public InstrumentView
     Knob*                       m_endKnob;
     Knob*                       m_loopKnob;
 
-    PixmapButton*               m_openAudioFileButton;
-    PixmapButton*               m_reverseButton;
-    automatableButtonGroup*     m_loopGroup;
-    PixmapButton*               m_stutterButton;
-    ComboBox*                   m_interpBox;
+    PixmapButton*           m_openAudioFileButton;
+    PixmapButton*           m_reverseButton;
+    automatableButtonGroup* m_loopGroup;
+    PixmapButton*           m_stutterButton;
+    ComboBox*               m_interpBox;
 };
 
 class AudioFileProcessorWaveView : public QWidget
 {
     Q_OBJECT
+
   protected:
-    virtual void updateCursor(QMouseEvent* _me = NULL);
+    virtual void updateCursor(QMouseEvent* _me = nullptr);
     virtual void enterEvent(QEvent* _e);
     virtual void leaveEvent(QEvent* _e);
     virtual void mousePressEvent(QMouseEvent* _me);

@@ -166,7 +166,7 @@ GuiApplication::GuiApplication(bool showSplashScreen)
 
 GuiApplication::~GuiApplication()
 {
-	InstrumentTrackView::cleanupWindowCache();
+	// InstrumentTrackView::cleanupWindowCache();
 	s_instance = nullptr;
 }
 

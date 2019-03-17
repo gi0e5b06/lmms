@@ -55,7 +55,7 @@ QPixmap* PatternView::s_stepBtnOff      = NULL;
 QPixmap* PatternView::s_stepBtnOffLight = NULL;
 
 Pattern::Pattern(InstrumentTrack* _instrument_track) :
-      TrackContentObject(_instrument_track, "Pattern tile"),
+      TrackContentObject(_instrument_track, "Score tile"),
       m_instrumentTrack(_instrument_track), m_patternType(MelodyPattern)
 {
     setName(_instrument_track->name());
@@ -721,7 +721,7 @@ QMenu* PatternView::buildContextMenu()
 
     QAction* a;
 
-    cm->addAction(embed::getIconPixmap("piano"), tr("Open in piano-roll"),
+    cm->addAction(embed::getIconPixmap("piano"), tr("Open in the piano roll"),
                   this, SLOT(openInPianoRoll()));
     cm->addSeparator();
     addRemoveMuteClearMenu(cm, true, true, !m_pat->m_notes.empty());

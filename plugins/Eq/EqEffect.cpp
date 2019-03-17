@@ -1,5 +1,5 @@
 /*
- * eqeffect.cpp - defination of EqEffect class.
+ * EqEffect.cpp -
  *
  * Copyright (c) 2014 David French <dave/dot/french3/at/googlemail/dot/com>
  *
@@ -62,6 +62,8 @@ bool EqEffect::processAudioBuffer(sampleFrame* buf, const fpp_t frames)
     bool smoothBegin, smoothEnd;
     if(!shouldProcessAudioBuffer(buf, frames, smoothBegin, smoothEnd))
         return false;
+
+    // int passes = m_eqControls.m_passesModel.value() + 1;
 
     // setup sample exact controls
     real_t hpRes        = m_eqControls.m_hpResModel.value();
@@ -190,6 +192,27 @@ bool EqEffect::processAudioBuffer(sampleFrame* buf, const fpp_t frames)
         m_inGain = dbfsToAmp(m_eqControls.m_inGainModel.value());
     }
 
+    //if(hpActive) m_hp12.setPasses(passes);
+    /*
+    EqHp12Filter m_hp24;
+    EqHp12Filter m_hp480;
+    EqHp12Filter m_hp481;
+
+    EqLowShelfFilter m_lowShelf;
+
+    EqPeakFilter m_para1;
+    EqPeakFilter m_para2;
+    EqPeakFilter m_para3;
+    EqPeakFilter m_para4;
+
+    EqHighShelfFilter m_highShelf;
+
+    EqLp12Filter m_lp12;
+    EqLp12Filter m_lp24;
+    EqLp12Filter m_lp480;
+    EqLp12Filter m_lp481;
+    */
+    
     m_eqControls.m_inProgress = true;
 
     const real_t outGain    = m_outGain;
@@ -227,25 +250,48 @@ bool EqEffect::processAudioBuffer(sampleFrame* buf, const fpp_t frames)
         if(hpActive)
         {
             m_hp12.setParameters(sampleRate, *hpFreqPtr, *hpResPtr, 1);
-            buf[f][0] = m_hp12.update(buf[f][0], 0);
-            buf[f][1] = m_hp12.update(buf[f][1], 1);
+            // for(int p = 0; p < passes; p++)
+            {
+                // buf[f][0] = bound(-1., m_hp12.update(buf[f][0], 0), 1.);
+                // buf[f][1] = bound(-1., m_hp12.update(buf[f][1], 1), 1.);
+                m_hp12.update(buf[f]);
+            }
 
             if(hp24Active || hp48Active)
             {
                 m_hp24.setParameters(sampleRate, *hpFreqPtr, *hpResPtr, 1);
-                buf[f][0] = m_hp24.update(buf[f][0], 0);
-                buf[f][1] = m_hp24.update(buf[f][1], 1);
+                // for(int p = 0; p < passes; p++)
+                {
+                    // buf[f][0] = bound(-1., m_hp24.update(buf[f][0],
+                    // 0), 1.); buf[f][1] = bound(-1.,
+                    // m_hp24.update(buf[f][1], 1), 1.);
+                    m_hp24.update(buf[f]);
+                }
             }
 
             if(hp48Active)
             {
                 m_hp480.setParameters(sampleRate, *hpFreqPtr, *hpResPtr, 1);
-                buf[f][0] = m_hp480.update(buf[f][0], 0);
-                buf[f][1] = m_hp480.update(buf[f][1], 1);
-
+                // for(int p = 0; p < passes; p++)
+                {
+                    /*
+                      buf[f][0] = bound(-1., m_hp480.update(buf[f][0],
+                      0), 1.);
+                      buf[f][1] = bound(-1.,
+                      m_hp480.update(buf[f][1], 1), 1.);
+                    */
+                    m_hp480.update(buf[f]);
+                }
                 m_hp481.setParameters(sampleRate, *hpFreqPtr, *hpResPtr, 1);
-                buf[f][0] = m_hp481.update(buf[f][0], 0);
-                buf[f][1] = m_hp481.update(buf[f][1], 1);
+                // for(int p = 0; p < passes; p++)
+                {
+                    /*
+                      buf[f][0] = bound(-1., m_hp481.update(buf[f][0],
+                      0), 1.); buf[f][1] = bound(-1.,
+                      m_hp481.update(buf[f][1], 1), 1.);
+                    */
+                    m_hp481.update(buf[f]);
+                }
             }
         }
 
@@ -253,78 +299,127 @@ bool EqEffect::processAudioBuffer(sampleFrame* buf, const fpp_t frames)
         {
             m_lowShelf.setParameters(sampleRate, *lowShelfFreqPtr,
                                      *lowShelfResPtr, lowShelfGain);
-            buf[f][0] = m_lowShelf.update(buf[f][0], 0);
-            buf[f][1] = m_lowShelf.update(buf[f][1], 1);
+            // for(int p = 0; p < passes; p++)
+            {
+                /*
+                  buf[f][0] = bound(-1., m_lowShelf.update(buf[f][0], 0), 1.);
+                  buf[f][1] = bound(-1., m_lowShelf.update(buf[f][1], 1), 1.);
+                */
+                m_lowShelf.update(buf[f]);
+            }
         }
 
         if(para1Active)
         {
             m_para1.setParameters(sampleRate, *para1FreqPtr, *para1BwPtr,
                                   para1Gain);
-            buf[f][0] = m_para1.update(buf[f][0], 0);
-            buf[f][1] = m_para1.update(buf[f][1], 1);
+            // for(int p = 0; p < passes; p++)
+            {
+                // buf[f][0] = bound(-1., m_para1.update(buf[f][0], 0), 1.);
+                // buf[f][1] = bound(-1., m_para1.update(buf[f][1], 1), 1.);
+                m_para1.update(buf[f]);
+            }
         }
 
         if(para2Active)
         {
             m_para2.setParameters(sampleRate, *para2FreqPtr, *para2BwPtr,
                                   para2Gain);
-            buf[f][0] = m_para2.update(buf[f][0], 0);
-            buf[f][1] = m_para2.update(buf[f][1], 1);
+            // for(int p = 0; p < passes; p++)
+            {
+                // buf[f][0] = bound(-1., m_para2.update(buf[f][0], 0), 1.);
+                // buf[f][1] = bound(-1., m_para2.update(buf[f][1], 1), 1.);
+                m_para2.update(buf[f]);
+            }
         }
 
         if(para3Active)
         {
             m_para3.setParameters(sampleRate, *para3FreqPtr, *para3BwPtr,
                                   para3Gain);
-            buf[f][0] = m_para3.update(buf[f][0], 0);
-            buf[f][1] = m_para3.update(buf[f][1], 1);
+            // for(int p = 0; p < passes; p++)
+            {
+                // buf[f][0] = bound(-1., m_para3.update(buf[f][0], 0), 1.);
+                // buf[f][1] = bound(-1., m_para3.update(buf[f][1], 1), 1.);
+                m_para3.update(buf[f]);
+            }
         }
 
         if(para4Active)
         {
             m_para4.setParameters(sampleRate, *para4FreqPtr, *para4BwPtr,
                                   para4Gain);
-            buf[f][0] = m_para4.update(buf[f][0], 0);
-            buf[f][1] = m_para4.update(buf[f][1], 1);
+            // for(int p = 0; p < passes; p++)
+            {
+                // buf[f][0] = bound(-1., m_para4.update(buf[f][0], 0), 1.);
+                // buf[f][1] = bound(-1., m_para4.update(buf[f][1], 1), 1.);
+                m_para4.update(buf[f]);
+            }
         }
 
         if(highShelfActive)
         {
             m_highShelf.setParameters(sampleRate, *hightShelfFreqPtr,
                                       *highShelfResPtr, highShelfGain);
-            buf[f][0] = m_highShelf.update(buf[f][0], 0);
-            buf[f][1] = m_highShelf.update(buf[f][1], 1);
+            // for(int p = 0; p < passes; p++)
+            {
+                // buf[f][0] = bound(-1., m_highShelf.update(buf[f][0],
+                // 0), 1.);
+                // buf[f][1] = bound(-1., m_highShelf.update(buf[f][1],
+                // 1), 1.);
+                m_highShelf.update(buf[f]);
+            }
         }
 
         if(lpActive)
         {
             m_lp12.setParameters(sampleRate, *lpFreqPtr, *lpResPtr, 1);
-            buf[f][0] = m_lp12.update(buf[f][0], 0);
-            buf[f][1] = m_lp12.update(buf[f][1], 1);
+            // for(int p = 0; p < passes; p++)
+            {
+                // buf[f][0] = bound(-1., m_lp12.update(buf[f][0], 0), 1.);
+                // buf[f][1] = bound(-1., m_lp12.update(buf[f][1], 1), 1.);
+                m_lp12.update(buf[f]);
+            }
 
             if(lp24Active || lp48Active)
             {
                 m_lp24.setParameters(sampleRate, *lpFreqPtr, *lpResPtr, 1);
-                buf[f][0] = m_lp24.update(buf[f][0], 0);
-                buf[f][1] = m_lp24.update(buf[f][1], 1);
+                // for(int p = 0; p < passes; p++)
+                {
+                    // buf[f][0] = bound(-1., m_lp24.update(buf[f][0],
+                    // 0), 1.);
+                    // buf[f][1] = bound(-1., m_lp24.update(buf[f][1],
+                    // 1), 1.);
+                    m_lp24.update(buf[f]);
+                }
             }
 
             if(lp48Active)
             {
                 m_lp480.setParameters(sampleRate, *lpFreqPtr, *lpResPtr, 1);
-                buf[f][0] = m_lp480.update(buf[f][0], 0);
-                buf[f][1] = m_lp480.update(buf[f][1], 1);
-
+                // for(int p = 0; p < passes; p++)
+                {
+                    // buf[f][0] = bound(-1., m_lp480.update(buf[f][0],
+                    // 0), 1.);
+                    // buf[f][1] = bound(-1., m_lp480.update(buf[f][1],
+                    // 1), 1.);
+                    m_lp480.update(buf[f]);
+                }
                 m_lp481.setParameters(sampleRate, *lpFreqPtr, *lpResPtr, 1);
-                buf[f][0] = m_lp481.update(buf[f][0], 0);
-                buf[f][1] = m_lp481.update(buf[f][1], 1);
+                // for(int p = 0; p < passes; p++)
+                {
+                    // buf[f][0] = bound(-1., m_lp481.update(buf[f][0],
+                    // 0), 1.);
+                    // buf[f][1] = bound(-1., m_lp481.update(buf[f][1],
+                    // 1), 1.);
+                    m_lp481.update(buf[f]);
+                }
             }
         }
 
         // apply wet / dry levels
-        buf[f][0] = (d0 * dryS[0]) + (w0 * buf[f][0]);
-        buf[f][1] = (d1 * dryS[1]) + (w1 * buf[f][1]);
+        buf[f][0] = (d0 * dryS[0]) + (w0 * bound(-1., buf[f][0], 1.));
+        buf[f][1] = (d1 * dryS[1]) + (w1 * bound(-1., buf[f][1], 1.));
 
         // increment pointers if needed
         hpResPtr += hpResInc;
@@ -359,7 +454,7 @@ bool EqEffect::processAudioBuffer(sampleFrame* buf, const fpp_t frames)
        && m_eqControls.m_outFftBands.getActive())  // outSum > 0 )
     {
         m_eqControls.m_outFftBands.analyze(buf, frames);
-        setBandPeaks(&m_eqControls.m_outFftBands, (int)(sampleRate));
+        setBandPeaks(&m_eqControls.m_outFftBands, int(sampleRate));
     }
     else
     {

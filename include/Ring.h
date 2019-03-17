@@ -1,26 +1,24 @@
 /*
- * RingBuffer.h - an effective and flexible implementation of a ringbuffer for
- * LMMS
+ * Ring.h -
  *
- * Copyright (c) 2014 Vesa Kivimäki
+ * Copyright (c) 2018-2019 gi0e5b06 (on github.com)
+ * Copyright (c) 2014      Vesa Kivimäki
  * Copyright (c) 2005-2014 Tobias Doerffel <tobydox/at/users.sourceforge.net>
  *
- * This file is part of LMMS - https://lmms.io
+ * This file is part of LSMM -
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public
- * License along with this program (see COPYING); if not, write to the
- * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
- * Boston, MA 02110-1301 USA.
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
 
@@ -65,6 +63,16 @@ class EXPORT Ring : public QObject
     const real_t maxLevel() const
     {
         return m_maxLevel;
+    }
+
+    const f_cnt_t position() const
+    {
+            return m_position;
+    }
+
+    const real_t positiont() const
+    {
+            return framesToMs(m_position);
     }
 
     const bool isFrozen() const
@@ -130,12 +138,12 @@ class EXPORT Ring : public QObject
     inline f_cnt_t msToFrames(const real_t _ms) const
     {
         return static_cast<f_cnt_t>(
-                ceilf(_ms * (real_t)m_sampleRate * 0.001f));
+                round(_ms * real_t(m_sampleRate) * 0.001));
     }
 
     inline real_t framesToMs(const f_cnt_t _size) const
     {
-        return real_t(_size) * 1000.f / (real_t)m_sampleRate;
+        return real_t(_size) * 1000. / real_t(m_sampleRate);
     }
 
     inline f_cnt_t relpos(const f_cnt_t _offset) const

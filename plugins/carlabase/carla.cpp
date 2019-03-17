@@ -1,25 +1,23 @@
 /*
- * carla.cpp - Carla for LMMS
+ * carla.cpp - Carla for LSMM
  *
- * Copyright (C) 2014 Filipe Coelho <falktx@falktx.com>
- * Copyright (c) 2018 gi0e5b06 (on github.com)
+ * Copyright (c) 2018-2019 gi0e5b06 (on github.com)
+ * Copyright (C) 2014      Filipe Coelho <falktx@falktx.com>
  *
- * This file is part of LMMS - https://lmms.io
+ * This file is part of LSMM -
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public
- * License along with this program (see COPYING); if not, write to the
- * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
- * Boston, MA 02110-1301 USA.
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
 
@@ -216,6 +214,7 @@ CarlaInstrument::CarlaInstrument(InstrumentTrack* const  instrumentTrack,
     if(fHandle != nullptr && fDescriptor->activate != nullptr)
         fDescriptor->activate(fHandle);
 
+    /*
     for(int i = 0; i < NB_MIDI_KNOBS; i++)
     {
         m_midiKnobs[i] = new FloatModel(
@@ -223,7 +222,6 @@ CarlaInstrument::CarlaInstrument(InstrumentTrack* const  instrumentTrack,
                 QString("KNB%1").arg(NB_MIDI_KNOB_START + i), false);
         m_midiKnobs[i]->setStrictStepSize(true);
     }
-    /*
     for(int i=0;i<NB_MIDI_LEDS;i++)
     {
             m_midiLeds[i]=new BoolModel
@@ -370,9 +368,9 @@ QString CarlaInstrument::nodeName() const
 
 void CarlaInstrument::saveSettings(QDomDocument& doc, QDomElement& parent)
 {
+    /*
     for(int i = 0; i < NB_MIDI_KNOBS; i++)
         m_midiKnobs[i]->saveSettings(doc, parent, QString("knob%1").arg(i));
-    /*
     for(int i=0;i<NB_MIDI_LEDS;i++)
             m_midiLeds[i]->saveSettings( doc, parent, QString("led%1").arg(i)
     ); for(int i=0;i<NB_MIDI_LCDS;i++) m_midiLcds[i]->saveSettings( doc,
@@ -510,9 +508,9 @@ void CarlaInstrument::loadSettings(const QDomElement& elem)
 {
     qInfo("CarlaInstrument::loadSettings start");
 
+    /*
     for(int i = 0; i < NB_MIDI_KNOBS; i++)
         m_midiKnobs[i]->loadSettings(elem, QString("knob%1").arg(i));
-    /*
     for(int i=0;i<NB_MIDI_LEDS;i++)
             m_midiLeds[i]->loadSettings( elem, QString("led%1").arg(i) );
     for(int i=0;i<NB_MIDI_LCDS;i++)
@@ -715,8 +713,7 @@ CarlaInstrumentView::CarlaInstrumentView(CarlaInstrument* const instrument,
       fTimerId(fHandle != nullptr && fDescriptor->ui_idle != nullptr
                        ? startTimer(30)
                        : 0),
-      m_carlaInstrument(instrument)
-// p_parent(parent)
+      m_carlaInstrument(instrument), m_paramsView(nullptr)
 {
     setAutoFillBackground(true);
     QPalette pal;
@@ -727,7 +724,7 @@ CarlaInstrumentView::CarlaInstrumentView(CarlaInstrument* const instrument,
     setPalette(pal);
 
     QVBoxLayout* l = new QVBoxLayout(this);
-    l->setContentsMargins(0, 66, 0, 0);
+    l->setContentsMargins(6, 66, 6, 6);
     l->setSpacing(6);
 
     m_toggleUIButton = new QPushButton(tr("Show GUI"), this);
@@ -740,7 +737,7 @@ CarlaInstrumentView::CarlaInstrumentView(CarlaInstrument* const instrument,
     m_toggleUIButton->setWhatsThis(
             tr("Click here to show or hide the graphical user interface "
                "(GUI) of Carla."));
-    m_toggleUIButton->setFixedSize(250, 22);
+    // m_toggleUIButton->setFixedSize(250, 22);
     l->addWidget(m_toggleUIButton, Qt::AlignHCenter);
 
     // Open params sub window button
@@ -755,9 +752,10 @@ CarlaInstrumentView::CarlaInstrumentView(CarlaInstrument* const instrument,
     m_toggleParamsWindowButton->setWhatsThis(
             tr("Click here to show or hide the parameters "
                "of your Carla instrument."));
-    m_toggleParamsWindowButton->setFixedSize(250, 22);
+    // m_toggleParamsWindowButton->setFixedSize(250, 22);
     l->addWidget(m_toggleParamsWindowButton, Qt::AlignHCenter);
 
+    /*
     QScrollArea* knobsSCA = new QScrollArea(this);
     knobsSCA->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     knobsSCA->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
@@ -784,58 +782,14 @@ CarlaInstrumentView::CarlaInstrumentView(CarlaInstrument* const instrument,
                 SLOT(onDataChanged()));
         knobsLOT->addWidget(m_midiKnobs[i], i / 7, i % 7);
     }
-    /*
-    QWidget* kg=new QWidget(this);
-    kg->setFixedSize(228,117+21+0);
-    for(int i=0;i<NB_MIDI_KNOBS;i++)
-    {
-            m_midiKnobs[i]=new Knob(knobBright_26,kg);
-            m_midiKnobs[i]->setLabel(QString("CC
-    %1").arg(NB_MIDI_KNOB_START+i));
-            m_midiKnobs[i]->setHintText(QString("MIDI Channel %1, CC %2, V
-    ") .arg(MIDI_CH).arg(NB_MIDI_KNOB_START+i),"");
-            m_midiKnobs[i]->setWhatsThis("");
-            m_midiKnobs[i]->setGeometry(39*(i%6),39*(i/6),39,39);
-            m_midiKnobs[i]->setModel(instrument->m_midiKnobs[i]);
-            connect(instrument->m_midiKnobs[i], SIGNAL(dataChanged()),
-                    this, SLOT(onDataChanged()));
-    }
-    for(int i=0;i<NB_MIDI_LEDS;i++)
-    {
-            m_midiLeds[i]=new LedCheckBox(kg);
-            m_midiLeds[i]->setText(QString("CC
-    %1").arg(NB_MIDI_LED_START+i));
-            m_midiLeds[i]->setTextAnchorPoint(Qt::AnchorBottom);
-            //m_midiLeds[i]->setHintText(QString("MIDI Channel %1, CC %2,
-    V ")
-            // .arg(MIDI_CH).arg(NB_MIDI_LED_START+i),"");
-            //m_midiLeds[i]->setWhatsThis("");
-            m_midiLeds[i]->setGeometry(29*(i%8),117+21*(i/8),29,21);
-            m_midiLeds[i]->setModel(instrument->m_midiLeds[i]);
-            connect(instrument->m_midiLeds[i], SIGNAL(dataChanged()),
-                    this, SLOT(onDataChanged()));
-    }
-    for(int i=0;i<NB_MIDI_LCDS;i++)
-    {
-            m_midiLcds[i]=new LcdSpinBox(3,kg);
-            m_midiLcds[i]->setText(QString("CC
-    %1").arg(NB_MIDI_LCD_START+i));
-            //m_midiLcds[i]->setHintText(QString("MIDI Channel %1, CC %2,
-    V ")
-            // .arg(MIDI_CH).arg(NB_MIDI_LCD_START+i),"");
-            //m_midiLcds[i]->setWhatsThis("");
-            m_midiLcds[i]->setGeometry(58*(i%4),117+21+34*(i/4),58,34);
-            m_midiLcds[i]->setModel(instrument->m_midiLcds[i]);
-            connect(instrument->m_midiLcds[i],SIGNAL(dataChanged()),
-                    this, SLOT(onDataChanged()));
-    }
-    l->addWidget(kg);
     */
+    /*
     knobsGBX->setContentWidget(knobsPNL);
     knobsSCA->setWidget(knobsGBX);
     l->addWidget(knobsSCA);
-    l->addStretch();
+    */
 
+    l->addStretch(1);
     connect(instrument, SIGNAL(uiClosed()), this, SLOT(uiClosed()));
 }
 
@@ -860,15 +814,16 @@ void CarlaInstrumentView::uiClosed()
 
 void CarlaInstrumentView::toggleParamsWindow(bool visible)
 {
+    qInfo("CarlaInstrumentView::toggleParamsWindow 0.1");
     if(m_paramsView == nullptr)
     {
-        qInfo("CarlaInstrumentView::toggleParamsWindow 0");
-        m_paramsView
-                = new CarlaParamsView(m_carlaInstrument, this);  // p_parent);
+        qInfo("CarlaInstrumentView::toggleParamsWindow 0.2");
+        m_paramsView = new CarlaInstrumentParamsView(m_carlaInstrument,
+                                                     this);  // p_parent);
         connect(m_paramsView->subWindow(), SIGNAL(closed()), this,
                 SLOT(paramsWindowClosed()));
     }
-
+    qInfo("CarlaInstrumentView::toggleParamsWindow 0.3");
     if(visible != m_paramsView->subWindow()->isVisible())
     {
         if(visible)
@@ -892,6 +847,7 @@ void CarlaInstrumentView::paramsWindowClosed()
     m_toggleParamsWindowButton->setChecked(false);
 }
 
+/*
 void CarlaInstrumentView::onDataChanged()
 {
     QObject* o = sender();
@@ -909,23 +865,6 @@ void CarlaInstrumentView::onDataChanged()
                     cc = NB_MIDI_KNOB_START + i;
                     v  = m_midiKnobs[i]->model()->value();
                 }
-        /*
-        if(cc==-1)
-                for(int i=0;i<NB_MIDI_LEDS;i++)
-                        if(m_midiLeds[i]->model()==m)
-                        {
-                                cc=NB_MIDI_LED_START+i;
-                                v =m_midiLeds[i]->model()->value();
-                        }
-
-        if(cc==-1)
-                for(int i=0;i<NB_MIDI_LCDS;i++)
-                        if(m_midiLcds[i]->model()==m)
-                        {
-                                cc=NB_MIDI_LCD_START+i;
-                                v =m_midiLcds[i]->model()->value();
-                        }
-        */
         if(cc != -1)
         {
             qInfo("cc %d: data changed: %d", cc, v);
@@ -947,6 +886,7 @@ void CarlaInstrumentView::onDataChanged()
     else
         qInfo("sender but no model");
 }
+*/
 
 void CarlaInstrumentView::modelChanged()
 {
@@ -960,8 +900,8 @@ void CarlaInstrumentView::timerEvent(QTimerEvent* event)
     InstrumentView::timerEvent(event);
 }
 
-CarlaParamsView::CarlaParamsView(CarlaInstrument* instrument,
-                                 QWidget*         parent) :
+CarlaInstrumentParamsView::CarlaInstrumentParamsView(
+        CarlaInstrument* instrument, QWidget* parent) :
       QWidget(parent),
       m_carlaInstrument(instrument)
 {
@@ -1064,16 +1004,16 @@ CarlaParamsView::CarlaParamsView(CarlaInstrument* instrument,
     */
 
     /*m_subWindow->*/
-    setWindowTitle(m_carlaInstrument->instrumentTrack()->name()
-                   + tr(" - Parameters"));
+    setWindowTitle(m_carlaInstrument->instrumentTrack()->name() + " - "
+                   + tr("Parameters"));
 
     setSizePolicy(QSizePolicy::Fixed, QSizePolicy::MinimumExpanding);
     setFixedWidth(250);
     setMinimumHeight(500);
 
-    qInfo("CarlaParamsView::CarlaParamsView 1");
+    qInfo("CarlaInstrumentParamsView::CarlaInstrumentParamsView 1");
     m_subWindow = SubWindow::putWidgetOnWorkspace(this, false, false, false);
-    qInfo("CarlaParamsView::CarlaParamsView 2");
+    qInfo("CarlaInstrumentParamsView::CarlaInstrumentParamsView 2");
     // m_subWindow->setWidget(centralWidget);
     m_subWindow->hide();
 
@@ -1089,16 +1029,16 @@ CarlaParamsView::CarlaParamsView(CarlaInstrument* instrument,
     connect(m_automatedOnlyButton, SIGNAL(toggled(bool)), this,
             SLOT(filterKnobs()));
 
-    qInfo("CarlaParamsView::CarlaParamsView 3");
+    qInfo("CarlaInstrumentParamsView::CarlaInstrumentParamsView 3");
     refreshKnobs();  // Add buttons if there are any already.
-    qInfo("CarlaParamsView::CarlaParamsView 4");
+    qInfo("CarlaInstrumentParamsView::CarlaInstrumentParamsView 4");
     m_subWindow->show();  // Show the subwindow
-    qInfo("CarlaParamsView::CarlaParamsView 5");
+    qInfo("CarlaInstrumentParamsView::CarlaInstrumentParamsView 5");
 }
 
-CarlaParamsView::~CarlaParamsView()
+CarlaInstrumentParamsView::~CarlaInstrumentParamsView()
 {
-    qInfo("CarlaParamsView::~CarlaParamsView START");
+    qInfo("CarlaInstrumentParamsView::~CarlaInstrumentParamsView START");
 
     // Close and delete m_subWindow
     if(m_subWindow != nullptr)
@@ -1116,15 +1056,15 @@ CarlaParamsView::~CarlaParamsView()
         m_carlaInstrument->clearParamModels();
     }
 
-    qInfo("CarlaParamsView::~CarlaParamsView END");
+    qInfo("CarlaInstrumentParamsView::~CarlaInstrumentParamsView END");
 }
 
-void CarlaParamsView::clearFilterText()
+void CarlaInstrumentParamsView::clearFilterText()
 {
     m_paramsFilterLineEdit->setText("");
 }
 
-void CarlaParamsView::filterKnobs()
+void CarlaInstrumentParamsView::filterKnobs()
 {
     QString text = m_paramsFilterLineEdit->text();
     clearKnobs();  // Remove all knobs from the layout.
@@ -1154,7 +1094,7 @@ void CarlaParamsView::filterKnobs()
     }
 }
 
-void CarlaParamsView::onRefreshButton()
+void CarlaInstrumentParamsView::onRefreshButton()
 {
     if(m_carlaInstrument->paramModels.isEmpty() == false)
     {
@@ -1174,12 +1114,12 @@ void CarlaParamsView::onRefreshButton()
     refreshKnobs();
 }
 
-void CarlaParamsView::onRefreshValuesButton()
+void CarlaInstrumentParamsView::onRefreshValuesButton()
 {
     m_carlaInstrument->refreshParams(true);
 }
 
-void CarlaParamsView::refreshKnobs()
+void CarlaInstrumentParamsView::refreshKnobs()
 {
     if(m_carlaInstrument->paramModels.count() == 0)
     {
@@ -1229,7 +1169,7 @@ void CarlaParamsView::refreshKnobs()
     */
 }
 
-void CarlaParamsView::addKnob(uint32_t index)
+void CarlaInstrumentParamsView::addKnob(uint32_t index)
 {
     // Add the new knob to layout
     m_scrollAreaLayout->addWidget(m_knobs[index], lCurRow, lCurColumn,
@@ -1248,7 +1188,7 @@ void CarlaParamsView::addKnob(uint32_t index)
     }
 }
 
-void CarlaParamsView::clearKnobs()
+void CarlaInstrumentParamsView::clearKnobs()
 {
     // Remove knobs from layout.
     for(uint32_t i = 0; i < m_knobs.count(); ++i)
@@ -1260,7 +1200,7 @@ void CarlaParamsView::clearKnobs()
     lCurRow    = 0;
 }
 
-void CarlaParamsView::modelChanged()
+void CarlaInstrumentParamsView::modelChanged()
 {
     refreshKnobs();
 }

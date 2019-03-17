@@ -40,7 +40,7 @@ BBEditor::BBEditor(BBTrackContainer* tc) :
       Editor(false), m_trackContainerView(new BBTrackContainerView(tc))
 {
     setWindowIcon(embed::getIconPixmap("bb_track_btn"));
-    setWindowTitle(tr("Beat+Bassline Editor"));
+    setWindowTitle(tr("Beat"));
     setCentralWidget(m_trackContainerView);
 
     /*

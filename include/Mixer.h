@@ -1,24 +1,23 @@
 /*
  * Mixer.h - audio-device-independent mixer for LMMS
  *
+ * Copyright (c) 2018-2019 gi0e5b06 (on github.com)
  * Copyright (c) 2004-2014 Tobias Doerffel <tobydox/at/users.sourceforge.net>
  *
- * This file is part of LMMS - https://lmms.io
+ * This file is part of LSMM -
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public
- * License along with this program (see COPYING); if not, write to the
- * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
- * Boston, MA 02110-1301 USA.
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
 
@@ -86,6 +85,7 @@ class HandleManager : public QThread
     void addPlayHandleHM(PlayHandle* handle);
     void removePlayHandleHM(PlayHandle* handle);
     void removePlayHandlesOfTypesHM(const Track* _track, const quint8 _types);
+    void removePlayHandlesForInstrumentHM(const Instrument* _instrument);
     void removeAllPlayHandlesHM();
 
   private:
@@ -258,6 +258,7 @@ class EXPORT Mixer : public QObject
             nphsOfTrack(const Track* _track, bool _all = false);
 
     void waitUntilNoPlayHandle(const Track* _track, const quint8 _types);
+    void waitUntilNoPlayHandle(const Instrument* _instrument);
 
     void adjustTempo(const bpm_t _tempo);
 
@@ -388,6 +389,7 @@ class EXPORT Mixer : public QObject
     void playHandleToAdd(PlayHandle* handle);
     void playHandleToRemove(PlayHandle* handle);
     void playHandlesOfTypesToRemove(const Track* _track, const quint8 _types);
+    void playHandlesForInstrumentToRemove(const Instrument* _instrument);
     void allPlayHandlesRemoval();
 
   private:
@@ -406,6 +408,7 @@ class EXPORT Mixer : public QObject
     void removePlayHandle1(PlayHandle* handle);
     void deletePlayHandle1(PlayHandle* _ph);
     void removePlayHandlesOfTypes1(const Track* _track, const quint8 types);
+    void removePlayHandlesForInstrument1(const Instrument* _instrument);
     void removeAllPlayHandles1();
 
     void runChangesInModel();

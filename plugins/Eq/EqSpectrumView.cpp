@@ -1,23 +1,22 @@
-/* eqspectrumview.cpp - implementation of EqSpectrumView class.
+/* EqSpectrumView.cpp -
  *
- * Copyright (c) 2014-2017, David French
- * <dave/dot/french3/at/googlemail/dot/com>
+ * Copyright (c) 2019      gi0e5b06 (on github.com)
+ * Copyright (c) 2014-2017 David French <dave/dot/french3/at/gmail/dot/com>
  *
- * This file is part of LMMS - https://lmms.io
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * This file is part of LSMM -
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public
- * License along with this program (see COPYING); if not, write to the
- * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
- * Boston, MA 02110-1301 USA.
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
 
@@ -45,13 +44,14 @@ EqAnalyser::EqAnalyser() :
     const float a2 = 0.14128;
     const float a3 = 0.01168;
 
+    const float R = F_2PI / float(FFT_BUFFER_SIZE - 1);
     for(int i = 0; i < FFT_BUFFER_SIZE; i++)
     {
+        const float x = float(i) * R;
         m_fftWindow[i]
-                = (a0 - a1 * cosf(2 * F_PI * i / (float)FFT_BUFFER_SIZE - 1)
-                   + a2 * cosf(4 * F_PI * i / (float)FFT_BUFFER_SIZE - 1)
-                   - a3 * cos(6 * F_PI * i / (float)FFT_BUFFER_SIZE - 1.0));
+                = a0 - a1 * cosf(x) + a2 * cosf(2.f * x) - a3 * cosf(3.f * x);
     }
+
     clear();
 }
 
@@ -102,9 +102,7 @@ void EqAnalyser::analyze(sampleFrame* buf, const fpp_t frames)
 
         // apply FFT window
         for(int i = 0; i < FFT_BUFFER_SIZE; i++)
-        {
-            m_buffer[i] = m_buffer[i] * m_fftWindow[i];
-        }
+            m_buffer[i] *= m_fftWindow[i];
 
         fftwf_execute(m_fftPlan);
         absspec(m_specBuf, m_absSpecBuf, FFT_BUFFER_SIZE + 1);
@@ -185,7 +183,11 @@ void EqSpectrumView::paintEvent(QPaintEvent* event)
     }
     */
 
-    const int fh      = height();
+    const int fh = height();
+    const int fw = width();
+    if(fw == 0 || fh == 0)
+        return;
+
     const int LOWER_Y = -36;  // dB
     QPainter  painter(this);
     painter.setPen(
@@ -202,14 +204,15 @@ void EqSpectrumView::paintEvent(QPaintEvent* event)
 
     m_periodicalUpdate = false;
     // Now we calculate the path
-    m_path       = QPainterPath();
-    float* bands = m_analyser->m_bands;
-    float  peak;
-    m_path.moveTo(0, height());
+    FLOAT* bands = m_analyser->m_bands;
+    int*   vy    = MM_ALLOC(int, fw);
+    for(int x = 0; x < fw; x++)
+        vy[x] = fh;
     m_peakSum = 0;
     // float fallOff = 1.01;
     for(int x = 0; x < MAX_BANDS; ++x, ++bands)
     {
+        float peak;
         if(energy <= 0)
             peak = 0;
         else
@@ -224,16 +227,18 @@ void EqSpectrumView::paintEvent(QPaintEvent* event)
             peak = fh - 1;  // continue;
         }
 
-        if(peak > m_bandHeight[x])
+        if(peak >= m_bandHeight[x])
         {
             m_bandHeight[x] = peak;
         }
         else
         {
             // m_bandHeight[x] /= fallOff;
-            FLOAT fo        = 10.f / CONFIG_GET_INT("ui.framespersecond");
-            fo              = powf(0.9, fo);
-            m_bandHeight[x] = m_bandHeight[x] * fo + peak * (1. - fo);
+            // FLOAT fo        = 10.f / CONFIG_GET_INT("ui.framespersecond");
+            // fo              = powf(0.9, fo);
+            if(m_bandHeight[x] > 0)
+                m_bandHeight[x]--;
+            // = m_bandHeight[x] * fo + peak * (1. - fo);
         }
 
         /*
@@ -243,12 +248,20 @@ void EqSpectrumView::paintEvent(QPaintEvent* event)
           }
         */
 
-        m_path.lineTo(EqHandle::freqToXPixel(bandToFreq(x), width()),
-                      fh - m_bandHeight[x]);
-        m_peakSum += m_bandHeight[x];
+        m_peakSum += peak;  // m_bandHeight[x];
+        int vx = qBound<FLOAT>(
+                0, roundf(EqHandle::freqToXPixel(bandToFreq(x), fw)), fw - 1);
+        vy[vx] = qMin<int>(vy[vx], fh - m_bandHeight[x]);
     }
 
-    m_path.lineTo(width(), height());
+    m_path = QPainterPath();
+    m_path.moveTo(0, fh);
+
+    for(int vx = 0; vx < fw; vx++)
+        m_path.lineTo(vx, vy[vx]);
+    MM_FREE(vy);
+
+    m_path.lineTo(fw, fh);
     m_path.closeSubpath();
     painter.fillPath(m_path, QBrush(m_color));
     painter.drawPath(m_path);

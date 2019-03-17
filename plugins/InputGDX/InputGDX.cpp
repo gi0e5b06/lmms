@@ -63,9 +63,9 @@ bool InputGDX::processAudioBuffer(sampleFrame* _buf, const fpp_t _frames)
     if(!shouldProcessAudioBuffer(_buf, _frames, smoothBegin, smoothEnd))
         return false;
 
-    const ValueBuffer* leftSignalBuf
+    /*const*/ ValueBuffer* leftSignalBuf
             = m_gdxControls.m_leftSignalModel.valueBuffer();
-    const ValueBuffer* rightSignalBuf
+    /*const*/ ValueBuffer* rightSignalBuf
             = m_gdxControls.m_rightSignalModel.valueBuffer();
     const ValueBuffer* volumeBuf = m_gdxControls.m_volumeModel.valueBuffer();
     const ValueBuffer* balanceBuf
@@ -75,13 +75,20 @@ bool InputGDX::processAudioBuffer(sampleFrame* _buf, const fpp_t _frames)
 
     if(leftSignalBuf == nullptr)
         m_gdxControls.m_leftSignalModel.setControlledValue(0.);
+    else
+        leftSignalBuf->lock();
+
     if(rightSignalBuf == nullptr)
         m_gdxControls.m_rightSignalModel.setControlledValue(0.);
+    else
+        rightSignalBuf->lock();
 
+    /*
     if(leftSignalBuf == nullptr)
         qInfo("Left SIGNAL is null");
     if(rightSignalBuf == nullptr)
         qInfo("Right SIGNAL is null");
+    */
 
     for(fpp_t f = 0; f < _frames; ++f)
     {
@@ -120,9 +127,17 @@ bool InputGDX::processAudioBuffer(sampleFrame* _buf, const fpp_t _frames)
         curVal0 *= balLeft;
         curVal1 *= balRight;
 
-        _buf[f][0] = d0 * _buf[f][0] + w0 * curVal0;
-        _buf[f][1] = d1 * _buf[f][1] + w1 * curVal1;
+        // if(f == 10)
+        //   qInfo("Input: FL=%5f FR=%5f", curVal0, curVal1);
+
+        _buf[f][0] = d0 * _buf[f][0] + w0 * bound(-1., curVal0, 1.);
+        _buf[f][1] = d1 * _buf[f][1] + w1 * bound(-1., curVal1, 1.);
     }
+
+    if(leftSignalBuf != nullptr)
+        leftSignalBuf->unlock();
+    if(rightSignalBuf != nullptr)
+        rightSignalBuf->unlock();
 
     return true;
 }

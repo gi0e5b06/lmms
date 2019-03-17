@@ -26,12 +26,10 @@
 #define CARLA_EFFECT_CONTROLS_H
 
 #include "EffectControls.h"
-//#include "CarlaEffectControlDialog.h"
+//#include "CarlaEffectDialog.h"
 //#include "Knob.h"
 
-
 class CarlaEffect;
-
 
 #define NB_KNOBS      18
 #define NB_LEDS        8
@@ -40,7 +38,6 @@ class CarlaEffect;
 #define NB_LED_START  60
 #define NB_LCD_START  70
 #define MIDI_CH        1
-
 
 class CarlaEffectControls : public EffectControls
 {
@@ -73,7 +70,7 @@ private:
         BoolModel*   m_leds [NB_LEDS ];
         IntModel*    m_lcds [NB_LCDS ];
 
-	friend class CarlaEffectControlDialog;
+	friend class CarlaEffectDialog;
 	friend class CarlaEffect;
 
 } ;

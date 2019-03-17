@@ -1,25 +1,24 @@
 /*
  * papu_instrument.cpp - GameBoy papu based instrument
  *
+ * Copyright (c) 2019 gi0e5b06 (on github.com)
  * Copyright (c) 2008 Attila Herman <attila589/at/gmail.com>
  *                    Csaba Hruska <csaba.hruska/at/gmail.com>
  *
- * This file is part of LMMS - https://lmms.io
+ * This file is part of LSMM -
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public
- * License along with this program (see COPYING); if not, write to the
- * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
- * Boston, MA 02110-1301 USA.
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
 
@@ -49,13 +48,12 @@ extern "C"
                "FreeBoy",
                QT_TRANSLATE_NOOP("pluginBrowser",
                                  "Emulation of GameBoy (TM) APU"),
-
-               "Attila Herman <attila589/at/gmail.com>"
+               "Attila Herman <attila589/at/gmail.com>\n"
                "Csaba Hruska <csaba.hruska/at/gmail.com>",
                0x0100,
                Plugin::Instrument,
                new PluginPixmapLoader("logo"),
-               NULL};
+               nullptr};
 }
 
 papuInstrument::papuInstrument(InstrumentTrack* _instrument_track) :
@@ -220,13 +218,10 @@ f_cnt_t papuInstrument::desiredReleaseFrames() const
 void papuInstrument::playNote(NotePlayHandle* _n,
                               sampleFrame*    _working_buffer)
 {
-    const f_cnt_t tfp        = _n->totalFramesPlayed();
-    const int     samplerate = Engine::mixer()->processingSampleRate();
-    const fpp_t   frames     = _n->framesLeftForCurrentPeriod();
-    const f_cnt_t offset     = _n->noteOffset();
+    const f_cnt_t       tfp        = _n->totalFramesPlayed();
+    const sample_rate_t samplerate = Engine::mixer()->processingSampleRate();
 
     int data = 0;
-    int freq = _n->frequency();
 
     if(tfp == 0)
     {
@@ -321,6 +316,10 @@ void papuInstrument::playNote(NotePlayHandle* _n,
         papu->write_register(0xff30 + i, data);
     }
 
+    const fpp_t   frames = _n->framesLeftForCurrentPeriod();
+    const f_cnt_t offset = _n->noteOffset();
+    const int     freq   = _n->frequency(); // int required
+
     if((freq >= 65) && (freq <= 4000))
     {
         int initflag = (tfp == 0) ? 128 : 0;
@@ -349,7 +348,7 @@ void papuInstrument::playNote(NotePlayHandle* _n,
             for(char r = 0; r < 8; r++)
             {
                 f = 524288. / (r * exp2(s + 1.));
-                if(fabs(freq - fopt) > fabs(freq - f))
+                if(abs(freq - fopt) > abs(freq - f))
                 {
                     fopt = f;
                     ropt = r;
@@ -402,7 +401,7 @@ void papuInstrument::deleteNotePluginData(NotePlayHandle* _n)
 
 PluginView* papuInstrument::instantiateView(QWidget* _parent)
 {
-    return (new papuInstrumentView(this, _parent));
+    return new papuInstrumentView(this, _parent);
 }
 
 class papuKnob : public Knob
@@ -428,7 +427,7 @@ papuInstrumentView::papuInstrumentView(Instrument* _instrument,
 
     setAutoFillBackground(true);
     QPalette pal;
-    pal.setBrush(backgroundRole(), PLUGIN_NAME::getIconPixmap("artwork"));
+    pal.setBrush(backgroundRole(), PLUGIN_NAME::getPixmap("artwork"));
     setPalette(pal);
 
     m_ch1SweepTimeKnob = new papuKnob(this);
@@ -536,22 +535,22 @@ papuInstrumentView::papuInstrumentView(Instrument* _instrument,
     m_bassKnob->move(5 + 3 * 32, 58);
     ToolTip::add(m_bassKnob, tr("Bass"));
 
-    m_ch1SweepDirButton = new PixmapButton(this, NULL);
+    m_ch1SweepDirButton = new PixmapButton(this, tr("Sweep Direction 1"));
     m_ch1SweepDirButton->setCheckable(true);
     m_ch1SweepDirButton->move(167, 108);
     m_ch1SweepDirButton->setActiveGraphic(
-            PLUGIN_NAME::getIconPixmap("btn_down"));
+            PLUGIN_NAME::getPixmap("btn_down"));
     m_ch1SweepDirButton->setInactiveGraphic(
-            PLUGIN_NAME::getIconPixmap("btn_up"));
+            PLUGIN_NAME::getPixmap("btn_up"));
     ToolTip::add(m_ch1SweepDirButton, tr("Sweep Direction"));
 
-    m_ch1VolSweepDirButton = new PixmapButton(this, NULL);
+    m_ch1VolSweepDirButton = new PixmapButton(this, tr("Volume Sweep Direction"));
     m_ch1VolSweepDirButton->setCheckable(true);
     m_ch1VolSweepDirButton->move(207, 108);
     m_ch1VolSweepDirButton->setActiveGraphic(
-            PLUGIN_NAME::getIconPixmap("btn_up"));
+            PLUGIN_NAME::getPixmap("btn_up"));
     m_ch1VolSweepDirButton->setInactiveGraphic(
-            PLUGIN_NAME::getIconPixmap("btn_down"));
+            PLUGIN_NAME::getPixmap("btn_down"));
     ToolTip::add(m_ch1VolSweepDirButton, tr("Volume Sweep Direction"));
 
     m_ch2VolSweepDirButton
@@ -559,12 +558,12 @@ papuInstrumentView::papuInstrumentView(Instrument* _instrument,
     m_ch2VolSweepDirButton->setCheckable(true);
     m_ch2VolSweepDirButton->move(102, 156);
     m_ch2VolSweepDirButton->setActiveGraphic(
-            PLUGIN_NAME::getIconPixmap("btn_up"));
+            PLUGIN_NAME::getPixmap("btn_up"));
     m_ch2VolSweepDirButton->setInactiveGraphic(
-            PLUGIN_NAME::getIconPixmap("btn_down"));
+            PLUGIN_NAME::getPixmap("btn_down"));
     ToolTip::add(m_ch2VolSweepDirButton, tr("Volume Sweep Direction"));
 
-    // m_ch3OnButton = new PixmapButton( this, NULL );
+    // m_ch3OnButton = new PixmapButton( this, nullptr );
     // m_ch3OnButton->move( 176, 53 );
 
     m_ch4VolSweepDirButton
@@ -572,76 +571,76 @@ papuInstrumentView::papuInstrumentView(Instrument* _instrument,
     m_ch4VolSweepDirButton->setCheckable(true);
     m_ch4VolSweepDirButton->move(207, 157);
     m_ch4VolSweepDirButton->setActiveGraphic(
-            PLUGIN_NAME::getIconPixmap("btn_up"));
+            PLUGIN_NAME::getPixmap("btn_up"));
     m_ch4VolSweepDirButton->setInactiveGraphic(
-            PLUGIN_NAME::getIconPixmap("btn_down"));
+            PLUGIN_NAME::getPixmap("btn_down"));
     ToolTip::add(m_ch4VolSweepDirButton, tr("Volume Sweep Direction"));
 
-    m_ch4ShiftRegWidthButton = new PixmapButton(this, NULL);
+    m_ch4ShiftRegWidthButton = new PixmapButton(this, tr("Shift Register Width"));
     m_ch4ShiftRegWidthButton->setCheckable(true);
     m_ch4ShiftRegWidthButton->move(207, 171);
     m_ch4ShiftRegWidthButton->setActiveGraphic(
-            PLUGIN_NAME::getIconPixmap("btn_7"));
+            PLUGIN_NAME::getPixmap("btn_7"));
     m_ch4ShiftRegWidthButton->setInactiveGraphic(
-            PLUGIN_NAME::getIconPixmap("btn_15"));
+            PLUGIN_NAME::getPixmap("btn_15"));
     ToolTip::add(m_ch4ShiftRegWidthButton, tr("Shift Register Width"));
 
-    m_ch1So1Button = new PixmapButton(this, NULL);
+    m_ch1So1Button = new PixmapButton(this, tr("Channel1 to SO1 (Right)"));
     m_ch1So1Button->setCheckable(true);
     m_ch1So1Button->move(208, 51);
-    m_ch1So1Button->setActiveGraphic(PLUGIN_NAME::getIconPixmap("btn_on"));
-    m_ch1So1Button->setInactiveGraphic(PLUGIN_NAME::getIconPixmap("btn_off"));
+    m_ch1So1Button->setActiveGraphic(PLUGIN_NAME::getPixmap("btn_on"));
+    m_ch1So1Button->setInactiveGraphic(PLUGIN_NAME::getPixmap("btn_off"));
     ToolTip::add(m_ch1So1Button, tr("Channel1 to SO1 (Right)"));
 
-    m_ch2So1Button = new PixmapButton(this, NULL);
+    m_ch2So1Button = new PixmapButton(this, tr("Channel2 to SO1 (Right)"));
     m_ch2So1Button->setCheckable(true);
     m_ch2So1Button->move(208, 51 + 12);
-    m_ch2So1Button->setActiveGraphic(PLUGIN_NAME::getIconPixmap("btn_on"));
-    m_ch2So1Button->setInactiveGraphic(PLUGIN_NAME::getIconPixmap("btn_off"));
+    m_ch2So1Button->setActiveGraphic(PLUGIN_NAME::getPixmap("btn_on"));
+    m_ch2So1Button->setInactiveGraphic(PLUGIN_NAME::getPixmap("btn_off"));
     ToolTip::add(m_ch2So1Button, tr("Channel2 to SO1 (Right)"));
 
-    m_ch3So1Button = new PixmapButton(this, NULL);
+    m_ch3So1Button = new PixmapButton(this, tr("Channel3 to SO1 (Right)"));
     m_ch3So1Button->setCheckable(true);
     m_ch3So1Button->move(208, 51 + 2 * 12);
-    m_ch3So1Button->setActiveGraphic(PLUGIN_NAME::getIconPixmap("btn_on"));
-    m_ch3So1Button->setInactiveGraphic(PLUGIN_NAME::getIconPixmap("btn_off"));
+    m_ch3So1Button->setActiveGraphic(PLUGIN_NAME::getPixmap("btn_on"));
+    m_ch3So1Button->setInactiveGraphic(PLUGIN_NAME::getPixmap("btn_off"));
     ToolTip::add(m_ch3So1Button, tr("Channel3 to SO1 (Right)"));
 
-    m_ch4So1Button = new PixmapButton(this, NULL);
+    m_ch4So1Button = new PixmapButton(this, tr("Channel4 to SO1 (Right)"));
     m_ch4So1Button->setCheckable(true);
     m_ch4So1Button->setChecked(false);
     m_ch4So1Button->move(208, 51 + 3 * 12);
-    m_ch4So1Button->setActiveGraphic(PLUGIN_NAME::getIconPixmap("btn_on"));
-    m_ch4So1Button->setInactiveGraphic(PLUGIN_NAME::getIconPixmap("btn_off"));
+    m_ch4So1Button->setActiveGraphic(PLUGIN_NAME::getPixmap("btn_on"));
+    m_ch4So1Button->setInactiveGraphic(PLUGIN_NAME::getPixmap("btn_off"));
     ToolTip::add(m_ch4So1Button, tr("Channel4 to SO1 (Right)"));
 
-    m_ch1So2Button = new PixmapButton(this, NULL);
+    m_ch1So2Button = new PixmapButton(this, tr("Channel1 to SO2 (Left)"));
     m_ch1So2Button->setCheckable(true);
     m_ch1So2Button->move(148, 51);
-    m_ch1So2Button->setActiveGraphic(PLUGIN_NAME::getIconPixmap("btn_on"));
-    m_ch1So2Button->setInactiveGraphic(PLUGIN_NAME::getIconPixmap("btn_off"));
+    m_ch1So2Button->setActiveGraphic(PLUGIN_NAME::getPixmap("btn_on"));
+    m_ch1So2Button->setInactiveGraphic(PLUGIN_NAME::getPixmap("btn_off"));
     ToolTip::add(m_ch1So2Button, tr("Channel1 to SO2 (Left)"));
 
-    m_ch2So2Button = new PixmapButton(this, NULL);
+    m_ch2So2Button = new PixmapButton(this, tr("Channel2 to SO2 (Left)"));
     m_ch2So2Button->setCheckable(true);
     m_ch2So2Button->move(148, 51 + 12);
-    m_ch2So2Button->setActiveGraphic(PLUGIN_NAME::getIconPixmap("btn_on"));
-    m_ch2So2Button->setInactiveGraphic(PLUGIN_NAME::getIconPixmap("btn_off"));
+    m_ch2So2Button->setActiveGraphic(PLUGIN_NAME::getPixmap("btn_on"));
+    m_ch2So2Button->setInactiveGraphic(PLUGIN_NAME::getPixmap("btn_off"));
     ToolTip::add(m_ch2So2Button, tr("Channel2 to SO2 (Left)"));
 
-    m_ch3So2Button = new PixmapButton(this, NULL);
+    m_ch3So2Button = new PixmapButton(this, tr("Channel3 to SO2 (Left)"));
     m_ch3So2Button->setCheckable(true);
     m_ch3So2Button->move(148, 51 + 2 * 12);
-    m_ch3So2Button->setActiveGraphic(PLUGIN_NAME::getIconPixmap("btn_on"));
-    m_ch3So2Button->setInactiveGraphic(PLUGIN_NAME::getIconPixmap("btn_off"));
+    m_ch3So2Button->setActiveGraphic(PLUGIN_NAME::getPixmap("btn_on"));
+    m_ch3So2Button->setInactiveGraphic(PLUGIN_NAME::getPixmap("btn_off"));
     ToolTip::add(m_ch3So2Button, tr("Channel3 to SO2 (Left)"));
 
-    m_ch4So2Button = new PixmapButton(this, NULL);
+    m_ch4So2Button = new PixmapButton(this, tr("Channel4 to SO2 (Left)"));
     m_ch4So2Button->setCheckable(true);
     m_ch4So2Button->setChecked(false);
     m_ch4So2Button->move(148, 51 + 3 * 12);
-    m_ch4So2Button->setActiveGraphic(PLUGIN_NAME::getIconPixmap("btn_on"));
-    m_ch4So2Button->setInactiveGraphic(PLUGIN_NAME::getIconPixmap("btn_off"));
+    m_ch4So2Button->setActiveGraphic(PLUGIN_NAME::getPixmap("btn_on"));
+    m_ch4So2Button->setInactiveGraphic(PLUGIN_NAME::getPixmap("btn_off"));
     ToolTip::add(m_ch4So2Button, tr("Channel4 to SO2 (Left)"));
 
     m_graph = new Graph(this);

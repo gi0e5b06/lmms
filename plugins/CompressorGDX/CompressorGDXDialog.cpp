@@ -38,7 +38,7 @@ CompressorGDXDialog::CompressorGDXDialog(CompressorGDXControls* controls) :
 
     setAutoFillBackground(true);
     QPalette pal;
-    pal.setBrush(backgroundRole(), embed::getIconPixmap("plugin_bg"));
+    pal.setBrush(backgroundRole(), embed::getPixmap("plugin_bg"));
     // pal.setBrush(backgroundRole(),PLUGIN_NAME::getIconPixmap("artwork"));
     setPalette(pal);
 

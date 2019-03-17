@@ -66,6 +66,54 @@ int closest_key(frequency_t _f, real_t _delta)
     return (vmin <= _delta ? kmin : -1);
 }
 
+real_t goertzel_filter(FLOAT*        _samples,
+                       f_cnt_t       _frames,
+                       frequency_t   _freq,
+                       sample_rate_t _sr)
+{
+    real_t sPrev          = 0.0;
+    real_t sPrev2         = 0.0;
+    real_t normalizedfreq = _freq / _sr;
+    real_t coeff          = 2 * cos(R_2PI * normalizedfreq);
+    for(int i = 0; i < _frames; i++)
+    {
+        real_t s = _samples[i] + coeff * sPrev - sPrev2;
+        sPrev2   = sPrev;
+        sPrev    = s;
+    }
+    real_t power = sPrev2 * sPrev2 + sPrev * sPrev - coeff * sPrev * sPrev2;
+    return power;
+}
+
+void goertzel_frequency(FLOAT*       _samples,
+                        f_cnt_t      _frames,
+                        frequency_t& tf_,
+                        real_t&      energy_)
+{
+    const real_t sr   = Engine::mixer()->processingSampleRate();
+    real_t       emax = 0.;
+    int          kmax = -1;
+    for(int k = 0; k < 128; k++)
+    {
+        real_t e = goertzel_filter(_samples, _frames, REF_FREQS[k], sr);
+        if(e > emax)
+        {
+            emax = e;
+            kmax = k;
+        }
+    }
+    if(kmax >= 0)
+    {
+        tf_     = REF_FREQS[kmax];
+        energy_ = emax;
+    }
+    else
+    {
+        tf_  = 0.;
+        emax = 0.;
+    }
+}
+
 FrequencyGDX::FrequencyGDX(Model*                                    parent,
                            const Descriptor::SubPluginFeatures::Key* key) :
       Effect(&frequencygdx_plugin_descriptor, parent, key),
@@ -155,6 +203,11 @@ bool FrequencyGDX::processAudioBuffer(sampleFrame* _buf, const fpp_t _frames)
             tf = round(real_t(topfq) * 22050. / real_t(FFT_BUFFER_SIZE));
         }
         break;
+        case 1:
+        {
+            goertzel_frequency(m_buffer, m_framesFilledUp, tf, m_energy);
+        }
+        break;
         case 0:
         {
             int    topfq = 0;
@@ -205,7 +258,6 @@ bool FrequencyGDX::processAudioBuffer(sampleFrame* _buf, const fpp_t _frames)
             tf = frequency_t(topfq);  // * 22050. / real_t(FFT_BUFFER_SIZE);
         }
         break;
-        case 1:
         default:
         {
             m_energy = 0.;

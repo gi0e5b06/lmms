@@ -1,30 +1,29 @@
 /*
  * BasicFilters.h - simple but powerful filter-class with most used filters
  *
- * original file by ???
- * modified and enhanced by Tobias Doerffel
+ * http://shepazu.github.io/Audio-EQ-Cookbook/audio-eq-cookbook.html
+ * http://www.earlevel.com/main/2012/11/26/biquad-c-source-code/
  *
- * Lowpass_SV code originally from Nekobee, Copyright (C) 2004 Sean Bolton and
- * others adapted & modified for use in LMMS
- *
+ * Copyright (c) 2018-2019 gi0e5b06 (on github.com)
  * Copyright (c) 2004-2009 Tobias Doerffel <tobydox/at/users.sourceforge.net>
  *
- * This file is part of LMMS - https://lmms.io
+ * Lowpass_SV code originally from Nekobee, Copyright (C) 2004 Sean Bolton and
+ * others adapted & modified for use in LSMM
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * This file is part of LSMM -
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public
- * License along with this program (see COPYING); if not, write to the
- * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
- * Boston, MA 02110-1301 USA.
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
 
@@ -40,6 +39,7 @@
 #include <cmath>
 //#include "templates.h"
 #include "MemoryManager.h"
+#include "Ring.h"
 #include "interpolation.h"
 #include "lmms_constants.h"
 
@@ -47,42 +47,93 @@ template <ch_cnt_t CHANNELS = DEFAULT_CHANNELS>
 class BasicFilters;
 
 template <ch_cnt_t CHANNELS = DEFAULT_CHANNELS>
-class LinkwitzRiley
+class LsmmFilter
 {
-    MM_OPERATORS
   public:
-    LinkwitzRiley(sample_rate_t sampleRate)
+    virtual void clearHistory()
     {
-        m_sampleRate = sampleRate;
+    }
+
+    virtual sample_rate_t sampleRate() const final
+    {
+        return m_sampleRate;
+    }
+
+    virtual void setSampleRate(sample_rate_t _sampleRate)
+    {
+        m_sampleRate = _sampleRate;
+    }
+
+    virtual void update(sampleFrame& _in)
+    {
+        for(ch_cnt_t ch = 0; ch < qMin(DEFAULT_CHANNELS, CHANNELS); ++ch)
+            _in[ch] = update(_in[ch], ch);
+    }
+
+    /*
+    virtual void updateBuffer(sampleFrame* _buf, const fpp_t _frames) final
+    {
+        for(fpp_t f = 0; f < _frames; ++f)
+            update(_buf[f]);
+    }
+    */
+
+  protected:
+    LsmmFilter(sample_rate_t _sampleRate) : m_sampleRate(_sampleRate)
+    {
         clearHistory();
     }
+
+    virtual sample_t update(sample_t in, ch_cnt_t ch) = 0;
+
+  private:
+    sample_rate_t m_sampleRate;
+};
+
+template <ch_cnt_t CHANNELS = DEFAULT_CHANNELS>
+class LinkwitzRiley : public LsmmFilter<CHANNELS>
+{
+    MM_OPERATORS
+
+  public:
+    LinkwitzRiley(sample_rate_t _sampleRate) :
+          LsmmFilter<CHANNELS>(_sampleRate)
+    {
+    }
+
     virtual ~LinkwitzRiley()
     {
     }
 
-    inline void clearHistory()
+    virtual void clearHistory()
     {
+        LsmmFilter<CHANNELS>::clearHistory();
         for(int i = 0; i < CHANNELS; ++i)
-        {
             m_z1[i] = m_z2[i] = m_z3[i] = m_z4[i] = 0.;
-        }
     }
 
-    inline void setSampleRate(sample_rate_t sampleRate)
+    using LsmmFilter<CHANNELS>::sampleRate;
+
+    /*
+    virtual void setSampleRate(sample_rate_t sampleRate)
     {
         m_sampleRate = sampleRate;
     }
+    */
 
-    inline void setCoeffs(frequency_t freq)
+    virtual void setCoeffs(frequency_t _freq) final
     {
+        const sample_rate_t csr         = sampleRate();
+        const real_t        sampleRatio = 1. / real_t(csr <= 0 ? 44100 : csr);
+
         // wc
-        const double wc  = D_2PI * freq;
+        const double wc  = D_2PI * _freq;
         const double wc2 = wc * wc;
         const double wc3 = wc2 * wc;
         m_wc4            = wc2 * wc2;
 
         // k
-        const double k  = wc / tan(D_PI * freq / m_sampleRate);
+        const double k  = wc / tan(D_PI * _freq * sampleRatio);
         const double k2 = k * k;
         const double k3 = k2 * k;
         m_k4            = k2 * k2;
@@ -104,7 +155,7 @@ class LinkwitzRiley
                * m_a;
     }
 
-    inline void setLowpass(frequency_t freq)
+    virtual void setLowpass(frequency_t freq) final
     {
         setCoeffs(freq);
         m_a0 = m_wc4 * m_a;
@@ -112,7 +163,7 @@ class LinkwitzRiley
         m_a2 = 6. * m_a0;
     }
 
-    inline void setHighpass(frequency_t freq)
+    virtual void setHighpass(frequency_t freq) final
     {
         setCoeffs(freq);
         m_a0 = m_k4 * m_a;
@@ -120,7 +171,18 @@ class LinkwitzRiley
         m_a2 = 6. * m_a0;
     }
 
-    inline sample_t update(sample_t in, ch_cnt_t ch)
+    using LsmmFilter<CHANNELS>::update;  //(sampleFrame& _in);
+
+    /*
+    virtual void update(sampleFrame& _in) final
+    {
+        for(ch_cnt_t ch = 0; ch < qMin(DEFAULT_CHANNELS, CHANNELS); ++ch)
+            _in[ch] = update(_in[ch], ch);
+    }
+    */
+
+  protected:
+    virtual sample_t update(sample_t in, ch_cnt_t ch)
     {
         const double x = in - (m_z1[ch] * m_b1) - (m_z2[ch] * m_b2)
                          - (m_z3[ch] * m_b3) - (m_z4[ch] * m_b4);
@@ -131,15 +193,17 @@ class LinkwitzRiley
         m_z2[ch] = m_z1[ch];
         m_z1[ch] = x;
 
-        return y;
+        return bound(-1., y, 1.);
     }
 
+    // using LsmmFilter<CHANNELS>::m_sampleRate;
+
   private:
-    sample_rate_t m_sampleRate;
-    double        m_wc4;
-    double        m_k4;
-    double        m_a, m_a0, m_a1, m_a2;
-    double        m_b1, m_b2, m_b3, m_b4;
+    // sample_rate_t m_sampleRate;
+    double m_wc4;
+    double m_k4;
+    double m_a, m_a0, m_a1, m_a2;
+    double m_b1, m_b2, m_b3, m_b4;
 
     typedef double frame[CHANNELS];
     frame          m_z1, m_z2, m_z3, m_z4;
@@ -147,20 +211,31 @@ class LinkwitzRiley
 typedef LinkwitzRiley<2> StereoLinkwitzRiley;
 
 template <ch_cnt_t CHANNELS = DEFAULT_CHANNELS>
-class BiQuad
+class BiQuad : public LsmmFilter<CHANNELS>
 {
     MM_OPERATORS
+
   public:
-    BiQuad()
+    BiQuad(sample_rate_t _sampleRate = 0) : LsmmFilter<CHANNELS>(_sampleRate)
     {
-        clearHistory();
     }
+
     virtual ~BiQuad()
     {
     }
 
-    inline void
-            setCoeffs(real_t a1, real_t a2, real_t b0, real_t b1, real_t b2)
+    virtual void clearHistory()
+    {
+        LsmmFilter<CHANNELS>::clearHistory();
+        for(int i = 0; i < CHANNELS; ++i)
+        {
+            m_z1[i] = 0.;
+            m_z2[i] = 0.;
+        }
+    }
+
+    virtual void setCoeffs(
+            real_t a1, real_t a2, real_t b0, real_t b1, real_t b2) final
     {
         m_a1 = a1;
         m_a2 = a2;
@@ -168,61 +243,84 @@ class BiQuad
         m_b1 = b1;
         m_b2 = b2;
     }
-    inline void clearHistory()
+
+    using LsmmFilter<CHANNELS>::update;
+
+    /*
+    virtual void update(sampleFrame& _in)
     {
-        for(int i = 0; i < CHANNELS; ++i)
-        {
-            m_z1[i] = 0.;
-            m_z2[i] = 0.;
-        }
+        for(ch_cnt_t ch = 0; ch < qMin(DEFAULT_CHANNELS, CHANNELS); ++ch)
+            _in[ch] = update(_in[ch], ch);
+        //_in[0] = update(_in[0], 0);
+        //_in[1] = update(_in[1], 1);
     }
-    inline sample_t update(sample_t in, ch_cnt_t ch)
+    */
+
+  protected:
+    virtual sample_t update(sample_t in, ch_cnt_t ch)
     {
         // biquad filter in transposed form
         const real_t out = m_z1[ch] + m_b0 * in;
         m_z1[ch]         = m_b1 * in + m_z2[ch] - m_a1 * out;
         m_z2[ch]         = m_b2 * in - m_a2 * out;
-        return out;
+        return bound(-1., out, 1.);
     }
 
   private:
     real_t m_a1, m_a2, m_b0, m_b1, m_b2;
     real_t m_z1[CHANNELS], m_z2[CHANNELS];
 
-    friend class BasicFilters<CHANNELS>;  // needed for subfilter stuff in
-                                          // BasicFilters
+    // needed for subfilter stuff in BasicFilters
+    friend class BasicFilters<CHANNELS>;
 };
 typedef BiQuad<2> StereoBiQuad;
 
 template <ch_cnt_t CHANNELS = DEFAULT_CHANNELS>
-class OnePole
+class OnePole : public LsmmFilter<CHANNELS>
 {
     MM_OPERATORS
+
   public:
-    OnePole()
+    OnePole(sample_rate_t _sampleRate = 0) : LsmmFilter<CHANNELS>(_sampleRate)
     {
-        m_a0 = 1.0;
-        m_b1 = 0.0;
-        for(int i = 0; i < CHANNELS; ++i)
-        {
-            m_z1[i] = 0.0;
-        }
     }
+
     virtual ~OnePole()
     {
     }
 
-    inline void setCoeffs(real_t a0, real_t b1)
+    virtual void clearHistory()
+    {
+        LsmmFilter<CHANNELS>::clearHistory();
+        m_a0 = 1.0;
+        m_b1 = 0.0;
+        for(int i = 0; i < CHANNELS; ++i)
+            m_z1[i] = 0.0;
+    }
+
+    virtual void setCoeffs(real_t a0, real_t b1) final
     {
         m_a0 = a0;
         m_b1 = b1;
     }
 
-    inline sample_t update(sample_t s, ch_cnt_t ch)
+    using LsmmFilter<CHANNELS>::update;
+
+    /*
+    virtual void update(sampleFrame& _in)
+    {
+        for(ch_cnt_t ch = 0; ch < qMin(DEFAULT_CHANNELS, CHANNELS); ++ch)
+            _in[ch] = update(_in[ch], ch);
+    }
+    */
+
+  protected:
+    virtual sample_t update(sample_t s, ch_cnt_t ch)
     {
         if(abs(s) <= SILENCE && abs(m_z1[ch]) <= SILENCE)
             return 0.;
-        return m_z1[ch] = s * m_a0 + m_z1[ch] * m_b1;
+        m_z1[ch] = s * m_a0 + m_z1[ch] * m_b1;
+        return bound(-1., m_z1[ch], 1.);
     }
 
   private:
@@ -232,9 +330,10 @@ class OnePole
 typedef OnePole<2> StereoOnePole;
 
 template <ch_cnt_t CHANNELS>
-class BasicFilters
+class BasicFilters final : public LsmmFilter<CHANNELS>
 {
     MM_OPERATORS
+
   public:
     enum FilterTypes
     {
@@ -262,8 +361,9 @@ class BasicFilters
         Tripole,
         Brown,
         Pink,
-        NumFilters
+        Peak
     };
+    constexpr static int NumFilters = Peak + 1;
 
     static inline frequency_t minFreq()
     {
@@ -272,7 +372,7 @@ class BasicFilters
 
     static inline real_t minQ()
     {
-        return 0.01;
+        return 0.003;
     }
 
     static inline frequency_t maxFreq()
@@ -285,73 +385,176 @@ class BasicFilters
         return 10.;
     }
 
-    /*inline*/ void setFilterType(const int _idx)
+    // optimization
+    virtual void setTypeAndPasses(int _type, int _passes)
     {
-        m_doubleFilter = _idx == DoubleLowPass || _idx == DoubleMoog;
-        if(!m_doubleFilter)
+        _passes = qBound(1, _passes, 4);
+        if(m_passes != _passes || m_type != _type)
+        {
+            m_passes = _passes;
+            setFilterType(_type);
+        }
+    }
+
+    virtual void setPasses(int _passes)
+    {
+        _passes = qBound(1, _passes, 4);
+        if(m_passes != _passes)
+        {
+            m_passes = _passes;
+            setFilterType(m_type);
+        }
+        /*
+        if(_passes <= 1)
+        {
+            if(m_subFilter != nullptr)
+            {
+                delete m_subFilter;
+                m_subFilter = nullptr;
+            }
+        }
+        else if(m_subFilter == nullptr)
+        {
+            m_subFilter = new BasicFilters<CHANNELS>(
+                    static_cast<sample_rate_t>(m_sampleRate), _passes - 1);
+            m_subFilter->setFilterType(m_type == DoubleLowPass ? LowPass
+                                                               : Moog);
+        }
+        */
+    }
+
+    virtual void setFilterType(const int _idx)
+    {
+        // qInfo("BasicFilters::setFilterType passes=%d", m_passes);
+
+        m_doubleFilter = (_idx == DoubleLowPass || _idx == DoubleMoog);
+
+        int passes = m_passes;
+
+        if(m_doubleFilter)
+        {
+            // Double lowpass mode, backwards-compat for the goofy
+            // Add-NumFilters to signify doubleFilter stuff
+            m_type = (_idx == DoubleLowPass ? LowPass : Moog);
+            passes++;
+        }
+        else
         {
             m_type = static_cast<FilterTypes>(_idx);
+        }
+
+        if(passes <= 1)
+        {
+            if(m_subFilter != nullptr)
+            {
+                delete m_subFilter;
+                m_subFilter = nullptr;
+            }
             return;
         }
 
-        // Double lowpass mode, backwards-compat for the goofy
-        // Add-NumFilters to signify doubleFilter stuff
-        m_type = _idx == DoubleLowPass ? LowPass : Moog;
-        if(m_subFilter == NULL)
+        if(m_subFilter == nullptr)
         {
-            m_subFilter = new BasicFilters<CHANNELS>(
-                    static_cast<sample_rate_t>(m_sampleRate));
+            m_subFilter
+                    = new BasicFilters<CHANNELS>(sampleRate(), passes - 1);
         }
-        m_subFilter->m_type = m_type;
+        m_subFilter->setFilterType(m_type);
     }
 
-    /*inline*/ BasicFilters(const sample_rate_t _sample_rate) :
-          m_doubleFilter(false), m_sampleRate(_sample_rate),
-          m_sampleRatio(1. / double(m_sampleRate)), m_subFilter(NULL)
+    virtual void setFeedbackAmount(real_t _amount)
     {
+        m_feedbackAmount = bound(-10., _amount, 10.);
+    }
+
+    virtual void setFeedbackDelay(real_t _delay)
+    {
+        m_feedbackDelay = bound(0.1, _delay, 1000.);
+    }
+
+    using LsmmFilter<CHANNELS>::sampleRate;
+
+    BasicFilters(const sample_rate_t _sampleRate, const int _passes = 1) :
+          LsmmFilter<CHANNELS>(_sampleRate), m_biQuad(_sampleRate),
+          m_doubleFilter(false), m_subFilter(nullptr), m_ring(real_t(1001.)),
+          m_feedbackDelay(0.), m_feedbackAmount(0.)
+    {
+        setPasses(_passes);
         clearHistory();
     }
 
-    /*inline*/ virtual ~BasicFilters()
+    virtual ~BasicFilters()
     {
-        delete m_subFilter;
+        if(m_subFilter != nullptr)
+        {
+            delete m_subFilter;
+            m_subFilter = nullptr;
+        }
     }
 
-    /*inline*/ void clearHistory()
+    virtual void clearHistory()
     {
+        LsmmFilter<CHANNELS>::clearHistory();
+
         // reset in/out history for biquads
         m_biQuad.clearHistory();
 
         // reset in/out history
-        for(ch_cnt_t _chnl = 0; _chnl < CHANNELS; ++_chnl)
+        for(ch_cnt_t ch = 0; ch < CHANNELS; ++ch)
         {
             // reset in/out history for moog-filter
-            m_y1[_chnl] = m_y2[_chnl] = m_y3[_chnl] = m_y4[_chnl]
-                    = m_oldx[_chnl] = m_oldy1[_chnl] = m_oldy2[_chnl]
-                    = m_oldy3[_chnl]                 = 0.;
+            m_y1[ch] = m_y2[ch] = m_y3[ch] = m_y4[ch] = 0.;
+            m_oldx[ch] = m_oldy1[ch] = m_oldy2[ch] = m_oldy3[ch] = 0.;
 
             // tripole
-            m_last[_chnl]   = 0.;
-            m_brownv[_chnl] = 0.;
+            m_last[ch]   = 0.;
+            m_brownv[ch] = 0.;
 
             // reset in/out history for RC-filters
-            m_rclp0[_chnl] = m_rcbp0[_chnl] = m_rchp0[_chnl]
-                    = m_rclast0[_chnl]      = 0.;
-            m_rclp1[_chnl] = m_rcbp1[_chnl] = m_rchp1[_chnl]
-                    = m_rclast1[_chnl]      = 0.;
+            m_rclp0[ch] = m_rcbp0[ch] = m_rchp0[ch] = m_rclast0[ch] = 0.;
+            m_rclp1[ch] = m_rcbp1[ch] = m_rchp1[ch] = m_rclast1[ch] = 0.;
 
             for(int i = 0; i < 6; i++)
-                m_vfbp[i][_chnl] = m_vfhp[i][_chnl] = m_vflast[i][_chnl] = 0.;
+                m_vfbp[i][ch] = m_vfhp[i][ch] = m_vflast[i][ch] = 0.;
 
             // reset in/out history for SV-filters
-            m_delay1[_chnl] = 0.;
-            m_delay2[_chnl] = 0.;
-            m_delay3[_chnl] = 0.;
-            m_delay4[_chnl] = 0.;
+            m_delay1[ch] = 0.;
+            m_delay2[ch] = 0.;
+            m_delay3[ch] = 0.;
+            m_delay4[ch] = 0.;
         }
+
+        if(m_subFilter != nullptr)
+            m_subFilter->clearHistory();
     }
 
-    /*inline*/ sample_t update(sample_t _in0, ch_cnt_t _chnl)
+    virtual void update(sampleFrame& _in)
+    {
+        if(m_feedbackAmount != 0.)
+        {
+            sampleFrame s = {0., 0.};
+            m_ring.readt(&s, 1, m_ring.positiont() - m_feedbackDelay);
+            for(ch_cnt_t ch = 0; ch < qMin(DEFAULT_CHANNELS, CHANNELS); ++ch)
+                _in[ch] = bound(-1., _in[ch] + m_feedbackAmount * s[ch], 1.);
+            //_in[0] = bound(-1., _in[0] + m_feedbackAmount * s[0], 1.);
+            //_in[1] = bound(-1., _in[1] + m_feedbackAmount * s[1], 1.);
+            /*
+            static int n = 0;
+            n++;
+            if(n % 1000 == 0)
+                qInfo("BF::u a=%f d=%f s0=%f s1=%f ring=%d", m_feedbackAmount,
+                      m_feedbackDelay, s[0], s[1], m_ring.size());
+            */
+        }
+
+        // for(ch_cnt_t ch = 0; ch < qMin(DEFAULT_CHANNELS, CHANNELS); ++ch)
+        //   _in[ch] = update(_in[ch], ch);
+        LsmmFilter<CHANNELS>::update(_in);
+
+        m_ring.write(_in);
+    }
+
+  protected:
+    virtual sample_t update(sample_t _in0, ch_cnt_t _chnl)
     {
         sample_t out;
         switch(m_type)
@@ -423,7 +626,7 @@ class BasicFilters
                 }
                 out *= 0.25;
                 m_last[_chnl] = _in0;
-                return out;
+                break;  // return out;
             }
 
                 // 4-pole state-variant lowpass filter, adapted from Nekobee
@@ -455,8 +658,9 @@ class BasicFilters
                 }
 
                 /* mix filter output into output buffer */
-                return m_type == Lowpass_SV ? m_delay4[_chnl]
-                                            : m_delay3[_chnl];
+                out = (m_type == Lowpass_SV ? m_delay4[_chnl]
+                                            : m_delay3[_chnl]);
+                break;
             }
 
             case Highpass_SV:
@@ -471,7 +675,8 @@ class BasicFilters
                     m_delay1[_chnl] = m_svf1 * hp + m_delay1[_chnl];
                 }
 
-                return hp;
+                out = hp;
+                break;
             }
 
             case Notch_SV:
@@ -497,7 +702,8 @@ class BasicFilters
                 }
 
                 /* mix filter output into output buffer */
-                return m_delay4[_chnl] + hp1;
+                out = m_delay4[_chnl] + hp1;
+                break;
             }
 
                 // 4-times oversampled simulation of an active
@@ -529,7 +735,8 @@ class BasicFilters
                     m_rchp0[_chnl]   = hp;
                     m_rcbp0[_chnl]   = bp;
                 }
-                return lp;
+                out = lp;
+                break;
             }
             case Highpass_RC12:
             case Bandpass_RC12:
@@ -550,7 +757,8 @@ class BasicFilters
                     m_rchp0[_chnl]   = hp;
                     m_rcbp0[_chnl]   = bp;
                 }
-                return m_type == Highpass_RC12 ? hp : bp;
+                out = (m_type == Highpass_RC12 ? hp : bp);
+                break;
             }
 
             case Lowpass_RC24:
@@ -595,7 +803,8 @@ class BasicFilters
                     m_rcbp1[_chnl]   = bp;
                     m_rchp1[_chnl]   = hp;
                 }
-                return lp;
+                out = lp;
+                break;
             }
             case Highpass_RC24:
             case Bandpass_RC24:
@@ -635,20 +844,21 @@ class BasicFilters
                     m_rchp1[_chnl]   = hp;
                     m_rcbp1[_chnl]   = bp;
                 }
-                return m_type == Highpass_RC24 ? hp : bp;
+                out = (m_type == Highpass_RC24 ? hp : bp);
+                break;
             }
 
             case Formantfilter:
             case FastFormant:
             {
-                if(abs(_in0) <= SILENCE && abs(m_vflast[0][_chnl]) <= SILENCE)
-                {
-                    return 0.;
-                }  // performance hack - skip processing when the numbers get
-                   // too small
-                sample_t hp, bp, in;
+                out = 0.;
 
-                out = 0;
+                // performance hack - skip processing when the numbers get too
+                // small
+                if(abs(_in0) <= SILENCE && abs(m_vflast[0][_chnl]) <= SILENCE)
+                    break;
+
+                sample_t  hp, bp, in;
                 const int os
                         = m_type == FastFormant
                                   ? 1
@@ -745,7 +955,8 @@ class BasicFilters
 
                     out += bp;
                 }
-                return m_type == FastFormant ? out * 2. : out * 0.5;
+                out = (m_type == FastFormant ? out * 2. : out * 0.5);
+                break;
             }
             case Brown:
             {
@@ -768,7 +979,7 @@ class BasicFilters
 
                 m_brownv[_chnl] = out;
                 m_last[_chnl]   = _in0;
-                return out;  // * 3.5;  // compensate for gain
+                break;  // return out;  // * 3.5;  // compensate for gain
             }
             case Pink:
             {
@@ -796,30 +1007,37 @@ class BasicFilters
                        //+ b6[_chnl] * b6[_chnl] * b6[_chnl] * (m_pinkq - 1.)
                        + (_in0 * 0.5362))
                       * 0.11;
-                b6[_chnl]       = _in0 * 0.115926;
+                b6[_chnl]      = _in0 * 0.115926;
                 m_pinkv[_chnl] = out;
-                m_last[_chnl]   = _in0;
-                return out;
+                m_last[_chnl]  = _in0;
+                // return out;
+                break;
             }
             default:
                 out = m_biQuad.update(_in0, _chnl);
                 break;
         }
 
-        if(m_doubleFilter)
-        {
-            return m_subFilter->update(out, _chnl);
-        }
+        if(m_subFilter != nullptr)  // m_doubleFilter)
+            out = m_subFilter->update(out, _chnl);
 
         // Clipper band limited sigmoid
-        return out;
+        return bound(-1., out, 1.);
     }
 
-    inline void calcFilterCoeffs(frequency_t _freq, real_t _q)
+  public:
+    virtual void calcFilterCoeffs(frequency_t _freq, real_t _q, real_t _gain)
     {
+        if(m_subFilter != nullptr)
+            m_subFilter->calcFilterCoeffs(_freq, _q, _gain);
+
         // temp coef vars
         _q    = bound(minQ(), _q, maxQ());
         _freq = bound(minFreq(), _freq, maxFreq());
+
+        // m_sampleRate(_sampleRate)
+        const sample_rate_t csr         = sampleRate();
+        const real_t        sampleRatio = 1. / real_t(csr <= 0 ? 44100 : csr);
 
         if(m_type == Lowpass_RC12 || m_type == Bandpass_RC12
            || m_type == Highpass_RC12 || m_type == Lowpass_RC24
@@ -827,12 +1045,12 @@ class BasicFilters
         {
             //_freq = bound(50., _freq, 20000.);
 
-            const real_t sr = m_sampleRatio * 0.25;
-            const real_t f  = 1. / (_freq * D_2PI);
+            const real_t srq = sampleRatio * 0.25;
+            const real_t f   = 1. / (_freq * R_2PI);
 
-            m_rca = 1. - sr / (f + sr);
+            m_rca = 1. - srq / (f + srq);
             m_rcb = 1. - m_rca;
-            m_rcc = f / (f + sr);
+            m_rcc = f / (f + srq);
 
             // Stretch Q/resonance, as self-oscillation reliably starts at a q
             // of [2.5,2.6]
@@ -871,8 +1089,8 @@ class BasicFilters
                                  * D_2PI);
 
             // samplerate coeff: depends on oversampling
-            const real_t sr = m_type == FastFormant ? m_sampleRatio
-                                                    : m_sampleRatio * 0.25;
+            const real_t sr = m_type == FastFormant ? sampleRatio
+                                                    : sampleRatio * 0.25;
 
             m_vfa[0] = 1. - sr / (f0 + sr);
             m_vfb[0] = 1. - m_vfa[0];
@@ -888,25 +1106,26 @@ class BasicFilters
             // [ 0 - 0.5 ]
             // const real_t f = bound(minFreq(), _freq, 20000.) *
             // m_sampleRatio;
-            const real_t f = _freq * m_sampleRatio;
+            const real_t f = _freq * sampleRatio;
             // (Empirical tunning)
             m_p = (3.6 - 3.2 * f) * f;
             m_k = 2. * m_p - 1;
             m_r = _q * fastexp((1 - m_p) * 1.386249);  // pow(D_E,...)
-
+            /*
             if(m_doubleFilter)
             {
                 m_subFilter->m_r = m_r;
                 m_subFilter->m_p = m_p;
                 m_subFilter->m_k = m_k;
             }
+            */
             return;
         }
 
         if(m_type == Tripole)
         {
             // bound(20., _freq, 20000.)
-            const real_t f = _freq * m_sampleRatio * 0.25;
+            const real_t f = _freq * sampleRatio * 0.25;
 
             m_p = (3.6 - 3.2 * f) * f;
             m_k = 2. * m_p - 1.;
@@ -919,7 +1138,7 @@ class BasicFilters
            || m_type == Highpass_SV || m_type == Notch_SV)
         {
             // qMax(minFreq(), _freq)
-            const real_t f = sin(_freq * m_sampleRatio * D_PI);
+            const real_t f = sin(_freq * sampleRatio * R_PI);
             m_svf1         = qMin(f, 0.825);
             m_svf2         = qMin(f * 2., 0.825);
             m_svq          = qMax(0.0001, 2. - (_q * 0.1995));
@@ -931,22 +1150,54 @@ class BasicFilters
             m_brownf = _freq / maxFreq();
             m_brownf = log10(1. + m_brownf) / log10(2.);
             m_brownq = _q / 0.5;
-            //qInfo("brown: %f", m_brownf);
+            // qInfo("brown: %f", m_brownf);
             return;
         }
+
         if(m_type == Pink)
         {
             m_pinkf = _freq / maxFreq();
             m_pinkf = log10(1. + m_pinkf) / log10(2.);
             m_pinkq = _q / 0.5;
-            //qInfo("pink: %f", m_pinkf);
+            // qInfo("pink: %f", m_pinkf);
             return;
+        }
+
+        if(m_type == Peak)
+        {
+            // calc intermediate
+            const real_t w0 = R_2PI * _freq * sampleRatio;
+            const real_t c  = cos(w0);
+            const real_t s  = sin(w0);
+            const real_t A  = pow(10, _gain * 0.45);  // 0.025*18;
+            const real_t alpha
+                    = s * sinh(R_2_LOG / 2. * _q * w0 / s);  // q is bw
+
+            real_t a0, a1, a2, b0, b1, b2;  // coeffs to calculate
+
+            // calc coefficents
+            b0 = 1 + alpha * A;
+            b1 = -2 * c;
+            b2 = 1 - alpha * A;
+            a0 = 1 + alpha / A;
+            a1 = -2 * c;
+            a2 = 1 - alpha / A;
+
+            // normalise
+            b0 /= a0;
+            b1 /= a0;
+            b2 /= a0;
+            a1 /= a0;
+            a2 /= a0;
+            a0 = 1;
+
+            m_biQuad.setCoeffs(a1, a2, b0, b1, b2);
         }
 
         // other filters
         //_freq = bound(minFreq(), _freq, 20000.);
 
-        const real_t omega = D_2PI * _freq * m_sampleRatio;
+        const real_t omega = R_2PI * _freq * sampleRatio;
         const real_t tsin  = sin(omega) * 0.5;
         const real_t tcos  = cos(omega);
 
@@ -999,12 +1250,12 @@ class BasicFilters
                 break;
         }
 
-        if(m_doubleFilter)
-        {
+        /*
+        if( m_doubleFilter)
             m_subFilter->m_biQuad.setCoeffs(m_biQuad.m_a1, m_biQuad.m_a2,
                                             m_biQuad.m_b0, m_biQuad.m_b1,
                                             m_biQuad.m_b2);
-        }
+        */
     }
 
   private:
@@ -1031,7 +1282,7 @@ class BasicFilters
     bf_frame_t m_y1, m_y2, m_y3, m_y4, m_oldx, m_oldy1, m_oldy2, m_oldy3;
     // additional one for Tripole filter
     bf_frame_t m_last;
-    bf_frame_t m_brownv,m_pinkv;
+    bf_frame_t m_brownv, m_pinkv;
 
     // in/out history for RC-type-filters
     bf_frame_t m_rcbp0, m_rclp0, m_rchp0, m_rclast0;
@@ -1048,10 +1299,13 @@ class BasicFilters
 
     FilterTypes m_type;
     bool        m_doubleFilter;
-
-    sample_rate_t           m_sampleRate;
-    DOUBLE                  m_sampleRatio;
+    // sample_rate_t           m_sampleRate;
+    // DOUBLE                  m_sampleRatio;
     BasicFilters<CHANNELS>* m_subFilter;
+    int                     m_passes;
+    Ring                    m_ring;
+    real_t                  m_feedbackDelay;
+    real_t                  m_feedbackAmount;
 };
 
 #endif

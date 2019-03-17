@@ -323,15 +323,10 @@ class EXPORT AutomatableModel : public Model, public JournallingObject
 
     real_t globalAutomationValueAt(const MidiTime& time);
 
-    static void incrementPeriodCounter()
-    {
-        ++s_periodCounter;
-    }
-
-    static void resetPeriodCounter()
-    {
-        s_periodCounter = 0;
-    }
+    static long periodCounter();
+    static void incrementPeriodCounter();
+    static void resetPeriodCounter();
+    static void postponeUpdate(AutomatableModel* _m, const ValueBuffer* _vb);
 
     // tmp
     QVector<AutomatableModel*> m_linkedModels;
@@ -433,6 +428,8 @@ class EXPORT AutomatableModel : public Model, public JournallingObject
 
     bool   m_hasSampleExactData;
     QMutex m_valueBufferMutex;
+
+    static QHash<AutomatableModel*, const ValueBuffer*> s_postponedUpdates;
 };
 
 template <typename T>

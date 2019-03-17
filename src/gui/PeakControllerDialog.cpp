@@ -3,7 +3,7 @@
  * controller's settings
  *
  * Copyright (c) 2008-2009 Paul Giblock <drfaygo/at/gmail.com>
- * 
+ *
  * This file is part of LMMS - https://lmms.io
  *
  * This program is free software; you can redistribute it and/or
@@ -23,59 +23,53 @@
  *
  */
 
-
 #include <QLabel>
 //#include <QPushButton>
-#include <QMdiArea> // REQUIRED
+#include <QMdiArea>  // REQUIRED
 #include <QPainter>
 
 //#include "CaptionMenu.h"
 //#include "MainWindow.h"
-#include "ToolTip.h"
-
 #include "PeakController.h"
+#include "ToolTip.h"
 //#include "Knob.h"
 //#include "TempoSyncKnob.h"
 
 //#include "gui_templates.h"
 #include "embed.h"
 
-
-PeakControllerDialog::PeakControllerDialog( Controller * _model, QWidget * _parent ) :
-	ControllerDialog( _model, _parent )
+PeakControllerDialog::PeakControllerDialog(Controller* _model,
+                                           QWidget*    _parent) :
+      ControllerDialog(_model, _parent)
 {
-	setWindowTitle( tr( "PEAK" ) );
-	setWindowIcon( embed::getIconPixmap( "controller" ) );
-	setFixedSize( 254,60 );
-	
-	ToolTip::add( this, tr( "LFO Controller" ) );
+    setWindowTitle(tr("PEAK"));
+    setWindowIcon(embed::getIcon("controller"));
+    setFixedSize(254, 60);
 
-	QLabel * l = new QLabel( this );
-	l->setText( "Use FX's controls" );
-	l->setGeometry(6,6,width()-12,height()-12);//0,0,move(10, 10);
+    ToolTip::add(this, tr("Peak Controller"));
 
-	setModel( _model );
+    QLabel* l = new QLabel(this);
+    l->setText("Use FX's controls");
+    l->setGeometry(6, 6, width() - 12, height() - 12);  // 0,0,move(10, 10);
 
-	setAutoFillBackground( true );
-	QPalette pal;
-	pal.setBrush( backgroundRole(), embed::getIconPixmap( "lfo_controller_artwork" ) );
-	setPalette( pal );
+    setModel(_model);
+
+    setAutoFillBackground(true);
+    QPalette pal;
+    pal.setBrush(backgroundRole(),
+                 embed::getPixmap("lfo_controller_artwork"));
+    setPalette(pal);
 }
-
-
-
 
 PeakControllerDialog::~PeakControllerDialog()
 {
 }
 
-
-
 /*
 void effectView::displayHelp()
 {
-	QWhatsThis::showText( mapToGlobal( rect().bottomRight() ),
-								whatsThis() );
+        QWhatsThis::showText( mapToGlobal( rect().bottomRight() ),
+                                                                whatsThis() );
 }
 
 
@@ -83,30 +77,22 @@ void effectView::displayHelp()
 
 void effectView::closeEffects()
 {
-	m_subWindow->hide();
-	m_show = true;
+        m_subWindow->hide();
+        m_show = true;
 }
 */
 
-
-void PeakControllerDialog::contextMenuEvent( QContextMenuEvent * )
+void PeakControllerDialog::contextMenuEvent(QContextMenuEvent*)
 {
 }
 
-
-
-
-void PeakControllerDialog::paintEvent( QPaintEvent* _pe )
+void PeakControllerDialog::paintEvent(QPaintEvent* _pe)
 {
-	//QPainter p( this );
-        ControllerDialog::paintEvent(_pe);
+    // QPainter p( this );
+    ControllerDialog::paintEvent(_pe);
 }
-
-
 
 void PeakControllerDialog::modelChanged()
 {
-	m_peakController = castModel<PeakController>();
+    m_peakController = castModel<PeakController>();
 }
-
-

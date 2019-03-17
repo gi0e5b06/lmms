@@ -73,7 +73,7 @@
 
 typedef AutomationPattern::timeMap timeMap;
 
-// some constants...
+// some constants
 const int INITIAL_PIANOROLL_WIDTH  = 860;
 const int INITIAL_PIANOROLL_HEIGHT = 480;
 
@@ -497,7 +497,7 @@ void PianoRoll::showVolTextFloat(volume_t vol, const QPoint& pos, int timeout)
 {
     //! \todo display velocity for MIDI-based instruments
     // possibly dBFS values too? not sure if it makes sense for note
-    // volumes...
+    // volumes
     showTextFloat(tr("Velocity: %1%").arg(vol), pos, timeout);
 }
 
@@ -877,7 +877,7 @@ void PianoRoll::setCurrentPattern(Pattern* newPattern)
     }
 
     // resizeEvent() does the rest for us (scrolling, range-checking
-    // of start-notes and so on...)
+    // of start-notes and so on)
     resizeEvent(nullptr);
 
     // make sure to always get informed about the pattern being destroyed
@@ -1773,7 +1773,7 @@ void PianoRoll::mousePressEvent(QMouseEvent* me)
             // will be our iterator in the following loop
             Notes::ConstIterator it = notes.begin() + notes.size() - 1;
 
-            // loop through whole note-vector...
+            // loop through whole note-vector
             for(int i = 0; i < notes.size(); ++i)
             {
                 Note*    note = *it;
@@ -2072,7 +2072,7 @@ void PianoRoll::mousePressEvent(QMouseEvent* me)
                 stopTestNotes();
                 stopTestKey();
                 // m_pattern->instrumentTrack()->pianoModel()->handleKeyPress(
-                playTestKey(key_num, v, 0);
+                playTestKey(key_num, v, 0);  // OK
             }
         }
         else
@@ -2185,7 +2185,8 @@ void PianoRoll::stopTestNote(Note* n)
         qInfo("PianoRoll::stopTestNote n=%d", n->key());
         n->setIsPlaying(false);
         m_pattern->instrumentTrack()->pianoModel()->handleKeyRelease(
-                n->key());
+                n->key() - m_pattern->instrumentTrack()->baseNote()
+                + DefaultKey);
     }
 }
 
@@ -2201,9 +2202,13 @@ void PianoRoll::playTestNote(Note* n)
         const int baseVelocity
                 = m_pattern->instrumentTrack()->midiPort()->baseVelocity();
         m_pattern->instrumentTrack()->pianoModel()->handleKeyPress(
-                n->key(), n->midiVelocity(baseVelocity));
+                n->key() - m_pattern->instrumentTrack()->baseNote()
+                        + DefaultKey,
+                n->midiVelocity(baseVelocity));
 
-        MidiEvent event(MidiMetaEvent, -1, n->key(),
+        MidiEvent event(MidiMetaEvent, -1,
+                        n->key() - m_pattern->instrumentTrack()->baseNote()
+                                + DefaultKey,
                         panningToMidi(n->getPanning()));
         event.setMetaEvent(MidiNotePanning);
         m_pattern->instrumentTrack()->processInEvent(event, 0);
@@ -2672,7 +2677,7 @@ void PianoRoll::mouseMoveEvent(QMouseEvent* me)
             // will be our iterator in the following loop
             Notes::ConstIterator it = notes.begin() + notes.size() - 1;
 
-            // loop through whole note-vector...
+            // loop through whole note-vector
             for(int i = 0; i < notes.size(); ++i)
             {
                 Note* note = *it;
@@ -2763,7 +2768,7 @@ void PianoRoll::mouseMoveEvent(QMouseEvent* me)
             // will be our iterator in the following loop
             Notes::ConstIterator it = notes.begin();
 
-            // loop through whole note-vector...
+            // loop through whole note-vector
             while(it != notes.end())
             {
                 Note*    note = *it;
@@ -3163,7 +3168,7 @@ void PianoRoll::paintEvent(QPaintEvent* pe)
         //    pianoModel->lock();
     }
 
-    // draw all white keys...
+    // draw all white keys
     for(int y = key_line_y + 1 + y_offset; y > PR_TOP_MARGIN;
         key_line_y -= KEY_LINE_HEIGHT, ++keys_processed)
     {
@@ -3307,7 +3312,7 @@ void PianoRoll::paintEvent(QPaintEvent* pe)
         if(prKeyOrder[key % KeysPerOctave] == PR_BLACK_KEY)
         {
             // then draw it (calculation of y very complicated,
-            // but that's the only working solution, sorry...)
+            // but that's the only working solution, sorry)
             // check if the key is pressed or not
             if(pianoModel != nullptr && pianoModel->isKeyPressed(key))
             {
@@ -3371,7 +3376,7 @@ void PianoRoll::paintEvent(QPaintEvent* pe)
                m_nemStr.at(m_noteEditMode) + ":");
 
     // set clipping area, because we are not allowed to paint over
-    // keyboard...
+    // keyboard
     p.setClipRect(WHITE_KEY_WIDTH, PR_TOP_MARGIN, width() - WHITE_KEY_WIDTH,
                   height() - PR_TOP_MARGIN - PR_BOTTOM_MARGIN);
 
@@ -3683,8 +3688,7 @@ void PianoRoll::paintEvent(QPaintEvent* pe)
         p.setPen(QApplication::palette().color(QPalette::Active,
                                                QPalette::BrightText));
         p.drawText(WHITE_KEY_WIDTH + 20, PR_TOP_MARGIN + 40,
-                   tr("Please open a pattern by double-clicking "
-                      "on it!"));
+                   tr("Open a score tile by double-clicking on it."));
     }
 
     p.setClipRect(WHITE_KEY_WIDTH, PR_TOP_MARGIN, width() - WHITE_KEY_WIDTH,
@@ -4202,7 +4206,7 @@ void PianoRoll::selectAll()
             // if we move start-key down, we have to add
             // the difference between old and new start-key
             // to m_selectedKeys, otherwise the selection
-            // is just moved down...
+            // is just moved down
             m_selectedKeys += m_selectStartKey - (key - 1);
             m_selectStartKey = key - 1;
         }
@@ -4492,7 +4496,7 @@ void PianoRoll::pasteNotes()
         if(modified)
         {
             // we only have to do the following lines if we pasted at
-            // least one note...
+            // least one note
             Engine::getSong()->setModified();
             update();
             gui->songEditor()->update();
@@ -4703,7 +4707,7 @@ Note* PianoRoll::noteUnderMouse()
             = (pos.x() - WHITE_KEY_WIDTH) * MidiTime::ticksPerTact() / m_ppt
               + m_currentPosition;
 
-    // loop through whole note-vector...
+    // loop through whole note-vector
     for(Note* const& note: m_pattern->notes())
     {
         // and check whether the cursor is over an
@@ -5041,7 +5045,7 @@ PianoRollWindow::PianoRollWindow() : Editor(true), m_editor(new PianoRoll())
     connect(m_editor, SIGNAL(currentPatternChanged()), this,
             SIGNAL(currentPatternChanged()));
     connect(m_editor, SIGNAL(currentPatternChanged()), this,
-            SLOT(patternRenamed()));
+            SLOT(updateWindowTitle()));
 }
 
 const Pattern* PianoRollWindow::currentPattern() const
@@ -5060,15 +5064,13 @@ void PianoRollWindow::setCurrentPattern(Pattern* pattern)
 
     if(pattern)
     {
-        setWindowTitle(tr("Piano-Roll - %1").arg(pattern->name()));
         connect(pattern->instrumentTrack(), SIGNAL(nameChanged()), this,
-                SLOT(patternRenamed()));
-        connect(pattern, SIGNAL(dataChanged()), this, SLOT(patternRenamed()));
+                SLOT(updateWindowTitle()));
+        connect(pattern, SIGNAL(dataChanged()), this,
+                SLOT(updateWindowTitle()));
     }
-    else
-    {
-        setWindowTitle(tr("Piano-Roll - no pattern"));
-    }
+
+    updateWindowTitle();
 }
 
 void PianoRollWindow::setGhostPattern(Pattern* pattern)
@@ -5131,16 +5133,11 @@ QSize PianoRollWindow::sizeHint() const
     return {INITIAL_PIANOROLL_WIDTH, INITIAL_PIANOROLL_HEIGHT};
 }
 
-void PianoRollWindow::patternRenamed()
+void PianoRollWindow::updateWindowTitle()
 {
-    if(currentPattern())
-    {
-        setWindowTitle(tr("Piano-Roll - %1").arg(currentPattern()->name()));
-    }
-    else
-    {
-        setWindowTitle(tr("Piano-Roll - no pattern"));
-    }
+    const Pattern* p = currentPattern();
+    setWindowTitle(p != nullptr ? tr("Piano Roll - %1").arg(p->name())
+                                : tr("Piano Roll - no tile"));
 }
 
 void PianoRollWindow::ghostPatternSet(bool state)

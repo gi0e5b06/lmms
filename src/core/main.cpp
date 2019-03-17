@@ -390,7 +390,7 @@ int main(int argc, char** argv)
 
             return EXIT_SUCCESS;
         }
-        else if(arg == "--allowroot")
+        else if(arg == "--allowroot" || arg == "--allow-root")
         {
             // Ignore, processed earlier
 #ifdef LMMS_BUILD_WIN32
@@ -1233,13 +1233,13 @@ int main(int argc, char** argv)
         {
             PL_END("Project Rendering")
         }
-    }
 
-    // ProjectRenderer::updateConsoleProgress() doesn't return line after
-    // render
-    if(coreOnly)
-    {
-        printf("\n");
+        // ProjectRenderer::updateConsoleProgress() doesn't return line after
+        // render
+        if(coreOnly)
+        {
+            printf("\n");
+        }
     }
 
     // TODO: use aboutToQuit() signal

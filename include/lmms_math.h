@@ -234,12 +234,13 @@ static inline int fastrandi()
 static inline real_t fastrand(real_t range)
 {
 #ifdef REAL_IS_DOUBLE
-    static const double fast_rand_ratio = 1. / double(FAST_RAND_MAX);
-    return double(fastrandi()) * range * fast_rand_ratio;
+    static const double fast_rand_ratio = 1. / static_cast<double>(FAST_RAND_MAX);
+    return static_cast<double>(fastrandi()) * range * fast_rand_ratio;
 #endif
 #ifdef REAL_IS_FLOAT
-    static const float fast_rand_ratio = 1.f / float(FAST_RAND_MAX);
-    return float(fastrandi()) * range * fast_rand_ratio;
+    static const float fast_rand_ratio
+            = 1.f / static_cast<float>(FAST_RAND_MAX);
+    return static_cast<float>(fastrandi()) * range * fast_rand_ratio;
 #endif
 }
 
@@ -256,13 +257,15 @@ static inline real_t fastrand01exc()
 // obsolete
 static inline float fastrandf01inc()
 {
-    return float(fastrandi()) / float(FAST_RAND_MAX);
+    return static_cast<float>(fastrandi())
+           / static_cast<float>(FAST_RAND_MAX);
 }
 
 // obsolete
 static inline float fastrandf01exc()
 {
-    return float(fastrandi()) / float(FAST_RAND_MAX + 1);
+    return static_cast<float>(fastrandi())
+           / static_cast<float>(FAST_RAND_MAX + 1);
 }
 
 #define fastFma fma
@@ -316,13 +319,6 @@ static inline double fastFma(double a, double b, double c)
 }
 */
 
-#define fastPow fastpow
-
-static inline real_t fastpow(real_t a, real_t b)
-{
-    return powf(a, b);
-}
-
 static inline real_t fastexp(real_t a)
 {
     return expf(a);
@@ -333,70 +329,92 @@ static inline real_t fastexp2(real_t a)
     return exp2f(a);
 }
 
+// https://en.wikipedia.org/wiki/Fast_inverse_square_root
+// not tested/used yet
 /*
-static inline float fastPowf(float a, float b)
+static inline real_t fastrsqrt(real_t x)
 {
-    return powf(a, b);
+    const float x2         = static_cast<float>(x) * 0.5f;  // REQUIRED
+    const float threehalfs = 1.5f;                          // REQUIRED
+
+    union {
+        float    f;
+        uint32_t i;
+    } conv = {x};  // member 'f' set to value of 'number'.
+    conv.i = 0x5f3759df - (conv.i >> 1);
+    conv.f *= (threehalfs - (x2 * conv.f * conv.f));
+    return conv.f;
 }
 */
 
 /*
-// source:
-//
-http://martin.ankerl.com/2007/10/04/optimized-pow-approximation-for-java-and-c-c/
-static inline double fastPow(double a, double b)
+#define fastPow fastpow
+
+static inline float fastPowf(float a, float b)
+{
+   return fastPow(static_cast<double>(a), static_cast<double>(b));
+}
+*/
+
+static inline real_t fastpow(real_t a, real_t b)
+{
+   return powf(a, b);
+}
+
+// http://martin.ankerl.com/2007/10/04/optimized-pow-approximation-for-java-and-c-c/
+// gives strange results
+/*
+static inline real_t fastpow(real_t a, real_t b)
 {
     union {
-        double  d;
+        DOUBLE  d;
         int32_t x[2];
     } u    = {a};
     u.x[1] = static_cast<int32_t>(b * (u.x[1] - 1072632447) + 1072632447);
     u.x[0] = 0;
     return u.d;
 }
-
-static inline float fastPowf(float a, float b)
-{
-    return fastPow(double(a), double(b));
-}
-
-static inline real_t fastpow(real_t a, real_t b)
-{
-    if(sizeof(real_t) == sizeof(float))
-        return fastPowf(a, b);
-    else
-        return fastPow(a, b);
-}
 */
 
 // sinc function
 static inline real_t sinc(real_t _x)
 {
-    if(sizeof(real_t) == sizeof(float))
-        return _x == 0.f ? 1.f : sinf(F_PI * _x) / (F_PI * _x);
-    else
-        return _x == 0. ? 1. : sin(D_PI * _x) / (D_PI * _x);
-}
-
-static inline real_t signedpow(real_t v, real_t e)
-{
-    if(sizeof(real_t) == sizeof(float))
-        return v < 0.f ? powf(-v, e) * -1.f : powf(v, e);
-    else
-        return v < 0. ? pow(-v, e) * -1. : pow(v, e);
+#ifdef REAL_IS_FLOAT
+    return _x == 0.f ? 1.f : sinf(F_PI * _x) / (F_PI * _x);
+#endif
+#ifdef REAL_IS_DOUBLE
+    return _x == 0. ? 1. : sin(D_PI * _x) / (D_PI * _x);
+#endif
 }
 
 //! @brief Exponential function that deals with negative bases
+static inline real_t signedpow(real_t v, real_t e)
+{
+#ifdef REAL_IS_FLOAT
+    return v < 0.f ? powf(-v, e) * -1.f : powf(v, e);
+#endif
+#ifdef REAL_IS_DOUBLE
+    return v < 0. ? pow(-v, e) * -1. : pow(v, e);
+#endif
+}
+
+// needed temporary for Nes
+static inline FLOAT signedpowf(FLOAT v, FLOAT e)
+{
+    return v < 0.f ? powf(-v, e) * -1.f : powf(v, e);
+}
+
+/*
 static inline double signedPow(double v, double e)
 {
     return v < 0 ? pow(-v, e) * -1. : pow(v, e);
 }
 
-//! @brief Exponential function that deals with negative bases
 static inline float signedPowf(float v, float e)
 {
     return v < 0 ? powf(-v, e) * -1.f : powf(v, e);
 }
+*/
 
 static inline double logToLinearScale(double min, double max, double value)
 {
@@ -404,7 +422,7 @@ static inline double logToLinearScale(double min, double max, double value)
     {
         const double mmax   = qMax(qAbs(min), qAbs(max));
         const double val    = value * (max - min) + min;
-        const double result = signedPow(val / mmax, D_E) * mmax;
+        const double result = signedpow(val / mmax, D_E) * mmax;
         return isnan(result) ? 0 : result;
     }
     double result = pow(value, D_E) * (max - min) + min;
@@ -419,7 +437,7 @@ static inline double linearToLogScale(double min, double max, double value)
     if(min < 0)
     {
         const double mmax   = qMax(qAbs(min), qAbs(max));
-        const double result = signedPow(valueLimited / mmax, EXP) * mmax;
+        const double result = signedpow(valueLimited / mmax, EXP) * mmax;
         return isnan(result) ? 0 : result;
     }
     double result = pow(val, EXP) * (max - min) + min;
@@ -434,7 +452,7 @@ static inline float logToLinearScale(float min, float max, float value)
     {
         const float mmax   = qMax(qAbs(min), qAbs(max));
         const float val    = value * (max - min) + min;
-        const float result = signedPowf(val / mmax, F_E) * mmax;
+        const float result = signedpowf(val / mmax, F_E) * mmax;
         return isnan(result) ? 0 : result;
     }
     float result = powf(value, F_E) * (max - min) + min;
@@ -451,7 +469,7 @@ static inline float linearToLogScale(float min, float max, float value)
     if(min < 0)
     {
         const float mmax   = qMax(qAbs(min), qAbs(max));
-        const float result = signedPowf(valueLimited / mmax, EXP) * mmax;
+        const float result = signedpowf(valueLimited / mmax, EXP) * mmax;
         return isnan(result) ? 0 : result;
     }
     float result = powf(val, EXP) * (max - min) + min;

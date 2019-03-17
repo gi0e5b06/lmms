@@ -22,57 +22,59 @@
  * Boston, MA 02110-1301 USA.
  *
  */
- 
+
 #ifndef MULTITAP_ECHO_H
 #define MULTITAP_ECHO_H
 
+#include "BasicFilters.h"
 #include "Effect.h"
 #include "MultitapEchoControls.h"
-#include "ValueBuffer.h"
 #include "RingBuffer.h"
+#include "ValueBuffer.h"
 #include "lmms_math.h"
-#include "BasicFilters.h"
 
 class MultitapEchoEffect : public Effect
 {
-public:
-	MultitapEchoEffect( Model* parent, const Descriptor::SubPluginFeatures::Key* key );
-	virtual ~MultitapEchoEffect();
-	virtual bool processAudioBuffer( sampleFrame* buf, const fpp_t frames );
+  public:
+    MultitapEchoEffect(Model*                                    parent,
+                       const Descriptor::SubPluginFeatures::Key* key);
+    virtual ~MultitapEchoEffect();
+    virtual bool processAudioBuffer(sampleFrame* buf, const fpp_t frames);
 
-	virtual EffectControls* controls()
-	{
-		return &m_controls;
-	}
+    virtual EffectControls* controls()
+    {
+        return &m_controls;
+    }
 
-private:
-	void updateFilters( int begin, int end );
-	void runFilter( sampleFrame * dst, sampleFrame * src, StereoOnePole & filter, const fpp_t frames );
+  private:
+    void updateFilters(int begin, int end);
+    void runFilter(sampleFrame*   dst,
+                   sampleFrame*   src,
+                   StereoOnePole& filter,
+                   const fpp_t    frames);
 
-	inline void setFilterFreq( float fc, StereoOnePole & f )
-	{
-		const float b1 = expf( -2.0f * F_PI * fc );
-		f.setCoeffs( 1.0f - b1, b1 );
-	}
+    inline void setFilterFreq(float fc, StereoOnePole& f)
+    {
+        const float b1 = expf(-2.0f * F_PI * fc);
+        f.setCoeffs(1.0f - b1, b1);
+    }
 
-	int m_stages;
+    int m_stages;
 
-	MultitapEchoControls m_controls;
-	
-	float m_amp [32];
-	float m_lpFreq [32];
+    MultitapEchoControls m_controls;
 
-	RingBuffer m_buffer;
-	StereoOnePole m_filter [32][4];
-	
-	float m_sampleRate;
-	float m_sampleRatio;
-	
-	sampleFrame * m_work;
+    float m_amp[32];
+    float m_lpFreq[32];
 
-	friend class MultitapEchoControls;
+    sample_rate_t m_sampleRate;
+    DOUBLE        m_sampleRatio;
 
+    RingBuffer    m_buffer;
+    StereoOnePole m_filter[32][4];
+
+    sampleFrame* m_work;
+
+    friend class MultitapEchoControls;
 };
-
 
 #endif

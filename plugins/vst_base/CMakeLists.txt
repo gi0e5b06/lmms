@@ -12,7 +12,7 @@ IF(LMMS_BUILD_WIN32)
 		TARGET_LINK_LIBRARIES(RemoteVstPlugin -lQtCore4)
 	ENDIF()
 	TARGET_LINK_LIBRARIES(RemoteVstPlugin -lpthread -lgdi32 -lws2_32)
-	SET_TARGET_PROPERTIES(RemoteVstPlugin PROPERTIES COMPILE_FLAGS "${COMPILE_FLAGS} -O0" LINK_FLAGS "${LINK_FLAGS} -mwindows")
+	SET_TARGET_PROPERTIES(RemoteVstPlugin PROPERTIES COMPILE_FLAGS "${COMPILE_FLAGS} -O0 " LINK_FLAGS "${LINK_FLAGS} -mwindows")
 	ADD_CUSTOM_COMMAND(TARGET RemoteVstPlugin POST_BUILD COMMAND "${STRIP}" "$<TARGET_FILE:RemoteVstPlugin>")
 	INSTALL(TARGETS RemoteVstPlugin RUNTIME DESTINATION "${PLUGIN_DIR}")
 
@@ -55,9 +55,9 @@ SET(WINE_CXX_ARGS
 	-I${WINE_INCLUDE_DIR}/windows
 	-L${WINE_LIBRARY_DIR}
 	${CMAKE_CURRENT_SOURCE_DIR}/RemoteVstPlugin.cpp
-	-std=c++0x
 	-mwindows -lpthread -lole32 ${EXTRA_FLAGS} -fno-omit-frame-pointer
 	${WINE_BUILD_FLAGS}
+	-std=c++0x -m32 -march=core2
 	-o ../RemoteVstPlugin
 )
 

@@ -36,6 +36,7 @@
 class QThread;
 
 class Track;
+class Instrument;
 class AudioPort;
 
 class PlayHandle : public ThreadableJob
@@ -99,9 +100,10 @@ class PlayHandle : public ThreadableJob
         return m_processingLock.tryLock();
     }
 
-    virtual void play(sampleFrame* buffer)              = 0;
-    virtual bool isFromTrack(const Track* _track) const = 0;
-    virtual bool isFinished() const                     = 0;
+    virtual void play(sampleFrame* buffer)                             = 0;
+    virtual bool isFromTrack(const Track* _track) const                = 0;
+    virtual bool isFromInstrument(const Instrument* _instrument) const = 0;
+    virtual bool isFinished() const                                    = 0;
     virtual void setFinished() final;
 
     // returns the frameoffset at the start of the playhandle,
@@ -138,7 +140,15 @@ class PlayHandle : public ThreadableJob
 
     virtual void decrRefCount() final
     {
-        m_refCount--;
+        if(m_refCount > 0)
+            m_refCount--;
+        else
+            qWarning("Warning: playHandle negative refCount");
+    }
+
+    virtual void resetRefCount() final
+    {
+        m_refCount = 0;
     }
 
   protected:

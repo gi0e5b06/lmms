@@ -73,31 +73,154 @@ bool Format12Export::proceed(const QString& _fileName)
     QDomElement root = dataFile.documentElement();
     root.setAttribute("creatorversion", "1.2.0");
 
-    QStringList tags;
-    tags << "notehumanizing"
-         << "noteduplicatesremoving"
-         << "notefiltering"
-         << "notekeying"
-         << "noteoutting"
-         << "glissando"
-         << "notesustaining";
-    for(QString tag: tags)
+    QStringList tagsToRemove;
+    tagsToRemove << "notehumanizing"
+                 << "noteduplicatesremoving"
+                 << "notefiltering"
+                 << "notekeying"
+                 << "noteoutting"
+                 << "glissando"
+                 << "notesustaining"
+                 << "noteplaying"
+                 << "filter1"
+                 << "filter2";
+    for(const QString& tag: tagsToRemove)
+        removeTag(root, tag);
+
+    QHash<QString, QString> tagsToRename;
+    tagsToRename.insert("synthgdx", "audiofileprocessor");
+    tagsToRename.insert("padsgdx", "audiofileprocessor");
+    for(QString tag: tagsToRename.keys())
+        renameTag(root, tag, tagsToRename.value(tag));
+
+    QStringList attributesToRemove;
+    // attributesToRemove << "eldata filter1_passes";
+    for(const QString& s: attributesToRemove)
     {
-        QDomNodeList nodes;
-        nodes = root.elementsByTagName(tag);
-        qInfo("Format12: found %d tags '%s'", nodes.length(),
-              qPrintable(tag));
-        for(int i = nodes.length() - 1; i >= 0; --i)
+        QStringList sl = s.trimmed().split(' ');
+        if(sl.size() != 2)
         {
-            QDomNode node   = nodes.at(i);  //.clear();
-            QDomNode parent = node.parentNode();
-            if(!parent.isNull())
-                parent.removeChild(node);
+            qWarning("Format12: invalid line: '%s'", qPrintable(s));
+            continue;
         }
+        QString tagName  = sl.takeFirst();
+        QString attrName = sl.takeFirst();
+        removeAttribute(root, tagName, attrName);
+    }
+
+    QHash<QString, QString> attributesToRename;
+    // attributesToRename.insert("eldata filter1_cutoff", "ftype");
+    for(const QString& s: attributesToRename.keys())
+    {
+        QStringList sl = s.trimmed().split(' ');
+        if(sl.size() != 2)
+        {
+            qWarning("Format12: invalid line: '%s'", qPrintable(s));
+            continue;
+        }
+        QString tagName  = sl.takeFirst();
+        QString attrName = sl.takeFirst();
+        QString newName  = attributesToRename.value(s);
+        renameAttribute(root, tagName, attrName, newName);
     }
 
     dataFile.normalize();
     return dataFile.writeFile(_fileName);
+}
+
+void Format12Export::removeTag(QDomElement& _root, const QString& _tagName)
+{
+    QDomNodeList nodes(_root.elementsByTagName(_tagName));
+    qInfo("Format12: found %d tags '%s' to remove", nodes.length(),
+          qPrintable(_tagName));
+    for(int i = nodes.length() - 1; i >= 0; --i)
+    {
+        QDomNode node   = nodes.at(i);  //.clear();
+        QDomNode parent = node.parentNode();
+        if(!parent.isNull())
+            parent.removeChild(node);
+    }
+}
+
+void Format12Export::renameTag(QDomElement&   _root,
+                               const QString& _oldName,
+                               const QString& _newName)
+{
+    QDomNodeList nodes(_root.elementsByTagName(_oldName));
+    qInfo("Format12: found %d tags '%s' to rename to '%s'", nodes.length(),
+          qPrintable(_oldName), qPrintable(_newName));
+    for(int i = nodes.length() - 1; i >= 0; --i)
+    {
+        QDomNode node = nodes.at(i);  //.clear();
+        if(node.isElement())
+        {
+            QDomElement e = node.toElement();
+            e.setTagName(_newName);
+        }
+    }
+}
+
+void Format12Export::removeAttribute(QDomElement&   _root,
+                                     const QString& _tagName,
+                                     const QString& _attrName)
+{
+    int          count = 0;
+    QDomNodeList nodes(_root.elementsByTagName(_tagName));
+    for(int i = nodes.length() - 1; i >= 0; --i)
+    {
+        QDomNode node = nodes.at(i);
+        if(node.isElement())
+        {
+            QDomElement e = node.toElement();
+            if(e.hasAttribute(_attrName))
+            {
+                e.removeAttribute(_attrName);
+                count++;
+            }
+        }
+    }
+    if(count > 0)
+        qInfo("Format12: %d attributes '%s' removed in %d elements '%s'",
+              count, qPrintable(_attrName), nodes.length(),
+              qPrintable(_tagName));
+}
+
+void Format12Export::renameAttribute(QDomElement&   _root,
+                                     const QString& _tagName,
+                                     const QString& _attrName,
+                                     const QString& _newName)
+{
+    int          count = 0;
+    QDomNodeList nodes(_root.elementsByTagName(_tagName));
+    for(int i = nodes.length() - 1; i >= 0; --i)
+    {
+        QDomNode node = nodes.at(i);
+        if(node.isElement())
+        {
+            QDomElement e = node.toElement();
+            if(e.hasAttribute(_newName))
+            {
+                qWarning(
+                        "Format12: invalid attribute renaming: '%s' already "
+                        "exists in '%s'",
+                        qPrintable(_newName), qPrintable(_tagName));
+                continue;
+            }
+
+            if(e.hasAttribute(_attrName))
+            {
+                QString v(e.attribute(_attrName, ""));
+                e.removeAttribute(_attrName);
+                e.setAttribute(_newName, v);
+                count++;
+            }
+        }
+    }
+    if(count > 0)
+        qInfo("Format12: %d attributes '%s' renamed to '%s' in %d elements "
+              "'%s'",
+              count, qPrintable(_attrName), qPrintable(_newName),
+              nodes.length(), qPrintable(_tagName));
 }
 
 extern "C"

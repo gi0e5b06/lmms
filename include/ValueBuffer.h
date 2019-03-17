@@ -30,8 +30,8 @@
 
 //#include <vector>
 #include "MemoryManager.h"
-#include "lmms_basics.h"
 #include "export.h"
+#include "lmms_basics.h"
 
 class EXPORT ValueBuffer  //: public std::vector<real_t>
 {
@@ -43,9 +43,10 @@ class EXPORT ValueBuffer  //: public std::vector<real_t>
     ValueBuffer(int _length);
     virtual ~ValueBuffer();
 
-    inline real_t value(int _offset) const
+    inline real_t value(int _i) const
     {
-        return m_data[_offset % m_len];
+        Q_ASSERT(_i >= 0 && _i < m_len);
+        return m_data[_i];  // % m_len];
     }
 
     inline const real_t* values() const
@@ -65,6 +66,7 @@ class EXPORT ValueBuffer  //: public std::vector<real_t>
 
     inline void set(int _i, real_t _v)
     {
+        Q_ASSERT(_i >= 0 && _i < m_len);
         m_data[_i] = _v;
     }
 
@@ -73,13 +75,35 @@ class EXPORT ValueBuffer  //: public std::vector<real_t>
         memset(m_data, 0, sizeof(real_t) * m_len);
     }
 
+    inline void lock() const
+    {
+        const_cast<QMutex*>(&m_mutex)->lock();
+    }
+
+    inline void unlock() const
+    {
+        const_cast<QMutex*>(&m_mutex)->unlock();
+    }
+
+    inline long period() const
+    {
+        return m_period;
+    }
+
+    inline void setPeriod(long _period)
+    {
+        m_period = _period;
+    }
+
     void copyFrom(const ValueBuffer* _vb);
     void fill(real_t _value);
     void interpolate(real_t _start, real_t _end);
 
   private:
+    QMutex  m_mutex;
     int     m_len;
     real_t* m_data;
+    long    m_period;
 };
 
 #endif

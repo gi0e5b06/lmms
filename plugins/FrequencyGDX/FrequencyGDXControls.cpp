@@ -41,7 +41,7 @@ FrequencyGDXControls::FrequencyGDXControls(FrequencyGDX* effect) :
       m_mainNoteModel(-1., -1., 11., 1., this, tr("Main note"))
 {
     m_modeModel.addItem(tr("Simple"));
-    m_modeModel.addItem(tr("Precise (TODO)"));
+    m_modeModel.addItem(tr("Goertzel"));
     m_modeModel.addItem(tr("FFT"));
 }
 

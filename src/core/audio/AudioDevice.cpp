@@ -42,13 +42,11 @@ AudioDevice::AudioDevice(const ch_cnt_t _channels, Mixer* _mixer) :
     qWarning("AudioDevice::AudioDevice");
 
     int error;
-    if((m_srcState
-        = src_new(mixer()->currentQualitySettings().libsrcInterpolation(),
-                  SURROUND_CHANNELS, &error))
-       == NULL)
-    {
-        qCritical("AudioDevice: src_new() failed");
-    }
+    m_srcState
+            = src_new(mixer()->currentQualitySettings().libsrcInterpolation(),
+                      SURROUND_CHANNELS, &error);
+    if(m_srcState == nullptr)
+        qCritical("AudioDevice: src_new() failed error=%d", error);
 }
 
 AudioDevice::~AudioDevice()
@@ -79,8 +77,10 @@ fpp_t AudioDevice::getNextBuffer(surroundSampleFrame* _ab)
 {
     fpp_t                      frames = mixer()->framesPerPeriod();
     const surroundSampleFrame* b      = mixer()->nextBuffer();
-    if(!b)
+
+    if(b == nullptr)
     {
+        qWarning("AudioDevice::getNextBuffer no data from mixer?");
         return 0;
     }
 
@@ -92,7 +92,10 @@ fpp_t AudioDevice::getNextBuffer(surroundSampleFrame* _ab)
     {
         resample(b, frames, _ab, mixer()->processingSampleRate(),
                  m_sampleRate);
-        frames *= m_sampleRate / mixer()->processingSampleRate();
+        /*
+        frames = (frames * double(m_sampleRate))
+                 / double(mixer()->processingSampleRate());
+        */
     }
     else
     {

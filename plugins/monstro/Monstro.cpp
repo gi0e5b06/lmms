@@ -940,7 +940,7 @@ inline real_t MonstroSynth::calcSlope(int slope, real_t s)
         return s;
     if(s == 0.)
         return s;
-    return fastPow(s, m_parent->m_slope[slope]);
+    return fastpow(s, m_parent->m_slope[slope]);
 }
 
 MonstroInstrument::MonstroInstrument(InstrumentTrack* _instrument_track) :

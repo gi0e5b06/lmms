@@ -1,132 +1,137 @@
 /*
  * eqcontrols.h - defination of EqControls class.
  *
+ * Copyright (c) 2019 gi0e5b06 (on github.com)
  * Copyright (c) 2014 David French <dave/dot/french3/at/googlemail/dot/com>
  *
- * This file is part of LMMS - https://lmms.io
+ * This file is part of LSMM -
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public
- * License along with this program (see COPYING); if not, write to the
- * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
- * Boston, MA 02110-1301 USA.
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
 
 #ifndef EQCONTROLS_H
 #define EQCONTROLS_H
 
+#include "ComboBoxModel.h"
 #include "EffectControls.h"
 #include "EqSpectrumView.h"
-
 
 class EqEffect;
 
 class EqControls : public EffectControls
 {
-	Q_OBJECT
-public:
-	explicit EqControls( EqEffect* effect );
-	virtual ~EqControls()
-	{
-	}
+    Q_OBJECT
 
-	virtual void saveSettings ( QDomDocument& doc, QDomElement& parent );
+  public:
+    explicit EqControls(EqEffect* effect);
+    virtual ~EqControls()
+    {
+    }
 
-	virtual void loadSettings ( const QDomElement &_this );
+    virtual void saveSettings(QDomDocument& doc, QDomElement& parent);
 
-	inline virtual QString nodeName() const
-	{
-		return "Eq";
-	}
+    virtual void loadSettings(const QDomElement& _this);
 
-	virtual int controlCount()
-	{
-		return 42;
-	}
+    inline virtual QString nodeName() const
+    {
+        return "Eq";
+    }
 
-	virtual EffectControlDialog* createView();
+    virtual int controlCount()
+    {
+        return 42;
+    }
 
-	float m_inPeakL;
-	float m_inPeakR;
-	float m_outPeakL;
-	float m_outPeakR;
-	float m_lowShelfPeakL, m_lowShelfPeakR;
-	float m_para1PeakL, m_para1PeakR;
-	float m_para2PeakL, m_para2PeakR;
-	float m_para3PeakL, m_para3PeakR;
-	float m_para4PeakL, m_para4PeakR;
-	float m_highShelfPeakL, m_highShelfPeakR;
+    virtual EffectControlDialog* createView();
 
-	EqAnalyser m_inFftBands;
-	EqAnalyser m_outFftBands;
+    float m_inPeakL;
+    float m_inPeakR;
+    float m_outPeakL;
+    float m_outPeakR;
+    float m_lowShelfPeakL, m_lowShelfPeakR;
+    float m_para1PeakL, m_para1PeakR;
+    float m_para2PeakL, m_para2PeakR;
+    float m_para3PeakL, m_para3PeakR;
+    float m_para4PeakL, m_para4PeakR;
+    float m_highShelfPeakL, m_highShelfPeakR;
 
-	bool m_inProgress;
-	bool visable();
+    EqAnalyser m_inFftBands;
+    EqAnalyser m_outFftBands;
 
-private:
-	EqEffect *m_effect;
+    bool m_inProgress;
+    bool visable();
 
-	FloatModel m_inGainModel;
-	FloatModel m_outGainModel;
-	FloatModel m_lowShelfGainModel;
-	FloatModel m_para1GainModel;
-	FloatModel m_para2GainModel;
-	FloatModel m_para3GainModel;
-	FloatModel m_para4GainModel;
-	FloatModel m_highShelfGainModel;
+  protected slots:
+    void onPassesChanged();
 
-	FloatModel m_hpResModel;
-	FloatModel m_lowShelfResModel;
-	FloatModel m_para1BwModel;
-	FloatModel m_para2BwModel;
-	FloatModel m_para3BwModel;
-	FloatModel m_para4BwModel;
-	FloatModel m_highShelfResModel;
-	FloatModel m_lpResModel;
+  private:
+    EqEffect* m_effect;
 
-	FloatModel m_hpFeqModel;
-	FloatModel m_lowShelfFreqModel;
-	FloatModel m_para1FreqModel;
-	FloatModel m_para2FreqModel;
-	FloatModel m_para3FreqModel;
-	FloatModel m_para4FreqModel;
-	FloatModel m_highShelfFreqModel;
-	FloatModel m_lpFreqModel;
+    ComboBoxModel m_passesModel;
 
-	BoolModel m_hpActiveModel;
-	BoolModel m_lowShelfActiveModel;
-	BoolModel m_para1ActiveModel;
-	BoolModel m_para2ActiveModel;
-	BoolModel m_para3ActiveModel;
-	BoolModel m_para4ActiveModel;
-	BoolModel m_highShelfActiveModel;
-	BoolModel m_lpActiveModel;
+    FloatModel m_inGainModel;
+    FloatModel m_outGainModel;
+    FloatModel m_lowShelfGainModel;
+    FloatModel m_para1GainModel;
+    FloatModel m_para2GainModel;
+    FloatModel m_para3GainModel;
+    FloatModel m_para4GainModel;
+    FloatModel m_highShelfGainModel;
 
-	BoolModel m_lp12Model;
-	BoolModel m_lp24Model;
-	BoolModel m_lp48Model;
+    FloatModel m_hpResModel;
+    FloatModel m_lowShelfResModel;
+    FloatModel m_para1BwModel;
+    FloatModel m_para2BwModel;
+    FloatModel m_para3BwModel;
+    FloatModel m_para4BwModel;
+    FloatModel m_highShelfResModel;
+    FloatModel m_lpResModel;
 
-	BoolModel m_hp12Model;
-	BoolModel m_hp24Model;
-	BoolModel m_hp48Model;
+    FloatModel m_hpFeqModel;
+    FloatModel m_lowShelfFreqModel;
+    FloatModel m_para1FreqModel;
+    FloatModel m_para2FreqModel;
+    FloatModel m_para3FreqModel;
+    FloatModel m_para4FreqModel;
+    FloatModel m_highShelfFreqModel;
+    FloatModel m_lpFreqModel;
 
-	IntModel m_lpTypeModel;
-	IntModel m_hpTypeModel;
+    BoolModel m_hpActiveModel;
+    BoolModel m_lowShelfActiveModel;
+    BoolModel m_para1ActiveModel;
+    BoolModel m_para2ActiveModel;
+    BoolModel m_para3ActiveModel;
+    BoolModel m_para4ActiveModel;
+    BoolModel m_highShelfActiveModel;
+    BoolModel m_lpActiveModel;
 
-	BoolModel m_analyseInModel;
-	BoolModel m_analyseOutModel;
+    BoolModel m_lp12Model;
+    BoolModel m_lp24Model;
+    BoolModel m_lp48Model;
 
-	friend class EqControlsDialog;
-	friend class EqEffect;
+    BoolModel m_hp12Model;
+    BoolModel m_hp24Model;
+    BoolModel m_hp48Model;
+
+    IntModel m_lpTypeModel;
+    IntModel m_hpTypeModel;
+
+    BoolModel m_analyseInModel;
+    BoolModel m_analyseOutModel;
+
+    friend class EqControlsDialog;
+    friend class EqEffect;
 };
-#endif // EQCONTROLS_H
+#endif  // EQCONTROLS_H

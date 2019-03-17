@@ -190,7 +190,7 @@ Controller* Controller::create(ControllerTypes _ct, Model* _parent)
     switch(_ct)
     {
         case Controller::DummyController:
-            if(!dummy)
+            if(dummy == nullptr)
                 dummy = new Controller(DummyController, nullptr,
                                        "[dummy controller]");
             c = dummy;
@@ -218,20 +218,31 @@ Controller* Controller::create(ControllerTypes _ct, Model* _parent)
 
 Controller* Controller::create(const QDomElement& _this, Model* _parent)
 {
-    Controller* c;
-    if(_this.attribute("type").toInt() == Controller::PeakController)
+    Controller* c = nullptr;
+
+    int type = 0;
+    if(_this.hasAttribute("type"))
+    {
+        type = _this.attribute("type").toInt();
+    }
+    else
+    {
+        qWarning("Controller::create %s has no type",
+                 qPrintable(_this.tagName()));
+    }
+
+    if(type == Controller::PeakController)
     {
         c = PeakController::getControllerBySetting(_this);
     }
     else
     {
-        c = create(
-                static_cast<ControllerTypes>(_this.attribute("type").toInt()),
-                _parent);
+        c = create(static_cast<ControllerTypes>(type), _parent);
     }
 
     if(c != nullptr)
     {
+        // qInfo("T=%d c=%p", type, c);
         c->restoreState(_this);
     }
 

@@ -46,6 +46,7 @@ class EXPORT PresetPreviewPlayHandle : public QObject, public PlayHandle
     virtual void play(sampleFrame* buffer);
     virtual bool isFinished() const;
     virtual bool isFromTrack(const Track* _track) const;
+    virtual bool isFromInstrument(const Instrument* _instrument) const;
 
     static void init();
     static void cleanup();

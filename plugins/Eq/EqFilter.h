@@ -39,15 +39,15 @@
 class EqFilter : public StereoBiQuad
 {
   public:
-    EqFilter() : m_sampleRate(0), m_freq(0), m_res(0), m_gain(0), m_bw(0)
+    EqFilter() : StereoBiQuad(0), m_freq(0), m_res(0), m_gain(0), m_bw(0)
     {
     }
 
-    virtual /*inline*/ void setSampleRate(sample_rate_t sampleRate)
+    virtual /*inline*/ void setSampleRate(sample_rate_t _sampleRate)
     {
-        if(sampleRate != m_sampleRate)
+        if(_sampleRate != sampleRate())
         {
-            m_sampleRate = sampleRate;
+            StereoBiQuad::setSampleRate(_sampleRate);
             calcCoefficents();
         }
     }
@@ -338,16 +338,17 @@ class EqHighShelfFilter : public EqFilter
 class EqLinkwitzRiley : public StereoLinkwitzRiley
 {
   public:
-    EqLinkwitzRiley() : StereoLinkwitzRiley(44100), m_freq(0), m_sr(1)
+    EqLinkwitzRiley() : StereoLinkwitzRiley(0), m_freq(0)  //, m_sr(1)
     {
+        // setSampleRate(Engine::mixer()->processingSampleRate());
     }
 
-    virtual /*inline*/ void setSR(sample_rate_t sampleRate)
+    virtual void setSampleRate(sample_rate_t _sampleRate)
     {
-        if(sampleRate != m_sr)
+        if(_sampleRate != sampleRate())
         {
-            m_sr = sampleRate;
-            setSampleRate(sampleRate);
+            // m_sr = _sampleRate;
+            StereoLinkwitzRiley::setSampleRate(_sampleRate);
             setLowpass(m_freq);
         }
     }
@@ -361,6 +362,7 @@ class EqLinkwitzRiley : public StereoLinkwitzRiley
         }
     }
 
+    /*
     virtual void processBuffer(sampleFrame* buf, const fpp_t frames)
     {
         for(fpp_t f = 0; f < frames; ++f)
@@ -369,10 +371,11 @@ class EqLinkwitzRiley : public StereoLinkwitzRiley
             buf[f][1] = update(buf[f][1], 1);
         }
     }
+    */
 
   protected:
-    frequency_t   m_freq;
-    sample_rate_t m_sr;
+    frequency_t m_freq;
+    // sample_rate_t m_sr;
 };
 
 #endif  // EQFILTER_H

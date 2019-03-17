@@ -102,6 +102,14 @@ bool SampleRecordHandle::isFromTrack( const Track * _track ) const
 
 
 
+bool SampleRecordHandle::isFromInstrument(const Instrument* _instrument) const
+{
+    return false;
+}
+
+
+
+
 f_cnt_t SampleRecordHandle::framesRecorded() const
 {
 	return m_framesRecorded;

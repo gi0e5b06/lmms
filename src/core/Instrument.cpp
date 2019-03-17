@@ -39,15 +39,13 @@ Instrument::Instrument(InstrumentTrack*  _instrumentTrack,
 Instrument::~Instrument()
 {
     qInfo("Instrument::~Instrument [%s] START", qPrintable(displayName()));
-    /*
-    Engine::mixer()->emit playHandlesOfTypesToRemove(
-            m_instrumentTrack,
-            0xFF);
+
+    Engine::mixer()->emit playHandlesForInstrumentToRemove(this);
+    qInfo("Instrument::~Instrument wait");
     QCoreApplication::sendPostedEvents();
-    QThread::yieldCurrentThread();
-    QCoreApplication::sendPostedEvents();
-    QThread::yieldCurrentThread();
-    */
+    // QThread::yieldCurrentThread();
+    Engine::mixer()->waitUntilNoPlayHandle(this);
+
     m_instrumentTrack = nullptr;
     qInfo("Instrument::~Instrument [%s] END", qPrintable(displayName()));
 }
@@ -65,11 +63,11 @@ f_cnt_t Instrument::beatLen(NotePlayHandle*) const
     return 0;
 }
 
-Instrument* Instrument::instantiate(const QString&   _plugin_name,
-                                    InstrumentTrack* _instrument_track)
+Instrument* Instrument::instantiate(const QString&   _pluginName,
+                                    InstrumentTrack* _instrumentTrack)
 {
-    Plugin* p = Plugin::instantiate(_plugin_name, _instrument_track,
-                                    _instrument_track);
+    Plugin* p = Plugin::instantiate(_pluginName, _instrumentTrack,
+                                    _instrumentTrack);
     // check whether instantiated plugin is an instrument
     if(dynamic_cast<Instrument*>(p) != nullptr)
     {
@@ -79,7 +77,7 @@ Instrument* Instrument::instantiate(const QString&   _plugin_name,
 
     // not quite... so delete plugin and return dummy instrument
     delete p;
-    return new DummyInstrument(_instrument_track);
+    return new DummyInstrument(_instrumentTrack);
 }
 
 bool Instrument::isFromTrack(const Track* _track) const

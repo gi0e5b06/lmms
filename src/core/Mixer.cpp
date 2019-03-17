@@ -1,24 +1,23 @@
 /*
  * Mixer.cpp - audio-device-independent mixer for LMMS
  *
+ * Copyright (c) 2018-2019 gi0e5b06 (on github.com)
  * Copyright (c) 2004-2014 Tobias Doerffel <tobydox/at/users.sourceforge.net>
  *
- * This file is part of LMMS - https://lmms.io
+ * This file is part of LSMM -
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public
- * License along with this program (see COPYING); if not, write to the
- * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
- * Boston, MA 02110-1301 USA.
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
 
@@ -241,12 +240,15 @@ void Mixer::clearAllPlayHandles()
     {
         qInfo("Mixer::clearAllPlayHandles 2");
         QCoreApplication::sendPostedEvents();
-        qInfo("Mixer::clearAllPlayHandles 3");
+        // qInfo("Mixer::clearAllPlayHandles 3");
         QThread::yieldCurrentThread();
-        qInfo("Mixer::clearAllPlayHandles 4");
+        // qInfo("Mixer::clearAllPlayHandles 4");
         again = (m_playHandles.size() + m_playHandlesToAdd.size()
                          + m_playHandlesToRemove.size()
                  > 0);
+
+        if(m_renderOnly)
+            break;
     }
     qInfo("Mixer: all handles removed");
 }
@@ -1086,6 +1088,7 @@ void Mixer::removePlayHandlesOfTypes1(const Track* _track,
             [this](PlayHandle* ph) {
                 if(ph->type() == 2)
                     qInfo("   set finished to iph");
+                ph->resetRefCount();
                 ph->setFinished();
                 // this->removePlayHandle(ph);
             },
@@ -1093,6 +1096,48 @@ void Mixer::removePlayHandlesOfTypes1(const Track* _track,
 
     doneChangeInModel();
     // qInfo("Mixer::removePlayHandlesOfTypes END %p %d", _track, _types);
+}
+
+void Mixer::removePlayHandlesForInstrument1(const Instrument* _instrument)
+{
+    if(_instrument == nullptr)
+    {
+        qWarning("Mixer::removePlayHandlesForInstrument1 instrument is null");
+        return;
+    }
+
+    // qInfo("Mixer::removePlayHandlesForInstrument1 START %p %d", _track,
+    // _types);
+    SafeList<PlayHandle*> r(false);
+    requestChangeInModel();
+
+    m_playHandles.map([&r, _instrument](PlayHandle* ph) {
+        if(ph->isFromInstrument(_instrument))
+            r.appendUnique(ph);
+    });
+    m_playHandlesToAdd.map([&r, _instrument](PlayHandle* ph) {
+        if(ph->isFromInstrument(_instrument))
+            r.appendUnique(ph);
+    });
+    m_playHandlesToRemove.map([&r, _instrument](PlayHandle* ph) {
+        if(ph->isFromInstrument(_instrument))
+            r.appendUnique(ph);
+    });
+
+    r.map(
+            [this](PlayHandle* ph) {
+                if(ph->type() == 2)
+                    qInfo("Mixer::removePlayHandlesForInstrument1 set "
+                          "finished to iph");
+                ph->resetRefCount();
+                ph->setFinished();
+                // this->removePlayHandle(ph);
+            },
+            true);
+
+    doneChangeInModel();
+    // qInfo("Mixer::removePlayHandlesForInstrument1 END %p %d", _track,
+    // _types);
 }
 
 void Mixer::removeAllPlayHandles1()
@@ -1106,7 +1151,12 @@ void Mixer::removeAllPlayHandles1()
     m_playHandlesToAdd.map([&r](PlayHandle* ph) { r.appendUnique(ph); });
     m_playHandlesToRemove.map([&r](PlayHandle* ph) { r.appendUnique(ph); });
 
-    r.map([this](PlayHandle* ph) { ph->setFinished(); }, true);
+    r.map(
+            [this](PlayHandle* ph) {
+                ph->resetRefCount();
+                ph->setFinished();
+            },
+            true);
 
     doneChangeInModel();
 
@@ -1166,7 +1216,6 @@ void Mixer::waitUntilNoPlayHandle(const Track* _track, const quint8 _types)
         return;
     }
 
-    // qInfo("Mixer::removePlayHandlesOfTypes START %p %d", _track, _types);
     bool                  again = true;
     SafeList<PlayHandle*> r(false);
     while(again)
@@ -1187,14 +1236,77 @@ void Mixer::waitUntilNoPlayHandle(const Track* _track, const quint8 _types)
         });
 
         again = !r.isEmpty();
+
+        r.map([](PlayHandle* ph) {
+            qInfo("wait track ph type=%d isFinished=%d", ph->type(),
+                  ph->isFinished());
+            ph->resetRefCount(); // force ?
+            ph->setFinished();
+        });
+
         doneChangeInModel();
 
         if(again)
         {
-            qInfo("Mixer::waitUntilNoPlayHandle still %d playHandles",
+            qInfo("Mixer::waitUntilNoPlayHandle(Track) still %d playHandles",
                   r.size());
             r.clear();
+            QCoreApplication::sendPostedEvents();
             QThread::yieldCurrentThread();
+            if(m_renderOnly)
+                break;
+        }
+    }
+}
+
+void Mixer::waitUntilNoPlayHandle(const Instrument* _instrument)
+{
+    if(_instrument == nullptr)
+    {
+        qWarning("Mixer::waitUntilNoPlayHandle instrument is null");
+        return;
+    }
+
+    bool                  again = true;
+    SafeList<PlayHandle*> r(false);
+    while(again)
+    {
+        requestChangeInModel();
+
+        m_playHandles.map([&r, _instrument](PlayHandle* ph) {
+            if(ph->isFromInstrument(_instrument))
+                r.appendUnique(ph);
+        });
+        m_playHandlesToAdd.map([&r, _instrument](PlayHandle* ph) {
+            if(ph->isFromInstrument(_instrument))
+                r.appendUnique(ph);
+        });
+        m_playHandlesToRemove.map([&r, _instrument](PlayHandle* ph) {
+            if(ph->isFromInstrument(_instrument))
+                r.appendUnique(ph);
+        });
+
+        again = !r.isEmpty();
+
+        r.map([](PlayHandle* ph) {
+            qInfo("wait instrument ph type=%d isFinished=%d", ph->type(),
+                  ph->isFinished());
+            ph->resetRefCount(); // force?
+            ph->setFinished();
+        });
+
+        doneChangeInModel();
+
+        if(again)
+        {
+            qInfo("Mixer::waitUntilNoPlayHandle(Instrument) still %d "
+                  "playHandles",
+                  r.size());
+            r.clear();
+            QCoreApplication::sendPostedEvents();
+            QThread::yieldCurrentThread();
+            if(m_renderOnly)
+                break;
         }
     }
 }
@@ -1604,6 +1716,10 @@ HandleManager::HandleManager(Mixer* _mixer) : m_mixer(_mixer)
             this,
             SLOT(removePlayHandlesOfTypesHM(const Track*, const quint8)),
             Qt::QueuedConnection);
+    connect(m_mixer,
+            SIGNAL(playHandlesForInstrumentToRemove(const Instrument*)), this,
+            SLOT(removePlayHandlesForInstrumentHM(const Instrument*)),
+            Qt::QueuedConnection);
     connect(m_mixer, SIGNAL(allPlayHandlesRemoval()), this,
             SLOT(removeAllPlayHandlesHM()), Qt::QueuedConnection);
 }
@@ -1639,6 +1755,16 @@ void HandleManager::removePlayHandlesOfTypesHM(const Track* _track,
         qInfo("HandleManager::removePlayHandlesOfTypesHM STRANGE");
 
     m_mixer->removePlayHandlesOfTypes1(_track, _types);
+}
+
+void HandleManager::removePlayHandlesForInstrumentHM(
+        const Instrument* _instrument)
+{
+    // qInfo("HandleManager::removePlayHandlesForInstrumentHM");
+    if(QThread::currentThread() != this)
+        qInfo("HandleManager::removePlayHandlesForInstrumentHM STRANGE");
+
+    m_mixer->removePlayHandlesForInstrument1(_instrument);
 }
 
 void HandleManager::removeAllPlayHandlesHM()

@@ -1,8 +1,7 @@
 /*
- * SampleTrack.cpp - implementation of class SampleTrack, a track which
- *                   provides arrangement of samples
+ * SampleTrack.cpp - Track which provides arrangement of samples
  *
- * Copyright (c) 2017-2018 gi0e5b06 (on github.com)
+ * Copyright (c) 2017-2019 gi0e5b06 (on github.com)
  * Copyright (c) 2005-2014 Tobias Doerffel <tobydox/at/users.sourceforge.net>
  *
  * This file is part of LMMS - https://lmms.io
@@ -37,6 +36,7 @@
 #include "EffectRackView.h"
 #include "embed.h"
 //#include "FileBrowser.h"
+#include "FxLineLcdSpinBox.h"
 #include "FxMixer.h"
 #include "FxMixerView.h"
 #include "GuiApplication.h"
@@ -62,6 +62,7 @@
 #include "SampleRecordHandle.h"
 #include "Song.h"
 #include "StringPairDrag.h"
+#include "TabWidget.h"
 #include "TimeLineWidget.h"
 #include "ToolTip.h"
 //#include "TrackContainerView.h"
@@ -71,6 +72,7 @@
 #include <QDropEvent>
 #include <QFileInfo>
 #include <QLayout>
+#include <QLineEdit>
 #include <QMdiArea>
 #include <QMdiSubWindow>
 #include <QMenu>
@@ -803,6 +805,8 @@ SampleTrack::SampleTrack(TrackContainer* tc) :
                      0.1f,
                      this,
                      tr("Panning")),
+      m_useMasterPitchModel(true, this, tr("Master Pitch")),
+      m_effectChannelModel(0, 0, 0, this, tr("FX channel")),
       m_audioPort(tr("Sample track"),
                   true,
                   nullptr,
@@ -813,10 +817,10 @@ SampleTrack::SampleTrack(TrackContainer* tc) :
                   nullptr,
                   &m_mutedModel,
                   nullptr,
-                  nullptr),
-      m_effectChannelModel(0, 0, 0, this, tr("FX channel"))
+                  nullptr)
 {
     setColor(QColor("#D98F26"));
+    setUseStyleColor(true);
 
     m_panningModel.setCenterValue(DefaultPanning);
 
@@ -826,6 +830,16 @@ SampleTrack::SampleTrack(TrackContainer* tc) :
 
     connect(&m_effectChannelModel, SIGNAL(dataChanged()), this,
             SLOT(updateEffectChannel()));
+
+    // connect(&m_volumeEnabledModel, SIGNAL(dataChanged()), this,
+    //        SLOT(updateVolume()));
+    connect(&m_volumeModel, SIGNAL(dataChanged()), this,
+            SLOT(updateVolume()));
+
+    // connect(&m_panningEnabledModel, SIGNAL(dataChanged()), this,
+    //        SLOT(updatePanning()));
+    connect(&m_panningModel, SIGNAL(dataChanged()), this,
+            SLOT(updatePanning()));
 }
 
 SampleTrack::~SampleTrack()
@@ -1092,9 +1106,8 @@ SampleTrackView::SampleTrackView(SampleTrack* _st, TrackContainerView* _tcv) :
     m_tlb->move(3, 1);
     m_tlb->show();
 
-    // connect( m_tlb, SIGNAL( clicked( bool ) ),
-    //         this, SLOT( showEffects() ) );
-    connect(m_tlb, SIGNAL(toggled(bool)), this, SLOT(toggleVisibility(bool)));
+    connect(m_tlb, SIGNAL(toggled(bool)), this,
+            SLOT(toggleSampleWindow(bool)));
 
     connect(_st, SIGNAL(dataChanged()), m_tlb, SLOT(update()));
     connect(_st, SIGNAL(dataChanged()), this, SLOT(updateName()));
@@ -1110,8 +1123,7 @@ SampleTrackView::SampleTrackView(SampleTrack* _st, TrackContainerView* _tcv) :
         widgetWidth = DEFAULT_SETTINGS_WIDGET_WIDTH;
     }
 
-    m_volumeKnob = new Knob(knobBright_26,  // knobSmall_17,
-                            getTrackSettingsWidget(), tr("Volume"));
+    m_volumeKnob = new Knob(getTrackSettingsWidget(), tr("Volume"));
     m_volumeKnob->setVolumeKnob(true);
     m_volumeKnob->setModel(&_st->m_volumeModel);
     m_volumeKnob->setHintText(tr("Volume:"), "%");
@@ -1120,8 +1132,7 @@ SampleTrackView::SampleTrackView(SampleTrack* _st, TrackContainerView* _tcv) :
     m_volumeKnob->show();
     m_volumeKnob->setWhatsThis(tr(STVOLHELP));
 
-    m_panningKnob = new Knob(knobBright_26,  // knobSmall_17,
-                             getTrackSettingsWidget(), tr("Panning"));
+    m_panningKnob = new Knob(getTrackSettingsWidget(), tr("Panning"));
     m_panningKnob->setModel(&_st->m_panningModel);
     m_panningKnob->setHintText(tr("Panning:"), "%");
     m_panningKnob->move(widgetWidth - 29, 3);  // 24,2
@@ -1129,16 +1140,16 @@ SampleTrackView::SampleTrackView(SampleTrack* _st, TrackContainerView* _tcv) :
     m_panningKnob->setPointColor(Qt::magenta);
     m_panningKnob->show();
 
+    /*
     m_effectRack = new EffectRackView(_st->audioPort()->effects());
     m_effectRack->setFixedSize(250 + 3, 200);  //( 240, 242 );
-
     m_effectRack->setWindowTitle(
             QString(tr("Effects on %1")).arg(_st->name()));
     m_effectRack->setWindowIcon(embed::getIconPixmap("sample_track"));
-
     m_window = SubWindow::putWidgetOnWorkspace(m_effectRack, false, false,
                                                false);
     m_window->hide();
+    */
 
     m_activityIndicator
             = new FadeButton(QApplication::palette().color(
@@ -1167,15 +1178,16 @@ SampleTrackView::SampleTrackView(SampleTrack* _st, TrackContainerView* _tcv) :
 SampleTrackView::~SampleTrackView()
 {
     freeSampleTrackWindow();
-    // m_window->deleteLater();
 }
 
 void SampleTrackView::updateName()
 {
     // qInfo("SampleTrackView::updateName");
+    /*
     SampleTrack* st = castModel<SampleTrack>();
     m_effectRack->setWindowTitle(
             QString(tr("Effects on %1")).arg(st->name()));
+    */
 }
 
 void SampleTrackView::modelChanged()
@@ -1187,7 +1199,6 @@ void SampleTrackView::modelChanged()
 
     m_volumeKnob->setModel(&st->m_volumeModel);
     m_panningKnob->setModel(&st->m_panningModel);
-    // m_effectChannelNumber->setModel( &st->m_effectChannelModel );
 
     TrackView::modelChanged();
 }
@@ -1313,7 +1324,14 @@ void SampleTrackView::assignFxLine(int channelIndex)
     gui->fxMixerView()->setCurrentFxLine(channelIndex);
 }
 
-// TODO: Add windows to free list on freeInstrumentTrackWindow.
+SampleTrackWindow* SampleTrackView::sampleTrackWindow()
+{
+    if(m_window == nullptr)
+        m_window = new SampleTrackWindow(this);
+    return m_window;
+}
+
+// TODO: Add windows to free list on freeSampleTrackWindow.
 // But, don't NULL m_window or disconnect signals.  This will allow windows
 // that are being show/hidden frequently to stay connected.
 void SampleTrackView::freeSampleTrackWindow()
@@ -1387,27 +1405,12 @@ void SampleTrackView::showEffects()
 }
 */
 
-void SampleTrackView::toggleVisibility(bool _on)
+void SampleTrackView::toggleSampleWindow(bool _on)
 {
-    // sampleTrackWindow()->toggleVisibility( _on );
+    sampleTrackWindow()->toggleVisibility(_on);
 
-    if(_on)  // m_window->isHidden() )
-    {
-        m_effectRack->show();
-        m_window->show();
-        m_window->raise();
-    }
-    else
-    {
-        m_window->hide();
-    }
-
-    /*
-    if( !_on )
-    {
-            freeSampleTrackWindow();
-    }
-    */
+    if(!_on)
+        freeSampleTrackWindow();
 }
 
 void SampleTrackView::activityIndicatorPressed()
@@ -1420,3 +1423,538 @@ void SampleTrackView::activityIndicatorReleased()
 {
     // model()->processInEvent( MidiEvent( MidiNoteOff, 0, DefaultKey, 0 ) );
 }
+
+// #### STW:
+SampleTrackWindow::SampleTrackWindow(SampleTrackView* _stv) :
+      QWidget(), ModelView(nullptr, this), m_track(_stv->model()),
+      m_stv(_stv), m_sampleView(nullptr)
+{
+    setAcceptDrops(true);
+
+    // init own layout + widgets
+    setFocusPolicy(Qt::StrongFocus);
+    QVBoxLayout* vlayout = new QVBoxLayout(this);
+    vlayout->setMargin(0);
+    vlayout->setSpacing(0);
+
+    TabWidget* generalSettingsWidget
+            = new TabWidget(tr("GENERAL SETTINGS"), this);
+
+    QVBoxLayout* generalSettingsLayout
+            = new QVBoxLayout(generalSettingsWidget);
+
+    generalSettingsLayout->setContentsMargins(6, 18, 6, 6);
+    generalSettingsLayout->setSpacing(6);
+
+    QWidget* nameAndChangeTrackWidget = new QWidget(generalSettingsWidget);
+    QHBoxLayout* nameAndChangeTrackLayout
+            = new QHBoxLayout(nameAndChangeTrackWidget);
+    nameAndChangeTrackLayout->setContentsMargins(0, 0, 0, 0);
+    nameAndChangeTrackLayout->setSpacing(6);
+
+    // setup line edit for changing instrument track name
+    m_nameLineEdit = new QLineEdit;
+    m_nameLineEdit->setFont(pointSize<9>(m_nameLineEdit->font()));
+    connect(m_nameLineEdit, SIGNAL(textChanged(const QString&)), this,
+            SLOT(textChanged(const QString&)));
+
+    m_nameLineEdit->setSizePolicy(
+            QSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred));
+    nameAndChangeTrackLayout->addWidget(m_nameLineEdit);
+
+    // set up left/right arrows for changing instrument
+    /*
+    m_leftRightNav = new LeftRightNav(this);
+    connect(m_leftRightNav, SIGNAL(onNavLeft()), this,
+            SLOT(viewPrevSample()));
+    connect(m_leftRightNav, SIGNAL(onNavRight()), this,
+            SLOT(viewNextSample()));
+    m_leftRightNav->setWhatsThis(
+            tr("Use these controls to view and edit the next/previous track "
+               "in the song editor."));
+
+    // m_leftRightNav->setShortcuts();
+    nameAndChangeTrackLayout->addWidget(m_leftRightNav);
+    nameAndChangeTrackLayout->setAlignment(m_leftRightNav, Qt::AlignTop);
+    */
+
+    generalSettingsLayout->addWidget(nameAndChangeTrackWidget);
+
+    QGridLayout* basicControlsLayout = new QGridLayout;
+    basicControlsLayout->setHorizontalSpacing(3);
+    basicControlsLayout->setVerticalSpacing(0);
+    basicControlsLayout->setContentsMargins(0, 0, 0, 0);
+
+    // set up volume knob
+    m_volumeKnob = new Knob(nullptr, tr("Sample volume"));
+    m_volumeKnob->setVolumeKnob(true);
+    m_volumeKnob->setText(tr("VOL"));
+    m_volumeKnob->setHintText(tr("Volume:"), "%");
+    // m_volumeKnob->setWhatsThis(tr(ITVOLHELP));
+
+    // QLabel *label = new QLabel( tr( "VOL" ), this );
+    // label->setStyleSheet( labelStyleSheet );
+    // basicControlsLayout->addWidget( label, 1, 0);
+    // basicControlsLayout->setAlignment( label, labelAlignment );
+
+    // set up panning knob
+    m_panningKnob = new Knob(nullptr, tr("Panning"));
+    m_panningKnob->setText(tr("PAN"));
+    m_panningKnob->setHintText(tr("Panning:"), "");
+    m_panningKnob->setPointColor(Qt::magenta);
+
+    // label = new QLabel( tr( "PAN" ), this );
+    // label->setStyleSheet( labelStyleSheet );
+    // basicControlsLayout->addWidget( label, 1, 1);
+    // basicControlsLayout->setAlignment( label, labelAlignment );
+
+    // set up pitch knob
+    m_bendingKnob = new Knob(nullptr, tr("Pitch"));
+    m_bendingKnob->setPointColor(Qt::cyan);
+    m_bendingKnob->setHintText(tr("Pitch:"), " " + tr("cents"));
+    m_bendingKnob->setText(tr("PITCH"));
+
+    // m_pitchLabel = new QLabel( tr( "PITCH" ), this );
+    // m_pitchLabel->setStyleSheet( labelStyleSheet );
+    // basicControlsLayout->addWidget( m_pitchLabel, 1, 3);
+    // basicControlsLayout->setAlignment( m_pitchLabel, labelAlignment );
+
+    // set up pitch range knob
+    m_bendingRangeSpinBox = new LcdSpinBox(2, "19cyan", nullptr,
+                                           tr("Pitch range (semitones)"));
+    m_bendingRangeSpinBox->setText(tr("RANGE"));
+
+    // m_bendingRangeLabel = new QLabel( tr( "RANGE" ), this );
+    // m_bendingRangeLabel->setStyleSheet( labelStyleSheet );
+    // basicControlsLayout->addWidget( m_bendingRangeLabel, 1, 4);
+    // basicControlsLayout->setAlignment( m_bendingRangeLabel, labelAlignment
+    // );
+
+    // setup spinbox for selecting FX-channel
+    m_effectChannelNumber
+            = new FxLineLcdSpinBox(2, nullptr, tr("FX channel"));
+    m_effectChannelNumber->setText(tr("FX"));
+
+    // label = new QLabel( tr( "FX" ), this );
+    // label->setStyleSheet( labelStyleSheet );
+    // basicControlsLayout->addWidget( label, 1, 6);
+    // basicControlsLayout->setAlignment( label, labelAlignment );
+
+    QPushButton* saveSettingsBtn = new QPushButton(
+            embed::getIconPixmap("project_save"), QString());
+    saveSettingsBtn->setMinimumSize(30, 30);  // 32, 32 );
+
+    connect(saveSettingsBtn, SIGNAL(clicked()), this,
+            SLOT(saveSettingsBtnClicked()));
+
+    ToolTip::add(
+            saveSettingsBtn,
+            tr("Save current instrument track settings in a preset file"));
+    saveSettingsBtn->setWhatsThis(
+            tr("Click here, if you want to save current instrument track "
+               "settings in a preset file. "
+               "Later you can load this preset by double-clicking it in the "
+               "preset-browser."));
+
+    // QString labelStyleSheet = "font-size: 6pt;";
+    // Qt::Alignment labelAlignment = Qt::AlignHCenter | Qt::AlignTop;
+    Qt::Alignment widgetAlignment
+            = Qt::AlignHCenter | Qt::AlignBottom;  // Center;
+
+    basicControlsLayout->addWidget(m_volumeKnob, 0, 0, widgetAlignment);
+    basicControlsLayout->addWidget(m_panningKnob, 0, 1, widgetAlignment);
+    basicControlsLayout->addWidget(m_bendingKnob, 0, 2, widgetAlignment);
+    basicControlsLayout->addWidget(m_bendingRangeSpinBox, 0, 3,
+                                   widgetAlignment);
+    basicControlsLayout->addWidget(m_effectChannelNumber, 0, 4,
+                                   widgetAlignment);
+    basicControlsLayout->setColumnStretch(5, 1);
+    // basicControlsLayout->addWidget(saveSettingsBtn, 0, 6, widgetAlignment);
+
+    // label = new QLabel( tr( "SAVE" ), this );
+    // label->setStyleSheet( labelStyleSheet );
+    // basicControlsLayout->addWidget( label, 1, 7);
+    // basicControlsLayout->setAlignment( label, labelAlignment );
+
+    generalSettingsLayout->addLayout(basicControlsLayout);
+
+    m_tabWidget = new TabWidget("", this, true);
+    // m_tabWidget->setFixedHeight(100);
+    // INSTRUMENT_HEIGHT + GRAPHIC_TAB_HEIGHT - 4);
+
+    /*
+    // create tab-widgets
+    m_ssView = new InstrumentSoundShapingView(m_tabWidget);
+
+    // FUNC tab
+    QScrollArea* saFunc = new QScrollArea(m_tabWidget);
+    saFunc->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
+    saFunc->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    saFunc->setFrameStyle(QFrame::NoFrame);
+
+    QWidget*     instrumentFunctions = new QWidget(saFunc);
+    QVBoxLayout* instrumentFunctionsLayout
+            = new QVBoxLayout(instrumentFunctions);
+    instrumentFunctionsLayout->setContentsMargins(2, 3, 2, 5);
+    // instrumentFunctionsLayout->addStrut( 230 );
+
+    for(InstrumentFunction* f: m_track->m_noteFunctions)
+    {
+        InstrumentFunctionView* v = f->createView();
+        m_noteFunctionViews.append(v);
+        v->setMinimumWidth(230);
+        instrumentFunctionsLayout->addWidget(v);
+    }
+
+    saFunc->setWidget(instrumentFunctions);
+
+    // MIDI tab
+    m_midiView = new InstrumentMidiIOView(m_tabWidget);
+    */
+
+    // FX tab
+    m_effectView
+            = new EffectRackView(m_track->m_audioPort.effects(), m_tabWidget);
+    m_effectView->setMinimumSize(250, 250);
+
+    /*
+    // MISC tab
+    m_miscView = new InstrumentMiscView(m_track, m_tabWidget);
+    */
+
+    /*
+    m_tabWidget->addTab(m_ssView, tr("Envelope, filter & LFO"), "env_lfo_tab",
+    1); m_tabWidget->addTab(saFunc , tr("Note effects"), "func_tab", 2);
+    m_tabWidget->addTab(m_midiView, tr("MIDI settings"), "midi_tab", 4);
+    m_tabWidget->addTab(m_miscView, tr("Miscellaneous"), "misc_tab", 5);
+    */
+
+    m_tabWidget->addTab(new QWidget(m_tabWidget),
+                        tr("Envelope, filter & LFO"), "env_lfo_tab", 1);
+    m_tabWidget->addTab(new QWidget(m_tabWidget), tr("Note effects"),
+                        "func_tab", 2);
+    m_tabWidget->addTab(m_effectView, tr("Effects"), "fx_tab", 3);
+    m_tabWidget->addTab(new QWidget(m_tabWidget), tr("MIDI settings"),
+                        "midi_tab", 4);
+    m_tabWidget->addTab(new QWidget(m_tabWidget), tr("Miscellaneous"),
+                        "misc_tab", 5);
+
+    vlayout->addWidget(generalSettingsWidget, 0);
+    vlayout->addWidget(m_tabWidget, 1);
+
+    /*
+    // setup piano-widget
+    m_peripheralView = new PianoView(this);
+    // m_peripheralView = new PeripheralPadsView(this);
+    m_peripheralView->setFixedSize(INSTRUMENT_WIDTH, PIANO_HEIGHT);
+    m_peripheralView->setModel(&m_track->m_piano);
+    vlayout->addWidget(m_peripheralView);
+    */
+
+    setModel(_stv->model());
+
+    updateSampleView();
+
+    // setFixedWidth(INSTRUMENT_WIDTH);
+    setFixedSize(254, 344);  // tmp
+    // resize(sizeHint());
+    resize(250, 340);
+
+    /*
+    QMdiSubWindow * win = gui->mainWindow()->addWindowedWidget( this );
+    Qt::WindowFlags flags = win->windowFlags();
+    flags |= Qt::MSWindowsFixedSizeDialogHint;
+    flags &= ~Qt::WindowMaximizeButtonHint;
+    win->setWindowFlags( flags );
+    */
+    SubWindow* win
+            = SubWindow::putWidgetOnWorkspace(this, false, false, false);
+    win->setWindowIcon(embed::getIcon("sample_track"));
+    // win->setFixedSize( win->size() );
+    win->hide();
+
+    // Hide the Size and Maximize options from the system menu
+    // since the dialog size is fixed.
+    // QMenu * systemMenu = win->systemMenu();
+    // systemMenu->actions().at( 2 )->setVisible( false ); // Size
+    // systemMenu->actions().at( 4 )->setVisible( false ); // Maximize
+}
+
+SampleTrackWindow::~SampleTrackWindow()
+{
+    // SampleTrackView::s_windowCache.removeAll(this);
+    // DELETE_HELPER(m_peripheralView)
+    // DELETE_HELPER(m_instrumentView)
+
+    /*
+        if(gui->mainWindow()->workspace())
+        {
+            parentWidget()->hide();
+            parentWidget()->deleteLater();
+        }
+    */
+    SubWindow* win = dynamic_cast<SubWindow*>(parentWidget());
+    if(win != nullptr)
+    {
+        win->hide();
+        win->deleteLater();
+    }
+}
+
+void SampleTrackWindow::setSampleTrackView(SampleTrackView* view)
+{
+    if(m_stv && view)
+        m_stv->m_tlb->setChecked(false);
+
+    m_stv = view;
+}
+
+void SampleTrackWindow::modelChanged()
+{
+    m_track = castModel<SampleTrack>();
+    qInfo("SampleTrackWindow::modelChanged m_track=%p", m_track);
+
+    m_nameLineEdit->setText(m_track->name());
+
+    m_track->disconnect(SIGNAL(nameChanged()), this);
+    // m_track->disconnect(SIGNAL(instrumentChanged()), this);
+
+    connect(m_track, SIGNAL(nameChanged()), this, SLOT(updateName()));
+    // connect(m_track, SIGNAL(instrumentChanged()), this,
+    //        SLOT(updateSampleView()));
+
+    m_volumeKnob->setModel(&m_track->m_volumeModel);
+    m_panningKnob->setModel(&m_track->m_panningModel);
+    m_effectChannelNumber->setModel(&m_track->m_effectChannelModel);
+    // m_peripheralView->setModel(&m_track->m_piano);
+
+    /*
+    if(m_track->instrument() && m_track->instrument()->isBendable())
+    {
+        m_bendingKnob->setModel(&m_track->m_bendingModel);
+        m_bendingRangeSpinBox->setModel(&m_track->m_bendingRangeModel);
+        m_bendingKnob->show();
+        // m_pitchLabel->show();
+        m_bendingRangeSpinBox->show();
+        // m_bendingRangeLabel->show();
+    }
+    else
+    */
+    {
+        m_bendingKnob->hide();
+        // m_pitchLabel->hide();
+        m_bendingKnob->setModel(
+                new FloatModel(0., 0., 0., 0.01, nullptr, "[bending]", true));
+        m_bendingRangeSpinBox->hide();
+        // m_bendingRangeLabel->hide();
+    }
+
+    // m_ssView->setModel(&m_track->m_soundShaping);
+    // m_noteFunctionViews[i]->setModel(m_track->m_noteFunctions[i]);
+    // m_midiView->setModel(&m_track->m_midiPort);
+
+    qInfo("SampleTrackWindow::modelChanged effects=%p",
+          m_track->m_audioPort.effects());
+    m_effectView->setModel(m_track->m_audioPort.effects());
+    // m_miscView->pitchGroupBox()->ledButton()->setModel(
+    //        &m_track->m_useMasterPitchModel);
+    updateName();
+}
+
+void SampleTrackWindow::saveSettingsBtnClicked()
+{
+    /*
+    FileDialog sfd(this, tr("Save preset"), "",
+                   tr("XML preset file (*.xpf)"));
+
+    QString presetRoot = ConfigManager::inst()->userPresetsDir();
+    if(!QDir(presetRoot).exists())
+    {
+        QDir().mkdir(presetRoot);
+    }
+    if(!QDir(presetRoot + m_track->instrumentName()).exists())
+    {
+        QDir(presetRoot).mkdir(m_track->instrumentName());
+    }
+
+    sfd.setAcceptMode(FileDialog::AcceptSave);
+    sfd.setDirectory(presetRoot + m_track->instrumentName());
+    sfd.setFileMode(FileDialog::AnyFile);
+    QString fname = m_track->name();
+    sfd.selectFile(fname.remove(QRegExp("[^a-zA-Z0-9_\\-\\d\\s]")));
+    sfd.setDefaultSuffix("xpf");
+
+    if(sfd.exec() == QDialog::Accepted && !sfd.selectedFiles().isEmpty()
+       && !sfd.selectedFiles().first().isEmpty())
+    {
+        DataFile::LocaleHelper localeHelper(DataFile::LocaleHelper::ModeSave);
+
+        DataFile dataFile(DataFile::SampleTrackSettings);
+        m_track->setSimpleSerializing();
+        m_track->saveSettings(dataFile, dataFile.content());
+        QString f = sfd.selectedFiles()[0];
+        dataFile.writeFile(f);
+    }
+    */
+}
+
+void SampleTrackWindow::updateName()
+{
+    setWindowTitle(m_track->name().length() > 25
+                           ? (m_track->name().left(24) + "...")
+                           : m_track->name());
+
+    if(m_nameLineEdit->text() != m_track->name())
+    {
+        m_nameLineEdit->setText(m_track->name());
+    }
+}
+
+void SampleTrackWindow::updateSampleView()
+{
+    if(m_sampleView == nullptr)
+    {
+        m_sampleView = new QWidget(m_tabWidget);
+        m_tabWidget->addTab(m_sampleView, tr("Plugin"), "plugin_tab", 0);
+        // m_tabWidget->setActiveTab(0);
+        m_tabWidget->setActiveTab(3);  // fx
+
+        // Get the instrument window to refresh
+        modelChanged();
+
+        // Get the text on the trackButton to change
+        m_track->emit dataChanged();
+    }
+}
+
+void SampleTrackWindow::textChanged(const QString& _newName)
+{
+    m_track->setName(_newName);
+    Engine::getSong()->setModified();
+}
+
+void SampleTrackWindow::toggleVisibility(bool _on)
+{
+    if(_on)
+    {
+        show();
+        parentWidget()->show();
+        parentWidget()->raise();
+    }
+    else
+    {
+        parentWidget()->hide();
+    }
+}
+
+void SampleTrackWindow::closeEvent(QCloseEvent* event)
+{
+    event->ignore();
+
+    if(gui->mainWindow()->workspace())
+    {
+        parentWidget()->hide();
+    }
+    else
+    {
+        hide();
+    }
+
+    m_stv->m_tlb->setFocus();
+    m_stv->m_tlb->setChecked(false);
+}
+
+void SampleTrackWindow::focusInEvent(QFocusEvent*)
+{
+    // m_peripheralView->setFocus();
+}
+
+void SampleTrackWindow::dragEnterEventGeneric(QDragEnterEvent* _dee)
+{
+    StringPairDrag::processDragEnterEvent(_dee, "");
+    // instrument,presetfile,pluginpresetfile");
+}
+
+void SampleTrackWindow::dragEnterEvent(QDragEnterEvent* _dee)
+{
+    dragEnterEventGeneric(_dee);
+}
+
+void SampleTrackWindow::dropEvent(QDropEvent* _de)
+{
+    // qInfo("SampleTrackWindow::dropEvent event=%p", _de);
+
+    QString type  = StringPairDrag::decodeKey(_de);
+    QString value = StringPairDrag::decodeValue(_de);
+
+    // qInfo("SampleTrackWindow::dropEvent #2");
+    if(type == "instrument")
+    {
+        // qInfo("SampleTrackWindow::dropEvent #instrument");
+
+        /*
+          m_track->loadInstrument(value);
+
+          Engine::getSong()->setModified();
+          _de->accept();
+          setFocus();
+        */
+    }
+    else if(type == "presetfile")
+    {
+        // qInfo("InstrumentTrackWindow::dropEvent #preset");
+
+        /*
+          DataFile dataFile(value);
+          InstrumentTrack::removeMidiPortNode(dataFile);
+          m_track->setSimpleSerializing();
+          m_track->loadSettings(dataFile.content().toElement());
+
+          Engine::getSong()->setModified();
+          _de->accept();
+          setFocus();
+        */
+    }
+    else if(type == "pluginpresetfile")
+    {
+        // qInfo("InstrumentTrackWindow::dropEvent #plugin");
+        /*
+        const QString ext = FileItem::extension(value);
+        Instrument*   i   = m_track->instrument();
+
+        // qInfo("InstrumentTrackWindow::dropEvent i=%p", i);
+
+        if((i == nullptr) || !i->descriptor()->supportsFileType(ext))
+        {
+                i = m_track->loadInstrument(
+                    pluginFactory->pluginSupportingExtension(ext).name());
+        }
+
+        if(i != nullptr)
+        {
+            i->loadFile(value);
+            Engine::getSong()->setModified();
+        }
+
+        _de->accept();
+        setFocus();
+        */
+    }
+}
+
+void SampleTrackWindow::saveSettings(QDomDocument& doc,
+                                     QDomElement&  thisElement)
+{
+    thisElement.setAttribute("tab", m_tabWidget->activeTab());
+    MainWindow::saveWidgetState(this, thisElement);
+}
+
+void SampleTrackWindow::loadSettings(const QDomElement& thisElement)
+{
+    m_tabWidget->setActiveTab(thisElement.attribute("tab").toInt());
+    MainWindow::restoreWidgetState(this, thisElement);
+    if(isVisible())
+        m_stv->m_tlb->setChecked(true);
+}
+
+// #include "InstrumentTrack.moc"

@@ -70,13 +70,13 @@ class KickerOsc
     {
         for(fpp_t frame = 0; frame < frames; ++frame)
         {
-            // const double gain = ( 1 - fastPow( ( m_counter < m_length ) ?
+            // const double gain = ( 1 - fastpow( ( m_counter < m_length ) ?
             // m_counter / m_length : 1, m_env ) );
             if(m_counter < m_length)
             {
                 /*
                   m_versionModel
-                  const real_t gain = 1. - fastPow( m_counter / m_length,
+                  const real_t gain = 1. - fastpow( m_counter / m_length,
                   m_env ); const sample_t s = ( Oscillator::sinSample(
                   m_phase ) * ( 1. - m_noise ) ) +
                   ( Oscillator::noiseSample( 0. ) * gain *
@@ -84,7 +84,7 @@ class KickerOsc
                 */
                 /*
                   const real_t gain
-                  = 1. - fastPowf(m_counter / m_length, m_env);
+                  = 1. - fastpow(m_counter / m_length, m_env);
                   const real_t    p = positivefraction(m_phase);
                   const sample_t s = (WaveFormStandard::SINE.f(p) * (1. -
                   m_noise))

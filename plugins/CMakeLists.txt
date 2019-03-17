@@ -4,7 +4,7 @@ SET(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 # Enable C++11
 #ADD_DEFINITIONS(-std=c++0x)
 #ADD_DEFINITIONS(-std=c++11)
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0 -std=c++11")
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O9 -std=c++11")
 
 IF(LMMS_BUILD_APPLE)
 	SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
@@ -50,86 +50,87 @@ IF(LMMS_SUPPORT_LV2)
 ENDIF(LMMS_SUPPORT_LV2)
 
 IF("${PLUGIN_LIST}" STREQUAL "")
-	SET(PLUGIN_LIST
-		${MINIMAL_LIST}
-                ${LMMS_LV2_PLUGINS}
-		Amplifier
-		AmplifierGDX
-		BassBooster
-		bit_invader
-		Bitcrush
-		carlabase
-                carlaeffectbay
-                carlaeffectrack
-		carlapatchbay
-		carlarack
-                ChainGDX
-		ClickGDX
-                CompressorGDX
-		CrossoverEQ
-		# csound_instr - not ready
-		Delay
-                DistortorGDX
-		DualFilter
-		dynamics_processor
-		Eq
-		Flanger
-                Format12Export
-                FrequencyGDX
-		GigPlayer
-		HydrogenImport
-                InputGDX
-		# ladspa_browser - not needed
-		LadspaEffect
-		lb302
-                # lvst2instrument
-                # MatrixGDX
-		MidiImport
-		MidiExport
-		MultitapEcho
-		monstro
-		nes
-                NormalizeGDX
-                NoteCrazyGDX
-		opl2
-		organic
-                OscilloscopeGDX
-                OutputGDX
-                PadsGDX
-		papu
-		patman
-		peak_controller_effect
-                RandomGDX
-		ReverbSC
-                ScarifierGDX
-		ScatterGDX
-		sf2_player
-		sfxr
-                ShaperGDX
-                ShifterGDX
-		sid
-                SmashGDX
-                SpaceGDX
-		SpectrumAnalyzer
-                SplitGDX
-                StemMP4Import
-		stereo_enhancer
-		stereo_matrix
-		stk
-                SynthGDX
-                VectorGDX
-		vestige
-		vst_base
-		VstEffect
-		watsyn
-		waveshaper
-		vibed
-                VideoLineExport
-                VideoWaveExport
-                VocoderGDX
-                WallGDX
-		xpressive
-		zynaddsubfx
+  SET(PLUGIN_LIST
+	${MINIMAL_LIST}
+    ${LMMS_LV2_PLUGINS}
+	Amplifier
+	AmplifierGDX
+	BassBooster
+	bit_invader
+	Bitcrush
+	carlabase
+    carlaeffectbay
+    carlaeffectrack
+	carlapatchbay
+	carlarack
+    ChainGDX
+	ChannellerGDX
+    ClickGDX
+    CompressorGDX
+	CrossoverEQ
+	# csound_instr - not ready
+	Delay
+    DistortorGDX
+	DualFilter
+	dynamics_processor
+	Eq
+	Flanger
+    Format12Export
+    FrequencyGDX
+	GigPlayer
+	HydrogenImport
+    InputGDX
+	# ladspa_browser - not needed
+	LadspaEffect
+	lb302
+    # lvst2instrument
+    # MatrixGDX
+	MidiImport
+	MidiExport
+	MultitapEcho
+	monstro
+	nes
+    NormalizeGDX
+    NoteCrazyGDX
+	opl2
+	organic
+    OscilloscopeGDX
+    OutputGDX
+    PadsGDX
+	papu
+	patman
+	peak_controller_effect
+    RandomGDX
+	ReverbSC
+    ScarifierGDX
+	ScatterGDX
+	sf2_player
+	sfxr
+    ShaperGDX
+    ShifterGDX
+	sid
+    SmashGDX
+    SpaceGDX
+	SpectrumAnalyzer
+    SplitGDX
+    StemMP4Import
+	stereo_enhancer
+	stereo_matrix
+	stk
+    SynthGDX
+    VectorGDX
+	vestige
+	vst_base
+	VstEffect
+	watsyn
+	waveshaper
+	vibed
+    VideoLineExport
+    VideoWaveExport
+    VocoderGDX
+    WallGDX
+	xpressive
+	zynaddsubfx
 	)
 
 ENDIF("${PLUGIN_LIST}" STREQUAL "")

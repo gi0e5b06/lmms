@@ -207,8 +207,9 @@ bool BitcrushEffect::processAudioBuffer(sampleFrame* buf, const fpp_t frames)
         if(qMax(qAbs(m_buffer[f][0]), qAbs(m_buffer[f][1])) >= 1.0e-10f)
         {
             m_silenceCounter = 0;
-            m_buffer[f][0]   = m_filter.update(m_buffer[f][0], 0);
-            m_buffer[f][1]   = m_filter.update(m_buffer[f][1], 1);
+            // m_buffer[f][0]   = m_filter.update(m_buffer[f][0], 0);
+            // m_buffer[f][1]   = m_filter.update(m_buffer[f][1], 1);
+            m_filter.update(m_buffer[f]);
         }
         else
         {
@@ -219,8 +220,9 @@ bool BitcrushEffect::processAudioBuffer(sampleFrame* buf, const fpp_t frames)
             else
             {
                 ++m_silenceCounter;
-                m_buffer[f][0] = m_filter.update(m_buffer[f][0], 0);
-                m_buffer[f][1] = m_filter.update(m_buffer[f][1], 1);
+                // m_buffer[f][0] = m_filter.update(m_buffer[f][0], 0);
+                // m_buffer[f][1] = m_filter.update(m_buffer[f][1], 1);
+                m_filter.update(m_buffer[f]);
             }
         }
     }

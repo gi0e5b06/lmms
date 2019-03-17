@@ -290,11 +290,13 @@ EnvelopeAndLfoView::EnvelopeAndLfoView(QWidget* _parent) :
     m_outKnob->setLabel(tr("OUT"));
     m_outKnob->setPointColor(Qt::red);
     m_outKnob->setInteractive(false);
-    m_outKnob->move(LFO_SHAPES_X + 185 + 8, LFO_SHAPES_Y +5 );
+    m_outKnob->move(LFO_SHAPES_X + 185 + 8, LFO_SHAPES_Y + 5);
     m_outKnob->setHintText(tr("Out:"), "");
-    //m_outKnob->setWhatsThis(tr(""));
+    // m_outKnob->setWhatsThis(tr(""));
 
     setAcceptDrops(true);
+    setMinimumWidth(230);
+    setFixedHeight(LFO_SHAPES_Y + 44);
 }
 
 EnvelopeAndLfoView::~EnvelopeAndLfoView()

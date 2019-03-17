@@ -73,8 +73,8 @@ PluginBrowser::PluginBrowser(QWidget* _parent) :
     view_layout->setSpacing(5);
 
     QLabel* hint = new QLabel(tr("Drag an instrument "
-                                 "into either the Song-Editor, the "
-                                 "Beat+Bassline Editor or into an "
+                                 "into either the song editor, the "
+                                 "beat editor or into an "
                                  "existing instrument track."),
                               m_view);
     hint->setWordWrap(true);

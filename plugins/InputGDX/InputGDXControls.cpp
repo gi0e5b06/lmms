@@ -32,17 +32,17 @@
 
 InputGDXControls::InputGDXControls(InputGDX* effect) :
       EffectControls(effect), m_effect(effect),
-      m_leftSignalModel(0., -1., 1., 0.00000001, this, tr("Left")),
-      m_rightSignalModel(0., -1., 1., 0.00000001, this, tr("Right")),
-      m_volumeModel(1., 0., 1., 0.00000001, this, tr("Volume")),
-      m_balanceModel(0., -1., 1., 0.00000001, this, tr("Balance")),
-      m_mixingModel(0.5, 0., 1., 0.00000001, this, tr("Mixing")),
+      m_leftSignalModel(0., -1., 1., 0.000001, this, tr("Left")),
+      m_rightSignalModel(0., -1., 1., 0.000001, this, tr("Right")),
+      m_volumeModel(1., 0., 1., 0.001, this, tr("Volume")),
+      m_balanceModel(0., -1., 1., 0.001, this, tr("Balance")),
+      m_mixingModel(0.5, 0., 1., 0.001, this, tr("Mixing")),
       m_deltaModel(0.001, 0.001, 1., 0.001, this, tr("Delta"))
 {
     m_leftSignalModel.setFrequentlyUpdated(true);
     m_rightSignalModel.setFrequentlyUpdated(true);
-    m_volumeModel.setFrequentlyUpdated(true);
-    m_balanceModel.setFrequentlyUpdated(true);
+    //m_volumeModel.setFrequentlyUpdated(true);
+    //m_balanceModel.setFrequentlyUpdated(true);
     //m_mixingModel.setFrequentlyUpdated(true);
 
     /*

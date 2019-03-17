@@ -59,13 +59,13 @@ DualFilterControlDialog::DualFilterControlDialog(
     makeknob(cut1Knob, 6, 16, m_cut1Model, tr("FREQ"), tr("Cutoff frequency"),
              "Hz");
     makeknob(res1Knob, 36, 16, m_res1Model, tr("RESO"), tr("Resonance"), "");
-    makeknob(gain1Knob, 66, 16, m_gain1Model, tr("GAIN"), tr("Gain"), "%");
+    makeknob(gain1Knob, 66, 16, m_gain1Model, tr("VOL"), tr("Volume"), "%");
     makeknob(mixKnob, 125 - 13, 16, m_mixModel, tr("MIX"), tr("Mix"), "");
     makeknob(cut2Knob, 224 - 66, 16, m_cut2Model, tr("FREQ"),
              tr("Cutoff frequency"), "Hz");
     makeknob(res2Knob, 224 - 36, 16, m_res2Model, tr("RESO"), tr("Resonance"),
              "");
-    makeknob(gain2Knob, 224 - 6, 16, m_gain2Model, tr("GAIN"), tr("Gain"),
+    makeknob(gain2Knob, 224 - 6, 16, m_gain2Model, tr("VOL"), tr("Volume"),
              "%");
 
     cut1Knob->setPointColor(Qt::green);
@@ -86,12 +86,12 @@ DualFilterControlDialog::DualFilterControlDialog(
     ToolTip::add(enabled2Toggle, tr("Click to enable/disable Filter 2"));
 
     ComboBox* m_filter1ComboBox = new ComboBox(this);
-    m_filter1ComboBox->setGeometry(6, 55, 180, 22);
+    m_filter1ComboBox->setGeometry(6, 55, 151, 22);
     m_filter1ComboBox->setFont(pointSize<8>(m_filter1ComboBox->font()));
     m_filter1ComboBox->setModel(&controls->m_filter1Model);
 
     ComboBox* m_filter2ComboBox = new ComboBox(this);
-    m_filter2ComboBox->setGeometry(64, 80, 180, 22);
+    m_filter2ComboBox->setGeometry(93, 80, 151, 22);
     m_filter2ComboBox->setFont(pointSize<8>(m_filter2ComboBox->font()));
     m_filter2ComboBox->setModel(&controls->m_filter2Model);
 }

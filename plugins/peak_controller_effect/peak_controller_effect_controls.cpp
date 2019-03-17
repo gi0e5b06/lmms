@@ -45,17 +45,16 @@ PeakControllerEffectControls::PeakControllerEffectControls(
       m_modeModel(this, tr("Mode")),
       m_amountMultModel(1.0, 0, 32, 0.2, this, tr("Amount Multiplicator"))
 {
-        m_modeModel.addItem("~RMS");
-        m_modeModel.addItem("RMS");
-        m_modeModel.addItem("~Peak");
-        m_modeModel.addItem("Peak");
-        m_modeModel.setInitValue(1);
-        m_modeModel.reset();
+    m_modeModel.addItem("~RMS");
+    m_modeModel.addItem("RMS");
+    m_modeModel.addItem("~Peak");
+    m_modeModel.addItem("Peak");
+    m_modeModel.setInitValue(1);
+    m_modeModel.reset();
 }
 
 void PeakControllerEffectControls::loadSettings(const QDomElement& _this)
 {
-
     m_baseModel.loadSettings(_this, "base");
     m_amountModel.loadSettings(_this, "amount");
     m_muteModel.loadSettings(_this, "mute");

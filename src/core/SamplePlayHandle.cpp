@@ -27,7 +27,7 @@
 #include "AudioPort.h"
 #include "BBTrack.h"
 #include "Engine.h"
-//#include "InstrumentTrack.h"
+#include "Instrument.h"
 #include "MixHelpers.h"
 #include "Mixer.h"
 #include "SampleTrack.h"
@@ -179,6 +179,11 @@ bool SamplePlayHandle::isFinished() const
 bool SamplePlayHandle::isFromTrack(const Track* _track) const
 {
     return m_track == _track || m_bbTrack == _track;
+}
+
+bool SamplePlayHandle::isFromInstrument(const Instrument* _instrument) const
+{
+    return false;
 }
 
 /*

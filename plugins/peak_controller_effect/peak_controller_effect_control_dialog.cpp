@@ -39,40 +39,40 @@ PeakControllerEffectControlDialog::PeakControllerEffectControlDialog(
         PeakControllerEffectControls* _controls) :
       EffectControlDialog(_controls)
 {
-    setWindowIcon(embed::getIconPixmap("controller"));
+    setWindowIcon(embed::getIcon("controller"));
     setAutoFillBackground(true);
     QPalette pal;
-    pal.setBrush(backgroundRole(), PLUGIN_NAME::getIconPixmap("artwork"));
+    pal.setBrush(backgroundRole(), PLUGIN_NAME::getPixmap("artwork"));
     setPalette(pal);
     // setFixedSize( 240, 80 );
     setFixedSize(254, 70);
 
-    m_baseKnob = new Knob(knobBright_26, this);
+    m_baseKnob = new Knob(this);
     m_baseKnob->setLabel(tr("BASE"));
     m_baseKnob->setModel(&_controls->m_baseModel);
     m_baseKnob->setHintText(tr("Base amount:"), "");
 
-    m_amountKnob = new Knob(knobBright_26, this);
+    m_amountKnob = new Knob(this);
     m_amountKnob->setLabel(tr("AMNT"));
     m_amountKnob->setModel(&_controls->m_amountModel);
     m_amountKnob->setHintText(tr("Modulation amount:"), "");
 
-    m_amountMultKnob = new Knob(knobBright_26, this);
+    m_amountMultKnob = new Knob(this);
     m_amountMultKnob->setLabel(tr("MULT"));
     m_amountMultKnob->setModel(&_controls->m_amountMultModel);
     m_amountMultKnob->setHintText(tr("Amount Multiplicator:"), "");
 
-    m_attackKnob = new Knob(knobBright_26, this);
+    m_attackKnob = new Knob(this);
     m_attackKnob->setLabel(tr("ATCK"));
     m_attackKnob->setModel(&_controls->m_attackModel);
     m_attackKnob->setHintText(tr("Attack:"), "");
 
-    m_decayKnob = new Knob(knobBright_26, this);
+    m_decayKnob = new Knob(this);
     m_decayKnob->setLabel(tr("DCAY"));
     m_decayKnob->setModel(&_controls->m_decayModel);
     m_decayKnob->setHintText(tr("Release:"), "");
 
-    m_tresholdKnob = new Knob(knobBright_26, this);
+    m_tresholdKnob = new Knob(this);
     m_tresholdKnob->setLabel(tr("TRSH"));
     m_tresholdKnob->setModel(&_controls->m_tresholdModel);
     m_tresholdKnob->setHintText(tr("Treshold:"), "");

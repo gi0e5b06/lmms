@@ -51,7 +51,7 @@ SynthGDXView::SynthGDXView(Instrument* _instrument, QWidget* _parent) :
     scrollArea->setFrameStyle(QFrame::NoFrame);
     scrollArea->setLineWidth(1);
     scrollArea->setContentsMargins(0, 0, 0, 0);
-    scrollArea->setWidget(new QWidget);
+    // scrollArea->setWidget(new QWidget);
 
     QVBoxLayout* saLayout = new QVBoxLayout(this);
     setLayout(saLayout);

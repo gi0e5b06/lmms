@@ -911,9 +911,8 @@ void Song::clearProject()
 
     qInfo("Song::clearProject 13");
 
-    InstrumentTrackView::cleanupWindowCache();
-
-    qInfo("Song::clearProject 14");
+    // InstrumentTrackView::cleanupWindowCache();
+    // qInfo("Song::clearProject 14");
 }
 
 // create new file

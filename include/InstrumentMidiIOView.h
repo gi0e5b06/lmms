@@ -2,6 +2,7 @@
  * InstrumentMidiIOView.h - widget in instrument-track-window for setting
  *                          up MIDI-related stuff
  *
+ * Copyright (c) 2018-2019 gi0e5b06 (on github.com)
  * Copyright (c) 2005-2014 Tobias Doerffel <tobydox/at/users.sourceforge.net>
  *
  * This file is part of LMMS - https://lmms.io
@@ -28,19 +29,20 @@
 
 #include "ComboBoxModel.h"
 #include "ModelView.h"
+#include "Midi.h"
 
 #include <QWidget>
 
 class GroupBox;
+class Knob;
 class LcdSpinBox;
 class LedCheckBox;
 class QToolButton;
 class LedCheckBox;
 class InstrumentTrack;
+class MidiProcessorView;
 
-class InstrumentMidiIOView
-      : public QWidget
-      , public ModelView
+class InstrumentMidiIOView : public QWidget, public ModelView
 {
     Q_OBJECT
 
@@ -88,13 +90,19 @@ class InstrumentMiscView : public QWidget
   private:
     InstrumentTrack* m_track;
 
-    GroupBox* m_masterPitchGBX;
+    MidiProcessorView* m_midiInProc;
+    MidiProcessorView* m_midiOutProc;
 
     GroupBox*    m_controlChangesGBX;
     LedCheckBox* m_ccVolumeLCB;
     LedCheckBox* m_ccPanningLCB;
     LedCheckBox* m_ccBendingLCB;
     LedCheckBox* m_ccModulatingLCB;
+
+    GroupBox* m_allMidiCCGBX;
+    Knob*     m_midiCCKNB[MidiControllerCount];
+
+    GroupBox* m_masterPitchGBX;
 
     GroupBox*     m_scaleGBX;
     ComboBoxModel m_scaleBankModel;

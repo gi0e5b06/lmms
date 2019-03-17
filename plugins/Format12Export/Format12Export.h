@@ -40,6 +40,19 @@ class Format12Export : public ExportFilter
 
     virtual bool proceed(const QString& _fileName);
 
+  protected:
+    void removeTag(QDomElement& _root, const QString& _tagName);
+    void renameTag(QDomElement&   _root,
+                   const QString& _oldName,
+                   const QString& _newName);
+    void removeAttribute(QDomElement&   _root,
+                         const QString& _tagName,
+                         const QString& _attrName);
+    void renameAttribute(QDomElement&   _root,
+                         const QString& _tagName,
+                         const QString& _attrName,
+                         const QString& _newName);
+
   private:
     void error();
 };

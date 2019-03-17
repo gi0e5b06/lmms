@@ -91,7 +91,7 @@ class EXPORT Note : public SerializingObject
          int             key      = DefaultKey,
          volume_t        volume   = DefaultVolume,
          panning_t       panning  = DefaultPanning,
-         DetuningHelper* detuning = NULL);
+         DetuningHelper* detuning = nullptr);
     Note(const Note& note);
     virtual ~Note();
 
@@ -285,7 +285,7 @@ class EXPORT Note : public SerializingObject
     DetuningHelper* m_detuning;
 };
 
-//typedef QVector<Note*> NoteVector;
+// typedef QVector<Note*> NoteVector;
 typedef QVector<Note*> Notes;
 
 #endif

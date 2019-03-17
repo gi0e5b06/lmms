@@ -1,25 +1,23 @@
 /*
  * InstrumentFunction.h - models for instrument-functions-tab
  *
- * Copyright (c) 2017-2018 gi0e5b06
+ * Copyright (c) 2017-2019 gi0e5b06 (on github.com)
  * Copyright (c) 2004-2014 Tobias Doerffel <tobydox/at/users.sourceforge.net>
  *
- * This file is part of LMMS - https://lmms.io
+ * This file is part of LSMM -
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public
- * License along with this program (see COPYING); if not, write to the
- * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
- * Boston, MA 02110-1301 USA.
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
 
@@ -40,9 +38,7 @@ class InstrumentTrack;
 class NotePlayHandle;
 class InstrumentFunctionView;
 
-class InstrumentFunction
-      : public Model
-      , public JournallingObject
+class InstrumentFunction : public Model, public JournallingObject
 {
     Q_OBJECT
 
@@ -388,7 +384,10 @@ class InstrumentFunctionNoteOutting : public InstrumentFunction
     FloatModel m_panModel;
     FloatModel m_keyModel;
     FloatModel m_noteModel;
-    FloatModel m_modModel;
+    FloatModel m_modValueModel;
+    FloatModel m_modRefKeyModel;
+    FloatModel m_modAmountModel;
+    FloatModel m_modBaseModel;
 
     friend class InstrumentFunctionNoteOuttingView;
 };
@@ -457,7 +456,7 @@ class InstrumentFunctionNoteSustaining : public InstrumentFunction
     int64_t m_lastTime;
     QMutex  m_mutex;
 
-    //volatile NotePlayHandle* m_lastNPH;
+    // volatile NotePlayHandle* m_lastNPH;
     /*
     FloatModel m_volumeRangeModel;
     FloatModel m_panRangeModel;
@@ -473,6 +472,42 @@ class InstrumentFunctionNoteSustaining : public InstrumentFunction
     */
 
     friend class InstrumentFunctionNoteSustainingView;
+};
+
+class InstrumentFunctionNotePlaying : public InstrumentFunction
+{
+    Q_OBJECT
+
+  public:
+    InstrumentFunctionNotePlaying(Model* _parent);
+    virtual ~InstrumentFunctionNotePlaying();
+
+    virtual bool processNote(NotePlayHandle* n);
+    virtual void saveSettings(QDomDocument& _doc, QDomElement& _parent);
+    virtual void loadSettings(const QDomElement& _this);
+
+    inline virtual QString nodeName() const
+    {
+        return "noteplaying";
+    }
+
+    virtual InstrumentFunctionView* createView();
+
+  public slots:
+    void reset();
+    void onGateChanged();
+
+  private:
+    FloatModel m_gateModel;
+    FloatModel m_keyModel;
+    FloatModel m_volModel;
+    FloatModel m_panModel;
+
+    int             m_currentGeneration;
+    NotePlayHandle* m_currentNPH;
+    // QMutex  m_mutex;
+
+    friend class InstrumentFunctionNotePlayingView;
 };
 
 #endif

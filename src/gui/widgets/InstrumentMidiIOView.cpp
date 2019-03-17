@@ -1,6 +1,7 @@
 /*
  * InstrumentMidiIOView.cpp - MIDI-IO-View
  *
+ * Copyright (c) 2018-2019 gi0e5b06 (on github.com)
  * Copyright (c) 2005-2014 Tobias Doerffel <tobydox/at/users.sourceforge.net>
  *
  * This file is part of LMMS - https://lmms.io
@@ -28,36 +29,59 @@
 #include "Engine.h"
 #include "GroupBox.h"
 #include "InstrumentTrack.h"
+#include "Knob.h"
 #include "LcdSpinBox.h"
 #include "LedCheckBox.h"
 #include "MidiClient.h"
 #include "MidiPortMenu.h"  // REQUIRED
+#include "MidiProcessorView.h"
 #include "Mixer.h"
 //#include "ToolTip.h"
 #include "Scale.h"
 #include "embed.h"
 #include "gui_templates.h"
 
+#include <QGridLayout>
 #include <QHBoxLayout>
 #include <QLabel>
 //#include <QMenu>
+#include <QScrollArea>
 #include <QToolButton>
 #include <QVBoxLayout>
 
 InstrumentMidiIOView::InstrumentMidiIOView(QWidget* parent) :
-      QWidget(parent), ModelView(NULL, this), m_rpBtn(NULL), m_wpBtn(NULL)
+      QWidget(parent), ModelView(nullptr, this), m_rpBtn(nullptr),
+      m_wpBtn(nullptr)
 {
     setAutoFillBackground(true);
-    QVBoxLayout* layout = new QVBoxLayout(this);
-    layout->setContentsMargins(2, 3, 2, 5);
+
+    QScrollArea* mainSCA = new QScrollArea(this);
+    mainSCA->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
+    mainSCA->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    mainSCA->setFrameStyle(QFrame::NoFrame);
+    mainSCA->setLineWidth(1);
+
+    QVBoxLayout* thisLOT = new QVBoxLayout(this);
+    setLayout(thisLOT);
+    thisLOT->setContentsMargins(0, 0, 0, 0);
+    thisLOT->addWidget(mainSCA, 0, 0);
+    // thisLOT->setColumnStretch(0, 1);
+    // thisLOT->setRowStretch(0, 1);
+
+    QWidget*     mainPNL = new QWidget(mainSCA);
+    QGridLayout* mainLOT = new QGridLayout(mainPNL);
+    mainLOT->setContentsMargins(3, 3, 3, 3);
+    mainLOT->setHorizontalSpacing(0);
+    mainLOT->setVerticalSpacing(3);
+    mainPNL->setLayout(mainLOT);
 
     /// Midi Input
 
-    m_midiInputGBX = new GroupBox(tr("MIDI INPUT"), this, true, false);
-    QWidget*     midiInputPNL    = new QWidget(m_midiInputGBX);
-    QHBoxLayout* midiInputLayout = new QHBoxLayout(midiInputPNL);
-    midiInputLayout->setContentsMargins(6, 6, 6, 6);
-    midiInputLayout->setSpacing(6);
+    m_midiInputGBX = new GroupBox(tr("MIDI INPUT"), mainPNL, true, false);
+    QWidget*     midiInputPNL = new QWidget(m_midiInputGBX);
+    QHBoxLayout* midiInputLOT = new QHBoxLayout(midiInputPNL);
+    midiInputLOT->setContentsMargins(6, 6, 6, 6);
+    midiInputLOT->setSpacing(6);
     m_midiInputGBX->setContentWidget(midiInputPNL);
 
     if(!Engine::mixer()->midiClient()->isRaw())
@@ -67,25 +91,24 @@ InstrumentMidiIOView::InstrumentMidiIOView(QWidget* parent) :
         m_rpBtn->setText(tr("MIDI devices to receive MIDI events from"));
         m_rpBtn->setIcon(embed::getIconPixmap("piano"));
         m_rpBtn->setPopupMode(QToolButton::InstantPopup);
-        midiInputLayout->addWidget(m_rpBtn);
+        midiInputLOT->addWidget(m_rpBtn, Qt::AlignTop | Qt::AlignHCenter);
     }
 
     m_inputChannelSpinBox = new LcdSpinBox(2, midiInputPNL);
     m_inputChannelSpinBox->addTextForValue(0, "--");
     m_inputChannelSpinBox->setLabel(tr("CHANNEL"));
     m_inputChannelSpinBox->setEnabled(false);
-    midiInputLayout->addWidget(m_inputChannelSpinBox);
+    midiInputLOT->addWidget(m_inputChannelSpinBox);
 
     m_fixedInputVelocitySpinBox = new LcdSpinBox(3, midiInputPNL);
     // m_fixedInputVelocitySpinBox->setDisplayOffset( 1 );
     m_fixedInputVelocitySpinBox->addTextForValue(-1, "---");  // 0
     m_fixedInputVelocitySpinBox->setLabel(tr("VELOCITY"));
     m_fixedInputVelocitySpinBox->setEnabled(false);
-    midiInputLayout->addWidget(m_fixedInputVelocitySpinBox);
+    midiInputLOT->addWidget(m_fixedInputVelocitySpinBox);
 
-    midiInputLayout->addStretch(1);
+    midiInputLOT->addStretch(1);
     // m_midiInputGBX->setMinimumWidth(230);
-    layout->addWidget(m_midiInputGBX);
 
     connect(m_midiInputGBX->ledButton(), SIGNAL(toggled(bool)),
             m_inputChannelSpinBox, SLOT(setEnabled(bool)));
@@ -94,11 +117,11 @@ InstrumentMidiIOView::InstrumentMidiIOView(QWidget* parent) :
 
     /// Midi Output
 
-    m_midiOutputGBX = new GroupBox(tr("MIDI OUTPUT"), this, true, false);
-    QWidget*     midiOutputPNL    = new QWidget(m_midiOutputGBX);
-    QHBoxLayout* midiOutputLayout = new QHBoxLayout(midiOutputPNL);
-    midiOutputLayout->setContentsMargins(6, 6, 6, 6);
-    midiOutputLayout->setSpacing(6);
+    m_midiOutputGBX = new GroupBox(tr("MIDI OUTPUT"), mainPNL, true, false);
+    QWidget*     midiOutputPNL = new QWidget(m_midiOutputGBX);
+    QGridLayout* midiOutputLOT = new QGridLayout(midiOutputPNL);
+    midiOutputLOT->setContentsMargins(6, 6, 6, 6);
+    midiOutputLOT->setSpacing(6);
     m_midiOutputGBX->setContentWidget(midiOutputPNL);
 
     if(!Engine::mixer()->midiClient()->isRaw())
@@ -108,36 +131,38 @@ InstrumentMidiIOView::InstrumentMidiIOView(QWidget* parent) :
         m_wpBtn->setText(tr("MIDI devices to send MIDI events to"));
         m_wpBtn->setIcon(embed::getIconPixmap("piano"));
         m_wpBtn->setPopupMode(QToolButton::InstantPopup);
-        midiOutputLayout->addWidget(m_wpBtn);
+        midiOutputLOT->addWidget(m_wpBtn, 0, 0, 2, 1,
+                                 Qt::AlignTop | Qt::AlignHCenter);
     }
 
     m_outputChannelSpinBox = new LcdSpinBox(2, midiOutputPNL);
     m_outputChannelSpinBox->setLabel(tr("CHANNEL"));
     m_outputChannelSpinBox->setEnabled(false);
-    midiOutputLayout->addWidget(m_outputChannelSpinBox);
+    midiOutputLOT->addWidget(m_outputChannelSpinBox, 0, 1);
 
     m_fixedOutputVelocitySpinBox = new LcdSpinBox(3, midiOutputPNL);
     // m_fixedOutputVelocitySpinBox->setDisplayOffset( 1 );
     m_fixedOutputVelocitySpinBox->addTextForValue(-1, "---");  // 0
     m_fixedOutputVelocitySpinBox->setLabel(tr("VELOCITY"));
     m_fixedOutputVelocitySpinBox->setEnabled(false);
-    midiOutputLayout->addWidget(m_fixedOutputVelocitySpinBox);
+    midiOutputLOT->addWidget(m_fixedOutputVelocitySpinBox, 0, 2);
 
     m_outputProgramSpinBox = new LcdSpinBox(3, midiOutputPNL);
     m_outputProgramSpinBox->setLabel(tr("PROGRAM"));
     m_outputProgramSpinBox->setEnabled(false);
-    midiOutputLayout->addWidget(m_outputProgramSpinBox);
+    midiOutputLOT->addWidget(m_outputProgramSpinBox, 1, 1);
 
     m_fixedOutputNoteSpinBox = new LcdSpinBox(3, midiOutputPNL);
     // m_fixedOutputNoteSpinBox->setDisplayOffset( 1 );
     m_fixedOutputNoteSpinBox->addTextForValue(-1, "---");  // 0
     m_fixedOutputNoteSpinBox->setLabel(tr("NOTE"));
     m_fixedOutputNoteSpinBox->setEnabled(false);
-    midiOutputLayout->addWidget(m_fixedOutputNoteSpinBox);
+    midiOutputLOT->addWidget(m_fixedOutputNoteSpinBox, 1, 2);
 
-    midiOutputLayout->addStretch(1);
+    // midiOutputLOT->addStretch(1);
+    midiOutputLOT->setColumnStretch(3, 1);
+    midiOutputLOT->setRowStretch(2, 1);
     // m_midiOutputGBX->setMinimumWidth(230);
-    layout->addWidget(m_midiOutputGBX);
 
     connect(m_midiOutputGBX->ledButton(), SIGNAL(toggled(bool)),
             m_outputChannelSpinBox, SLOT(setEnabled(bool)));
@@ -148,15 +173,14 @@ InstrumentMidiIOView::InstrumentMidiIOView(QWidget* parent) :
     connect(m_midiOutputGBX->ledButton(), SIGNAL(toggled(bool)),
             m_fixedOutputNoteSpinBox, SLOT(setEnabled(bool)));
 
-
     /// Base Velocity
 
     m_baseVelocityGBX
-            = new GroupBox(tr("CUSTOM BASE VELOCITY"), this, true, false);
-    QWidget*     baseVelocityPNL    = new QWidget(m_baseVelocityGBX);
-    QHBoxLayout* baseVelocityLayout = new QHBoxLayout(baseVelocityPNL);
-    midiOutputLayout->setContentsMargins(6, 6, 6, 6);
-    midiOutputLayout->setSpacing(6);
+            = new GroupBox(tr("CUSTOM BASE VELOCITY"), mainPNL, true, false);
+    QWidget*     baseVelocityPNL = new QWidget(m_baseVelocityGBX);
+    QHBoxLayout* baseVelocityLOT = new QHBoxLayout(baseVelocityPNL);
+    midiOutputLOT->setContentsMargins(6, 6, 6, 6);
+    midiOutputLOT->setSpacing(6);
     m_baseVelocityGBX->setContentWidget(baseVelocityPNL);
 
     /*
@@ -165,23 +189,36 @@ InstrumentMidiIOView::InstrumentMidiIOView(QWidget* parent) :
                             "MIDI-based instruments at 100% note velocity"));
     baseVelocityHelp->setWordWrap(true);
     baseVelocityHelp->setFont(pointSize<8>(baseVelocityHelp->font()));
-    baseVelocityLayout->addWidget(baseVelocityHelp);
+    baseVelocityLOT->addWidget(baseVelocityHelp);
     */
- 
+
     m_baseVelocitySpinBox = new LcdSpinBox(3, baseVelocityPNL);
     m_baseVelocitySpinBox->setLabel(tr("BASE VELOCITY"));
     m_baseVelocitySpinBox->setEnabled(false);
-    baseVelocityLayout->addWidget(m_baseVelocitySpinBox);
+    baseVelocityLOT->addWidget(m_baseVelocitySpinBox);
 
-    baseVelocityLayout->addStretch(1);
+    baseVelocityLOT->addStretch(1);
     // m_baseVelocityGBX->setMinimumWidth(230);
-    layout->addWidget(m_baseVelocityGBX);
 
     connect(m_baseVelocityGBX->ledButton(), SIGNAL(toggled(bool)),
             m_baseVelocitySpinBox, SLOT(setEnabled(bool)));
 
-    layout->addStretch(1);
-    setLayout(layout);
+    /*
+    m_midiInputGBX->setMinimumWidth(230);
+    m_midiOutputGBX->setMinimumWidth(230);
+    m_baseVelocityGBX->setMinimumWidth(230);
+    */
+
+    mainLOT->addWidget(m_midiInputGBX, 0, 0);
+    mainLOT->addWidget(m_midiOutputGBX, 1, 0);
+    mainLOT->addWidget(m_baseVelocityGBX, 2, 0);
+    mainLOT->setColumnStretch(0, 1);
+    mainLOT->setRowStretch(3, 1);
+
+    // mainPNL->setMinimumSize(236,350);
+    mainSCA->setWidget(mainPNL);
+    mainSCA->setWidgetResizable(true);
+    // setFixedWidth(234);
 }
 
 InstrumentMidiIOView::~InstrumentMidiIOView()
@@ -218,17 +255,45 @@ void InstrumentMidiIOView::modelChanged()
 }
 
 InstrumentMiscView::InstrumentMiscView(InstrumentTrack* it, QWidget* parent) :
-        QWidget(parent), m_track(it), m_scaleBankModel(it,tr("Scale bank")),
-        m_scaleIndexModel(it,tr("Scale index"))
+      QWidget(parent), m_track(it), m_scaleBankModel(it, tr("Scale bank")),
+      m_scaleIndexModel(it, tr("Scale index"))
 {
     setAutoFillBackground(true);
-    QVBoxLayout* layout = new QVBoxLayout(this);
-    layout->setContentsMargins(2, 3, 2, 5);
 
+    QScrollArea* mainSCA = new QScrollArea(this);
+    mainSCA->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
+    mainSCA->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    mainSCA->setFrameStyle(QFrame::NoFrame);
+    mainSCA->setLineWidth(1);
+
+    QVBoxLayout* thisLOT = new QVBoxLayout(this);
+    setLayout(thisLOT);
+    thisLOT->setContentsMargins(0, 0, 0, 0);
+    thisLOT->addWidget(mainSCA, 0, 0);
+    // thisLOT->setColumnStretch(0, 1);
+    // thisLOT->setRowStretch(0, 1);
+
+    QWidget*     mainPNL = new QWidget(mainSCA);
+    QGridLayout* mainLOT = new QGridLayout(mainPNL);
+    mainLOT->setContentsMargins(3, 3, 3, 3);
+    mainLOT->setHorizontalSpacing(0);
+    mainLOT->setVerticalSpacing(3);
+    mainPNL->setLayout(mainLOT);
+
+    /// Processor
+
+    QWidget*     midiProcPNL = new QWidget(mainPNL);
+    QHBoxLayout* midiProcLOT = new QHBoxLayout(midiProcPNL);
+    midiProcLOT->setContentsMargins(6, 6, 6, 6);
+    midiProcLOT->setSpacing(6);
+    m_midiInProc  = new MidiProcessorView(true, it, midiProcPNL);
+    m_midiOutProc = new MidiProcessorView(false, it, midiProcPNL);
+    midiProcLOT->addWidget(m_midiInProc);
+    midiProcLOT->addWidget(m_midiOutProc);
 
     /// Master pitch
 
-    m_masterPitchGBX = new GroupBox(tr("MASTER PITCH"), this, true, false);
+    m_masterPitchGBX = new GroupBox(tr("MASTER PITCH"), mainPNL, true, true);
     m_masterPitchGBX->ledButton()->setModel(&it->m_useMasterPitchModel);
 
     QWidget*     masterPitchPNL = new QWidget(m_masterPitchGBX);
@@ -242,45 +307,67 @@ InstrumentMiscView::InstrumentMiscView(InstrumentTrack* it, QWidget* parent) :
     masterPitchLOT->addWidget(masterPitchHelp);
     masterPitchLOT->addStretch(1);
 
-
     /// Control Changes
 
     m_controlChangesGBX
-            = new GroupBox(tr("CONTROL CHANGES"), this, false, false);
+            = new GroupBox(tr("CONTROL CHANGES"), mainPNL, false, true);
     QWidget*     controlChangesPNL = new QWidget(m_controlChangesGBX);
     QGridLayout* controlChangesLOT = new QGridLayout(controlChangesPNL);
-    controlChangesLOT->setContentsMargins(3,3,3,3);
+    controlChangesLOT->setContentsMargins(3, 3, 3, 3);
     controlChangesLOT->setSpacing(3);
     m_controlChangesGBX->setContentWidget(controlChangesPNL);
 
-    m_ccVolumeLCB=new LedCheckBox(m_controlChangesGBX);
+    m_ccVolumeLCB = new LedCheckBox(m_controlChangesGBX);
     m_ccVolumeLCB->setText(tr("Volume"));
     m_ccVolumeLCB->setModel(m_track->volumeEnabledModel());
-    //m_ccVolumeLCB->setEnabled(false);
-    controlChangesLOT->addWidget(m_ccVolumeLCB,0,0);
+    // m_ccVolumeLCB->setEnabled(false);
+    controlChangesLOT->addWidget(m_ccVolumeLCB, 0, 0);
 
-    m_ccPanningLCB=new LedCheckBox(m_controlChangesGBX);
+    m_ccPanningLCB = new LedCheckBox(m_controlChangesGBX);
     m_ccPanningLCB->setText(tr("Panning"));
     m_ccPanningLCB->setModel(m_track->panningEnabledModel());
-    //m_ccPanningLCB->setEnabled(false);
-    controlChangesLOT->addWidget(m_ccPanningLCB,1,0);
+    // m_ccPanningLCB->setEnabled(false);
+    controlChangesLOT->addWidget(m_ccPanningLCB, 1, 0);
 
-    m_ccBendingLCB=new LedCheckBox(m_controlChangesGBX);
+    m_ccBendingLCB = new LedCheckBox(m_controlChangesGBX);
     m_ccBendingLCB->setText(tr("Bending"));
     m_ccBendingLCB->setModel(m_track->bendingEnabledModel());
-    //m_ccBendingLCB->setEnabled(false);
-    controlChangesLOT->addWidget(m_ccBendingLCB,0,1);
+    // m_ccBendingLCB->setEnabled(false);
+    controlChangesLOT->addWidget(m_ccBendingLCB, 0, 1);
 
-    m_ccModulatingLCB=new LedCheckBox(m_controlChangesGBX);
+    m_ccModulatingLCB = new LedCheckBox(m_controlChangesGBX);
     m_ccModulatingLCB->setText(tr("(TODO) Modulating"));
-    //m_ccModulatingLCB->setModel(m_track->modulatingEnabledModel());
-    //m_ccModulatingLCB->setEnabled(false);
-    controlChangesLOT->addWidget(m_ccModulatingLCB,1,1);
+    // m_ccModulatingLCB->setModel(m_track->modulatingEnabledModel());
+    // m_ccModulatingLCB->setEnabled(false);
+    controlChangesLOT->addWidget(m_ccModulatingLCB, 1, 1);
 
+    /// All Midi CC
+
+    m_allMidiCCGBX = new GroupBox(tr("ALL MIDI CC"), mainPNL, false, true);
+    QWidget*     allMidiCCPNL = new QWidget(m_allMidiCCGBX);
+    QGridLayout* allMidiCCLOT = new QGridLayout(allMidiCCPNL);
+    allMidiCCLOT->setContentsMargins(3, 3, 3, 3);
+    allMidiCCLOT->setSpacing(3);
+    m_allMidiCCGBX->setContentWidget(allMidiCCPNL);
+    for(int i = 0; i < MidiControllerCount; i++)
+    {
+        m_midiCCKNB[i] = new Knob(allMidiCCPNL);
+        m_midiCCKNB[i]->setText(QString("CC %1").arg(i));
+        m_midiCCKNB[i]->setModel(m_track->midiCCModel(i));
+        m_midiCCKNB[i]->setHintText(QString("MIDI CC %1, V ").arg(i), "");
+        m_midiCCKNB[i]->setWhatsThis("");
+
+        /*
+        connect(m_track->m_midiCCKNB[i], SIGNAL(dataChanged()), this,
+                SLOT(onDataChanged()));
+        */
+
+        allMidiCCLOT->addWidget(m_midiCCKNB[i], i / 7, i % 7);
+    }
 
     /// Scale
 
-    m_scaleGBX = new GroupBox(tr("SCALE"), this, false, false);
+    m_scaleGBX = new GroupBox(tr("SCALE"), mainPNL, false, true);
 
     QWidget*     ScalePNL = new QWidget(m_scaleGBX);
     QGridLayout* scaleLOT = new QGridLayout(ScalePNL);
@@ -298,7 +385,7 @@ InstrumentMiscView::InstrumentMiscView(InstrumentTrack* it, QWidget* parent) :
     indexCMB->setMinimumWidth(7 * 27 + 12);
 
     Scale::fillBankModel(m_scaleBankModel);
-    Scale::fillIndexModel(m_scaleIndexModel,0);
+    Scale::fillIndexModel(m_scaleIndexModel, 0);
     connect(&m_scaleBankModel, SIGNAL(dataChanged()), this,
             SLOT(updateScaleIndexModel()));
     connect(&m_scaleBankModel, SIGNAL(dataChanged()), this,
@@ -320,11 +407,16 @@ InstrumentMiscView::InstrumentMiscView(InstrumentTrack* it, QWidget* parent) :
     scaleLOT->setRowStretch(2, 1);
     scaleLOT->setColumnStretch(7, 1);
 
-    layout->addWidget(m_controlChangesGBX);
-    layout->addWidget(m_masterPitchGBX);
-    layout->addWidget(m_scaleGBX);
-    layout->addStretch(1);
-    setLayout(layout);
+    mainLOT->addWidget(midiProcPNL, 0, 0, Qt::AlignHCenter);
+    mainLOT->addWidget(m_controlChangesGBX, 1, 0);
+    mainLOT->addWidget(m_masterPitchGBX, 2, 0);
+    mainLOT->addWidget(m_scaleGBX, 3, 0);
+    mainLOT->addWidget(m_allMidiCCGBX, 4, 0);
+
+    mainLOT->setColumnStretch(0, 1);
+    mainLOT->setRowStretch(6, 1);
+    mainSCA->setWidget(mainPNL);
+    mainSCA->setWidgetResizable(true);
 }
 
 InstrumentMiscView::~InstrumentMiscView()

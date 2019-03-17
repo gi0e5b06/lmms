@@ -234,7 +234,7 @@ QMenu* BBTCOView::buildContextMenu()
     a=
     */
     cm->addAction(embed::getIconPixmap("bb_track"),
-                  tr("Open in Beat+Bassline-Editor"), this,
+                  tr("Open in the beat editor"), this,
                   SLOT(openInBBEditor()));
     addRemoveMuteClearMenu(cm, true, false, false);
     cm->addSeparator();

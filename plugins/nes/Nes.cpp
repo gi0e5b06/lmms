@@ -399,7 +399,7 @@ void NesObject::renderOutput(sampleFrame* buf, fpp_t frames)
         pin1 *= 1.0 + (Oscillator::noiseSample(0.0f) * DITHER_AMP);
         pin1 = pin1 / 30.0f;
 
-        pin1 = signedPow(pin1, NES_DIST);
+        pin1 = signedpowf(pin1, NES_DIST);
 
         pin1 = pin1 * 2.0f - 1.0f;
 
@@ -410,8 +410,8 @@ void NesObject::renderOutput(sampleFrame* buf, fpp_t frames)
 
         // compensate DC offset
         pin1 += 1.0f
-                - signedPow(static_cast<float>(ch1Level + ch2Level) / 30.0f,
-                            NES_DIST);
+                - signedpowf(static_cast<float>(ch1Level + ch2Level) / 30.f,
+                             NES_DIST);
 
         pin1 *= NES_MIXING_12;
 
@@ -420,7 +420,7 @@ void NesObject::renderOutput(sampleFrame* buf, fpp_t frames)
         pin2 *= 1.0 + (Oscillator::noiseSample(0.0f) * DITHER_AMP);
         pin2 = pin2 / 30.0f;
 
-        pin2 = signedPow(pin2, NES_DIST);
+        pin2 = signedpowf(pin2, NES_DIST);
 
         pin2 = pin2 * 2.0f - 1.0f;
 
@@ -431,7 +431,7 @@ void NesObject::renderOutput(sampleFrame* buf, fpp_t frames)
 
         // compensate DC offset
         pin2 += 1.0f
-                - signedPow(static_cast<float>(ch3Level + ch4Level) / 30.0f,
+                - signedpowf(static_cast<float>(ch3Level + ch4Level) / 30.0f,
                             NES_DIST);
 
         pin2 *= NES_MIXING_34;
@@ -860,16 +860,16 @@ NesInstrumentView::NesInstrumentView(Instrument* instrument,
                                                                "sweep"),
                                                             "", "")
 
-                    makenesled(
-                            m_ch4EnabledBtn, KNOB_X1, KNOB_Y4 - 12,
-                            tr("Enable channel 4")) makenesled(m_ch4EnvEnabledBtn,
-                                                               KNOB_X3,
-                                                               KNOB_Y4 - 12,
-                                                               tr("Enable "
-                                                                  "envelope "
-                                                                  "4"))
-                            makenesled(m_ch4EnvLoopedBtn, 129, KNOB_Y4 - 12,
-                                       tr("Enable envelope 4 loop"))
+                    makenesled(m_ch4EnabledBtn, KNOB_X1, KNOB_Y4 - 12,
+                               tr("Enable channel 4"))
+                            makenesled(
+                                    m_ch4EnvEnabledBtn, KNOB_X3, KNOB_Y4 - 12,
+                                    tr("Enable "
+                                       "envelope "
+                                       "4")) makenesled(m_ch4EnvLoopedBtn,
+                                                        129, KNOB_Y4 - 12,
+                                                        tr("Enable envelope "
+                                                           "4 loop"))
 
                                     makenesled(
                                             m_ch4NoiseQuantizeBtn, 162,

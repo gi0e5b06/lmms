@@ -4,8 +4,9 @@
 
 ValueBuffer::ValueBuffer(const ValueBuffer* _vb)
 {
-    m_len  = _vb->length();
-    m_data = new real_t[m_len];
+    m_len    = _vb->length();
+    m_data   = new real_t[m_len];
+    m_period = _vb->period();
     copyFrom(_vb);
 }
 
@@ -17,16 +18,18 @@ ValueBuffer::ValueBuffer(int _length)
 //: std::vector<real_t>(_length)
 {
     Q_ASSERT(_length > 2);
-    m_len  = _length;
-    m_data = new real_t[m_len];
+    m_len    = _length;
+    m_data   = new real_t[m_len];
+    m_period = -1;
 }
 
 ValueBuffer::~ValueBuffer()
 //: std::vector<real_t>(_length)
 {
     delete m_data;
-    m_len  = 0;
-    m_data = nullptr;
+    m_len    = 0;
+    m_data   = nullptr;
+    m_period = -1;
 }
 
 /*
@@ -67,10 +70,12 @@ void ValueBuffer::clear()
 
 void ValueBuffer::copyFrom(const ValueBuffer* _vb)
 {
+    _vb->lock();
     const real_t* src = _vb->values();
     // for(int i=m_len-1; i>=0; --i)
     //        m_data[i]=src[i];
     memcpy(m_data, src, sizeof(real_t) * m_len);
+    _vb->unlock();
 }
 
 void ValueBuffer::fill(real_t _value)

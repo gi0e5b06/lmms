@@ -82,31 +82,41 @@ void Config::init()
     getConfigFileName(filename, MAX_STRING_SIZE);
     readConfig(filename);
 
+    char *home_dirname = getenv("HOME");
+    std::string home=(home_dirname != nullptr ? home_dirname : "");
+
     if(cfg.bankRootDirList[0].empty()) {
         //banks
-        cfg.bankRootDirList[0] = "~/banks";
-        cfg.bankRootDirList[1] = "./";
-        cfg.bankRootDirList[2] = "/usr/share/zynaddsubfx/banks";
-        cfg.bankRootDirList[3] = "/usr/local/share/zynaddsubfx/banks";
+        cfg.bankRootDirList[0] = home+"/banks";
+        cfg.bankRootDirList[1] = home+"/lmms/banks/ZynAddSubFX";
+        cfg.bankRootDirList[2] = "./";
+        cfg.bankRootDirList[3] = "/usr/share/zynaddsubfx/banks";
+        cfg.bankRootDirList[4] = "/usr/local/share/zynaddsubfx/banks";
 #ifdef __APPLE__
-        cfg.bankRootDirList[4] = "../Resources/banks";
+        cfg.bankRootDirList[5] = "../Resources/banks";
 #else
-        cfg.bankRootDirList[4] = "../banks";
+        cfg.bankRootDirList[5] = "../banks";
 #endif
-        cfg.bankRootDirList[5] = "banks";
+        cfg.bankRootDirList[6] = "banks";
+        cfg.bankRootDirList[7] = "/usr/share/lmms/banks/ZynAddSubFX";
+        cfg.bankRootDirList[8] = "/usr/local/share/lmms/banks/ZynAddSubFX";
     }
 
     if(cfg.presetsDirList[0].empty()) {
         //presets
-        cfg.presetsDirList[0] = "./";
-#ifdef __APPLE__
-        cfg.presetsDirList[1] = "../Resources/presets";
-#else
-        cfg.presetsDirList[1] = "../presets";
-#endif
-        cfg.presetsDirList[2] = "presets";
+        cfg.presetsDirList[0] = home+"/presets";
+        cfg.presetsDirList[1] = home+"/lmms/presets/ZynAddSubFX";
+        cfg.presetsDirList[2] = "./";
         cfg.presetsDirList[3] = "/usr/share/zynaddsubfx/presets";
         cfg.presetsDirList[4] = "/usr/local/share/zynaddsubfx/presets";
+#ifdef __APPLE__
+        cfg.presetsDirList[5] = "../Resources/presets";
+#else
+        cfg.presetsDirList[5] = "../presets";
+#endif
+        cfg.presetsDirList[6] = "presets";
+        cfg.presetsDirList[7] = "/usr/share/lmms/presets/ZynAddSubFX";
+        cfg.presetsDirList[8] = "/usr/local/share/lmms/presets/ZynAddSubFX";
     }
     cfg.LinuxALSAaudioDev = "default";
     cfg.nameTag = "";

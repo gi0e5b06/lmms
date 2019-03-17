@@ -235,7 +235,7 @@ WaveFormStandard::Set::Set()
                       QDir::Name | QDir::IgnoreCase,
                       QDir::Files | QDir::NoDotAndDotDot);
 
-            qInfo("bank waveform '%s'", qPrintable(wfb));
+            // qInfo("bank waveform '%s'", qPrintable(wfb));
             QString bankname = wfb;
             // bankname.replace(QRegExp("^AKWF_"), "");
             bankname.replace('_', ' ');
@@ -278,10 +278,11 @@ void WaveFormStandard::Set::createMissing()
 
 WaveFormStandard::Set::~Set()
 {
-    qInfo("WaveFormStandard::Set::~Set");
+    // qInfo("WaveFormStandard::Set::~Set");
     for(int b = MAX_BANK - MIN_BANK; b >= 0; --b)
         for(int i = MAX_INDEX - MIN_INDEX; i >= 0; --i)
-            DELETE_HELPER(m_stock[b][i])
+            if(m_stock[b][i] != nullptr)
+                delete m_stock[b][i];
 }
 
 void WaveFormStandard::Set::createZeroed(int _bank)

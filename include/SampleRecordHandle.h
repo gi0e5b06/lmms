@@ -48,6 +48,7 @@ public:
 	virtual bool isFinished() const;
 
 	virtual bool isFromTrack( const Track * _track ) const;
+    virtual bool isFromInstrument(const Instrument* _instrument) const;
 
 	f_cnt_t framesRecorded() const;
 	void createSampleBuffer( SampleBuffer * * _sample_buf );

@@ -12,7 +12,7 @@ template <class T>
 class SafeList
 {
   public:
-    SafeList(bool _checkUnicity)
+    SafeList(bool _checkUnicity = true)
     {
     }
 

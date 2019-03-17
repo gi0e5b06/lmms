@@ -1793,9 +1793,10 @@ void TrackContentObjectView::addRemoveMuteClearMenu(QMenu* _cm,
                                                     bool   _clear)
 {
     QAction* a;
-    a = _cm->addAction(embed::getIconPixmap("cancel"),
-                       tr("Delete (<%1>+middle click)").arg(UI_SHIFT_KEY),
-                       this, SLOT(remove()));
+    a = _cm->addAction(
+            embed::getIconPixmap("cancel"),
+            tr("Remove this tile (<%1>+middle click)").arg(UI_SHIFT_KEY),
+            this, SLOT(remove()));
     a->setEnabled(_remove);
     a = _cm->addAction(embed::getIconPixmap("muted"),
                        tr("Mute/unmute (<%1>+middle click)").arg(UI_CTRL_KEY),

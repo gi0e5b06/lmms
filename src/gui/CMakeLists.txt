@@ -11,14 +11,14 @@ SET(LMMS_SRCS
         ${LMMS_LV2_SRCS}
 	gui/AboutDialog.cpp
 	gui/ActionGroup.cpp
-        gui/ActionUpdatable.cpp
+    gui/ActionUpdatable.cpp
 	gui/AudioAlsaSetupWidget.cpp
 	gui/AudioAlsaGdxSetupWidget.cpp
 	gui/AudioDeviceSetupWidget.cpp
 	gui/AutomatableModelView.cpp
 	gui/AutomationPatternView.cpp
-        gui/CableOverlay.cpp
-        gui/CableView.cpp
+    gui/CableOverlay.cpp
+    gui/CableView.cpp
 	gui/ControllerConnectionDialog.cpp
 	gui/ControllerDialog.cpp
 	gui/EffectControlDialog.cpp
@@ -32,7 +32,7 @@ SET(LMMS_SRCS
 	gui/InstrumentView.cpp
 	gui/LfoControllerDialog.cpp
 	gui/LmmsPalette.cpp
-        gui/lmms_qt_gui.cpp
+    gui/lmms_qt_gui.cpp
 	gui/LmmsStyle.cpp
 	gui/MainApplication.cpp
 	gui/MainWindow.cpp
@@ -40,12 +40,12 @@ SET(LMMS_SRCS
 	#gui/MidiEffectSelectDialog.cpp
 	gui/MidiSetupWidget.cpp
 	gui/ModelView.cpp
-        gui/PaintCacheable.cpp
-        gui/PaintManager.cpp
+    gui/PaintCacheable.cpp
+    gui/PaintManager.cpp
 	gui/PeakControllerDialog.cpp
-        gui/PeripheralView.cpp
-        gui/PeripheralLaunchpadView.cpp
-        gui/PeripheralPadsView.cpp
+    gui/PeripheralView.cpp
+    gui/PeripheralLaunchpadView.cpp
+    gui/PeripheralPadsView.cpp
 	gui/PianoView.cpp
 	gui/PluginBrowser.cpp
 	gui/RowTableView.cpp
@@ -81,7 +81,9 @@ SET(LMMS_SRCS
 	gui/widgets/EnvelopeAndLfoView.cpp
 	gui/widgets/FadeButton.cpp
 	gui/widgets/Fader.cpp
+    gui/widgets/FilterView.cpp
 	gui/widgets/FxLine.cpp
+	gui/widgets/FxLineLcdSpinBox.cpp
 	gui/widgets/Graph.cpp
 	gui/widgets/GroupBox.cpp
 	#gui/widgets/HwScreenWidget.cpp
@@ -99,7 +101,8 @@ SET(LMMS_SRCS
 	#gui/widgets/MidiEffectView.cpp
 	#gui/widgets/MidiEffectRackView.cpp
 	gui/widgets/MidiPortMenu.cpp
-	gui/widgets/NStateButton.cpp
+	gui/widgets/MidiProcessorView.cpp
+    gui/widgets/NStateButton.cpp
 	gui/widgets/PixmapButton.cpp
 	gui/widgets/ProjectNotes.cpp
 	gui/widgets/RenameDialog.cpp
