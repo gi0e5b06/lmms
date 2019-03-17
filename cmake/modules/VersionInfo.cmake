@@ -74,4 +74,3 @@ MESSAGE("\n"
 	"*   Override version:           -DFORCE_VERSION=x.x.x-x\n"
 	"*   Ignore Git information:     -DFORCE_VERSION=internal\n"
 )
-
