@@ -32,47 +32,47 @@ shared:
   # Commmon environment variables RelWithDebInfo
   common_environment: &common_environment
     QT5: True
-    CMAKE_OPTS: -DUSE_WERROR=ON -DCMAKE_BUILD_TYPE=Debug -DUSE_CCACHE=ON -DWANT_VST=ON -DWANT_WINE=OFF
+    CMAKE_OPTS: -DUSE_WERROR=ON -DCMAKE_BUILD_TYPE=Debug -DUSE_CCACHE=ON -DWANT_CARLA=OFF -DWANT_VST=ON -DWANT_WINE=OFF
     CCACHE_MAXSIZE: 500M
     CCACHE_LOGFILE: /tmp/artifacts/ccache.log
     MAKEFLAGS: -j6
 
 jobs:
-  mingw32:
-    environment:
-      <<: *common_environment
-    docker:
-      - image: lmmsci/linux.mingw32:18.04
-    steps:
-      - checkout
-      - *init
-      - *restore_cache
-      - run:
-          name: Building
-          command: |
-            mkdir build && cd build
-            ../cmake/build_win32.sh
-            make lmms
-            make
-      - *ccache_stats
-      - *save_cache
-  mingw64:
-    environment:
-      <<: *common_environment
-    docker:
-      - image: lmmsci/linux.mingw64:18.04
-    steps:
-      - checkout
-      - *init
-      - *restore_cache
-      - run:
-          name: Building
-          command: |
-            mkdir build && cd build
-            ../cmake/build_win64.sh
-            make
-      - *ccache_stats
-      - *save_cache
+#  mingw32:
+#    environment:
+#      <<: *common_environment
+#    docker:
+#      - image: lmmsci/linux.mingw32:18.04
+#    steps:
+#      - checkout
+#      - *init
+#      - *restore_cache
+#      - run:
+#          name: Building
+#          command: |
+#            mkdir build && cd build
+#            ../cmake/build_win32.sh
+#            make lmms
+#            make
+#      - *ccache_stats
+#      - *save_cache
+#  mingw64:
+#    environment:
+#      <<: *common_environment
+#    docker:
+#      - image: lmmsci/linux.mingw64:18.04
+#    steps:
+#      - checkout
+#      - *init
+#      - *restore_cache
+#      - run:
+#          name: Building
+#          command: |
+#            mkdir build && cd build
+#            ../cmake/build_win64.sh
+#            make
+#      - *ccache_stats
+#      - *save_cache
   linux.gcc:
     docker:
       - image: circleci/buildpack-deps:cosmic
@@ -88,7 +88,7 @@ jobs:
           command: |
             sudo apt-get update
             sudo apt-get install -y qttools5-dev-tools
-            sudo apt-get install -y libmpg123-dev liblame-dev libsdl2-dev carla
+            sudo apt-get install -y libmpg123-dev libmp3lame-dev libsdl2-dev
       - run:
           name: Configure
           command: |
