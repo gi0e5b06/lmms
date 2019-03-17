@@ -75,7 +75,7 @@ jobs:
       - *save_cache
   linux.gcc:
     docker:
-      - image: cosmic/Dockerfile:18.10
+      - image: circleci/buildpack-deps:cosmic
       # lmmsci/linux.gcc:18.04
     environment:
       <<: *common_environment
