@@ -75,7 +75,8 @@ jobs:
       - *save_cache
   linux.gcc:
     docker:
-      - image: lmmsci/linux.gcc:18.04
+      - image: cosmic/Dockerfile:18.10
+      # lmmsci/linux.gcc:18.04
     environment:
       <<: *common_environment
     steps:
@@ -85,7 +86,9 @@ jobs:
       - run:
           name: Install dependencies
           command: |
-            apt-get install -y libmpg123-dev liblame-dev libsdl2-dev carla qttools5-dev
+            sudo apt-get update
+            sudo apt-get install -y qttools5-dev-tools
+            sudo apt-get install -y libmpg123-dev liblame-dev libsdl2-dev carla
       - run:
           name: Configure
           command: |
