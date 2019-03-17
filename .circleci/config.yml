@@ -38,41 +38,41 @@ shared:
     MAKEFLAGS: -j6
 
 jobs:
-#  mingw32:
-#    environment:
-#      <<: *common_environment
-#    docker:
-#      - image: lmmsci/linux.mingw32:18.04
-#    steps:
-#      - checkout
-#      - *init
-#      - *restore_cache
-#      - run:
-#          name: Building
-#          command: |
-#            mkdir build && cd build
-#            ../cmake/build_win32.sh
-#            make lmms
-#            make
-#      - *ccache_stats
-#      - *save_cache
-#  mingw64:
-#    environment:
-#      <<: *common_environment
-#    docker:
-#      - image: lmmsci/linux.mingw64:18.04
-#    steps:
-#      - checkout
-#      - *init
-#      - *restore_cache
-#      - run:
-#          name: Building
-#          command: |
-#            mkdir build && cd build
-#            ../cmake/build_win64.sh
-#            make
-#      - *ccache_stats
-#      - *save_cache
+  mingw32:
+    environment:
+      <<: *common_environment
+    docker:
+      - image: lmmsci/linux.mingw32:18.04
+    steps:
+      - checkout
+      - *init
+      - *restore_cache
+      - run:
+          name: Building
+          command: |
+            mkdir build && cd build
+            ../cmake/build_win32.sh
+            make lmms
+            make
+      - *ccache_stats
+      - *save_cache
+  mingw64:
+    environment:
+      <<: *common_environment
+    docker:
+      - image: lmmsci/linux.mingw64:18.04
+    steps:
+      - checkout
+      - *init
+      - *restore_cache
+      - run:
+          name: Building
+          command: |
+            mkdir build && cd build
+            ../cmake/build_win64.sh
+            make
+      - *ccache_stats
+      - *save_cache
   linux.gcc:
     docker:
       - image: circleci/buildpack-deps:cosmic
@@ -87,7 +87,7 @@ jobs:
           name: Install dependencies
           command: |
             sudo apt-get update
-            sudo apt-get install -y qttools5-dev-tools
+            sudo apt-get install -y g++ cmake make qttools5-dev-tools
             sudo apt-get install -y libmpg123-dev libmp3lame-dev libsdl2-dev
       - run:
           name: Configure
@@ -129,7 +129,7 @@ workflows:
   version: 2
   build-and-test:
     jobs:
-      - mingw32
-      - mingw64
+      #- mingw32
+      #- mingw64
       - linux.gcc
       - shellcheck
