@@ -124,9 +124,10 @@ void AutomationTrackView::dropEvent(QDropEvent* _de)
     QString val  = StringPairDrag::decodeValue(_de);
     if(type == "automatable_model")
     {
+        _de->accept();
         AutomatableModel* mod = dynamic_cast<AutomatableModel*>(
                 Engine::projectJournal()->journallingObject(val.toInt()));
-        if(mod != NULL)
+        if(mod != nullptr)
         {
             MidiTime pos
                     = MidiTime(trackContainerView()->currentPosition()

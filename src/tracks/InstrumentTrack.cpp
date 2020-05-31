@@ -102,8 +102,10 @@ InstrumentTrack::InstrumentTrack(TrackContainer* tc) :
                  Engine::mixer()->midiClient(),
                  this,
                  this),
-      m_notes(), m_sustainedNotes(true), m_sustainPedalPressed(false),
-      m_silentBuffersProcessed(false), m_previewMode(false), m_scale(nullptr),
+      m_notes(), m_sustainedNotes(true),
+      m_midiNotesMutex(/*"InstrumentTrack::m_midiNotesMutex"*/),
+      m_sustainPedalPressed(false), m_silentBuffersProcessed(false),
+      m_previewMode(false), m_scale(nullptr),
       m_baseNoteModel(0, 0, NumKeys - 1, this, tr("Base note")),
       m_volumeEnabledModel(true, this, tr("Enabled Volume")),
       m_volumeModel(
@@ -246,6 +248,12 @@ InstrumentTrack::~InstrumentTrack()
     Instrument* old = m_instrument;
     if(old != nullptr)
     {
+        Engine::mixer()->emit playHandlesForInstrumentToRemove(old);
+        qInfo("InstrumentTrack::~InstrumentTrack wait instrument");
+        QCoreApplication::sendPostedEvents();
+        // QThread::yieldCurrentThread();
+        Engine::mixer()->waitUntilNoPlayHandle(old);
+
         qInfo("~InstrumentTrack delete instrument START [%s]",
               qPrintable(name()));
         m_instrument = nullptr;
@@ -365,12 +373,11 @@ void InstrumentTrack::processAudioBuffer(sampleFrame*    buf,
            || m_panningEnabledModel.value())
         {
             const volume_t vol
-                    = m_volumeEnabledModel.value()
-                              ? qBound(MinVolume,
-                                       nph == nullptr ? m_envVolume
-                                                      : nph->getVolume(),
-                                       MaxVolume)
-                              : DefaultVolume;
+                    = m_volumeEnabledModel.value() ? qBound(
+                              MinVolume,
+                              nph == nullptr ? m_envVolume : nph->getVolume(),
+                              MaxVolume)
+                                                   : DefaultVolume;
             const panning_t pan
                     = m_panningEnabledModel.value()
                               ? qBound(PanningLeft,
@@ -421,9 +428,7 @@ void InstrumentTrack::processInEvent(const MidiEvent& event,
                                      f_cnt_t          offset)
 {
     if(Engine::getSong()->isExporting())
-    {
         return;
-    }
 
     bool eventHandled = false;
 
@@ -438,6 +443,7 @@ void InstrumentTrack::processInEvent(const MidiEvent& event,
             if(event.velocity() > 0)
             {
                 {
+                    qInfo("IT::pIE noteOn before");
                     // Engine::mixer()->requestChangeInModel();
                     m_midiNotesMutex.lock();
                     NotePlayHandle* n = m_notes[key];
@@ -458,10 +464,10 @@ void InstrumentTrack::processInEvent(const MidiEvent& event,
                         Engine::mixer()->emit playHandleToAdd(n);
                     }
                     else
-                    {
                         m_midiNotesMutex.unlock();
-                    }
+
                     // Engine::mixer()->doneChangeInModel();
+                    qInfo("IT::pIE noteOn after");
                 }
                 eventHandled = true;
                 break;
@@ -469,19 +475,22 @@ void InstrumentTrack::processInEvent(const MidiEvent& event,
 
         case MidiNoteOff:
         {
+            qInfo("IT::pIE noteOff before 0a");
+            // Engine::mixer()->requestChangeInModel();
+            qInfo("IT::pIE noteOff before 0b");
             m_midiNotesMutex.lock();
-            Engine::mixer()->requestChangeInModel();
+            qInfo("IT::pIE noteOff before 0c");
             NotePlayHandle* n = m_notes[key];
             m_notes[key]      = nullptr;
             if(n != nullptr)
             {
-                if(n->isFinished())
-                    n = nullptr;
-                else
-                    n->incrRefCount();
+                // if(n->isFinished())
+                //    n = nullptr;
+                // else
+                n->incrRefCount();
             }
-            Engine::mixer()->doneChangeInModel();
             m_midiNotesMutex.unlock();
+            // Engine::mixer()->doneChangeInModel();
             // if(n != nullptr) n->lock();
 
             if(n != nullptr)
@@ -498,24 +507,31 @@ void InstrumentTrack::processInEvent(const MidiEvent& event,
                     n->decrRefCount();
                 // n->unlock();
             }
-        }
+
             eventHandled = true;
-            break;
+            qInfo("IT::pIE noteOff after");
+        }
+        break;
 
         case MidiKeyPressure:
         {
+            qInfo("IT::pIE notePressure before 0a");
             m_midiNotesMutex.lock();
-            Engine::mixer()->requestChangeInModel();
+            // Engine::mixer()->requestChangeInModel();
             NotePlayHandle* n = m_notes[key];
             if(n != nullptr)
             {
                 if(n->isFinished())
-                    n = nullptr;
+                {
+                    n            = nullptr;
+                    m_notes[key] = nullptr;
+                }
                 else
                     n->incrRefCount();
             }
-            Engine::mixer()->doneChangeInModel();
+            // Engine::mixer()->doneChangeInModel();
             m_midiNotesMutex.unlock();
+            qInfo("IT::pIE notePressure after 1");
 
             if(n != nullptr)
             {
@@ -580,7 +596,8 @@ void InstrumentTrack::processInEvent(const MidiEvent& event,
                                             nph->setLength(MidiTime(static_cast<
                                                                     f_cnt_t>(
                                                     nph->totalFramesPlayed()
-                                                    / Engine::framesPerTick())));
+                                                    / Engine::
+                                                            framesPerTick())));
                                             midiNoteOff(*nph);
                                         }
                                     }
@@ -732,6 +749,24 @@ void InstrumentTrack::processOutEvent(const MidiEvent& event,
 
 void InstrumentTrack::silenceAllNotes(/*bool removeIPH*/)
 {
+    qInfo("InstrumentTrack::silenceAllNotes 0a");
+    // lock();
+    // m_sustainedNotes.clear();
+    m_sustainedNotes.map(
+            [this](NotePlayHandle* nph) {
+                if(nph != nullptr)
+                {
+                    const int key = nph->key();
+                    nph->decrRefCount();
+                    nph->setFinished();
+                    processOutEvent(MidiEvent(MidiNoteOff, -1, key, 0));
+                }
+            },
+            true);
+    // unlock();
+    qInfo("InstrumentTrack::silenceAllNotes 0b");
+
+    // Engine::mixer()->requestChangeInModel();
     qInfo("InstrumentTrack::silenceAllNotes 1a");
     for(int i = 0; i < NumMidiKeys; ++i)
     {
@@ -742,12 +777,23 @@ void InstrumentTrack::silenceAllNotes(/*bool removeIPH*/)
         }
     }
     qInfo("InstrumentTrack::silenceAllNotes 1b");
-    Engine::mixer()->requestChangeInModel();
     m_midiNotesMutex.lock();
     for(int i = 0; i < NumMidiKeys; ++i)
     {
-        if(m_notes[i] != nullptr)
-            m_notes[i]->resetRefCount();
+        NotePlayHandle* nph = m_notes[i];
+        if(nph != nullptr || m_runningMidiNotes[i] != 0)
+        {
+            if(nph != nullptr)
+            {
+                nph->resetRefCount();
+                nph->setFinished();
+            }
+
+            qInfo("InstrumentTrack: silence %d", i);
+            m_midiNotesMutex.unlock();
+            processOutEvent(MidiEvent(MidiNoteOff, -1, i, 0));
+            m_midiNotesMutex.lock();
+        }
         m_notes[i]            = nullptr;
         m_runningMidiNotes[i] = 0;
     }
@@ -755,23 +801,12 @@ void InstrumentTrack::silenceAllNotes(/*bool removeIPH*/)
 
     qInfo("InstrumentTrack::silenceAllNotes 2");
 
-    lock();
-    // invalidate all NotePlayHandles and PresetPreviewHandles linked to this
-    // track
-    qInfo("InstrumentTrack::silenceAllNotes 3a");
-    // m_sustainedNotes.clear();
-    m_sustainedNotes.map(
-            [this](NotePlayHandle* nph) {
-                if(nph != nullptr)
-                    nph->decrRefCount();
-            },
-            true);
-
+    // lock();
     qInfo("InstrumentTrack::silenceAllNotes 3b");
     m_processHandles.clear();
     qInfo("InstrumentTrack::silenceAllNotes 3c");
-    unlock();
-    Engine::mixer()->doneChangeInModel();
+    // unlock();
+    // Engine::mixer()->doneChangeInModel();
 
     qInfo("InstrumentTrack::silenceAllNotes 4");
     quint8 types = PlayHandle::TypeNotePlayHandle
@@ -785,13 +820,13 @@ void InstrumentTrack::silenceAllNotes(/*bool removeIPH*/)
     }
     */
 
-    lock();
+    // lock();
     Engine::mixer()->emit playHandlesOfTypesToRemove(this, types);
     qInfo("InstrumentTrack::silenceAllNotes 5");
     QCoreApplication::sendPostedEvents();
     // QThread::yieldCurrentThread();
     Engine::mixer()->waitUntilNoPlayHandle(this, types);
-    unlock();
+    // unlock();
 
     qInfo("InstrumentTrack::silenceAllNotes 6");
 }
@@ -1586,7 +1621,7 @@ InstrumentTrackWindow* InstrumentTrackView::topLevelInstrumentTrackWindow()
 void InstrumentTrackView::createFxLine()
 {
     int channelIndex = gui->fxMixerView()->addNewChannel();
-    Engine::fxMixer()->effectChannel(channelIndex)->m_name
+    Engine::fxMixer()->effectChannel(channelIndex)->name()
             = getTrack()->name();
     assignFxLine(channelIndex);
 }
@@ -1775,7 +1810,7 @@ void InstrumentTrackView::muteChanged()
 QMenu* InstrumentTrackView::createAudioInputMenu()
 {
     QString title = tr("Audio Input (not implemented)");
-    //.arg( channelIndex ).arg( fxChannel->m_name );
+    //.arg( channelIndex ).arg( fxChannel->name() );
     QMenu* fxMenu = new QMenu(title);
     fxMenu->setEnabled(false);
     return fxMenu;
@@ -1788,7 +1823,7 @@ QMenu* InstrumentTrackView::createAudioOutputMenu()
 
     QString title = tr("Audio Output (%1:%2)")
                             .arg(channelIndex)
-                            .arg(fxChannel->m_name);
+                            .arg(fxChannel->name());
     QMenu* fxMenu = new QMenu(title);
 
     QSignalMapper* fxMenuSignalMapper = new QSignalMapper(fxMenu);
@@ -1801,16 +1836,16 @@ QMenu* InstrumentTrackView::createAudioOutputMenu()
         FxChannel* ch = Engine::fxMixer()->effectChannel(i);
 
         QString label
-                = tr("Mixer %1:%2").arg(ch->m_channelIndex).arg(ch->m_name);
+                = tr("Mixer %1:%2").arg(ch->channelIndex()).arg(ch->name());
         QAction* action
                 = fxMenu->addAction(label, fxMenuSignalMapper, SLOT(map()));
         action->setEnabled(ch != fxChannel);
-        fxMenuSignalMapper->setMapping(action, ch->m_channelIndex);
-        if(ch->m_channelIndex != i)
+        fxMenuSignalMapper->setMapping(action, ch->channelIndex());
+        if(ch->channelIndex() != i)
             qWarning(
                     "InstrumentTrackView::createAudioOutputMenu suspicious "
                     "ch: %d %d",
-                    ch->m_channelIndex, i);
+                    ch->channelIndex(), i);
     }
 
     connect(fxMenuSignalMapper, SIGNAL(mapped(int)), this,
@@ -1862,7 +1897,7 @@ QMenu* InstrumentTrackView::createFxMenu(QString title, QString newFxLabel)
     // If title allows interpolation, pass channel index and name
     if(title.contains("%2"))
     {
-        title = title.arg(channelIndex).arg(fxChannel->m_name);
+        title = title.arg(channelIndex).arg(fxChannel->name());
     }
 
     QMenu* fxMenu = new QMenu(title);
@@ -1879,10 +1914,10 @@ QMenu* InstrumentTrackView::createFxMenu(QString title, QString newFxLabel)
         if(ch != fxChannel)
         {
             QString label
-                    = tr("FX %1: %2").arg(ch->m_channelIndex).arg(ch->m_name);
+                    = tr("FX %1: %2").arg(ch->channelIndex()).arg(ch->name());
             QAction* action = fxMenu->addAction(label, fxMenuSignalMapper,
                                                 SLOT(map()));
-            fxMenuSignalMapper->setMapping(action, ch->m_channelIndex);
+            fxMenuSignalMapper->setMapping(action, ch->channelIndex());
         }
     }
 

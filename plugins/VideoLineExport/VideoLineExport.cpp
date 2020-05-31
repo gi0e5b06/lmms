@@ -96,7 +96,7 @@ bool VideoLineExport::proceed(const QString& _fileName)
     Tracks tracks = Engine::getSong()->tracks();
     int    tempo  = Engine::getSong()->getTempo();
 
-    const TimeLineWidget* tl = gui->songEditor()->m_editor->timeLineWidget();
+    const TimeLineWidget* tl = gui->songWindow()->m_editor->timeLineWidget();
 
     int nTracks = 0;
     for(const Track* track: tracks)

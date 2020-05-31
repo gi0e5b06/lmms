@@ -293,14 +293,16 @@ MainWindow::~MainWindow()
     }
     // TODO: Close tools
     // dependencies are such that the editors must be destroyed BEFORE Song is
-    // deletect in Engine::destroy
+    // deleted in Engine::destroy
     //   see issue #2015 on github
-    qInfo("delete gui->automationEditor();");
-    delete gui->automationEditor();
-    qInfo("delete gui->pianoRoll();");
-    delete gui->pianoRoll();
-    qInfo("delete gui->songEditor();");
-    delete gui->songEditor();
+    qInfo("delete gui->automationWindow();");
+    delete gui->automationWindow();
+    // qInfo("delete gui->bbWindow();");
+    // delete gui->bbWindow();
+    qInfo("delete gui->pianoRollWindow();");
+    delete gui->pianoRollWindow();
+    qInfo("delete gui->songWindow();");
+    delete gui->songWindow();
     // destroy engine which will do further cleanups etc.
     Engine::destroy();
 }
@@ -315,7 +317,7 @@ void MainWindow::onTimeout()
 void MainWindow::finalize()
 {
     resetWindowTitle();
-    setWindowIcon(embed::getIconPixmap("icon"));
+    setWindowIcon(embed::getIcon("icon"));
 
     // project-popup-menu
     QMenu* project_menu = new QMenu(this);
@@ -549,42 +551,42 @@ void MainWindow::finalize()
     m_toolBarLayout->addWidget(m_metronomeToggle, 0, 8);
 
     // window-toolbar
-    ToolButton* song_editor_window
-            = new ToolButton(embed::getIconPixmap("songeditor"),
-                             tr("Show/hide the song editor") + " (F5)", this,
-                             SLOT(toggleSongEditorWin()), m_toolBar);
-    song_editor_window->setShortcut(Qt::Key_F5);
-    song_editor_window->setWhatsThis(
-            tr("By pressing this button, you can show or hide the "
-               "song editor. The song editor is used for creating the "
-               "tracks and how they should be played."));
-
-    ToolButton* bb_editor_window
+    ToolButton* bbWindowBTN
             = new ToolButton(embed::getIconPixmap("bb_track_btn"),
                              tr("Show/hide the beat editor") + " (F6)", this,
-                             SLOT(toggleBBEditorWin()), m_toolBar);
-    bb_editor_window->setShortcut(Qt::Key_F6);
-    bb_editor_window->setWhatsThis(
+                             SLOT(toggleBBWindow()), m_toolBar);
+    bbWindowBTN->setShortcut(Qt::Key_F6);
+    bbWindowBTN->setWhatsThis(
             tr("By pressing this button, you can show or hide the "
                "beat editor. The beat editor is used "
                "for creating beats and basslines."));
 
-    ToolButton* piano_roll_window
+    ToolButton* songWindowBTN
+            = new ToolButton(embed::getIconPixmap("songeditor"),
+                             tr("Show/hide the song editor") + " (F5)", this,
+                             SLOT(toggleSongWindow()), m_toolBar);
+    songWindowBTN->setShortcut(Qt::Key_F5);
+    songWindowBTN->setWhatsThis(
+            tr("By pressing this button, you can show or hide the "
+               "song editor. The song editor is used for creating the "
+               "tracks and how they should be played."));
+
+    ToolButton* pianoRollWindowBTN
             = new ToolButton(embed::getIconPixmap("piano"),
                              tr("Show/hide the piano roll") + " (F7)", this,
-                             SLOT(togglePianoRollWin()), m_toolBar);
-    piano_roll_window->setShortcut(Qt::Key_F7);
-    piano_roll_window->setWhatsThis(
+                             SLOT(togglePianoRollWindow()), m_toolBar);
+    pianoRollWindowBTN->setShortcut(Qt::Key_F7);
+    pianoRollWindowBTN->setWhatsThis(
             tr("By pressing this button, you can show or hide the "
                "piano roll. The piano roll is used for creating "
                "patterns of notes, especially for the melodies."));
 
-    ToolButton* automation_editor_window = new ToolButton(
-            embed::getIconPixmap("automation"),
-            tr("Show/hide the automation editor") + " (F8)", this,
-            SLOT(toggleAutomationEditorWin()), m_toolBar);
-    automation_editor_window->setShortcut(Qt::Key_F8);
-    automation_editor_window->setWhatsThis(
+    ToolButton* automationWindowBTN
+            = new ToolButton(embed::getIconPixmap("automation"),
+                             tr("Show/hide the automation editor") + " (F8)",
+                             this, SLOT(toggleAutomationWindow()), m_toolBar);
+    automationWindowBTN->setShortcut(Qt::Key_F8);
+    automationWindowBTN->setWhatsThis(
             tr("By pressing this button, you can show or hide the "
                "automation editor. The automation editor is used "
                "for creating curves of dynamic values for any parameter."));
@@ -592,7 +594,7 @@ void MainWindow::finalize()
     ToolButton* fx_mixer_window
             = new ToolButton(embed::getIconPixmap("fx_mixer"),
                              tr("Show/hide the mixer") + " (F9)", this,
-                             SLOT(toggleFxMixerWin()), m_toolBar);
+                             SLOT(toggleFxMixerWindow()), m_toolBar);
     fx_mixer_window->setShortcut(Qt::Key_F9);
     fx_mixer_window->setWhatsThis(
             tr("By pressing this button, you can show or hide the "
@@ -603,7 +605,7 @@ void MainWindow::finalize()
     ToolButton* project_notes_window
             = new ToolButton(embed::getIconPixmap("project_notes"),
                              tr("Show/hide the project notes") + " (F10)",
-                             this, SLOT(toggleProjectNotesWin()), m_toolBar);
+                             this, SLOT(toggleProjectNotesWindow()), m_toolBar);
     project_notes_window->setShortcut(Qt::Key_F10);
     project_notes_window->setWhatsThis(
             tr("By pressing this button, you can show or hide the "
@@ -613,7 +615,8 @@ void MainWindow::finalize()
     ToolButton* controllers_window
             = new ToolButton(embed::getIconPixmap("controller"),
                              tr("Show/hide the controller rack") + " (F11)",
-                             this, SLOT(toggleControllerRack()), m_toolBar);
+                             this, SLOT(toggleControllerRackWindow()),
+                             m_toolBar);
     controllers_window->setShortcut(Qt::Key_F11);
 
     ToolButton* reorganize_windows
@@ -622,10 +625,10 @@ void MainWindow::finalize()
                              SLOT(reorganizeWindows()), m_toolBar);
     reorganize_windows->setShortcut(Qt::Key_F12);
 
-    m_toolBarLayout->addWidget(song_editor_window, 1, 1);
-    m_toolBarLayout->addWidget(bb_editor_window, 1, 2);
-    m_toolBarLayout->addWidget(piano_roll_window, 1, 3);
-    m_toolBarLayout->addWidget(automation_editor_window, 1, 4);
+    m_toolBarLayout->addWidget(songWindowBTN, 1, 1);
+    m_toolBarLayout->addWidget(bbWindowBTN, 1, 2);
+    m_toolBarLayout->addWidget(pianoRollWindowBTN, 1, 3);
+    m_toolBarLayout->addWidget(automationWindowBTN, 1, 4);
     m_toolBarLayout->addWidget(fx_mixer_window, 1, 5);
     m_toolBarLayout->addWidget(project_notes_window, 1, 6);
     m_toolBarLayout->addWidget(controllers_window, 1, 7);
@@ -651,17 +654,17 @@ void MainWindow::finalize()
     }
 
     // Add editor subwindows
-    for(Editor* editor:
-        std::list<Editor*>{gui->songEditor(), gui->getBBEditor(),
-                           gui->pianoRoll(), gui->automationEditor()})
+    for(EditorWindow* ew:
+        std::list<EditorWindow*>{gui->songWindow(), gui->bbWindow(),
+                           gui->pianoRollWindow(), gui->automationWindow()})
     {
         // QMdiSubWindow* window = addWindowedWidget(widget);
         // window->setAttribute(Qt::WA_DeleteOnClose, false);
         // window->resize(widget->sizeHint());
         SubWindow* win
-                = SubWindow::putWidgetOnWorkspace(editor, false, false, true);
-        win->setWindowIcon(editor->windowIcon());
-        toggleWindow(editor, false);
+                = SubWindow::putWidgetOnWorkspace(ew, false, false, true);
+        win->setWindowIcon(ew->windowIcon());
+        toggleWindow(ew, false);
     }
 
     for(QWidget* widget:
@@ -669,31 +672,8 @@ void MainWindow::finalize()
                             gui->getControllerRackView()})
         toggleWindow(widget, false);
 
-    toggleWindow(gui->songEditor(), true);
+    toggleWindow(gui->songWindow(), true);
     // reorganizeWindows();
-
-    /*
-    // gui->fxMixerView()->parentWidget()->move(5,290);
-    gui->fxMixerView()->parentWidget()->show();
-
-    // gui->songEditor()->parentWidget()->move(5,5);
-    gui->songEditor()->parentWidget()->show();
-
-    // gui->getBBEditor()->parentWidget()->move(550,290);
-    gui->getBBEditor()->parentWidget()->hide();
-
-    // gui->automationEditor()->parentWidget()->move(200,200);
-    gui->automationEditor()->parentWidget()->hide();
-
-    // gui->pianoRoll()->parentWidget()->move(200,200);
-    gui->pianoRoll()->parentWidget()->hide();
-
-    // gui->getProjectNotes()->parentWidget()->move(200,200);
-    gui->getProjectNotes()->parentWidget()->hide();
-
-    // gui->getControllerRackView()->parentWidget()->move(ww-250,200);
-    gui->getControllerRackView()->parentWidget()->hide();
-    */
 
     // reset window title every time we change the state of a subwindow to
     // show the correct title
@@ -754,58 +734,33 @@ int MainWindow::addSpacingToToolBar(int _size, int _col)
     return _col;
 }
 
-/*
-SubWindow* MainWindow::addWindowedWidget(QWidget *w) //Qt::WindowFlags
-windowFlags
-{
-        // wrap the widget in our own *custom* window that patches some errors
-in QMdiSubWindow
-        //SubWindow *win = new SubWindow(m_workspace->viewport(),
-windowFlags);
-        //win->setAttribute(Qt::WA_DeleteOnClose);
-        //win->setWidget(w);
-        //return win;
-        SubWindow *win = new SubWindow(w);
-        //win->setWidget(w);
-        m_workspace->addSubWindow(win);
-        return win;
-}
-*/
-
 void MainWindow::resetWindowTitle()
 {
     QString title = "";
+
     if(Engine::getSong()->projectFileName() != "")
-    {
         title = QFileInfo(Engine::getSong()->projectFileName())
                         .completeBaseName();
-    }
+
     if(title == "")
-    {
         title = tr("Untitled");
-    }
+
     if(Engine::getSong()->isModified())
-    {
         title += '*';
-    }
+
     if(getSession() == Recover)
-    {
         title += " - " + tr("Recover session. Please save your work!");
-    }
+
     setWindowTitle(title + " - " + tr("LMMS %1").arg(LMMS_VERSION));
 }
 
 bool MainWindow::mayChangeProject(bool stopPlayback)
 {
     if(stopPlayback)
-    {
         Engine::getSong()->stop();
-    }
 
     if(!Engine::getSong()->isModified() && getSession() != Recover)
-    {
         return true;
-    }
 
     // Separate message strings for modified and recovered files
     QString messageTitleRecovered = tr("Recovered project not saved");
@@ -836,9 +791,8 @@ bool MainWindow::mayChangeProject(bool stopPlayback)
     else if(answer == QMessageBox::Discard)
     {
         if(getSession() == Recover)
-        {
             sessionCleanup();
-        }
+
         return true;
     }
 
@@ -909,9 +863,8 @@ void MainWindow::restoreWidgetState(QWidget* _w, const QDomElement& _de)
         // Check isEmpty() to work around corrupt project files with empty
         // size
         if(!r.size().isEmpty())
-        {
             _w->resize(r.size());
-        }
+
         _w->move(r.topLeft());
 
         // set the window to its correct minimized/maximized/restored state
@@ -1259,19 +1212,19 @@ void MainWindow::toggleWindow(QWidget* window, bool forceShow)
  */
 void MainWindow::refocus()
 {
-    QList<QWidget*> editors;
-    editors << gui->songEditor()->parentWidget()
-            << gui->getBBEditor()->parentWidget()
-            << gui->pianoRoll()->parentWidget()
-            << gui->automationEditor()->parentWidget();
+    QList<QWidget*> windows;
+    windows << gui->songWindow()->parentWidget()
+            << gui->bbWindow()->parentWidget()
+            << gui->pianoRollWindow()->parentWidget()
+            << gui->automationWindow()->parentWidget();
 
     bool                      found = false;
-    QList<QWidget*>::Iterator editor;
-    for(editor = editors.begin(); editor != editors.end(); ++editor)
+    QList<QWidget*>::Iterator window;
+    for(window = windows.begin(); window != windows.end(); ++window)
     {
-        if(!(*editor)->isHidden())
+        if(!(*window)->isHidden())
         {
-            (*editor)->setFocus();
+            (*window)->setFocus();
             found = true;
             break;
         }
@@ -1289,39 +1242,39 @@ void MainWindow::toggleActiveWindow(QMdiSubWindow* _w)
     toggleWindow(_w, true);
 }
 
-void MainWindow::toggleBBEditorWin()
+void MainWindow::toggleBBWindow()
 {
-    toggleWindow(gui->getBBEditor(), true);
+    toggleWindow(gui->bbWindow(), true);
 }
 
-void MainWindow::toggleSongEditorWin()
+void MainWindow::toggleSongWindow()
 {
-    toggleWindow(gui->songEditor(), true);
+    toggleWindow(gui->songWindow(), true);
 }
 
-void MainWindow::toggleProjectNotesWin()
+void MainWindow::togglePianoRollWindow()
 {
-    toggleWindow(gui->getProjectNotes(), true);
+    toggleWindow(gui->pianoRollWindow(), true);
 }
 
-void MainWindow::togglePianoRollWin()
+void MainWindow::toggleAutomationWindow()
 {
-    toggleWindow(gui->pianoRoll(), true);
+    toggleWindow(gui->automationWindow(), true);
 }
 
-void MainWindow::toggleAutomationEditorWin()
+void MainWindow::toggleControllerRackWindow()
 {
-    toggleWindow(gui->automationEditor(), true);
+    toggleWindow(gui->getControllerRackView(), true);
 }
 
-void MainWindow::toggleFxMixerWin()
+void MainWindow::toggleFxMixerWindow()
 {
     toggleWindow(gui->fxMixerView(), true);
 }
 
-void MainWindow::toggleControllerRack()
+void MainWindow::toggleProjectNotesWindow()
 {
-    toggleWindow(gui->getControllerRackView(), true);
+    toggleWindow(gui->getProjectNotes(), true);
 }
 
 void MainWindow::updateViewMenu()
@@ -1332,25 +1285,25 @@ void MainWindow::updateViewMenu()
     // not on top -> top <-> invisible
     m_viewMenu->addAction(embed::getIconPixmap("songeditor"),
                           tr("Song Editor") + " (F5)", this,
-                          SLOT(toggleSongEditorWin()));
+                          SLOT(toggleSongWindow()));
     m_viewMenu->addAction(embed::getIconPixmap("bb_track"),
                           tr("Beat+Bassline Editor") + " (F6)", this,
-                          SLOT(toggleBBEditorWin()));
+                          SLOT(toggleBBWindow()));
     m_viewMenu->addAction(embed::getIconPixmap("piano"),
                           tr("Piano Roll") + " (F7)", this,
-                          SLOT(togglePianoRollWin()));
+                          SLOT(togglePianoRollWindow()));
     m_viewMenu->addAction(embed::getIconPixmap("automation"),
                           tr("Automation Editor") + " (F8)", this,
-                          SLOT(toggleAutomationEditorWin()));
+                          SLOT(toggleAutomationWindow()));
     m_viewMenu->addAction(embed::getIconPixmap("fx_mixer"),
                           tr("FX Mixer") + " (F9)", this,
-                          SLOT(toggleFxMixerWin()));
+                          SLOT(toggleFxMixerWindow()));
     m_viewMenu->addAction(embed::getIconPixmap("project_notes"),
                           tr("Project Notes") + " (F10)", this,
-                          SLOT(toggleProjectNotesWin()));
+                          SLOT(toggleProjectNotesWindow()));
     m_viewMenu->addAction(embed::getIconPixmap("controller"),
                           tr("Controller Rack") + " (F11)", this,
-                          SLOT(toggleControllerRack()));
+                          SLOT(toggleControllerRackWindow()));
 
     m_viewMenu->addSeparator();
 
@@ -1463,11 +1416,11 @@ void MainWindow::reorganizeWindows()
     int y3 = ht - h3 + 8;
 
     /*
-      toggleWindow( gui->getBBEditor(), forceShow );
-      toggleWindow( gui->songEditor() );
+      toggleWindow( gui->bbWindow(), forceShow );
+      toggleWindow( gui->songWindow() );
       toggleWindow( gui->getProjectNotes() );
       toggleWindow( gui->pianoRoll() );
-      toggleWindow( gui->automationEditor() );
+      toggleWindow( gui->automationWindow() );
       toggleWindow( gui->fxMixerView() );
       toggleWindow( gui->getControllerRackView() );
     */
@@ -1478,15 +1431,15 @@ void MainWindow::reorganizeWindows()
         if(win->isHidden())
             continue;
 
-        if(win == gui->songEditor()->parentWidget())
+        if(win == gui->songWindow()->parentWidget())
             win->setGeometry(0, 0, w2, h1);
-        else if(win == gui->getBBEditor()->parentWidget())
+        else if(win == gui->bbWindow()->parentWidget())
             win->setGeometry(w1 + 2, h1, w2 - w1, ht - h1 - h3 - 2);
         else if(win == gui->getProjectNotes()->parentWidget())
             win->setGeometry(20, 20, wt - 80, ht - 80);  // 0,0,w2,h1);
-        else if(win == gui->pianoRoll()->parentWidget())
+        else if(win == gui->pianoRollWindow()->parentWidget())
             win->setGeometry(40, 40, wt - 80, ht - 80);  // 0,0,w2,h1);
-        else if(win == gui->automationEditor()->parentWidget())
+        else if(win == gui->automationWindow()->parentWidget())
             win->setGeometry(60, 60, wt - 80, ht - 80);  // 0,0,w2,h1);
         else if(win == gui->fxMixerView()->parentWidget())
             win->move(0, h1);
@@ -1502,29 +1455,29 @@ void MainWindow::reorganizeWindows()
 
 void MainWindow::updatePlayPauseIcons()
 {
-    gui->songEditor()->setPauseIcon(false);
-    gui->automationEditor()->setPauseIcon(false);
-    gui->getBBEditor()->setPauseIcon(false);
-    gui->pianoRoll()->setPauseIcon(false);
+    gui->songWindow()->setPauseIcon(false);
+    gui->automationWindow()->setPauseIcon(false);
+    gui->bbWindow()->setPauseIcon(false);
+    gui->pianoRollWindow()->setPauseIcon(false);
 
     if(Engine::getSong()->isPlaying())
     {
         switch(Engine::getSong()->playMode())
         {
             case Song::Mode_PlaySong:
-                gui->songEditor()->setPauseIcon(true);
+                gui->songWindow()->setPauseIcon(true);
                 break;
 
             case Song::Mode_PlayAutomationPattern:
-                gui->automationEditor()->setPauseIcon(true);
+                gui->automationWindow()->setPauseIcon(true);
                 break;
 
             case Song::Mode_PlayBB:
-                gui->getBBEditor()->setPauseIcon(true);
+                gui->bbWindow()->setPauseIcon(true);
                 break;
 
             case Song::Mode_PlayPattern:
-                gui->pianoRoll()->setPauseIcon(true);
+                gui->pianoRollWindow()->setPauseIcon(true);
                 break;
 
             default:
@@ -1825,13 +1778,13 @@ void MainWindow::onActionTriggered(bool _checked)
         qCritical("MainWindow: no active subwindow");
         return;
     }
-    Editor* aed = dynamic_cast<Editor*>(asw->widget());
-    if(aed == nullptr)
+    EditorWindow* aew = dynamic_cast<EditorWindow*>(asw->widget());
+    if(aew == nullptr)
     {
-        qCritical("MainWindow: no active editor");
+        qCritical("MainWindow: no active editor window");
         return;
     }
-    aed->actionTriggered(n);
+    aew->actionTriggered(n);
     requireActionUpdate();
 }
 
@@ -1846,7 +1799,7 @@ void MainWindow::updateActions(const bool            _active,
         if(asw == subWindow)
             continue;
         QWidget* w = subWindow->widget();
-        Editor*  e = dynamic_cast<Editor*>(w);
+        EditorWindow*  e = dynamic_cast<EditorWindow*>(w);
         // qInfo("e1=%p (%s)",e,qPrintable(subWindow->windowTitle()));
         if(e)
             e->updateActions(false, _table);
@@ -1854,7 +1807,7 @@ void MainWindow::updateActions(const bool            _active,
     if(asw)
     {
         QWidget* w = asw->widget();
-        Editor*  e = dynamic_cast<Editor*>(w);
+        EditorWindow*  e = dynamic_cast<EditorWindow*>(w);
         // qInfo("e2=%p (%s)",e,qPrintable(asw->windowTitle()));
         if(e)
             e->updateActions(_active, _table);

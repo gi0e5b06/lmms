@@ -1,6 +1,7 @@
 /*
  * LedCheckBox.h - class LedCheckBox, an improved QCheckBox
  *
+ * Copyright (c) 2018-2019 gi0e5b06 (on github.com)
  * Copyright (c) 2005-2008 Tobias Doerffel <tobydox/at/users.sourceforge.net>
  *
  * This file is part of LMMS - https://lmms.io
@@ -67,7 +68,7 @@ class EXPORT LedCheckBox : public AutomatableButton
     bool blinking() const;
     void setBlinking(bool _b);
 
-    virtual void enterValue();
+    // virtual void enterValue();
 
   public slots:
     virtual void update();

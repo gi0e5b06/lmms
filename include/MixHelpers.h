@@ -90,15 +90,15 @@ void addSwappedMultiplied(sampleFrame*       dst,
 void addMultipliedByBuffer(sampleFrame*       dst,
                            const sampleFrame* src,
                            real_t             coeffSrc,
-                           ValueBuffer*       coeffSrcBuf,
+                           const ValueBuffer* coeffSrcBuf,
                            int                frames);
 
 /*! \brief Add samples from src multiplied by coeffSrc and coeffSrcBuf to dst
  */
 void addMultipliedByBuffers(sampleFrame*       dst,
                             const sampleFrame* src,
-                            ValueBuffer*       coeffSrcBuf1,
-                            ValueBuffer*       coeffSrcBuf2,
+                            const ValueBuffer* coeffSrcBuf1,
+                            const ValueBuffer* coeffSrcBuf2,
                             int                frames);
 
 /*! \brief Same as addMultiplied, but sanitize output (strip out infs/nans) */
@@ -112,15 +112,15 @@ void addSanitizedMultiplied(sampleFrame*       dst,
 void addSanitizedMultipliedByBuffer(sampleFrame*       dst,
                                     const sampleFrame* src,
                                     real_t             coeffSrc,
-                                    ValueBuffer*       coeffSrcBuf,
+                                    const ValueBuffer* coeffSrcBuf,
                                     int                frames);
 
 /*! \brief Add samples from src multiplied by coeffSrc and coeffSrcBuf to dst
  * - sanitized version */
 void addSanitizedMultipliedByBuffers(sampleFrame*       dst,
                                      const sampleFrame* src,
-                                     ValueBuffer*       coeffSrcBuf1,
-                                     ValueBuffer*       coeffSrcBuf2,
+                                     const ValueBuffer* coeffSrcBuf1,
+                                     const ValueBuffer* coeffSrcBuf2,
                                      int                frames);
 
 /*! \brief Add samples from src multiplied by coeffSrcLeft/coeffSrcRight to

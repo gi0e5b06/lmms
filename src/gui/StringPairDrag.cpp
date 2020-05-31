@@ -70,6 +70,7 @@ bool StringPairDrag::processDragEnterEvent(QDragEnterEvent* _dee,
 {
     if(!_dee->mimeData()->hasFormat(mimeType()))
     {
+        _dee->ignore(); //TMP
         return false;
     }
     QString txt = _dee->mimeData()->data(mimeType());

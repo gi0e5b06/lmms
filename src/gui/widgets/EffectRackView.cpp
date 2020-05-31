@@ -47,7 +47,7 @@ EffectRackView::EffectRackView(EffectChain* model,
     qRegisterMetaType<EffectView*>("EffectView*");
 
     QWidget* effectsView = new QWidget();
-    effectsView->setContentsMargins(0,0,0,12);
+    effectsView->setContentsMargins(0, 0, 0, 12);
 
     m_scrollArea = new QScrollArea(this);
     m_scrollArea->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
@@ -172,14 +172,16 @@ void EffectRackView::update()
             qMax<int>(fxChain()->m_effects.size(), m_effectViews.size()),
             false);
 
-    for(QVector<Effect*>::Iterator it = fxChain()->m_effects.begin();
-        it != fxChain()->m_effects.end(); ++it)
+    // for(QVector<Effect*>::Iterator it = fxChain()->m_effects.begin();
+    //    it != fxChain()->m_effects.end(); ++it)
+
+    fxChain()->m_effects.map([this,&view_map,w](Effect* effect)
     {
         int i = 0;
         for(QVector<EffectView*>::Iterator vit = m_effectViews.begin();
             vit != m_effectViews.end(); ++vit, ++i)
         {
-            if((*vit)->model() == *it)
+            if((*vit)->model() == effect)  //*it)
             {
                 view_map[i] = true;
                 break;
@@ -187,7 +189,7 @@ void EffectRackView::update()
         }
         if(i >= m_effectViews.size())
         {
-            EffectView* view = new EffectView(*it, w);
+            EffectView* view = new EffectView(effect, w);  //*it
             connect(view, SIGNAL(moveUp(EffectView*)), this,
                     SLOT(moveUp(EffectView*)));
             connect(view, SIGNAL(moveDown(EffectView*)), this,
@@ -209,7 +211,7 @@ void EffectRackView::update()
                 view_map.append(true);
             }
         }
-    }
+    });
 
     int i = 0, nView = 0;
 
@@ -292,7 +294,7 @@ void EffectRackView::mousePressEvent(QMouseEvent* _me)
 {
     if(_me->button() == Qt::MiddleButton)
     {
-            //qInfo("MIDDLE PRESS");
+        // qInfo("MIDDLE PRESS");
         _me->accept();
     }
 }
@@ -302,7 +304,7 @@ void EffectRackView::mouseReleaseEvent(QMouseEvent* _me)
     if(_me->button() == Qt::MiddleButton)
     {
         _me->accept();
-        //qInfo("MIDDLE RELEASE");
+        // qInfo("MIDDLE RELEASE");
         if(rect().contains(_me->pos()))
         {
             bool ok = Selection::has(Effect::classNodeName());
@@ -315,10 +317,9 @@ void EffectRackView::mouseReleaseEvent(QMouseEvent* _me)
                     EffectKey key(effectData.elementsByTagName("key")
                                           .item(0)
                                           .toElement());
-                    QString name(effectData.attribute("name"));
+                    QString   name(effectData.attribute("name"));
 
-                    Effect* e
-                            = Effect::instantiate(name, fxChain(), &key);
+                    Effect* e = Effect::instantiate(name, fxChain(), &key);
 
                     if(e != NULL && e->isOkay()
                        && e->nodeName() == Effect::classNodeName())

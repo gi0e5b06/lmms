@@ -42,8 +42,8 @@ class EXPORT LadspaControl : public Model, public JournallingObject
     virtual ~LadspaControl();
 
     LADSPA_Data  value();
-    ValueBuffer* valueBuffer();
-    void         setValue(LADSPA_Data _value);
+    const ValueBuffer* valueBuffer();
+    void setValue(LADSPA_Data _value);
 
     bool isLink()
     {

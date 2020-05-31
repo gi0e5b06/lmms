@@ -2,7 +2,7 @@
  * ladspa_port_dialog.h - dialog to test a LADSPA plugin
  *
  * Copyright (c) 2006-2007 Danny McRae <khjklujn/at/users.sourceforge.net>
- * 
+ *
  * This file is part of LMMS - https://lmms.io
  *
  * This program is free software; you can redistribute it and/or
@@ -22,28 +22,22 @@
  *
  */
 
-
 #ifndef _LADSPA_PORT_DIALOG_H
 #define _LADSPA_PORT_DIALOG_H
 
+#include "LadspaManager.h"
 
 #include <QDialog>
 
-#include "LadspaManager.h"
-
-
-
-
 class ladspaPortDialog : public QDialog
 {
-	Q_OBJECT
-public:
-	ladspaPortDialog( const ladspa_key_t & _key );
-	virtual ~ladspaPortDialog();
+    Q_OBJECT
 
+  public:
+    ladspaPortDialog(const ladspa_key_t& _key);
+    virtual ~ladspaPortDialog();
+
+    virtual QSize sizeHint() const;
 };
-
-
-
 
 #endif

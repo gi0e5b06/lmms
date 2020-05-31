@@ -46,26 +46,39 @@ AutomatableButton::AutomatableButton(QWidget* _parent, const QString& _name) :
 AutomatableButton::~AutomatableButton()
 {
     if(m_group != nullptr)
-    {
         m_group->removeButton(this);
-    }
 }
 
 void AutomatableButton::modelChanged()
 {
-    if(QPushButton::isChecked() != model()->rawValue())
-    {
-        QPushButton::setChecked(model()->rawValue());
-    }
+    BoolModel* m = model();
+    if(!m)
+        return;
+
+    if(QPushButton::isChecked() != m->rawValue())
+        QPushButton::setChecked(m->rawValue());
 }
 
 void AutomatableButton::update()
 {
-    if(QPushButton::isChecked() != model()->rawValue())
-    {
-        QPushButton::setChecked(model()->rawValue());
-    }
+    BoolModel* m = model();
+    if(!m)
+        return;
+
+    if(QPushButton::isChecked() != m->rawValue())
+        QPushButton::setChecked(m->rawValue());
+
     QPushButton::update();
+}
+
+void AutomatableButton::setChecked(bool _on)
+{
+    BoolModel* m = model();
+    if(!m)
+        return;
+
+    // QPushButton::setChecked is called in update-slot
+    m->setValue(_on);
 }
 
 void AutomatableButton::contextMenuEvent(QContextMenuEvent* _me)
@@ -92,6 +105,9 @@ void AutomatableButton::contextMenuEvent(QContextMenuEvent* _me)
 
 void AutomatableButton::mousePressEvent(QMouseEvent* _me)
 {
+    if(!isInteractive())
+        return;
+
     if(_me->button() == Qt::LeftButton
        && !(_me->modifiers() & Qt::ControlModifier))
     {
@@ -128,19 +144,25 @@ void AutomatableButton::mousePressEvent(QMouseEvent* _me)
 
 void AutomatableButton::mouseReleaseEvent(QMouseEvent* _me)
 {
+    if(!isInteractive())
+        return;
+
     if(_me && _me->button() == Qt::LeftButton)
-    {
         emit clicked();
-    }
 }
 
 void AutomatableButton::dropEvent(QDropEvent* _de)
 {
+    BoolModel* m = model();
+    if(!m)
+        return;
+
     QString type = StringPairDrag::decodeKey(_de);
     QString val  = StringPairDrag::decodeValue(_de);
     if(type == "float_value")
     {
-        model()->setValue(val.toFloat() ? true : false);
+        m->addJournalCheckPoint();
+        m->setValue(val.toFloat());
         _de->accept();
     }
     else if(type == "automatable_model")
@@ -149,31 +171,36 @@ void AutomatableButton::dropEvent(QDropEvent* _de)
                 Engine::projectJournal()->journallingObject(val.toInt()));
         if(mod != nullptr)
         {
-            AutomatableModel::linkModels(model(), mod);
-            mod->setValue(model()->rawValue());
+            AutomatableModel::linkModels(m, mod);
+            mod->setValue(m->rawValue());
         }
     }
 }
 
 void AutomatableButton::toggle()
 {
+    BoolModel* m = model();
+    if(!m)
+        return;
+
     if(isCheckable() && m_group != nullptr)
     {
-        if(model()->rawValue() == false)
+        if(m->rawValue() == false)
         {
             m_group->activateButton(this);
         }
     }
     else
     {
-        model()->setValue(!model()->rawValue());
+        m->addJournalCheckPoint();
+        m->setValue(!m->rawValue());
     }
 }
 
 void AutomatableButton::enterValue()
 {
     BoolModel* m = model();
-    if(!m)
+    if(!m || !isInteractive())
         return;
 
     bool ok;
@@ -191,6 +218,7 @@ void AutomatableButton::enterValue()
 
     if(ok)
     {
+        m->addJournalCheckPoint();
         m->setValue(new_val);
     }
 }

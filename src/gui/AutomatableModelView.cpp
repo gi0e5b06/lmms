@@ -42,8 +42,8 @@
 static float floatFromClipboard(bool* ok = nullptr);
 
 AutomatableModelView::AutomatableModelView(::Model* model, QWidget* _this) :
-      ModelView(model, _this), m_description(QString::null),
-      m_unit(QString::null)
+      ModelView(model, _this), m_interactive(true),
+      m_description(QString::null), m_unit(QString::null)
 {
     widget()->setAcceptDrops(true);
     widget()->setCursor(QCursor(embed::getIconPixmap("hand"), 3, 3));
@@ -53,34 +53,56 @@ AutomatableModelView::~AutomatableModelView()
 {
 }
 
-void AutomatableModelView::addDefaultActions(QMenu* menu)
+bool AutomatableModelView::isInteractive() const
 {
-    AutomatableModel* model = modelUntyped();
+    return m_interactive;
+}
+
+void AutomatableModelView::setInteractive(bool _b)
+{
+    if(m_interactive == _b)
+        return;
+
+    m_interactive = _b;
+    widget()->setAcceptDrops(_b);
+    widget()->update();
+}
+
+void AutomatableModelView::addDefaultActions(QMenu*     menu,
+                                             const bool _interactive)
+{
+    const AutomatableModel* model = modelUntyped();
+    if(!model)
+        return;
 
     AutomatableModelViewSlots* amvSlots
             = new AutomatableModelViewSlots(this, menu);
 
-    menu->addAction(embed::getIconPixmap("edit_rename"),
-                    AutomatableModel::tr("Enter &Value"), amvSlots,
-                    SLOT(enterValue()));
+    QAction* a;
 
-    menu->addAction(
-            embed::getIconPixmap("reload"),
+    a = menu->addAction(embed::getIcon("edit_rename"),
+                        AutomatableModel::tr("Enter &Value"), amvSlots,
+                        SLOT(enterValue()));
+    a->setEnabled(_interactive);
+
+    a = menu->addAction(
+            embed::getIcon("reload"),
             AutomatableModel::tr("&Reset (%1%2)")
                     .arg(model->displayValue(model->initValue<float>()))
                     .arg(m_unit),
             model, SLOT(reset()));
+    a->setEnabled(_interactive);
 
     FloatModel* fm = dynamic_cast<FloatModel*>(modelUntyped());
     if(fm != nullptr)
-        menu->addAction(embed::getIconPixmap("edit_rename"),
+        menu->addAction(embed::getIcon("edit_rename"),
                         AutomatableModel::tr("Edit &Randomization (%1%2)")
                                 .arg(fm->randomRatio() * 100.)
                                 .arg("%"),
                         amvSlots, SLOT(editRandomization()));
 
     menu->addSeparator();
-    menu->addAction(embed::getIconPixmap("edit_copy"),
+    menu->addAction(embed::getIcon("edit_copy"),
                     AutomatableModel::tr("&Copy value (%1%2)")
                             .arg(model->displayValue(model->value<float>()))
                             .arg(m_unit),
@@ -94,14 +116,14 @@ void AutomatableModelView::addDefaultActions(QMenu* menu)
                                  .arg(m_unit)
                        : AutomatableModel::tr("&Paste value");
     QAction* pasteAction
-            = menu->addAction(embed::getIconPixmap("edit_paste"), pasteDesc,
+            = menu->addAction(embed::getIcon("edit_paste"), pasteDesc,
                               amvSlots, SLOT(pasteFromClipboard()));
-    pasteAction->setEnabled(canPaste);
+    pasteAction->setEnabled(canPaste && _interactive);
 
     menu->addSeparator();
     if(model->hasLinkedModels())
     {
-        menu->addAction(embed::getIconPixmap("edit_erase"),
+        menu->addAction(embed::getIcon("edit_erase"),
                         AutomatableModel::tr("Remove all linked controls"),
                         amvSlots, SLOT(unlinkAllModels()));
     }
@@ -123,16 +145,16 @@ void AutomatableModelView::addDefaultActions(QMenu* menu)
         QMenu* contMenu = menu->addMenu(embed::getIconPixmap("controller"),
                                         controllerTxt);
 
-        contMenu->addAction(embed::getIconPixmap("controller"),
+        contMenu->addAction(embed::getIcon("controller"),
                             AutomatableModel::tr("Edit connection..."),
                             amvSlots, SLOT(execConnectionDialog()));
-        contMenu->addAction(embed::getIconPixmap("cancel"),
+        contMenu->addAction(embed::getIcon("cancel"),
                             AutomatableModel::tr("Remove connection"),
                             amvSlots, SLOT(removeConnection()));
     }
     else
     {
-        menu->addAction(embed::getIconPixmap("controller"),
+        menu->addAction(embed::getIcon("controller"),
                         AutomatableModel::tr("Connect to controller..."),
                         amvSlots, SLOT(execConnectionDialog()));
     }
@@ -166,17 +188,20 @@ void AutomatableModelView::setModel( Model* model, bool isOldModelValid )
 
 void AutomatableModelView::mousePressEvent(QMouseEvent* event)
 {
+    AutomatableModel* m = modelUntyped();
+    if(!m || !isInteractive())
+        return;
+
     if(event->button() == Qt::LeftButton
        && event->modifiers() & Qt::ControlModifier)
     {
-        new StringPairDrag("automatable_model",
-                           QString::number(modelUntyped()->id()), QPixmap(),
-                           widget());
+        new StringPairDrag("automatable_model", QString::number(m->id()),
+                           QPixmap(), widget());
         event->accept();
     }
     else if(event->button() == Qt::MidButton)
     {
-        modelUntyped()->reset();
+        m->reset();
     }
 }
 
@@ -266,7 +291,7 @@ void AutomatableModelViewSlots::removeConnection()
 
 void AutomatableModelViewSlots::editSongGlobalAutomation()
 {
-    gui->automationEditor()->open(AutomationPattern::globalAutomationPattern(
+    gui->automationWindow()->open(AutomationPattern::globalAutomationPattern(
             m_amv->modelUntyped()));
 }
 

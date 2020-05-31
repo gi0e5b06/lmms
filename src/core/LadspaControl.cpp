@@ -152,7 +152,7 @@ LADSPA_Data LadspaControl::value()
 }
 
 
-ValueBuffer * LadspaControl::valueBuffer()
+const ValueBuffer* LadspaControl::valueBuffer()
 {
 	switch( m_port->data_type )
 	{

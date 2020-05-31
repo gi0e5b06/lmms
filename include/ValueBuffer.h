@@ -49,12 +49,14 @@ class EXPORT ValueBuffer  //: public std::vector<real_t>
         return m_data[_i];  // % m_len];
     }
 
-    inline const real_t* values() const
+    /*
+    inline real_t const * const values() const
     {
         return m_data;
     }
+    */
 
-    inline real_t* values()
+    inline real_t* values() const
     {
         return m_data;
     }
@@ -95,7 +97,7 @@ class EXPORT ValueBuffer  //: public std::vector<real_t>
         m_period = _period;
     }
 
-    void copyFrom(const ValueBuffer* _vb);
+    void copyFrom(const ValueBuffer* const _vb);
     void fill(real_t _value);
     void interpolate(real_t _start, real_t _end);
 

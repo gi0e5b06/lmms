@@ -1,3 +1,25 @@
+/*
+ * SafeList.h -
+ *
+ * Copyright (c) 2019-2020 gi0e5b06 (on github.com)
+ *
+ * This file is part of LSMM -
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
+
 #ifndef SAFE_LIST_H
 #define SAFE_LIST_H
 
@@ -89,6 +111,84 @@ class SafeList
             return false;
         }
         return m_list.removeOne(_e);
+    }
+
+    bool moveUp(T _e, bool _check = true)
+    {
+        QMutexLocker lock(&m_mutex);
+        if(_check && !m_list.contains(_e))
+        {
+            BACKTRACE
+            qCritical("SafeList::moveUp doesn't contain that element");
+            return false;
+        }
+
+        if(_e == m_list.first())
+            return false;
+
+        typename QVector<T>::Iterator it
+                = qFind(m_list.begin(), m_list.end(), _e);
+
+        it = m_list.erase(it);
+        m_list.insert(it - 1, _e);
+        return true;
+    }
+
+    bool moveDown(T _e, bool _check = true)
+    {
+        QMutexLocker lock(&m_mutex);
+        if(_check && !m_list.contains(_e))
+        {
+            BACKTRACE
+            qCritical("SafeList::moveDown doesn't contain that element");
+            return false;
+        }
+
+        if(_e == m_list.last())
+            return false;
+
+        typename QVector<T>::Iterator it
+                = qFind(m_list.begin(), m_list.end(), _e);
+
+        it = m_list.erase(it);
+        m_list.insert(it + 1, _e);
+        return true;
+    }
+
+    bool moveTop(T _e, bool _check = true)
+    {
+        QMutexLocker lock(&m_mutex);
+        if(_check && !m_list.contains(_e))
+        {
+            BACKTRACE
+            qCritical("SafeList::moveTop doesn't contain that element");
+            return false;
+        }
+
+        if(_e == m_list.first())
+            return false;
+
+        m_list.removeOne(_e);
+        m_list.prepend(_e);
+        return true;
+    }
+
+    bool moveBottom(T _e, bool _check = true)
+    {
+        QMutexLocker lock(&m_mutex);
+        if(_check && !m_list.contains(_e))
+        {
+            BACKTRACE
+            qCritical("SafeList::moveBottom doesn't contain that element");
+            return false;
+        }
+
+        if(_e == m_list.last())
+            return false;
+
+        m_list.removeOne(_e);
+        m_list.append(_e);
+        return true;
     }
 
     int size() const

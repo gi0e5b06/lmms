@@ -681,7 +681,8 @@ void SampleBuffer::normalizeSampleRate(const sample_rate_t _srcSR,
     }
 }
 
-sample_t SampleBuffer::userWaveSample(const real_t _sample) const
+sample_t SampleBuffer::userWaveSample(const real_t _sample,
+                                      const int    _channel) const
 {
     const f_cnt_t frames = m_frames;
     if(frames == 0)
@@ -697,7 +698,7 @@ sample_t SampleBuffer::userWaveSample(const real_t _sample) const
     f_cnt_t f2 = f1 + 1;
     if(f2 == frames)
         f2 = 0;
-    return linearInterpolate(data[f1][0], data[f2][0],
+    return linearInterpolate(data[f1][_channel], data[f2][_channel],
                              positivefraction(_sample));
 }
 
@@ -1827,6 +1828,7 @@ void SampleBuffer::stretch(const double _factor)
                 a *= real_t(i + 1) / real_t(q);
             if(i > grain - q)
                 a *= real_t(grain - i) / real_t(q);
+            f=qBound(0,f%m_frames,m_frames);
             dst_data[n][0] += m_data[f][0] * a;
             dst_data[n][1] += m_data[f][1] * a;
             n++;

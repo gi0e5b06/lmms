@@ -1,6 +1,7 @@
 /*
  * LedCheckBox.cpp - class LedCheckBox, an improved QCheckBox
  *
+ * Copyright (c) 2018-2019 gi0e5b06 (on github.com)
  * Copyright (c) 2005-2014 Tobias Doerffel <tobydox/at/users.sourceforge.net>
  *
  * This file is part of LMMS - https://lmms.io
@@ -22,16 +23,16 @@
  *
  */
 
-#include <QFontMetrics>
-#include <QInputDialog>
-#include <QPainter>
-//#include <QStyle>
 #include "GuiApplication.h"
 #include "LedCheckBox.h"
 #include "MainWindow.h"
 #include "embed.h"
 #include "gui_templates.h"
 
+#include <QFontMetrics>
+#include <QInputDialog>
+#include <QPainter>
+//#include <QStyle>
 #include <QStyleOption>
 #include <QTime>
 
@@ -182,13 +183,11 @@ void LedCheckBox::initUi(LedColors _color)
     setCheckable(true);
 
     if(_color >= NumColors || _color < Yellow)
-    {
         _color = Yellow;
-    }
 
     m_ledOnPixmap = new QPixmap(
-            embed::getIconPixmap(names[_color].toUtf8().constData()));
-    m_ledOffPixmap = new QPixmap(embed::getIconPixmap("led_off"));
+            embed::getPixmap(names[_color].toUtf8().constData()));
+    m_ledOffPixmap = new QPixmap(embed::getPixmap("led_off"));
 
     // setFont(pointSize<11>(font()));
     setText(m_text);
@@ -228,6 +227,7 @@ void LedCheckBox::onTextUpdated()
     setMinimumSize(w, h);
 }
 
+/*
 void LedCheckBox::enterValue()
 {
     BoolModel* m = model();
@@ -250,6 +250,7 @@ void LedCheckBox::enterValue()
         m->setValue(new_val);
     }
 }
+*/
 
 bool LedCheckBox::blinking() const
 {

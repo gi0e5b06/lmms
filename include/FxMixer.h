@@ -38,7 +38,10 @@ class SampleBuffer;
 typedef QVector<FxRoute*>   FxRoutes;
 typedef QVector<FxChannel*> FxChannels;
 
-class FxChannel : public Model, public virtual ThreadableJob
+class FxChannel :
+      public Model,
+      public virtual ThreadableJob,
+      public SerializingObject
 {
     Q_OBJECT
 
@@ -51,21 +54,166 @@ class FxChannel : public Model, public virtual ThreadableJob
     FxChannel(int idx, Model* _parent);
     virtual ~FxChannel();
 
+    virtual QString nodeName() const
+    {
+        return "fxchannel";
+    }
+
+    virtual QString name() const
+    {
+        return m_name;
+    }
+
+    virtual void setName(const QString _name)
+    {
+        m_name = _name;
+    }
+
+    virtual fx_ch_t channelIndex() const
+    {
+        return m_channelIndex;
+    }
+
+    virtual void setChannelIndex(fx_ch_t _ci)
+    {
+        m_channelIndex = _ci;
+    }
+
+    virtual const EffectChain& fxChain() const
+    {
+        return m_fxChain;
+    }
+
+    virtual EffectChain& fxChain()
+    {
+        return m_fxChain;
+    }
+
+    virtual bool hasInput() const
+    {
+        return m_hasInput;
+    }
+
+    virtual void setHasInput(bool _b)
+    {
+        m_hasInput = _b;
+    }
+
+    virtual bool isQueued() const
+    {
+        return m_queued;
+    }
+
+    virtual void setQueued(bool _b)
+    {
+        m_queued = _b;
+    }
+
+    virtual sampleFrame* buffer() const
+    {
+        return m_buffer;
+    }
+
+    virtual real_t peakLeft() const
+    {
+        return m_peakLeft;
+    }
+
+    virtual void resetPeakLeft()
+    {
+        m_peakLeft = 0.;
+    }
+
+    virtual real_t peakRight() const
+    {
+        return m_peakRight;
+    }
+
+    virtual void resetPeakRight()
+    {
+        m_peakRight = 0.;
+    }
+
     virtual bool hasCableFrom(Model* _m) const;
 
-    inline const BoolModel* clippingModel() const
+    inline const BoolModel& clippingModel() const
     {
-        return &m_clippingModel;
+        return m_clippingModel;
     }
 
-    inline const BoolModel* frozenModel() const
+    inline BoolModel& clippingModel()
     {
-        return &m_frozenModel;
+        return m_clippingModel;
     }
 
-    inline const BoolModel* mutedModel() const
+    inline const BoolModel& frozenModel() const
     {
-        return &m_mutedModel;
+        return m_frozenModel;
+    }
+
+    inline BoolModel& frozenModel()
+    {
+        return m_frozenModel;
+    }
+
+    inline const BoolModel& mutedModel() const
+    {
+        return m_mutedModel;
+    }
+
+    inline BoolModel& mutedModel()
+    {
+        return m_mutedModel;
+    }
+
+    inline const BoolModel& soloModel() const
+    {
+        return m_soloModel;
+    }
+
+    inline BoolModel& soloModel()
+    {
+        return m_soloModel;
+    }
+
+    inline const FloatModel& volumeModel() const
+    {
+        return m_volumeModel;
+    }
+
+    inline FloatModel& volumeModel()
+    {
+        return m_volumeModel;
+    }
+
+    inline const FxRoutes& sends() const
+    {
+        return m_sends;
+    }
+
+    inline const FxRoutes& receives() const
+    {
+        return m_receives;
+    }
+
+    void addSendRoute(FxRoute* _route)
+    {
+        m_sends.append(_route);
+    }
+
+    void addReceiveRoute(FxRoute* _route)
+    {
+        m_receives.append(_route);
+    }
+
+    void removeSendRoute(FxRoute* _route)
+    {
+        m_sends.remove(m_sends.indexOf(_route));
+    }
+
+    void removeReceiveRoute(FxRoute* _route)
+    {
+        m_receives.remove(m_receives.indexOf(_route));
     }
 
     virtual void updateFrozenBuffer();
@@ -73,25 +221,61 @@ class FxChannel : public Model, public virtual ThreadableJob
     virtual void readFrozenBuffer();
     virtual void writeFrozenBuffer();
 
+    virtual bool requiresProcessing() const
+    {
+        return true;
+    }
+
+    void muteForSolo();
+    void unmuteForSolo();
+    void resetSolo();
+
+    inline void processed();
+
+    void lock()
+    {
+        m_lock.lock();
+    }
+
+    void unlock()
+    {
+        m_lock.unlock();
+    }
+
+    virtual void resetDeps();
+
+  public slots:
+    void toggleFrozen();
+
+  protected:
+    virtual void doProcessing();
+    virtual void incrementDeps();
+
+    virtual void saveSettings(QDomDocument& doc, QDomElement& element);
+    virtual void loadSettings(const QDomElement& element);
+
+  private:
     EffectChain m_fxChain;
     // set to true when input fed from mixToChannel or child channel
     bool m_hasInput;
     // set to true if any effect in the channel is enabled and running
     bool m_stillRunning;
 
-    BoolModel m_frozenModel;
-    BoolModel m_clippingModel;
+    SampleBuffer* m_frozenBuf;
+    BoolModel     m_frozenModel;
+    BoolModel     m_clippingModel;
 
+  public:  // TMP
     Effect*   m_eqDJ;
     BoolModel m_eqDJEnableModel;
     // FloatModel m_eqDJHighModel;
     // FloatModel m_eqDJMediumModel;
     // FloatModel m_eqDJLowModel;
-
+  private:
     real_t       m_peakLeft;
     real_t       m_peakRight;
     sampleFrame* m_buffer;
-    bool         m_muteBeforeSolo;
+    bool         m_mutedBeforeSolo;
     BoolModel    m_mutedModel;
     BoolModel    m_soloModel;
     FloatModel   m_volumeModel;
@@ -109,27 +293,10 @@ class FxChannel : public Model, public virtual ThreadableJob
     // pointers to other channels that send to this one
     FxRoutes m_receives;
 
-    virtual bool requiresProcessing() const
-    {
-        return true;
-    }
-    void unmuteForSolo();
-
-    QAtomicInt  m_dependenciesMet;
-    void        incrementDeps();
-    inline void processed();
-
-  public slots:
-    void toggleFrozen();
-
-  protected:
-    SampleBuffer* m_frozenBuf;
-
-  private:
-    virtual void doProcessing();
+    QAtomicInt m_dependenciesMet;
 };
 
-class FxRoute : public QObject
+class FxRoute : public QObject, public SerializingObject
 {
     Q_OBJECT
 
@@ -137,14 +304,19 @@ class FxRoute : public QObject
     FxRoute(FxChannel* from, FxChannel* to, real_t amount);
     virtual ~FxRoute();
 
+    virtual QString nodeName() const
+    {
+        return "send";
+    }
+
     fx_ch_t senderIndex() const
     {
-        return m_from->m_channelIndex;
+        return m_from->channelIndex();
     }
 
     fx_ch_t receiverIndex() const
     {
-        return m_to->m_channelIndex;
+        return m_to->channelIndex();
     }
 
     FloatModel* amount()
@@ -163,6 +335,10 @@ class FxRoute : public QObject
     }
 
     void updateName();
+
+  protected:
+    virtual void saveSettings(QDomDocument& doc, QDomElement& element);
+    virtual void loadSettings(const QDomElement& element);
 
   private:
     FxChannel* m_from;

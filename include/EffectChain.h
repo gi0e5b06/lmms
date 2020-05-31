@@ -26,16 +26,15 @@
 #ifndef EFFECT_CHAIN_H
 #define EFFECT_CHAIN_H
 
-#include <QVector>
+//#include <QVector>
 
 #include "AutomatableModel.h"
-//#include "Model.h"
+#include "SafeList.h"
 #include "SerializingObject.h"
 
 #include "lmms_basics.h"
 
 class Effect;
-
 
 class EXPORT EffectChain : public Model, public SerializingObject
 {
@@ -75,7 +74,8 @@ public:
 
 
 private:
-	typedef QVector<Effect *> EffectList;
+	//typedef QVector<Effect *> EffectList;
+    typedef SafeList<Effect *> EffectList;
 	EffectList m_effects;
 
 	BoolModel m_enabledModel;

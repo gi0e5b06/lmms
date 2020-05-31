@@ -49,6 +49,7 @@ CompressorGDXDialog::CompressorGDXDialog(CompressorGDXControls* controls) :
     Knob* inGainKNB = new Knob(this);
     // outGainKNB->move(17, 85);
     inGainKNB->setModel(&controls->m_inGainModel);
+    inGainKNB->setPointColor(Qt::red);
     inGainKNB->setLabel(tr("IN"));
     inGainKNB->setHintText(tr("In gain:"), "");
 
@@ -73,12 +74,14 @@ CompressorGDXDialog::CompressorGDXDialog(CompressorGDXControls* controls) :
     Knob* boostKNB = new Knob(this);
     // boostKNB->move(17, 85);
     boostKNB->setModel(&controls->m_boostModel);
+    boostKNB->setPointColor(Qt::yellow);
     boostKNB->setLabel(tr("BOOST"));
     boostKNB->setHintText(tr("Boost:"), "");
 
     Knob* outGainKNB = new Knob(this);
     // outGainKNB->move(17, 85);
     outGainKNB->setModel(&controls->m_outGainModel);
+    outGainKNB->setPointColor(Qt::red);
     outGainKNB->setLabel(tr("OUT"));
     outGainKNB->setHintText(tr("Out gain:"), "");
 

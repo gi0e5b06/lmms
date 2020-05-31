@@ -108,9 +108,9 @@ GroupBox::GroupBox(const QString& _title,
     vl->setRowStretch(1, 1);
     vl->setRowStretch(2, 0);
     vl->setColumnStretch(0, 1);
-    qInfo("GroupBox::GroupBox setLayout(vl); BEFORE");
+    // qInfo("GroupBox::GroupBox setLayout(vl); BEFORE");
     setLayout(vl);
-    qInfo("GroupBox::GroupBox setLayout(vl); AFTER");
+    // qInfo("GroupBox::GroupBox setLayout(vl); AFTER");
 
     m_top    = new Top(_title, this, _led, _arrow);
     m_panel  = nullptr;
@@ -163,7 +163,7 @@ void GroupBox::setContentWidget(QWidget* _w)
     if(m_panel && m_panel->isVisible())
     {
         togglePanel();
-        visible = true;
+        visible         = true;
         QGridLayout* vl = dynamic_cast<QGridLayout*>(layout());
         vl->removeWidget(m_panel);
     }

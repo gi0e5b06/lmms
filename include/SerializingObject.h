@@ -42,7 +42,6 @@ class EXPORT SerializingObject
     virtual ~SerializingObject();
 
     virtual QDomElement saveState(QDomDocument& _doc, QDomElement& _parent);
-
     virtual void restoreState(const QDomElement& _this);
 
     // to be implemented by actual object

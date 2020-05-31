@@ -34,6 +34,7 @@ class automatableButtonGroup;
 class EXPORT AutomatableButton : public QPushButton, public BoolModelView
 {
     Q_OBJECT
+
   public:
     AutomatableButton(QWidget*       _parent,
                       const QString& _name = "[automatable button]");
@@ -51,11 +52,7 @@ class EXPORT AutomatableButton : public QPushButton, public BoolModelView
   public slots:
     virtual void update();
     virtual void toggle();
-    virtual void setChecked(bool _on)
-    {
-        // QPushButton::setChecked is called in update-slot
-        model()->setValue(_on);
-    }
+    virtual void setChecked(bool _on) final;
 
   protected:
     virtual void contextMenuEvent(QContextMenuEvent* _me);
@@ -75,6 +72,7 @@ class EXPORT AutomatableButton : public QPushButton, public BoolModelView
 class EXPORT automatableButtonGroup : public QWidget, public IntModelView
 {
     Q_OBJECT
+
   public:
     automatableButtonGroup(QWidget*       _parent,
                            const QString& _name = "[button group]");

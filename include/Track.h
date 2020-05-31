@@ -395,6 +395,7 @@ class TrackContentObjectView : public SelectableObject, public ModelView
     virtual void contextMenuEvent(QContextMenuEvent* _cme) final;
 
     virtual void dragEnterEvent(QDragEnterEvent* dee);
+    //virtual void dragMoveEvent(QDragMoveEvent *event);
     virtual void dropEvent(QDropEvent* de);
     virtual void leaveEvent(QEvent* e);
     virtual void mousePressEvent(QMouseEvent* me);

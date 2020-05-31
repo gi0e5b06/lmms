@@ -80,11 +80,12 @@ IF("${PLUGIN_LIST}" STREQUAL "")
 	GigPlayer
 	HydrogenImport
     InputGDX
-	# ladspa_browser - not needed
+	ladspa_browser
 	LadspaEffect
 	lb302
     # lvst2instrument
     # MatrixGDX
+    Microwave
 	MidiImport
 	MidiExport
 	MultitapEcho

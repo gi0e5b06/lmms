@@ -83,7 +83,7 @@ typedef int32_t key_t;
 #endif
 
 #else
-#include <QMutex>
+#include "Mutex.h" //#include <QMutex>
 #include <QProcess>
 #include <QThread>
 
@@ -794,7 +794,7 @@ class EXPORT RemotePlugin : public QObject, public RemotePluginBase
     QProcess       m_process;
     ProcessWatcher m_watcher;
 
-    QMutex m_commMutex;
+    Mutex m_commMutex; // QMutex
     bool   m_splitChannels;
 #ifdef USE_QT_SHMEM
     QSharedMemory m_shmObj;

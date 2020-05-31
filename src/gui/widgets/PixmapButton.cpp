@@ -1,7 +1,8 @@
 /*
- * PixmapButton.cpp - implementation of pixmap-button (often used as "themed"
- *                     checkboxes/radiobuttons etc)
+ * PixmapButton.cpp - A pixmap-based button
+ * (often used as "themed" checkboxes/radiobuttons etc)
  *
+ * Copyright (c) 2018-2019 gi0e5b06 (on github.com)
  * Copyright (c) 2004-2013 Tobias Doerffel <tobydox/at/users.sourceforge.net>
  *
  * This file is part of LMMS - https://lmms.io
@@ -25,15 +26,18 @@
 
 #include "PixmapButton.h"
 
-#include <QInputDialog>
-#include <QMouseEvent>
-#include <QPainter>
-#include <QTime>
 //#include "MainWindow.h"
 #include "Backtrace.h"
 #include "GuiApplication.h"
 #include "MainWindow.h"
 #include "embed.h"
+
+#include <QFontMetrics>
+#include <QInputDialog>
+#include <QPainter>
+//#include <QStyle>
+#include <QStyleOption>
+#include <QTime>
 
 PixmapButton::PixmapButton(QWidget* _parent, const QString& _name) :
       AutomatableButton(_parent, _name), m_activePixmap(), m_inactivePixmap(),
@@ -54,11 +58,19 @@ void PixmapButton::update()
 
 void PixmapButton::paintEvent(QPaintEvent*)
 {
+    QStyleOption opt;
+    opt.init(this);
     QPainter p(this);
+    style()->drawPrimitive(QStyle::PE_Widget, &opt, &p, this);
 
-    m_blinkingState = (QTime::currentTime().msec() * 6 / 1000) % 2 == 0;
+    BoolModel* m = model();
+    if(!m)
+        return;
 
-    if((model() != NULL && model()->rawValue()
+    if(m_blinking)
+        m_blinkingState = (QTime::currentTime().msec() * 6 / 1000) % 2 == 0;
+
+    if((m != nullptr && m->rawValue()
         && (!m_blinking || m_blinkingState || (isCheckable() && m_pressed)))
        || (!isCheckable() && m_pressed))
     {
@@ -140,7 +152,7 @@ void PixmapButton::setInactiveGraphic(const QPixmap& _pm, bool _update)
 QSize PixmapButton::sizeHint() const
 {
     /*
-    if( ( model() != NULL && model()->rawValue() ) || m_pressed )
+    if( ( model() != nullptr && model()->rawValue() ) || m_pressed )
     {
             //return
     minimumSize().expandedTo(m_activePixmap.size()).boundedTo(maximumSize());
@@ -162,6 +174,7 @@ QSize PixmapButton::sizeHint() const
     return r;
 }
 
+/*
 void PixmapButton::enterValue()
 {
     BoolModel* m = model();
@@ -184,6 +197,7 @@ void PixmapButton::enterValue()
         m->setValue(new_val);
     }
 }
+*/
 
 bool PixmapButton::blinking() const
 {

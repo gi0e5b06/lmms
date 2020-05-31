@@ -33,6 +33,7 @@
 #include "InstrumentSoundShaping.h"
 #include "MidiEventProcessor.h"
 #include "MidiPort.h"
+#include "Mutex.h"
 #include "NotePlayHandle.h"
 #include "PeripheralView.h"
 #include "Piano.h"
@@ -362,7 +363,7 @@ class EXPORT InstrumentTrack : public Track, public MidiEventProcessor
     NotePlayHandles m_sustainedNotes;
 
     int    m_runningMidiNotes[NumMidiKeys];
-    QMutex m_midiNotesMutex;
+    QMutex m_midiNotesMutex; // Mutex
 
     bool m_sustainPedalPressed;
 

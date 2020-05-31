@@ -1,24 +1,23 @@
 /*
- * Editor.cpp - implementation of Editor class
+ * EditorWindow.cpp -
  *
+ * Copyright (c) 2018-2019 gi0e5b06 (on github.com)
  * Copyright (c) 2014 Lukas W <lukaswhl/at/gmail.com>
  *
- * This file is part of LMMS - https://lmms.io
+ * This file is part of LSMM -
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public
- * License along with this program (see COPYING); if not, write to the
- * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
- * Boston, MA 02110-1301 USA.
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
 
@@ -32,23 +31,23 @@
 #include <QLabel>
 #include <QShortcut>
 
-const QVector<real_t> Editor::ZOOM_LEVELS
+const QVector<real_t> EditorWindow::ZOOM_LEVELS
         = {0.10, 0.20, 0.50, 1.0, 2.0, 5.0, 10.0, 20.0};
 
-void Editor::fillZoomLevels(ComboBoxModel& _cbm)
+void EditorWindow::fillZoomLevels(ComboBoxModel& _cbm)
 {
-    for(const real_t& zoomLevel: Editor::ZOOM_LEVELS)
+    for(const real_t& zoomLevel: EditorWindow::ZOOM_LEVELS)
     {
         _cbm.addItem(QString("%1\%").arg(zoomLevel * 100));
     }
 }
 
-const QVector<tick_t> Editor::QUANTIZE_LEVELS
+const QVector<tick_t> EditorWindow::QUANTIZE_LEVELS
         = {4 * 192,  2 * 192,  1 * 192,  192 / 2, 192 / 4, 192 / 8,
            192 / 16, 192 / 32, 192 / 64, 192 / 3, 192 / 6, 192 / 12,
            192 / 24, 192 / 48, 192 / 96, 1};
 
-void Editor::fillQuantizeLevels(ComboBoxModel& _cbm)
+void EditorWindow::fillQuantizeLevels(ComboBoxModel& _cbm)
 {
     _cbm.addItem("4/1");
     _cbm.addItem("2/1");
@@ -68,12 +67,12 @@ void Editor::fillQuantizeLevels(ComboBoxModel& _cbm)
     _cbm.addItem("1/192");
 }
 
-const QVector<tick_t> Editor::LENGTH_LEVELS
+const QVector<tick_t> EditorWindow::LENGTH_LEVELS
         = {4 * 192,  2 * 192,  1 * 192,  192 / 2, 192 / 4, 192 / 8,
            192 / 16, 192 / 32, 192 / 64, 192 / 3, 192 / 6, 192 / 12,
            192 / 24, 192 / 48, 192 / 96, 1};
 
-void Editor::fillLengthLevels(ComboBoxModel& _cbm)
+void EditorWindow::fillLengthLevels(ComboBoxModel& _cbm)
 {
     _cbm.addItem("4/1", new PixmapLoader("note_four_whole"));
     _cbm.addItem("2/1", new PixmapLoader("note_double_whole"));
@@ -93,7 +92,7 @@ void Editor::fillLengthLevels(ComboBoxModel& _cbm)
     _cbm.addItem("1/192", new PixmapLoader("note_tick"));
 }
 
-void Editor::setPauseIcon(bool displayPauseIcon)
+void EditorWindow::setPauseIcon(bool displayPauseIcon)
 {
     // If we're playing, show a pause icon
     if(displayPauseIcon)
@@ -102,20 +101,20 @@ void Editor::setPauseIcon(bool displayPauseIcon)
         m_playAction->setIcon(embed::getIconPixmap("play"));
 }
 
-DropToolBar* Editor::addDropToolBarToTop(QString const& windowTitle)
+DropToolBar* EditorWindow::addDropToolBarToTop(QString const& windowTitle)
 {
     return addDropToolBar(Qt::TopToolBarArea, windowTitle);
 }
 
-DropToolBar* Editor::addDropToolBar(Qt::ToolBarArea whereToAdd,
-                                    QString const&  windowTitle)
+DropToolBar* EditorWindow::addDropToolBar(Qt::ToolBarArea whereToAdd,
+                                          QString const&  windowTitle)
 {
     return addDropToolBar(this, whereToAdd, windowTitle);
 }
 
-DropToolBar* Editor::addDropToolBar(QWidget*        parent,
-                                    Qt::ToolBarArea whereToAdd,
-                                    QString const&  windowTitle)
+DropToolBar* EditorWindow::addDropToolBar(QWidget*        parent,
+                                          Qt::ToolBarArea whereToAdd,
+                                          QString const&  windowTitle)
 {
     DropToolBar* toolBar = new DropToolBar(parent);
     addToolBar(whereToAdd, toolBar);
@@ -127,7 +126,7 @@ DropToolBar* Editor::addDropToolBar(QWidget*        parent,
     return toolBar;
 }
 
-void Editor::togglePlayStop()
+void EditorWindow::togglePlayStop()
 {
     if(Engine::getSong()->isPlaying())
         stop();
@@ -136,7 +135,7 @@ void Editor::togglePlayStop()
     requireActionUpdate();
 }
 
-Editor::Editor(bool record) :
+EditorWindow::EditorWindow(bool record) :
       m_toolBar(new DropToolBar(this)), m_playAction(nullptr),
       m_recordAction(nullptr), m_recordAccompanyAction(nullptr),
       m_stopAction(nullptr)
@@ -178,14 +177,24 @@ Editor::Editor(bool record) :
     addButton(m_stopAction, "stopButton");
 }
 
-Editor::~Editor()
+EditorWindow::~EditorWindow()
 {
-    qInfo("Editor::~Editor");
+    qInfo("EditorWindow::~EditorWindow");
 }
 
-QAction* Editor::playAction() const
+QAction* EditorWindow::playAction() const
 {
     return m_playAction;
+}
+
+void EditorWindow::closeEvent(QCloseEvent* _ce)
+{
+    if(parentWidget())
+        parentWidget()->hide();
+    else
+        hide();
+
+    _ce->ignore();
 }
 
 DropToolBar::DropToolBar(QWidget* parent) : QToolBar(parent)

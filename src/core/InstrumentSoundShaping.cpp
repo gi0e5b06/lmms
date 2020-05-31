@@ -559,12 +559,6 @@ f_cnt_t InstrumentSoundShaping::releaseFrames() const
 void InstrumentSoundShaping::saveSettings(QDomDocument& _doc,
                                           QDomElement&  _this)
 {
-    // for compatibility
-    m_filter1TypeModel.saveSettings(_doc, _this, "ftype");
-    m_filter1CutModel.saveSettings(_doc, _this, "fcut");
-    m_filter1ResModel.saveSettings(_doc, _this, "fres");
-    m_filter1EnabledModel.saveSettings(_doc, _this, "fwet");
-
     QDomElement ef1 = _doc.createElement("filter1");
     m_filter1TypeModel.saveSettings(_doc, ef1, "type");
     m_filter1CutModel.saveSettings(_doc, ef1, "cutoff");
@@ -606,10 +600,14 @@ void InstrumentSoundShaping::loadSettings(const QDomElement& _this)
     if(!nf1.isNull() && nf1.isElement())
     {
         QDomElement ef1 = nf1.toElement();
-        m_filter1TypeModel.loadSettings(ef1, "type");
-        m_filter1CutModel.loadSettings(ef1, "cutoff");
-        m_filter1ResModel.loadSettings(ef1, "resonance");
-        m_filter1EnabledModel.loadSettings(ef1, "enabled");
+        if(!_this.hasAttribute("ftype"))
+            m_filter1TypeModel.loadSettings(ef1, "type");
+        if(!_this.hasAttribute("fcut"))
+            m_filter1CutModel.loadSettings(ef1, "cutoff");
+        if(!_this.hasAttribute("fres"))
+            m_filter1ResModel.loadSettings(ef1, "resonance");
+        if(!_this.hasAttribute("fwet"))
+            m_filter1EnabledModel.loadSettings(ef1, "enabled");
         m_filter1PassesModel.loadSettings(ef1, "passes");
         m_filter1GainModel.loadSettings(ef1, "gain");
         m_filter1ResponseModel.loadSettings(ef1, "response");
@@ -625,7 +623,7 @@ void InstrumentSoundShaping::loadSettings(const QDomElement& _this)
     if(_this.hasAttribute("fres"))
         m_filter1ResModel.loadSettings(_this, "fres");
     if(_this.hasAttribute("fwet"))
-        m_filter1EnabledModel.loadSettings(_this, "fwet"); // on/off
+        m_filter1EnabledModel.loadSettings(_this, "fwet");  // on/off
 
     QDomNode nf2 = _this.namedItem("filter2");
     if(!nf2.isNull() && nf2.isElement())

@@ -33,13 +33,13 @@ class ComboBox;
 
 class BBTrackContainerView;
 
-class BBEditor : public Editor
+class BBWindow : public EditorWindow
 {
     Q_OBJECT
 
   public:
-    BBEditor(BBTrackContainer* _tc);
-    virtual ~BBEditor();
+    BBWindow(BBTrackContainer* _tc);
+    virtual ~BBWindow();
 
     QSize sizeHint() const;
 

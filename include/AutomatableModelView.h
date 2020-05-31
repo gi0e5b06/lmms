@@ -26,114 +26,112 @@
 #ifndef AUTOMATABLE_MODEL_VIEW_H
 #define AUTOMATABLE_MODEL_VIEW_H
 
-#include "ModelView.h"
 #include "AutomatableModel.h"
+#include "ModelView.h"
 
 class QMenu;
 class QMouseEvent;
 
 class EXPORT AutomatableModelView : public ModelView
 {
-public:
-	AutomatableModelView( Model* model, QWidget* _this );
-	virtual ~AutomatableModelView();
+  public:
+    AutomatableModelView(Model* model, QWidget* _this);
+    virtual ~AutomatableModelView();
 
-	// some basic functions for convenience
-	AutomatableModel* modelUntyped()
-	{
-		return castModel<AutomatableModel>();
-	}
+    // some basic functions for convenience
+    AutomatableModel* modelUntyped()
+    {
+        return castModel<AutomatableModel>();
+    }
 
-	const AutomatableModel* modelUntyped() const
-	{
-		return castModel<AutomatableModel>();
-	}
+    const AutomatableModel* modelUntyped() const
+    {
+        return castModel<AutomatableModel>();
+    }
 
-	//virtual void setModel( Model* model, bool isOldModelValid = true );
+    // virtual void setModel( Model* model, bool isOldModelValid = true );
 
-	template<typename T>
-	inline T value() const
-	{
-		return modelUntyped() ? modelUntyped()->value<T>() : 0;
-	}
+    template <typename T>
+    inline T value() const
+    {
+        return modelUntyped() ? modelUntyped()->value<T>() : 0;
+    }
 
-	inline void setDescription( const QString& desc )
-	{
-		m_description = desc;
-	}
+    inline void setDescription(const QString& desc)
+    {
+        m_description = desc;
+    }
 
-	inline void setUnit( const QString& unit )
-	{
-		m_unit = unit;
-	}
+    inline void setUnit(const QString& unit)
+    {
+        m_unit = unit;
+    }
 
-        QColor cableColor() const;
+    QColor cableColor() const;
 
-	virtual void addDefaultActions( QMenu* menu );
-        virtual void enterValue();
-        virtual void editRandomization();
+    virtual bool isInteractive() const final;
+    virtual void setInteractive(bool _b) final;
 
-protected:
-	virtual void mousePressEvent( QMouseEvent* event );
+    virtual void addDefaultActions(QMenu*     menu,
+                                   const bool _interactive = true);
+    virtual void enterValue();
+    virtual void editRandomization();
 
-	QString m_description;
-	QString m_unit;
+  protected:
+    virtual void mousePressEvent(QMouseEvent* event);
 
-} ;
-
-
-
+    bool    m_interactive;
+    QString m_description;
+    QString m_unit;
+};
 
 class AutomatableModelViewSlots : public QObject
 {
-	Q_OBJECT
-public:
-	AutomatableModelViewSlots( AutomatableModelView* amv, QObject* parent );
+    Q_OBJECT
 
-public slots:
-        void enterValue();
-        void editRandomization();
-	void execConnectionDialog();
-	void removeConnection();
-	void editSongGlobalAutomation();
-	void unlinkAllModels();
-	void removeSongGlobalAutomation();
+  public:
+    AutomatableModelViewSlots(AutomatableModelView* amv, QObject* parent);
 
-private slots:
-	/// Copy the model's value to the clipboard.
-	void copyToClipboard();
-	/// Paste the model's value from the clipboard.
-	void pasteFromClipboard();
+  public slots:
+    void enterValue();
+    void editRandomization();
+    void execConnectionDialog();
+    void removeConnection();
+    void editSongGlobalAutomation();
+    void unlinkAllModels();
+    void removeSongGlobalAutomation();
 
-protected:
-	AutomatableModelView* m_amv;
+  private slots:
+    /// Copy the model's value to the clipboard.
+    void copyToClipboard();
+    /// Paste the model's value from the clipboard.
+    void pasteFromClipboard();
 
-} ;
+  protected:
+    AutomatableModelView* m_amv;
+};
 
-
-
-template <typename ModelType> class EXPORT TypedModelView : public AutomatableModelView
+template <typename ModelType>
+class EXPORT TypedModelView : public AutomatableModelView
 {
-public:
-	TypedModelView( Model* model, QWidget* _this) :
-		AutomatableModelView( model, _this )
-	{}
+  public:
+    TypedModelView(Model* model, QWidget* _this) :
+          AutomatableModelView(model, _this)
+    {
+    }
 
-	ModelType* model()
-	{
-		return castModel<ModelType>();
-	}
-	const ModelType* model() const
-	{
-		return castModel<ModelType>();
-	}
+    ModelType* model()
+    {
+        return castModel<ModelType>();
+    }
+    const ModelType* model() const
+    {
+        return castModel<ModelType>();
+    }
 };
 
 using FloatModelView = TypedModelView<FloatModel>;
-using IntModelView = TypedModelView<IntModel>;
-using BoolModelView = TypedModelView<BoolModel>;
-
-
+using IntModelView   = TypedModelView<IntModel>;
+using BoolModelView  = TypedModelView<BoolModel>;
 
 #endif
-

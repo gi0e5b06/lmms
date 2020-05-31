@@ -239,6 +239,7 @@ SongEditor::SongEditor(Song* song) :
     col += 2;
 
     // navigator
+    if(false)
     {
 
         const char* NAV_ICONS_1[6]
@@ -319,9 +320,9 @@ SongEditor::SongEditor(Song* song) :
             SLOT(updateScrollBar(int)));
 
     // Set up zooming x model
-    Editor::fillZoomLevels(*m_zoomingXModel);
+    EditorWindow::fillZoomLevels(*m_zoomingXModel);
     /*
-    for(const float& zoomLevel : Editor::ZOOM_LEVELS)
+    for(const float& zoomLevel : EditorWindow::ZOOM_LEVELS)
         m_zoomingXModel->addItem(QString("%1%").arg(zoomLevel * 100));
     */
     m_zoomingXModel->setInitValue(m_zoomingXModel->findText("100%"));
@@ -329,9 +330,9 @@ SongEditor::SongEditor(Song* song) :
             SLOT(zoomingXChanged()));
 
     // Set up zooming y model
-    Editor::fillZoomLevels(*m_zoomingYModel);
+    EditorWindow::fillZoomLevels(*m_zoomingYModel);
     /*
-    for(const float& zoomLevel : Editor::ZOOM_LEVELS)
+    for(const float& zoomLevel : EditorWindow::ZOOM_LEVELS)
         m_zoomingYModel->addItem(QString("%1%").arg(zoomLevel * 100));
     */
     m_zoomingYModel->setInitValue(m_zoomingYModel->findText("100%"));
@@ -339,7 +340,7 @@ SongEditor::SongEditor(Song* song) :
             SLOT(zoomingYChanged()));
 
     // Quantize
-    Editor::fillQuantizeLevels(*m_quantizeModel);
+    EditorWindow::fillQuantizeLevels(*m_quantizeModel);
     m_quantizeModel->setInitValue(m_quantizeModel->findText("1/1"));
 
     setFocusPolicy(Qt::StrongFocus);
@@ -466,7 +467,7 @@ void SongEditor::keyPressEvent(QKeyEvent* ke)
 tick_t SongEditor::quantization() const
 {
     int v = m_quantizeModel->value();
-    return Editor::QUANTIZE_LEVELS[v];
+    return EditorWindow::QUANTIZE_LEVELS[v];
 }
 
 void SongEditor::unitePatterns()
@@ -1264,7 +1265,8 @@ void SongEditor::updatePositionLine()
 
 void SongEditor::zoomingXChanged()
 {
-    setPixelsPerTact(Editor::ZOOM_LEVELS[m_zoomingXModel->value()] * 16.f);
+    setPixelsPerTact(EditorWindow::ZOOM_LEVELS[m_zoomingXModel->value()]
+                     * 16.f);
 
     m_song->m_playPos[Song::Mode_PlaySong].m_timeLine->setPixelsPerTact(
             pixelsPerTact());
@@ -1273,7 +1275,7 @@ void SongEditor::zoomingXChanged()
 
 void SongEditor::zoomingYChanged()
 {
-    const float f = Editor::ZOOM_LEVELS[m_zoomingYModel->value()];
+    const float f = EditorWindow::ZOOM_LEVELS[m_zoomingYModel->value()];
 
     for(TrackView* tv: trackViews())
     {
@@ -1319,8 +1321,8 @@ ComboBoxModel* SongEditor::quantizeModel() const
     return m_quantizeModel;
 }
 
-SongEditorWindow::SongEditorWindow(Song* song) :
-      Editor(Engine::mixer()->audioDev()->supportsCapture()),
+SongWindow::SongWindow(Song* song) :
+      EditorWindow(Engine::mixer()->audioDev()->supportsCapture()),
       m_editor(new SongEditor(song))
 //, m_crtlAction(nullptr)
 {
@@ -1501,17 +1503,18 @@ SongEditorWindow::SongEditorWindow(Song* song) :
     connect(this, SIGNAL(resized()), m_editor, SLOT(updatePositionLine()));
 }
 
-QSize SongEditorWindow::sizeHint() const
+QSize SongWindow::sizeHint() const
 {
     return {900, 280};
 }
 
-void SongEditorWindow::resizeEvent(QResizeEvent* event)
+void SongWindow::resizeEvent(QResizeEvent* _event)
 {
+    EditorWindow ::resizeEvent(_event);
     emit resized();
 }
 
-void SongEditorWindow::play()
+void SongWindow::play()
 {
     emit playTriggered();
 
@@ -1533,27 +1536,27 @@ void SongEditorWindow::play()
     requireActionUpdate();
 }
 
-void SongEditorWindow::record()
+void SongWindow::record()
 {
     m_editor->m_song->record();
     requireActionUpdate();
 }
 
-void SongEditorWindow::recordAccompany()
+void SongWindow::recordAccompany()
 {
     m_editor->m_song->playAndRecord();
     requireActionUpdate();
 }
 
-void SongEditorWindow::stop()
+void SongWindow::stop()
 {
     Engine::transport()->transportStop();
     m_editor->m_song->stop();
-    gui->pianoRoll()->stopRecording();
+    gui->pianoRollWindow()->stopRecording();
     requireActionUpdate();
 }
 
-void SongEditorWindow::lostFocus()
+void SongWindow::lostFocus()
 {
     /*
     if(m_crtlAction)
@@ -1566,7 +1569,7 @@ void SongEditorWindow::lostFocus()
     requireActionUpdate();
 }
 
-void SongEditorWindow::adjustUiAfterProjectLoad()
+void SongWindow::adjustUiAfterProjectLoad()
 {
     // make sure to bring us to front as the song editor is the central
     // widget in a song and when just opening a song in order to listen to
@@ -1581,7 +1584,7 @@ void SongEditorWindow::adjustUiAfterProjectLoad()
     requireActionUpdate();
 }
 
-void SongEditorWindow::keyPressEvent(QKeyEvent* ke)
+void SongWindow::keyPressEvent(QKeyEvent* ke)
 {
     if(ke->key() == Qt::Key_Control)
     {
@@ -1603,7 +1606,7 @@ void SongEditorWindow::keyPressEvent(QKeyEvent* ke)
     }
 }
 
-void SongEditorWindow::keyReleaseEvent(QKeyEvent* ke)
+void SongWindow::keyReleaseEvent(QKeyEvent* ke)
 {
     if(ke->key() == Qt::Key_Control)
     {
@@ -1629,14 +1632,14 @@ void SongEditorWindow::keyReleaseEvent(QKeyEvent* ke)
 
 // ActionUpdatable //
 
-void SongEditorWindow::updateActions(const bool            _active,
-                                     QHash<QString, bool>& _table) const
+void SongWindow::updateActions(const bool            _active,
+                               QHash<QString, bool>& _table) const
 {
-    // qInfo("SongEditorWindow::updateActions() active=%d",_active);
+    // qInfo("SongWindow::updateActions() active=%d",_active);
     m_editor->updateActions(_active, _table);
 }
 
-void SongEditorWindow::actionTriggered(QString _name)
+void SongWindow::actionTriggered(QString _name)
 {
     m_editor->actionTriggered(_name);
 }
@@ -1646,7 +1649,7 @@ void SongEditor::updateActions(const bool            _active,
 {
     // qInfo("SongEditor::updateActions() active=%d",_active);
     bool hasSelection = _active && selectedObjects().size() > 0;
-    // qInfo("SongEditorWindow::updateActions() active=%d selection=%d",
+    // qInfo("SongWindow::updateActions() active=%d selection=%d",
     //      _active,hasSelection);
     _table.insert("edit_cut", hasSelection);
     _table.insert("edit_copy", hasSelection);

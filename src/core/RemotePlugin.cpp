@@ -32,486 +32,448 @@
 #include "RemotePlugin.h"
 
 #include "BufferManager.h"
-#include "Mixer.h"
 #include "Engine.h"
-
+#include "Mixer.h"
 #include "denormals.h"
 
 #include <QDir>
 
 #ifndef SYNC_WITH_SHM_FIFO
 #include <QUuid>
+
 #include <sys/socket.h>
 #include <sys/un.h>
 #endif
 
 // simple helper thread monitoring our RemotePlugin - if process terminates
 // unexpectedly invalidate plugin so LMMS doesn't lock up
-ProcessWatcher::ProcessWatcher( RemotePlugin * _p ) :
-	QThread(),
-	m_plugin( _p ),
-	m_quit( false )
+ProcessWatcher::ProcessWatcher(RemotePlugin* _p) :
+      QThread(), m_plugin(_p), m_quit(false)
 {
-        setObjectName("process watcher");
+    setObjectName("process watcher");
 }
-
 
 void ProcessWatcher::run()
 {
-        disable_denormals();
+    disable_denormals();
 
-	while( !m_quit && m_plugin->isRunning() )
-	{
-		msleep( 200 );
-	}
-	if( !m_quit )
-	{
-                qWarning("Warning: RemotePlugin died, invalidating now" );
-		m_plugin->invalidate();
-	}
+    while(!m_quit && m_plugin->isRunning())
+    {
+        msleep(200);
+    }
+    if(!m_quit)
+    {
+        qWarning("Warning: RemotePlugin died, invalidating now");
+        m_plugin->invalidate();
+    }
 }
-
-
-
-
 
 RemotePlugin::RemotePlugin() :
-	QObject(),
+      QObject(),
 #ifdef SYNC_WITH_SHM_FIFO
-	RemotePluginBase( new shmFifo(), new shmFifo() ),
+      RemotePluginBase(new shmFifo(), new shmFifo()),
 #else
-	RemotePluginBase(),
+      RemotePluginBase(),
 #endif
-	m_failed( true ),
-	m_process(),
-	m_watcher( this ),
-	m_commMutex( QMutex::Recursive ),
-	m_splitChannels( false ),
+      m_failed(true), m_process(), m_watcher(this),
+      m_commMutex("RemotePlugin", QMutex::Recursive), m_splitChannels(false),
 #ifdef USE_QT_SHMEM
-	m_shmObj(),
+      m_shmObj(),
 #else
-	m_shmID( 0 ),
+      m_shmID(0),
 #endif
-	m_shmSize( 0 ),
-	m_shm( NULL ),
-	m_inputCount( DEFAULT_CHANNELS ),
-	m_outputCount( DEFAULT_CHANNELS )
+      m_shmSize(0), m_shm(NULL), m_inputCount(DEFAULT_CHANNELS),
+      m_outputCount(DEFAULT_CHANNELS)
 {
 #ifndef SYNC_WITH_SHM_FIFO
-	struct sockaddr_un sa;
-	sa.sun_family = AF_LOCAL;
+    struct sockaddr_un sa;
+    sa.sun_family = AF_LOCAL;
 
-	m_socketFile = QDir::tempPath() + QDir::separator() +
-						QUuid::createUuid().toString();
-	const char * path = m_socketFile.toUtf8().constData();
-	size_t length = strlen( path );
-	if ( length >= sizeof sa.sun_path )
-	{
-		length = sizeof sa.sun_path - 1;
-		qWarning( "Warning: RemotePlugin: Socket path too long." );
-	}
-	memcpy( sa.sun_path, path, length );
-	sa.sun_path[length] = '\0';
+    m_socketFile = QDir::tempPath() + QDir::separator()
+                   + QUuid::createUuid().toString();
+    const char* path   = m_socketFile.toUtf8().constData();
+    size_t      length = strlen(path);
+    if(length >= sizeof sa.sun_path)
+    {
+        length = sizeof sa.sun_path - 1;
+        qWarning("Warning: RemotePlugin: Socket path too long.");
+    }
+    memcpy(sa.sun_path, path, length);
+    sa.sun_path[length] = '\0';
 
-	m_server = socket( PF_LOCAL, SOCK_STREAM, 0 );
-	if ( m_server == -1 )
-	{
-		qWarning( "Warning: RemotePlugin: Unable to start the server." );
-	}
-	remove( path );
-	int ret = bind( m_server, (struct sockaddr *) &sa, sizeof sa );
-	if ( ret == -1 || listen( m_server, 1 ) == -1 )
-	{
-		qWarning( "Warning: RemotePlugin: Unable to bind the server." );
-	}
+    m_server = socket(PF_LOCAL, SOCK_STREAM, 0);
+    if(m_server == -1)
+    {
+        qWarning("Warning: RemotePlugin: Unable to start the server.");
+    }
+    remove(path);
+    int ret = bind(m_server, (struct sockaddr*)&sa, sizeof sa);
+    if(ret == -1 || listen(m_server, 1) == -1)
+    {
+        qWarning("Warning: RemotePlugin: Unable to bind the server.");
+    }
 #endif
 }
-
-
-
 
 RemotePlugin::~RemotePlugin()
 {
-	m_watcher.quit();
-	m_watcher.wait();
+    m_watcher.quit();
+    m_watcher.wait();
 
-	if( m_failed == false )
-	{
-		if( isRunning() )
-		{
-			lock();
-			sendMessage( IdQuit );
+    if(m_failed == false)
+    {
+        if(isRunning())
+        {
+            lock();
+            sendMessage(IdQuit);
 
-			m_process.waitForFinished( 1000 );
-			if( m_process.state() != QProcess::NotRunning )
-			{
-				m_process.terminate();
-				m_process.kill();
-			}
-			unlock();
-		}
+            m_process.waitForFinished(1000);
+            if(m_process.state() != QProcess::NotRunning)
+            {
+                m_process.terminate();
+                m_process.kill();
+            }
+            unlock();
+        }
 
 #ifndef USE_QT_SHMEM
-		shmdt( m_shm );
-		shmctl( m_shmID, IPC_RMID, NULL );
+        shmdt(m_shm);
+        shmctl(m_shmID, IPC_RMID, NULL);
 #endif
-	}
+    }
 
 #ifndef SYNC_WITH_SHM_FIFO
-	if ( close( m_server ) == -1)
-	{
-		qWarning( "Warning: RemotePlugin: Error freeing resources" );
-	}
-	remove( m_socketFile.toUtf8().constData() );
+    if(close(m_server) == -1)
+    {
+        qWarning("Warning: RemotePlugin: Error freeing resources");
+    }
+    remove(m_socketFile.toUtf8().constData());
 #endif
 }
 
-
-
-
-bool RemotePlugin::init( const QString &pluginExecutable,
-							bool waitForInitDoneMsg )
+bool RemotePlugin::init(const QString& pluginExecutable,
+                        bool           waitForInitDoneMsg)
 {
-	lock();
-	if( m_failed )
-	{
+    lock();
+    if(m_failed)
+    {
 #ifdef SYNC_WITH_SHM_FIFO
-		reset( new shmFifo(), new shmFifo() );
+        reset(new shmFifo(), new shmFifo());
 #endif
-		m_failed = false;
-	}
-	QString exec = QFileInfo(QDir("plugins:"), pluginExecutable).absoluteFilePath();
+        m_failed = false;
+    }
+    QString exec = QFileInfo(QDir("plugins:"), pluginExecutable)
+                           .absoluteFilePath();
 #ifdef LMMS_BUILD_APPLE
-	// search current directory first
-	QString curDir = QCoreApplication::applicationDirPath() + "/" + pluginExecutable;
-	if( QFile( curDir ).exists() )
-	{
-		exec = curDir;
-	}
+    // search current directory first
+    QString curDir
+            = QCoreApplication::applicationDirPath() + "/" + pluginExecutable;
+    if(QFile(curDir).exists())
+    {
+        exec = curDir;
+    }
 #endif
 #ifdef LMMS_BUILD_WIN32
-	if( ! exec.endsWith( ".exe", Qt::CaseInsensitive ) )
-	{
-		exec += ".exe";
-	}
+    if(!exec.endsWith(".exe", Qt::CaseInsensitive))
+    {
+        exec += ".exe";
+    }
 #endif
 
-	if( ! QFile( exec ).exists() )
-	{
-		qWarning( "Remote plugin '%s' not found.",
-                          qPrintable(exec));
-		m_failed = true;
-		invalidate();
-		unlock();
-		return failed();
-	}
+    if(!QFile(exec).exists())
+    {
+        qWarning("Remote plugin '%s' not found.", qPrintable(exec));
+        m_failed = true;
+        invalidate();
+        unlock();
+        return failed();
+    }
 
-	QStringList args;
+    QStringList args;
 #ifdef SYNC_WITH_SHM_FIFO
-	// swap in and out for bidirectional communication
-	args << QString::number( out()->shmKey() );
-	args << QString::number( in()->shmKey() );
+    // swap in and out for bidirectional communication
+    args << QString::number(out()->shmKey());
+    args << QString::number(in()->shmKey());
 #else
-	args << m_socketFile;
+    args << m_socketFile;
 #endif
 #ifndef DEBUG_REMOTE_PLUGIN
-	m_process.setProcessChannelMode( QProcess::ForwardedChannels );
-	m_process.setWorkingDirectory( QCoreApplication::applicationDirPath() );
-	m_process.start( exec, args );
-	m_watcher.start( QThread::LowestPriority );
+    m_process.setProcessChannelMode(QProcess::ForwardedChannels);
+    m_process.setWorkingDirectory(QCoreApplication::applicationDirPath());
+    m_process.start(exec, args);
+    m_watcher.start(QThread::LowestPriority);
 #else
-	qDebug() << exec << args;
+    qDebug() << exec << args;
 #endif
 
-	connect( &m_process, SIGNAL( finished( int, QProcess::ExitStatus ) ),
-		this, SLOT( processFinished( int, QProcess::ExitStatus ) ) );
+    connect(&m_process, SIGNAL(finished(int, QProcess::ExitStatus)), this,
+            SLOT(processFinished(int, QProcess::ExitStatus)));
 
 #ifndef SYNC_WITH_SHM_FIFO
-	struct pollfd pollin;
-	pollin.fd = m_server;
-	pollin.events = POLLIN;
+    struct pollfd pollin;
+    pollin.fd     = m_server;
+    pollin.events = POLLIN;
 
-	switch ( poll( &pollin, 1, 30000 ) )
-	{
-		case -1:
-			qWarning( "Warning: RemotePlugin: Unexpected poll error" );
-			break;
+    switch(poll(&pollin, 1, 30000))
+    {
+        case -1:
+            qWarning("Warning: RemotePlugin: Unexpected poll error");
+            break;
 
-		case 0:
-			qWarning( "Warning: RemotePlugin: Did not connect" );
-			break;
+        case 0:
+            qWarning("Warning: RemotePlugin: Did not connect");
+            break;
 
-		default:
-			m_socket = accept( m_server, NULL, NULL );
-			if ( m_socket == -1 )
-			{
-				qWarning( "Warning: RemotePlugin: Unexpected socket error" );
-			}
-	}
+        default:
+            m_socket = accept(m_server, NULL, NULL);
+            if(m_socket == -1)
+            {
+                qWarning("Warning: RemotePlugin: Unexpected socket error");
+            }
+    }
 #endif
 
-	resizeSharedProcessingMemory();
+    resizeSharedProcessingMemory();
 
-	if( waitForInitDoneMsg )
-	{
-		waitForInitDone();
-	}
-	unlock();
+    if(waitForInitDoneMsg)
+    {
+        waitForInitDone();
+    }
+    unlock();
 
-	return failed();
+    return failed();
 }
 
-
-
-
-bool RemotePlugin::process( const sampleFrame * _in_buf,
-			    sampleFrame * _out_buf )
+bool RemotePlugin::process(const sampleFrame* _in_buf, sampleFrame* _out_buf)
 {
-	const fpp_t frames = Engine::mixer()->framesPerPeriod();
+    const fpp_t frames = Engine::mixer()->framesPerPeriod();
 
-	if( m_failed || !isRunning() )
-	{
-		if( _out_buf != NULL )
-		{
-			BufferManager::clear( _out_buf );
-		}
-		return false;
-	}
+    if(m_failed || !isRunning())
+    {
+        if(_out_buf != NULL)
+        {
+            BufferManager::clear(_out_buf);
+        }
+        return false;
+    }
 
-	if( m_shm == NULL )
-	{
-		// m_shm being zero means we didn't initialize everything so
-		// far so process one message each time (and hope we get
-		// information like SHM-key etc.) until we process messages
-		// in a later stage of this procedure
-		if( m_shmSize == 0 )
-		{
-			lock();
-			fetchAndProcessAllMessages();
-			unlock();
-		}
-		if( _out_buf != NULL )
-		{
-			BufferManager::clear( _out_buf );//, frames );
-		}
-		return false;
-	}
+    if(m_shm == NULL)
+    {
+        // m_shm being zero means we didn't initialize everything so
+        // far so process one message each time (and hope we get
+        // information like SHM-key etc.) until we process messages
+        // in a later stage of this procedure
+        if(m_shmSize == 0)
+        {
+            lock();
+            fetchAndProcessAllMessages();
+            unlock();
+        }
+        if(_out_buf != NULL)
+        {
+            BufferManager::clear(_out_buf);  //, frames );
+        }
+        return false;
+    }
 
-	memset( m_shm, 0, m_shmSize );
+    memset(m_shm, 0, m_shmSize);
 
-	ch_cnt_t inputs = qMin<ch_cnt_t>( m_inputCount, DEFAULT_CHANNELS );
+    ch_cnt_t inputs = qMin<ch_cnt_t>(m_inputCount, DEFAULT_CHANNELS);
 
-	if( _in_buf != NULL && inputs > 0 )
-	{
-		if( m_splitChannels )
-		{
-			for( ch_cnt_t ch = 0; ch < inputs; ++ch )
-			{
-				for( fpp_t frame = 0; frame < frames; ++frame )
-				{
-					m_shm[ch * frames + frame] =
-							_in_buf[frame][ch];
-				}
-			}
-		}
-		else if( inputs == DEFAULT_CHANNELS )
-		{
-			memcpy( m_shm, _in_buf, frames * BYTES_PER_FRAME );
-		}
-		else
-		{
-			sampleFrame * o = (sampleFrame *) m_shm;
-			for( ch_cnt_t ch = 0; ch < inputs; ++ch )
-			{
-				for( fpp_t frame = 0; frame < frames; ++frame )
-				{
-					o[frame][ch] = _in_buf[frame][ch];
-				}
-			}
-		}
-	}
+    if(_in_buf != NULL && inputs > 0)
+    {
+        if(m_splitChannels)
+        {
+            for(ch_cnt_t ch = 0; ch < inputs; ++ch)
+            {
+                for(fpp_t frame = 0; frame < frames; ++frame)
+                {
+                    m_shm[ch * frames + frame] = _in_buf[frame][ch];
+                }
+            }
+        }
+        else if(inputs == DEFAULT_CHANNELS)
+        {
+            memcpy(m_shm, _in_buf, frames * BYTES_PER_FRAME);
+        }
+        else
+        {
+            sampleFrame* o = (sampleFrame*)m_shm;
+            for(ch_cnt_t ch = 0; ch < inputs; ++ch)
+            {
+                for(fpp_t frame = 0; frame < frames; ++frame)
+                {
+                    o[frame][ch] = _in_buf[frame][ch];
+                }
+            }
+        }
+    }
 
-	lock();
-	sendMessage( IdStartProcessing );
+    lock();
+    sendMessage(IdStartProcessing);
 
-	if( m_failed || _out_buf == NULL || m_outputCount == 0 )
-	{
-		unlock();
-		return false;
-	}
+    if(m_failed || _out_buf == NULL || m_outputCount == 0)
+    {
+        unlock();
+        return false;
+    }
 
-	waitForMessage( IdProcessingDone );
-	unlock();
+    waitForMessage(IdProcessingDone);
+    unlock();
 
-	const ch_cnt_t outputs = qMin<ch_cnt_t>( m_outputCount,
-							DEFAULT_CHANNELS );
-	if( m_splitChannels )
-	{
-		for( ch_cnt_t ch = 0; ch < outputs; ++ch )
-		{
-			for( fpp_t frame = 0; frame < frames; ++frame )
-			{
-				_out_buf[frame][ch] = m_shm[( m_inputCount+ch )*
-								frames + frame];
-			}
-		}
-	}
-	else if( outputs == DEFAULT_CHANNELS )
-	{
-		memcpy( _out_buf, m_shm + m_inputCount * frames,
-						frames * BYTES_PER_FRAME );
-	}
-	else
-	{
-		sampleFrame * o = (sampleFrame *) ( m_shm +
-							m_inputCount*frames );
-		// clear buffer, if plugin didn't fill up both channels
-		BufferManager::clear( _out_buf );//, frames );
+    const ch_cnt_t outputs = qMin<ch_cnt_t>(m_outputCount, DEFAULT_CHANNELS);
+    if(m_splitChannels)
+    {
+        for(ch_cnt_t ch = 0; ch < outputs; ++ch)
+        {
+            for(fpp_t frame = 0; frame < frames; ++frame)
+            {
+                _out_buf[frame][ch]
+                        = m_shm[(m_inputCount + ch) * frames + frame];
+            }
+        }
+    }
+    else if(outputs == DEFAULT_CHANNELS)
+    {
+        memcpy(_out_buf, m_shm + m_inputCount * frames,
+               frames * BYTES_PER_FRAME);
+    }
+    else
+    {
+        sampleFrame* o = (sampleFrame*)(m_shm + m_inputCount * frames);
+        // clear buffer, if plugin didn't fill up both channels
+        BufferManager::clear(_out_buf);  //, frames );
 
-		for( ch_cnt_t ch = 0; ch <
-				qMin<int>( DEFAULT_CHANNELS, outputs ); ++ch )
-		{
-			for( fpp_t frame = 0; frame < frames; ++frame )
-			{
-				_out_buf[frame][ch] = o[frame][ch];
-			}
-		}
-	}
+        for(ch_cnt_t ch = 0; ch < qMin<int>(DEFAULT_CHANNELS, outputs); ++ch)
+        {
+            for(fpp_t frame = 0; frame < frames; ++frame)
+            {
+                _out_buf[frame][ch] = o[frame][ch];
+            }
+        }
+    }
 
-	return true;
+    return true;
 }
 
-
-
-
-void RemotePlugin::processMidiEvent( const MidiEvent & _e,
-                                     const f_cnt_t _offset )
+void RemotePlugin::processMidiEvent(const MidiEvent& _e,
+                                    const f_cnt_t    _offset)
 {
-        //if(_e.type()==MidiEventTypes::MidiPitchBend)
-        //        qInfo("RemotePlugin::processMidiEvent t=%d c=%d k=%d v=%d",
-        //              _e.type(),_e.channel(),_e.param(0),_e.param(1));
+    // if(_e.type()==MidiEventTypes::MidiPitchBend)
+    //        qInfo("RemotePlugin::processMidiEvent t=%d c=%d k=%d v=%d",
+    //              _e.type(),_e.channel(),_e.param(0),_e.param(1));
 
-	message m( IdMidiEvent );
-	m.addInt( _e.type() );
-	m.addInt( _e.channel() );
-	m.addInt( _e.param( 0 ) );
-	m.addInt( _e.param( 1 ) );
-	m.addInt( _offset );
-	lock();
-	sendMessage( m );
-	unlock();
+    message m(IdMidiEvent);
+    m.addInt(_e.type());
+    m.addInt(_e.channel());
+    m.addInt(_e.param(0));
+    m.addInt(_e.param(1));
+    m.addInt(_offset);
+    lock();
+    sendMessage(m);
+    unlock();
 }
-
-
-
 
 void RemotePlugin::resizeSharedProcessingMemory()
 {
-	const size_t s = ( m_inputCount+m_outputCount ) *
-				Engine::mixer()->framesPerPeriod() *
-							sizeof( float );
-	if( m_shm != NULL )
-	{
+    const size_t s = (m_inputCount + m_outputCount)
+                     * Engine::mixer()->framesPerPeriod() * sizeof(float);
+    if(m_shm != NULL)
+    {
 #ifdef USE_QT_SHMEM
-		m_shmObj.detach();
+        m_shmObj.detach();
 #else
-		shmdt( m_shm );
-		shmctl( m_shmID, IPC_RMID, NULL );
+        shmdt(m_shm);
+        shmctl(m_shmID, IPC_RMID, NULL);
 #endif
-	}
+    }
 
-	static int shm_key = 0;
+    static int shm_key = 0;
 #ifdef USE_QT_SHMEM
-	do
-	{
-		m_shmObj.setKey( QString( "%1" ).arg( ++shm_key ) );
-		m_shmObj.create( s );
-	} while( m_shmObj.error() != QSharedMemory::NoError );
+    do
+    {
+        m_shmObj.setKey(QString("%1").arg(++shm_key));
+        m_shmObj.create(s);
+    } while(m_shmObj.error() != QSharedMemory::NoError);
 
-	m_shm = (float *) m_shmObj.data();
+    m_shm = (float*)m_shmObj.data();
 #else
-	while( ( m_shmID = shmget( ++shm_key, s, IPC_CREAT | IPC_EXCL |
-								0600 ) ) == -1 )
-	{
-	}
+    while((m_shmID = shmget(++shm_key, s, IPC_CREAT | IPC_EXCL | 0600)) == -1)
+    {
+    }
 
-	m_shm = (float *) shmat( m_shmID, 0, 0 );
+    m_shm = (float*)shmat(m_shmID, 0, 0);
 #endif
-	m_shmSize = s;
-	sendMessage( message( IdChangeSharedMemoryKey ).
-				addInt( shm_key ).addInt( m_shmSize ) );
+    m_shmSize = s;
+    sendMessage(message(IdChangeSharedMemoryKey)
+                        .addInt(shm_key)
+                        .addInt(m_shmSize));
 }
 
-
-
-
-void RemotePlugin::processFinished( int exitCode,
-					QProcess::ExitStatus exitStatus )
+void RemotePlugin::processFinished(int                  exitCode,
+                                   QProcess::ExitStatus exitStatus)
 {
 #ifndef SYNC_WITH_SHM_FIFO
-	invalidate();
+    invalidate();
 #endif
 }
 
-
-
-
-bool RemotePlugin::processMessage( const message & _m )
+bool RemotePlugin::processMessage(const message& _m)
 {
-	lock();
-	message reply_message( _m.id );
-	bool reply = false;
-	switch( _m.id )
-	{
-		case IdUndefined:
-			unlock();
-			return false;
+    lock();
+    message reply_message(_m.id);
+    bool    reply = false;
+    switch(_m.id)
+    {
+        case IdUndefined:
+            unlock();
+            return false;
 
-		case IdInitDone:
-			reply = true;
-			break;
+        case IdInitDone:
+            reply = true;
+            break;
 
-		case IdSampleRateInformation:
-			reply = true;
-			reply_message.addInt( Engine::mixer()->processingSampleRate() );
-			break;
+        case IdSampleRateInformation:
+            reply = true;
+            reply_message.addInt(Engine::mixer()->processingSampleRate());
+            break;
 
-		case IdBufferSizeInformation:
-			reply = true;
-			reply_message.addInt( Engine::mixer()->framesPerPeriod() );
-			break;
+        case IdBufferSizeInformation:
+            reply = true;
+            reply_message.addInt(Engine::mixer()->framesPerPeriod());
+            break;
 
-		case IdChangeInputCount:
-			m_inputCount = _m.getInt( 0 );
-			resizeSharedProcessingMemory();
-			break;
+        case IdChangeInputCount:
+            m_inputCount = _m.getInt(0);
+            resizeSharedProcessingMemory();
+            break;
 
-		case IdChangeOutputCount:
-			m_outputCount = _m.getInt( 0 );
-			resizeSharedProcessingMemory();
-			break;
+        case IdChangeOutputCount:
+            m_outputCount = _m.getInt(0);
+            resizeSharedProcessingMemory();
+            break;
 
-		case IdChangeInputOutputCount:
-			m_inputCount = _m.getInt( 0 );
-			m_outputCount = _m.getInt( 1 );
-			resizeSharedProcessingMemory();
-			break;
+        case IdChangeInputOutputCount:
+            m_inputCount  = _m.getInt(0);
+            m_outputCount = _m.getInt(1);
+            resizeSharedProcessingMemory();
+            break;
 
-		case IdDebugMessage:
-			qDebug( "Notice: RemotePlugin: DebugMessage: %s",
-                                _m.getString( 0 ).c_str() );
-			break;
+        case IdDebugMessage:
+            qDebug("Notice: RemotePlugin: DebugMessage: %s",
+                   _m.getString(0).c_str());
+            break;
 
-		case IdProcessingDone:
-		case IdQuit:
-		default:
-			break;
-	}
-	if( reply )
-	{
-		sendMessage( reply_message );
-	}
-	unlock();
+        case IdProcessingDone:
+        case IdQuit:
+        default:
+            break;
+    }
+    if(reply)
+    {
+        sendMessage(reply_message);
+    }
+    unlock();
 
-	return true;
+    return true;
 }

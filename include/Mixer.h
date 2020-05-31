@@ -59,8 +59,9 @@ const int BYTES_PER_SURROUND_FRAME = sizeof(surroundSampleFrame);
 // const real_t S32_MULTIPLIER = powf(2,31)-1.;
 // const real_t S64_MULTIPLIER = powf(2,63)-1.;
 
-const int32_t FREQUENCIES[12] = {11025, 16000, 22050, 24000, 32000,  44100,
-                                 48000, 64000, 88200, 96000, 176400, 192000};
+const int32_t FREQUENCIES[15]
+        = {8000,  11025, 16000, 22050,  24000,  32000,  44100, 48000,
+           64000, 88200, 96000, 176400, 192000, 352800, 384000};
 
 const real_t  BaseFreq   = 440.;
 const Keys    BaseKey    = Key_A;

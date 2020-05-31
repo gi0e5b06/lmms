@@ -1,7 +1,7 @@
 /*
  * WaveFormStandard.cpp -
  *
- * Copyright (c) 2018-2019 gi0e5b06 (on github.com)
+ * Copyright (c) 2018-2020 gi0e5b06 (on github.com)
  *
  * This file is part of LSMM -
  *
@@ -54,11 +54,6 @@ WaveFormStandard::Set::Set()
     new WaveFormStandard("Sq peak", 0, 5, sqpeakf, Linear, 10);
     new WaveFormStandard("White noise", 0, 6, randf, Discrete, 10);
     // 7 is reserved
-    new WaveFormStandard(" 0.0", ZERO_BANK, ZERO_INDEX, zerof, Exact);
-    new WaveFormStandard("sqrt()", 20, 12, sqrtf, Linear,
-                         10);  // FLOAT REQUIRED
-    new WaveFormStandard("sharpgauss()", 21, 47, sharpgaussf, Linear, 9);
-
     new WaveFormStandard("Pulse", BANK, 8, pulsef, Exact);
     new WaveFormStandard("Exponential triangle", BANK, 11, exptrif, Linear);
     new WaveFormStandard("Sawtooth", BANK, 12, sawtoothf, Exact);
@@ -126,12 +121,14 @@ WaveFormStandard::Set::Set()
     // Dephased (3)
     // Phase - 0.5
     BANK              = 3;
-    m_bankNames[BANK] = "Dephased";
+    m_bankNames[BANK] = "Complement";
+    createComplement(BANK);
 
     // Reversed (4)
     // - Phase
     BANK              = 4;
-    m_bankNames[BANK] = "Reversed";
+    m_bankNames[BANK] = "Reverse";
+    createReverse(BANK);
 
     // Soften
     // BANK              = 5;
@@ -159,6 +156,7 @@ WaveFormStandard::Set::Set()
     m_bankNames[BANK] = "Constant";
     new WaveFormStandard /*MINUS1*/ ("-1.0", BANK, 0, minus1f, Exact);
     new WaveFormStandard /*MINUS05*/ ("-0.5", BANK, 20, minus05f, Exact);
+    new WaveFormStandard /*ZERO*/ (" 0.0", BANK, 40, zerof, Exact);
     new WaveFormStandard /*PLUS05*/ ("+0.5", BANK, 60, plus05f, Exact);
     new WaveFormStandard /*PLUS1*/ ("+1.0", BANK, 80, plus1f, Exact);
 
@@ -170,11 +168,13 @@ WaveFormStandard::Set::Set()
     new WaveFormStandard /*CB*/ ("cb()", BANK, 3, cbf, Exact);
     new WaveFormStandard /*CMPL*/ ("complement()", BANK, 10, complementf,
                                    Exact);
+    new WaveFormStandard("sqrt()", BANK, 12, sqrtf, Linear,
+                         10);  // FLOAT REQUIRED
     new WaveFormStandard /*CBRT*/ ("cbrt()", BANK, 13, cbrtf, Linear);
     new WaveFormStandard /*NEXP*/ ("n_exp()", BANK, 20, nexp2f, Linear);
     new WaveFormStandard /*NLOG*/ ("n_log()", BANK, 30, nlogf, Linear);
     new WaveFormStandard /*NGAUSS*/ ("n_gauss()", BANK, 41, ngaussf, Linear);
-    // SHARPGAUSS 47
+    new WaveFormStandard("sharpgauss()", BANK, 47, sharpgaussf, Linear, 9);
     new WaveFormStandard("fibonacci1", BANK, 61, fibonacci1, Linear);
     new WaveFormStandard("fibonacci2", BANK, 62, fibonacci2, Linear);
     new WaveFormStandard /*COS*/ ("n_cos()", BANK, 80, ncosf, Linear);
@@ -185,10 +185,11 @@ WaveFormStandard::Set::Set()
     new WaveFormStandard /*CORNERDIST*/ ("d_corner()", BANK, 93, cornerdistf,
                                          Linear);
 
-    // Mathematical
-    BANK              = 22;
-    m_bankNames[BANK] = "Statistical";
+    // Statistical
+    //BANK              = 22;
+    //m_bankNames[BANK] = "Statistical";
 
+    // Lib AKWF
     int sbank = 35;
     {
         QDir wfrd("../../../lmms/waveforms", "AKWF_*",
@@ -278,11 +279,15 @@ void WaveFormStandard::Set::createMissing()
 
 WaveFormStandard::Set::~Set()
 {
-    // qInfo("WaveFormStandard::Set::~Set");
+    qInfo("WaveFormStandard::Set::~Set before");
     for(int b = MAX_BANK - MIN_BANK; b >= 0; --b)
         for(int i = MAX_INDEX - MIN_INDEX; i >= 0; --i)
             if(m_stock[b][i] != nullptr)
+            {
                 delete m_stock[b][i];
+                m_stock[b][i] = nullptr;
+            }
+    qInfo("WaveFormStandard::Set::~Set after");
 }
 
 void WaveFormStandard::Set::createZeroed(int _bank)
@@ -293,7 +298,7 @@ void WaveFormStandard::Set::createZeroed(int _bank)
         if(w == nullptr || w == get(ZERO_BANK, ZERO_INDEX) || w->zeroed())
             continue;
         // if(get(_bank,i)!=nullptr) continue;
-        QString s = w->name() + " 0p";
+        QString s = w->name() + " PH0";
         (new WaveFormStandard(s, _bank, i, w))->setZeroed(true);
     }
 }
@@ -306,8 +311,34 @@ void WaveFormStandard::Set::createCentered(int _bank)
         if(w == nullptr || w == get(ZERO_BANK, ZERO_INDEX) || w->centered())
             continue;
         // if(get(_bank,i)!=nullptr) continue;
-        QString s = w->name() + " C";
+        QString s = w->name() + " CTR";
         (new WaveFormStandard(s, _bank, i, w))->setCentered(true);
+    }
+}
+
+void WaveFormStandard::Set::createComplement(int _bank)
+{
+    for(int i = MIN_INDEX; i <= MAX_INDEX; i++)
+    {
+        const WaveFormStandard* w = get(0, i);
+        if(w == nullptr || w == get(ZERO_BANK, ZERO_INDEX) || w->complement())
+            continue;
+        // if(get(_bank,i)!=nullptr) continue;
+        QString s = w->name() + " CPL";
+        (new WaveFormStandard(s, _bank, i, w))->setComplement(true);
+    }
+}
+
+void WaveFormStandard::Set::createReverse(int _bank)
+{
+    for(int i = MIN_INDEX; i <= MAX_INDEX; i++)
+    {
+        const WaveFormStandard* w = get(0, i);
+        if(w == nullptr || w == get(ZERO_BANK, ZERO_INDEX) || w->reverse())
+            continue;
+        // if(get(_bank,i)!=nullptr) continue;
+        QString s = w->name() + " REV";
+        (new WaveFormStandard(s, _bank, i, w))->setReverse(true);
     }
 }
 
@@ -430,7 +461,7 @@ const WaveFormStandard* const WaveFormStandard::WHITENOISE
 // 7 is reserved
 const WaveFormStandard* const WaveFormStandard::ZERO
         = WAVEFORMS.get(ZERO_BANK, ZERO_INDEX);
-const WaveFormStandard* const WaveFormStandard::SQRT = WAVEFORMS.get(20, 12);
+const WaveFormStandard* const WaveFormStandard::SQRT = WAVEFORMS.get(21, 12);
 const WaveFormStandard* const WaveFormStandard::SHARPGAUSS
         = WAVEFORMS.get(21, 47);
 
@@ -491,7 +522,7 @@ void WaveFormStandard::Set::set(const int               _bank,
     const int i = _index - MIN_INDEX;
     if(m_stock[b][i] == _wf)
         return;
-    if(m_stock[b][i] != NULL)
+    if(m_stock[b][i] != nullptr)
         qWarning("Warning: replacing waveform[%d][%d] %s %s", b, i,
                  qPrintable(m_stock[b][i]->m_name), qPrintable(_wf->m_name));
     m_stock[b][i] = _wf;
@@ -639,18 +670,23 @@ WaveFormStandard::WaveFormStandard(const QString&          _name,
                                    const WaveFormStandard* _wave) :
       WaveFormStandard(_name, _bank, _index, _wave->mode(), _wave->quality())
 {
-    m_func  = _wave->m_func;
-    m_file  = _wave->m_file;
-    m_data  = _wave->m_data;
-    m_size  = _wave->m_size;
+    m_func = _wave->m_func;
+    m_file = _wave->m_file;
+    // m_data  = _wave->m_data;
+    // m_size  = _wave->m_size;
     m_built = _wave->m_built;
 
-    if(m_data != nullptr)
+    if(_wave->m_data != nullptr && _wave->m_size > 0)
     {
         m_size = _wave->m_size;
         m_data = MM_ALLOC(real_t, m_size + 1);
         for(int f = 0; f < m_size + 1; ++f)
             m_data[f] = _wave->m_data[f];
+    }
+    else
+    {
+        m_data = nullptr;
+        m_size = 0;
     }
 
     m_hardness   = _wave->m_hardness;
@@ -666,11 +702,15 @@ WaveFormStandard::WaveFormStandard(const QString&          _name,
 
 WaveFormStandard::~WaveFormStandard()
 {
+    qInfo("~WaveFormStandard (%d,%d,%s)", m_bank, m_index,
+          qPrintable(m_name));
+    /*
     if(m_data != nullptr)
     {
         MM_FREE(m_data);
         m_data = nullptr;
     }
+    */
 }
 
 /*

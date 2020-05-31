@@ -44,15 +44,15 @@ FilterView::FilterView(const QString& _title,
       envLOT->addWidget(m_filterGroupBox);
     */
 
-    QWidget*     filterPNL = new QWidget(this);
-    QGridLayout* filterLOT = new QGridLayout(this);
+    qInfo("filterPNL BEFORE");
+    QWidget*     filterPNL = new QWidget(nullptr);
+    QGridLayout* filterLOT = new QGridLayout(filterPNL);
+    qInfo("filterPNL AFTER");
     filterLOT->setContentsMargins(3, 3, 3, 3);
     filterLOT->setColumnStretch(6, 1);
     filterLOT->setHorizontalSpacing(3);
     filterLOT->setVerticalSpacing(3);
-    qInfo("filterPNL->setLayout(filterLOT); BEFORE");
     filterPNL->setLayout(filterLOT);
-    qInfo("filterPNL->setLayout(filterLOT); AFTER");
 
     m_filterTypeComboBox = new ComboBox(filterPNL);
     // m_filterTypeComboBox->setGeometry(3, 3, 155, 26);

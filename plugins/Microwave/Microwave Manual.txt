@@ -1,0 +1,157 @@
+HOW TO OPERATE YOUR MICROWAVE
+
+Table of Contents:
+
+1. Feature Overview
+ a. Wavetable tab
+ b. Sub Oscillator Tab
+ c. Sample Tab
+ d. Matrix Tab
+ e. Filter Tab
+ f. Miscellaneous Tab
+2. CPU Preservation Guidelines
+3. Feature Tips and Details
+
+
+
+
+
+==FEATURE OVERVIEW==
+
+
+-=WAVETABLE TAB=-
+
+If you zoom in all the way on a sound or waveform, you'll see these little "audio pixels".  These are called "samples", not to be confused with the common term "sound sample" which refers to any stored piece of audio.  These "audio pixels" can easily be seen when using LMMS's BitInvader.
+
+A "wavetable synthesizer" is a synthesizer that stores its waveforms as a list of samples.  This means synthesizers like BitInvader and WatSyn are technically wavetable synthesizers.  But, the term "wavetable synthesizer" more commonly (but not more or less correctly) refers to a synthesizer that stores multiple waveforms, plays one waveform and repeats it, and allows the user to move a knob to change which waveform is being played.  Synthesizers of this nature, even the basic ones, are unimaginably powerful.  Microwave is one of them.
+
+Microwave's wavetables have 256 waveforms, at 2048 samples each.  The Morph (MPH) knob chooses which of the 256 waveforms in the wavetable to play.  It is important to note that Microwave does not have any wavetable loaded by default, so no sound will be heard currently.  Load a sound file as a wavetable now (click the folder button at the bottom).  If you play a note while moving the Morph knob, you'll notice the waveform that is playing morphing to create new timbres.
+
+Range (RNG) is a feature unique to Microwave.  It takes waveforms in the wavetable near the one chosen by the Morph one, and mixes those in with the main waveform (at a lower volume as you get further away from the main waveform).  For example, a Morph of 5 and a Range of 2 will give you a mix between waveform 5, waveform 4 at half volume, and waveform 6 at half volume.
+
+MDFY (Modify) and the dropdown box next to it (Modify Mode) are used to warp your wavetable realtime, using formulas I created myself.  Change the Modify Mode and move the Modify knob while playing a note.  Hear how each Modify Mode causes a drastically different change to the sound.  These are extremely useful for injecting more flavor and awesomeness into your sound.  Use all of them to learn what they can do.
+
+DET stands for Detune, which changes the pitch of that oscillator, in cents.  PHS stands for Phase, which simply phase shifts the oscillator, and RAND next to it is Phase Randomness, which sets the oscillator to a random phase with each note.
+
+Microwave supports very advanced unison abillities.  Unison is when you clone the oscillator multiple times, and play them all at the same time, usually with slight differences applied to them.  The original sound as well as the clones are called "voices".  In the UNISON box, NUM chooses the number of voices.  DET detunes each voice slightly, a common unison feature.  MPH and MOD are special.  They change the Morph and Modify (respectively) values for each individual voice, which can create an amazing 3D sound.  It is important to note that every unison voice is calculated individually, so using large numbers of unison voices can be very detrimental to your CPU.
+
+Earlier I mentioned that Microwave's wavetables have 256 waveforms, at 2048 samples each.  This can be changed using the Sample Length knob.  This knob is meant to be used for finetuning your wavetable if the loading was slightly inaccurate.  If you notice your waveform moving left/right too much in the visualizer as you morph through the wavetable, the Sample Length knob may be able to fix that.
+
+With most synthesizers, CPU would be a major concern when using wavetables.  Luckily, I have put an obscene amount of work into optimizing Microwave, so this should be much less of a problem.  Feel free to go crazy.
+
+
+-=SUB TAB=-
+
+This tab behaves a lot like BitInvader, but is significantly more useful in the context of Microwave.  This tab is meant to be used for many things:
+1. Single-waveform oscillators/modulators
+2. LFOs
+3. Envelopes
+4. Step Sequencers
+5. Noise Generators
+
+In very early versions of Microwave, the five things listed above were all in their own tabs, and were later combined into one for obvious user-friendliness reasons.  I would like to quickly note here that I implore all of you to use Step Sequencers in Microwave all the time.  I wanted it to be one of the more highlighted features of Microwave, but never really had the chance.  Step Sequencers are an awesome and unique way to add rhythmic modulations to your sound.
+
+The LENGTH knob changes the length of the oscillator.  Decreasing this to a small number makes it very easy to use this as a Step Sequencer.  In some special cases you may also want to automate this knob for some interesting effects.
+
+There are four LEDs you can see at the bottom.  The top left is whether the oscillator is enabled.  The top right is "Muted", which is different.  When an oscillator is enabled but muted, it is still calculated and still used for modulation, but that oscillator's sound is never played.  You'll usually want this on when using this as an envelope/LFO/step sequencer.  The bottom left is keytracking.  When keytracking is disabled, the oscillator always plays at the same frequency regardless of the note you press.  You'll want to turn this off when you need your envelopes/LFOs/step sequencers to always go at the same speed.  The bottom right LED converts the oscillator into a noise generator, which generates a different flavor of noise depending on the graph you draw.
+
+When the tempo knob is set to anything other than 0, the pitch is decreased drastically (you'll probably want to mute it) so that it perfectly matches up with the set tempo when detune is set to 0.  If you need it at half speed, double speed, etc., just change its pitch by octaves (because increasing by an octave doubles the frequency).
+
+Note that explanations on how to use this for modulation is explained in the Matrix Tab section.
+
+
+-=SAMPLE TAB=-
+
+This tab is used to import entire samples to use as oscillators.  This means you can frequency modulate your cowbells with your airhorns, which you can then phase modulate with an ogre yelling about his swamp, which you can then amplitude modulate with a full-length movie about bees.  Alternatively, you could just use it as a simple way to layer in a sound or some noise sample with the sound you have already created.  It is important to note that imported samples are stored within Microwave, which means two things:
+1. Unlike AudioFileProcessor, where the size of the sample does not impact the project file size, any samples in Microwave will be losslessly stored inside the project file and preset, which can make the project file extremely large.
+2. When sending your project file or Microwave preset to somebody else, they do not need to have the sample to open it, unlike with AudioFileProcessor.
+
+With that being said, Microwave's Sample Tab is not meant as a replacement to AudioFileProcessor.  Microwave will use more CPU, and some audio problems may show up when playing notes other than A4 (e.g. unstable pitch and stuff).  In most cases, if what you want can be done with AudioFileProcessor, you should use AudioFileProcessor.  Otherwise, totally use Microwave.  The Sample Tab is useful for many reasons, especially for its modulation capabilities and the weird way Microwave can morph samples depending on its graph waveform.
+
+The Sample Tab has two new knobs.  Those change the start and end position of the sample.
+
+There are two new LEDs for this tab, at the right.  The second to last one enables the graph.  The graph determines the order in which the sample is played.  A saw wave will play the sample normally, and a reverse wave wave will play it backward.  Draw a random squiggle on it and... well, you'll hear it.  Pretty much, left/right is time, up/down is position in the sample.  Note that this will almost definitely change the pitch in most circumstances, because changing a sound's speed also changes its pitch.  The last LED enables and disabled sample looping.
+
+
+-=MATRIX TAB=-
+
+This tab is used for a lot of things, ranging from modulation, effect routing, humanization, etc.  If you think it looks difficult, it's a lot easier than it looks.  If you think it looks easy, it's much more difficult than it looks.
+
+The matrix works by taking one or two inputs (whether it be from an oscillator, effect output, humanizer, or anything else) and outputting it somewhere (e.g. to control/modulate a knob, to an effect input, etc.).  It's fairly simple.
+
+Notice how there are three rows.  Only focus on the top two, as the top and bottom ones are functionally identical.  The top left dropdown box chooses the matrix input, and the LCD Spinboxes choose which input (e.g. which oscillator, which filter, etc.) to grab from.  The AMT knob chooses the Amount of the input that is fed into the output (e.g. input volume to effect, how much to move a knob by, etc.).  The CRV (Curve) knob gives that input a bias upward or downward, which can be used as an extremely simple way to shape and sculpt your modulations in absolutely brilliant ways.
+
+The middle left dropdown box sends which section to send the output to (e.g. which tab), and the dropdown box to the right of it is more specific (e.g. the Morph knob of the main tab, the third filter, etc.), as well as the LCD Spinbox following (for e.g. which oscillator to send it to).  The dropdown box to the right of that lets you choose between unidirectional and bidirectional modulation, as well as choosing how the two inputs are combined (e.g. add vs multiply).  The LED to the right of that converts the inputs from LFOs to envelopes if applicable.  In other words, it ignores repetitions of the input oscillators.
+
+It seems simple, but this section is one of the most important parts of Microwave.  Most synthesizers only have some combination of FM, PM, AM, and PWM modulation types.  Because of how Microwave's matrix tab is set up, allowing any parameter to be controlled by any oscillator at any speed, Microwave has those modulation types as well as over a hundred more.  Welcome to Choice Paralysis.  There will never be any point in time when the amount of choice you have will not overwhelm you.  Have fun with your freedom!
+
+
+-=EFFECT TAB=-
+(temporarily AKA Filter Tab)
+
+The current version of Microwave only has filters for effects, but that will be changed in future versions.
+
+FREQ is the filter's cutoff frequency, and RESO is the filter's resonance.  GAIN is the gain for peak filters, shelf filters, etc.  TYPE is the type of filter.  Microwave currently has lowpass, highpass, bandpass, peak, notch, low shelf, high shelf, allpass, and moog lowpass filters.  SLOPE runs the sound through the filter multiple times, changing the filter's slope at (usually) increments of 12 db.
+
+IN and OUT are volume knobs for the filter's input and output.  W/D is Wet/Dry.  PAN changes the Wet/Dry amount in individual ears, allowing you to use interesting panning filters.  SAT stands for Saturation, which allows you to add some simple distortion to your sound after it is filtered.
+
+FDBK (Feedback) stores the filter's output and sends it back to the filter's input after a certain amount of time.  This is a very odd, unique, interesting, and useful feature.  Without a filter in effect, increasing the feedback turns this into a comb filter.  Having a filter selected and working can create some ridiculous tibres you'd rarely ever hear out of most other synthesizers.  The change the feedback makes to the sound is very tonal, and the pitch it creates depends on its delay.  Because of this, I made it so the delay is keytracking by default, so the change it makes to your sound matches the note you play.  DET detunes that, and the keytracking button in the top right turns keytracking off for that.  Definitely have fun with this feature, you can get weird and amazing sound out of this.  Notice that this feature entirely allows Karplus-Strong synthesis, as well as any other ridiculous adaptations that pop into your head.
+
+
+-=MISCELLANEOUS TAB=-
+
+The oversampling dropdown box is ***VERY*** important when it comes to Microwave's audio quality.  The higher it is, the cleaner your sound will be.  But, oversampling is also extremely detrimental to your CPU.  The multiplier of oversampling will be almost exactly the multiplier it applies to the processing power it uses.
+
+But how do you know whether you need oversampling?  2x should be appropriate in most (?) cases, but definitely not all of them.  If your sound is very basic, and all matrix inputs that control knobs only move very very slowly, then it's possible that as low as 1x oversampling (which means no oversampling) may be appropriate.  But, if the sound makes use of modulation, then higher values of oversampling may be appropriate, especially if the modulator contains or plays at high frequencies.  When in doubt, use your ears and compare.  Never neglect the oversampling.  If you're making a sound that uses modulation and it sounds a bit too much like a dying engine, bumping up the oversampling a bit may be all that is needed to bring the sound from okay to awesome.  I strongly suggest making oversampling tweaking a part of your habitual workflow when using Microwave.
+
+
+
+
+==CPU PRESERVATION GUIDELINES==
+
+
+First and foremost, turn the wavetable tab's visualizer off.  That uses a ton of processing power.
+
+Microwave stores the highest oscillator that is enabled, and checks every oscillator from the first one to the highest enabled one to see whether it's enabled.  So, having just the 50th oscillator enabled will take significantly more processing power than having just the 1st one enabled, because it would need to check oscillators 1-50 to see whether they're enabled.
+
+Increasing the Range knob will use more CPU (since it needs to calculate nearby waveforms as well).  With very large Range values the CPU hit can get quite noticeable.  But, even though this needs to calculate nearby waveforms, it doesn't need to recalculate the entire oscillator, so increasing the Range won't use nearly as much CPU as, for example, increasing the number of unison voices.  
+
+Having a larger number of unison voices increases the CPU usage by around the voice amount.  For example, having 30 voices will use approximately 15x as much processing power as just two voices.  This increase is almost exactly linear (with the exception of using only one voice, which uses less than half the CPU as two voices, since having unison disabled entirely will prevent unison stuff from being calculated entirely).
+
+The values of the Morph and Modify knobs in the UNISON box have no impact on processing power needed, except for a small performance gain when they are at exactly 0.
+
+Having both of the DET knobs in and out of the UNISON box set to exactly 0 will result in a significant performance gain in the wavetable tab.  Any values other than 0 will have a near identical impact in comparison to each other.
+
+Even when the modify is not in use, having the Modify Mode set to None will use (sometimes significantly) less CPU than if it is set to something else.
+
+When using modify, expect the largest CPU hit from modes that require accessing other parts of the waveform to work (e.g. Squarify and Pulsify).
+
+Oversampling results in an almost exact multiplication in processing power needed.  So 8x oversampling will use 4x more CPU than 2x oversampling.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

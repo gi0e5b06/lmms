@@ -75,11 +75,10 @@ class EXPORT BBTrackContainer : public TrackContainer
     void fixIncorrectPositions();
     void createTCOsForBB(int _bb);
 
-    virtual  // AutomatedValueMap
-            void
-            automatedValuesAt(MidiTime           time,
-                              int                tcoNum,
-                              AutomatedValueMap& _map) const override;
+    // AutomatedValueMap
+    virtual void automatedValuesAt(MidiTime           time,
+                                   int                tcoNum,
+                                   AutomatedValueMap& _map) const override;
 
   public slots:
     void play();
@@ -90,7 +89,7 @@ class EXPORT BBTrackContainer : public TrackContainer
   private:
     ComboBoxModel m_bbComboBoxModel;
 
-    friend class BBEditor;
+    friend class BBWindow;
 };
 
 #endif

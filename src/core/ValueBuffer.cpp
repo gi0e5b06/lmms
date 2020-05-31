@@ -68,12 +68,12 @@ void ValueBuffer::clear()
 }
 */
 
-void ValueBuffer::copyFrom(const ValueBuffer* _vb)
+void ValueBuffer::copyFrom(const ValueBuffer* const _vb)
 {
     _vb->lock();
-    const real_t* src = _vb->values();
+    real_t* const src = _vb->values();
     // for(int i=m_len-1; i>=0; --i)
-    //        m_data[i]=src[i];
+    //      m_data[i]=src[i];
     memcpy(m_data, src, sizeof(real_t) * m_len);
     _vb->unlock();
 }
@@ -83,6 +83,7 @@ void ValueBuffer::fill(real_t _value)
     // std::fill(begin(), end(), value);
     for(int i = m_len - 1; i >= 0; --i)
         m_data[i] = _value;
+    // memset?
 }
 
 void ValueBuffer::interpolate(real_t _start, real_t _end)

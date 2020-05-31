@@ -23,143 +23,148 @@
  */
 
 #include "DelayEffect.h"
+
 #include "Engine.h"
 #include "embed.h"
 #include "interpolation.h"
 
-
 extern "C"
 {
 
-Plugin::Descriptor PLUGIN_EXPORT delay_plugin_descriptor =
-{
-	STRINGIFY( PLUGIN_NAME ),
-	"Delay",
-	QT_TRANSLATE_NOOP( "pluginBrowser", "A native delay plugin" ),
-	"Dave French <contact/dot/dave/dot/french3/at/googlemail/dot/com>",
-	0x0100,
-	Plugin::Effect,
-	new PluginPixmapLoader("logo"),
-	NULL,
-	NULL
-} ;
+    Plugin::Descriptor PLUGIN_EXPORT delay_plugin_descriptor
+            = {STRINGIFY(PLUGIN_NAME),
+               "Delay",
+               QT_TRANSLATE_NOOP("pluginBrowser", "A native delay plugin"),
+               "Dave French "
+               "<contact/dot/dave/dot/french3/at/googlemail/dot/com>",
+               0x0100,
+               Plugin::Effect,
+               new PluginPixmapLoader("logo"),
+               NULL,
+               NULL};
 
+    DelayEffect::DelayEffect(
+            Model*                                            parent,
+            const Plugin::Descriptor::SubPluginFeatures::Key* key) :
+          Effect(&delay_plugin_descriptor, parent, key),
+          m_delayControls(this)
+    {
+        m_delay   = 0;
+        m_delay   = new StereoDelay(20,
+                                  Engine::mixer()->processingSampleRate());
+        m_lfo     = new Lfo(Engine::mixer()->processingSampleRate());
+        m_outGain = 1.0;
+    }
 
+    DelayEffect::~DelayEffect()
+    {
+        if(m_delay)
+        {
+            delete m_delay;
+        }
+        if(m_lfo)
+        {
+            delete m_lfo;
+        }
+    }
 
-
-DelayEffect::DelayEffect( Model* parent, const Plugin::Descriptor::SubPluginFeatures::Key* key ) :
-	Effect( &delay_plugin_descriptor, parent, key ),
-	m_delayControls( this )
-{
-	m_delay = 0;
-	m_delay = new StereoDelay( 20, Engine::mixer()->processingSampleRate() );
-	m_lfo = new Lfo( Engine::mixer()->processingSampleRate() );
-	m_outGain = 1.0;
-}
-
-
-
-
-DelayEffect::~DelayEffect()
-{
-	if( m_delay )
-	{
-		delete m_delay;
-	}
-	if( m_lfo )
-	{
-		delete m_lfo;
-	}
-}
-
-
-
-
-bool DelayEffect::processAudioBuffer( sampleFrame* buf, const fpp_t frames )
-{
+    bool DelayEffect::processAudioBuffer(sampleFrame* buf, const fpp_t frames)
+    {
         bool smoothBegin, smoothEnd;
         if(!shouldProcessAudioBuffer(buf, frames, smoothBegin, smoothEnd))
-                return false;
+            return false;
 
-	const real_t sr = Engine::mixer()->processingSampleRate();
-	real_t lPeak = 0.;
-	real_t rPeak = 0.;
-	real_t length = m_delayControls.m_delayTimeModel.value();
-	real_t amplitude = m_delayControls.m_lfoAmountModel.value() * sr;
-	real_t lfoTime = 1.0 / m_delayControls.m_lfoTimeModel.value();
-	real_t feedback =  m_delayControls.m_feedbackModel.value();
-	ValueBuffer *lengthBuffer = m_delayControls.m_delayTimeModel.valueBuffer();
-	ValueBuffer *feedbackBuffer = m_delayControls.m_feedbackModel.valueBuffer();
-	ValueBuffer *lfoTimeBuffer = m_delayControls.m_lfoTimeModel.valueBuffer();
-	ValueBuffer *lfoAmountBuffer = m_delayControls.m_lfoAmountModel.valueBuffer();
-	int lengthInc = lengthBuffer ? 1 : 0;
-	int amplitudeInc = lfoAmountBuffer ? 1 : 0;
-	int lfoTimeInc = lfoTimeBuffer ? 1 : 0;
-	int feedbackInc = feedbackBuffer ? 1 : 0;
-	real_t* lengthPtr = lengthBuffer ? &( lengthBuffer->values()[ 0 ] ) : &length;
-	real_t* amplitudePtr = lfoAmountBuffer ? &( lfoAmountBuffer->values()[ 0 ] ) : &amplitude;
-	real_t* lfoTimePtr = lfoTimeBuffer ? &( lfoTimeBuffer->values()[ 0 ] ) : &lfoTime;
-	real_t* feedbackPtr = feedbackBuffer ? &( feedbackBuffer->values()[ 0 ] ) : &feedback;
+        const real_t sr     = Engine::mixer()->processingSampleRate();
+        real_t       lPeak  = 0.;
+        real_t       rPeak  = 0.;
+        real_t       length = m_delayControls.m_delayTimeModel.value();
+        real_t amplitude    = m_delayControls.m_lfoAmountModel.value() * sr;
+        real_t lfoTime      = 1.0 / m_delayControls.m_lfoTimeModel.value();
+        real_t feedback     = m_delayControls.m_feedbackModel.value();
+        /*const*/ ValueBuffer* lengthBuffer
+                = m_delayControls.m_delayTimeModel.valueBuffer();
+        /*const*/ ValueBuffer* feedbackBuffer
+                = m_delayControls.m_feedbackModel.valueBuffer();
+        /*const*/ ValueBuffer* lfoTimeBuffer
+                = m_delayControls.m_lfoTimeModel.valueBuffer();
+        /*const*/ ValueBuffer* lfoAmountBuffer
+                = m_delayControls.m_lfoAmountModel.valueBuffer();
+        int lengthInc    = lengthBuffer ? 1 : 0;
+        int amplitudeInc = lfoAmountBuffer ? 1 : 0;
+        int lfoTimeInc   = lfoTimeBuffer ? 1 : 0;
+        int feedbackInc  = feedbackBuffer ? 1 : 0;
 
-	if( m_delayControls.m_outGainModel.isValueChanged() )
-	{
-		m_outGain = dbfsToAmp( m_delayControls.m_outGainModel.value() );
-	}
+        real_t* lengthPtr
+                //        = lengthBuffer ? &(lengthBuffer->values()[0]) :
+                //        &length;
+                = lengthBuffer ? lengthBuffer->values() : &length;
+        real_t* amplitudePtr
+                = lfoAmountBuffer ? lfoAmountBuffer->values() : &amplitude;
+        real_t* lfoTimePtr
+                = lfoTimeBuffer ? lfoTimeBuffer->values() : &lfoTime;
+        real_t* feedbackPtr
+                = feedbackBuffer ? feedbackBuffer->values() : &feedback;
 
-	int sampleLength;
-	for( fpp_t f = 0; f < frames; ++f )
-	{
-                real_t w0, d0, w1, d1;
-                computeWetDryLevels(f, frames, smoothBegin, smoothEnd,
-                                    w0, d0, w1, d1);
+        if(m_delayControls.m_outGainModel.isValueChanged())
+        {
+            m_outGain = dbfsToAmp(m_delayControls.m_outGainModel.value());
+        }
 
-                sample_t dryS[2] = { buf[f][0], buf[f][1] };
+        int sampleLength;
+        for(fpp_t f = 0; f < frames; ++f)
+        {
+            real_t w0, d0, w1, d1;
+            computeWetDryLevels(f, frames, smoothBegin, smoothEnd, w0, d0, w1,
+                                d1);
 
-		m_delay->setFeedback( *feedbackPtr );
-		m_lfo->setFrequency( *lfoTimePtr );
-		sampleLength = *lengthPtr * Engine::mixer()->processingSampleRate();
-		m_currentLength = sampleLength;
-		m_delay->setLength( m_currentLength + ( *amplitudePtr * real_t(m_lfo->tick()) ) );
-		m_delay->tick( buf[f] );
+            sample_t dryS[2] = {buf[f][0], buf[f][1]};
 
-		buf[f][0] *= m_outGain;
-		buf[f][1] *= m_outGain;
+            m_delay->setFeedback(*feedbackPtr);
+            m_lfo->setFrequency(*lfoTimePtr);
+            sampleLength
+                    = *lengthPtr * Engine::mixer()->processingSampleRate();
+            m_currentLength = sampleLength;
+            m_delay->setLength(m_currentLength
+                               + (*amplitudePtr * real_t(m_lfo->tick())));
+            m_delay->tick(buf[f]);
 
-		lPeak = buf[f][0] > lPeak ? buf[f][0] : lPeak;
-		rPeak = buf[f][1] > rPeak ? buf[f][1] : rPeak;
+            buf[f][0] *= m_outGain;
+            buf[f][1] *= m_outGain;
 
-		buf[f][0] = ( d0 * dryS[0] ) + ( w0 * buf[f][0] );
-		buf[f][1] = ( d1 * dryS[1] ) + ( w1 * buf[f][1] );
+            lPeak = buf[f][0] > lPeak ? buf[f][0] : lPeak;
+            rPeak = buf[f][1] > rPeak ? buf[f][1] : rPeak;
 
-		lengthPtr += lengthInc;
-		amplitudePtr += amplitudeInc;
-		lfoTimePtr += lfoTimeInc;
-		feedbackPtr += feedbackInc;
-	}
+            buf[f][0] = (d0 * dryS[0]) + (w0 * buf[f][0]);
+            buf[f][1] = (d1 * dryS[1]) + (w1 * buf[f][1]);
 
-	m_delayControls.m_outPeakL = lPeak;
-	m_delayControls.m_outPeakR = rPeak;
+            lengthPtr += lengthInc;
+            amplitudePtr += amplitudeInc;
+            lfoTimePtr += lfoTimeInc;
+            feedbackPtr += feedbackInc;
+        }
 
-	return true;
+        m_delayControls.m_outPeakL = lPeak;
+        m_delayControls.m_outPeakR = rPeak;
+
+        return true;
+    }
+
+    void DelayEffect::changeSampleRate()
+    {
+        m_lfo->setSampleRate(Engine::mixer()->processingSampleRate());
+        m_delay->setSampleRate(Engine::mixer()->processingSampleRate());
+    }
+
+    extern "C"
+    {
+
+        // needed for getting plugin out of shared lib
+        Plugin* PLUGIN_EXPORT lmms_plugin_main(Model* parent, void* data)
+        {
+            return new DelayEffect(
+                    parent,
+                    static_cast<const Plugin::Descriptor::SubPluginFeatures::
+                                        Key*>(data));
+        }
+    }
 }
-
-void DelayEffect::changeSampleRate()
-{
-	m_lfo->setSampleRate( Engine::mixer()->processingSampleRate() );
-	m_delay->setSampleRate( Engine::mixer()->processingSampleRate() );
-}
-
-
-
-
-extern "C"
-{
-
-//needed for getting plugin out of shared lib
-Plugin * PLUGIN_EXPORT lmms_plugin_main( Model* parent, void* data )
-{
-	return new DelayEffect( parent , static_cast<const Plugin::Descriptor::SubPluginFeatures::Key *>( data ) );
-}
-
-}}
-

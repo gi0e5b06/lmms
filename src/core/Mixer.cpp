@@ -873,7 +873,7 @@ void Mixer::addPlayHandle1(PlayHandle* _ph)
                  __FILE__, __LINE__);
     }
 
-    requestChangeInModel();
+    //requestChangeInModel();
 
     _ph->audioPort()->addPlayHandle(_ph);
 
@@ -903,7 +903,8 @@ void Mixer::addPlayHandle1(PlayHandle* _ph)
             m_playHandlesToAdd.appendUnique(_ph);
         }
     }
-    doneChangeInModel();
+
+    //doneChangeInModel();
 }
 
 void Mixer::removePlayHandle1(PlayHandle* _ph)
@@ -921,7 +922,7 @@ void Mixer::removePlayHandle1(PlayHandle* _ph)
         // return;
     }
 
-    requestChangeInModel();
+    //requestChangeInModel();
 
     if(_ph->type() == PlayHandle::TypeNotePlayHandle)
     {
@@ -931,7 +932,7 @@ void Mixer::removePlayHandle1(PlayHandle* _ph)
 
     deletePlayHandle1(_ph);
 
-    doneChangeInModel();
+    //doneChangeInModel();
 }
 
 static SafeHash<QString, bool> s_deleteTracker;
@@ -1220,7 +1221,7 @@ void Mixer::waitUntilNoPlayHandle(const Track* _track, const quint8 _types)
     SafeList<PlayHandle*> r(false);
     while(again)
     {
-        requestChangeInModel();
+        //requestChangeInModel();
 
         m_playHandles.map([&r, _types, _track](PlayHandle* ph) {
             if((ph->type() & _types) && ph->isFromTrack(_track))
@@ -1244,7 +1245,7 @@ void Mixer::waitUntilNoPlayHandle(const Track* _track, const quint8 _types)
             ph->setFinished();
         });
 
-        doneChangeInModel();
+        //doneChangeInModel();
 
         if(again)
         {
@@ -1271,7 +1272,7 @@ void Mixer::waitUntilNoPlayHandle(const Instrument* _instrument)
     SafeList<PlayHandle*> r(false);
     while(again)
     {
-        requestChangeInModel();
+        //requestChangeInModel();
 
         m_playHandles.map([&r, _instrument](PlayHandle* ph) {
             if(ph->isFromInstrument(_instrument))
@@ -1295,7 +1296,7 @@ void Mixer::waitUntilNoPlayHandle(const Instrument* _instrument)
             ph->setFinished();
         });
 
-        doneChangeInModel();
+        //doneChangeInModel();
 
         if(again)
         {
@@ -1313,7 +1314,7 @@ void Mixer::waitUntilNoPlayHandle(const Instrument* _instrument)
 
 void Mixer::adjustTempo(const bpm_t _tempo)
 {
-    requestChangeInModel();
+    //requestChangeInModel();
     // for(PlayHandle* ph: m_playHandles)
     m_playHandles.map([_tempo](PlayHandle* ph) {
         NotePlayHandle* nph = dynamic_cast<NotePlayHandle*>(ph);
@@ -1324,7 +1325,7 @@ void Mixer::adjustTempo(const bpm_t _tempo)
             nph->unlock();
         }
     });
-    doneChangeInModel();
+    //doneChangeInModel();
 }
 
 void Mixer::requestChangeInModel()
@@ -1334,9 +1335,15 @@ void Mixer::requestChangeInModel()
 
     m_changesMutex.lock();
     m_changes++;
+    if(m_changes>1)
+    {
+      qWarning("Mixer::requestChangeInModel changes=%d",m_changes);
+      BACKTRACE
+    }
     m_changesMutex.unlock();
 
     m_doChangesMutex.lock();
+
     m_waitChangesMutex.lock();
     if(m_isProcessing && !m_waitingForWrite && !m_changesSignal)
     {
@@ -1352,6 +1359,11 @@ void Mixer::doneChangeInModel()
         return;
 
     m_changesMutex.lock();
+    if(m_changes>1)
+    {
+      qWarning("Mixer::doneChangeInModel changes=%d",m_changes);
+      BACKTRACE
+    }
     bool moreChanges = --m_changes;
     m_changesMutex.unlock();
 

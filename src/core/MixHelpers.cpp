@@ -175,9 +175,7 @@ bool isSilent(const sampleFrame* _src, const f_cnt_t _frames)
     for(f_cnt_t f = _frames - 1; f >= 0; f -= 4)  //--f
     {
         if(abs(_src[f][0]) >= SILENCE || abs(_src[f][1]) >= SILENCE)
-        {
             return false;
-        }
     }
 
     return true;
@@ -189,9 +187,7 @@ bool isClipping(const sampleFrame* _src, const f_cnt_t _frames)
     for(f_cnt_t f = _frames - 1; f >= 0; --f)
     {
         if(abs(_src[f][0]) > 1. || abs(_src[f][1]) > 1.)
-        {
             return true;
-        }
     }
     return false;
 }
@@ -264,11 +260,11 @@ void addMultiplied(sampleFrame*       _dst,
                    const ValueBuffer* _coeffSrcBuf,
                    const f_cnt_t      _frames)
 {
-    const real_t* values = _coeffSrcBuf->values();
+    // const real_t* const values = _coeffSrcBuf->values();
     for(f_cnt_t f = _frames - 1; f >= 0; --f)
     {
-        _dst[f][0] += _src[f][0] * values[f];
-        _dst[f][1] += _src[f][1] * values[f];
+        _dst[f][0] += _src[f][0] * _coeffSrcBuf->value(f);  // values[f];
+        _dst[f][1] += _src[f][1] * _coeffSrcBuf->value(f);  // values[f];
     }
 }
 
@@ -335,28 +331,31 @@ void addSwappedMultiplied(sampleFrame*       dst,
 void addMultipliedByBuffer(sampleFrame*       dst,
                            const sampleFrame* src,
                            real_t             coeffSrc,
-                           ValueBuffer*       coeffSrcBuf,
+                           const ValueBuffer* coeffSrcBuf,
                            int                frames)
 {
+    // const real_t* const values = coeffSrcBuf->values();
     for(int f = 0; f < frames; ++f)
     {
-        dst[f][0] += src[f][0] * coeffSrc * coeffSrcBuf->values()[f];
-        dst[f][1] += src[f][1] * coeffSrc * coeffSrcBuf->values()[f];
+        const real_t c = coeffSrc * coeffSrcBuf->value(f);  // s[f];
+        dst[f][0] += src[f][0] * c;
+        dst[f][1] += src[f][1] * c;
     }
 }
 
 void addMultipliedByBuffers(sampleFrame*       dst,
                             const sampleFrame* src,
-                            ValueBuffer*       coeffSrcBuf1,
-                            ValueBuffer*       coeffSrcBuf2,
+                            const ValueBuffer* coeffSrcBuf1,
+                            const ValueBuffer* coeffSrcBuf2,
                             int                frames)
 {
+    // const real_t* const values = _coeffSrcBuf->values();
     for(int f = 0; f < frames; ++f)
     {
-        dst[f][0] += src[f][0] * coeffSrcBuf1->values()[f]
-                     * coeffSrcBuf2->values()[f];
-        dst[f][1] += src[f][1] * coeffSrcBuf1->values()[f]
-                     * coeffSrcBuf2->values()[f];
+        const real_t c = coeffSrcBuf1->value(f)     // s()[f]
+                         * coeffSrcBuf2->value(f);  // s()[f];
+        dst[f][0] += src[f][0] * c;
+        dst[f][1] += src[f][1] * c;
     }
 }
 
@@ -376,38 +375,33 @@ void addSanitized(sampleFrame*       _dst,
 void addSanitizedMultipliedByBuffer(sampleFrame*       dst,
                                     const sampleFrame* src,
                                     real_t             coeffSrc,
-                                    ValueBuffer*       coeffSrcBuf,
+                                    const ValueBuffer* coeffSrcBuf,
                                     int                frames)
 {
     for(int f = 0; f < frames; ++f)
     {
-        dst[f][0]
-                += (isinf(src[f][0]) || isnan(src[f][0]))
-                           ? 0.
-                           : src[f][0] * coeffSrc * coeffSrcBuf->values()[f];
-        dst[f][1]
-                += (isinf(src[f][1]) || isnan(src[f][1]))
-                           ? 0.
-                           : src[f][1] * coeffSrc * coeffSrcBuf->values()[f];
+        const real_t c = coeffSrc * coeffSrcBuf->value(f);  // s[f];
+        dst[f][0] += (isinf(src[f][0]) || isnan(src[f][0])) ? 0.
+                                                            : src[f][0] * c;
+        dst[f][1] += (isinf(src[f][1]) || isnan(src[f][1])) ? 0.
+                                                            : src[f][1] * c;
     }
 }
 
 void addSanitizedMultipliedByBuffers(sampleFrame*       dst,
                                      const sampleFrame* src,
-                                     ValueBuffer*       coeffSrcBuf1,
-                                     ValueBuffer*       coeffSrcBuf2,
+                                     const ValueBuffer* coeffSrcBuf1,
+                                     const ValueBuffer* coeffSrcBuf2,
                                      int                frames)
 {
     for(int f = 0; f < frames; ++f)
     {
-        dst[f][0] += (isinf(src[f][0]) || isnan(src[f][0]))
-                             ? 0.
-                             : src[f][0] * coeffSrcBuf1->values()[f]
-                                       * coeffSrcBuf2->values()[f];
-        dst[f][1] += (isinf(src[f][1]) || isnan(src[f][1]))
-                             ? 0.
-                             : src[f][1] * coeffSrcBuf1->values()[f]
-                                       * coeffSrcBuf2->values()[f];
+        const real_t c = coeffSrcBuf1->value(f)     // s()[f]
+                         * coeffSrcBuf2->value(f);  // s()[f];
+        dst[f][0] += (isinf(src[f][0]) || isnan(src[f][0])) ? 0.
+                                                            : src[f][0] * c;
+        dst[f][1] += (isinf(src[f][1]) || isnan(src[f][1])) ? 0.
+                                                            : src[f][1] * c;
     }
 }
 

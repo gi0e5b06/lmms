@@ -36,8 +36,8 @@
 #include "StringPairDrag.h"
 #include "embed.h"
 
-BBEditor::BBEditor(BBTrackContainer* tc) :
-      Editor(false), m_trackContainerView(new BBTrackContainerView(tc))
+BBWindow::BBWindow(BBTrackContainer* tc) :
+      EditorWindow(false), m_trackContainerView(new BBTrackContainerView(tc))
 {
     setWindowIcon(embed::getIconPixmap("bb_track_btn"));
     setWindowTitle(tr("Beat"));
@@ -155,21 +155,21 @@ BBEditor::BBEditor(BBTrackContainer* tc) :
     addAction(viewPrevious);
 }
 
-BBEditor::~BBEditor()
+BBWindow::~BBWindow()
 {
 }
 
-QSize BBEditor::sizeHint() const
+QSize BBWindow::sizeHint() const
 {
     return {minimumWidth() + 10, 300};
 }
 
-void BBEditor::removeBBView(int bb)
+void BBWindow::removeBBView(int bb)
 {
     m_trackContainerView->removeBBView(bb);
 }
 
-void BBEditor::play()
+void BBWindow::play()
 {
     if(Engine::getSong()->playMode() != Song::Mode_PlayBB)
     {
@@ -181,7 +181,7 @@ void BBEditor::play()
     }
 }
 
-void BBEditor::stop()
+void BBWindow::stop()
 {
     Engine::getSong()->stop();
 }

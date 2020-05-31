@@ -436,8 +436,9 @@ void AutomatableModel::setValue(const real_t value)
 void AutomatableModel::propagateValue()
 {
     ++m_setValueDepth;
+
     // add changes to history so user can undo it
-    addJournalCheckPoint();
+    // addJournalCheckPoint();
 
     // notify linked models
     for(QVector<AutomatableModel*>::Iterator it = m_linkedModels.begin();
@@ -887,6 +888,7 @@ false ) ); else v=fittedValue( lm->m_value );
 
 ValueBuffer* AutomatableModel::valueBuffer()
 {
+    //QMutexLocker m(const_cast<QMutex*>(&m_valueBufferMutex));
     QMutexLocker m(&m_valueBufferMutex);
     return m_hasSampleExactData ? &m_valueBuffer : nullptr;
 }
@@ -1007,8 +1009,8 @@ type"); break;
                 return &m_valueBuffer;
         }
 
-        // if we have no sample-exact source for a ValueBuffer, return nullptr to
-signify that no data is available at the moment
+        // if we have no sample-exact source for a ValueBuffer, return nullptr
+to signify that no data is available at the moment
         // in which case the recipient knows to use the static value() instead
         m_lastUpdatedPeriod = s_periodCounter;
         m_hasSampleExactData = false;
@@ -1075,7 +1077,8 @@ void AutomatableModel::setAutomatedBuffer(const ValueBuffer* _vb)
     }
 
     const fpp_t FPP = Engine::mixer()->framesPerPeriod();
-    if(_vb == nullptr || _vb->length() != FPP || m_valueBuffer.length() != FPP)
+    if(_vb == nullptr || _vb->length() != FPP
+       || m_valueBuffer.length() != FPP)
     {
         qWarning("AutomatableModel::setAutomatedBuffer bad length");
         return;
@@ -1104,7 +1107,8 @@ void AutomatableModel::setControlledBuffer(const ValueBuffer* _vb)
         return;
 
     const fpp_t FPP = Engine::mixer()->framesPerPeriod();
-    if(_vb == nullptr || _vb->length() != FPP || m_valueBuffer.length() != FPP)
+    if(_vb == nullptr || _vb->length() != FPP
+       || m_valueBuffer.length() != FPP)
     {
         qWarning("AutomatableModel::setControlledBuffer");
         return;

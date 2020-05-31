@@ -47,7 +47,7 @@ AutomationPatternView::AutomationPatternView(AutomationPattern* _pattern,
       m_pat(_pattern), m_paintPixmap(), m_pat_rec(embed::getPixmap("pat_rec"))
 {
     connect(m_pat, SIGNAL(dataChanged()), this, SLOT(update()));
-    connect(gui->automationEditor(), SIGNAL(currentPatternChanged()), this,
+    connect(gui->automationWindow(), SIGNAL(currentPatternChanged()), this,
             SLOT(update()));
 
     setAttribute(Qt::WA_OpaquePaintEvent, true);
@@ -68,7 +68,7 @@ AutomationPatternView::~AutomationPatternView()
 void AutomationPatternView::openInAutomationEditor()
 {
     if(gui)
-        gui->automationEditor()->open(m_pat);
+        gui->automationWindow()->open(m_pat);
 }
 
 void AutomationPatternView::update()
@@ -110,9 +110,9 @@ void AutomationPatternView::disconnectObject(QAction* _a)
 
         // If automation editor is opened, update its display after
         // disconnection
-        if(gui->automationEditor())
+        if(gui->automationWindow())
         {
-            gui->automationEditor()->m_editor->updateAfterPatternChange();
+            gui->automationWindow()->m_editor->updateAfterPatternChange();
         }
 
         // if there is no more connection connected to the AutomationPattern
@@ -243,7 +243,7 @@ void AutomationPatternView::paintEvent(QPaintEvent*)
 
     // QLinearGradient lingrad( 0, 0, 0, height() );
     bool muted   = m_pat->getTrack()->isMuted() || m_pat->isMuted();
-    bool current = gui->automationEditor()->currentPattern() == m_pat;
+    bool current = gui->automationWindow()->currentPattern() == m_pat;
 
     // state: selected, muted, default, user
     QColor bgcolor
@@ -489,10 +489,10 @@ void AutomationPatternView::dropEvent(QDropEvent* _de)
         }
         update();
 
-        if(gui->automationEditor()
-           && gui->automationEditor()->currentPattern() == m_pat)
+        if(gui->automationWindow()
+           && gui->automationWindow()->currentPattern() == m_pat)
         {
-            gui->automationEditor()->setCurrentPattern(m_pat);
+            gui->automationWindow()->setCurrentPattern(m_pat);
         }
     }
     else

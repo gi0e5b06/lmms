@@ -63,9 +63,9 @@ bool InputGDX::processAudioBuffer(sampleFrame* _buf, const fpp_t _frames)
     if(!shouldProcessAudioBuffer(_buf, _frames, smoothBegin, smoothEnd))
         return false;
 
-    /*const*/ ValueBuffer* leftSignalBuf
+    const ValueBuffer* leftSignalBuf
             = m_gdxControls.m_leftSignalModel.valueBuffer();
-    /*const*/ ValueBuffer* rightSignalBuf
+    const ValueBuffer* rightSignalBuf
             = m_gdxControls.m_rightSignalModel.valueBuffer();
     const ValueBuffer* volumeBuf = m_gdxControls.m_volumeModel.valueBuffer();
     const ValueBuffer* balanceBuf

@@ -1,28 +1,26 @@
 /*
  * AutomationEditor.cpp - used for actual setting of dynamic values
  *
- * Copyright (c) 2018      gi0e5b06 (on github.com)
+ * Copyright (c) 2018-2019 gi0e5b06 (on github.com)
  * Copyright (c) 2008-2014 Tobias Doerffel <tobydox/at/users.sourceforge.net>
  * Copyright (c) 2008-2013 Paul Giblock <pgib/at/users.sourceforge.net>
  * Copyright (c) 2006-2008 Javier Serrano Polo
  * <jasp00/at/users.sourceforge.net>
  *
- * This file is part of LMMS - https://lmms.io
+ * This file is part of LSMM -
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public
- * License along with this program (see COPYING); if not, write to the
- * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
- * Boston, MA 02110-1301 USA.
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
 
@@ -65,12 +63,12 @@
 
 #include <cmath>
 
-QPixmap* AutomationEditor::s_toolDraw   = NULL;
-QPixmap* AutomationEditor::s_toolErase  = NULL;
-QPixmap* AutomationEditor::s_toolSelect = NULL;
-QPixmap* AutomationEditor::s_toolMove   = NULL;
-QPixmap* AutomationEditor::s_toolYFlip  = NULL;
-QPixmap* AutomationEditor::s_toolXFlip  = NULL;
+QPixmap* AutomationEditor::s_toolDraw   = nullptr;
+QPixmap* AutomationEditor::s_toolErase  = nullptr;
+QPixmap* AutomationEditor::s_toolSelect = nullptr;
+QPixmap* AutomationEditor::s_toolMove   = nullptr;
+QPixmap* AutomationEditor::s_toolYFlip  = nullptr;
+QPixmap* AutomationEditor::s_toolXFlip  = nullptr;
 
 // const QVector<double> AutomationEditor::m_zoomXLevels =
 //      { 0.10f, 0.20f, 0.50f, 1.0f, 2.0f, 5.0f, 10.0f, 20.0f };
@@ -146,11 +144,11 @@ AutomationEditor::AutomationEditor() :
             SLOT(setQuantization()));
     m_quantizeModel.setValue(m_quantizeModel.findText("1/8"));
 
-    if(s_toolYFlip == NULL)
+    if(s_toolYFlip == nullptr)
     {
         s_toolYFlip = new QPixmap(embed::getIconPixmap("flip_y"));
     }
-    if(s_toolXFlip == NULL)
+    if(s_toolXFlip == nullptr)
     {
         s_toolXFlip = new QPixmap(embed::getIconPixmap("flip_x"));
     }
@@ -180,24 +178,24 @@ AutomationEditor::AutomationEditor() :
             SLOT(verScrolled(int)));
 
     // init pixmaps
-    if(s_toolDraw == NULL)
+    if(s_toolDraw == nullptr)
     {
         s_toolDraw = new QPixmap(embed::getIconPixmap("edit_draw"));
     }
-    if(s_toolErase == NULL)
+    if(s_toolErase == nullptr)
     {
         s_toolErase = new QPixmap(embed::getIconPixmap("edit_erase"));
     }
-    if(s_toolSelect == NULL)
+    if(s_toolSelect == nullptr)
     {
         s_toolSelect = new QPixmap(embed::getIconPixmap("edit_select"));
     }
-    if(s_toolMove == NULL)
+    if(s_toolMove == nullptr)
     {
         s_toolMove = new QPixmap(embed::getIconPixmap("edit_move"));
     }
 
-    setCurrentPattern(NULL);
+    setCurrentPattern(nullptr);
 
     setMouseTracking(true);
 }
@@ -342,11 +340,11 @@ void AutomationEditor::updateAfterPatternChange()
 
     m_currentPosition = 0;
 
-    if(!validPattern())
+    if(m_pattern == nullptr)
     {
         m_minLevel = m_maxLevel = m_scrollLevel = 0;
         m_step                                  = 1;
-        resizeEvent(NULL);
+        resizeEvent(nullptr);
         return;
     }
 
@@ -365,7 +363,7 @@ void AutomationEditor::updateAfterPatternChange()
 
     // resizeEvent() does the rest for us (scrolling, range-checking
     // of levels and so on...)
-    resizeEvent(NULL);
+    resizeEvent(nullptr);
 
     update();
 }
@@ -378,7 +376,7 @@ void AutomationEditor::update()
     // Note detuning?
     if(m_pattern && !m_pattern->getTrack())
     {
-        gui->pianoRoll()->update();
+        gui->pianoRollWindow()->update();
     }
 }
 
@@ -448,7 +446,7 @@ void AutomationEditor::keyPressEvent(QKeyEvent* ke)
 
 void AutomationEditor::leaveEvent(QEvent* e)
 {
-    while(QApplication::overrideCursor() != NULL)
+    while(QApplication::overrideCursor() != nullptr)
     {
         QApplication::restoreOverrideCursor();
     }
@@ -513,7 +511,7 @@ void AutomationEditor::drawLine(int x0In, real_t y0, int x1In, real_t y1)
 void AutomationEditor::mousePressEvent(QMouseEvent* mouseEvent)
 {
     QMutexLocker m(&m_patternMutex);
-    if(!validPattern())
+    if(m_pattern == nullptr)
     {
         return;
     }
@@ -704,7 +702,7 @@ void AutomationEditor::mouseReleaseEvent(QMouseEvent* mouseEvent)
 void AutomationEditor::mouseMoveEvent(QMouseEvent* mouseEvent)
 {
     QMutexLocker m(&m_patternMutex);
-    if(!validPattern())
+    if(m_pattern == nullptr)
     {
         update();
         return;
@@ -795,31 +793,24 @@ void AutomationEditor::mouseMoveEvent(QMouseEvent* mouseEvent)
             // no value??
             if(it != time_map.end())
             {
-                if(QApplication::overrideCursor())
-                {
-                    if(QApplication::overrideCursor()->shape()
+                if(QApplication::overrideCursor() != nullptr
+                   && QApplication::overrideCursor()->shape()
                        != Qt::SizeAllCursor)
+                {
+                    while(QApplication::overrideCursor() != nullptr)
                     {
-                        while(QApplication::overrideCursor() != NULL)
-                        {
-                            QApplication::restoreOverrideCursor();
-                        }
-
-                        QCursor c(Qt::SizeAllCursor);
-                        QApplication::setOverrideCursor(c);
+                        QApplication::restoreOverrideCursor();
                     }
                 }
-                else
-                {
-                    QCursor c(Qt::SizeAllCursor);
-                    QApplication::setOverrideCursor(c);
-                }
+
+                QCursor c(Qt::SizeAllCursor);
+                QApplication::setOverrideCursor(c);
             }
             else
             {
                 // the cursor is over no value, so restore
                 // cursor
-                while(QApplication::overrideCursor() != NULL)
+                while(QApplication::overrideCursor() != nullptr)
                 {
                     QApplication::restoreOverrideCursor();
                 }
@@ -1111,7 +1102,7 @@ void AutomationEditor::paintEvent(QPaintEvent* pe)
     Qt::Alignment text_flags
             = (Qt::Alignment)(Qt::AlignRight | Qt::AlignVCenter);
 
-    if(validPattern())
+    if(m_pattern != nullptr)
     {
         if(m_y_auto)
         {
@@ -1258,7 +1249,8 @@ void AutomationEditor::paintEvent(QPaintEvent* pe)
                   / static_cast<real_t>(Engine::getSong()
                                                 ->getTimeSigModel()
                                                 .getDenominator());
-        real_t zoomFactor = Editor::ZOOM_LEVELS[m_zoomingXModel.value()];
+        real_t zoomFactor
+                = EditorWindow::ZOOM_LEVELS[m_zoomingXModel.value()];
         // the bars which disappears at the left side by scrolling
         int leftBars
                 = m_currentPosition * zoomFactor / MidiTime::ticksPerTact();
@@ -1325,7 +1317,7 @@ void AutomationEditor::paintEvent(QPaintEvent* pe)
         qSwap<real_t>(selLevel_start, selLevel_end);
     }
 
-    if(validPattern())
+    if(m_pattern != nullptr)
     {
         // NEEDS Change in CSS
         // int len_ticks = 4;
@@ -1466,7 +1458,7 @@ void AutomationEditor::paintEvent(QPaintEvent* pe)
     p.drawRect(x + VALUES_WIDTH, y, w, h);
 
     // TODO: Get this out of paint event
-    int l = validPattern() ? (int)m_pattern->length() : 0;
+    int l = m_pattern != nullptr ? (int)m_pattern->length() : 0;
 
     // reset scroll-range
     if(m_leftRightScroll->maximum() != l)
@@ -1475,14 +1467,13 @@ void AutomationEditor::paintEvent(QPaintEvent* pe)
         m_leftRightScroll->setPageStep(l);
     }
 
-    if(validPattern()
-       && GuiApplication::instance()->automationEditor()->hasFocus())
+    if(m_pattern != nullptr && gui->automationWindow()->hasFocus())
     {
 
         drawCross(p);
     }
 
-    const QPixmap* cursor = NULL;
+    const QPixmap* cursor = nullptr;
     // draw current edit-mode-icon below the cursor
     switch(m_editMode)
     {
@@ -1704,7 +1695,7 @@ real_t AutomationEditor::getLevel(int y)
 inline bool AutomationEditor::inBBEditor()
 {
     QMutexLocker m(&m_patternMutex);
-    return (validPattern()
+    return (m_pattern != nullptr
             && m_pattern->getTrack()->trackContainer()
                        == Engine::getBBTrackContainer());
 }
@@ -1712,11 +1703,8 @@ inline bool AutomationEditor::inBBEditor()
 void AutomationEditor::play()
 {
     QMutexLocker m(&m_patternMutex);
-
-    if(!validPattern())
-    {
+    if(m_pattern == nullptr)
         return;
-    }
 
     if(!m_pattern->getTrack())
     {
@@ -1724,7 +1712,7 @@ void AutomationEditor::play()
         {
             Engine::getSong()->stop();
             Engine::getSong()->playPattern(
-                    gui->pianoRoll()->currentPattern());
+                    gui->pianoRollWindow()->currentPattern());
         }
         else if(Engine::getSong()->isStopped() == false)
         {
@@ -1733,7 +1721,7 @@ void AutomationEditor::play()
         else
         {
             Engine::getSong()->playPattern(
-                    gui->pianoRoll()->currentPattern());
+                    gui->pianoRollWindow()->currentPattern());
         }
     }
     else if(inBBEditor())
@@ -1756,19 +1744,14 @@ void AutomationEditor::play()
 void AutomationEditor::stop()
 {
     QMutexLocker m(&m_patternMutex);
-
-    if(!validPattern())
-    {
+    if(m_pattern == nullptr)
         return;
-    }
+
     if(m_pattern->getTrack() && inBBEditor())
-    {
         Engine::getBBTrackContainer()->stop();
-    }
     else
-    {
         Engine::getSong()->stop();
-    }
+
     m_scrollBack = true;
 }
 
@@ -1814,7 +1797,7 @@ void AutomationEditor::setEditMode(int mode)
 void AutomationEditor::setProgressionType(
         AutomationPattern::ProgressionTypes type)
 {
-    if(validPattern())
+    if(m_pattern != nullptr)
     {
         m_pattern->addJournalCheckPoint();
         QMutexLocker m(&m_patternMutex);
@@ -1899,10 +1882,8 @@ void AutomationEditor::setWaveRepeat()
 void AutomationEditor::selectAll()
 {
     QMutexLocker m(&m_patternMutex);
-    if(!validPattern())
-    {
+    if(m_pattern == nullptr)
         return;
-    }
 
     timeMap& time_map = m_pattern->getTimeMap();
 
@@ -1935,10 +1916,8 @@ void AutomationEditor::selectAll()
 void AutomationEditor::getSelectedValues(timeMap& selected_values)
 {
     QMutexLocker m(&m_patternMutex);
-    if(!validPattern())
-    {
+    if(m_pattern == nullptr)
         return;
-    }
 
     int sel_pos_start = m_selectStartTick;
     int sel_pos_end   = sel_pos_start + m_selectedTick;
@@ -1997,10 +1976,8 @@ void AutomationEditor::copySelectedValues()
 void AutomationEditor::cutSelectedValues()
 {
     QMutexLocker m(&m_patternMutex);
-    if(!validPattern())
-    {
+    if(m_pattern == nullptr)
         return;
-    }
 
     m_pattern->addJournalCheckPoint();
     m_valuesToCopy.clear();
@@ -2021,13 +1998,13 @@ void AutomationEditor::cutSelectedValues()
     }
 
     update();
-    gui->songEditor()->update();
+    gui->songWindow()->update();
 }
 
 void AutomationEditor::pasteValues()
 {
     QMutexLocker m(&m_patternMutex);
-    if(validPattern() && !m_valuesToCopy.isEmpty())
+    if(m_pattern != nullptr && !m_valuesToCopy.isEmpty())
     {
         m_pattern->addJournalCheckPoint();
         for(timeMap::iterator it = m_valuesToCopy.begin();
@@ -2040,17 +2017,15 @@ void AutomationEditor::pasteValues()
         // least one value...
         Engine::getSong()->setModified();
         update();
-        gui->songEditor()->update();
+        gui->songWindow()->update();
     }
 }
 
 void AutomationEditor::deleteSelectedValues()
 {
     QMutexLocker m(&m_patternMutex);
-    if(!validPattern())
-    {
+    if(m_pattern == nullptr)
         return;
-    }
 
     m_pattern->addJournalCheckPoint();
     timeMap selected_values;
@@ -2068,7 +2043,7 @@ void AutomationEditor::deleteSelectedValues()
     {
         Engine::getSong()->setModified();
         update();
-        gui->songEditor()->update();
+        gui->songWindow()->update();
     }
 }
 
@@ -2100,7 +2075,7 @@ void AutomationEditor::updatePosition(const MidiTime& t)
 
 void AutomationEditor::zoomingXChanged()
 {
-    m_ppt = Editor::ZOOM_LEVELS[m_zoomingXModel.value()] * DEFAULT_PPT;
+    m_ppt = EditorWindow::ZOOM_LEVELS[m_zoomingXModel.value()] * DEFAULT_PPT;
 
     Q_ASSERT(m_ppt > 0.f);
 
@@ -2120,7 +2095,7 @@ void AutomationEditor::zoomingYChanged()
 #ifdef LMMS_DEBUG
     Q_ASSERT(m_y_delta > 0);
 #endif
-    resizeEvent(NULL);
+    resizeEvent(nullptr);
 }
 
 void AutomationEditor::setQuantization()
@@ -2189,8 +2164,8 @@ void AutomationEditor::updateTopBottomLevels()
     }
 }
 
-AutomationEditorWindow::AutomationEditorWindow() :
-      Editor(), m_editor(new AutomationEditor())
+AutomationWindow::AutomationWindow() :
+      EditorWindow(), m_editor(new AutomationEditor())
 {
     setCentralWidget(m_editor);
 
@@ -2442,7 +2417,7 @@ AutomationEditorWindow::AutomationEditorWindow() :
     m_zoomingXComboBox = new ComboBox(zoomToolBar);
     m_zoomingXComboBox->setFixedSize(70, 32);
 
-    for(const real_t& zoomLevel: Editor::ZOOM_LEVELS)
+    for(const real_t& zoomLevel: EditorWindow::ZOOM_LEVELS)
     {
         m_editor->m_zoomingXModel.addItem(
                 QString("%1\%").arg(zoomLevel * 100));
@@ -2516,21 +2491,25 @@ AutomationEditorWindow::AutomationEditorWindow() :
     m_toolBar->setAcceptDrops(true);
 }
 
-AutomationEditorWindow::~AutomationEditorWindow()
+AutomationWindow::~AutomationWindow()
 {
 }
 
-void AutomationEditorWindow::reset()
+void AutomationWindow::reset()
 {
     setCurrentPattern(nullptr);
 }
 
-void AutomationEditorWindow::setCurrentPattern(AutomationPattern* pattern)
+void AutomationWindow::setCurrentPattern(AutomationPattern* pattern)
 {
+    const AutomationPattern* old = m_editor->currentPattern();
+    if(old == pattern)
+        return;
+
     // Disconnect our old pattern
-    if(currentPattern() != nullptr)
+    if(old != nullptr)
     {
-        m_editor->m_pattern->disconnect(this);
+        old->disconnect(this);
         m_flipXAction->disconnect();
         m_flipYAction->disconnect();
     }
@@ -2542,7 +2521,7 @@ void AutomationEditorWindow::setCurrentPattern(AutomationPattern* pattern)
     if(pattern == nullptr)
         return;
 
-    switch(m_editor->m_pattern->progressionType())
+    switch(pattern->progressionType())
     {
         case AutomationPattern::DiscreteProgression:
             m_discreteAction->setChecked(true);
@@ -2578,27 +2557,31 @@ void AutomationEditorWindow::setCurrentPattern(AutomationPattern* pattern)
     emit currentPatternChanged();
 }
 
-const AutomationPattern* AutomationEditorWindow::currentPattern()
+const AutomationPattern* AutomationWindow::currentPattern()
 {
     return m_editor->currentPattern();
 }
 
-void AutomationEditorWindow::updateWindowTitle()
+void AutomationWindow::updateWindowTitle()
 {
     const AutomationPattern* p = currentPattern();
     setWindowTitle(p != nullptr ? tr("Automation - %1").arg(p->name())
                                 : tr("Automation - no tile"));
 }
 
-void AutomationEditorWindow::dropEvent(QDropEvent* _de)
+void AutomationWindow::dropEvent(QDropEvent* _de)
 {
     QString type = StringPairDrag::decodeKey(_de);
     QString val  = StringPairDrag::decodeValue(_de);
     if(type == "automatable_model")
     {
-        AutomatableModel* mod = dynamic_cast<AutomatableModel*>(
-                Engine::projectJournal()->journallingObject(val.toInt()));
-        if(mod != NULL)
+        AutomatableModel* mod
+                = dynamic_cast<AutomatableModel*>(Model::find(val));
+        if(mod == nullptr)
+            mod = dynamic_cast<AutomatableModel*>(
+                    Engine::projectJournal()->journallingObject(val.toInt()));
+
+        if(mod != nullptr)
         {
             bool added = m_editor->m_pattern->addObject(mod);
             if(!added)
@@ -2616,12 +2599,13 @@ void AutomationEditorWindow::dropEvent(QDropEvent* _de)
     update();
 }
 
-void AutomationEditorWindow::dragEnterEvent(QDragEnterEvent* _dee)
+void AutomationWindow::dragEnterEvent(QDragEnterEvent* _dee)
 {
-    StringPairDrag::processDragEnterEvent(_dee, "automatable_model");
+    if(m_editor->m_pattern != nullptr)
+        StringPairDrag::processDragEnterEvent(_dee, "automatable_model");
 }
 
-void AutomationEditorWindow::open(AutomationPattern* pattern)
+void AutomationWindow::open(AutomationPattern* pattern)
 {
     setCurrentPattern(pattern);
     parentWidget()->show();
@@ -2629,38 +2613,41 @@ void AutomationEditorWindow::open(AutomationPattern* pattern)
     setFocus();
 }
 
-QSize AutomationEditorWindow::sizeHint() const
+QSize AutomationWindow::sizeHint() const
 {
-    return {INITIAL_WIDTH, INITIAL_HEIGHT};
+    // static const int INITIAL_WIDTH  = 860;
+    // static const int INITIAL_HEIGHT = 480;
+    // return {INITIAL_WIDTH, INITIAL_HEIGHT};
+    return {860, 480};
 }
 
-void AutomationEditorWindow::clearCurrentPattern()
+void AutomationWindow::clearCurrentPattern()
 {
     m_editor->m_pattern = nullptr;
     setCurrentPattern(nullptr);
 }
 
-void AutomationEditorWindow::play()
+void AutomationWindow::play()
 {
     m_editor->play();
     setPauseIcon(Engine::getSong()->isPlaying());
 }
 
-void AutomationEditorWindow::stop()
+void AutomationWindow::stop()
 {
     m_editor->stop();
 }
 
 // ActionUpdatable //
 
-void AutomationEditorWindow::updateActions(const bool            _active,
-                                           QHash<QString, bool>& _table) const
+void AutomationWindow::updateActions(const bool            _active,
+                                     QHash<QString, bool>& _table) const
 {
-    // qInfo("AutomationEditorWindow::updateActions() active=%d",_active);
+    // qInfo("AutomationWindow::updateActions() active=%d",_active);
     m_editor->updateActions(_active, _table);
 }
 
-void AutomationEditorWindow::actionTriggered(QString _name)
+void AutomationWindow::actionTriggered(QString _name)
 {
     m_editor->actionTriggered(_name);
 }
@@ -2670,7 +2657,7 @@ void AutomationEditor::updateActions(const bool            _active,
 {
     // qInfo("AutomationEditor::updateActions() active=%d",_active);
     bool hasPoints = _active && m_pattern && (m_pattern->timeMapLength() > 0);
-    // qInfo("AutomationEditorWindow::updateActions() active=%d selection=%d",
+    // qInfo("AutomationWindow::updateActions() active=%d selection=%d",
     //      _active,hasSelection);
     _table.insert("edit_cut", false);
     _table.insert("edit_copy", hasPoints);

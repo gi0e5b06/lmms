@@ -63,12 +63,12 @@ LcdSpinBox::~LcdSpinBox()
 void LcdSpinBox::modelChanged()
 {
     ModelView::modelChanged();
-    LcdWidget::setValue(model()->rawValue());
+    LcdWidget::setValue(modelUntyped()->rawValue<int>());
 }
 
 void LcdSpinBox::update()
 {
-    LcdWidget::setValue(model()->rawValue());
+    LcdWidget::setValue(modelUntyped()->rawValue<int>());
     LcdWidget::update();
 }
 
@@ -168,17 +168,17 @@ void LcdSpinBox::mousePressEvent(QMouseEvent* _me)
        && !(_me->modifiers() & Qt::ShiftModifier)
        && displayRect().contains(_me->pos()))  // y() < cellHeight() + 2  )
     {
-        AutomatableModel* thisModel = model();
-        if(thisModel)
+        AutomatableModel* m = model();
+        if(m)
         {
-            thisModel->addJournalCheckPoint();
-            thisModel->saveJournallingState(false);
+            m->addJournalCheckPoint();
+            m->saveJournallingState(false);
+            m_pressValue = m->rawValue<int>();
         }
-
-        if(model())
-            m_pressValue = model()->rawValue();
         else
+        {
             m_pressValue = 0.;
+        }
 
         m_pressLeft = true;
         m_pressPos  = _me->pos();
@@ -219,7 +219,8 @@ void LcdSpinBox::mouseReleaseEvent(QMouseEvent*)
 {
     if(m_pressLeft)
     {
-        if(model())
+        AutomatableModel* m = model();
+        if(m)
             model()->restoreJournallingState();
 
         // QCursor::setPos( m_pressPos );

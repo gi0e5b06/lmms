@@ -55,9 +55,9 @@ class EXPORT FxMixerView :
     class FxChannelView : public ModelView
     {
       public:
-        FxChannelView(QWidget* _parent, FxMixerView* _mv, int _chIndex);
+        FxChannelView(QWidget* _parent, FxMixerView* _mv, fx_ch_t _chIndex);
 
-        void setChannelIndex(int index);
+        void setChannelIndex(fx_ch_t _index);
 
         virtual QLine  cableFrom() const;
         virtual QLine  cableTo() const;

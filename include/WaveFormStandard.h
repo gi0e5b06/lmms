@@ -151,6 +151,8 @@ class WaveFormStandard : public WaveForm
         void createMissing();
         void createZeroed(int _bank);
         void createCentered(int _bank);
+        void createComplement(int _bank);
+        void createReverse(int _bank);
         void createDegraded(int _bank, bool _linear, int _quality);
         void createSoften(int _bank, real_t _bandwidth);
 

@@ -312,16 +312,16 @@ QColor FxMixerView::FxChannelView::cableColor() const
 
 FxMixerView::FxChannelView::FxChannelView(QWidget*     _parent,
                                           FxMixerView* _mv,
-                                          int          channelIndex) :
+                                          fx_ch_t      _channelIndex) :
       ModelView(nullptr, nullptr)
 {
-    m_fxLine = new FxLine(_parent, _mv, channelIndex);
+    m_fxLine = new FxLine(_parent, _mv, _channelIndex);
     setWidget(m_fxLine);  // GDX
-    FxChannel* fxChannel = Engine::fxMixer()->effectChannel(channelIndex);
+    FxChannel* fxChannel = Engine::fxMixer()->effectChannel(_channelIndex);
     setModel(fxChannel);  // GDX
 
-    m_fader = new Fader(&fxChannel->m_volumeModel,
-                        tr("FX Fader %1").arg(channelIndex), m_fxLine);
+    m_fader = new Fader(&fxChannel->volumeModel(),
+                        tr("FX Fader %1").arg(_channelIndex), m_fxLine);
     m_fader->setLevelsDisplayedInDBFS(true);
     m_fader->setMinPeak(dbfsToAmp(-42));
     m_fader->setMaxPeak(dbfsToAmp(9));
@@ -334,18 +334,18 @@ FxMixerView::FxChannelView::FxChannelView(QWidget*     _parent,
 
     YF -= 16;
     m_soloBtn = new PixmapButton(m_fxLine, tr("Solo"));
-    m_soloBtn->setModel(&fxChannel->m_soloModel);
+    m_soloBtn->setModel(&fxChannel->soloModel());
     m_soloBtn->setActiveGraphic(embed::getIconPixmap("led_magenta"));
     m_soloBtn->setInactiveGraphic(embed::getIconPixmap("led_off"));
     m_soloBtn->setCheckable(true);
     m_soloBtn->move(XF, YF);
-    connect(&fxChannel->m_soloModel, SIGNAL(dataChanged()), _mv,
+    connect(&fxChannel->soloModel(), SIGNAL(dataChanged()), _mv,
             SLOT(toggledSolo()));
     ToolTip::add(m_soloBtn, tr("Solo"));
 
     YF -= 14;
     m_muteBtn = new PixmapButton(m_fxLine, tr("Mute"));
-    m_muteBtn->setModel(&fxChannel->m_mutedModel);
+    m_muteBtn->setModel(&fxChannel->mutedModel());
     m_muteBtn->setActiveGraphic(embed::getIconPixmap("led_off"));
     m_muteBtn->setInactiveGraphic(embed::getIconPixmap("led_green"));
     m_muteBtn->setCheckable(true);
@@ -353,12 +353,12 @@ FxMixerView::FxChannelView::FxChannelView(QWidget*     _parent,
     ToolTip::add(m_muteBtn, tr("Mute"));
 
     YF -= 116;
-    if(channelIndex == 0)
+    if(_channelIndex == 0)
     {
-        m_eqEnableBtn  = NULL;
-        m_eqHighKnob   = NULL;
-        m_eqMediumKnob = NULL;
-        m_eqLowKnob    = NULL;
+        m_eqEnableBtn  = nullptr;
+        m_eqHighKnob   = nullptr;
+        m_eqMediumKnob = nullptr;
+        m_eqLowKnob    = nullptr;
     }
     else
     {
@@ -437,7 +437,7 @@ FxMixerView::FxChannelView::FxChannelView(QWidget*     _parent,
 
     YF -= 14;
     m_frozenBtn = new PixmapButton(m_fxLine, tr("Frozen"));
-    m_frozenBtn->setModel(&fxChannel->m_frozenModel);
+    m_frozenBtn->setModel(&fxChannel->frozenModel());
     m_frozenBtn->setActiveGraphic(embed::getIconPixmap("led_blue"));
     m_frozenBtn->setInactiveGraphic(embed::getIconPixmap("led_off"));
     m_frozenBtn->setCheckable(true);
@@ -446,7 +446,7 @@ FxMixerView::FxChannelView::FxChannelView(QWidget*     _parent,
 
     YF -= 14;
     m_clippingBtn = new PixmapButton(m_fxLine, tr("Clipping"));
-    m_clippingBtn->setModel(&fxChannel->m_clippingModel);
+    m_clippingBtn->setModel(&fxChannel->clippingModel());
     m_clippingBtn->setActiveGraphic(embed::getIconPixmap("led_red"));
     m_clippingBtn->setInactiveGraphic(embed::getIconPixmap("led_off"));
     m_clippingBtn->setCheckable(true);
@@ -456,22 +456,22 @@ FxMixerView::FxChannelView::FxChannelView(QWidget*     _parent,
 
     // Create EffectRack for the channel
     m_rackView
-            = new EffectRackView(&fxChannel->m_fxChain, _mv->m_racksWidget);
+        = new EffectRackView(&fxChannel->fxChain(), _mv->m_racksWidget);
     // m_rackView->setFixedSize(250, FxLine::FxLineHeight);
     m_rackView->setFixedHeight(FxLine::FxLineHeight);
 }
 
-void FxMixerView::FxChannelView::setChannelIndex(int index)
+void FxMixerView::FxChannelView::setChannelIndex(fx_ch_t index)
 {
     FxChannel* fxChannel = Engine::fxMixer()->effectChannel(index);
 
-    m_frozenBtn->setModel(&fxChannel->m_frozenModel);
-    m_clippingBtn->setModel(&fxChannel->m_clippingModel);
+    m_frozenBtn->setModel(&fxChannel->frozenModel());
+    m_clippingBtn->setModel(&fxChannel->clippingModel());
 
-    m_fader->setModel(&fxChannel->m_volumeModel);
-    m_muteBtn->setModel(&fxChannel->m_mutedModel);
-    m_soloBtn->setModel(&fxChannel->m_soloModel);
-    m_rackView->setModel(&fxChannel->m_fxChain);
+    m_fader->setModel(&fxChannel->volumeModel());
+    m_muteBtn->setModel(&fxChannel->mutedModel());
+    m_soloBtn->setModel(&fxChannel->soloModel());
+    m_rackView->setModel(&fxChannel->fxChain());
 }
 
 void FxMixerView::toggledSolo()
@@ -589,7 +589,7 @@ void FxMixerView::deleteUnusedChannels()
         }
         FxChannel* ch = Engine::fxMixer()->effectChannel(i);
         // delete channel if no references found
-        if(empty && ch->m_receives.isEmpty())
+        if(empty && ch->receives().isEmpty())
         {
             deleteChannel(i);
         }
@@ -705,22 +705,22 @@ void FxMixerView::updateFaders()
         const float opr      = m_fxChannelViews[i]->m_fader->getPeak_R();
         const float fall_off = 1.2;
 
-        if(m->effectChannel(i)->m_peakLeft > opl)
+        if(m->effectChannel(i)->peakLeft() > opl)
         {
             m_fxChannelViews[i]->m_fader->setPeak_L(
-                    m->effectChannel(i)->m_peakLeft);
-            m->effectChannel(i)->m_peakLeft = 0;
+                    m->effectChannel(i)->peakLeft());
+            m->effectChannel(i)->resetPeakLeft();
         }
         else
         {
             m_fxChannelViews[i]->m_fader->setPeak_L(opl / fall_off);
         }
 
-        if(m->effectChannel(i)->m_peakRight > opr)
+        if(m->effectChannel(i)->peakRight() > opr)
         {
             m_fxChannelViews[i]->m_fader->setPeak_R(
-                    m->effectChannel(i)->m_peakRight);
-            m->effectChannel(i)->m_peakRight = 0;
+                                                    m->effectChannel(i)->peakRight());
+            m->effectChannel(i)->resetPeakRight();
         }
         else
         {

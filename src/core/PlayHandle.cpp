@@ -36,7 +36,8 @@
 
 PlayHandle::PlayHandle(const Type type, f_cnt_t offset) :
       m_audioPort(nullptr), m_finished(false), m_type(type), m_offset(offset),
-      m_usesBuffer(true), m_playHandleBuffer(nullptr), m_bufferReleased(true), m_refCount(0)
+      m_usesBuffer(true), m_playHandleBuffer(nullptr), m_bufferReleased(true),
+      m_refCount(0)
 {
     // BufferManager::acquire()),
     m_debug_uuid = QUuid::createUuid().toString();
@@ -49,7 +50,7 @@ PlayHandle::~PlayHandle()
 
 void PlayHandle::setFinished()
 {
-    if(m_refCount<=0 && !m_finished)
+    if(m_refCount <= 0 && !m_finished)
     {
         m_finished = true;
         Engine::mixer()->emit playHandleToRemove(this);

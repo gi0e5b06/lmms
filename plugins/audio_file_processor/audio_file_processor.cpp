@@ -526,7 +526,7 @@ AudioFileProcessorView::AudioFileProcessorView(Instrument* _instrument,
             PLUGIN_NAME::getIconPixmap("loop_pingpong_on"));
     m_loopPingPongButton->setInactiveGraphic(
             PLUGIN_NAME::getIconPixmap("loop_pingpong_off"));
-    ToolTip::add(m_loopPingPongButton, tr("Enable loop"));
+    ToolTip::add(m_loopPingPongButton, tr("Enable ping-pong loop"));
     m_loopPingPongButton->setWhatsThis(tr(
             "This button enables ping-pong-looping. "
             "The sample loops backwards and forwards between the end point "

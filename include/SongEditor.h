@@ -58,9 +58,7 @@ private:
 };
 */
 
-class SongEditor
-      : public TrackContainerView
-      , public virtual ActionUpdatable
+class SongEditor : public TrackContainerView, public virtual ActionUpdatable
 {
     Q_OBJECT
   public:
@@ -172,16 +170,15 @@ class SongEditor
     EditMode m_mode;
     EditMode m_ctrlMode;  // mode they were in before they hit ctrl
 
-    friend class SongEditorWindow;
+    friend class SongWindow;
 };
 
-class SongEditorWindow
-      : public Editor
-      , public virtual ActionUpdatable
+class SongWindow : public EditorWindow, public virtual ActionUpdatable
 {
     Q_OBJECT
+
   public:
-    SongEditorWindow(Song* song);
+    SongWindow(Song* song);
 
     virtual void updateActions(const bool            _active,
                                QHash<QString, bool>& _table) const;  // = 0;
@@ -218,7 +215,7 @@ class SongEditorWindow
     ActionGroup* m_editModeGroup;
     QAction*     m_drawModeAction;
     QAction*     m_selectModeAction;
-    //QAction*     m_crtlAction;
+    // QAction*     m_crtlAction;
 
     ComboBox* m_zoomingXComboBox;
     ComboBox* m_zoomingYComboBox;

@@ -66,9 +66,11 @@ DualFilterEffect::~DualFilterEffect()
 bool DualFilterEffect::processAudioBuffer(sampleFrame* buf,
                                           const fpp_t  frames)
 {
+    //qInfo("DualFilterEffect::processAudioBuffer 1");
     bool smoothBegin, smoothEnd;
     if(!shouldProcessAudioBuffer(buf, frames, smoothBegin, smoothEnd))
         return false;
+    //qInfo("DualFilterEffect::processAudioBuffer 2");
 
     if(m_dfControls.m_filter1Model.isValueChanged() || m_filter1changed)
     {
@@ -97,21 +99,21 @@ bool DualFilterEffect::processAudioBuffer(sampleFrame* buf,
     ValueBuffer* gain2Buffer = m_dfControls.m_gain2Model.valueBuffer();
     ValueBuffer* mixBuffer   = m_dfControls.m_mixModel.valueBuffer();
 
-    int cut1Inc  = cut1Buffer ? 1 : 0;
-    int res1Inc  = res1Buffer ? 1 : 0;
-    int gain1Inc = gain1Buffer ? 1 : 0;
-    int cut2Inc  = cut2Buffer ? 1 : 0;
-    int res2Inc  = res2Buffer ? 1 : 0;
-    int gain2Inc = gain2Buffer ? 1 : 0;
-    int mixInc   = mixBuffer ? 1 : 0;
+    const int cut1Inc  = cut1Buffer ? 1 : 0;
+    const int res1Inc  = res1Buffer ? 1 : 0;
+    const int gain1Inc = gain1Buffer ? 1 : 0;
+    const int cut2Inc  = cut2Buffer ? 1 : 0;
+    const int res2Inc  = res2Buffer ? 1 : 0;
+    const int gain2Inc = gain2Buffer ? 1 : 0;
+    const int mixInc   = mixBuffer ? 1 : 0;
 
-    real_t* cut1Ptr  = cut1Buffer ? &(cut1Buffer->values()[0]) : &cut1;
-    real_t* res1Ptr  = res1Buffer ? &(res1Buffer->values()[0]) : &res1;
-    real_t* gain1Ptr = gain1Buffer ? &(gain1Buffer->values()[0]) : &gain1;
-    real_t* cut2Ptr  = cut2Buffer ? &(cut2Buffer->values()[0]) : &cut2;
-    real_t* res2Ptr  = res2Buffer ? &(res2Buffer->values()[0]) : &res2;
-    real_t* gain2Ptr = gain2Buffer ? &(gain2Buffer->values()[0]) : &gain2;
-    real_t* mixPtr   = mixBuffer ? &(mixBuffer->values()[0]) : &mix;
+    real_t* cut1Ptr  = cut1Buffer ? cut1Buffer->values() : &cut1;
+    real_t* res1Ptr  = res1Buffer ? res1Buffer->values() : &res1;
+    real_t* gain1Ptr = gain1Buffer ? gain1Buffer->values() : &gain1;
+    real_t* cut2Ptr  = cut2Buffer ? cut2Buffer->values() : &cut2;
+    real_t* res2Ptr  = res2Buffer ? res2Buffer->values() : &res2;
+    real_t* gain2Ptr = gain2Buffer ? gain2Buffer->values() : &gain2;
+    real_t* mixPtr   = mixBuffer ? mixBuffer->values() : &mix;
 
     const bool enabled1 = m_dfControls.m_enabled1Model.value();
     const bool enabled2 = m_dfControls.m_enabled2Model.value();

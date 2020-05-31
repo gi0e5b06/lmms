@@ -24,20 +24,18 @@
 
 #include "GuiApplication.h"
 
-#include "LmmsStyle.h"
-#include "LmmsPalette.h"
+#include "AutomationEditor.h"  // REQUIRED
+#include "BBEditor.h"          // REQUIRED
 #include "ConfigManager.h"
 #include "ControllerRackView.h"
 #include "FxMixerView.h"
+#include "LmmsPalette.h"
+#include "LmmsStyle.h"
 #include "MainWindow.h"
+#include "PianoRoll.h"     // REQUIRED
+#include "ProjectNotes.h"  // REQUIRED
 #include "Song.h"
-
-#include "AutomationEditor.h" // REQUIRED
-#include "BBEditor.h" // REQUIRED
-#include "PianoRoll.h" // REQUIRED
-#include "ProjectNotes.h" // REQUIRED
-#include "SongEditor.h" // REQUIRED
-
+#include "SongEditor.h"  // REQUIRED
 #include "embed.h"
 #include "lmmsversion.h"
 
@@ -46,194 +44,205 @@
 #include <QMessageBox>
 #include <QSplashScreen>
 
-
 GuiApplication* GuiApplication::s_instance = nullptr;
 
 GuiApplication* GuiApplication::instance()
 {
-	return s_instance;
+    return s_instance;
 }
-
 
 GuiApplication::GuiApplication(bool showSplashScreen)
 {
-	// enable HiDPI scaling before showing anything (Qt 5.6+ only)
-#if (QT_VERSION >= 0x050600)
-	QApplication::setAttribute(Qt::AA_EnableHighDpiScaling, true);
+    // enable HiDPI scaling before showing anything (Qt 5.6+ only)
+#if(QT_VERSION >= 0x050600)
+    QApplication::setAttribute(Qt::AA_EnableHighDpiScaling, true);
 #endif
 
-	// prompt the user to create the LMMS working directory (e.g. ~/lmms) if it doesn't exist
-	if ( !ConfigManager::inst()->hasWorkingDir() &&
-		QMessageBox::question( NULL,
-				tr( "Working directory" ),
-				tr( "The LMMS working directory %1 does not "
-				"exist. Create it now? You can change the directory "
-				"later via Edit -> Settings." ).arg( ConfigManager::inst()->workingDir() ),
-					QMessageBox::Yes | QMessageBox::No, QMessageBox::Yes ) == QMessageBox::Yes)
-	{
-		ConfigManager::inst()->createWorkingDir();
-	}
-	// Init style and palette
-	QDir::addSearchPath("artwork", ConfigManager::inst()->artworkDir());
-	QDir::addSearchPath("artwork", ConfigManager::inst()->defaultArtworkDir());
-	QDir::addSearchPath("artwork", ":/artwork");
+    // prompt the user to create the LMMS working directory (e.g. ~/lmms) if
+    // it doesn't exist
+    if(!ConfigManager::inst()->hasWorkingDir()
+       && QMessageBox::question(
+                  NULL, tr("Working directory"),
+                  tr("The LMMS working directory %1 does not "
+                     "exist. Create it now? You can change the directory "
+                     "later via Edit -> Settings.")
+                          .arg(ConfigManager::inst()->workingDir()),
+                  QMessageBox::Yes | QMessageBox::No, QMessageBox::Yes)
+                  == QMessageBox::Yes)
+    {
+        ConfigManager::inst()->createWorkingDir();
+    }
+    // Init style and palette
+    QDir::addSearchPath("artwork", ConfigManager::inst()->artworkDir());
+    QDir::addSearchPath("artwork",
+                        ConfigManager::inst()->defaultArtworkDir());
+    QDir::addSearchPath("artwork", ":/artwork");
 
-        LmmsStyle* lmmsstyle = new LmmsStyle();
-        QApplication::setStyle(lmmsstyle);
+    LmmsStyle* lmmsstyle = new LmmsStyle();
+    QApplication::setStyle(lmmsstyle);
 
-        LmmsPalette* lmmspal = new LmmsPalette(nullptr, lmmsstyle);
-        QPalette* lpal = new QPalette(lmmspal->palette());
-        QApplication::setPalette( *lpal );
-        LmmsStyle::s_palette = lpal;
+    LmmsPalette* lmmspal = new LmmsPalette(nullptr, lmmsstyle);
+    QPalette*    lpal    = new QPalette(lmmspal->palette());
+    QApplication::setPalette(*lpal);
+    LmmsStyle::s_palette = lpal;
 
 #ifdef LMMS_BUILD_APPLE
-	QApplication::setAttribute(Qt::AA_DontShowIconsInMenus, true);
+    QApplication::setAttribute(Qt::AA_DontShowIconsInMenus, true);
 #endif
 
-        // Show splash screen
-	QSplashScreen splashScreen( embed::getIconPixmap( "splash" ) );
-	if( showSplashScreen ) splashScreen.show();
+    // Show splash screen
+    QSplashScreen splashScreen(embed::getIconPixmap("splash"));
+    if(showSplashScreen)
+        splashScreen.show();
 
-	QHBoxLayout layout;
-	layout.setAlignment(Qt::AlignBottom);
-	splashScreen.setLayout(&layout);
+    QHBoxLayout layout;
+    layout.setAlignment(Qt::AlignBottom);
+    splashScreen.setLayout(&layout);
 
-	// Create a left-aligned label for loading progress 
-	// & a right-aligned label for version info
-	QLabel loadingProgressLabel;
-	m_loadingProgressLabel = &loadingProgressLabel;
-	QLabel versionLabel(MainWindow::tr( "Version %1" ).arg( LMMS_VERSION ));
+    // Create a left-aligned label for loading progress
+    // & a right-aligned label for version info
+    QLabel loadingProgressLabel;
+    m_loadingProgressLabel = &loadingProgressLabel;
+    QLabel versionLabel(MainWindow::tr("Version %1").arg(LMMS_VERSION));
 
-	loadingProgressLabel.setAlignment(Qt::AlignLeft);
-	versionLabel.setAlignment(Qt::AlignRight);
+    loadingProgressLabel.setAlignment(Qt::AlignLeft);
+    versionLabel.setAlignment(Qt::AlignRight);
 
-	layout.addWidget(&loadingProgressLabel);
-	layout.addWidget(&versionLabel);
+    layout.addWidget(&loadingProgressLabel);
+    layout.addWidget(&versionLabel);
 
-	// may have long gaps between future frames, so force update now
-	splashScreen.update();
-	qApp->processEvents();
+    // may have long gaps between future frames, so force update now
+    splashScreen.update();
+    qApp->processEvents();
 
-	connect(Engine::inst(), SIGNAL(initProgress(const QString&)), 
-		this, SLOT(displayInitProgress(const QString&)));
+    connect(Engine::inst(), SIGNAL(initProgress(const QString&)), this,
+            SLOT(displayInitProgress(const QString&)));
 
-	// Init central engine which handles all components of LMMS
-	Engine::init(false);
+    // Init central engine which handles all components of LMMS
+    Engine::init(false);
 
-	s_instance = this;
+    s_instance = this;
 
-	displayInitProgress(tr("Preparing UI"));
+    displayInitProgress(tr("Preparing UI"));
 
-	m_mainWindow = new MainWindow();
-	connect(m_mainWindow, SIGNAL(destroyed(QObject*)), this, SLOT(childDestroyed(QObject*)));
-	connect(m_mainWindow, SIGNAL(initProgress(const QString&)), 
-		this, SLOT(displayInitProgress(const QString&)));
+    m_mainWindow = new MainWindow();
+    connect(m_mainWindow, SIGNAL(destroyed(QObject*)), this,
+            SLOT(childDestroyed(QObject*)));
+    connect(m_mainWindow, SIGNAL(initProgress(const QString&)), this,
+            SLOT(displayInitProgress(const QString&)));
 
-	displayInitProgress(tr("Preparing song editor"));
-	m_songEditor = new SongEditorWindow(Engine::getSong());
-	connect(m_songEditor, SIGNAL(destroyed(QObject*)), this, SLOT(childDestroyed(QObject*)));
+    displayInitProgress(tr("Preparing song editor"));
+    m_songWindow = new SongWindow(Engine::getSong());
+    connect(m_songWindow, SIGNAL(destroyed(QObject*)), this,
+            SLOT(childDestroyed(QObject*)));
 
-	displayInitProgress(tr("Preparing mixer"));
-	m_fxMixerView = new FxMixerView;
-	connect(m_fxMixerView, SIGNAL(destroyed(QObject*)), this, SLOT(childDestroyed(QObject*)));
+    displayInitProgress(tr("Preparing mixer"));
+    m_fxMixerView = new FxMixerView;
+    connect(m_fxMixerView, SIGNAL(destroyed(QObject*)), this,
+            SLOT(childDestroyed(QObject*)));
 
-	displayInitProgress(tr("Preparing controller rack"));
-	m_controllerRackView = new ControllerRackView;
-	connect(m_controllerRackView, SIGNAL(destroyed(QObject*)), this, SLOT(childDestroyed(QObject*)));
+    displayInitProgress(tr("Preparing controller rack"));
+    m_controllerRackView = new ControllerRackView;
+    connect(m_controllerRackView, SIGNAL(destroyed(QObject*)), this,
+            SLOT(childDestroyed(QObject*)));
 
-	displayInitProgress(tr("Preparing project notes"));
-	m_projectNotes = new ProjectNotes;
-	connect(m_projectNotes, SIGNAL(destroyed(QObject*)), this, SLOT(childDestroyed(QObject*)));
+    displayInitProgress(tr("Preparing project notes"));
+    m_projectNotes = new ProjectNotes;
+    connect(m_projectNotes, SIGNAL(destroyed(QObject*)), this,
+            SLOT(childDestroyed(QObject*)));
 
-	displayInitProgress(tr("Preparing beat/bassline editor"));
-	m_bbEditor = new BBEditor(Engine::getBBTrackContainer());
-	connect(m_bbEditor, SIGNAL(destroyed(QObject*)), this, SLOT(childDestroyed(QObject*)));
+    displayInitProgress(tr("Preparing beat/bassline editor"));
+    m_bbWindow = new BBWindow(Engine::getBBTrackContainer());
+    connect(m_bbWindow, SIGNAL(destroyed(QObject*)), this,
+            SLOT(childDestroyed(QObject*)));
 
-	displayInitProgress(tr("Preparing piano roll"));
-	m_pianoRoll = new PianoRollWindow();
-	connect(m_pianoRoll, SIGNAL(destroyed(QObject*)), this, SLOT(childDestroyed(QObject*)));
+    displayInitProgress(tr("Preparing piano roll"));
+    m_pianoRollWindow = new PianoRollWindow();
+    connect(m_pianoRollWindow, SIGNAL(destroyed(QObject*)), this,
+            SLOT(childDestroyed(QObject*)));
 
-	displayInitProgress(tr("Preparing automation editor"));
-	m_automationEditor = new AutomationEditorWindow;
-	connect(m_automationEditor, SIGNAL(destroyed(QObject*)), this, SLOT(childDestroyed(QObject*)));
+    displayInitProgress(tr("Preparing automation editor"));
+    m_automationWindow = new AutomationWindow;
+    connect(m_automationWindow, SIGNAL(destroyed(QObject*)), this,
+            SLOT(childDestroyed(QObject*)));
 
-	splashScreen.finish(m_mainWindow);
-	m_mainWindow->finalize();
-	m_mainWindow->reorganizeWindows();
+    splashScreen.finish(m_mainWindow);
+    m_mainWindow->finalize();
+    m_mainWindow->reorganizeWindows();
 
-	m_loadingProgressLabel = nullptr;
+    m_loadingProgressLabel = nullptr;
 }
 
 GuiApplication::~GuiApplication()
 {
-	// InstrumentTrackView::cleanupWindowCache();
-	s_instance = nullptr;
+    // InstrumentTrackView::cleanupWindowCache();
+    s_instance = nullptr;
 }
 
-
-void GuiApplication::displayInitProgress(const QString &msg)
+void GuiApplication::displayInitProgress(const QString& msg)
 {
-	Q_ASSERT(m_loadingProgressLabel != nullptr);
+    Q_ASSERT(m_loadingProgressLabel != nullptr);
 
-	m_loadingProgressLabel->setText(msg);
-	// must force a UI update and process events, as there may be long gaps between processEvents() calls during init
-	m_loadingProgressLabel->repaint();
-	qApp->processEvents();
+    m_loadingProgressLabel->setText(msg);
+    // must force a UI update and process events, as there may be long gaps
+    // between processEvents() calls during init
+    m_loadingProgressLabel->repaint();
+    qApp->processEvents();
 }
 
-void GuiApplication::childDestroyed(QObject *obj)
+void GuiApplication::childDestroyed(QObject* obj)
 {
-	// when any object that can be reached via gui->mainWindow(), gui->fxMixerView(), etc
-	//   is destroyed, ensure that their accessor functions will return null instead of a garbage pointer.
-	if (obj == m_mainWindow)
-	{
-		m_mainWindow = nullptr;
-	}
-	else if (obj == m_fxMixerView)
-	{
-		m_fxMixerView = nullptr;
-	}
-	else if (obj == m_songEditor)
-	{
-		m_songEditor = nullptr;
-	}
-	else if (obj == m_automationEditor)
-	{
-		m_automationEditor = nullptr;
-	}
-	else if (obj == m_bbEditor)
-	{
-		m_bbEditor = nullptr;
-	}
-	else if (obj == m_pianoRoll)
-	{
-		m_pianoRoll = nullptr;
-	}
-	else if (obj == m_projectNotes)
-	{
-		m_projectNotes = nullptr;
-	}
-	else if (obj == m_controllerRackView)
-	{
-		m_controllerRackView = nullptr;
-	}
+    // when any object that can be reached via gui->mainWindow(),
+    // gui->fxMixerView(), etc
+    //   is destroyed, ensure that their accessor functions will return null
+    //   instead of a garbage pointer.
+    if(obj == m_mainWindow)
+    {
+        m_mainWindow = nullptr;
+    }
+    else if(obj == m_automationWindow)
+    {
+        m_automationWindow = nullptr;
+    }
+    else if(obj == m_bbWindow)
+    {
+        m_bbWindow = nullptr;
+    }
+    else if(obj == m_pianoRollWindow)
+    {
+        m_pianoRollWindow = nullptr;
+    }
+    else if(obj == m_songWindow)
+    {
+        m_songWindow = nullptr;
+    }
+    else if(obj == m_controllerRackView)
+    {
+        m_controllerRackView = nullptr;
+    }
+    else if(obj == m_fxMixerView)
+    {
+        m_fxMixerView = nullptr;
+    }
+    else if(obj == m_projectNotes)
+    {
+        m_projectNotes = nullptr;
+    }
 }
-
-
-
 
 // tmp
 void GuiApplication::hasSongFinished()
 {
-	Song* song=Engine::getSong();
-	if( !song ) return;
-	tact_t t=song->getTacts();
-	if( t > song->length() )
-	{
-		qWarning("Song finished!");
-		qApp->closeAllWindows();
-		qWarning("All Windows closed");
-		qApp->exit(0);
-		qWarning("Exit Loop");
-	}
+    Song* song = Engine::getSong();
+    if(!song)
+        return;
+    tact_t t = song->getTacts();
+    if(t > song->length())
+    {
+        qWarning("Song finished!");
+        qApp->closeAllWindows();
+        qWarning("All Windows closed");
+        qApp->exit(0);
+        qWarning("Exit Loop");
+    }
 }

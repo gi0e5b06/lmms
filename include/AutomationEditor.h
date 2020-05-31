@@ -2,26 +2,24 @@
  * AutomationEditor.h - a window where you can edit dynamic values in an easy
  *                      way
  *
- * Copyright (c) 2018      gi0e5b06 (on github.com)
+ * Copyright (c) 2018-2019 gi0e5b06 (on github.com)
  * Copyright (c) 2006-2008 Javier Serrano Polo
  * <jasp00/at/users.sourceforge.net>
  *
- * This file is part of LMMS - https://lmms.io
+ * This file is part of LSMM -
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public
- * License along with this program (see COPYING); if not, write to the
- * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
- * Boston, MA 02110-1301 USA.
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
 
@@ -48,10 +46,10 @@ class ComboBox;
 class NotePlayHandle;
 class TimeLineWidget;
 
-class AutomationEditor
-      : public QWidget
-      , public JournallingObject
-      , public virtual ActionUpdatable
+class AutomationEditor :
+      public QWidget,
+      public JournallingObject,
+      public virtual ActionUpdatable
 {
     Q_OBJECT
     Q_PROPERTY(QColor barLineColor READ barLineColor WRITE setBarLineColor)
@@ -71,10 +69,12 @@ class AutomationEditor
         return m_pattern;
     }
 
+    /*
     inline bool validPattern() const
     {
         return m_pattern != nullptr;
     }
+    */
 
     virtual void saveSettings(QDomDocument& doc, QDomElement& parent);
     virtual void loadSettings(const QDomElement& parent);
@@ -283,23 +283,20 @@ class AutomationEditor
     QColor m_crossColor;
     QColor m_backgroundShade;
 
-    friend class AutomationEditorWindow;
+    friend class AutomationWindow;
 
   signals:
     void currentPatternChanged();
     void positionChanged(const MidiTime&);
 };
 
-class AutomationEditorWindow : public Editor
+class AutomationWindow : public EditorWindow
 {
     Q_OBJECT
 
-    static const int INITIAL_WIDTH  = 860;
-    static const int INITIAL_HEIGHT = 480;
-
   public:
-    AutomationEditorWindow();
-    virtual ~AutomationEditorWindow();
+    AutomationWindow();
+    virtual ~AutomationWindow();
 
     void reset();
 

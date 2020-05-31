@@ -68,7 +68,7 @@ LadspaEffect::LadspaEffect(Model*                                    _parent,
       m_controls(NULL), m_maxSampleRate(0),
       m_key(LadspaSubPluginFeatures::subPluginKeyToLadspaKey(_key))
 {
-    setColor(QColor(59,66,128));
+    setColor(QColor(59, 66, 128));
 
     Ladspa2LMMS* manager = Engine::getLADSPAManager();
     if(manager->getDescription(m_key) == nullptr)
@@ -165,11 +165,13 @@ bool LadspaEffect::processAudioBuffer(sampleFrame* _buf, const fpp_t _frames)
                     break;
                 case AUDIO_RATE_INPUT:
                 {
-                    ValueBuffer* vb = pp->control->valueBuffer();
+                    const ValueBuffer* vb = pp->control->valueBuffer();
                     if(vb)
                     {
-                        memcpy(pp->buffer, vb->values(),
-                               frames * sizeof(float));
+                        // memcpy(pp->buffer, vb->values(),
+                        //       frames * sizeof(float));
+                        for(fpp_t frame = 0; frame < frames; ++frame)
+                            pp->buffer[frame] = vb->value(frame);
                     }
                     else
                     {

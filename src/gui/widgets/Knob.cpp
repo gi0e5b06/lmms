@@ -65,7 +65,7 @@ Knob::Knob(QWidget* _parent, const QString& _name) :
 
 Knob::Knob(knobTypes _knob_num, QWidget* _parent, const QString& _name) :
       Widget(_parent), FloatModelView(nullptr, this), m_pressLeft(false),
-      m_label(""), m_interactive(true), m_knobPixmap(nullptr),
+      m_label(""), /*m_interactive(true), */ m_knobPixmap(nullptr),
       m_volumeKnob(false, nullptr, "[volume knob]"),
       m_volumeRatio(100., 0., 1000000., 0., nullptr, "[volume ratio]"),
       m_angle(-1000.f),
@@ -199,6 +199,7 @@ void Knob::setText(const QString& txt)
     update();
 }
 
+/*
 bool Knob::isInteractive() const
 {
     return m_interactive;
@@ -212,6 +213,7 @@ void Knob::setInteractive(bool _b)
     m_interactive = _b;
     update();
 }
+*/
 
 void Knob::setTotalAngle(float angle)
 {
@@ -821,11 +823,7 @@ void Knob::mousePressEvent(QMouseEvent* _me)
     {
         m->addJournalCheckPoint();
         m->saveJournallingState(false);
-
-        if(m)
-            m_pressValue = m->normalizedValue(m->rawValue());
-        else
-            m_pressValue = 0.f;
+        m_pressValue = m->normalizedValue(m->rawValue());
 
         m_pressPos  = _me->pos();
         m_pressLeft = true;
@@ -854,6 +852,7 @@ void Knob::mousePressEvent(QMouseEvent* _me)
     else
     {
         FloatModelView::mousePressEvent(_me);
+        m_pressLeft = false;
     }
 }
 
@@ -881,7 +880,7 @@ void Knob::mouseReleaseEvent(QMouseEvent* event)
     if(!m || !isInteractive())
         return;
 
-    if(event && event->button() == Qt::LeftButton)
+    if(event && event->button() == Qt::LeftButton && m_pressLeft)
     {
         m->restoreJournallingState();
     }

@@ -111,10 +111,9 @@ TimeLineWidget::TimeLineWidget(const int       xoff,
 
 TimeLineWidget::~TimeLineWidget()
 {
-    if(gui->songEditor())
-    {
+    if(gui->songWindow())
         m_pos.m_timeLine = NULL;
-    }
+
     delete m_hint;
 }
 

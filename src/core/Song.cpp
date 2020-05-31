@@ -124,11 +124,15 @@ void Song::setTempo()
 {
     const bpm_t tempo = (bpm_t)m_tempoModel.value();
 
+    qInfo("Song::setTempo 1");
     Engine::mixer()->adjustTempo(tempo);
+    qInfo("Song::setTempo 2");
     Engine::updateFramesPerTick();
+    qInfo("Song::setTempo 3");
     m_vstSyncController.setTempo(tempo);
-
+    qInfo("Song::setTempo 4");
     emit tempoChanged(tempo);
+    qInfo("Song::setTempo 5");
 }
 
 void Song::setTimeSignature()
@@ -643,10 +647,10 @@ void Song::stop()
                 // m_playPos[m_playMode].setTicks( 0 );
                 // m_elapsedMilliSeconds = 0;
                 Engine::transport()->transportLocate(0);
-                if(gui && gui->songEditor()
+                if(gui && gui->songWindow()
                    && (tl->autoScroll() == TimeLineWidget::AutoScrollEnabled))
                 {
-                    gui->songEditor()->m_editor->updatePosition(0);
+                    gui->songWindow()->m_editor->updatePosition(0);
                 }
                 break;
 
@@ -657,11 +661,11 @@ void Song::stop()
                     // tl->savedPos().getTicks() ); setToTime(tl->savedPos());
                     Engine::transport()->transportLocate(
                             tl->savedPos().frames(Engine::framesPerTick()));
-                    if(gui && gui->songEditor()
+                    if(gui && gui->songWindow()
                        && (tl->autoScroll()
                            == TimeLineWidget::AutoScrollEnabled))
                     {
-                        gui->songEditor()->m_editor->updatePosition(
+                        gui->songWindow()->m_editor->updatePosition(
                                 MidiTime(tl->savedPos().getTicks()));
                     }
                     tl->savePos(-1);
@@ -813,16 +817,16 @@ void Song::clearProject()
 
     Engine::mixer()->requestChangeInModel();
 
-    if(gui && gui->getBBEditor())
+    if(gui && gui->bbWindow())
     {
-        gui->getBBEditor()->trackContainerView()->clearAllTracks();
+        gui->bbWindow()->trackContainerView()->clearAllTracks();
     }
 
     qInfo("Song::clearProject 2b");
 
-    if(gui && gui->songEditor())
+    if(gui && gui->songWindow())
     {
-        gui->songEditor()->m_editor->clearAllTracks();
+        gui->songWindow()->m_editor->clearAllTracks();
     }
 
     qInfo("Song::clearProject 2c");
@@ -858,16 +862,16 @@ void Song::clearProject()
 
     qInfo("Song::clearProject 6");
 
-    if(gui && gui->automationEditor())
+    if(gui && gui->automationWindow())
     {
-        gui->automationEditor()->reset();
+        gui->automationWindow()->reset();
     }
 
     qInfo("Song::clearProject 7");
 
-    if(gui && gui->pianoRoll())
+    if(gui && gui->pianoRollWindow())
     {
-        gui->pianoRoll()->reset();
+        gui->pianoRollWindow()->reset();
     }
 
     qInfo("Song::clearProject 8");
@@ -1137,14 +1141,16 @@ void Song::loadProject(const QString& fileName)
                         gui->getControllerRackView()->restoreState(
                                 node.toElement());
                     }
-                    else if(node.nodeName() == gui->pianoRoll()->nodeName())
+                    else if(node.nodeName()
+                            == gui->pianoRollWindow()->nodeName())
                     {
-                        gui->pianoRoll()->restoreState(node.toElement());
+                        gui->pianoRollWindow()->restoreState(
+                                node.toElement());
                     }
                     else if(node.nodeName()
-                            == gui->automationEditor()->m_editor->nodeName())
+                            == gui->automationWindow()->m_editor->nodeName())
                     {
-                        gui->automationEditor()->m_editor->restoreState(
+                        gui->automationWindow()->m_editor->restoreState(
                                 node.toElement());
                     }
                     else if(node.nodeName()
@@ -1172,14 +1178,14 @@ void Song::loadProject(const QString& fileName)
 
     if(gui)
     {
-        if(gui->pianoRoll()->currentPattern() == nullptr)
+        if(gui->pianoRollWindow()->currentPattern() == nullptr)
         {
-            // gui->pianoRoll()->parentWidget()->hide();
+            // gui->pianoRollWindow()->parentWidget()->hide();
         }
 
-        if(gui->automationEditor()->m_editor->currentPattern() == nullptr)
+        if(gui->automationWindow()->m_editor->currentPattern() == nullptr)
         {
-            // gui->automationEditor()->hide();
+            // gui->automationWindow()->hide();
         }
     }
 
@@ -1244,9 +1250,9 @@ void Song::loadProject(const QString& fileName)
     {
         gui->mainWindow()->resetWindowTitle();
         // qInfo("Song::loadProject 7");
-        gui->songEditor()->m_editor->realignTracks();
+        gui->songWindow()->m_editor->realignTracks();
         // qInfo("Song::loadProject 8");
-        gui->getBBEditor()->trackContainerView()->realignTracks();
+        gui->bbWindow()->trackContainerView()->realignTracks();
         // qInfo("Song::loadProject 9");
     }
 
@@ -1288,8 +1294,8 @@ void Song::buildProjectDataFile(DataFile& dataFile)
     if(gui)
     {
         gui->getControllerRackView()->saveState(dataFile, dataFile.content());
-        gui->pianoRoll()->saveState(dataFile, dataFile.content());
-        gui->automationEditor()->m_editor->saveState(dataFile,
+        gui->pianoRollWindow()->saveState(dataFile, dataFile.content());
+        gui->automationWindow()->m_editor->saveState(dataFile,
                                                      dataFile.content());
         gui->getProjectNotes()->SerializingObject::saveState(
                 dataFile, dataFile.content());

@@ -34,127 +34,123 @@
 //#include <QMdiSubWindow>
 
 #include "JournallingObject.h"
-#include "communication.h"
 #include "SubWindow.h"
+#include "communication.h"
 
 /*
 class VstSubWindow : public SubWindow
 {
  public:
-	VstSubWindow( );//QWidget * _parent, Qt::WindowFlags _flags = 0 );
-	virtual ~VstSubWindow();
-	virtual void closeEvent( QCloseEvent * e );
+        VstSubWindow( );//QWidget * _parent, Qt::WindowFlags _flags = 0 );
+        virtual ~VstSubWindow();
+        virtual void closeEvent( QCloseEvent * e );
 };
 */
 
 class PLUGIN_EXPORT VstPlugin : public RemotePlugin, public JournallingObject
 {
-	Q_OBJECT
-public:
-	VstPlugin( const QString & _plugin );
-	virtual ~VstPlugin();
+    Q_OBJECT
 
-	void tryLoad( const QString &remoteVstPluginExecutable );
+  public:
+    VstPlugin(const QString& _plugin);
+    virtual ~VstPlugin();
 
-	virtual bool processMessage( const message & _m );
+    void tryLoad(const QString& remoteVstPluginExecutable);
 
-	inline bool hasEditor() const
-	{
-		return m_pluginWindowID != 0;
-	}
+    virtual bool processMessage(const message& _m);
 
-	void showEditor(bool isEffect=false, QWidget* _parent=NULL);
+    inline bool hasEditor() const
+    {
+        return m_pluginWindowID != 0;
+    }
 
-	void hideEditor();
+    void showEditor(bool isEffect = false, QWidget* _parent = NULL);
 
-	inline const QString & name() const
-	{
-		return m_name;
-	}
+    void hideEditor();
 
-	inline int version() const
-	{
-		return m_version;
-	}
+    inline const QString& name() const
+    {
+        return m_name;
+    }
 
-	inline const QString & vendorString() const
-	{
-		return m_vendorString;
-	}
+    inline int version() const
+    {
+        return m_version;
+    }
 
-	inline const QString & productString() const
-	{
-		return m_productString;
-	}
+    inline const QString& vendorString() const
+    {
+        return m_vendorString;
+    }
 
-	inline const QString& currentProgramName() const
-	{
-		return m_currentProgramName;
-	}
+    inline const QString& productString() const
+    {
+        return m_productString;
+    }
 
-	inline const QString& allProgramNames() const
-	{
-		return m_allProgramNames;
-	}
+    inline const QString& currentProgramName() const
+    {
+        return m_currentProgramName;
+    }
 
-	int currentProgram();
+    inline const QString& allProgramNames() const
+    {
+        return m_allProgramNames;
+    }
 
-	const QMap<QString, QString> & parameterDump();
-	void setParameterDump( const QMap<QString, QString> & _pdump );
+    int currentProgram();
 
+    const QMap<QString, QString>& parameterDump();
+    void setParameterDump(const QMap<QString, QString>& _pdump);
 
-	QWidget * pluginWidget() const;
-	QMdiSubWindow * mdiSubWindow() const;
+    QWidget*       pluginWidget() const;
+    QMdiSubWindow* mdiSubWindow() const;
 
-	virtual void loadSettings( const QDomElement & _this );
-	virtual void saveSettings( QDomDocument & _doc, QDomElement & _this );
+    virtual void loadSettings(const QDomElement& _this);
+    virtual void saveSettings(QDomDocument& _doc, QDomElement& _this);
 
-	inline virtual QString nodeName() const
-	{
-		return "vstplugin";
-	}
+    inline virtual QString nodeName() const
+    {
+        return "vstplugin";
+    }
 
+  public slots:
+    void setTempo(bpm_t _bpm);
+    void updateSampleRate();
+    void openPreset(void);
+    void setProgram(int index);
+    void rotateProgram(int offset);
+    void loadProgramNames();
+    void savePreset(void);
+    void setParam(int i, float f);
+    void idleUpdate();
 
-public slots:
-	void setTempo( bpm_t _bpm );
-	void updateSampleRate();
-	void openPreset( void );
-	void setProgram( int index );
-	void rotateProgram( int offset );
-	void loadProgramNames();
-	void savePreset( void );
-	void setParam( int i, float f );
-	void idleUpdate();
+  private:
+    void       loadChunk(const QByteArray& _chunk);
+    QByteArray saveChunk();
 
+    QString                 m_plugin;
+    QPointer<QWidget>       m_pluginWidget;
+    QPointer<QMdiSubWindow> m_subWindow;
+    int                     m_pluginWindowID;
+    QSize                   m_pluginGeometry;
 
-private:
-	void loadChunk( const QByteArray & _chunk );
-	QByteArray saveChunk();
+    bool m_badDllFormat;
 
-	QString m_plugin;
-	QPointer<QWidget>       m_pluginWidget;
-	QPointer<QMdiSubWindow> m_subWindow;
-	int m_pluginWindowID;
-	QSize m_pluginGeometry;
+    QString m_name;
+    int     m_version;
+    QString m_vendorString;
+    QString m_productString;
+    QString m_currentProgramName;
+    QString m_allProgramNames;
 
-	bool m_badDllFormat;
+    QString p_name;
 
-	QString m_name;
-	int m_version;
-	QString m_vendorString;
-	QString m_productString;
-	QString m_currentProgramName;
-	QString m_allProgramNames;
+    QMap<QString, QString> m_parameterDump;
 
-	QString p_name;
+    int m_currentProgram;
 
-	QMap<QString, QString> m_parameterDump;
-
-	int m_currentProgram;
-
-	QTimer m_idleTimer;
-
-} ;
-
+    QTimer m_idleTimer;
+};
 
 #endif

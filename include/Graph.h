@@ -48,6 +48,7 @@ class EXPORT Graph
         LinearStyle,
         LinearNonCyclicStyle,
         BarStyle,
+        // BarCenterGradStyle,
         NumGraphStyles
     };
 

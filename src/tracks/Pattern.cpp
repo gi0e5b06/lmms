@@ -166,9 +166,9 @@ MidiTime Pattern::stepPosition(int _step) const
 Note* Pattern::addNote(const Note& _new_note, const bool _quant_pos)
 {
     Note* new_note = new Note(_new_note);
-    if(_quant_pos && gui->pianoRoll())
+    if(_quant_pos && gui->pianoRollWindow())
     {
-        new_note->quantizePos(gui->pianoRoll()->quantization());
+        new_note->quantizePos(gui->pianoRollWindow()->quantization());
     }
 
     instrumentTrack()->lock();
@@ -562,10 +562,10 @@ void Pattern::updateBBTrack()
                 Engine::getBBTrackContainer()->updateBBTrack( this );
         }
 
-        if( gui && gui->pianoRoll() && gui->pianoRoll()->currentPattern() ==
-this )
+        if( gui && gui->pianoRollWindow() &&
+gui->pianoRollWindow()->currentPattern() == this )
         {
-                gui->pianoRoll()->update();
+                gui->pianoRollWindow()->update();
         }
 }
 */
@@ -624,7 +624,7 @@ PatternView::PatternView(Pattern* pattern, TrackView* parent) :
       m_mutedNoteFillColor(100, 100, 100, 220),
       m_mutedNoteBorderColor(100, 100, 100, 220)
 {
-    connect(gui->pianoRoll(), SIGNAL(currentPatternChanged()), this,
+    connect(gui->pianoRollWindow(), SIGNAL(currentPatternChanged()), this,
             SLOT(update()));
 
     if(s_stepBtnOn0 == NULL)
@@ -666,18 +666,18 @@ void PatternView::update()
 
 void PatternView::openInPianoRoll()
 {
-    gui->pianoRoll()->setCurrentPattern(m_pat);
-    gui->pianoRoll()->parentWidget()->show();
-    gui->pianoRoll()->show();
-    gui->pianoRoll()->setFocus();
+    gui->pianoRollWindow()->setCurrentPattern(m_pat);
+    gui->pianoRollWindow()->parentWidget()->show();
+    gui->pianoRollWindow()->show();
+    gui->pianoRollWindow()->setFocus();
 }
 
 void PatternView::setGhostInPianoRoll()
 {
-    gui->pianoRoll()->setGhostPattern(m_pat);
-    gui->pianoRoll()->parentWidget()->show();
-    gui->pianoRoll()->show();
-    gui->pianoRoll()->setFocus();
+    gui->pianoRollWindow()->setGhostPattern(m_pat);
+    gui->pianoRollWindow()->parentWidget()->show();
+    gui->pianoRollWindow()->show();
+    gui->pianoRollWindow()->setFocus();
 }
 
 /*
@@ -754,8 +754,8 @@ QMenu* PatternView::buildContextMenu()
 
     a = cm->addAction(embed::getIconPixmap("ghost_note"), tr("Ghost notes"),
                       this, SLOT(setGhostInPianoRoll()));
-    a->setEnabled(gui->pianoRoll()->currentPattern()
-                  && gui->pianoRoll()->currentPattern() != m_pat
+    a->setEnabled(gui->pianoRollWindow()->currentPattern()
+                  && gui->pianoRollWindow()->currentPattern() != m_pat
                   && !m_pat->empty());
 
     cm->addSeparator();
@@ -877,8 +877,8 @@ void PatternView::mousePressEvent(QMouseEvent* _me)
         Engine::getSong()->setModified();
         update();
 
-        if(gui->pianoRoll()->currentPattern() == m_pat)
-            gui->pianoRoll()->update();
+        if(gui->pianoRollWindow()->currentPattern() == m_pat)
+            gui->pianoRollWindow()->update();
     }
     else
 
@@ -943,9 +943,9 @@ void PatternView::wheelEvent(QWheelEvent* _we)
 
             Engine::getSong()->setModified();
             update();
-            if(gui->pianoRoll()->currentPattern() == m_pat)
+            if(gui->pianoRollWindow()->currentPattern() == m_pat)
             {
-                gui->pianoRoll()->update();
+                gui->pianoRollWindow()->update();
             }
         }
         _we->accept();
@@ -980,9 +980,9 @@ void PatternView::paintEvent(QPaintEvent*)
 
     QPainter p(&m_paintPixmap);
 
-    bool const muted       = m_pat->getTrack()->isMuted() || m_pat->isMuted();
-    bool       current     = gui->pianoRoll()->currentPattern() == m_pat;
-    bool       ghost       = gui->pianoRoll()->ghostPattern() == m_pat;
+    bool const muted   = m_pat->getTrack()->isMuted() || m_pat->isMuted();
+    bool       current = gui->pianoRollWindow()->currentPattern() == m_pat;
+    bool       ghost   = gui->pianoRollWindow()->ghostPattern() == m_pat;
     bool       beatPattern = m_pat->m_patternType == Pattern::BeatPattern;
 
     // state: selected, normal, user, beat pattern, muted

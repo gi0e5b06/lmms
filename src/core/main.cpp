@@ -1072,7 +1072,7 @@ int main(int argc, char** argv)
                                                 "not reversible.")));
 
             mb.setIcon(QMessageBox::Warning);
-            mb.setWindowIcon(embed::getIconPixmap("icon"));
+            mb.setWindowIcon(embed::getIcon("icon"));
             mb.setWindowFlags(Qt::WindowCloseButtonHint);
 
             QPushButton* recover;
@@ -1101,8 +1101,8 @@ int main(int argc, char** argv)
             exit->setVisible(false);
 
             // set icons
-            recover->setIcon(embed::getIconPixmap("recover"));
-            discard->setIcon(embed::getIconPixmap("discard"));
+            recover->setIcon(embed::getIcon("recover"));
+            discard->setIcon(embed::getIcon("discard"));
 
             mb.setDefaultButton(recover);
             mb.setEscapeButton(exit);

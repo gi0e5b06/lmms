@@ -86,6 +86,7 @@ void Effect::startRunning()
 {
     if(!isRunning())
     {
+        // qInfo("%s: start running", qPrintable(nodeName()));
         // resetBufferCount();//m_bufferCount = 0;
         m_runningModel.setAutomatedValue(true);
     }
@@ -94,7 +95,11 @@ void Effect::startRunning()
 void Effect::stopRunning()
 {
     if(isRunning())
+    {
+        // qInfo("%s: stop running", qPrintable(nodeName()));
         m_runningModel.setAutomatedValue(false);
+    }
+
     if(!m_gateClosed)
         m_gateClosed = true;
 }
@@ -212,8 +217,10 @@ bool Effect::gateHasClosed(real_t&      _rms,
     if(g > 0.)
     {
         if(g < 1. && _rms < 0.)
+        {
             _rms = computeRMS(_buf, _frames);
-        // qInfo("GHC g=%f rms=%f",g,_rms);
+            // qInfo("GHC g=%f rms=%f", g, _rms);
+        }
 
         if(Engine::mixer()->warningXRuns())
             g += 0.01;
@@ -261,7 +268,7 @@ bool Effect::gateHasOpen(real_t& _rms, sampleFrame* _buf, const fpp_t _frames)
             if(!isRunning())
                 startRunning();
             m_bufferCount = 0;
-            // qInfo("GHO RESET");//resetBufferCount();
+            // qInfo("GHO RESET");  // resetBufferCount();
             return true;
         }
     }
@@ -287,8 +294,11 @@ real_t Effect::computeRMS(sampleFrame* _buf, const fpp_t _frames)
               _frames);
         rms = 0.;
     }
+
     // return fastsqrtf01(qBound(0.,rms,1.));
-    return WaveForm::sqrt(bound(0., rms, 1.));
+    real_t r = WaveForm::sqrt(bound(0., rms, 1.));
+    // qInfo("Effect::computeRMS rms=%f r=%f", rms, r);
+    return r;
 }
 
 bool Effect::shouldProcessAudioBuffer(sampleFrame* _buf,
@@ -300,6 +310,9 @@ bool Effect::shouldProcessAudioBuffer(sampleFrame* _buf,
     {
         if(isRunning())
             stopRunning();
+
+        // qInfo("%s: shouldPAB return false okey=%d enabled=%d",
+        //      qPrintable(nodeName()), isOkay(), isEnabled());
         return false;
     }
 
@@ -311,19 +324,23 @@ bool Effect::shouldProcessAudioBuffer(sampleFrame* _buf,
         real_t rms = -1.;
         if(gateHasOpen(rms, _buf, _frames))
         {
-            // qInfo("%s: gate open",qPrintable(nodeName()));
+            // qInfo("%s: gate open", qPrintable(nodeName()));
             _smoothBegin = true;
         }
         else if(gateHasClosed(rms, _buf, _frames))
         {
-            // qInfo("%s: gate closed",qPrintable(nodeName()));
+            // qInfo("%s: gate closed", qPrintable(nodeName()));
             _smoothEnd = true;
         }
+        // qInfo("%s: shouldPAB autoquit rms=%f", qPrintable(nodeName()),
+        // rms);
     }
 
     if(!isRunning() && !_smoothEnd)
     {
-        const ValueBuffer* wetDryBuf = m_wetDryModel.valueBuffer();
+        /*qInfo("%s: shouldPAB return false running=%d",
+          qPrintable(nodeName()), isRunning());*/
+        ValueBuffer* wetDryBuf = m_wetDryModel.valueBuffer();
 
         for(fpp_t f = 0; f < _frames; ++f)
         {
@@ -345,9 +362,15 @@ bool Effect::shouldKeepRunning(sampleFrame* _buf,
                                bool         _unclip)
 {
     if(!isOkay() || dontRun() || !isEnabled())
+    {
+        // qInfo("KR STOP 1");
         return false;
+    }
     if(!isRunning())
+    {
+        // qInfo("KR STOP 2");
         return false;
+    }
 
     if(_unclip)
     {
@@ -411,7 +434,7 @@ void Effect::computeWetDryLevels(fpp_t   _f,
                                  real_t& _w1,
                                  real_t& _d1)
 {
-    const ValueBuffer* wetDryBuf = m_wetDryModel.valueBuffer();
+    ValueBuffer* wetDryBuf = m_wetDryModel.valueBuffer();
 
     real_t w = (wetDryBuf ? wetDryBuf->value(_f) : m_wetDryModel.value());
     _d0      = 1.0 - w;
@@ -436,14 +459,14 @@ void Effect::computeWetDryLevels(fpp_t   _f,
     }
     else if(isBalanceable())
     {
-        const ValueBuffer* balanceBuf = m_balanceModel.valueBuffer();
-        const real_t       bal        = (balanceBuf ? balanceBuf->value(_f)
+        ValueBuffer* balanceBuf = m_balanceModel.valueBuffer();
+        const real_t bal        = (balanceBuf ? balanceBuf->value(_f)
                                        : m_balanceModel.value());
-        const real_t       bal0       = bal < 0. ? 1. : 1. - bal;
-        const real_t       bal1       = bal < 0. ? 1. + bal : 1.;
-        _w0                           = bal0 * w;
-        _w1                           = bal1 * w;
-        const real_t df               = (2. + _d0 + _d1) / 4.;
+        const real_t bal0       = bal < 0. ? 1. : 1. - bal;
+        const real_t bal1       = bal < 0. ? 1. + bal : 1.;
+        _w0                     = bal0 * w;
+        _w1                     = bal1 * w;
+        const real_t df         = (2. + _d0 + _d1) / 4.;
         _d0 += (1. - bal0) * w * df;
         _d1 += (1. - bal1) * w * df;
     }

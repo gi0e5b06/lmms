@@ -232,7 +232,8 @@ class EXPORT SampleBuffer : public QObject, public sharedObject
 
     // protect calls from the GUI to this function with dataReadLock() and
     // dataUnlock(), out of loops for efficiency
-    sample_t userWaveSample(const real_t _sample) const;
+    sample_t userWaveSample(const real_t _sample,
+                            const int    channel = 0) const;
 
     void dataReadLock()
     {

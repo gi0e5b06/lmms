@@ -508,9 +508,7 @@ void TrackContentObject::paste()
     }
     */
     AutomationPattern::resolveAllIDs();
-    GuiApplication::instance()
-            ->automationEditor()
-            ->m_editor->updateAfterPatternChange();
+    gui->automationWindow()->m_editor->updateAfterPatternChange();
 }
 
 /*! \brief Mutes this TrackContentObject
@@ -568,7 +566,7 @@ TrackContentObjectView::TrackContentObjectView(TrackContentObject* tco,
     setMouseTracking(true);
 
     connect(m_tco, SIGNAL(lengthChanged()), this, SLOT(updateLength()));
-    connect(gui->songEditor()->m_editor->zoomingXModel(),
+    connect(gui->songWindow()->m_editor->zoomingXModel(),
             SIGNAL(dataChanged()), this, SLOT(updateLength()));
     connect(m_tco, SIGNAL(positionChanged()), this, SLOT(updatePosition()));
     connect(m_tco, SIGNAL(destroyedTCO()), this, SLOT(close()));
@@ -810,7 +808,7 @@ void TrackContentObjectView::changeColor()
     if(isSelected())
     {
         QVector<SelectableObject*> selected
-                = gui->songEditor()->m_editor->selectedObjects();
+                = gui->songWindow()->m_editor->selectedObjects();
         for(QVector<SelectableObject*>::iterator it = selected.begin();
             it != selected.end(); ++it)
         {
@@ -829,7 +827,7 @@ void TrackContentObjectView::resetColor()
     if(isSelected())
     {
         QVector<SelectableObject*> selected
-                = gui->songEditor()->m_editor->selectedObjects();
+                = gui->songWindow()->m_editor->selectedObjects();
         for(QVector<SelectableObject*>::iterator it = selected.begin();
             it != selected.end(); ++it)
         {
@@ -948,6 +946,7 @@ void TrackContentObjectView::dragEnterEvent(QDragEnterEvent* dee)
 
     TrackContentWidget* tcw = getTrackView()->getTrackContentWidget();
     MidiTime tcoPos         = MidiTime(m_tco->startPosition().getTact(), 0);
+
     if(tcw->canPasteSelection(tcoPos, dee->mimeData()) == false)
     {
         dee->ignore();
@@ -982,6 +981,7 @@ void TrackContentObjectView::dropEvent(QDropEvent* de)
     // Track must be the same type to paste into
     if(type != ("tco_" + QString::number(m_tco->getTrack()->type())))
     {
+        de->ignore();
         return;
     }
 
@@ -994,6 +994,10 @@ void TrackContentObjectView::dropEvent(QDropEvent* de)
         {
             de->accept();
         }
+        else
+        {
+            de->ignore();
+        }
         return;
     }
 
@@ -1002,6 +1006,7 @@ void TrackContentObjectView::dropEvent(QDropEvent* de)
     if(qwSource != nullptr
        && dynamic_cast<TrackContentObjectView*>(qwSource) == this)
     {
+        de->ignore();
         return;
     }
 
@@ -1021,16 +1026,17 @@ void TrackContentObjectView::dropEvent(QDropEvent* de)
  */
 void TrackContentObjectView::leaveEvent(QEvent* _le)
 {
+    /*
+    while(QApplication::overrideCursor() != nullptr)
+        QApplication::restoreOverrideCursor();
+    */
+
     if(m_tco->getTrack()->isFrozen())
     {
-        _le->ignore();
+        if(_le != nullptr) _le->ignore();
         return;
     }
 
-    while(QApplication::overrideCursor() != nullptr)
-    {
-        QApplication::restoreOverrideCursor();
-    }
     if(_le != nullptr)
     {
         QWidget::leaveEvent(_le);
@@ -1253,7 +1259,7 @@ void TrackContentObjectView::mousePressEvent(QMouseEvent* me)
             }
             else
             {
-                gui->songEditor()->m_editor->selectAllTcos(false);
+                gui->songWindow()->m_editor->selectAllTcos(false);
                 QVector<TrackContentObjectView*> tcoViews;
                 tcoViews.push_back(this);
                 DataFile dataFile  = createTCODataFiles(tcoViews);
@@ -1275,7 +1281,7 @@ void TrackContentObjectView::mousePressEvent(QMouseEvent* me)
         }
         else
         {
-            gui->songEditor()->m_editor->selectAllTcos(false);
+            gui->songWindow()->m_editor->selectAllTcos(false);
             m_tco->addJournalCheckPoint();
 
             // move or resize
@@ -1466,7 +1472,7 @@ void TrackContentObjectView::mouseMoveEvent(QMouseEvent* me)
         if(dx == 0)
             return;
 
-        const tick_t q = gui->songEditor()->m_editor->quantization();
+        const tick_t q = gui->songWindow()->m_editor->quantization();
 
         tick_t delta = dx * MidiTime::ticksPerTact() / ppt;
         if(me->modifiers() & Qt::ShiftModifier)
@@ -1512,7 +1518,7 @@ void TrackContentObjectView::mouseMoveEvent(QMouseEvent* me)
         if(dx == 0)
             return;
 
-        const tick_t q = gui->songEditor()->m_editor->quantization();
+        const tick_t q = gui->songWindow()->m_editor->quantization();
 
         tick_t delta = dx * MidiTime::ticksPerTact() / ppt;
         if(me->modifiers() & Qt::ShiftModifier)
@@ -1570,7 +1576,7 @@ void TrackContentObjectView::mouseMoveEvent(QMouseEvent* me)
         // qInfo("Track: ResizeRight");
 
         const int    dx = me->x() - m_initialMousePos.x();
-        const tick_t q  = gui->songEditor()->m_editor->quantization();
+        const tick_t q  = gui->songWindow()->m_editor->quantization();
 
         tick_t delta = dx * MidiTime::ticksPerTact() / ppt;
         if(me->modifiers() & Qt::ShiftModifier)
@@ -1622,7 +1628,7 @@ void TrackContentObjectView::mouseMoveEvent(QMouseEvent* me)
         // qInfo("Track: ResizeLeft");
 
         const int    dx = me->x() - m_initialMousePos.x();
-        const tick_t q  = gui->songEditor()->m_editor->quantization();
+        const tick_t q  = gui->songWindow()->m_editor->quantization();
 
         tick_t delta = dx * MidiTime::ticksPerTact() / ppt;
         if(me->modifiers() & Qt::ShiftModifier)
@@ -1679,20 +1685,25 @@ void TrackContentObjectView::mouseMoveEvent(QMouseEvent* me)
             || me->x() < RESIZE_GRIP_WIDTH)
            && !me->buttons() && !m_tco->autoResize() && !m_tco->isFixed())
         {
-            if(QApplication::overrideCursor() != nullptr
-               && QApplication::overrideCursor()->shape()
-                          != Qt::SizeHorCursor)
+            if(QApplication::overrideCursor() != nullptr)
             {
-                while(QApplication::overrideCursor() != nullptr)
-                {
+                while(QApplication::overrideCursor() != nullptr
+                      && QApplication::overrideCursor()->shape()
+                      != Qt::SizeHorCursor)
                     QApplication::restoreOverrideCursor();
-                }
             }
-            QCursor c(Qt::SizeHorCursor);
-            QApplication::setOverrideCursor(c);
+
+            if(QApplication::overrideCursor() == nullptr)
+            {
+                QCursor c(Qt::SizeHorCursor);
+                QApplication::setOverrideCursor(c);
+            }
         }
         else
         {
+            while(QApplication::overrideCursor() != nullptr)
+                QApplication::restoreOverrideCursor();
+
             leaveEvent(nullptr);
         }
     }
@@ -1732,7 +1743,12 @@ void TrackContentObjectView::mouseReleaseEvent(QMouseEvent* me)
     delete m_hint;
     m_hint = nullptr;
     s_textFloat->hide();
+
+    while(QApplication::overrideCursor() != nullptr)
+        QApplication::restoreOverrideCursor();
+
     leaveEvent(nullptr);
+
     SelectableObject::mouseReleaseEvent(me);
 }
 
@@ -2148,7 +2164,7 @@ void TrackContentWidget::update()
 void TrackContentWidget::changePosition(const MidiTime& newPos)
 {
     if(m_trackView->trackContainerView()
-       == gui->getBBEditor()->trackContainerView())
+       == gui->bbWindow()->trackContainerView())
     {
         const int curBB = Engine::getBBTrackContainer()->currentBB();
         setUpdatesEnabled(false);
@@ -2543,7 +2559,7 @@ void TrackContentWidget::paintEvent(QPaintEvent* pe)
     /*const*/ TrackContainerView* tcv = m_trackView->trackContainerView();
 
     // Don't draw background on BB-Editor
-    // if( tcv != gui->getBBEditor()->trackContainerView() )
+    // if( tcv != gui->bbWindow()->trackContainerView() )
     if(!isFixed())
     {
         /*
@@ -2962,7 +2978,7 @@ void TrackOperationsWidget::splitTrack()
     const int                   oldidxbb = bbtc->currentBB();
 
     // qInfo("TrackOperationsWidget::splitTrack start splitting");
-    BBTrackContainerView* bbtcv = gui->getBBEditor()->trackContainerView();
+    BBTrackContainerView* bbtcv = gui->bbWindow()->trackContainerView();
     for(TrackView* tv: bbtcv->trackViews())
     {
         // qInfo("TrackOperationsWidget::splitTrack isolate track
@@ -3085,7 +3101,7 @@ void TrackOperationsWidget::changeColor()
     if( isSelected() )
     {
             QVector<SelectableObject*> selected =
-                    gui->songEditor()->m_editor->selectedObjects();
+                    gui->songWindow()->m_editor->selectedObjects();
             for( QVector<SelectableObject *>::iterator it =
                          selected.begin();
                  it != selected.end(); ++it )
@@ -3115,7 +3131,7 @@ void TrackOperationsWidget::resetColor()
     if( isSelected() )
     {
             QVector<SelectableObject*> selected =
-                    gui->songEditor()->m_editor->selectedObjects();
+                    gui->songWindow()->m_editor->selectedObjects();
             for( QVector<SelectableObject *>::iterator it =
                          selected.begin();
                  it != selected.end(); ++it )
@@ -4317,10 +4333,10 @@ void TrackView::mouseMoveEvent(QMouseEvent* me)
 void TrackView::mouseReleaseEvent(QMouseEvent* me)
 {
     m_action = NoAction;
+
     while(QApplication::overrideCursor() != nullptr)
-    {
         QApplication::restoreOverrideCursor();
-    }
+
     m_trackOperationsWidget.update();
 
     QWidget::mouseReleaseEvent(me);

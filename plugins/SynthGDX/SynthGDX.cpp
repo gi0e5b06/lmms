@@ -193,6 +193,11 @@ OscillatorObject::OscillatorObject(Model* _parent, int _idx) :
     // m_GraphModel = new GraphModel(0., 1., FPP, NULL);
 
     m_waveRing = new Ring(600);  // Engine::mixer()->framesPerPeriod());
+
+    connect(&m_wave1BankModel, SIGNAL(dataChanged()), this,
+            SLOT(updateWaveRing()));
+    connect(&m_wave1IndexModel, SIGNAL(dataChanged()), this,
+            SLOT(updateWaveRing()));
     connect(&m_wave1SymetricModel, SIGNAL(dataChanged()), this,
             SLOT(updateWaveRing()));
     connect(&m_wave1ReverseModel, SIGNAL(dataChanged()), this,
@@ -206,6 +211,11 @@ OscillatorObject::OscillatorObject(Model* _parent, int _idx) :
     connect(&m_wave1OppositeModel, SIGNAL(dataChanged()), this,
             SLOT(updateWaveRing()));
     connect(&m_wave1ComplementModel, SIGNAL(dataChanged()), this,
+            SLOT(updateWaveRing()));
+
+    connect(&m_wave2BankModel, SIGNAL(dataChanged()), this,
+            SLOT(updateWaveRing()));
+    connect(&m_wave2IndexModel, SIGNAL(dataChanged()), this,
             SLOT(updateWaveRing()));
     connect(&m_wave2SymetricModel, SIGNAL(dataChanged()), this,
             SLOT(updateWaveRing()));

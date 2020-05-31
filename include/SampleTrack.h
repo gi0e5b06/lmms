@@ -205,6 +205,9 @@ class SampleTrack : public Track
 
   protected slots:
     void updateEffectChannel();
+    void updatePanning();
+    void updateVolume();
+
 
   private:
     FloatModel m_volumeModel;

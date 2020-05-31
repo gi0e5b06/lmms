@@ -110,57 +110,52 @@ bool EqEffect::processAudioBuffer(sampleFrame* buf, const fpp_t frames)
             = m_eqControls.m_highShelfFreqModel.valueBuffer();
     ValueBuffer* lpFreqBuffer = m_eqControls.m_lpFreqModel.valueBuffer();
 
-    int hpResInc        = hpResBuffer ? 1 : 0;
-    int lowShelfResInc  = lowShelfResBuffer ? 1 : 0;
-    int para1BwInc      = para1BwBuffer ? 1 : 0;
-    int para2BwInc      = para2BwBuffer ? 1 : 0;
-    int para3BwInc      = para3BwBuffer ? 1 : 0;
-    int para4BwInc      = para4BwBuffer ? 1 : 0;
-    int highShelfResInc = highShelfResBuffer ? 1 : 0;
-    int lpResInc        = lpResBuffer ? 1 : 0;
+    const int hpResInc        = hpResBuffer ? 1 : 0;
+    const int lowShelfResInc  = lowShelfResBuffer ? 1 : 0;
+    const int para1BwInc      = para1BwBuffer ? 1 : 0;
+    const int para2BwInc      = para2BwBuffer ? 1 : 0;
+    const int para3BwInc      = para3BwBuffer ? 1 : 0;
+    const int para4BwInc      = para4BwBuffer ? 1 : 0;
+    const int highShelfResInc = highShelfResBuffer ? 1 : 0;
+    const int lpResInc        = lpResBuffer ? 1 : 0;
 
-    int hpFreqInc        = hpFreqBuffer ? 1 : 0;
-    int lowShelfFreqInc  = lowShelfFreqBuffer ? 1 : 0;
-    int para1FreqInc     = para1FreqBuffer ? 1 : 0;
-    int para2FreqInc     = para2FreqBuffer ? 1 : 0;
-    int para3FreqInc     = para3FreqBuffer ? 1 : 0;
-    int para4FreqInc     = para4FreqBuffer ? 1 : 0;
-    int highShelfFreqInc = highShelfFreqBuffer ? 1 : 0;
-    int lpFreqInc        = lpFreqBuffer ? 1 : 0;
+    const int hpFreqInc        = hpFreqBuffer ? 1 : 0;
+    const int lowShelfFreqInc  = lowShelfFreqBuffer ? 1 : 0;
+    const int para1FreqInc     = para1FreqBuffer ? 1 : 0;
+    const int para2FreqInc     = para2FreqBuffer ? 1 : 0;
+    const int para3FreqInc     = para3FreqBuffer ? 1 : 0;
+    const int para4FreqInc     = para4FreqBuffer ? 1 : 0;
+    const int highShelfFreqInc = highShelfFreqBuffer ? 1 : 0;
+    const int lpFreqInc        = lpFreqBuffer ? 1 : 0;
 
-    real_t* hpResPtr = hpResBuffer ? &(hpResBuffer->values()[0]) : &hpRes;
-    real_t* lowShelfResPtr = lowShelfResBuffer
-                                     ? &(lowShelfResBuffer->values()[0])
-                                     : &lowShelfRes;
-    real_t* para1BwPtr
-            = para1BwBuffer ? &(para1BwBuffer->values()[0]) : &para1Bw;
-    real_t* para2BwPtr
-            = para2BwBuffer ? &(para2BwBuffer->values()[0]) : &para2Bw;
-    real_t* para3BwPtr
-            = para3BwBuffer ? &(para3BwBuffer->values()[0]) : &para3Bw;
-    real_t* para4BwPtr
-            = para4BwBuffer ? &(para4BwBuffer->values()[0]) : &para4Bw;
+    real_t* hpResPtr = hpResBuffer ? hpResBuffer->values() : &hpRes;
+    real_t* lowShelfResPtr
+            = lowShelfResBuffer ? lowShelfResBuffer->values() : &lowShelfRes;
+    real_t* para1BwPtr = para1BwBuffer ? para1BwBuffer->values() : &para1Bw;
+    real_t* para2BwPtr = para2BwBuffer ? para2BwBuffer->values() : &para2Bw;
+    real_t* para3BwPtr = para3BwBuffer ? para3BwBuffer->values() : &para3Bw;
+    real_t* para4BwPtr = para4BwBuffer ? para4BwBuffer->values() : &para4Bw;
     real_t* highShelfResPtr = highShelfResBuffer
-                                      ? &(highShelfResBuffer->values()[0])
+                                      ? highShelfResBuffer->values()
                                       : &highShelfRes;
-    real_t* lpResPtr = lpResBuffer ? &(lpResBuffer->values()[0]) : &lpRes;
+    real_t* lpResPtr = lpResBuffer ? lpResBuffer->values() : &lpRes;
 
-    real_t* hpFreqPtr = hpFreqBuffer ? &(hpFreqBuffer->values()[0]) : &hpFreq;
+    real_t* hpFreqPtr       = hpFreqBuffer ? hpFreqBuffer->values() : &hpFreq;
     real_t* lowShelfFreqPtr = lowShelfFreqBuffer
-                                      ? &(lowShelfFreqBuffer->values()[0])
+                                      ? lowShelfFreqBuffer->values()
                                       : &lowShelfFreq;
     real_t* para1FreqPtr
-            = para1FreqBuffer ? &(para1FreqBuffer->values()[0]) : &para1Freq;
+            = para1FreqBuffer ? para1FreqBuffer->values() : &para1Freq;
     real_t* para2FreqPtr
-            = para2FreqBuffer ? &(para2FreqBuffer->values()[0]) : &para2Freq;
+            = para2FreqBuffer ? para2FreqBuffer->values() : &para2Freq;
     real_t* para3FreqPtr
-            = para3FreqBuffer ? &(para3FreqBuffer->values()[0]) : &para3Freq;
+            = para3FreqBuffer ? para3FreqBuffer->values() : &para3Freq;
     real_t* para4FreqPtr
-            = para4FreqBuffer ? &(para4FreqBuffer->values()[0]) : &para4Freq;
+            = para4FreqBuffer ? para4FreqBuffer->values() : &para4Freq;
     real_t* hightShelfFreqPtr = highShelfFreqBuffer
-                                        ? &(highShelfFreqBuffer->values()[0])
+                                        ? highShelfFreqBuffer->values()
                                         : &highShelfFreq;
-    real_t* lpFreqPtr = lpFreqBuffer ? &(lpFreqBuffer->values()[0]) : &lpFreq;
+    real_t* lpFreqPtr = lpFreqBuffer ? lpFreqBuffer->values() : &lpFreq;
 
     bool hpActive        = m_eqControls.m_hpActiveModel.value();
     bool hp24Active      = m_eqControls.m_hp24Model.value();
@@ -192,7 +187,7 @@ bool EqEffect::processAudioBuffer(sampleFrame* buf, const fpp_t frames)
         m_inGain = dbfsToAmp(m_eqControls.m_inGainModel.value());
     }
 
-    //if(hpActive) m_hp12.setPasses(passes);
+    // if(hpActive) m_hp12.setPasses(passes);
     /*
     EqHp12Filter m_hp24;
     EqHp12Filter m_hp480;
@@ -212,7 +207,7 @@ bool EqEffect::processAudioBuffer(sampleFrame* buf, const fpp_t frames)
     EqLp12Filter m_lp480;
     EqLp12Filter m_lp481;
     */
-    
+
     m_eqControls.m_inProgress = true;
 
     const real_t outGain    = m_outGain;

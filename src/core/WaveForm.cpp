@@ -1,7 +1,7 @@
 /*
  * WaveForm.cpp -
  *
- * Copyright (c) 2018-2019 gi0e5b06 (on github.com)
+ * Copyright (c) 2018-2020 gi0e5b06 (on github.com)
  *
  * This file is part of LSMM -
  *
@@ -111,7 +111,10 @@ WaveForm::WaveForm(const QString&        _name,
 WaveForm::~WaveForm()
 {
     if(m_data != nullptr)
+    {
         MM_FREE(m_data);
+        m_data = nullptr;
+    }
 }
 
 real_t WaveForm::softness() const
@@ -293,6 +296,11 @@ bool WaveForm::build_frames()
         int                size = sb->frames();
         const sampleFrame* data = sb->data();
 
+        if(size <= 0 || data == nullptr)
+            qWarning("Error: waveform not built: bad file: %s",
+                     qPrintable(m_file));
+        qWarning("WaveForm File size = %d",size);
+
         if(m_data != nullptr)
             MM_FREE(m_data);
         m_data = MM_ALLOC(real_t, size);
@@ -435,12 +443,17 @@ void WaveForm::acoren()
     if(m_absolute)
         for(int f = 0; f < size; ++f)
             m_data[f] = abs(m_data[f]);
+    if(m_complement)
+        for(int f = 0; f < size; ++f)
+        {
+            if(m_data[f] > 0.)
+                m_data[f] = 1. - m_data[f];
+            else if(m_data[f] < 0.)
+                m_data[f] = -1. - m_data[f];
+        }
     if(m_opposite)
         for(int f = 0; f < size; ++f)
             m_data[f] = -m_data[f];
-    if(m_complement)
-    {
-    }
     if(m_reverse)
     {
         real_t v;
@@ -482,7 +495,7 @@ void WaveForm::center()
     {
         real_t e = 0.;
         for(int g = -50; g <= 50; g++)
-            e += abs(m_data[(f + g + size) % size]) / (1. + 0.01*g);
+            e += abs(m_data[(f + g + size) % size]) / (1. + 0.01 * g);
         ee[f] = e;
     }
 

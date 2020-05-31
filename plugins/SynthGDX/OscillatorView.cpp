@@ -104,6 +104,8 @@ OscillatorView::OscillatorView(OscillatorObject* _osc,
     bank1CMB->setMinimumWidth(3 * 27 + 4);
     connect(&m_osc->m_wave1BankModel, SIGNAL(dataChanged()), this,
             SLOT(updateWave1IndexModel()));
+    //connect(&m_osc->m_wave1BankModel, SIGNAL(dataChanged()), m_osc,
+    //        SLOT(updateWaveRing()));
 
     ComboBox* index1CMB = new ComboBox(this);
     index1CMB->setModel(&m_osc->m_wave1IndexModel);

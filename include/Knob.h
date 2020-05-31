@@ -98,8 +98,8 @@ class EXPORT Knob : public Widget, public FloatModelView
     QString text() const;
     void    setText(const QString& _s);
 
-    bool isInteractive() const;
-    void setInteractive(bool _b);
+    // bool isInteractive() const;
+    // void setInteractive(bool _b);
 
     void setTotalAngle(float angle);
 
@@ -203,7 +203,7 @@ class EXPORT Knob : public Widget, public FloatModelView
     bool   m_pressLeft;   // true when left button pressed
 
     QString m_label;
-    bool    m_interactive;
+    // bool    m_interactive;
 
     QPixmap*   m_knobPixmap;
     BoolModel  m_volumeKnob;

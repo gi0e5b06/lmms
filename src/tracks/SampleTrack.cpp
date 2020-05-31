@@ -886,6 +886,16 @@ void SampleTrack::updateEffectChannel()
     m_audioPort.setNextFxChannel(m_effectChannelModel.value());
 }
 
+void SampleTrack::updatePanning()
+{
+    // same model
+}
+
+void SampleTrack::updateVolume()
+{
+    // same model
+}
+
 bool SampleTrack::play(const MidiTime& _start,
                        const fpp_t     _frames,
                        const f_cnt_t   _offset,
@@ -1220,7 +1230,7 @@ void SampleTrackView::muteChanged()
 QMenu* SampleTrackView::createAudioInputMenu()
 {
     QString title = tr("Audio Input (N/A)");
-    //.arg( channelIndex ).arg( fxChannel->m_name );
+    //.arg( channelIndex ).arg( fxChannel->name() );
     QMenu* fxMenu = new QMenu(title);
     return fxMenu;
 }
@@ -1232,7 +1242,7 @@ QMenu* SampleTrackView::createAudioOutputMenu()
 
     QString title = tr("Audio Output (%1:%2)")
                             .arg(channelIndex)
-                            .arg(fxChannel->m_name);
+                            .arg(fxChannel->name());
     QMenu* fxMenu = new QMenu(title);
 
     QSignalMapper* fxMenuSignalMapper = new QSignalMapper(fxMenu);
@@ -1245,16 +1255,16 @@ QMenu* SampleTrackView::createAudioOutputMenu()
         FxChannel* ch = Engine::fxMixer()->effectChannel(i);
 
         QString label
-                = tr("Mixer %1:%2").arg(ch->m_channelIndex).arg(ch->m_name);
+                = tr("Mixer %1:%2").arg(ch->channelIndex()).arg(ch->name());
         QAction* action
                 = fxMenu->addAction(label, fxMenuSignalMapper, SLOT(map()));
         action->setEnabled(ch != fxChannel);
-        fxMenuSignalMapper->setMapping(action, ch->m_channelIndex);
-        if(ch->m_channelIndex != i)
+        fxMenuSignalMapper->setMapping(action, ch->channelIndex());
+        if(ch->channelIndex() != i)
             qWarning(
                     "InstrumentTrackView::createAudioOutputMenu suspicious "
                     "ch: %d %d",
-                    ch->m_channelIndex, i);
+                    ch->channelIndex(), i);
     }
 
     connect(fxMenuSignalMapper, SIGNAL(mapped(int)), this,
@@ -1273,7 +1283,7 @@ QMenu* SampleTrackView::createFxMenu(QString title, QString newFxLabel)
     // If title allows interpolation, pass channel index and name
     if(title.contains("%2"))
     {
-        title = title.arg(channelIndex).arg(fxChannel->m_name);
+        title = title.arg(channelIndex).arg(fxChannel->name());
     }
 
     QMenu* fxMenu = new QMenu(title);
@@ -1290,12 +1300,12 @@ QMenu* SampleTrackView::createFxMenu(QString title, QString newFxLabel)
         if(currentChannel != fxChannel)
         {
             QString label = tr("FX %1: %2")
-                                    .arg(currentChannel->m_channelIndex)
-                                    .arg(currentChannel->m_name);
+                                    .arg(currentChannel->channelIndex())
+                                    .arg(currentChannel->name());
             QAction* action = fxMenu->addAction(label, fxMenuSignalMapper,
                                                 SLOT(map()));
             fxMenuSignalMapper->setMapping(action,
-                                           currentChannel->m_channelIndex);
+                                           currentChannel->channelIndex());
         }
     }
 
@@ -1309,7 +1319,7 @@ QMenu* SampleTrackView::createFxMenu(QString title, QString newFxLabel)
 void SampleTrackView::createFxLine()
 {
     int channelIndex = gui->fxMixerView()->addNewChannel();
-    Engine::fxMixer()->effectChannel(channelIndex)->m_name
+    Engine::fxMixer()->effectChannel(channelIndex)->name()
             = getTrack()->name();
     assignFxLine(channelIndex);
 }

@@ -1,6 +1,8 @@
 /*
- * PixmapButton.h - declaration of class pixmapButton
+ * PixmapButton.h - A pixmap-based button
+ * (often used as "themed" checkboxes/radiobuttons etc)
  *
+ * Copyright (c) 2018-2019 gi0e5b06 (on github.com)
  * Copyright (c) 2004-2008 Tobias Doerffel <tobydox/at/users.sourceforge.net>
  *
  * This file is part of LMMS - https://lmms.io
@@ -22,55 +24,52 @@
  *
  */
 
-
 #ifndef PIXMAP_BUTTON_H
 #define PIXMAP_BUTTON_H
 
-#include <QPixmap>
-
 #include "AutomatableButton.h"
 
+#include <QPixmap>
+#include <QMouseEvent>
 
 class EXPORT PixmapButton : public AutomatableButton
 {
-	Q_OBJECT
-public:
-	PixmapButton(QWidget* _parent,const QString& _name="[pixmap button]");
-	virtual ~PixmapButton();
+    Q_OBJECT
 
-	void setActiveGraphic( const QPixmap & _pm, bool _update = true );
-	void setInactiveGraphic( const QPixmap & _pm, bool _update = true );
+  public:
+    PixmapButton(QWidget* _parent, const QString& _name = "[pixmap button]");
+    virtual ~PixmapButton();
 
-	QSize sizeHint() const;
+    void setActiveGraphic(const QPixmap& _pm, bool _update = true);
+    void setInactiveGraphic(const QPixmap& _pm, bool _update = true);
 
-        bool blinking() const;
-        void setBlinking(bool _b);
+    QSize sizeHint() const;
 
-        virtual void enterValue();
+    bool blinking() const;
+    void setBlinking(bool _b);
 
-public slots:
-        virtual void update();
+    // virtual void enterValue();
 
+  public slots:
+    virtual void update();
 
-signals:
-	void doubleClicked();
+  signals:
+    void doubleClicked();
 
+  protected:
+    virtual void paintEvent(QPaintEvent* _pe);
+    virtual void resizeEvent(QResizeEvent* _re);
+    virtual void mousePressEvent(QMouseEvent* _me);
+    virtual void mouseReleaseEvent(QMouseEvent* _me);
+    virtual void mouseDoubleClickEvent(QMouseEvent* _me);
 
-protected:
-	virtual void paintEvent           (QPaintEvent*  _pe);
-	virtual void resizeEvent          (QResizeEvent* _re);
-	virtual void mousePressEvent      (QMouseEvent*  _me);
-	virtual void mouseReleaseEvent    (QMouseEvent*  _me);
-	virtual void mouseDoubleClickEvent(QMouseEvent*  _me);
+  private:
+    QPixmap m_activePixmap;
+    QPixmap m_inactivePixmap;
+    bool    m_pressed;
 
-
-private:
-	QPixmap m_activePixmap;
-	QPixmap m_inactivePixmap;
-	bool	m_pressed;
-
-        bool    m_blinkingState;
-        bool    m_blinking;
-} ;
+    bool m_blinkingState;
+    bool m_blinking;
+};
 
 #endif

@@ -32,14 +32,16 @@
 
 class QLabel;
 
-class AutomationEditorWindow;
-class BBEditor;
+class MainWindow;
+
+class AutomationWindow;
+class BBWindow;
+class PianoRollWindow;
+class SongWindow;
+
 class ControllerRackView;
 class FxMixerView;
-class MainWindow;
-class PianoRollWindow;
 class ProjectNotes;
-class SongEditorWindow;
 
 class EXPORT GuiApplication : public QObject
 {
@@ -51,13 +53,14 @@ public:
 	static GuiApplication* instance();
 
 	MainWindow* mainWindow() { return m_mainWindow; }
-	FxMixerView* fxMixerView() { return m_fxMixerView; }
-	SongEditorWindow* songEditor() { return m_songEditor; }
-	BBEditor* getBBEditor() { return m_bbEditor; }
-	PianoRollWindow* pianoRoll() { return m_pianoRoll; }
-	ProjectNotes* getProjectNotes() { return m_projectNotes; }
-	AutomationEditorWindow* automationEditor() { return m_automationEditor; }
+	AutomationWindow* automationWindow() { return m_automationWindow; }
+	BBWindow* bbWindow() { return m_bbWindow; }
+	PianoRollWindow* pianoRollWindow() { return m_pianoRollWindow; }
+	SongWindow* songWindow() { return m_songWindow; }
+
 	ControllerRackView* getControllerRackView() { return m_controllerRackView; }
+	FxMixerView* fxMixerView() { return m_fxMixerView; }
+	ProjectNotes* getProjectNotes() { return m_projectNotes; }
 
 public slots:
 	void displayInitProgress(const QString &msg);
@@ -70,13 +73,16 @@ private:
 	static GuiApplication* s_instance;
 
 	MainWindow* m_mainWindow;
-	FxMixerView* m_fxMixerView;
-	SongEditorWindow* m_songEditor;
-	AutomationEditorWindow* m_automationEditor;
-	BBEditor* m_bbEditor;
-	PianoRollWindow* m_pianoRoll;
-	ProjectNotes* m_projectNotes;
+
+	AutomationWindow* m_automationWindow;
+	BBWindow* m_bbWindow;
+	PianoRollWindow* m_pianoRollWindow;
+	SongWindow* m_songWindow;
+
 	ControllerRackView* m_controllerRackView;
+	FxMixerView* m_fxMixerView;
+	ProjectNotes* m_projectNotes;
+
 	QLabel* m_loadingProgressLabel;
 };
 

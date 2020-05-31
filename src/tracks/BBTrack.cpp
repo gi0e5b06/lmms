@@ -429,7 +429,7 @@ void BBTCOView::openInBBEditor()
 {
     Engine::getBBTrackContainer()->setCurrentBB(m_bbTCO->bbTrackIndex());
 
-    gui->mainWindow()->toggleBBEditorWin();
+    gui->mainWindow()->toggleBBWindow();
 }
 
 /*
@@ -671,7 +671,7 @@ void BBTrack::saveTrackSpecificSettings(QDomDocument& _doc,
 {
     //	_this.setAttribute( "icon", m_trackLabel->pixmapFile() );
     /*	_this.setAttribute( "current", s_infoMap[this] ==
-                                            engine::getBBEditor()->currentBB()
+                                            engine::bbWindow()->currentBB()
        );*/
     if(s_infoMap[this] == 0
        && _this.parentNode().parentNode().nodeName() != "clone"
@@ -723,7 +723,7 @@ void BBTrack::loadTrackSpecificSettings(const QDomElement& _this)
             help at all....
             if( _this.attribute( "current" ).toInt() )
             {
-                    engine::getBBEditor()->setCurrentBB( s_infoMap[this] );
+                    engine::bbWindow()->setCurrentBB( s_infoMap[this] );
             }*/
 }
 
@@ -775,17 +775,17 @@ BBTrackView::BBTrackView(BBTrack* _bbt, TrackContainerView* _tcv) :
 
 BBTrackView::~BBTrackView()
 {
-    gui->getBBEditor()->removeBBView(BBTrack::s_infoMap[m_bbTrack]);
+    gui->bbWindow()->removeBBView(BBTrack::s_infoMap[m_bbTrack]);
 }
 
 bool BBTrackView::close()
 {
-    gui->getBBEditor()->removeBBView(BBTrack::s_infoMap[m_bbTrack]);
+    gui->bbWindow()->removeBBView(BBTrack::s_infoMap[m_bbTrack]);
     return TrackView::close();
 }
 
 void BBTrackView::clickedTrackLabel()
 {
     Engine::getBBTrackContainer()->setCurrentBB(m_bbTrack->index());
-    gui->getBBEditor()->show();
+    gui->bbWindow()->show();
 }
