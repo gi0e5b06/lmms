@@ -2,7 +2,7 @@
  * PianoRoll.h - declaration of class PianoRoll which is a window where you
  *               can set and edit notes in an easy way
  *
- * Copyright (c) 2018-2019 gi0e5b06 (on github.com)
+ * Copyright (c) 2018-2020 gi0e5b06 (on github.com)
  * Copyright (c) 2004-2014 Tobias Doerffel <tobydox/at/users.sourceforge.net>
  * Copyright (c) 2008      Andrew Kelley <superjoe30/at/gmail/dot/com>
  *
@@ -63,21 +63,21 @@ class PianoRoll : public QWidget
             QColor ghostNoteColor READ ghostNoteColor WRITE setGhostNoteColor)
     Q_PROPERTY(QColor barColor READ barColor WRITE setBarColor)
     Q_PROPERTY(QColor selectedNoteColor READ selectedNoteColor WRITE
-                                                               setSelectedNoteColor)
+                       setSelectedNoteColor)
     Q_PROPERTY(QColor textColor READ textColor WRITE setTextColor)
     Q_PROPERTY(
             QColor textColorLight READ textColorLight WRITE setTextColorLight)
     Q_PROPERTY(QColor textShadow READ textShadow WRITE setTextShadow)
     Q_PROPERTY(QColor markedSemitoneColor READ markedSemitoneColor WRITE
-                                                                   setMarkedSemitoneColor)
+                       setMarkedSemitoneColor)
     Q_PROPERTY(int noteOpacity READ noteOpacity WRITE setNoteOpacity)
     Q_PROPERTY(unsigned char ghostNoteOpacity READ ghostNoteOpacity WRITE
-                                                                    setGhostNoteOpacity)
+                       setGhostNoteOpacity)
     Q_PROPERTY(bool noteBorders READ noteBorders WRITE setNoteBorders)
     Q_PROPERTY(bool ghostNoteBorders READ ghostNoteBorders WRITE
-                                                           setGhostNoteBorders)
+                       setGhostNoteBorders)
     Q_PROPERTY(QColor backgroundShade READ backgroundShade WRITE
-                                                           setBackgroundShade)
+                       setBackgroundShade)
   public:
     enum EditModes
     {
@@ -183,16 +183,16 @@ class PianoRoll : public QWidget
     virtual void wheelEvent(QWheelEvent* we);
     virtual void focusOutEvent(QFocusEvent*);
 
-    static void drawNoteRect(QPainter&     p,
-                             int           x,
-                             int           y,
-                             int           width,
-                             const Note*   n,
-                             const QColor& noteCol,
-                             const QColor& selCol,
-                             const int     noteOpc,
-                             const bool    borderless,
-                             const bool    drawNoteNames);
+    void drawNoteRect(QPainter&     p,
+                      int           x,
+                      int           y,
+                      int           width,
+                      const Note*   n,
+                      const QColor& noteCol,
+                      const QColor& selCol,
+                      const int     noteOpc,
+                      const bool    borderless,
+                      const bool    drawNoteNames);
 
     int   getKey(int y) const;
     void  removeSelection();
@@ -230,6 +230,7 @@ class PianoRoll : public QWidget
     void updatePositionAccompany(const MidiTime& t);
 
     void zoomingXChanged();
+    void zoomingYChanged();
     void quantizeChanged();
     void quantizeNotes();
 
@@ -350,6 +351,7 @@ class PianoRoll : public QWidget
     static TextFloat* s_textFloat;
 
     ComboBoxModel m_zoomingXModel;
+    ComboBoxModel m_zoomingYModel;
     ComboBoxModel m_quantizeModel;
     ComboBoxModel m_noteLenModel;
     ComboBoxModel m_rootModel;
@@ -396,7 +398,8 @@ class PianoRoll : public QWidget
 
     int m_oldNotesEditHeight;
     int m_notesEditHeight;
-    int m_ppt;  // pixels per tact
+    FLOAT m_ppt;    // pixels per tact
+    FLOAT m_ppklh;  // pixels per key line (height)
     int m_totalKeysToScroll;
 
     // remember these values to use them
@@ -460,7 +463,7 @@ class PianoRoll : public QWidget
 class PianoRollWindow : public EditorWindow, SerializingObject
 {
     Q_OBJECT
-    
+
   public:
     PianoRollWindow();
 
@@ -507,6 +510,7 @@ class PianoRollWindow : public EditorWindow, SerializingObject
     PianoRoll* m_editor;
 
     ComboBox*    m_zoomingXComboBox;
+    ComboBox*    m_zoomingYComboBox;
     ComboBox*    m_quantizeComboBox;
     ComboBox*    m_noteLenComboBox;
     ComboBox*    m_rootComboBox;
