@@ -172,13 +172,9 @@ void BBWindow::removeBBView(int bb)
 void BBWindow::play()
 {
     if(Engine::getSong()->playMode() != Song::Mode_PlayBB)
-    {
         Engine::getSong()->playBB();
-    }
     else
-    {
         Engine::getSong()->togglePause();
-    }
 }
 
 void BBWindow::stop()

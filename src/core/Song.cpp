@@ -1,7 +1,7 @@
 /*
  * Song.cpp -
  *
- * Copyright (c) 2017-2019 gi0e5b06 (on github.com)
+ * Copyright (c) 2017-2020 gi0e5b06 (on github.com)
  * Copyright (c) 2004-2014 Tobias Doerffel <tobydox/at/users.sourceforge.net>
  *
  * This file is part of LSMM -
@@ -39,6 +39,7 @@
 #include "FxMixerView.h"
 #include "GuiApplication.h"
 #include "ImportFilter.h"
+#include "Instrument.h"
 #include "MainWindow.h"
 #include "Pattern.h"
 #include "PeakController.h"
@@ -189,11 +190,62 @@ void Song::processNextBuffer()
             break;
 
         case Mode_PlayPattern:
-            if(m_patternToPlay != NULL)
+            if(m_patternToPlay != nullptr)
             {
                 tcoNum = m_patternToPlay->getTrack()->getTCONum(
                         m_patternToPlay);
                 trackList.push_back(m_patternToPlay->getTrack());
+            }
+            break;
+
+        case Mode_PlayAutomation:
+            if(m_automationToPlay != nullptr)
+            {
+                tcoNum = m_automationToPlay->getTrack()->getTCONum(
+                        m_automationToPlay);
+                bool all = false;
+                for(AutomatableModel* o: m_automationToPlay->objects())
+                {
+                    Model* p = o;
+                    while(p != nullptr)
+                    {
+                        p = p->parentModel();
+
+                        Track* t = dynamic_cast<Track*>(p);
+                        if(t != nullptr)
+                        {
+                            // qWarning("AP +T %s",
+                            // qPrintable(t->displayName()));
+                            trackList.push_back(t);
+                            break;
+                        }
+
+                        FxChannel* c = dynamic_cast<FxChannel*>(p);
+                        if(c != nullptr)
+                        {
+                            // TO DO: add only relevant tracks
+                            qWarning("AP +C %s",
+                                     qPrintable(c->displayName()));
+                            if(c->channelIndex() == 0)
+                            {
+                                all = true;
+                                break;
+                            }
+                        }
+
+                        /*
+                        if(p != nullptr)
+                        {
+                            qWarning("AP ?? %s",
+                                     qPrintable(p->displayName()));
+                        }
+                        */
+                    }
+                }
+                if(all)
+                    trackList = tracks();
+                else
+                    trackList.push_back(m_automationToPlay->getTrack());
             }
             break;
 
@@ -202,17 +254,15 @@ void Song::processNextBuffer()
     }
 
     // if we have no tracks to play, nothing to do
-    if(trackList.empty() == true)
-    {
+    if(trackList.empty())
         return;
-    }
 
     // check for looping-mode and act if necessary
-    TimeLineWidget* tl = m_playPos[m_playMode].m_timeLine;
-    bool            checkLoop
-            = tl != NULL && m_exporting == false && tl->loopPointsEnabled();
+    TimeLineWidget* tl        = m_playPos[m_playMode].m_timeLine;
+    bool            checkLoop = (tl != nullptr) && (m_exporting == false)
+                     && tl->loopPointsEnabled();
 
-    if(tl != NULL)
+    if(tl != nullptr)
     {
         // int n =tl->currentLoop();
         int nn = tl->nextLoop();
@@ -280,10 +330,23 @@ void Song::processNextBuffer()
                                       ->lengthOfCurrentBB();
                 }
                 else if(m_playMode == Mode_PlayPattern
-                        && m_loopPattern == true && tl != NULL
+                        && m_loopPattern == true && tl != nullptr
                         && tl->loopPointsEnabled() == false)
                 {
-                    maxTact = m_patternToPlay->length().getTact();
+                    maxTact = MidiTime(m_patternToPlay->unitLength())
+                                      .getTact();
+                    if(maxTact < 1)
+                        maxTact = 1;
+                }
+                else if(m_playMode == Mode_PlayAutomation
+                        && m_loopPattern == true && tl != nullptr
+                        && tl->loopPointsEnabled() == false)
+                {
+                    maxTact = m_automationToPlay->unitLength()
+                                      / MidiTime::ticksPerTact()
+                              + 1;
+                    if(maxTact < 1)
+                        maxTact = 1;
                 }
 
                 // end of played object reached?
@@ -413,6 +476,8 @@ void Song::processAutomations(const TrackList& tracklist,
             tcoNum           = bbTrack->index();
         }
         break;
+        case Mode_PlayAutomation:
+            break;
         default:
             return;
     }
@@ -503,12 +568,9 @@ void Song::playSong()
     m_paused   = false;
     MM_ACTIVE(true)
 
-    m_vstSyncController.setPlaybackState(true);
-
-    savePos();
-
     // qWarning("Playing song...");
-
+    m_vstSyncController.setPlaybackState(true);
+    savePos();
     emit playbackStateChanged();
 }
 
@@ -526,10 +588,8 @@ void Song::playAndRecord()
 
 void Song::playBB()
 {
-    if(isStopped() == false)
-    {
+    if(!isStopped())
         stop();
-    }
 
     m_playMode = Mode_PlayBB;
     m_playing  = true;
@@ -537,23 +597,19 @@ void Song::playBB()
     MM_ACTIVE(true)
 
     m_vstSyncController.setPlaybackState(true);
-
     savePos();
-
     emit playbackStateChanged();
 }
 
-void Song::playPattern(const Pattern* patternToPlay, bool loop)
+void Song::playPattern(const Pattern* _patternToPlay, bool _loop)
 {
-    if(isStopped() == false)
-    {
+    if(!isStopped())
         stop();
-    }
 
-    m_patternToPlay = patternToPlay;
-    m_loopPattern   = loop;
+    m_patternToPlay = _patternToPlay;
+    m_loopPattern   = _loop;
 
-    if(m_patternToPlay != NULL)
+    if(m_patternToPlay != nullptr)
     {
         m_playMode = Mode_PlayPattern;
         m_playing  = true;
@@ -561,8 +617,30 @@ void Song::playPattern(const Pattern* patternToPlay, bool loop)
         MM_ACTIVE(true)
     }
 
+    m_vstSyncController.setPlaybackState(true);
     savePos();
+    emit playbackStateChanged();
+}
 
+void Song::playAutomation(const AutomationPattern* _automationToPlay,
+                          bool                     _loop)
+{
+    if(!isStopped())
+        stop();
+
+    m_automationToPlay = _automationToPlay;
+    m_loopPattern      = _loop;
+
+    if(m_automationToPlay != nullptr)
+    {
+        m_playMode = Mode_PlayAutomation;
+        m_playing  = true;
+        m_paused   = false;
+        MM_ACTIVE(true)
+    }
+
+    m_vstSyncController.setPlaybackState(true);
+    savePos();
     emit playbackStateChanged();
 }
 

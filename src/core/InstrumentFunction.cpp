@@ -727,6 +727,8 @@ void InstrumentFunctionArpeggio::saveSettings(QDomDocument& _doc,
     m_arpGateModel.saveSettings(_doc, _this, "arpgate");
     m_arpDirectionModel.saveSettings(_doc, _this, "arpdir");
     m_arpModeModel.saveSettings(_doc, _this, "arpmode");
+    m_arpBaseModel.saveSettings(_doc, _this, "base");
+    m_arpRepeatModel.saveSettings(_doc, _this, "repeat");
 }
 
 void InstrumentFunctionArpeggio::loadSettings(const QDomElement& _this)
@@ -754,6 +756,8 @@ void InstrumentFunctionArpeggio::loadSettings(const QDomElement& _this)
             }*/
 
     m_arpModeModel.loadSettings(_this, "arpmode");
+    m_arpBaseModel.loadSettings(_this, "base");
+    m_arpRepeatModel.loadSettings(_this, "repeat");
 }
 
 InstrumentFunctionView* InstrumentFunctionArpeggio::createView()

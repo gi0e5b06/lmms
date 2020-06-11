@@ -42,6 +42,7 @@
 #include <utility>
 
 class AutomationTrack;
+class AutomationPattern;
 class Pattern;
 class TimeLineWidget;
 
@@ -74,7 +75,7 @@ class EXPORT Song : public TrackContainer, public virtual Transportable
         Mode_PlaySong,
         Mode_PlayBB,
         Mode_PlayPattern,
-        Mode_PlayAutomationPattern,
+        Mode_PlayAutomation,
         Mode_Count
     };
 
@@ -313,7 +314,9 @@ class EXPORT Song : public TrackContainer, public virtual Transportable
     void record();
     void playAndRecord();
     void playBB();
-    void playPattern(const Pattern* patternToPlay, bool loop = true);
+    void playPattern(const Pattern* _patternToPlay, bool _loop = true);
+    void playAutomation(const AutomationPattern* _automationToPlay,
+                        bool                     _loop = true);
     void togglePause();
     void stop();
 
@@ -326,7 +329,7 @@ class EXPORT Song : public TrackContainer, public virtual Transportable
     void exportProjectVideoLine();
     void exportProjectVideoWave();
     void exportProjectFormat12();
-    void buildProjectDataFile(DataFile& dataFile); // public for export
+    void buildProjectDataFile(DataFile& dataFile);  // public for export
 
     void startExport();
     void stopExport();
@@ -428,8 +431,9 @@ class EXPORT Song : public TrackContainer, public virtual Transportable
     PlayPos           m_playPos[Mode_Count];
     tact_t            m_length;
 
-    const Pattern* m_patternToPlay;
-    bool           m_loopPattern;
+    const Pattern*           m_patternToPlay;
+    const AutomationPattern* m_automationToPlay;
+    bool                     m_loopPattern;
 
     double m_elapsedMilliSeconds;
     tick_t m_elapsedTicks;

@@ -87,7 +87,7 @@ void FxRoute::updateName()
 }
 
 FxChannel::FxChannel(int idx, Model* _parent) :
-      Model(_parent, QString("FxChannel #%1").arg(idx)), m_fxChain(nullptr),
+      Model(_parent, QString("FxChannel #%1").arg(idx)), m_fxChain(this),
       m_hasInput(false), m_stillRunning(false), m_frozenBuf(nullptr),
       m_frozenModel(false, _parent), m_clippingModel(false, _parent),
       m_eqDJ(nullptr), m_eqDJEnableModel(false, _parent),
@@ -100,7 +100,7 @@ FxChannel::FxChannel(int idx, Model* _parent) :
                       acquire()),  // new
                                    // sampleFrame[Engine::mixer()->framesPerPeriod()]
                                    // ),
-      m_mutedModel(false, _parent), m_soloModel(false, _parent),
+      m_mutedModel(false, this), m_soloModel(false, this),
       m_volumeModel(1.0, 0.0, 1.0, 0.001, _parent),  // max=2.
       m_name(), m_channelIndex(idx), m_lock(), m_queued(false),
       m_dependenciesMet(0)
@@ -569,7 +569,8 @@ void FxChannel::doProcessing()
 }
 
 FxMixer::FxMixer() :
-      Model(nullptr, "FxMixer"), JournallingObject(), m_fxChannels()
+      Model(nullptr, "FxMixer"), JournallingObject(),
+      m_fxRoutes(), m_fxChannels()
 {
     // create master channel
     createChannel();

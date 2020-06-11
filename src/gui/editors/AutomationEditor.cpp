@@ -161,7 +161,7 @@ AutomationEditor::AutomationEditor() :
     // add time-line
     m_timeLine = new TimeLineWidget(
             VALUES_WIDTH, 0, m_ppt,
-            Engine::getSong()->getPlayPos(Song::Mode_PlayAutomationPattern),
+            Engine::getSong()->getPlayPos(Song::Mode_PlayAutomation),
             m_currentPosition, this);
     connect(this, SIGNAL(positionChanged(const MidiTime&)), m_timeLine,
             SLOT(updatePosition(const MidiTime&)));
@@ -1673,7 +1673,7 @@ void AutomationEditor::resizeEvent(QResizeEvent* re)
     if(Engine::getSong())
     {
         Engine::getSong()
-                ->getPlayPos(Song::Mode_PlayAutomationPattern)
+                ->getPlayPos(Song::Mode_PlayAutomation)
                 .m_timeLine->setFixedWidth(width());
     }
 
@@ -1775,6 +1775,12 @@ void AutomationEditor::play()
     if(m_pattern == nullptr)
         return;
 
+    if(Engine::getSong()->playMode() != Song::Mode_PlayAutomation)
+        Engine::getSong()->playAutomation(m_pattern);
+    else
+        Engine::getSong()->togglePause();
+
+    /*
     if(!m_pattern->getTrack())
     {
         if(Engine::getSong()->playMode() != Song::Mode_PlayPattern)
@@ -1808,6 +1814,7 @@ void AutomationEditor::play()
             Engine::getSong()->togglePause();
         }
     }
+    */
 }
 
 void AutomationEditor::stop()
@@ -2119,7 +2126,7 @@ void AutomationEditor::deleteSelectedValues()
 void AutomationEditor::updatePosition(const MidiTime& t)
 {
     if((Engine::getSong()->isPlaying()
-        && Engine::getSong()->playMode() == Song::Mode_PlayAutomationPattern)
+        && Engine::getSong()->playMode() == Song::Mode_PlayAutomation)
        || m_scrollBack == true)
     {
         const int w = width() - VALUES_WIDTH;

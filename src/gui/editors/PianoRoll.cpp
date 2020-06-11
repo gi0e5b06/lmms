@@ -4248,14 +4248,11 @@ void PianoRoll::play()
 {
     if(m_pattern == nullptr)
         return;
+
     if(Engine::getSong()->playMode() != Song::Mode_PlayPattern)
-    {
         Engine::getSong()->playPattern(m_pattern);
-    }
     else
-    {
         Engine::getSong()->togglePause();
-    }
 }
 
 void PianoRoll::record()

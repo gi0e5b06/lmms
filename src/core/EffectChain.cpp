@@ -34,7 +34,7 @@
 
 EffectChain::EffectChain(Model* _parent) :
       Model(_parent, "Effect chain"), SerializingObject(),
-      m_enabledModel(false, NULL, tr("Effects enabled"))
+      m_enabledModel(false, nullptr, tr("Effects enabled"))
 {
 }
 
