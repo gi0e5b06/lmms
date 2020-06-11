@@ -1,7 +1,7 @@
 /*
  * Mutex.h -
  *
- * Copyright (c) 2019 gi0e5b06 (on github.com)
+ * Copyright (c) 2019-2020 gi0e5b06 (on github.com)
  *
  * This file is part of LSMM -
  *
@@ -30,9 +30,10 @@ class Mutex : public QMutex
 {
   public:
     Mutex(const QString&        _name,
-          QMutex::RecursionMode _mode = NonRecursive) :
+          QMutex::RecursionMode _mode = NonRecursive,
+          bool                  _info = false) :
           QMutex(_mode),
-          m_name(_name)
+          m_name(_name), m_info(_info)
     {
     }
 
@@ -41,36 +42,45 @@ class Mutex : public QMutex
 
     virtual void lock()
     {
-        qInfo("Mutex::lock %s before", qPrintable(m_name));
+        if(m_info)
+            qInfo("Mutex::lock %s before", qPrintable(m_name));
         QMutex::lock();
-        qInfo("Mutex::lock %s after", qPrintable(m_name));
+        if(m_info)
+            qInfo("Mutex::lock %s after", qPrintable(m_name));
     }
 
     virtual bool tryLock(int _timeout = 0)
     {
-        qInfo("Mutex::tryLock %s before", qPrintable(m_name));
-        bool r=QMutex::tryLock(_timeout);
-        qInfo("Mutex::tryLock %s before", qPrintable(m_name));
+        if(m_info)
+            qInfo("Mutex::tryLock %s before", qPrintable(m_name));
+        bool r = QMutex::tryLock(_timeout);
+        if(m_info)
+            qInfo("Mutex::tryLock %s before", qPrintable(m_name));
         return r;
     }
 
     virtual bool try_lock()
     {
-        qInfo("Mutex::try_lock %s before", qPrintable(m_name));
-        bool r=QMutex::try_lock();
-        qInfo("Mutex::try_lock %s after", qPrintable(m_name));
+        if(m_info)
+            qInfo("Mutex::try_lock %s before", qPrintable(m_name));
+        bool r = QMutex::try_lock();
+        if(m_info)
+            qInfo("Mutex::try_lock %s after", qPrintable(m_name));
         return r;
     }
 
     virtual void unlock()
     {
-        qInfo("Mutex::unlock %s before", qPrintable(m_name));
+        if(m_info)
+            qInfo("Mutex::unlock %s before", qPrintable(m_name));
         QMutex::unlock();
-        qInfo("Mutex::unlock %s after", qPrintable(m_name));
+        if(m_info)
+            qInfo("Mutex::unlock %s after", qPrintable(m_name));
     }
 
   private:
     QString m_name;
+    bool    m_info;
 };
 
 #endif

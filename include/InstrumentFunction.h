@@ -1,7 +1,7 @@
 /*
  * InstrumentFunction.h - models for instrument-functions-tab
  *
- * Copyright (c) 2017-2019 gi0e5b06 (on github.com)
+ * Copyright (c) 2017-2020 gi0e5b06 (on github.com)
  * Copyright (c) 2004-2014 Tobias Doerffel <tobydox/at/users.sourceforge.net>
  *
  * This file is part of LSMM -
@@ -87,7 +87,7 @@ class InstrumentFunctionNoteStacking : public InstrumentFunction
     static const int MAX_CHORD_POLYPHONY = 13;
 
   private:
-    typedef int8_t ChordSemiTones[MAX_CHORD_POLYPHONY];
+    typedef int8_t ChordSemitones[MAX_CHORD_POLYPHONY];
 
   public:
     InstrumentFunctionNoteStacking(Model* _parent);
@@ -108,7 +108,7 @@ class InstrumentFunctionNoteStacking : public InstrumentFunction
     {
       private:
         QString        m_name;
-        ChordSemiTones m_semiTones;
+        ChordSemitones m_semitones;
         int            m_size;
 
       public:
@@ -116,7 +116,7 @@ class InstrumentFunctionNoteStacking : public InstrumentFunction
         {
         }
 
-        Chord(const char* n, const ChordSemiTones& semi_tones);
+        Chord(const char* _name, const ChordSemitones& _semitones);
 
         int size() const
         {
@@ -133,11 +133,11 @@ class InstrumentFunctionNoteStacking : public InstrumentFunction
             return size() == 0;
         }
 
-        bool hasSemiTone(int8_t semiTone) const;
+        bool hasSemitone(int8_t _semitone) const;
 
         int8_t last() const
         {
-            return m_semiTones[size() - 1];
+            return m_semitones[size() - 1];
         }
 
         const QString& getName() const
@@ -147,7 +147,7 @@ class InstrumentFunctionNoteStacking : public InstrumentFunction
 
         int8_t operator[](int n) const
         {
-            return m_semiTones[n];
+            return m_semitones[n];
         }
     };
 
@@ -159,7 +159,7 @@ class InstrumentFunctionNoteStacking : public InstrumentFunction
         struct Init
         {
             const char*    m_name;
-            ChordSemiTones m_semiTones;
+            ChordSemitones m_semitones;
         };
 
         static Init s_initTable[];
@@ -239,6 +239,8 @@ class InstrumentFunctionArpeggio : public InstrumentFunction
     FloatModel         m_arpGateModel;
     ComboBoxModel      m_arpDirectionModel;
     ComboBoxModel      m_arpModeModel;
+    FloatModel         m_arpBaseModel;
+    FloatModel         m_arpRepeatModel;
 
     friend class InstrumentTrack;
     friend class InstrumentFunctionArpeggioView;

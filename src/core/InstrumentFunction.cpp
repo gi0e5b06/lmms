@@ -1,7 +1,7 @@
 /*
  * InstrumentFunction.cpp - models for instrument-function-tab
  *
- * Copyright (c) 2017-2019 gi0e5b06 (on github.com)
+ * Copyright (c) 2017-2020 gi0e5b06 (on github.com)
  * Copyright (c) 2004-2014 Tobias Doerffel <tobydox/at/users.sourceforge.net>
  *
  * This file is part of LSMM -
@@ -271,30 +271,25 @@ InstrumentFunctionNoteStacking::ChordTable::Init
             {0, 1, 4, 5, 6, 8, 11, -1}}};
 
 InstrumentFunctionNoteStacking::Chord::Chord(
-        const char* n, const ChordSemiTones& semi_tones) :
-      m_name(InstrumentFunctionNoteStacking::tr(n))
+        const char* _name, const ChordSemitones& _semitones) :
+      m_name(InstrumentFunctionNoteStacking::tr(_name))
 {
     for(m_size = 0; m_size < MAX_CHORD_POLYPHONY; m_size++)
     {
-        if(semi_tones[m_size] == -1)
-        {
+        if(_semitones[m_size] == -1)
             break;
-        }
 
-        m_semiTones[m_size] = semi_tones[m_size];
+        m_semitones[m_size] = _semitones[m_size];
     }
 }
 
-bool InstrumentFunctionNoteStacking::Chord::hasSemiTone(
-        int8_t semi_tone) const
+bool InstrumentFunctionNoteStacking::Chord::hasSemitone(
+        int8_t _semitone) const
 {
     for(int i = 0; i < size(); ++i)
-    {
-        if(semi_tone == m_semiTones[i])
-        {
+        if(_semitone == m_semitones[i])
             return true;
-        }
-    }
+
     return false;
 }
 
@@ -303,7 +298,7 @@ InstrumentFunctionNoteStacking::ChordTable::ChordTable() : QVector<Chord>()
     for(int i = 0;
         i < static_cast<int>(sizeof s_initTable / sizeof *s_initTable); i++)
     {
-        push_back(Chord(s_initTable[i].m_name, s_initTable[i].m_semiTones));
+        push_back(Chord(s_initTable[i].m_name, s_initTable[i].m_semitones));
     }
 }
 
@@ -441,13 +436,16 @@ InstrumentFunctionArpeggio::InstrumentFunctionArpeggio(Model* _parent) :
       // m_enabledModel( false ),
       m_arpModel(this, tr("Arpeggio type")),
       m_arpRangeModel(1., 1., 9., 1., this, tr("Arpeggio range")),
-      m_arpCycleModel(0., 0., 6., 1., this, tr("Cycle steps")),
+      m_arpCycleModel(0., 0., 11., 1., this, tr("Cycle steps")),
       m_arpSkipModel(0., 0., 100., 1., this, tr("Skip rate")),
       m_arpMissModel(0., 0., 100., 1., this, tr("Miss rate")),
       m_arpTimeModel(200., 25., 2000., 1., 2000, this, tr("Arpeggio time")),
       m_arpGateModel(100., 1., 200., 1., this, tr("Arpeggio gate")),
       m_arpDirectionModel(this, tr("Arpeggio direction")),
-      m_arpModeModel(this, tr("Arpeggio mode"))
+      m_arpModeModel(this, tr("Arpeggio mode")),
+      m_arpBaseModel(0., 0., 11., 1., this, tr("Base")),
+      m_arpRepeatModel(0., 0., 15., 1., this, tr("Repeat"))
+
 {
     const InstrumentFunctionNoteStacking::ChordTable& chord_table
             = InstrumentFunctionNoteStacking::ChordTable::getInstance();
@@ -566,8 +564,8 @@ bool InstrumentFunctionArpeggio::processNote(NotePlayHandle* _n)
         {
             // Set master note if not playing arp note or it will play as an
             // ordinary note
-            if(_n->generation() == 0)
-                _n->setMasterNote();
+            // if(_n->generation() == 0)
+            //   _n->setMasterNote();
             // update counters
             frames_processed += arp_frames;
             cur_frame += arp_frames;
@@ -582,8 +580,8 @@ bool InstrumentFunctionArpeggio::processNote(NotePlayHandle* _n)
             {
                 // Set master note to prevent the note to extend over skipped
                 // notes This may only be needed for lb302
-                if(_n->generation() == 0)
-                    _n->setMasterNote();
+                // if(_n->generation() == 0)
+                //    _n->setMasterNote();
                 // update counters
                 frames_processed += arp_frames;
                 cur_frame += arp_frames;
@@ -604,15 +602,16 @@ bool InstrumentFunctionArpeggio::processNote(NotePlayHandle* _n)
             }
         }
 
+        int armv        = m_arpRepeatModel.value() + 1;
         int cur_arp_idx = 0;
         // process according to arpeggio-direction...
         if(dir == ArpDirUp)
         {
-            cur_arp_idx = (cur_frame / arp_frames) % range;
+            cur_arp_idx = (cur_frame / armv / arp_frames) % range;
         }
         else if(dir == ArpDirDown)
         {
-            cur_arp_idx = range - (cur_frame / arp_frames) % range - 1;
+            cur_arp_idx = range - (cur_frame / armv / arp_frames) % range - 1;
         }
         else if(dir == ArpDirUpAndDown && range > 1)
         {
@@ -620,7 +619,7 @@ bool InstrumentFunctionArpeggio::processNote(NotePlayHandle* _n)
             // once down -> makes 2 * range possible notes...
             // because we don't play the lower and upper notes
             // twice, we have to subtract 2
-            cur_arp_idx = (cur_frame / arp_frames) % (range * 2 - 2);
+            cur_arp_idx = (cur_frame / armv / arp_frames) % (range * 2 - 2);
             // if greater than range, we have to play down...
             // looks like the code for arp_dir==DOWN... :)
             if(cur_arp_idx >= range)
@@ -631,7 +630,7 @@ bool InstrumentFunctionArpeggio::processNote(NotePlayHandle* _n)
         else if(dir == ArpDirDownAndUp && range > 1)
         {
             // copied from ArpDirUpAndDown above
-            cur_arp_idx = (cur_frame / arp_frames) % (range * 2 - 2);
+            cur_arp_idx = (cur_frame / armv / arp_frames) % (range * 2 - 2);
             // if greater than range, we have to play down...
             // looks like the code for arp_dir==DOWN... :)
             if(cur_arp_idx >= range)
@@ -647,24 +646,34 @@ bool InstrumentFunctionArpeggio::processNote(NotePlayHandle* _n)
             cur_arp_idx = int(round(range * fastrand01inc()));
         }
 
-        // Cycle notes
-        if(m_arpCycleModel.value() && dir != ArpDirRandom)
-        {
-            cur_arp_idx *= m_arpCycleModel.value() + 1;
-            cur_arp_idx %= range;
-        }
+        int key    = cur_arp_idx % range;
+        int octave = key / cur_chord_size;
+
+        key %= cur_chord_size;
+        // key *= cur_chord_size;
+        // key %= KeysPerOctave;
+
+        // Cycle, Base, Repeat
+        int acmv = m_arpCycleModel.value();
+        int abmv = m_arpBaseModel.value();
+        // if(dir != ArpDirRandom)
+        // if(armv > 0)
+        //    key /= armv + 1;
+        if(acmv > 0)
+            key *= acmv + 1;
+        key += abmv;
+        key %= cur_chord_size;
 
         // now calculate final key for our arp-note
-        const int subnote_key
-                = base_note_key
-                  + (cur_arp_idx / cur_chord_size) * KeysPerOctave
-                  + chord_table[selected_arp][cur_arp_idx % cur_chord_size];
+        const int subnote_key = base_note_key + octave * KeysPerOctave
+                                + chord_table[selected_arp][key];
 
         // range-checking
         if(subnote_key >= NumKeys || subnote_key < 0
            || Engine::mixer()->criticalXRuns() || _n->isTrackMuted())
         {
-            // qInfo("InstrumentFunctionArpeggio::processNote subnote break");
+            // qInfo("InstrumentFunctionArpeggio::processNote subnote
+            // break");
             continue;
         }
 
@@ -672,8 +681,8 @@ bool InstrumentFunctionArpeggio::processNote(NotePlayHandle* _n)
 
         // if(MM_SAFE(NotePlayHandle,1))
         {
-            // Note subnote( _n->length(), 0, subnote_key, _n->getVolume(),
-            // _n->getPanning(), _n->detuning() );
+            // Note subnote( _n->length(), 0, subnote_key,
+            // _n->getVolume(), _n->getPanning(), _n->detuning() );
             Note subnote(/*MidiTime( 0 ), MidiTime( 0 ),*/
                          _n->length(), 0, subnote_key, _n->getVolume(),
                          _n->getPanning(), _n->detuning());
@@ -694,7 +703,7 @@ bool InstrumentFunctionArpeggio::processNote(NotePlayHandle* _n)
 
     // make sure note is handled as arp-base-note, even
     // if we didn't add a sub-note so far
-    if(m_arpModeModel.value() != FreeMode)
+    // if(m_arpModeModel.value() != FreeMode)
     {
         if(_n->generation() == 0)
             _n->setMasterNote();
@@ -739,7 +748,8 @@ void InstrumentFunctionArpeggio::loadSettings(const QDomElement& _this)
             {
                     m_arpTimeKnob->setSyncMode(
                     ( tempoSyncKnob::tempoSyncMode ) _this.attribute(
-                                                     "arpsyncmode" ).toInt()
+                                                     "arpsyncmode"
+       ).toInt()
        );
             }*/
 
@@ -1333,9 +1343,9 @@ bool InstrumentFunctionGlissando::processNote(NotePlayHandle* _n)
 
     if(_n->totalFramesPlayed() != 0)
     {
-        // qInfo("Glissando: TFP>0 last=%ld cur=%ld\r", m_lastTime, curTime);
-        // m_lastKey  = newKey;
-        // m_lastTime = qMax(m_lastTime,curTime);
+        // qInfo("Glissando: TFP>0 last=%ld cur=%ld\r", m_lastTime,
+        // curTime); m_lastKey  = newKey; m_lastTime =
+        // qMax(m_lastTime,curTime);
         return true;
     }
 
@@ -1369,7 +1379,8 @@ bool InstrumentFunctionGlissando::processNote(NotePlayHandle* _n)
             / Engine::mixer()->processingSampleRate());
     const int64_t offTime = static_cast<int64_t>(
             _n->offset() * 1000. / Engine::mixer()->processingSampleRate());
-    // qInfo("Glissando: INFO lk=%d nk=%d last=%ld cur=%ld frm=%ld off=%ld "
+    // qInfo("Glissando: INFO lk=%d nk=%d last=%ld cur=%ld frm=%ld off=%ld
+    // "
     //      "per=%ld",
     //      m_lastKey, newKey, m_lastTime, curTime, frmTime, offTime,
     //      perTime);
@@ -1386,7 +1397,8 @@ bool InstrumentFunctionGlissando::processNote(NotePlayHandle* _n)
 
     if(curTime + offTime + perTime + 10 < m_lastTime)
     {
-        // qInfo("Glissando: SKIPPED cur=%ld last=%ld", curTime, m_lastTime);
+        // qInfo("Glissando: SKIPPED cur=%ld last=%ld", curTime,
+        // m_lastTime);
         return true;
     }
 
@@ -1478,11 +1490,13 @@ bool InstrumentFunctionGlissando::processNote(NotePlayHandle* _n)
 
     if(howmany <= 1)
     {
-        // qInfo("Glissando: HOWMANY<=1 (%d) lk=%d nk=%d step=%d last=%ld",
+        // qInfo("Glissando: HOWMANY<=1 (%d) lk=%d nk=%d step=%d
+        // last=%ld",
         //       howmany, m_lastKey, newKey, step, m_lastTime);
         m_lastKey  = newKey;
         m_lastTime = curTime + frmTime + offTime;
-        // qInfo("         : HOWMANY<=1 (%d) lk=%d nk=%d step=%d last=%ld",
+        // qInfo("         : HOWMANY<=1 (%d) lk=%d nk=%d step=%d
+        // last=%ld",
         //      howmany, m_lastKey, newKey, step, m_lastTime);
         return true;
     }
@@ -1555,13 +1569,16 @@ bool InstrumentFunctionGlissando::processNote(NotePlayHandle* _n)
     //        Engine::mixer()->processingSampleRate());
 
     // const int64_t posTime = static_cast<int64_t>(
-    //        pos_frame * 1000. / Engine::mixer()->processingSampleRate());
+    //        pos_frame * 1000. /
+    //        Engine::mixer()->processingSampleRate());
 
-    // qInfo("Glissando : ++++++++> frm=%ld off=%ld pos=%ld tot=%ld", frmTime,
+    // qInfo("Glissando : ++++++++> frm=%ld off=%ld pos=%ld tot=%ld",
+    // frmTime,
     //      offTime, posTime, totTime);
 
     const int64_t endTime = curTime + frmTime + offTime;
-    // qInfo("Glissando: NEW prev=%ld cur=%ld end=%ld", m_lastTime, curTime,
+    // qInfo("Glissando: NEW prev=%ld cur=%ld end=%ld", m_lastTime,
+    // curTime,
     //      endTime);
     m_lastTime = endTime;
 
@@ -1740,7 +1757,7 @@ InstrumentFunctionNotePlaying::InstrumentFunctionNotePlaying(Model* _parent) :
 {
     m_gateModel.setStrictStepSize(true);
 
-    //connect(Engine::getSong(), SIGNAL(playbackStateChanged()), this,
+    // connect(Engine::getSong(), SIGNAL(playbackStateChanged()), this,
     //        SLOT(reset()));
     connect(&m_gateModel, SIGNAL(dataChanged()), this, SLOT(onGateChanged()));
 }
@@ -1777,22 +1794,21 @@ void InstrumentFunctionNotePlaying::onGateChanged()
         return;
 
     int  key = m_keyModel.value();
-    Note subnote(192 * 128, 0, key,
-                 m_volModel.value(),
-                 m_panModel.value(), nullptr);  // V,P,B
+    Note subnote(192 * 128, 0, key, m_volModel.value(), m_panModel.value(),
+                 nullptr);  // V,P,B
 
-    const int mingen=m_minNoteGenerationModel.value();
-    const int maxgen=m_maxNoteGenerationModel.value();
+    const int mingen = m_minNoteGenerationModel.value();
+    const int maxgen = m_maxNoteGenerationModel.value();
     m_currentGeneration++;
-    if(m_currentGeneration>maxgen || m_currentGeneration<mingen)
-        m_currentGeneration=mingen;
+    if(m_currentGeneration > maxgen || m_currentGeneration < mingen)
+        m_currentGeneration = mingen;
 
     NotePlayHandle* nph = NotePlayHandleManager::acquire(
             track, 0, 192 * 128 * Engine::framesPerTick(), subnote, nullptr,
             -1, NotePlayHandle::OriginPlaying, m_currentGeneration);
 
     nph->incrRefCount();
-    m_currentNPH=nph;
+    m_currentNPH = nph;
     Engine::mixer()->emit playHandleToAdd(nph);
 }
 

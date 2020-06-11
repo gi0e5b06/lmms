@@ -2,7 +2,7 @@
  * AutomationEditor.h - a window where you can edit dynamic values in an easy
  *                      way
  *
- * Copyright (c) 2018-2019 gi0e5b06 (on github.com)
+ * Copyright (c) 2018-2020 gi0e5b06 (on github.com)
  * Copyright (c) 2006-2008 Javier Serrano Polo
  * <jasp00/at/users.sourceforge.net>
  *
@@ -60,7 +60,7 @@ class AutomationEditor :
     Q_PROPERTY(QBrush graphColor READ graphColor WRITE setGraphColor)
     Q_PROPERTY(QColor crossColor READ crossColor WRITE setCrossColor)
     Q_PROPERTY(QColor backgroundShade READ backgroundShade WRITE
-                                                           setBackgroundShade)
+                       setBackgroundShade)
   public:
     void setCurrentPattern(AutomationPattern* new_pattern);
 
@@ -180,7 +180,8 @@ class AutomationEditor :
 
     /// Updates the pattern's quantization using the current user selected
     /// value.
-    void setQuantization();
+    void setQuantizationX();
+    void setQuantizationY();
 
   private:
     enum Actions
@@ -193,7 +194,7 @@ class AutomationEditor :
 
     // some constants...
     static const int SCROLLBAR_SIZE = 12;
-    static const int TOP_MARGIN     = 16;
+    static const int TOP_MARGIN     = 23; // 16
 
     static const int DEFAULT_Y_DELTA        = 6;
     static const int DEFAULT_STEPS_PER_TACT = 16;
@@ -209,12 +210,13 @@ class AutomationEditor :
     static QPixmap* s_toolErase;
     static QPixmap* s_toolSelect;
     static QPixmap* s_toolMove;
-    static QPixmap* s_toolYFlip;
-    static QPixmap* s_toolXFlip;
+    // static QPixmap* s_toolYFlip;
+    // static QPixmap* s_toolXFlip;
 
     ComboBoxModel m_zoomingXModel;
     ComboBoxModel m_zoomingYModel;
-    ComboBoxModel m_quantizeModel;
+    ComboBoxModel m_quantizeXModel;
+    ComboBoxModel m_quantizeYModel;
 
     // static const QVector<double> m_zoomXLevels;
 
@@ -335,8 +337,12 @@ class AutomationWindow : public EditorWindow
     QAction* m_cubicHermiteAction;
     QAction* m_parabolicAction;
 
-    QAction* m_flipYAction;
+    QAction* m_moveAbsUpAction;
+    QAction* m_moveAbsDownAction;
+    QAction* m_moveRelUpAction;
+    QAction* m_moveRelDownAction;
     QAction* m_flipXAction;
+    QAction* m_flipYAction;
 
     Knob* m_tensionKnob;
 
@@ -347,9 +353,9 @@ class AutomationWindow : public EditorWindow
     Knob*     m_waveAmplitudeKnob;
     Knob*     m_waveRepeatKnob;
 
-    ComboBox* m_zoomingXComboBox;
-    ComboBox* m_zoomingYComboBox;
-    ComboBox* m_quantizeComboBox;
+    //ComboBox* m_zoomingXComboBox;
+    //ComboBox* m_zoomingYComboBox;
+    //ComboBox* m_quantizeComboBox;
 };
 
 #endif

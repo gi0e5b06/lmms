@@ -198,15 +198,17 @@ class PianoRoll : public QWidget
     void  removeSelection();
     void  selectAll();
     Notes getSelectedNotes();
+    Notes getSelectionOrAll();
     void  selectNotesOnKey();
     int   xCoordOfTick(int tick);
 
     // for entering values with dblclick in the vol/pan bars
     void enterValue(Notes& _notes);
 
-    void markSemiTone(const int                                    i,
+    void markSemitone(const int                                    i,
                       const int                                    key,
                       const InstrumentFunctionNoteStacking::Chord* chord);
+
   protected slots:
     void play();
     void record();
@@ -237,24 +239,30 @@ class PianoRoll : public QWidget
     void rootChanged();
     void scaleChanged();
     void guessScale();
-    void updateSemiToneMarkerMenu();
+    void updateSemitoneMarkerMenu();
 
     void changeNoteEditMode(int i);
-    void markSemiTone(int i);
+    void markSemitone(int i);
 
     void hidePattern(Pattern* pattern);
     void clearGhostPattern();
 
-    void upChord();
-    void downChord();
+    void upChord1();
+    void downChord1();
+    void upChord12();
+    void downChord12();
+    void upScale();
+    void downScale();
+    void flipX();
+    void flipY();
 
     void selectRegionFromPixels(int xStart, int xEnd);
 
   signals:
     void currentPatternChanged();
     void ghostPatternSet(bool);
-    void semiToneMarkerMenuScaleSetEnabled(bool);
-    void semiToneMarkerMenuChordSetEnabled(bool);
+    void semitoneMarkerMenuScaleSetEnabled(bool);
+    void semitoneMarkerMenuChordSetEnabled(bool);
 
   private:
     enum Actions
@@ -277,11 +285,11 @@ class PianoRoll : public QWidget
         NoteEditCount  // make sure this one is always last
     };
 
-    enum SemiToneMarkerAction
+    enum SemitoneMarkerAction
     {
         stmaUnmarkAll,
-        stmaMarkCurrentSemiTone,
-        stmaMarkAllOctaveSemiTones,
+        stmaMarkCurrentSemitone,
+        stmaMarkAllOctaveSemitones,
         stmaMarkCurrentScale,
         stmaMarkCurrentChord,
         stmaCopyAllNotesOnKey
@@ -297,8 +305,8 @@ class PianoRoll : public QWidget
     QVector<QString> m_nemStr;  // gui names of each edit mode
     QMenu* m_noteEditMenu;      // when you right click below the key area
 
-    QList<int> m_markedSemiTones;
-    QMenu*     m_semiToneMarkerMenu;  // when you right click on the key area
+    QList<int> m_markedSemitones;
+    QMenu*     m_semitoneMarkerMenu;  // when you right click on the key area
 
     PianoRoll();
     PianoRoll(const PianoRoll&);
@@ -309,7 +317,7 @@ class PianoRoll : public QWidget
     MidiTime newNoteLen() const;
 
     void shiftPos(int amount);
-    void shiftSemiTone(int amount);
+    void shiftSemitone(int amount);
     bool isSelection() const;
     int  selectionCount() const;
     void playTestNote(Note* n);
@@ -396,11 +404,11 @@ class PianoRoll : public QWidget
     int m_moveStartX;
     int m_moveStartY;
 
-    int m_oldNotesEditHeight;
-    int m_notesEditHeight;
+    int   m_oldNotesEditHeight;
+    int   m_notesEditHeight;
     FLOAT m_ppt;    // pixels per tact
     FLOAT m_ppklh;  // pixels per key line (height)
-    int m_totalKeysToScroll;
+    int   m_totalKeysToScroll;
 
     // remember these values to use them
     // for the next note that is set

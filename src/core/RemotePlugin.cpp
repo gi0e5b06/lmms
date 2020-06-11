@@ -76,7 +76,8 @@ RemotePlugin::RemotePlugin() :
       RemotePluginBase(),
 #endif
       m_failed(true), m_process(), m_watcher(this),
-      m_commMutex("RemotePlugin", QMutex::Recursive), m_splitChannels(false),
+      m_commMutex("RemotePlugin", QMutex::Recursive, false),
+      m_splitChannels(false),
 #ifdef USE_QT_SHMEM
       m_shmObj(),
 #else

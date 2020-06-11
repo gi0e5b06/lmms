@@ -1,7 +1,7 @@
 /*
  * InstrumentFunctionViews.cpp - view for instrument-functions-tab
  *
- * Copyright (c) 2017-2019 gi0e5b06 (on github.com)
+ * Copyright (c) 2017-2020 gi0e5b06 (on github.com)
  * Copyright (c) 2004-2014 Tobias Doerffel <tobydox/at/users.sourceforge.net>
  *
  * This file is part of LSMM -
@@ -117,7 +117,8 @@ InstrumentFunctionArpeggioView::InstrumentFunctionArpeggioView(
       m_arpCycleKnob(new Knob()), m_arpSkipKnob(new Knob()),
       m_arpMissKnob(new Knob()), m_arpTimeKnob(new TempoSyncKnob()),
       m_arpGateKnob(new Knob()), m_arpDirectionComboBox(new ComboBox()),
-      m_arpModeComboBox(new ComboBox())
+      m_arpModeComboBox(new ComboBox()), m_arpBaseKnob(new Knob()),
+      m_arpRepeatKnob(new Knob())
 {
     QGridLayout* mainLayout = new QGridLayout(m_panel);
     mainLayout->setContentsMargins(6, 2, 2, 2);
@@ -180,6 +181,12 @@ InstrumentFunctionArpeggioView::InstrumentFunctionArpeggioView(
                "arpeggio-tone that should be played. With this you "
                "can make cool staccato arpeggios."));
 
+    m_arpBaseKnob->setLabel(tr("BASE"));
+    m_arpBaseKnob->setHintText(tr("Base:"), "");
+
+    m_arpRepeatKnob->setLabel(tr("REPEAT"));
+    m_arpRepeatKnob->setHintText(tr("Repeating:"), "");
+
     QLabel* arpChordLabel = new QLabel(tr("Chord:"));
     arpChordLabel->setFont(pointSize<8>(arpChordLabel->font()));
 
@@ -202,6 +209,8 @@ InstrumentFunctionArpeggioView::InstrumentFunctionArpeggioView(
     mainLayout->addWidget(m_arpMissKnob, 3, 2, 2, 1, Qt::AlignHCenter);
     mainLayout->addWidget(m_arpGateKnob, 6, 1, 2, 1, Qt::AlignHCenter);
     mainLayout->addWidget(m_arpTimeKnob, 6, 2, 2, 1, Qt::AlignHCenter);
+    mainLayout->addWidget(m_arpBaseKnob, 9, 1, 2, 1, Qt::AlignHCenter);
+    mainLayout->addWidget(m_arpRepeatKnob, 9, 2, 2, 1, Qt::AlignHCenter);
 
     mainLayout->setRowMinimumHeight(2, 3);
     mainLayout->setRowMinimumHeight(5, 3);
@@ -224,6 +233,8 @@ void InstrumentFunctionArpeggioView::modelChanged()
     m_arpGateKnob->setModel(&m_cc->m_arpGateModel);
     m_arpDirectionComboBox->setModel(&m_cc->m_arpDirectionModel);
     m_arpModeComboBox->setModel(&m_cc->m_arpModeModel);
+    m_arpBaseKnob->setModel(&m_cc->m_arpBaseModel);
+    m_arpRepeatKnob->setModel(&m_cc->m_arpRepeatModel);
 }
 
 InstrumentFunctionNoteHumanizingView::InstrumentFunctionNoteHumanizingView(

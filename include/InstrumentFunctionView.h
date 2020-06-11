@@ -1,7 +1,7 @@
 /*
  * InstrumentFunctionView.h - views for instrument-functions-tab
  *
- * Copyright (c) 2017-2019 gi0e5b06 (on github.com)
+ * Copyright (c) 2017-2020 gi0e5b06 (on github.com)
  * Copyright (c) 2004-2014 Tobias Doerffel <tobydox/at/users.sourceforge.net>
  *
  * This file is part of LSMM -
@@ -88,9 +88,10 @@ class InstrumentFunctionArpeggioView : public InstrumentFunctionView
     Knob*                       m_arpMissKnob;
     TempoSyncKnob*              m_arpTimeKnob;
     Knob*                       m_arpGateKnob;
-
-    ComboBox* m_arpDirectionComboBox;
-    ComboBox* m_arpModeComboBox;
+    ComboBox*                   m_arpDirectionComboBox;
+    ComboBox*                   m_arpModeComboBox;
+    Knob*                       m_arpBaseKnob;
+    Knob*                       m_arpRepeatKnob;
 };
 
 class InstrumentFunctionNoteHumanizingView : public InstrumentFunctionView

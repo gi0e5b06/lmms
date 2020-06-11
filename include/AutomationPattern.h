@@ -2,27 +2,25 @@
  * AutomationPattern.h - declaration of class AutomationPattern, which
  * contains all information about an automation pattern
  *
- * Copyright (c) 2018-2019 gi0e5b06 (on github.com)
+ * Copyright (c) 2018-2020 gi0e5b06 (on github.com)
  * Copyright (c) 2008-2014 Tobias Doerffel <tobydox/at/users.sourceforge.net>
  * Copyright (c) 2006-2008 Javier Serrano Polo
  * <jasp00/at/users.sourceforge.net>
  *
- * This file is part of LMMS - https://lmms.io
+ * This file is part of LSMM -
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public
- * License along with this program (see COPYING); if not, write to the
- * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
- * Boston, MA 02110-1301 USA.
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
 
@@ -207,19 +205,35 @@ class EXPORT AutomationPattern : public TrackContentObject
     {
         return m_isRecording;
     }
+
     void setRecording(const bool b);
 
-    static int quantization()
+    static int quantizationX()
     {
-        return s_quantization;
+        return s_quantizationX;
     }
-    static void setQuantization(int q)
+
+    static void setQuantizationX(int q)
     {
-        s_quantization = q;
+        s_quantizationX = q;
+    }
+
+    static real_t quantizationY()
+    {
+        return s_quantizationY;
+    }
+
+    static void setQuantizationY(real_t q)
+    {
+        s_quantizationY = q;
     }
 
   public slots:
     virtual void clear();
+    virtual void moveAbsUp();
+    virtual void moveAbsDown();
+    virtual void moveRelUp();
+    virtual void moveRelDown();
     virtual void flipHorizontally();
     virtual void flipVertically();
 
@@ -265,7 +279,8 @@ class EXPORT AutomationPattern : public TrackContentObject
     bool   m_isRecording;
     real_t m_lastRecordedValue;
 
-    static int s_quantization;
+    static int    s_quantizationX;  // ticks
+    static real_t s_quantizationY;
 
     static const real_t DEFAULT_MIN_VALUE;
     static const real_t DEFAULT_MAX_VALUE;

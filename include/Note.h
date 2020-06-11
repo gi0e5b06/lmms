@@ -96,14 +96,17 @@ class EXPORT Note : public SerializingObject
     virtual ~Note();
 
     // used by GUI
+
     inline void setSelected(const bool selected)
     {
         m_selected = selected;
     }
+
     inline void setOldKey(const int oldKey)
     {
         m_oldKey = oldKey;
     }
+
     inline void setOldPos(const MidiTime& oldPos)
     {
         m_oldPos = oldPos;
@@ -113,6 +116,7 @@ class EXPORT Note : public SerializingObject
     {
         m_oldLength = oldLength;
     }
+
     inline void setIsPlaying(const bool isPlaying)
     {
         m_isPlaying = isPlaying;

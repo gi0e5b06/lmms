@@ -2,27 +2,25 @@
  * AutomationPattern.cpp - implementation of class AutomationPattern which
  *                         holds dynamic values
  *
- * Copyright (c) 2018-2019 gi0e5b06 (on github.com)
+ * Copyright (c) 2018-2020 gi0e5b06 (on github.com)
  * Copyright (c) 2008-2014 Tobias Doerffel <tobydox/at/users.sourceforge.net>
  * Copyright (c) 2006-2008 Javier Serrano Polo
  * <jasp00/at/users.sourceforge.net>
  *
- * This file is part of LMMS - https://lmms.io
+ * This file is part of LSMM -
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public
- * License along with this program (see COPYING); if not, write to the
- * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
- * Boston, MA 02110-1301 USA.
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
 
@@ -40,7 +38,8 @@
 
 #include <cmath>
 
-int          AutomationPattern::s_quantization    = 1;
+int          AutomationPattern::s_quantizationX   = 1;
+real_t       AutomationPattern::s_quantizationY   = 0.0625;
 const real_t AutomationPattern::DEFAULT_MIN_VALUE = 0.;
 const real_t AutomationPattern::DEFAULT_MAX_VALUE = 1.;
 
@@ -58,7 +57,7 @@ AutomationPattern::AutomationPattern(AutomationTrack* _auto_track) :
 }
 
 AutomationPattern::AutomationPattern(const AutomationPattern& _other) :
-        TrackContentObject(_other.m_autoTrack, _other.displayName()),
+      TrackContentObject(_other.m_autoTrack, _other.displayName()),
       m_autoTrack(_other.m_autoTrack), m_objects(_other.m_objects),
       m_tension(_other.m_tension), m_progressionType(_other.m_progressionType)
 {
@@ -296,15 +295,17 @@ void AutomationPattern::updateBBTrack()
 }
 */
 
-MidiTime AutomationPattern::putValue(const MidiTime& time,
-                                     const real_t    value,
-                                     const bool      quantPos,
-                                     const bool      ignoreSurrounding)
+MidiTime AutomationPattern::putValue(const MidiTime& _time,
+                                     const real_t    _value,
+                                     const bool      _quantPos,
+                                     const bool      _ignoreSurrounding)
 {
     cleanObjects();
 
-    const int    q = quantization();
-    const tick_t t = quantPos ? Note::quantized(time, q) : time;
+    const int    qx = quantizationX();
+    const real_t qy = quantizationY();
+    const tick_t t  = _quantPos ? Note::quantized(_time, qx) : _time;
+    const real_t v  = _quantPos ? qy * round(_value / qy) : _value;
 
     /*
     if((t > 0) && !ignoreSurrounding && (valueAt(t - 1) ==
@@ -318,10 +319,10 @@ MidiTime AutomationPattern::putValue(const MidiTime& time,
 
     // Remove control points that are covered by the new points
     // quantization value. Control Key to override
-    if(quantPos && !ignoreSurrounding)
+    if(_quantPos && !_ignoreSurrounding)
     {
         // qInfo("putval q=%d t=%d", q, t);
-        for(tick_t i = t - q + 1; i < t + q; ++i)
+        for(tick_t i = t - qx + 1; i < t + qx; ++i)
         {
             // AutomationPattern::removeValue(i);
             if(m_timeMap.contains(i))
@@ -333,7 +334,7 @@ MidiTime AutomationPattern::putValue(const MidiTime& time,
     }
 
     // m_timeMap[t] = value;
-    m_timeMap.insert(t, value);
+    m_timeMap.insert(t, v);
 
     timeMap::const_iterator it = m_timeMap.find(t);
     if(it != m_timeMap.begin())
@@ -409,7 +410,7 @@ MidiTime AutomationPattern::setDragValue(const MidiTime& time,
     if(m_dragging == false)
     {
         MidiTime newTime
-                = quantPos ? Note::quantized(time, quantization()) : time;
+                = quantPos ? Note::quantized(time, quantizationX()) : time;
         this->removeValue(newTime);
         m_oldTimeMap = m_timeMap;
         m_dragging   = true;
@@ -646,6 +647,134 @@ real_t* AutomationPattern::valuesAfter(const MidiTime& _time) const
     }
 
     return ret;
+}
+
+void AutomationPattern::moveAbsUp()
+{
+    if(isEmpty())
+        return;
+
+    const AutomatableModel* m    = firstObject();
+    const real_t            vmin = m->minValue<real_t>();
+    const real_t            vmax = m->maxValue<real_t>();
+
+    timeMap tempMap;
+    bool    modified = false;
+    for(tick_t p: m_timeMap.keys())
+    {
+        real_t v = m_timeMap.value(p);
+        // p = (len - p) % (len+1);
+        // if(p < 0) p += len;
+        v = bound(vmin, v + (vmax - vmin) * 0.03125, vmax);
+        tempMap.insert(p, v);
+        modified = true;
+    }
+    if(modified)
+    {
+        m_timeMap.clear();
+        m_timeMap = tempMap;
+        // updateLength();
+        generateTangents();
+        emit dataChanged();
+        Engine::getSong()->setModified();
+    }
+}
+
+void AutomationPattern::moveAbsDown()
+{
+    if(isEmpty())
+        return;
+
+    const AutomatableModel* m    = firstObject();
+    const real_t            vmin = m->minValue<real_t>();
+    const real_t            vmax = m->maxValue<real_t>();
+
+    timeMap tempMap;
+    bool    modified = false;
+    for(tick_t p: m_timeMap.keys())
+    {
+        real_t v = m_timeMap.value(p);
+        // p = (len - p) % (len+1);
+        // if(p < 0) p += len;
+        v = bound(vmin, v - (vmax - vmin) * 0.03125, vmax);
+        tempMap.insert(p, v);
+        modified = true;
+    }
+    if(modified)
+    {
+        m_timeMap.clear();
+        m_timeMap = tempMap;
+        // updateLength();
+        generateTangents();
+        emit dataChanged();
+        Engine::getSong()->setModified();
+    }
+}
+
+void AutomationPattern::moveRelUp()
+{
+    if(isEmpty())
+        return;
+
+    const AutomatableModel* m    = firstObject();
+    const real_t            vmin = m->minValue<real_t>();
+    const real_t            vmax = m->maxValue<real_t>();
+    const real_t            v0   = valueAt(0);
+
+    timeMap tempMap;
+    bool    modified = false;
+    for(tick_t p: m_timeMap.keys())
+    {
+        real_t v = m_timeMap.value(p);
+        real_t o = v;
+
+        v = bound(vmin, (v - v0) * 1.03125 + v0, vmax);
+        tempMap.insert(p, v);
+        if(o != v)
+            modified = true;
+    }
+    if(modified)
+    {
+        m_timeMap.clear();
+        m_timeMap = tempMap;
+        // updateLength();
+        generateTangents();
+        emit dataChanged();
+        Engine::getSong()->setModified();
+    }
+}
+
+void AutomationPattern::moveRelDown()
+{
+    if(isEmpty())
+        return;
+
+    const AutomatableModel* m    = firstObject();
+    const real_t            vmin = m->minValue<real_t>();
+    const real_t            vmax = m->maxValue<real_t>();
+    const real_t            v0   = valueAt(0);
+
+    timeMap tempMap;
+    bool    modified = false;
+    for(tick_t p: m_timeMap.keys())
+    {
+        real_t v = m_timeMap.value(p);
+        real_t o = v;
+
+        v = bound(vmin, (v - v0) / 1.03125 + v0, vmax);
+        tempMap.insert(p, v);
+        if(o != v)
+            modified = true;
+    }
+    if(modified)
+    {
+        m_timeMap.clear();
+        m_timeMap = tempMap;
+        // updateLength();
+        generateTangents();
+        emit dataChanged();
+        Engine::getSong()->setModified();
+    }
 }
 
 void AutomationPattern::flipHorizontally()
