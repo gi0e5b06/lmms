@@ -105,6 +105,7 @@ class FileBrowserTreeWidget : public QTreeWidget
     void activateListItem(QTreeWidgetItem* item, int column);
     void openInNewInstrumentTrackBBE(void);
     void openInNewInstrumentTrackSE(void);
+    void openContainingFolder();
     void sendToActiveInstrumentTrack(void);
     void updateDirectory(QTreeWidgetItem* item);
 

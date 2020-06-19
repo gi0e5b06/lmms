@@ -23,8 +23,11 @@
 #ifndef MUTEX_H
 #define MUTEX_H
 
+#include "Backtrace.h"
+
 #include <QMutex>
 #include <QString>
+#include <QThread>
 
 class Mutex : public QMutex
 {
@@ -33,7 +36,15 @@ class Mutex : public QMutex
           QMutex::RecursionMode _mode = NonRecursive,
           bool                  _info = false) :
           QMutex(_mode),
-          m_name(_name), m_info(_info)
+          m_name(_name), m_info(_info), m_locked(0)
+    {
+    }
+
+    Mutex(const QString&        _name,
+          bool                  _info,
+          QMutex::RecursionMode _mode = NonRecursive) :
+          QMutex(NonRecursive),
+          m_name(_name), m_info(_info), m_locked(0)
     {
     }
 
@@ -44,7 +55,15 @@ class Mutex : public QMutex
     {
         if(m_info)
             qInfo("Mutex::lock %s before", qPrintable(m_name));
+        if(m_locked > 0 && !isRecursive()
+           && m_thread == QThread::currentThread())
+        {
+            BACKTRACE
+            qWarning("Mutex::lock %s is already locked", qPrintable(m_name));
+        }
         QMutex::lock();
+        m_locked++;
+        m_thread = QThread::currentThread();
         if(m_info)
             qInfo("Mutex::lock %s after", qPrintable(m_name));
     }
@@ -54,33 +73,49 @@ class Mutex : public QMutex
         if(m_info)
             qInfo("Mutex::tryLock %s before", qPrintable(m_name));
         bool r = QMutex::tryLock(_timeout);
+        if(r)
+        {
+            m_locked++;
+            m_thread = QThread::currentThread();
+            if(m_locked > 0 && !isRecursive()
+               && m_thread == QThread::currentThread())
+            {
+                BACKTRACE
+                qWarning("Mutex::tryLock %s is already locked",
+                         qPrintable(m_name));
+            }
+        }
         if(m_info)
-            qInfo("Mutex::tryLock %s before", qPrintable(m_name));
+            qInfo("Mutex::tryLock %s after", qPrintable(m_name));
         return r;
     }
 
     virtual bool try_lock()
     {
-        if(m_info)
-            qInfo("Mutex::try_lock %s before", qPrintable(m_name));
-        bool r = QMutex::try_lock();
-        if(m_info)
-            qInfo("Mutex::try_lock %s after", qPrintable(m_name));
-        return r;
+        return tryLock();
     }
 
     virtual void unlock()
     {
         if(m_info)
             qInfo("Mutex::unlock %s before", qPrintable(m_name));
+        if(m_locked < 1)
+        {
+            BACKTRACE
+            qWarning("Mutex::unlock %s is not locked", qPrintable(m_name));
+        }
+        m_thread = nullptr;
+        m_locked--;
         QMutex::unlock();
         if(m_info)
             qInfo("Mutex::unlock %s after", qPrintable(m_name));
     }
 
   private:
-    QString m_name;
-    bool    m_info;
+    QString  m_name;
+    bool     m_info;
+    int      m_locked;
+    QThread* m_thread;
 };
 
 #endif

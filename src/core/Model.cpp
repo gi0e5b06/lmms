@@ -121,6 +121,75 @@ Model* Model::find(const QString& _uuid)
     return s_models.value(_uuid, nullptr);
 }
 
+QString Model::objectName() const
+{
+    QString r = QObject::objectName();
+    if(r.isEmpty())
+    {
+        r = displayName();  // fullDisplayName();
+        r.replace('/', '_');
+        // r.replace('>', '/');
+        r.replace(QRegExp("[#]"), "");
+        r.replace(QRegExp("[(].*[)]"), "");
+
+        QRegExp rx1("(^|/)[A-Z]+", Qt::CaseSensitive);
+        int     p = 0;
+        while(p >= 0 && p < r.length())
+        {
+            // qInfo("on: p=%d r=%s", p, qPrintable(r));
+            p = rx1.indexIn(r, p);
+            if(p < 0)
+                break;
+
+            int n = rx1.matchedLength();
+            // qInfo("    matches %s", qPrintable(r.mid(p, n)));
+            r = r.left(p) + r.mid(p, n).toLower() + r.mid(p + n);
+            p++;  //= n;
+        }
+
+        QRegExp rx2(" +.");
+        p = 0;
+        while(p >= 0 && p < r.length())
+        {
+            // qInfo("on: p=%d r=%s", p, qPrintable(r));
+            p = rx2.indexIn(r, p);
+            if(p < 0)
+                break;
+
+            int n = rx2.matchedLength();
+            r     = r.left(p) + r.mid(p + n - 1, 1).toUpper() + r.mid(p + n);
+            p++;
+            // if(r.length() > 50) break;
+        }
+
+        // r = QString("{") + r + "}";
+    }
+
+    return r;
+}
+
+QString Model::fullObjectName() const
+{
+    const QString& n = objectName();
+    const Model*   m = parentModel();
+
+    if(m != nullptr)
+    {
+        const QString p = m->fullObjectName();
+        if(p.isEmpty())
+        {
+            if(n.isEmpty())
+                return QString::null;
+            else
+                return n;
+        }
+
+        return p + "." + n;
+    }
+
+    return n;
+}
+
 void Model::setDisplayName(const QString& _displayName)
 {
     if(m_displayName != _displayName)
@@ -133,19 +202,22 @@ void Model::setDisplayName(const QString& _displayName)
 QString Model::fullDisplayName() const
 {
     const QString& n = displayName();
-    if(parentModel())
+    const Model*   m = parentModel();
+
+    if(m != nullptr)
     {
-        const QString p = parentModel()->fullDisplayName();
-        if(n.isEmpty() && p.isEmpty())
+        const QString p = m->fullDisplayName();
+        if(p.isEmpty())
         {
-            return QString::null;
+            if(n.isEmpty())
+                return QString::null;
+            else
+                return n;
         }
-        else if(p.isEmpty())
-        {
-            return n;
-        }
+
         return p + ">" + n;
     }
+
     return n;
 }
 

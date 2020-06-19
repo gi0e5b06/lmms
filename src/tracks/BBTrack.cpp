@@ -31,7 +31,8 @@
 #include "Mixer.h"
 #include "RenameDialog.h"
 #include "Song.h"
-#include "SongEditor.h"
+//#include "SongEditor.h"
+#include "TimeLineWidget.h"
 #include "ToolTip.h"
 #include "TrackLabelButton.h"
 #include "embed.h"
@@ -46,7 +47,8 @@
 BBTrack::infoMap BBTrack::s_infoMap;
 
 BBTCO::BBTCO(Track* _track) :
-      TrackContentObject(_track, "Beat tile"), m_mask(nullptr)
+      TrackContentObject(_track, "Beat tile"), m_bbTrackIndex(-1),
+      m_mask(nullptr)
 {
     tact_t t = Engine::getBBTrackContainer()->lengthOfBB(bbTrackIndex());
     if(t > 0)
@@ -60,10 +62,11 @@ BBTCO::BBTCO(Track* _track) :
 }
 
 BBTCO::BBTCO(const BBTCO& _other) :
-      TrackContentObject(_other), m_mask(nullptr)
+      TrackContentObject(_other), m_bbTrackIndex(_other.m_bbTrackIndex),
+      m_mask(nullptr)
 {
     const Bitset* mask = _other.mask();
-    if(mask)
+    if(mask != nullptr)
         m_mask = new Bitset(*mask);
 
     // changeLength(_other.length());
@@ -77,9 +80,45 @@ BBTCO::~BBTCO()
         delete m_mask;
 }
 
+QString BBTCO::defaultName() const
+{
+    Track* t = track();
+    if(m_bbTrackIndex >= 0
+       && m_bbTrackIndex < Engine::getBBTrackContainer()->numOfBBs())
+        t = BBTrack::findBBTrack(m_bbTrackIndex);
+    return t->name();
+}
+
 int BBTCO::bbTrackIndex() const
 {
-    return dynamic_cast<BBTrack*>(getTrack())->index();
+    if(m_bbTrackIndex >= 0
+       && m_bbTrackIndex < Engine::getBBTrackContainer()->numOfBBs())
+        return m_bbTrackIndex;
+    else
+        return dynamic_cast<BBTrack*>(track())->index();
+}
+
+void BBTCO::setBBTrackIndex(int _index)
+{
+    qWarning("BBTCO::setBBTrackIndex o=%d n=%d", m_bbTrackIndex, _index);
+    if(m_bbTrackIndex != _index && _index >= -1
+       && _index < Engine::getBBTrackContainer()->numOfBBs())
+    {
+        bool un        = (name() == defaultName());
+        m_bbTrackIndex = _index;
+        Track* t       = nullptr;
+        if(m_bbTrackIndex >= 0
+           && m_bbTrackIndex < Engine::getBBTrackContainer()->numOfBBs())
+            t = BBTrack::findBBTrack(m_bbTrackIndex);
+        if(t == nullptr)
+            t = track();
+        qWarning("BBTCO::setBBTrackIndex t=%s", qPrintable(t->name()));
+        setColor(t->color());
+        setUseStyleColor(false);
+        if(un)
+            setName(m_bbTrackIndex >= 0 ? defaultName() : "");
+        emit dataChanged();
+    }
 }
 
 bool BBTCO::isEmpty() const
@@ -201,6 +240,18 @@ void BBTCO::loadSettings(const QDomElement& element)
     */
 }
 
+void BBTCO::clear()
+{
+    if(m_mask == nullptr)
+        m_mask = new Bitset(MASKSZ, false);
+
+    for(int index = Engine::getBBTrackContainer()->tracks().size() - 1;
+        index >= 0; index--)
+        m_mask->set(index);
+
+    emit dataChanged();
+}
+
 TrackContentObjectView* BBTCO::createView(TrackView* _tv)
 {
     // qInfo("BBTCO::createView tv=%p", _tv);
@@ -216,7 +267,7 @@ BBTCOView::BBTCOView(BBTCO* _tco, TrackView* _tv) :
       TrackContentObjectView(_tco, _tv), m_bbTCO(_tco), m_paintPixmap()
 {
     // qInfo("BBTCOView::BBTCOView %p", _tco);
-    connect(_tco->getTrack(), SIGNAL(dataChanged()), this, SLOT(update()));
+    connect(_tco->track(), SIGNAL(dataChanged()), this, SLOT(update()));
 
     setStyle(QApplication::style());
 }
@@ -236,12 +287,14 @@ QMenu* BBTCOView::buildContextMenu()
     cm->addAction(embed::getIconPixmap("bb_track"),
                   tr("Open in the beat editor"), this,
                   SLOT(openInBBEditor()));
-    addRemoveMuteClearMenu(cm, true, false, false);
+    addRemoveMuteClearMenu(cm, true, true, true);
     cm->addSeparator();
     addCutCopyPasteMenu(cm, true, true, true);
 
     cm->addSeparator();
     addMuteMenu(cm, !m_bbTCO->isMuted());
+    addBeatMenu(cm, !m_bbTCO->isMuted()
+                            && Engine::getBBTrackContainer()->numOfBBs() > 1);
 
     cm->addSeparator();
     addPropertiesMenu(cm, false, false);
@@ -279,6 +332,27 @@ void BBTCOView::addMuteMenu(QMenu* _cm, bool _enabled)
     _cm->addMenu(smmi);
 }
 
+void BBTCOView::addBeatMenu(QMenu* _cm, bool _enabled)
+{
+    QMenu* smb = new QMenu(tr("Beat"));
+
+    QAction*  a;
+    const int n = Engine::getBBTrackContainer()->numOfBBs();
+    for(int i = -1; i < n; i++)
+    {
+        QString s(i == -1 ? tr("Default") : BBTrack::findBBTrack(i)->name());
+        a = smb->addAction(s);
+        a->setData(QVariant(i));
+        a->setCheckable(true);
+        a->setChecked(i == m_bbTCO->m_bbTrackIndex);
+        a->setEnabled(_enabled);
+    }
+
+    connect(smb, SIGNAL(triggered(QAction*)), this,
+            SLOT(chooseBeat(QAction*)));
+    _cm->addMenu(smb);
+}
+
 void BBTCOView::toggleMask(QAction* _a)
 {
     const int index = _a->data().toInt();
@@ -290,6 +364,14 @@ void BBTCOView::toggleMask(QAction* _a)
         m_bbTCO->m_mask = mask;
     }
     mask->toggle(index);
+    setNeedsUpdate(true);
+}
+
+void BBTCOView::chooseBeat(QAction* _a)
+{
+    const int index = _a->data().toInt();
+    qInfo("BBTCOView::chooseBeat %d", index);
+    m_bbTCO->setBBTrackIndex(index);
     setNeedsUpdate(true);
 }
 
@@ -319,21 +401,19 @@ void BBTCOView::paintEvent(QPaintEvent*)
 
     // QLinearGradient lingrad( 0, 0, 0, height() );
 
-    bool muted = m_bbTCO->getTrack()->isMuted() || m_bbTCO->isMuted();
+    bool muted = m_bbTCO->track()->isMuted() || m_bbTCO->isMuted();
 
     // state: selected, muted, default, user selected
     QColor bgcolor
             = isSelected()
                       ? selectedColor()
                       : (muted ? mutedBackgroundColor()
-                               : (useStyleColor()
-                                          ? (m_bbTCO->getTrack()
-                                                             ->useStyleColor()
-                                                     ? painter.background()
-                                                               .color()
-                                                     : m_bbTCO->getTrack()
-                                                               ->color())
-                                          : color()));
+                               : (useStyleColor() ? (
+                                          m_bbTCO->track()->useStyleColor()
+                                                  ? painter.background()
+                                                            .color()
+                                                  : m_bbTCO->track()->color())
+                                                  : color()));
 
     /*
     lingrad.setColorAt( 0, c.light( 130 ) );
@@ -381,7 +461,7 @@ void BBTCOView::paintEvent(QPaintEvent*)
                 p.drawLine(2, 2 + y, width() - 4, 2 + y);
     }
 
-    bool frozen = m_bbTCO->getTrack()->isFrozen();
+    bool frozen = m_bbTCO->track()->isFrozen();
     paintFrozenIcon(frozen, p);
 
     // float
@@ -396,28 +476,8 @@ void BBTCOView::paintEvent(QPaintEvent*)
     // pattern name
     paintTextLabel(m_bbTCO->name(), bgcolor, p);
 
-    /*
-    // inner border
-    p.setPen( c.lighter( 130 ) );
-    p.drawRect( 1, 1, rect().right() - TCO_BORDER_WIDTH,
-            rect().bottom() - TCO_BORDER_WIDTH );
-
-    // outer border
-    p.setPen( c.darker( 300 ) );
-    p.drawRect( 0, 0, rect().right(), rect().bottom() );
-    */
     paintTileBorder(false, false, bgcolor, p);
-
-    /*
-    // draw the 'muted' pixmap only if the pattern was manualy muted
-    if( m_bbTCO->isMuted() )
-    {
-            const int spacing = TCO_BORDER_WIDTH;
-            const int size = 14;
-            p.drawPixmap( spacing, height() - ( size + spacing ),
-                    embed::getIconPixmap( "muted", size, size ) );
-    }
-    */
+    paintTileLoop(p);
     paintMutedIcon(m_bbTCO->isMuted(), p);
 
     p.end();
@@ -435,7 +495,7 @@ void BBTCOView::openInBBEditor()
 /*
 void BBTCOView::resetName()
 {
-        m_bbTCO->setName( m_bbTCO->getTrack()->name() );
+        m_bbTCO->setName( m_bbTCO->track()->name() );
 }
 
 
@@ -524,7 +584,7 @@ BBTrack::BBTrack(TrackContainer* tc) : Track(Track::BBTrack, tc)
     int bbNum       = s_infoMap.size();
     s_infoMap[this] = bbNum;
 
-    setName(tr("Beat/Bassline %1").arg(bbNum));
+    setName(tr("Beat %1").arg(bbNum + 1));
     Engine::getBBTrackContainer()->createTCOsForBB(bbNum);
     Engine::getBBTrackContainer()->setCurrentBB(bbNum);
     Engine::getBBTrackContainer()->updateComboBox();
@@ -569,7 +629,7 @@ QString BBTrack::defaultName() const
             if(!tco->isEmpty())
                 return tco->name();
         }
-    return tr("Beat/Bassline %1").arg(i);
+    return tr("Beat %1").arg(i);
 }
 
 // play _frames frames of given TCO within starting with _start
@@ -588,12 +648,20 @@ bool BBTrack::play(const MidiTime& _start,
                                                    s_infoMap[this], nullptr);
     }
 
-    const float fpt = Engine::framesPerTick();
+    const Song* song = Engine::getSong();
+    const float fpt  = Engine::framesPerTick();
 
+    MidiTime  start = _start;
     tcoVector tcos;
+    int       n = currentLoop();
+    if(song->playMode() == Song::Mode_PlaySong)
+    {
+        TimeLineWidget* tl = song->getPlayPos().m_timeLine;
+        if(tl != nullptr)
+            start = tl->adjustTime(start, n);
+    }
     // getTCOsInRange(tcos, _start, _start + static_cast<int>(_frames / fpt));
-    getTCOsInRange(tcos, _start,
-                   _start + tick_t(ceilf(float(_frames) / fpt)));
+    getTCOsInRange(tcos, start, start + tick_t(ceilf(float(_frames) / fpt)));
 
     if(tcos.size() == 0)
         return false;
@@ -631,17 +699,24 @@ bool BBTrack::play(const MidiTime& _start,
 
         const MidiTime& stp = (*it)->startPosition();
         const MidiTime& len = (*it)->length();
-        // qInfo("bbtrack sz=%d _start=%d lastPos=%d lastLen=%d",
-        //      tcos.size(),_start,lastPosition,lastLen);
-        if(_start < stp + len)
+        // qInfo("bbtrack sz=%d _start=%d start=%d lastPos=%d lastLen=%d",
+        //      tcos.size(),_start,start,lastPosition,lastLen);
+        if(start < stp + len)
         {
             const BBTCO* tco = dynamic_cast<const BBTCO*>(*it);
             if(tco != nullptr)
             {
-                fpp_t nbf = qMin<int>(_frames, (stp + len - _start) * fpt);
+                const fpp_t nbf
+                        = qMin<int>(_frames, (stp + len - start) * fpt);
+                BBTrack*  t   = this;
+                const int idx = tco->bbTrackIndex();
+                if(idx != -1)
+                    t = BBTrack::findBBTrack(idx);
+                const int num = s_infoMap[t];
+                qWarning("BBTrack::play t=%s num=%d idx=%d",
+                         qPrintable(t->name()), num, idx);
                 played |= Engine::getBBTrackContainer()->play(
-                        _start - stp, nbf, _offset, s_infoMap[this],
-                        tco->mask());
+                        start - stp, nbf, _offset, num, tco->mask());
             }
         }
     }
@@ -764,12 +839,13 @@ BBTrackView::BBTrackView(BBTrack* _bbt, TrackContainerView* _tcv) :
     // too), so disable it
     setAcceptDrops(false);
 
-    m_trackLabel = new TrackLabelButton(this, getTrackSettingsWidget());
-    m_trackLabel->setIcon(embed::getIconPixmap("bb_track"));
-    m_trackLabel->move(3, 1);
-    m_trackLabel->show();
-    connect(m_trackLabel, SIGNAL(clicked(bool)), this,
-            SLOT(clickedTrackLabel()));
+    TrackLabelButton* tbl
+            = new TrackLabelButton(this, getTrackSettingsWidget());
+    tbl->setIcon(embed::getIconPixmap("bb_track"));
+    tbl->move(3, 1);
+    tbl->show();
+    connect(tbl, SIGNAL(clicked(bool)), this, SLOT(clickedTrackLabel()));
+
     setModel(_bbt);
 }
 
@@ -784,8 +860,14 @@ bool BBTrackView::close()
     return TrackView::close();
 }
 
+void BBTrackView::addSpecificMenu(QMenu* _cm, bool _enabled)
+{
+    // TODO Select optional tconum
+}
+
 void BBTrackView::clickedTrackLabel()
 {
     Engine::getBBTrackContainer()->setCurrentBB(m_bbTrack->index());
-    gui->bbWindow()->show();
+    // gui->bbWindow()->show();
+    gui->mainWindow()->toggleBBWindow();
 }

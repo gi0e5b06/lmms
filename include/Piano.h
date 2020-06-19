@@ -50,9 +50,10 @@ class Piano : public Model
     // void pressKey(int key);
     // void releaseKey(int key);
 
-    void handleKeyPress(int key, int midiVelocity = -1);
+    void handleKeyPress(int key, uint8_t midiVelocity = -1);
     void handleKeyRelease(int key);
-    void handleKeyPressure(int key, int midiVelocity);
+    void handleKeyPressure(int key, uint8_t midiVelocity);
+    void handleKeyPanning(int key, uint8_t midiPanning);
 
     InstrumentTrack* instrumentTrack() const
     {

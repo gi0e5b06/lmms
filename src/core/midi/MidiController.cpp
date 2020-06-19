@@ -27,205 +27,183 @@
 //#include <QObject>
 
 #include "Engine.h"
-#include "Mixer.h"
 #include "MidiClient.h"
 #include "MidiController.h"
+#include "Mixer.h"
 //#include "Song.h"
 
-#include "lmms_math.h" // REQUIRED
+#include "lmms_math.h"  // REQUIRED
 
-
-MidiController::MidiController( Model * _parent ) :
-	Controller( Controller::MidiController, _parent, tr( "MIDI Controller" ) ),
-	MidiEventProcessor(),
-	m_midiPort( tr( "unnamed_midi_controller" ),
-			Engine::mixer()->midiClient(), this, this, MidiPort::Input ),
-	m_lastValue( 0.0f ),
-	m_previousValue( 0.0f ),
-	m_switch( true )
+MidiController::MidiController(Model* _parent) :
+      Controller(Controller::MidiController, _parent, tr("MIDI Controller")),
+      MidiEventProcessor(), m_midiPort(tr("unnamed_midi_controller"),
+                                       Engine::mixer()->midiClient(),
+                                       this,
+                                       this,
+                                       MidiPort::Input),
+      m_lastValue(0.0f), m_previousValue(0.0f), m_switch(true)
 {
-	setSampleExact( true );
-	connect( &m_midiPort, SIGNAL( modeChanged() ),
-			this, SLOT( updateName() ) );
+    setSampleExact(true);
+    connect(&m_midiPort, SIGNAL(modeChanged()), this, SLOT(updateName()));
 }
-
-
-
 
 MidiController::~MidiController()
 {
 }
 
-
-
-
 void MidiController::fillValueBuffer()
 {
-	if( m_previousValue != m_lastValue )
-	{
-		m_valueBuffer.interpolate( m_previousValue, m_lastValue );
-		m_previousValue = m_lastValue;
-	}
-	else
-	{
-		m_valueBuffer.fill( m_lastValue );
-	}
+    if(m_previousValue != m_lastValue)
+    {
+        m_valueBuffer.interpolate(m_previousValue, m_lastValue);
+        m_previousValue = m_lastValue;
+    }
+    else
+    {
+        m_valueBuffer.fill(m_lastValue);
+    }
 }
-
 
 void MidiController::updateName()
 {
-        int type = m_midiPort.widgetType();
-        if(type == 6)
-                setName( QString("MIDI ch%1 pitchbend").
-                         arg( m_midiPort.inputChannel() ) );
+    int type = m_midiPort.widgetType();
+    if(type == 6)
+        setName(QString("MIDI ch%1 pitchbend")
+                        .arg(m_midiPort.inputChannel()));
+    else
+        setName(QString("MIDI ch%1 ctrl%2")
+                        .arg(m_midiPort.inputChannel())
+                        .arg(m_midiPort.inputController()));
+}
+
+void MidiController::processInEvent(const MidiEvent& event,
+                                    const MidiTime&  time,
+                                    f_cnt_t          offset)
+{
+    unsigned char controllerNum = event.controllerNumber();
+
+    int type = m_midiPort.widgetType();
+    if(type <= 0 || type >= 7)
+        return;
+    if(type == 6 && event.type() != MidiPitchBend)
+        return;
+    if(type != 6 && event.type() == MidiPitchBend)
+        return;
+
+    if((m_midiPort.inputController() == controllerNum + 1
+        || event.type() == MidiPitchBend)
+       && (m_midiPort.inputChannel() == event.channel() + 1
+           || m_midiPort.inputChannel() == 0))
+    {
+        float val = 0.f;
+
+        if(event.type() == MidiControlChange)
+            val = event.controllerValue();
+        else if(event.type() == MidiNoteOn)
+            val = event.velocity();
+        else if(event.type() == MidiNoteOff)
+            val = event.velocity();
+        else if(event.type() == MidiPitchBend)
+            val = 127.f * event.midiPitchBend() / 16383.f;
         else
-                setName( QString("MIDI ch%1 ctrl%2").
-                         arg( m_midiPort.inputChannel() ).
-                         arg( m_midiPort.inputController() ) );
+            // Don't care - maybe add special cases for mod later
+            qWarning("MidiController: in event Default");
+
+        if(type == 1)  // Open Relay Button
+        {
+            if(event.type() == MidiNoteOn)
+                val = 0.f;
+            else if(event.type() == MidiNoteOff)
+                ;  // val=127;
+        }
+        else if(type == 2)  // Close Relay Button
+        {
+            if(event.type() == MidiNoteOn)
+                ;  // val=127;
+            else if(event.type() == MidiNoteOff)
+                val = 0.f;
+        }
+        else if(type == 3)  // Switch
+        {
+            if(event.type() == MidiNoteOn)
+            {
+                val      = (m_switch ? val : 0.f);
+                m_switch = (m_switch ? 0 : 1.f);
+            }
+            else
+                return;
+        }
+
+        {
+            float base  = m_midiPort.baseInputValue();
+            float slope = m_midiPort.slopeInputValue();
+            float delta = m_midiPort.deltaInputValue();
+            val         = base + slope * (val - delta);
+
+            float vmin = m_midiPort.minInputValue();
+            float vmax = m_midiPort.maxInputValue();
+            float step = m_midiPort.stepInputValue();
+            if(step > 1.f)
+                val = vmin + fmodf(val - vmin, step);
+            if(val < vmin)
+                val = vmin;
+            if(val > vmax)
+                val = vmax;
+
+            if(val < 0.f)
+                val = 0.f;  // just for safety
+            if(val > 127.f)
+                val = 127.f;  // just for safety
+
+            m_previousValue = m_lastValue;
+            m_lastValue     = val / 127.0f;
+            // qInfo("MidiController: last=%f
+            // prev=%f",m_lastValue,m_previousValue);
+        }
+
+        if(m_previousValue != m_lastValue)
+        {
+            if(type <= 3)
+                m_previousValue = m_lastValue;
+            updateValueBuffer();
+            emit controlledValueChanged(m_lastValue);
+        }
+        else
+        {
+            // qWarning("MidiController: emit dataUnchanged");
+            // emit dataUnchanged();
+        }
+    }
 }
 
-
-
-
-void MidiController::processInEvent( const MidiEvent& event, const MidiTime& time, f_cnt_t offset )
+void MidiController::subscribeReadablePorts(const MidiPort::Map& _map)
 {
-	unsigned char controllerNum = event.controllerNumber();
-
-        int type = m_midiPort.widgetType();
-        if(type <= 0 || type >= 7) return;
-        if(type == 6 && event.type() != MidiPitchBend) return;
-        if(type != 6 && event.type() == MidiPitchBend) return;
-
-	if( (m_midiPort.inputController() == controllerNum + 1 ||
-             event.type() == MidiPitchBend) &&
-	    ( m_midiPort.inputChannel() == event.channel() + 1 ||
-	      m_midiPort.inputChannel() == 0 ) )
-	{
-		float val=0.f;
-
-		if(event.type() == MidiControlChange)
-			val=event.controllerValue();
-		else
-		if(event.type() == MidiNoteOn)
-			val=event.velocity();
-		else
-		if(event.type() == MidiNoteOff)
-			val=event.velocity();
-		else
-                if(event.type() == MidiPitchBend)
-                        val=127.f*event.midiPitchBend()/16383.f;
-                else
-			// Don't care - maybe add special cases for mod later
-			qWarning("MidiController: in event Default");
-
-		if(type == 1) //Open Relay Button
-		{
-			     if(event.type() == MidiNoteOn ) val=0.f;
-			else if(event.type() == MidiNoteOff) ;//val=127;
-		}
-		else
-		if(type == 2) //Close Relay Button
-		{
-			     if(event.type() == MidiNoteOn ) ;//val=127;
-			else if(event.type() == MidiNoteOff) val=0.f;
-		}
-		else
-		if(type == 3) //Switch
-		{
-			if(event.type() == MidiNoteOn)
-			{
-				val=( m_switch ? val : 0.f );
-				m_switch=(m_switch ? 0 : 1.f);
-			}
-			else return;
-		}
-
-		{
-			float base =m_midiPort.baseInputValue();
-			float slope=m_midiPort.slopeInputValue();
-			float delta=m_midiPort.deltaInputValue();
-			val=base+slope*(val-delta);
-
-                        float vmin=m_midiPort.minInputValue();
-                        float vmax=m_midiPort.maxInputValue();
-			float step=m_midiPort.stepInputValue();
-			if(step>1.f) val=vmin+fmodf(val-vmin,step);
-			if(val<vmin) val=vmin;
-			if(val>vmax) val=vmax;
-
-			if(val<  0.f) val=  0.f; //just for safety
-			if(val>127.f) val=127.f; //just for safety
-
-			m_previousValue = m_lastValue;
-			m_lastValue = val/127.0f;
-                        //qInfo("MidiController: last=%f prev=%f",m_lastValue,m_previousValue);
-		}
-
-		if(m_previousValue != m_lastValue)
-		{
-			if(type<=3) m_previousValue=m_lastValue;
-			updateValueBuffer();
-			emit controlledValueChanged(m_lastValue);
-		}
-		else
-		{
-			//qWarning("MidiController: emit dataUnchanged");
-			//emit dataUnchanged();
-		}
-	}
+    for(MidiPort::Map::ConstIterator it = _map.constBegin();
+        it != _map.constEnd(); ++it)
+    {
+        m_midiPort.subscribeReadablePort(it.key(), *it);
+    }
 }
 
-
-
-
-void MidiController::subscribeReadablePorts( const MidiPort::Map & _map )
+void MidiController::saveSettings(QDomDocument& _doc, QDomElement& _this)
 {
-	for( MidiPort::Map::ConstIterator it = _map.constBegin();
-						it != _map.constEnd(); ++it )
-	{
-		m_midiPort.subscribeReadablePort( it.key(), *it );
-	}
+    Controller::saveSettings(_doc, _this);
+    m_midiPort.saveSettings(_doc, _this);
 }
 
-
-
-
-void MidiController::saveSettings( QDomDocument & _doc, QDomElement & _this )
+void MidiController::loadSettings(const QDomElement& _this)
 {
-	Controller::saveSettings( _doc, _this );
-	m_midiPort.saveSettings( _doc, _this );
-
+    Controller::loadSettings(_this);
+    m_midiPort.loadSettings(_this);
+    updateName();
 }
-
-
-
-
-void MidiController::loadSettings( const QDomElement & _this )
-{
-	Controller::loadSettings( _this );
-
-	m_midiPort.loadSettings( _this );
-
-	updateName();
-}
-
-
-
 
 QString MidiController::nodeName() const
 {
-	return( "Midicontroller" );
+    return "Midicontroller";
 }
 
-
-
-
-ControllerDialog * MidiController::createDialog( QWidget * _parent )
+ControllerDialog* MidiController::createDialog(QWidget* _parent)
 {
-	return NULL;
+    return nullptr;
 }
-
-
-
-

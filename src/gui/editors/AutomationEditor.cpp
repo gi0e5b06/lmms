@@ -219,15 +219,28 @@ AutomationEditor::~AutomationEditor()
     delete m_waveRepeatModel;
 }
 
-void AutomationEditor::setCurrentPattern(AutomationPattern* new_pattern)
+void AutomationEditor::setCurrentPattern(AutomationPattern* _newPattern)
 {
-    if(m_pattern)
+    const AutomationPattern* old = currentPattern();
+    if(old == _newPattern)
+        return;
+
+    if(old != nullptr)
     {
-        m_pattern->disconnect(this);
+        old->disconnect(this);
     }
 
+    // stop playing if it played before
+    if(Engine::getSong()->isPlaying()
+       && Engine::getSong()->playMode() == Song::Mode_PlayAutomation)
+    {
+        Engine::getSong()->playAutomation(nullptr);
+    }
+
+    // set new data
     m_patternMutex.lock();
-    m_pattern = new_pattern;
+    m_pattern         = _newPattern;
+    m_currentPosition = 0;
     m_patternMutex.unlock();
 
     if(m_pattern != nullptr)
@@ -371,7 +384,7 @@ void AutomationEditor::update()
 
     QMutexLocker m(&m_patternMutex);
     // Note detuning?
-    if(m_pattern && !m_pattern->getTrack())
+    if(m_pattern && !m_pattern->track())
     {
         gui->pianoRollWindow()->update();
     }
@@ -454,11 +467,7 @@ void AutomationEditor::leaveEvent(QEvent* e)
         update();
     }
 
-    while(QApplication::overrideCursor() != nullptr)
-    {
-        QApplication::restoreOverrideCursor();
-    }
-
+    Editor::resetOverrideCursor();
     QWidget::leaveEvent(e);
 }
 
@@ -617,10 +626,8 @@ void AutomationEditor::mousePressEvent(QMouseEvent* mouseEvent)
                                                * m_ppt)
                                       / MidiTime::ticksPerTact());
                 m_moveXOffset = x - aligned_x - 1;
-                // set move-cursor
-                QCursor c(Qt::SizeAllCursor);
-                QApplication::setOverrideCursor(c);
 
+                Editor::applyOverrideCursor(Qt::SizeAllCursor);
                 Engine::getSong()->setModified();
             }
             else if(((mouseEvent->button() == Qt::MiddleButton
@@ -709,7 +716,8 @@ void AutomationEditor::mouseReleaseEvent(QMouseEvent* mouseEvent)
         {
             m_pattern->applyDragValue();
         }
-        QApplication::restoreOverrideCursor();
+
+        Editor::resetOverrideCursor();
     }
 
     m_action = NONE;
@@ -823,27 +831,13 @@ void AutomationEditor::mouseMoveEvent(QMouseEvent* mouseEvent)
                 // no value??
                 if(it != time_map.end())
                 {
-                    if(QApplication::overrideCursor() != nullptr
-                       && QApplication::overrideCursor()->shape()
-                                  != Qt::SizeAllCursor)
-                    {
-                        while(QApplication::overrideCursor() != nullptr)
-                        {
-                            QApplication::restoreOverrideCursor();
-                        }
-                    }
-
-                    QCursor c(Qt::SizeAllCursor);
-                    QApplication::setOverrideCursor(c);
+                    Editor::applyOverrideCursor(Qt::SizeAllCursor);
                 }
                 else
                 {
                     // the cursor is over no value, so restore
                     // cursor
-                    while(QApplication::overrideCursor() != nullptr)
-                    {
-                        QApplication::restoreOverrideCursor();
-                    }
+                    Editor::resetOverrideCursor();
                 }
             }
             else if(mouseEvent->buttons() & Qt::LeftButton
@@ -1042,7 +1036,7 @@ void AutomationEditor::mouseMoveEvent(QMouseEvent* mouseEvent)
                 }
             }
 
-            QApplication::restoreOverrideCursor();
+            Editor::resetOverrideCursor();
         }
 
         // update();
@@ -1765,7 +1759,7 @@ inline bool AutomationEditor::inBBEditor()
 {
     QMutexLocker m(&m_patternMutex);
     return (m_pattern != nullptr
-            && m_pattern->getTrack()->trackContainer()
+            && m_pattern->track()->trackContainer()
                        == Engine::getBBTrackContainer());
 }
 
@@ -1781,7 +1775,7 @@ void AutomationEditor::play()
         Engine::getSong()->togglePause();
 
     /*
-    if(!m_pattern->getTrack())
+    if(!m_pattern->track())
     {
         if(Engine::getSong()->playMode() != Song::Mode_PlayPattern)
         {
@@ -1823,7 +1817,7 @@ void AutomationEditor::stop()
     if(m_pattern == nullptr)
         return;
 
-    if(m_pattern->getTrack() && inBBEditor())
+    if(m_pattern->track() && inBBEditor())
         Engine::getBBTrackContainer()->stop();
     else
         Engine::getSong()->stop();

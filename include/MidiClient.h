@@ -82,6 +82,7 @@ class MidiClient
     {
         return QStringList();
     }
+
     virtual QStringList writablePorts() const
     {
         return QStringList();

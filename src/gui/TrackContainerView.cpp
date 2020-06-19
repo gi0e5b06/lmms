@@ -151,8 +151,7 @@ void TrackContainerView::moveTrackView(TrackView* trackView, int indexTo)
         return;
     }
 
-    BBTrack::swapBBTracks(trackView->getTrack(),
-                          m_trackViews[indexTo]->getTrack());
+    BBTrack::swapBBTracks(trackView->track(), m_trackViews[indexTo]->track());
 
     m_scrollLayout->removeWidget(trackView);
     m_scrollLayout->insertWidget(indexTo, trackView);
@@ -231,7 +230,7 @@ TrackView* TrackContainerView::createTrackView(Track* _t)
     for(trackViewList::iterator it = m_trackViews.begin();
         it != m_trackViews.end(); ++it)
     {
-        if((*it)->getTrack() == _t)
+        if((*it)->track() == _t)
         {
             return (*it);
         }
@@ -246,7 +245,7 @@ void TrackContainerView::deleteTrackView(TrackView* _tv)
 {
     // m_tc->addJournalCheckPoint();
 
-    Track* t = _tv->getTrack();
+    Track* t = _tv->track();
     removeTrackView(_tv);
     delete _tv;
 
@@ -256,6 +255,7 @@ void TrackContainerView::deleteTrackView(TrackView* _tv)
     requireActionUpdate();
 }
 
+// y in TrackContentWidget
 const TrackView* TrackContainerView::trackViewAt(const int _y) const
 {
     const int abs_y = _y + m_scrollArea->verticalScrollBar()->value();
@@ -270,11 +270,9 @@ const TrackView* TrackContainerView::trackViewAt(const int _y) const
         const int y_cnt1 = y_cnt;
         y_cnt += (*it)->height();
         if(abs_y >= y_cnt1 && abs_y < y_cnt)
-        {
             return (*it);
-        }
     }
-    return (NULL);
+    return nullptr;
 }
 
 bool TrackContainerView::allowRubberband() const
@@ -458,7 +456,7 @@ void TrackContainerView::clearAllTracks()
     while(!m_trackViews.empty())
     {
         TrackView* tv = m_trackViews.takeLast();
-        Track*     t  = tv->getTrack();
+        Track*     t  = tv->track();
         qInfo("TrackContainerView::clearAllTrack views [%s]",
               qPrintable(t->name()));
         delete tv;
@@ -510,7 +508,6 @@ void TrackContainerView::dropEvent(QDropEvent* _de)
                 Track::create(Track::InstrumentTrack, m_tc));
         InstrumentLoaderThread* ilt
                 = new InstrumentLoaderThread(this, it, value);
-        ilt->setObjectName("load instrument " + value);
         ilt->start();
         // it->toggledInstrumentTrackButton( true );
         _de->accept();
@@ -685,7 +682,7 @@ InstrumentLoaderThread::InstrumentLoaderThread(QObject*         parent,
       QThread(parent),
       m_it(it), m_name(name)
 {
-    setObjectName("instrument loader " + name);
+    setObjectName("instrumentLoader_" + name.trimmed().replace(' ','_'));
     m_containerThread = thread();
 }
 

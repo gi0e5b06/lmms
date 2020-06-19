@@ -43,8 +43,8 @@ PixmapButton::PixmapButton(QWidget* _parent, const QString& _name) :
       AutomatableButton(_parent, _name), m_activePixmap(), m_inactivePixmap(),
       m_pressed(false), m_blinkingState(true), m_blinking(false)
 {
-    setActiveGraphic(embed::getIconPixmap("led_yellow"));
-    setInactiveGraphic(embed::getIconPixmap("led_off"), false);
+    setActiveGraphic(embed::getPixmap("led_yellow"));
+    setInactiveGraphic(embed::getPixmap("led_off"), false);
 }
 
 PixmapButton::~PixmapButton()

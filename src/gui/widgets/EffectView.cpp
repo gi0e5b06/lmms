@@ -251,7 +251,7 @@ m_tco->setName(s);
 
 void EffectView::resetName()
 {
-    // m_tco->setName(m_tco->getTrack()->name());
+    // m_tco->setName(m_tco->track()->name());
 }
 
 void EffectView::changeColor()

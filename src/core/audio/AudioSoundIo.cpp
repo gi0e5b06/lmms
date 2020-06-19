@@ -45,6 +45,8 @@ AudioSoundIo::AudioSoundIo(bool& outSuccessful, Mixer* _mixer) :
                                    SURROUND_CHANNELS),
                   _mixer)
 {
+    setObjectName("soundioAudio");
+
     outSuccessful       = false;
     m_soundio           = NULL;
     m_outstream         = NULL;
@@ -339,10 +341,9 @@ static void setup_widget_on_devices_change(SoundIo* soundio)
 
 void AudioSoundIo::setupWidget::reconnectSoundIo()
 {
-    const QString& configBackend
-            = m_isFirst ? ConfigManager::inst()->value("audiosoundio",
-                                                       "backend")
-                        : m_backendModel.currentText();
+    const QString& configBackend = m_isFirst ? ConfigManager::inst()->value(
+                                           "audiosoundio", "backend")
+                                             : m_backendModel.currentText();
     m_isFirst = false;
 
     soundio_disconnect(m_soundio);

@@ -45,6 +45,7 @@
 //#include "gui_templates.h"
 
 #include <QApplication>
+#include <QDesktopServices>
 #include <QEventLoop>
 #include <QHBoxLayout>
 #include <QKeyEvent>
@@ -346,9 +347,11 @@ FileBrowserTreeWidget::~FileBrowserTreeWidget()
 void FileBrowserTreeWidget::contextMenuEvent(QContextMenuEvent* e)
 {
     FileItem* f = dynamic_cast<FileItem*>(itemAt(e->pos()));
-    if(f != nullptr
-       && (f->handling() == FileItem::LoadAsPreset
-           || f->handling() == FileItem::LoadByPlugin))
+    if(f == nullptr)
+        return;
+
+    if(f->handling() == FileItem::LoadAsPreset
+       || f->handling() == FileItem::LoadByPlugin)
     {
         m_contextMenuItem = f;
         QMenu contextMenu(this);
@@ -360,6 +363,9 @@ void FileBrowserTreeWidget::contextMenuEvent(QContextMenuEvent* e)
         contextMenu.addAction(tr("Open in new instrument-track/"
                                  "B+B Editor"),
                               this, SLOT(openInNewInstrumentTrackBBE()));
+        contextMenu.addAction(QIcon(embed::getIconPixmap("folder")),
+                              tr("Open containing folder"), this,
+                              SLOT(openContainingFolder()));
         contextMenu.exec(e->globalPos());
         m_contextMenuItem = nullptr;
     }
@@ -671,10 +677,10 @@ void FileBrowserTreeWidget::handleFile(FileItem* f, InstrumentTrack* it)
             InstrumentTrack::removeMidiPortNode(dataFile);
             it->setSimpleSerializing();
             it->loadSettings(dataFile.content().toElement());
-            if(it->volumeModel()->value()==MinVolume)
-                    it->volumeModel()->setValue(DefaultVolume);
+            if(it->volumeModel()->value() == MinVolume)
+                it->volumeModel()->setValue(DefaultVolume);
             if(it->isMuted())
-                    it->setMuted(false);
+                it->setMuted(false);
             break;
         }
 
@@ -745,6 +751,15 @@ void FileBrowserTreeWidget::openInNewInstrumentTrackBBE(void)
 void FileBrowserTreeWidget::openInNewInstrumentTrackSE(void)
 {
     openInNewInstrumentTrack(Engine::getSong());
+}
+
+void FileBrowserTreeWidget::openContainingFolder()
+{
+    if(m_contextMenuItem != nullptr)
+    {
+        QFileInfo fileInfo(m_contextMenuItem->fullName());
+        QDesktopServices::openUrl(QUrl::fromLocalFile(fileInfo.dir().path()));
+    }
 }
 
 void FileBrowserTreeWidget::sendToActiveInstrumentTrack(void)

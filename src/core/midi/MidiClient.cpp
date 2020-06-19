@@ -59,10 +59,8 @@ void MidiClient::addPort(MidiPort* port)
 
 void MidiClient::removePort(MidiPort* port)
 {
-    if(!port)
-    {
+    if(port == nullptr)
         return;
-    }
 
     /*
     QVector<MidiPort *>::Iterator it =

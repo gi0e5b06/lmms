@@ -2,24 +2,23 @@
  * Track.h - declaration of classes concerning tracks -> necessary for all
  *           track-like objects (beat/bassline, sample-track...)
  *
+ * Copyright (c) 2017-2020 gi0e5b06 (on github.com)
  * Copyright (c) 2004-2014 Tobias Doerffel <tobydox/at/users.sourceforge.net>
  *
- * This file is part of LMMS - https://lmms.io
+ * This file is part of LSMM -
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public
- * License along with this program (see COPYING); if not, write to the
- * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
- * Boston, MA 02110-1301 USA.
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
 
@@ -28,6 +27,7 @@
 
 //#include <QVector>
 //#include <QList>
+#include <QMenu>
 #include <QWidget>
 //#include <QSignalMapper>
 #include "lmms_basics.h"
@@ -88,12 +88,6 @@ class TrackContentObject : public Model, public JournallingObject
     virtual void loadSettings(const QDomElement& element);
 
     inline Track* track() const
-    {
-        return m_track;
-    }
-
-    // Obsolete
-    inline Track* getTrack() const
     {
         return m_track;
     }
@@ -294,15 +288,15 @@ class TrackContentObjectView : public SelectableObject, public ModelView
     // theming qproperties
     Q_PROPERTY(QColor mutedColor READ mutedColor WRITE setMutedColor)
     Q_PROPERTY(QColor mutedBackgroundColor READ mutedBackgroundColor WRITE
-                                                                     setMutedBackgroundColor)
+                       setMutedBackgroundColor)
     Q_PROPERTY(QColor selectedColor READ selectedColor WRITE setSelectedColor)
     Q_PROPERTY(QColor textColor READ textColor WRITE setTextColor)
     Q_PROPERTY(QColor textBackgroundColor READ textBackgroundColor WRITE
-                                                                   setTextBackgroundColor)
+                       setTextBackgroundColor)
     Q_PROPERTY(QColor textShadowColor READ textShadowColor WRITE
-                                                           setTextShadowColor)
+                       setTextShadowColor)
     Q_PROPERTY(QColor BBPatternBackground READ BBPatternBackground WRITE
-                                                                   setBBPatternBackground)
+                       setBBPatternBackground)
     // Q_PROPERTY( bool gradient READ gradient WRITE setGradient )
 
   public:
@@ -317,7 +311,7 @@ class TrackContentObjectView : public SelectableObject, public ModelView
     }
 
     bool   isFixed() const;
-    real_t pixelsPerTact();
+    real_t pixelsPerTact() const;
     bool   useStyleColor() const;
     void   setUseStyleColor(bool _use);
     QColor color() const;
@@ -395,7 +389,7 @@ class TrackContentObjectView : public SelectableObject, public ModelView
     virtual void contextMenuEvent(QContextMenuEvent* _cme) final;
 
     virtual void dragEnterEvent(QDragEnterEvent* dee);
-    //virtual void dragMoveEvent(QDragMoveEvent *event);
+    // virtual void dragMoveEvent(QDragMoveEvent *event);
     virtual void dropEvent(QDropEvent* de);
     virtual void leaveEvent(QEvent* e);
     virtual void mousePressEvent(QMouseEvent* me);
@@ -415,6 +409,7 @@ class TrackContentObjectView : public SelectableObject, public ModelView
     DataFile createTCODataFiles(
             const QVector<TrackContentObjectView*>& tcos) const;
 
+    virtual void paintTileLoop(QPainter& painter) final;
     virtual void paintTextLabel(const QString& text,
                                 const QColor&  bg,
                                 QPainter&      painter) final;
@@ -549,7 +544,7 @@ class TrackContentWidget : public QWidget, public JournallingObject
     virtual ~TrackContentWidget();
 
     bool   isFixed() const;
-    real_t pixelsPerTact();
+    real_t pixelsPerTact() const;
 
     /*! \brief Updates the background tile pixmap. */
     void updateBackground();
@@ -592,10 +587,11 @@ class TrackContentWidget : public QWidget, public JournallingObject
     virtual void paintEvent(QPaintEvent* pe);
     virtual void resizeEvent(QResizeEvent* re);
 
-    virtual void paintGrid(QPainter&                   p,
-                           int                         tact,
-                           real_t                      ppt,
-                           QVector<QPointer<BarView>>& barViews);
+    virtual void paintLoop(QPainter& p, const MidiTime& t0, const real_t ppt);
+    virtual void paintGrid(QPainter&                         p,
+                           const MidiTime&                   t0,
+                           const real_t                      ppt,
+                           const QVector<QPointer<BarView>>& barViews);
     virtual void paintCell(QPainter&                p,
                            int                      xc,
                            int                      yc,
@@ -621,7 +617,7 @@ class TrackContentWidget : public QWidget, public JournallingObject
     }
 
   private:
-    Track*   getTrack();
+    Track*   track();
     MidiTime getPosition(int mouseX);
 
     TrackView* m_trackView;
@@ -646,9 +642,14 @@ class TrackOperationsWidget : public QWidget
     TrackOperationsWidget(TrackView* parent);
     virtual ~TrackOperationsWidget();
 
+  public slots:
+    void handleLoopMenuAction(QAction* _a);
+
   protected:
+    virtual void addLoopMenu(QMenu* _cm, bool _enabled) final;
     virtual void addNameMenu(QMenu* _cm, bool _enabled) final;
     virtual void addColorMenu(QMenu* _cm, bool _enabled) final;
+    virtual void addSpecificMenu(QMenu* _cm, bool _enabled) final;
 
     virtual void mousePressEvent(QMouseEvent* me);
     virtual void paintEvent(QPaintEvent* pe);
@@ -659,8 +660,8 @@ class TrackOperationsWidget : public QWidget
     void isolateTrack();
     void removeTrack();
     void updateMenu();
-    void recordingOn();
-    void recordingOff();
+    // void recordingOn();
+    // void recordingOff();
     void clearTrack();
     void changeName();
     void resetName();
@@ -713,11 +714,25 @@ class EXPORT Track : public Model, public JournallingObject
     Track(TrackType type, TrackContainer* tc);
     virtual ~Track();
 
+    virtual QString objectName() const;
+
     bool   isFixed() const;
     bool   useStyleColor() const;
     void   setUseStyleColor(bool _b);
     QColor color() const;
     void   setColor(const QColor& _newColor);
+
+    int currentLoop() const
+    {
+        return m_currentLoop;
+    }
+
+    void setCurrentLoop(int _loop)
+    {
+        m_currentLoop = _loop;
+    }
+
+    // void selectSubloop(const MidiTime& _pos);
 
     static Track* create(TrackType tt, TrackContainer* tc);
     static Track* create(const QDomElement& element, TrackContainer* tc);
@@ -856,6 +871,9 @@ class EXPORT Track : public Model, public JournallingObject
     virtual void toggleSolo();
     virtual void toggleFrozen();
 
+  private:
+    virtual int trackIndex() const final;
+
   protected:
     BoolModel m_frozenModel;
     BoolModel m_clippingModel;
@@ -870,6 +888,7 @@ class EXPORT Track : public Model, public JournallingObject
     QColor          m_color;
     bool            m_useStyleColor;
 
+    int  m_currentLoop;
     bool m_mutedBeforeSolo;
     bool m_simpleSerializingMode;
 
@@ -896,16 +915,21 @@ class TrackView : public QWidget, public ModelView, public JournallingObject
     virtual QColor cableColor() const;
 
     bool   isFixed() const;
-    real_t pixelsPerTact();
+    real_t pixelsPerTact() const;
 
-    inline const Track* getTrack() const
+    inline const Track* track() const
     {
         return m_track;
     }
 
-    inline Track* getTrack()
+    inline Track* track()
     {
         return m_track;
+    }
+
+    inline const TrackContainerView* trackContainerView() const
+    {
+        return m_trackContainerView;
     }
 
     inline TrackContainerView* trackContainerView()
@@ -913,14 +937,29 @@ class TrackView : public QWidget, public ModelView, public JournallingObject
         return m_trackContainerView;
     }
 
+    inline const TrackOperationsWidget* getTrackOperationsWidget() const
+    {
+        return &m_trackOperationsWidget;
+    }
+
     inline TrackOperationsWidget* getTrackOperationsWidget()
     {
         return &m_trackOperationsWidget;
     }
 
+    inline const QWidget* getTrackSettingsWidget() const
+    {
+        return &m_trackSettingsWidget;
+    }
+
     inline QWidget* getTrackSettingsWidget()
     {
         return &m_trackSettingsWidget;
+    }
+
+    inline const TrackContentWidget* getTrackContentWidget() const
+    {
+        return &m_trackContentWidget;
     }
 
     inline TrackContentWidget* getTrackContentWidget()
@@ -934,6 +973,8 @@ class TrackView : public QWidget, public ModelView, public JournallingObject
     }
 
     virtual void update();
+
+    virtual void addSpecificMenu(QMenu* _cm, bool _enabled) = 0;
 
   public slots:
     virtual bool close();

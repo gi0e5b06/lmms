@@ -36,7 +36,6 @@
 #include "RenderManager.h"
 #include "SampleBuffer.h"
 #include "Song.h"
-
 #include "denormals.h"
 
 #ifdef LMMS_HAVE_SCHED_H
@@ -44,60 +43,58 @@
 #endif
 
 // GDX This big constant is/was a problem...
-const ProjectRenderer::FileEncodeDevice& ProjectRenderer::fileEncodeDevices(int i)
+const ProjectRenderer::FileEncodeDevice&
+        ProjectRenderer::fileEncodeDevices(int i)
 {
-        static const FileEncodeDevice r[] = {
+    static const FileEncodeDevice r[] = {
 
-                {ProjectRenderer::WaveFile,
-                 QT_TRANSLATE_NOOP("ProjectRenderer", "WAV-File (*.wav)"),
-                 ".wav", &AudioFileWave::getInst},
-                {ProjectRenderer::FlacFile,
-                 QT_TRANSLATE_NOOP("ProjectRenderer", "FLAC-File (*.flac)"),
-                 ".flac", &AudioFileFlac::getInst},
-                {ProjectRenderer::OggFile,
-                 QT_TRANSLATE_NOOP("ProjectRenderer",
-                                   "Compressed OGG-File (*.ogg)"),
-                 ".ogg",
+            {ProjectRenderer::WaveFile,
+             QT_TRANSLATE_NOOP("ProjectRenderer", "WAV-File (*.wav)"), ".wav",
+             &AudioFileWave::getInst},
+            {ProjectRenderer::FlacFile,
+             QT_TRANSLATE_NOOP("ProjectRenderer", "FLAC-File (*.flac)"),
+             ".flac", &AudioFileFlac::getInst},
+            {ProjectRenderer::OggFile,
+             QT_TRANSLATE_NOOP("ProjectRenderer",
+                               "Compressed OGG-File (*.ogg)"),
+             ".ogg",
 #ifdef LMMS_HAVE_OGGVORBIS
-                 &AudioFileOgg::getInst
+             &AudioFileOgg::getInst
 #else
-                 NULL
+             NULL
 #endif
-                },
-                {ProjectRenderer::MP3File,
-                 QT_TRANSLATE_NOOP("ProjectRenderer",
-                                   "Compressed MP3-File (*.mp3)"),
-                 ".mp3",
+            },
+            {ProjectRenderer::MP3File,
+             QT_TRANSLATE_NOOP("ProjectRenderer",
+                               "Compressed MP3-File (*.mp3)"),
+             ".mp3",
 #ifdef LMMS_HAVE_MP3LAME
-                 &AudioFileMP3::getInst
+             &AudioFileMP3::getInst
 #else
-                 NULL
+             NULL
 #endif
-                },
-                {ProjectRenderer::AUFile,
-                 QT_TRANSLATE_NOOP("ProjectRenderer",
-                                   "Sun/Next AU-File (*.au)"),
-                 ".au", &AudioFileAU::getInst},
-                {ProjectRenderer::RawFile,
-                 QString(QT_TRANSLATE_NOOP("ProjectRenderer",
-                                           "Stereo Raw File (*.%1)"))
-                         .arg(SampleBuffer::rawStereoSuffix()),
-                 "." + SampleBuffer::rawStereoSuffix(),
-                 &AudioFileRaw::getInst},
+            },
+            {ProjectRenderer::AUFile,
+             QT_TRANSLATE_NOOP("ProjectRenderer", "Sun/Next AU-File (*.au)"),
+             ".au", &AudioFileAU::getInst},
+            {ProjectRenderer::RawFile,
+             QString(QT_TRANSLATE_NOOP("ProjectRenderer",
+                                       "Stereo Raw File (*.%1)"))
+                     .arg(SampleBuffer::rawStereoSuffix()),
+             "." + SampleBuffer::rawStereoSuffix(), &AudioFileRaw::getInst},
 #ifndef LMMS_DISABLE_SURROUND
-                {ProjectRenderer::RawFile,
-                 QString(QT_TRANSLATE_NOOP("ProjectRenderer",
-                                           "Surround Raw File (*.%1)"))
-                         .arg(SampleBuffer::rawSurroundSuffix()),
-                 "." + SampleBuffer::rawSurroundSuffix(),
-                 &AudioFileRaw::getInst},
+            {ProjectRenderer::RawFile,
+             QString(QT_TRANSLATE_NOOP("ProjectRenderer",
+                                       "Surround Raw File (*.%1)"))
+                     .arg(SampleBuffer::rawSurroundSuffix()),
+             "." + SampleBuffer::rawSurroundSuffix(), &AudioFileRaw::getInst},
 #endif  // ... insert your own file-encoder-infos here... may be one
         // day the user can add own encoders inside the program...
 
-                {ProjectRenderer::NumFileFormats, NULL, NULL, NULL}
+            {ProjectRenderer::NumFileFormats, NULL, NULL, NULL}
 
-        };
-        return r[i];
+    };
+    return r[i];
 }
 
 ProjectRenderer::ProjectRenderer(
@@ -112,6 +109,7 @@ ProjectRenderer::ProjectRenderer(
       m_abort(false)
 {
     setObjectName("project renderer " + outputFilename);
+
     AudioFileDeviceInstantiaton audioEncoderFactory
             = fileEncodeDevices(exportFileFormat).m_getDevInst;
 
@@ -142,9 +140,9 @@ ProjectRenderer::ExportFileFormats
     int idx = 0;
     while(fileEncodeDevices(idx).m_fileFormat != NumFileFormats)
     {
-            if(QString(fileEncodeDevices(idx).m_extension) == _ext)
+        if(QString(fileEncodeDevices(idx).m_extension) == _ext)
         {
-                return (fileEncodeDevices(idx).m_fileFormat);
+            return (fileEncodeDevices(idx).m_fileFormat);
         }
         ++idx;
     }
@@ -154,7 +152,7 @@ ProjectRenderer::ExportFileFormats
 
 QString ProjectRenderer::getFileExtensionFromFormat(ExportFileFormats fmt)
 {
-        return fileEncodeDevices(fmt).m_extension;
+    return fileEncodeDevices(fmt).m_extension;
 }
 
 void ProjectRenderer::startProcessing()

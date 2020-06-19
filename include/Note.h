@@ -174,8 +174,7 @@ class EXPORT Note : public SerializingObject
 
     inline MidiTime endPos() const
     {
-        const int l = length();
-        return pos() + l;
+        return pos() + length();
     }
 
     inline const MidiTime& length() const
@@ -216,6 +215,11 @@ class EXPORT Note : public SerializingObject
     inline panning_t getPanning() const
     {
         return m_panning;
+    }
+
+    uint8_t midiPanning() const
+    {
+        return panningToMidi(getPanning());
     }
 
     inline bool probability() const

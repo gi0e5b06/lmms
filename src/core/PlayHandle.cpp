@@ -36,6 +36,7 @@
 
 PlayHandle::PlayHandle(const Type type, f_cnt_t offset) :
       m_audioPort(nullptr), m_finished(false), m_type(type), m_offset(offset),
+      m_processingLock("PlayHandle::m_processingLock",false),
       m_usesBuffer(true), m_playHandleBuffer(nullptr), m_bufferReleased(true),
       m_refCount(0)
 {

@@ -41,7 +41,7 @@ MidiPort::MidiPort(const QString&      name,
                    Model*              parent,
                    Mode                mode) :
       Model(parent, name.isEmpty() ? "[midi port]" : name),
-      m_readablePortsMenu(NULL), m_writablePortsMenu(NULL),
+      m_readablePortsMenu(nullptr), m_writablePortsMenu(nullptr),
       m_midiClient(client), m_midiEventProcessor(eventProcessor),
       m_mode(mode),
       m_inputChannelModel(0, 0, MidiChannelCount, this, tr("Input channel")),

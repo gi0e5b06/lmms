@@ -124,7 +124,7 @@ void AutomatableToolButton::contextMenuEvent( QContextMenuEvent * _me )
 	// for the case, the user clicked right while pressing left mouse-
 	// button, the context-menu appears while mouse-cursor is still hidden
 	// and it isn't shown again until user does something which causes
-	// an QApplication::restoreOverrideCursor()-call...
+	// an QApplication::restoreOverride Cursor()-call...
 	/*TMP mouseReleaseEvent( NULL );*/
 
 	CaptionMenu contextMenu( model()->displayName() );

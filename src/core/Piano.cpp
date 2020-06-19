@@ -171,7 +171,7 @@ return isValidKey(_key) ? (m_pressedKeys[_key] > 0) : false;
  *
  *  \param key the key being pressed
  */
-void Piano::handleKeyPress(int key, int midiVelocity)
+void Piano::handleKeyPress(int key, uint8_t midiVelocity)
 {
     /*
 if(!isValidKey(key))
@@ -234,7 +234,7 @@ void Piano::handleKeyRelease(int key)
     // emit dataChanged();
 }
 
-void Piano::handleKeyPressure(int key, int midiVelocity)
+void Piano::handleKeyPressure(int key, uint8_t midiVelocity)
 {
     /*
    if(!isValidKey(key) || !isKeyPressed(key))
@@ -252,6 +252,16 @@ void Piano::handleKeyPressure(int key, int midiVelocity)
     {
         m_instrumentTrack->processInEvent(
                 MidiEvent(MidiKeyPressure, -1, key, midiVelocity));
+    }
+}
+
+void Piano::handleKeyPanning(int key, uint8_t midiPanning)
+{
+    if(isKeyPressed(key))
+    {
+        MidiEvent event(MidiMetaEvent, -1, key, midiPanning);
+        event.setMetaEvent(MidiNotePanning);
+        m_instrumentTrack->processInEvent(event);
     }
 }
 

@@ -44,8 +44,11 @@ class BBTCO : public TrackContentObject
     BBTCO(const BBTCO& _other);
     virtual ~BBTCO();
 
-    int          bbTrackIndex() const;
+    int  bbTrackIndex() const;
+    void setBBTrackIndex(int _index);
+
     virtual bool isEmpty() const;
+    virtual QString defaultName() const;
 
     virtual tick_t unitLength() const;
 
@@ -64,6 +67,8 @@ class BBTCO : public TrackContentObject
 
     virtual TrackContentObjectView* createView(TrackView* _tv);
 
+    virtual void clear();
+
   protected:
     virtual Bitset* mask()
     {
@@ -71,6 +76,7 @@ class BBTCO : public TrackContentObject
     }
 
   private:
+    int     m_bbTrackIndex;
     Bitset* m_mask;
 
     friend class BBTCOView;
@@ -102,10 +108,12 @@ class BBTCOView : public TrackContentObjectView
     // void changeColor();
     // void resetColor();
     void toggleMask(QAction* _action);
+    void chooseBeat(QAction* _action);
 
   protected:
     virtual QMenu* buildContextMenu();
     virtual void   addMuteMenu(QMenu* _cm, bool _enabled);
+    virtual void   addBeatMenu(QMenu* _cm, bool _enabled);
 
     virtual void paintEvent(QPaintEvent* pe);
     virtual void mouseDoubleClickEvent(QMouseEvent* _me);
@@ -209,17 +217,21 @@ class BBTrackView : public TrackView
 
     virtual bool close();
 
-    const BBTrack* getBBTrack() const
+    /*
+    const BBTrack* bbTrack() const
     {
         return m_bbTrack;
     }
+    */
+
+    virtual void addSpecificMenu(QMenu* _cm, bool _enabled);
 
   public slots:
     void clickedTrackLabel();
 
   private:
-    BBTrack*          m_bbTrack;
-    TrackLabelButton* m_trackLabel;
+    BBTrack* m_bbTrack;
+    // TrackLabelButton* m_trackLabel;
 };
 
 #endif

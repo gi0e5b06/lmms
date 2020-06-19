@@ -58,7 +58,10 @@ AudioJack::AudioJack( bool & _success_ful, Mixer*  _mixer ) :
 	m_framesDoneInCurBuf( 0 ),
 	m_framesToDoInCurBuf( 0 )
 {
+    setObjectName("jackAudio");
+
 	_success_ful = initJackClient();
+
 	if( _success_ful )
 	{
 		connect( this, SIGNAL( zombified() ),

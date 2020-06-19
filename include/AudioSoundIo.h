@@ -56,7 +56,7 @@ class AudioSoundIoSetupUtil : public QObject
     void reconnectSoundIo();
 };
 
-class AudioSoundIo : public AudioDevice
+class AudioSoundIo : public AudioDevice, public QObject
 {
   public:
     AudioSoundIo(bool& _success_ful, Mixer* mixer);

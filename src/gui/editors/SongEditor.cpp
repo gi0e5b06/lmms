@@ -1,7 +1,7 @@
 /*
  * SongEditor.cpp - basic window for song-editing
  *
- * Copyright (c) 2018-2019 gi0e5b06 (on github.com)
+ * Copyright (c) 2018-2020 gi0e5b06 (on github.com)
  * Copyright (c) 2004-2014 Tobias Doerffel <tobydox/at/users.sourceforge.net>
  *
  * This file is part of LMMS - https://lmms.io
@@ -142,7 +142,7 @@ SongEditor::SongEditor(Song* song) :
     /*
     toolButton * hq_btn = new toolButton( embed::getIconPixmap( "hq_mode" ),
                                             tr( "High quality mode" ),
-                                            NULL, NULL, tb );
+                                            nullptr, nullptr, tb );
     hq_btn->setCheckable( true );
     connect( hq_btn, SIGNAL( toggled( bool ) ),
                     this, SLOT( setHighQuality( bool ) ) );
@@ -480,7 +480,7 @@ void SongEditor::unitePatterns()
         if(t->type() == Track::InstrumentTrack)
         {
             // qInfo("Unite: instrument track %p",t);
-            Pattern* newp = NULL;
+            Pattern* newp = nullptr;
             for(QVector<SelectableObject*>::iterator it = so.begin();
                 it != so.end(); ++it)
             {
@@ -498,7 +498,7 @@ void SongEditor::unitePatterns()
                     qCritical("Unite: tco null");
                     continue;
                 }
-                if(tco->getTrack() != t)
+                if(tco->track() != t)
                     continue;
                 Pattern* p = dynamic_cast<Pattern*>(tco);
                 if(!p)
@@ -506,11 +506,12 @@ void SongEditor::unitePatterns()
                     qCritical("Unite: p null");
                     continue;
                 }
-                if(newp == NULL)
+                if(newp == nullptr)
                 {
                     t->addJournalCheckPoint();
                     newp = new Pattern(*p);
                     newp->setJournalling(false);
+                    // newp->setAutoResize(true);
                     newp->movePosition(p->startPosition());
                     newp->changeLength(p->length());
                 }
@@ -524,8 +525,8 @@ void SongEditor::unitePatterns()
                         newp->addNote(*newn, false);
                     }
                     newp->changeLength(qMax<int>(
-                            newp->length(), -p->startPosition()
-                                                    + newp->startPosition()
+                            newp->length(), p->startPosition()
+                                                    - newp->startPosition()
                                                     + p->length()));
                 }
                 tcov->remove();
@@ -540,7 +541,7 @@ void SongEditor::unitePatterns()
         else if(t->type() == Track::AutomationTrack)
         {
             // qInfo("Unite: automation track %p",t);
-            AutomationPattern* newp = NULL;
+            AutomationPattern* newp = nullptr;
             MidiTime           endPos;
             for(QVector<SelectableObject*>::iterator it = so.begin();
                 it != so.end(); ++it)
@@ -559,7 +560,7 @@ void SongEditor::unitePatterns()
                     qCritical("Unite: tco null");
                     continue;
                 }
-                if(tco->getTrack() != t)
+                if(tco->track() != t)
                     continue;
                 AutomationPattern* p = dynamic_cast<AutomationPattern*>(tco);
                 if(!p)
@@ -567,7 +568,7 @@ void SongEditor::unitePatterns()
                     qCritical("Unite: p null");
                     continue;
                 }
-                if(newp == NULL)
+                if(newp == nullptr)
                 {
                     t->addJournalCheckPoint();
                     newp = new AutomationPattern(*p);
@@ -603,7 +604,7 @@ void SongEditor::unitePatterns()
         else if(t->type() == Track::BBTrack)
         {
             // qInfo("Unite: bb track %p",t);
-            BBTCO*   newp = NULL;
+            BBTCO*   newp = nullptr;
             MidiTime endPos;
             for(QVector<SelectableObject*>::iterator it = so.begin();
                 it != so.end(); ++it)
@@ -622,7 +623,7 @@ void SongEditor::unitePatterns()
                     qCritical("Unite: tco null");
                     continue;
                 }
-                if(tco->getTrack() != t)
+                if(tco->track() != t)
                     continue;
                 BBTCO* p = dynamic_cast<BBTCO*>(tco);
                 if(!p)
@@ -630,7 +631,7 @@ void SongEditor::unitePatterns()
                     qCritical("Unite: p null");
                     continue;
                 }
-                if(newp == NULL)
+                if(newp == nullptr)
                 {
                     t->addJournalCheckPoint();
                     newp = new BBTCO(*p);
@@ -693,7 +694,7 @@ void SongEditor::dividePatterns()
                     qCritical("Divide: tco null");
                     continue;
                 }
-                if(tco->getTrack() != t)
+                if(tco->track() != t)
                     continue;
                 Pattern* p = dynamic_cast<Pattern*>(tco);
                 if(!p)
@@ -790,7 +791,7 @@ void SongEditor::dividePatterns()
                     qCritical("Unite: tco null");
                     continue;
                 }
-                if(tco->getTrack() != t)
+                if(tco->track() != t)
                     continue;
                 AutomationPattern* p = dynamic_cast<AutomationPattern*>(tco);
                 if(!p)
@@ -882,7 +883,7 @@ void SongEditor::dividePatterns()
                     qCritical("Divide: tco null");
                     continue;
                 }
-                if(tco->getTrack() != t)
+                if(tco->track() != t)
                     continue;
                 BBTCO* p = dynamic_cast<BBTCO*>(tco);
                 if(!p)
@@ -909,7 +910,7 @@ void SongEditor::dividePatterns()
                 newp1->movePosition(p->startPosition());
                 newp1->changeLength(splitPos - p->startPosition());
 
-                qInfo("SE: newp1->track=%p (t=%p)", newp1->getTrack(), t);
+                qInfo("SE: newp1->track=%p (t=%p)", newp1->track(), t);
                 qInfo("SE: origp: p=%d l=%d", p->startPosition().getTicks(),
                       p->length().getTicks());
                 qInfo("SE: newp1: p=%d l=%d",
@@ -951,7 +952,7 @@ void SongEditor::dividePatterns()
                     qCritical("Divide: tco null");
                     continue;
                 }
-                if(tco->getTrack() != t)
+                if(tco->track() != t)
                     continue;
                 SampleTCO* p = dynamic_cast<SampleTCO*>(tco);
                 if(!p)
@@ -1176,7 +1177,7 @@ static inline void
     {
         // do smooth scroll animation using QTimeLine
         QTimeLine* t = scrollBar->findChild<QTimeLine*>();
-        if(t == NULL)
+        if(t == nullptr)
         {
             t = new QTimeLine(500, scrollBar);
             t->setFrameRange(scrollBar->value(), newVal);
@@ -1285,7 +1286,7 @@ void SongEditor::zoomingYChanged()
     }
     realignTracks();
     for(TrackView* tv: trackViews())
-        tv->getTrack()->setHeight(height());
+        tv->track()->setHeight(height());
 }
 
 void SongEditor::selectAllTcos(bool select)
@@ -1425,6 +1426,7 @@ SongWindow::SongWindow(Song* song) :
 
     // Loop mark actions
     DropToolBar* loopMarkToolBar = addDropToolBarToTop(tr("Loop marks"));
+    loopMarkToolBar->addBlank();
     loopMarkToolBar->addBlank();
     loopMarkToolBar->addBlank();
     loopMarkToolBar->addBlank();

@@ -125,7 +125,7 @@ class MidiPort final : public Model, public SerializingObject
     MidiPort(const QString&      name,
              MidiClient*         client,
              MidiEventProcessor* eventProcessor,
-             Model*              parent = NULL,
+             Model*              parent = nullptr,
              Mode                mode   = Disabled);
     virtual ~MidiPort();
 

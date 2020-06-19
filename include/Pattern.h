@@ -154,7 +154,7 @@ class EXPORT Pattern : public TrackContentObject
     Notes            m_notes;
 
     friend class PatternView;
-    friend class BBTrackContainerView;
+    friend class BBEditor;
 
   signals:
     void destroyedPattern(Pattern*);

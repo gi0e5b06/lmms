@@ -242,7 +242,7 @@ void AutomationPatternView::paintEvent(QPaintEvent*)
     QPainter p(&m_paintPixmap);
 
     // QLinearGradient lingrad( 0, 0, 0, height() );
-    bool muted   = m_pat->getTrack()->isMuted() || m_pat->isMuted();
+    bool muted   = m_pat->track()->isMuted() || m_pat->isMuted();
     bool current = gui->automationWindow()->currentPattern() == m_pat;
 
     // state: selected, muted, default, user
@@ -251,11 +251,11 @@ void AutomationPatternView::paintEvent(QPaintEvent*)
                       ? selectedColor()
                       : (muted ? mutedBackgroundColor()
                                : (useStyleColor()
-                                          ? (m_pat->getTrack()
+                                          ? (m_pat->track()
                                                              ->useStyleColor()
                                                      ? painter.background()
                                                                .color()
-                                                     : m_pat->getTrack()
+                                                     : m_pat->track()
                                                                ->color())
                                           : color()));
     /*
@@ -299,9 +299,9 @@ void AutomationPatternView::paintEvent(QPaintEvent*)
     QColor fgcolor
             = muted ? mutedColor()
                     : (useStyleColor()
-                               ? (m_pat->getTrack()->useStyleColor()
+                               ? (m_pat->track()->useStyleColor()
                                           ? painter.pen().brush().color()
-                                          : m_pat->getTrack()
+                                          : m_pat->track()
                                                     ->color()
                                                     .lighter())
                                : color().lighter());
@@ -420,7 +420,7 @@ void AutomationPatternView::paintEvent(QPaintEvent*)
         p.drawPixmap(1, rect().bottom() - m_pat_rec.height(), m_pat_rec);
     }
 
-    bool frozen = m_pat->getTrack()->isFrozen();
+    bool frozen = m_pat->track()->isFrozen();
     paintFrozenIcon(frozen, p);
 
     paintTileTacts(false, m_pat->length().nextFullTact(), 1, bgcolor,
@@ -429,28 +429,8 @@ void AutomationPatternView::paintEvent(QPaintEvent*)
     // pattern name
     paintTextLabel(m_pat->name(), bgcolor, p);
 
-    /*
-    // inner border
-    p.setPen( c.lighter( current ? 160 : 130 ) );
-    p.drawRect( 1, 1, rect().right() - TCO_BORDER_WIDTH,
-            rect().bottom() - TCO_BORDER_WIDTH );
-
-    // outer border
-    p.setPen( current? c.lighter( 130 ) : c.darker( 300 ) );
-    p.drawRect( 0, 0, rect().right(), rect().bottom() );
-    */
     paintTileBorder(current, false, bgcolor, p);
-
-    // draw the 'muted' pixmap only if the pattern was manualy muted
-    /*
-    if( m_pat->isMuted() )
-    {
-            const int spacing = TCO_BORDER_WIDTH;
-            const int size = 14;
-            p.drawPixmap( spacing, height() - ( size + spacing ),
-                    embed::getIconPixmap( "muted", size, size ) );
-    }
-    */
+    paintTileLoop(p);
     paintMutedIcon(m_pat->isMuted(), p);
 
     p.end();

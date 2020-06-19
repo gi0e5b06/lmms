@@ -73,13 +73,13 @@ Song::Song() :
       m_masterVolumeModel(100., 0., 200., 0.1, this, tr("Master volume")),
       m_masterPitchModel(0., -60., 60., 0.01, this, tr("Master pitch")),
       m_masterPanningModel(0., -100., 100., 0.1, this, tr("Master panning")),
-      m_metaData(), m_fileName(), m_oldFileName(), m_modified(false),
-      m_loadOnLaunch(true), m_recording(false), m_exporting(false),
-      m_exportLoop(false), m_renderBetweenMarkers(false), m_playing(false),
-      m_paused(false), m_loadingProject(false), m_isCancelled(false),
-      m_savingProject(false), m_playMode(Mode_None), m_length(0),
-      m_patternToPlay(NULL), m_loopPattern(false), m_elapsedMilliSeconds(0),
-      m_elapsedTicks(0), m_elapsedTacts(0)
+      m_metaData(), m_nLoadingTrack(0), m_fileName(), m_oldFileName(),
+      m_modified(false), m_loadOnLaunch(true), m_recording(false),
+      m_exporting(false), m_exportLoop(false), m_renderBetweenMarkers(false),
+      m_playing(false), m_paused(false), m_loadingProject(false),
+      m_isCancelled(false), m_savingProject(false), m_playMode(Mode_None),
+      m_length(0), m_patternToPlay(NULL), m_loopPattern(false),
+      m_elapsedMilliSeconds(0), m_elapsedTicks(0), m_elapsedTacts(0)
 {
     connect(&m_tempoModel, SIGNAL(dataChanged()), this, SLOT(setTempo()));
     connect(&m_tempoModel, SIGNAL(dataUnchanged()), this, SLOT(setTempo()));
@@ -192,16 +192,15 @@ void Song::processNextBuffer()
         case Mode_PlayPattern:
             if(m_patternToPlay != nullptr)
             {
-                tcoNum = m_patternToPlay->getTrack()->getTCONum(
-                        m_patternToPlay);
-                trackList.push_back(m_patternToPlay->getTrack());
+                tcoNum = m_patternToPlay->track()->getTCONum(m_patternToPlay);
+                trackList.push_back(m_patternToPlay->track());
             }
             break;
 
         case Mode_PlayAutomation:
             if(m_automationToPlay != nullptr)
             {
-                tcoNum = m_automationToPlay->getTrack()->getTCONum(
+                tcoNum = m_automationToPlay->track()->getTCONum(
                         m_automationToPlay);
                 bool all = false;
                 for(AutomatableModel* o: m_automationToPlay->objects())
@@ -245,7 +244,7 @@ void Song::processNextBuffer()
                 if(all)
                     trackList = tracks();
                 else
-                    trackList.push_back(m_automationToPlay->getTrack());
+                    trackList.push_back(m_automationToPlay->track());
             }
             break;
 

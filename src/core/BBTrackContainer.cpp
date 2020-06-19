@@ -30,7 +30,7 @@
 #include "Song.h"
 
 BBTrackContainer::BBTrackContainer() :
-      TrackContainer(nullptr, "BBTrackContainer"),
+      TrackContainer(nullptr, "Beats"),
       m_bbComboBoxModel(this, tr("Current track"))
 {
     connect(&m_bbComboBoxModel, SIGNAL(dataChanged()), this,
@@ -116,7 +116,7 @@ tick_t BBTrackContainer::beatLengthOfBB(int _bb) const
     for(const Track* t: tracks())
     {
         Pattern* p = dynamic_cast<Pattern*>(t->getTCO(_bb));
-        if(p)
+        if(p != nullptr)
         {
             tick_t plen = p->length();  // beatPatternLength();
             max_length  = qMax(max_length, plen);
@@ -243,19 +243,10 @@ void BBTrackContainer::currentBBChanged()
     // now update all track-labels (the current one has to become white,
     // the others gray)
     /*
-    Tracks tl = Engine::getSong()->tracks();
-    for(Tracks::iterator it = tl.begin(); it != tl.end(); ++it)
-    {
-        if((*it)->type() == Track::BBTrack)
-        {
-            (*it)->dataChanged();
-        }
-    }
-    */
-
     for(Track* t: Engine::getSong()->tracks())
         if(t->type() == Track::BBTrack)
             t->emit dataChanged();
+    */
 }
 
 void BBTrackContainer::createTCOsForBB(int _bb)

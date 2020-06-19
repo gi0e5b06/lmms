@@ -199,7 +199,7 @@ class PianoRoll : public QWidget
     void  selectAll();
     Notes getSelectedNotes();
     Notes getSelectionOrAll();
-    void  selectNotesOnKey();
+    void  selectNotesOnKey(const int _key);
     int   xCoordOfTick(int tick);
 
     // for entering values with dblclick in the vol/pan bars
@@ -323,7 +323,7 @@ class PianoRoll : public QWidget
     void playTestNote(Note* n);
     void stopTestNote(Note* n);
     void stopTestNotes();
-    void playTestKey(int _midiKey, int _midiVelocity, int _midiPanning);
+    void playTestKey(int _midiKey, int _midiVelocity);
     void stopTestKey();
     void suspendTestNotes();
     void resumeTestNotes();

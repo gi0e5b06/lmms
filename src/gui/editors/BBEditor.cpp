@@ -37,7 +37,7 @@
 #include "embed.h"
 
 BBWindow::BBWindow(BBTrackContainer* tc) :
-      EditorWindow(false), m_trackContainerView(new BBTrackContainerView(tc))
+      EditorWindow(false), m_trackContainerView(new BBEditor(tc))
 {
     setWindowIcon(embed::getIconPixmap("bb_track_btn"));
     setWindowTitle(tr("Beat"));
@@ -182,28 +182,28 @@ void BBWindow::stop()
     Engine::getSong()->stop();
 }
 
-BBTrackContainerView::BBTrackContainerView(BBTrackContainer* tc) :
+BBEditor::BBEditor(BBTrackContainer* tc) :
       TrackContainerView(tc), m_bbtc(tc)
 {
     setModel(tc);
 }
 
-float BBTrackContainerView::pixelsPerTact() const
+float BBEditor::pixelsPerTact() const
 {
     return m_ppt > 0.f ? m_ppt : 256.f;
 }
 
-void BBTrackContainerView::addSteps()
+void BBEditor::addSteps()
 {
     makeSteps(false);
 }
 
-void BBTrackContainerView::cloneSteps()
+void BBEditor::cloneSteps()
 {
     makeSteps(true);
 }
 
-void BBTrackContainerView::removeSteps()
+void BBEditor::removeSteps()
 {
     Tracks tl = model()->tracks();
 
@@ -218,63 +218,63 @@ void BBTrackContainerView::removeSteps()
     }
 }
 
-void BBTrackContainerView::addInstrumentTrack()
+void BBEditor::addInstrumentTrack()
 {
     (void)Track::create(Track::InstrumentTrack, model());
 }
 
-void BBTrackContainerView::addSampleTrack()
+void BBEditor::addSampleTrack()
 {
     (void)Track::create(Track::SampleTrack, model());
 }
 
-void BBTrackContainerView::addAutomationTrack()
+void BBEditor::addAutomationTrack()
 {
     (void)Track::create(Track::AutomationTrack, model());
 }
 
-int BBTrackContainerView::highestStepResolution()
+int BBEditor::highestStepResolution()
 {
     int r = 0;
     for(const TrackView* view: trackViews())
     {
-        const Track*     t = view->getTrack();
+        const Track*     t = view->track();
         Track::tcoVector v = t->getTCOs();
         for(const TrackContentObject* tco: v)
             r = qMax<int>(r, tco->stepResolution());
-        qInfo("BBTrackContainerView::highestStepResolution %s %d",
-              qPrintable(view->getTrack()->name()), r);
+        qInfo("BBEditor::highestStepResolution %s %d",
+              qPrintable(view->track()->name()), r);
     }
     return r;
 }
 
-void BBTrackContainerView::rotateOneStepLeft()
+void BBEditor::rotateOneStepLeft()
 {
     int r = highestStepResolution();
     if(r > 0)
         for(TrackView* view: trackViews())
         {
-            const Track*     t = view->getTrack();
+            const Track*     t = view->track();
             Track::tcoVector v = t->getTCOs();
             for(TrackContentObject* tco: v)
                 tco->rotate(-MidiTime::ticksPerTact() / r);
         }
 }
 
-void BBTrackContainerView::rotateOneStepRight()
+void BBEditor::rotateOneStepRight()
 {
     int r = highestStepResolution();
     if(r > 0)
         for(TrackView* view: trackViews())
         {
-            const Track*     t = view->getTrack();
+            const Track*     t = view->track();
             Track::tcoVector v = t->getTCOs();
             for(TrackContentObject* tco: v)
                 tco->rotate(MidiTime::ticksPerTact() / r);
         }
 }
 
-void BBTrackContainerView::removeBBView(int bb)
+void BBEditor::removeBBView(int bb)
 {
     for(TrackView* view: trackViews())
     {
@@ -282,18 +282,18 @@ void BBTrackContainerView::removeBBView(int bb)
     }
 }
 
-void BBTrackContainerView::saveSettings(QDomDocument& doc,
+void BBEditor::saveSettings(QDomDocument& doc,
                                         QDomElement&  element)
 {
     MainWindow::saveWidgetState(parentWidget(), element);
 }
 
-void BBTrackContainerView::loadSettings(const QDomElement& element)
+void BBEditor::loadSettings(const QDomElement& element)
 {
     MainWindow::restoreWidgetState(parentWidget(), element);
 }
 
-void BBTrackContainerView::dropEvent(QDropEvent* de)
+void BBEditor::dropEvent(QDropEvent* de)
 {
     QString type  = StringPairDrag::decodeKey(de);
     QString value = StringPairDrag::decodeValue(de);
@@ -315,13 +315,13 @@ void BBTrackContainerView::dropEvent(QDropEvent* de)
     }
 }
 
-void BBTrackContainerView::updatePosition()
+void BBEditor::updatePosition()
 {
     // realignTracks();
     emit positionChanged(m_currentPosition);
 }
 
-void BBTrackContainerView::makeSteps(bool clone)
+void BBEditor::makeSteps(bool clone)
 {
     Tracks tl = model()->tracks();
 

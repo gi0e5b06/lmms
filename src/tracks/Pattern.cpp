@@ -69,8 +69,8 @@ Pattern::Pattern(InstrumentTrack* _instrument_track) :
 }
 
 Pattern::Pattern(const Pattern& _other) :
-      TrackContentObject(_other.m_instrumentTrack, _other.displayName()),
-      m_instrumentTrack(_other.m_instrumentTrack),
+      // TrackContentObject(_other.m_instrumentTrack, _other.displayName()),
+      TrackContentObject(_other), m_instrumentTrack(_other.m_instrumentTrack),
       m_patternType(_other.m_patternType)
 {
     for(Notes::ConstIterator it = _other.m_notes.begin();
@@ -269,9 +269,9 @@ void Pattern::clearNotes()
 Note* Pattern::addStepNote(int step)
 {
     Note* note = noteAtStep(step);
-    return note == nullptr ? addNote(Note(MidiTime(-DefaultTicksPerTact),
-                                          stepPosition(step)),
-                                     false)
+    return note == nullptr ? addNote(
+                   Note(MidiTime(-DefaultTicksPerTact), stepPosition(step)),
+                   false)
                            : note;
 }
 
@@ -557,7 +557,7 @@ TrackContentObjectView* Pattern::createView(TrackView* _tv)
 /*
 void Pattern::updateBBTrack()
 {
-        if( getTrack()->trackContainer() == Engine::getBBTrackContainer() )
+        if( track()->trackContainer() == Engine::getBBTrackContainer() )
         {
                 Engine::getBBTrackContainer()->updateBBTrack( this );
         }
@@ -697,10 +697,26 @@ void PatternView::resetName()
 
 void PatternView::setNameFromFirstNote()
 {
+    int    kmin = NumKeys - 1;
+    tick_t smin = 0;
     if(!m_pat->isEmpty())
     {
-        int k = m_pat->notes().first()->key();
-        m_pat->setName(Note::findKeyName(k));
+        for(Note* n: m_pat->notes())
+        {
+            int    k = n->key();
+            tick_t s = n->pos();
+            if(s < smin)
+            {
+                smin = s;
+                kmin = k;
+            }
+            if(k < kmin && s <= smin)
+            {
+                smin = s;
+                kmin = k;
+            }
+        }
+        m_pat->setName(Note::findKeyName(kmin));
     }
 }
 
@@ -850,7 +866,7 @@ int PatternView::mouseToStep(int _x, int _y)
 
 void PatternView::mousePressEvent(QMouseEvent* _me)
 {
-    if(m_pat->getTrack()->isFrozen())
+    if(m_pat->track()->isFrozen())
         _me->ignore();
 
     if((_me->button() == Qt::MiddleButton)
@@ -891,7 +907,7 @@ void PatternView::mousePressEvent(QMouseEvent* _me)
 
 void PatternView::mouseDoubleClickEvent(QMouseEvent* _me)
 {
-    if(m_pat->getTrack()->isFrozen())
+    if(m_pat->track()->isFrozen())
         _me->ignore();
 
     if(_me->button() != Qt::LeftButton)
@@ -907,7 +923,7 @@ void PatternView::mouseDoubleClickEvent(QMouseEvent* _me)
 
 void PatternView::wheelEvent(QWheelEvent* _we)
 {
-    if(m_pat->getTrack()->isFrozen())
+    if(m_pat->track()->isFrozen())
         _we->ignore();
 
     if(m_pat->m_patternType == Pattern::BeatPattern
@@ -980,7 +996,7 @@ void PatternView::paintEvent(QPaintEvent*)
 
     QPainter p(&m_paintPixmap);
 
-    bool const muted   = m_pat->getTrack()->isMuted() || m_pat->isMuted();
+    bool const muted   = m_pat->track()->isMuted() || m_pat->isMuted();
     bool       current = gui->pianoRollWindow()->currentPattern() == m_pat;
     bool       ghost   = gui->pianoRollWindow()->ghostPattern() == m_pat;
     bool       beatPattern = m_pat->m_patternType == Pattern::BeatPattern;
@@ -990,14 +1006,12 @@ void PatternView::paintEvent(QPaintEvent*)
             = isSelected()
                       ? selectedColor()
                       : ((!muted && !beatPattern)
-                                 ? (useStyleColor()
-                                            ? (m_pat->getTrack()
-                                                               ->useStyleColor()
-                                                       ? painter.background()
-                                                                 .color()
-                                                       : m_pat->getTrack()
-                                                                 ->color())
-                                            : color())
+                                 ? (useStyleColor() ? (
+                                            m_pat->track()->useStyleColor()
+                                                    ? painter.background()
+                                                              .color()
+                                                    : m_pat->track()->color())
+                                                    : color())
                                  : (beatPattern ? BBPatternBackground()
                                                 : mutedBackgroundColor()));
 
@@ -1277,7 +1291,7 @@ void PatternView::paintEvent(QPaintEvent*)
         }
     }
 
-    bool frozen = m_pat->getTrack()->isFrozen();
+    bool frozen = m_pat->track()->isFrozen();
     paintFrozenIcon(frozen, p);
 
     if(!beatPattern)
@@ -1313,18 +1327,9 @@ void PatternView::paintEvent(QPaintEvent*)
         p.drawLine(width()-1,1,width()-1,height()-2);
         */
         paintTileBorder(current, ghost, bgcolor, p);
+        paintTileLoop(p);
     }
 
-    /*
-    // draw the 'muted' pixmap only if the pattern was manually muted
-    if( m_pat->isMuted() )
-    {
-            const int spacing = TCO_BORDER_WIDTH;
-            const int size = 14;
-            p.drawPixmap( spacing, height() - ( size + spacing ),
-                    embed::getIconPixmap( "muted", size, size ) );
-    }
-    */
     paintMutedIcon(m_pat->isMuted(), p);
 
     painter.drawPixmap(0, 0, m_paintPixmap);

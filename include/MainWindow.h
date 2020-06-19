@@ -1,24 +1,23 @@
 /*
  * MainWindow.h - declaration of class MainWindow, the main window of LMMS
  *
+ * Copyright (c) 2017-2020 gi0e5b06 (on github.com)
  * Copyright (c) 2004-2014 Tobias Doerffel <tobydox/at/users.sourceforge.net>
  *
- * This file is part of LMMS - https://lmms.io
+ * This file is part of LSMM -
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public
- * License along with this program (see COPYING); if not, write to the
- * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
- * Boston, MA 02110-1301 USA.
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
 
@@ -198,7 +197,7 @@ class MainWindow : public QMainWindow, public virtual ActionUpdatable
     void aboutLMMS();
     void help();
     void closeTab(int _index);
-    void toggleActiveWindow(QMdiSubWindow* _w);
+    // void toggleActiveWindow(QMdiSubWindow* _w);
     void toggleAutomationWindow();
     void toggleBBWindow();
     void togglePianoRollWindow();
@@ -287,6 +286,9 @@ class MainWindow : public QMainWindow, public virtual ActionUpdatable
     void updateViewMenu(void);
     void updateConfig(QAction* _who);
     void onToggleMetronome();
+    void listMidiMenu();
+    void mapMidiMenu();
+    void unmapMidiMenu();
 
   signals:
     void periodicUpdate();

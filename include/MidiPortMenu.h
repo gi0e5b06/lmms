@@ -26,36 +26,30 @@
 #ifndef MIDI_PORT_MENU_H
 #define MIDI_PORT_MENU_H
 
-#include <QMenu>
-
-#include "ModelView.h"
 #include "MidiPort.h"
+#include "ModelView.h"
+
+#include <QMenu>
 
 class QAction;
 
-
 class MidiPortMenu : public QMenu, public ModelView
 {
-	Q_OBJECT
-public:
-	MidiPortMenu( MidiPort::Modes _mode );
-	virtual ~MidiPortMenu();
+    Q_OBJECT
+  public:
+    MidiPortMenu(MidiPort::Modes _mode);
+    virtual ~MidiPortMenu();
 
+  public slots:
+    void updateMenu();
 
-public slots:
-	void updateMenu();
+  protected slots:
+    void activatedPort(QAction* _item);
 
+  private:
+    virtual void modelChanged();
 
-protected slots:
-	void activatedPort( QAction * _item );
-
-
-private:
-	virtual void modelChanged();
-
-	MidiPort::Modes m_mode;
-
-} ;
-
+    MidiPort::Modes m_mode;
+};
 
 #endif

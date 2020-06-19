@@ -75,7 +75,7 @@ jobs:
       - *save_cache
   linux.gcc:
     docker:
-      - image: circleci/buildpack-deps:cosmic
+      - image: circleci/buildpack-deps:eoan
       # lmmsci/linux.gcc:18.04
     environment:
       <<: *common_environment
@@ -132,4 +132,4 @@ workflows:
       #- mingw32
       #- mingw64
       - linux.gcc
-      - shellcheck
+      #- shellcheck

@@ -344,11 +344,11 @@ void NotePlayHandle::play(sampleFrame* _workingBuffer)
     if(m_totalFramesPlayed == 0)
     {
         /*
-    if(!legato())
-    {
-        m_instrumentTrack->setLegatoFrames(0);
-        qInfo("Legato 0 -> frames");
-    }
+          if(!legato())
+          {
+          m_instrumentTrack->setLegatoFrames(0);
+          qInfo("Legato 0 -> frames");
+          }
         */
         noteOn(offset());
     }

@@ -59,7 +59,10 @@ private:
 };
 */
 
-class SongEditor : public TrackContainerView, public virtual ActionUpdatable
+class SongEditor :
+      public TrackContainerView,
+      public virtual Editor,
+      public virtual ActionUpdatable
 {
     Q_OBJECT
   public:

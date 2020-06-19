@@ -31,7 +31,7 @@
 class BBTrackContainer;
 class ComboBox;
 
-class BBTrackContainerView;
+class BBEditor;
 
 class BBWindow : public EditorWindow
 {
@@ -43,11 +43,12 @@ class BBWindow : public EditorWindow
 
     QSize sizeHint() const;
 
-    const BBTrackContainerView* trackContainerView() const
+    const BBEditor* trackContainerView() const
     {
         return m_trackContainerView;
     }
-    BBTrackContainerView* trackContainerView()
+
+    BBEditor* trackContainerView()
     {
         return m_trackContainerView;
     }
@@ -59,16 +60,19 @@ class BBWindow : public EditorWindow
     void stop();
 
   private:
-    BBTrackContainerView* m_trackContainerView;
-    ComboBox*             m_bbComboBox;
+    BBEditor* m_trackContainerView;
+    ComboBox* m_bbComboBox;
 };
 
-class BBTrackContainerView : public TrackContainerView
+class BBEditor :
+      public TrackContainerView,
+      public virtual Editor,
+      public virtual ActionUpdatable
 {
     Q_OBJECT
 
   public:
-    BBTrackContainerView(BBTrackContainer* tc);
+    BBEditor(BBTrackContainer* tc);
 
     virtual bool isFixed() const  // fixedTCOs()
     {

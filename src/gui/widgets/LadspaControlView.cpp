@@ -41,7 +41,7 @@ LadspaControlView::LadspaControlView(QWidget*       _parent,
       ModelView(_ctl, this), m_ctl(_ctl)
 {
     setObjectName(
-            QString("LadspaControlView-%1").arg((unsigned long)this, 16));
+            QString("ladspaControlView%1").arg((unsigned long)this, 16));
     QHBoxLayout* layout = new QHBoxLayout(this);
     layout->setMargin(0);
     layout->setSpacing(0);
@@ -160,7 +160,7 @@ if(p)
 }
 else
     */
-        
+
     QWidget::update();
 
     /*

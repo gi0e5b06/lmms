@@ -62,13 +62,13 @@ SamplePlayHandle::SamplePlayHandle(const QString& sampleFile) :
 SamplePlayHandle::SamplePlayHandle(SampleTCO* tco) :
       SamplePlayHandle(tco->sampleBuffer(), false)
 {
-    m_track = tco->getTrack();
+    m_track = tco->track();
     m_totalFramesPlayed
             = 0;  // tco->initialPlayTick() * Engine::framesPerTick();
     m_frames = (/*tco->initialPlayTick() +*/ tco->length())
                * Engine::framesPerTick();
     setCurrentFrame(tco->initialPlayTick() * Engine::framesPerTick());
-    setAudioPort(((SampleTrack*)tco->getTrack())->audioPort());
+    setAudioPort(((SampleTrack*)tco->track())->audioPort());
 }
 
 SamplePlayHandle::~SamplePlayHandle()

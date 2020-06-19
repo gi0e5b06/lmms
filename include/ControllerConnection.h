@@ -26,7 +26,6 @@
  *
  */
 
-
 #ifndef CONTROLLER_CONNECTION_H
 #define CONTROLLER_CONNECTION_H
 
@@ -39,90 +38,92 @@
 
 class ControllerConnection;
 
-typedef QVector<ControllerConnection *> ControllerConnectionVector;
-
+typedef QVector<ControllerConnection*> ControllerConnectionVector;
 
 class EXPORT ControllerConnection : public QObject, public JournallingObject
 {
-	Q_OBJECT
-public:
+    Q_OBJECT
+  public:
+    ControllerConnection(Controller* _controller);
+    ControllerConnection(int _controllerId);
 
-	ControllerConnection( Controller * _controller );
-	ControllerConnection( int _controllerId );
+    virtual ~ControllerConnection();
 
-	virtual ~ControllerConnection();
+    inline Controller* controller()
+    {
+        return m_controller;
+    }
 
-	inline Controller * getController()
-	{
-		return m_controller;
-	}
+    // Obsolete
+    inline Controller* getController()
+    {
+        return m_controller;
+    }
 
-	void setController( Controller * _controller );
+    void setController(Controller* _controller);
 
-	inline void setController( int _controllerId );
+    inline void setController(int _controllerId);
 
-        /*
-	real_t currentValue( int _offset )
-	{
-		return m_controller->currentValue( _offset );
-	}
+    /*
+    real_t currentValue( int _offset )
+    {
+            return m_controller->currentValue( _offset );
+    }
 
-        bool hasChanged();
-	ValueBuffer * valueBuffer();
-        */
+    bool hasChanged();
+    ValueBuffer * valueBuffer();
+    */
 
-	inline void setTargetName( const QString & _name );
+    inline void setTargetName(const QString& _name);
 
-	inline QString targetName() const
-	{
-		return m_targetName;
-	}
+    inline QString targetName() const
+    {
+        return m_targetName;
+    }
 
-	inline bool isFinalized()
-	{
-		return m_controllerId < 0;
-	}
+    inline bool isFinalized()
+    {
+        return m_controllerId < 0;
+    }
 
-	static void finalizeConnections();
+    static void finalizeConnections();
 
-	virtual void saveSettings( QDomDocument & _doc, QDomElement & _this );
-	virtual void loadSettings( const QDomElement & _this );
+    virtual void saveSettings(QDomDocument& _doc, QDomElement& _this);
+    virtual void loadSettings(const QDomElement& _this);
 
-	static inline const QString classNodeName()
-	{
-		return "connection";
-	}
+    static inline const QString classNodeName()
+    {
+        return "connection";
+    }
 
-	virtual QString nodeName() const
-	{
-		return classNodeName();
-	}
+    virtual QString nodeName() const
+    {
+        return classNodeName();
+    }
 
+  public slots:
+    void deleteConnection();
+    void onControlledValueChanged(real_t _v);
+    void onControlledBufferChanged(const ValueBuffer* _vb);
 
-public slots:
-	void deleteConnection();
-        void onControlledValueChanged(real_t _v);
-        void onControlledBufferChanged(const ValueBuffer* _vb);
+  signals:
+    // The value changed while the mixer isn't running (i.e: MIDI CC)
+    // void valueChanged();
+    void controlledValueChanged(real_t _v);
+    void controlledBufferChanged(const ValueBuffer* _vb);
 
-signals:
-	// The value changed while the mixer isn't running (i.e: MIDI CC)
-	//void valueChanged();
-        void controlledValueChanged(real_t _v);
-        void controlledBufferChanged(const ValueBuffer* _vb);
+  protected:
+    // virtual controllerDialog * createDialog( QWidget * _parent );
+    Controller* m_controller;
+    QString     m_targetName;
+    int         m_controllerId;
+    bool        m_ownsController;
+    real_t      m_previousValue;
+    long        m_lastUpdatedPeriod;
 
-protected:
-	//virtual controllerDialog * createDialog( QWidget * _parent );
-	Controller * m_controller;
-	QString m_targetName;
-	int m_controllerId;
-	bool m_ownsController;
-        real_t m_previousValue;
-	long m_lastUpdatedPeriod;
+    static ControllerConnectionVector s_connections;
 
-	static ControllerConnectionVector s_connections;
-
-	friend class ControllerConnectionDialog;
+    friend class ControllerConnectionDialog;
 };
 
 #endif
-

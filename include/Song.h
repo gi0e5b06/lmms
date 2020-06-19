@@ -1,5 +1,5 @@
 /*
- * Song.cpp -
+ * Song.h -
  *
  * Copyright (c) 2017-2019 gi0e5b06 (on github.com)
  * Copyright (c) 2004-2014 Tobias Doerffel <tobydox/at/users.sourceforge.net>

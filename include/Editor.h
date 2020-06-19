@@ -1,7 +1,7 @@
 /*
  * Editor.h -
  *
- * Copyright (c) 2018-2019 gi0e5b06 (on github.com)
+ * Copyright (c) 2018-2020 gi0e5b06 (on github.com)
  * Copyright (c) 2014 Lukas W <lukaswhl/at/gmail.com>
  *
  * This file is part of LSMM -
@@ -36,6 +36,14 @@ class QAction;
 class ComboBoxModel;
 class DropToolBar;
 
+class Editor
+{
+  public:
+    static void applyOverrideCursor(Qt::CursorShape _shape);
+    static void applyOverrideCursor(QCursor& _c);
+    static void resetOverrideCursor();
+};
+
 /// \brief The base window for windows that conaint an editor.
 /// Provides toolbars and transport.
 /// Those editors include the Song Editor, the Automation Editor, B&B Editor,
@@ -60,8 +68,8 @@ class EditorWindow : public QMainWindow, public virtual ActionUpdatable
     /// \brief	Constructor.
     ///
     /// \param	record	If set true, the editor's toolbar will contain record
-    ///					buttons in addition to the play and
-    ///stop buttons.
+    ///					buttons in addition to the play and stop
+    ///buttons.
     EditorWindow(bool record = false);
     virtual ~EditorWindow();
 

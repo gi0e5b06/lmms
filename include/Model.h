@@ -27,8 +27,8 @@
 
 #include "export.h"
 
-#include <QObject>
 #include <QHash>
+#include <QObject>
 #include <QString>
 
 class EXPORT Model : public QObject
@@ -36,9 +36,9 @@ class EXPORT Model : public QObject
     Q_OBJECT
 
   public:
-    Model(Model*  _parent,
+    Model(Model*         _parent,
           const QString& _displayName,
-          bool    _defaultConstructed = false);
+          bool           _defaultConstructed = false);
     virtual ~Model();
 
     bool isDefaultConstructed()
@@ -48,13 +48,16 @@ class EXPORT Model : public QObject
 
     Model* parentModel() const
     {
-        return static_cast<Model*>(parent());
+        return dynamic_cast<Model*>(parent());
     }
 
     virtual const QString uuid() final;
-    virtual bool hasUuid() const final;
-    virtual void setUuid(const QString& _uuid) final;
-    virtual void resetUuid() final;
+    virtual bool          hasUuid() const final;
+    virtual void          setUuid(const QString& _uuid) final;
+    virtual void          resetUuid() final;
+
+    virtual QString objectName() const;
+    virtual QString fullObjectName() const;
 
     virtual QString displayName() const
     {
@@ -87,7 +90,7 @@ class EXPORT Model : public QObject
     QString m_uuid;
     QString m_debug_uuid;
 
-    static QHash<QString,Model*> s_models;
+    static QHash<QString, Model*> s_models;
 };
 
 #endif

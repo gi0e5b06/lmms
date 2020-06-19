@@ -26,12 +26,12 @@
 #define PLAY_HANDLE_H
 
 #include "MemoryManager.h"
+#include "Mutex.h"
 #include "SafeList.h"
 #include "ThreadableJob.h"
 #include "lmms_basics.h"
 
 #include <QList>
-#include <QMutex>
 
 class QThread;
 
@@ -171,7 +171,7 @@ class PlayHandle : public ThreadableJob
   private:
     Type         m_type;
     f_cnt_t      m_offset;
-    QMutex       m_processingLock;
+    Mutex        m_processingLock;
     bool         m_usesBuffer;
     sampleFrame* m_playHandleBuffer;
     bool         m_bufferReleased;

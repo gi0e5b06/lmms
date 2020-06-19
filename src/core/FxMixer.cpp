@@ -89,19 +89,16 @@ void FxRoute::updateName()
 FxChannel::FxChannel(int idx, Model* _parent) :
       Model(_parent, QString("FxChannel #%1").arg(idx)), m_fxChain(this),
       m_hasInput(false), m_stillRunning(false), m_frozenBuf(nullptr),
-      m_frozenModel(false, _parent), m_clippingModel(false, _parent),
-      m_eqDJ(nullptr), m_eqDJEnableModel(false, _parent),
+      m_frozenModel(false, _parent, tr("Frozen")),
+      m_clippingModel(false, _parent, tr("Clipping")), m_eqDJ(nullptr),
+      m_eqDJEnableModel(false, _parent, tr("DJ Enabled")),
       // m_eqDJHighModel  ( 0., -70., 0., 1., _parent ),
       // m_eqDJMediumModel( 0., -70., 0., 1., _parent ),
       // m_eqDJLowModel   ( 0., -70., 0., 1., _parent ),
-      m_peakLeft(0.), m_peakRight(0.),
-      m_buffer(
-              BufferManager::
-                      acquire()),  // new
-                                   // sampleFrame[Engine::mixer()->framesPerPeriod()]
-                                   // ),
-      m_mutedModel(false, this), m_soloModel(false, this),
-      m_volumeModel(1.0, 0.0, 1.0, 0.001, _parent),  // max=2.
+      m_peakLeft(0.), m_peakRight(0.), m_buffer(BufferManager::acquire()),
+      m_mutedModel(false, this, tr("Mute")),
+      m_soloModel(false, this, tr("Solo")),
+      m_volumeModel(1.0, 0.0, 1.0, 0.001, _parent, tr("Volume")),  // max=2.
       m_name(), m_channelIndex(idx), m_lock(), m_queued(false),
       m_dependenciesMet(0)
 {
@@ -507,7 +504,8 @@ void FxChannel::doProcessing()
         m_stillRunning
                 = m_fxChain.processAudioBuffer(m_buffer, fpp, m_hasInput);
 
-        //qWarning("FxMixer: hasInput=%d stillrun=%d",m_hasInput,m_stillRunning);
+        // qWarning("FxMixer: hasInput=%d
+        // stillrun=%d",m_hasInput,m_stillRunning);
 
         if(!isFrozen() && m_frozenBuf
            && (((song->playMode() == Song::Mode_PlaySong)
@@ -569,8 +567,8 @@ void FxChannel::doProcessing()
 }
 
 FxMixer::FxMixer() :
-      Model(nullptr, "FxMixer"), JournallingObject(),
-      m_fxRoutes(), m_fxChannels()
+      Model(nullptr, "FxMixer"), JournallingObject(), m_fxRoutes(),
+      m_fxChannels()
 {
     // create master channel
     createChannel();
@@ -1089,9 +1087,12 @@ void FxMixer::clearChannel(fx_ch_t index)
     ch->mutedModel().setValue(false);
     ch->soloModel().setValue(false);
     ch->setName((index == 0) ? tr("Master") : tr("FX %1").arg(index));
-    ch->volumeModel().setDisplayName(ch->name() + ">" + tr("Volume"));
-    ch->mutedModel().setDisplayName(ch->name() + ">" + tr("Mute"));
-    ch->soloModel().setDisplayName(ch->name() + ">" + tr("Solo"));
+
+    /*
+      ch->volumeModel().setDisplayName(ch->name() + ">" + tr("Volume"));
+      ch->mutedModel().setDisplayName(ch->name() + ">" + tr("Mute"));
+      ch->soloModel().setDisplayName(ch->name() + ">" + tr("Solo"));
+    */
 
     // send only to master
     if(index > 0)

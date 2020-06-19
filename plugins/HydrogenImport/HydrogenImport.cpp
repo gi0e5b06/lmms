@@ -209,14 +209,20 @@ bool HydrogenImport::readSong()
             else
             {
                 unsigned nLayer = 0;
+                QDomNode instrumentComponentNode
+                        = instrumentNode.firstChildElement(
+                                "instrumentComponent");
+                if(instrumentComponentNode.isNull())
+                    instrumentComponentNode = instrumentNode;
+
                 QDomNode layerNode
-                        = instrumentNode.firstChildElement("layer");
+                        = instrumentComponentNode.firstChildElement("layer");
                 while(!layerNode.isNull())
                 {
                     if(nLayer >= MAX_LAYERS)
                     {
-                        printf("nLayer >= MAX_LAYERS");
-                        continue;
+                        qWarning("nLayer >= MAX_LAYERS");
+                        break;
                     }
                     QString sFilename = LocalFileMng::readXmlString(
                             layerNode, "filename", "");

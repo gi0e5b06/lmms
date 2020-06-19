@@ -139,7 +139,7 @@ FxMixerView::FxMixerView() :
     // show the add new effect channel button
     QPushButton* newChannelBtn = new QPushButton(
             embed::getIconPixmap("new_channel"), QString::null, this);
-    newChannelBtn->setObjectName("newChannelBtn");
+    // newChannelBtn->setObjectName("newChannelButton");
     const int wpb = fxLineSize.width();
     newChannelBtn->setFixedSize(wpb, wpb);
     connect(newChannelBtn, SIGNAL(clicked()), this, SLOT(addNewChannel()));

@@ -2,24 +2,23 @@
  * TimeLineWidget.cpp - class timeLine, representing a time-line with position
  * marker
  *
+ * Copyright (c) 2017-2020 gi0e5b06 (on github.com)
  * Copyright (c) 2004-2014 Tobias Doerffel <tobydox/at/users.sourceforge.net>
  *
- * This file is part of LMMS - https://lmms.io
+ * This file is part of LSMM -
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public
- * License along with this program (see COPYING); if not, write to the
- * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
- * Boston, MA 02110-1301 USA.
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
 
@@ -150,9 +149,19 @@ void TimeLineWidget::addToolButtons(QToolBar* _tool_bar)
     connect(behaviourAtStop, SIGNAL(changedState(int)), this,
             SLOT(toggleBehaviourAtStop(int)));
 
+    QToolButton* zBTN = new QToolButton(_tool_bar);
+    QAction*     a    = new QAction("Z", zBTN);
+    zBTN->setDefaultAction(a);
+    a->setToolTip(tr("Set subloop under the cursor"));
+    a->setCheckable(false);
+    a->setShortcut('Z');
+    connect(zBTN, SIGNAL(triggered(QAction*)), this,
+            SLOT(selectSubloop(QAction*)));
+
     _tool_bar->addWidget(autoScroll);
     _tool_bar->addWidget(loopPoints);
     _tool_bar->addWidget(behaviourAtStop);
+    _tool_bar->addWidget(zBTN);
 
     /*
     if(m_loopButton == NULL)
@@ -193,9 +202,9 @@ void TimeLineWidget::addLoopMarkButtons(QToolBar* _tool_bar)
 
     for(int i = 0; i < NB_LOOPS; i++)
     {
-        AutomatableToolButton* b
-                = new AutomatableToolButton(_tool_bar, "Loop mark");
-        b->setMinimumSize(32,32);
+        AutomatableToolButton* b = new AutomatableToolButton(
+                _tool_bar, tr("Loop mark %1").arg((char)(65 + i)));
+        b->setMinimumSize(32, 32);
         QAction* a = new QAction(QString((char)(65 + i)),
                                  b);  //.append(QString(" loop")));
         b->setDefaultAction(a);
@@ -240,10 +249,10 @@ void TimeLineWidget::addLoopSizeButtons(QToolBar* _tool_bar)
 
     for(int i = 0; i < NB_LOOP_SIZES; i++)
     {
-        AutomatableToolButton* b
-                = new AutomatableToolButton(_tool_bar, "Loop size");
+        AutomatableToolButton* b = new AutomatableToolButton(
+                _tool_bar, tr("Loop size %1").arg((char)(49 + i)));
         // QAction* a=new QAction(labels[i],b);
-        QAction* a = new QAction(embed::getIconPixmap(icons[i]), "", b);
+        QAction* a = new QAction(embed::getIcon(icons[i]), "", b);
         b->setDefaultAction(a);
         a->setData(QVariant(LOOP_SIZES[i]));
         a->setToolTip(labels[i]);
@@ -946,5 +955,32 @@ void TimeLineWidget::handleContextMenuAction(QAction* _a)
             else
                 setLoopEnd(n, x);
             break;
+    }
+}
+
+void TimeLineWidget::selectSubloop(QAction* _a)
+{
+    SongEditor* w = gui->songWindow()->m_editor;
+    QPoint      p = w->contentWidget()->mapFromGlobal(QCursor::pos());
+
+    const TrackView* tv = w->trackViewAt(p.y());
+    if(tv == nullptr)
+        return;
+
+    const TrackContentWidget* tcw = tv->getTrackContentWidget();
+    if(tcw == nullptr)
+        return;
+
+    Track* t = const_cast<Track*>(tv->track());
+
+    p = tcw->mapFrom(tv, p);
+
+    const int n = findLoop(w->currentPosition().getTicks()
+                           + (MidiTime::ticksPerTact() / tv->pixelsPerTact())
+                                     * p.x());
+    if(n != t->currentLoop())
+    {
+        t->setCurrentLoop(n);
+        const_cast<TrackContentWidget*>(tcw)->update();
     }
 }

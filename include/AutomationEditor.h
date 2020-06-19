@@ -49,6 +49,7 @@ class TimeLineWidget;
 class AutomationEditor :
       public QWidget,
       public JournallingObject,
+      public virtual Editor,
       public virtual ActionUpdatable
 {
     Q_OBJECT

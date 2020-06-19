@@ -1,25 +1,23 @@
 /*
  * InstrumentTrack.h - Track which provides arrangement of notes
  *
- * Copyright (c) 2017-2019 gi0e5b06 (on github.com)
+ * Copyright (c) 2017-2020 gi0e5b06 (on github.com)
  * Copyright (c) 2004-2014 Tobias Doerffel <tobydox/at/users.sourceforge.net>
  *
- * This file is part of LMMS - https://lmms.io
+ * This file is part of LSMM -
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public
- * License along with this program (see COPYING); if not, write to the
- * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
- * Boston, MA 02110-1301 USA.
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
 
@@ -86,6 +84,11 @@ class EXPORT InstrumentTrack : public Track, public MidiEventProcessor
 
     MidiEvent applyMasterKey(const MidiEvent& event);
 
+    virtual void removeMidiNote(const int _key, const f_cnt_t _offset) final;
+    virtual void addMidiNote(const int      _key,
+                             const f_cnt_t  _offset,
+                             const volume_t _volume,
+                             const int      _channel) final;
     virtual void processInEvent(const MidiEvent& event,
                                 const MidiTime&  time   = MidiTime(),
                                 f_cnt_t          offset = 0);
@@ -338,7 +341,7 @@ class EXPORT InstrumentTrack : public Track, public MidiEventProcessor
   public slots:
     virtual void toggleFrozen();
     // silence all running notes played by this track
-  void silenceAllNotes(/*bool removeIPH = false*/);
+    void silenceAllNotes(/*bool removeIPH = false*/);
 
   protected:
     virtual QString nodeName() const
@@ -363,7 +366,7 @@ class EXPORT InstrumentTrack : public Track, public MidiEventProcessor
     NotePlayHandles m_sustainedNotes;
 
     int    m_runningMidiNotes[NumMidiKeys];
-    QMutex m_midiNotesMutex; // Mutex
+    Mutex m_midiNotesMutex;
 
     bool m_sustainPedalPressed;
 
@@ -461,6 +464,8 @@ class InstrumentTrackView : public TrackView
     QMenu* createAudioOutputMenu();
     QMenu* createMidiInputMenu();
     QMenu* createMidiOutputMenu();
+
+    virtual void addSpecificMenu(QMenu* _cm, bool _enabled);
 
   protected:
     virtual void paintEvent(QPaintEvent* pe);

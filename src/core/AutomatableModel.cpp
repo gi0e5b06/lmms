@@ -1133,10 +1133,8 @@ void AutomatableModel::setControlledBuffer(const ValueBuffer* _vb)
 
 void AutomatableModel::unlinkControllerConnection()
 {
-    if(m_controllerConnection)
-    {
+    if(m_controllerConnection !=nullptr)
         m_controllerConnection->disconnect(this);
-    }
 
     m_controllerConnection = nullptr;
 }

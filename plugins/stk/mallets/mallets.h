@@ -113,7 +113,18 @@ class malletsSynth
             m_voice->setFrequency(_pitch);
     }
 
+    inline int presetIndex()
+    {
+        return m_presetIndex;
+    }
+
+    inline void setPresetIndex(int presetIndex)
+    {
+        m_presetIndex = presetIndex;
+    }
+
   protected:
+    int       m_presetIndex;
     Instrmnt* m_voice;
     StkFloat* m_delay;
     uint8_t   m_delayRead;

@@ -208,7 +208,6 @@ class SampleTrack : public Track
     void updatePanning();
     void updateVolume();
 
-
   private:
     FloatModel m_volumeModel;
     FloatModel m_panningModel;
@@ -258,6 +257,8 @@ class SampleTrackView : public TrackView
     void updateName();
     // void updateSampleView();
 
+    virtual void addSpecificMenu(QMenu* _cm, bool _enabled);
+
   protected:
     virtual void resizeEvent(QResizeEvent* _re);
     virtual void dragEnterEvent(QDragEnterEvent* _dee);
@@ -265,6 +266,7 @@ class SampleTrackView : public TrackView
 
     virtual QString nodeName() const
     {
+        qWarning("SampleTrackView::nodeName() useless?");
         return "SampleTrackView";
     }
 

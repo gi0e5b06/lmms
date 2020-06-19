@@ -572,7 +572,8 @@ void PianoRoll::markSemitone(
                 {
                     i = qFind(m_markedSemitones.begin(),
                               m_markedSemitones.end(), aok.at(ix));
-                    m_markedSemitones.erase(i);
+                    if(i != m_markedSemitones.end())
+                        m_markedSemitones.erase(i);
                 }
             }
             else
@@ -628,7 +629,7 @@ void PianoRoll::markSemitone(
         }
         case stmaCopyAllNotesOnKey:
         {
-            selectNotesOnKey();
+            selectNotesOnKey(key);
             break;
         }
         default:;
@@ -978,10 +979,10 @@ PianoRoll::~PianoRoll()
 {
 }
 
-void PianoRoll::setCurrentPattern(Pattern* pattern)
+void PianoRoll::setCurrentPattern(Pattern* _newPattern)
 {
     const Pattern* old = currentPattern();
-    if(old == pattern)
+    if(old == _newPattern)
         return;
 
     // Disconnect our old pattern
@@ -999,7 +1000,7 @@ void PianoRoll::setCurrentPattern(Pattern* pattern)
     }
 
     // set new data
-    m_pattern         = pattern;
+    m_pattern         = _newPattern;
     m_currentPosition = 0;
     m_currentNote     = nullptr;
     m_startKey        = INITIAL_START_KEY;
@@ -1574,7 +1575,7 @@ void PianoRoll::keyPressEvent(QKeyEvent* ke)
         {
             // m_pattern->instrumentTrack()->pianoModel()->handleKeyPress(
             //    key_num, MidiDefaultVelocity);
-            playTestKey(key_num, MidiDefaultVelocity, 0);
+            playTestKey(key_num, MidiDefaultVelocity);
             ke->accept();
         }
     }
@@ -1760,7 +1761,7 @@ void PianoRoll::keyPressEvent(QKeyEvent* ke)
             {
                 m_ctrlMode = m_editMode;
                 m_editMode = ModeSelect;
-                QApplication::changeOverrideCursor(Qt::ArrowCursor);
+                Editor::applyOverrideCursor(Qt::ArrowCursor);
                 ke->accept();
             }
             break;
@@ -1810,13 +1811,9 @@ void PianoRoll::keyReleaseEvent(QKeyEvent* ke)
 
 void PianoRoll::leaveEvent(QEvent* e)
 {
-    while(QApplication::overrideCursor() != nullptr)
-    {
-        QApplication::restoreOverrideCursor();
-    }
-
-    QWidget::leaveEvent(e);
     s_textFloat->hide();
+    Editor::resetOverrideCursor();
+    QWidget::leaveEvent(e);
 }
 
 int PianoRoll::noteEditTop() const
@@ -1880,7 +1877,7 @@ void PianoRoll::mousePressEvent(QMouseEvent* me)
     {
         m_ctrlMode = m_editMode;
         m_editMode = ModeSelect;
-        QApplication::changeOverrideCursor(QCursor(Qt::ArrowCursor));
+        Editor::applyOverrideCursor(Qt::ArrowCursor);
         update();
     }
 
@@ -2108,12 +2105,10 @@ void PianoRoll::mousePressEvent(QMouseEvent* me)
                    && m_currentNote->length() > 0)
                 {
                     m_pattern->addJournalCheckPoint();
+
                     // then resize the note
                     m_action = ActionResizeNote;
-
-                    // set resize-cursor
-                    QCursor c(Qt::SizeHorCursor);
-                    QApplication::setOverrideCursor(c);
+                    Editor::applyOverrideCursor(Qt::SizeHorCursor);
                 }
                 else
                 {
@@ -2124,10 +2119,7 @@ void PianoRoll::mousePressEvent(QMouseEvent* me)
 
                     // otherwise move it
                     m_action = ActionMoveNote;
-
-                    // set move-cursor
-                    QCursor c(Qt::SizeAllCursor);
-                    QApplication::setOverrideCursor(c);
+                    Editor::applyOverrideCursor(Qt::SizeAllCursor);
 
                     // if they're holding shift, copy all selected notes
                     if(!is_new_note && me->modifiers() & Qt::ShiftModifier)
@@ -2206,7 +2198,7 @@ void PianoRoll::mousePressEvent(QMouseEvent* me)
             // reference to last key needed for both
             // right click (used for copy all keys on note)
             // and for playing the key when left-clicked
-            m_lastKey = key_num;
+            // m_lastKey = key_num;
 
             // clicked on keyboard on the left
             if(me->buttons() == Qt::RightButton)
@@ -2223,7 +2215,7 @@ void PianoRoll::mousePressEvent(QMouseEvent* me)
                 stopTestNotes();
                 stopTestKey();
                 // m_pattern->instrumentTrack()->pianoModel()->handleKeyPress(
-                playTestKey(key_num, v, 0);  // OK
+                playTestKey(key_num, v);
             }
         }
         else
@@ -2350,18 +2342,25 @@ void PianoRoll::playTestNote(Note* n)
         qInfo("PianoRoll::playTestNote 1");
         const int baseVelocity
                 = m_pattern->instrumentTrack()->midiPort()->baseVelocity();
-        m_pattern->instrumentTrack()->pianoModel()->handleKeyPress(
-                n->key() - m_pattern->instrumentTrack()->baseNote()
-                        + DefaultKey,
-                n->midiVelocity(baseVelocity));
+        const int midiKey = n->key()
+                            - m_pattern->instrumentTrack()->baseNote()
+                            + DefaultKey;
+        const uint8_t midiVelocity = n->midiVelocity(baseVelocity);
+        const int     midiPanning  = n->midiPanning();
 
+        m_pattern->instrumentTrack()->pianoModel()->handleKeyPress(
+                midiKey, midiVelocity);
         qInfo("PianoRoll::playTestNote 2");
+        /*
         MidiEvent event(MidiMetaEvent, -1,
                         n->key() - m_pattern->instrumentTrack()->baseNote()
                                 + DefaultKey,
                         panningToMidi(n->getPanning()));
         event.setMetaEvent(MidiNotePanning);
         m_pattern->instrumentTrack()->processInEvent(event, 0);
+        */
+        m_pattern->instrumentTrack()->pianoModel()->handleKeyPanning(
+                midiKey, midiPanning);
         qInfo("PianoRoll::playTestNote 3");
     }
 }
@@ -2388,11 +2387,8 @@ void PianoRoll::suspendTestNotes()
     }
 }
 
-void PianoRoll::playTestKey(int key, int midiVelocity, int midiPanning)
+void PianoRoll::playTestKey(int key, int midiVelocity)
 {
-    // turn off old key
-    //    if(m_lastKey >= 0)  stopTestKey(m_lastKey);
-
     // remember which one we're playing
     m_lastKey = key;
 
@@ -2400,13 +2396,6 @@ void PianoRoll::playTestKey(int key, int midiVelocity, int midiPanning)
     m_pattern->instrumentTrack()->pianoModel()->handleKeyPress(
             key - m_pattern->instrumentTrack()->baseNote() + DefaultKey,
             midiVelocity);
-
-    MidiEvent event(MidiMetaEvent, -1,
-                    key - m_pattern->instrumentTrack()->baseNote()
-                            + DefaultKey,
-                    midiPanning);
-    event.setMetaEvent(MidiNotePanning);
-    m_pattern->instrumentTrack()->processInEvent(event, 0);
 }
 
 void PianoRoll::stopTestKey()
@@ -2556,7 +2545,7 @@ void PianoRoll::mouseReleaseEvent(QMouseEvent* me)
 
     if(m_editMode == ModeDraw)
     {
-        QApplication::restoreOverrideCursor();
+        Editor::resetOverrideCursor();
     }
 
     if(mustRepaint)
@@ -2577,7 +2566,7 @@ void PianoRoll::mouseMoveEvent(QMouseEvent* me)
     {
         if(me->y() > keyAreaBottom() && me->y() < noteEditTop())
         {
-            QApplication::setOverrideCursor(QCursor(Qt::SizeVerCursor));
+            Editor::applyOverrideCursor(Qt::SizeVerCursor);
             return;
         }
     }
@@ -2609,10 +2598,8 @@ void PianoRoll::mouseMoveEvent(QMouseEvent* me)
             stopTestNotes();
             stopTestKey();
             // m_pattern->instrumentTrack()->pianoModel()->handleKeyPress(
-            playTestKey(key_num,
-                        ((float)x) / ((float)WHITE_KEY_WIDTH)
-                                * MidiDefaultVelocity,
-                        0);
+            playTestKey(key_num, ((float)x) / ((float)WHITE_KEY_WIDTH)
+                                         * MidiDefaultVelocity);
             update();
             return;
         }
@@ -2857,27 +2844,12 @@ void PianoRoll::mouseMoveEvent(QMouseEvent* me)
                               && x > noteRightX - RESIZE_AREA_WIDTH;
                 Qt::CursorShape cursorShape
                         = atTail ? Qt::SizeHorCursor : Qt::SizeAllCursor;
-                if(QApplication::overrideCursor() != nullptr)
-                {
-                    while(QApplication::overrideCursor() != nullptr
-                          && QApplication::overrideCursor()->shape()
-                                     != cursorShape)
-                        QApplication::restoreOverrideCursor();
-                }
-
-                if(QApplication::overrideCursor() == nullptr)
-                {
-                    QCursor c(cursorShape);
-                    QApplication::setOverrideCursor(c);
-                }
+                Editor::applyOverrideCursor(cursorShape);
             }
             else
             {
                 // the cursor is over no note, so restore cursor
-                while(QApplication::overrideCursor() != nullptr)
-                {
-                    QApplication::restoreOverrideCursor();
-                }
+                Editor::resetOverrideCursor();
             }
         }
         else if(me->buttons() & Qt::LeftButton && m_editMode == ModeSelect
@@ -3016,7 +2988,8 @@ void PianoRoll::mouseMoveEvent(QMouseEvent* me)
                 --m_selectedKeys;
             }
         }
-        QApplication::restoreOverrideCursor();
+
+        Editor::resetOverrideCursor();
     }
 
     m_lastMouseX = me->x();
@@ -4236,8 +4209,7 @@ QList<int> PianoRoll::getAllOctavesForKey(int keyToMirror) const
 
 Song::PlayModes PianoRoll::desiredPlayModeForAccompany() const
 {
-    if(m_pattern->getTrack()->trackContainer()
-       == Engine::getBBTrackContainer())
+    if(m_pattern->track()->trackContainer() == Engine::getBBTrackContainer())
     {
         return Song::Mode_PlayBB;
     }
@@ -4280,7 +4252,7 @@ void PianoRoll::recordAccompany()
     m_pattern->addJournalCheckPoint();
     m_recording = true;
 
-    if(m_pattern->getTrack()->trackContainer() == Engine::getSong())
+    if(m_pattern->track()->trackContainer() == Engine::getSong())
     {
         Engine::getSong()->playSong();
     }
@@ -4429,16 +4401,15 @@ Notes PianoRoll::getSelectedNotes()
 }
 
 // selects all notess associated with m_lastKey
-void PianoRoll::selectNotesOnKey()
+void PianoRoll::selectNotesOnKey(const int _key)
 {
     if(m_pattern != nullptr)
     {
+        qInfo("PianoRoll::selectNotesOnKey k=%d", _key);
         for(Note* note: m_pattern->notes())
         {
-            if(note->key() == m_lastKey)
-            {
+            if(note->key() == _key)  // m_lastKey)
                 note->setSelected(true);
-            }
         }
     }
 }
@@ -4581,10 +4552,12 @@ void PianoRoll::cutSelectedNotes()
 {
     if(m_pattern == nullptr)
         return;
+
     Notes selected_notes = getSelectedNotes();
 
     if(!selected_notes.empty())
     {
+        m_pattern->addJournalCheckPoint();
         copyToClipboard(selected_notes);
 
         Engine::getSong()->setModified();
@@ -4605,6 +4578,7 @@ void PianoRoll::pasteNotes()
 {
     if(m_pattern == nullptr)
         return;
+
     QString value = QApplication::clipboard()
                             ->mimeData(QClipboard::Clipboard)
                             ->data("text/x-note-list");
@@ -4619,9 +4593,7 @@ void PianoRoll::pasteNotes()
         clearSelectedNotes();
 
         if(!list.isEmpty())
-        {
             m_pattern->addJournalCheckPoint();
-        }
 
         tick_t delta = m_currentPosition;
         QPoint mouse = mapFromGlobal(QCursor::pos());
@@ -4644,6 +4616,7 @@ void PianoRoll::pasteNotes()
             delta += (mouse.x() - WHITE_KEY_WIDTH) * MidiTime::ticksPerTact()
                      / m_ppt;
         }
+
         const tick_t q = quantization();
         qInfo("PianoRoll::pasteNotes cp=%d delta=%d q=%d",
               m_currentPosition.getTicks(), delta, q);

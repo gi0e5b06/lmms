@@ -150,7 +150,7 @@ Mixer::Mixer(bool renderOnly) :
         MixerWorkerThread* wt = new MixerWorkerThread(this);
         if(i < m_numWorkers)
         {
-            wt->setObjectName(QString("mixer:worker%1").arg(i));
+            wt->setObjectName(QString("mixerWorker%1").arg(i));
             wt->start(QThread::TimeCriticalPriority);
         }
         m_workers.push_back(wt);
@@ -1337,11 +1337,13 @@ void Mixer::requestChangeInModel()
 
     m_changesMutex.lock();
     m_changes++;
+    /*
     if(m_changes > 1)
     {
         qWarning("Mixer::requestChangeInModel changes=%d", m_changes);
         BACKTRACE
     }
+    */
     m_changesMutex.unlock();
 
     m_doChangesMutex.lock();
@@ -1361,11 +1363,13 @@ void Mixer::doneChangeInModel()
         return;
 
     m_changesMutex.lock();
+    /*
     if(m_changes > 1)
     {
         qWarning("Mixer::doneChangeInModel changes=%d", m_changes);
         BACKTRACE
     }
+    */
     bool moreChanges = --m_changes;
     m_changesMutex.unlock();
 

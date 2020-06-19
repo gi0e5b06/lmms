@@ -99,7 +99,7 @@ GroupBox::GroupBox(const QString& _title,
                    bool           _arrow) :
       QWidget(_parent)
 {
-    setObjectName(_title);
+    // setObjectName(_title);
 
     QGridLayout* vl = new QGridLayout(this);
     vl->setSpacing(0);

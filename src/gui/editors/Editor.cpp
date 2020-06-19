@@ -1,7 +1,7 @@
 /*
  * EditorWindow.cpp -
  *
- * Copyright (c) 2018-2019 gi0e5b06 (on github.com)
+ * Copyright (c) 2018-2020 gi0e5b06 (on github.com)
  * Copyright (c) 2014 Lukas W <lukaswhl/at/gmail.com>
  *
  * This file is part of LSMM -
@@ -28,11 +28,42 @@
 #include "embed.h"
 
 #include <QAction>
+#include <QApplication>
 #include <QLabel>
 #include <QShortcut>
 
+static int cursor_count = 0;
+
+void Editor::applyOverrideCursor(Qt::CursorShape _shape)
+{
+    QCursor c(_shape);
+    applyOverrideCursor(c);
+}
+
+void Editor::applyOverrideCursor(QCursor& _c)
+{
+    if(cursor_count > 0)
+    {
+        QApplication::changeOverrideCursor(_c);
+    }
+    else
+    {
+        QApplication::setOverrideCursor(_c);
+        cursor_count++;
+    }
+}
+
+void Editor::resetOverrideCursor()
+{
+    if(cursor_count > 0 && QApplication::overrideCursor() != nullptr)
+    {
+        QApplication::restoreOverrideCursor();
+        cursor_count--;
+    }
+}
+
 const QVector<real_t> EditorWindow::ZOOM_LEVELS
-        = {0.10, 0.20, 0.50, 1.0, 2.0, 5.0, 10.0, 20.0};
+        = {0.10, 0.20, 0.50, 0.75, 1.00, 1.50, 2.0, 5.00, 10.00, 20.00};
 
 void EditorWindow::fillZoomLevels(ComboBoxModel& _cbm)
 {

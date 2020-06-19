@@ -66,6 +66,8 @@ SET(LMMS_SRCS
 	gui/editors/PianoRoll.cpp
 	gui/editors/SongEditor.cpp
 
+    gui/midi/MidiMapper.cpp
+
 	gui/widgets/AutomatableActionGroup.cpp
 	gui/widgets/AutomatableButton.cpp
 	gui/widgets/AutomatableSlider.cpp

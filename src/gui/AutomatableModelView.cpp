@@ -285,7 +285,7 @@ void AutomatableModelViewSlots::removeConnection()
     if(m->controllerConnection())
     {
         delete m->controllerConnection();
-        m->setControllerConnection(NULL);
+        m->setControllerConnection(nullptr);
     }
 }
 

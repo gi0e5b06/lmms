@@ -57,9 +57,15 @@ AutomationPattern::AutomationPattern(AutomationTrack* _auto_track) :
 }
 
 AutomationPattern::AutomationPattern(const AutomationPattern& _other) :
-      TrackContentObject(_other.m_autoTrack, _other.displayName()),
-      m_autoTrack(_other.m_autoTrack), m_objects(_other.m_objects),
-      m_tension(_other.m_tension), m_progressionType(_other.m_progressionType)
+      // TrackContentObject(_other.m_autoTrack, _other.displayName()),
+      TrackContentObject(_other), m_autoTrack(_other.m_autoTrack),
+      m_objects(_other.m_objects), m_tension(_other.m_tension),
+      m_waveBank(_other.m_waveBank), m_waveIndex(_other.m_waveIndex),
+      m_waveRatio(_other.m_waveRatio), m_waveSkew(_other.m_waveSkew),
+      m_waveAmplitude(_other.m_waveAmplitude),
+      m_waveRepeat(_other.m_waveRepeat),
+      m_progressionType(_other.m_progressionType), m_dragging(false),
+      m_isRecording(false), m_lastRecordedValue(0)
 {
     for(timeMap::const_iterator it = _other.m_timeMap.begin();
         it != _other.m_timeMap.end(); ++it)
@@ -68,7 +74,7 @@ AutomationPattern::AutomationPattern(const AutomationPattern& _other) :
         m_tangents[it.key()] = _other.m_tangents[it.key()];
     }
 
-    switch(getTrack()->trackContainer()->type())
+    switch(track()->trackContainer()->type())
     {
         case TrackContainer::BBContainer:
             setAutoResize(true);
@@ -259,7 +265,7 @@ tick_t AutomationPattern::unitLength() const
 /*
 MidiTime AutomationPattern::beatLength() const
 {
-        Track* t=getTrack();
+        Track* t=track();
         BBTrackContainer* c=dynamic_cast<BBTrackContainer*>
                 (t->trackContainer());
         return c ? c->beatLengthOfBB(startPosition()
@@ -281,7 +287,7 @@ void AutomationPattern::updateLength()
 /*
 void AutomationPattern::updateBBTrack()
 {
-        if( getTrack()->trackContainer() == Engine::getBBTrackContainer() )
+        if( track()->trackContainer() == Engine::getBBTrackContainer() )
         {
                 Engine::getBBTrackContainer()->updateBBTrack( this );
         }
@@ -343,7 +349,7 @@ MidiTime AutomationPattern::putValue(const MidiTime& _time,
 
     // we need to maximize our length in case we're part of a hidden
     // automation track as the user can't resize this pattern
-    if(getTrack() && getTrack()->type() == Track::HiddenAutomationTrack)
+    if(track() && track()->type() == Track::HiddenAutomationTrack)
         updateLength();
 
     emit dataChanged();
@@ -363,7 +369,7 @@ void AutomationPattern::removeValue(const MidiTime& time)
     }
     generateTangents(it, 3);
 
-    if(getTrack() && getTrack()->type() == Track::HiddenAutomationTrack)
+    if(track() && track()->type() == Track::HiddenAutomationTrack)
         updateLength();
 
     emit dataChanged();

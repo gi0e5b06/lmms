@@ -1,7 +1,7 @@
 /*
  * SampleTrack.cpp - Track which provides arrangement of samples
  *
- * Copyright (c) 2017-2019 gi0e5b06 (on github.com)
+ * Copyright (c) 2017-2020 gi0e5b06 (on github.com)
  * Copyright (c) 2005-2014 Tobias Doerffel <tobydox/at/users.sourceforge.net>
  *
  * This file is part of LMMS - https://lmms.io
@@ -104,7 +104,7 @@ SampleTCO::SampleTCO(Track* _track) :
 }
 
 SampleTCO::SampleTCO(const SampleTCO& _other) :
-      TrackContentObject(_other.getTrack(), _other.displayName()),
+      TrackContentObject(_other.track(), _other.displayName()),
       m_initialPlayTick(_other.m_initialPlayTick),
       m_sampleBuffer(new SampleBuffer(*_other.m_sampleBuffer)),
       m_isPlaying(false)
@@ -115,7 +115,7 @@ SampleTCO::SampleTCO(const SampleTCO& _other) :
 
 SampleTCO::~SampleTCO()
 {
-    SampleTrack* sampletrack = dynamic_cast<SampleTrack*>(getTrack());
+    SampleTrack* sampletrack = dynamic_cast<SampleTrack*>(track());
     if(sampletrack)
     {
         sampletrack->updateTcos();
@@ -139,7 +139,7 @@ tick_t SampleTCO::unitLength() const
 QString SampleTCO::defaultName() const
 {
     QString r = m_sampleBuffer->audioFile();
-    return r.isEmpty() ? getTrack()->name() : r;
+    return r.isEmpty() ? track()->name() : r;
 }
 
 void SampleTCO::resizeLeft(const MidiTime& pos, const MidiTime& len)
@@ -233,7 +233,7 @@ void SampleTCO::doConnections()
     connect(this, SIGNAL(dataChanged()), this,
             SLOT(playbackPositionChanged()));
     // care about mute track
-    connect(getTrack()->mutedModel(), SIGNAL(dataChanged()), this,
+    connect(track()->mutedModel(), SIGNAL(dataChanged()), this,
             SLOT(playbackPositionChanged()));
     // care about TCO position
     connect(this, SIGNAL(positionChanged()), this, SLOT(updateTrackTcos()));
@@ -286,15 +286,15 @@ void SampleTCO::playbackPositionChanged()
     /*
       Engine::mixer()->emit playHandlesOfTypesToRemove(
       // removePlayHandlesOfTypes(
-      getTrack(), PlayHandle::TypeSamplePlayHandle);
+      track(), PlayHandle::TypeSamplePlayHandle);
     */
-    SampleTrack* st = dynamic_cast<SampleTrack*>(getTrack());
+    SampleTrack* st = dynamic_cast<SampleTrack*>(track());
     st->setPlayingTcos(false);
 }
 
 void SampleTCO::updateTrackTcos()
 {
-    SampleTrack* sampletrack = dynamic_cast<SampleTrack*>(getTrack());
+    SampleTrack* sampletrack = dynamic_cast<SampleTrack*>(track());
     if(sampletrack)
     {
         sampletrack->updateTcos();
@@ -668,21 +668,19 @@ void SampleTCOView::paintEvent(QPaintEvent* pe)
 
     QPainter p(&m_paintPixmap);
 
-    bool muted = m_tco->getTrack()->isMuted() || m_tco->isMuted();
+    bool muted = m_tco->track()->isMuted() || m_tco->isMuted();
 
     // state: selected, muted, default, user
     QColor bgcolor
             = isSelected()
                       ? selectedColor()
                       : (muted ? mutedBackgroundColor()
-                               : (useStyleColor()
-                                          ? (m_tco->getTrack()
-                                                             ->useStyleColor()
-                                                     ? painter.background()
-                                                               .color()
-                                                     : m_tco->getTrack()
-                                                               ->color())
-                                          : color()));
+                               : (useStyleColor() ? (
+                                          m_tco->track()->useStyleColor()
+                                                  ? painter.background()
+                                                            .color()
+                                                  : m_tco->track()->color())
+                                                  : color()));
 
     /*
     // paint a black rectangle under the pattern to prevent glitches with
@@ -735,7 +733,7 @@ void SampleTCOView::paintEvent(QPaintEvent* pe)
         x0 += m_tco->unitLength() * ppTick;
     }
 
-    bool frozen = m_tco->getTrack()->isFrozen();
+    bool frozen = m_tco->track()->isFrozen();
     paintFrozenIcon(frozen, p);
 
     paintTileTacts(false, m_tco->length().nextFullTact(), 1, bgcolor, p);
@@ -751,28 +749,8 @@ void SampleTCOView::paintEvent(QPaintEvent* pe)
     // disable antialiasing for borders, since its not needed
     // p.setRenderHint( QPainter::Antialiasing, false );
 
-    /*
-    // inner border
-    p.setPen( c.lighter( 160 ) );
-    p.drawRect( 1, 1, rect().right() - TCO_BORDER_WIDTH,
-            rect().bottom() - TCO_BORDER_WIDTH );
-
-    // outer border
-    p.setPen( c.darker( 300 ) );
-    p.drawRect( 0, 0, rect().right(), rect().bottom() );
-    */
     paintTileBorder(false, false, bgcolor, p);
-
-    /*
-    // draw the 'muted' pixmap only if the pattern was manualy muted
-    if( m_tco->isMuted() )
-    {
-            const int spacing = TCO_BORDER_WIDTH;
-            const int size = 14;
-            p.drawPixmap( spacing, height() - ( size + spacing ),
-                    embed::getIconPixmap( "muted", size, size ) );
-    }
-    */
+    paintTileLoop(p);
     paintMutedIcon(m_tco->isMuted(), p);
 
     // recording sample tracks is not possible at the moment
@@ -1319,8 +1297,7 @@ QMenu* SampleTrackView::createFxMenu(QString title, QString newFxLabel)
 void SampleTrackView::createFxLine()
 {
     int channelIndex = gui->fxMixerView()->addNewChannel();
-    Engine::fxMixer()->effectChannel(channelIndex)->name()
-            = getTrack()->name();
+    Engine::fxMixer()->effectChannel(channelIndex)->name() = track()->name();
     assignFxLine(channelIndex);
 }
 
@@ -1432,6 +1409,12 @@ void SampleTrackView::activityIndicatorPressed()
 void SampleTrackView::activityIndicatorReleased()
 {
     // model()->processInEvent( MidiEvent( MidiNoteOff, 0, DefaultKey, 0 ) );
+}
+
+void SampleTrackView::addSpecificMenu(QMenu* _cm, bool _enabled)
+{
+    _cm->addMenu(createAudioInputMenu());
+    _cm->addMenu(createAudioOutputMenu());
 }
 
 // #### STW:

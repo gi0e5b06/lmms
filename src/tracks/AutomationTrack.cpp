@@ -29,6 +29,8 @@
 
 #include "AutomationPattern.h"
 #include "Engine.h"
+#include "GuiApplication.h"
+#include "MainWindow.h"
 #include "ProjectJournal.h"
 #include "StringPairDrag.h"
 #include "TrackContainerView.h"
@@ -103,14 +105,48 @@ AutomationTrackView::AutomationTrackView(AutomationTrack*    _at,
     setFixedHeight(32);
     TrackLabelButton* tlb
             = new TrackLabelButton(this, getTrackSettingsWidget());
-    tlb->setIcon(embed::getIconPixmap("automation_track"));
+    tlb->setIcon(embed::getIcon("automation_track"));
     tlb->move(3, 1);
     tlb->show();
+    connect(tlb, SIGNAL(clicked(bool)), this, SLOT(clickedTrackLabel()));
     setModel(_at);
 }
 
 AutomationTrackView::~AutomationTrackView()
 {
+}
+
+void AutomationTrackView::addSpecificMenu(QMenu* _cm, bool _enabled)
+{
+    _cm->addAction(tr("Turn all recording on"), this, SLOT(recordingOn()));
+    _cm->addAction(tr("Turn all recording off"), this, SLOT(recordingOff()));
+}
+
+void AutomationTrackView::recordingOn()
+{
+    const Track::tcoVector& tcov = track()->getTCOs();
+    for(Track::tcoVector::const_iterator it = tcov.begin(); it != tcov.end();
+        ++it)
+    {
+        AutomationPattern* ap = dynamic_cast<AutomationPattern*>(*it);
+        if(ap != nullptr)
+
+            ap->setRecording(true);
+    }
+    update();
+}
+
+void AutomationTrackView::recordingOff()
+{
+    const Track::tcoVector& tcov = track()->getTCOs();
+    for(Track::tcoVector::const_iterator it = tcov.begin(); it != tcov.end();
+        ++it)
+    {
+        AutomationPattern* ap = dynamic_cast<AutomationPattern*>(*it);
+        if(ap != nullptr)
+            ap->setRecording(false);
+    }
+    update();
 }
 
 void AutomationTrackView::dragEnterEvent(QDragEnterEvent* _dee)
@@ -135,8 +171,8 @@ void AutomationTrackView::dropEvent(QDropEvent* _de)
                                   - getTrackContentWidget()->x())
                                          * MidiTime::ticksPerTact()
                                          / static_cast<int>(
-                                                   trackContainerView()
-                                                           ->pixelsPerTact()))
+                                                 trackContainerView()
+                                                         ->pixelsPerTact()))
                               .toAbsoluteTact();
 
             if(pos.getTicks() < 0)
@@ -144,7 +180,7 @@ void AutomationTrackView::dropEvent(QDropEvent* _de)
                 pos.setTicks(0);
             }
 
-            TrackContentObject* tco = getTrack()->createTCO(pos);
+            TrackContentObject* tco = track()->createTCO(pos);
             AutomationPattern*  pat = dynamic_cast<AutomationPattern*>(tco);
             pat->addObject(mod);
             pat->movePosition(pos);
@@ -156,4 +192,9 @@ void AutomationTrackView::dropEvent(QDropEvent* _de)
     }
 
     update();
+}
+
+void AutomationTrackView::clickedTrackLabel()
+{
+    gui->mainWindow()->toggleAutomationWindow();
 }

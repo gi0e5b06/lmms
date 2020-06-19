@@ -382,7 +382,7 @@ void TrackContainer::automatedValuesFromTracks(const Tracks&      tracks,
         else if(auto* bb = dynamic_cast<BBTCO*>(tco))
         {
             auto bbIndex
-                    = dynamic_cast<class BBTrack*>(bb->getTrack())->index();
+                    = dynamic_cast<class BBTrack*>(bb->track())->index();
             auto     bbContainer = Engine::getBBTrackContainer();
             MidiTime bbTime      = time - tco->startPosition();
             // bbTime = std::min(bbTime, tco->length());
@@ -491,7 +491,7 @@ void TrackContainer::automatedValuesFromTrack(const Track*       _track,
         else if(auto* bb = dynamic_cast<BBTCO*>(tco))
         {
             auto bbIndex
-                    = dynamic_cast<class BBTrack*>(bb->getTrack())->index();
+                    = dynamic_cast<class BBTrack*>(bb->track())->index();
             auto     bbContainer = Engine::getBBTrackContainer();
             MidiTime bbTime      = time - tco->startPosition();
             // bbTime = std::min(bbTime, tco->length());

@@ -1660,7 +1660,7 @@ InstrumentFunctionNoteSustaining::~InstrumentFunctionNoteSustaining()
 
 void InstrumentFunctionNoteSustaining::reset()
 {
-    if(!Engine::getSong()->isPlaying())
+    // if(!Engine::getSong()->isPlaying())
     {
         // qInfo("Glissando: reset()");
         m_lastKey  = -1;
@@ -1791,6 +1791,10 @@ void InstrumentFunctionNotePlaying::onGateChanged()
     qInfo("InstrumentFunctionNotePlaying::onGateChanged");
 
     reset();
+
+    // only when something related is playing
+    if(!Engine::getSong()->isPlaying() || !m_enabledModel.value())
+        return;
 
     InstrumentTrack* track = dynamic_cast<InstrumentTrack*>(parent());
     if(track == nullptr || track->isMuted() || m_gateModel.value() < 0.5

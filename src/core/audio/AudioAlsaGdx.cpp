@@ -49,7 +49,7 @@ AudioAlsaGdx::AudioAlsaGdx(bool& _success_ful, Mixer* _mixer) :
 {
     qWarning("AudioAlsaGdx::AudioAlsaGdx");
 
-    setObjectName("audio:alsagdx");
+    setObjectName("alsaGdxAudio");
 
     _success_ful = false;
 
@@ -309,7 +309,7 @@ void AudioAlsaGdx::runS16()
     while(quit == false)
     {
         sampleS16_t* ptr = pcmbuf;
-        int           len = pcmbuf_size;
+        int          len = pcmbuf_size;
         while(len)
         {
             if(outbuf_pos == 0)
@@ -659,7 +659,7 @@ int AudioAlsaGdx::setHWParams(const ch_cnt_t   _channels,
 
     m_periodSize = mixer()->framesPerPeriod();
 
-    dir          = 0;
+    dir = 0;
     err = snd_pcm_hw_params_set_period_size_near(m_outHandle, m_hwParams,
                                                  &m_periodSize, &dir);
     if(err < 0)
@@ -682,7 +682,7 @@ int AudioAlsaGdx::setHWParams(const ch_cnt_t   _channels,
 
     m_bufferSize = m_periodSize * 2;
 
-    //dir = 0;
+    // dir = 0;
     err = snd_pcm_hw_params_set_buffer_size_near(m_outHandle, m_hwParams,
                                                  &m_bufferSize);
     if(err < 0)

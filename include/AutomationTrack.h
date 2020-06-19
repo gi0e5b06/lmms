@@ -3,7 +3,8 @@
  *                     automation of objects without a track
  *
  * Copyright (c) 2008-2014 Tobias Doerffel <tobydox/at/users.sourceforge.net>
- * Copyright (c) 2006-2008 Javier Serrano Polo <jasp00/at/users.sourceforge.net>
+ * Copyright (c) 2006-2008 Javier Serrano Polo
+ * <jasp00/at/users.sourceforge.net>
  *
  * This file is part of LMMS - https://lmms.io
  *
@@ -29,48 +30,56 @@
 
 #include "Track.h"
 
-
 class AutomationTrack : public Track
 {
-	Q_OBJECT
-public:
-	AutomationTrack( TrackContainer* tc, bool _hidden = false );
-	virtual ~AutomationTrack();
+    Q_OBJECT
+  public:
+    AutomationTrack(TrackContainer* tc, bool _hidden = false);
+    virtual ~AutomationTrack();
 
-	virtual QString defaultName() const;
+    virtual QString defaultName() const;
 
-	virtual bool play( const MidiTime & _start, const fpp_t _frames,
-						const f_cnt_t _frame_base, int _tco_num = -1 );
+    virtual bool play(const MidiTime& _start,
+                      const fpp_t     _frames,
+                      const f_cnt_t   _frame_base,
+                      int             _tco_num = -1);
 
-	virtual QString nodeName() const
-	{
-		return "automationtrack";
-	}
+    virtual QString nodeName() const
+    {
+        return "automationtrack";
+    }
 
-	virtual TrackView * createView( TrackContainerView* );
-	virtual TrackContentObject * createTCO( const MidiTime & _pos );
+    virtual TrackView*          createView(TrackContainerView*);
+    virtual TrackContentObject* createTCO(const MidiTime& _pos);
 
-	virtual void saveTrackSpecificSettings( QDomDocument & _doc,
-							QDomElement & _parent );
-	virtual void loadTrackSpecificSettings( const QDomElement & _this );
+    virtual void saveTrackSpecificSettings(QDomDocument& _doc,
+                                           QDomElement&  _parent);
+    virtual void loadTrackSpecificSettings(const QDomElement& _this);
 
-private:
-	friend class AutomationTrackView;
-
-} ;
-
-
+  private:
+    friend class AutomationTrackView;
+};
 
 class AutomationTrackView : public TrackView
 {
-public:
-	AutomationTrackView( AutomationTrack* at, TrackContainerView* tcv );
-	virtual ~AutomationTrackView();
+    Q_OBJECT
 
-	virtual void dragEnterEvent( QDragEnterEvent * _dee );
-	virtual void dropEvent( QDropEvent * _de );
+  public:
+    AutomationTrackView(AutomationTrack* at, TrackContainerView* tcv);
+    virtual ~AutomationTrackView();
 
-} ;
+    virtual void addSpecificMenu(QMenu* _cm, bool _enabled);
 
+  public slots:
+    void recordingOn();
+    void recordingOff();
+
+  protected:
+    virtual void dragEnterEvent(QDragEnterEvent* _dee);
+    virtual void dropEvent(QDropEvent* _de);
+
+  public slots:
+    void clickedTrackLabel();
+};
 
 #endif

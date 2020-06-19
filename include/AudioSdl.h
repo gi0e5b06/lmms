@@ -42,54 +42,49 @@
 
 class QLineEdit;
 
-
-class AudioSdl : public AudioDevice
+class AudioSdl : public AudioDevice, public QObject
 {
-public:
-	AudioSdl( bool & _success_ful, Mixer* mixer );
-	virtual ~AudioSdl();
+  public:
+    AudioSdl(bool& _success_ful, Mixer* mixer);
+    virtual ~AudioSdl();
 
-	inline static QString name()
-	{
-		return QT_TRANSLATE_NOOP( "setupWidget",
-					"SDL (Simple DirectMedia Layer)" );
-	}
+    inline static QString name()
+    {
+        return QT_TRANSLATE_NOOP("setupWidget",
+                                 "SDL (Simple DirectMedia Layer)");
+    }
 
+    class setupWidget : public AudioDeviceSetupWidget
+    {
+      public:
+        setupWidget(QWidget* _parent);
+        virtual ~setupWidget();
 
-	class setupWidget : public AudioDeviceSetupWidget
-	{
-	public:
-		setupWidget( QWidget * _parent );
-		virtual ~setupWidget();
+        virtual void saveSettings();
 
-		virtual void saveSettings();
+      private:
+        QLineEdit* m_device;
+    };
 
-	private:
-		QLineEdit * m_device;
+  private:
+    virtual void startProcessing();
+    virtual void stopProcessing();
+    virtual void applyQualitySettings();
 
-	} ;
+    static void sdlAudioCallback(void* _udata, Uint8* _buf, int _len);
+    void        sdlAudioCallback(Uint8* _buf, int _len);
 
+    SDL_AudioSpec m_audioHandle;
 
-private:
-	virtual void startProcessing();
-	virtual void stopProcessing();
-	virtual void applyQualitySettings();
+    surroundSampleFrame* m_outBuf;
+    Uint8*               m_convertedBuf;
+    int                  m_convertedBufPos;
+    int                  m_convertedBufSize;
 
-	static void sdlAudioCallback( void * _udata, Uint8 * _buf, int _len );
-	void sdlAudioCallback( Uint8 * _buf, int _len );
+    bool m_convertEndian;
 
-	SDL_AudioSpec m_audioHandle;
-
-	surroundSampleFrame * m_outBuf;
-	Uint8 * m_convertedBuf;
-	int m_convertedBufPos;
-	int m_convertedBufSize;
-
-	bool m_convertEndian;
-
-	bool m_stopped;
-
-} ;
+    bool m_stopped;
+};
 
 #endif
 

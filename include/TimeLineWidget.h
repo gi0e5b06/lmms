@@ -2,24 +2,23 @@
  * TimeLineWidget.h - class timeLine, representing a time-line with position
  * marker
  *
+ * Copyright (c) 2017-2020 gi0e5b06 (on github.com)
  * Copyright (c) 2004-2008 Tobias Doerffel <tobydox/at/users.sourceforge.net>
  *
- * This file is part of LMMS - https://lmms.io
+ * This file is part of LSMM -
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public
- * License along with this program (see COPYING); if not, write to the
- * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
- * Boston, MA 02110-1301 USA.
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
 
@@ -37,7 +36,7 @@ class QToolBar;
 class QToolButton;
 class MidiTime;
 class NStateButton;
-class SongEditor;
+// class SongEditor;
 class TextFloat;
 
 class TimeLineWidget : public QWidget, public JournallingObject
@@ -47,33 +46,33 @@ class TimeLineWidget : public QWidget, public JournallingObject
   public:
     Q_PROPERTY(QColor barLineColor READ getBarLineColor WRITE setBarLineColor)
     Q_PROPERTY(QColor barNumberColor READ getBarNumberColor WRITE
-                                                            setBarNumberColor)
+                       setBarNumberColor)
     Q_PROPERTY(int loopRectangleVerticalPadding READ
                        getLoopRectangleVerticalPadding WRITE
-                                                       setLoopRectangleVerticalPadding)
+                               setLoopRectangleVerticalPadding)
 
     Q_PROPERTY(QColor inactiveLoopColor READ getInactiveLoopColor WRITE
-                                                                  setInactiveLoopColor)
+                       setInactiveLoopColor)
     Q_PROPERTY(QBrush inactiveLoopBrush READ getInactiveLoopBrush WRITE
-                                                                  setInactiveLoopBrush)
+                       setInactiveLoopBrush)
     Q_PROPERTY(QColor inactiveLoopInnerColor READ getInactiveLoopInnerColor
                        WRITE setInactiveLoopInnerColor)
     Q_PROPERTY(QColor inactiveLoopTextColor READ getInactiveLoopTextColor
                        WRITE setInactiveLoopTextColor)
 
     Q_PROPERTY(QColor activeLoopColor READ getActiveLoopColor WRITE
-                                                              setActiveLoopColor)
+                       setActiveLoopColor)
     Q_PROPERTY(QBrush activeLoopBrush READ getActiveLoopBrush WRITE
-                                                              setActiveLoopBrush)
+                       setActiveLoopBrush)
     Q_PROPERTY(QColor activeLoopInnerColor READ getActiveLoopInnerColor WRITE
-                                                                        setActiveLoopInnerColor)
+                       setActiveLoopInnerColor)
     Q_PROPERTY(QColor activeLoopTextColor READ getActiveLoopTextColor WRITE
-                                                                      setActiveLoopTextColor)
+                       setActiveLoopTextColor)
 
     Q_PROPERTY(QColor selectedLoopColor READ getSelectedLoopColor WRITE
-                                                                  setSelectedLoopColor)
+                       setSelectedLoopColor)
     Q_PROPERTY(QBrush selectedLoopBrush READ getSelectedLoopBrush WRITE
-                                                                  setSelectedLoopBrush)
+                       setSelectedLoopBrush)
     Q_PROPERTY(QColor selectedLoopInnerColor READ getSelectedLoopInnerColor
                        WRITE setSelectedLoopInnerColor)
     Q_PROPERTY(QColor selectedLoopTextColor READ getSelectedLoopTextColor
@@ -312,6 +311,14 @@ class TimeLineWidget : public QWidget, public JournallingObject
     void setLoopStart(int _n, int _x);
     void setLoopEnd(int _n, int _x);
 
+    MidiTime adjustTime(const MidiTime& _time, int _loop = -1)
+    {
+        if((_loop < 0) || (_loop >= NB_LOOPS))
+            return _time;
+
+        return loopBegin(_loop) + _time % (loopEnd(_loop) - loopBegin(_loop));
+    }
+
     inline void savePos(const MidiTime& _pos)
     {
         m_savedPos = _pos;
@@ -365,6 +372,7 @@ class TimeLineWidget : public QWidget, public JournallingObject
     void selectLoop(const MidiTime& t);
     void resizeLoop(QAction* _a);
     void handleContextMenuAction(QAction* _a);
+    void selectSubloop(QAction* _a);
 
   protected:
     virtual void contextMenuEvent(QContextMenuEvent*);

@@ -289,8 +289,8 @@ void InstrumentSoundShaping::processAudioBuffer(sampleFrame*    buffer,
 
     if(filter1 != nullptr && m_filter1EnabledModel.value())
     {
-        real_t cutBuffer[frames];
-        real_t resBuffer[frames];
+        real_t* cutBuffer = MM_ALLOC(real_t, frames);
+        real_t* resBuffer = MM_ALLOC(real_t, frames);
 
         int old_filter_cut = 0;
         int old_filter_res = 0;
@@ -306,6 +306,7 @@ void InstrumentSoundShaping::processAudioBuffer(sampleFrame*    buffer,
                                                envReleaseBegin, frames,
                                                _legato, _marcato, _staccato);
         }
+
         if(m_envLfoParameters[Resonance]->isUsed())
         {
             m_envLfoParameters[Resonance]->fillLevel(
@@ -412,6 +413,9 @@ void InstrumentSoundShaping::processAudioBuffer(sampleFrame*    buffer,
                 filter1->update(buffer[frame]);
             }
         }
+
+        MM_FREE(resBuffer);
+        MM_FREE(cutBuffer);
 
         real_t resp = m_filter1ResponseModel.value();
         if(resp != 0.)

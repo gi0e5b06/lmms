@@ -249,7 +249,7 @@ void fileCheck(QString& file)
 
 int main(int argc, char** argv)
 {
-    QThread::currentThread()->setObjectName("main thread");
+    QThread::currentThread()->setObjectName("mainThread");
 
 // /lib/x86_64-linux-gnu/libc.so.6(+0x3ef20)[0x7f34e1286f20]
 // /usr/lib/x86_64-linux-gnu/libQt5Core.so.5(_Z9qIsFinited+0x10)[0x7f34e1a5bed0]
