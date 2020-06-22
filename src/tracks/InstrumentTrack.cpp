@@ -102,7 +102,7 @@ InstrumentTrack::InstrumentTrack(TrackContainer* tc) :
                  this,
                  this),
       m_notes(), m_sustainedNotes(true),
-      m_midiNotesMutex("InstrumentTrack::m_midiNotesMutex",false),
+      m_midiNotesMutex("InstrumentTrack::m_midiNotesMutex", false),
       m_sustainPedalPressed(false), m_silentBuffersProcessed(false),
       m_previewMode(false), m_scale(nullptr),
       m_baseNoteModel(0, 0, NumKeys - 1, this, tr("Base note")),
@@ -440,7 +440,8 @@ void InstrumentTrack::removeMidiNote(const int _key, const f_cnt_t _offset)
         n->decrRefCount();
         n->decrRefCount();
     }
-    else m_midiNotesMutex.unlock();
+    else
+        m_midiNotesMutex.unlock();
 }
 
 void InstrumentTrack::addMidiNote(const int      _key,
@@ -1198,6 +1199,7 @@ bool InstrumentTrack::play(const MidiTime& _start,
                 cur_start -= p->startPosition();
             }
 
+            tick_t real_start = cur_start;
             if(p->autoRepeat())
             {
                 cur_start %= ul;
@@ -1215,19 +1217,38 @@ bool InstrumentTrack::play(const MidiTime& _start,
             {
                 // skip notes which are posated before start-tact
                 while(nit != notes.end() && (*nit)->pos() < cur_start)
-                {
                     ++nit;
-                }
             }
 
             Note* cur_note;
             while(nit != notes.end() && (cur_note = *nit)->pos() == cur_start)
             {
+                if(real_start >= p->length())
+                {
+                    ++nit;
+                    continue;
+                }
+
                 const f_cnt_t note_frames = cur_note->length().frames(fpt);
 
                 NotePlayHandle* nph = NotePlayHandleManager::acquire(
                         this, _offset, note_frames, *cur_note);
                 nph->setBBTrack(bb_track);
+
+                /*
+                qInfo("IT rs=%d cs=%d np=%d nl=%d ne=%d pl=%d", real_start,
+                      cur_start, nph->pos().getTicks(),
+                      nph->length().getTicks(),
+                      (nph->pos() + nph->length()).getTicks(),
+                      p->length().getTicks());
+                */
+                if(real_start + nph->length() > p->length())
+                {
+                    nph->setLength(p->length() - real_start);
+                    nph->setFrames(
+                            MidiTime(p->length() - real_start).frames(fpt));
+                }
+
                 // are we playing global song?
                 if(_tco_num < 0)
                 {

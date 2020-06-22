@@ -220,8 +220,9 @@ QAction* EditorWindow::playAction() const
 
 void EditorWindow::closeEvent(QCloseEvent* _ce)
 {
-    if(parentWidget())
-        parentWidget()->hide();
+    QWidget* p = parentWidget();
+    if(p != nullptr)
+        p->hide();
     else
         hide();
 

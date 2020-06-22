@@ -576,10 +576,10 @@ tick_t Pattern::unitLength() const
 
     for(Notes::ConstIterator it = m_notes.begin(); it != m_notes.end(); ++it)
     {
-        if((*it)->length() > 0)
-        {
-            len = qMax<tick_t>(len, (*it)->endPos());
-        }
+        // if((*it)->length() > 0)
+        //{
+        len = qMax<tick_t>(len, (*it)->endPos());
+        //}
     }
     len = MidiTime(len).nextFullTact() * MidiTime::ticksPerTact();
 

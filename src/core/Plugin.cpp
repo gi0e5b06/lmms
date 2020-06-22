@@ -95,6 +95,7 @@ Plugin* Plugin::instantiate(const QString& _pluginName,
                             .arg(pluginFactory->errorString(pluginName)),
                     QMessageBox::Ok | QMessageBox::Default);
         }
+        qInfo("Plugin::instantiate not found: name=%s data=%p",qPrintable(_pluginName),_data);
         return new DummyPlugin();
     }
 

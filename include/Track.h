@@ -118,8 +118,7 @@ class TrackContentObject : public Model, public JournallingObject
 
     inline MidiTime endPosition() const
     {
-        const int sp = m_startPosition;
-        return sp + m_length;
+        return m_startPosition + m_length;
     }
 
     virtual tick_t unitLength() const = 0;

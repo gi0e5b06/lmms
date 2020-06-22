@@ -109,8 +109,9 @@ FxChannel::FxChannel(int idx, Model* _parent) :
         key->name = "ladspaeffect";
         key->attributes.insert("file", "dj_eq_1901");
         key->attributes.insert("plugin", "dj_eq");
+        // qInfo("FxChannel::FxChannel before eqDJ");
         m_eqDJ = Effect::instantiate(key->name, nullptr, key);
-        // qInfo("FxChannel::FxChannel eqDJ=%p",m_eqDJ);
+        // qInfo("FxChannel::FxChannel eqDJ=%p", m_eqDJ);
 
         /*
         EffectControls* c=m_eqDJ->controls();
@@ -593,13 +594,16 @@ FxMixer::~FxMixer()
 
 int FxMixer::createChannel()
 {
+    // qInfo("FxMixer::createChannel 1");
     const int index = m_fxChannels.size();
     // create new channel
     m_fxChannels.push_back(new FxChannel(index, this));
 
+    // qInfo("FxMixer::createChannel 2");
     // reset channel state
     clearChannel(index);
 
+    // qInfo("FxMixer::createChannel 3");
     return index;
 }
 
@@ -826,7 +830,7 @@ FxRoute* FxMixer::createRoute(FxChannel* from, FxChannel* to, real_t amount)
     if(from == to)
         return nullptr;
 
-    Engine::mixer()->requestChangeInModel();
+    // Engine::mixer()->requestChangeInModel();
     FxRoute* route = new FxRoute(from, to, amount);
 
     // add us to from's sends
@@ -839,7 +843,7 @@ FxRoute* FxMixer::createRoute(FxChannel* from, FxChannel* to, real_t amount)
 
     // add us to fxmixer's list
     Engine::fxMixer()->m_fxRoutes.append(route);
-    Engine::mixer()->doneChangeInModel();
+    // Engine::mixer()->doneChangeInModel();
 
     return route;
 }
@@ -1082,7 +1086,9 @@ void FxMixer::clear()
 void FxMixer::clearChannel(fx_ch_t index)
 {
     FxChannel* ch = m_fxChannels[index];
+    // qInfo("FxMixer::clearChannel 1");
     ch->fxChain().clear();
+    // qInfo("FxMixer::clearChannel 2");
     ch->volumeModel().setValue(1.);
     ch->mutedModel().setValue(false);
     ch->soloModel().setValue(false);
@@ -1094,6 +1100,7 @@ void FxMixer::clearChannel(fx_ch_t index)
       ch->soloModel().setDisplayName(ch->name() + ">" + tr("Solo"));
     */
 
+    // qInfo("FxMixer::clearChannel 3");
     // send only to master
     if(index > 0)
     {
@@ -1103,15 +1110,19 @@ void FxMixer::clearChannel(fx_ch_t index)
             deleteChannelSend(ch->sends().first());
         }
 
+        // qInfo("FxMixer::clearChannel 4");
         // add send to master
         createChannelSend(index, 0);
     }
 
+    // qInfo("FxMixer::clearChannel 5");
     // delete receives
     while(!ch->receives().isEmpty())
     {
         deleteChannelSend(ch->receives().first());
     }
+
+    qInfo("FxMixer::clearChannel 6");
 }
 
 // make sure we have at least num channels

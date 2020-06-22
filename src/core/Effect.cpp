@@ -45,7 +45,7 @@ Effect::Effect(const Plugin::Descriptor*                 _desc,
                Model*                                    _parent,
                const Descriptor::SubPluginFeatures::Key* _key) :
       Plugin(_desc, _parent),
-      m_gateClosed(true), m_parent(NULL),
+      m_gateClosed(true), m_parent(nullptr),
       m_key(_key ? *_key : Descriptor::SubPluginFeatures::Key()),
       m_processors(1), m_okay(true), m_noRun(false),
       m_runningModel(false, this, tr("Effect running")), m_bufferCount(0),
@@ -61,7 +61,7 @@ Effect::Effect(const Plugin::Descriptor*                 _desc,
 {
     // m_gateModel.setScaleLogarithmic(true);
 
-    m_srcState[0] = m_srcState[1] = NULL;
+    m_srcState[0] = m_srcState[1] = nullptr;
     reinitSRC();
 
     // if( ConfigManager::inst()->value( "ui", "disableautoquit").toInt() )
@@ -75,7 +75,7 @@ Effect::~Effect()
 {
     for(int i = 0; i < 2; ++i)
     {
-        if(m_srcState[i] != NULL)
+        if(m_srcState[i] != nullptr)
         {
             src_delete(m_srcState[i]);
         }
@@ -170,7 +170,7 @@ Effect* Effect::instantiate(const QString&                      pluginName,
 {
     Plugin* p = Plugin::instantiate(pluginName, _parent, _key);
     // check whether instantiated plugin is an effect
-    if(dynamic_cast<Effect*>(p) != NULL)
+    if(dynamic_cast<Effect*>(p) != nullptr)
     {
         // qInfo("Effect::instantiate SUCCESS %s",qPrintable(pluginName));
         // everything ok, so return pointer
@@ -184,7 +184,7 @@ Effect* Effect::instantiate(const QString&                      pluginName,
     // instantiate a DummyEffect
     delete p;
 
-    return NULL;
+    return nullptr;
 }
 
 int Effect::timeout() const
@@ -489,7 +489,7 @@ void Effect::reinitSRC()
 {
     for(int i = 0; i < 2; ++i)
     {
-        if(m_srcState[i] != NULL)
+        if(m_srcState[i] != nullptr)
         {
             src_delete(m_srcState[i]);
         }
@@ -498,7 +498,7 @@ void Effect::reinitSRC()
                                             ->currentQualitySettings()
                                             .libsrcInterpolation(),
                                     DEFAULT_CHANNELS, &error))
-           == NULL)
+           == nullptr)
         {
             qFatal("Error: src_new() failed in effect.cpp!\n");
         }
@@ -523,7 +523,7 @@ void Effect::resample(int                _i,
     /*
 #ifdef REAL_IS_FLOAT
     {
-            if( m_srcState[_i] == NULL )
+            if( m_srcState[_i] == nullptr )
                     return;
             m_srcData[_i].input_frames = _frames;
             m_srcData[_i].output_frames = Engine::mixer()->framesPerPeriod();

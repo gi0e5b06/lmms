@@ -1146,8 +1146,8 @@ void MidiAlsaGdx::run()
                 case SND_SEQ_EVENT_PGMCHANGE:
                     dest->processInEvent(MidiEvent(MidiProgramChange,
                                                    ev->data.control.channel,
-                                                   ev->data.control.param,
-                                                   ev->data.control.value,
+                                                   // ev->data.control.param,
+                                                   ev->data.control.value, 0,
                                                    source),
                                          ticks);
                     break;
@@ -1336,9 +1336,9 @@ void MidiAlsaGdx::processOutEvent(const MidiEvent& event,
 }
 
 void MidiAlsaGdx::sendBytes(const uint8_t*  bytes,
-                                const int       size,
-                                const MidiTime& time,
-                                const MidiPort* port)
+                            const int       size,
+                            const MidiTime& time,
+                            const MidiPort* port)
 {
     if(port == nullptr)
     {

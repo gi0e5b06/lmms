@@ -713,8 +713,10 @@ bool BBTrack::play(const MidiTime& _start,
                 if(idx != -1)
                     t = BBTrack::findBBTrack(idx);
                 const int num = s_infoMap[t];
+                /*
                 qWarning("BBTrack::play t=%s num=%d idx=%d",
                          qPrintable(t->name()), num, idx);
+                */
                 played |= Engine::getBBTrackContainer()->play(
                         start - stp, nbf, _offset, num, tco->mask());
             }

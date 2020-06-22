@@ -681,10 +681,7 @@ bool InstrumentFunctionArpeggio::processNote(NotePlayHandle* _n)
 
         // if(MM_SAFE(NotePlayHandle,1))
         {
-            // Note subnote( _n->length(), 0, subnote_key,
-            // _n->getVolume(), _n->getPanning(), _n->detuning() );
-            Note subnote(/*MidiTime( 0 ), MidiTime( 0 ),*/
-                         _n->length(), 0, subnote_key, _n->getVolume(),
+            Note subnote(_n->length(), 0, subnote_key, _n->getVolume(),
                          _n->getPanning(), _n->detuning());
 
             // create sub-note-play-handle, only ptr to note is different
@@ -1144,7 +1141,7 @@ bool InstrumentFunctionNoteKeying::processNote(NotePlayHandle* _n)
                                           o + 100. * l * r,
                                           m_volumeMaxModel.value());
             n          = qBound<volume_t>(0., n, 200.);
-            qInfo("NK: volume %f->%f", o, n);
+            // qInfo("NK: volume %f->%f", o, n);
             _n->setVolume(n);
         }
     }
@@ -1162,7 +1159,7 @@ bool InstrumentFunctionNoteKeying::processNote(NotePlayHandle* _n)
                                             o + 200. * l * r,
                                             m_panMaxModel.value());
             n           = qBound<volume_t>(-100., n, 100.);
-            qInfo("NK: panning %f->%f", o, n);
+            // qInfo("NK: panning %f->%f", o, n);
             _n->setPanning(n);
         }
     }

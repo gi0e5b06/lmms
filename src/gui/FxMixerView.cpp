@@ -192,19 +192,24 @@ FxMixerView::~FxMixerView()
 
 int FxMixerView::addNewChannel()
 {
+    qInfo("FxMixerView::addNewChannel 1");
     // add new fx mixer channel and redraw the form.
     FxMixer* mix = Engine::fxMixer();
 
     int newChannelIndex = mix->createChannel();
+    qInfo("FxMixerView::addNewChannel 2");
     m_fxChannelViews.push_back(
             new FxChannelView(m_channelAreaWidget, this, newChannelIndex));
     chLayout->addWidget(m_fxChannelViews[newChannelIndex]->m_fxLine);
     m_racksLayout->addWidget(m_fxChannelViews[newChannelIndex]->m_rackView);
 
+    qInfo("FxMixerView::addNewChannel 3");
     updateFxLine(newChannelIndex);
 
+    qInfo("FxMixerView::addNewChannel 4");
     updateMaxChannelSelector();
 
+    qInfo("FxMixerView::addNewChannel 5");
     return newChannelIndex;
 }
 

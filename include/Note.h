@@ -174,7 +174,7 @@ class EXPORT Note : public SerializingObject
 
     inline MidiTime endPos() const
     {
-        return pos() + length();
+        return pos() + qMax<tick_t>(0,m_length);
     }
 
     inline const MidiTime& length() const
