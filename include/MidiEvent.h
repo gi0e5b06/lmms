@@ -50,10 +50,10 @@ class MidiEvent final
               int8_t         channel    = 0,
               int16_t        param1     = 0,
               int16_t        param2     = 0,
-              const void*    sourcePort = NULL) :
+              const void*    sourcePort = nullptr) :
           m_type(type),
-          m_metaEvent(MidiMetaInvalid), m_channel(channel), m_sysExData(NULL),
-          m_sourcePort(sourcePort)
+          m_metaEvent(MidiMetaInvalid), m_channel(channel),
+          m_sysExData(nullptr), m_sourcePort(sourcePort)
     {
         m_data.m_param[0] = param1;
         m_data.m_param[1] = param2;
@@ -61,7 +61,7 @@ class MidiEvent final
 
     MidiEvent(MidiEventTypes type, const char* sysExData, int dataLen) :
           m_type(type), m_metaEvent(MidiMetaInvalid), m_channel(0),
-          m_sysExData(sysExData), m_sourcePort(NULL)
+          m_sysExData(sysExData), m_sourcePort(nullptr)
     {
         m_data.m_sysExDataLen = dataLen;
     }
@@ -126,7 +126,7 @@ class MidiEvent final
 
     uint8_t byte(int i) const
     {
-            return m_data.m_bytes[i];
+        return m_data.m_bytes[i];
     }
 
     void setByte(int i, uint16_t value)

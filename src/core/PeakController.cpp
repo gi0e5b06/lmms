@@ -37,44 +37,49 @@
 
 PeakControllerEffectVector PeakController::s_effects;
 
-int  PeakController::m_getCount;
-int  PeakController::m_loadCount;
-bool PeakController::m_buggedFile;
+int  PeakController::s_getCount;
+int  PeakController::s_loadCount;
+bool PeakController::s_buggedFile;
 
 PeakController::PeakController(Model*                _parent,
-                               PeakControllerEffect* _peak_effect) :
+                               PeakControllerEffect* _peakEffect) :
       Controller(Controller::PeakController, _parent, tr("Peak Controller")),
-      m_peakEffect(_peak_effect), m_currentSample(0.)
+      m_peakEffect(_peakEffect), m_currentSample(0.)
 {
     setFrequentlyUpdated(true);
     setSampleExact(true);
-    if(m_peakEffect)
-    {
+
+    if(m_peakEffect != nullptr)
         connect(m_peakEffect, SIGNAL(destroyed()), this,
                 SLOT(handleDestroyedEffect()));
-    }
+
     connect(Engine::mixer(), SIGNAL(sampleRateChanged()), this,
             SLOT(updateCoeffs()));
     connect(m_peakEffect->attackModel(), SIGNAL(dataChanged()), this,
             SLOT(updateCoeffs()));
     connect(m_peakEffect->decayModel(), SIGNAL(dataChanged()), this,
             SLOT(updateCoeffs()));
+
     m_coeffNeedsUpdate = true;
 }
 
 PeakController::~PeakController()
 {
+    qInfo("TODO: PeakController::~PeakController");
+
     // EffectChain::loadSettings() appends effect to EffectChain::m_effects
     // When it's previewing, EffectChain::loadSettings(<Controller Fx XML>) is
     // not called Therefore, we shouldn't call removeEffect() as it is not
     // even appended. NB: Most XML setting are loaded on preview, except
     // controller fx.
+    /*
     if(m_peakEffect != nullptr && m_peakEffect->effectChain() != nullptr)
     //&& PresetPreviewPlayHandle::isPreviewing() == false )
     {
-        // qWarning("PeakController::~PeakController()");
+        qWarning("PeakController::~PeakController()");
         m_peakEffect->effectChain()->removeEffect(m_peakEffect);
     }
+    */
 }
 
 void PeakController::fillValueBuffer()
@@ -93,7 +98,7 @@ void PeakController::fillValueBuffer()
         m_coeffNeedsUpdate = false;
     }
 
-    if(m_peakEffect)
+    if(m_peakEffect != nullptr)
     {
         sample_t targetSample = m_peakEffect->lastSample();
         if(m_currentSample != targetSample)
@@ -105,13 +110,9 @@ void PeakController::fillValueBuffer()
             {
                 const real_t diff = (targetSample - m_currentSample);
                 if(m_currentSample < targetSample)  // going up...
-                {
                     m_currentSample += diff * m_attackCoeff;
-                }
                 else if(m_currentSample > targetSample)  // going down
-                {
                     m_currentSample += diff * m_decayCoeff;
-                }
                 values[f] = m_currentSample;
             }
         }
@@ -145,11 +146,15 @@ void PeakController::handleDestroyedEffect()
 
 void PeakController::saveSettings(QDomDocument& _doc, QDomElement& _this)
 {
-    if(m_peakEffect)
+    if(m_peakEffect != nullptr)
     {
         Controller::saveSettings(_doc, _this);
-
         _this.setAttribute("effectId", m_peakEffect->m_effectId);
+        _this.setAttribute("target", m_peakEffect->uuid());
+    }
+    else
+    {
+        qWarning("PeakController::saveSettings effect is null");
     }
 }
 
@@ -158,11 +163,10 @@ void PeakController::loadSettings(const QDomElement& _this)
     Controller::loadSettings(_this);
 
     int effectId = _this.attribute("effectId").toInt();
-    if(m_buggedFile == true)
-    {
-        effectId = m_loadCount++;
-    }
+    if(s_buggedFile == true)
+        effectId = s_loadCount++;
 
+    /*
     PeakControllerEffectVector::Iterator i;
     for(i = s_effects.begin(); i != s_effects.end(); ++i)
     {
@@ -172,14 +176,41 @@ void PeakController::loadSettings(const QDomElement& _this)
             return;
         }
     }
+    */
+    for(PeakControllerEffect* e: s_effects)
+        if(e->m_effectId == effectId)
+        {
+            m_peakEffect = e;
+            return;
+        }
+
+    if(_this.hasAttribute("target"))
+    {
+        QString target = _this.attribute("target");
+        Model*  m      = Model::find(target);
+        if(m != nullptr)
+        {
+            PeakControllerEffect* e = static_cast<PeakControllerEffect*>(m);
+            if(e != nullptr)
+            {
+                m_peakEffect = e;
+                return;
+            }
+        }
+        qWarning("PeakController::loadSettings invalid target %s",
+                 qPrintable(target));
+    }
+
+    qWarning("PeakController::loadSettings effect #%d not found", effectId);
+    m_peakEffect = nullptr;
 }
 
 // Backward compatibility function for bug in <= 0.4.15
 void PeakController::initGetControllerBySetting()
 {
-    m_loadCount  = 0;
-    m_getCount   = 0;
-    m_buggedFile = false;
+    s_loadCount  = 0;
+    s_getCount   = 0;
+    s_buggedFile = false;
 }
 
 PeakController*
@@ -187,29 +218,35 @@ PeakController*
 {
     int effectId = _this.attribute("effectId").toInt();
 
-    PeakControllerEffectVector::Iterator i;
-
+    // PeakControllerEffectVector::Iterator i;
     // Backward compatibility for bug in <= 0.4.15 . For >= 1.0.0 ,
     // foundCount should always be 1 because m_effectId is initialized with
     // rand()
     int foundCount = 0;
-    if(m_buggedFile == false)
+    if(s_buggedFile == false)
     {
+        /*
         for(i = s_effects.begin(); i != s_effects.end(); ++i)
-        {
             if((*i)->m_effectId == effectId)
-            {
                 foundCount++;
-            }
-        }
+        */
+        for(PeakControllerEffect* e: s_effects)
+            if(e->m_effectId == effectId)
+                foundCount++;
+
         if(foundCount >= 2)
         {
-            m_buggedFile    = true;
+            s_buggedFile    = true;
             int newEffectId = 0;
+            /*
             for(i = s_effects.begin(); i != s_effects.end(); ++i)
             {
                 (*i)->m_effectId = newEffectId++;
             }
+            */
+            for(PeakControllerEffect* e: s_effects)
+                e->m_effectId = newEffectId++;
+
             QMessageBox msgBox;
             msgBox.setIcon(QMessageBox::Information);
             msgBox.setWindowTitle(tr("Peak Controller Bug"));
@@ -224,13 +261,13 @@ PeakController*
         }
     }
 
-    if(m_buggedFile == true)
-    {
-        effectId = m_getCount;
-    }
-    m_getCount++;  // NB: m_getCount should be increased even m_buggedFile is
+    if(s_buggedFile == true)
+        effectId = s_getCount;
+
+    s_getCount++;  // NB: s_getCount should be increased even s_buggedFile is
                    // false
 
+    /*
     for(i = s_effects.begin(); i != s_effects.end(); ++i)
     {
         if((*i)->m_effectId == effectId)
@@ -238,6 +275,10 @@ PeakController*
             return (*i)->controller();
         }
     }
+    */
+    for(PeakControllerEffect* e: s_effects)
+        if(e->m_effectId == effectId)
+            return e->controller();
 
     return nullptr;
 }

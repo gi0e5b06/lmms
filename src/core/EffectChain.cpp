@@ -40,7 +40,9 @@ EffectChain::EffectChain(Model* _parent) :
 
 EffectChain::~EffectChain()
 {
+    qInfo("EffectChain::~EffectChain START");
     clear();
+    qInfo("EffectChain::~EffectChain END");
 }
 
 void EffectChain::saveSettings(QDomDocument& _doc, QDomElement& _this)
@@ -48,11 +50,11 @@ void EffectChain::saveSettings(QDomDocument& _doc, QDomElement& _this)
     //_this.setAttribute( "enabled", m_enabledModel.value() );
     m_enabledModel.saveSettings(_doc, _this, "enabled");
 
-    _this.setAttribute("numofeffects", m_effects.size());//m_effects.count());
+    _this.setAttribute("numofeffects",
+                       m_effects.size());  // m_effects.count());
 
-    //for(Effect* effect: m_effects)
-    m_effects.map([&_doc,&_this](Effect* effect)
-    {
+    // for(Effect* effect: m_effects)
+    m_effects.map([&_doc, &_this](Effect* effect) {
         if(DummyEffect* dummy = dynamic_cast<DummyEffect*>(effect))
         {
             _this.appendChild(dummy->originalPluginData());
@@ -209,7 +211,7 @@ bool EffectChain::processAudioBuffer(sampleFrame* _buf,
     if(m_enabledModel.value() == false)
         return false;
 
-    const bool exporting = Engine::getSong()->isExporting();
+    const bool exporting = Engine::song()->isExporting();
     if(exporting)  // strip infs/nans if exporting
         MixHelpers::sanitize(_buf, _frames);
 
@@ -280,6 +282,22 @@ void EffectChain::clear()
     }
     */
 
-    m_effects.map([](Effect* e) { delete e; }, true);
+    qInfo("EffectChain::clear START");
+    /*
+      m_effects.map(
+            [](Effect* e) {
+                qInfo("EffectChain::clear delete %s START",
+      qPrintable(e->displayName())); delete e; qInfo("EffectChain::clear
+      delete %s END", qPrintable(e->displayName()));
+            },
+            true);
+    */
+    while(!m_effects.isEmpty())
+    {
+        Effect* e = m_effects.takeLast();
+        e->deleteLater();
+    }
+
+    qInfo("EffectChain::clear END");
     // Engine::mixer()->doneChangeInModel();
 }

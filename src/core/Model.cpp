@@ -76,13 +76,15 @@ Model::~Model()
     // qInfo("Model::~Model END %s", qPrintable(m_displayName));
 }
 
-const QString Model::uuid()
+const QString Model::uuid() const
 {
     if(!hasUuid())
     {
-        m_uuid = QUuid::createUuid().toString().replace("{", "").replace("}",
-                                                                         "");
-        s_models.insert(m_uuid, this);
+        Model* m  = const_cast<Model*>(this);
+        m->m_uuid = QUuid::createUuid().toString().replace("{", "").replace(
+                "}", "");
+        s_models.insert(m->m_uuid, m);
+        BACKTRACE
         qInfo("Model::uuid create uuid for '%s'",
               qPrintable(fullDisplayName()));
     }

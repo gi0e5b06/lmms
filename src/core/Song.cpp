@@ -78,9 +78,12 @@ Song::Song() :
       m_exporting(false), m_exportLoop(false), m_renderBetweenMarkers(false),
       m_playing(false), m_paused(false), m_loadingProject(false),
       m_isCancelled(false), m_savingProject(false), m_playMode(Mode_None),
-      m_length(0), m_patternToPlay(NULL), m_loopPattern(false),
+      m_length(0), m_patternToPlay(nullptr), m_loopPattern(false),
       m_elapsedMilliSeconds(0), m_elapsedTicks(0), m_elapsedTacts(0)
 {
+    m_metaData.set("Created", QDateTime::currentDateTimeUtc().toString(
+                                      "yyyy-MM-dd hh:mm:ss"));
+
     connect(&m_tempoModel, SIGNAL(dataChanged()), this, SLOT(setTempo()));
     connect(&m_tempoModel, SIGNAL(dataUnchanged()), this, SLOT(setTempo()));
     connect(&m_timeSigModel, SIGNAL(dataChanged()), this,
@@ -94,8 +97,6 @@ Song::Song() :
     connect(&m_masterPanningModel, SIGNAL(dataChanged()), this,
             SLOT(masterPanningChanged()));
 
-    qRegisterMetaType<Note>("Note");
-    qRegisterMetaType<const Pattern*>("const Pattern*");
     setType(SongContainer);
 }
 
@@ -151,7 +152,7 @@ void Song::savePos()
 {
     TimeLineWidget* tl = m_playPos[m_playMode].m_timeLine;
 
-    if(tl != NULL)
+    if(tl != nullptr)
     {
         tl->savePos(m_playPos[m_playMode]);
     }
@@ -161,9 +162,7 @@ void Song::processNextBuffer()
 {
     // if not playing, nothing to do
     if(m_playing == false)
-    {
         return;
-    }
 
     TrackList trackList;
     int       tcoNum = -1;  // track content object number
@@ -176,16 +175,14 @@ void Song::processNextBuffer()
             trackList = tracks();
             // at song-start we have to reset the LFOs
             if(m_playPos[Mode_PlaySong] == 0)
-            {
                 EnvelopeAndLfoParameters::instances()->reset();
-            }
             break;
 
         case Mode_PlayBB:
             if(Engine::getBBTrackContainer()->numOfBBs() > 0)
             {
                 tcoNum = Engine::getBBTrackContainer()->currentBB();
-                trackList.push_back(BBTrack::findBBTrack(tcoNum));
+                trackList.append(BBTrack::findBBTrack(tcoNum));
             }
             break;
 
@@ -193,7 +190,7 @@ void Song::processNextBuffer()
             if(m_patternToPlay != nullptr)
             {
                 tcoNum = m_patternToPlay->track()->getTCONum(m_patternToPlay);
-                trackList.push_back(m_patternToPlay->track());
+                trackList.append(m_patternToPlay->track());
             }
             break;
 
@@ -203,8 +200,8 @@ void Song::processNextBuffer()
                 tcoNum = m_automationToPlay->track()->getTCONum(
                         m_automationToPlay);
                 bool all = false;
-                for(AutomatableModel* o: m_automationToPlay->objects())
-                {
+                // for(AutomatableModel* o: m_automationToPlay->objects())
+                m_automationToPlay->objects().map([&trackList, &all](auto o) {
                     Model* p = o;
                     while(p != nullptr)
                     {
@@ -215,7 +212,7 @@ void Song::processNextBuffer()
                         {
                             // qWarning("AP +T %s",
                             // qPrintable(t->displayName()));
-                            trackList.push_back(t);
+                            trackList.append(t);
                             break;
                         }
 
@@ -240,11 +237,12 @@ void Song::processNextBuffer()
                         }
                         */
                     }
-                }
+                });
+
                 if(all)
                     trackList = tracks();
                 else
-                    trackList.push_back(m_automationToPlay->track());
+                    trackList.append(m_automationToPlay->track());
             }
             break;
 
@@ -488,17 +486,15 @@ void Song::processAutomations(const TrackList& tracklist,
 
     const Tracks& tracks = container->tracks();
 
-    Track::tcoVector tcos;
-    for(Track* track: tracks)
+    Tiles tcos;
+    for(const Track* track: tracks)
     {
         if((track->type() == Track::AutomationTrack) && !track->isMuted())
-        {
             track->getTCOsInRange(tcos, 0, timeStart);
-        }
     }
 
     // Process recording
-    for(TrackContentObject* tco: tcos)
+    for(Tile* tco: tcos)
     {
         auto p = dynamic_cast<AutomationPattern*>(tco);
         if(!p)
@@ -715,7 +711,7 @@ void Song::stop()
     m_paused           = false;
     m_recording        = true;
 
-    if(tl != NULL)
+    if(tl != nullptr)
     {
 
         switch(tl->behaviourAtStop())
@@ -877,14 +873,10 @@ void Song::clearProject()
     Engine::projectJournal()->setJournalling(false);
 
     if(m_playing)
-    {
         stop();
-    }
 
     for(int i = 0; i < Mode_Count; i++)
-    {
         setPlayPos(0, (PlayModes)i);
-    }
 
     qInfo("Song::clearProject 1");
 
@@ -892,7 +884,7 @@ void Song::clearProject()
 
     qInfo("Song::clearProject 2a");
 
-    Engine::mixer()->requestChangeInModel();
+    // Engine::mixer()->requestChangeInModel();
 
     if(gui && gui->bbWindow())
     {
@@ -913,11 +905,9 @@ void Song::clearProject()
         gui->fxMixerView()->clear();
     }
 
-    Engine::mixer()->doneChangeInModel();
-
+    // Engine::mixer()->doneChangeInModel();
     QCoreApplication::sendPostedEvents();
-
-    Engine::mixer()->requestChangeInModel();
+    // Engine::mixer()->requestChangeInModel();
 
     qInfo("Song::clearProject 3a");
     Engine::getBBTrackContainer()->clearAllTracks();
@@ -927,15 +917,16 @@ void Song::clearProject()
     clearSongMetaData();
     qInfo("Song::clearProject 4");
 
+    /*
     Engine::mixer()->doneChangeInModel();
-
     QCoreApplication::sendPostedEvents();
+    Engine::mixer()->requestChangeInModel();
+    */
 
     qInfo("Song::clearProject 5");
 
-    Engine::mixer()->requestChangeInModel();
-
     Engine::fxMixer()->clear();
+    QCoreApplication::sendPostedEvents();
 
     qInfo("Song::clearProject 6");
 
@@ -967,7 +958,7 @@ void Song::clearProject()
     AutomationPattern::globalAutomationPattern(&m_masterPanningModel)
             ->clear();
 
-    Engine::mixer()->doneChangeInModel();
+    // Engine::mixer()->doneChangeInModel();
 
     qInfo("Song::clearProject 10");
 
@@ -999,7 +990,6 @@ void Song::clearProject()
 // create new file
 void Song::createNewProject()
 {
-
     QString defaultTemplate
             = ConfigManager::inst()->userTemplateDir() + "default.mpt";
 
@@ -1062,29 +1052,27 @@ void Song::createNewProject()
 void Song::createNewProjectFromTemplate(const QString& templ)
 {
     loadProject(templ);
+    m_metaData.set("Created", QDateTime::currentDateTimeUtc().toString(
+                                      "yyyy-MM-dd hh:mm:ss"));
+
     // clear file-name so that user doesn't overwrite template when
     // saving...
     m_fileName = m_oldFileName = "";
     // update window title
     m_loadOnLaunch = false;
+
     if(gui->mainWindow())
-    {
         gui->mainWindow()->resetWindowTitle();
-    }
 }
 
 // load given song
 void Song::loadProject(const QString& fileName)
 {
     if(m_loadingProject)
-    {
         qWarning("Song::loadProject() called when another load is running");
-    }
 
     if(m_savingProject)
-    {
         qWarning("Song::loadProject() called when a save is running");
-    }
 
     m_loadingProject = true;
 
@@ -1099,9 +1087,7 @@ void Song::loadProject(const QString& fileName)
     if(dataFile.head().isNull())
     {
         if(m_loadOnLaunch)
-        {
             createNewProject();
-        }
         m_fileName = m_oldFileName;
         return;
     }
@@ -1309,7 +1295,7 @@ void Song::loadProject(const QString& fileName)
     {
         if(gui)
         {
-            QMessageBox::warning(NULL, tr("LMMS Error report"),
+            QMessageBox::warning(nullptr, tr("LMMS Error report"),
                                  errorSummary(), QMessageBox::Ok);
         }
         else
@@ -1388,13 +1374,24 @@ void Song::buildProjectDataFile(DataFile& dataFile)
 // only save current song as _filename and do nothing else
 bool Song::saveProjectFile(const QString& _fileName)
 {
+    if(m_metaData.get("Created").isEmpty())
+    {
+        QFileInfo fi(_fileName);
+        QDateTime d = fi.birthTime();
+        if(!d.isValid())
+            d = fi.metadataChangeTime();
+        if(!d.isValid())
+            d = fi.lastModified();
+        if(d.isValid())
+            m_metaData.set("Created", d.toString("yyyy-MM-dd hh:mm:ss"));
+    }
+
     DataFile dataFile(DataFile::SongProject);
     buildProjectDataFile(dataFile);
 
     bool r = dataFile.writeFile(_fileName);
     if(r && (_fileName == m_fileName))
     {
-        // QFileInfo fi(filename);
         dataFile.writeFile(projectDir() + QDir::separator() + "project"
                            + QDir::separator() + "current.mmp");
         dataFile.writeFile(projectDir() + QDir::separator() + "project"
@@ -1455,13 +1452,14 @@ void Song::importProject()
 {
     createProjectTree();
 
-    FileDialog ofd(
-            NULL, tr("Import file"), ConfigManager::inst()->userProjectsDir(),
-            tr("MIDI sequences") + " (*.mid *.midi *.rmi);;"
-                    + tr("Hydrogen projects") + " (*.h2song);;" + tr("Stems")
-                    + " (*.stem.mp4);;" + tr("All file types") + " (*.*)");
+    FileDialog ofd(nullptr, tr("Import file"),
+                   ConfigManager::inst()->userProjectsDir(),
+                   tr("MIDI sequences") + " (*.mid *.midi *.rmi);;"
+                           + tr("Hydrogen projects") + " (*.h2song);;"
+                           + tr("Stems") + " (*.stem.mp4);;"
+                           + tr("All file types") + " (*.*)");
 
-    ofd.setFileMode(FileDialog::ExistingFiles);
+    ofd.setFileMode(FileDialog::ExistingFile);
     if(ofd.exec() == QDialog::Accepted && !ofd.selectedFiles().isEmpty())
     {
         ImportFilter::import(ofd.selectedFiles()[0], this);
@@ -1824,8 +1822,8 @@ void Song::exportProjectMidi()
           tracks_BB = Engine::getBBTrackContainer()->tracks();
         */
         ExportFilter* exf = dynamic_cast<ExportFilter*>(
-                Plugin::instantiate("midiexport", NULL, NULL));
-        if(exf == NULL)
+                Plugin::instantiate("midiexport", nullptr, nullptr));
+        if(exf == nullptr)
         {
             qWarning("Warning: Failed to load midi export filter");
             return;
@@ -1905,8 +1903,8 @@ void Song::exportProjectVideoLine()
         }
         */
         ExportFilter* exf = dynamic_cast<ExportFilter*>(
-                Plugin::instantiate("videolineexport", NULL, NULL));
-        if(exf == NULL)
+                Plugin::instantiate("videolineexport", nullptr, nullptr));
+        if(exf == nullptr)
         {
             qWarning("Warning: Failed to load videoline export filter");
             return;
@@ -1970,8 +1968,8 @@ void Song::exportProjectVideoWave()
 
         // instantiate videowave export plugin
         ExportFilter* exf = dynamic_cast<ExportFilter*>(
-                Plugin::instantiate("videowaveexport", NULL, NULL));
-        if(exf == NULL)
+                Plugin::instantiate("videowaveexport", nullptr, nullptr));
+        if(exf == nullptr)
         {
             qWarning("Warning: Failed to load videowave export filter");
             return;
@@ -2021,8 +2019,8 @@ void Song::exportProjectFormat12()
 
         // instantiate oldformat export plugin
         ExportFilter* exf = dynamic_cast<ExportFilter*>(
-                Plugin::instantiate("format12export", NULL, NULL));
-        if(exf == NULL)
+                Plugin::instantiate("format12export", nullptr, nullptr));
+        if(exf == nullptr)
         {
             qWarning("Warning: Failed to load format12 export filter");
             return;
@@ -2041,11 +2039,12 @@ void Song::setModified()
     if(!m_loadingProject)
     {
         m_modified = true;
+        m_metaData.set("Modified", QDateTime::currentDateTimeUtc().toString(
+                                           "yyyy-MM-dd hh:mm:ss"));
+
         if(gui != nullptr && gui->mainWindow()
            && QThread::currentThread() == gui->mainWindow()->thread())
-        {
             gui->mainWindow()->resetWindowTitle();
-        }
     }
 }
 
@@ -2119,6 +2118,21 @@ void Song::clearSongMetaData()
     {
         setModified();
         emit metaDataChanged();
+    }
+}
+
+void Song::userWorking()
+{
+    static qint64 last = 0;
+
+    qint64 now = QDateTime::currentSecsSinceEpoch();
+    qint64 d   = qMin<qint64>(30, now - last);
+    last       = now;
+    if(d > 0)
+    {
+        qint64 t = d + m_metaData.get("CumulativeWorkTime").toULongLong();
+        m_metaData.set("CumulativeWorkTime", QString("%1").arg(t));
+        // qInfo("CumulativeWorkTime %lld %lld", d, t);
     }
 }
 

@@ -96,7 +96,7 @@ class EXPORT InstrumentTrack : public Track, public MidiEventProcessor
                                  const MidiTime&  time   = MidiTime(),
                                  f_cnt_t          offset = 0);
 
-    bool isSustainPedalPressed() const
+    virtual bool isSustainPedalPressed() const
     {
         return m_sustainPedalPressed;
     }
@@ -155,7 +155,7 @@ class EXPORT InstrumentTrack : public Track, public MidiEventProcessor
     virtual TrackView* createView(TrackContainerView* tcv);
 
     // create new track-content-object = pattern
-    virtual TrackContentObject* createTCO(const MidiTime& _pos);
+    virtual Tile* createTCO(const MidiTime& _pos);
 
     // called by track
     virtual void saveTrackSpecificSettings(QDomDocument& _doc,
@@ -170,14 +170,14 @@ class EXPORT InstrumentTrack : public Track, public MidiEventProcessor
     const Scale* scale() const;
     void         setScale(const Scale* _scale);
 
-    const AudioPort* audioPort() const
+    const AudioPortPointer audioPort() const
     {
-        return &m_audioPort;
+        return m_audioPort;
     }
 
-    AudioPort* audioPort()
+    AudioPortPointer audioPort()
     {
-        return &m_audioPort;
+        return m_audioPort;
     }
 
     const MidiPort* midiPort() const
@@ -277,7 +277,7 @@ class EXPORT InstrumentTrack : public Track, public MidiEventProcessor
         return m_midiCCModel[_cc];
     }
 
-    void setPreviewMode(const bool);
+    // void setPreviewMode(const bool);
 
     virtual void cleanFrozenBuffer();
     virtual void readFrozenBuffer();
@@ -365,19 +365,20 @@ class EXPORT InstrumentTrack : public Track, public MidiEventProcessor
     NotePlayHandle* m_notes[NumMidiKeys];
     NotePlayHandles m_sustainedNotes;
 
-    int    m_runningMidiNotes[NumMidiKeys];
+    int   m_runningMidiNotes[NumMidiKeys];
     Mutex m_midiNotesMutex;
 
     bool m_sustainPedalPressed;
 
     bool m_silentBuffersProcessed;
 
-    bool m_previewMode;
+    // bool m_previewMode;
 
     const Scale* m_scale;
     IntModel     m_baseNoteModel;
 
-    NotePlayHandleList m_processHandles;
+    // NotePlayHandleList m_processHandles;
+    NotePlayHandles m_processHandles;
 
     BoolModel  m_volumeEnabledModel;
     FloatModel m_volumeModel;
@@ -396,7 +397,7 @@ class EXPORT InstrumentTrack : public Track, public MidiEventProcessor
 
     BoolModel              m_useMasterPitchModel;
     IntModel               m_effectChannelModel;
-    AudioPort              m_audioPort;
+    AudioPortPointer       m_audioPort;
     Instrument*            m_instrument;
     InstrumentSoundShaping m_soundShaping;
 

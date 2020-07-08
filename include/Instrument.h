@@ -172,7 +172,7 @@ class EXPORT Instrument : public Plugin
     // provided functions:
     // --------------------------------------------------------------------
 
-    // instantiate instrument-plugin with given name or return NULL
+    // instantiate instrument-plugin with given name or return nullptr
     // on failure
     static Instrument* instantiate(const QString&   _plugin_name,
                                    InstrumentTrack* _instrument_track);

@@ -34,7 +34,7 @@
 
 EffectSelectDialog::EffectSelectDialog(QWidget* _parent) :
       QDialog(_parent), ui(new Ui::EffectSelectDialog), m_sourceModel(),
-      m_model(), m_descriptionWidget(NULL)
+      m_model(), m_descriptionWidget(nullptr)
 {
     ui->setupUi(this);
 
@@ -74,6 +74,7 @@ EffectSelectDialog::EffectSelectDialog(QWidget* _parent) :
     {
         QString name;
         QString type;
+
         if((*it).desc->subPluginFeatures)
         {
             name = (*it).name;
@@ -84,6 +85,7 @@ EffectSelectDialog::EffectSelectDialog(QWidget* _parent) :
             name = (*it).desc->displayName();
             type = "LMMS";
         }
+
         m_sourceModel.setItem(row, 0, new QStandardItem(name));
         m_sourceModel.setItem(row, 1, new QStandardItem(type));
         ++row;
@@ -148,22 +150,21 @@ Effect* EffectSelectDialog::instantiateSelectedPlugin(EffectChain* _parent)
         return Effect::instantiate(m_currentSelection.desc->name(), _parent,
                                    &m_currentSelection);
     }
-    return NULL;
+
+    return nullptr;
 }
 
 void EffectSelectDialog::acceptSelection()
 {
     if(m_currentSelection.isValid())
-    {
         accept();
-    }
 }
 
 void EffectSelectDialog::rowChanged(const QModelIndex& _idx,
                                     const QModelIndex&)
 {
     delete m_descriptionWidget;
-    m_descriptionWidget = NULL;
+    m_descriptionWidget = nullptr;
 
     if(m_model.mapToSource(_idx).row() < 0)
     {
@@ -174,6 +175,7 @@ void EffectSelectDialog::rowChanged(const QModelIndex& _idx,
     {
         m_currentSelection = m_effectKeys[m_model.mapToSource(_idx).row()];
     }
+
     if(m_currentSelection.desc)
     {
         m_descriptionWidget = new QWidget;

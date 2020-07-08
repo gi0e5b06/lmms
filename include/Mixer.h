@@ -44,7 +44,7 @@
 
 class AudioDevice;
 class MidiClient;
-class AudioPort;
+// class AudioPort;
 class NotePlayHandle;
 
 const fpp_t MINIMUM_BUFFER_SIZE = 32;
@@ -83,8 +83,12 @@ class HandleManager : public QThread
     virtual ~HandleManager();
 
   public slots:
-    void addPlayHandleHM(PlayHandle* handle);
-    void removePlayHandleHM(PlayHandle* handle);
+    void addAudioPortHM(AudioPortPointer port);
+    void removeAudioPortHM(AudioPortPointer port);
+
+    void addPlayHandleHM(PlayHandlePointer handle);
+    void removePlayHandleHM(PlayHandlePointer handle);
+
     void removePlayHandlesOfTypesHM(const Track* _track, const quint8 _types);
     void removePlayHandlesForInstrumentHM(const Instrument* _instrument);
     void removeAllPlayHandlesHM();
@@ -233,10 +237,6 @@ class EXPORT Mixer : public QObject
         return m_audioDev;
     }
 
-    // audio-port-stuff
-    void addAudioPort(AudioPort* _port);
-    void removeAudioPort(AudioPort* _port);
-
     // MIDI-client-stuff
     inline const QString& midiClientName() const
     {
@@ -255,8 +255,7 @@ class EXPORT Mixer : public QObject
     }
     */
 
-    ConstNotePlayHandleList  // QList<const NotePlayHandle*>
-            nphsOfTrack(const Track* _track, bool _all = false);
+    ConstNotePlayHandles nphsOfTrack(const Track* _track, bool _all = false);
 
     void waitUntilNoPlayHandle(const Track* _track, const quint8 _types);
     void waitUntilNoPlayHandle(const Instrument* _instrument);
@@ -386,9 +385,13 @@ class EXPORT Mixer : public QObject
     void qualitySettingsChanged();
     void sampleRateChanged();
     // void nextDisplayBuffer( const surroundSampleFrame * buffer );
-    void playHandleDeleted(PlayHandle* handle);
-    void playHandleToAdd(PlayHandle* handle);
-    void playHandleToRemove(PlayHandle* handle);
+
+    void audioPortToAdd(AudioPortPointer port);
+    void audioPortToRemove(AudioPortPointer port);
+
+    void playHandleToAdd(PlayHandlePointer handle);
+    void playHandleToRemove(PlayHandlePointer handle);
+    void playHandleDeleted(PlayHandlePointer handle);
     void playHandlesOfTypesToRemove(const Track* _track, const quint8 _types);
     void playHandlesForInstrumentToRemove(const Instrument* _instrument);
     void allPlayHandlesRemoval();
@@ -405,21 +408,21 @@ class EXPORT Mixer : public QObject
 
     const surroundSampleFrame* renderNextBuffer();
 
-    void addPlayHandle1(PlayHandle* handle);
-    void removePlayHandle1(PlayHandle* handle);
-    void deletePlayHandle1(PlayHandle* _ph);
+    void addAudioPort1(AudioPortPointer port);
+    void removeAudioPort1(AudioPortPointer port);
+
+    void addPlayHandle1(PlayHandlePointer handle);
+    void removePlayHandle1(PlayHandlePointer handle);
+    void deletePlayHandle1(PlayHandlePointer _ph);
     void removePlayHandlesOfTypes1(const Track* _track, const quint8 types);
     void removePlayHandlesForInstrument1(const Instrument* _instrument);
     void removeAllPlayHandles1();
 
     void runChangesInModel();
 
-    bool m_renderOnly;
-
-    // QVector<AudioPort*>
+    bool       m_renderOnly;
     AudioPorts m_audioPorts;
-
-    fpp_t m_framesPerPeriod;
+    fpp_t      m_framesPerPeriod;
     // long  m_periodCounter;
 
     sampleFrame* m_inputBuffer[2];
@@ -477,9 +480,9 @@ class EXPORT Mixer : public QObject
 
     bool           m_changesSignal;
     unsigned int   m_changes;
-    QMutex         m_changesMutex;
-    QMutex         m_doChangesMutex;
-    QMutex         m_waitChangesMutex;
+    Mutex          m_changesMutex;
+    Mutex          m_doChangesMutex;
+    Mutex          m_waitChangesMutex;
     QWaitCondition m_changesMixerCondition;
     QWaitCondition m_changesRequestCondition;
 

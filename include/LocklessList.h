@@ -66,7 +66,7 @@ class LocklessList
 
     Element* popList()
     {
-        return m_first.fetchAndStoreOrdered(NULL);
+        return m_first.fetchAndStoreOrdered(nullptr);
     }
 
     Element* first()

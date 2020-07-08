@@ -120,13 +120,24 @@ DataFile::DataFile(const QString& _fileName) :
         qWarning("DataFile::seed_count>1");
     // qSetGlobalQHashSeed(42);
 
+    qInfo("DataFile::DataFile f=%s", qPrintable(_fileName));
     QFile inFile(_fileName);
+    if(!inFile.exists() && (_fileName.indexOf('.') < 0))
+    {
+        inFile.setFileName(_fileName + ".mmp");
+        qInfo("DataFile::DataFile f=%s", qPrintable(inFile.fileName()));
+        if(!inFile.exists())
+            inFile.setFileName(_fileName + ".mmpz");
+        if(!inFile.exists())
+            inFile.setFileName(_fileName + ".mpt");
+    }
+
     if(!inFile.open(QIODevice::ReadOnly))
     {
         if(gui)
         {
             QMessageBox::critical(
-                    NULL, SongEditor::tr("Could not open file"),
+                    nullptr, SongEditor::tr("Could not open file"),
                     SongEditor::tr("Could not open file %1. You probably "
                                    "have no permissions to read this "
                                    "file.\n Please make sure to have at "
@@ -262,7 +273,7 @@ bool DataFile::writeFile(const QString& filename)
         {
             BACKTRACE
             QMessageBox::critical(
-                    NULL, SongEditor::tr("Could not write file"),
+                    nullptr, SongEditor::tr("Could not write file"),
                     SongEditor::tr("Could not open %1 for writing. You "
                                    "probably are not permitted to "
                                    "write to this file. Please make sure you "
@@ -717,7 +728,7 @@ void DataFile::upgrade_0_4_0_beta1()
                     m["plugin"]          = sl.value(0);
                     m["file"]            = sl.value(1);
                 }
-                EffectKey key(NULL, name, m);
+                EffectKey key(nullptr, name, m);
                 el.appendChild(key.saveXML(*this));
             }
         }
@@ -1044,7 +1055,7 @@ void DataFile::loadData(const QByteArray& _data, const QString& _sourceFile)
             if(gui)
             {
                 QMessageBox::critical(
-                        NULL, SongEditor::tr("Error in file"),
+                        nullptr, SongEditor::tr("Error in file"),
                         SongEditor::tr("The file %1 seems to contain "
                                        "errors and therefore can't be "
                                        "loaded.")

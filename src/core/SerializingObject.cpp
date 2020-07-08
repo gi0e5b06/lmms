@@ -24,8 +24,8 @@
 
 #include "SerializingObject.h"
 
-#include <QRegExp>
 #include <QDomElement>
+#include <QRegExp>
 
 SerializingObject::SerializingObject() : m_hook(nullptr)
 {
@@ -33,10 +33,8 @@ SerializingObject::SerializingObject() : m_hook(nullptr)
 
 SerializingObject::~SerializingObject()
 {
-    if(m_hook)
-    {
+    if(m_hook != nullptr)
         m_hook->m_hookedIn = nullptr;
-    }
 }
 
 QDomElement SerializingObject::saveState(QDomDocument& doc,
@@ -47,10 +45,8 @@ QDomElement SerializingObject::saveState(QDomDocument& doc,
 
     saveSettings(doc, element);
 
-    if(hook())
-    {
-        hook()->saveSettings(doc, element);
-    }
+    if(m_hook != nullptr)
+        m_hook->saveSettings(doc, element);
 
     return element;
 }
@@ -59,25 +55,19 @@ void SerializingObject::restoreState(const QDomElement& element)
 {
     loadSettings(element);
 
-    if(hook())
-    {
-        hook()->loadSettings(element);
-    }
+    if(m_hook != nullptr)
+        m_hook->loadSettings(element);
 }
 
 void SerializingObject::setHook(SerializingObjectHook* hook)
 {
-    if(m_hook)
-    {
-        m_hook->m_hookedIn = NULL;
-    }
+    if(m_hook != nullptr)
+        m_hook->m_hookedIn = nullptr;
 
     m_hook = hook;
 
-    if(m_hook)
-    {
+    if(m_hook != nullptr)
         m_hook->m_hookedIn = this;
-    }
 }
 
 void SerializingObject::saveSettings(QDomDocument& doc, QDomElement& element)
@@ -86,8 +76,10 @@ void SerializingObject::saveSettings(QDomDocument& doc, QDomElement& element)
     Q_UNUSED(element)
 }
 
-void SerializingObject::loadSettings(const QDomElement& element){
-        Q_UNUSED(element)}
+void SerializingObject::loadSettings(const QDomElement& element)
+{
+    Q_UNUSED(element)
+}
 
 QString SerializingObject::formatNumber(real_t v)
 {

@@ -54,7 +54,7 @@ OscilloscopeGDX::OscilloscopeGDX(
     setColor(QColor(59, 66, 160));
 
     int periodsPerDisplayRefresh = qMax(
-            1, int(ceilf(float(Engine::mixer()->processingSampleRate())
+            1, int(ceilf(FLOAT(Engine::mixer()->processingSampleRate())
                          / m_fpp / CONFIG_GET_INT("ui.framespersecond"))));
     m_ring = new Ring(m_fpp * periodsPerDisplayRefresh);
 }

@@ -28,9 +28,7 @@
 
 /*
  * \mainpage Track classes
- *
  * \section introduction Introduction
- *
  * \todo fill this out
  */
 
@@ -87,45 +85,44 @@ const int RESIZE_GRIP_WIDTH = 4;
  * beside the cursor as you move or resize elements of a track about.
  * This pointer keeps track of it, as you only ever need one at a time.
  */
-TextFloat* TrackContentObjectView::s_textFloat = nullptr;
+TextFloat* TileView::s_textFloat = nullptr;
 
 // ===========================================================================
-// TrackContentObject
+// Tile
 // ===========================================================================
-/*! \brief Create a new TrackContentObject
+/*! \brief Create a new Tile
  *
  *  Creates a new track content object for the given track.
  *
  * \param _track The track that will contain the new object
  */
-TrackContentObject::TrackContentObject(Track*         track,
-                                       const QString& _displayName) :
-      Model(track, _displayName),
-      m_steps(DefaultStepsPerTact), m_stepResolution(DefaultStepsPerTact),
-      m_track(track), m_name(QString::null), m_startPosition(), m_length(),
+Tile::Tile(Track* _track, const QString& _displayName) :
+      Model(_track, _displayName), m_steps(DefaultStepsPerTact),
+      m_stepResolution(DefaultStepsPerTact), m_track(_track),
+      m_name(QString::null), m_startPosition(), m_length(),
       m_mutedModel(false, this, tr("Mute")),
-      m_soloModel(false, this, tr("Solo")), m_autoResize(false),
-      m_autoRepeat(false), m_color(128, 128, 128), m_useStyleColor(true),
-      m_selectViewOnCreate(false)
+      // m_soloModel(false, this, tr("Solo")),
+      m_autoResize(false), m_autoRepeat(false), m_color(128, 128, 128),
+      m_useStyleColor(true), m_selectViewOnCreate(false)
 {
     /*
-    if(Engine::getSong()&&Engine::getSong()->isPlaying())
+    if(Engine::song()&&Engine::song()->isPlaying())
     {
             static bool s_once=false;
             if(!s_once)
             {
                     BACKTRACE
                     s_once=true;
-                    qWarning("TrackContentObject::TrackContentObject
+                    qWarning("Tile::Tile
     alloc...");
             }
     }
     */
 
-    if(track)
-        track->addTCO(this);
+    if(_track)
+        _track->addTCO(this);
     // else
-    // qWarning("TrackContentObject::TrackContentObject no track???");
+    // qWarning("Tile::Tile no track???");
 
     setJournalling(false);
     movePosition(0);
@@ -133,7 +130,7 @@ TrackContentObject::TrackContentObject(Track*         track,
     setJournalling(true);
 }
 
-TrackContentObject::TrackContentObject(const TrackContentObject& _other) :
+Tile::Tile(const Tile& _other) :
       Model(_other.m_track, _other.displayName()), m_steps(_other.m_steps),
       m_stepResolution(_other.m_stepResolution), m_track(_other.m_track),
       m_name(_other.m_name), m_startPosition(_other.m_startPosition),
@@ -148,12 +145,12 @@ TrackContentObject::TrackContentObject(const TrackContentObject& _other) :
         t->addTCO(this);
 }
 
-/*! \brief Destroy a TrackContentObject
+/*! \brief Destroy a Tile
  *
  *  Destroys the given track content object.
  *
  */
-TrackContentObject::~TrackContentObject()
+Tile::~Tile()
 {
     emit destroyedTCO();
 
@@ -162,12 +159,12 @@ TrackContentObject::~TrackContentObject()
         t->removeTCO(this);
 }
 
-QString TrackContentObject::defaultName() const
+QString Tile::defaultName() const
 {
     return track()->name();
 }
 
-void TrackContentObject::saveSettings(QDomDocument& doc, QDomElement& element)
+void Tile::saveSettings(QDomDocument& doc, QDomElement& element)
 {
     element.setAttribute("name", name());
     element.setAttribute("autoresize", autoResize() ? 1 : 0);
@@ -179,7 +176,7 @@ void TrackContentObject::saveSettings(QDomDocument& doc, QDomElement& element)
     element.setAttribute("usestyle", useStyleColor() ? 1 : 0);
 }
 
-void TrackContentObject::loadSettings(const QDomElement& element)
+void Tile::loadSettings(const QDomElement& element)
 {
     if(element.hasAttribute("name"))
         setName(element.attribute("name"));
@@ -208,61 +205,61 @@ void TrackContentObject::loadSettings(const QDomElement& element)
         setUseStyleColor(element.attribute("usestyle").toUInt() == 1);
 }
 
-bool TrackContentObject::isFixed() const
+bool Tile::isFixed() const
 {
     return track()->isFixed();
 }
 
-QColor TrackContentObject::color() const
+QColor Tile::color() const
 {
     return m_color;
 }
 
-void TrackContentObject::setColor(const QColor& _c)
+void Tile::setColor(const QColor& _c)
 {
     m_color = _c;
 }
 
-bool TrackContentObject::useStyleColor() const
+bool Tile::useStyleColor() const
 {
     return m_useStyleColor;
 }
 
-void TrackContentObject::setUseStyleColor(bool _b)
+void Tile::setUseStyleColor(bool _b)
 {
     m_useStyleColor = _b;
 }
 
-/*! \brief Move this TrackContentObject's position in time
+/*! \brief Move this Tile's position in time
  *
  *  If the track content object has moved, update its position.  We
  *  also add a journal entry for undo and update the display.
  *
  * \param _pos The new position of the track content object.
  */
-void TrackContentObject::movePosition(const MidiTime& pos)
+void Tile::movePosition(const MidiTime& pos)
 {
     if(m_startPosition != pos)
     {
         m_startPosition = pos;
-        Engine::getSong()->updateLength();
+        Engine::song()->updateLength();
         emit positionChanged();
     }
 }
 
-/*! \brief Change the length of this TrackContentObject
+/*! \brief Change the length of this Tile
  *
  *  If the track content object's length has chaanged, update it.  We
  *  also add a journal entry for undo and update the display.
  *
  * \param _length The new length of the track content object.
  */
-void TrackContentObject::changeLength(const MidiTime& _length)
+void Tile::changeLength(const MidiTime& _length)
 {
-    // qInfo("TrackContentObject::changeLength #1");
+    // qInfo("Tile::changeLength #1");
 
-    real_t nom = Engine::getSong()->getTimeSigModel().getNumerator();
-    real_t den = Engine::getSong()->getTimeSigModel().getDenominator();
+    real_t nom          = Engine::song()->getTimeSigModel().getNumerator();
+    real_t den          = Engine::song()->getTimeSigModel().getDenominator();
     int    ticksPerTact = DefaultTicksPerTact * (nom / den);
 
     tick_t len = qMax(static_cast<tick_t>(_length), ticksPerTact / 32);
@@ -272,19 +269,19 @@ void TrackContentObject::changeLength(const MidiTime& _length)
         m_length = len;
         m_steps  = len * m_stepResolution * stepsPerTact()
                   / MidiTime::ticksPerTact() / 16;
-        // qInfo("TrackContentObject::changeLength #2");
-        Engine::getSong()->updateLength();
-        // qInfo("TrackContentObject::changeLength #3");
+        // qInfo("Tile::changeLength #2");
+        Engine::song()->updateLength();
+        // qInfo("Tile::changeLength #3");
         emit lengthChanged();
     }
 }
 
-void TrackContentObject::updateLength()
+void Tile::updateLength()
 {
     updateLength(length());
 }
 
-void TrackContentObject::updateLength(tick_t _len)
+void Tile::updateLength(tick_t _len)
 {
     if(isFixed())
     {
@@ -300,36 +297,36 @@ void TrackContentObject::updateLength(tick_t _len)
     // updateBBTrack();
 }
 
-void TrackContentObject::resizeLeft(const MidiTime& pos, const MidiTime& len)
+void Tile::resizeLeft(const MidiTime& pos, const MidiTime& len)
 {
     movePosition(pos);
     changeLength(len);
 }
 
-void TrackContentObject::resizeRight(const MidiTime& pos, const MidiTime& len)
+void Tile::resizeRight(const MidiTime& pos, const MidiTime& len)
 {
     movePosition(pos);
     changeLength(len);
 }
 
-int TrackContentObject::stepsPerTact() const
+int Tile::stepsPerTact() const
 {
     int steps = MidiTime::ticksPerTact() / DefaultBeatsPerTact;
     return qMax(1, steps);
 }
 
-MidiTime TrackContentObject::stepPosition(int _step) const
+MidiTime Tile::stepPosition(int _step) const
 {
     return _step * 16. / m_stepResolution * MidiTime::ticksPerTact()
            / stepsPerTact();
 }
 
-int TrackContentObject::stepResolution() const
+int Tile::stepResolution() const
 {
     return m_stepResolution;
 }
 
-void TrackContentObject::setStepResolution(int _res)
+void Tile::setStepResolution(int _res)
 {
     if(_res > 0)
     {
@@ -344,32 +341,32 @@ void TrackContentObject::setStepResolution(int _res)
     }
 }
 
-void TrackContentObject::addBarSteps()
+void Tile::addBarSteps()
 {
     m_steps += stepsPerTact();
     updateLength();
     emit dataChanged();
-    Engine::getSong()->setModified();
+    Engine::song()->setModified();
 }
 
-void TrackContentObject::addBeatSteps()
+void Tile::addBeatSteps()
 {
     m_steps += stepsPerTact()
-               / Engine::getSong()->getTimeSigModel().getNumerator();
+               / Engine::song()->getTimeSigModel().getNumerator();
     updateLength();
     emit dataChanged();
-    Engine::getSong()->setModified();
+    Engine::song()->setModified();
 }
 
-void TrackContentObject::addOneStep()
+void Tile::addOneStep()
 {
     m_steps++;  //= stepsPerTact();
     updateLength();
     emit dataChanged();
-    Engine::getSong()->setModified();
+    Engine::song()->setModified();
 }
 
-void TrackContentObject::removeBarSteps()
+void Tile::removeBarSteps()
 {
     int n = stepsPerTact();
     if(n < m_steps)
@@ -383,14 +380,13 @@ void TrackContentObject::removeBarSteps()
         m_steps -= n;
         updateLength();
         emit dataChanged();
-        Engine::getSong()->setModified();
+        Engine::song()->setModified();
     }
 }
 
-void TrackContentObject::removeBeatSteps()
+void Tile::removeBeatSteps()
 {
-    int n = stepsPerTact()
-            / Engine::getSong()->getTimeSigModel().getNumerator();
+    int n = stepsPerTact() / Engine::song()->getTimeSigModel().getNumerator();
     if(n < m_steps)
     {
         /*
@@ -402,11 +398,11 @@ void TrackContentObject::removeBeatSteps()
         m_steps -= n;
         updateLength();
         emit dataChanged();
-        Engine::getSong()->setModified();
+        Engine::song()->setModified();
     }
 }
 
-void TrackContentObject::removeOneStep()
+void Tile::removeOneStep()
 {
     int n = 1;
     if(n < m_steps)
@@ -420,78 +416,80 @@ void TrackContentObject::removeOneStep()
         m_steps -= n;
         updateLength();
         emit dataChanged();
-        Engine::getSong()->setModified();
+        Engine::song()->setModified();
     }
 }
 
-void TrackContentObject::rotateOneStepLeft()
+void Tile::rotateOneStepLeft()
 {
     rotate(-MidiTime::ticksPerTact() / stepsPerTact());
 }
 
-void TrackContentObject::rotateOneStepRight()
+void Tile::rotateOneStepRight()
 {
     rotate(MidiTime::ticksPerTact() / stepsPerTact());
 }
 
-void TrackContentObject::rotateOneBeatLeft()
+void Tile::rotateOneBeatLeft()
 {
     rotate(-MidiTime::ticksPerTact()
-           / Engine::getSong()->getTimeSigModel().getNumerator());
+           / Engine::song()->getTimeSigModel().getNumerator());
 }
 
-void TrackContentObject::rotateOneBeatRight()
+void Tile::rotateOneBeatRight()
 {
     rotate(MidiTime::ticksPerTact()
-           / Engine::getSong()->getTimeSigModel().getNumerator());
+           / Engine::song()->getTimeSigModel().getNumerator());
 }
 
-void TrackContentObject::rotateOneBarLeft()
+void Tile::rotateOneBarLeft()
 {
     rotate(-MidiTime::ticksPerTact());
 }
 
-void TrackContentObject::rotateOneBarRight()
+void Tile::rotateOneBarRight()
 {
     rotate(MidiTime::ticksPerTact());
 }
 
-void TrackContentObject::splitAfterEveryBar()
+void Tile::splitAfterEveryBar()
 {
     split(MidiTime::ticksPerTact());
 }
 
-void TrackContentObject::splitAfterEveryFourthBar()
+void Tile::splitAfterEveryFourthBar()
 {
     split(4 * MidiTime::ticksPerTact());
 }
 
-bool TrackContentObject::comparePosition(const TrackContentObject* a,
-                                         const TrackContentObject* b)
+/*
+bool Tile::comparePosition(const Tile* a,
+                                         const Tile* b)
 {
     return a->startPosition() < b->startPosition();
 }
+*/
 
-void TrackContentObject::clear()
+void Tile::clear()
 {
 }
 
-/*! \brief Copy this TrackContentObject to the clipboard.
+/*! \brief Copy this Tile to the clipboard.
  *
  *  Copies this track content object to the clipboard.
  */
-void TrackContentObject::copy()
+void Tile::copy()
 {
     Clipboard::copy(this);
 }
 
-/*! \brief Pastes this TrackContentObject into a track.
+/*! \brief Pastes this Tile into a track.
  *
  *  Pastes this track content object into a track.
  *
  * \param _je The journal entry to undo
  */
-void TrackContentObject::paste()
+void Tile::paste()
 {
     if(Clipboard::has(nodeName()))
     {
@@ -511,7 +509,7 @@ void TrackContentObject::paste()
     gui->automationWindow()->m_editor->updateAfterPatternChange();
 }
 
-/*! \brief Mutes this TrackContentObject
+/*! \brief Mutes this Tile
  *
  *  Restore the previous state of this track content object.  This will
  *  restore the position or the length of the track content object
@@ -519,16 +517,16 @@ void TrackContentObject::paste()
  *
  * \param _je The journal entry to undo
  */
-void TrackContentObject::toggleMute()
+void Tile::toggleMute()
 {
     m_mutedModel.setValue(!m_mutedModel.value());
     emit dataChanged();
 }
 
 // ===========================================================================
-// trackContentObjectView
+// TileView
 // ===========================================================================
-/*! \brief Create a new trackContentObjectView
+/*! \brief Create a new TileView
  *
  *  Creates a new track content object view for the given
  *  track content object in the given track view.
@@ -536,13 +534,11 @@ void TrackContentObject::toggleMute()
  * \param _tco The track content object to be displayed
  * \param _tv  The track view that will contain the new object
  */
-TrackContentObjectView::TrackContentObjectView(TrackContentObject* tco,
-                                               TrackView*          tv) :
-      SelectableObject(tv->getTrackContentWidget()),
-      ModelView(nullptr, this), m_tco(tco), m_trackView(tv),
-      m_action(NoAction), m_initialMousePos(QPoint(0, 0)),
-      m_initialMouseGlobalPos(QPoint(0, 0)), m_hint(nullptr),
-      m_mutedColor(0, 0, 0), m_mutedBackgroundColor(0, 0, 0),
+TileView::TileView(Tile* tco, TrackView* tv) :
+      SelectableObject(tv->getTrackContentWidget()), ModelView(nullptr, this),
+      m_tco(tco), m_trackView(tv), m_action(NoAction),
+      m_initialMousePos(QPoint(0, 0)), m_initialMouseGlobalPos(QPoint(0, 0)),
+      m_hint(nullptr), m_mutedColor(0, 0, 0), m_mutedBackgroundColor(0, 0, 0),
       m_selectedColor(0, 0, 0), m_textColor(0, 0, 0),
       m_textShadowColor(0, 0, 0), m_BBPatternBackground(0, 0, 0),
       // m_gradient( true ),
@@ -577,12 +573,12 @@ TrackContentObjectView::TrackContentObjectView(TrackContentObject* tco,
     updatePosition();
 }
 
-/*! \brief Destroy a trackContentObjectView
+/*! \brief Destroy a TileView
  *
  *  Destroys the given track content object view.
  *
  */
-TrackContentObjectView::~TrackContentObjectView()
+TileView::~TileView()
 {
     delete m_hint;
     // we have to give our track-container the focus because otherwise the
@@ -592,14 +588,14 @@ TrackContentObjectView::~TrackContentObjectView()
     m_trackView->trackContainerView()->setFocus();
 }
 
-/*! \brief Update a TrackContentObjectView
+/*! \brief Update a TileView
  *
  *  TCO's get drawn only when needed,
  *  and when a TCO is updated,
  *  it needs to be redrawn.
  *
  */
-void TrackContentObjectView::update()
+void TileView::update()
 {
     if(isFixed())
         Engine::getBBTrackContainer()->updateBBTrack(m_tco);
@@ -608,7 +604,7 @@ void TrackContentObjectView::update()
     SelectableObject::update();
 }
 
-/*! \brief Does this trackContentObjectView have a fixed TCO?
+/*! \brief Does this TileView have a fixed TCO?
  *
  *  Returns whether the containing trackView has fixed
  *  TCOs.
@@ -617,7 +613,7 @@ void TrackContentObjectView::update()
  *  what circumstance are they fixed?
  */
 /*
-bool TrackContentObjectView::fixedTCOs()
+bool TileView::fixedTCOs()
 {
         return m_trackView->trackContainerView()->fixedTCOs();
 }
@@ -625,115 +621,115 @@ bool TrackContentObjectView::fixedTCOs()
 
 // qproperty access functions, to be inherited & used by TCOviews
 //! \brief CSS theming qproperty access method
-QColor TrackContentObjectView::mutedColor() const
+QColor TileView::mutedColor() const
 {
     return m_mutedColor;
 }
 
-QColor TrackContentObjectView::mutedBackgroundColor() const
+QColor TileView::mutedBackgroundColor() const
 {
     return m_mutedBackgroundColor;
 }
 
-QColor TrackContentObjectView::selectedColor() const
+QColor TileView::selectedColor() const
 {
     return m_selectedColor;
 }
 
-QColor TrackContentObjectView::textColor() const
+QColor TileView::textColor() const
 {
     return m_textColor;
 }
 
-QColor TrackContentObjectView::textBackgroundColor() const
+QColor TileView::textBackgroundColor() const
 {
     return m_textBackgroundColor;
 }
 
-QColor TrackContentObjectView::textShadowColor() const
+QColor TileView::textShadowColor() const
 {
     return m_textShadowColor;
 }
 
-QColor TrackContentObjectView::BBPatternBackground() const
+QColor TileView::BBPatternBackground() const
 {
     return m_BBPatternBackground;
 }
 
-// bool TrackContentObjectView::gradient() const
+// bool TileView::gradient() const
 //{ return m_gradient; }
 
 //! \brief CSS theming qproperty access method
-void TrackContentObjectView::setMutedColor(const QColor& c)
+void TileView::setMutedColor(const QColor& c)
 {
     m_mutedColor = QColor(c);
 }
 
-void TrackContentObjectView::setMutedBackgroundColor(const QColor& c)
+void TileView::setMutedBackgroundColor(const QColor& c)
 {
     m_mutedBackgroundColor = QColor(c);
 }
 
-void TrackContentObjectView::setSelectedColor(const QColor& c)
+void TileView::setSelectedColor(const QColor& c)
 {
     m_selectedColor = QColor(c);
 }
 
-void TrackContentObjectView::setTextColor(const QColor& c)
+void TileView::setTextColor(const QColor& c)
 {
     m_textColor = QColor(c);
 }
 
-void TrackContentObjectView::setTextBackgroundColor(const QColor& c)
+void TileView::setTextBackgroundColor(const QColor& c)
 {
     m_textBackgroundColor = c;
 }
 
-void TrackContentObjectView::setTextShadowColor(const QColor& c)
+void TileView::setTextShadowColor(const QColor& c)
 {
     m_textShadowColor = QColor(c);
 }
 
-void TrackContentObjectView::setBBPatternBackground(const QColor& c)
+void TileView::setBBPatternBackground(const QColor& c)
 {
     m_BBPatternBackground = QColor(c);
 }
 
-// void TrackContentObjectView::setGradient( const bool & b )
+// void TileView::setGradient( const bool & b )
 //{ m_gradient = b; }
 
 // access needsUpdate member variable
-bool TrackContentObjectView::needsUpdate()
+bool TileView::needsUpdate()
 {
     return m_needsUpdate;
 }
 
-void TrackContentObjectView::setNeedsUpdate(bool b)
+void TileView::setNeedsUpdate(bool b)
 {
     m_needsUpdate = b;
 }
 
-/*! \brief Close a trackContentObjectView
+/*! \brief Close a TileView
  *
  *  Closes a track content object view by asking the track
  *  view to remove us and then asking the QWidget to close us.
  *
  * \return Boolean state of whether the QWidget was able to close.
  */
-bool TrackContentObjectView::close()
+bool TileView::close()
 {
     m_trackView->getTrackContentWidget()->removeTCOView(this);
     return QWidget::close();
 }
 
-/*! \brief Removes a trackContentObjectView from its track view.
+/*! \brief Removes a TileView from its track view.
  *
  *  Like the close() method, this asks the track view to remove this
  *  track content object view.  However, the track content object is
  *  scheduled for later deletion rather than closed immediately.
  *
  */
-void TrackContentObjectView::remove()
+void TileView::remove()
 {
     m_trackView->track()->addJournalCheckPoint();
 
@@ -742,48 +738,48 @@ void TrackContentObjectView::remove()
     m_tco->deleteLater();
 }
 
-void TrackContentObjectView::mute()
+void TileView::mute()
 {
     m_tco->toggleMute();
 }
 
-void TrackContentObjectView::clear()
+void TileView::clear()
 {
     m_tco->clear();
 }
 
-/*! \brief Cut this trackContentObjectView from its track to the clipboard.
+/*! \brief Cut this TileView from its track to the clipboard.
  *
  *  Perform the 'cut' action of the clipboard - copies the track content
  *  object to the clipboard and then removes it from the track.
  */
-void TrackContentObjectView::cut()
+void TileView::cut()
 {
     m_tco->copy();
     remove();
 }
 
-void TrackContentObjectView::copy()
+void TileView::copy()
 {
     m_tco->copy();
 }
 
-void TrackContentObjectView::paste()
+void TileView::paste()
 {
     m_tco->paste();
 }
 
-void TrackContentObjectView::changeAutoResize()
+void TileView::changeAutoResize()
 {
     m_tco->setAutoResize(!m_tco->autoResize());
 }
 
-void TrackContentObjectView::changeAutoRepeat()
+void TileView::changeAutoRepeat()
 {
     m_tco->setAutoRepeat(!m_tco->autoRepeat());
 }
 
-void TrackContentObjectView::changeName()
+void TileView::changeName()
 {
     QString      s = m_tco->name();
     RenameDialog rename_dlg(s);
@@ -791,12 +787,12 @@ void TrackContentObjectView::changeName()
     m_tco->setName(s);
 }
 
-void TrackContentObjectView::resetName()
+void TileView::resetName()
 {
     m_tco->setName(m_tco->track()->name());
 }
 
-void TrackContentObjectView::changeColor()
+void TileView::changeColor()
 {
     QColor new_color = QColorDialog::getColor(color());
 
@@ -812,8 +808,7 @@ void TrackContentObjectView::changeColor()
         for(QVector<SelectableObject*>::iterator it = selected.begin();
             it != selected.end(); ++it)
         {
-            TrackContentObjectView* tcov
-                    = dynamic_cast<TrackContentObjectView*>(*it);
+            TileView* tcov = dynamic_cast<TileView*>(*it);
             if(tcov)
                 tcov->setColor(new_color);
         }
@@ -822,7 +817,7 @@ void TrackContentObjectView::changeColor()
         setColor(new_color);
 }
 
-void TrackContentObjectView::resetColor()
+void TileView::resetColor()
 {
     if(isSelected())
     {
@@ -831,8 +826,7 @@ void TrackContentObjectView::resetColor()
         for(QVector<SelectableObject*>::iterator it = selected.begin();
             it != selected.end(); ++it)
         {
-            TrackContentObjectView* tcov
-                    = dynamic_cast<TrackContentObjectView*>(*it);
+            TileView* tcov = dynamic_cast<TileView*>(*it);
             if(tcov)
                 tcov->setUseStyleColor(true);
         }
@@ -843,60 +837,60 @@ void TrackContentObjectView::resetColor()
     // BBTrack::clearLastTCOColor();
 }
 
-bool TrackContentObjectView::isFixed() const
+bool TileView::isFixed() const
 {
     return m_tco->isFixed();
 }
 
-/*! \brief How many pixels a tact (bar) takes for this trackContentObjectView.
+/*! \brief How many pixels a tact (bar) takes for this TileView.
  *
  * \return the number of pixels per tact (bar).
  */
-real_t TrackContentObjectView::pixelsPerTact() const
+real_t TileView::pixelsPerTact() const
 {
     return m_trackView->pixelsPerTact();
 }
 
-bool TrackContentObjectView::useStyleColor() const
+bool TileView::useStyleColor() const
 {
     return m_tco->useStyleColor();
 }
 
-void TrackContentObjectView::setUseStyleColor(bool _use)
+void TileView::setUseStyleColor(bool _use)
 {
     if(_use != m_tco->useStyleColor())
     {
         m_tco->setUseStyleColor(_use);
-        Engine::getSong()->setModified();
+        Engine::song()->setModified();
         update();
     }
 }
 
-QColor TrackContentObjectView::color() const
+QColor TileView::color() const
 {
     return m_tco->color();
 }
 
-void TrackContentObjectView::setColor(const QColor& new_color)
+void TileView::setColor(const QColor& new_color)
 {
     if(new_color != m_tco->color())
     {
         m_tco->setColor(new_color);
         m_tco->setUseStyleColor(false);
-        Engine::getSong()->setModified();
+        Engine::song()->setModified();
         update();
     }
     // BBTrack::setLastTCOColor( new_color );
 }
 
-/*! \brief Updates a trackContentObjectView's length
+/*! \brief Updates a TileView's length
  *
  *  If this track content object view has a fixed TCO, then we must
  *  keep the width of our parent.  Otherwise, calculate our width from
  *  the track content object's length in pixels adding in the border.
  *
  */
-void TrackContentObjectView::updateLength()
+void TileView::updateLength()
 {
     // if( fixedTCOs() )
     //{
@@ -913,14 +907,14 @@ void TrackContentObjectView::updateLength()
     m_trackView->trackContainerView()->update();
 }
 
-/*! \brief Updates a trackContentObjectView's position.
+/*! \brief Updates a TileView's position.
  *
  *  Ask our track view to change our position.  Then make sure that the
  *  track view is updated in case this position has changed the track
  *  view's length.
  *
  */
-void TrackContentObjectView::updatePosition()
+void TileView::updatePosition()
 {
     m_trackView->getTrackContentWidget()->changePosition();
     // moving a TCO can result in change of song-length etc.,
@@ -930,7 +924,7 @@ void TrackContentObjectView::updatePosition()
     update();
 }
 
-/*! \brief Change the trackContentObjectView's display when something
+/*! \brief Change the TileView's display when something
  *  being dragged enters it.
  *
  *  We need to notify Qt to change our display if something being
@@ -938,7 +932,7 @@ void TrackContentObjectView::updatePosition()
  *
  * \param dee The QDragEnterEvent to watch.
  */
-void TrackContentObjectView::dragEnterEvent(QDragEnterEvent* dee)
+void TileView::dragEnterEvent(QDragEnterEvent* dee)
 {
     if(m_tco->track()->isFrozen())
     {
@@ -960,16 +954,16 @@ void TrackContentObjectView::dragEnterEvent(QDragEnterEvent* dee)
     }
 }
 
-/*! \brief Handle something being dropped on this trackContentObjectView.
+/*! \brief Handle something being dropped on this TileView.
  *
- *  When something has been dropped on this trackContentObjectView, and
+ *  When something has been dropped on this TileView, and
  *  it's a track content object, then use an instance of our dataFile reader
  *  to take the xml of the track content object and turn it into something
  *  we can write over our current state.
  *
  * \param de The QDropEvent to handle.
  */
-void TrackContentObjectView::dropEvent(QDropEvent* de)
+void TileView::dropEvent(QDropEvent* de)
 {
     if(m_tco->track()->isFrozen())
     {
@@ -1005,8 +999,7 @@ void TrackContentObjectView::dropEvent(QDropEvent* de)
 
     // Don't allow pasting a tco into itself.
     QObject* qwSource = de->source();
-    if(qwSource != nullptr
-       && dynamic_cast<TrackContentObjectView*>(qwSource) == this)
+    if(qwSource != nullptr && dynamic_cast<TileView*>(qwSource) == this)
     {
         de->ignore();
         return;
@@ -1026,7 +1019,7 @@ void TrackContentObjectView::dropEvent(QDropEvent* de)
  *
  * \param e The QEvent to watch.
  */
-void TrackContentObjectView::leaveEvent(QEvent* _le)
+void TileView::leaveEvent(QEvent* _le)
 {
     Editor::resetOverrideCursor();
 
@@ -1042,24 +1035,24 @@ void TrackContentObjectView::leaveEvent(QEvent* _le)
 }
 
 /*! \brief Create a DataFile suitable for copying multiple
- *trackContentObjects.
+ *Tiles.
  *
- *	trackContentObjects in the vector are written to the "tcos" node in
- *the DataFile.  The trackContentObjectView's initial mouse position is
+ *	Tiles in the vector are written to the "tcos" node in
+ *the DataFile.  The TileView's initial mouse position is
  *written to the "initialMouseX" node in the DataFile.  When dropped on a
  *track, this is used to create copies of the TCOs.
  *
  * \param tcos The trackContectObjects to save in a DataFile
  */
-DataFile TrackContentObjectView::createTCODataFiles(
-        const QVector<TrackContentObjectView*>& tcoViews) const
+DataFile
+        TileView::createTCODataFiles(const QVector<TileView*>& tcoViews) const
 {
     Track*          t  = m_trackView->track();
     TrackContainer* tc = t->trackContainer();
     DataFile        dataFile(DataFile::DragNDropData);
     QDomElement     tcoParent = dataFile.createElement("tcos");
 
-    typedef QVector<TrackContentObjectView*> tcoViewVector;
+    typedef QVector<TileView*> tcoViewVector;
     for(tcoViewVector::const_iterator it = tcoViews.begin();
         it != tcoViews.end(); ++it)
     {
@@ -1078,7 +1071,7 @@ DataFile TrackContentObjectView::createTCODataFiles(
     if(initialTrackIndex < 0)
     {
         qCritical(
-                "TrackContentObjectView::createTCODataFiles: "
+                "TileView::createTCODataFiles: "
                 "Fail to find selected track in the TrackContainer");
         return dataFile;
     }
@@ -1093,14 +1086,14 @@ DataFile TrackContentObjectView::createTCODataFiles(
     return dataFile;
 }
 
-void TrackContentObjectView::paintTileLoop(QPainter& p)
+void TileView::paintTileLoop(QPainter& p)
 {
     const Track* t = m_tco->track();
     const int    n = t->currentLoop();
     if(n < 0 || n >= TimeLineWidget::NB_LOOPS)
         return;
 
-    const Song*           song = Engine::getSong();
+    const Song*           song = Engine::song();
     const TimeLineWidget* tl
             = song->getPlayPos(Song::Mode_PlaySong).m_timeLine;
     if(tl == nullptr)
@@ -1130,9 +1123,9 @@ void TrackContentObjectView::paintTileLoop(QPainter& p)
     p.fillRect(xstart, yc + 1, wc, 5, bg);
 }
 
-void TrackContentObjectView::paintTextLabel(QString const& text,
-                                            const QColor&  c,
-                                            QPainter&      p)
+void TileView::paintTextLabel(QString const& text,
+                              const QColor&  c,
+                              QPainter&      p)
 {
     if(text.trimmed() == "")
         return;
@@ -1165,10 +1158,10 @@ void TrackContentObjectView::paintTextLabel(QString const& text,
     p.setRenderHints(QPainter::Antialiasing, false);
 }
 
-void TrackContentObjectView::paintTileBorder(const bool    current,
-                                             const bool    ghost,
-                                             const QColor& c,
-                                             QPainter&     p)
+void TileView::paintTileBorder(const bool    current,
+                               const bool    ghost,
+                               const QColor& c,
+                               QPainter&     p)
 {
     if(TCO_BORDER_WIDTH > 0)
     {
@@ -1194,11 +1187,11 @@ void TrackContentObjectView::paintTileBorder(const bool    current,
     }
 }
 
-void TrackContentObjectView::paintTileTacts(const bool    current,
-                                            tact_t        nbt,
-                                            tick_t        tpg,
-                                            const QColor& c,
-                                            QPainter&     p)
+void TileView::paintTileTacts(const bool    current,
+                              tact_t        nbt,
+                              tick_t        tpg,
+                              const QColor& c,
+                              QPainter&     p)
 {
     p.setRenderHints(QPainter::Antialiasing, true);
 
@@ -1231,7 +1224,7 @@ void TrackContentObjectView::paintTileTacts(const bool    current,
     p.setRenderHints(QPainter::Antialiasing, false);
 }
 
-void TrackContentObjectView::paintMutedIcon(const bool muted, QPainter& p)
+void TileView::paintMutedIcon(const bool muted, QPainter& p)
 {
     if(muted)
     {
@@ -1242,7 +1235,7 @@ void TrackContentObjectView::paintMutedIcon(const bool muted, QPainter& p)
     }
 }
 
-void TrackContentObjectView::paintFrozenIcon(const bool frozen, QPainter& p)
+void TileView::paintFrozenIcon(const bool frozen, QPainter& p)
 {
     if(frozen)
     {
@@ -1256,9 +1249,9 @@ void TrackContentObjectView::paintFrozenIcon(const bool frozen, QPainter& p)
     }
 }
 
-/*! \brief Handle a mouse press on this trackContentObjectView.
+/*! \brief Handle a mouse press on this TileView.
  *
- *  Handles the various ways in which a trackContentObjectView can be
+ *  Handles the various ways in which a TileView can be
  *  used with a click of a mouse button.
  *
  *  * If our container supports rubber band selection then handle
@@ -1271,7 +1264,7 @@ void TrackContentObjectView::paintFrozenIcon(const bool frozen, QPainter& p)
  *
  * \param me The QMouseEvent to handle.
  */
-void TrackContentObjectView::mousePressEvent(QMouseEvent* me)
+void TileView::mousePressEvent(QMouseEvent* me)
 {
     if(m_tco->track()->isFrozen())
     {
@@ -1291,17 +1284,18 @@ void TrackContentObjectView::mousePressEvent(QMouseEvent* me)
             else
             {
                 gui->songWindow()->m_editor->selectAllTcos(false);
-                QVector<TrackContentObjectView*> tcoViews;
+                QVector<TileView*> tcoViews;
                 tcoViews.push_back(this);
-                DataFile dataFile  = createTCODataFiles(tcoViews);
-                QPixmap  thumbnail = grab();
+                QString data = createTCODataFiles(tcoViews)
+                                       .toString();  // DataFile dataFile
+                QPixmap thumbnail = grab();
                 if((thumbnail.width() > 128) || (thumbnail.height() > 128))
                     thumbnail
                             = thumbnail.scaled(128, 128, Qt::KeepAspectRatio,
                                                Qt::SmoothTransformation);
                 new StringPairDrag(
-                        QString("tco_%1").arg(m_tco->track()->type()),
-                        dataFile.toString(), thumbnail, this);
+                        QString("tco_%1").arg(m_tco->track()->type()), data,
+                        thumbnail, this);
             }
         }
         else if(isSelected())
@@ -1416,9 +1410,9 @@ void TrackContentObjectView::mousePressEvent(QMouseEvent* me)
     }
 }
 
-/*! \brief Handle a mouse movement (drag) on this trackContentObjectView.
+/*! \brief Handle a mouse movement (drag) on this TileView.
  *
- *  Handles the various ways in which a trackContentObjectView can be
+ *  Handles the various ways in which a TileView can be
  *  used with a mouse drag.
  *
  *  * If in move mode, move ourselves in the track,
@@ -1429,7 +1423,7 @@ void TrackContentObjectView::mousePressEvent(QMouseEvent* me)
  * \param me The QMouseEvent to handle.
  * \todo what does the final else case do here?
  */
-void TrackContentObjectView::mouseMoveEvent(QMouseEvent* me)
+void TileView::mouseMoveEvent(QMouseEvent* me)
 {
     if(m_tco->track()->isFrozen())
     {
@@ -1446,14 +1440,13 @@ void TrackContentObjectView::mouseMoveEvent(QMouseEvent* me)
             m_action = NoAction;
 
             // Collect all selected TCOs
-            QVector<TrackContentObjectView*> tcoViews;
-            QVector<SelectableObject*>       so
+            QVector<TileView*>         tcoViews;
+            QVector<SelectableObject*> so
                     = m_trackView->trackContainerView()->selectedObjects();
             for(QVector<SelectableObject*>::iterator it = so.begin();
                 it != so.end(); ++it)
             {
-                TrackContentObjectView* tcov
-                        = dynamic_cast<TrackContentObjectView*>(*it);
+                TileView* tcov = dynamic_cast<TileView*>(*it);
                 if(tcov != nullptr)
                 {
                     tcoViews.push_back(tcov);
@@ -1461,7 +1454,8 @@ void TrackContentObjectView::mouseMoveEvent(QMouseEvent* me)
             }
 
             // Write the TCOs to the DataFile for copying
-            DataFile dataFile = createTCODataFiles(tcoViews);
+            QString data = createTCODataFiles(tcoViews)
+                                   .toString();  // DataFile dataFile
 
             // TODO -- thumbnail for all selected
             QPixmap thumbnail = grab();
@@ -1469,7 +1463,7 @@ void TrackContentObjectView::mouseMoveEvent(QMouseEvent* me)
                 thumbnail = thumbnail.scaled(128, 128, Qt::KeepAspectRatio,
                                              Qt::SmoothTransformation);
             new StringPairDrag(QString("tco_%1").arg(m_tco->track()->type()),
-                               dataFile.toString(), thumbnail, this);
+                               data, thumbnail, this);
         }
     }
 
@@ -1556,7 +1550,7 @@ void TrackContentObjectView::mouseMoveEvent(QMouseEvent* me)
         if(delta == 0)
             return;
 
-        QVector<TrackContentObject*> tcos;
+        QVector<Tile*> tcos;
         // MidiTime::ticksPerTact()
         // find out smallest position of all selected objects for not
         // moving an object before zero
@@ -1565,12 +1559,11 @@ void TrackContentObjectView::mouseMoveEvent(QMouseEvent* me)
         for(QVector<SelectableObject*>::iterator it = so.begin();
             it != so.end(); ++it)
         {
-            TrackContentObjectView* tcov
-                    = dynamic_cast<TrackContentObjectView*>(*it);
+            TileView* tcov = dynamic_cast<TileView*>(*it);
             if(tcov == nullptr)
                 continue;
 
-            TrackContentObject* tco = tcov->m_tco;
+            Tile* tco = tcov->m_tco;
             tcos.push_back(tco);
             tick_t p = tco->startPosition();
             if(first || smallest_pos > p)
@@ -1591,8 +1584,8 @@ void TrackContentObjectView::mouseMoveEvent(QMouseEvent* me)
         // qInfo("q=%d delta=%d sp=%d", q, delta, smallest_pos);
         if(delta == 0)
             return;
-        for(QVector<TrackContentObject*>::iterator it = tcos.begin();
-            it != tcos.end(); ++it)
+        for(QVector<Tile*>::iterator it = tcos.begin(); it != tcos.end();
+            ++it)
         {
             tick_t t = (*it)->startPosition() + delta;
             (*it)->movePosition(t);
@@ -1725,14 +1718,14 @@ void TrackContentObjectView::mouseMoveEvent(QMouseEvent* me)
     }
 }
 
-/*! \brief Handle a mouse release on this trackContentObjectView.
+/*! \brief Handle a mouse release on this TileView.
  *
  *  If we're in move or resize mode, journal the change as appropriate.
  *  Then tidy up.
  *
  * \param me The QMouseEvent to handle.
  */
-void TrackContentObjectView::mouseReleaseEvent(QMouseEvent* me)
+void TileView::mouseReleaseEvent(QMouseEvent* me)
 {
     Editor::resetOverrideCursor();
 
@@ -1767,14 +1760,14 @@ void TrackContentObjectView::mouseReleaseEvent(QMouseEvent* me)
     SelectableObject::mouseReleaseEvent(me);
 }
 
-/*! \brief Set up the context menu for this trackContentObjectView.
+/*! \brief Set up the context menu for this TileView.
  *
  *  Set up the various context menu events that can apply to a
  *  track content object view.
  *
  * \param cme The QContextMenuEvent to add the actions to.
  */
-void TrackContentObjectView::contextMenuEvent(QContextMenuEvent* _cme)
+void TileView::contextMenuEvent(QContextMenuEvent* _cme)
 {
     if(m_tco->track()->isFrozen())
     {
@@ -1818,10 +1811,10 @@ void TrackContentObjectView::contextMenuEvent(QContextMenuEvent* _cme)
     */
 }
 
-void TrackContentObjectView::addRemoveMuteClearMenu(QMenu* _cm,
-                                                    bool   _remove,
-                                                    bool   _mute,
-                                                    bool   _clear)
+void TileView::addRemoveMuteClearMenu(QMenu* _cm,
+                                      bool   _remove,
+                                      bool   _mute,
+                                      bool   _clear)
 {
     QAction* a;
     a = _cm->addAction(
@@ -1838,10 +1831,10 @@ void TrackContentObjectView::addRemoveMuteClearMenu(QMenu* _cm,
     a->setEnabled(_clear);
 }
 
-void TrackContentObjectView::addCutCopyPasteMenu(QMenu* _cm,
-                                                 bool   _cut,
-                                                 bool   _copy,
-                                                 bool   _paste)
+void TileView::addCutCopyPasteMenu(QMenu* _cm,
+                                   bool   _cut,
+                                   bool   _copy,
+                                   bool   _paste)
 {
     QAction* a;
     a = _cm->addAction(embed::getIcon("edit_cut"), tr("Cut"), this,
@@ -1855,7 +1848,7 @@ void TrackContentObjectView::addCutCopyPasteMenu(QMenu* _cm,
     a->setEnabled(_paste);
 }
 
-void TrackContentObjectView::addSplitMenu(QMenu* _cm, bool _one, bool _four)
+void TileView::addSplitMenu(QMenu* _cm, bool _one, bool _four)
 {
     QMenu* sms = new QMenu(tr("Split"));
 
@@ -1871,7 +1864,7 @@ void TrackContentObjectView::addSplitMenu(QMenu* _cm, bool _one, bool _four)
     _cm->addMenu(sms);
 }
 
-void TrackContentObjectView::addFlipMenu(QMenu* _cm, bool _x, bool _y)
+void TileView::addFlipMenu(QMenu* _cm, bool _x, bool _y)
 {
     QAction* a;
     a = _cm->addAction(embed::getIcon("flip_x"), tr("Flip horizontally"),
@@ -1882,10 +1875,7 @@ void TrackContentObjectView::addFlipMenu(QMenu* _cm, bool _x, bool _y)
     a->setEnabled(_y);
 }
 
-void TrackContentObjectView::addRotateMenu(QMenu* _cm,
-                                           bool   _bar,
-                                           bool   _beat,
-                                           bool   _step)
+void TileView::addRotateMenu(QMenu* _cm, bool _bar, bool _beat, bool _step)
 {
     QMenu* smrl = new QMenu(tr("Rotate left"));
     QMenu* smrr = new QMenu(tr("Rotate right"));
@@ -1916,10 +1906,7 @@ void TrackContentObjectView::addRotateMenu(QMenu* _cm,
     _cm->addMenu(smrr);
 }
 
-void TrackContentObjectView::addStepMenu(QMenu* _cm,
-                                         bool   _bar,
-                                         bool   _beat,
-                                         bool   _step)
+void TileView::addStepMenu(QMenu* _cm, bool _bar, bool _beat, bool _step)
 {
     QMenu* sma = new QMenu(tr("Add steps"));
     QMenu* smr = new QMenu(tr("Remove steps"));
@@ -1977,9 +1964,7 @@ void TrackContentObjectView::addStepMenu(QMenu* _cm,
     _cm->addMenu(sme);
 }
 
-void TrackContentObjectView::addPropertiesMenu(QMenu* _cm,
-                                               bool   _resize,
-                                               bool   _repeat)
+void TileView::addPropertiesMenu(QMenu* _cm, bool _resize, bool _repeat)
 {
     QAction* a;
     // embed::getIcon("zoom_x"),
@@ -1994,7 +1979,7 @@ void TrackContentObjectView::addPropertiesMenu(QMenu* _cm,
     a->setEnabled(_repeat);
 }
 
-void TrackContentObjectView::addNameMenu(QMenu* _cm, bool _enabled)
+void TileView::addNameMenu(QMenu* _cm, bool _enabled)
 {
     QAction* a;
     a = _cm->addAction(embed::getIcon("edit_rename"), tr("Change name"), this,
@@ -2005,7 +1990,7 @@ void TrackContentObjectView::addNameMenu(QMenu* _cm, bool _enabled)
     a->setEnabled(_enabled);
 }
 
-void TrackContentObjectView::addColorMenu(QMenu* _cm, bool _enabled)
+void TileView::addColorMenu(QMenu* _cm, bool _enabled)
 {
     QAction* a;
     a = _cm->addAction(embed::getIcon("colorize"), tr("Change color"), this,
@@ -2022,7 +2007,7 @@ void TrackContentObjectView::addColorMenu(QMenu* _cm, bool _enabled)
  * \param distance The threshold distance that the mouse has moved to return
  * true.
  */
-bool TrackContentObjectView::mouseMovedDistance(QMouseEvent* me, int distance)
+bool TileView::mouseMovedDistance(QMouseEvent* me, int distance)
 {
     QPoint    dPos        = mapToGlobal(me->pos()) - m_initialMouseGlobalPos;
     const int pixelsMoved = dPos.manhattanLength();
@@ -2079,7 +2064,7 @@ void TrackContentWidget::updateBackground()
 {
     /*
     //const int tactsPerBar = 4;
-    const int tactsPerBar=Engine::getSong()->getTimeSigModel().getNumerator();
+    const int tactsPerBar=Engine::song()->getTimeSigModel().getNumerator();
     const TrackContainerView * tcv = m_trackView->trackContainerView();
 
     // Assume even-pixels-per-tact. Makes sense, should be like this anyways
@@ -2118,16 +2103,16 @@ void TrackContentWidget::updateBackground()
     update();
 }
 
-/*! \brief Adds a trackContentObjectView to this widget.
+/*! \brief Adds a TileView to this widget.
  *
- *  Adds a(nother) trackContentObjectView to our list of views.  We also
+ *  Adds a(nother) TileView to our list of views.  We also
  *  check that our position is up-to-date.
  *
- * \param tcov The trackContentObjectView to add.
+ * \param tcov The TileView to add.
  */
-void TrackContentWidget::addTCOView(TrackContentObjectView* tcov)
+void TrackContentWidget::addTCOView(TileView* tcov)
 {
-    TrackContentObject* tco = tcov->getTrackContentObject();
+    Tile* tco = tcov->getTile();
 
     m_tcoViews.push_back(tcov);
 
@@ -2136,20 +2121,20 @@ void TrackContentWidget::addTCOView(TrackContentObjectView* tcov)
     tco->restoreJournallingState();
 }
 
-/*! \brief Removes the given trackContentObjectView to this widget.
+/*! \brief Removes the given TileView to this widget.
  *
- *  Removes the given trackContentObjectView from our list of views.
+ *  Removes the given TileView from our list of views.
  *
- * \param tcov The trackContentObjectView to add.
+ * \param tcov The TileView to add.
  */
-void TrackContentWidget::removeTCOView(TrackContentObjectView* tcov)
+void TrackContentWidget::removeTCOView(TileView* tcov)
 {
     tcoViewVector::iterator it
             = qFind(m_tcoViews.begin(), m_tcoViews.end(), tcov);
     if(it != m_tcoViews.end())
     {
         m_tcoViews.erase(it);
-        Engine::getSong()->setModified();
+        Engine::song()->setModified();
     }
 }
 
@@ -2185,8 +2170,7 @@ void TrackContentWidget::changePosition(const MidiTime& newPos)
         for(tcoViewVector::iterator it = m_tcoViews.begin();
             it != m_tcoViews.end(); ++it)
         {
-            if((*it)->getTrackContentObject()->startPosition().getTact()
-               == curBB)
+            if((*it)->getTile()->startPosition().getTact() == curBB)
             {
                 (*it)->move(0, (*it)->y());
                 (*it)->raise();
@@ -2201,8 +2185,7 @@ void TrackContentWidget::changePosition(const MidiTime& newPos)
         for(tcoViewVector::iterator it = m_tcoViews.begin();
             it != m_tcoViews.end(); ++it)
         {
-            if((*it)->getTrackContentObject()->startPosition().getTact()
-               != curBB)
+            if((*it)->getTile()->startPosition().getTact() != curBB)
             {
                 (*it)->hide();
             }
@@ -2225,8 +2208,8 @@ void TrackContentWidget::changePosition(const MidiTime& newPos)
     for(tcoViewVector::iterator it = m_tcoViews.begin();
         it != m_tcoViews.end(); ++it)
     {
-        TrackContentObjectView* tcov = *it;
-        TrackContentObject*     tco  = tcov->getTrackContentObject();
+        TileView* tcov = *it;
+        Tile*     tco  = tcov->getTile();
 
         tco->changeLength(tco->length());
 
@@ -2419,7 +2402,7 @@ bool TrackContentWidget::pasteSelection(MidiTime tcoPos, QDropEvent* de)
         MidiTime delta   = offset + (oldTact - grabbedTCOTact);
         MidiTime pos     = tcoPos + delta;
 
-        TrackContentObject* tco = t->createTCO(pos);
+        Tile* tco = t->createTCO(pos);
         tco->restoreState(tcoElement);
         tco->movePosition(pos);
         if(wasSelection)
@@ -2502,8 +2485,8 @@ void TrackContentWidget::mousePressEvent(QMouseEvent* me)
         t->saveJournallingState(false);
 
         MidiTime pos = MidiTime(getPosition(me->pos().x()).getTact(), 0);
-        TrackContentObject* tco = t->createTCO(pos);
-        QString             nn  = tco->nodeName();
+        Tile*    tco = t->createTCO(pos);
+        QString  nn  = tco->nodeName();
 
         tco->saveJournallingState(false);
         bool ok = Selection::has(nn);
@@ -2551,7 +2534,7 @@ void TrackContentWidget::mousePressEvent(QMouseEvent* me)
         track()->addJournalCheckPoint();
         const MidiTime pos
                 = getPosition(me->x()).getTact() * MidiTime::ticksPerTact();
-        TrackContentObject* tco = track()->createTCO(pos);
+        Tile* tco = track()->createTCO(pos);
 
         tco->saveJournallingState(false);
         tco->movePosition(pos);
@@ -2602,7 +2585,7 @@ void TrackContentWidget::paintLoop(QPainter&       p,
     if(n < 0 || n >= TimeLineWidget::NB_LOOPS)
         return;
 
-    const Song*           song = Engine::getSong();
+    const Song*           song = Engine::song();
     const TimeLineWidget* tl
             = song->getPlayPos(Song::Mode_PlaySong).m_timeLine;
     if(tl == nullptr)
@@ -2975,18 +2958,17 @@ void TrackOperationsWidget::paintEvent(QPaintEvent* pe)
  */
 void TrackOperationsWidget::cloneTrack()
 {
-    TrackContainerView* tcView = m_trackView->trackContainerView();
-
-    Track*     newTrack     = m_trackView->track()->clone();
-    TrackView* newTrackView = tcView->createTrackView(newTrack);
-
-    int index = tcView->trackViews().indexOf(m_trackView);
-    int i     = tcView->trackViews().size();
-    while(i != index + 1)
+    TrackContainerView* tcView       = m_trackView->trackContainerView();
+    Track*              newTrack     = m_trackView->track()->clone();
+    TrackView*          newTrackView = tcView->createTrackView(newTrack);
+    int                 index = tcView->trackViews().indexOf(m_trackView);
+    int                 i     = tcView->trackViews().size();
+    while(i > index + 1)
     {
         tcView->moveTrackView(newTrackView, i - 1);
         i--;
     }
+    // tcView->moveTrackView(newTrackView,index);
 
     if(newTrack->isSolo())
         newTrack->setSolo(false);
@@ -2995,6 +2977,52 @@ void TrackOperationsWidget::cloneTrack()
     if(newTrack->isClipping())
         newTrack->setClipping(false);
     newTrack->cleanFrozenBuffer();
+}
+
+/*! \brief Clone this track but without the tiles
+ *
+ */
+void TrackOperationsWidget::spawnTrack()
+{
+    TrackContainerView* tcView       = m_trackView->trackContainerView();
+    Track*              newTrack     = m_trackView->track()->clone();
+    TrackView*          newTrackView = tcView->createTrackView(newTrack);
+    int                 index = tcView->trackViews().indexOf(m_trackView);
+    int                 i     = tcView->trackViews().size();
+    while(i > index + 1)
+    {
+        tcView->moveTrackView(newTrackView, i - 1);
+        i--;
+    }
+    // tcView->moveTrackView(newTrackView,index);
+
+    if(newTrack->isSolo())
+        newTrack->setSolo(false);
+    if(newTrack->isFrozen())
+        newTrack->setFrozen(false);
+    if(newTrack->isClipping())
+        newTrack->setClipping(false);
+    newTrack->cleanFrozenBuffer();
+
+    QCoreApplication::sendPostedEvents();
+
+    newTrack->lockTrack();
+    newTrack->deleteTCOs();
+    if(newTrack->trackContainer() == Engine::getBBTrackContainer())
+        newTrack->createTCOsForBB(Engine::getBBTrackContainer()->numOfBBs()
+                                  - 1);
+    newTrack->unlockTrack();
+}
+
+/*! \brief Clear this track - clears all TCOs from the track */
+void TrackOperationsWidget::clearTrack()
+{
+    Track* t = m_trackView->track();
+    t->lockTrack();
+    t->deleteTCOs();
+    if(t->trackContainer() == Engine::getBBTrackContainer())
+        t->createTCOsForBB(Engine::getBBTrackContainer()->numOfBBs() - 1);
+    t->unlockTrack();
 }
 
 /*! \brief Split the beat
@@ -3083,8 +3111,8 @@ void TrackOperationsWidget::isolateTrack()
 
         // qInfo("TrackOperationsWidget::isolateTrack clear all notes in
         // %s",qPrintable(t->name()));
-        TrackContentObject* o = t->getTCO(newidxbb);
-        // for(TrackContentObject* o : t->getTCOs(idxbb))
+        Tile* o = t->getTCO(newidxbb);
+        // for(Tile* o : t->getTCOs(idxbb))
         {
             Pattern* p = dynamic_cast<Pattern*>(o);  // static
             if(!p)
@@ -3097,17 +3125,6 @@ void TrackOperationsWidget::isolateTrack()
     }
 
     bbtc->setCurrentBB(oldidxbb);
-}
-
-/*! \brief Clear this track - clears all TCOs from the track */
-void TrackOperationsWidget::clearTrack()
-{
-    Track* t = m_trackView->track();
-    t->lock();
-    t->deleteTCOs();
-    if(t->trackContainer() == Engine::getBBTrackContainer())
-        t->createTCOsForBB(Engine::getBBTrackContainer()->numOfBBs() - 1);
-    t->unlock();
 }
 
 void TrackOperationsWidget::changeName()
@@ -3145,8 +3162,8 @@ void TrackOperationsWidget::changeColor()
                          selected.begin();
                  it != selected.end(); ++it )
             {
-                    TrackContentObjectView* tcov=
-                            dynamic_cast<TrackContentObjectView*>( *it );
+                    TileView* tcov=
+                            dynamic_cast<TileView*>( *it );
                     if( tcov )
                             tcov->setColor( new_color );
             }
@@ -3157,7 +3174,7 @@ void TrackOperationsWidget::changeColor()
     {
         t->setColor(new_color);
         t->setUseStyleColor(false);
-        Engine::getSong()->setModified();
+        Engine::song()->setModified();
         m_trackView->update();
     }
 }
@@ -3175,8 +3192,8 @@ void TrackOperationsWidget::resetColor()
                          selected.begin();
                  it != selected.end(); ++it )
             {
-                    TrackContentObjectView* tcov=
-                            dynamic_cast<TrackContentObjectView*>( *it );
+                    TileView* tcov=
+                            dynamic_cast<TileView*>( *it );
                     if( tcov )
                             tcov->setUseStyleColor(true);
             }
@@ -3187,7 +3204,7 @@ void TrackOperationsWidget::resetColor()
     if(!t->useStyleColor())
     {
         t->setUseStyleColor(true);
-        Engine::getSong()->setModified();
+        Engine::song()->setModified();
         m_trackView->update();
     }
 
@@ -3300,8 +3317,11 @@ void TrackOperationsWidget::updateMenu()
 {
     QMenu* toMenu = m_trackOps->menu();
     toMenu->clear();
-    toMenu->addAction(embed::getIcon("edit_copy", 16, 16),
+    toMenu->addAction(embed::getIcon("clone", 16, 16),
                       tr("Clone this track"), this, SLOT(cloneTrack()));
+    toMenu->addAction(embed::getIcon("clone", 16, 16),
+                      tr("Spawn this track"), this, SLOT(spawnTrack()));
+
     if(!m_trackView->trackContainerView()->fixedTCOs())
     {
         if(m_trackView->track()->type() == Track::BBTrack)
@@ -3341,8 +3361,8 @@ void TrackOperationsWidget::recordingOn()
             = dynamic_cast<AutomationTrackView*>(m_trackView);
     if(atv)
     {
-        const Track::tcoVector& tcov = atv->track()->getTCOs();
-        for(Track::tcoVector::const_iterator it = tcov.begin();
+        const Tiles& tcov = atv->track()->getTCOs();
+        for(Tiles::const_iterator it = tcov.begin();
             it != tcov.end(); ++it)
         {
             AutomationPattern* ap = dynamic_cast<AutomationPattern*>(*it);
@@ -3361,8 +3381,8 @@ void TrackOperationsWidget::recordingOff()
             = dynamic_cast<AutomationTrackView*>(m_trackView);
     if(atv)
     {
-        const Track::tcoVector& tcov = atv->track()->getTCOs();
-        for(Track::tcoVector::const_iterator it = tcov.begin();
+        const Tiles& tcov = atv->track()->getTCOs();
+        for(Tiles::const_iterator it = tcov.begin();
             it != tcov.end(); ++it)
         {
             AutomationPattern* ap = dynamic_cast<AutomationPattern*>(*it);
@@ -3405,7 +3425,8 @@ Track::Track(TrackType type, TrackContainer* tc) :
       m_name(),             /*!< The track's name */
       m_color(Qt::white), m_useStyleColor(true), m_currentLoop(-1),
       m_simpleSerializingMode(false),
-      m_trackContentObjects() /*!< The track content objects (segments) */
+      m_tiles(), /*!< The track content objects (segments) */
+      m_processingLock("Track::m_processingLock", QMutex::Recursive, false)
 {
     m_trackContainer->addTrack(this);
     m_height = -1;
@@ -3421,22 +3442,24 @@ Track::Track(TrackType type, TrackContainer* tc) :
  *  If the track container is a Beat+Bassline container, step through
  *  its list of tracks and remove us.
  *
- *  Then delete the TrackContentObject's contents, remove this track from
+ *  Then delete the Tile's contents, remove this track from
  *  the track container.
  *
  *  Finally step through this track's automation and forget all of them.
  */
 Track::~Track()
 {
-    qInfo("Track::~Track 1 [%s]", qPrintable(name()));
+    qInfo("Track::~Track 0 [%s]", qPrintable(name()));
+    // setMuted(true);  // <-- DEBUG
+    lockTrack();
+    qInfo("Track::~Track 1");
     clearAllTrackPlayHandles();
-    lock();
     emit destroyedTrack();
     qInfo("Track::~Track 2");
     deleteTCOs();
     qInfo("Track::~Track 3");
     m_trackContainer->removeTrack(this);
-    unlock();
+    unlockTrack();
     qInfo("Track::~Track 4");
 }
 
@@ -3444,7 +3467,7 @@ QString Track::objectName() const
 {
     QString r = QObject::objectName();
     if(r.isEmpty())
-        r=QString("track%1").arg(trackIndex());
+        r = QString("track%1").arg(trackIndex());
     return r;
 }
 
@@ -3563,7 +3586,7 @@ Track* Track::clone()
 /*! \brief Save this track's settings to file
  *
  *  We save the track type and its muted state and solo state, then append the
- * track- specific settings.  Then we iterate through the trackContentObjects
+ * track- specific settings.  Then we iterate through the Tiles
  *  and save all their states in turn.
  *
  *  \param doc The QDomDocument to use to save
@@ -3610,8 +3633,7 @@ void Track::saveSettings(QDomDocument& doc, QDomElement& element)
     }
 
     // now save settings of all TCO's
-    for(tcoVector::const_iterator it = m_trackContentObjects.begin();
-        it != m_trackContentObjects.end(); ++it)
+    for(Tiles::const_iterator it = m_tiles.begin(); it != m_tiles.end(); ++it)
     {
         (*it)->saveState(doc, element);
     }
@@ -3620,10 +3642,10 @@ void Track::saveSettings(QDomDocument& doc, QDomElement& element)
 /*! \brief Load the settings from a file
  *
  *  We load the track's type and muted state and solo state, then clear out
- * our current TrackContentObject.
+ * our current Tile.
  *
  *  Then we step through the QDomElement's children and load the
- *  track-specific settings and trackContentObjects states from it
+ *  track-specific settings and Tiles states from it
  *  one at a time.
  *
  *  \param element the QDomElement to load track settings from
@@ -3682,10 +3704,10 @@ void Track::loadSettings(const QDomElement& element)
 
     deleteTCOs();
     /*
-    while(!m_trackContentObjects.empty())
+    while(!m_tiles.empty())
     {
-        delete m_trackContentObjects.front();
-        // m_trackContentObjects.erase( m_trackContentObjects.begin() );
+        delete m_tiles.front();
+        // m_tiles.erase( m_tiles.begin() );
     }
     */
 
@@ -3702,7 +3724,7 @@ void Track::loadSettings(const QDomElement& element)
                     && node.nodeName() != "frozen"
                     && !node.toElement().attribute("metadata").toInt())
             {
-                TrackContentObject* tco = createTCO(MidiTime(0));
+                Tile* tco = createTCO(MidiTime(0));
                 tco->restoreState(node.toElement());
                 saveJournallingState(false);
                 restoreJournallingState();
@@ -3730,52 +3752,52 @@ void Track::loadSettings(const QDomElement& element)
     // if(!isFrozen()) cleanFrozenBuffer();
 }
 
-/*! \brief Add another TrackContentObject into this track
+/*! \brief Add another Tile into this track
  *
- *  \param tco The TrackContentObject to attach to this track.
+ *  \param tco The Tile to attach to this track.
  */
-TrackContentObject* Track::addTCO(TrackContentObject* _tco)
+Tile* Track::addTCO(Tile* _tco)
 {
-    // qInfo("Track::addTCO tco=%p 'emit trackContentObjectAdded'", _tco);
-    if(!m_trackContentObjects.contains(_tco))
-        m_trackContentObjects.append(_tco);
+    // qInfo("Track::addTCO tco=%p 'emit tileAdded'", _tco);
+    if(!m_tiles.contains(_tco))
+        m_tiles.append(_tco);
     else
         qInfo("Track::addTCO tco was already added");
-    emit trackContentObjectAdded(_tco);
+    emit tileAdded(_tco);
 
     return _tco;  // just for convenience
 }
 
-/*! \brief Remove a given TrackContentObject from this track
+/*! \brief Remove a given Tile from this track
  *
- *  \param tco The TrackContentObject to remove from this track.
+ *  \param tco The Tile to remove from this track.
  */
-void Track::removeTCO(TrackContentObject* _tco)
+void Track::removeTCO(Tile* _tco)
 {
     /*
-      tcoVector::iterator it = qFind(m_trackContentObjects.begin(),
-      m_trackContentObjects.end(), tco);
-      if(it != m_trackContentObjects.end())
+      Tiles::iterator it = qFind(m_tiles.begin(),
+      m_tiles.end(), tco);
+      if(it != m_tiles.end())
       {
-      m_trackContentObjects.erase(it);
-      if(Engine::getSong())
+      m_tiles.erase(it);
+      if(Engine::song())
       {
-      Engine::getSong()->updateLength();
-      Engine::getSong()->setModified();
+      Engine::song()->updateLength();
+      Engine::song()->setModified();
       }
       }
     */
-    if(m_trackContentObjects.removeOne(_tco))
+    if(m_tiles.removeOne(_tco))
     {
-        Song* song = Engine::getSong();
+        Song* song = Engine::song();
         if(song)
         {
-            Engine::getSong()->updateLength();
-            Engine::getSong()->setModified();
+            Engine::song()->updateLength();
+            Engine::song()->setModified();
         }
 
         // tmp test
-        if(m_trackContentObjects.contains(_tco))
+        if(m_tiles.contains(_tco))
             qInfo("Track::removeTCO() tco was more than one");
     }
     else
@@ -3785,37 +3807,36 @@ void Track::removeTCO(TrackContentObject* _tco)
 /*! \brief Remove all TCOs from this track */
 void Track::deleteTCOs()
 {
-    while(!m_trackContentObjects.isEmpty())
-        delete m_trackContentObjects.first();
+    while(!m_tiles.isEmpty())
+        delete m_tiles.first();
 }
 
-/*! \brief Return the number of trackContentObjects we contain
+/*! \brief Return the number of Tiles we contain
  *
- *  \return the number of trackContentObjects we currently contain.
+ *  \return the number of Tiles we currently contain.
  */
 int Track::numOfTCOs() const
 {
-    return m_trackContentObjects.size();
+    // BACKTRACE
+    return m_tiles.size();
 }
 
-/*! \brief Get a TrackContentObject by number
+/*! \brief Get a Tile by number
  *
  *  If the TCO number is less than our TCO array size then fetch that
  *  numbered object from the array.  Otherwise we warn the user that
  *  we've somehow requested a TCO that is too large, and create a new
  *  TCO for them.
- *  \param tcoNum The number of the TrackContentObject to fetch.
- *  \return the given TrackContentObject or a new one if out of range.
+ *  \param tcoNum The number of the Tile to fetch.
+ *  \return the given Tile or a new one if out of range.
  *  \todo reject TCO numbers less than zero.
  *  \todo if we create a TCO here, should we somehow attach it to the
  *     track?
  */
-TrackContentObject* Track::getTCO(int tcoNum) const
+Tile* Track::getTCO(int tcoNum) const
 {
-    if(tcoNum < m_trackContentObjects.size())
-    {
-        return m_trackContentObjects[tcoNum];
-    }
+    if(tcoNum < m_tiles.size())
+        return m_tiles[tcoNum];
 
     BACKTRACE
     qCritical(
@@ -3825,17 +3846,17 @@ TrackContentObject* Track::getTCO(int tcoNum) const
     return nullptr;  // createTCO( tcoNum * MidiTime::ticksPerTact() );
 }
 
-/*! \brief Determine the given TrackContentObject's number in our array.
+/*! \brief Determine the given Tile's number in our array.
  *
- *  \param tco The TrackContentObject to search for.
+ *  \param tco The Tile to search for.
  *  \return its number in our array.
  */
-int Track::getTCONum(const TrackContentObject* tco) const
+int Track::getTCONum(const Tile* tco) const
 {
     //	for( int i = 0; i < getTrackContentWidget()->numOfTCOs(); ++i )
-    tcoVector::iterator it = const_cast<tcoVector::iterator>(qFind(
-            m_trackContentObjects.begin(), m_trackContentObjects.end(), tco));
-    if(it != m_trackContentObjects.end())
+    Tiles::iterator it = const_cast<Tiles::iterator>(
+            qFind(m_tiles.begin(), m_tiles.end(), tco));
+    if(it != m_tiles.end())
     {
         /*
           if( getTCO( i ) == _tco )
@@ -3843,28 +3864,28 @@ int Track::getTCONum(const TrackContentObject* tco) const
           return i;
           }
         */
-        return it - m_trackContentObjects.begin();
+        return it - m_tiles.begin();
     }
     qCritical("Track::getTCONum(...): TCO not found!\n");
     return 0;
 }
 
-/*! \brief Retrieve a list of trackContentObjects that fall within a period.
+/*! \brief Retrieve a list of Tiles that fall within a period.
  *
- *  Here we're interested in a range of trackContentObjects that intersect
+ *  Here we're interested in a range of Tiles that intersect
  *  the given time period.
  *
  *  We return the TCOs we find in order by time, earliest TCOs first.
  *
- *  \param tcoV The list to contain the found trackContentObjects.
+ *  \param tcoV The list to contain the found Tiles.
  *  \param start The MIDI start time of the range.
  *  \param end   The MIDI endi time of the range.
  */
-void Track::getTCOsInRange(tcoVector&      tcoV,
+void Track::getTCOsInRange(Tiles&          tcoV,
                            const MidiTime& start,
                            const MidiTime& end) const
 {
-    for(TrackContentObject* tco: m_trackContentObjects)
+    for(Tile* tco: m_tiles)
     {
         int s = tco->startPosition();
         int e = tco->endPosition();
@@ -3873,37 +3894,36 @@ void Track::getTCOsInRange(tcoVector&      tcoV,
             // TCO is within given range
             // Insert sorted by TCO's position
             tcoV.insert(std::upper_bound(tcoV.begin(), tcoV.end(), tco,
-                                         TrackContentObject::comparePosition),
+                                         Tile::lessThan),
                         tco);
         }
     }
 }
 
-/*! \brief Swap the position of two trackContentObjects.
+/*! \brief Swap the position of two Tiles.
  *
  *  First, we arrange to swap the positions of the two TCOs in the
- *  trackContentObjects list.  Then we swap their start times as well.
+ *  Tiles list.  Then we swap their start times as well.
  *
- *  \param tcoNum1 The first TrackContentObject to swap.
- *  \param tcoNum2 The second TrackContentObject to swap.
+ *  \param tcoNum1 The first Tile to swap.
+ *  \param tcoNum2 The second Tile to swap.
  */
 void Track::swapPositionOfTCOs(int tcoNum1, int tcoNum2)
 {
-    qSwap(m_trackContentObjects[tcoNum1], m_trackContentObjects[tcoNum2]);
+    qSwap(m_tiles[tcoNum1], m_tiles[tcoNum2]);
 
-    const MidiTime pos = m_trackContentObjects[tcoNum1]->startPosition();
+    const MidiTime pos = m_tiles[tcoNum1]->startPosition();
 
-    m_trackContentObjects[tcoNum1]->movePosition(
-            m_trackContentObjects[tcoNum2]->startPosition());
-    m_trackContentObjects[tcoNum2]->movePosition(pos);
+    m_tiles[tcoNum1]->movePosition(m_tiles[tcoNum2]->startPosition());
+    m_tiles[tcoNum2]->movePosition(pos);
 }
 
 void Track::createTCOsForBB(int bb)
 {
     while(numOfTCOs() < bb + 1)
     {
-        MidiTime            position = MidiTime(numOfTCOs(), 0);
-        TrackContentObject* tco      = createTCO(position);
+        MidiTime position = MidiTime(numOfTCOs(), 0);
+        Tile*    tco      = createTCO(position);
         tco->movePosition(position);
         tco->changeLength(MidiTime(1, 0));
     }
@@ -3921,14 +3941,14 @@ void Track::fixOverlappingTCOs()
     const int n = numOfTCOs();
     for(int i = 0; i < n; ++i)
     {
-        TrackContentObject* tco = getTCO(i);
+        Tile* tco = getTCO(i);
         if(tco->startPosition() < p)
             tco->movePosition(p);
         p = tco->endPosition();
     }
 }
 
-/*! \brief Move all the trackContentObjects after a certain time later by one
+/*! \brief Move all the Tiles after a certain time later by one
  * bar.
  *
  *  \param pos The time at which we want to insert the bar.
@@ -3940,8 +3960,7 @@ void Track::insertTact(const MidiTime& pos)
 {
     // we'll increase the position of every TCO, positioned behind pos, by
     // one tact
-    for(tcoVector::iterator it = m_trackContentObjects.begin();
-        it != m_trackContentObjects.end(); ++it)
+    for(Tiles::iterator it = m_tiles.begin(); it != m_tiles.end(); ++it)
     {
         if((*it)->startPosition() >= pos)
         {
@@ -3951,7 +3970,7 @@ void Track::insertTact(const MidiTime& pos)
     }
 }
 
-/*! \brief Move all the trackContentObjects after a certain time earlier by
+/*! \brief Move all the Tiles after a certain time earlier by
  * one bar.
  *
  *  \param pos The time at which we want to remove the bar.
@@ -3960,8 +3979,7 @@ void Track::removeTact(const MidiTime& pos)
 {
     // we'll decrease the position of every TCO, positioned behind pos, by
     // one tact
-    for(tcoVector::iterator it = m_trackContentObjects.begin();
-        it != m_trackContentObjects.end(); ++it)
+    for(Tiles::iterator it = m_tiles.begin(); it != m_tiles.end(); ++it)
     {
         if((*it)->startPosition() >= pos)
         {
@@ -3982,10 +4000,9 @@ tact_t Track::length() const
 {
     // find last end-position
     tick_t last = 0;
-    for(tcoVector::const_iterator it = m_trackContentObjects.begin();
-        it != m_trackContentObjects.end(); ++it)
+    for(Tiles::const_iterator it = m_tiles.begin(); it != m_tiles.end(); ++it)
     {
-        if(Engine::getSong()->isExporting() && (*it)->isMuted())
+        if(Engine::song()->isExporting() && (*it)->isMuted())
         {
             continue;
         }
@@ -4135,9 +4152,8 @@ TrackView::TrackView(Track* track, TrackContainerView* tcv) :
     setAttribute(Qt::WA_DeleteOnClose, true);
 
     connect(m_track, SIGNAL(destroyedTrack()), this, SLOT(close()));
-    connect(m_track, SIGNAL(trackContentObjectAdded(TrackContentObject*)),
-            this, SLOT(createTCOView(TrackContentObject*)),
-            Qt::QueuedConnection);
+    connect(m_track, SIGNAL(tileAdded(Tile*)), this,
+            SLOT(createTCOView(Tile*)), Qt::QueuedConnection);
 
     connect(&m_track->m_mutedModel, SIGNAL(dataChanged()),
             &m_trackContentWidget, SLOT(update()));
@@ -4157,9 +4173,8 @@ TrackView::TrackView(Track* track, TrackContainerView* tcv) :
             &m_trackContentWidget, SLOT(update()));
 
     // create views for already existing TCOs
-    for(Track::tcoVector::iterator it
-        = m_track->m_trackContentObjects.begin();
-        it != m_track->m_trackContentObjects.end(); ++it)
+    for(Tiles::iterator it = m_track->m_tiles.begin();
+        it != m_track->m_tiles.end(); ++it)
     {
         createTCOView(*it);
     }
@@ -4443,15 +4458,15 @@ void TrackView::paintEvent(QPaintEvent* pe)
     style()->drawPrimitive(QStyle::PE_Widget, &opt, &p, this);
 }
 
-/*! \brief Create a TrackContentObject View in this track View.
+/*! \brief Create a Tile View in this track View.
  *
- *  \param tco the TrackContentObject to create the view for.
+ *  \param tco the Tile to create the view for.
  *  \todo is this a good description for what this method does?
  */
-void TrackView::createTCOView(TrackContentObject* _tco)
+void TrackView::createTCOView(Tile* _tco)
 {
     // qInfo("TrackView::createTCOView tco=%p", _tco);
-    TrackContentObjectView* tv = _tco->createView(this);
+    TileView* tv = _tco->createView(this);
     if(_tco->getSelectViewOnCreate() == true)
     {
         tv->setSelected(true);

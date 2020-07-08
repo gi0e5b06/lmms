@@ -35,15 +35,25 @@ InstrumentPlayHandle::InstrumentPlayHandle(Instrument*      instrument,
       PlayHandle(TypeInstrumentPlayHandle),
       m_instrument(instrument), m_track(instrumentTrack)
 {
-    setAudioPort(instrumentTrack->audioPort());
+    // setAudioPort(instrumentTrack->audioPort());
 }
 
 InstrumentPlayHandle::~InstrumentPlayHandle()
 {
     qInfo("~InstrumentPlayHandle");
-    setAudioPort(nullptr);
+    // setAudioPort(nullptr);
     m_instrument = nullptr;
     m_track      = nullptr;
+}
+
+void InstrumentPlayHandle::enterMixer()
+{
+    m_track->audioPort()->addPlayHandle(pointer());
+}
+
+void InstrumentPlayHandle::exitMixer()
+{
+    m_track->audioPort()->removePlayHandle(pointer());
 }
 
 void InstrumentPlayHandle::play(sampleFrame* _working_buffer)
@@ -72,7 +82,7 @@ void InstrumentPlayHandle::play(sampleFrame* _working_buffer)
     // if not, we need to ensure that all our nph's have been processed first
     // ConstNotePlayHandleList nphv = NotePlayHandle::nphsOfInstrumentTrack(
     //        m_instrument->instrumentTrack(), true);
-    ConstNotePlayHandleList cnphv = Engine::mixer()->nphsOfTrack(track, true);
+    ConstNotePlayHandles cnphv = Engine::mixer()->nphsOfTrack(track, true);
 
     /*
     do
@@ -100,6 +110,7 @@ void InstrumentPlayHandle::play(sampleFrame* _working_buffer)
     do
     {
         nphsLeft = false;
+        /*
         for(const NotePlayHandle* cnph: cnphv)
         {
             if(cnph != nullptr && cnph->state() != ThreadableJob::Done
@@ -112,13 +123,26 @@ void InstrumentPlayHandle::play(sampleFrame* _working_buffer)
                 nph->process();
             }
         }
+        */
+        cnphv.map([this, &processed, &nphsLeft](const NotePlayHandle* cnph) {
+            if(cnph != nullptr && cnph->state() != ThreadableJob::Done
+               && !cnph->isFinished())
+            {
+                processed = true;
+                nphsLeft  = true;
+
+                NotePlayHandle* nph = const_cast<NotePlayHandle*>(cnph);
+                nph->process();
+            }
+        });
     } while(nphsLeft);
 
     real_t  ndm    = 0.;
     f_cnt_t maxtfp = -1;
     f_cnt_t maxfbr = -1;
-    for(const NotePlayHandle* cnph: cnphv)
-    {
+    //    for(const NotePlayHandle* cnph: cnphv)
+    cnphv.map([this, &ndm, &maxtfp, &maxfbr,
+               track](const NotePlayHandle* cnph) {
         if(cnph != nullptr && !cnph->isFinished())
         {
             NotePlayHandle* nph = const_cast<NotePlayHandle*>(cnph);
@@ -151,7 +175,7 @@ void InstrumentPlayHandle::play(sampleFrame* _working_buffer)
                 maxtfp = tfp;
             }
         }
-    }
+    });
 
     // ndm = m_instrument->instrumentTrack()->noteBendingModel()->value();
     // ndm*=(1.-0.05*Engine::mixer()->baseSampleRate() /
@@ -207,7 +231,8 @@ return m_instrument->isFromTrack(_track);
     */
 }
 
-bool InstrumentPlayHandle::isFromInstrument(const Instrument* _instrument) const
+bool InstrumentPlayHandle::isFromInstrument(
+        const Instrument* _instrument) const
 {
     return m_instrument == _instrument;
 }

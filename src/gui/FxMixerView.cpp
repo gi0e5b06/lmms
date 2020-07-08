@@ -1,24 +1,23 @@
 /*
  * FxMixerView.cpp - effect-mixer-view for LMMS
  *
+ * Copyright (c) 2017-2020 gi0e5b06 (on github.com)
  * Copyright (c) 2008-2014 Tobias Doerffel <tobydox/at/users.sourceforge.net>
  *
- * This file is part of LMMS - https://lmms.io
+ * This file is part of LSMM -
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public
- * License along with this program (see COPYING); if not, write to the
- * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
- * Boston, MA 02110-1301 USA.
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
 
@@ -53,7 +52,7 @@
 //#include "lmms_math.h"
 
 FxMixerView::FxMixerView() :
-      QWidget(), ModelView(NULL, this), SerializingObjectHook()
+      QWidget(), ModelView(nullptr, this), SerializingObjectHook()
 {
     FxMixer* m = Engine::fxMixer();
     m->setHook(this);
@@ -416,10 +415,10 @@ FxMixerView::FxChannelView::FxChannelView(QWidget*     _parent,
                     qWarning("FxChannel: not 3???");
             }
             else
-                qWarning("FxChannel: EffectControlDialog* v=NULL");
+                qWarning("FxChannel: EffectControlDialog* v=nullptr");
         }
         else
-            qWarning("FxChannel: EffectControls* c=NULL");
+            qWarning("FxChannel: EffectControls* c=nullptr");
 
         /*
         m_eqHighKnob  =new Knob(knobBright_26, m_fxLine );
@@ -506,7 +505,7 @@ void FxMixerView::updateFxLine(int index)
     int         selIndex  = m_currentFxLine->channelIndex();
     FxLine*     thisLine  = m_fxChannelViews[index]->m_fxLine;
     FloatModel* sendModel = mix->channelSendModel(selIndex, index);
-    if(sendModel == NULL)
+    if(sendModel == nullptr)
     {
         // does not send, hide send knob
         thisLine->m_sendKnob->setVisible(false);

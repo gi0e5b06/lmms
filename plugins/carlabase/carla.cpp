@@ -238,7 +238,7 @@ CarlaInstrument::CarlaInstrument(InstrumentTrack* const  instrumentTrack,
     // we need a play-handle which cares for calling play()
     InstrumentPlayHandle* iph
             = new InstrumentPlayHandle(this, instrumentTrack);
-    Engine::mixer()->emit playHandleToAdd(iph);
+    Engine::mixer()->emit playHandleToAdd(PlayHandlePointer(iph));
 
     connect(Engine::mixer(), SIGNAL(sampleRateChanged()), this,
             SLOT(sampleRateChanged()));
@@ -433,7 +433,7 @@ void CarlaInstrument::refreshParams(bool valuesOnly, const QDomElement* elem)
             // source/native-plugins/resources/carla-plugin
             FLOAT param_value = fDescriptor->get_parameter_value(fHandle, i);
 
-            if(valuesOnly)
+            if(valuesOnly && i < paramModels.size())
             {
                 paramModels[i]->setValue(param_value);
                 continue;

@@ -396,8 +396,9 @@ PianoRoll::PianoRoll() :
     // Set up root model
     for(int key = 0; key < KeysPerOctave; key++)
         m_rootModel.addItem(Note::findNoteName(key));
+
     m_rootModel.setValue(0);
-    connect(&m_rootModel, SIGNAL(dataChanged()), this, SLOT(rootChanged()));
+    connect(&m_rootModel, SIGNAL(dataChanged()), this, SLOT(onRootOrScaleChanged()));
 
     // Set up scale model
     const InstrumentFunctionNoteStacking::ChordTable& chord_table
@@ -405,31 +406,22 @@ PianoRoll::PianoRoll() :
 
     m_scaleModel.addItem(tr("No scale"));
     for(const InstrumentFunctionNoteStacking::Chord& chord: chord_table)
-    {
         if(chord.isScale())
-        {
             m_scaleModel.addItem(chord.getName());
-        }
-    }
 
     m_scaleModel.setValue(0);
     // change can update m_semitoneMarkerMenu
     connect(&m_scaleModel, SIGNAL(dataChanged()), this,
             SLOT(updateSemitoneMarkerMenu()));
-    connect(&m_scaleModel, SIGNAL(dataChanged()), this, SLOT(scaleChanged()));
+    connect(&m_scaleModel, SIGNAL(dataChanged()), this, SLOT(onRootOrScaleChanged()));
 
     // Set up chord model
     m_chordModel.addItem(tr("No chord"));
     for(const InstrumentFunctionNoteStacking::Chord& chord: chord_table)
-    {
         if(!chord.isScale())
-        {
             m_chordModel.addItem(chord.getName());
-        }
-    }
 
     m_chordModel.setValue(0);
-
     // change can update m_semitoneMarkerMenu
     connect(&m_chordModel, SIGNAL(dataChanged()), this,
             SLOT(updateSemitoneMarkerMenu()));
@@ -437,9 +429,6 @@ PianoRoll::PianoRoll() :
     setFocusPolicy(Qt::StrongFocus);
     setFocus();
     setMouseTracking(true);
-
-    connect(&m_scaleModel, SIGNAL(dataChanged()), this,
-            SLOT(updateSemitoneMarkerMenu()));
 
     connect(Engine::getSong(), SIGNAL(timeSignatureChanged(int, int)), this,
             SLOT(update()));
@@ -642,17 +631,7 @@ void PianoRoll::markSemitone(
     m_markedSemitones.erase(new_end, m_markedSemitones.end());
 }
 
-void PianoRoll::rootChanged()
-{
-    markSemitone(stmaUnmarkAll, 0, nullptr);
-    if(m_scaleModel.value() == 0)
-        markSemitone(stmaMarkAllOctaveSemitones, m_rootModel.value(),
-                     nullptr);
-    else
-        markSemitone(stmaMarkCurrentScale, m_rootModel.value(), nullptr);
-}
-
-void PianoRoll::scaleChanged()
+void PianoRoll::onRootOrScaleChanged()
 {
     markSemitone(stmaUnmarkAll, 0, nullptr);
     if(m_scaleModel.value() == 0)
@@ -1304,10 +1283,8 @@ void PianoRoll::drawNoteRect(QPainter&     p,
     ++y;
     width -= 2;
 
-    if(width <= 0)
-    {
+    if(width < 2)
         width = 2;
-    }
 
     // Volume
     float const volumeRange = static_cast<float>(MaxVolume - MinVolume);
@@ -2447,13 +2424,10 @@ void PianoRoll::computeSelectedNotes(bool shift)
             int len_ticks = note->length();
 
             if(len_ticks == 0)
-            {
                 continue;
-            }
-            else if(len_ticks < 0)
-            {
-                len_ticks = 4;
-            }
+
+            if(len_ticks < 0)
+                len_ticks = 6;
 
             const int key = note->key() - m_startKey + 1;
 
@@ -3676,13 +3650,11 @@ void PianoRoll::paintEvent(QPaintEvent* pe)
                 int len_ticks = note->length();
 
                 if(len_ticks == 0)
-                {
                     continue;
-                }
-                else if(len_ticks < 0)
-                {
-                    len_ticks = 4;
-                }
+
+                if(len_ticks < 0)
+                    len_ticks = 6;
+
                 const int key = note->key() - m_startKey + 1;
 
                 int pos_ticks = note->pos();
@@ -3690,11 +3662,10 @@ void PianoRoll::paintEvent(QPaintEvent* pe)
                 int note_width = len_ticks * m_ppt / MidiTime::ticksPerTact();
                 const int x    = (pos_ticks - m_currentPosition) * m_ppt
                               / MidiTime::ticksPerTact();
+
                 // skip this note if not in visible area at all
                 if(!(x + note_width >= 0 && x <= width() - WHITE_KEY_WIDTH))
-                {
                     continue;
-                }
 
                 // is the note in visible area?
                 if(key > 0 && key <= visible_keys)
@@ -3716,13 +3687,10 @@ void PianoRoll::paintEvent(QPaintEvent* pe)
             int len_ticks = note->length();
 
             if(len_ticks == 0)
-            {
                 continue;
-            }
-            else if(len_ticks < 0)
-            {
-                len_ticks = 4;
-            }
+
+            if(len_ticks < 0)
+                len_ticks = 6;
 
             const int key = note->key() - m_startKey + 1;
 
@@ -3731,11 +3699,10 @@ void PianoRoll::paintEvent(QPaintEvent* pe)
             int note_width = len_ticks * m_ppt / MidiTime::ticksPerTact();
             const int x    = (pos_ticks - m_currentPosition) * m_ppt
                           / MidiTime::ticksPerTact();
+
             // skip this note if not in visible area at all
             if(!(x + note_width >= 0 && x <= width() - WHITE_KEY_WIDTH))
-            {
                 continue;
-            }
 
             // is the note in visible area?
             if(key > 0 && key <= visible_keys)

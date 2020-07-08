@@ -1,10 +1,10 @@
 SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 SET(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
-# Enable C++11
+# Enable C++1 1
 #ADD_DEFINITIONS(-std=c++0x)
-#ADD_DEFINITIONS(-std=c++11)
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O9 -std=c++11")
+#ADD_DEFINITIONS(-std=c++1 1)
+#??? SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O9 -std=c++1 1")
 
 IF(LMMS_BUILD_APPLE)
 	SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
@@ -66,6 +66,7 @@ IF("${PLUGIN_LIST}" STREQUAL "")
     ChainGDX
 	ChannellerGDX
     ClickGDX
+    Compressor
     CompressorGDX
 	CrossoverEQ
 	# csound_instr - not ready

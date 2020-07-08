@@ -1,24 +1,22 @@
 /*
  * SmashGDXControls.cpp - controls for wall effect
  *
- * Copyright (c) 2018 gi0e5b06 (on github.com)
+ * Copyright (c) 2018-2020 gi0e5b06 (on github.com)
  *
- * This file is part of LMMS - https://lmms.io
+ * This file is part of LSMM -
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public
- * License along with this program (see COPYING); if not, write to the
- * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
- * Boston, MA 02110-1301 USA.
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
 
@@ -32,12 +30,12 @@
 
 SmashGDXControls::SmashGDXControls(SmashGDXEffect* effect) :
       EffectControls(effect), m_effect(effect),
-      m_rateModel(0.f, 0.f, 0.01f, 0.00001f, this, tr("Rate")),
-      m_phaseModel(0.f, -1.f, 1.f, 0.00001f, this, tr("Phase")),
-      m_levelModel(0.f, 0.f, 1.f, 0.00001f, this, tr("Level")),
-      m_bitsModel(64.f, 0.f, 64.f, 1.f, this, tr("Bits"))
+      m_rateModel(0., 0., 0.01, 0.00001, this, tr("Rate")),
+      m_phaseModel(0., -1., 1., 0.00001, this, tr("Phase")),
+      m_levelModel(0., 0., 1., 0.00001, this, tr("Level")),
+      m_bitsModel(64., 0., 64., 1., this, tr("Bits"))
 {
-        m_bitsModel.setStrictStepSize(true);
+    m_bitsModel.setStrictStepSize(true);
     /*
     connect( &m_rateModel, SIGNAL( dataChanged() ), this, SLOT(
       changeControl() ) );

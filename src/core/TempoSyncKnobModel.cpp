@@ -109,7 +109,7 @@ void TempoSyncKnobModel::calculateTempoSyncTime(bpm_t _bpm)
         }
         bool   journalling = testAndSetJournalling(false);
         real_t oneUnit     = 60000. / (_bpm * conversionFactor * m_scale);
-        setValue(oneUnit * maxValue());
+        setAutomatedValue(oneUnit * maxValue());
         setJournalling(journalling);
     }
 

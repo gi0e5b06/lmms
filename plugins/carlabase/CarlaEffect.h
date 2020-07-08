@@ -104,7 +104,7 @@ class PLUGIN_EXPORT CarlaEffect :
   signals:
     void uiClosed();
 
-  private slots:
+ private slots:
     void sampleRateChanged();
     void refreshParams(bool valuesOnly, const QDomElement* elem = nullptr);
     void clearParamModels();

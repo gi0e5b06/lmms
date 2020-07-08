@@ -47,8 +47,10 @@ PerfLog::Cumul::Cumul() :
 
 void PerfLog::begin(const QString& what)
 {
+    /*
     if(s_running.contains(what))
         qWarning("PerfLog::begin already %s", qPrintable(what));
+    */
 
     s_running.insert(what, Entry());
 }

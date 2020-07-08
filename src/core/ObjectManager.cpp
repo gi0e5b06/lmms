@@ -48,8 +48,9 @@ void ObjectManager<T>::free(T* _ptr)
 
 template <class T>
 ObjectManager<T>::ObjectManager(const int _nbe, const char* _ref) :
-      m_mutex(), m_nbe(_nbe), m_data(NULL), m_available(_nbe, true),
-      m_lastfree(0), m_count(0), m_max(0), m_ref(_ref), //m_typeid(typeid(T)),
+      m_mutex(), m_nbe(_nbe), m_data(nullptr), m_available(_nbe, true),
+      m_lastfree(0), m_count(0), m_max(0),
+      m_ref(_ref),  // m_typeid(typeid(T)),
       m_size(sizeof(T))
 {
     if(_nbe > 32 * 1024)

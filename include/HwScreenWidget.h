@@ -42,7 +42,7 @@ class EXPORT HwScreenWidget : public QWidget
 	QQ_LOCAL_PROPERTY(int,rows,rows,setRows)
 	QQ_LOCAL_PROPERTY(QString,label,label,setLabel)
 
-	HwScreenWidget(QWidget* parent = NULL, int columns = 16, int rows = 2,
+	HwScreenWidget(QWidget* parent = nullptr, int columns = 16, int rows = 2,
 		       const QString & label = QString(""),
 		       const QString & colorSet = QString("gob"));
 

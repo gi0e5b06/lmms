@@ -27,15 +27,19 @@
 #ifndef AUTOMATION_PATTERN_H
 #define AUTOMATION_PATTERN_H
 
+#include "SafeList.h"
 #include "Track.h"
 
 #include <QMap>
 #include <QPointer>
 
 class AutomationTrack;
+class AutomationPattern;
 class MidiTime;
 
-class EXPORT AutomationPattern : public TrackContentObject
+typedef QVector<AutomationPattern*> AutomationPatterns;
+
+class EXPORT AutomationPattern : public Tile
 {
     Q_OBJECT
 
@@ -48,8 +52,10 @@ class EXPORT AutomationPattern : public TrackContentObject
         ParabolicProgression
     };
 
-    typedef QMap<tick_t, real_t>                timeMap;
-    typedef QVector<QPointer<AutomatableModel>> objectVector;
+    typedef QMap<tick_t, real_t> timeMap;
+    // typedef QVector<QPointer<AutomatableModel>> Objects;
+    // typedef SafeList<QPointer<AutomatableModel>> Objects;
+    typedef SafeList<AutomatableModel*> Objects;
 
     AutomationPattern(AutomationTrack* _auto_track);
     AutomationPattern(const AutomationPattern& _pat_to_copy);
@@ -57,11 +63,16 @@ class EXPORT AutomationPattern : public TrackContentObject
 
     virtual bool    isEmpty() const;
     virtual QString defaultName() const;
+    virtual tick_t  unitLength() const;
 
-    bool addObject(AutomatableModel* _obj, bool _search_dup = true);
+    bool addObject(AutomatableModel* _obj);  //, bool _search_dup = true);
 
     const AutomatableModel* firstObject() const;
-    const objectVector&     objects() const;
+
+    const Objects& objects() const
+    {
+        return m_objects;
+    }
 
     MidiTime putValue(const MidiTime& time,
                       const real_t    value,
@@ -121,7 +132,6 @@ class EXPORT AutomationPattern : public TrackContentObject
 
     MidiTime timeMapLength() const;
 
-    virtual tick_t unitLength() const;
     // virtual MidiTime beatLength() const;
     // virtual void changeLength( const MidiTime & _length );
     virtual void updateLength();
@@ -177,7 +187,11 @@ class EXPORT AutomationPattern : public TrackContentObject
     real_t  valueAt(const MidiTime& _time) const;
     real_t* valuesAfter(const MidiTime& _time) const;
 
-    const QString name() const;
+    // insert the values from the models into the map
+    virtual void automatedValuesAt(const MidiTime&    _time,
+                                   AutomatedValueMap& _map);
+
+    virtual const QString name() const;
 
     // settings-management
     virtual void saveSettings(QDomDocument& _doc, QDomElement& _parent);
@@ -193,11 +207,10 @@ class EXPORT AutomationPattern : public TrackContentObject
         return classNodeName();
     }
 
-    virtual TrackContentObjectView* createView(TrackView* _tv);
+    virtual TileView* createView(TrackView* _tv);
 
-    static bool isAutomated(const AutomatableModel* _m);
-    static QVector<AutomationPattern*>
-                              patternsForModel(const AutomatableModel* _m);
+    static bool               isAutomated(const AutomatableModel* _m);
+    static AutomationPatterns patternsForModel(const AutomatableModel* _m);
     static AutomationPattern* globalAutomationPattern(AutomatableModel* _m);
     static void               resolveAllIDs();
 
@@ -206,7 +219,7 @@ class EXPORT AutomationPattern : public TrackContentObject
         return m_isRecording;
     }
 
-    void setRecording(const bool b);
+    void setRecording(bool b);
 
     static int quantizationX()
     {
@@ -247,6 +260,9 @@ class EXPORT AutomationPattern : public TrackContentObject
   signals:
     void recordValue(MidiTime time, real_t value);
 
+  protected:
+    AutomatableModel* dummyObject() const;
+
   private:
     void   cleanObjects();
     void   generateTangents();
@@ -255,9 +271,10 @@ class EXPORT AutomationPattern : public TrackContentObject
                    int                     offset,
                    bool                    xruns = false) const;
 
-    AutomationTrack* m_autoTrack;
+    AutomationTrack* m_automationTrack;
     QVector<jo_id_t> m_idsToResolve;
-    objectVector     m_objects;
+    QVector<QString> m_uuidsToResolve;
+    Objects          m_objects;
     timeMap          m_timeMap;  // actual values
     timeMap m_oldTimeMap;        // old values for storing the values before
                                  // setDragValue() is called.
@@ -281,9 +298,9 @@ class EXPORT AutomationPattern : public TrackContentObject
 
     static int    s_quantizationX;  // ticks
     static real_t s_quantizationY;
-
-    static const real_t DEFAULT_MIN_VALUE;
-    static const real_t DEFAULT_MAX_VALUE;
+    // static FloatModel s_dummyFirstObject;
+    // static const real_t DEFAULT_MIN_VALUE;
+    // static const real_t DEFAULT_MAX_VALUE;
 
     friend class AutomationPatternView;
 };

@@ -46,6 +46,8 @@
 #include <cstring>
 //#include "CarlaEffectView.h"
 
+#define CARLA_SETTING_PREFIX "PARAM_KNOB_"
+
 // this doesn't seem to be defined anywhere
 static const double ticksPerBeat = 48.0;
 
@@ -479,6 +481,100 @@ bool CarlaEffect::processAudioBuffer(sampleFrame* buf, const fpp_t frames)
 EffectControls* CarlaEffect::controls()
 {
     return m_gdxControls;
+}
+
+void CarlaEffect::refreshParams(bool valuesOnly, const QDomElement* elem)
+{
+    if(fDescriptor->get_parameter_count != nullptr
+       && fDescriptor->get_parameter_info != nullptr
+       && fDescriptor->get_parameter_value != nullptr
+       && fDescriptor->set_parameter_value != nullptr)
+    {
+        uint32_t param_count = fDescriptor->get_parameter_count(fHandle);
+
+        if(!valuesOnly)
+        {
+            clearParamModels();
+            paramModels.reserve(param_count);
+        }
+
+        m_completerList.clear();
+
+        for(uint32_t i = 0; i < param_count; ++i)
+        {
+            // https://github.com/falkTX/Carla/tree/master/source/native-plugins
+            // source/native-plugins/resources/carla-plugin
+            FLOAT param_value = fDescriptor->get_parameter_value(fHandle, i);
+
+            if(valuesOnly && i < paramModels.size())
+            {
+                paramModels[i]->setValue(param_value);
+                continue;
+            }
+
+            const NativeParameter* paramInfo(
+                    fDescriptor->get_parameter_info(fHandle, i));
+
+            // Get parameter name
+            QString name = "_NO_NAME_";
+            if(paramInfo->name != nullptr)
+            {
+                name = paramInfo->name;
+            }
+
+            m_completerList.push_back(name);
+
+            // current_value, min, max, steps
+            paramModels.push_back(new FloatModel(
+                    param_value, paramInfo->ranges.min, paramInfo->ranges.max,
+                    paramInfo->ranges.step, this, name));
+
+            // Load settings into model.
+            QString idStr = CARLA_SETTING_PREFIX + QString::number(i);
+            paramModels[i]->setObjectName(QString::number(
+                    i));  // use this as reference for parameter index.
+
+            if(elem != nullptr)
+                paramModels[i]->loadSettings(*elem, idStr);
+
+            // Connect to signal dataChanged to knobChanged function.
+            // connect(paramModels[i], SIGNAL(dataChanged()), this,
+            // SLOT(knobModelChanged()));
+            connect(paramModels[i], &FloatModel::dataChanged,
+                    [=]() { paramModelChanged(i); });
+        }
+
+        // Set completer data
+        // m_completerModel.setStringList(m_completerList);
+    }
+}
+
+void CarlaEffect::clearParamModels()
+{
+    // Delete the models, this also disconnects all connections (automation
+    // and controller connections)
+    for(int i = 0; i < paramModels.count(); ++i)
+        delete paramModels[i];
+
+    // Clear the list
+    paramModels.clear();
+}
+
+void CarlaEffect::paramModelChanged(uint32_t index)
+{
+    qInfo("CarlaEffect::paramModelChanged(%d)", index);
+
+    // FloatModel *senderFloatModel = qobject_cast<FloatModel *>(sender());
+    if(fDescriptor->set_parameter_value != nullptr)
+    {
+        // fDescriptor->set_parameter_value(fHandle,
+        // senderFloatModel->objectName().toInt(), senderFloatModel->value());
+        // qInfo(" *** %s (%d)", qPrintable(paramModels[index]->objectName()),
+        //   paramModels[index]->objectName().toInt());
+        fDescriptor->set_parameter_value(
+                fHandle, paramModels[index]->objectName().toInt(),
+                paramModels[index]->value());
+    }
 }
 
 void CarlaEffect::sampleRateChanged()

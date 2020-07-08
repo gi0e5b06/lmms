@@ -888,7 +888,7 @@ false ) ); else v=fittedValue( lm->m_value );
 
 ValueBuffer* AutomatableModel::valueBuffer()
 {
-    //QMutexLocker m(const_cast<QMutex*>(&m_valueBufferMutex));
+    // QMutexLocker m(const_cast<QMutex*>(&m_valueBufferMutex));
     QMutexLocker m(&m_valueBufferMutex);
     return m_hasSampleExactData ? &m_valueBuffer : nullptr;
 }
@@ -1043,24 +1043,22 @@ void AutomatableModel::setAutomatedBuffer(const ValueBuffer* _vb)
 {
     long vbp = _vb->period();
 
-    if(Engine::getSong() == nullptr || !Engine::getSong()->isPlaying())
+    if(Engine::song() == nullptr || !Engine::song()->isPlaying())
         return;
 
     if(vbp != -1 && vbp > s_periodCounter)
     {
         postponeUpdate(this, _vb);
-        /*
-        QTimer::singleShot(1, [this, _vb]() {
-            this->setAutomatedBuffer(_vb);
-        });
-        */
         return;
     }
 
     if(vbp != -1 && vbp < s_periodCounter
        && m_lastUpdatedPeriod == s_periodCounter)
     {
-        qWarning("AutomatableModel::setAutomatedBuffer old vbp");
+        m_hasSampleExactData = false;  // TMP
+        if(_vb != nullptr && _vb->length() > 0)
+            setAutomatedValue(_vb->value(0));
+        // qWarning("AutomatableModel::setAutomatedBuffer old vbp");
         return;
     }
 
@@ -1133,7 +1131,7 @@ void AutomatableModel::setControlledBuffer(const ValueBuffer* _vb)
 
 void AutomatableModel::unlinkControllerConnection()
 {
-    if(m_controllerConnection !=nullptr)
+    if(m_controllerConnection != nullptr)
         m_controllerConnection->disconnect(this);
 
     m_controllerConnection = nullptr;

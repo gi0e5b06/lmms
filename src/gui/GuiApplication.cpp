@@ -62,7 +62,7 @@ GuiApplication::GuiApplication(bool showSplashScreen)
     // it doesn't exist
     if(!ConfigManager::inst()->hasWorkingDir()
        && QMessageBox::question(
-                  NULL, tr("Working directory"),
+                  nullptr, tr("Working directory"),
                   tr("The LMMS working directory %1 does not "
                      "exist. Create it now? You can change the directory "
                      "later via Edit -> Settings.")

@@ -128,7 +128,7 @@ class EXPORT Plugin : public Model, public JournallingObject
             {
                 typedef QMap<QString, QString> AttributeMap;
 
-                inline Key(const Plugin::Descriptor* desc = NULL,
+                inline Key(const Plugin::Descriptor* desc = nullptr,
                            const QString&            name = QString(),
                            const AttributeMap&       am   = AttributeMap()) :
                       desc(desc),
@@ -142,7 +142,7 @@ class EXPORT Plugin : public Model, public JournallingObject
 
                 inline bool isValid() const
                 {
-                    return desc != NULL && name.isNull() == false;
+                    return desc != nullptr && name.isNull() == false;
                 }
 
                 const Plugin::Descriptor* desc;

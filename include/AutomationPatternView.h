@@ -31,7 +31,7 @@
 
 class AutomationPattern;
 
-class AutomationPatternView : public TrackContentObjectView
+class AutomationPatternView : public TileView
 {
     Q_OBJECT
 

@@ -51,7 +51,7 @@ class EXPORT Model : public QObject
         return dynamic_cast<Model*>(parent());
     }
 
-    virtual const QString uuid() final;
+    virtual const QString uuid() const final;
     virtual bool          hasUuid() const final;
     virtual void          setUuid(const QString& _uuid) final;
     virtual void          resetUuid() final;

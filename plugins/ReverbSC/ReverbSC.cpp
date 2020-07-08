@@ -26,7 +26,7 @@
 
 #include <math.h>
 
-#define DB2LIN(X) pow(10, X / 20.0f);
+#define DB2LIN(X) pow(10., X / 20.);
 
 extern "C"
 {
@@ -93,17 +93,17 @@ bool ReverbSCEffect::processAudioBuffer(sampleFrame* _buf,
 
     for(fpp_t f = 0; f < _frames; ++f)
     {
-        float w0, d0, w1, d1;
+        real_t w0, d0, w1, d1;
         computeWetDryLevels(f, _frames, smoothBegin, smoothEnd, w0, d0, w1,
                             d1);
 
-        float s0 = _buf[f][0];
-        float s1 = _buf[f][1];
+        SPFLOAT s0 = _buf[f][0];
+        SPFLOAT s1 = _buf[f][1];
 
-        const SPFLOAT inGain = (SPFLOAT)DB2LIN(
+        const real_t inGain = (SPFLOAT)DB2LIN(
                 (inGainBuf ? inGainBuf->value(f)
                            : m_reverbSCControls.m_inputGainModel.value()));
-        const SPFLOAT outGain = (SPFLOAT)DB2LIN(
+        const real_t outGain = (SPFLOAT)DB2LIN(
                 (outGainBuf ? outGainBuf->value(f)
                             : m_reverbSCControls.m_outputGainModel.value()));
 
@@ -121,8 +121,8 @@ bool ReverbSCEffect::processAudioBuffer(sampleFrame* _buf,
         sp_dcblock_compute(sp, dcblk[0], &tmpL, &dcblkL);
         sp_dcblock_compute(sp, dcblk[1], &tmpR, &dcblkR);
 
-        float curVal0 = dcblkL * outGain;
-        float curVal1 = dcblkR * outGain;
+        sample_t curVal0 = dcblkL * outGain;
+        sample_t curVal1 = dcblkR * outGain;
 
         _buf[f][0] = d0 * _buf[f][0] + w0 * curVal0;
         _buf[f][1] = d1 * _buf[f][1] + w1 * curVal1;

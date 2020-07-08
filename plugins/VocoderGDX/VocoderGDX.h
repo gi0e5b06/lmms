@@ -62,9 +62,9 @@ class PLUGIN_EXPORT VocoderGDX : public Effect
 
     fftwf_complex* m_cBuf0;
     fftwf_complex* m_cBuf1;
-    float*         m_oBuf;
-    float*         m_rBuf0;
-    float*         m_rBuf1;
+    FLOAT*         m_oBuf;
+    FLOAT*         m_rBuf0;
+    FLOAT*         m_rBuf1;
 
     int m_size;
     int m_filled;

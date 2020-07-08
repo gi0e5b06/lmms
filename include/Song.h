@@ -304,6 +304,8 @@ class EXPORT Song : public TrackContainer, public virtual Transportable
         setSongMetaData("Structure", s);
     }
 
+    void userWorking();
+
     virtual f_cnt_t transportPosition();
     virtual void    transportStart();
     virtual void    transportStop();

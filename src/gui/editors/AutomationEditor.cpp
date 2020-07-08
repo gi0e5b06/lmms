@@ -2875,12 +2875,12 @@ void AutomationEditor::copySelection()
         r.append(QChar(','));
         r.append(QString::number(y, 'f'));
 
-        for(auto m: m_pattern->objects())
-        {
-            real_t v = m->scaledValue(y);
+        // for(auto m: m_pattern->objects())
+        m_pattern->objects().map([&r, y](auto m) {
+            const real_t v = m->scaledValue(y);
             r.append(QChar(','));
             r.append(QString::number(v, 'f'));
-        }
+        });
 
         r.append(QChar('\n'));
     }

@@ -33,6 +33,7 @@
 #include "ConfigManager.h"
 #include "Engine.h"
 #include "Mixer.h"
+#include "PerfLog.h"
 #include "endian_handling.h"
 //#include "gui_templates.h"
 #include "templates.h"
@@ -310,7 +311,7 @@ void AudioAlsaGdx::runS16()
     {
         sampleS16_t* ptr = pcmbuf;
         int          len = pcmbuf_size;
-        while(len)
+        while(len > 0)
         {
             if(outbuf_pos == 0)
             {
@@ -337,7 +338,7 @@ void AudioAlsaGdx::runS16()
         f_cnt_t frames = m_periodSize;
         ptr            = pcmbuf;
 
-        while(frames)
+        while(frames > 0)
         {
             int err = snd_pcm_writei(m_outHandle, ptr, frames);
 
@@ -383,7 +384,7 @@ void AudioAlsaGdx::runF32()
     {
         float* ptr = pcmbuf;
         int    len = pcmbuf_size;
-        while(len)
+        while(len > 0)
         {
             if(outbuf_pos == 0)
             {
@@ -410,7 +411,7 @@ void AudioAlsaGdx::runF32()
         f_cnt_t frames = m_periodSize;
         ptr            = pcmbuf;
 
-        while(frames)
+        while(frames > 0)
         {
             int err = snd_pcm_writei(m_outHandle, ptr, frames);
 
@@ -455,7 +456,7 @@ void AudioAlsaGdx::runS32()
     {
         int32_t* ptr = pcmbuf;
         int      len = pcmbuf_size;
-        while(len)
+        while(len > 0)
         {
             if(outbuf_pos == 0)
             {
@@ -482,7 +483,7 @@ void AudioAlsaGdx::runS32()
         f_cnt_t frames = m_periodSize;
         ptr            = pcmbuf;
 
-        while(frames)
+        while(frames > 0)
         {
             int err = snd_pcm_writei(m_outHandle, ptr, frames);
 

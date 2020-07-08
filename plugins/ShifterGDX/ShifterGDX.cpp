@@ -1,24 +1,22 @@
 /*
  * ShifterGDX.cpp -
  *
- * Copyright (c) 2019 gi0e5b06 (on github.com)
+ * Copyright (c) 2019-2020 gi0e5b06 (on github.com)
  *
- * This file is part of LMMS - https://lmms.io
+ * This file is part of LSMM -
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public
- * License along with this program (see COPYING); if not, write to the
- * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
- * Boston, MA 02110-1301 USA.
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
 
@@ -45,8 +43,8 @@ extern "C"
                0x0100,
                Plugin::Effect,
                new PluginPixmapLoader("logo"),
-               NULL,
-               NULL};
+               nullptr,
+               nullptr};
 }
 
 ShifterGDX::ShifterGDX(Model*                                    parent,
@@ -59,15 +57,16 @@ ShifterGDX::ShifterGDX(Model*                                    parent,
     // m_size = qMax<int>(2048, Engine::mixer()->framesPerPeriod());
     // m_size = qMax<int>(128, Engine::mixer()->framesPerPeriod());
 
-    m_rBuf0 = (float*)fftwf_malloc(m_size * sizeof(float));
-    m_rBuf1 = (float*)fftwf_malloc(m_size * sizeof(float));
-    m_oBuf0 = (float*)fftwf_malloc(m_size * sizeof(float));
-    m_oBuf1 = (float*)fftwf_malloc(m_size * sizeof(float));
-    memset(m_rBuf0, 0, m_size * sizeof(float));
-    memset(m_rBuf1, 0, m_size * sizeof(float));
+    // TODO: switch to double?
+    m_rBuf0 = (FLOAT*)fftwf_malloc(m_size * sizeof(FLOAT));
+    m_rBuf1 = (FLOAT*)fftwf_malloc(m_size * sizeof(FLOAT));
+    m_oBuf0 = (FLOAT*)fftwf_malloc(m_size * sizeof(FLOAT));
+    m_oBuf1 = (FLOAT*)fftwf_malloc(m_size * sizeof(FLOAT));
+    memset(m_rBuf0, 0, m_size * sizeof(FLOAT));
+    memset(m_rBuf1, 0, m_size * sizeof(FLOAT));
 
-    // memset(m_oBuf0, 0, m_size * sizeof(float));
-    // memset(m_oBuf1, 0, m_size * sizeof(float));
+    // memset(m_oBuf0, 0, m_size * sizeof(FLOAT));
+    // memset(m_oBuf1, 0, m_size * sizeof(FLOAT));
 
     m_cBuf0 = (fftwf_complex*)fftwf_malloc((m_size / 2 + 1)
                                            * sizeof(fftwf_complex));
@@ -232,7 +231,7 @@ bool ShifterGDX::processAudioBuffer(sampleFrame* _buf, const fpp_t _frames)
 
     for(fpp_t f = 0; f < _frames; ++f)
     {
-        float w0, d0, w1, d1;
+        real_t w0, d0, w1, d1;
         computeWetDryLevels(f, _frames, smoothBegin, smoothEnd, w0, d0, w1,
                             d1);
 

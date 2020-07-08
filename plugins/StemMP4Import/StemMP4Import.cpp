@@ -124,7 +124,7 @@ bool StemMP4Import::tryImport(TrackContainer* _tc)
 
         st->setName(fi.fileName() + " P" + i);
 
-        TrackContentObject* tco = st->createTCO(MidiTime(0));
+        Tile* tco = st->createTCO(MidiTime(0));
         if(tco == nullptr)
         {
             qCritical("Error: can not create a sample tile");

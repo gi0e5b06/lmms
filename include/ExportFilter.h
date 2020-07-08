@@ -31,40 +31,40 @@
 //#include "TrackContainer.h"
 #include "Plugin.h"
 
-
 class EXPORT ExportFilter : public Plugin
 {
-public:
-	ExportFilter( const Descriptor * _descriptor ) : Plugin( _descriptor, NULL ) {}
-	virtual ~ExportFilter() {}
+  public:
+    ExportFilter(const Descriptor* _descriptor) : Plugin(_descriptor, nullptr)
+    {
+    }
 
-        /*
-	virtual bool tryExport(const Tracks &tracks,
-        const Tracks &tracksBB,
-        int tempo, int masterPitch, const QString &filename ) = 0;
-        */
+    virtual ~ExportFilter()
+    {
+    }
 
-        virtual bool proceed(const QString& _fileName) = 0;
+    /*
+    virtual bool tryExport(const Tracks &tracks,
+    const Tracks &tracksBB,
+    int tempo, int masterPitch, const QString &filename ) = 0;
+    */
 
-protected:
+    virtual bool proceed(const QString& _fileName) = 0;
 
-	virtual void saveSettings( QDomDocument &, QDomElement & )
-	{
-	}
+  protected:
+    virtual void saveSettings(QDomDocument&, QDomElement&)
+    {
+    }
 
-	virtual void loadSettings( const QDomElement & )
-	{
-	}
+    virtual void loadSettings(const QDomElement&)
+    {
+    }
 
-	virtual QString nodeName() const
-	{
-		return "import_filter";
-	}
+    virtual QString nodeName() const
+    {
+        return "import_filter";
+    }
 
-
-private:
-
-} ;
-
+  private:
+};
 
 #endif

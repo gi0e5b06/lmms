@@ -22,7 +22,6 @@
  *
  */
 
-
 #ifndef SAMPLE_RECORD_HANDLE_H
 #define SAMPLE_RECORD_HANDLE_H
 
@@ -35,39 +34,37 @@
 class BBTrack;
 class SampleBuffer;
 class SampleTCO;
-class Track;
-
+class SampleTrack;
 
 class SampleRecordHandle : public PlayHandle
 {
-public:
-	SampleRecordHandle( SampleTCO* tco );
-	virtual ~SampleRecordHandle();
+  public:
+    SampleRecordHandle(SampleTCO* tco);
+    virtual ~SampleRecordHandle();
 
-	virtual void play( sampleFrame * _working_buffer );
-	virtual bool isFinished() const;
+    virtual void play(sampleFrame* _working_buffer);
+    virtual bool isFinished() const;
 
-	virtual bool isFromTrack( const Track * _track ) const;
+    virtual bool isFromTrack(const Track* _track) const;
     virtual bool isFromInstrument(const Instrument* _instrument) const;
 
-	f_cnt_t framesRecorded() const;
-	void createSampleBuffer( SampleBuffer * * _sample_buf );
+    f_cnt_t framesRecorded() const;
+    void    createSampleBuffer(SampleBuffer** _sample_buf);
 
+    virtual void enterMixer();
+    virtual void exitMixer();
 
-private:
-	virtual void writeBuffer( const sampleFrame * _ab,
-						const f_cnt_t _frames );
+  private:
+    virtual void writeBuffer(const sampleFrame* _ab, const f_cnt_t _frames);
 
-	typedef QList<QPair<sampleFrame *, f_cnt_t> > bufferList;
-	bufferList m_buffers;
-	f_cnt_t m_framesRecorded;
-	MidiTime m_minLength;
+    typedef QList<QPair<sampleFrame*, f_cnt_t>> bufferList;
+    bufferList                                  m_buffers;
+    f_cnt_t                                     m_framesRecorded;
+    MidiTime                                    m_minLength;
 
-	Track * m_track;
-	BBTrack * m_bbTrack;
-	SampleTCO * m_tco;
-
-} ;
-
+    SampleTrack* m_sampleTrack;
+    BBTrack*     m_bbTrack;
+    SampleTCO*   m_tco;
+};
 
 #endif

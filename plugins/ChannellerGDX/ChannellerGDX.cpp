@@ -65,7 +65,7 @@ bool ChannellerGDX::processAudioBuffer(sampleFrame* _buf, const fpp_t _frames)
     const int operation = m_gdxControls.m_operationModel.value();
     for(fpp_t f = 0; f < _frames; ++f)
     {
-        float w0, d0, w1, d1;
+        real_t w0, d0, w1, d1;
         computeWetDryLevels(f, _frames, smoothBegin, smoothEnd, w0, d0, w1,
                             d1);
 

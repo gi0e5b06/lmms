@@ -57,7 +57,7 @@ bool BBTrackContainer::play(MidiTime      _start,
     if(beatlen <= 0)
         return false;
 
-    _start = _start % (beatlen * MidiTime::ticksPerTact());
+    //_start = _start % (beatlen * MidiTime::ticksPerTact());
 
     bool   played_a_note = false;
     Tracks tl            = tracks();
@@ -68,11 +68,11 @@ bool BBTrackContainer::play(MidiTime      _start,
             continue;
 
         f_cnt_t             realstart = _start;
-        TrackContentObject* p         = (*it)->getTCO(_tco_num);
+        Tile* p         = (*it)->getTCO(_tco_num);
         // Pattern* p=dynamic_cast<Pattern*>((*it)->getTCO( _tco_num ));
         // if(p)
         {
-            tick_t tlen = p->length();
+            tick_t tlen = p->unitLength();//length();
             if(tlen <= 0)
                 continue;
             realstart = _start % tlen;  // GDX
@@ -102,7 +102,7 @@ tact_t BBTrackContainer::lengthOfBB(int _bb) const
 
     for(const Track* t: tracks())
     {
-        TrackContentObject* tco = t->getTCO(_bb);
+        Tile* tco = t->getTCO(_bb);
         if(tco != nullptr)
             max_length = qMax(max_length, tco->length());
     }
@@ -118,7 +118,7 @@ tick_t BBTrackContainer::beatLengthOfBB(int _bb) const
         Pattern* p = dynamic_cast<Pattern*>(t->getTCO(_bb));
         if(p != nullptr)
         {
-            tick_t plen = p->length();  // beatPatternLength();
+            tick_t plen = p->unitLength(); //length();  // beatPatternLength();
             max_length  = qMax(max_length, plen);
         }
     }
@@ -171,7 +171,7 @@ void BBTrackContainer::swapBB(int _bb1, int _bb2)
     updateComboBox();
 }
 
-void BBTrackContainer::updateBBTrack(TrackContentObject* _tco)
+void BBTrackContainer::updateBBTrack(Tile* _tco)
 {
     BBTrack* t = BBTrack::findBBTrack(_tco->startPosition()
                                       / DefaultTicksPerTact);
@@ -196,7 +196,7 @@ void BBTrackContainer::fixIncorrectPositions()
     for(Track* t: tracks())
         for(int i = 0; i < n; ++i)
         {
-            TrackContentObject* tco = t->getTCO(i);
+            Tile* tco = t->getTCO(i);
             tco->movePosition(MidiTime(i, 0));
             tco->setAutoResize(false);
             tco->setAutoRepeat(false);
@@ -208,13 +208,9 @@ void BBTrackContainer::fixIncorrectPositions()
 void BBTrackContainer::play()
 {
     if(Engine::getSong()->playMode() != Song::Mode_PlayBB)
-    {
         Engine::getSong()->playBB();
-    }
     else
-    {
         Engine::getSong()->togglePause();
-    }
 }
 
 void BBTrackContainer::stop()

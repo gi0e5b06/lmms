@@ -68,7 +68,7 @@ typedef int16_t bpm_t;          // tempo (MIN_BPM .. MAX_BPM)
 typedef int16_t bitrate_t;      // bitrate in kbps
 typedef int16_t fx_ch_t;        // FX-channel (0 .. MAX_EFFECT_CHANNEL)
 
-typedef int32_t jo_id_t;  // (unique) ID of a journalling object
+typedef uint32_t jo_id_t;  // (unique) ID of a journalling object
 
 // use for improved branch prediction
 #define likely(x) __builtin_expect((x), 1)

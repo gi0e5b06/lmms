@@ -26,118 +26,109 @@
 #define DUMMY_EFFECT_H
 
 #include "Effect.h"
-#include "EffectControls.h"
 #include "EffectControlDialog.h"
-
+#include "EffectControls.h"
 
 class DummyEffectControlDialog : public EffectControlDialog
 {
-public:
-	DummyEffectControlDialog( EffectControls * _controls ) :
-		EffectControlDialog( _controls )
-	{
-	}
-
-} ;
-
+  public:
+    DummyEffectControlDialog(EffectControls* _controls) :
+          EffectControlDialog(_controls)
+    {
+    }
+};
 
 class DummyEffectControls : public EffectControls
 {
-public:
-	DummyEffectControls( Effect * _eff ) :
-		EffectControls( _eff )
-	{
-	}
+  public:
+    DummyEffectControls(Effect* _eff) : EffectControls(_eff)
+    {
+    }
 
-	virtual ~DummyEffectControls()
-	{
-	}
+    virtual ~DummyEffectControls()
+    {
+    }
 
-	virtual int controlCount()
-	{
-		return 0;
-	}
+    virtual int controlCount()
+    {
+        return 0;
+    }
 
-	virtual void saveSettings( QDomDocument &, QDomElement & )
-	{
-	}
+    virtual void saveSettings(QDomDocument&, QDomElement&)
+    {
+    }
 
-	virtual void loadSettings( const QDomElement & )
-	{
-	}
+    virtual void loadSettings(const QDomElement&)
+    {
+    }
 
-	virtual QString nodeName() const
-	{
-		return "DummyControls";
-	}
+    virtual QString nodeName() const
+    {
+        return "DummyControls";
+    }
 
-	virtual EffectControlDialog * createView()
-	{
-		return new DummyEffectControlDialog( this );
-	}
-} ;
-
-
+    virtual EffectControlDialog* createView()
+    {
+        return new DummyEffectControlDialog(this);
+    }
+};
 
 class DummyEffect : public Effect
 {
-	Q_OBJECT
-public:
-	DummyEffect( Model * _parent, const QDomElement& originalPluginData ) :
-		Effect( NULL, _parent, NULL ),
-		m_controls( this ),
-		m_originalPluginData( originalPluginData )
-	{
-		setName();
-	}
+    Q_OBJECT
 
-	virtual ~DummyEffect()
-	{
-	}
+  public:
+    DummyEffect(Model* _parent, const QDomElement& originalPluginData) :
+          Effect(nullptr, _parent, nullptr), m_controls(this),
+          m_originalPluginData(originalPluginData)
+    {
+        setName();
+    }
 
-	virtual EffectControls * controls()
-	{
-		return &m_controls;
-	}
+    virtual ~DummyEffect()
+    {
+    }
 
-	bool processAudioBuffer( sampleFrame *, const fpp_t )
-	{
-		return false;
-	}
+    virtual EffectControls* controls()
+    {
+        return &m_controls;
+    }
 
-	const QDomElement& originalPluginData() const
-	{
-		return m_originalPluginData;
-	}
+    bool processAudioBuffer(sampleFrame*, const fpp_t)
+    {
+        return false;
+    }
 
+    const QDomElement& originalPluginData() const
+    {
+        return m_originalPluginData;
+    }
 
+  private:
+    DummyEffectControls m_controls;
+    const QDomElement   m_originalPluginData;
 
-private:
-	DummyEffectControls m_controls;
-	const QDomElement m_originalPluginData;
-	
-	// Parse the display name from the dom
-	virtual void setName()
-	{
-		QDomNodeList keys = originalPluginData().elementsByTagName( "key" );
-		for( int i = 0; !keys.item( i ).isNull(); ++i )
-		{
-			QDomNodeList attributes = keys.item( i ).toElement().elementsByTagName( "attribute" );
-			for( int j = 0; !attributes.item( j ).isNull(); ++j )
-			{
-				QDomElement attribute = attributes.item( j ).toElement();
-				if( attribute.hasAttribute( "value" ) )
-				{
-					QString name = tr("NOT FOUND") + " (" + attribute.attribute( "value" ) + ")";
-					setDisplayName(name);
-					return;
-				}
-
-			}
-
-		}
-	}
-} ;
-
+    // Parse the display name from the dom
+    virtual void setName()
+    {
+        QDomNodeList keys = originalPluginData().elementsByTagName("key");
+        for(int i = 0; !keys.item(i).isNull(); ++i)
+        {
+            QDomNodeList attributes
+                    = keys.item(i).toElement().elementsByTagName("attribute");
+            for(int j = 0; !attributes.item(j).isNull(); ++j)
+            {
+                QDomElement attribute = attributes.item(j).toElement();
+                if(attribute.hasAttribute("value"))
+                {
+                    QString name = tr("NOT FOUND") + " ("
+                                   + attribute.attribute("value") + ")";
+                    setDisplayName(name);
+                    return;
+                }
+            }
+        }
+    }
+};
 
 #endif

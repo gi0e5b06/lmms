@@ -47,8 +47,7 @@
 BBTrack::infoMap BBTrack::s_infoMap;
 
 BBTCO::BBTCO(Track* _track) :
-      TrackContentObject(_track, "Beat tile"), m_bbTrackIndex(-1),
-      m_mask(nullptr)
+      Tile(_track, "Beat tile"), m_bbTrackIndex(-1), m_mask(nullptr)
 {
     tact_t t = Engine::getBBTrackContainer()->lengthOfBB(bbTrackIndex());
     if(t > 0)
@@ -62,8 +61,7 @@ BBTCO::BBTCO(Track* _track) :
 }
 
 BBTCO::BBTCO(const BBTCO& _other) :
-      TrackContentObject(_other), m_bbTrackIndex(_other.m_bbTrackIndex),
-      m_mask(nullptr)
+      Tile(_other), m_bbTrackIndex(_other.m_bbTrackIndex), m_mask(nullptr)
 {
     const Bitset* mask = _other.mask();
     if(mask != nullptr)
@@ -139,7 +137,7 @@ tick_t BBTCO::unitLength() const
 
 void BBTCO::saveSettings(QDomDocument& doc, QDomElement& element)
 {
-    TrackContentObject::saveSettings(doc, element);
+    Tile::saveSettings(doc, element);
 
     if(m_mask != nullptr)
     {
@@ -177,7 +175,7 @@ void BBTCO::saveSettings(QDomDocument& doc, QDomElement& element)
 
 void BBTCO::loadSettings(const QDomElement& element)
 {
-    TrackContentObject::loadSettings(element);
+    Tile::loadSettings(element);
 
     if(element.hasAttribute("mask"))
     {
@@ -252,19 +250,19 @@ void BBTCO::clear()
     emit dataChanged();
 }
 
-TrackContentObjectView* BBTCO::createView(TrackView* _tv)
+TileView* BBTCO::createView(TrackView* _tv)
 {
     // qInfo("BBTCO::createView tv=%p", _tv);
     return new BBTCOView(this, _tv);
 }
 
 /*
-BBTCOView::BBTCOView(TrackContentObject* _tco, TrackView* _tv) :
-      TrackContentObjectView(_tco, _tv), m_bbTCO(dynamic_cast<BBTCO*>(_tco)),
+BBTCOView::BBTCOView(Tile* _tco, TrackView* _tv) :
+      TileView(_tco, _tv), m_bbTCO(dynamic_cast<BBTCO*>(_tco)),
       m_paintPixmap()
 */
 BBTCOView::BBTCOView(BBTCO* _tco, TrackView* _tv) :
-      TrackContentObjectView(_tco, _tv), m_bbTCO(_tco), m_paintPixmap()
+      TileView(_tco, _tv), m_bbTCO(_tco), m_paintPixmap()
 {
     // qInfo("BBTCOView::BBTCOView %p", _tco);
     connect(_tco->track(), SIGNAL(dataChanged()), this, SLOT(update()));
@@ -572,10 +570,10 @@ void BBTCOView::update()
 {
     ToolTip::add(this, m_bbTCO->name());
 
-    TrackContentObjectView::update();
+    TileView::update();
 }
 
-// QColor * BBTrack::s_lastTCOColor = NULL;
+// QColor * BBTrack::s_lastTCOColor = nullptr;
 
 BBTrack::BBTrack(TrackContainer* tc) : Track(Track::BBTrack, tc)
 {
@@ -625,7 +623,7 @@ QString BBTrack::defaultName() const
     for(const Track* t: Engine::getBBTrackContainer()->tracks())
         if(!t->isMuted())
         {
-            TrackContentObject* tco = t->getTCO(i);
+            Tile* tco = t->getTCO(i);
             if(!tco->isEmpty())
                 return tco->name();
         }
@@ -651,9 +649,9 @@ bool BBTrack::play(const MidiTime& _start,
     const Song* song = Engine::getSong();
     const float fpt  = Engine::framesPerTick();
 
-    MidiTime  start = _start;
-    tcoVector tcos;
-    int       n = currentLoop();
+    MidiTime start = _start;
+    Tiles    tcos;
+    int      n = currentLoop();
     if(song->playMode() == Song::Mode_PlaySong)
     {
         TimeLineWidget* tl = song->getPlayPos().m_timeLine;
@@ -669,7 +667,7 @@ bool BBTrack::play(const MidiTime& _start,
     /*
     MidiTime lastPosition;
     MidiTime lastLen;
-    for( tcoVector::iterator it = tcos.begin(); it != tcos.end(); ++it )
+    for( Tiles::iterator it = tcos.begin(); it != tcos.end(); ++it )
     {
             if( !( *it )->isMuted() &&
                 ( *it )->startPosition() >= lastPosition )
@@ -692,7 +690,7 @@ bool BBTrack::play(const MidiTime& _start,
     // MidiTime lastPosition;
     // MidiTime lastLen;
     bool played = false;
-    for(tcoVector::iterator it = tcos.begin(); it != tcos.end(); ++it)
+    for(Tiles::iterator it = tcos.begin(); it != tcos.end(); ++it)
     {
         if((*it)->isMuted())
             continue;
@@ -730,7 +728,7 @@ TrackView* BBTrack::createView(TrackContainerView* tcv)
     return new BBTrackView(this, tcv);
 }
 
-TrackContentObject* BBTrack::createTCO(const MidiTime& _pos)
+Tile* BBTrack::createTCO(const MidiTime& _pos)
 {
     BBTCO* bbtco = new BBTCO(this);
     /*
@@ -816,7 +814,7 @@ BBTrack* BBTrack::findBBTrack(int _bb_num)
                     return const_cast<BBTrack*>(it.key());
             }
     }
-    return NULL;
+    return nullptr;
     */
     return const_cast<BBTrack*>(s_infoMap.key(_bb_num, nullptr));
 }
@@ -825,7 +823,7 @@ void BBTrack::swapBBTracks(Track* _track1, Track* _track2)
 {
     BBTrack* t1 = dynamic_cast<BBTrack*>(_track1);
     BBTrack* t2 = dynamic_cast<BBTrack*>(_track2);
-    if(t1 != NULL && t2 != NULL)
+    if(t1 != nullptr && t2 != nullptr)
     {
         qSwap(s_infoMap[t1], s_infoMap[t2]);
         Engine::getBBTrackContainer()->swapBB(s_infoMap[t1], s_infoMap[t2]);

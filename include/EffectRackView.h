@@ -41,14 +41,13 @@ class QVBoxLayout;
 class EffectView;
 class GroupBox;
 
-class EffectRackView
-      : public GroupBox
-      , public ModelView
+class EffectRackView : public GroupBox, public ModelView
 {
     Q_OBJECT
+
   public:
     EffectRackView(EffectChain* model,
-                   QWidget*     parent = NULL,
+                   QWidget*     parent = nullptr,
                    QString      _title = "");
     virtual ~EffectRackView();
 

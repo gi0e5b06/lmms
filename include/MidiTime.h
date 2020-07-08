@@ -74,12 +74,24 @@ class EXPORT MidiTime
     MidiTime  operator-(const tick_t time) const;
 
     // return the tact, rounded down and 0-based
-    tact_t getTact() const;
+    tact_t tact() const;
     // return the tact, rounded up and 0-based
     tact_t nextFullTact() const;
 
+    // Obsolete
+    inline tact_t getTact() const
+    {
+        return tact();
+    }
+
+    tick_t ticks() const;
     void   setTicks(tick_t ticks);
-    tick_t getTicks() const;
+
+    // Obsolete
+    inline tick_t getTicks() const
+    {
+        return ticks();
+    }
 
     operator tick_t() const;
 

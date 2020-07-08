@@ -28,6 +28,8 @@
 
 #include "VstSyncData.h"
 
+#include "lmms_basics.h"
+
 #include <QObject>
 #include <QSharedMemory>
 

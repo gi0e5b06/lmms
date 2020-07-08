@@ -169,9 +169,7 @@ bool LV2EffectGDX::processAudioBuffer(sampleFrame* _buf, const fpp_t _frames)
             {
                 case CHANNEL_IN:
                     for(fpp_t frame = 0; frame < _frames; ++frame)
-                    {
                         pp->buffer[frame].f = _buf[frame][channel];
-                    }
                     ++channel;
                     break;
                 case AUDIO_RATE_INPUT:
@@ -179,8 +177,10 @@ bool LV2EffectGDX::processAudioBuffer(sampleFrame* _buf, const fpp_t _frames)
                     ValueBuffer* vb = pp->control->valueBuffer();
                     if(vb)
                     {
-                        memcpy(pp->buffer, vb->values(),
-                               _frames * sizeof(float));
+                        //memcpy(pp->buffer, vb->values(),
+                        //       _frames * sizeof(FLOAT));
+                        for(fpp_t frame = 0; frame < _frames; ++frame)
+                            pp->buffer[frame] = vb->value(frame);
                     }
                     else
                     {
@@ -189,17 +189,14 @@ bool LV2EffectGDX::processAudioBuffer(sampleFrame* _buf, const fpp_t _frames)
                         // rates are treated as though they were control rate
                         // by setting the port buffer to all the same value.
                         for(fpp_t frame = 0; frame < _frames; ++frame)
-                        {
                             pp->buffer[frame] = pp->value;
-                        }
                     }
                     break;
                 }
                 case CONTROL_RATE_INPUT:
-                    if(pp->control == NULL)
-                    {
+                    if(pp->control == nullptr)
                         break;
-                    }
+
                     pp->value.f   = pp->control->value().f / pp->scale;
                     pp->buffer[0] = pp->value;
                     break;

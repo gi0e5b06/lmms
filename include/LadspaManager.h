@@ -226,7 +226,7 @@ class EXPORT LadspaManager
     information dependent on the history of the plugin instance
     except for any data locations provided by connectPort() and any
     gain set by setRunAddingGain(). If there is nothing for
-    activate() to do then the plugin writer may provide a NULL rather
+    activate() to do then the plugin writer may provide a nullptr rather
     than an empty function.
 
     When present, hosts must call this function once before run() (or
@@ -264,7 +264,7 @@ class EXPORT LadspaManager
     addition.
 
     runAdding() is optional. When it is not provided by a plugin,
-    this function pointer must be set to NULL. When it is provided,
+    this function pointer must be set to nullptr. When it is provided,
     the function setRunAddingGain() must be provided also. */
     bool runAdding(const ladspa_key_t& _plugin,
                    LADSPA_Handle       _instance,
@@ -278,14 +278,14 @@ class EXPORT LadspaManager
 
     This function should be provided by the plugin if and only if the
     runAdding() function is provided. When it is absent this
-    function pointer must be set to NULL. */
+    function pointer must be set to nullptr. */
     bool setRunAddingGain(const ladspa_key_t& _plugin,
                           LADSPA_Handle       _instance,
                           LADSPA_Data         _gain);
 
     /* This is the counterpart to activate() (see above). If there is
     nothing for deactivate() to do then the plugin writer may provide
-    a NULL rather than an empty function.
+    a nullptr rather than an empty function.
 
     Hosts must deactivate all activated units after they have been
     run() (or run_adding()) for the last time. This call should be

@@ -43,7 +43,7 @@ Instrument::~Instrument()
     Engine::mixer()->emit playHandlesForInstrumentToRemove(this);
     qInfo("Instrument::~Instrument wait");
     QCoreApplication::sendPostedEvents();
-    // QThread::yieldCurrentThread();
+    QThread::yieldCurrentThread();
     Engine::mixer()->waitUntilNoPlayHandle(this);
 
     m_instrumentTrack = nullptr;

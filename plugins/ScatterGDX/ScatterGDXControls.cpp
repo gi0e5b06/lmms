@@ -22,58 +22,49 @@
  *
  */
 
+#include "ScatterGDXControls.h"
+
+#include "Engine.h"
+#include "ScatterGDX.h"
+#include "Song.h"
 
 #include <QDomElement>
 
-#include "ScatterGDXControls.h"
-#include "ScatterGDX.h"
-#include "Engine.h"
-#include "Song.h"
-
-
-ScatterGDXControls::ScatterGDXControls( ScatterGDXEffect* effect ) :
-	EffectControls( effect ),
-	m_effect( effect ),
-	m_pwrModel(  0.f,  0.f, 8.f, 1.f,      this, tr( "Power"    ) ),
-        m_spdModel(  1.f, -1.f, 1.f, 0.00001f, this, tr( "Speed"    ) ),
-	m_frcModel(  2.f,  1.f, 8.f, 1.f,      this, tr( "Fraction" ) ),
-	m_ovrModel(  0.f,  0.f, 1.f, 0.00001f, this, tr( "Override" ) ),
-	m_strModel(  0.f,  0.f, 1.f, 0.00001f, this, tr( "Start"    ) )
+ScatterGDXControls::ScatterGDXControls(ScatterGDXEffect* effect) :
+      EffectControls(effect), m_effect(effect),
+      m_pwrModel(0., 0., 8., 1., this, tr("Power")),
+      m_spdModel(1., -1., 1., 0.00001, this, tr("Speed")),
+      m_frcModel(2., 1., 8., 1., this, tr("Fraction")),
+      m_ovrModel(0., 0., 1., 0.00001, this, tr("Override")),
+      m_strModel(0., 0., 1., 0.00001, this, tr("Start"))
 {
-/*	connect( &m_volumeModel, SIGNAL( dataChanged() ), this, SLOT( changeControl() ) );
-	connect( &m_panModel, SIGNAL( dataChanged() ), this, SLOT( changeControl() ) );
-	connect( &m_leftModel, SIGNAL( dataChanged() ), this, SLOT( changeControl() ) );
-	connect( &m_rightModel, SIGNAL( dataChanged() ), this, SLOT( changeControl() ) );*/
+    /*	connect( &m_volumeModel, SIGNAL( dataChanged() ), this, SLOT(
+       changeControl() ) ); connect( &m_panModel, SIGNAL( dataChanged() ),
+       this, SLOT( changeControl() ) ); connect( &m_leftModel, SIGNAL(
+       dataChanged() ), this, SLOT( changeControl() ) ); connect(
+       &m_rightModel, SIGNAL( dataChanged() ), this, SLOT( changeControl() )
+       );*/
 }
-
-
-
 
 void ScatterGDXControls::changeControl()
 {
-//	engine::getSong()->setModified();
+    //	engine::getSong()->setModified();
 }
 
-
-
-
-void ScatterGDXControls::loadSettings( const QDomElement& _this )
+void ScatterGDXControls::loadSettings(const QDomElement& _this)
 {
-	m_pwrModel.loadSettings( _this, "power" );
-	m_spdModel.loadSettings( _this, "speed" );
-	m_frcModel.loadSettings( _this, "fraction" );
-	m_ovrModel.loadSettings( _this, "override" );
-	m_strModel.loadSettings( _this, "start" );
+    m_pwrModel.loadSettings(_this, "power");
+    m_spdModel.loadSettings(_this, "speed");
+    m_frcModel.loadSettings(_this, "fraction");
+    m_ovrModel.loadSettings(_this, "override");
+    m_strModel.loadSettings(_this, "start");
 }
 
-
-
-
-void ScatterGDXControls::saveSettings( QDomDocument& doc, QDomElement& _this )
+void ScatterGDXControls::saveSettings(QDomDocument& doc, QDomElement& _this)
 {
-	m_pwrModel.saveSettings( doc, _this, "power" );
-	m_spdModel.saveSettings( doc, _this, "speed" );
-	m_frcModel.saveSettings( doc, _this, "fraction" );
-	m_ovrModel.saveSettings( doc, _this, "override" );
-	m_strModel.saveSettings( doc, _this, "start" );
+    m_pwrModel.saveSettings(doc, _this, "power");
+    m_spdModel.saveSettings(doc, _this, "speed");
+    m_frcModel.saveSettings(doc, _this, "fraction");
+    m_ovrModel.saveSettings(doc, _this, "override");
+    m_strModel.saveSettings(doc, _this, "start");
 }

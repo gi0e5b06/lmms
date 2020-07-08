@@ -26,6 +26,7 @@
 #define AUDIO_PORT_H
 
 #include <QMutex>
+#include <QSharedPointer>
 #include <QString>
 //#include <QMutexLocker>
 
@@ -33,14 +34,18 @@
 #include "MemoryManager.h"
 #include "PlayHandle.h"
 #include "SafeList.h"
+#include "ThreadableJob.h"
 
 class AudioPort;
 class EffectChain;
 // class FloatModel;
 // class BoolModel;
 class SampleBuffer;
+// class PlayHandle;
 
-typedef SafeList<AudioPort*> AudioPorts;
+// typedef QSharedPointer<PlayHandle> PlayHandlePointer;
+typedef QSharedPointer<AudioPort>  AudioPortPointer;
+typedef SafeList<AudioPortPointer> AudioPorts;
 
 class AudioPort : public ThreadableJob
 {
@@ -64,6 +69,7 @@ class AudioPort : public ThreadableJob
         return m_portBuffer;
     }
 
+    /*
     inline void lockBuffer()
     {
         m_portBufferLock.lock();
@@ -73,6 +79,7 @@ class AudioPort : public ThreadableJob
     {
         m_portBufferLock.unlock();
     }
+    */
 
     // indicate whether JACK & Co should provide output-buffer at ext. port
     inline bool extOutputEnabled() const
@@ -108,51 +115,69 @@ class AudioPort : public ThreadableJob
 
     bool processEffects();
 
-    // ThreadableJob stuff
-    virtual void doProcessing();
-    virtual bool requiresProcessing() const
+    virtual bool requiresProcessing() const final
     {
+        // return !m_playHandles.isEmpty();
         return true;
     }
 
-    void addPlayHandle(PlayHandle* handle);
-    void removePlayHandle(PlayHandle* handle);
+    void lock()
+    {
+        m_processingLock.lock();
+    }
+
+    void unlock()
+    {
+        m_processingLock.unlock();
+    }
+
+    bool tryLock()
+    {
+        return m_processingLock.tryLock();
+    }
+
+    void addPlayHandle(PlayHandlePointer handle);
+    void removePlayHandle(PlayHandlePointer handle);
 
     void updateFrozenBuffer(f_cnt_t _len);
     void cleanFrozenBuffer(f_cnt_t _len);
     void readFrozenBuffer(QString _uuid);
     void writeFrozenBuffer(QString _uuid);
 
+    virtual AudioPortPointer& pointer()
+    {
+        return *m_pointer;
+    }
+
+    virtual const AudioPortPointer& pointer() const
+    {
+        return *m_pointer;
+    }
+
+  protected:
+    virtual void doProcessing() final;
+
   private:
     volatile bool m_bufferUsage;
-
-    sampleFrame* m_portBuffer;
-    QMutex       m_portBufferLock;
-
-    bool    m_extOutputEnabled;
-    fx_ch_t m_nextFxChannel;
-
-    QString m_name;
-
-    EffectChain* m_effects;
-
-    // PlayHandleList
-    SafeList<PlayHandle*> m_playHandles;
-    //QMutex                m_playHandleLock;
-
-    BoolModel*  m_volumeEnabledModel;
-    FloatModel* m_volumeModel;
-    BoolModel*  m_panningEnabledModel;
-    FloatModel* m_panningModel;
-    BoolModel*  m_bendingEnabledModel;
-    FloatModel* m_bendingModel;
-    BoolModel*  m_mutedModel;
-    BoolModel*  m_frozenModel;
-    BoolModel*  m_clippingModel;
-
-    SampleBuffer* m_frozenBuf;
-    // sampleFrame* m_frozenBuf;
-    // int          m_frozenLen;
+    sampleFrame*  m_portBuffer;
+    // QMutex                      m_portBufferLock;
+    Mutex                       m_processingLock;
+    bool                        m_extOutputEnabled;
+    fx_ch_t                     m_nextFxChannel;
+    QString                     m_name;
+    EffectChain*                m_effects;
+    SafeList<PlayHandlePointer> m_playHandles;
+    BoolModel*                  m_volumeEnabledModel;
+    FloatModel*                 m_volumeModel;
+    BoolModel*                  m_panningEnabledModel;
+    FloatModel*                 m_panningModel;
+    BoolModel*                  m_bendingEnabledModel;
+    FloatModel*                 m_bendingModel;
+    BoolModel*                  m_mutedModel;
+    BoolModel*                  m_frozenModel;
+    BoolModel*                  m_clippingModel;
+    SampleBuffer*               m_frozenBuf;
+    AudioPortPointer*           m_pointer;
 
     friend class Mixer;
     friend class MixerWorkerThread;

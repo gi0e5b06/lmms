@@ -60,6 +60,15 @@ class EXPORT PeakController : public Controller
     void                      updateCoeffs();
 
   protected:
+    virtual bool isConfigurable()
+    {
+        return false;
+    }
+    virtual bool isRemovable()
+    {
+        return false;
+    }
+
     // The internal per-controller get-value function
     virtual void fillValueBuffer();
 
@@ -69,14 +78,14 @@ class EXPORT PeakController : public Controller
 
   private:
     sample_t m_currentSample;
-    // backward compatibility for <= 0.4.15
-    static int  m_getCount;
-    static int  m_loadCount;
-    static bool m_buggedFile;
+    real_t   m_attackCoeff;
+    real_t   m_decayCoeff;
+    bool     m_coeffNeedsUpdate;
 
-    real_t m_attackCoeff;
-    real_t m_decayCoeff;
-    bool   m_coeffNeedsUpdate;
+    // backward compatibility for <= 0.4.15
+    static int  s_getCount;
+    static int  s_loadCount;
+    static bool s_buggedFile;
 };
 
 class PeakControllerDialog : public ControllerDialog

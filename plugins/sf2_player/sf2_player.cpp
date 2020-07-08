@@ -184,7 +184,7 @@ sf2Instrument::sf2Instrument(InstrumentTrack* _instrument_track) :
 
     InstrumentPlayHandle* iph
             = new InstrumentPlayHandle(this, _instrument_track);
-    Engine::mixer()->emit playHandleToAdd(iph);
+    Engine::mixer()->emit playHandleToAdd(iph->pointer());
 }
 
 sf2Instrument::~sf2Instrument()
@@ -1073,7 +1073,7 @@ void sf2InstrumentView::showFileDialog()
     sf2Instrument* k = castModel<sf2Instrument>();
 
     FileDialog ofd(NULL, tr("Open SoundFont file"));
-    ofd.setFileMode(FileDialog::ExistingFiles);
+    ofd.setFileMode(FileDialog::ExistingFile);
 
     QStringList types;
     types << tr("SoundFont2 Files (*.sf2)");
@@ -1094,12 +1094,8 @@ void sf2InstrumentView::showFileDialog()
 
     if(ofd.exec() == QDialog::Accepted && !ofd.selectedFiles().isEmpty())
     {
-        QString f = ofd.selectedFiles()[0];
-        if(f != "")
-        {
-            k->openFile(f);
-            Engine::getSong()->setModified();
-        }
+        k->openFile(ofd.selectedFiles()[0]);
+        Engine::getSong()->setModified();
     }
 
     m_fileDialogButton->setEnabled(true);

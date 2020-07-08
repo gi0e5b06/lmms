@@ -1,24 +1,23 @@
 /*
  * Clipboard.cpp - the clipboard for patterns, notes etc.
  *
+ * Copyright (c) 2018-2020 gi0e5b06 (on github.com)
  * Copyright (c) 2004-2009 Tobias Doerffel <tobydox/at/users.sourceforge.net>
  *
- * This file is part of LMMS - https://lmms.io
+ * This file is part of LSMM -
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public
- * License along with this program (see COPYING); if not, write to the
- * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
- * Boston, MA 02110-1301 USA.
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
 
@@ -72,7 +71,7 @@ const QString CSI_::type(const QString& _nodeName)
 
 void CSI_::set(SerializingObject* _obj, QClipboard::Mode _mode)
 {
-    if(_obj == NULL)
+    if(_obj == nullptr)
     {
         qWarning("Warning: tried to copy null object to clipboard");
         return;
@@ -100,17 +99,17 @@ bool CSI_::has(const QString& _nodeName, QClipboard::Mode _mode)
     if(clip->hasFormat(type))
         return true;
 
-    if(!dom(_nodeName,_mode).isNull())
-            return true;
+    if(!dom(_nodeName, _mode).isNull())
+        return true;
 
-    qWarning("Warning: data type'%s' not found",qPrintable(type));
+    qWarning("Warning: data type '%s' not found", qPrintable(type));
 
     return false;
 }
 
 bool CSI_::get(SerializingObject* _obj, QClipboard::Mode _mode)
 {
-    if(_obj == NULL)
+    if(_obj == nullptr)
     {
         qWarning("Warning: tried to get null object to clipboard");
         return false;
@@ -145,7 +144,7 @@ bool CSI_::get(SerializingObject* _obj, QClipboard::Mode _mode)
     }
     */
 
-    QDomElement e=dom(_obj->nodeName(),_mode);
+    QDomElement e = dom(_obj->nodeName(), _mode);
 
     if(e.nodeName() != _obj->nodeName())
     {
@@ -175,7 +174,7 @@ QString CSI_::txt(QClipboard::Mode _mode)
 {
     const QMimeData* clip = QApplication::clipboard()->mimeData(_mode);
 
-    QString type="";
+    QString    type = "";
     QByteArray data;
 
     /*
@@ -190,9 +189,9 @@ QString CSI_::txt(QClipboard::Mode _mode)
     }
     else
     */
-    if(clip->hasFormat(type="text/plain"))
+    if(clip->hasFormat(type = "text/plain"))
     {
-        data=clip->data(type);
+        data = clip->data(type);
     }
     else
     {
@@ -207,22 +206,20 @@ QDomElement CSI_::dom(const QString& _nodeName, QClipboard::Mode _mode)
 {
     const QMimeData* clip = QApplication::clipboard()->mimeData(_mode);
 
-    QString type="";
+    QString    type = "";
     QByteArray data;
 
-    if(clip->hasFormat(type=CSI_::type(_nodeName)))
+    if(clip->hasFormat(type = CSI_::type(_nodeName)))
     {
-        data=clip->data(type);
+        data = clip->data(type);
     }
-    else
-    if(clip->hasFormat(type="text/xml"))
+    else if(clip->hasFormat(type = "text/xml"))
     {
-        data=clip->data(type);
+        data = clip->data(type);
     }
-    else
-    if(clip->hasFormat(type="text/plain"))
+    else if(clip->hasFormat(type = "text/plain"))
     {
-        data=clip->data(type);
+        data = clip->data(type);
     }
     else
     {

@@ -80,7 +80,7 @@ vestigeInstrument::vestigeInstrument(InstrumentTrack* _instrumentTrack) :
     // now we need a play-handle which cares for calling play()
     InstrumentPlayHandle* iph
             = new InstrumentPlayHandle(this, _instrumentTrack);
-    Engine::mixer()->emit playHandleToAdd(iph);
+    Engine::mixer()->emit playHandleToAdd(iph->pointer());
 }
 
 vestigeInstrument::~vestigeInstrument()

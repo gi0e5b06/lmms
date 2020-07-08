@@ -42,14 +42,14 @@ class EXPORT SerializingObject
     virtual ~SerializingObject();
 
     virtual QDomElement saveState(QDomDocument& _doc, QDomElement& _parent);
-    virtual void restoreState(const QDomElement& _this);
+    virtual void        restoreState(const QDomElement& _this);
 
     // to be implemented by actual object
     virtual QString nodeName() const = 0;
 
     void setHook(SerializingObjectHook* _hook);
 
-    SerializingObjectHook* hook()
+    virtual SerializingObjectHook* hook() const final
     {
         return m_hook;
     }
@@ -68,16 +68,14 @@ class EXPORT SerializingObject
 class SerializingObjectHook
 {
   public:
-    SerializingObjectHook() : m_hookedIn(NULL)
+    SerializingObjectHook() : m_hookedIn(nullptr)
     {
     }
 
     virtual ~SerializingObjectHook()
     {
-        if(m_hookedIn != NULL)
-        {
-            m_hookedIn->setHook(NULL);
-        }
+        if(m_hookedIn != nullptr)
+            m_hookedIn->setHook(nullptr);
     }
 
     virtual void saveSettings(QDomDocument& _doc, QDomElement& _this) = 0;

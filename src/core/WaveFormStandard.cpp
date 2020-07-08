@@ -186,8 +186,8 @@ WaveFormStandard::Set::Set()
                                          Linear);
 
     // Statistical
-    //BANK              = 22;
-    //m_bankNames[BANK] = "Statistical";
+    // BANK              = 22;
+    // m_bankNames[BANK] = "Statistical";
 
     // Lib AKWF
     int sbank = 35;
@@ -540,7 +540,7 @@ void WaveFormStandard::Set::fillBankModel(ComboBoxModel& _model)
                                   //.arg(b, 2, 16, QChar('0'))
                            .arg(m_bankNames[b - MIN_BANK])
                            .trimmed();
-        _model.addItem(text, NULL, b);
+        _model.addItem(text, nullptr, b);
     }
 }
 
@@ -560,7 +560,7 @@ void WaveFormStandard::Set::fillIndexModel(ComboBoxModel& _model,
                                   //.arg(i, 2, 16, QChar('0'))
                            .arg(wf->name())
                            .trimmed();
-        _model.addItem(text, NULL, i);
+        _model.addItem(text, nullptr, i);
     }
 }
 
@@ -702,8 +702,10 @@ WaveFormStandard::WaveFormStandard(const QString&          _name,
 
 WaveFormStandard::~WaveFormStandard()
 {
+    /*
     qInfo("~WaveFormStandard (%d,%d,%s)", m_bank, m_index,
           qPrintable(m_name));
+    */
     /*
     if(m_data != nullptr)
     {

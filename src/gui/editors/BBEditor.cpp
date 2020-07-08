@@ -1,24 +1,23 @@
 /*
  * BBEditor.cpp - basic main-window for editing of beats and basslines
  *
+ * Copyright (c) 2018-2020 gi0e5b06 (on github.com)
  * Copyright (c) 2004-2008 Tobias Doerffel <tobydox/at/users.sourceforge.net>
  *
- * This file is part of LMMS - https://lmms.io
+ * This file is part of LSMM -
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public
- * License along with this program (see COPYING); if not, write to the
- * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
- * Boston, MA 02110-1301 USA.
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
 
@@ -28,18 +27,24 @@
 //#include <QKeyEvent>
 //#include <QLayout>
 
+#include "BBTrack.h"
 #include "BBTrackContainer.h"
 #include "ComboBox.h"
+#include "GuiApplication.h"
 #include "MainWindow.h"
+#include "SongEditor.h"
 #include "Pattern.h"
 #include "Song.h"
 #include "StringPairDrag.h"
+
 #include "embed.h"
+
+#include <QCoreApplication>
 
 BBWindow::BBWindow(BBTrackContainer* tc) :
       EditorWindow(false), m_trackContainerView(new BBEditor(tc))
 {
-    setWindowIcon(embed::getIconPixmap("bb_track_btn"));
+    setWindowIcon(embed::getIcon("bb_track_btn"));
     setWindowTitle(tr("Beat"));
     setCentralWidget(m_trackContainerView);
 
@@ -93,26 +98,30 @@ BBWindow::BBWindow(BBTrackContainer* tc) :
     DropToolBar* trackActionsToolBar
             = addDropToolBarToTop(tr("Track actions"));
 
-    trackActionsToolBar->addAction(
-            embed::getIconPixmap("add_instrument_track"),
-            tr("Add instrument-track"), m_trackContainerView,
-            SLOT(addInstrumentTrack()));
+    trackActionsToolBar->addAction(embed::getIcon("clone"),
+                                   tr("Clone the beat"), m_trackContainerView,
+                                   SLOT(cloneBeat()));
+
+    trackActionsToolBar->addAction(embed::getIcon("add_instrument_track"),
+                                   tr("Add instrument-track"),
+                                   m_trackContainerView,
+                                   SLOT(addInstrumentTrack()));
 
     /*
-    trackActionsToolBar->addAction(embed::getIconPixmap("add_bb_track"),
+    trackActionsToolBar->addAction(embed::getIcon("add_bb_track"),
                                    tr("Add beat/bassline"),
                                    Engine::getSong(),
                                    SLOT(addBBTrack()));
     */
 
     trackActionsToolBar->addAction(
-            embed::getIconPixmap("add_sample_track"), tr("Add sample-track"),
+            embed::getIcon("add_sample_track"), tr("Add sample-track"),
             m_trackContainerView, SLOT(addSampleTrack()));
 
-    trackActionsToolBar->addAction(
-            embed::getIconPixmap("add_automation_track"),
-            tr("Add automation-track"), m_trackContainerView,
-            SLOT(addAutomationTrack()));
+    trackActionsToolBar->addAction(embed::getIcon("add_automation_track"),
+                                   tr("Add automation-track"),
+                                   m_trackContainerView,
+                                   SLOT(addAutomationTrack()));
 
     /*
     QWidget* stretch = new QWidget(m_toolBar);
@@ -123,21 +132,21 @@ BBWindow::BBWindow(BBTrackContainer* tc) :
     // Step actions
     DropToolBar* stepActionsToolBar = addDropToolBarToTop(tr("Step actions"));
 
-    stepActionsToolBar->addAction(embed::getIconPixmap("step_btn_remove"),
+    stepActionsToolBar->addAction(embed::getIcon("step_btn_remove"),
                                   tr("Remove steps"), m_trackContainerView,
                                   SLOT(removeSteps()));
-    stepActionsToolBar->addAction(embed::getIconPixmap("step_btn_add"),
+    stepActionsToolBar->addAction(embed::getIcon("step_btn_add"),
                                   tr("Add steps"), m_trackContainerView,
                                   SLOT(addSteps()));
-    stepActionsToolBar->addAction(embed::getIconPixmap("step_btn_duplicate"),
+    stepActionsToolBar->addAction(embed::getIcon("step_btn_duplicate"),
                                   tr("Clone Steps"), m_trackContainerView,
                                   SLOT(cloneSteps()));
 
     stepActionsToolBar->addAction(
-            embed::getIconPixmap("arrow_left"), tr("Rotate one step left"),
+            embed::getIcon("arrow_left"), tr("Rotate one step left"),
             m_trackContainerView, SLOT(rotateOneStepLeft()));
     stepActionsToolBar->addAction(
-            embed::getIconPixmap("arrow_right"), tr("Rotate one step right"),
+            embed::getIcon("arrow_right"), tr("Rotate one step right"),
             m_trackContainerView, SLOT(rotateOneStepRight()));
 
     connect(&tc->m_bbComboBoxModel, SIGNAL(dataChanged()),
@@ -182,8 +191,7 @@ void BBWindow::stop()
     Engine::getSong()->stop();
 }
 
-BBEditor::BBEditor(BBTrackContainer* tc) :
-      TrackContainerView(tc), m_bbtc(tc)
+BBEditor::BBEditor(BBTrackContainer* tc) : TrackContainerView(tc), m_bbtc(tc)
 {
     setModel(tc);
 }
@@ -205,32 +213,70 @@ void BBEditor::cloneSteps()
 
 void BBEditor::removeSteps()
 {
-    Tracks tl = model()->tracks();
-
-    for(Tracks::iterator it = tl.begin(); it != tl.end(); ++it)
+    // Tracks tl = model()->tracks();
+    // for(Tracks::iterator it = tl.begin(); it != tl.end(); ++it)
+    for(Track* t: model()->tracks())
     {
-        if((*it)->type() == Track::InstrumentTrack)
+        if(t->type() == Track::InstrumentTrack)
         {
-            Pattern* p = static_cast<Pattern*>(
-                    (*it)->getTCO(m_bbtc->currentBB()));
+            Pattern* p
+                    = static_cast<Pattern*>(t->getTCO(m_bbtc->currentBB()));
             p->removeBarSteps();
         }
     }
 }
 
+void BBEditor::cloneBeat()
+{
+    TrackContainerView* tcView    = gui->songWindow()->m_editor;
+    const int           cur_bb    = m_bbtc->currentBB();
+    BBTrack*            bbt       = BBTrack::findBBTrack(cur_bb);
+    TrackView*          trackView = tcView->createTrackView(bbt);
+
+    Track*     newTrack     = bbt->clone();
+    TrackView* newTrackView = tcView->createTrackView(newTrack);
+    int        index        = tcView->trackViews().indexOf(trackView);
+    int        i            = tcView->trackViews().size();
+    while(i > index + 1)
+    {
+        tcView->moveTrackView(newTrackView, i - 1);
+        i--;
+    }
+    // tcView->moveTrackView(newTrackView,index);
+
+    if(newTrack->isSolo())
+        newTrack->setSolo(false);
+    if(newTrack->isFrozen())
+        newTrack->setFrozen(false);
+    if(newTrack->isClipping())
+        newTrack->setClipping(false);
+    newTrack->cleanFrozenBuffer();
+
+    QCoreApplication::sendPostedEvents();
+
+    newTrack->lockTrack();
+    newTrack->deleteTCOs();
+    if(newTrack->trackContainer() == Engine::getBBTrackContainer())
+        newTrack->createTCOsForBB(Engine::getBBTrackContainer()->numOfBBs()
+                                  - 1);
+    newTrack->unlockTrack();
+
+    m_bbtc->setCurrentBB(static_cast<BBTrack*>(newTrack)->index());
+}
+
 void BBEditor::addInstrumentTrack()
 {
-    (void)Track::create(Track::InstrumentTrack, model());
+    Track::create(Track::InstrumentTrack, model());
 }
 
 void BBEditor::addSampleTrack()
 {
-    (void)Track::create(Track::SampleTrack, model());
+    Track::create(Track::SampleTrack, model());
 }
 
 void BBEditor::addAutomationTrack()
 {
-    (void)Track::create(Track::AutomationTrack, model());
+    Track::create(Track::AutomationTrack, model());
 }
 
 int BBEditor::highestStepResolution()
@@ -238,9 +284,9 @@ int BBEditor::highestStepResolution()
     int r = 0;
     for(const TrackView* view: trackViews())
     {
-        const Track*     t = view->track();
-        Track::tcoVector v = t->getTCOs();
-        for(const TrackContentObject* tco: v)
+        const Track* t = view->track();
+        Tiles        v = t->getTCOs();
+        for(const Tile* tco: v)
             r = qMax<int>(r, tco->stepResolution());
         qInfo("BBEditor::highestStepResolution %s %d",
               qPrintable(view->track()->name()), r);
@@ -254,9 +300,9 @@ void BBEditor::rotateOneStepLeft()
     if(r > 0)
         for(TrackView* view: trackViews())
         {
-            const Track*     t = view->track();
-            Track::tcoVector v = t->getTCOs();
-            for(TrackContentObject* tco: v)
+            const Track* t = view->track();
+            Tiles        v = t->getTCOs();
+            for(Tile* tco: v)
                 tco->rotate(-MidiTime::ticksPerTact() / r);
         }
 }
@@ -267,9 +313,9 @@ void BBEditor::rotateOneStepRight()
     if(r > 0)
         for(TrackView* view: trackViews())
         {
-            const Track*     t = view->track();
-            Track::tcoVector v = t->getTCOs();
-            for(TrackContentObject* tco: v)
+            const Track* t = view->track();
+            Tiles        v = t->getTCOs();
+            for(Tile* tco: v)
                 tco->rotate(MidiTime::ticksPerTact() / r);
         }
 }
@@ -277,13 +323,10 @@ void BBEditor::rotateOneStepRight()
 void BBEditor::removeBBView(int bb)
 {
     for(TrackView* view: trackViews())
-    {
         view->getTrackContentWidget()->removeTCOView(bb);
-    }
 }
 
-void BBEditor::saveSettings(QDomDocument& doc,
-                                        QDomElement&  element)
+void BBEditor::saveSettings(QDomDocument& doc, QDomElement& element)
 {
     MainWindow::saveWidgetState(parentWidget(), element);
 }
@@ -323,22 +366,18 @@ void BBEditor::updatePosition()
 
 void BBEditor::makeSteps(bool clone)
 {
-    Tracks tl = model()->tracks();
-
-    for(Tracks::iterator it = tl.begin(); it != tl.end(); ++it)
+    // Tracks tl = model()->tracks();
+    // for(Tracks::iterator it = tl.begin(); it != tl.end(); ++it)
+    for(Track* t: model()->tracks())
     {
-        if((*it)->type() == Track::InstrumentTrack)
+        if(t->type() == Track::InstrumentTrack)
         {
-            Pattern* p = static_cast<Pattern*>(
-                    (*it)->getTCO(m_bbtc->currentBB()));
+            Pattern* p
+                    = static_cast<Pattern*>(t->getTCO(m_bbtc->currentBB()));
             if(clone)
-            {
                 p->cloneSteps();
-            }
             else
-            {
                 p->addBarSteps();
-            }
         }
     }
 }

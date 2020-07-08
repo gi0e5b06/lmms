@@ -49,8 +49,8 @@ class AutomationTrack : public Track
         return "automationtrack";
     }
 
-    virtual TrackView*          createView(TrackContainerView*);
-    virtual TrackContentObject* createTCO(const MidiTime& _pos);
+    virtual TrackView* createView(TrackContainerView*);
+    virtual Tile*      createTCO(const MidiTime& _pos);
 
     virtual void saveTrackSpecificSettings(QDomDocument& _doc,
                                            QDomElement&  _parent);

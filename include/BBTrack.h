@@ -37,7 +37,7 @@
 class TrackLabelButton;
 class TrackContainer;
 
-class BBTCO : public TrackContentObject
+class BBTCO : public Tile
 {
   public:
     BBTCO(Track* _track);
@@ -47,10 +47,9 @@ class BBTCO : public TrackContentObject
     int  bbTrackIndex() const;
     void setBBTrackIndex(int _index);
 
-    virtual bool isEmpty() const;
+    virtual bool    isEmpty() const;
     virtual QString defaultName() const;
-
-    virtual tick_t unitLength() const;
+    virtual tick_t  unitLength() const;
 
     virtual void saveSettings(QDomDocument& _doc, QDomElement& _parent);
     virtual void loadSettings(const QDomElement& _this);
@@ -65,7 +64,7 @@ class BBTCO : public TrackContentObject
         return m_mask;
     }
 
-    virtual TrackContentObjectView* createView(TrackView* _tv);
+    virtual TileView* createView(TrackView* _tv);
 
     virtual void clear();
 
@@ -82,11 +81,11 @@ class BBTCO : public TrackContentObject
     friend class BBTCOView;
 };
 
-class BBTCOView : public TrackContentObjectView
+class BBTCOView : public TileView
 {
     Q_OBJECT
   public:
-    // BBTCOView( TrackContentObject * _tco, TrackView * _tv );
+    // BBTCOView( Tile * _tco, TrackView * _tv );
     BBTCOView(BBTCO* _tco, TrackView* _tv);
     virtual ~BBTCOView();
 
@@ -128,6 +127,7 @@ class BBTCOView : public TrackContentObjectView
 class EXPORT BBTrack : public Track
 {
     Q_OBJECT
+
   public:
     BBTrack(TrackContainer* tc);
     virtual ~BBTrack();
@@ -139,8 +139,8 @@ class EXPORT BBTrack : public Track
                       const f_cnt_t   _frame_base,
                       int             _tco_num = -1);
 
-    virtual TrackView*          createView(TrackContainerView* tcv);
-    virtual TrackContentObject* createTCO(const MidiTime& _pos);
+    virtual TrackView* createView(TrackContainerView* tcv);
+    virtual Tile*      createTCO(const MidiTime& _pos);
 
     virtual void saveTrackSpecificSettings(QDomDocument& _doc,
                                            QDomElement&  _parent);
@@ -183,7 +183,7 @@ class EXPORT BBTrack : public Track
             {
                     delete s_lastTCOColor;
             }
-            s_lastTCOColor = NULL;
+            s_lastTCOColor = nullptr;
     }
     */
 

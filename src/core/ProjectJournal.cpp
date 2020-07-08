@@ -24,6 +24,7 @@
 
 #include "ProjectJournal.h"
 
+#include "AutomationPattern.h"
 #include "Engine.h"
 #include "JournallingObject.h"
 #include "Song.h"
@@ -50,20 +51,20 @@ void ProjectJournal::undo()
 {
     while(!m_undoCheckPoints.isEmpty())
     {
-        CheckPoint         c  = m_undoCheckPoints.pop();
-        JournallingObject* jo = m_joIDs[c.joID];
+        CheckPoint         c = m_undoCheckPoints.pop();
+        JournallingObject* o = m_joIDs[c.joID];
 
-        if(jo)
+        if(o != nullptr)
         {
             DataFile curState(DataFile::JournalData);
-            jo->saveState(curState, curState.content());
+            o->saveState(curState, curState.content());
             m_redoCheckPoints.push(CheckPoint(c.joID, curState));
 
             bool prev = isJournalling();
             setJournalling(false);
-            jo->restoreState(c.data.content().firstChildElement());
+            o->restoreState(c.data.content().firstChildElement());
             setJournalling(prev);
-            Engine::getSong()->setModified();
+            Engine::song()->setModified();
             break;
         }
     }
@@ -73,20 +74,20 @@ void ProjectJournal::redo()
 {
     while(!m_redoCheckPoints.isEmpty())
     {
-        CheckPoint         c  = m_redoCheckPoints.pop();
-        JournallingObject* jo = m_joIDs[c.joID];
+        CheckPoint         c = m_redoCheckPoints.pop();
+        JournallingObject* o = m_joIDs[c.joID];
 
-        if(jo)
+        if(o != nullptr)
         {
             DataFile curState(DataFile::JournalData);
-            jo->saveState(curState, curState.content());
+            o->saveState(curState, curState.content());
             m_undoCheckPoints.push(CheckPoint(c.joID, curState));
 
             bool prev = isJournalling();
             setJournalling(false);
-            jo->restoreState(c.data.content().firstChildElement());
+            o->restoreState(c.data.content().firstChildElement());
             setJournalling(prev);
-            Engine::getSong()->setModified();
+            Engine::song()->setModified();
             break;
         }
     }
@@ -102,21 +103,33 @@ bool ProjectJournal::canRedo() const
     return !m_redoCheckPoints.isEmpty();
 }
 
-void ProjectJournal::addJournalCheckPoint(JournallingObject* jo)
+void ProjectJournal::addJournalCheckPoint(JournallingObject* o)
 {
+    if(o == nullptr)
+    {
+        BACKTRACE
+        return;
+    }
+
     if(isJournalling())
     {
+        /*
+        for(auto id: m_joIDs.keys(nullptr))
+            m_joIDs.remove(id);
+        AutomationPattern::resolveAllIDs();
+        qInfo("ProjectJournal::addJournalCheckPoint id=%d nb=%d", o->id(),
+              m_joIDs.size());
+        */
+
         m_redoCheckPoints.clear();
 
         DataFile dataFile(DataFile::JournalData);
-        jo->saveState(dataFile, dataFile.content());
+        o->saveState(dataFile, dataFile.content());
 
-        m_undoCheckPoints.push(CheckPoint(jo->id(), dataFile));
+        m_undoCheckPoints.push(CheckPoint(o->id(), dataFile));
         if(m_undoCheckPoints.size() > MAX_UNDO_STATES)
-        {
             m_undoCheckPoints.remove(0, m_undoCheckPoints.size()
                                                 - MAX_UNDO_STATES);
-        }
     }
 }
 
@@ -124,27 +137,62 @@ jo_id_t ProjectJournal::allocID(JournallingObject* _obj)
 {
     jo_id_t id;
     for(jo_id_t tid = rand();
-        m_joIDs.contains(id = tid % EO_ID_MSB | EO_ID_MSB); tid++)
+        m_joIDs.contains(id = ((tid % EO_ID_MSB) | EO_ID_MSB)); tid++)
     {
     }
 
-    m_joIDs[id] = _obj;
-    // printf("new id: %d\n", id );
+    m_joIDs.insert(id, _obj);
+    if(id == 2379397)
+        qInfo("ProjectJournal::allocID %d %p", id, _obj);
+    if(_obj == nullptr)
+        BACKTRACE
+
     return id;
 }
 
 void ProjectJournal::reallocID(const jo_id_t _id, JournallingObject* _obj)
 {
-    // printf("realloc %d %d\n", _id, _obj );
-    //	if( m_joIDs.contains( _id ) )
+    if(_id == 2379397)
+        qInfo("ProjectJournal::reallocID %d %p", _id, _obj);
+
+    if(_obj == nullptr)
     {
-        m_joIDs[_id] = _obj;
+        BACKTRACE
+        return;
     }
+
+    //	if( m_joIDs.contains( _id ) )
+    m_joIDs.insert(_id, _obj);
+}
+
+void ProjectJournal::freeID(const jo_id_t _id)
+{
+    JournallingObject* o = m_joIDs.value(_id);
+    if(_id == 2379397)
+        qInfo("ProjectJournal::freeID %d %p", _id, o);
+
+    if(o == nullptr)
+    {
+        BACKTRACE
+        return;
+    }
+
+    //	if( m_joIDs.contains( _id ) )
+    m_joIDs.insert(_id, nullptr);
 }
 
 jo_id_t ProjectJournal::idToSave(jo_id_t id)
 {
-    return id & ~EO_ID_MSB;
+    if(id == 2379397)
+        qInfo("ProjectJournal::idToSave %d -> %d", id, id & ~EO_ID_MSB);
+    return (id % EO_ID_MSB);  // & ~EO_ID_MSB;
+}
+
+jo_id_t ProjectJournal::idFromSave(jo_id_t id)
+{
+    if(id == 2379397)
+        qInfo("ProjectJournal::idFromSave %d -> %d", id, id | EO_ID_MSB);
+    return (id % EO_ID_MSB) | EO_ID_MSB;
 }
 
 void ProjectJournal::clearJournal()
@@ -152,9 +200,10 @@ void ProjectJournal::clearJournal()
     m_undoCheckPoints.clear();
     m_redoCheckPoints.clear();
 
+    /*
     for(JoIdMap::Iterator it = m_joIDs.begin(); it != m_joIDs.end();)
     {
-        if(it.value() == NULL)
+        if(it.value() == nullptr)
         {
             it = m_joIDs.erase(it);
         }
@@ -163,16 +212,21 @@ void ProjectJournal::clearJournal()
             ++it;
         }
     }
+    */
+    for(auto id: m_joIDs.keys(nullptr))
+        m_joIDs.remove(id);
 }
 
 void ProjectJournal::stopAllJournalling()
 {
+    /*
     for(JoIdMap::Iterator it = m_joIDs.begin(); it != m_joIDs.end(); ++it)
-    {
-        if(it.value() != NULL)
-        {
+        if(it.value() != nullptr)
             it.value()->setJournalling(false);
-        }
-    }
+    */
+    for(auto o: m_joIDs.values())
+        if(o != nullptr)
+            o->setJournalling(false);
+
     setJournalling(false);
 }

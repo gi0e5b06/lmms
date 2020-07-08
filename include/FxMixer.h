@@ -221,7 +221,7 @@ class FxChannel :
     virtual void readFrozenBuffer();
     virtual void writeFrozenBuffer();
 
-    virtual bool requiresProcessing() const
+    virtual bool requiresProcessing() const final
     {
         return true;
     }
@@ -248,7 +248,7 @@ class FxChannel :
     void toggleFrozen();
 
   protected:
-    virtual void doProcessing();
+    virtual void doProcessing() final;
     virtual void incrementDeps();
 
     virtual void saveSettings(QDomDocument& doc, QDomElement& element);
@@ -394,7 +394,7 @@ class EXPORT FxMixer : public Model, public JournallingObject
     bool checkInfiniteLoop(FxChannel* from, FxChannel* to);
 
     // return the FloatModel of fromChannel sending its output to the input of
-    // toChannel. NULL if there is no send.
+    // toChannel. nullptr if there is no send.
     FloatModel* channelSendModel(fx_ch_t fromChannel, fx_ch_t toChannel);
 
     // add a new channel to the Fx Mixer.

@@ -1,9 +1,9 @@
 INCLUDE(BuildPlugin)
 
-# Enable C++11 for CXXFLAGS only
+# Enable C++1 1 for CXXFLAGS only
 # This is needed since this plugin uses C. Otherwise Travis fails
-REMOVE_DEFINITIONS(-std=c++0x)
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
+#??? REMOVE_DEFINITIONS(-std=c++0x)
+#??? SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
 
 BUILD_PLUGIN(
 	reverbsc

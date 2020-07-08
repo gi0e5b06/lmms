@@ -1,25 +1,24 @@
 /*
  * main.cpp - just main.cpp which is starting up app...
  *
+ * Copyright (c) 2017-2020 gi0e5b06 (on github.com)
  * Copyright (c) 2004-2014 Tobias Doerffel <tobydox/at/users.sourceforge.net>
  * Copyright (c) 2012-2013 Paul Giblock    <p/at/pgiblock.net>
  *
- * This file is part of LMMS - https://lmms.io
+ * This file is part of LSMM -
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public
- * License along with this program (see COPYING); if not, write to the
- * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
- * Boston, MA 02110-1301 USA.
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
 
@@ -856,14 +855,12 @@ int main(int argc, char** argv)
     struct sigaction sa;
     sa.sa_handler = SIG_IGN;
     sa.sa_flags   = SA_SIGINFO;
+
     if(sigemptyset(&sa.sa_mask))
-    {
         qWarning("Error: Signal initialization failed.");
-    }
-    if(sigaction(SIGPIPE, &sa, NULL))
-    {
+
+    if(sigaction(SIGPIPE, &sa, nullptr))
         qWarning("Error: Signal initialization failed.");
-    }
 #endif
 
     bool destroyEngine = false;
@@ -1214,7 +1211,8 @@ int main(int argc, char** argv)
         }
     }
 
-    // QThread::currentThread()->setPriority( QThread::LowPriority );
+    // QThread::currentThread()->setPriority(QThread::LowPriority);
+
     // DEBUG_THREAD_PRINT
     const int ret = app->exec();
     delete app;

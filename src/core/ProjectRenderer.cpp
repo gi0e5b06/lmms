@@ -61,7 +61,7 @@ const ProjectRenderer::FileEncodeDevice&
 #ifdef LMMS_HAVE_OGGVORBIS
              &AudioFileOgg::getInst
 #else
-             NULL
+             nullptr
 #endif
             },
             {ProjectRenderer::MP3File,
@@ -71,7 +71,7 @@ const ProjectRenderer::FileEncodeDevice&
 #ifdef LMMS_HAVE_MP3LAME
              &AudioFileMP3::getInst
 #else
-             NULL
+             nullptr
 #endif
             },
             {ProjectRenderer::AUFile,
@@ -91,7 +91,7 @@ const ProjectRenderer::FileEncodeDevice&
 #endif  // ... insert your own file-encoder-infos here... may be one
         // day the user can add own encoders inside the program...
 
-            {ProjectRenderer::NumFileFormats, NULL, NULL, NULL}
+            {ProjectRenderer::NumFileFormats, nullptr, nullptr, nullptr}
 
     };
     return r[i];
@@ -105,7 +105,7 @@ ProjectRenderer::ProjectRenderer(
         RenderManager*                _rm) :
       QThread(_rm),
       // QThread(Engine::mixer()),
-      m_fileDev(NULL), m_qualitySettings(qualitySettings), m_progress(0),
+      m_fileDev(nullptr), m_qualitySettings(qualitySettings), m_progress(0),
       m_abort(false)
 {
     setObjectName("project renderer " + outputFilename);
@@ -123,7 +123,7 @@ ProjectRenderer::ProjectRenderer(
         if(!successful)
         {
             delete m_fileDev;
-            m_fileDev = NULL;
+            m_fileDev = nullptr;
         }
     }
 }

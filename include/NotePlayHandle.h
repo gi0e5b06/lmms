@@ -196,6 +196,8 @@ class EXPORT NotePlayHandle /*final*/
         return m_parent != nullptr;
     }
 
+    virtual void setFinished();
+
     /*! Returns origin of note */
     Origin origin() const
     {
@@ -251,9 +253,6 @@ class EXPORT NotePlayHandle /*final*/
             nphsOfInstrumentTrack(const InstrumentTrack* Track,
                                   bool allPlayHandles = false);
     */
-
-    /*! Returns whether given NotePlayHandle instance is equal to *this */
-    // bool operator==(const NotePlayHandle& _nph) const;
 
     bool isTrackMuted() const;
 
@@ -327,6 +326,9 @@ class EXPORT NotePlayHandle /*final*/
     const Scale* scale() const;
     void         setScale(const Scale* _scale);
 
+    /*! Returns whether given NotePlayHandle instance is equal to *this */
+    // bool operator==(const NotePlayHandle& _nph) const;
+
   protected:
     NotePlayHandle(InstrumentTrack* instrumentTrack,
                    const f_cnt_t    offset,
@@ -347,6 +349,9 @@ class EXPORT NotePlayHandle /*final*/
     {
         return p;
     }
+
+    virtual void enterMixer();
+    virtual void exitMixer();
 
   private:
     void updateFrequency();

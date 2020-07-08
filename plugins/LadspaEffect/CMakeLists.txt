@@ -1,7 +1,7 @@
 INCLUDE(BuildPlugin)
 
-# Disable C++11
-REMOVE_DEFINITIONS(-std=c++0x)
+# Disable C++1 1
+#??? REMOVE_DEFINITIONS(-std=c++0x)
 
 BUILD_PLUGIN(ladspaeffect LadspaEffect.cpp LadspaControls.cpp LadspaDialog.cpp LadspaSubPluginFeatures.cpp LadspaEffect.h LadspaControls.h LadspaDialog.h LadspaSubPluginFeatures.h MOCFILES LadspaEffect.h LadspaControls.h LadspaDialog.h EMBEDDED_RESOURCES logo.png)
 

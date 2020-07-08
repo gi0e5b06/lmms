@@ -51,7 +51,7 @@
 const float TimeLineWidget::LOOP_SIZES[NB_LOOP_SIZES]
         = {1.0f, 2.0f, 4.0f, 8.0f, 0.5f, 0.25f, 0.125f, 0.0625f, 0.03125f};
 
-QPixmap* TimeLineWidget::s_posMarkerPixmap = NULL;
+QPixmap* TimeLineWidget::s_posMarkerPixmap = nullptr;
 
 TimeLineWidget::TimeLineWidget(const int       xoff,
                                const int       yoff,
@@ -78,8 +78,8 @@ TimeLineWidget::TimeLineWidget(const int       xoff,
       m_behaviourAtStop(BackToZero), m_changedPosition(true), m_xOffset(xoff),
       m_posMarkerX(0), m_ppt(ppt), m_pos(pos), m_begin(begin), m_savedPos(-1),
       m_currentLoop(0), m_nextLoop(-1),
-      // m_loopButtons( NULL ),
-      m_hint(NULL), m_action(NoAction), m_moveXOff(0)
+      // m_loopButtons( nullptr ),
+      m_hint(nullptr), m_action(NoAction), m_moveXOff(0)
 {
     // m_loopPos[0] = 0;
     // m_loopPos[1] = DefaultTicksPerTact;
@@ -88,7 +88,7 @@ TimeLineWidget::TimeLineWidget(const int       xoff,
     for(int i = 0; i < 2 * NB_LOOPS; i++)
         m_loopPos[i] = ((i / 2) * NB_LOOPS + i % 2) * DefaultTicksPerTact;
 
-    if(s_posMarkerPixmap == NULL)
+    if(s_posMarkerPixmap == nullptr)
     {
         s_posMarkerPixmap
                 = new QPixmap(embed::getIconPixmap("playpos_marker"));
@@ -111,7 +111,7 @@ TimeLineWidget::TimeLineWidget(const int       xoff,
 TimeLineWidget::~TimeLineWidget()
 {
     if(gui->songWindow())
-        m_pos.m_timeLine = NULL;
+        m_pos.m_timeLine = nullptr;
 
     delete m_hint;
 }
@@ -164,7 +164,7 @@ void TimeLineWidget::addToolButtons(QToolBar* _tool_bar)
     _tool_bar->addWidget(zBTN);
 
     /*
-    if(m_loopButton == NULL)
+    if(m_loopButton == nullptr)
     {
             int const n=currentLoop();
             m_loopButton=new QToolButton(_tool_bar);
@@ -285,7 +285,7 @@ void TimeLineWidget::setCurrentLoop(const int n)
     }
 
     /*
-    if(m_loopButton != NULL)
+    if(m_loopButton != nullptr)
     {
             m_loopButton->setText(QString("&").append(QString((char)(65+n))));
             m_loopButton->update();
@@ -420,10 +420,9 @@ void TimeLineWidget::setLoopStart(int _n, int _x)
     if((_n < 0) || (_n >= NB_LOOPS))
         return;
 
+    // Catch begin > end
     if(m_loopPos[2 * _n + 0] > m_loopPos[2 * _n + 1])
-    {
         qSwap(m_loopPos[2 * _n + 0], m_loopPos[2 * _n + 1]);
-    }
 
     MidiTime t = m_begin
                  + static_cast<int>(_x * MidiTime::ticksPerTact() / m_ppt);
@@ -443,20 +442,18 @@ void TimeLineWidget::setLoopEnd(int _n, int _x)
         return;
 
     if(m_loopPos[2 * _n + 0] > m_loopPos[2 * _n + 1])
-    {
         qSwap(m_loopPos[2 * _n + 0], m_loopPos[2 * _n + 1]);
-    }
 
-    MidiTime t = m_begin
-                 + static_cast<int>(_x * MidiTime::ticksPerTact() / m_ppt);
-    t                     = t.toNearestTact();
-    const tick_t d        = MidiTime::ticksPerTact();
+    const tick_t d = MidiTime::ticksPerTact();
+    MidiTime     t = m_begin + static_cast<int>(_x * d / m_ppt);
+
+    t = t.toNearestTact();
     m_loopPos[2 * _n + 1] = t;
+
     // Catch begin == end
     if(m_loopPos[2 * _n + 1] < m_loopPos[2 * _n + 0] + d)
-    {
         m_loopPos[2 * _n + 1] = m_loopPos[2 * _n + 0] + d;
-    }
+
     update();
 }
 
@@ -826,7 +823,7 @@ void TimeLineWidget::mouseMoveEvent(QMouseEvent* event)
             {
                 // no ctrl-press-hint when having ctrl pressed
                 delete m_hint;
-                m_hint = NULL;
+                m_hint = nullptr;
             }
             else
                 t = t.toNearestTact();
@@ -858,7 +855,7 @@ void TimeLineWidget::mouseMoveEvent(QMouseEvent* event)
             {
                 // no ctrl-press-hint when having ctrl pressed
                 delete m_hint;
-                m_hint = NULL;
+                m_hint = nullptr;
                 d      = MidiTime::ticksPerTact() / 32;
             }
             else
@@ -885,11 +882,11 @@ void TimeLineWidget::mouseMoveEvent(QMouseEvent* event)
 void TimeLineWidget::mouseReleaseEvent(QMouseEvent* event)
 {
     delete m_hint;
-    m_hint = NULL;
+    m_hint = nullptr;
+
     if(m_action == SelectSongTCO)
-    {
         emit selectionFinished();
-    }
+
     m_action = NoAction;
 }
 

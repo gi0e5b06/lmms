@@ -43,7 +43,7 @@ class QPushButton;
 class InstrumentTrack;
 class SampleBuffer;
 
-class EXPORT Pattern : public TrackContentObject
+class EXPORT Pattern : public Tile
 {
     Q_OBJECT
 
@@ -62,12 +62,13 @@ class EXPORT Pattern : public TrackContentObject
     {
         return isEmpty();
     }  // obsolete
-    virtual bool isEmpty() const;
+
+    virtual bool   isEmpty() const;
+    virtual tick_t unitLength() const;
 
     void init();
 
-    virtual void   updateLength();
-    virtual tick_t unitLength() const;
+    virtual void updateLength();
     // MidiTime beatPatternLength() const;
 
     // note management
@@ -114,7 +115,7 @@ class EXPORT Pattern : public TrackContentObject
         return m_instrumentTrack;
     }
 
-    virtual TrackContentObjectView* createView(TrackView* _tv);
+    virtual TileView* createView(TrackView* _tv);
 
     // signals:
     // using Model::dataChanged(); <-- not working
@@ -160,7 +161,7 @@ class EXPORT Pattern : public TrackContentObject
     void destroyedPattern(Pattern*);
 };
 
-class PatternView : public TrackContentObjectView
+class PatternView : public TileView
 {
     Q_OBJECT
 
@@ -171,11 +172,11 @@ class PatternView : public TrackContentObjectView
     Q_PROPERTY(
             QColor noteFillColor READ getNoteFillColor WRITE setNoteFillColor)
     Q_PROPERTY(QColor noteBorderColor READ getNoteBorderColor WRITE
-                                                              setNoteBorderColor)
+                       setNoteBorderColor)
     Q_PROPERTY(QColor mutedNoteFillColor READ getMutedNoteFillColor WRITE
-                                                                    setMutedNoteFillColor)
+                       setMutedNoteFillColor)
     Q_PROPERTY(QColor mutedNoteBorderColor READ getMutedNoteBorderColor WRITE
-                                                                        setMutedNoteBorderColor)
+                       setMutedNoteBorderColor)
 
     QColor const& getNoteFillColor() const
     {

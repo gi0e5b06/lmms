@@ -86,7 +86,7 @@ NotePlayHandle::NotePlayHandle(InstrumentTrack* instrumentTrack,
         m_automationDetune
                 = (detuning() ? detuning()->automationPattern()->valueAt(0)
                               : 0.f);
-        m_instrumentTrack->m_processHandles.push_back(this);
+        m_instrumentTrack->m_processHandles.append(this);
     }
     else
     {
@@ -129,13 +129,15 @@ NotePlayHandle::NotePlayHandle(InstrumentTrack* instrumentTrack,
         // m_usesBuffer = false;
     }
 
-    setAudioPort(instrumentTrack->audioPort());
+    // setAudioPort(instrumentTrack->audioPort());
+    // m_instrumentTrack->audioPort()->addPlayHandle(pointer());
 
     unlock();
 }
 
 NotePlayHandle::~NotePlayHandle()
 {
+    // m_instrumentTrack->audioPort()->removePlayHandle(pointer());
 }
 
 static QHash<QString, bool> s_releaseTracker;
@@ -144,14 +146,14 @@ bool NotePlayHandle::done1()
 {
     if(s_releaseTracker.contains(m_debug_uuid))
     {
-        // BACKTRACE
+        BACKTRACE
         qCritical(
                 "NotePlayHandleManager::release %p was "
                 "already released parent=%p finished=%d subnotes=%d\n"
                 "uuid=%s",
                 this, m_parent, m_finished, m_subNotes.size(),
                 qPrintable(m_debug_uuid));
-        unlock();
+        // unlock();
         return false;
     }
     s_releaseTracker.insert(m_debug_uuid, true);
@@ -161,7 +163,7 @@ bool NotePlayHandle::done1()
     if(m_parent != nullptr)
         m_parent->removeSubNote(this);
 
-    noteOff(0);
+    // noteOff(0); tmp
 
     /*
     if(hasParent())
@@ -198,7 +200,7 @@ bool NotePlayHandle::done1()
     // if(hasParent() == false)
     {
         // delete m_baseDetuning;
-        m_instrumentTrack->m_processHandles.removeAll(this);
+        m_instrumentTrack->m_processHandles.removeAll(this, false);
     }
 
     if(m_pluginData != nullptr)
@@ -221,6 +223,22 @@ bool NotePlayHandle::done1()
     unlock();
 
     return true;
+}
+
+void NotePlayHandle::enterMixer()
+{
+    m_instrumentTrack->audioPort()->addPlayHandle(pointer());
+}
+
+void NotePlayHandle::exitMixer()
+{
+    m_instrumentTrack->audioPort()->removePlayHandle(pointer());
+}
+
+void NotePlayHandle::setFinished()
+{
+    finishSubNotes();
+    PlayHandle::setFinished();
 }
 
 void NotePlayHandle::removeSubNote(NotePlayHandle* _nph)
@@ -254,51 +272,48 @@ void NotePlayHandle::setVolume(volume_t _volume)
 {
     Note::setVolume(_volume);
 
-    m_instrumentTrack->noteVolumeModel()->setAutomatedValue(_volume);
-
-    int key = midiKey();
-    if(key >= 0 && key < NumMidiKeys)
+    lock();
+    if(m_instrumentTrack != nullptr)
     {
-        const int baseVelocity
-                = m_instrumentTrack->midiPort()->baseVelocity();
-        MidiEvent event(MidiKeyPressure, midiChannel(), key,
-                        midiVelocity(baseVelocity));
-        m_instrumentTrack->processOutEvent(event);
+        m_instrumentTrack->noteVolumeModel()->setAutomatedValue(_volume);
+
+        int key = midiKey();
+        if(key >= 0 && key < NumMidiKeys)
+        {
+            const int baseVelocity
+                    = m_instrumentTrack->midiPort()->baseVelocity();
+            MidiEvent event(MidiKeyPressure, midiChannel(), key,
+                            midiVelocity(baseVelocity));
+            m_instrumentTrack->processOutEvent(event);
+        }
     }
+    unlock();
 }
 
 void NotePlayHandle::setPanning(panning_t _panning)
 {
     Note::setPanning(_panning);
 
-    m_instrumentTrack->notePanningModel()->setAutomatedValue(_panning);
-
-    int key = midiKey();
-    if(key >= 0 && key < NumMidiKeys)
+    lock();
+    if(m_instrumentTrack != nullptr)
     {
-        MidiEvent event(MidiMetaEvent, midiChannel(), key,
-                        panningToMidi(_panning));
-        event.setMetaEvent(MidiNotePanning);
-        m_instrumentTrack->processOutEvent(event);
+        m_instrumentTrack->notePanningModel()->setAutomatedValue(_panning);
+
+        int key = midiKey();
+        if(key >= 0 && key < NumMidiKeys)
+        {
+            MidiEvent event(MidiMetaEvent, midiChannel(), key,
+                            panningToMidi(_panning));
+            event.setMetaEvent(MidiNotePanning);
+            m_instrumentTrack->processOutEvent(event);
+        }
     }
+    unlock();
 }
 
 void NotePlayHandle::setLegato(bool _legato)
 {
     Note::setLegato(_legato);
-
-    /*
-    m_instrumentTrack->notePanningModel()->setAutomatedValue(_panning);
-
-    int key = midiKey();
-    if(key >= 0 && key < NumMidiKeys)
-    {
-        MidiEvent event(MidiMetaEvent, midiChannel(), key,
-                        panningToMidi(_panning));
-        event.setMetaEvent(MidiNotePanning);
-        m_instrumentTrack->processOutEvent(event);
-    }
-    */
 }
 
 int NotePlayHandle::midiKey() const
@@ -311,35 +326,21 @@ void NotePlayHandle::play(sampleFrame* _workingBuffer)
     if(m_muted)
         return;
 
+    const fpp_t FPP = Engine::mixer()->framesPerPeriod();
+
     // if the note offset falls over to next period, then don't start playback
     // yet
-    if(offset() >= Engine::mixer()->framesPerPeriod())
+    if(offset() >= FPP)
     {
-        setOffset(offset() - Engine::mixer()->framesPerPeriod());
+        setOffset(offset() - FPP);
         return;
     }
 
     lock();
 
-    /*
-    if(m_instrumentTrack->instrument() &&
-       m_instrumentTrack->instrument()->isMidiBased())
-    {
-            setVolume(getVolume());  // tmp, need updateVolume()
-            setPanning(getPanning());
-    }
-
-    if( m_frequencyNeedsUpdate )
-    {
-            updateFrequency();
-    }
-    */
-
     // number of frames that can be played this period
     f_cnt_t framesThisPeriod
-            = m_totalFramesPlayed == 0
-                      ? Engine::mixer()->framesPerPeriod() - offset()
-                      : Engine::mixer()->framesPerPeriod();
+            = m_totalFramesPlayed == 0 ? FPP - offset() : FPP;
 
     if(m_totalFramesPlayed == 0)
     {
@@ -404,8 +405,7 @@ void NotePlayHandle::play(sampleFrame* _workingBuffer)
         // are inserted by arpAndChordsTabWidget::processNote()
         if(!m_subNotes.isEmpty())
         {
-            m_releaseFramesToDo = m_releaseFramesDone
-                                  + 2 * Engine::mixer()->framesPerPeriod();
+            m_releaseFramesToDo = m_releaseFramesDone + 2 * FPP;
         }
         // look whether we have frames left to be done before release
         if(m_framesBeforeRelease)
@@ -461,36 +461,32 @@ void NotePlayHandle::play(sampleFrame* _workingBuffer)
 f_cnt_t NotePlayHandle::framesLeft() const
 {
     if(m_instrumentTrack->isSustainPedalPressed())
-    {
         return 4 * Engine::mixer()->framesPerPeriod();
-    }
-    else if(m_released && actualReleaseFramesToDo() == 0)
-    {
+
+    if(m_released && actualReleaseFramesToDo() == 0)
         return m_framesBeforeRelease;
-    }
-    else if(m_released)
-    {
+
+    if(m_released)
         return m_framesBeforeRelease + m_releaseFramesToDo
                - m_releaseFramesDone;
-    }
+
     return m_frames + actualReleaseFramesToDo() - m_totalFramesPlayed;
 }
 
 fpp_t NotePlayHandle::framesLeftForCurrentPeriod() const
 {
     if(m_totalFramesPlayed == 0)
-    {
         return (fpp_t)qMin<f_cnt_t>(
                 framesLeft(), Engine::mixer()->framesPerPeriod() - offset());
-    }
+
     return (fpp_t)qMin<f_cnt_t>(framesLeft(),
                                 Engine::mixer()->framesPerPeriod());
 }
 
 bool NotePlayHandle::isFinished() const
 {
-    return m_finished || (m_released && framesLeft() <= 0)
-           || (m_parent != nullptr && m_parent->isFinished());
+    return m_finished || (m_parent != nullptr && m_parent->isFinished())
+           || (m_released && framesLeft() <= 0);
 }
 
 bool NotePlayHandle::isFromTrack(const Track* _track) const

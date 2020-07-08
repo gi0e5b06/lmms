@@ -25,6 +25,8 @@
 #ifndef FILE_BROWSER_H
 #define FILE_BROWSER_H
 
+#include "Mutex.h"
+#include "PlayHandle.h"
 #include "SideBarWidget.h"
 
 #include <QDir>
@@ -37,9 +39,7 @@ class QLineEdit;
 class FileItem;
 class InstrumentTrack;
 class FileBrowserTreeWidget;
-class PlayHandle;
 class TrackContainer;
-class PlayHandle;
 
 class FileBrowser : public SideBarWidget
 {
@@ -60,7 +60,7 @@ class FileBrowser : public SideBarWidget
   private slots:
     void reloadTree();
     void expandItems(QTreeWidgetItem* _item = nullptr, bool _all = false);
-    // call with item=NULL to filter the entire tree
+    // call with item=nullptr to filter the entire tree
     bool filterItems(const QString&   _filter,
                      QTreeWidgetItem* _item = nullptr);
     void giveFocusToFilter();
@@ -90,7 +90,7 @@ class FileBrowserTreeWidget : public QTreeWidget
     virtual ~FileBrowserTreeWidget();
 
   public slots:
-    void onPlayHandleDeleted(PlayHandle* handle);
+    void onPlayHandleDeleted(PlayHandlePointer handle);
 
   signals:
     void sendInfo(QString _s);
@@ -116,8 +116,8 @@ class FileBrowserTreeWidget : public QTreeWidget
     bool   m_mousePressed;
     QPoint m_pressPos;
 
-    PlayHandle* m_previewPlayHandle;
-    QMutex      m_pphMutex;
+    PlayHandlePointer m_previewPlayHandle;
+    Mutex             m_pphMutex;
 
     FileItem* m_contextMenuItem;
 };

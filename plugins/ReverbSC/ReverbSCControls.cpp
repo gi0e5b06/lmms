@@ -33,10 +33,10 @@
 ReverbSCControls::ReverbSCControls( ReverbSCEffect* effect ) :
 	EffectControls( effect ),
 	m_effect( effect ),
-	m_inputGainModel( 0.0f, -60.0f, 15, 0.1f, this, tr( "Input Gain" ) ),
-	m_sizeModel( 0.89f, 0.0f, 1.0f, 0.01f, this, tr( "Size" ) ),
-	m_colorModel( 10000.0f, 100.0f, 15000.0f, 0.1f, this, tr( "Color" ) ),
-	m_outputGainModel( 0.0f, -60.0f, 15, 0.1f, this, tr( "Output Gain" ) )
+	m_inputGainModel( 0., -60., 15., 0.1, this, tr( "Input Gain" ) ),
+	m_sizeModel( 0.89, 0., 1., 0.01, this, tr( "Size" ) ),
+	m_colorModel( 10000., 100., 15000., 0.1, this, tr( "Color" ) ),
+	m_outputGainModel( 0., -60., 15., 0.1, this, tr( "Output Gain" ) )
 {
 	connect( Engine::mixer(), SIGNAL( sampleRateChanged() ), this, SLOT( changeSampleRate() ));
 }

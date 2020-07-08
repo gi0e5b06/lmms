@@ -77,12 +77,10 @@ Knob::Knob(knobTypes _knob_num, QWidget* _parent, const QString& _name) :
 
 void Knob::initUi(const QString& _name)
 {
-    qRegisterMetaType<knobTypes>("knobTypes");
+    // qRegisterMetaType<knobTypes>("knobTypes");
 
     if(s_textFloat == nullptr)
-    {
         s_textFloat = new TextFloat;
-    }
 
     setWindowTitle(_name);
     setCursor(Qt::PointingHandCursor);
@@ -355,7 +353,7 @@ void Knob::setTextColor(const QColor& c)
 }
 
 QLineF Knob::calculateLine(const QPointF& _mid,
-                           float          _radius,
+                           float          _outerRadius,
                            float          _innerRadius) const
 {
     const float rarc = m_angle * F_PI / 180.f;
@@ -363,7 +361,7 @@ QLineF Knob::calculateLine(const QPointF& _mid,
     const float sa   = -sin(rarc);
 
     return QLineF(_mid.x() - sa * _innerRadius, _mid.y() - ca * _innerRadius,
-                  _mid.x() - sa * _radius, _mid.y() - ca * _radius);
+                  _mid.x() - sa * _outerRadius, _mid.y() - ca * _outerRadius);
 }
 
 bool Knob::updateAngle()
@@ -1093,8 +1091,8 @@ QString Knob::displayValue() const
     {
         return m_description.trimmed() + " "
                + QString::number(
-                         ampToDbfs(m->getRoundedValue() / volumeRatio()), 'f',
-                         2)
+                       ampToDbfs(m->getRoundedValue() / volumeRatio()), 'f',
+                       2)
                + " dBFS";
     }
     return m_description.trimmed()

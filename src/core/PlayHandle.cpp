@@ -35,11 +35,15 @@
 #include <iterator>
 
 PlayHandle::PlayHandle(const Type type, f_cnt_t offset) :
-      m_audioPort(nullptr), m_finished(false), m_type(type), m_offset(offset),
-      m_processingLock("PlayHandle::m_processingLock",false),
+      // m_audioPort(nullptr),
+      m_finished(false), m_type(type), m_offset(offset),
+      m_processingLock(
+              "PlayHandle::m_processingLock", QMutex::Recursive, false),
       m_usesBuffer(true), m_playHandleBuffer(nullptr), m_bufferReleased(true),
-      m_refCount(0)
+      m_refCount(0), m_pointer(nullptr)
 {
+    m_pointer = new PlayHandlePointer(this);
+    // (((PlayHandlePointer*)m_pointer)->reset(this);
     // BufferManager::acquire()),
     m_debug_uuid = QUuid::createUuid().toString();
 }
@@ -47,19 +51,24 @@ PlayHandle::PlayHandle(const Type type, f_cnt_t offset) :
 PlayHandle::~PlayHandle()
 {
     releaseBuffer();
+    //m_pointer->reset(nullptr);
+    //delete ((PlayHandlePointer*)m_pointer);
 }
 
 void PlayHandle::setFinished()
 {
+    lock();
     if(m_refCount <= 0 && !m_finished)
     {
         m_finished = true;
-        Engine::mixer()->emit playHandleToRemove(this);
+        Engine::mixer()->emit playHandleToRemove(pointer());
     }
+    unlock();
 }
 
 void PlayHandle::doProcessing()
 {
+    lock();
     if(m_usesBuffer)
     {
         if(m_playHandleBuffer == nullptr)
@@ -74,6 +83,7 @@ void PlayHandle::doProcessing()
     {
         play(nullptr);
     }
+    unlock();
 }
 
 void PlayHandle::releaseBuffer()

@@ -47,7 +47,6 @@
 
 extern "C"
 {
-
     Plugin::Descriptor PLUGIN_EXPORT ladspaeffect_plugin_descriptor
             = {STRINGIFY(PLUGIN_NAME),
                "LADSPA",

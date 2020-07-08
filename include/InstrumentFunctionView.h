@@ -45,7 +45,7 @@ class InstrumentFunctionView : public GroupBox, public ModelView
   protected:
     InstrumentFunctionView(InstrumentFunction* cc,
                            const QString&      _caption,
-                           QWidget*            _parent = NULL,
+                           QWidget*            _parent = nullptr,
                            bool                _arrow  = true);
 };
 
@@ -55,7 +55,7 @@ class InstrumentFunctionNoteStackingView : public InstrumentFunctionView
 
   public:
     InstrumentFunctionNoteStackingView(InstrumentFunctionNoteStacking* cc,
-                                       QWidget* parent = NULL);
+                                       QWidget* parent = nullptr);
     virtual ~InstrumentFunctionNoteStackingView();
 
   public slots:
@@ -73,7 +73,7 @@ class InstrumentFunctionArpeggioView : public InstrumentFunctionView
 
   public:
     InstrumentFunctionArpeggioView(InstrumentFunctionArpeggio* arp,
-                                   QWidget*                    parent = NULL);
+                                   QWidget* parent = nullptr);
     virtual ~InstrumentFunctionArpeggioView();
 
   public slots:
@@ -92,6 +92,7 @@ class InstrumentFunctionArpeggioView : public InstrumentFunctionView
     ComboBox*                   m_arpModeComboBox;
     Knob*                       m_arpBaseKnob;
     Knob*                       m_arpRepeatKnob;
+    Knob*                       m_arpLimitKnob;
 };
 
 class InstrumentFunctionNoteHumanizingView : public InstrumentFunctionView
@@ -100,7 +101,7 @@ class InstrumentFunctionNoteHumanizingView : public InstrumentFunctionView
 
   public:
     InstrumentFunctionNoteHumanizingView(InstrumentFunctionNoteHumanizing* cc,
-                                         QWidget* parent = NULL);
+                                         QWidget* parent = nullptr);
     virtual ~InstrumentFunctionNoteHumanizingView();
 
   public slots:
@@ -125,7 +126,7 @@ class InstrumentFunctionNoteDuplicatesRemovingView :
   public:
     InstrumentFunctionNoteDuplicatesRemovingView(
             InstrumentFunctionNoteDuplicatesRemoving* cc,
-            QWidget*                                  parent = NULL);
+            QWidget*                                  parent = nullptr);
     virtual ~InstrumentFunctionNoteDuplicatesRemovingView();
 
   public slots:
@@ -141,7 +142,7 @@ class InstrumentFunctionNoteFilteringView : public InstrumentFunctionView
 
   public:
     InstrumentFunctionNoteFilteringView(InstrumentFunctionNoteFiltering* cc,
-                                        QWidget* parent = NULL);
+                                        QWidget* parent = nullptr);
     virtual ~InstrumentFunctionNoteFilteringView();
 
   public slots:
@@ -152,6 +153,9 @@ class InstrumentFunctionNoteFilteringView : public InstrumentFunctionView
     ComboBox*                        m_configComboBox;
     ComboBox*                        m_actionComboBox;
     LedCheckBox*                     m_noteSelectionLed[12];
+    Knob*                            m_intervalKnob;
+    ComboBox*                        m_rootComboBox;
+    ComboBox*                        m_scaleComboBox;
 };
 
 class InstrumentFunctionNoteKeyingView : public InstrumentFunctionView
@@ -160,7 +164,7 @@ class InstrumentFunctionNoteKeyingView : public InstrumentFunctionView
 
   public:
     InstrumentFunctionNoteKeyingView(InstrumentFunctionNoteKeying* cc,
-                                     QWidget* parent = NULL);
+                                     QWidget* parent = nullptr);
     virtual ~InstrumentFunctionNoteKeyingView();
 
   public slots:
@@ -184,7 +188,7 @@ class InstrumentFunctionNoteOuttingView : public InstrumentFunctionView
 
   public:
     InstrumentFunctionNoteOuttingView(InstrumentFunctionNoteOutting* cc,
-                                      QWidget* parent = NULL);
+                                      QWidget* parent = nullptr);
     virtual ~InstrumentFunctionNoteOuttingView();
 
   public slots:
@@ -209,7 +213,7 @@ class InstrumentFunctionGlissandoView : public InstrumentFunctionView
 
   public:
     InstrumentFunctionGlissandoView(InstrumentFunctionGlissando* arp,
-                                    QWidget* parent = NULL);
+                                    QWidget* parent = nullptr);
     virtual ~InstrumentFunctionGlissandoView();
 
   public slots:
@@ -230,7 +234,7 @@ class InstrumentFunctionNoteSustainingView : public InstrumentFunctionView
 
   public:
     InstrumentFunctionNoteSustainingView(InstrumentFunctionNoteSustaining* cc,
-                                         QWidget* parent = NULL);
+                                         QWidget* parent = nullptr);
     virtual ~InstrumentFunctionNoteSustainingView();
 
   public slots:
@@ -260,7 +264,7 @@ class InstrumentFunctionNotePlayingView : public InstrumentFunctionView
 
   public:
     InstrumentFunctionNotePlayingView(InstrumentFunctionNotePlaying* cc,
-                                      QWidget* parent = NULL);
+                                      QWidget* parent = nullptr);
     virtual ~InstrumentFunctionNotePlayingView();
 
   public slots:

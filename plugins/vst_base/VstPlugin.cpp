@@ -623,7 +623,7 @@ void VstPlugin::openPreset()
 
     FileDialog ofd(NULL, tr("Open Preset"), "",
                    tr("Vst Plugin Preset (*.fxp *.fxb)"));
-    ofd.setFileMode(FileDialog::ExistingFiles);
+    ofd.setFileMode(FileDialog::ExistingFile);
     if(ofd.exec() == QDialog::Accepted && !ofd.selectedFiles().isEmpty())
     {
         lock();

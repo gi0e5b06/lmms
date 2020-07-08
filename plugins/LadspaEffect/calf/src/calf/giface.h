@@ -447,8 +447,11 @@ public:
     using Metadata::in_count;
     using Metadata::out_count;
     using Metadata::param_count;
-    float *ins[Metadata::in_count]; 
+#pragma GCC diagnostic ignored "-Wmemset-elt-size"
+    float *ins[Metadata::in_count];
+#pragma GCC diagnostic ignored "-Wmemset-elt-size"
     float *outs[Metadata::out_count];
+#pragma GCC diagnostic ignored "-Wmemset-elt-size"
     float *params[Metadata::param_count];
 
     progress_report_iface *progress_report;

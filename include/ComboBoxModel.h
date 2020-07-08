@@ -25,19 +25,20 @@
 #ifndef COMBOBOX_MODEL_H
 #define COMBOBOX_MODEL_H
 
+#include "AutomatableModel.h"
+
 #include <QVariant>
 #include <QVector>
-
-#include "AutomatableModel.h"
 
 class PixmapLoader;
 
 class EXPORT ComboBoxModel : public IntModel
 {
     Q_OBJECT
+
   public:
-    ComboBoxModel(Model*         parent = nullptr,
-                  const QString& displayName = "[combo box model]",
+    ComboBoxModel(Model*         parent               = nullptr,
+                  const QString& displayName          = "[combo box model]",
                   bool           isDefaultConstructed = false) :
           IntModel(0, 0, 0, parent, displayName, isDefaultConstructed)
     {
@@ -49,7 +50,7 @@ class EXPORT ComboBoxModel : public IntModel
     }
 
     void addItem(const QString&  _text,
-                 PixmapLoader*   _icon = NULL,
+                 PixmapLoader*   _icon = nullptr,
                  const QVariant& _data = QVariant());
 
     void clear();

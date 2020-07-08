@@ -1,6 +1,6 @@
 /*
- * MidiTime.cpp - Class that encapsulates the position of a note/event in terms of
- *   its bar, beat and tick.
+ * MidiTime.cpp - Class that encapsulates the position of a note/event in
+ *                terms of its bar, beat and tick.
  *
  * Copyright (c) 2004-2014 Tobias Doerffel <tobydox/at/users.sourceforge.net
  * Copyright (c) 2018 gi0e5b06 (on github.com)
@@ -28,203 +28,180 @@
 
 #include "MeterModel.h"
 
-TimeSig::TimeSig( int num, int denom ) :
-	m_num(num),
-	m_denom(denom)
+TimeSig::TimeSig(int num, int denom) : m_num(num), m_denom(denom)
 {
 }
 
-TimeSig::TimeSig( const MeterModel &model ) :
-	m_num(model.getNumerator()),
-	m_denom(model.getDenominator())
+TimeSig::TimeSig(const MeterModel& model) :
+      m_num(model.getNumerator()), m_denom(model.getDenominator())
 {
 }
-
 
 int TimeSig::numerator() const
 {
-	return m_num;
+    return m_num;
 }
 
 int TimeSig::denominator() const
 {
-	return m_denom;
+    return m_denom;
 }
 
-
-
-
-MidiTime::MidiTime( const tact_t tact, const tick_t ticks ) :
-	m_ticks( tact * s_ticksPerTact + ticks )
+MidiTime::MidiTime(const tact_t tact, const tick_t ticks) :
+      m_ticks(tact * s_ticksPerTact + ticks)
 {
 }
 
-MidiTime::MidiTime( const tick_t ticks ) :
-	m_ticks( ticks )
+MidiTime::MidiTime(const tick_t ticks) : m_ticks(ticks)
 {
 }
 
 MidiTime MidiTime::toNearestTact() const
 {
-	if( m_ticks % s_ticksPerTact >= s_ticksPerTact/2 )
-	{
-		return ( getTact() + 1 ) * s_ticksPerTact;
-	}
-	return getTact() * s_ticksPerTact;
+    if(m_ticks % s_ticksPerTact >= s_ticksPerTact / 2)
+    {
+        return (tact() + 1) * s_ticksPerTact;
+    }
+    return tact() * s_ticksPerTact;
 }
-
 
 MidiTime MidiTime::toAbsoluteTact() const
 {
-	return getTact() * s_ticksPerTact;
+    return tact() * s_ticksPerTact;
 }
 
-
-MidiTime& MidiTime::operator+=( const MidiTime& time )
+MidiTime& MidiTime::operator+=(const MidiTime& time)
 {
-	m_ticks += time.m_ticks;
-	return *this;
+    m_ticks += time.m_ticks;
+    return *this;
 }
 
-
-MidiTime& MidiTime::operator-=( const MidiTime& time )
+MidiTime& MidiTime::operator-=(const MidiTime& time)
 {
-	m_ticks -= time.m_ticks;
-	return *this;
+    m_ticks -= time.m_ticks;
+    return *this;
 }
 
-
-MidiTime& MidiTime::operator+=( const tick_t _ticks )
+MidiTime& MidiTime::operator+=(const tick_t _ticks)
 {
-	m_ticks += _ticks;
-	return *this;
+    m_ticks += _ticks;
+    return *this;
 }
 
-
-MidiTime& MidiTime::operator-=( const tick_t _ticks )
+MidiTime& MidiTime::operator-=(const tick_t _ticks)
 {
-	m_ticks -= _ticks;
-	return *this;
+    m_ticks -= _ticks;
+    return *this;
 }
 
-MidiTime MidiTime::operator+( const MidiTime& time ) const
+MidiTime MidiTime::operator+(const MidiTime& time) const
 {
-	return MidiTime(m_ticks+time.m_ticks);
+    return MidiTime(m_ticks + time.m_ticks);
 }
 
-MidiTime MidiTime::operator-( const MidiTime& time ) const
+MidiTime MidiTime::operator-(const MidiTime& time) const
 {
-	return MidiTime(m_ticks-time.m_ticks);
+    return MidiTime(m_ticks - time.m_ticks);
 }
 
-MidiTime MidiTime::operator+( const tick_t _ticks ) const
+MidiTime MidiTime::operator+(const tick_t _ticks) const
 {
-	return MidiTime(m_ticks+_ticks);
+    return MidiTime(m_ticks + _ticks);
 }
 
-MidiTime MidiTime::operator-( const tick_t _ticks ) const
+MidiTime MidiTime::operator-(const tick_t _ticks) const
 {
-	return MidiTime(m_ticks-_ticks);
+    return MidiTime(m_ticks - _ticks);
 }
 
-tact_t MidiTime::getTact() const
+tact_t MidiTime::tact() const
 {
-	return m_ticks / s_ticksPerTact;
+    return m_ticks / s_ticksPerTact;
 }
-
 
 tact_t MidiTime::nextFullTact() const
 {
-	return (m_ticks + (s_ticksPerTact-1)) / s_ticksPerTact;
+    return (m_ticks + (s_ticksPerTact - 1)) / s_ticksPerTact;
 }
 
-
-void MidiTime::setTicks( tick_t ticks )
+void MidiTime::setTicks(tick_t ticks)
 {
-	m_ticks = ticks;
+    m_ticks = ticks;
 }
 
-
-tick_t MidiTime::getTicks() const
+tick_t MidiTime::ticks() const
 {
-	return m_ticks;
+    return m_ticks;
 }
-
 
 MidiTime::operator tick_t() const
 {
-	return m_ticks;
+    return m_ticks;
 }
 
-
-tick_t MidiTime::ticksPerBeat( const TimeSig &sig ) const
+tick_t MidiTime::ticksPerBeat(const TimeSig& sig) const
 {
-	// (number of ticks per bar) divided by (number of beats per bar)
-	return ticksPerTact(sig) / sig.numerator();
+    // (number of ticks per bar) divided by (number of beats per bar)
+    return ticksPerTact(sig) / sig.numerator();
 }
 
-
-tick_t MidiTime::getTickWithinBar( const TimeSig &sig ) const
+tick_t MidiTime::getTickWithinBar(const TimeSig& sig) const
 {
-	return m_ticks % ticksPerTact(sig);
+    return m_ticks % ticksPerTact(sig);
 }
 
-tick_t MidiTime::getBeatWithinBar( const TimeSig &sig ) const
+tick_t MidiTime::getBeatWithinBar(const TimeSig& sig) const
 {
-	return getTickWithinBar(sig) / ticksPerBeat(sig);
+    return getTickWithinBar(sig) / ticksPerBeat(sig);
 }
 
-tick_t MidiTime::getTickWithinBeat( const TimeSig &sig ) const
+tick_t MidiTime::getTickWithinBeat(const TimeSig& sig) const
 {
-	return getTickWithinBar(sig) % ticksPerBeat(sig);
+    return getTickWithinBar(sig) % ticksPerBeat(sig);
 }
 
-
-f_cnt_t MidiTime::frames( const float framesPerTick ) const
+f_cnt_t MidiTime::frames(const float framesPerTick) const
 {
-	if( m_ticks >= 0 )
-	{
-		return static_cast<f_cnt_t>( m_ticks * framesPerTick );
-	}
-	return 0;
+    if(m_ticks >= 0)
+    {
+        return static_cast<f_cnt_t>(m_ticks * framesPerTick);
+    }
+    return 0;
 }
 
 double MidiTime::getTimeInMilliseconds(bpm_t beatsPerMinute) const
 {
-	return ticksToMilliseconds(getTicks(), beatsPerMinute);
+    return ticksToMilliseconds(ticks(), beatsPerMinute);
 }
 
-MidiTime MidiTime::fromFrames( const f_cnt_t frames, const float framesPerTick )
+MidiTime MidiTime::fromFrames(const f_cnt_t frames, const float framesPerTick)
 {
-	return MidiTime( static_cast<int>( frames / framesPerTick ) );
+    return MidiTime(static_cast<int>(frames / framesPerTick));
 }
-
 
 tick_t MidiTime::ticksPerTact()
 {
-	return s_ticksPerTact;
+    return s_ticksPerTact;
 }
 
-
-tick_t MidiTime::ticksPerTact( const TimeSig &sig )
+tick_t MidiTime::ticksPerTact(const TimeSig& sig)
 {
-	return DefaultTicksPerTact * sig.numerator() / sig.denominator();
+    return DefaultTicksPerTact * sig.numerator() / sig.denominator();
 }
 
-
-void MidiTime::setTicksPerTact( tick_t tpt )
+void MidiTime::setTicksPerTact(tick_t tpt)
 {
-	s_ticksPerTact = tpt;
+    s_ticksPerTact = tpt;
 }
-
 
 double MidiTime::ticksToMilliseconds(tick_t ticks, bpm_t beatsPerMinute)
 {
-	return MidiTime::ticksToMilliseconds(static_cast<double>(ticks), beatsPerMinute);
+    return MidiTime::ticksToMilliseconds(static_cast<double>(ticks),
+                                         beatsPerMinute);
 }
 
 double MidiTime::ticksToMilliseconds(double ticks, bpm_t beatsPerMinute)
 {
-	// 60 * 1000 / 48 = 1250
-	return ( ticks * 1250 ) / beatsPerMinute;
+    // 60 * 1000 / 48 = 1250
+    return (ticks * 1250) / beatsPerMinute;
 }

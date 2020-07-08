@@ -40,202 +40,207 @@
 
 class IntModel;
 
-
 class EXPORT Oscillator /*final*/
 {
-	MM_OPERATORS
-public:
-	enum WaveShapes
-	{
-		SineWave,
-		TriangleWave,
-		SawWave,
-		SquareWave,
-		MoogSawWave,
-		ExponentialWave,
-		WhiteNoise,
-		UserDefinedWave,
-                ZeroWave,
-                OneWave,
-                MinusOneWave,
-		NumWaveShapes
-	} ;
+    MM_OPERATORS
+  public:
+    enum WaveShapes
+    {
+        SineWave,
+        TriangleWave,
+        SawWave,
+        SquareWave,
+        MoogSawWave,
+        ExponentialWave,
+        WhiteNoise,
+        UserDefinedWave,
+        ZeroWave,
+        OneWave,
+        MinusOneWave,
+        NumWaveShapes
+    };
 
-	enum ModulationAlgos
-	{
-		PhaseModulation,
-		AmplitudeModulation,
-		SignalMix,
-		SynchronizedBySubOsc,
-		FrequencyModulation,
-		PulseModulation,
-                OutputModulation,
-		NumModulationAlgos
-	} ;
+    enum ModulationAlgos
+    {
+        PhaseModulation,
+        AmplitudeModulation,
+        SignalMix,
+        SynchronizedBySubOsc,
+        FrequencyModulation,
+        PulseModulation,
+        OutputModulation,
+        NumModulationAlgos
+    };
 
+    Oscillator(const IntModel*    _wave_shape_model,
+               const IntModel*    _mod_algo_model,
+               const frequency_t& _freq,
+               const real_t&      _detuning,
+               const real_t&      _phase_offset,
+               const volume_t&    _volume,
+               Oscillator*        _m_subOsc = nullptr);
 
-	Oscillator( const IntModel * _wave_shape_model,
-                    const IntModel * _mod_algo_model,
-                    const frequency_t & _freq,
-                    const real_t & _detuning,
-                    const real_t & _phase_offset,
-                    const volume_t & _volume,
-                    Oscillator * _m_subOsc = NULL );
+    virtual ~Oscillator()
+    {
+        delete m_subOsc;
+    }
 
-	virtual ~Oscillator()
-	{
-		delete m_subOsc;
-	}
+    inline void setUserWave(const SampleBuffer* _wave)
+    {
+        m_userWave = _wave;
+    }
 
+    void update(sampleFrame* _ab, const fpp_t _frames, const ch_cnt_t _chnl);
 
-	inline void setUserWave( const SampleBuffer * _wave )
-	{
-		m_userWave = _wave;
-	}
+    // now follow the wave-shape-routines...
 
-	void update( sampleFrame * _ab, const fpp_t _frames,
-							const ch_cnt_t _chnl );
+    static inline sample_t sinSample(real_t _sample)
+    {
+        // return sinf( _sample * F_2PI );
+        // return fastnormsinf01(fraction(_sample));
+        return WaveForm::sine(positivefraction(_sample));
+    }
 
-	// now follow the wave-shape-routines...
+    static inline sample_t triangleSample(const real_t _sample)
+    {
+        /*
+        const real_t ph = fraction( _sample );
+        if( ph <= 0.25f )
+        {
+                return ph * 4.0f;
+        }
+        else if( ph <= 0.75f )
+        {
+                return 2.0f - ph * 4.0f;
+        }
+        return ph * 4.0f - 4.0f;
+        */
+        // return fasttrianglef01(fraction(_sample));
+        return WaveForm::triangle(positivefraction(_sample));
+    }
 
-	static inline sample_t sinSample( real_t _sample )
-	{
-                //return sinf( _sample * F_2PI );
-                //return fastnormsinf01(fraction(_sample));
-                return WaveForm::sine(positivefraction(_sample));
-	}
+    static inline sample_t sawSample(const real_t _sample)
+    {
+        // return -1.0f + fraction( _sample ) * 2.0f;
+        // return fastsawf01(fraction(_sample));
+        return WaveForm::ramp(positivefraction(_sample));
+    }
 
-	static inline sample_t triangleSample( const real_t _sample )
-	{
-                /*
-		const real_t ph = fraction( _sample );
-		if( ph <= 0.25f )
-		{
-			return ph * 4.0f;
-		}
-		else if( ph <= 0.75f )
-		{
-			return 2.0f - ph * 4.0f;
-		}
-		return ph * 4.0f - 4.0f;
-                */
-                //return fasttrianglef01(fraction(_sample));
-                return WaveForm::triangle(positivefraction(_sample));
-	}
+    static inline sample_t squareSample(const real_t _sample)
+    {
+        // return ( fraction( _sample ) > 0.5f ) ? -1.0f : 1.0f;
+        // return fastsquaref01(fraction(_sample));
+        return WaveForm::square(positivefraction(_sample));
+    }
 
-	static inline sample_t sawSample( const real_t _sample )
-	{
-		//return -1.0f + fraction( _sample ) * 2.0f;
-                //return fastsawf01(fraction(_sample));
-                return WaveForm::ramp(positivefraction(_sample));
-	}
+    static inline sample_t moogSawSample(const real_t _sample)
+    {
+        /*
+        const real_t ph = fraction( _sample );
+        if( ph < 0.5f )
+        {
+                return -1.0f + ph * 4.0f;
+        }
+        return 1.0f - 2.0f * ph;
+        */
+        // return fastmoogsawf01(fraction(_sample));
+        return WaveForm::harshramp(positivefraction(_sample));
+    }
 
-	static inline sample_t squareSample( const real_t _sample )
-	{
-		//return ( fraction( _sample ) > 0.5f ) ? -1.0f : 1.0f;
-                //return fastsquaref01(fraction(_sample));
-                return WaveForm::square(positivefraction(_sample));
-	}
+    static inline sample_t expSample(const real_t _sample)
+    {
+        /*
+        real_t ph = fraction( _sample );
+        if( ph > 0.5f )
+        {
+                ph = 1.0f - ph;
+        }
+        return -1.0f + 8.0f * ph * ph;
+        */
+        // return fastnormexpf01(fraction(_sample));
+        return WaveForm::sqpeak(positivefraction(_sample));
+    }
 
-	static inline sample_t moogSawSample( const real_t _sample )
-	{
-                /*
-		const real_t ph = fraction( _sample );
-		if( ph < 0.5f )
-		{
-			return -1.0f + ph * 4.0f;
-		}
-		return 1.0f - 2.0f * ph;
-                */
-                //return fastmoogsawf01(fraction(_sample));
-                return WaveForm::harshramp(positivefraction(_sample));
-	}
+    static inline sample_t noiseSample(const real_t _sample)
+    {
+        // Precise implementation
+        // return 1.0f - rand() * 2.0f / RAND_MAX;
 
-	static inline sample_t expSample( const real_t _sample )
-	{
-                /*
-		real_t ph = fraction( _sample );
-		if( ph > 0.5f )
-		{
-			ph = 1.0f - ph;
-		}
-		return -1.0f + 8.0f * ph * ph;
-                */
-                //return fastnormexpf01(fraction(_sample));
-                return WaveForm::sqpeak(positivefraction(_sample));
-	}
+        // Fast implementation
+        // return 1.0f - fast_rand() * 2.0f / FAST_RAND_MAX;
+        return WaveForm::whitenoise(positivefraction(_sample));
+    }
 
-	static inline sample_t noiseSample( const real_t _sample )
-	{
-		// Precise implementation
-                //return 1.0f - rand() * 2.0f / RAND_MAX;
+    inline sample_t userWaveSample(const real_t _sample) const
+    {
+        return m_userWave->userWaveSample(_sample);
+    }
 
-		// Fast implementation
-		//return 1.0f - fast_rand() * 2.0f / FAST_RAND_MAX;
-                return WaveForm::whitenoise(positivefraction(_sample));
-	}
+  private:
+    const IntModel*     m_waveShapeModel;
+    const IntModel*     m_modulationAlgoModel;
+    const frequency_t&  m_freq;
+    const real_t&       m_detuning;
+    const volume_t&     m_volume;
+    const real_t&       m_ext_phaseOffset;
+    Oscillator*         m_subOsc;
+    real_t              m_phaseOffset;
+    real_t              m_phase;
+    const SampleBuffer* m_userWave;
 
-	inline sample_t userWaveSample( const real_t _sample ) const
-	{
-		return m_userWave->userWaveSample(_sample);
-	}
+    void updateNoSub(sampleFrame*   _ab,
+                     const fpp_t    _frames,
+                     const ch_cnt_t _chnl);
+    void updatePM(sampleFrame*   _ab,
+                  const fpp_t    _frames,
+                  const ch_cnt_t _chnl);
+    void updateAM(sampleFrame*   _ab,
+                  const fpp_t    _frames,
+                  const ch_cnt_t _chnl);
+    void updateMix(sampleFrame*   _ab,
+                   const fpp_t    _frames,
+                   const ch_cnt_t _chnl);
+    void updateSync(sampleFrame*   _ab,
+                    const fpp_t    _frames,
+                    const ch_cnt_t _chnl);
+    void updateFM(sampleFrame*   _ab,
+                  const fpp_t    _frames,
+                  const ch_cnt_t _chnl);
 
+    real_t      syncInit(sampleFrame*   _ab,
+                         const fpp_t    _frames,
+                         const ch_cnt_t _chnl);
+    inline bool syncOk(real_t _osc_coeff);
 
-private:
-	const IntModel * m_waveShapeModel;
-	const IntModel * m_modulationAlgoModel;
-	const frequency_t & m_freq;
-	const real_t & m_detuning;
-	const volume_t & m_volume;
-	const real_t & m_ext_phaseOffset;
-	Oscillator * m_subOsc;
-	real_t m_phaseOffset;
-	real_t m_phase;
-	const SampleBuffer * m_userWave;
+    template <WaveShapes W>
+    void updateNoSub(sampleFrame*   _ab,
+                     const fpp_t    _frames,
+                     const ch_cnt_t _chnl);
+    template <WaveShapes W>
+    void updatePM(sampleFrame*   _ab,
+                  const fpp_t    _frames,
+                  const ch_cnt_t _chnl);
+    template <WaveShapes W>
+    void updateAM(sampleFrame*   _ab,
+                  const fpp_t    _frames,
+                  const ch_cnt_t _chnl);
+    template <WaveShapes W>
+    void updateMix(sampleFrame*   _ab,
+                   const fpp_t    _frames,
+                   const ch_cnt_t _chnl);
+    template <WaveShapes W>
+    void updateSync(sampleFrame*   _ab,
+                    const fpp_t    _frames,
+                    const ch_cnt_t _chnl);
+    template <WaveShapes W>
+    void updateFM(sampleFrame*   _ab,
+                  const fpp_t    _frames,
+                  const ch_cnt_t _chnl);
 
+    template <WaveShapes W>
+    inline sample_t getSample(const real_t _sample);
 
-	void updateNoSub( sampleFrame * _ab, const fpp_t _frames,
-							const ch_cnt_t _chnl );
-	void updatePM( sampleFrame * _ab, const fpp_t _frames,
-							const ch_cnt_t _chnl );
-	void updateAM( sampleFrame * _ab, const fpp_t _frames,
-							const ch_cnt_t _chnl );
-	void updateMix( sampleFrame * _ab, const fpp_t _frames,
-							const ch_cnt_t _chnl );
-	void updateSync( sampleFrame * _ab, const fpp_t _frames,
-							const ch_cnt_t _chnl );
-	void updateFM( sampleFrame * _ab, const fpp_t _frames,
-							const ch_cnt_t _chnl );
-
-	real_t syncInit( sampleFrame * _ab, const fpp_t _frames,
-							const ch_cnt_t _chnl );
-	inline bool syncOk( real_t _osc_coeff );
-
-	template<WaveShapes W>
-	void updateNoSub( sampleFrame * _ab, const fpp_t _frames,
-							const ch_cnt_t _chnl );
-	template<WaveShapes W>
-	void updatePM( sampleFrame * _ab, const fpp_t _frames,
-							const ch_cnt_t _chnl );
-	template<WaveShapes W>
-	void updateAM( sampleFrame * _ab, const fpp_t _frames,
-							const ch_cnt_t _chnl );
-	template<WaveShapes W>
-	void updateMix( sampleFrame * _ab, const fpp_t _frames,
-							const ch_cnt_t _chnl );
-	template<WaveShapes W>
-	void updateSync( sampleFrame * _ab, const fpp_t _frames,
-							const ch_cnt_t _chnl );
-	template<WaveShapes W>
-	void updateFM( sampleFrame * _ab, const fpp_t _frames,
-							const ch_cnt_t _chnl );
-
-	template<WaveShapes W>
-	inline sample_t getSample( const real_t _sample );
-
-	inline void recalcPhase();
-
-} ;
-
+    inline void recalcPhase();
+};
 
 #endif

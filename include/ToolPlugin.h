@@ -1,9 +1,10 @@
 /*
- * ToolPlugin.h - declaration of class ToolPlugin, a standard interface for all
- *                tool plugins
+ * ToolPlugin.h - declaration of class ToolPlugin, a standard interface for
+ * all tool plugins
  *
- * Copyright (c) 2006-2007 Javier Serrano Polo <jasp00/at/users.sourceforge.net>
- * Copyright (c) 2008-2009 Tobias Doerffel <tobydox/at/users.sourceforge.net>
+ * Copyright (c) 2006-2007 Javier Serrano Polo
+ * <jasp00/at/users.sourceforge.net> Copyright (c) 2008-2009 Tobias Doerffel
+ * <tobydox/at/users.sourceforge.net>
  *
  * This file is part of LMMS - https://lmms.io
  *
@@ -31,15 +32,14 @@
 
 class EXPORT ToolPlugin : public Plugin
 {
-public:
-	ToolPlugin( const Descriptor * _descriptor, Model * _parent );
-	virtual ~ToolPlugin();
+  public:
+    ToolPlugin(const Descriptor* _descriptor, Model* _parent);
+    virtual ~ToolPlugin();
 
-	// instantiate tool-plugin with given name or return NULL
-	// on failure
-	static ToolPlugin * instantiate( const QString & _plugin_name,
-										Model * _parent );
-
-} ;
+    // instantiate tool-plugin with given name or return nullptr
+    // on failure
+    static ToolPlugin* instantiate(const QString& _plugin_name,
+                                   Model*         _parent);
+};
 
 #endif

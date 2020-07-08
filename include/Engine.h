@@ -73,9 +73,15 @@ class EXPORT LmmsCore : public QObject
         return s_fxMixer;
     }
 
-    static Song* getSong()
+    static Song* song()
     {
         return s_song;
+    }
+
+    // Obsolete
+    static Song* getSong()
+    {
+        return song();
     }
 
     static Transportable* transport()
@@ -118,10 +124,9 @@ class EXPORT LmmsCore : public QObject
 
     static inline LmmsCore* inst()
     {
-        if(s_instanceOfMe == NULL)
-        {
+        if(s_instanceOfMe == nullptr)
             s_instanceOfMe = new LmmsCore();
-        }
+
         return s_instanceOfMe;
     }
 

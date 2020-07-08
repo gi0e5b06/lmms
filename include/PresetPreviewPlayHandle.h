@@ -47,17 +47,21 @@ class EXPORT PresetPreviewPlayHandle : public QObject, public PlayHandle
     virtual bool isFinished() const;
     virtual bool isFromTrack(const Track* _track) const;
     virtual bool isFromInstrument(const Instrument* _instrument) const;
+    virtual void noteOff(const f_cnt_t offset = 0);
+
+    virtual void enterMixer();
+    virtual void exitMixer();
 
     static void init();
     static void cleanup();
 
-    static ConstNotePlayHandleList
+    static ConstNotePlayHandles
             nphsOfInstrumentTrack(const InstrumentTrack* instrumentTrack);
 
     static bool isPreviewing();
 
   public slots:
-    void onPlayHandleDeleted(PlayHandle* handle);
+    void onPlayHandleDeleted(PlayHandlePointer handle);
 
   private:
     static PreviewTrackContainer* s_previewTC;

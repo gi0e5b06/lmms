@@ -28,65 +28,55 @@
 #include "AutomationPattern.h"
 #include "shared_object.h"
 
-
 class InlineAutomation : public FloatModel, public sharedObject
 {
-public:
-	InlineAutomation() :
-		FloatModel(),
-		sharedObject(),
-		m_autoPattern( nullptr )
-	{
-	}
+  public:
+    InlineAutomation() : FloatModel(), sharedObject(), m_autoPattern(nullptr)
+    {
+    }
 
-	virtual ~InlineAutomation()
-	{
-		if( m_autoPattern )
-		{
-			delete m_autoPattern;
-		}
-	}
+    virtual ~InlineAutomation()
+    {
+        if(m_autoPattern != nullptr)
+            delete m_autoPattern;
+    }
 
-	virtual float defaultValue() const = 0;
+    virtual float defaultValue() const = 0;
 
-	bool hasAutomation() const
-	{
-		if( m_autoPattern != nullptr && m_autoPattern->getTimeMap().isEmpty() == false )
-		{
-			// prevent saving inline automation if there's just one value which equals value
-			// of model which is going to be saved anyways
-			if( isAtInitValue() &&
-				m_autoPattern->getTimeMap().size() == 1 &&
-				m_autoPattern->getTimeMap().keys().first() == 0 &&
-				m_autoPattern->getTimeMap().values().first() == value() )
-			{
-				return false;
-			}
+    bool hasAutomation() const
+    {
+        if(m_autoPattern != nullptr
+           && m_autoPattern->getTimeMap().isEmpty() == false)
+        {
+            // prevent saving inline automation if there's just one value
+            // which equals value of model which is going to be saved anyways
+            if(isAtInitValue() && m_autoPattern->getTimeMap().size() == 1
+               && m_autoPattern->getTimeMap().keys().first() == 0
+               && m_autoPattern->getTimeMap().values().first() == value())
+                return false;
 
-			return true;
-		}
+            return true;
+        }
 
-		return false;
-	}
+        return false;
+    }
 
-	AutomationPattern * automationPattern()
-	{
-		if( m_autoPattern == nullptr )
-		{
-			m_autoPattern = new AutomationPattern( nullptr );
-			m_autoPattern->addObject( this );
-		}
-		return m_autoPattern;
-	}
+    AutomationPattern* automationPattern()
+    {
+        if(m_autoPattern == nullptr)
+        {
+            m_autoPattern = new AutomationPattern(nullptr);
+            m_autoPattern->addObject(this);
+        }
 
-	virtual void saveSettings( QDomDocument & _doc, QDomElement & _parent );
-	virtual void loadSettings( const QDomElement & _this );
+        return m_autoPattern;
+    }
 
+    virtual void saveSettings(QDomDocument& _doc, QDomElement& _parent);
+    virtual void loadSettings(const QDomElement& _this);
 
-private:
-	AutomationPattern * m_autoPattern;
-
-} ;
-
+  private:
+    AutomationPattern* m_autoPattern;
+};
 
 #endif

@@ -25,6 +25,7 @@
 #ifndef MIXER_WORKER_THREAD_H
 #define MIXER_WORKER_THREAD_H
 
+#include "AudioPort.h"
 #include "SafeList.h"
 
 #include <QAtomicPointer>
@@ -63,7 +64,8 @@ class MixerWorkerThread : public QThread
         void wait();
 
       private:
-#define JOB_QUEUE_SIZE 2048
+#define JOB_QUEUE_SIZE 256
+        // 2048
         QAtomicPointer<ThreadableJob> m_items[JOB_QUEUE_SIZE];
         AtomicInt                     m_queueSize;
         AtomicInt                     m_itemsDone;
@@ -78,12 +80,12 @@ class MixerWorkerThread : public QThread
     static void resetJobQueue(JobQueue::OperationMode _opMode
                               = JobQueue::Static)
     {
-        globalJobQueue.reset(_opMode);
+        s_globalJobQueue.reset(_opMode);
     }
 
     static void addJob(ThreadableJob* _job)
     {
-        globalJobQueue.addJob(_job);
+        s_globalJobQueue.addJob(_job);
     }
 
     // a convenient helper function allowing to pass a container with pointers
@@ -94,10 +96,21 @@ class MixerWorkerThread : public QThread
                              = JobQueue::Static)
     {
         resetJobQueue(_opMode);
-        // for( typename T::ConstIterator it = _vec.begin(); it != _vec.end();
-        // ++it )
-        //  addJob( *it );
-        _vec.map([](T _e) { MixerWorkerThread::addJob(_e); });
+        _vec.map([](T _e) {
+            /*
+              if(_e.isNull())
+                qWarning("MixerWorkingThread::fillJobQueue null job");
+              else
+            */
+            {
+                /*
+                AudioPort* ap=dynamic_cast<AudioPort*>(_e.data());
+                if(ap!=nullptr)
+                  qWarning("fillJobQueue ap=%s", qPrintable(ap->name()));
+                */
+                MixerWorkerThread::addJob(_e.data());
+            }
+        });
     }
 
     static void startAndWaitForJobs();
@@ -105,9 +118,9 @@ class MixerWorkerThread : public QThread
   private:
     virtual void run();
 
-    static JobQueue                  globalJobQueue;
-    static QWaitCondition*           queueReadyWaitCond;
-    static QList<MixerWorkerThread*> workerThreads;
+    static JobQueue                     s_globalJobQueue;
+    static QWaitCondition*              s_queueReadyWaitCond;
+    static SafeList<MixerWorkerThread*> s_workerThreads;
 
     volatile bool m_quit;
 };

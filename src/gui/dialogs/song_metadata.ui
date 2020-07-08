@@ -24,7 +24,7 @@
   </property>
   <layout class="QGridLayout" name="gridLayout_4">
    <item row="0" column="0">
-    <layout class="QVBoxLayout" name="verticalLayout" stretch="1,1">
+    <layout class="QVBoxLayout" name="verticalLayout" stretch="1,0">
      <item>
       <widget class="QTabWidget" name="tabWidget">
        <property name="currentIndex">
@@ -38,26 +38,152 @@
          <property name="geometry">
           <rect>
            <x>1</x>
-           <y>0</y>
+           <y>5</y>
            <width>697</width>
-           <height>121</height>
+           <height>421</height>
           </rect>
          </property>
-         <layout class="QGridLayout" name="gridLayout" columnstretch="0,0">
-          <item row="3" column="0">
-           <widget class="QLabel" name="label_Structure">
-            <property name="text">
-             <string>Structure:</string>
+         <layout class="QGridLayout" name="gridLayout" columnstretch="0,0,0">
+          <property name="leftMargin">
+           <number>6</number>
+          </property>
+          <property name="topMargin">
+           <number>6</number>
+          </property>
+          <property name="rightMargin">
+           <number>6</number>
+          </property>
+          <property name="bottomMargin">
+           <number>6</number>
+          </property>
+          <item row="6" column="2">
+           <widget class="QComboBox" name="value_Structure">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+              <horstretch>1</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="editable">
+             <bool>true</bool>
             </property>
            </widget>
           </item>
-          <item row="3" column="1">
-           <widget class="QLineEdit" name="value_Structure"/>
+          <item row="7" column="2">
+           <layout class="QHBoxLayout" name="horizontalLayout">
+            <item>
+             <widget class="QComboBox" name="value_Root">
+              <property name="maximumSize">
+               <size>
+                <width>100</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="editable">
+               <bool>false</bool>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QComboBox" name="value_Scale">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                <horstretch>1</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>500</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="editable">
+               <bool>false</bool>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item row="5" column="0">
+           <widget class="QLabel" name="label_Software">
+            <property name="text">
+             <string>Software:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="8" column="0">
+           <widget class="QLabel" name="label_Space1">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+              <horstretch>0</horstretch>
+              <verstretch>1</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
           </item>
           <item row="0" column="0">
            <widget class="QLabel" name="label_Tempo">
             <property name="text">
              <string>Tempo:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="2">
+           <widget class="QLabel" name="value_Software">
+            <property name="text">
+             <string notr="true">LSMM</string>
+            </property>
+           </widget>
+          </item>
+          <item row="7" column="0">
+           <widget class="QLabel" name="label_Scale">
+            <property name="text">
+             <string>Root and Scale:</string>
+            </property>
+            <property name="buddy">
+             <cstring>value_Root</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="2">
+           <widget class="QLabel" name="value_Tempo">
+            <property name="text">
+             <string notr="true">unknown</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="2">
+           <widget class="QLabel" name="value_Modified">
+            <property name="text">
+             <string notr="true">unknown</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="2">
+           <widget class="QLabel" name="value_Created">
+            <property name="text">
+             <string notr="true">unknown</string>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="0">
+           <widget class="QLabel" name="label_Structure">
+            <property name="text">
+             <string>Structure:</string>
+            </property>
+            <property name="buddy">
+             <cstring>value_Structure</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QLabel" name="label_Created">
+            <property name="text">
+             <string>Creation:</string>
             </property>
            </widget>
           </item>
@@ -68,31 +194,31 @@
             </property>
            </widget>
           </item>
-          <item row="0" column="1">
-           <widget class="QLabel" name="value_Tempo">
-            <property name="text">
-             <string notr="true">unknown</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="1">
+          <item row="1" column="2">
            <widget class="QLabel" name="value_TimeSignature">
             <property name="text">
              <string notr="true">N/N</string>
             </property>
            </widget>
           </item>
-          <item row="2" column="0">
-           <widget class="QLabel" name="label_Software">
+          <item row="3" column="0">
+           <widget class="QLabel" name="label_Modified">
             <property name="text">
-             <string>Software:</string>
+             <string>Modification:</string>
             </property>
            </widget>
           </item>
-          <item row="2" column="1">
-           <widget class="QLabel" name="value_Software">
+          <item row="4" column="0">
+           <widget class="QLabel" name="label_CumulativeWorkTime">
             <property name="text">
-             <string notr="true">LMMS</string>
+             <string>Work Time:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="2">
+           <widget class="QLabel" name="value_CumulativeWorkTime">
+            <property name="text">
+             <string notr="true">unknown</string>
             </property>
            </widget>
           </item>
@@ -107,39 +233,126 @@
          <property name="geometry">
           <rect>
            <x>4</x>
-           <y>0</y>
-           <width>685</width>
-           <height>421</height>
+           <y>1</y>
+           <width>691</width>
+           <height>452</height>
           </rect>
          </property>
-         <layout class="QGridLayout" name="gridLayout_3" rowstretch="0,0,0,0,0,0,0,0,0,0" columnstretch="0,0">
-          <item row="9" column="1">
-           <widget class="QLineEdit" name="value_Subgenre"/>
+         <layout class="QGridLayout" name="gridLayout_3" rowstretch="0,0,0,0,0,0,0,0,0,0,0" columnstretch="0,0">
+          <property name="leftMargin">
+           <number>6</number>
+          </property>
+          <property name="topMargin">
+           <number>6</number>
+          </property>
+          <property name="rightMargin">
+           <number>6</number>
+          </property>
+          <property name="bottomMargin">
+           <number>6</number>
+          </property>
+          <item row="6" column="0">
+           <widget class="QLabel" name="label_Copyright">
+            <property name="text">
+             <string>Copyright:</string>
+            </property>
+            <property name="buddy">
+             <cstring>value_Copyright</cstring>
+            </property>
+           </widget>
           </item>
-          <item row="6" column="1">
-           <widget class="QLineEdit" name="value_Copyright"/>
+          <item row="8" column="0">
+           <widget class="QLabel" name="label_Genre">
+            <property name="text">
+             <string>Genre:</string>
+            </property>
+            <property name="buddy">
+             <cstring>value_Genre</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="7" column="1">
+           <widget class="QComboBox" name="value_License">
+            <property name="maximumSize">
+             <size>
+              <width>300</width>
+              <height>16777215</height>
+             </size>
+            </property>
+            <property name="editable">
+             <bool>true</bool>
+            </property>
+           </widget>
           </item>
           <item row="1" column="0">
            <widget class="QLabel" name="label_Artist">
             <property name="text">
              <string>Artist:</string>
             </property>
+            <property name="buddy">
+             <cstring>value_Artist</cstring>
+            </property>
            </widget>
           </item>
-          <item row="2" column="1">
-           <widget class="QLineEdit" name="value_AlbumTitle"/>
+          <item row="5" column="0">
+           <widget class="QLabel" name="label_IRCS">
+            <property name="text">
+             <string notr="true">IRCS:</string>
+            </property>
+            <property name="buddy">
+             <cstring>value_IRCS</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QLabel" name="label_AlbumTitle">
+            <property name="text">
+             <string>Album Title:</string>
+            </property>
+            <property name="buddy">
+             <cstring>value_AlbumTitle</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="7" column="0">
+           <widget class="QLabel" name="label_License">
+            <property name="text">
+             <string>License:</string>
+            </property>
+            <property name="buddy">
+             <cstring>value_License</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="9" column="1">
+           <widget class="QLineEdit" name="value_Subgenre"/>
+          </item>
+          <item row="3" column="1">
+           <widget class="QLineEdit" name="value_TrackNumber">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>130</width>
+              <height>16777215</height>
+             </size>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="1">
+           <widget class="QLineEdit" name="value_Copyright"/>
           </item>
           <item row="0" column="0">
            <widget class="QLabel" name="label_SongTitle">
             <property name="text">
              <string>Song Title:</string>
             </property>
-           </widget>
-          </item>
-          <item row="4" column="0">
-           <widget class="QLabel" name="label_ReleaseDate">
-            <property name="text">
-             <string>Released:</string>
+            <property name="buddy">
+             <cstring>value_SongTitle</cstring>
             </property>
            </widget>
           </item>
@@ -162,60 +375,6 @@
             </property>
            </widget>
           </item>
-          <item row="4" column="1">
-           <widget class="QDateEdit" name="value_ReleaseDate">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="maximumSize">
-             <size>
-              <width>130</width>
-              <height>16777215</height>
-             </size>
-            </property>
-           </widget>
-          </item>
-          <item row="8" column="0">
-           <widget class="QLabel" name="label_Genre">
-            <property name="text">
-             <string>Genre:</string>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="1">
-           <widget class="QLineEdit" name="value_SongTitle"/>
-          </item>
-          <item row="2" column="0">
-           <widget class="QLabel" name="label_AlbumTitle">
-            <property name="text">
-             <string>Album Title:</string>
-            </property>
-           </widget>
-          </item>
-          <item row="5" column="0">
-           <widget class="QLabel" name="label_IRCS">
-            <property name="text">
-             <string notr="true">IRCS:</string>
-            </property>
-           </widget>
-          </item>
-          <item row="9" column="0">
-           <widget class="QLabel" name="label_Subgenre">
-            <property name="text">
-             <string>Subgenre:</string>
-            </property>
-           </widget>
-          </item>
-          <item row="6" column="0">
-           <widget class="QLabel" name="label_Copyright">
-            <property name="text">
-             <string>Copyright:</string>
-            </property>
-           </widget>
-          </item>
           <item row="5" column="1">
            <widget class="QLineEdit" name="value_IRCS">
             <property name="sizePolicy">
@@ -235,17 +394,10 @@
           <item row="1" column="1">
            <widget class="QLineEdit" name="value_Artist"/>
           </item>
-          <item row="3" column="0">
-           <widget class="QLabel" name="label_TrackNumber">
-            <property name="text">
-             <string>Track Number:</string>
-            </property>
-           </widget>
-          </item>
-          <item row="3" column="1">
-           <widget class="QLineEdit" name="value_TrackNumber">
+          <item row="4" column="1">
+           <widget class="QDateEdit" name="value_ReleaseDate">
             <property name="sizePolicy">
-             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+             <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
               <horstretch>0</horstretch>
               <verstretch>0</verstretch>
              </sizepolicy>
@@ -258,23 +410,52 @@
             </property>
            </widget>
           </item>
-          <item row="7" column="0">
-           <widget class="QLabel" name="label_License">
+          <item row="2" column="1">
+           <widget class="QLineEdit" name="value_AlbumTitle"/>
+          </item>
+          <item row="3" column="0">
+           <widget class="QLabel" name="label_TrackNumber">
             <property name="text">
-             <string>License:</string>
+             <string>Track Number:</string>
+            </property>
+            <property name="buddy">
+             <cstring>value_TrackNumber</cstring>
             </property>
            </widget>
           </item>
-          <item row="7" column="1">
-           <widget class="QComboBox" name="value_License">
-            <property name="maximumSize">
-             <size>
-              <width>300</width>
-              <height>16777215</height>
-             </size>
+          <item row="9" column="0">
+           <widget class="QLabel" name="label_Subgenre">
+            <property name="text">
+             <string>Subgenre:</string>
             </property>
-            <property name="editable">
-             <bool>true</bool>
+            <property name="buddy">
+             <cstring>value_Subgenre</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QLineEdit" name="value_SongTitle"/>
+          </item>
+          <item row="4" column="0">
+           <widget class="QLabel" name="label_ReleaseDate">
+            <property name="text">
+             <string>Released:</string>
+            </property>
+            <property name="buddy">
+             <cstring>value_ReleaseDate</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="10" column="0">
+           <widget class="QLabel" name="label_Space3">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+              <horstretch>0</horstretch>
+              <verstretch>1</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string/>
             </property>
            </widget>
           </item>
@@ -289,62 +470,67 @@
          <property name="geometry">
           <rect>
            <x>2</x>
-           <y>2</y>
+           <y>3</y>
            <width>697</width>
-           <height>421</height>
+           <height>450</height>
           </rect>
          </property>
          <layout class="QGridLayout" name="gridLayout_2">
+          <property name="leftMargin">
+           <number>6</number>
+          </property>
+          <property name="topMargin">
+           <number>6</number>
+          </property>
+          <property name="rightMargin">
+           <number>6</number>
+          </property>
+          <property name="bottomMargin">
+           <number>6</number>
+          </property>
           <property name="horizontalSpacing">
            <number>6</number>
           </property>
           <property name="verticalSpacing">
            <number>2</number>
           </property>
-          <item row="8" column="1">
-           <widget class="QLineEdit" name="value_SoundCloud"/>
-          </item>
-          <item row="6" column="0">
-           <widget class="QLabel" name="label_LMMS">
-            <property name="text">
-             <string notr="true">LMMS.io</string>
-            </property>
-           </widget>
-          </item>
-          <item row="7" column="1">
-           <widget class="QLineEdit" name="value_Orfium"/>
-          </item>
-          <item row="9" column="1">
-           <widget class="QLineEdit" name="value_Spotify"/>
-          </item>
-          <item row="9" column="0">
-           <widget class="QLabel" name="label_Spotify">
-            <property name="text">
-             <string notr="true">Spotify:</string>
-            </property>
-           </widget>
-          </item>
           <item row="10" column="0">
            <widget class="QLabel" name="label_YouTube">
             <property name="text">
              <string notr="true">YouTube:</string>
             </property>
+            <property name="buddy">
+             <cstring>value_YouTube</cstring>
+            </property>
            </widget>
-          </item>
-          <item row="10" column="1">
-           <widget class="QLineEdit" name="value_YouTube"/>
           </item>
           <item row="7" column="0">
            <widget class="QLabel" name="label_Orfium">
             <property name="text">
              <string notr="true">Orfium:</string>
             </property>
+            <property name="buddy">
+             <cstring>value_Orfium</cstring>
+            </property>
            </widget>
           </item>
-          <item row="8" column="0">
-           <widget class="QLabel" name="label_SoundCloud">
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_ArtistWebsite">
             <property name="text">
-             <string notr="true">SoundCloud:</string>
+             <string>Artist Website:</string>
+            </property>
+            <property name="buddy">
+             <cstring>value_ArtistWebsite</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_LabelWebsite">
+            <property name="text">
+             <string>Label Website:</string>
+            </property>
+            <property name="buddy">
+             <cstring>value_LabelWebsite</cstring>
             </property>
            </widget>
           </item>
@@ -359,59 +545,135 @@
             <property name="text">
              <string notr="true">iTunes:</string>
             </property>
-           </widget>
-          </item>
-          <item row="3" column="1">
-           <widget class="QLineEdit" name="value_BandCamp"/>
-          </item>
-          <item row="4" column="0">
-           <widget class="QLabel" name="label_Clyp">
-            <property name="text">
-             <string notr="true">Clyp:</string>
+            <property name="buddy">
+             <cstring>value_iTunes</cstring>
             </property>
            </widget>
           </item>
-          <item row="2" column="1">
-           <widget class="QLineEdit" name="value_Amazon"/>
-          </item>
-          <item row="3" column="0">
-           <widget class="QLabel" name="label_BandCamp">
+          <item row="6" column="0">
+           <widget class="QLabel" name="label_LMMS">
             <property name="text">
-             <string notr="true">BandCamp:</string>
+             <string notr="true">LMMS.io</string>
             </property>
-           </widget>
-          </item>
-          <item row="2" column="0">
-           <widget class="QLabel" name="label_Amazon">
-            <property name="text">
-             <string notr="true">Amazon:</string>
+            <property name="buddy">
+             <cstring>value_LMMS</cstring>
             </property>
            </widget>
           </item>
           <item row="6" column="1">
            <widget class="QLineEdit" name="value_LMMS"/>
           </item>
-          <item row="0" column="0">
-           <widget class="QLabel" name="label_ArtistWebsite">
-            <property name="text">
-             <string>Artist Website:</string>
-            </property>
-           </widget>
-          </item>
           <item row="0" column="1">
            <widget class="QLineEdit" name="value_ArtistWebsite"/>
           </item>
-          <item row="1" column="0">
-           <widget class="QLabel" name="label_LabelWebsite">
+          <item row="8" column="1">
+           <widget class="QLineEdit" name="value_SoundCloud"/>
+          </item>
+          <item row="2" column="0">
+           <widget class="QLabel" name="label_Amazon">
             <property name="text">
-             <string>Label Website:</string>
+             <string notr="true">Amazon:</string>
+            </property>
+            <property name="buddy">
+             <cstring>value_Amazon</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="9" column="0">
+           <widget class="QLabel" name="label_Spotify">
+            <property name="text">
+             <string notr="true">Spotify:</string>
+            </property>
+            <property name="buddy">
+             <cstring>value_Spotify</cstring>
             </property>
            </widget>
           </item>
           <item row="1" column="1">
            <widget class="QLineEdit" name="value_LabelWebsite"/>
           </item>
+          <item row="3" column="0">
+           <widget class="QLabel" name="label_BandCamp">
+            <property name="text">
+             <string notr="true">BandCamp:</string>
+            </property>
+            <property name="buddy">
+             <cstring>value_BandCamp</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="10" column="1">
+           <widget class="QLineEdit" name="value_YouTube"/>
+          </item>
+          <item row="8" column="0">
+           <widget class="QLabel" name="label_SoundCloud">
+            <property name="text">
+             <string notr="true">SoundCloud:</string>
+            </property>
+            <property name="buddy">
+             <cstring>value_SoundCloud</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <widget class="QLineEdit" name="value_Amazon"/>
+          </item>
+          <item row="4" column="0">
+           <widget class="QLabel" name="label_Clyp">
+            <property name="text">
+             <string notr="true">Clyp:</string>
+            </property>
+            <property name="buddy">
+             <cstring>value_Clyp</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="1">
+           <widget class="QLineEdit" name="value_BandCamp"/>
+          </item>
+          <item row="7" column="1">
+           <widget class="QLineEdit" name="value_Orfium"/>
+          </item>
+          <item row="9" column="1">
+           <widget class="QLineEdit" name="value_Spotify"/>
+          </item>
+          <item row="11" column="0">
+           <widget class="QLabel" name="label_Space2">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+              <horstretch>0</horstretch>
+              <verstretch>1</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+          </item>
          </layout>
+         <zorder>label_YouTube</zorder>
+         <zorder>label_Orfium</zorder>
+         <zorder>label_LabelWebsite</zorder>
+         <zorder>value_iTunes</zorder>
+         <zorder>value_Clyp</zorder>
+         <zorder>label_iTunes</zorder>
+         <zorder>label_LMMS</zorder>
+         <zorder>value_LMMS</zorder>
+         <zorder>value_ArtistWebsite</zorder>
+         <zorder>value_SoundCloud</zorder>
+         <zorder>label_Amazon</zorder>
+         <zorder>label_Spotify</zorder>
+         <zorder>value_LabelWebsite</zorder>
+         <zorder>label_BandCamp</zorder>
+         <zorder>value_YouTube</zorder>
+         <zorder>label_SoundCloud</zorder>
+         <zorder>value_Amazon</zorder>
+         <zorder>label_Clyp</zorder>
+         <zorder>value_BandCamp</zorder>
+         <zorder>value_Orfium</zorder>
+         <zorder>value_Spotify</zorder>
+         <zorder>label_Space2</zorder>
+         <zorder>label_ArtistWebsite</zorder>
         </widget>
        </widget>
       </widget>
@@ -439,8 +701,8 @@
    <slot>accept()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>248</x>
-     <y>254</y>
+     <x>255</x>
+     <y>518</y>
     </hint>
     <hint type="destinationlabel">
      <x>157</x>
@@ -455,8 +717,8 @@
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>316</x>
-     <y>260</y>
+     <x>323</x>
+     <y>518</y>
     </hint>
     <hint type="destinationlabel">
      <x>286</x>

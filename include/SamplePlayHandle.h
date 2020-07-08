@@ -25,15 +25,17 @@
 #ifndef SAMPLE_PLAY_HANDLE_H
 #define SAMPLE_PLAY_HANDLE_H
 
+#include "AudioPort.h"
 #include "AutomatableModel.h"
 #include "PlayHandle.h"
 #include "SampleBuffer.h"
 
 class BBTrack;
 class SampleTCO;
+/*
 class Track;
 class Instrument;
-class AudioPort;
+*/
 
 class SamplePlayHandle final : public PlayHandle
 {
@@ -42,6 +44,9 @@ class SamplePlayHandle final : public PlayHandle
     SamplePlayHandle(SampleBuffer* sampleBuffer, bool ownAudioPort = true);
     SamplePlayHandle(SampleTCO* tco);
     virtual ~SamplePlayHandle();
+
+    virtual void enterMixer();
+    virtual void exitMixer();
 
     virtual void play(sampleFrame* buffer);
     virtual bool isFinished() const;
@@ -59,7 +64,7 @@ class SamplePlayHandle final : public PlayHandle
     virtual void    setCurrentFrame(f_cnt_t _f);
 
     virtual f_cnt_t autoRepeat();
-    virtual void setAutoRepeat(f_cnt_t _f);
+    virtual void    setAutoRepeat(f_cnt_t _f);
 
     // f_cnt_t totalFrames() const;
 
@@ -92,12 +97,12 @@ class SamplePlayHandle final : public PlayHandle
     SampleBuffer::HandleState m_state;
     f_cnt_t                   m_autoRepeat;
 
-    const bool m_ownAudioPort;
-
-    FloatModel  m_defaultVolumeModel;
-    FloatModel* m_volumeModel;
-    Track*      m_track;
-    BBTrack*    m_bbTrack;
+    const bool       m_ownAudioPort;
+    AudioPortPointer m_audioPort;
+    FloatModel       m_defaultVolumeModel;
+    FloatModel*      m_volumeModel;
+    Track*           m_track;
+    BBTrack*         m_bbTrack;
 };
 
 #endif

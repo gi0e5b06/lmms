@@ -38,7 +38,7 @@ const f_cnt_t minimumFrames = 1;
 
 EnvelopeAndLfoParameters::LfoInstances*
         EnvelopeAndLfoParameters::s_lfoInstances
-        = NULL;
+        = nullptr;
 
 void EnvelopeAndLfoParameters::LfoInstances::trigger()
 {
@@ -77,13 +77,15 @@ void EnvelopeAndLfoParameters::LfoInstances::remove(
 EnvelopeAndLfoParameters::EnvelopeAndLfoParameters(
         real_t _value_for_zero_amount, Model* _parent) :
       Model(_parent, "Envelope"),
-      m_used(false), m_predelayModel(0.,
-                                     0.,
-                                     2.,
-                                     0.001,
-                                     SECS_PER_ENV_SEGMENT * 1000.,
-                                     this,
-                                     tr("Predelay")),
+      m_used(false),
+      m_paramMutex("EnvelopeAndLfoParameters::m_paramMutex", true),
+      m_predelayModel(0.,
+                      0.,
+                      2.,
+                      0.001,
+                      SECS_PER_ENV_SEGMENT * 1000.,
+                      this,
+                      tr("Predelay")),
       m_attackModel(0.04,
                     0.,
                     2.,
@@ -192,7 +194,8 @@ EnvelopeAndLfoParameters::EnvelopeAndLfoParameters(
     connect(Engine::mixer(), SIGNAL(sampleRateChanged()), this,
             SLOT(updateSampleVars()));
 
-    m_lfoShapeData = new sample_t[Engine::mixer()->framesPerPeriod()];
+    m_lfoShapeData = MM_ALLOC(sample_t, Engine::mixer()->framesPerPeriod());
+    //    m_lfoShapeData = new sample_t[Engine::mixer()->framesPerPeriod()];
 
     updateSampleVars();
 }
@@ -215,9 +218,17 @@ EnvelopeAndLfoParameters::~EnvelopeAndLfoParameters()
     m_lfoWaveIndexModel.disconnect(this);
     m_x100Model.disconnect(this);
 
+    /*
     delete[] m_pahdEnv;
     delete[] m_rEnv;
     delete[] m_lfoShapeData;
+    */
+    if(m_pahdEnv != nullptr)
+        MM_FREE(m_pahdEnv);
+    if(m_rEnv != nullptr)
+        MM_FREE(m_rEnv);
+    if(m_lfoShapeData != nullptr)
+        MM_FREE(m_lfoShapeData);
 
     instances()->remove(this);
 
@@ -274,10 +285,10 @@ inline sample_t EnvelopeAndLfoParameters::lfoShapeSample(fpp_t _frame_offset)
 void EnvelopeAndLfoParameters::updateLfoShapeData()
 {
     const fpp_t frames = Engine::mixer()->framesPerPeriod();
+
     for(fpp_t offset = 0; offset < frames; ++offset)
-    {
         m_lfoShapeData[offset] = lfoShapeSample(offset);
-    }
+
     m_bad_lfoShapeData = false;
 }
 
@@ -288,28 +299,23 @@ inline void EnvelopeAndLfoParameters::fillLfoLevel(real_t*     _buf,
     if(m_lfoAmountIsZero || _frame <= m_lfoPredelayFrames)
     {
         for(fpp_t offset = 0; offset < _frames; ++offset)
-        {
             *_buf++ = 0.;
-        }
         return;
     }
+
     _frame -= m_lfoPredelayFrames;
 
     if(m_bad_lfoShapeData)
-    {
         updateLfoShapeData();
-    }
 
     fpp_t        offset = 0;
     const real_t lafI   = 1. / qMax(minimumFrames, m_lfoAttackFrames);
+
     for(; offset < _frames && _frame < m_lfoAttackFrames; ++offset, ++_frame)
-    {
         *_buf++ = m_lfoShapeData[offset] * _frame * lafI;
-    }
+
     for(; offset < _frames; ++offset)
-    {
         *_buf++ = m_lfoShapeData[offset];
-    }
 }
 
 void EnvelopeAndLfoParameters::fillLevel(real_t*       _buf,
@@ -381,7 +387,7 @@ void EnvelopeAndLfoParameters::fillLevel(real_t*       _buf,
                     bound(-1., *_buf + m_outBuffer.value(offset), 1.));
     }
 
-    m_outBuffer.setPeriod(AutomatableModel::periodCounter()+1);
+    m_outBuffer.setPeriod(AutomatableModel::periodCounter() + 1);
     m_outBuffer.unlock();
     emit sendOut(&m_outBuffer);
 }
@@ -456,9 +462,11 @@ void EnvelopeAndLfoParameters::loadSettings(const QDomElement& _this)
                                                     "lfosyncmode" ).toInt() );
             }*/
 
+    // qInfo("EnvelopeAndLfoParameters::loadSettings 1");
     m_userWave.setAudioFile(_this.attribute("userwavefile"));
-
+    // qInfo("EnvelopeAndLfoParameters::loadSettings 2");
     updateSampleVars();
+    // qInfo("EnvelopeAndLfoParameters::loadSettings 3");
 }
 
 void EnvelopeAndLfoParameters::updateSampleVars()
@@ -491,14 +499,11 @@ void EnvelopeAndLfoParameters::updateSampleVars()
 
     m_sustainLevel = m_sustainModel.value();
     m_amount       = m_amountModel.value();
+
     if(m_amount >= 0)
-    {
         m_amountAdd = (1. - m_amount) * m_valueForZeroAmount;
-    }
     else
-    {
         m_amountAdd = m_valueForZeroAmount;
-    }
 
     m_pahdFrames
             = predelay_frames + attack_frames + hold_frames + decay_frames;
@@ -507,24 +512,29 @@ void EnvelopeAndLfoParameters::updateSampleVars()
     m_rFrames = qMax(minimumFrames, m_rFrames);
 
     if(static_cast<int>(floor(m_amount * 1000.)) == 0)
-    {
         m_rFrames = minimumFrames;
-    }
+
+    // qInfo("EALP: pahdFrames=%d rFrames=%d", m_pahdFrames, m_rFrames);
 
     // if the buffers are too small, make bigger ones - so we only alloc new
     // memory when necessary
     if(m_pahdBufSize < m_pahdFrames)
     {
         sample_t* tmp = m_pahdEnv;
-        m_pahdEnv     = new sample_t[m_pahdFrames];
-        delete[] tmp;
+        m_pahdEnv     = MM_ALLOC(sample_t, m_pahdFrames);
+        if(tmp != nullptr)
+            MM_FREE(tmp);
+        /* m_pahdEnv = new sample_t[m_pahdFrames]; delete[] tmp; */
         m_pahdBufSize = m_pahdFrames;
     }
+
     if(m_rBufSize < m_rFrames)
     {
         sample_t* tmp = m_rEnv;
-        m_rEnv        = new sample_t[m_rFrames];
-        delete[] tmp;
+        m_rEnv        = MM_ALLOC(sample_t, m_rFrames);
+        if(tmp != nullptr)
+            MM_FREE(tmp);
+        /* m_rEnv = new sample_t[m_rFrames]; delete[] tmp; */
         m_rBufSize = m_rFrames;
     }
 
@@ -583,8 +593,8 @@ void EnvelopeAndLfoParameters::updateSampleVars()
     m_lfoOscillationFrames = static_cast<f_cnt_t>(frames_per_lfo_oscillation
                                                   * m_lfoSpeedModel.value());
 
-    // qInfo("m_lfoSpeedModel = %f",m_lfoSpeedModel.value());
-    // qInfo("m_lfoOscillationFrames = %d",m_lfoOscillationFrames);
+    // qInfo("EALP: m_lfoSpeedModel = %f", m_lfoSpeedModel.value());
+    // qInfo("EALP: m_lfoOscillationFrames = %d", m_lfoOscillationFrames);
 
     if(m_x100Model.value())
     {

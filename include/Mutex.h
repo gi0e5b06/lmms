@@ -59,7 +59,9 @@ class Mutex : public QMutex
            && m_thread == QThread::currentThread())
         {
             BACKTRACE
-            qWarning("Mutex::lock %s is already locked", qPrintable(m_name));
+            qWarning("Mutex::lock %s is already locked (%d,%s)",
+                     qPrintable(m_name), m_locked,
+                     qPrintable(m_thread->objectName()));
         }
         QMutex::lock();
         m_locked++;
@@ -77,8 +79,7 @@ class Mutex : public QMutex
         {
             m_locked++;
             m_thread = QThread::currentThread();
-            if(m_locked > 0 && !isRecursive()
-               && m_thread == QThread::currentThread())
+            if(m_locked > 1 && !isRecursive())
             {
                 BACKTRACE
                 qWarning("Mutex::tryLock %s is already locked",

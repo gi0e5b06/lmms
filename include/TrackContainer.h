@@ -58,7 +58,7 @@ class EXPORT TrackContainer : public Model, public JournallingObject
 
     virtual AutomationPattern* tempoAutomationPattern()
     {
-        return NULL;
+        return nullptr;
     }
 
     bool hasTracks() const;

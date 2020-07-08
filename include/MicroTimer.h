@@ -34,41 +34,37 @@
 #include <cstdlib>
 //#include "lmms_basics.h"
 
-
 class MicroTimer
 {
-public:
-	//inline
-        MicroTimer()
-	{
-		reset();
-	}
+  public:
+    // inline
+    MicroTimer()
+    {
+        reset();
+    }
 
-        /*
-	inline virtual ~MicroTimer()
-	{
-	}
-        */
+    /*
+    inline virtual ~MicroTimer()
+    {
+    }
+    */
 
-	//inline
-        void reset()
-	{
-		gettimeofday( &begin, NULL );
-	}
+    // inline
+    void reset()
+    {
+        gettimeofday(&begin, nullptr);
+    }
 
-	inline int elapsed() const
-	{
-		struct timeval now;
-		gettimeofday( &now, NULL );
-		return ( now.tv_sec - begin.tv_sec ) * 1000 * 1000 +
-					( now.tv_usec - begin.tv_usec );
-	}
+    inline int elapsed() const
+    {
+        struct timeval now;
+        gettimeofday(&now, nullptr);
+        return (now.tv_sec - begin.tv_sec) * 1000 * 1000
+               + (now.tv_usec - begin.tv_usec);
+    }
 
-
-private:
-	struct timeval begin;
-
-} ;
-
+  private:
+    struct timeval begin;
+};
 
 #endif

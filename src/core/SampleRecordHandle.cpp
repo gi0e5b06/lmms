@@ -22,7 +22,6 @@
  *
  */
 
-
 #include "SampleRecordHandle.h"
 
 #include "BBTrack.h"
@@ -31,134 +30,110 @@
 #include "Mixer.h"
 #include "SampleBuffer.h"
 #include "SampleTrack.h"
+#include "debug.h"  // REQUIRED
 
-#include "debug.h" // REQUIRED
-
-
-SampleRecordHandle::SampleRecordHandle( SampleTCO* tco ) :
-	PlayHandle( TypeSamplePlayHandle ),
-	m_framesRecorded( 0 ),
-	m_minLength( tco->length() ),
-	m_track( tco->track() ),
-	m_bbTrack( NULL ),
-	m_tco( tco )
+SampleRecordHandle::SampleRecordHandle(SampleTCO* tco) :
+      PlayHandle(TypeSamplePlayHandle), m_framesRecorded(0),
+      m_minLength(tco->length()), m_sampleTrack(tco->sampleTrack()), m_bbTrack(nullptr),
+      m_tco(tco)
 {
 }
-
-
-
 
 SampleRecordHandle::~SampleRecordHandle()
 {
-	if( !m_buffers.empty() )
-	{
-		SampleBuffer* sb;
-		createSampleBuffer( &sb );
-		m_tco->setSampleBuffer( sb );
-	}
+    if(!m_buffers.empty())
+    {
+        SampleBuffer* sb;
+        createSampleBuffer(&sb);
+        m_tco->setSampleBuffer(sb);
+    }
 
-	while( !m_buffers.empty() )
-	{
-		delete[] m_buffers.front().first;
-		m_buffers.erase( m_buffers.begin() );
-	}
-	m_tco->setRecord( false );
+    while(!m_buffers.empty())
+    {
+        delete[] m_buffers.front().first;
+        m_buffers.erase(m_buffers.begin());
+    }
+    m_tco->setRecord(false);
 }
 
-
-
-
-void SampleRecordHandle::play( sampleFrame * /*_working_buffer*/ )
+void SampleRecordHandle::enterMixer()
 {
-	const sampleFrame * recbuf = Engine::mixer()->inputBuffer();
-	const f_cnt_t frames = Engine::mixer()->inputBufferFrames();
-	writeBuffer( recbuf, frames );
-	m_framesRecorded += frames;
-
-	MidiTime len = (tick_t)( m_framesRecorded / Engine::framesPerTick() );
-	if( len > m_minLength )
-	{
-//		m_tco->changeLength( len );
-		m_minLength = len;
-	}
+    m_sampleTrack->audioPort()->addPlayHandle(pointer());
 }
 
+void SampleRecordHandle::exitMixer()
+{
+    m_sampleTrack->audioPort()->removePlayHandle(pointer());
+}
 
+void SampleRecordHandle::play(sampleFrame* /*_working_buffer*/)
+{
+    const sampleFrame* recbuf = Engine::mixer()->inputBuffer();
+    const f_cnt_t      frames = Engine::mixer()->inputBufferFrames();
+    writeBuffer(recbuf, frames);
+    m_framesRecorded += frames;
 
+    MidiTime len = (tick_t)(m_framesRecorded / Engine::framesPerTick());
+    if(len > m_minLength)
+    {
+        //		m_tco->changeLength( len );
+        m_minLength = len;
+    }
+}
 
 bool SampleRecordHandle::isFinished() const
 {
-	return false;
+    return false;
 }
 
-
-
-
-bool SampleRecordHandle::isFromTrack( const Track * _track ) const
+bool SampleRecordHandle::isFromTrack(const Track* _track) const
 {
-	return m_track == _track || m_bbTrack == _track;
+    return m_sampleTrack == _track || m_bbTrack == _track;
 }
-
-
-
 
 bool SampleRecordHandle::isFromInstrument(const Instrument* _instrument) const
 {
     return false;
 }
 
-
-
-
 f_cnt_t SampleRecordHandle::framesRecorded() const
 {
-	return m_framesRecorded;
+    return m_framesRecorded;
 }
 
-
-
-
-void SampleRecordHandle::createSampleBuffer( SampleBuffer** sampleBuf )
+void SampleRecordHandle::createSampleBuffer(SampleBuffer** sampleBuf)
 {
-	const f_cnt_t frames = framesRecorded();
-	// create buffer to store all recorded buffers in
-	sampleFrame * data = new sampleFrame[frames];
-	// make sure buffer is cleaned up properly at the end...
-	sampleFrame * data_ptr = data;
+    const f_cnt_t frames = framesRecorded();
+    // create buffer to store all recorded buffers in
+    sampleFrame* data = new sampleFrame[frames];
+    // make sure buffer is cleaned up properly at the end...
+    sampleFrame* data_ptr = data;
 
+    assert(data != nullptr);
 
-	assert( data != NULL );
-
-	// now copy all buffers into big buffer
-	for( bufferList::const_iterator it = m_buffers.begin();
-						it != m_buffers.end(); ++it )
-	{
-		memcpy( data_ptr, ( *it ).first, ( *it ).second *
-							sizeof( sampleFrame ) );
-		data_ptr += ( *it ).second;
-	}
-	// create according sample-buffer out of big buffer
-	*sampleBuf = new SampleBuffer( data, frames );
-	( *sampleBuf)->setSampleRate( Engine::mixer()->inputSampleRate() );
-	delete[] data;
+    // now copy all buffers into big buffer
+    for(bufferList::const_iterator it = m_buffers.begin();
+        it != m_buffers.end(); ++it)
+    {
+        memcpy(data_ptr, (*it).first, (*it).second * sizeof(sampleFrame));
+        data_ptr += (*it).second;
+    }
+    // create according sample-buffer out of big buffer
+    *sampleBuf = new SampleBuffer(data, frames);
+    (*sampleBuf)->setSampleRate(Engine::mixer()->inputSampleRate());
+    delete[] data;
 }
 
-
-
-
-void SampleRecordHandle::writeBuffer( const sampleFrame * _ab,
-					const f_cnt_t _frames )
+void SampleRecordHandle::writeBuffer(const sampleFrame* _ab,
+                                     const f_cnt_t      _frames)
 {
-	sampleFrame * buf = new sampleFrame[_frames];
-	for( f_cnt_t frame = 0; frame < _frames; ++frame )
-	{
-		for( ch_cnt_t chnl = 0; chnl < DEFAULT_CHANNELS; ++chnl )
-		{
-			buf[frame][chnl] = _ab[frame][chnl];
-		}
-	}
-	m_buffers.push_back( qMakePair( buf, _frames ) );
+    sampleFrame* buf = new sampleFrame[_frames];
+    for(f_cnt_t frame = 0; frame < _frames; ++frame)
+    {
+        for(ch_cnt_t chnl = 0; chnl < DEFAULT_CHANNELS; ++chnl)
+        {
+            buf[frame][chnl] = _ab[frame][chnl];
+        }
+    }
+    m_buffers.push_back(qMakePair(buf, _frames));
 }
-
-
-

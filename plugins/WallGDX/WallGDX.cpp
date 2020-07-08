@@ -75,7 +75,7 @@ bool WallGDXEffect::processAudioBuffer(sampleFrame* _buf, const fpp_t _frames)
 
     for(fpp_t f = 0; f < _frames; ++f)
     {
-        float w0, d0, w1, d1;
+        real_t w0, d0, w1, d1;
         computeWetDryLevels(f, _frames, smoothBegin, smoothEnd, w0, d0, w1,
                             d1);
 
@@ -83,20 +83,20 @@ bool WallGDXEffect::processAudioBuffer(sampleFrame* _buf, const fpp_t _frames)
         m_buffer[m_idx][0] = _buf[f][0];
         m_buffer[m_idx][1] = _buf[f][1];
 
-        float distance = distanceBuf ? distanceBuf->value(f)
+        real_t distance = distanceBuf ? distanceBuf->value(f)
                                      : m_gdxControls.m_distanceModel.value();
-        float dry = dryBuf
+        real_t dry = dryBuf
                                   ? dryBuf->value(f)
                                   : m_gdxControls.m_dryModel.value();
-        float wet = wetBuf
+        real_t wet = wetBuf
                                   ? wetBuf->value(f)
                                   : m_gdxControls.m_wetModel.value();
 
         int32_t t = (m_idx + static_cast<int32_t>(m_len * (1.f - distance)))
                     % m_len;
 
-        float curVal0 = dry * _buf[f][0] - wet * m_buffer[t][1];
-        float curVal1 = dry * _buf[f][1] - wet * m_buffer[t][1];
+        sample_t curVal0 = dry * _buf[f][0] - wet * m_buffer[t][1];
+        sample_t curVal1 = dry * _buf[f][1] - wet * m_buffer[t][1];
 
         _buf[f][0] = d0 * _buf[f][0] + w0 * curVal0;
         _buf[f][1] = d1 * _buf[f][1] + w1 * curVal1;

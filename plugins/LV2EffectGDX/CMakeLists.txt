@@ -2,7 +2,6 @@ IF(LMMS_SUPPORT_LV2)
 
   INCLUDE(BuildPlugin)
 
-# Disable C++11
 #REMOVE_DEFINITIONS(-std=c++0x)
 
 INCLUDE_DIRECTORIES(

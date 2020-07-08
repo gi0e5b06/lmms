@@ -29,6 +29,7 @@
 
 //#include "AutomatableModel.h"
 #include "ComboBoxModel.h"
+#include "Note.h"
 //#include "JournallingObject.h"
 #include "TempoSyncKnobModel.h"
 
@@ -196,6 +197,7 @@ class InstrumentFunctionNoteStacking : public InstrumentFunction
 class InstrumentFunctionArpeggio : public InstrumentFunction
 {
     Q_OBJECT
+
   public:
     enum ArpDirections
     {
@@ -241,6 +243,7 @@ class InstrumentFunctionArpeggio : public InstrumentFunction
     ComboBoxModel      m_arpModeModel;
     FloatModel         m_arpBaseModel;
     FloatModel         m_arpRepeatModel;
+    FloatModel         m_arpLimitModel;
 
     friend class InstrumentTrack;
     friend class InstrumentFunctionArpeggioView;
@@ -321,10 +324,16 @@ class InstrumentFunctionNoteFiltering : public InstrumentFunction
 
     virtual InstrumentFunctionView* createView();
 
+  public slots:
+    void onRootOrScaleChanged();
+
   private:
     ComboBoxModel  m_configModel;
     ComboBoxModel* m_actionModel[4];
-    BoolModel*     m_noteSelectionModel[4][12];
+    BoolModel*     m_noteSelectionModel[4][KeysPerOctave];
+    FloatModel*    m_intervalModel[4];
+    ComboBoxModel* m_rootModel[4];
+    ComboBoxModel* m_scaleModel[4];
 
     friend class InstrumentFunctionNoteFilteringView;
 };

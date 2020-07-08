@@ -121,7 +121,7 @@ ZynAddSubFxInstrument::ZynAddSubFxInstrument(
     // now we need a play-handle which cares for calling play()
     InstrumentPlayHandle* iph
             = new InstrumentPlayHandle(this, _instrumentTrack);
-    Engine::mixer()->emit playHandleToAdd(iph);
+    Engine::mixer()->emit playHandleToAdd(iph->pointer());
 
     connect(Engine::mixer(), SIGNAL(sampleRateChanged()), this,
             SLOT(reloadPlugin()));

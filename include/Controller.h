@@ -132,6 +132,9 @@ class Controller : public Model, public JournallingObject
     }
 
   protected:
+    virtual bool isConfigurable() { return true; }
+    virtual bool isRemovable() { return true; }
+
     // The internal per-controller get-value function
     virtual real_t value(int _offset) final;
 

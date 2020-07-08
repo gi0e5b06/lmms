@@ -20,11 +20,13 @@ ENDIF(LMMS_HOST_X86 OR LMMS_HOST_X86_64)
 
 # build ZynAddSubFX with full optimizations #O2
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O9 -Wno-write-strings -Wno-deprecated-declarations -fpermissive")
+# hide warnings
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-class-memaccess -Wno-format-truncation")
 
 IF(LMMS_BUILD_WIN32)
 	# link system-libraries
 	ADD_DEFINITIONS(-DPTW32_STATIC_LIB)
-	# fix X11 headers errors caused by bug with mingw + c++11
+	# fix X11 headers errors caused by bug with mingw + c++1 1
 	REMOVE_DEFINITIONS(-std=c++0x)
 	ADD_DEFINITIONS(-std=gnu++0x) 
 ENDIF(LMMS_BUILD_WIN32)

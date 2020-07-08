@@ -613,8 +613,6 @@ AudioFileProcessorView::AudioFileProcessorView(Instrument* _instrument,
     connect(castModel<audioFileProcessor>(), SIGNAL(isPlaying(f_cnt_t)),
             m_waveView, SLOT(isPlaying(f_cnt_t)));
 
-    qRegisterMetaType<f_cnt_t>("f_cnt_t");
-
     setAcceptDrops(true);
 }
 
@@ -694,6 +692,9 @@ void AudioFileProcessorView::paintEvent(QPaintEvent*)
     p.drawPixmap(0, 0, *s_artwork);
 
     audioFileProcessor* a = castModel<audioFileProcessor>();
+
+    if(a == nullptr)
+        return;
 
     QString file_name = "";
     int     idx       = a->m_sampleBuffer.audioFile().length();

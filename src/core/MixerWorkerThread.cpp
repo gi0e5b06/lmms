@@ -27,17 +27,26 @@
 #include "Mixer.h"
 #include "ThreadableJob.h"
 #include "denormals.h"
+#include "Backtrace.h"
 
 #include <QMutex>
 #include <QWaitCondition>
 
-MixerWorkerThread::JobQueue MixerWorkerThread::globalJobQueue;
-QWaitCondition*             MixerWorkerThread::queueReadyWaitCond = nullptr;
-QList<MixerWorkerThread*>   MixerWorkerThread::workerThreads;
+MixerWorkerThread::JobQueue MixerWorkerThread::s_globalJobQueue;
+QWaitCondition*             MixerWorkerThread::s_queueReadyWaitCond = nullptr;
+SafeList<MixerWorkerThread*> MixerWorkerThread::s_workerThreads;
 
 // implementation of internal JobQueue
 void MixerWorkerThread::JobQueue::reset(OperationMode _opMode)
 {
+    /*
+    if(m_queueSize > 0)
+    {
+        BACKTRACE
+        qWarning("MixerWorkerThread::JobQueue::reset queue=%d done=%d",
+                 (int)m_queueSize, (int)m_itemsDone);
+    }
+    */
     m_queueSize = 0;
     m_itemsDone = 0;
     m_opMode    = _opMode;
@@ -72,10 +81,10 @@ void MixerWorkerThread::JobQueue::run()
         for(int i = 0; i < m_queueSize && i < JOB_QUEUE_SIZE; ++i)
         {
             ThreadableJob* job = m_items[i].fetchAndStoreOrdered(nullptr);
-            if(job)
+            if(job != nullptr)
             {
                 // qInfo("Processing job in %s",
-                //   qPrintable(QThread::currentThread()->objectName()));
+                //      qPrintable(QThread::currentThread()->objectName()));
                 job->process();
                 processedJob = true;
                 m_itemsDone.fetchAndAddOrdered(1);
@@ -104,22 +113,22 @@ MixerWorkerThread::MixerWorkerThread(Mixer* mixer) :
     setObjectName("mixer worker");
 
     // initialize global static data
-    if(queueReadyWaitCond == nullptr)
-    {
-        queueReadyWaitCond = new QWaitCondition;
-    }
+    if(s_queueReadyWaitCond == nullptr)
+        s_queueReadyWaitCond = new QWaitCondition();
 
     // keep track of all instantiated worker threads - this is used for
     // processing the last worker thread "inline", see comments in
     // MixerWorkerThread::startAndWaitForJobs() for details
-    workerThreads << this;
+    // workerThreads << this;
+    s_workerThreads.append(this);
 
     resetJobQueue();
 }
 
 MixerWorkerThread::~MixerWorkerThread()
 {
-    workerThreads.removeAll(this);
+    // workerThreads.removeAll(this);
+    s_workerThreads.removeOne(this);
 }
 
 void MixerWorkerThread::quit()
@@ -130,25 +139,25 @@ void MixerWorkerThread::quit()
 
 void MixerWorkerThread::startAndWaitForJobs()
 {
-    queueReadyWaitCond->wakeAll();
+    s_queueReadyWaitCond->wakeAll();
     // The last worker-thread is never started. Instead it's processed
     // "inline" i.e. within the global Mixer thread. This way we can reduce
     // latencies that otherwise would be caused by synchronizing with another
     // thread.
-    globalJobQueue.run();
-    globalJobQueue.wait();
+    // s_globalJobQueue.run();
+    s_globalJobQueue.wait();
 }
 
 void MixerWorkerThread::run()
 {
     disable_denormals();
 
-    QMutex m;
+    Mutex m("MixerWorkerThread::run", false);
     while(m_quit == false)
     {
         m.lock();
-        queueReadyWaitCond->wait(&m);
-        globalJobQueue.run();
+        s_queueReadyWaitCond->wait(&m);
+        s_globalJobQueue.run();
         m.unlock();
     }
 }

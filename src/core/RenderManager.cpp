@@ -40,7 +40,7 @@ RenderManager::RenderManager(const Mixer::qualitySettings& qualitySettings,
       m_qualitySettings(qualitySettings),
       m_oldQualitySettings(Engine::mixer()->currentQualitySettings()),
       m_outputSettings(outputSettings), m_format(fmt),
-      m_outputPath(outputPath), m_activeRenderer(NULL)
+      m_outputPath(outputPath), m_activeRenderer(nullptr)
 {
     Engine::mixer()->storeAudioDevice();
 }
@@ -48,7 +48,7 @@ RenderManager::RenderManager(const Mixer::qualitySettings& qualitySettings,
 RenderManager::~RenderManager()
 {
     delete m_activeRenderer;
-    m_activeRenderer = NULL;
+    m_activeRenderer = nullptr;
 
     Engine::mixer()->restoreAudioDevice();  // Also deletes audio dev.
     Engine::mixer()->changeQuality(m_oldQualitySettings);
@@ -106,13 +106,13 @@ void RenderManager::renderNextTrack()
     // qWarning("RenderManager::renderNextTrack");
 
     // post-process current track
-    if(m_activeRenderer != NULL)
+    if(m_activeRenderer != nullptr)
     {
         QString f = m_activeRenderer->outputFile();
         bool    a = m_activeRenderer->aborted();
 
         delete m_activeRenderer;
-        m_activeRenderer = NULL;
+        m_activeRenderer = nullptr;
 
         fprintf(stderr, "\n");
         postProcess(f, a);
@@ -120,7 +120,7 @@ void RenderManager::renderNextTrack()
     else
     {
         delete m_activeRenderer;
-        m_activeRenderer = NULL;
+        m_activeRenderer = nullptr;
     }
 
     if(m_tracksToRender.isEmpty())
@@ -172,7 +172,7 @@ void RenderManager::renderNextTrack()
 // Render the song into individual channels
 void RenderManager::renderChannels()
 {
-        qWarning("RenderManager::renderChannels not implemented");
+    qWarning("RenderManager::renderChannels not implemented");
 }
 
 // Render the song into individual tracks
@@ -194,8 +194,7 @@ void RenderManager::renderTracks()
         }
     }
 
-    const Tracks t2
-            = Engine::getBBTrackContainer()->tracks();
+    const Tracks t2 = Engine::getBBTrackContainer()->tracks();
     for(auto it = t2.begin(); it != t2.end(); ++it)
     {
         Track* tk = (*it);
@@ -260,7 +259,10 @@ QString RenderManager::pathForTrack(const Track* track, int num)
     QString extension = ProjectRenderer::getFileExtensionFromFormat(m_format);
     QString name      = track->name();
     name              = name.remove(QRegExp("[^a-zA-Z]"));
-    name              = QString("%1_%2%3").arg(num,2,10,QChar('0')).arg(name).arg(extension);
+    name              = QString("%1_%2%3")
+                   .arg(num, 2, 10, QChar('0'))
+                   .arg(name)
+                   .arg(extension);
     return QDir(m_outputPath).filePath(name);
 }
 

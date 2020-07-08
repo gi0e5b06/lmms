@@ -1,7 +1,7 @@
 /*
  * Pattern.cpp - implementation of class pattern which holds notes
  *
- * Copyright (c) 2018-2019 gi0e5b06 (on github.com)
+ * Copyright (c) 2018-2020 gi0e5b06 (on github.com)
  * Copyright (c) 2004-2014 Tobias Doerffel <tobydox/at/users.sourceforge.net>
  * Copyright (c) 2005-2007 Danny McRae <khjklujn/at/yahoo.com>
  *
@@ -49,13 +49,13 @@
 #include <cmath>
 #include <limits>
 
-QPixmap* PatternView::s_stepBtnOn0      = NULL;
-QPixmap* PatternView::s_stepBtnOn200    = NULL;
-QPixmap* PatternView::s_stepBtnOff      = NULL;
-QPixmap* PatternView::s_stepBtnOffLight = NULL;
+QPixmap* PatternView::s_stepBtnOn0      = nullptr;
+QPixmap* PatternView::s_stepBtnOn200    = nullptr;
+QPixmap* PatternView::s_stepBtnOff      = nullptr;
+QPixmap* PatternView::s_stepBtnOffLight = nullptr;
 
 Pattern::Pattern(InstrumentTrack* _instrument_track) :
-      TrackContentObject(_instrument_track, "Score tile"),
+      Tile(_instrument_track, "Score tile"),
       m_instrumentTrack(_instrument_track), m_patternType(MelodyPattern)
 {
     setName(_instrument_track->name());
@@ -69,8 +69,8 @@ Pattern::Pattern(InstrumentTrack* _instrument_track) :
 }
 
 Pattern::Pattern(const Pattern& _other) :
-      // TrackContentObject(_other.m_instrumentTrack, _other.displayName()),
-      TrackContentObject(_other), m_instrumentTrack(_other.m_instrumentTrack),
+      // Tile(_other.m_instrumentTrack, _other.displayName()),
+      Tile(_other), m_instrumentTrack(_other.m_instrumentTrack),
       m_patternType(_other.m_patternType)
 {
     for(Notes::ConstIterator it = _other.m_notes.begin();
@@ -92,21 +92,17 @@ Pattern::~Pattern()
 
     // clearNotes();
     for(Notes::Iterator it = m_notes.begin(); it != m_notes.end(); ++it)
-    {
         delete *it;
-    }
+
     m_notes.clear();
 }
 
 bool Pattern::isEmpty() const
 {
     for(Notes::ConstIterator it = m_notes.begin(); it != m_notes.end(); ++it)
-    {
         if((*it)->length() != 0)
-        {
             return false;
-        }
-    }
+
     return true;
 }
 
@@ -171,7 +167,8 @@ Note* Pattern::addNote(const Note& _new_note, const bool _quant_pos)
         new_note->quantizePos(gui->pianoRollWindow()->quantization());
     }
 
-    instrumentTrack()->lock();
+    InstrumentTrack* t = instrumentTrack();
+    t->lockTrack();
     if(m_notes.size() == 0 || m_notes.back()->pos() <= new_note->pos())
     {
         m_notes.push_back(new_note);
@@ -193,7 +190,7 @@ Note* Pattern::addNote(const Note& _new_note, const bool _quant_pos)
 
         m_notes.insert(it, new_note);
     }
-    instrumentTrack()->unlock();
+    t->unlockTrack();
 
     checkType();
     updateLength();
@@ -204,7 +201,9 @@ Note* Pattern::addNote(const Note& _new_note, const bool _quant_pos)
 
 void Pattern::removeNote(Note* _note_to_del)
 {
-    instrumentTrack()->lock();
+    InstrumentTrack* t = instrumentTrack();
+    t->lockTrack();
+
     Notes::Iterator it = m_notes.begin();
     while(it != m_notes.end())
     {
@@ -216,14 +215,14 @@ void Pattern::removeNote(Note* _note_to_del)
         }
         ++it;
     }
-    instrumentTrack()->unlock();
+    t->unlockTrack();
 
     checkType();
     updateLength();
     emit dataChanged();
 }
 
-// returns a pointer to the note at specified step, or NULL if note doesn't
+// returns a pointer to the note at specified step, or nullptr if note doesn't
 // exist
 
 Note* Pattern::noteAtStep(int _step)
@@ -246,19 +245,22 @@ void Pattern::rearrangeAllNotes()
 
 void Pattern::clearNotes()
 {
-    if((m_notes.size() > 0) && (dynamic_cast<Pattern*>(this) != NULL))
+    if((m_notes.size() > 0) && (dynamic_cast<Pattern*>(this) != nullptr))
     {
         // BACKTRACE
-        if(instrumentTrack())
-            instrumentTrack()->lock();
+        InstrumentTrack* t = instrumentTrack();
+        if(t != nullptr)
+            t->lockTrack();
+
         for(Notes::Iterator it = m_notes.begin(); it != m_notes.end(); ++it)
         {
             // qInfo("deleting note %p pattern %p",*it,this);
             delete *it;
         }
         m_notes.clear();
-        if(instrumentTrack())
-            instrumentTrack()->unlock();
+
+        if(t != nullptr)
+            t->unlockTrack();
     }
     // else qFatal("not a pattern\n");
 
@@ -329,7 +331,10 @@ void Pattern::flipHorizontally()
     if(isEmpty())
         return;
 
-    instrumentTrack()->lock();
+    InstrumentTrack* t = instrumentTrack();
+    if(t != nullptr)
+        t->lockTrack();
+
     tick_t len      = autoRepeat() ? unitLength() : length().getTicks();
     bool   modified = false;
     for(Note* note: m_notes)
@@ -342,7 +347,9 @@ void Pattern::flipHorizontally()
     }
     if(modified)
         rearrangeAllNotes();
-    instrumentTrack()->unlock();
+
+    if(t != nullptr)
+        t->unlockTrack();
 
     // checkType();
     updateLength();  // not needed?
@@ -356,7 +363,10 @@ void Pattern::flipVertically()
     if(isEmpty())
         return;
 
-    instrumentTrack()->lock();
+    InstrumentTrack* t = instrumentTrack();
+    if(t != nullptr)
+        t->lockTrack();
+
     bool modified = false;
     int  minkey   = -1;
     int  maxkey   = -1;
@@ -379,7 +389,9 @@ void Pattern::flipVertically()
     }
     if(modified)
         rearrangeAllNotes();
-    instrumentTrack()->unlock();
+
+    if(t != nullptr)
+        t->unlockTrack();
 
     // checkType();
     // updateLength();
@@ -393,7 +405,10 @@ void Pattern::rotate(tick_t _ticks)
     if(_ticks == 0 || isEmpty())
         return;
 
-    instrumentTrack()->lock();
+    InstrumentTrack* t = instrumentTrack();
+    if(t != nullptr)
+        t->lockTrack();
+
     tick_t len      = autoRepeat() ? unitLength() : length().getTicks();
     bool   modified = false;
     for(Note* note: m_notes)
@@ -406,7 +421,9 @@ void Pattern::rotate(tick_t _ticks)
     }
     if(modified)
         rearrangeAllNotes();
-    instrumentTrack()->unlock();
+
+    if(t != nullptr)
+        t->unlockTrack();
 
     // checkType();
     updateLength();
@@ -417,7 +434,7 @@ void Pattern::rotate(tick_t _ticks)
 
 void Pattern::saveSettings(QDomDocument& _doc, QDomElement& _this)
 {
-    TrackContentObject::saveSettings(_doc, _this);
+    Tile::saveSettings(_doc, _this);
 
     _this.setAttribute("type", m_patternType);
 
@@ -458,7 +475,7 @@ void Pattern::loadSettings(const QDomElement& _this)
     m_patternType
             = static_cast<PatternTypes>(_this.attribute("type").toInt());
 
-    TrackContentObject::loadSettings(_this);
+    Tile::loadSettings(_this);
 
     /*
       setName(_this.attribute("name"));
@@ -517,9 +534,9 @@ Pattern* Pattern::nextPattern() const
 
 Pattern* Pattern::adjacentPatternByOffset(int offset) const
 {
-    QVector<TrackContentObject*> tcos   = m_instrumentTrack->getTCOs();
-    int                          tcoNum = m_instrumentTrack->getTCONum(this);
-    return dynamic_cast<Pattern*>(tcos.value(tcoNum + offset, NULL));
+    QVector<Tile*> tcos   = m_instrumentTrack->getTCOs();
+    int            tcoNum = m_instrumentTrack->getTCONum(this);
+    return dynamic_cast<Pattern*>(tcos.value(tcoNum + offset, nullptr));
 }
 
 void Pattern::clear()
@@ -549,7 +566,7 @@ void Pattern::cloneSteps()
     emit dataChanged();
 }
 
-TrackContentObjectView* Pattern::createView(TrackView* _tv)
+TileView* Pattern::createView(TrackView* _tv)
 {
     return new PatternView(this, _tv);
 }
@@ -574,14 +591,25 @@ tick_t Pattern::unitLength() const
 {
     tick_t len = MidiTime::ticksPerTact();
 
-    for(Notes::ConstIterator it = m_notes.begin(); it != m_notes.end(); ++it)
+    if(isFixed())
     {
-        // if((*it)->length() > 0)
-        //{
-        len = qMax<tick_t>(len, (*it)->endPos());
-        //}
+        len = m_steps * 16.f / m_stepResolution * MidiTime::ticksPerTact()
+              / stepsPerTact();
+        // qInfo("Pattern::unitLength len=%d tl=%d", len,
+        //       MidiTime::ticksPerTact());
     }
-    len = MidiTime(len).nextFullTact() * MidiTime::ticksPerTact();
+    else
+    {
+        for(Notes::ConstIterator it = m_notes.begin(); it != m_notes.end();
+            ++it)
+        {
+            // if((*it)->length() > 0)
+            //{
+            len = qMax<tick_t>(len, (*it)->endPos());
+            //}
+        }
+        len = MidiTime(len).nextFullTact() * MidiTime::ticksPerTact();
+    }
 
     return len;
 }
@@ -596,7 +624,7 @@ void Pattern::updateLength()
     else
         len = length();
 
-    TrackContentObject::updateLength(len);
+    Tile::updateLength(len);
 }
 
 void Pattern::changeTimeSignature()
@@ -618,8 +646,8 @@ void Pattern::changeTimeSignature()
 }
 
 PatternView::PatternView(Pattern* pattern, TrackView* parent) :
-      TrackContentObjectView(pattern, parent), m_pat(pattern),
-      m_paintPixmap(), m_noteFillColor(255, 255, 255, 220),
+      TileView(pattern, parent), m_pat(pattern), m_paintPixmap(),
+      m_noteFillColor(255, 255, 255, 220),
       m_noteBorderColor(255, 255, 255, 220),
       m_mutedNoteFillColor(100, 100, 100, 220),
       m_mutedNoteBorderColor(100, 100, 100, 220)
@@ -627,22 +655,22 @@ PatternView::PatternView(Pattern* pattern, TrackView* parent) :
     connect(gui->pianoRollWindow(), SIGNAL(currentPatternChanged()), this,
             SLOT(update()));
 
-    if(s_stepBtnOn0 == NULL)
+    if(s_stepBtnOn0 == nullptr)
     {
         s_stepBtnOn0 = new QPixmap(embed::getIconPixmap("step_btn_on_0"));
     }
 
-    if(s_stepBtnOn200 == NULL)
+    if(s_stepBtnOn200 == nullptr)
     {
         s_stepBtnOn200 = new QPixmap(embed::getIconPixmap("step_btn_on_200"));
     }
 
-    if(s_stepBtnOff == NULL)
+    if(s_stepBtnOff == nullptr)
     {
         s_stepBtnOff = new QPixmap(embed::getIconPixmap("step_btn_off"));
     }
 
-    if(s_stepBtnOffLight == NULL)
+    if(s_stepBtnOffLight == nullptr)
     {
         s_stepBtnOffLight
                 = new QPixmap(embed::getIconPixmap("step_btn_off_light"));
@@ -661,7 +689,7 @@ void PatternView::update()
 {
     ToolTip::add(this, m_pat->name());
 
-    TrackContentObjectView::update();
+    TileView::update();
 }
 
 void PatternView::openInPianoRoll()
@@ -697,10 +725,11 @@ void PatternView::resetName()
 
 void PatternView::setNameFromFirstNote()
 {
-    int    kmin = NumKeys - 1;
-    tick_t smin = 0;
     if(!m_pat->isEmpty())
     {
+        int    kmin = NumKeys - 1;
+        tick_t smin = m_pat->length();
+
         for(Note* n: m_pat->notes())
         {
             int    k = n->key();
@@ -901,7 +930,7 @@ void PatternView::mousePressEvent(QMouseEvent* _me)
     // if not in beat/bassline -mode, let parent class handle the event
 
     {
-        TrackContentObjectView::mousePressEvent(_me);
+        TileView::mousePressEvent(_me);
     }
 }
 
@@ -944,31 +973,25 @@ void PatternView::wheelEvent(QWheelEvent* _we)
             n->setVolume(0);
         }
 
-        if(n != NULL)
+        if(n != nullptr)
         {
             int vol = n->getVolume();
 
             if(_we->delta() > 0)
-            {
                 n->setVolume(qMin(100, vol + 5));
-            }
             else
-            {
                 n->setVolume(qMax(0, vol - 5));
-            }
 
             Engine::getSong()->setModified();
             update();
             if(gui->pianoRollWindow()->currentPattern() == m_pat)
-            {
                 gui->pianoRollWindow()->update();
-            }
         }
         _we->accept();
     }
     else
     {
-        TrackContentObjectView::wheelEvent(_we);
+        TileView::wheelEvent(_we);
     }
 }
 
@@ -1040,7 +1063,7 @@ void PatternView::paintEvent(QPaintEvent*)
     bool const drawTextBox   = !beatPattern && !isDefaultName;
 
     // TODO Warning! This might cause problems if
-    // TrackContentObjectView::paintTextLabel changes
+    // TileView::paintTextLabel changes
     int       textBoxHeight = 0;
     const int textTop       = TCO_BORDER_WIDTH + 1;
     if(drawTextBox)

@@ -33,7 +33,7 @@
 
 ImportFilter::ImportFilter(const QString&    _file_name,
                            const Descriptor* _descriptor) :
-      Plugin(_descriptor, NULL),
+      Plugin(_descriptor, nullptr),
       m_file(_file_name)
 {
 }
@@ -74,7 +74,7 @@ void ImportFilter::import(const QString& _file_to_import, TrackContainer* tc)
     if(successful == false)
     {
         QMessageBox::information(
-                NULL, TrackContainer::tr("Couldn't import file"),
+                nullptr, TrackContainer::tr("Couldn't import file"),
                 TrackContainer::tr("Couldn't find a filter for "
                                    "importing file %1.\n"
                                    "You should convert this file "
@@ -90,7 +90,7 @@ bool ImportFilter::openFile()
     if(m_file.open(QFile::ReadOnly) == false)
     {
         QMessageBox::critical(
-                NULL, TrackContainer::tr("Couldn't open file"),
+                nullptr, TrackContainer::tr("Couldn't open file"),
                 TrackContainer::tr("Couldn't open file %1 "
                                    "for reading.\nPlease make "
                                    "sure you have read-"

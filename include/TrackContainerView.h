@@ -84,8 +84,8 @@ class TrackContainerView :
         return m_rubberBand->selectedObjects();
     }
 
-    QVector<TrackContentObject*>     selectedTCOs();
-    QVector<TrackContentObjectView*> selectedTCOViews();
+    QVector<Tile*>     selectedTCOs();
+    QVector<TileView*> selectedTCOViews();
 
     TrackContainer* model()
     {

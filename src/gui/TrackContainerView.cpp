@@ -140,16 +140,12 @@ void TrackContainerView::moveTrackView(TrackView* trackView, int indexTo)
 {
     // Can't move out of bounds
     if(indexTo >= m_trackViews.size() || indexTo < 0)
-    {
         return;
-    }
 
     // Does not need to move to itself
     int indexFrom = m_trackViews.indexOf(trackView);
     if(indexFrom == indexTo)
-    {
         return;
-    }
 
     BBTrack::swapBBTracks(trackView->track(), m_trackViews[indexTo]->track());
 
@@ -229,12 +225,8 @@ TrackView* TrackContainerView::createTrackView(Track* _t)
     // Avoid duplicating track views
     for(trackViewList::iterator it = m_trackViews.begin();
         it != m_trackViews.end(); ++it)
-    {
         if((*it)->track() == _t)
-        {
             return (*it);
-        }
-    }
 
     TrackView* r = _t->createView(this);
     requireActionUpdate();
@@ -249,9 +241,9 @@ void TrackContainerView::deleteTrackView(TrackView* _tv)
     removeTrackView(_tv);
     delete _tv;
 
-    Engine::mixer()->requestChangeInModel();
+    // Engine::mixer()->requestChangeInModel();
     delete t;
-    Engine::mixer()->doneChangeInModel();
+    // Engine::mixer()->doneChangeInModel();
     requireActionUpdate();
 }
 
@@ -350,13 +342,14 @@ void TrackContainerView::computeHyperBarViews()
         hyperBarViews().append(new HyperBarView( 2,QColor(255,255,0,64),"O"));
         */
 
-        // QString s=Engine::getSong()->songStructure();
         // QString s="I16A16B8AB";
         // QString s="IABABCBO";
         QString s = Engine::getSong()->songMetaData("Structure");
+        s.replace(QRegExp("[^'A-Z0-9].*$"), "");
 
         for(int i = 0; i < s.length(); i++)
         {
+            int     o   = i;
             QChar   c   = s.at(i);
             QString hbs = QString(c);
             int     hbl = 0;
@@ -367,8 +360,14 @@ void TrackContainerView::computeHyperBarViews()
                 hbl                  = p.first;
                 hbc                  = p.second;
             }
-            int   n = 0;
+            int   p = 0;
             QChar d;
+            while((i + 1 < s.length()) && (d = s.at(i + 1)) == '\'')
+            {
+                p++;
+                i++;
+            }
+            int n = 4;
             while((i + 1 < s.length()) && (d = s.at(i + 1)).isDigit())
             {
                 n = 10 * n + d.digitValue();
@@ -378,7 +377,8 @@ void TrackContainerView::computeHyperBarViews()
                 hbl = n;
             if(hbl == 0)
                 continue;
-            hyperBarViews().append(new HyperBarView(hbl, hbc, c));
+            hyperBarViews().append(
+                    new HyperBarView(hbl, hbc, s.mid(o, 1 + p)));
         }
 
         computeBarViews();
@@ -593,7 +593,7 @@ void TrackContainerView::mouseMoveEvent(QMouseEvent* _me)
 
 void TrackContainerView::mouseReleaseEvent(QMouseEvent* _me)
 {
-    QVector<TrackContentObject*> so = selectedTCOs();
+    QVector<Tile*> so = selectedTCOs();
     if(so.length() > 0)
         Selection::select(so.at(0));
 
@@ -615,34 +615,34 @@ RubberBand* TrackContainerView::rubberBand() const
     return m_rubberBand;
 }
 
-QVector<TrackContentObject*> TrackContainerView::selectedTCOs()
+QVector<Tile*> TrackContainerView::selectedTCOs()
 {
     QVector<SelectableObject*>   s1 = selectedObjects();
-    QVector<TrackContentObject*> s2;
+    QVector<Tile*> s2;
     for(QVector<SelectableObject*>::iterator o1 = s1.begin(); o1 != s1.end();
         ++o1)
     {
-        TrackContentObjectView* tcov
-                = dynamic_cast<TrackContentObjectView*>(*o1);
+        TileView* tcov
+                = dynamic_cast<TileView*>(*o1);
         if(tcov == NULL)
             continue;
 
-        TrackContentObject* tco = tcov->getTrackContentObject();
+        Tile* tco = tcov->getTile();
 
         s2.push_back(tco);
     }
     return s2;
 }
 
-QVector<TrackContentObjectView*> TrackContainerView::selectedTCOViews()
+QVector<TileView*> TrackContainerView::selectedTCOViews()
 {
     QVector<SelectableObject*>       s1 = selectedObjects();
-    QVector<TrackContentObjectView*> s2;
+    QVector<TileView*> s2;
     for(QVector<SelectableObject*>::iterator o1 = s1.begin(); o1 != s1.end();
         ++o1)
     {
-        TrackContentObjectView* tcov
-                = dynamic_cast<TrackContentObjectView*>(*o1);
+        TileView* tcov
+                = dynamic_cast<TileView*>(*o1);
         if(tcov == NULL)
             continue;
 
@@ -682,7 +682,7 @@ InstrumentLoaderThread::InstrumentLoaderThread(QObject*         parent,
       QThread(parent),
       m_it(it), m_name(name)
 {
-    setObjectName("instrumentLoader_" + name.trimmed().replace(' ','_'));
+    setObjectName("instrumentLoader_" + name.trimmed().replace(' ', '_'));
     m_containerThread = thread();
 }
 

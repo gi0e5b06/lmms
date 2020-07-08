@@ -188,7 +188,7 @@ void SampleBuffer::update(bool _keepSettings)
     const bool lock = (m_data != nullptr);
     if(lock)
     {
-        Engine::mixer()->requestChangeInModel();
+        // Engine::mixer()->requestChangeInModel();
         m_varLock.lockForWrite();
         if(m_origData != m_data)
         {
@@ -497,7 +497,7 @@ samplerate );
     if(lock)
     {
         m_varLock.unlock();
-        Engine::mixer()->doneChangeInModel();
+        // Engine::mixer()->doneChangeInModel();
     }
 
     emit sampleUpdated();
@@ -1467,7 +1467,7 @@ QString SampleBuffer::selectAudioFile(const QString& _file)
     }
     // change dir to position of previously opened file
     ofd.setDirectory(dir);
-    ofd.setFileMode(FileDialog::ExistingFiles);
+    ofd.setFileMode(FileDialog::ExistingFile);
 
     // set filters
     QStringList types;
@@ -1828,7 +1828,7 @@ void SampleBuffer::stretch(const double _factor)
                 a *= real_t(i + 1) / real_t(q);
             if(i > grain - q)
                 a *= real_t(grain - i) / real_t(q);
-            f=qBound(0,f%m_frames,m_frames);
+            f = qBound(0, f % m_frames, m_frames);
             dst_data[n][0] += m_data[f][0] * a;
             dst_data[n][1] += m_data[f][1] * a;
             n++;

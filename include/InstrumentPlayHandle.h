@@ -42,6 +42,9 @@ class EXPORT InstrumentPlayHandle : public PlayHandle
                          InstrumentTrack* instrumentTrack);
     virtual ~InstrumentPlayHandle();
 
+    virtual void enterMixer();
+    virtual void exitMixer();
+
     virtual void play(sampleFrame* _working_buffer);
     virtual bool isFinished() const;
     virtual bool isFromTrack(const Track* _track) const;

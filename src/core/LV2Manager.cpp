@@ -36,7 +36,6 @@
 #include <QDir>
 #include <QLibrary>
 
-
 LV2Manager::LV2Manager()
 {
     // Make sure plugin search paths are set up
@@ -128,7 +127,7 @@ LV2Manager::LV2Manager()
                                         ( LV2_Descriptor_Function )
 plugin_lib.resolve
                                         ("lv2_descriptor" );
-                                if( descriptorFunction != NULL )
+                                if( descriptorFunction != nullptr )
                                 {
                                         addPlugins( descriptorFunction,
                                                     f.fileName() );
@@ -199,8 +198,8 @@ void LV2Manager::addPlugin(const lv2_key_t& k)
     d.author            =_p.get_author_name().as_string();
     d.version           =0;
     d.type              =Plugin::Effect;
-    d.logo              =NULL;
-    d.supportedFileTypes=NULL;
+    d.logo              =nullptr;
+    d.supportedFileTypes=nullptr;
     m_descriptors.put(k,d);
 
     PluginInfo info;
@@ -220,7 +219,7 @@ lv2ManagerDescription * LV2Manager::getDescription(const lv2_key_t& _key)
         }
         else
         {
-                return( NULL );
+                return( nullptr );
         }
 }
 */
@@ -232,7 +231,7 @@ void LV2Manager::addPlugins(LV2_Descriptor_Function _descriptor_func,
        const LV2_Descriptor * descriptor;
 
        for( long pluginIndex = 0;
-            ( descriptor = _descriptor_func( pluginIndex ) ) != NULL;
+            ( descriptor = _descriptor_func( pluginIndex ) ) != nullptr;
             ++pluginIndex )
        {
                lv2_key_t key( _file, QString( descriptor->Label ) );
@@ -577,7 +576,7 @@ QString LV2Manager::getPortName(const lv2_key_t& _key, uint32_t _port)
 const void* LV2Manager::getImplementationData(const lv2_key_t& _key)
 {
     // TODO
-    return NULL;
+    return nullptr;
 }
 
 /*
@@ -594,7 +593,7 @@ const LV2_Descriptor* LV2Manager::getDescriptor(const lv2_key_t& _key)
         }
 
         //TODO
-        return NULL;
+        return nullptr;
 }
 */
 
@@ -608,7 +607,7 @@ LV2_Instance LV2Manager::instantiate(const lv2_key_t& _key,
     {
         qWarning("LVEManager::instantiate key not found: %s",
                  qPrintable(_key));
-        return NULL;
+        return nullptr;
     }
 
     Lilv::Plugin p = plugin(_key);
@@ -616,17 +615,17 @@ LV2_Instance LV2Manager::instantiate(const lv2_key_t& _key,
     /*
     LV2_Feature lv2urid_map
             (LV2_URID__map,//"http://lv2plug.in/ns/ext/urid/#map",
-             NULL);
+             nullptr);
     LV2_Feature lv2urid_schedule
             (LV2_WORKER__schedule,//"http://lv2plug.in/ns/ext/worker/#schedule",
-             NULL);
+             nullptr);
     LV2_Feature* f[3]={ lv2urid_map,
                         lv2urid_schedule,
-                        NULL };
+                        nullptr };
     */
 
     qInfo("LV2Manager::instantiate before create p=%p", p.me);
-    LV2_Instance r = Lilv::Instance::create(p, (double)_sampleRate, NULL);
+    LV2_Instance r = Lilv::Instance::create(p, (double)_sampleRate, nullptr);
     qInfo("LV2Manager::instantiate after create");
     return r;
 }
@@ -698,8 +697,8 @@ bool LV2Manager::runAdding( const lv2_key_t & _key,
                 const LV2_Descriptor * descriptor =
                                 descriptorFunction(
                                         m_lv2ManagerMap[_plugin]->index );
-                if( descriptor->run_adding != NULL &&
-                                descriptor->set_run_adding_gain != NULL )
+                if( descriptor->run_adding != nullptr &&
+                                descriptor->set_run_adding_gain != nullptr )
                 {
                         ( descriptor->run_adding ) ( _instance, _sample_count
 ); return( true );
@@ -722,8 +721,8 @@ bool LV2Manager::setRunAddingGain( const lv2_key_t & _plugin,
                 const LV2_Descriptor * descriptor =
                                 descriptorFunction(
                                         m_lv2ManagerMap[_plugin]->index );
-                if( descriptor->run_adding != NULL &&
-                                  descriptor->set_run_adding_gain != NULL )
+                if( descriptor->run_adding != nullptr &&
+                                  descriptor->set_run_adding_gain != nullptr )
                 {
                         ( descriptor->set_run_adding_gain )
                                                         ( _instance, _gain );
@@ -778,7 +777,7 @@ static LV2_URID qtractor_lv2_urid_map(LV2_URID_Map_Handle, const char* uri)
         return LV2Manager::lv2_urid_map(uri);
 }
 
-static LV2_URID_Map      g_lv2_urid_map = {NULL, qtractor_lv2_urid_map};
+static LV2_URID_Map      g_lv2_urid_map = {nullptr, qtractor_lv2_urid_map};
 static const LV2_Feature g_lv2_urid_map_feature
         = {LV2_URID_MAP_URI, &g_lv2_urid_map};
 
@@ -811,12 +810,12 @@ const char* LV2Manager::lv2_urid_unmap(LV2_URID id)
 {
     QHash<LV2_URID, QByteArray>::ConstIterator iter = g_ids_map.constFind(id);
     if(iter == g_ids_map.constEnd())
-        return NULL;
+        return nullptr;
 
     return iter.value().constData();
 }
 
-static LV2_URID_Unmap    g_lv2_urid_unmap = {NULL, qtractor_lv2_urid_unmap};
+static LV2_URID_Unmap g_lv2_urid_unmap = {nullptr, qtractor_lv2_urid_unmap};
 static const LV2_Feature g_lv2_urid_unmap_feature
         = {LV2_URID_UNMAP_URI, &g_lv2_urid_unmap};
 
@@ -837,7 +836,7 @@ static LV2_URID qtractor_lv2_uri_to_id (
 }
 
 static LV2_URI_Map_Feature g_lv2_uri_map =
-        { NULL, qtractor_lv2_uri_to_id };
+        { nullptr, qtractor_lv2_uri_to_id };
 static const LV2_Feature g_lv2_uri_map_feature =
         { LV2_URI_MAP_URI, &g_lv2_uri_map };
 

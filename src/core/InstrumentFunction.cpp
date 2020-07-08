@@ -398,7 +398,7 @@ bool InstrumentFunctionNoteStacking::processNote(NotePlayHandle* _n)
                             subnote, _n, -1,
                             NotePlayHandle::OriginNoteStacking,
                             _n->generation() + 1);
-                    Engine::mixer()->emit playHandleToAdd(nph);
+                    Engine::mixer()->emit playHandleToAdd(nph->pointer());
                 }
             }
         }
@@ -444,8 +444,8 @@ InstrumentFunctionArpeggio::InstrumentFunctionArpeggio(Model* _parent) :
       m_arpDirectionModel(this, tr("Arpeggio direction")),
       m_arpModeModel(this, tr("Arpeggio mode")),
       m_arpBaseModel(0., 0., 11., 1., this, tr("Base")),
-      m_arpRepeatModel(0., 0., 15., 1., this, tr("Repeat"))
-
+      m_arpRepeatModel(0., 0., 15., 1., this, tr("Repeat")),
+      m_arpLimitModel(11., 0., 11., 1., this, tr("Limit"))
 {
     const InstrumentFunctionNoteStacking::ChordTable& chord_table
             = InstrumentFunctionNoteStacking::ChordTable::getInstance();
@@ -466,6 +466,12 @@ InstrumentFunctionArpeggio::InstrumentFunctionArpeggio(Model* _parent) :
     m_arpModeModel.addItem(tr("Free"), new PixmapLoader("arp_free"));
     m_arpModeModel.addItem(tr("Sort"), new PixmapLoader("arp_sort"));
     m_arpModeModel.addItem(tr("Sync"), new PixmapLoader("arp_sync"));
+
+    m_arpRangeModel.setStrictStepSize(true);
+    m_arpCycleModel.setStrictStepSize(true);
+    m_arpBaseModel.setStrictStepSize(true);
+    m_arpRepeatModel.setStrictStepSize(true);
+    m_arpLimitModel.setStrictStepSize(true);
 }
 
 InstrumentFunctionArpeggio::~InstrumentFunctionArpeggio()
@@ -497,27 +503,31 @@ bool InstrumentFunctionArpeggio::processNote(NotePlayHandle* _n)
     const int base_note_key = _n->key();
     const int selected_arp  = m_arpModel.value();
 
-    ConstNotePlayHandleList cnphv
+    ConstNotePlayHandles cnphv
             //= NotePlayHandle::nphsOfInstrumentTrack(_n->instrumentTrack());
             = Engine::mixer()->nphsOfTrack(_n->instrumentTrack());
 
+    /*
     if(m_arpModeModel.value() != FreeMode && cnphv.size() == 0)
     {
         // maybe we're playing only a preset-preview-note?
-        cnphv = PresetPreviewPlayHandle::nphsOfInstrumentTrack(
-                _n->instrumentTrack());
-        if(cnphv.size() == 0)
+        // cnphv = PresetPreviewPlayHandle::nphsOfInstrumentTrack(
+        //        _n->instrumentTrack());
+        // if(cnphv.size() == 0)
         {
             // still nothing found here, so lets return
             // return;
             cnphv.append(_n);
         }
     }
+    */
 
     const InstrumentFunctionNoteStacking::ChordTable& chord_table
             = InstrumentFunctionNoteStacking::ChordTable::getInstance();
     const int cur_chord_size = chord_table[selected_arp].size();
-    const int range       = (int)(cur_chord_size * m_arpRangeModel.value());
+    const int cur_arp_size
+            = qMin<int>(cur_chord_size, m_arpLimitModel.value() + 1);
+    const int range       = int(cur_arp_size * m_arpRangeModel.value());
     const int total_range = range * cnphv.size();
 
     // number of frames that every note should be played
@@ -530,17 +540,20 @@ bool InstrumentFunctionArpeggio::processNote(NotePlayHandle* _n)
     // used for calculating remaining frames for arp-note, we have to add
     // arp_frames-1, otherwise the first arp-note will not be setup
     // correctly... -> arp_frames frames silence at the start of every note!
-    int cur_frame = ((m_arpModeModel.value() != FreeMode)
-                             ? cnphv.first()->totalFramesPlayed()
-                             : _n->totalFramesPlayed())
-                    + arp_frames - 1;
-    // int cur_frame = _n->totalFramesPlayed() + arp_frames - 1;
+    f_cnt_t totalFramesPlayed = _n->totalFramesPlayed();
+    if(m_arpModeModel.value() != FreeMode)
+        cnphv.map([&totalFramesPlayed](const NotePlayHandle* cnph) {
+            totalFramesPlayed
+                    = qMax(totalFramesPlayed, cnph->totalFramesPlayed());
+        });
+    int cur_frame = totalFramesPlayed + arp_frames - 1;
 
     // used for loop
-    f_cnt_t frames_processed = (m_arpModeModel.value() != FreeMode)
-                                       ? cnphv.first()->noteOffset()
-                                       : _n->noteOffset();
-    // f_cnt_t frames_processed = _n->noteOffset();
+    f_cnt_t frames_processed = _n->noteOffset();
+    if(m_arpModeModel.value() != FreeMode)
+        cnphv.map([&frames_processed](const NotePlayHandle* cnph) {
+            frames_processed = qMax(frames_processed, cnph->noteOffset());
+        });
 
     while(frames_processed < Engine::mixer()->framesPerPeriod())
     {
@@ -597,9 +610,7 @@ bool InstrumentFunctionArpeggio::processNote(NotePlayHandle* _n)
         if(m_arpMissModel.value())
         {
             if(100. * fastrand01exc() < m_arpMissModel.value())
-            {
                 dir = ArpDirRandom;
-            }
         }
 
         int armv        = m_arpRepeatModel.value() + 1;
@@ -647,10 +658,10 @@ bool InstrumentFunctionArpeggio::processNote(NotePlayHandle* _n)
         }
 
         int key    = cur_arp_idx % range;
-        int octave = key / cur_chord_size;
+        int octave = key / cur_arp_size;
 
-        key %= cur_chord_size;
-        // key *= cur_chord_size;
+        key %= cur_arp_size;
+        // key *= cur_arp_size;
         // key %= KeysPerOctave;
 
         // Cycle, Base, Repeat
@@ -661,6 +672,7 @@ bool InstrumentFunctionArpeggio::processNote(NotePlayHandle* _n)
         //    key /= armv + 1;
         if(acmv > 0)
             key *= acmv + 1;
+        key %= cur_arp_size;
         key += abmv;
         key %= cur_chord_size;
 
@@ -690,7 +702,7 @@ bool InstrumentFunctionArpeggio::processNote(NotePlayHandle* _n)
                     _n->instrumentTrack(), frames_processed, gated_frames,
                     subnote, _n, -1, NotePlayHandle::OriginArpeggio,
                     _n->generation() + 1);
-            Engine::mixer()->emit playHandleToAdd(nph);
+            Engine::mixer()->emit playHandleToAdd(nph->pointer());
         }
 
         // update counters
@@ -702,11 +714,11 @@ bool InstrumentFunctionArpeggio::processNote(NotePlayHandle* _n)
     // if we didn't add a sub-note so far
     // if(m_arpModeModel.value() != FreeMode)
     {
-        if(_n->generation() == 0)
-            _n->setMasterNote();
+        // if(_n->generation() == 0)
+        _n->setMasterNote();
     }
 
-    return true;
+    return false;
 }
 
 void InstrumentFunctionArpeggio::saveSettings(QDomDocument& _doc,
@@ -726,6 +738,7 @@ void InstrumentFunctionArpeggio::saveSettings(QDomDocument& _doc,
     m_arpModeModel.saveSettings(_doc, _this, "arpmode");
     m_arpBaseModel.saveSettings(_doc, _this, "base");
     m_arpRepeatModel.saveSettings(_doc, _this, "repeat");
+    m_arpLimitModel.saveSettings(_doc, _this, "limit");
 }
 
 void InstrumentFunctionArpeggio::loadSettings(const QDomElement& _this)
@@ -755,6 +768,7 @@ void InstrumentFunctionArpeggio::loadSettings(const QDomElement& _this)
     m_arpModeModel.loadSettings(_this, "arpmode");
     m_arpBaseModel.loadSettings(_this, "base");
     m_arpRepeatModel.loadSettings(_this, "repeat");
+    m_arpLimitModel.loadSettings(_this, "limit");
 }
 
 InstrumentFunctionView* InstrumentFunctionArpeggio::createView()
@@ -815,7 +829,7 @@ bool InstrumentFunctionNoteHumanizing::processNote(NotePlayHandle* _n)
         if(l > 0.)
         {
             real_t r = fastrand01inc();
-            real_t n = 12. * (l * (r - 0.5));
+            real_t n = real_t(KeysPerOctave) * (l * (r - 0.5));
             // qInfo("NH: detune %f->%f", o, o + n);
             _n->addEffectDetune(n);
             //_n->setFrequencyUpdate();
@@ -991,9 +1005,38 @@ InstrumentFunctionNoteFiltering::InstrumentFunctionNoteFiltering(
         m_actionModel[j]->addItem(tr("Skip"));
         m_actionModel[j]->addItem(tr("Up"));
         m_actionModel[j]->addItem(tr("Down"));
-        for(int i = 0; i < 12; ++i)
+        // m_actionModel[j]->addItem(tr("Alternate"));
+
+        for(int i = 0; i < KeysPerOctave; ++i)
             m_noteSelectionModel[j][i]
                     = new BoolModel(true, this, Note::findKeyName(i));
+
+        m_intervalModel[j] = new FloatModel(1., 1., KeysPerOctave, 1., this,
+                                            tr("Interval"));
+        m_intervalModel[j]->setStrictStepSize(true);
+
+        // Set up root model
+        m_rootModel[j] = new ComboBoxModel(this, tr("Root"));
+        for(int key = 0; key < KeysPerOctave; key++)
+            m_rootModel[j]->addItem(Note::findNoteName(key));
+
+        m_rootModel[j]->setValue(0);
+        connect(m_rootModel[j], SIGNAL(dataChanged()), this,
+                SLOT(onRootOrScaleChanged()));
+
+        // Set up scale model
+        const InstrumentFunctionNoteStacking::ChordTable& chord_table
+                = InstrumentFunctionNoteStacking::ChordTable::getInstance();
+
+        m_scaleModel[j] = new ComboBoxModel(this, tr("Scale"));
+        m_scaleModel[j]->addItem(tr("No scale"));
+        for(const InstrumentFunctionNoteStacking::Chord& chord: chord_table)
+            if(chord.isScale())
+                m_scaleModel[j]->addItem(chord.getName());
+
+        m_scaleModel[j]->setValue(0);
+        connect(m_scaleModel[j], SIGNAL(dataChanged()), this,
+                SLOT(onRootOrScaleChanged()));
     }
 }
 
@@ -1002,9 +1045,34 @@ InstrumentFunctionNoteFiltering::~InstrumentFunctionNoteFiltering()
     for(int j = 0; j < 4; j++)
     {
         delete m_actionModel[j];
-        for(int i = 0; i < 12; ++i)
+        for(int i = 0; i < KeysPerOctave; ++i)
             delete m_noteSelectionModel[j][i];
+        delete m_intervalModel[j];
     }
+}
+
+void InstrumentFunctionNoteFiltering::onRootOrScaleChanged()
+{
+    const int j = m_configModel.value();
+
+    for(int k = 0; k < KeysPerOctave; k++)
+        m_noteSelectionModel[j][k]->setValue(true);
+
+    if(m_scaleModel[j]->value() == 0)
+        return;
+
+    const InstrumentFunctionNoteStacking::Chord& chord
+            = InstrumentFunctionNoteStacking::ChordTable::getInstance()
+                      .getScaleByName(m_scaleModel[j]->currentText());
+    if(chord.isEmpty())
+        return;
+
+    const int root = m_rootModel[j]->value();
+    const int cap  = KeysPerOctave;
+
+    for(int k = 0; k < KeysPerOctave; k++)
+        if(!chord.hasSemitone((k + cap - (root % cap)) % cap))
+            m_noteSelectionModel[j][k]->setValue(false);
 }
 
 bool InstrumentFunctionNoteFiltering::processNote(NotePlayHandle* _n)
@@ -1015,50 +1083,84 @@ bool InstrumentFunctionNoteFiltering::processNote(NotePlayHandle* _n)
         return true;
 
     const int j = m_configModel.value();
-
+    int       i = _n->key();
     {
-        const int  k = _n->key() % 12;
+        const int  k = i % KeysPerOctave;
         const bool v = m_noteSelectionModel[j][k]->value();
-        // qInfo("InstrumentFunctionNoteFiltering::processNote k=%d
-        // v=%d",k,v);
+        // qInfo("InstrumentFunctionNoteFiltering::processNote i=%d k=%d"
+        // " v=%d", i, k, v);
+
         if(v)
             return true;
     }
 
-    const int action = m_actionModel[j]->value();
+    const int action   = m_actionModel[j]->value();
+    const int interval = m_intervalModel[j]->value();
+    // qInfo("NF: interval=%d action=%d", interval, action);
 
     if(action == 1)  // Up
     {
-        for(int i = _n->key() + 1; i <= 127; i++)
+        bool ok = false;
+        for(int n = 0; n < interval; n++)
         {
-            const int  k = i % 12;
-            const bool v = m_noteSelectionModel[j][k]->value();
-            // qInfo("InstrumentFunctionNoteFiltering::processNote k=%d
-            // v=%d",k,v);
-            if(v)
+            ok = false;
+            i++;
+            for(; i < NumKeys; i++)
             {
-                _n->setKey(i);
-                return true;
+                const int  k = i % KeysPerOctave;
+                const bool v = m_noteSelectionModel[j][k]->value();
+                // qInfo("InstrumentFunctionNoteFiltering::processNote k=%d
+                // v=%d",k,v);
+                if(v)
+                {
+                    // qInfo("filter: i=%d n=%d", i, n);
+                    ok = true;
+                    break;
+                }
             }
+        }
+        if(ok)
+        {
+            /*
+            qInfo("NF: %d %s --up--> %d %s", _n->key(),
+                  qPrintable(Note::findKeyName(_n->key())), i,
+                  qPrintable(Note::findKeyName(i)));
+            */
+            _n->setKey(i);
+            _n->setFrequencyUpdate();
+            return true;
         }
     }
     else if(action == 2)  // Down
     {
-        for(int i = _n->key() - 1; i >= 0; i--)
+        bool ok = false;
+        for(int n = 0; n < interval; n++)
         {
-            const int  k = i % 12;
-            const bool v = m_noteSelectionModel[j][k]->value();
-            // qInfo("InstrumentFunctionNoteFiltering::processNote k=%d
-            // v=%d",k,v);
-            if(v)
+            ok = false;
+            i--;
+            for(; i >= 0; i--)
             {
-                _n->setKey(i);
-                return true;
+                const int  k = i % KeysPerOctave;
+                const bool v = m_noteSelectionModel[j][k]->value();
+                // qInfo("InstrumentFunctionNoteFiltering::processNote k=%d
+                // v=%d",k,v);
+                if(v)
+                {
+                    ok = true;
+                    break;
+                }
             }
         }
+        if(ok)
+        {
+            _n->setKey(i);
+            _n->setFrequencyUpdate();
+            return true;
+        }
     }
-    else
+    // else
     {
+        // if(_n->generation() == 0)
         _n->setMasterNote();
     }
 
@@ -1071,15 +1173,19 @@ void InstrumentFunctionNoteFiltering::saveSettings(QDomDocument& _doc,
     m_enabledModel.saveSettings(_doc, _this, "enabled");
     m_minNoteGenerationModel.saveSettings(_doc, _this, "mingen");
     m_maxNoteGenerationModel.saveSettings(_doc, _this, "maxgen");
-    m_configModel.saveSettings(_doc, _this, "config");
 
     for(int j = 0; j < 4; j++)
     {
+        m_rootModel[j]->saveSettings(_doc, _this, "root");
+        m_scaleModel[j]->saveSettings(_doc, _this, "scale");
         m_actionModel[j]->saveSettings(_doc, _this, QString("c%1").arg(j));
-        for(int i = 0; i < 12; ++i)
+        for(int i = 0; i < KeysPerOctave; ++i)
             m_noteSelectionModel[j][i]->saveSettings(
                     _doc, _this, QString("c%1n%2").arg(j).arg(i));
+        m_intervalModel[j]->saveSettings(_doc, _this, "interval");
     }
+
+    m_configModel.saveSettings(_doc, _this, "config");
 }
 
 void InstrumentFunctionNoteFiltering::loadSettings(const QDomElement& _this)
@@ -1087,15 +1193,19 @@ void InstrumentFunctionNoteFiltering::loadSettings(const QDomElement& _this)
     m_enabledModel.loadSettings(_this, "enabled");
     m_minNoteGenerationModel.loadSettings(_this, "mingen");
     m_maxNoteGenerationModel.loadSettings(_this, "maxgen");
-    m_configModel.loadSettings(_this, "config");
 
     for(int j = 0; j < 4; j++)
     {
+        m_rootModel[j]->loadSettings(_this, "root");
+        m_scaleModel[j]->loadSettings(_this, "scale");
         m_actionModel[j]->loadSettings(_this, QString("c%1").arg(j));
-        for(int i = 0; i < 12; ++i)
+        for(int i = 0; i < KeysPerOctave; ++i)
             m_noteSelectionModel[j][i]->loadSettings(
                     _this, QString("c%1n%2").arg(j).arg(i));
+        m_intervalModel[j]->loadSettings(_this, "interval");
     }
+
+    m_configModel.loadSettings(_this, "config");
 }
 
 InstrumentFunctionView* InstrumentFunctionNoteFiltering::createView()
@@ -1107,11 +1217,11 @@ InstrumentFunctionNoteKeying::InstrumentFunctionNoteKeying(Model* _parent) :
       InstrumentFunction(_parent, tr("NoteKeying")),
       // m_enabledModel( false, this ),
       m_volumeRangeModel(0., -500., 500., 1., this, tr("Volume change")),
-      m_volumeBaseModel(0., 0., 127., 1., this, tr("Volume base key")),
+      m_volumeBaseModel(0., 0., NumKeys - 1, 1., this, tr("Volume base key")),
       m_volumeMinModel(0., 0., 200., 0.1, this, tr("Volume min")),
       m_volumeMaxModel(100., 0., 200., 0.1, this, tr("Volume max")),
       m_panRangeModel(0., -500., 500., 1., this, tr("Pan change")),
-      m_panBaseModel(0., 0., 127., 1., this, tr("Pan base key")),
+      m_panBaseModel(0., 0., NumKeys - 1, 1., this, tr("Pan base key")),
       m_panMinModel(0., -100., 100., 0.1, this, tr("Pan min")),
       m_panMaxModel(0., -100., 100., 0.1, this, tr("Pan max"))
 {
@@ -1209,8 +1319,13 @@ InstrumentFunctionNoteOutting::InstrumentFunctionNoteOutting(Model* _parent) :
       // m_enabledModel( false, this ),
       m_volumeModel(0., 0., 200., 0.1, this, tr("Volume")),
       m_panModel(0., -100., 100., 0.1, this, tr("Pan")),
-      m_keyModel(DefaultKey, 0., 127., 1., this, tr("Key")),
-      m_noteModel(DefaultKey % 12, 0., 11., 1., this, tr("Note")),
+      m_keyModel(DefaultKey, 0., NumKeys - 1, 1., this, tr("Key")),
+      m_noteModel(DefaultKey % KeysPerOctave,
+                  0.,
+                  KeysPerOctave - 1,
+                  1.,
+                  this,
+                  tr("Note")),
       m_modValueModel(0., -1., 1., 0.001, this, tr("Modulation value")),
       m_modRefKeyModel(
               DefaultKey, 0., NumKeys - 1, 1., this, tr("Modulation key")),
@@ -1246,7 +1361,7 @@ bool InstrumentFunctionNoteOutting::processNote(NotePlayHandle* _n)
     m_volumeModel.setAutomatedValue(_n->getVolume());
     m_panModel.setAutomatedValue(_n->getPanning());
     m_keyModel.setAutomatedValue(_n->key());
-    m_noteModel.setAutomatedValue(_n->key() % 12);
+    m_noteModel.setAutomatedValue(_n->key() % KeysPerOctave);
     m_modValueModel.setAutomatedValue(
             bound(-1.,
                   real_t(_n->key() - m_modRefKeyModel.value())
@@ -1386,7 +1501,7 @@ bool InstrumentFunctionGlissando::processNote(NotePlayHandle* _n)
     //      m_lastKey, newKey, m_lastTime, curTime, frmTime, offTime,
     //      perTime);
 
-    if(m_lastKey < 0 || m_lastKey > 127)
+    if(m_lastKey < 0 || m_lastKey >= NumKeys)
     {
         m_lastKey  = newKey;
         m_lastTime = curTime + frmTime + offTime;
@@ -1553,7 +1668,7 @@ bool InstrumentFunctionGlissando::processNote(NotePlayHandle* _n)
                     _n->instrumentTrack(), frames_processed, gated_frames,
                     subnote, _n, -1, NotePlayHandle::OriginGlissando,
                     _n->generation() + 1);
-            Engine::mixer()->emit playHandleToAdd(nph);
+            Engine::mixer()->emit playHandleToAdd(nph->pointer());
         }
 
         // update counters
@@ -1591,9 +1706,9 @@ bool InstrumentFunctionGlissando::processNote(NotePlayHandle* _n)
 
         NotePlayHandle* nph = NotePlayHandleManager::acquire(
                 _n->instrumentTrack(), frames_processed,
-                _n->frames() - total_frames, note, NULL, -1,
+                _n->frames() - total_frames, note, nullptr, -1,
                 NotePlayHandle::OriginGlissando, _n->generation());
-        Engine::mixer()->emit playHandleToAdd(nph);
+        Engine::mixer()->emit playHandleToAdd(nph->pointer());
     }
 
     return false;
@@ -1769,7 +1884,7 @@ InstrumentFunctionNotePlaying::~InstrumentFunctionNotePlaying()
 
 void InstrumentFunctionNotePlaying::reset()
 {
-    qInfo("InstrumentFunctionNotePlaying::reset");
+    // qInfo("InstrumentFunctionNotePlaying::reset");
     if(m_currentNPH != nullptr)
     {
         m_currentNPH->decrRefCount();
@@ -1785,7 +1900,7 @@ bool InstrumentFunctionNotePlaying::processNote(NotePlayHandle* _n)
 
 void InstrumentFunctionNotePlaying::onGateChanged()
 {
-    qInfo("InstrumentFunctionNotePlaying::onGateChanged");
+    // qInfo("InstrumentFunctionNotePlaying::onGateChanged");
 
     reset();
 
@@ -1814,7 +1929,7 @@ void InstrumentFunctionNotePlaying::onGateChanged()
 
     nph->incrRefCount();
     m_currentNPH = nph;
-    Engine::mixer()->emit playHandleToAdd(nph);
+    Engine::mixer()->emit playHandleToAdd(nph->pointer());
 }
 
 void InstrumentFunctionNotePlaying::saveSettings(QDomDocument& _doc,

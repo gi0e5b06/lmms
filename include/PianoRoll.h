@@ -236,8 +236,7 @@ class PianoRoll : public QWidget
     void quantizeChanged();
     void quantizeNotes();
 
-    void rootChanged();
-    void scaleChanged();
+    void onRootOrScaleChanged();
     void guessScale();
     void updateSemitoneMarkerMenu();
 

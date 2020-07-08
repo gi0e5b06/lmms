@@ -39,11 +39,11 @@
 #include <QMouseEvent>
 #include <QPainter>
 
-// QPixmap* AutomationPatternView::s_pat_rec = NULL;
+// QPixmap* AutomationPatternView::s_pat_rec = nullptr;
 
 AutomationPatternView::AutomationPatternView(AutomationPattern* _pattern,
                                              TrackView*         _parent) :
-      TrackContentObjectView(_pattern, _parent),
+      TileView(_pattern, _parent),
       m_pat(_pattern), m_paintPixmap(), m_pat_rec(embed::getPixmap("pat_rec"))
 {
     connect(m_pat, SIGNAL(dataChanged()), this, SLOT(update()));
@@ -55,7 +55,7 @@ AutomationPatternView::AutomationPatternView(AutomationPattern* _pattern,
     ToolTip::add(this, m_pat->name());
     setStyle(QApplication::style());
 
-    // if(s_pat_rec == NULL)
+    // if(s_pat_rec == nullptr)
     //    s_pat_rec = embed::getPixmap("pat_rec");
 
     update();
@@ -75,7 +75,7 @@ void AutomationPatternView::update()
 {
     ToolTip::add(this, m_pat->name());
 
-    TrackContentObjectView::update();
+    TileView::update();
 }
 
 /*
@@ -98,29 +98,32 @@ void AutomationPatternView::disconnectObject(QAction* _a)
 {
     JournallingObject* j
             = Engine::projectJournal()->journallingObject(_a->data().toInt());
-    if(j && dynamic_cast<AutomatableModel*>(j))
+    AutomatableModel* m = dynamic_cast<AutomatableModel*>(j);
+
+    if(m != nullptr)
     {
         real_t oldMin = m_pat->getMin();
         real_t oldMax = m_pat->getMax();
 
+        /*
         m_pat->m_objects.erase(qFind(m_pat->m_objects.begin(),
                                      m_pat->m_objects.end(),
-                                     dynamic_cast<AutomatableModel*>(j)));
+                                     m));
+        */
+        m_pat->m_objects.removeAll(m);
+        //if(m_pat->m_objects.isEmpty())
+        //  m_pat->addObject(&AutomationPattern::s_dummyFirstObject);
         update();
 
         // If automation editor is opened, update its display after
         // disconnection
         if(gui->automationWindow())
-        {
             gui->automationWindow()->m_editor->updateAfterPatternChange();
-        }
 
         // if there is no more connection connected to the AutomationPattern
-        if(m_pat->m_objects.size() == 0)
-        {
-            // scale the points to fit the new min. and max. value
-            this->scaleTimemapToFit(oldMin, oldMax);
-        }
+        // scale the points to fit the new min. and max. value
+        if(m_pat->m_objects.isEmpty())
+            scaleTimemapToFit(oldMin, oldMax);
     }
 }
 
@@ -147,7 +150,7 @@ QMenu* AutomationPatternView::buildContextMenu()
     QMenu*   cm = new QMenu(this);
     QAction* a;
 
-    a = cm->addAction(embed::getIconPixmap("automation"),
+    a = cm->addAction(embed::getIcon("automation"),
                       tr("Open in Automation editor"), this,
                       SLOT(openInAutomationEditor()));
 
@@ -155,7 +158,7 @@ QMenu* AutomationPatternView::buildContextMenu()
     cm->addSeparator();
     addCutCopyPasteMenu(cm, true, true, true);
     cm->addSeparator();
-    addFlipMenu(cm,!m_pat->isEmpty(),!m_pat->isEmpty());
+    addFlipMenu(cm, !m_pat->isEmpty(), !m_pat->isEmpty());
 
     if(isFixed())
     {
@@ -178,10 +181,11 @@ QMenu* AutomationPatternView::buildContextMenu()
         bool smce = (!m_pat->m_objects.isEmpty());
 
         // cm->addSeparator();
-        int     n   = m_pat->m_objects.count();
+        int     n   = m_pat->m_objects.size();
         QString t   = (n <= 1 ? tr("%1 connection") : tr("%1 connections"));
         QMenu*  smc = new QMenu(t.arg(n), cm);
-        for(AutomationPattern::objectVector::iterator it
+        /*
+        for(AutomationPattern::Objects::iterator it
             = m_pat->m_objects.begin();
             it != m_pat->m_objects.end(); ++it)
         {
@@ -195,6 +199,15 @@ QMenu* AutomationPatternView::buildContextMenu()
                 smc->addAction(a);
             }
         }
+        */
+        m_pat->m_objects.map([&smc, &a, smce](auto m) {
+            a = new QAction(tr("Disconnect \"%1\"").arg(m->fullDisplayName()),
+                            smc);
+            a->setData(m->id());
+            a->setEnabled(smce);
+            smc->addAction(a);
+        });
+
         connect(smc, SIGNAL(triggered(QAction*)), this,
                 SLOT(disconnectObject(QAction*)));
         cm->addMenu(smc);
@@ -250,14 +263,12 @@ void AutomationPatternView::paintEvent(QPaintEvent*)
             = isSelected()
                       ? selectedColor()
                       : (muted ? mutedBackgroundColor()
-                               : (useStyleColor()
-                                          ? (m_pat->track()
-                                                             ->useStyleColor()
-                                                     ? painter.background()
-                                                               .color()
-                                                     : m_pat->track()
-                                                               ->color())
-                                          : color()));
+                               : (useStyleColor() ? (
+                                          m_pat->track()->useStyleColor()
+                                                  ? painter.background()
+                                                            .color()
+                                                  : m_pat->track()->color())
+                                                  : color()));
     /*
     lingrad.setColorAt( 1, c.darker( 300 ) );
     lingrad.setColorAt( 0, c );
@@ -301,9 +312,7 @@ void AutomationPatternView::paintEvent(QPaintEvent*)
                     : (useStyleColor()
                                ? (m_pat->track()->useStyleColor()
                                           ? painter.pen().brush().color()
-                                          : m_pat->track()
-                                                    ->color()
-                                                    .lighter())
+                                          : m_pat->track()->color().lighter())
                                : color().lighter());
     if(bgcolor.value() >= 192)
         fgcolor = bgcolor.darker();
@@ -423,8 +432,7 @@ void AutomationPatternView::paintEvent(QPaintEvent*)
     bool frozen = m_pat->track()->isFrozen();
     paintFrozenIcon(frozen, p);
 
-    paintTileTacts(false, m_pat->length().nextFullTact(), 1, bgcolor,
-                   p);
+    paintTileTacts(false, m_pat->length().nextFullTact(), 1, bgcolor, p);
 
     // pattern name
     paintTextLabel(m_pat->name(), bgcolor, p);
@@ -443,7 +451,7 @@ void AutomationPatternView::dragEnterEvent(QDragEnterEvent* _dee)
     StringPairDrag::processDragEnterEvent(_dee, "automatable_model");
     if(!_dee->isAccepted())
     {
-        TrackContentObjectView::dragEnterEvent(_dee);
+        TileView::dragEnterEvent(_dee);
     }
 }
 
@@ -455,7 +463,7 @@ void AutomationPatternView::dropEvent(QDropEvent* _de)
     {
         AutomatableModel* mod = dynamic_cast<AutomatableModel*>(
                 Engine::projectJournal()->journallingObject(val.toInt()));
-        if(mod != NULL)
+        if(mod != nullptr)
         {
             bool added = m_pat->addObject(mod);
             if(!added)
@@ -477,7 +485,7 @@ void AutomationPatternView::dropEvent(QDropEvent* _de)
     }
     else
     {
-        TrackContentObjectView::dropEvent(_de);
+        TileView::dropEvent(_de);
     }
 }
 

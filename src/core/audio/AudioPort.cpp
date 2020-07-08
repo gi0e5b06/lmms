@@ -40,7 +40,7 @@
 #include <QDir>
 
 AudioPort::AudioPort(const QString& _name,
-                     bool           _has_effect_chain,
+                     bool           _hasEffectChain,
                      BoolModel*     volumeEnabledModel,
                      FloatModel*    volumeModel,
                      BoolModel*     panningEnabledModel,
@@ -51,20 +51,25 @@ AudioPort::AudioPort(const QString& _name,
                      BoolModel*     frozenModel,
                      BoolModel*     clippingModel) :
       m_bufferUsage(false),
-      m_portBuffer(BufferManager::acquire()), m_extOutputEnabled(false),
-      m_nextFxChannel(0), m_name(_name),
-      m_effects(_has_effect_chain ? new EffectChain(nullptr) : nullptr),
+      m_portBuffer(BufferManager::acquire()),
+      m_processingLock(
+              "AudioPort::m_processingLock", QMutex::Recursive, false),
+      m_extOutputEnabled(false), m_nextFxChannel(0), m_name(_name),
+      m_effects(_hasEffectChain ? new EffectChain(nullptr) : nullptr),
       m_playHandles(true), m_volumeEnabledModel(volumeEnabledModel),
       m_volumeModel(volumeModel), m_panningEnabledModel(panningEnabledModel),
       m_panningModel(panningModel),
       m_bendingEnabledModel(bendingEnabledModel),
       m_bendingModel(bendingModel), m_mutedModel(mutedModel),
       m_frozenModel(frozenModel), m_clippingModel(clippingModel),
-      m_frozenBuf(nullptr)
+      m_frozenBuf(nullptr), m_pointer(nullptr)
 {
+    m_pointer = new AudioPortPointer(this);
     if(m_name.isEmpty())
         m_name = "[unnamed audio port]";
-    Engine::mixer()->addAudioPort(this);
+    qInfo("AudioPort::AudioPort '%s'", qPrintable(name()));
+    Engine::mixer()->emit audioPortToAdd(
+            pointer());  // addAudioPort(pointer());
     setExtOutputEnabled(true);
 }
 
@@ -73,16 +78,16 @@ AudioPort::~AudioPort()
     qInfo("AudioPort::~AudioPort '%s'", qPrintable(name()));
     setExtOutputEnabled(false);
     qInfo("AudioPort::~AudioPort 2");
-    Engine::mixer()->removeAudioPort(this);
+    Engine::mixer()->audioPortToRemove(pointer());
 
     if(!m_playHandles.isEmpty())
     {
         qInfo("AudioPort::~AudioPort still has %d playhandles",
               m_playHandles.size());
         m_playHandles.map(
-                [](PlayHandle* ph) {
+                [](PlayHandlePointer ph) {
                     InstrumentPlayHandle* iph
-                            = dynamic_cast<InstrumentPlayHandle*>(ph);
+                            = dynamic_cast<InstrumentPlayHandle*>(ph.data());
                     qInfo("  type=%d is_iph=%d", ph->type(),
                           (iph != nullptr));
                 },
@@ -101,6 +106,9 @@ AudioPort::~AudioPort()
     DELETE_HELPER(m_frozenBuf);
 
     qInfo("AudioPort::~AudioPort 6");
+    // m_pointer->reset(nullptr);
+    // delete((AudioPortPointer*)m_pointer);
+    qInfo("AudioPort::~AudioPort 7");
 }
 
 void AudioPort::setExtOutputEnabled(bool _enabled)
@@ -109,13 +117,9 @@ void AudioPort::setExtOutputEnabled(bool _enabled)
     {
         m_extOutputEnabled = _enabled;
         if(m_extOutputEnabled)
-        {
             Engine::mixer()->audioDev()->registerPort(this);
-        }
         else
-        {
             Engine::mixer()->audioDev()->unregisterPort(this);
-        }
     }
 }
 
@@ -134,17 +138,17 @@ bool AudioPort::processEffects()
                 m_bufferUsage);
         return more;
     }
+
     return false;
 }
 
 void AudioPort::doProcessing()
 {
-    if(m_mutedModel && m_mutedModel->value())
-    {
+    if(m_mutedModel != nullptr && m_mutedModel->value())
         return;
-    }
 
-    const Song*   song = Engine::getSong();
+    lock();
+    const Song*   song = Engine::song();
     const fpp_t   fpp  = Engine::mixer()->framesPerPeriod();
     const f_cnt_t af   = song->getPlayPos().absoluteFrame();
 
@@ -195,6 +199,7 @@ void AudioPort::doProcessing()
             Engine::fxMixer()->mixToChannel(m_portBuffer, m_nextFxChannel);
             // TODO: improve the flow here - convert to pull model
             m_bufferUsage = false;
+            unlock();
             return;
         }
     }
@@ -207,14 +212,15 @@ void AudioPort::doProcessing()
     // m_playHandleLock.lock();
     // now we mix all playhandle buffers into the audioport buffer
     // for(PlayHandle* ph: m_playHandles)
-    m_playHandles.map([this, fpp](PlayHandle* ph) {
+    m_playHandles.map([this, fpp](PlayHandlePointer ph) {
+        ph->lock();
         /*
-          if(ph->isFinished())
-          {
-          qInfo("AudioPort::doProcessing skip finished ph");
-          }
-          else
-        */
+         if(ph->isFinished())
+         {
+         qInfo("AudioPort::doProcessing skip finished ph");
+         }
+         else
+       */
         {
             sampleFrame* buf = ph->buffer();
             if(buf)
@@ -244,6 +250,7 @@ void AudioPort::doProcessing()
                 ph->releaseBuffer();
             }
         }
+        ph->unlock();
     });
     // m_playHandleLock.unlock();
 
@@ -426,7 +433,7 @@ void AudioPort::doProcessing()
         if(m_frozenModel && !m_frozenModel->value() && m_frozenBuf
            && (((song->playMode() == Song::Mode_PlaySong)
                 && song->isPlaying())
-               || (Engine::getSong()->isExporting()
+               || (Engine::song()->isExporting()
                    && Engine::mixer()->processingSampleRate()
                               == Engine::mixer()->baseSampleRate())))
         {
@@ -476,11 +483,13 @@ void AudioPort::doProcessing()
         // TODO: improve the flow here - convert to pull model
         m_bufferUsage = false;
     }
+
+    unlock();
 }
 
-void AudioPort::addPlayHandle(PlayHandle* _ph)
+void AudioPort::addPlayHandle(PlayHandlePointer _ph)
 {
-    if(_ph == nullptr)
+    if(_ph.isNull())
     {
         qWarning("AudioPort::addPlayHandle(null)");
         return;
@@ -511,9 +520,9 @@ void AudioPort::addPlayHandle(PlayHandle* _ph)
     // m_playHandleLock.unlock();
 }
 
-void AudioPort::removePlayHandle(PlayHandle* _ph)
+void AudioPort::removePlayHandle(PlayHandlePointer _ph)
 {
-    if(_ph == nullptr)
+    if(_ph.isNull())
     {
         qWarning("AudioPort::removePlayHandle(null)");
         return;
@@ -546,22 +555,25 @@ void AudioPort::removePlayHandle(PlayHandle* _ph)
     */
 
     if(_ph->type() == 2)
-        qInfo("AudioPort: ready to remove");
+        qInfo("AudioPort: ready to remove IPH");
 
-    int nh = m_playHandles.removeAll(_ph);
+    int nh = m_playHandles.removeAll(_ph, false);
     if(nh == 0)  // One
-        qWarning("AudioPort::removePlayHandle handle not found type=%d",
-                 _ph->type());
-    else if(nh > 1)
-        qWarning(
-                "AudioPort::removePlayHandle handle found more than once "
-                "type=%d nh=%d",
-                _ph->type(), nh);
+        qWarning("AudioPort::removePlayHandle handle not found");
+    // type=%d", _ph->type());
+    else
+    {
+        if(nh > 1)
+            qWarning(
+                    "AudioPort::removePlayHandle handle found more than once "
+                    "type=%d nh=%d",
+                    _ph->type(), nh);
 
-    // m_playHandleLock.unlock();
+        // m_playHandleLock.unlock();
 
-    if(_ph->type() == 2)
-        qInfo("AudioPort: removePlayHandle(IPH) DONE!");
+        if(_ph->type() == 2)
+            qInfo("AudioPort: removePlayHandle(IPH) DONE!");
+    }
 }
 
 void AudioPort::updateFrozenBuffer(f_cnt_t _len)
@@ -601,7 +613,7 @@ void AudioPort::readFrozenBuffer(QString _uuid)
     {
         delete m_frozenBuf;
         m_frozenBuf = nullptr;
-        QString d   = Engine::getSong()->projectDir() + QDir::separator()
+        QString d   = Engine::song()->projectDir() + QDir::separator()
                     + "tracks" + QDir::separator() + "frozen";
         if(QFileInfo(d).exists())
         {
@@ -627,7 +639,7 @@ void AudioPort::writeFrozenBuffer(QString _uuid)
        // m_frozenModel->value()&&
        m_frozenBuf)
     {
-        QString d = Engine::getSong()->projectDir() + QDir::separator()
+        QString d = Engine::song()->projectDir() + QDir::separator()
                     + "tracks" + QDir::separator() + "frozen";
         if(QFileInfo(d).exists())
         {

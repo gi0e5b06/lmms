@@ -271,7 +271,7 @@ MemoryManagerArray::MemoryManagerArray(const int    nbe,
 MemoryManagerArray::~MemoryManagerArray()
 {
     qWarning(
-            "~MemoryManagerArray %6lu : cnt=%6d : max=%6lu %s wasted=%6lu %s",
+            "~MemoryManagerArray %8lu : cnt=%8d : max=%8lu %s wasted=%8lu %s",
             C2ULI m_size, m_count, C2ULI m_max,
             (char*)(m_nbe == m_max ? "!!!" : "   "), C2ULI m_wasted, m_ref);
     MMA_STD_FREE(m_data);
@@ -283,8 +283,8 @@ MemoryManagerArray::~MemoryManagerArray()
     {
         i.next();
         qWarning(
-                "                    %6lu : bytes=%6lu cnt=%6ld"
-                "            %6ld",
+                "                    %8lu : bytes=%8lu cnt=%8ld"
+                "            %8ld",
                 C2ULI m_size, C2ULI i.key(), i.value(),
                 C2ULI(m_size - i.key()) * i.value());
     }

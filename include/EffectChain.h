@@ -31,63 +31,59 @@
 #include "AutomatableModel.h"
 #include "SafeList.h"
 #include "SerializingObject.h"
-
 #include "lmms_basics.h"
 
 class Effect;
 
 class EXPORT EffectChain : public Model, public SerializingObject
 {
-	Q_OBJECT
-public:
-	EffectChain( Model * _parent );
-	virtual ~EffectChain();
+    Q_OBJECT
+  public:
+    EffectChain(Model* _parent);
+    virtual ~EffectChain();
 
-	virtual void saveSettings( QDomDocument & _doc, QDomElement & _parent );
-	virtual void loadSettings( const QDomElement & _this );
+    virtual void saveSettings(QDomDocument& _doc, QDomElement& _parent);
+    virtual void loadSettings(const QDomElement& _this);
 
-	inline virtual QString nodeName() const
-	{
-		return "fxchain";
-	}
+    inline virtual QString nodeName() const
+    {
+        return "fxchain";
+    }
 
-	void appendEffect( Effect * _effect );
-	void removeEffect( Effect * _effect );
-	void moveUp( Effect * _effect );
-	void moveDown( Effect * _effect );
-	void moveTop( Effect * _effect );
-	void moveBottom( Effect * _effect );
-	bool processAudioBuffer( sampleFrame * _buf, const fpp_t _frames, bool hasInputNoise );
-	void startRunning();
+    void appendEffect(Effect* _effect);
+    void removeEffect(Effect* _effect);
+    void moveUp(Effect* _effect);
+    void moveDown(Effect* _effect);
+    void moveTop(Effect* _effect);
+    void moveBottom(Effect* _effect);
+    bool processAudioBuffer(sampleFrame* _buf,
+                            const fpp_t  _frames,
+                            bool         hasInputNoise);
+    void startRunning();
 
-	void clear();
+    void clear();
 
-        bool isEnabled()
-        {
-                return m_enabledModel.value();
-        }
+    bool isEnabled()
+    {
+        return m_enabledModel.value();
+    }
 
-	void setEnabled( bool _on )
-	{
-		m_enabledModel.setValue( _on );
-	}
+    void setEnabled(bool _on)
+    {
+        m_enabledModel.setValue(_on);
+    }
 
+  private:
+    // typedef QVector<Effect *> EffectList;
+    typedef SafeList<Effect*> EffectList;
+    EffectList                m_effects;
 
-private:
-	//typedef QVector<Effect *> EffectList;
-    typedef SafeList<Effect *> EffectList;
-	EffectList m_effects;
+    BoolModel m_enabledModel;
 
-	BoolModel m_enabledModel;
+    friend class EffectRackView;
 
-
-	friend class EffectRackView;
-
-
-signals:
-	void aboutToClear();
-
-} ;
+  signals:
+    void aboutToClear();
+};
 
 #endif
-

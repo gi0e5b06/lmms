@@ -37,7 +37,7 @@ class GroupBox : public QWidget
     {
       public:
         Top(const QString& _title,
-            GroupBox*      _parent = NULL,
+            GroupBox*      _parent = nullptr,
             bool           _led    = true,
             bool           _arrow  = true);
 
@@ -50,7 +50,7 @@ class GroupBox : public QWidget
 
   public:
     GroupBox(const QString& _title,
-             QWidget*       _parent = NULL,
+             QWidget*       _parent = nullptr,
              bool           _led    = true,
              bool           _arrow  = true);
     virtual ~GroupBox();
@@ -63,14 +63,14 @@ class GroupBox : public QWidget
     PixmapButton* ledButton();
     PixmapButton* arrowButton();
 
-    QWidget*      contentWidget();
-    void          setContentWidget(QWidget* _w);
+    QWidget* contentWidget();
+    void     setContentWidget(QWidget* _w);
 
-    QWidget*      bottomWidget();
-    void          setBottomWidget(QWidget* _w);
+    QWidget* bottomWidget();
+    void     setBottomWidget(QWidget* _w);
 
-    //QString& title();
-    //void setTitle(const QString& _title);
+    // QString& title();
+    // void setTitle(const QString& _title);
 
     int titleBarHeight() const;
 

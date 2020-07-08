@@ -1,24 +1,22 @@
 /*
  * SplitGDX.cpp - A splitting effect (tree node)
  *
- * Copyright (c) 2018 gi0e5b06 (on github.com)
+ * Copyright (c) 2018-2020 gi0e5b06 (on github.com)
  *
- * This file is part of LMMS - https://lmms.io
+ * This file is part of LSMM -
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public
- * License along with this program (see COPYING); if not, write to the
- * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
- * Boston, MA 02110-1301 USA.
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
 
@@ -32,7 +30,6 @@
 
 extern "C"
 {
-
     Plugin::Descriptor PLUGIN_EXPORT splitgdx_plugin_descriptor
             = {STRINGIFY(PLUGIN_NAME),
                "SplitGDX",
@@ -41,8 +38,8 @@ extern "C"
                0x0100,
                Plugin::Effect,
                new PluginPixmapLoader("logo"),
-               NULL,
-               NULL};
+               nullptr,
+               nullptr};
 }
 
 SplitGDXEffect::SplitGDXEffect(
@@ -82,7 +79,7 @@ bool SplitGDXEffect::processAudioBuffer(sampleFrame* _buf,
     memcpy(splitb, _buf, sizeof(sampleFrame) * _frames);
     if(m_splitChain->isEnabled())
     {
-        //m_splitChain->startRunning();
+        // m_splitChain->startRunning();
         r |= m_splitChain->processAudioBuffer(splitb, _frames, true);
 
         memcpy(wetb, splitb, sizeof(sampleFrame) * _frames);
@@ -99,10 +96,10 @@ bool SplitGDXEffect::processAudioBuffer(sampleFrame* _buf,
         memcpy(remb, splitb, sizeof(sampleFrame) * _frames);
     }
 
-    //m_wetChain->startRunning();
+    // m_wetChain->startRunning();
     r |= m_wetChain->processAudioBuffer(wetb, _frames, true);
 
-    //m_remChain->startRunning();
+    // m_remChain->startRunning();
     r |= m_remChain->processAudioBuffer(remb, _frames, true);
 
     const ValueBuffer* splitBuf = m_gdxControls.m_splitModel.valueBuffer();
@@ -111,17 +108,17 @@ bool SplitGDXEffect::processAudioBuffer(sampleFrame* _buf,
 
     for(fpp_t f = 0; f < _frames; ++f)
     {
-        float w0, d0, w1, d1;
+        real_t w0, d0, w1, d1;
         computeWetDryLevels(f, _frames, smoothBegin, smoothEnd, w0, d0, w1,
                             d1);
 
-        const float splitVal
+        const real_t splitVal
                 = (splitBuf ? splitBuf->value(f)
                             : m_gdxControls.m_splitModel.value());
-        const float wetVal = (splitBuf ? wetBuf->value(f)
-                                       : m_gdxControls.m_wetModel.value());
-        const float remVal = (remBuf ? remBuf->value(f)
-                                     : m_gdxControls.m_remModel.value());
+        const real_t wetVal = (splitBuf ? wetBuf->value(f)
+                                        : m_gdxControls.m_wetModel.value());
+        const real_t remVal = (remBuf ? remBuf->value(f)
+                                      : m_gdxControls.m_remModel.value());
 
         _buf[f][0]
                 = d0 * _buf[f][0]
@@ -143,7 +140,6 @@ bool SplitGDXEffect::processAudioBuffer(sampleFrame* _buf,
 
 extern "C"
 {
-
     // necessary for getting instance out of shared lib
     Plugin* PLUGIN_EXPORT lmms_plugin_main(Model* parent, void* data)
     {

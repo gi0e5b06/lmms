@@ -39,50 +39,47 @@ class QMdiSubWindow;
 
 class LedCheckBox;
 
-
 class ControllerView : public QWidget, public ModelView
 {
-	Q_OBJECT
-public:
-	ControllerView( Controller * _controller, QWidget * _parent );
-	virtual ~ControllerView();
+    Q_OBJECT
 
-	inline Controller * controller()
-	{
-		return castModel<Controller>();
-	}
+  public:
+    ControllerView(Controller* _controller, QWidget* _parent);
+    virtual ~ControllerView();
 
-	inline const Controller * controller() const
-	{
-		return castModel<Controller>();
-	}
+    inline Controller* controller()
+    {
+        return castModel<Controller>();
+    }
 
-	virtual void setModel( Model* model, bool isOldModelValid = true );
+    inline const Controller* controller() const
+    {
+        return castModel<Controller>();
+    }
 
-public slots:
-	void editControls();
-	void deleteController();
-	void displayHelp();
-	void closeControls();
-	void renameController();
+    virtual void setModel(Model* model, bool isOldModelValid = true);
 
-signals:
-	void deleteController( ControllerView * _view );
+  public slots:
+    void editControls();
+    void deleteController();
+    void displayHelp();
+    void closeControls();
+    void renameController();
 
+  signals:
+    void deleteController(Controller* _view);
 
-protected:
-	virtual void contextMenuEvent( QContextMenuEvent * _me );
-	virtual void paintEvent( QPaintEvent * _pe );
-	virtual void modelChanged();
-	virtual void mouseDoubleClickEvent( QMouseEvent * event );
+  protected:
+    virtual void contextMenuEvent(QContextMenuEvent* _me);
+    virtual void paintEvent(QPaintEvent* _pe);
+    virtual void modelChanged();
+    virtual void mouseDoubleClickEvent(QMouseEvent* event);
 
-
-private:
-	QPixmap m_bg;
-	LedCheckBox * m_bypass;
-	QMdiSubWindow * m_subWindow;
-	ControllerDialog * m_controllerDlg;
-
-} ;
+  private:
+    QPixmap           m_bg;
+    LedCheckBox*      m_bypass;
+    QMdiSubWindow*    m_subWindow;
+    ControllerDialog* m_controllerDlg;
+};
 
 #endif

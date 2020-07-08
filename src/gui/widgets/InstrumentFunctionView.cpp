@@ -86,7 +86,7 @@ InstrumentFunctionNoteStackingView::InstrumentFunctionNoteStackingView(
     QLabel* chordLabel = new QLabel(tr("Chord:"));
     chordLabel->setFont(pointSize<8>(chordLabel->font()));
 
-    m_chordRangeKnob->setLabel(tr("RANGE"));
+    m_chordRangeKnob->setText(tr("RANGE"));
     m_chordRangeKnob->setHintText(tr("Chord range:"), " " + tr("octave(s)"));
     m_chordRangeKnob->setWhatsThis(
             tr("Use this knob for setting the chord range in octaves. "
@@ -118,7 +118,7 @@ InstrumentFunctionArpeggioView::InstrumentFunctionArpeggioView(
       m_arpMissKnob(new Knob()), m_arpTimeKnob(new TempoSyncKnob()),
       m_arpGateKnob(new Knob()), m_arpDirectionComboBox(new ComboBox()),
       m_arpModeComboBox(new ComboBox()), m_arpBaseKnob(new Knob()),
-      m_arpRepeatKnob(new Knob())
+      m_arpRepeatKnob(new Knob()), m_arpLimitKnob(new Knob())
 {
     QGridLayout* mainLayout = new QGridLayout(m_panel);
     mainLayout->setContentsMargins(6, 2, 2, 2);
@@ -136,14 +136,14 @@ InstrumentFunctionArpeggioView::InstrumentFunctionArpeggioView(
                "major or minor triads, but there are a lot of other "
                "possible chords, you can select."));
 
-    m_arpRangeKnob->setLabel(tr("RANGE"));
+    m_arpRangeKnob->setText(tr("RANGE"));
     m_arpRangeKnob->setHintText(tr("Arpeggio range:"), " " + tr("octave(s)"));
     m_arpRangeKnob->setWhatsThis(
             tr("Use this knob for setting the arpeggio range in octaves. "
                "The selected arpeggio will be played within specified "
                "number of octaves."));
 
-    m_arpCycleKnob->setLabel(tr("CYCLE"));
+    m_arpCycleKnob->setText(tr("CYCLE"));
     m_arpCycleKnob->setHintText(tr("Cycle notes:") + " ",
                                 " " + tr("note(s)"));
     m_arpCycleKnob->setWhatsThis(tr(
@@ -152,7 +152,7 @@ InstrumentFunctionArpeggioView::InstrumentFunctionArpeggioView(
             "divisible by the number of steps jumped over you will get stuck "
             "in a shorter arpeggio or even on one note."));
 
-    m_arpSkipKnob->setLabel(tr("SKIP"));
+    m_arpSkipKnob->setText(tr("SKIP"));
     m_arpSkipKnob->setHintText(tr("Skip rate:"), tr("%"));
     m_arpSkipKnob->setWhatsThis(
             tr("The skip function will make the arpeggiator pause one step "
@@ -160,20 +160,20 @@ InstrumentFunctionArpeggioView::InstrumentFunctionArpeggioView(
                "position and no effect it will gradually progress to "
                "full amnesia at maximum setting."));
 
-    m_arpMissKnob->setLabel(tr("MISS"));
+    m_arpMissKnob->setText(tr("MISS"));
     m_arpMissKnob->setHintText(tr("Miss rate:"), tr("%"));
     m_arpMissKnob->setWhatsThis(
             tr("The miss function will make the arpeggiator miss the "
                "intended note."));
 
-    m_arpTimeKnob->setLabel(tr("TIME"));
+    m_arpTimeKnob->setText(tr("TIME"));
     m_arpTimeKnob->setHintText(tr("Arpeggio time:"), " " + tr("ms"));
     m_arpTimeKnob->setWhatsThis(
             tr("Use this knob for setting the arpeggio time in "
                "milliseconds. The arpeggio time specifies how long "
                "each arpeggio-tone should be played."));
 
-    m_arpGateKnob->setLabel(tr("GATE"));
+    m_arpGateKnob->setText(tr("GATE"));
     m_arpGateKnob->setHintText(tr("Arpeggio gate:"), tr("%"));
     m_arpGateKnob->setWhatsThis(
             tr("Use this knob for setting the arpeggio gate. The "
@@ -181,11 +181,14 @@ InstrumentFunctionArpeggioView::InstrumentFunctionArpeggioView(
                "arpeggio-tone that should be played. With this you "
                "can make cool staccato arpeggios."));
 
-    m_arpBaseKnob->setLabel(tr("BASE"));
+    m_arpBaseKnob->setText(tr("BASE"));
     m_arpBaseKnob->setHintText(tr("Base:"), "");
 
-    m_arpRepeatKnob->setLabel(tr("REPEAT"));
+    m_arpRepeatKnob->setText(tr("REPEAT"));
     m_arpRepeatKnob->setHintText(tr("Repeating:"), "");
+
+    m_arpLimitKnob->setText(tr("LIMIT"));
+    m_arpLimitKnob->setHintText(tr("Chord size:"), "");
 
     QLabel* arpChordLabel = new QLabel(tr("Chord:"));
     arpChordLabel->setFont(pointSize<8>(arpChordLabel->font()));
@@ -211,6 +214,7 @@ InstrumentFunctionArpeggioView::InstrumentFunctionArpeggioView(
     mainLayout->addWidget(m_arpTimeKnob, 6, 2, 2, 1, Qt::AlignHCenter);
     mainLayout->addWidget(m_arpBaseKnob, 9, 1, 2, 1, Qt::AlignHCenter);
     mainLayout->addWidget(m_arpRepeatKnob, 9, 2, 2, 1, Qt::AlignHCenter);
+    mainLayout->addWidget(m_arpLimitKnob, 9, 0, 2, 1, Qt::AlignRight);
 
     mainLayout->setRowMinimumHeight(2, 3);
     mainLayout->setRowMinimumHeight(5, 3);
@@ -235,6 +239,7 @@ void InstrumentFunctionArpeggioView::modelChanged()
     m_arpModeComboBox->setModel(&m_cc->m_arpModeModel);
     m_arpBaseKnob->setModel(&m_cc->m_arpBaseModel);
     m_arpRepeatKnob->setModel(&m_cc->m_arpRepeatModel);
+    m_arpLimitKnob->setModel(&m_cc->m_arpLimitModel);
 }
 
 InstrumentFunctionNoteHumanizingView::InstrumentFunctionNoteHumanizingView(
@@ -250,40 +255,40 @@ InstrumentFunctionNoteHumanizingView::InstrumentFunctionNoteHumanizingView(
     mainLayout->setHorizontalSpacing(6);
     mainLayout->setVerticalSpacing(1);
 
-    m_volumeRangeKnob->setLabel(tr("VOL%"));
+    m_volumeRangeKnob->setText(tr("VOL%"));
     m_volumeRangeKnob->setMinimumWidth(38);
     m_volumeRangeKnob->setPointColor(Qt::red);
     m_volumeRangeKnob->setHintText(tr("Volume change:"), "%");
     m_volumeRangeKnob->setWhatsThis(
             tr("Use this knob for setting the volume change in %."));
 
-    m_panRangeKnob->setLabel(tr("PAN%"));
+    m_panRangeKnob->setText(tr("PAN%"));
     m_panRangeKnob->setMinimumWidth(38);
     m_panRangeKnob->setPointColor(Qt::magenta);
     m_panRangeKnob->setHintText(tr("Pan change:"), "%");
     m_panRangeKnob->setWhatsThis(
             tr("Use this knob for setting the pan change in %."));
 
-    m_tuneRangeKnob->setLabel(tr("PITCH%"));
+    m_tuneRangeKnob->setText(tr("PITCH%"));
     m_tuneRangeKnob->setMinimumWidth(38);
     m_tuneRangeKnob->setPointColor(Qt::cyan);
     m_tuneRangeKnob->setHintText(tr("Pitch change:"), "%");
     m_tuneRangeKnob->setWhatsThis(
             tr("Use this knob for setting the tune change in %."));
 
-    m_offsetRangeKnob->setLabel(tr("DELAY%"));
+    m_offsetRangeKnob->setText(tr("DELAY%"));
     m_offsetRangeKnob->setMinimumWidth(38);
     m_offsetRangeKnob->setHintText(tr("Start delay:"), "");
     m_offsetRangeKnob->setWhatsThis(
             tr("Use this knob for setting the delay."));
 
-    m_shortenRangeKnob->setLabel(tr("SHORT%"));
+    m_shortenRangeKnob->setText(tr("SHORT%"));
     m_shortenRangeKnob->setMinimumWidth(38);
     m_shortenRangeKnob->setHintText(tr("Shortening:"), "%");
     m_shortenRangeKnob->setWhatsThis(
             tr("Use this knob for shortening in %."));
 
-    m_lengthenRangeKnob->setLabel(tr("LONG%"));
+    m_lengthenRangeKnob->setText(tr("LONG%"));
     m_lengthenRangeKnob->setMinimumWidth(38);
     m_lengthenRangeKnob->setHintText(tr("Lengthening:"), "%");
     m_lengthenRangeKnob->setWhatsThis(
@@ -343,8 +348,18 @@ InstrumentFunctionNoteFilteringView::InstrumentFunctionNoteFilteringView(
         InstrumentFunctionNoteFiltering* cc, QWidget* parent) :
       InstrumentFunctionView(cc, tr("FILTERING"), parent),
       m_cc(cc), m_configComboBox(new ComboBox()),
-      m_actionComboBox(new ComboBox())
+      m_actionComboBox(new ComboBox(m_panel, "[action]")),
+      m_intervalKnob(new Knob(m_panel, "[interval]"))
 {
+    m_intervalKnob->setText("GAP");
+    m_intervalKnob->setHintText(tr("Interval:"), "");
+
+    m_rootComboBox = new ComboBox(m_panel, "[root note]");
+    // m_rootComboBox->setFixedSize(70, 32);
+
+    m_scaleComboBox = new ComboBox(m_panel, "[scale]");
+    // m_scaleComboBox->setFixedSize(105, 32);
+
     QGridLayout* mainLayout = new QGridLayout(m_panel);
     mainLayout->setContentsMargins(6, 2, 2, 2);
     mainLayout->setColumnStretch(5, 1);
@@ -353,13 +368,16 @@ InstrumentFunctionNoteFilteringView::InstrumentFunctionNoteFilteringView(
 
     mainLayout->addWidget(m_configComboBox, 0, 0, 1, 2);
     mainLayout->addWidget(m_actionComboBox, 0, 2, 1, 2);
+    mainLayout->addWidget(m_intervalKnob, 0, 4, 2, 1);
+    mainLayout->addWidget(m_rootComboBox, 7, 0, 1, 2);
+    mainLayout->addWidget(m_scaleComboBox, 7, 2, 1, 4);
 
     for(int i = 0; i < 12; ++i)
     {
         m_noteSelectionLed[i]
                 = new LedCheckBox(Note::findNoteName(i), nullptr,
                                   QString("[note %1]").arg(i + 1));
-        mainLayout->addWidget(m_noteSelectionLed[i], i / 4 + 1, i % 4, 1, 1);
+        mainLayout->addWidget(m_noteSelectionLed[i], i / 4 + 2, i % 4, 1, 1);
     }
 }
 
@@ -389,6 +407,9 @@ void InstrumentFunctionNoteFilteringView::modelChanged()
     m_actionComboBox->setModel(m_cc->m_actionModel[j]);
     for(int i = 0; i < 12; ++i)
         m_noteSelectionLed[i]->setModel(m_cc->m_noteSelectionModel[j][i]);
+    m_intervalKnob->setModel(m_cc->m_intervalModel[j]);
+    m_rootComboBox->setModel(m_cc->m_rootModel[j]);
+    m_scaleComboBox->setModel(m_cc->m_scaleModel[j]);
 }
 
 InstrumentFunctionNoteKeyingView::InstrumentFunctionNoteKeyingView(
@@ -406,24 +427,24 @@ InstrumentFunctionNoteKeyingView::InstrumentFunctionNoteKeyingView(
     mainLayout->setVerticalSpacing(1);
 
     m_volumeRangeKnob->setPointColor(Qt::red);
-    m_volumeRangeKnob->setLabel(tr("VOL%"));
+    m_volumeRangeKnob->setText(tr("VOL%"));
     m_volumeRangeKnob->setHintText(tr("Volume change:"), "" + tr("%"));
     m_volumeRangeKnob->setWhatsThis(
             tr("Use this knob for setting the volume change in %."));
 
     m_panRangeKnob->setPointColor(Qt::magenta);
-    m_panRangeKnob->setLabel(tr("PAN%"));
+    m_panRangeKnob->setText(tr("PAN%"));
     m_panRangeKnob->setHintText(tr("Pan change:"), "" + tr("%"));
     m_panRangeKnob->setWhatsThis(
             tr("Use this knob for setting the pan change in %."));
 
-    m_volumeBaseKnob->setLabel(tr("BASE"));
-    m_volumeMinKnob->setLabel(tr("MIN"));
-    m_volumeMaxKnob->setLabel(tr("MAX"));
+    m_volumeBaseKnob->setText(tr("BASE"));
+    m_volumeMinKnob->setText(tr("MIN"));
+    m_volumeMaxKnob->setText(tr("MAX"));
 
-    m_panBaseKnob->setLabel(tr("BASE"));
-    m_panMinKnob->setLabel(tr("MIN"));
-    m_panMaxKnob->setLabel(tr("MAX"));
+    m_panBaseKnob->setText(tr("BASE"));
+    m_panMinKnob->setText(tr("MIN"));
+    m_panMaxKnob->setText(tr("MAX"));
 
     mainLayout->addWidget(m_volumeRangeKnob, 0, 0, 1, 1, Qt::AlignHCenter);
     mainLayout->addWidget(m_volumeBaseKnob, 0, 1, 1, 1, Qt::AlignHCenter);
@@ -470,11 +491,11 @@ InstrumentFunctionNoteOuttingView::InstrumentFunctionNoteOuttingView(
     mainLayout->setHorizontalSpacing(6);
     mainLayout->setVerticalSpacing(1);
 
-    m_volumeKnob->setLabel(tr("VEL"));
-    m_panKnob->setLabel(tr("PAN"));
-    m_keyKnob->setLabel(tr("KEY"));
-    m_noteKnob->setLabel(tr("NOTE"));
-    m_modValueKnob->setLabel(tr("MOD"));
+    m_volumeKnob->setText(tr("VEL"));
+    m_panKnob->setText(tr("PAN"));
+    m_keyKnob->setText(tr("KEY"));
+    m_noteKnob->setText(tr("NOTE"));
+    m_modValueKnob->setText(tr("MOD"));
 
     m_volumeKnob->setPointColor(Qt::red);
     m_panKnob->setPointColor(Qt::magenta);
@@ -488,9 +509,9 @@ InstrumentFunctionNoteOuttingView::InstrumentFunctionNoteOuttingView(
     m_noteKnob->setInteractive(false);
     m_modValueKnob->setInteractive(false);
 
-    m_modRefKeyKnob->setLabel(tr("REFK"));
-    m_modAmountKnob->setLabel(tr("AMNT"));
-    m_modBaseKnob->setLabel(tr("BASE"));
+    m_modRefKeyKnob->setText(tr("REFK"));
+    m_modAmountKnob->setText(tr("AMNT"));
+    m_modBaseKnob->setText(tr("BASE"));
 
     mainLayout->addWidget(m_volumeKnob, 0, 0, 1, 1, Qt::AlignHCenter);
     mainLayout->addWidget(m_panKnob, 0, 1, 1, 1, Qt::AlignHCenter);
@@ -539,14 +560,14 @@ InstrumentFunctionGlissandoView::InstrumentFunctionGlissandoView(
             tr("A glissando is a method playing all, only black or only "
                "white keys between two notes."));
 
-    m_gliTimeKnob->setLabel(tr("TIME"));
+    m_gliTimeKnob->setText(tr("TIME"));
     m_gliTimeKnob->setHintText(tr("Glissando time:"), " " + tr("ms"));
     m_gliTimeKnob->setWhatsThis(
             tr("Use this knob for setting the glissando time in "
                "milliseconds. The glissando time specifies how long "
                "each glissando note should be played."));
 
-    m_gliGateKnob->setLabel(tr("GATE"));
+    m_gliGateKnob->setText(tr("GATE"));
     m_gliGateKnob->setHintText(tr("Glissando gate:"), tr("%"));
     m_gliGateKnob->setWhatsThis(
             tr("Use this knob for setting the glissando gate. The "
@@ -554,7 +575,7 @@ InstrumentFunctionGlissandoView::InstrumentFunctionGlissandoView(
                "glissando note that should be played. With this you "
                "can make cool staccato glissandos."));
 
-    m_gliAttenuationKnob->setLabel(tr("MUT%"));
+    m_gliAttenuationKnob->setText(tr("MUT%"));
     m_gliAttenuationKnob->setHintText(tr("Attenuation:"), tr("%"));
     m_gliAttenuationKnob->setWhatsThis(
             tr("Use this knob for setting the volume reduction. The "
@@ -628,25 +649,25 @@ InstrumentFunctionNotePlayingView::InstrumentFunctionNotePlayingView(
 
     setWhatsThis(tr("An automatable note generator."));
 
-    m_gateKnob->setLabel(tr("GATE"));
+    m_gateKnob->setText(tr("GATE"));
     m_gateKnob->setHintText(tr("Gate:"), tr(""));
     m_gateKnob->setWhatsThis(
             tr("Use this knob for starting or stopping to play a note."));
 
-    m_keyKnob->setLabel(tr("KEY"));
+    m_keyKnob->setText(tr("KEY"));
     m_keyKnob->setPointColor(Qt::cyan);
     m_keyKnob->setHintText(tr("Key to play:"), "");
     m_keyKnob->setWhatsThis(tr(
             "Use this knob for setting the key of the next note to play."));
 
-    m_volKnob->setLabel(tr("VEL"));
+    m_volKnob->setText(tr("VEL"));
     m_volKnob->setPointColor(Qt::red);
     m_volKnob->setHintText(tr("Velocity:"), "");
     m_volKnob->setWhatsThis(
             tr("Use this knob for setting the velocity of the next note to "
                "play."));
 
-    m_panKnob->setLabel(tr("PAN"));
+    m_panKnob->setText(tr("PAN"));
     m_panKnob->setPointColor(Qt::magenta);
     m_panKnob->setHintText(tr("Panning:"), "");
     m_panKnob->setWhatsThis(

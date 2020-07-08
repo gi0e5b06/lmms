@@ -450,7 +450,7 @@ PatmanView::~PatmanView()
 void PatmanView::openFile(void)
 {
     FileDialog ofd(NULL, tr("Open patch file"));
-    ofd.setFileMode(FileDialog::ExistingFiles);
+    ofd.setFileMode(FileDialog::ExistingFile);
 
     QStringList types;
     types << tr("Patch-Files (*.pat)");
@@ -486,12 +486,8 @@ void PatmanView::openFile(void)
 
     if(ofd.exec() == QDialog::Accepted && !ofd.selectedFiles().isEmpty())
     {
-        QString f = ofd.selectedFiles()[0];
-        if(f != "")
-        {
-            m_pi->setFile(f);
-            Engine::getSong()->setModified();
-        }
+        m_pi->setFile(ofd.selectedFiles()[0]);
+        Engine::getSong()->setModified();
     }
 }
 

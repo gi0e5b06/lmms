@@ -29,40 +29,35 @@
 #include "Plugin.h"
 #include "PluginView.h"
 
-
 class DummyPlugin : public Plugin
 {
-public:
-	DummyPlugin() :
-		Plugin( NULL, NULL )
-	{
-	}
+  public:
+    DummyPlugin() : Plugin(nullptr, nullptr)
+    {
+    }
 
-	virtual ~DummyPlugin()
-	{
-	}
+    virtual ~DummyPlugin()
+    {
+    }
 
-	virtual void saveSettings( QDomDocument &, QDomElement & )
-	{
-	}
+    virtual void saveSettings(QDomDocument&, QDomElement&)
+    {
+    }
 
-	virtual void loadSettings( const QDomElement & )
-	{
-	}
+    virtual void loadSettings(const QDomElement&)
+    {
+    }
 
-	virtual QString nodeName() const
-	{
-		return "DummyPlugin";
-	}
+    virtual QString nodeName() const
+    {
+        return "DummyPlugin";
+    }
 
-
-protected:
-	virtual PluginView * instantiateView( QWidget * _parent )
-	{
-		return new PluginView( this, _parent );
-	}
-
-} ;
-
+  protected:
+    virtual PluginView* instantiateView(QWidget* _parent)
+    {
+        return new PluginView(this, _parent);
+    }
+};
 
 #endif

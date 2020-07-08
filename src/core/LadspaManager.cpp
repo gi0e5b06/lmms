@@ -133,7 +133,7 @@ ladspaManagerDescription*
     }
     else
     {
-        return (NULL);
+        return (nullptr);
     }
 }
 
@@ -264,7 +264,7 @@ bool LadspaManager::hasRealTimeDependency(const ladspa_key_t& _plugin)
     }
     else
     {
-        return (false);
+        return false;
     }
 }
 
@@ -280,7 +280,7 @@ bool LadspaManager::isInplaceBroken(const ladspa_key_t& _plugin)
     }
     else
     {
-        return (false);
+        return false;
     }
 }
 
@@ -296,7 +296,7 @@ bool LadspaManager::isRealTimeCapable(const ladspa_key_t& _plugin)
     }
     else
     {
-        return (false);
+        return false;
     }
 }
 
@@ -377,7 +377,7 @@ bool LadspaManager::isPortInput(const ladspa_key_t& _plugin, uint32_t _port)
     }
     else
     {
-        return (false);
+        return false;
     }
 }
 
@@ -394,7 +394,7 @@ bool LadspaManager::isPortOutput(const ladspa_key_t& _plugin, uint32_t _port)
     }
     else
     {
-        return (false);
+        return false;
     }
 }
 
@@ -411,7 +411,7 @@ bool LadspaManager::isPortAudio(const ladspa_key_t& _plugin, uint32_t _port)
     }
     else
     {
-        return (false);
+        return false;
     }
 }
 
@@ -428,7 +428,7 @@ bool LadspaManager::isPortControl(const ladspa_key_t& _plugin, uint32_t _port)
     }
     else
     {
-        return (false);
+        return false;
     }
 }
 
@@ -447,7 +447,7 @@ bool LadspaManager::areHintsSampleRateDependent(const ladspa_key_t& _plugin,
     }
     else
     {
-        return (false);
+        return false;
     }
 }
 
@@ -517,7 +517,7 @@ bool LadspaManager::isPortToggled(const ladspa_key_t& _plugin, uint32_t _port)
     }
     else
     {
-        return (false);
+        return false;
     }
 }
 
@@ -620,7 +620,7 @@ bool LadspaManager::isLogarithmic(const ladspa_key_t& _plugin, uint32_t _port)
     }
     else
     {
-        return (false);
+        return false;
     }
 }
 
@@ -638,7 +638,7 @@ bool LadspaManager::isInteger(const ladspa_key_t& _plugin, uint32_t _port)
     }
     else
     {
-        return (false);
+        return false;
     }
 }
 
@@ -672,7 +672,7 @@ const void* LadspaManager::getImplementationData(const ladspa_key_t& _plugin)
     }
     else
     {
-        return (NULL);
+        return (nullptr);
     }
 }
 
@@ -689,7 +689,7 @@ const LADSPA_Descriptor*
     }
     else
     {
-        return (NULL);
+        return (nullptr);
     }
 }
 
@@ -706,7 +706,7 @@ LADSPA_Handle LadspaManager::instantiate(const ladspa_key_t& _plugin,
     }
     else
     {
-        return (NULL);
+        return (nullptr);
     }
 }
 
@@ -721,13 +721,13 @@ bool LadspaManager::connectPort(const ladspa_key_t& _plugin,
                 = m_ladspaManagerMap[_plugin]->descriptorFunction;
         const LADSPA_Descriptor* descriptor
                 = descriptorFunction(m_ladspaManagerMap[_plugin]->index);
-        if(descriptor->connect_port != NULL)
+        if(descriptor->connect_port != nullptr)
         {
             (descriptor->connect_port)(_instance, _port, _data_location);
-            return (true);
+            return true;
         }
     }
-    return (false);
+    return false;
 }
 
 bool LadspaManager::activate(const ladspa_key_t& _plugin,
@@ -739,13 +739,13 @@ bool LadspaManager::activate(const ladspa_key_t& _plugin,
                 = m_ladspaManagerMap[_plugin]->descriptorFunction;
         const LADSPA_Descriptor* descriptor
                 = descriptorFunction(m_ladspaManagerMap[_plugin]->index);
-        if(descriptor->activate != NULL)
+        if(descriptor->activate != nullptr)
         {
             (descriptor->activate)(_instance);
-            return (true);
+            return true;
         }
     }
-    return (false);
+    return false;
 }
 
 bool LadspaManager::run(const ladspa_key_t& _plugin,
@@ -758,13 +758,13 @@ bool LadspaManager::run(const ladspa_key_t& _plugin,
                 = m_ladspaManagerMap[_plugin]->descriptorFunction;
         const LADSPA_Descriptor* descriptor
                 = descriptorFunction(m_ladspaManagerMap[_plugin]->index);
-        if(descriptor->run != NULL)
+        if(descriptor->run != nullptr)
         {
             (descriptor->run)(_instance, _sample_count);
-            return (true);
+            return true;
         }
     }
-    return (false);
+    return false;
 }
 
 bool LadspaManager::runAdding(const ladspa_key_t& _plugin,
@@ -777,14 +777,14 @@ bool LadspaManager::runAdding(const ladspa_key_t& _plugin,
                 = m_ladspaManagerMap[_plugin]->descriptorFunction;
         const LADSPA_Descriptor* descriptor
                 = descriptorFunction(m_ladspaManagerMap[_plugin]->index);
-        if(descriptor->run_adding != NULL
-           && descriptor->set_run_adding_gain != NULL)
+        if(descriptor->run_adding != nullptr
+           && descriptor->set_run_adding_gain != nullptr)
         {
             (descriptor->run_adding)(_instance, _sample_count);
-            return (true);
+            return true;
         }
     }
-    return (false);
+    return false;
 }
 
 bool LadspaManager::setRunAddingGain(const ladspa_key_t& _plugin,
@@ -797,14 +797,14 @@ bool LadspaManager::setRunAddingGain(const ladspa_key_t& _plugin,
                 = m_ladspaManagerMap[_plugin]->descriptorFunction;
         const LADSPA_Descriptor* descriptor
                 = descriptorFunction(m_ladspaManagerMap[_plugin]->index);
-        if(descriptor->run_adding != NULL
-           && descriptor->set_run_adding_gain != NULL)
+        if(descriptor->run_adding != nullptr
+           && descriptor->set_run_adding_gain != nullptr)
         {
             (descriptor->set_run_adding_gain)(_instance, _gain);
-            return (true);
+            return true;
         }
     }
-    return (false);
+    return false;
 }
 
 bool LadspaManager::deactivate(const ladspa_key_t& _plugin,
@@ -816,13 +816,13 @@ bool LadspaManager::deactivate(const ladspa_key_t& _plugin,
                 = m_ladspaManagerMap[_plugin]->descriptorFunction;
         const LADSPA_Descriptor* descriptor
                 = descriptorFunction(m_ladspaManagerMap[_plugin]->index);
-        if(descriptor->deactivate != NULL)
+        if(descriptor->deactivate != nullptr)
         {
             (descriptor->deactivate)(_instance);
-            return (true);
+            return true;
         }
     }
-    return (false);
+    return false;
 }
 
 bool LadspaManager::cleanup(const ladspa_key_t& _plugin,
@@ -834,11 +834,11 @@ bool LadspaManager::cleanup(const ladspa_key_t& _plugin,
                 = m_ladspaManagerMap[_plugin]->descriptorFunction;
         const LADSPA_Descriptor* descriptor
                 = descriptorFunction(m_ladspaManagerMap[_plugin]->index);
-        if(descriptor->cleanup != NULL)
+        if(descriptor->cleanup != nullptr)
         {
             (descriptor->cleanup)(_instance);
-            return (true);
+            return true;
         }
     }
-    return (false);
+    return false;
 }

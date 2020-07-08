@@ -1,34 +1,32 @@
 /*
  * ScatterGDX.cpp - A scatter
  *
- * Copyright (c) 2017-2018 gi0e5b06 (on github.com)
+ * Copyright (c) 2017-2020 gi0e5b06 (on github.com)
  *
- * This file is part of LMMS - https://lmms.io
+ * This file is part of LSMM -
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public
- * License along with this program (see COPYING); if not, write to the
- * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
- * Boston, MA 02110-1301 USA.
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
 
 #include "ScatterGDX.h"
 
-#include <math.h>
-
 #include "Engine.h"
 #include "Song.h"
 #include "embed.h"
+
+#include <math.h>
 
 extern "C"
 {
@@ -67,8 +65,8 @@ bool ScatterGDXEffect::processAudioBuffer(sampleFrame* _buf,
     if(!shouldProcessAudioBuffer(_buf, _frames, smoothBegin, smoothEnd))
         return false;
 
-    uint32_t MAXT = (uint32_t)(4.f * Engine::mixer()->processingSampleRate()
-                               * 120.f / Engine::getSong()->getTempo());
+    uint32_t MAXT = (uint32_t)(4. * Engine::mixer()->processingSampleRate()
+                               * 120. / Engine::getSong()->getTempo());
     while(2 * MAXT > 1536000)
         MAXT /= 2;
     // uint32_t MAXT=1536000;
@@ -117,16 +115,16 @@ bool ScatterGDXEffect::processAudioBuffer(sampleFrame* _buf,
         }
     }
 
-    float str = m_gdxControls.m_strModel.value();
-    m_start   = lround(str * MAXT / m_len);
-    m_end     = m_start + MAXT / m_len;
+    real_t str = m_gdxControls.m_strModel.value();
+    m_start    = lround(str * MAXT / m_len);
+    m_end      = m_start + MAXT / m_len;
 
     // qInfo("MAXT=%d MINT=%d time=%d end=%d
     // pos=%d",MAXT,MINT,m_time,m_end,m_pos);
 
     for(fpp_t f = 0; f < _frames; ++f)
     {
-        float w0, d0, w1, d1;
+        real_t w0, d0, w1, d1;
         computeWetDryLevels(f, _frames, smoothBegin, smoothEnd, w0, d0, w1,
                             d1);
 
@@ -138,20 +136,20 @@ bool ScatterGDXEffect::processAudioBuffer(sampleFrame* _buf,
         if(m_time < m_start)
             m_time = m_end - 1;
 
-        float s = m_gdxControls.m_spdModel.value();
-        int   t = abs(s) * m_time;
+        real_t s = m_gdxControls.m_spdModel.value();
+        int    t = abs(s) * m_time;
 
         curVal0 = m_buffer[t][0];
         curVal1 = m_buffer[t][1];
 
-        float o = m_gdxControls.m_ovrModel.value();
-        if(o != 0.f)
+        real_t o = m_gdxControls.m_ovrModel.value();
+        if(o != 0.)
         {
             m_buffer[m_time][0] += o * _buf[f][0];
             m_buffer[m_time][1] += o * _buf[f][1];
         }
 
-        if(s >= 0.f)
+        if(s >= 0.)
             m_time++;
         else
             m_time--;

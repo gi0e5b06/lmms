@@ -179,13 +179,13 @@ void TrackContainer::addTrack(Track* _track)
 {
     if(_track->type() != Track::HiddenAutomationTrack)
     {
-        _track->lock();
+        _track->lockTrack();
         m_tracksMutex.lockForWrite();
         if(m_tracks.contains(_track))
             qWarning("TrackContainer::addTrack already contains track");
         m_tracks.append(_track);
         m_tracksMutex.unlock();
-        _track->unlock();
+        _track->unlockTrack();
         emit trackAdded(_track);
     }
 }
@@ -306,7 +306,7 @@ void TrackContainer::automatedValuesFromTracks(const Tracks&      tracks,
                                                int                tcoNum,
                                                AutomatedValueMap& _map)
 {
-    Track::tcoVector tcos;
+    Tiles tcos;
 
     for(Track* track: tracks)
     {
@@ -335,10 +335,9 @@ void TrackContainer::automatedValuesFromTracks(const Tracks&      tracks,
     // AutomatedValueMap valueMap;
 
     // Q_ASSERT(std::is_sorted(tcos.begin(), tcos.end(),
-    // TrackContentObject::comparePosition));
+    // Tile::comparePosition));
 
-    if(!std::is_sorted(tcos.begin(), tcos.end(),
-                       TrackContentObject::comparePosition))
+    if(!std::is_sorted(tcos.begin(), tcos.end(), Tile::lessThan))
     {
         qCritical(
                 "Error: fail assert: is_sorted(tcos.begin(), tcos.end()) "
@@ -347,7 +346,7 @@ void TrackContainer::automatedValuesFromTracks(const Tracks&      tracks,
         return;  // valueMap;
     }
 
-    for(TrackContentObject* tco: tcos)
+    for(Tile* tco: tcos)
     {
         if(tco->isMuted() || tco->startPosition() > time
            || tco->endPosition() < time)
@@ -370,21 +369,15 @@ void TrackContainer::automatedValuesFromTracks(const Tracks&      tracks,
             else if(relTime >= p->length())
                 continue;
 
-            real_t value = p->valueAt(relTime);
-
-            for(AutomatableModel* model: p->objects())
-            {
-                // valueMap[model] = value;
-                // valueMap.insert(model,value);
-                _map.insert(model, value);
-            }
+            // real_t value = p->valueAt(relTime);
+            // for(AutomatableModel* model: p->objects())
+            p->automatedValuesAt(relTime, _map);
         }
         else if(auto* bb = dynamic_cast<BBTCO*>(tco))
         {
-            auto bbIndex
-                    = dynamic_cast<class BBTrack*>(bb->track())->index();
-            auto     bbContainer = Engine::getBBTrackContainer();
-            MidiTime bbTime      = time - tco->startPosition();
+            auto bbIndex = dynamic_cast<class BBTrack*>(bb->track())->index();
+            auto bbContainer = Engine::getBBTrackContainer();
+            MidiTime bbTime  = time - tco->startPosition();
             // bbTime = std::min(bbTime, tco->length());
             bbTime = bbTime % tco->length();
             bbTime = bbTime
@@ -421,7 +414,7 @@ void TrackContainer::automatedValuesFromTrack(const Track*       _track,
     if(_track->isMuted())
         return;
 
-    Track::tcoVector tcos;
+    Tiles tcos;
 
     switch(_track->type())
     {
@@ -444,10 +437,9 @@ void TrackContainer::automatedValuesFromTrack(const Track*       _track,
     // AutomatedValueMap valueMap;
 
     // Q_ASSERT(std::is_sorted(tcos.begin(), tcos.end(),
-    // TrackContentObject::comparePosition));
+    // Tile::comparePosition));
 
-    if(!std::is_sorted(tcos.begin(), tcos.end(),
-                       TrackContentObject::comparePosition))
+    if(!std::is_sorted(tcos.begin(), tcos.end(), Tile::lessThan))
     {
         qCritical(
                 "Error: fail assert: is_sorted(tcos.begin(), tcos.end()) "
@@ -456,7 +448,7 @@ void TrackContainer::automatedValuesFromTrack(const Track*       _track,
         return;
     }
 
-    for(TrackContentObject* tco: tcos)
+    for(Tile* tco: tcos)
     {
         if(tco->isMuted() || tco->startPosition() > time)
         {
@@ -476,24 +468,20 @@ void TrackContainer::automatedValuesFromTrack(const Track*       _track,
             }
             */
             if(p->isFixed())
-            {
                 relTime = relTime % p->length();
-            }
+            else if(relTime >= p->length())
+                continue;
 
-            real_t value = p->valueAt(relTime);
-
-            for(AutomatableModel* model: p->objects())
-            {
-                // valueMap[model] = value;
-                _map.insert(model, value);
-            }
+            // real_t value = p->valueAt(relTime);
+            // for(AutomatableModel* model: p->objects())
+            // _map.insert(model, value);
+            p->automatedValuesAt(relTime, _map);
         }
         else if(auto* bb = dynamic_cast<BBTCO*>(tco))
         {
-            auto bbIndex
-                    = dynamic_cast<class BBTrack*>(bb->track())->index();
-            auto     bbContainer = Engine::getBBTrackContainer();
-            MidiTime bbTime      = time - tco->startPosition();
+            auto bbIndex = dynamic_cast<class BBTrack*>(bb->track())->index();
+            auto bbContainer = Engine::getBBTrackContainer();
+            MidiTime bbTime  = time - tco->startPosition();
             // bbTime = std::min(bbTime, tco->length());
             bbTime = bbTime % tco->length();
             bbTime = bbTime
@@ -502,11 +490,12 @@ void TrackContainer::automatedValuesFromTrack(const Track*       _track,
 
             bbContainer->automatedValuesAt(bbTime, bbIndex, _map);
             /*
-            auto bbValues = bbContainer->automatedValuesAt(bbTime, bbIndex);
-            for (auto it=bbValues.begin(); it != bbValues.end(); it++)
+            auto bbValues = bbContainer->automatedValuesAt(bbTime,
+            bbIndex); for (auto it=bbValues.begin(); it != bbValues.end();
+            it++)
             {
-                    // override old values, bb track with the highest index
-            takes precedence
+                    // override old values, bb track with the highest
+            index takes precedence
                     //valueMap[it.key()] = it.value();
                     _map.insert(it.key(),it.value());
             }

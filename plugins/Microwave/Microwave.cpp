@@ -147,19 +147,18 @@ Microwave::Microwave(InstrumentTrack* _instrument_track) :
         unisonDetune[i] = new FloatModel(0, 0, 2000, 0.0001, this,
                                          tr("Unison Detune"));
         unisonDetune[i]->setScaleLogarithmic(true);
-        unisonMorph[i]  = new FloatModel(0, 0, 256, 0.0001, this,
-                                        tr("Unison Morph"));
+        unisonMorph[i]
+                = new FloatModel(0, 0, 256, 0.0001, this, tr("Unison Morph"));
         unisonModify[i] = new FloatModel(0, 0, 2048, 0.0001, this,
                                          tr("Unison Modify"));
-        detune[i] = new FloatModel(0, -9600, 9600, 1., this, tr("Detune"));
-        phase[i]  = new FloatModel(0, 0, 200, 0.0001, this, tr("Phase"));
+        detune[i]    = new FloatModel(0, -9600, 9600, 1., this, tr("Detune"));
+        phase[i]     = new FloatModel(0, 0, 200, 0.0001, this, tr("Phase"));
         phaseRand[i] = new FloatModel(100, 0, 100, 0.0001, this,
                                       tr("Phase Randomness"));
         vol[i] = new FloatModel(100., 0, 200., 0.0001, this, tr("Volume"));
         enabled[i] = new BoolModel(false, this);
         muted[i]   = new BoolModel(false, this);
-        pan[i]     = new FloatModel(0., -100., 100., 0.0001, this,
-                                tr("Panning"));
+        pan[i] = new FloatModel(0., -100., 100., 0.0001, this, tr("Panning"));
         setwavemodel(modifyMode[i])
 
                 filtInVol[i]
@@ -170,8 +169,8 @@ Microwave::Microwave(InstrumentTrack* _instrument_track) :
         filtCutoff[i] = new FloatModel(2000, 20, 20000, 0.0001, this,
                                        tr("Cutoff Frequency"));
         filtCutoff[i]->setScaleLogarithmic(true);
-        filtReso[i] = new FloatModel(0.707, 0, 16, 0.0001, this,
-                                     tr("Resonance"));
+        filtReso[i]
+                = new FloatModel(0.707, 0, 16, 0.0001, this, tr("Resonance"));
         filtReso[i]->setScaleLogarithmic(true);
         filtGain[i] = new FloatModel(0, -64, 64, 0.0001, this, tr("dbGain"));
         filtGain[i]->setScaleLogarithmic(true);
@@ -205,14 +204,12 @@ Microwave::Microwave(InstrumentTrack* _instrument_track) :
                 = new FloatModel(0, -100, 100, 0.0001, this, tr("Panning"));
         sampleDetune[i]
                 = new FloatModel(0, -9600, 9600, 0.0001, this, tr("Detune"));
-        samplePhase[i]
-                = new FloatModel(0, 0, 200, 0.0001, this, tr("Phase"));
+        samplePhase[i] = new FloatModel(0, 0, 200, 0.0001, this, tr("Phase"));
         samplePhaseRand[i] = new FloatModel(0, 0, 100, 0.0001, this,
                                             tr("Phase Randomness"));
         sampleStart[i]
                 = new FloatModel(0, 0, 0.9999f, 0.0001, this, tr("Start"));
-        sampleEnd[i]
-                = new FloatModel(1, 0.0001, 1, 0.0001, this, tr("End"));
+        sampleEnd[i] = new FloatModel(1, 0.0001, 1, 0.0001, this, tr("End"));
 
         macro[i] = new FloatModel(0, -100, 100, 0.0001, this, tr("Macro"));
     }
@@ -220,22 +217,21 @@ Microwave::Microwave(InstrumentTrack* _instrument_track) :
     for(int i = 0; i < 64; ++i)
     {
         subEnabled[i] = new BoolModel(false, this);
-        subVol[i]     = new FloatModel(100., 0., 200., 0.0001, this,
-                                   tr("Volume"));
-        subPhase[i]
-                = new FloatModel(0., 0., 200., 0.0001, this, tr("Phase"));
+        subVol[i]
+                = new FloatModel(100., 0., 200., 0.0001, this, tr("Volume"));
+        subPhase[i] = new FloatModel(0., 0., 200., 0.0001, this, tr("Phase"));
         subPhaseRand[i] = new FloatModel(0., 0., 100., 0.0001, this,
                                          tr("Phase Randomness"));
-        subDetune[i]    = new FloatModel(0., -9600., 9600., 1., this,
-                                      tr("Detune"));
-        subMuted[i]     = new BoolModel(true, this);
-        subKeytrack[i]  = new BoolModel(true, this);
-        subSampLen[i]   = new FloatModel(2048., 1., 2048., 1., this,
+        subDetune[i]
+                = new FloatModel(0., -9600., 9600., 1., this, tr("Detune"));
+        subMuted[i]    = new BoolModel(true, this);
+        subKeytrack[i] = new BoolModel(true, this);
+        subSampLen[i]  = new FloatModel(2048., 1., 2048., 1., this,
                                        tr("Sample Length"));
-        subNoise[i]     = new BoolModel(false, this);
-        subPanning[i]   = new FloatModel(0., -100., 100., 0.0001, this,
+        subNoise[i]    = new BoolModel(false, this);
+        subPanning[i]  = new FloatModel(0., -100., 100., 0.0001, this,
                                        tr("Panning"));
-        subTempo[i] = new FloatModel(0., 0., 400., 1., this, tr("Tempo"));
+        subTempo[i]    = new FloatModel(0., 0., 400., 1., this, tr("Tempo"));
 
         modEnabled[i] = new BoolModel(false, this);
 
@@ -296,111 +292,156 @@ Microwave::Microwave(InstrumentTrack* _instrument_track) :
 
     for(int i = 0; i < 8; ++i)
     {
-        connect(morph[i], &FloatModel::dataChanged, this,
+        connect(
+                morph[i], &FloatModel::dataChanged, this,
                 [this, i]() { valueChanged(1, i); }, Qt::DirectConnection);
-        connect(range[i], &FloatModel::dataChanged, this,
+        connect(
+                range[i], &FloatModel::dataChanged, this,
                 [this, i]() { valueChanged(2, i); }, Qt::DirectConnection);
-        connect(modify[i], &FloatModel::dataChanged, this,
+        connect(
+                modify[i], &FloatModel::dataChanged, this,
                 [this, i]() { valueChanged(3, i); }, Qt::DirectConnection);
-        connect(modifyMode[i], &FloatModel::dataChanged, this,
+        connect(
+                modifyMode[i], &FloatModel::dataChanged, this,
                 [this, i]() { valueChanged(4, i); }, Qt::DirectConnection);
-        connect(unisonVoices[i], &FloatModel::dataChanged, this,
+        connect(
+                unisonVoices[i], &FloatModel::dataChanged, this,
                 [this, i]() { valueChanged(6, i); }, Qt::DirectConnection);
-        connect(unisonDetune[i], &FloatModel::dataChanged, this,
+        connect(
+                unisonDetune[i], &FloatModel::dataChanged, this,
                 [this, i]() { valueChanged(7, i); }, Qt::DirectConnection);
-        connect(unisonMorph[i], &FloatModel::dataChanged, this,
+        connect(
+                unisonMorph[i], &FloatModel::dataChanged, this,
                 [this, i]() { valueChanged(8, i); }, Qt::DirectConnection);
-        connect(unisonModify[i], &FloatModel::dataChanged, this,
+        connect(
+                unisonModify[i], &FloatModel::dataChanged, this,
                 [this, i]() { valueChanged(9, i); }, Qt::DirectConnection);
-        connect(morphMax[i], &FloatModel::dataChanged, this,
+        connect(
+                morphMax[i], &FloatModel::dataChanged, this,
                 [this, i]() { valueChanged(10, i); }, Qt::DirectConnection);
-        connect(detune[i], &FloatModel::dataChanged, this,
+        connect(
+                detune[i], &FloatModel::dataChanged, this,
                 [this, i]() { valueChanged(11, i); }, Qt::DirectConnection);
-        connect(sampLen[i], &FloatModel::dataChanged, this,
+        connect(
+                sampLen[i], &FloatModel::dataChanged, this,
                 [this, i]() { valueChanged(12, i); }, Qt::DirectConnection);
-        connect(phase[i], &FloatModel::dataChanged, this,
+        connect(
+                phase[i], &FloatModel::dataChanged, this,
                 [this, i]() { valueChanged(13, i); }, Qt::DirectConnection);
-        connect(phaseRand[i], &FloatModel::dataChanged, this,
+        connect(
+                phaseRand[i], &FloatModel::dataChanged, this,
                 [this, i]() { valueChanged(80, i); }, Qt::DirectConnection);
-        connect(vol[i], &FloatModel::dataChanged, this,
+        connect(
+                vol[i], &FloatModel::dataChanged, this,
                 [this, i]() { valueChanged(14, i); }, Qt::DirectConnection);
-        connect(muted[i], &BoolModel::dataChanged, this,
+        connect(
+                muted[i], &BoolModel::dataChanged, this,
                 [this, i]() { valueChanged(57, i); }, Qt::DirectConnection);
 
-        connect(filtInVol[i], &FloatModel::dataChanged, this,
+        connect(
+                filtInVol[i], &FloatModel::dataChanged, this,
                 [this, i]() { valueChanged(15, i); }, Qt::DirectConnection);
-        connect(filtType[i], &ComboBoxModel::dataChanged, this,
+        connect(
+                filtType[i], &ComboBoxModel::dataChanged, this,
                 [this, i]() { valueChanged(16, i); }, Qt::DirectConnection);
-        connect(filtSlope[i], &ComboBoxModel::dataChanged, this,
+        connect(
+                filtSlope[i], &ComboBoxModel::dataChanged, this,
                 [this, i]() { valueChanged(17, i); }, Qt::DirectConnection);
-        connect(filtCutoff[i], &FloatModel::dataChanged, this,
+        connect(
+                filtCutoff[i], &FloatModel::dataChanged, this,
                 [this, i]() { valueChanged(18, i); }, Qt::DirectConnection);
-        connect(filtReso[i], &FloatModel::dataChanged, this,
+        connect(
+                filtReso[i], &FloatModel::dataChanged, this,
                 [this, i]() { valueChanged(19, i); }, Qt::DirectConnection);
-        connect(filtGain[i], &FloatModel::dataChanged, this,
+        connect(
+                filtGain[i], &FloatModel::dataChanged, this,
                 [this, i]() { valueChanged(20, i); }, Qt::DirectConnection);
-        connect(filtSatu[i], &FloatModel::dataChanged, this,
+        connect(
+                filtSatu[i], &FloatModel::dataChanged, this,
                 [this, i]() { valueChanged(21, i); }, Qt::DirectConnection);
-        connect(filtWetDry[i], &FloatModel::dataChanged, this,
+        connect(
+                filtWetDry[i], &FloatModel::dataChanged, this,
                 [this, i]() { valueChanged(22, i); }, Qt::DirectConnection);
-        connect(filtBal[i], &FloatModel::dataChanged, this,
+        connect(
+                filtBal[i], &FloatModel::dataChanged, this,
                 [this, i]() { valueChanged(23, i); }, Qt::DirectConnection);
-        connect(filtOutVol[i], &FloatModel::dataChanged, this,
+        connect(
+                filtOutVol[i], &FloatModel::dataChanged, this,
                 [this, i]() { valueChanged(24, i); }, Qt::DirectConnection);
-        connect(filtEnabled[i], &BoolModel::dataChanged, this,
+        connect(
+                filtEnabled[i], &BoolModel::dataChanged, this,
                 [this, i]() { valueChanged(25, i); }, Qt::DirectConnection);
-        connect(filtFeedback[i], &FloatModel::dataChanged, this,
+        connect(
+                filtFeedback[i], &FloatModel::dataChanged, this,
                 [this, i]() { valueChanged(69, i); }, Qt::DirectConnection);
-        connect(filtDetune[i], &FloatModel::dataChanged, this,
+        connect(
+                filtDetune[i], &FloatModel::dataChanged, this,
                 [this, i]() { valueChanged(70, i); }, Qt::DirectConnection);
-        connect(filtKeytracking[i], &BoolModel::dataChanged, this,
+        connect(
+                filtKeytracking[i], &BoolModel::dataChanged, this,
                 [this, i]() { valueChanged(71, i); }, Qt::DirectConnection);
-        connect(filtMuted[i], &BoolModel::dataChanged, this,
+        connect(
+                filtMuted[i], &BoolModel::dataChanged, this,
                 [this, i]() { valueChanged(79, i); }, Qt::DirectConnection);
 
-        connect(enabled[i], &BoolModel::dataChanged, this,
+        connect(
+                enabled[i], &BoolModel::dataChanged, this,
                 [this, i]() { valueChanged(48, i); }, Qt::DirectConnection);
 
-        connect(sampleEnabled[i], &BoolModel::dataChanged, this,
+        connect(
+                sampleEnabled[i], &BoolModel::dataChanged, this,
                 [this, i]() { valueChanged(59, i); }, Qt::DirectConnection);
 
-        connect(sampleGraphEnabled[i], &BoolModel::dataChanged, this,
+        connect(
+                sampleGraphEnabled[i], &BoolModel::dataChanged, this,
                 [this, i]() { valueChanged(60, i); }, Qt::DirectConnection);
 
-        connect(sampleMuted[i], &BoolModel::dataChanged, this,
+        connect(
+                sampleMuted[i], &BoolModel::dataChanged, this,
                 [this, i]() { valueChanged(61, i); }, Qt::DirectConnection);
 
-        connect(sampleKeytracking[i], &BoolModel::dataChanged, this,
+        connect(
+                sampleKeytracking[i], &BoolModel::dataChanged, this,
                 [this, i]() { valueChanged(62, i); }, Qt::DirectConnection);
 
-        connect(sampleLoop[i], &BoolModel::dataChanged, this,
+        connect(
+                sampleLoop[i], &BoolModel::dataChanged, this,
                 [this, i]() { valueChanged(63, i); }, Qt::DirectConnection);
 
-        connect(sampleVolume[i], &FloatModel::dataChanged, this,
+        connect(
+                sampleVolume[i], &FloatModel::dataChanged, this,
                 [this, i]() { valueChanged(64, i); }, Qt::DirectConnection);
 
-        connect(samplePanning[i], &FloatModel::dataChanged, this,
+        connect(
+                samplePanning[i], &FloatModel::dataChanged, this,
                 [this, i]() { valueChanged(65, i); }, Qt::DirectConnection);
 
-        connect(sampleDetune[i], &FloatModel::dataChanged, this,
+        connect(
+                sampleDetune[i], &FloatModel::dataChanged, this,
                 [this, i]() { valueChanged(66, i); }, Qt::DirectConnection);
 
-        connect(samplePhase[i], &FloatModel::dataChanged, this,
+        connect(
+                samplePhase[i], &FloatModel::dataChanged, this,
                 [this, i]() { valueChanged(67, i); }, Qt::DirectConnection);
 
-        connect(samplePhaseRand[i], &FloatModel::dataChanged, this,
+        connect(
+                samplePhaseRand[i], &FloatModel::dataChanged, this,
                 [this, i]() { valueChanged(68, i); }, Qt::DirectConnection);
 
-        connect(sampleStart[i], &FloatModel::dataChanged, this,
+        connect(
+                sampleStart[i], &FloatModel::dataChanged, this,
                 [this, i]() { valueChanged(73, i); }, Qt::DirectConnection);
 
-        connect(sampleEnd[i], &FloatModel::dataChanged, this,
+        connect(
+                sampleEnd[i], &FloatModel::dataChanged, this,
                 [this, i]() { valueChanged(74, i); }, Qt::DirectConnection);
 
-        connect(pan[i], &FloatModel::dataChanged, this,
+        connect(
+                pan[i], &FloatModel::dataChanged, this,
                 [this, i]() { valueChanged(75, i); }, Qt::DirectConnection);
 
-        connect(macro[i], &FloatModel::dataChanged, this,
+        connect(
+                macro[i], &FloatModel::dataChanged, this,
                 [this, i]() { valueChanged(78, i); }, Qt::DirectConnection);
 
         for(int j = 1; j <= 25; ++j)
@@ -432,40 +473,54 @@ Microwave::Microwave(InstrumentTrack* _instrument_track) :
         valueChanged(71, i);
         valueChanged(78, i);
 
-        connect(sampleEnabled[i], &BoolModel::dataChanged, this,
+        connect(
+                sampleEnabled[i], &BoolModel::dataChanged, this,
                 [this, i]() { sampleEnabledChanged(i); },
                 Qt::DirectConnection);
 
-        connect(enabled[i], &BoolModel::dataChanged, this,
+        connect(
+                enabled[i], &BoolModel::dataChanged, this,
                 [this, i]() { mainEnabledChanged(i); }, Qt::DirectConnection);
 
-        connect(filtEnabled[i], &BoolModel::dataChanged, this,
+        connect(
+                filtEnabled[i], &BoolModel::dataChanged, this,
                 [this, i]() { filtEnabledChanged(i); }, Qt::DirectConnection);
     }
 
     for(int i = 0; i < 64; ++i)
     {
-        connect(subEnabled[i], &BoolModel::dataChanged, this,
+        connect(
+                subEnabled[i], &BoolModel::dataChanged, this,
                 [this, i]() { valueChanged(26, i); }, Qt::DirectConnection);
-        connect(subVol[i], &FloatModel::dataChanged, this,
+        connect(
+                subVol[i], &FloatModel::dataChanged, this,
                 [this, i]() { valueChanged(27, i); }, Qt::DirectConnection);
-        connect(subPhase[i], &FloatModel::dataChanged, this,
+        connect(
+                subPhase[i], &FloatModel::dataChanged, this,
                 [this, i]() { valueChanged(28, i); }, Qt::DirectConnection);
-        connect(subPhaseRand[i], &FloatModel::dataChanged, this,
+        connect(
+                subPhaseRand[i], &FloatModel::dataChanged, this,
                 [this, i]() { valueChanged(29, i); }, Qt::DirectConnection);
-        connect(subDetune[i], &FloatModel::dataChanged, this,
+        connect(
+                subDetune[i], &FloatModel::dataChanged, this,
                 [this, i]() { valueChanged(30, i); }, Qt::DirectConnection);
-        connect(subMuted[i], &BoolModel::dataChanged, this,
+        connect(
+                subMuted[i], &BoolModel::dataChanged, this,
                 [this, i]() { valueChanged(31, i); }, Qt::DirectConnection);
-        connect(subKeytrack[i], &BoolModel::dataChanged, this,
+        connect(
+                subKeytrack[i], &BoolModel::dataChanged, this,
                 [this, i]() { valueChanged(32, i); }, Qt::DirectConnection);
-        connect(subSampLen[i], &FloatModel::dataChanged, this,
+        connect(
+                subSampLen[i], &FloatModel::dataChanged, this,
                 [this, i]() { valueChanged(33, i); }, Qt::DirectConnection);
-        connect(subNoise[i], &BoolModel::dataChanged, this,
+        connect(
+                subNoise[i], &BoolModel::dataChanged, this,
                 [this, i]() { valueChanged(34, i); }, Qt::DirectConnection);
-        connect(subPanning[i], &FloatModel::dataChanged, this,
+        connect(
+                subPanning[i], &FloatModel::dataChanged, this,
                 [this, i]() { valueChanged(72, i); }, Qt::DirectConnection);
-        connect(subTempo[i], &FloatModel::dataChanged, this,
+        connect(
+                subTempo[i], &FloatModel::dataChanged, this,
                 [this, i]() { valueChanged(76, i); }, Qt::DirectConnection);
         for(int j = 26; j <= 35; ++j)
         {
@@ -477,37 +532,53 @@ Microwave::Microwave(InstrumentTrack* _instrument_track) :
         connect(subEnabled[i], &BoolModel::dataChanged, this,
                 [this, i]() { subEnabledChanged(i); });
 
-        connect(modIn[i], &ComboBoxModel::dataChanged, this,
+        connect(
+                modIn[i], &ComboBoxModel::dataChanged, this,
                 [this, i]() { valueChanged(35, i); }, Qt::DirectConnection);
-        connect(modInNum[i], &ComboBoxModel::dataChanged, this,
+        connect(
+                modInNum[i], &ComboBoxModel::dataChanged, this,
                 [this, i]() { valueChanged(36, i); }, Qt::DirectConnection);
-        connect(modInOtherNum[i], &ComboBoxModel::dataChanged, this,
+        connect(
+                modInOtherNum[i], &ComboBoxModel::dataChanged, this,
                 [this, i]() { valueChanged(37, i); }, Qt::DirectConnection);
-        connect(modInAmnt[i], &ComboBoxModel::dataChanged, this,
+        connect(
+                modInAmnt[i], &ComboBoxModel::dataChanged, this,
                 [this, i]() { valueChanged(38, i); }, Qt::DirectConnection);
-        connect(modInCurve[i], &ComboBoxModel::dataChanged, this,
+        connect(
+                modInCurve[i], &ComboBoxModel::dataChanged, this,
                 [this, i]() { valueChanged(39, i); }, Qt::DirectConnection);
-        connect(modIn2[i], &ComboBoxModel::dataChanged, this,
+        connect(
+                modIn2[i], &ComboBoxModel::dataChanged, this,
                 [this, i]() { valueChanged(40, i); }, Qt::DirectConnection);
-        connect(modInNum2[i], &ComboBoxModel::dataChanged, this,
+        connect(
+                modInNum2[i], &ComboBoxModel::dataChanged, this,
                 [this, i]() { valueChanged(41, i); }, Qt::DirectConnection);
-        connect(modInOtherNum2[i], &ComboBoxModel::dataChanged, this,
+        connect(
+                modInOtherNum2[i], &ComboBoxModel::dataChanged, this,
                 [this, i]() { valueChanged(42, i); }, Qt::DirectConnection);
-        connect(modInAmnt2[i], &ComboBoxModel::dataChanged, this,
+        connect(
+                modInAmnt2[i], &ComboBoxModel::dataChanged, this,
                 [this, i]() { valueChanged(43, i); }, Qt::DirectConnection);
-        connect(modInCurve2[i], &ComboBoxModel::dataChanged, this,
+        connect(
+                modInCurve2[i], &ComboBoxModel::dataChanged, this,
                 [this, i]() { valueChanged(44, i); }, Qt::DirectConnection);
-        connect(modOutSec[i], &ComboBoxModel::dataChanged, this,
+        connect(
+                modOutSec[i], &ComboBoxModel::dataChanged, this,
                 [this, i]() { valueChanged(45, i); }, Qt::DirectConnection);
-        connect(modOutSig[i], &ComboBoxModel::dataChanged, this,
+        connect(
+                modOutSig[i], &ComboBoxModel::dataChanged, this,
                 [this, i]() { valueChanged(46, i); }, Qt::DirectConnection);
-        connect(modOutSecNum[i], &ComboBoxModel::dataChanged, this,
+        connect(
+                modOutSecNum[i], &ComboBoxModel::dataChanged, this,
                 [this, i]() { valueChanged(47, i); }, Qt::DirectConnection);
-        connect(modEnabled[i], &ComboBoxModel::dataChanged, this,
+        connect(
+                modEnabled[i], &ComboBoxModel::dataChanged, this,
                 [this, i]() { valueChanged(49, i); }, Qt::DirectConnection);
-        connect(modCombineType[i], &ComboBoxModel::dataChanged, this,
+        connect(
+                modCombineType[i], &ComboBoxModel::dataChanged, this,
                 [this, i]() { valueChanged(50, i); }, Qt::DirectConnection);
-        connect(modType[i], &BoolModel::dataChanged, this,
+        connect(
+                modType[i], &BoolModel::dataChanged, this,
                 [this, i]() { valueChanged(77, i); }, Qt::DirectConnection);
         for(int j = 35; j <= 47; ++j)
         {
@@ -519,7 +590,8 @@ Microwave::Microwave(InstrumentTrack* _instrument_track) :
         valueChanged(76, i);
         valueChanged(77, i);
 
-        connect(modEnabled[i], &BoolModel::dataChanged, this,
+        connect(
+                modEnabled[i], &BoolModel::dataChanged, this,
                 [this, i]() { modEnabledChanged(i); }, Qt::DirectConnection);
     }
 }
@@ -1221,16 +1293,15 @@ void Microwave::valueChanged(int which, int num)
             break;
     }
 
-    ConstNotePlayHandleList nphList
+    ConstNotePlayHandles nphs
             //= NotePlayHandle::nphsOfInstrumentTrack(microwaveTrack);
             = Engine::mixer()->nphsOfTrack(microwaveTrack);
 
-    for(int i = 0; i < nphList.length(); ++i)
-    {
+    nphs.map([this, which, num](const NotePlayHandle* nph) {
         mSynth* ps;
         do
         {
-            ps = static_cast<mSynth*>(nphList[i]->m_pluginData);
+            ps = static_cast<mSynth*>(nph->m_pluginData);
         } while(!ps);  // Makes sure "ps" isn't assigned a null value, if
                        // m_pluginData hasn't been created yet.
         // Above is possible CPU concern
@@ -1456,7 +1527,7 @@ void Microwave::valueChanged(int which, int num)
                 ps->phaseRand[num] = phaseRand[num]->value();
                 break;
         }
-    }
+    });
 }
 
 // Set the range of Morph based on Morph Max
@@ -2399,10 +2470,12 @@ MicrowaveView::MicrowaveView(Instrument* _instrument, QWidget* _parent) :
 
     for(int i = 0; i < 64; ++i)
     {
-        connect(castModel<Microwave>()->modOutSec[i],
+        connect(
+                castModel<Microwave>()->modOutSec[i],
                 &ComboBoxModel::dataChanged, this,
                 [this, i]() { modOutSecChanged(i); }, Qt::DirectConnection);
-        connect(castModel<Microwave>()->modIn[i], &ComboBoxModel::dataChanged,
+        connect(
+                castModel<Microwave>()->modIn[i], &ComboBoxModel::dataChanged,
                 this, [this, i]() { modInChanged(i); }, Qt::DirectConnection);
 
         connect(modUpArrow[i], &PixmapButton::clicked, this,
@@ -3431,9 +3504,8 @@ void MicrowaveView::openWavetableFile(QString fileName)
                         combined += (sampleBuffer->userWaveSample(
                                              k / lengthOfSample, channel)
                                              * sampleBuffer->userWaveSample(
-                                                       (k
-                                                        + i) / lengthOfSample,
-                                                       channel)
+                                                     (k + i) / lengthOfSample,
+                                                     channel)
                                      + 1) * 0.5
                                     - 0.5;
                     }
@@ -3629,10 +3701,10 @@ void MicrowaveView::openWavetableFile(QString fileName)
                                 = (b->waveforms[oscilNum][i] * thing)
                                   + ((-thing + 1)
                                      * b->waveforms[oscilNum][int(
-                                               i
-                                               - (fmod(i,
-                                                       b->sampLen[oscilNum]
-                                                               ->value())))]);
+                                             i
+                                             - (fmod(i,
+                                                     b->sampLen[oscilNum]
+                                                             ->value())))]);
                     }
                 }
                 break;
@@ -4240,8 +4312,8 @@ std::vector<sample_t>
             {
                 if(modInCurve[l]
                    != 100.)  // The "if" statement is there so unnecessary
-                              // CPU isn't spent (pow is very expensive) if
-                              // the curve knob isn't being used.
+                             // CPU isn't spent (pow is very expensive) if
+                             // the curve knob isn't being used.
                 {
                     // Move to a scale of 0 to 1 (from -1 to 1) and then apply
                     // the curve.
@@ -4390,7 +4462,8 @@ std::vector<sample_t>
                             morphVal[modOutSecNum[l] - 1] = bound(
                                     0.,
                                     morphVal[modOutSecNum[l] - 1]
-                                            + (round((comboModValMono)*morphMaxVal
+                                            + (round((
+                                                    comboModValMono)*morphMaxVal
                                                              [modOutSecNum[l]
                                                               - 1])),
                                     morphMaxVal[modOutSecNum[l] - 1]);
@@ -4476,7 +4549,8 @@ std::vector<sample_t>
                             unisonDetune[modOutSecNum[l] - 1] = bound(
                                     0.,
                                     unisonDetune[modOutSecNum[l] - 1]
-                                            + (round((comboModValMono)*morphMaxVal
+                                            + (round((
+                                                    comboModValMono)*morphMaxVal
                                                              [modOutSecNum[l]
                                                               - 1])),
                                     morphMaxVal[modOutSecNum[l] - 1]);
@@ -5002,9 +5076,9 @@ std::vector<sample_t>
                                                 * filtPrevSampOut[l][m][1][1]
                                       - (a2 / a0)
                                                 * filtPrevSampOut
-                                                          [l][m][2]
-                                                          [1];  // Right
-                                                                // ear
+                                                        [l][m][2]
+                                                        [1];  // Right
+                                                              // ear
                             break;
                         }
                         case 2:  // Bandpass
@@ -5025,9 +5099,9 @@ std::vector<sample_t>
                                                 * filtPrevSampOut[l][m][1][1]
                                       - (a2 / a0)
                                                 * filtPrevSampOut
-                                                          [l][m][2]
-                                                          [1];  // Right
-                                                                // ear
+                                                        [l][m][2]
+                                                        [1];  // Right
+                                                              // ear
                             break;
                         }
                     }
@@ -5072,12 +5146,10 @@ std::vector<sample_t>
                                     * (filtOutputs[l][1] < 0 ? -1 : 1);
 
                 // Balance knob wet
-                filtOutputs[l][0] *= filtBal[l] > 0
-                                             ? (100. - filtBal[l]) * 0.01
-                                             : 1.;
-                filtOutputs[l][1] *= filtBal[l] < 0
-                                             ? (100. + filtBal[l]) * 0.01
-                                             : 1.;
+                filtOutputs[l][0]
+                        *= filtBal[l] > 0 ? (100. - filtBal[l]) * 0.01 : 1.;
+                filtOutputs[l][1]
+                        *= filtBal[l] < 0 ? (100. + filtBal[l]) * 0.01 : 1.;
 
                 // Wet
                 temp1 = filtWetDry[l] * 0.01;
@@ -5172,19 +5244,18 @@ std::vector<sample_t>
                       - 1;  // unisonVoices[i] - 1 is needed many times, which
                             // is why unisonVoicesMinusOne exists
 
-            noteFreq
-                    = unisonVoicesMinusOne
-                              ? detuneWithCents(
-                                        nph->frequency(),
-                                        unisonDetuneAmounts[i][l]
-                                                        * unisonDetune[i]
-                                                + detuneVal[i])
-                              : detuneWithCents(
-                                        nph->frequency(),
-                                        detuneVal[i]);  // Calculates
-                                                        // frequency depending
-                                                        // on detune and
-                                                        // unison detune
+            noteFreq = unisonVoicesMinusOne
+                               ? detuneWithCents(
+                                       nph->frequency(),
+                                       unisonDetuneAmounts[i][l]
+                                                       * unisonDetune[i]
+                                               + detuneVal[i])
+                               : detuneWithCents(
+                                       nph->frequency(),
+                                       detuneVal[i]);  // Calculates
+                                                       // frequency depending
+                                                       // on detune and
+                                                       // unison detune
 
             sample_step[i][l] = sampLen[i] * (noteFreq / sample_rate);
 
@@ -5757,8 +5828,7 @@ std::vector<sample_t>
                     progress3 = sampGraphs[intprogress] * temp1;
                 }
 
-                temp1              = int(((progress2 + progress3 + 1) * 0.5)
-                            * sampleSize);
+                temp1 = int(((progress2 + progress3 + 1) * 0.5) * sampleSize);
                 samplesample[l][0] = samples[l][0][temp1];
                 samplesample[l][1] = samples[l][1][temp1];
             }

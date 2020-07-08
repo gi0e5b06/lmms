@@ -30,6 +30,7 @@
 //#include "JournallingObject.h"
 #include "AutomatableModel.h"
 #include "ComboBoxModel.h"
+#include "Mutex.h"
 #include "SampleBuffer.h"
 #include "TempoSyncKnobModel.h"
 #include "lmms_basics.h"
@@ -37,6 +38,7 @@
 class EXPORT EnvelopeAndLfoParameters : public Model, public JournallingObject
 {
     Q_OBJECT
+    MM_OPERATORS
 
   public:
     // how long should be each envelope-segment maximal (e.g. attack)?
@@ -129,7 +131,7 @@ class EXPORT EnvelopeAndLfoParameters : public Model, public JournallingObject
     static LfoInstances* s_lfoInstances;
     bool                 m_used;
 
-    QMutex m_paramMutex;
+    Mutex m_paramMutex;
 
     TempoSyncKnobModel m_predelayModel;
     TempoSyncKnobModel m_attackModel;

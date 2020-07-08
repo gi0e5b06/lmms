@@ -36,7 +36,7 @@
 namespace embed
 {
 
-QIcon EXPORT getIcon(const QString& _name, int _w = -1, int _h = -1);
+QIcon EXPORT   getIcon(const QString& _name, int _w = -1, int _h = -1);
 QPixmap EXPORT getPixmap(const QString& _name, int _w = -1, int _h = -1);
 QString EXPORT getText(const char* _name);
 
@@ -76,7 +76,7 @@ class PixmapLoader
 {
   public:
     PixmapLoader(const PixmapLoader* _ref) :
-          m_name(_ref != NULL ? _ref->m_name : QString::null)
+          m_name(_ref != nullptr ? _ref->m_name : QString::null)
     {
     }
 
@@ -87,9 +87,8 @@ class PixmapLoader
     virtual QPixmap pixmap() const
     {
         if(!m_name.isEmpty())
-        {
             return embed::getPixmap(m_name.toLatin1().constData());
-        }
+
         return QPixmap();
     }
 
@@ -118,10 +117,9 @@ class PluginPixmapLoader : public PixmapLoader
     virtual QPixmap pixmap() const
     {
         if(!m_name.isEmpty())
-        {
             return (PLUGIN_NAME::getIconPixmap(
                     m_name.toLatin1().constData()));
-        }
+
         return (QPixmap());
     }
 

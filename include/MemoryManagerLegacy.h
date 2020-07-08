@@ -57,7 +57,7 @@ struct MemoryPool
     int    m_chunks;
     QMutex m_mutex;
 
-    MemoryPool() : m_pool(NULL), m_free(NULL), m_chunks(0)
+    MemoryPool() : m_pool(nullptr), m_free(nullptr), m_chunks(0)
     {
     }
 

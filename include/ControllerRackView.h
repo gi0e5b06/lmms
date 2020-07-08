@@ -29,8 +29,8 @@
 
 //#include "lmms_basics.h"
 
-#include <QWidget>
 #include <QCloseEvent>
+#include <QWidget>
 
 class QPushButton;
 class QScrollArea;
@@ -39,45 +39,42 @@ class QVBoxLayout;
 class ControllerView;
 class Controller;
 
-
 class ControllerRackView : public QWidget, public SerializingObject
 {
-	Q_OBJECT
-public:
-	ControllerRackView();
-	virtual ~ControllerRackView();
+    Q_OBJECT
+  public:
+    ControllerRackView();
+    virtual ~ControllerRackView();
 
-	virtual void saveSettings( QDomDocument & _doc, QDomElement & _parent );
-	virtual void loadSettings( const QDomElement & _this );
+    virtual void saveSettings(QDomDocument& _doc, QDomElement& _parent);
+    virtual void loadSettings(const QDomElement& _this);
 
-	inline virtual QString nodeName() const
-	{
-		return "ControllerRackView";
-	}
+    inline virtual QString nodeName() const
+    {
+        return "ControllerRackView";
+    }
 
+  public slots:
+    void deleteController(Controller*);
+    void onControllerAdded(Controller*);
+    void onControllerRemoved(Controller*);
 
-public slots:
-	void deleteController( ControllerView * _view );
-	void onControllerAdded( Controller * );
-	void onControllerRemoved( Controller * );
+  protected:
+    virtual void closeEvent(QCloseEvent* _ce);
 
-protected:
-	virtual void closeEvent( QCloseEvent * _ce );
+  private slots:
+    void addController();
 
-private slots:
-	void addController();
+  private:
+    QVector<ControllerView*> m_controllerViews;
 
+    QScrollArea* m_scrollArea;
+    QVBoxLayout* m_scrollAreaLayout;
+    QPushButton* m_addButton;
 
-private:
-	QVector<ControllerView *> m_controllerViews;
-
-	QScrollArea * m_scrollArea;
-	QVBoxLayout * m_scrollAreaLayout;
-	QPushButton * m_addButton;
-
-	// Stores the index of where to insert the next ControllerView.
-	// Needed so that the StretchItem always stays at the last position.
-	int m_nextIndex;
-} ;
+    // Stores the index of where to insert the next ControllerView.
+    // Needed so that the StretchItem always stays at the last position.
+    int m_nextIndex;
+};
 
 #endif

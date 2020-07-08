@@ -34,7 +34,6 @@
 
 extern "C"
 {
-
     Plugin::Descriptor PLUGIN_EXPORT peakcontrollereffect_plugin_descriptor
             = {STRINGIFY(PLUGIN_NAME),
                "Peak Controller",
@@ -45,8 +44,8 @@ extern "C"
                0x0100,
                Plugin::Effect,
                new PluginPixmapLoader("logo"),
-               NULL,
-               NULL};
+               nullptr,
+               nullptr};
 }
 
 // We have to keep a list of all the PeakController effects so that we can
@@ -60,16 +59,17 @@ PeakControllerEffect::PeakControllerEffect(
         Model* _parent, const Descriptor::SubPluginFeatures::Key* _key) :
       Effect(&peakcontrollereffect_plugin_descriptor, _parent, _key),
       m_effectId(rand()), m_peakControls(this),
-      m_lastSample(m_peakControls.m_baseModel.value()), m_autoController(NULL)
+      m_lastSample(m_peakControls.m_baseModel.value()),
+      m_autoController(nullptr)
 {
-    m_autoController = new PeakController(Engine::getSong(), this);
-    if(!Engine::getSong()->isLoadingProject()
-       && !Engine::getSong()->isSavingProject()
+    m_autoController = new PeakController(Engine::song(), this);
+    if(!Engine::song()->isLoadingProject()
+       && !Engine::song()->isSavingProject()
        && !PresetPreviewPlayHandle::isPreviewing())
     {
         // qWarning("PeakControllerEffect::PeakControllerEffect() add auto
         // peak controller");
-        Engine::getSong()->addController(m_autoController);
+        Engine::song()->addController(m_autoController);
     }
     PeakController::s_effects.append(this);
 }
@@ -84,7 +84,7 @@ PeakControllerEffect::~PeakControllerEffect()
         PeakController::s_effects.remove(idx);
     }
     if(m_autoController)
-        Engine::getSong()->removeController(m_autoController);
+        Engine::song()->removeController(m_autoController);
 }
 
 bool PeakControllerEffect::processAudioBuffer(sampleFrame* _buf,

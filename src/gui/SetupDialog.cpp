@@ -1,25 +1,23 @@
 /*
  * SetupDialog.cpp - dialog for setting up LMMS
  *
- * Copyright (c) 2018-2019 gi0e5b06 (on github.com)
+ * Copyright (c) 2018-2020 gi0e5b06 (on github.com)
  * Copyright (c) 2005-2014 Tobias Doerffel <tobydox/at/users.sourceforge.net>
  *
- * This file is part of LMMS - https://lmms.io
+ * This file is part of LSMM -
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public
- * License along with this program (see COPYING); if not, write to the
- * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
- * Boston, MA 02110-1301 USA.
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
 
@@ -82,7 +80,7 @@ inline void labelWidget(QWidget* _w, const QString& _txt)
     f.setBold(true);
     title->setFont(pointSize<12>(f));
 
-    assert(dynamic_cast<QBoxLayout*>(_w->layout()) != NULL);
+    assert(dynamic_cast<QBoxLayout*>(_w->layout()) != nullptr);
 
     dynamic_cast<QBoxLayout*>(_w->layout())->addSpacing(5);
     dynamic_cast<QBoxLayout*>(_w->layout())->addWidget(title);
@@ -1207,22 +1205,19 @@ void SetupDialog::accept()
     // tell all audio-settings-widget to save their settings
     for(AswMap::iterator it = m_audioIfaceSetupWidgets.begin();
         it != m_audioIfaceSetupWidgets.end(); ++it)
-    {
         it.value()->saveSettings();
-    }
+
     // tell all MIDI-settings-widget to save their settings
     for(MswMap::iterator it = m_midiIfaceSetupWidgets.begin();
         it != m_midiIfaceSetupWidgets.end(); ++it)
-    {
         it.value()->saveSettings();
-    }
 
     ConfigManager::inst()->saveConfigFile();
 
     QDialog::accept();
     if(m_warnAfterSetup)
     {
-        QMessageBox::information(NULL, tr("Restart LMMS"),
+        QMessageBox::information(nullptr, tr("Restart LMMS"),
                                  tr("Please note that most changes "
                                     "won't take effect until "
                                     "you restart LMMS!"),
@@ -1414,20 +1409,18 @@ void SetupDialog::openGIGDir()
 {
     QString new_dir = FileDialog::getExistingDirectory(
             this, tr("Choose your GIG directory"), m_gigDir);
+
     if(new_dir != QString::null)
-    {
         m_gigLineEdit->setText(new_dir);
-    }
 }
 
 void SetupDialog::openSF2Dir()
 {
     QString new_dir = FileDialog::getExistingDirectory(
             this, tr("Choose your SF2 directory"), m_sf2Dir);
+
     if(new_dir != QString::null)
-    {
         m_sf2LineEdit->setText(new_dir);
-    }
 }
 
 void SetupDialog::setWorkingDir(const QString& _wd)
@@ -1439,10 +1432,9 @@ void SetupDialog::openVSTDir()
 {
     QString new_dir = FileDialog::getExistingDirectory(
             this, tr("Choose your VST-plugin directory"), m_vstDir);
+
     if(new_dir != QString::null)
-    {
         m_vdLineEdit->setText(new_dir);
-    }
 }
 
 void SetupDialog::setVSTDir(const QString& _vd)
@@ -1464,10 +1456,9 @@ void SetupDialog::openArtworkDir()
 {
     QString new_dir = FileDialog::getExistingDirectory(
             this, tr("Choose artwork-theme directory"), m_artworkDir);
+
     if(new_dir != QString::null)
-    {
         m_adLineEdit->setText(new_dir);
-    }
 }
 
 void SetupDialog::setArtworkDir(const QString& _ad)
@@ -1479,16 +1470,13 @@ void SetupDialog::openLADSPADir()
 {
     QString new_dir = FileDialog::getExistingDirectory(
             this, tr("Choose LADSPA plugin directory"), m_ladDir);
+
     if(new_dir != QString::null)
     {
         if(m_ladLineEdit->text() == "")
-        {
             m_ladLineEdit->setText(new_dir);
-        }
         else
-        {
             m_ladLineEdit->setText(m_ladLineEdit->text() + "," + new_dir);
-        }
     }
 }
 
@@ -1497,10 +1485,9 @@ void SetupDialog::openSTKDir()
 #ifdef LMMS_HAVE_STK
     QString new_dir = FileDialog::getExistingDirectory(
             this, tr("Choose STK rawwave directory"), m_stkDir);
+
     if(new_dir != QString::null)
-    {
         m_stkLineEdit->setText(new_dir);
-    }
 #endif
 }
 
@@ -1512,9 +1499,7 @@ void SetupDialog::openDefaultSoundfont()
             "SoundFont2 Files (*.sf2)");
 
     if(new_file != QString::null)
-    {
         m_sfLineEdit->setText(new_file);
-    }
 #endif
 }
 
@@ -1527,9 +1512,7 @@ void SetupDialog::openBackgroundArtwork()
         if(fileTypesList[i] != fileTypesList[i].toUpper())
         {
             if(!fileTypes.isEmpty())
-            {
                 fileTypes += " ";
-            }
             fileTypes += "*." + QString(fileTypesList[i]);
         }
     }
@@ -1541,9 +1524,7 @@ void SetupDialog::openBackgroundArtwork()
             "Image Files (" + fileTypes + ")");
 
     if(new_file != QString::null)
-    {
         m_baLineEdit->setText(new_file);
-    }
 }
 
 void SetupDialog::setLADSPADir(const QString& _fd)
@@ -1601,9 +1582,7 @@ void SetupDialog::audioInterfaceChanged(const QString& _iface)
 {
     for(AswMap::iterator it = m_audioIfaceSetupWidgets.begin();
         it != m_audioIfaceSetupWidgets.end(); ++it)
-    {
         it.value()->hide();
-    }
 
     if(m_audioIfaceNames.contains(_iface)
        && m_audioIfaceSetupWidgets.contains(m_audioIfaceNames[_iface]))
@@ -1627,9 +1606,7 @@ void SetupDialog::midiInterfaceChanged(const QString& _iface)
 {
     for(MswMap::iterator it = m_midiIfaceSetupWidgets.begin();
         it != m_midiIfaceSetupWidgets.end(); ++it)
-    {
         it.value()->hide();
-    }
 
     if(m_midiIfaceNames.contains(_iface)
        && m_midiIfaceSetupWidgets.contains(m_midiIfaceNames[_iface]))

@@ -142,12 +142,19 @@ FxChannel::FxChannel(int idx, Model* _parent) :
 
 FxChannel::~FxChannel()
 {
+    qInfo("FxChannel::~FxChannel 0");
+    if(m_eqDJ!=nullptr)
+        DELETE_HELPER(m_eqDJ);
+
+    qInfo("FxChannel::~FxChannel 1");
     // delete[] m_buffer;
     BufferManager::release(m_buffer);
     // qInfo("FxChannel::~FxChannel idx=%d",m_channelIndex);
 
-    if(m_frozenBuf)
+    qInfo("FxChannel::~FxChannel 2");
+    if(m_frozenBuf!=nullptr)
         delete m_frozenBuf;
+    qInfo("FxChannel::~FxChannel 3");
 }
 
 void FxChannel::saveSettings(QDomDocument& _doc, QDomElement& _this)
@@ -202,7 +209,7 @@ void FxChannel::updateFrozenBuffer()
     // qInfo("FxChannel::updateFrozenBuffer");
     // if(m_frozenModel)
     {
-        const Song*   song = Engine::getSong();
+        const Song*   song = Engine::song();
         const real_t  fpt  = Engine::framesPerTick();
         const f_cnt_t len  = song->ticksPerTact() * song->length() * fpt;
 
@@ -221,7 +228,7 @@ void FxChannel::cleanFrozenBuffer()
     // qInfo("FxChannel::cleanFrozenBuffer");
     // if(m_frozenModel)
     {
-        const Song*   song = Engine::getSong();
+        const Song*   song = Engine::song();
         const real_t  fpt  = Engine::framesPerTick();
         const f_cnt_t len  = song->ticksPerTact() * song->length() * fpt;
 
@@ -245,7 +252,7 @@ void FxChannel::readFrozenBuffer()
     {
         delete m_frozenBuf;
         m_frozenBuf = nullptr;
-        QString d   = Engine::getSong()->projectDir() + QDir::separator()
+        QString d   = Engine::song()->projectDir() + QDir::separator()
                     + "channels" + QDir::separator() + "frozen";
         if(QFileInfo(d).exists())
         {
@@ -272,7 +279,7 @@ void FxChannel::writeFrozenBuffer()
          // m_frozenModel->value()&&
             m_frozenBuf)
     {
-        QString d = Engine::getSong()->projectDir() + QDir::separator()
+        QString d = Engine::song()->projectDir() + QDir::separator()
                     + "channels" + QDir::separator() + "frozen";
         if(QFileInfo(d).exists())
         {
@@ -331,7 +338,7 @@ void FxChannel::resetSolo()
 
 void FxChannel::doProcessing()
 {
-    const Song*  song  = Engine::getSong();
+    const Song*  song  = Engine::song();
     const Mixer* mixer = Engine::mixer();
     // const real_t   fpt       = Engine::framesPerTick();
     const fpp_t   fpp       = mixer->framesPerPeriod();
@@ -339,7 +346,7 @@ void FxChannel::doProcessing()
     const f_cnt_t af        = song->getPlayPos().absoluteFrame();
 
     // qInfo("InstrumentTrack::play
-    // exporting=%d",Engine::getSong()->isExporting());
+    // exporting=%d",Engine::song()->isExporting());
     if(isFrozen() && m_frozenBuf && !exporting
        && (song->playMode() == Song::Mode_PlaySong) && song->isPlaying())
     {
@@ -580,13 +587,13 @@ FxMixer::~FxMixer()
 {
     qInfo("FxMixer::~FxMixer START");
     while(!m_fxRoutes.isEmpty())
+        deleteChannelSend(m_fxRoutes.last());  // first());
+
+    while(!m_fxChannels.isEmpty())  // m_fxChannels.size())
     {
-        deleteChannelSend(m_fxRoutes.first());
-    }
-    while(m_fxChannels.size())
-    {
-        FxChannel* f = m_fxChannels[m_fxChannels.size() - 1];
-        m_fxChannels.pop_back();
+        // FxChannel* f = m_fxChannels[m_fxChannels.size() - 1];
+        // m_fxChannels.pop_back();
+        FxChannel* f = m_fxChannels.takeLast();
         delete f;
     }
     qInfo("FxMixer::~FxMixer END");
@@ -597,7 +604,7 @@ int FxMixer::createChannel()
     // qInfo("FxMixer::createChannel 1");
     const int index = m_fxChannels.size();
     // create new channel
-    m_fxChannels.push_back(new FxChannel(index, this));
+    m_fxChannels.append(new FxChannel(index, this));
 
     // qInfo("FxMixer::createChannel 2");
     // reset channel state
@@ -668,60 +675,58 @@ void FxMixer::toggledSolo()
     m_lastSoloed = soloedChan;
 }
 
-void FxMixer::deleteChannel(int index)
+void FxMixer::deleteChannel(int _index)
 {
-    qInfo("FxMixer::deleteChannel index=%d", index);
+    qInfo("FxMixer::deleteChannel index=%d START", _index);
 
     // channel deletion is performed between mixer rounds
-    Engine::mixer()->requestChangeInModel();
+    // Engine::mixer()->requestChangeInModel();
 
     // go through every instrument and adjust for the channel index change
     Tracks tracks;
-    tracks += Engine::getSong()->tracks();
+    tracks += Engine::song()->tracks();
     tracks += Engine::getBBTrackContainer()->tracks();
 
     for(Track* t: tracks)
-    {
         if(t->type() == Track::InstrumentTrack)
         {
-            InstrumentTrack* inst = dynamic_cast<InstrumentTrack*>(t);
-            int              val  = inst->effectChannelModel()->value(0);
-            if(val == index)
+            InstrumentTrack* i = dynamic_cast<InstrumentTrack*>(t);
+            int              v = i->effectChannelModel()->value();  // 0);
+            if(v == _index)
             {
-                // we are deleting this track's fx send
-                // send to master
-                inst->effectChannelModel()->setValue(0);
+                // send to master before deletion
+                i->effectChannelModel()->setValue(0);
             }
-            else if(val > index)
+            else if(v > _index)
             {
                 // subtract 1 to make up for the missing channel
-                inst->effectChannelModel()->setValue(val - 1);
+                i->effectChannelModel()->setValue(v - 1);
             }
         }
-    }
 
-    FxChannel* ch = m_fxChannels[index];
+    qInfo("FxMixer::deleteChannel index=%d 1", _index);
+    FxChannel* ch = m_fxChannels[_index];
 
     // delete all of this channel's sends and receives
     while(!ch->sends().isEmpty())
-    {
-        deleteChannelSend(ch->sends().first());
-    }
+        deleteChannelSend(ch->sends().last());  // first());
     while(!ch->receives().isEmpty())
-    {
-        deleteChannelSend(ch->receives().first());
-    }
+        deleteChannelSend(ch->receives().last());  // first());
 
+    qInfo("FxMixer::deleteChannel index=%d 2", _index);
     // actually delete the channel
-    m_fxChannels.remove(index);
+    m_fxChannels.remove(_index);
+    qInfo("FxMixer::deleteChannel index=%d 3", _index);
     delete ch;
+    qInfo("FxMixer::deleteChannel index=%d 4", _index);
 
     // qInfo("FxMixer: delete #1 last soloed=%d",m_lastSoloed);
-    if(m_lastSoloed == index)
+    if(m_lastSoloed == _index)
         m_lastSoloed = -1;
     // qInfo("FxMixer: delete #2 last soloed=%d",m_lastSoloed);
 
-    for(int i = index; i < m_fxChannels.size(); ++i)
+    qInfo("FxMixer::deleteChannel index=%d 5", _index);
+    for(int i = _index; i < m_fxChannels.size(); ++i)
     {
         validateChannelName(i, i + 1);
 
@@ -735,16 +740,14 @@ void FxMixer::deleteChannel(int index)
 
         // now check all routes and update names of the send models
         for(FxRoute* r: m_fxChannels[i]->sends())
-        {
             r->updateName();
-        }
+        // same for the receive models
         for(FxRoute* r: m_fxChannels[i]->receives())
-        {
             r->updateName();
-        }
     }
 
-    Engine::mixer()->doneChangeInModel();
+    // Engine::mixer()->doneChangeInModel();
+    qInfo("FxMixer::deleteChannel index=%d END", _index);
 }
 
 void FxMixer::moveChannelLeft(int index)
@@ -757,9 +760,9 @@ void FxMixer::moveChannelLeft(int index)
     int a = index - 1, b = index;
 
     // go through every instrument and adjust for the channel index change
-    Tracks songTracks = Engine::getSong()->tracks();
+    /*
+    Tracks songTracks = Engine::song()->tracks();
     Tracks bbTracks   = Engine::getBBTrackContainer()->tracks();
-
     Tracks trackLists[] = {songTracks, bbTracks};
     for(int tl = 0; tl < 2; ++tl)
     {
@@ -781,6 +784,22 @@ void FxMixer::moveChannelLeft(int index)
             }
         }
     }
+    */
+
+    Tracks tracks;
+    tracks += Engine::song()->tracks();
+    tracks += Engine::getBBTrackContainer()->tracks();
+
+    for(Track* t: tracks)
+        if(t->type() == Track::InstrumentTrack)
+        {
+            InstrumentTrack* i = dynamic_cast<InstrumentTrack*>(t);
+            int              v = i->effectChannelModel()->value();  //(0);
+            if(v == a)
+                i->effectChannelModel()->setValue(b);
+            else if(v == b)
+                i->effectChannelModel()->setValue(a);
+        }
 
     // qInfo("FxMixer: move last soloed=%d",m_lastSoloed);
     if(m_lastSoloed == a)
@@ -868,7 +887,7 @@ void FxMixer::deleteChannelSend(fx_ch_t fromChannel, fx_ch_t toChannel)
 
 void FxMixer::deleteChannelSend(FxRoute* route)
 {
-    Engine::mixer()->requestChangeInModel();
+    // Engine::mixer()->requestChangeInModel();
     // remove us from from's sends
     // route->sender()->sends().remove(route->sender()->sends().indexOf(route));
     route->sender()->removeSendRoute(route);
@@ -880,7 +899,7 @@ void FxMixer::deleteChannelSend(FxRoute* route)
     Engine::fxMixer()->m_fxRoutes.remove(
             Engine::fxMixer()->m_fxRoutes.indexOf(route));
     delete route;
-    Engine::mixer()->doneChangeInModel();
+    // Engine::mixer()->doneChangeInModel();
 }
 
 bool FxMixer::isInfiniteLoop(fx_ch_t sendFrom, fx_ch_t sendTo)
@@ -972,7 +991,8 @@ void FxMixer::masterMix(sampleFrame* _buf)
     // also instantly add all muted channels as they don't need to care
     // about their senders, and can just increment the deps of their
     // recipients right away.
-    MixerWorkerThread::resetJobQueue(MixerWorkerThread::JobQueue::Dynamic);
+    MixerWorkerThread::
+            resetJobQueue();  // MixerWorkerThread::JobQueue::Dynamic);
     for(FxChannel* ch: m_fxChannels)
     {
         /*
@@ -1063,7 +1083,8 @@ void FxMixer::masterMix(sampleFrame* _buf)
 
     // clear all channel buffers and
     // reset channel process state
-    for(int i = 0; i < numChannels(); ++i)
+    // for(int i = 0; i < numChannels(); ++i)
+    for(int i = m_fxChannels.size() - 1; i >= 0; --i)
     {
         BufferManager::clear(m_fxChannels[i]->buffer());
         m_fxChannels[i]->reset();
@@ -1075,10 +1096,10 @@ void FxMixer::masterMix(sampleFrame* _buf)
 
 void FxMixer::clear()
 {
-    while(m_fxChannels.size() > 1)
-    {
-        deleteChannel(1);
-    }
+    // while(m_fxChannels.size() > 1)
+    //    deleteChannel(1);
+    for(int i = m_fxChannels.size() - 1; i > 0; --i)
+        deleteChannel(i);
 
     clearChannel(0);
 }
@@ -1086,9 +1107,9 @@ void FxMixer::clear()
 void FxMixer::clearChannel(fx_ch_t index)
 {
     FxChannel* ch = m_fxChannels[index];
-    // qInfo("FxMixer::clearChannel 1");
+    qInfo("FxMixer::clearChannel 1");
     ch->fxChain().clear();
-    // qInfo("FxMixer::clearChannel 2");
+    qInfo("FxMixer::clearChannel 2");
     ch->volumeModel().setValue(1.);
     ch->mutedModel().setValue(false);
     ch->soloModel().setValue(false);
@@ -1106,9 +1127,7 @@ void FxMixer::clearChannel(fx_ch_t index)
     {
         // delete existing sends
         while(!ch->sends().isEmpty())
-        {
-            deleteChannelSend(ch->sends().first());
-        }
+            deleteChannelSend(ch->sends().last());  // first());
 
         // qInfo("FxMixer::clearChannel 4");
         // add send to master
@@ -1118,9 +1137,7 @@ void FxMixer::clearChannel(fx_ch_t index)
     // qInfo("FxMixer::clearChannel 5");
     // delete receives
     while(!ch->receives().isEmpty())
-    {
-        deleteChannelSend(ch->receives().first());
-    }
+        deleteChannelSend(ch->receives().last());  // first());
 
     qInfo("FxMixer::clearChannel 6");
 }

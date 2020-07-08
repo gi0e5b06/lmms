@@ -929,7 +929,7 @@ void MainWindow::openProject()
                        tr("LMMS (*.mmp *.mmpz)"));
 
         ofd.setDirectory(ConfigManager::inst()->userProjectsDir());
-        ofd.setFileMode(FileDialog::ExistingFiles);
+        ofd.setFileMode(FileDialog::AnyFile);  // ExistingFile);
         if(ofd.exec() == QDialog::Accepted && !ofd.selectedFiles().isEmpty())
         {
             Song* song = Engine::getSong();

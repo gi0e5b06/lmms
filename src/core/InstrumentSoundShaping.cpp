@@ -30,6 +30,7 @@
 #include "InstrumentPlayHandle.h"
 #include "InstrumentTrack.h"
 #include "Mixer.h"
+#include "ProjectJournal.h"
 #include "embed.h"
 
 #include <QDomElement>
@@ -211,11 +212,11 @@ InstrumentSoundShaping::InstrumentSoundShaping(
 
 InstrumentSoundShaping::~InstrumentSoundShaping()
 {
-    qInfo("InstrumentSoundShaping::~InstrumentSoundShaping START");
+    // qInfo("InstrumentSoundShaping::~InstrumentSoundShaping START");
     for(int i = 0; i < NumTargets; ++i)
         DELETE_HELPER(m_envLfoParameters[i])
     m_instrumentTrack = nullptr;
-    qInfo("InstrumentSoundShaping::~InstrumentSoundShaping END");
+    // qInfo("InstrumentSoundShaping::~InstrumentSoundShaping END");
 }
 
 real_t InstrumentSoundShaping::volumeLevel(NotePlayHandle* n,
@@ -598,19 +599,24 @@ void InstrumentSoundShaping::saveSettings(QDomDocument& _doc,
 
 void InstrumentSoundShaping::loadSettings(const QDomElement& _this)
 {
+    // qInfo("InstrumentSoundShaping::loadSettings START");
     // QDomNodeList 	elementsByTagName(const QString & tagname) const
 
     QDomNode nf1 = _this.namedItem("filter1");
     if(!nf1.isNull() && nf1.isElement())
     {
         QDomElement ef1 = nf1.toElement();
-        if(!_this.hasAttribute("ftype"))
+        if(!_this.hasAttribute("ftype")
+           && _this.elementsByTagName("ftype").isEmpty())
             m_filter1TypeModel.loadSettings(ef1, "type");
-        if(!_this.hasAttribute("fcut"))
+        if(!_this.hasAttribute("fcut")
+           && _this.elementsByTagName("fcut").isEmpty())
             m_filter1CutModel.loadSettings(ef1, "cutoff");
-        if(!_this.hasAttribute("fres"))
+        if(!_this.hasAttribute("fres")
+           && _this.elementsByTagName("fres").isEmpty())
             m_filter1ResModel.loadSettings(ef1, "resonance");
-        if(!_this.hasAttribute("fwet"))
+        if(!_this.hasAttribute("fwet")
+           && _this.elementsByTagName("fwet").isEmpty())
             m_filter1EnabledModel.loadSettings(ef1, "enabled");
         m_filter1PassesModel.loadSettings(ef1, "passes");
         m_filter1GainModel.loadSettings(ef1, "gain");
@@ -620,13 +626,26 @@ void InstrumentSoundShaping::loadSettings(const QDomElement& _this)
     }
 
     // for compatibility
-    if(_this.hasAttribute("ftype"))
+    if(_this.hasAttribute("ftype")
+       || !_this.elementsByTagName("ftype").isEmpty())
         m_filter1TypeModel.loadSettings(_this, "ftype");
-    if(_this.hasAttribute("fcut"))
+    if(_this.hasAttribute("fcut")
+       || !_this.elementsByTagName("fcut").isEmpty())
+    {
         m_filter1CutModel.loadSettings(_this, "fcut");
-    if(_this.hasAttribute("fres"))
+        qInfo("ISS: filter1 fcut.uuid=%s",
+              qPrintable(m_filter1CutModel.uuid()));
+        qInfo("     Model::find %p %p", Model::find(m_filter1CutModel.uuid()),
+              Model::find("972d721b-8d74-491e-b275-c1445b3e82fd"));
+        qInfo("     id=%d", m_filter1CutModel.id());
+        qInfo("     jo=%p", Engine::projectJournal()->journallingObject(
+                                    m_filter1CutModel.id()));
+    }
+    if(_this.hasAttribute("fres")
+       || !_this.elementsByTagName("fres").isEmpty())
         m_filter1ResModel.loadSettings(_this, "fres");
-    if(_this.hasAttribute("fwet"))
+    if(_this.hasAttribute("fwet")
+       || !_this.elementsByTagName("fwet").isEmpty())
         m_filter1EnabledModel.loadSettings(_this, "fwet");  // on/off
 
     QDomNode nf2 = _this.namedItem("filter2");
@@ -655,10 +674,16 @@ void InstrumentSoundShaping::loadSettings(const QDomElement& _this)
                    == m_envLfoParameters[i]->nodeName()
                               + QString(targetNames[i][1]).toLower())
                 {
+                    // qInfo("InstrumentSoundShaping: node %s START",
+                    //      qPrintable(node.nodeName()));
                     m_envLfoParameters[i]->restoreState(node.toElement());
+                    // qInfo("InstrumentSoundShaping: node %s END",
+                    //      qPrintable(node.nodeName()));
                 }
             }
         }
         node = node.nextSibling();
     }
+
+    // qInfo("InstrumentSoundShaping::loadSettings END");
 }

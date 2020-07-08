@@ -24,66 +24,94 @@
 #include "MainApplication.h"
 
 //#include <QDebug>
-#include <QFileOpenEvent>
-
 #include "Engine.h"
 #include "GuiApplication.h"
 #include "MainWindow.h"
 #include "Song.h"
 
+#include <QFileOpenEvent>
+
 MainApplication::MainApplication(int& argc, char** argv) :
-	QApplication(argc, argv),
-	m_queuedFile() {}
+      QApplication(argc, argv), m_queuedFile()
+{
+}
 
 bool MainApplication::event(QEvent* event)
 {
-	switch(event->type())
-	{
-		case QEvent::FileOpen:
-		{
-			QFileOpenEvent * fileEvent = static_cast<QFileOpenEvent *>(event);
-			// Handle the project file
-			m_queuedFile = fileEvent->file();
-			if(Engine::getSong())
-			{
-				if(gui->mainWindow()->mayChangeProject(true))
-				{
-					qInfo("Notice: Loading file: %s",
-                                              qPrintable(m_queuedFile));
-					Engine::getSong()->loadProject(m_queuedFile);
-				}
-			}
-			else
-			{
-				qInfo("Queuing file: %s",qPrintable(m_queuedFile));
-			}
-			return true;
-		}
-		default:
-			return QApplication::event(event);
-	}
+    Song* song = Engine::song();
+
+    switch(event->type())
+    {
+        case QEvent::FileOpen:
+        {
+            QFileOpenEvent* fileEvent = static_cast<QFileOpenEvent*>(event);
+            // Handle the project file
+            m_queuedFile = fileEvent->file();
+            if(song != nullptr)
+            {
+                if(gui->mainWindow()->mayChangeProject(true))
+                {
+                    qInfo("Notice: Loading file: %s",
+                          qPrintable(m_queuedFile));
+                    song->loadProject(m_queuedFile);
+                }
+            }
+            else
+            {
+                qInfo("Queuing file: %s", qPrintable(m_queuedFile));
+            }
+            return true;
+        }
+        default:
+            return QApplication::event(event);
+    }
+}
+
+bool MainApplication::notify(QObject* receiver, QEvent* event)
+{
+    Song* song = Engine::song();
+
+    switch(event->type())
+    {
+        case QEvent::Gesture:
+        case QEvent::KeyPress:
+        case QEvent::MouseButtonPress:
+        case QEvent::Shortcut:
+        case QEvent::TouchBegin:
+        case QEvent::Wheel:
+            if(song != nullptr)
+            {
+                // qInfo("MainApplication: event %d", event->type());
+                song->userWorking();
+            }
+        default:
+            break;
+    }
+
+    return QApplication::notify(receiver, event);
 }
 
 #ifdef LMMS_BUILD_WIN32
 bool MainApplication::winEventFilter(MSG* msg, long* result)
 {
-	switch(msg->message)
-	{
-		case WM_STYLECHANGING:
-			if(msg->wParam == GWL_EXSTYLE)
-			{
-				// Prevent plugins making the main window transparent
-				STYLESTRUCT * style = reinterpret_cast<STYLESTRUCT *>(msg->lParam);
-				if(!(style->styleOld & WS_EX_LAYERED))
-				{
-					style->styleNew &= ~WS_EX_LAYERED;
-				}
-				*result = 0;
-				return true;
-			}
-			return false;
-		default:
-			return false;
-	}
+    switch(msg->message)
+    {
+        case WM_STYLECHANGING:
+            if(msg->wParam == GWL_EXSTYLE)
+            {
+                // Prevent plugins making the main window transparent
+                STYLESTRUCT* style
+                        = reinterpret_cast<STYLESTRUCT*>(msg->lParam);
+                if(!(style->styleOld & WS_EX_LAYERED))
+                {
+                    style->styleNew &= ~WS_EX_LAYERED;
+                }
+                *result = 0;
+                return true;
+            }
+            return false;
+        default:
+            return false;
+    }
 }
 #endif

@@ -36,7 +36,7 @@ class EXPORT JournallingObject : public SerializingObject
     JournallingObject();
     virtual ~JournallingObject();
 
-    inline jo_id_t id() const
+    virtual inline jo_id_t id() const final 
     {
         return m_id;
     }

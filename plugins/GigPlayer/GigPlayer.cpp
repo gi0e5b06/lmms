@@ -79,7 +79,7 @@ GigInstrument::GigInstrument(InstrumentTrack* _instrument_track) :
 {
     InstrumentPlayHandle* iph
             = new InstrumentPlayHandle(this, _instrument_track);
-    Engine::mixer()->emit playHandleToAdd(iph);
+    Engine::mixer()->emit playHandleToAdd(iph->pointer());
 
     updateSampleRate();
 
@@ -1025,7 +1025,7 @@ void GigInstrumentView::showFileDialog()
     GigInstrument* k = castModel<GigInstrument>();
 
     FileDialog ofd(NULL, tr("Open GIG file"));
-    ofd.setFileMode(FileDialog::ExistingFiles);
+    ofd.setFileMode(FileDialog::ExistingFile);
 
     QStringList types;
     types << tr("GIG Files (*.gig)");
@@ -1046,13 +1046,8 @@ void GigInstrumentView::showFileDialog()
 
     if(ofd.exec() == QDialog::Accepted && !ofd.selectedFiles().isEmpty())
     {
-        QString f = ofd.selectedFiles()[0];
-
-        if(f != "")
-        {
-            k->openFile(f);
-            Engine::getSong()->setModified();
-        }
+        k->openFile(ofd.selectedFiles()[0]);
+        Engine::getSong()->setModified();
     }
 
     m_fileDialogButton->setEnabled(true);

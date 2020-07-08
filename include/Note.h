@@ -2,7 +2,7 @@
  * Note.h - declaration of class note which contains all informations about a
  *          note + definitions of several constants and enums
  *
- * Copyright (c) 2018-2019 gi0e5b06 (on github.com)
+ * Copyright (c) 2018-2020 gi0e5b06 (on github.com)
  * Copyright (c) 2004-2014 Tobias Doerffel <tobydox/at/users.sourceforge.net>
  *
  * This file is part of LSMM -
@@ -135,16 +135,20 @@ class EXPORT Note : public SerializingObject
     virtual void setMarcato(bool _marcato);
     virtual void setStaccato(bool _staccato);
 
-    static inline bool lessThan(Note*& a, Note*& b)
+    // function to compare two notes - must be called explictly when
+    // using qSort.
+    static bool lessThan(const Note* a, const Note* b)
     {
-        // function to compare two notes - must be called explictly when
-        // using qSort
-        // return (bool) ((int) ( *a ).pos() < (int) ( *b ).pos());
-        return a->pos() < b->pos()
-               || (a->pos() == b->pos()
-                   && (a->length() < b->length()
-                       || (a->length() == b->length()
-                           && a->key() < b->key())));
+        const tick_t pa=a->pos().ticks();
+        const tick_t pb=b->pos().ticks();
+        if(pa!=pb) return pa<pb;
+        const int ka=a->key();
+        const int kb=b->key();
+        if(ka!=kb) return ka<kb;
+        const tick_t la=a->length().ticks();
+        const tick_t lb=b->length().ticks();
+        if(la!=lb) return la<lb;
+        return a<b;
     }
 
     inline bool selected() const
@@ -174,7 +178,7 @@ class EXPORT Note : public SerializingObject
 
     inline MidiTime endPos() const
     {
-        return pos() + qMax<tick_t>(0,m_length);
+        return pos() + qMax<tick_t>(1, m_length);
     }
 
     inline const MidiTime& length() const
@@ -258,6 +262,7 @@ class EXPORT Note : public SerializingObject
     {
         return m_detuning;
     }
+
     bool hasDetuningInfo() const;
     bool withinRange(tick_t tickStart, tick_t tickEnd) const;
 

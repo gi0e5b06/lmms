@@ -22,7 +22,6 @@
  *
  */
 
-
 #include "fft_helpers.h"
 
 #include "lmms_constants.h"
@@ -31,246 +30,273 @@
 
 #include <cmath>
 
-/* returns biggest value from abs_spectrum[spec_size] array
-
-   returns -1 on error
+/*
+  returns biggest value from abs_spectrum[spec_size] array
+  returns -1 on error
 */
-float maximum(float *abs_spectrum, unsigned int spec_size)
+float maximum(float* abs_spectrum, unsigned int spec_size)
 {
-	float maxi=0;
-	unsigned int i;
+    float        maxi = 0;
+    unsigned int i;
 
-	if ( abs_spectrum==NULL )
-		return -1;
+    if(abs_spectrum == nullptr)
+        return -1;
 
-	if (spec_size<=0)
-		return -1;
+    if(spec_size <= 0)
+        return -1;
 
-	for ( i=0; i<spec_size; i++ )
-	{
-		if ( abs_spectrum[i]>maxi )
-			maxi=abs_spectrum[i];
-	}
+    for(i = 0; i < spec_size; i++)
+    {
+        if(abs_spectrum[i] > maxi)
+            maxi = abs_spectrum[i];
+    }
 
-	return maxi;
+    return maxi;
 }
 
-
-int topband(float *abs_spectrum, unsigned int spec_size)
+int topband(float* abs_spectrum, unsigned int spec_size)
 {
-	if(abs_spectrum==NULL || spec_size<=0)
-		return -1;
+    if(abs_spectrum == nullptr || spec_size <= 0)
+        return -1;
 
-	float vmax=0.f;
-        int   imax=-1;
+    float vmax = 0.f;
+    int   imax = -1;
 
-	for(int i=spec_size-1; i>=0; --i)
-	{
-		if(abs_spectrum[i]>=vmax)
-                {
-			vmax=abs_spectrum[i];
-                        imax=i;
-                }
-	}
-
-	return imax;
-}
-
-
-/* apply hanning or hamming window to channel
-
-	returns -1 on error */
-int hanming(float *timebuffer, int length, WINDOWS type)
-{
-	int i;
-	float alpha;
-
-	if ( (timebuffer==NULL)||(length<=0) )
-		return -1;
-
-	switch (type)
-	{
-		case HAMMING: alpha=0.54; break;
-		case HANNING:
-		default: alpha=0.5; break;
-	}
-
-	for ( i=0; i<length; i++ )
-	{
-		timebuffer[i]=timebuffer[i]*(alpha+(1-alpha)*cos(2*F_PI*i/((float)length-1.0)));
-	}
-
-	return 0;
-}
-
-
-/* compute absolute values of complex_buffer, save to absspec_buffer
-   take care that - compl_len is not bigger than complex_buffer!
-                  - absspec buffer is big enough!
-
-      returns 0 on success, else -1          */
-int absspec(fftwf_complex *complex_buffer, float *absspec_buffer, int compl_length)
-{
-	int i;
-
-	if ( (complex_buffer==NULL)||(absspec_buffer==NULL) )
-		return -1;
-	if ( compl_length<=0 )
-		return -1;
-
-	for (i=0; i<compl_length; i++)
-	{
-		absspec_buffer[i]=(float )sqrt(complex_buffer[i][0]*complex_buffer[i][0] + complex_buffer[i][1]*complex_buffer[i][1]);
-	}
-
-	return 0;
-}
-
-
-/* build fewer subbands from many absolute spectrum values
-   take care that - compressedbands[] array num_new elements long
-                  - num_old > num_new
-
-     returns 0 on success, else -1          */
-int compressbands(float *absspec_buffer, float *compressedband, int num_old, int num_new, int bottom, int top)
-{
-	float ratio;
-	int i, usefromold;
-	float j;
-	float j_min, j_max;
-
-	if ( (absspec_buffer==NULL)||(compressedband==NULL) )
-		return -1;
-
-	if ( num_old<num_new )
-		return -1;
-
-	if ( (num_old<=0)||(num_new<=0) )
-		return -1;
-
-	if ( bottom<0 )
-		bottom=0;
-
-	if ( top>=num_old )
-		top=num_old-1;
-
-	usefromold=num_old-(num_old-top)-bottom;
-
-	ratio=(float)usefromold/(float)num_new;
-
-	// for each new subband
-	for ( i=0; i<num_new; i++ )
-	{
-		compressedband[i]=0;
-
-		j_min=(i*ratio)+bottom;
-
-		if ( j_min<0 )
-			j_min=bottom;
-
-		j_max=j_min+ratio;
-
-		for ( j=(int)j_min; j<=j_max; j++ )
-		{
-			compressedband[i]+=absspec_buffer[(int)j];
-		}
-	}
-
-	return 0;
-}
-
-
-int calc13octaveband31(float *absspec_buffer, float *subbands, int num_spec, float max_frequency)
-{
-        static const int onethirdoctavecenterfr[31] = {20, 25, 31, 40, 50, 63, 80, 100, 125, 160, 200, 250, 315, 400, 500, 630, 800, 1000, 1250, 1600, 2000, 2500, 3150, 4000, 5000, 6300, 8000, 10000, 12500, 16000, 20000};
-        //int i, j;
-	//float f_min, f_max, frequency, bandwidth;
-	//int j_min, j_max=0;
-	//float fpower;
-
-
-	if ( (absspec_buffer==NULL)||(subbands==NULL) )
-		return -1;
-
-	if ( num_spec<31 )
-		return -1;
-
-	if ( max_frequency<=0 )
-		return -1;
-
-	/*** energy ***/
-	float fpower=0;
-	for(int i=0; i<num_spec; i++)
-	{
-		absspec_buffer[i]=(absspec_buffer[i]*absspec_buffer[i])/num_spec;
-		fpower=fpower+(2*absspec_buffer[i]);
-	}
-	fpower=fpower-(absspec_buffer[0]); //dc not mirrored
-
-
-	/*** for each subband: sum up power ***/
-        /*
-	for ( i=0; i<31; i++ )
-	{
-		subbands[i]=0;
-
-		// calculate bandwidth for subband
-		frequency=onethirdoctavecenterfr[i];
-
-		bandwidth=(pow(2, 1.0/3.0)-1)*frequency;
-
-		f_min=frequency-bandwidth/2.0;
-		f_max=frequency+bandwidth/2.0;
-
-		j_min=(int)(f_min/max_frequency*(float)num_spec);
-		j_max=(int)(f_max/max_frequency*(float)num_spec);
-
-                fprintf(stderr,"fmin=%f fmax=%f jmin=%d jmax=%d\n",f_min,f_max,j_min,j_max);
-
-		if ( (j_min<0)||(j_max<0) )
-		{
-			fprintf(stderr, "Error: calc13octaveband31() in fft_helpers.cpp line %d failed.\n", __LINE__);
-			return -1;
-		}
-
-		for ( j=j_min; j<=j_max; j++ )
-		{
-			if( j_max<num_spec )
-				subbands[i]+=absspec_buffer[j];
-		}
-
-	} //for
-        */
-
-        for(int b=0; b<31; b++)
+    for(int i = spec_size - 1; i >= 0; --i)
+    {
+        if(abs_spectrum[i] >= vmax)
         {
-		subbands[b]=0.f;
-                int jmin=(b==0  ? 5 : (onethirdoctavecenterfr[b-1]+onethirdoctavecenterfr[b])/2);
-                int jmax=(b==30 ? num_spec : (onethirdoctavecenterfr[b]+onethirdoctavecenterfr[b+1])/2);
-                for(int j=jmin;j<jmax;j++)
-                        subbands[b]+=absspec_buffer[j];
+            vmax = abs_spectrum[i];
+            imax = i;
         }
+    }
 
-        return 0;
+    return imax;
 }
 
-/* compute power of finite time sequence
-   take care num_values is length of timesignal[]
-
-      returns power on success, else -1          */
-float signalpower(float *timesignal, int num_values)
+/*
+  apply hanning or hamming window to channel
+  returns -1 on error
+*/
+int hanming(float* timebuffer, int length, WINDOWS type)
 {
-	if ( num_values<=0 )
-		return -1;
+    int   i;
+    float alpha;
 
-	if( timesignal==NULL )
-		return -1;
+    if((timebuffer == nullptr) || (length <= 0))
+        return -1;
 
-	float power=0;
-	for ( int i=0; i<num_values; i++ )
-	{
-		power+=timesignal[i]*timesignal[i];
-	}
+    switch(type)
+    {
+        case HAMMING:
+            alpha = 0.54;
+            break;
+        case HANNING:
+        default:
+            alpha = 0.5;
+            break;
+    }
 
-	return power;
+    for(i = 0; i < length; i++)
+    {
+        timebuffer[i]
+                = timebuffer[i]
+                  * (alpha
+                     + (1 - alpha)
+                               * cos(2 * F_PI * i / ((float)length - 1.0)));
+    }
+
+    return 0;
+}
+
+/*
+  compute absolute values of complex_buffer, save to absspec_buffer
+  take care that - compl_len is not bigger than complex_buffer!
+                 - absspec buffer is big enough!
+  returns 0 on success, else -1
+*/
+int absspec(fftwf_complex* complex_buffer,
+            float*         absspec_buffer,
+            int            compl_length)
+{
+    int i;
+
+    if((complex_buffer == nullptr) || (absspec_buffer == nullptr))
+        return -1;
+    if(compl_length <= 0)
+        return -1;
+
+    for(i = 0; i < compl_length; i++)
+    {
+        absspec_buffer[i]
+                = (float)sqrt(complex_buffer[i][0] * complex_buffer[i][0]
+                              + complex_buffer[i][1] * complex_buffer[i][1]);
+    }
+
+    return 0;
+}
+
+/*
+  build fewer subbands from many absolute spectrum values
+  take care that - compressedbands[] array num_new elements long
+                 - num_old > num_new
+  returns 0 on success, else -1
+*/
+int compressbands(float* absspec_buffer,
+                  float* compressedband,
+                  int    num_old,
+                  int    num_new,
+                  int    bottom,
+                  int    top)
+{
+    float ratio;
+    int   i, usefromold;
+    float j;
+    float j_min, j_max;
+
+    if((absspec_buffer == nullptr) || (compressedband == nullptr))
+        return -1;
+
+    if(num_old < num_new)
+        return -1;
+
+    if((num_old <= 0) || (num_new <= 0))
+        return -1;
+
+    if(bottom < 0)
+        bottom = 0;
+
+    if(top >= num_old)
+        top = num_old - 1;
+
+    usefromold = num_old - (num_old - top) - bottom;
+
+    ratio = (float)usefromold / (float)num_new;
+
+    // for each new subband
+    for(i = 0; i < num_new; i++)
+    {
+        compressedband[i] = 0;
+
+        j_min = (i * ratio) + bottom;
+
+        if(j_min < 0)
+            j_min = bottom;
+
+        j_max = j_min + ratio;
+
+        for(j = (int)j_min; j <= j_max; j++)
+        {
+            compressedband[i] += absspec_buffer[(int)j];
+        }
+    }
+
+    return 0;
+}
+
+int calc13octaveband31(float* absspec_buffer,
+                       float* subbands,
+                       int    num_spec,
+                       float  max_frequency)
+{
+    static const int onethirdoctavecenterfr[31]
+            = {20,   25,   31,   40,    50,    63,    80,   100,
+               125,  160,  200,  250,   315,   400,   500,  630,
+               800,  1000, 1250, 1600,  2000,  2500,  3150, 4000,
+               5000, 6300, 8000, 10000, 12500, 16000, 20000};
+    // int i, j;
+    // float f_min, f_max, frequency, bandwidth;
+    // int j_min, j_max=0;
+    // float fpower;
+
+    if((absspec_buffer == nullptr) || (subbands == nullptr))
+        return -1;
+
+    if(num_spec < 31)
+        return -1;
+
+    if(max_frequency <= 0)
+        return -1;
+
+    /*** energy ***/
+    float fpower = 0;
+    for(int i = 0; i < num_spec; i++)
+    {
+        absspec_buffer[i]
+                = (absspec_buffer[i] * absspec_buffer[i]) / num_spec;
+        fpower = fpower + (2 * absspec_buffer[i]);
+    }
+    fpower = fpower - (absspec_buffer[0]);  // dc not mirrored
+
+    /*** for each subband: sum up power ***/
+    /*
+    for ( i=0; i<31; i++ )
+    {
+            subbands[i]=0;
+
+            // calculate bandwidth for subband
+            frequency=onethirdoctavecenterfr[i];
+
+            bandwidth=(pow(2, 1.0/3.0)-1)*frequency;
+
+            f_min=frequency-bandwidth/2.0;
+            f_max=frequency+bandwidth/2.0;
+
+            j_min=(int)(f_min/max_frequency*(float)num_spec);
+            j_max=(int)(f_max/max_frequency*(float)num_spec);
+
+            fprintf(stderr,"fmin=%f fmax=%f jmin=%d
+    jmax=%d\n",f_min,f_max,j_min,j_max);
+
+            if ( (j_min<0)||(j_max<0) )
+            {
+                    fprintf(stderr, "Error: calc13octaveband31() in
+    fft_helpers.cpp line %d failed.\n", __LINE__); return -1;
+            }
+
+            for ( j=j_min; j<=j_max; j++ )
+            {
+                    if( j_max<num_spec )
+                            subbands[i]+=absspec_buffer[j];
+            }
+
+    } //for
+    */
+
+    for(int b = 0; b < 31; b++)
+    {
+        subbands[b] = 0.f;
+        int jmin    = (b == 0 ? 5
+                           : (onethirdoctavecenterfr[b - 1]
+                              + onethirdoctavecenterfr[b])
+                                     / 2);
+        int jmax    = (b == 30 ? num_spec
+                            : (onethirdoctavecenterfr[b]
+                               + onethirdoctavecenterfr[b + 1])
+                                      / 2);
+        for(int j = jmin; j < jmax; j++)
+            subbands[b] += absspec_buffer[j];
+    }
+
+    return 0;
+}
+
+/*
+  compute power of finite time sequence
+  take care num_values is length of timesignal[]
+  returns power on success, else -1
+*/
+float signalpower(float* timesignal, int num_values)
+{
+    if(num_values <= 0)
+        return -1;
+
+    if(timesignal == nullptr)
+        return -1;
+
+    float power = 0;
+    for(int i = 0; i < num_values; i++)
+        power += timesignal[i] * timesignal[i];
+
+    return power;
 }

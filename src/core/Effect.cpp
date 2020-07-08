@@ -61,7 +61,8 @@ Effect::Effect(const Plugin::Descriptor*                 _desc,
 {
     // m_gateModel.setScaleLogarithmic(true);
 
-    m_srcState[0] = m_srcState[1] = nullptr;
+    for(int i = 0; i < 2; ++i)
+        m_srcState[i] = nullptr;
     reinitSRC();
 
     // if( ConfigManager::inst()->value( "ui", "disableautoquit").toInt() )
@@ -74,12 +75,8 @@ Effect::Effect(const Plugin::Descriptor*                 _desc,
 Effect::~Effect()
 {
     for(int i = 0; i < 2; ++i)
-    {
         if(m_srcState[i] != nullptr)
-        {
             src_delete(m_srcState[i]);
-        }
-    }
 }
 
 void Effect::startRunning()

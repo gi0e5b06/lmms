@@ -37,19 +37,19 @@ SamplePlayHandle::SamplePlayHandle(SampleBuffer* sampleBuffer,
       PlayHandle(TypeSamplePlayHandle),
       m_sampleBuffer(sharedObject::ref(sampleBuffer)),
       m_doneMayReturnTrue(true), m_totalFramesPlayed(0),
-      m_ownAudioPort(ownAudioPort),
+      m_ownAudioPort(ownAudioPort), m_audioPort(nullptr),
       m_defaultVolumeModel(DefaultVolume, MinVolume, MaxVolume, 1),
       m_volumeModel(&m_defaultVolumeModel), m_track(nullptr),
       m_bbTrack(nullptr)
 {
     m_frames = m_sampleBuffer->frames();
     setCurrentFrame(0);
-    if(ownAudioPort)
+    if(m_ownAudioPort)
     {
-        setAudioPort(new AudioPort("[SamplePlayHandle AudioPort]", false,
-                                   nullptr, m_volumeModel, nullptr, nullptr,
-                                   nullptr, nullptr, nullptr, nullptr,
-                                   nullptr));
+        m_audioPort.reset(new AudioPort("[SamplePlayHandle AudioPort]", false,
+                                        nullptr, m_volumeModel, nullptr,
+                                        nullptr, nullptr, nullptr, nullptr,
+                                        nullptr, nullptr));
     }
 }
 
@@ -68,15 +68,17 @@ SamplePlayHandle::SamplePlayHandle(SampleTCO* tco) :
     m_frames = (/*tco->initialPlayTick() +*/ tco->length())
                * Engine::framesPerTick();
     setCurrentFrame(tco->initialPlayTick() * Engine::framesPerTick());
-    setAudioPort(((SampleTrack*)tco->track())->audioPort());
+    // setAudioPort(((SampleTrack*)tco->track())->audioPort());
+    m_audioPort = /*.swap*/ (((SampleTrack*)tco->track())->audioPort());
 }
 
 SamplePlayHandle::~SamplePlayHandle()
 {
     sharedObject::unref(m_sampleBuffer);
+    /*
     if(m_ownAudioPort)
     {
-        AudioPort* ap = audioPort();
+        AudioPort* ap = m_audioPort.data();
         if(ap == nullptr)
         {
             qWarning("SamplePlayHandle::~SamplePlayHandle ap==nullptr");
@@ -84,10 +86,22 @@ SamplePlayHandle::~SamplePlayHandle()
         else
         {
             qWarning("SamplePlayHandle::~SamplePlayHandle delete");
-            setAudioPort(nullptr);
-            delete ap;
+            // setAudioPort(nullptr);
+            // delete ap;
+            m_audioPort.clear();
         }
     }
+    */
+}
+
+void SamplePlayHandle::enterMixer()
+{
+    m_audioPort->addPlayHandle(pointer());
+}
+
+void SamplePlayHandle::exitMixer()
+{
+    m_audioPort->removePlayHandle(pointer());
 }
 
 f_cnt_t SamplePlayHandle::currentFrame()

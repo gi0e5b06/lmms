@@ -343,9 +343,9 @@ bool HydrogenImport::readSong()
             QString patId = patternId.firstChild().nodeValue();
             patternId = (QDomNode)patternId.nextSiblingElement("patternID");
 
-            int                 i   = pattern_id[patId] + song_num_tracks;
-            Track*              t   = (BBTrack*)s->tracks().at(i);
-            TrackContentObject* tco = t->createTCO(pos);
+            int    i   = pattern_id[patId] + song_num_tracks;
+            Track* t   = (BBTrack*)s->tracks().at(i);
+            Tile*  tco = t->createTCO(pos);
             tco->movePosition(pos);
 
             if(pattern_length[patId] > best_length)

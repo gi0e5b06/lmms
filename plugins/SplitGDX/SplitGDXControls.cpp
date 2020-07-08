@@ -1,40 +1,38 @@
 /*
  * SplitGDXControls.cpp - controls for splitting effect (tree node)
  *
- * Copyright (c) 2018 gi0e5b06 (on github.com)
+ * Copyright (c) 2018-2020 gi0e5b06 (on github.com)
  *
- * This file is part of LMMS - https://lmms.io
+ * This file is part of LSMM -
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public
- * License along with this program (see COPYING); if not, write to the
- * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
- * Boston, MA 02110-1301 USA.
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
 
 #include "SplitGDXControls.h"
 
-#include <QDomElement>
-
 #include "Engine.h"
 #include "Song.h"
 #include "SplitGDX.h"
 
+#include <QDomElement>
+
 SplitGDXControls::SplitGDXControls(SplitGDXEffect* effect) :
       EffectControls(effect), m_effect(effect),
-      m_splitModel(0.0f, 0.0f, 1.0f, 0.00001f, this, tr("Sub dry")),
-      m_wetModel(0.5f, 0.0f, 1.0f, 0.00001f, this, tr("Sub wet")),
-      m_remModel(0.5f, 0.0f, 1.0f, 0.00001f, this, tr("Remainder"))
+      m_splitModel(0., 0., 1., 0.00001, this, tr("Sub dry")),
+      m_wetModel(0.5, 0., 1., 0.00001, this, tr("Sub wet")),
+      m_remModel(0.5, 0., 1., 0.00001, this, tr("Remainder"))
 {
 }
 

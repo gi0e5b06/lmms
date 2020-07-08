@@ -526,7 +526,7 @@ QString PadsGDXView::selectSFZFile(const QString& _file)
     }
     // change dir to position of previously opened file
     ofd.setDirectory(dir);
-    ofd.setFileMode(FileDialog::ExistingFiles);
+    ofd.setFileMode(FileDialog::ExistingFile);
 
     // set filters
     QStringList types;
@@ -538,15 +538,8 @@ QString PadsGDXView::selectSFZFile(const QString& _file)
         ofd.selectFile(file);  // QFileInfo( m_audioFile ).fileName() );
     }
 
-    if(ofd.exec() == QDialog::Accepted)
-    {
-        if(ofd.selectedFiles().isEmpty())
-        {
-            return QString::null;
-        }
-        // return SampleBuffer::tryToMakeRelative( ofd.selectedFiles()[0] );
+    if(ofd.exec() == QDialog::Accepted && !ofd.selectedFiles().isEmpty())
         return SampleBuffer::tryToMakeAbsolute(ofd.selectedFiles()[0]);
-    }
 
     return QString::null;
 }

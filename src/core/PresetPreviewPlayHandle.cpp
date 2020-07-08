@@ -29,6 +29,7 @@
 #include "Instrument.h"
 #include "InstrumentTrack.h"
 #include "Mixer.h"
+#include "Mutex.h"
 #include "PluginFactory.h"
 #include "ProjectJournal.h"
 #include "TrackContainer.h"
@@ -43,13 +44,15 @@ class PreviewTrackContainer : public TrackContainer
     PreviewTrackContainer() :
           TrackContainer(nullptr, "Preview track container"),
           m_previewInstrumentTrack(nullptr), m_previewNPH(nullptr),
-          m_dataMutex()
+          m_dataMutex("PreviewTrackContainer::m_dataMutex",
+                      QMutex::Recursive,
+                      false)
     {
         setJournalling(false);
         m_previewInstrumentTrack = dynamic_cast<InstrumentTrack*>(
                 Track::create(Track::InstrumentTrack, this));
         m_previewInstrumentTrack->setJournalling(false);
-        m_previewInstrumentTrack->setPreviewMode(true);
+        // m_previewInstrumentTrack->setPreviewMode(true);
     }
 
     virtual ~PreviewTrackContainer()
@@ -100,7 +103,7 @@ class PreviewTrackContainer : public TrackContainer
   private:
     InstrumentTrack* m_previewInstrumentTrack;
     NotePlayHandle*  m_previewNPH;
-    QMutex           m_dataMutex;
+    Mutex            m_dataMutex;
 
     friend class PresetPreviewPlayHandle;
 };
@@ -113,6 +116,7 @@ PresetPreviewPlayHandle::PresetPreviewPlayHandle(const QString& _preset_file,
       PlayHandle(TypePresetPreviewHandle),
       m_previewNPH(nullptr)
 {
+    qInfo("PresetPreviewPlayHandle::PresetPreviewPlayHandle 0");
     s_previewTC->lockData();
 
     setUsesBuffer(false);
@@ -138,20 +142,18 @@ PresetPreviewPlayHandle::PresetPreviewPlayHandle(const QString& _preset_file,
     {
         Instrument*   i = s_previewTC->previewInstrumentTrack()->instrument();
         const QString ext = QFileInfo(_preset_file).suffix().toLower();
+
         if(i == nullptr || !i->descriptor()->supportsFileType(ext))
-        {
             i = s_previewTC->previewInstrumentTrack()->loadInstrument(
                     pluginFactory->pluginSupportingExtension(ext).name());
-        }
+
         if(i != nullptr)
-        {
             i->loadFile(_preset_file);
-        }
     }
     else
     {
         bool dataFileCreated = false;
-        if(dataFile == 0)
+        if(dataFile == nullptr)
         {
             dataFile        = new DataFile(_preset_file);
             dataFileCreated = true;
@@ -161,30 +163,31 @@ PresetPreviewPlayHandle::PresetPreviewPlayHandle(const QString& _preset_file,
         // without an instrument in preview track, it will segfault
         if(dataFile->content().elementsByTagName("vestige").length() == 0)
         {
-            // qInfo("PresetPreviewPlayHandle::PresetPreviewPlayHandle 4");
+            qInfo("PresetPreviewPlayHandle::PresetPreviewPlayHandle 4");
             s_previewTC->previewInstrumentTrack()->loadTrackSpecificSettings(
                     dataFile->content().firstChild().toElement());
-            // qInfo("PresetPreviewPlayHandle::PresetPreviewPlayHandle 5");
+            qInfo("PresetPreviewPlayHandle::PresetPreviewPlayHandle 5");
         }
         else
         {
+            qInfo("PresetPreviewPlayHandle: Vestige->3osc");
             s_previewTC->previewInstrumentTrack()->loadInstrument(
                     "tripleoscillator");
             s_previewTC->previewInstrumentTrack()->setVolume(0);
         }
+
         if(dataFileCreated)
-        {
             delete dataFile;
-        }
     }
     dataFile = 0;
-    // qInfo("PresetPreviewPlayHandle::PresetPreviewPlayHandle 6");
+    qInfo("PresetPreviewPlayHandle::PresetPreviewPlayHandle 6");
 
     // make sure, our preset-preview-track does not appear in any MIDI-
     // devices list, so just disable receiving/sending MIDI-events at all
     s_previewTC->previewInstrumentTrack()->midiPort()->setMode(
             MidiPort::Disabled);
-    setAudioPort(s_previewTC->previewInstrumentTrack()->audioPort());
+
+    // setAudioPort(s_previewTC->previewInstrumentTrack()->audioPort());
 
     if(s_previewTC->previewInstrumentTrack()->getVolume() > DefaultVolume)
         s_previewTC->previewInstrumentTrack()->setVolume(DefaultVolume);
@@ -192,8 +195,8 @@ PresetPreviewPlayHandle::PresetPreviewPlayHandle(const QString& _preset_file,
     if(!Engine::mixer()->criticalXRuns()
        && !s_previewTC->previewInstrumentTrack()->isMuted())
     {
-        connect(Engine::mixer(), SIGNAL(playHandleDeleted(PlayHandle*)), this,
-                SLOT(onPlayHandleDeleted(PlayHandle*)));
+        connect(Engine::mixer(), SIGNAL(playHandleDeleted(PlayHandlePointer)),
+                this, SLOT(onPlayHandleDeleted(PlayHandlePointer)));
 
         // create note-play-handle for it
         m_previewNPH = NotePlayHandleManager::acquire(
@@ -201,28 +204,12 @@ PresetPreviewPlayHandle::PresetPreviewPlayHandle(const QString& _preset_file,
                 std::numeric_limits<f_cnt_t>::max() / 2,
                 Note(0, 0, DefaultKey, 100));
 
-        // qInfo("PresetPreviewPlayHandle::PresetPreviewPlayHandle 7");
-        /*
-        if(!Engine::mixer()->addPlayHandle(m_previewNPH))
-        {
-            qWarning(
-                    "PresetPreviewPlayHandle::play BAD previewPlayHandle not "
-                    "added");
-            // m_previewNPH->mute();
-            NotePlayHandleManager::release(m_previewNPH);
-            m_previewNPH = nullptr;
-        }
-        else
-        */
-        Engine::mixer()->emit playHandleToAdd(m_previewNPH);
-        {
-            s_previewTC->setPreviewNote(m_previewNPH);
-            // qInfo("PresetPreviewPlayHandle::play OK previewPlayHandle
-            // added");
-        }
+        qInfo("PresetPreviewPlayHandle::PresetPreviewPlayHandle 7");
+        s_previewTC->setPreviewNote(m_previewNPH);
+        Engine::mixer()->emit playHandleToAdd(m_previewNPH->pointer());
     }
 
-    // qInfo("PresetPreviewPlayHandle::PresetPreviewPlayHandle 8");
+    qInfo("PresetPreviewPlayHandle::PresetPreviewPlayHandle 8");
     s_previewTC->unlockData();
     Engine::projectJournal()->setJournalling(j);
 }
@@ -238,29 +225,59 @@ PresetPreviewPlayHandle::~PresetPreviewPlayHandle()
     if(m_previewNPH != nullptr)
     {
         qInfo("PresetPreviewPlayHandle::~PresetPreviewPlayHandle 0");
-        // m_previewNPH->noteOff();
+        if(!m_previewNPH->isFinished())
+            m_previewNPH->noteOff();
         // qInfo("PresetPreviewPlayHandle::~PresetPreviewPlayHandle 1a");
         // m_previewNPH->mute();
-        // qInfo("PresetPreviewPlayHandle::~PresetPreviewPlayHandle 1b");
-        m_previewNPH->setFinished();
+        qInfo("PresetPreviewPlayHandle::~PresetPreviewPlayHandle 1");
+        // m_previewNPH->setFinished();
         // Engine::mixer()->emit playHandleToRemove(m_previewNPH);
-        // qInfo("PresetPreviewPlayHandle::~PresetPreviewPlayHandle 2");
+        qInfo("PresetPreviewPlayHandle::~PresetPreviewPlayHandle 2");
         m_previewNPH = nullptr;
     }
 
     s_previewTC->unlockData();
+    BACKTRACE
 }
 
-void PresetPreviewPlayHandle::onPlayHandleDeleted(PlayHandle* handle)
+void PresetPreviewPlayHandle::enterMixer()
 {
+    // setAudioPort(s_previewTC->previewInstrumentTrack()->audioPort());
+    s_previewTC->previewInstrumentTrack()->audioPort()->addPlayHandle(
+            pointer());
+}
+
+void PresetPreviewPlayHandle::exitMixer()
+{
+    s_previewTC->previewInstrumentTrack()->audioPort()->removePlayHandle(
+            pointer());
+}
+
+void PresetPreviewPlayHandle::onPlayHandleDeleted(PlayHandlePointer handle)
+{
+    // qInfo("PresetPreviewPlayHandle::onPlayHandleDeleted");
+    s_previewTC->lockData();
     if(m_previewNPH != nullptr)
     {
         if(m_previewNPH == handle)
         {
             qInfo("PresetPreviewPlayHandle::onPlayHandleDeleted");
+            s_previewTC->setPreviewNote(nullptr);
             m_previewNPH = nullptr;
         }
     }
+    s_previewTC->unlockData();
+}
+
+void PresetPreviewPlayHandle::noteOff(const f_cnt_t offset)
+{
+    s_previewTC->lockData();
+    if(m_previewNPH != nullptr)
+    {
+        qInfo("PresetPreviewPlayHandle::noteOff");
+        m_previewNPH->noteOff(offset);
+    }
+    s_previewTC->unlockData();
 }
 
 void PresetPreviewPlayHandle::play(sampleFrame* _working_buffer)
@@ -271,7 +288,9 @@ void PresetPreviewPlayHandle::play(sampleFrame* _working_buffer)
 
 bool PresetPreviewPlayHandle::isFinished() const
 {
-    return m_finished || m_previewNPH == nullptr || m_previewNPH->isMuted();
+    bool r = m_finished || m_previewNPH == nullptr || m_previewNPH->isMuted();
+    qInfo("PresetPreviewPlayHandle::isFinished r=%d", r);
+    return r;
 }
 
 bool PresetPreviewPlayHandle::isFromTrack(const Track* _track) const
@@ -295,20 +314,23 @@ void PresetPreviewPlayHandle::init()
 void PresetPreviewPlayHandle::cleanup()
 {
     DELETE_HELPER(s_previewTC);
-    // delete s_previewTC;
-    // s_previewTC = nullptr;
+    /*
+    if(s_previewTC != nullptr)
+    {
+        delete s_previewTC;
+        s_previewTC = nullptr;
+    }
+    */
 }
 
-ConstNotePlayHandleList PresetPreviewPlayHandle::nphsOfInstrumentTrack(
+ConstNotePlayHandles PresetPreviewPlayHandle::nphsOfInstrumentTrack(
         const InstrumentTrack* _it)
 {
-    ConstNotePlayHandleList cnphv;
+    ConstNotePlayHandles cnphv;
     s_previewTC->lockData();
     if(s_previewTC->previewNote() != nullptr
        && s_previewTC->previewNote()->instrumentTrack() == _it)
-    {
-        cnphv.push_back(s_previewTC->previewNote());
-    }
+        cnphv.append(s_previewTC->previewNote());
     s_previewTC->unlockData();
     return cnphv;
 

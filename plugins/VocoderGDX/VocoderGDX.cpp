@@ -54,16 +54,16 @@ VocoderGDX::VocoderGDX(Model*                                    parent,
       Effect(&vocodergdx_plugin_descriptor, parent, key),
       m_gdxControls(this), m_filled(0)
 {
-        m_size = Engine::mixer()->processingSampleRate(); //20;  // 5Hz
+    m_size = Engine::mixer()->processingSampleRate();  // 20;  // 5Hz
     // m_size = qMax<int>(2048, Engine::mixer()->framesPerPeriod());
-    //m_size = qMax<int>(128, Engine::mixer()->framesPerPeriod());
+    // m_size = qMax<int>(128, Engine::mixer()->framesPerPeriod());
 
-    m_rBuf0 = (float*)fftwf_malloc(m_size * sizeof(float));
-    m_rBuf1 = (float*)fftwf_malloc(m_size * sizeof(float));
-    m_oBuf  = (float*)fftwf_malloc(m_size * sizeof(float));
-    memset(m_rBuf0, 0, m_size * sizeof(float));
-    memset(m_rBuf1, 0, m_size * sizeof(float));
-    memset(m_oBuf, 0, m_size * sizeof(float));
+    m_rBuf0 = (FLOAT*)fftwf_malloc(m_size * sizeof(FLOAT));
+    m_rBuf1 = (FLOAT*)fftwf_malloc(m_size * sizeof(FLOAT));
+    m_oBuf  = (FLOAT*)fftwf_malloc(m_size * sizeof(FLOAT));
+    memset(m_rBuf0, 0, m_size * sizeof(FLOAT));
+    memset(m_rBuf1, 0, m_size * sizeof(FLOAT));
+    memset(m_oBuf, 0, m_size * sizeof(FLOAT));
 
     m_cBuf0 = (fftwf_complex*)fftwf_malloc((m_size / 2 + 1)
                                            * sizeof(fftwf_complex));
@@ -101,12 +101,12 @@ bool VocoderGDX::processAudioBuffer(sampleFrame* _buf, const fpp_t _frames)
 
     for(fpp_t f = 0; f < _frames; ++f)
     {
-        float w0, d0, w1, d1;
+        real_t w0, d0, w1, d1;
         computeWetDryLevels(f, _frames, smoothBegin, smoothEnd, w0, d0, w1,
                             d1);
 
-        float curVal0 = _buf[f][0];
-        float curVal1 = _buf[f][1];
+        real_t curVal0 = _buf[f][0];
+        real_t curVal1 = _buf[f][1];
 
         curVal0 = sign(curVal0) * abs(curVal1);
         curVal1 = curVal0;
@@ -162,15 +162,13 @@ bool VocoderGDX::processAudioBuffer(sampleFrame* _buf, const fpp_t _frames)
 
     bool smoothBegin, smoothEnd;
     if(!shouldProcessAudioBuffer(_buf, _frames, smoothBegin, smoothEnd))
-    {
         return false;
-    }
 
     /*
     for(fpp_t f = 0; f < frames; ++f)
     {
-        _buf[f][0] = 0.f;
-        _buf[f][1] = 0.f;
+        _buf[f][0] = 0.;
+        _buf[f][1] = 0.;
     }
     */
 
@@ -178,10 +176,10 @@ bool VocoderGDX::processAudioBuffer(sampleFrame* _buf, const fpp_t _frames)
     fftwf_execute(m_r2cPlan1);
 
     for(int f = 0; f < m_size; f++)
-        m_oBuf[f] = 0.f;
+        m_oBuf[f] = 0.;
 
-    // float base  = powf(2.f, (24 + m_gdxControls.m_keyModel.value())
-    // / 12.f);int   mode =
+    // real_t base  = pow(2., (24 + m_gdxControls.m_keyModel.value())
+    // / 12.);int   mode =
     // m_gdxControls.m_modeModel.value();
 
     /*
@@ -201,17 +199,17 @@ bool VocoderGDX::processAudioBuffer(sampleFrame* _buf, const fpp_t _frames)
     }
     */
 
-    float width = m_gdxControls.m_widthModel.value();
+    real_t width = m_gdxControls.m_widthModel.value();
     for(int w = 0; w < m_size / 2 + 1; w++)
     {
-        // m_cBuf1[w][0] = (m_cBuf1[w][0] > width ? m_cBuf0[w][0] : 0.f);
-        // m_cBuf1[w][1] = (m_cBuf1[w][1] > width ? m_cBuf0[w][1] : 0.f);
+        // m_cBuf1[w][0] = (m_cBuf1[w][0] > width ? m_cBuf0[w][0] : 0.);
+        // m_cBuf1[w][1] = (m_cBuf1[w][1] > width ? m_cBuf0[w][1] : 0.);
 
         /*
           m_cBuf1[w][0] =sign(m_cBuf1[w][0])*
-          (abs(0.8f*m_cBuf1[w][0])+0.2f*abs(m_cBuf0[w][0]));
+          (abs(0.8*m_cBuf1[w][0])+0.2*abs(m_cBuf0[w][0]));
           m_cBuf1[w][1] =sign(m_cBuf1[w][1])*
-          (abs(0.8f*m_cBuf1[w][1])+0.2f*abs(m_cBuf0[w][1]));
+          (abs(0.8*m_cBuf1[w][1])+0.2*abs(m_cBuf0[w][1]));
         */
         /*
           m_cBuf1[w][0]
@@ -221,14 +219,14 @@ bool VocoderGDX::processAudioBuffer(sampleFrame* _buf, const fpp_t _frames)
         */
         // m_cBuf1[w][0] *= abs(m_cBuf0[w][0]);
         // m_cBuf1[w][1] *= abs(m_cBuf0[w][1]);
-        const float rho1 = qBound(0.f,
-                                  sqrt(m_cBuf1[w][0] * m_cBuf1[w][0]
-                                       + m_cBuf1[w][1] * m_cBuf1[w][1]),
-                                  1.f);
-        const float rho0 = qBound(0.f,
-                                  sqrt(m_cBuf0[w][0] * m_cBuf0[w][0]
-                                       + m_cBuf0[w][1] * m_cBuf0[w][1]),
-                                  1.f);
+        const real_t rho1 = bound(0.,
+                                   sqrt(m_cBuf1[w][0] * m_cBuf1[w][0]
+                                        + m_cBuf1[w][1] * m_cBuf1[w][1]),
+                                   1.);
+        const real_t rho0 = bound(0.,
+                                   sqrt(m_cBuf0[w][0] * m_cBuf0[w][0]
+                                        + m_cBuf0[w][1] * m_cBuf0[w][1]),
+                                   1.);
         if(rho0 <= width)
         {
             m_cBuf1[w][0] = 0.;
@@ -236,8 +234,8 @@ bool VocoderGDX::processAudioBuffer(sampleFrame* _buf, const fpp_t _frames)
         }
         else
         {
-            m_cBuf1[w][0] = qBound(-1.f, m_cBuf0[w][0] * rho1 / rho0, 1.f);
-            m_cBuf1[w][1] = qBound(-1.f, m_cBuf0[w][1] * rho1 / rho0, 1.f);
+            m_cBuf1[w][0] = bound(-1., m_cBuf0[w][0] * rho1 / rho0, 1.);
+            m_cBuf1[w][1] = bound(-1., m_cBuf0[w][1] * rho1 / rho0, 1.);
         }
         if(w > 2000)
         {
@@ -250,8 +248,8 @@ bool VocoderGDX::processAudioBuffer(sampleFrame* _buf, const fpp_t _frames)
             m_cBuf1[w][1] *= 1. / (11 - w / 10);
         }
         /*
-if(w > 100 && w < 600)
-            if(fastrandf01inc() < 0.0005f)
+          if(w > 100 && w < 600)
+            if(fastrandf01inc() < 0.0005)
                 qInfo("w=%d rho=%f c0=%f c1=%f", w, rho, m_cBuf1[w][0],
                       m_cBuf1[w][1]);
         */
@@ -260,25 +258,25 @@ if(w > 100 && w < 600)
     fftwf_execute(m_c2rPlan);
 
     {
-        float a = 1.f / m_size * m_gdxControls.m_ampModel.value();
+        real_t a = 1. / m_size * m_gdxControls.m_ampModel.value();
         for(int f = 0; f < m_size; f++)
-            m_oBuf[f] = qBound(-1.f, m_oBuf[f] * a, 1.f);
+            m_oBuf[f] = bound(-1., m_oBuf[f] * a, 1.);
     }
 
     for(fpp_t f = 0; f < frames; ++f)
     {
-        float w0, d0, w1, d1;
+        real_t w0, d0, w1, d1;
         computeWetDryLevels(f, _frames, smoothBegin, smoothEnd, w0, d0, w1,
                             d1);
 
-        float v = m_oBuf[start + f];
+        real_t v = m_oBuf[start + f];
 
-        // if(fastrandf01inc() < 0.05f)
+        // if(fastrandf01inc() < 0.05)
         //    if(f == 0)
         //        qInfo("v[0]=%f", v);
 
-        float curVal0 = v;
-        float curVal1 = curVal0;
+        sample_t curVal0 = v;
+        sample_t curVal1 = curVal0;
 
         _buf[f][0] = d0 * _buf[f][0] + w0 * curVal0;
         _buf[f][1] = d1 * _buf[f][1] + w1 * curVal1;

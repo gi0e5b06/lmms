@@ -60,6 +60,6 @@ void MeterModel::saveSettings(QDomDocument&  _doc,
 
 void MeterModel::loadSettings(const QDomElement& _this, const QString& _name)
 {
-    m_numeratorModel.loadSettings(_this, _name + "_numerator");
-    m_denominatorModel.loadSettings(_this, _name + "_denominator");
+    m_numeratorModel.loadSettings(_this, _name + "_numerator", false);
+    m_denominatorModel.loadSettings(_this, _name + "_denominator", false);
 }

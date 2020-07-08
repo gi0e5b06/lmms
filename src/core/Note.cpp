@@ -42,7 +42,7 @@ Note::Note(const MidiTime& length,
       m_volume(qBound(MinVolume, volume, MaxVolume)),
       m_panning(qBound(PanningLeft, panning, PanningRight)),
       m_probability(1.), m_legato(false), m_marcato(false), m_staccato(false),
-      m_length(length), m_pos(pos), m_detuning(NULL)
+      m_length(length), m_pos(pos), m_detuning(nullptr)
 {
     if(detuning)
     {
@@ -61,21 +61,17 @@ Note::Note(const Note& note) :
       m_key(note.m_key), m_volume(note.m_volume), m_panning(note.m_panning),
       m_probability(note.m_probability), m_legato(note.m_legato),
       m_marcato(note.m_marcato), m_staccato(note.m_staccato),
-      m_length(note.m_length), m_pos(note.m_pos), m_detuning(NULL)
+      m_length(note.m_length), m_pos(note.m_pos), m_detuning(nullptr)
 {
-    if(note.m_detuning)
-    {
+    if(note.m_detuning != nullptr)
         m_detuning = sharedObject::ref(note.m_detuning);
-    }
 }
 
 Note::~Note()
 {
     // qInfo("deleting note %p",this);
-    if(m_detuning)
-    {
+    if(m_detuning != nullptr)
         sharedObject::unref(m_detuning);
-    }
 }
 
 void Note::setLength(const MidiTime& length)
@@ -130,9 +126,8 @@ MidiTime Note::quantized(const MidiTime& m, const int qGrid)
 {
     real_t p = (real_t(m) / real_t(qGrid));
     if(fraction(p) < 0.5)
-    {
         return static_cast<int>(p) * qGrid;
-    }
+
     return static_cast<int>(p + 1) * qGrid;
 }
 
@@ -140,9 +135,7 @@ void Note::quantizeLength(const int qGrid)
 {
     setLength(quantized(length(), qGrid));
     if(length() == 0)
-    {
         setLength(qGrid);
-    }
 }
 
 void Note::quantizePos(const int qGrid)
@@ -210,10 +203,10 @@ void Note::loadSettings(const QDomElement& _this)
 
 void Note::createDetuning()
 {
-    if(m_detuning == NULL)
+    if(m_detuning == nullptr)
     {
         m_detuning = sharedObject::ref(new DetuningHelper);
-        (void)m_detuning->automationPattern();
+        m_detuning->automationPattern();
         m_detuning->setRange(-MaxDetuning, MaxDetuning, 0.5);
         m_detuning->automationPattern()->setProgressionType(
                 AutomationPattern::LinearProgression);
@@ -227,8 +220,8 @@ bool Note::hasDetuningInfo() const
 
 bool Note::withinRange(tick_t tickStart, tick_t tickEnd) const
 {
-    tick_t p = pos().getTicks();
-    return p >= tickStart && p <= tickEnd && length().getTicks() != 0;
+    tick_t p = pos().ticks();
+    return p >= tickStart && p <= tickEnd && length().ticks() != 0;
 }
 
 static QHash<QString, int> MIDI_KEYS_N2I;

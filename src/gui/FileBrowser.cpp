@@ -173,8 +173,16 @@ bool FileBrowser::filterItems(const QString& filter, QTreeWidgetItem* item)
         }
         else
         {
-            // file matches filter?
-            bool didMatch = it->text(0).contains(filter, Qt::CaseInsensitive);
+            bool didMatch = true;
+
+            if(!it->text(0).contains(filter, Qt::CaseInsensitive))
+                didMatch = false;
+            else if(it->text(0).contains(
+                            QRegExp("^.*[.]f[0-9]+c[0-9]+s[0-9]+$")))
+                didMatch = false;
+            else if(it->text(0).contains(QRegExp("[.]php$")))
+                didMatch = false;
+
             it->setHidden(!didMatch);
             anyMatched = anyMatched || didMatch;
         }
@@ -192,9 +200,7 @@ void FileBrowser::reloadTree()
     m_fileBrowserTreeWidget->clear();
     QStringList paths = m_directories.split('*');
     for(QStringList::iterator it = paths.begin(); it != paths.end(); ++it)
-    {
         addItems(*it);
-    }
     expandItems();
     m_filterEdit->setText(text);
     filterItems(text);
@@ -322,7 +328,7 @@ void FileBrowser::keyPressEvent(QKeyEvent* ke)
 FileBrowserTreeWidget::FileBrowserTreeWidget(QWidget* parent) :
       QTreeWidget(parent), m_mousePressed(false), m_pressPos(),
       m_previewPlayHandle(nullptr),
-      m_pphMutex(),  // tmp  QMutex::Recursive ),
+      m_pphMutex("FBTW::m_pphMutex", QMutex::Recursive, false),
       m_contextMenuItem(nullptr)
 {
     setColumnCount(1);
@@ -336,8 +342,8 @@ FileBrowserTreeWidget::FileBrowserTreeWidget(QWidget* parent) :
     connect(this, SIGNAL(itemExpanded(QTreeWidgetItem*)),
             SLOT(updateDirectory(QTreeWidgetItem*)));
 
-    connect(Engine::mixer(), SIGNAL(playHandleDeleted(PlayHandle*)), this,
-            SLOT(onPlayHandleDeleted(PlayHandle*)));
+    connect(Engine::mixer(), SIGNAL(playHandleDeleted(PlayHandlePointer)), this,
+            SLOT(onPlayHandleDeleted(PlayHandlePointer)));
 }
 
 FileBrowserTreeWidget::~FileBrowserTreeWidget()
@@ -363,7 +369,7 @@ void FileBrowserTreeWidget::contextMenuEvent(QContextMenuEvent* e)
         contextMenu.addAction(tr("Open in new instrument-track/"
                                  "B+B Editor"),
                               this, SLOT(openInNewInstrumentTrackBBE()));
-        contextMenu.addAction(QIcon(embed::getIconPixmap("folder")),
+        contextMenu.addAction(QIcon(embed::getIcon("folder")),
                               tr("Open containing folder"), this,
                               SLOT(openContainingFolder()));
         contextMenu.exec(e->globalPos());
@@ -377,15 +383,22 @@ void FileBrowserTreeWidget::mousePressEvent(QMouseEvent* me)
     if(me->button() != Qt::LeftButton)
         return;
 
-    if(m_previewPlayHandle != nullptr)
+    if(m_previewPlayHandle.data() != nullptr)
+    {
+        qInfo("FileBrowserTreeWidget::mousePressEvent m_previewPlayHandle != "
+              "nullptr");
         return;
+    }
 
     // qWarning("FileBrowserTreeWidget::mousePressEvent()");
     // qWarning("P isPreviewing=%d",PresetPreviewPlayHandle::isPreviewing());
     // qWarning("P   m_mousePressed=%d",m_mousePressed);
 
     if(m_mousePressed || PresetPreviewPlayHandle::isPreviewing())
+    {
+        qInfo("FileBrowserTreeWidget::mousePressEvent isPreviewing");
         return;
+    }
 
     QTreeWidgetItem* i = itemAt(me->pos());
     if(i)
@@ -456,15 +469,14 @@ void FileBrowserTreeWidget::mousePressEvent(QMouseEvent* me)
 
         m_pphMutex.lock();
 
-        if(m_previewPlayHandle != nullptr)
+        if(m_previewPlayHandle.data() != nullptr)
         {
             // TMP GDX
             // Engine::mixer()->removePlayHandle(m_previewPlayHandle);
             // delete m_previewPlayHandle;
             qWarning("FileBrowser: RELEASE m_previewPlayHandle != nullptr");
+            m_previewPlayHandle.reset(nullptr);
         }
-
-        m_previewPlayHandle = nullptr;
 
         // in special case of sample-files we do not care about
         // handling() rather than directly creating a SamplePlayHandle
@@ -474,11 +486,11 @@ void FileBrowserTreeWidget::mousePressEvent(QMouseEvent* me)
                     tr("Loading sample"),
                     tr("Please wait, loading sample for "
                        "preview..."),
-                    embed::getIconPixmap("sample_file", 24, 24), 0);
+                    embed::getPixmap("sample_file", 24, 24), 0);
             // qApp->processEvents(QEventLoop::ExcludeUserInputEvents);
-            SamplePlayHandle* s = new SamplePlayHandle(f->fullName());
+            SamplePlayHandle* h = new SamplePlayHandle(f->fullName());
             // s->setDoneMayReturnTrue(false);
-            m_previewPlayHandle = s;
+            m_previewPlayHandle.swap(h->pointer());
             delete tf;
         }
         else if((f->extension() == "xiz" || f->extension() == "sf2"
@@ -490,9 +502,10 @@ void FileBrowserTreeWidget::mousePressEvent(QMouseEvent* me)
                     tr("Loading data"),
                     tr("Please wait, loading data for "
                        "preview..."),
-                    embed::getIconPixmap("soundfont_file", 24, 24), 0);
-            m_previewPlayHandle = new PresetPreviewPlayHandle(
+                    embed::getPixmap("soundfont_file", 24, 24), 0);
+            PresetPreviewPlayHandle* h = new PresetPreviewPlayHandle(
                     f->fullName(), f->handling() == FileItem::LoadByPlugin);
+            m_previewPlayHandle.swap(h->pointer());
             delete tf;
         }
         else if(f->type() != FileItem::VstPluginFile
@@ -503,7 +516,7 @@ void FileBrowserTreeWidget::mousePressEvent(QMouseEvent* me)
                     tr("Loading preset"),
                     tr("Please wait, loading preset for "
                        "preview..."),
-                    embed::getIconPixmap("preset_file", 24, 24), 0);
+                    embed::getPixmap("preset_file", 24, 24), 0);
             DataFile dataFile(f->fullName());
             if(!dataFile.validate(f->extension()))
             {
@@ -517,9 +530,10 @@ void FileBrowserTreeWidget::mousePressEvent(QMouseEvent* me)
                 m_pphMutex.unlock();
                 return;
             }
-            m_previewPlayHandle = new PresetPreviewPlayHandle(
+            PresetPreviewPlayHandle* h = new PresetPreviewPlayHandle(
                     f->fullName(), f->handling() == FileItem::LoadByPlugin,
                     &dataFile);
+            m_previewPlayHandle.swap(h->pointer());
             delete tf;
         }
 
@@ -549,33 +563,30 @@ void FileBrowserTreeWidget::mouseMoveEvent(QMouseEvent* me)
                                                ? "presetfile"
                                                : "pluginpresetfile",
                                        f->fullName(),
-                                       embed::getIconPixmap("preset_file"),
-                                       this);
+                                       embed::getPixmap("preset_file"), this);
                     break;
 
                 case FileItem::SampleFile:
                     new StringPairDrag("samplefile", f->fullName(),
-                                       embed::getIconPixmap("sample_file"),
-                                       this);
+                                       embed::getPixmap("sample_file"), this);
                     break;
                 case FileItem::SoundFontFile:
                     new StringPairDrag("soundfontfile", f->fullName(),
-                                       embed::getIconPixmap("soundfont_file"),
+                                       embed::getPixmap("soundfont_file"),
                                        this);
                     break;
                 case FileItem::VstPluginFile:
-                    new StringPairDrag(
-                            "vstpluginfile", f->fullName(),
-                            embed::getIconPixmap("vst_plugin_file"), this);
+                    new StringPairDrag("vstpluginfile", f->fullName(),
+                                       embed::getPixmap("vst_plugin_file"),
+                                       this);
                     break;
                 case FileItem::MidiFile:
                     new StringPairDrag("importedproject", f->fullName(),
-                                       embed::getIconPixmap("midi_file"),
-                                       this);
+                                       embed::getPixmap("midi_file"), this);
                     break;
                 case FileItem::ProjectFile:
                     new StringPairDrag("projectfile", f->fullName(),
-                                       embed::getIconPixmap("project_file"),
+                                       embed::getPixmap("project_file"),
                                        this);
                     break;
 
@@ -601,7 +612,7 @@ void FileBrowserTreeWidget::mouseReleaseEvent(QMouseEvent* me)
     m_mousePressed = false;
 
     m_pphMutex.lock();
-    if(m_previewPlayHandle != nullptr)
+    if(m_previewPlayHandle.data() != nullptr)
     {
         // if there're samples shorter than 3 seconds, we don't
         // stop them if the user releases mouse-button...
@@ -627,28 +638,49 @@ void FileBrowserTreeWidget::mouseReleaseEvent(QMouseEvent* me)
         */
 
         qInfo("FileBrowserTreeWidget::mouseReleaseEvent 1");
-        m_previewPlayHandle->setFinished();
+        if(!m_previewPlayHandle->isFinished())
+        {
+            PresetPreviewPlayHandle* ppph
+                    = dynamic_cast<PresetPreviewPlayHandle*>(
+                            m_previewPlayHandle.data());
+            if(ppph != nullptr)
+            {
+                ppph->noteOff(0);
+            }
+            else
+            {
+                m_previewPlayHandle->setFinished();
+                // Engine::mixer()->emit
+                // playHandleToRemove(m_previewPlayHandle);
+            }
+        }
         qInfo("FileBrowserTreeWidget::mouseReleaseEvent 2");
         m_previewPlayHandle = nullptr;
     }
     m_pphMutex.unlock();
 }
 
-void FileBrowserTreeWidget::onPlayHandleDeleted(PlayHandle* handle)
+void FileBrowserTreeWidget::onPlayHandleDeleted(PlayHandlePointer handle)
 {
-    if(m_previewPlayHandle != nullptr)
+    if(handle.data()==nullptr)
+        return;
+
+    // qInfo("FileBrowserTreeWidget::onPlayHandleDeleted");
+    m_pphMutex.lock();
+    if(m_previewPlayHandle.data() != nullptr)
     {
-        if(m_previewPlayHandle == handle)
+        if(m_previewPlayHandle.data() == handle.data())
         {
             qInfo("FileBrowserTreeWidget::onPlayHandleDeleted");
-            m_previewPlayHandle = nullptr;
+            m_previewPlayHandle.reset(nullptr);
         }
     }
+    m_pphMutex.unlock();
 }
 
 void FileBrowserTreeWidget::handleFile(FileItem* f, InstrumentTrack* it)
 {
-    Engine::mixer()->requestChangeInModel();
+    // Engine::mixer()->requestChangeInModel();
     switch(f->handling())
     {
         case FileItem::LoadAsProject:
@@ -692,18 +724,18 @@ void FileBrowserTreeWidget::handleFile(FileItem* f, InstrumentTrack* it)
         default:
             break;
     }
-    Engine::mixer()->doneChangeInModel();
+    // Engine::mixer()->doneChangeInModel();
 }
 
 void FileBrowserTreeWidget::activateListItem(QTreeWidgetItem* item,
                                              int              column)
 {
-    // qWarning("FileBrowserTreeWidget::activateListItem()");
+    qWarning("FileBrowserTreeWidget::activateListItem()");
     // qWarning("A isPreviewing=%d",PresetPreviewPlayHandle::isPreviewing());
     // qWarning("A   m_mousePressed=%d",m_mousePressed);
 
     // make sure any playback is stopped
-    // mouseReleaseEvent( nullptr );
+    mouseReleaseEvent(nullptr);
     // qWarning("A isPreviewing=%d",PresetPreviewPlayHandle::isPreviewing());
     // qWarning("A   m_mousePressed=%d",m_mousePressed);
 
@@ -819,19 +851,17 @@ void Directory::initPixmaps(void)
 {
     if(s_folderPixmap == nullptr)
     {
-        s_folderPixmap = new QPixmap(embed::getIconPixmap("folder"));
+        s_folderPixmap = new QPixmap(embed::getPixmap("folder"));
     }
 
     if(s_folderOpenedPixmap == nullptr)
     {
-        s_folderOpenedPixmap
-                = new QPixmap(embed::getIconPixmap("folder_opened"));
+        s_folderOpenedPixmap = new QPixmap(embed::getPixmap("folder_opened"));
     }
 
     if(s_folderLockedPixmap == nullptr)
     {
-        s_folderLockedPixmap
-                = new QPixmap(embed::getIconPixmap("folder_locked"));
+        s_folderLockedPixmap = new QPixmap(embed::getPixmap("folder_locked"));
     }
 }
 
@@ -858,7 +888,7 @@ void Directory::update(void)
                 sep->setText(
                         0, FileBrowserTreeWidget::tr("--- Factory files ---")
                                    .replace("-", "—"));
-                sep->setIcon(0, embed::getIconPixmap("factory_files"));
+                sep->setIcon(0, embed::getIcon("factory_files"));
                 insertChild(m_dirCount + top_index, sep);
             }
         }

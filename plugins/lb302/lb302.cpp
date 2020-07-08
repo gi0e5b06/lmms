@@ -28,7 +28,7 @@
  *
  */
 
-// Need to include this first to ensure we get M_PI in MinGW with C++11
+// Need to include this first to ensure we get M_PI in MinGW with C++1 1
 #define _USE_MATH_DEFINES
 #include "lb302.h"
 
@@ -323,7 +323,7 @@ lb302Synth::lb302Synth(InstrumentTrack* _instrumentTrack) :
 
     InstrumentPlayHandle* iph
             = new InstrumentPlayHandle(this, _instrumentTrack);
-    Engine::mixer()->emit playHandleToAdd(iph);
+    Engine::mixer()->emit playHandleToAdd(iph->pointer());
 }
 
 lb302Synth::~lb302Synth()

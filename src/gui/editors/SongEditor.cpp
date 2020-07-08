@@ -427,13 +427,13 @@ void SongEditor::keyPressEvent(QKeyEvent* ke)
     {
         deleteSelection();
         /*
-        QVector<TrackContentObjectView *> tcoViews;
+        QVector<TileView *> tcoViews;
         QVector<SelectableObject *> so = selectedObjects();
         for( QVector<SelectableObject *>::iterator it = so.begin();
                         it != so.end(); ++it )
         {
-                TrackContentObjectView * tcov =
-                        dynamic_cast<TrackContentObjectView *>( *it );
+                TileView * tcov =
+                        dynamic_cast<TileView *>( *it );
                 tcov->remove();
         }
         */
@@ -484,15 +484,14 @@ void SongEditor::unitePatterns()
             for(QVector<SelectableObject*>::iterator it = so.begin();
                 it != so.end(); ++it)
             {
-                TrackContentObjectView* tcov
-                        = dynamic_cast<TrackContentObjectView*>(*it);
+                TileView* tcov = dynamic_cast<TileView*>(*it);
                 // tcov->remove();
                 if(!tcov)
                 {
                     qCritical("Unite: tcov null");
                     continue;
                 }
-                TrackContentObject* tco = tcov->getTrackContentObject();
+                Tile* tco = tcov->getTile();
                 if(!tco)
                 {
                     qCritical("Unite: tco null");
@@ -546,15 +545,14 @@ void SongEditor::unitePatterns()
             for(QVector<SelectableObject*>::iterator it = so.begin();
                 it != so.end(); ++it)
             {
-                TrackContentObjectView* tcov
-                        = dynamic_cast<TrackContentObjectView*>(*it);
+                TileView* tcov = dynamic_cast<TileView*>(*it);
                 // tcov->remove();
                 if(!tcov)
                 {
                     qCritical("Unite: tcov null");
                     continue;
                 }
-                TrackContentObject* tco = tcov->getTrackContentObject();
+                Tile* tco = tcov->getTile();
                 if(!tco)
                 {
                     qCritical("Unite: tco null");
@@ -587,8 +585,8 @@ void SongEditor::unitePatterns()
                                    - newp->startPosition();
                         newp->getTimeMap().insert(newt, v);
                     }
-                    for(QPointer<AutomatableModel> o: p->objects())
-                        newp->addObject(o);
+                    // for(QPointer<AutomatableModel> o: p->objects())
+                    p->objects().map([&newp](auto o) { newp->addObject(o); });
                     endPos = qMax(endPos, p->endPosition());
                 }
                 tcov->remove();
@@ -609,15 +607,14 @@ void SongEditor::unitePatterns()
             for(QVector<SelectableObject*>::iterator it = so.begin();
                 it != so.end(); ++it)
             {
-                TrackContentObjectView* tcov
-                        = dynamic_cast<TrackContentObjectView*>(*it);
+                TileView* tcov = dynamic_cast<TileView*>(*it);
                 // tcov->remove();
                 if(!tcov)
                 {
                     qCritical("Unite: tcov null");
                     continue;
                 }
-                TrackContentObject* tco = tcov->getTrackContentObject();
+                Tile* tco = tcov->getTile();
                 if(!tco)
                 {
                     qCritical("Unite: tco null");
@@ -681,14 +678,13 @@ void SongEditor::dividePatterns()
             for(QVector<SelectableObject*>::iterator it = so.begin();
                 it != so.end(); ++it)
             {
-                TrackContentObjectView* tcov
-                        = dynamic_cast<TrackContentObjectView*>(*it);
+                TileView* tcov = dynamic_cast<TileView*>(*it);
                 if(!tcov)
                 {
                     qCritical("Divide: tcov null");
                     continue;
                 }
-                TrackContentObject* tco = tcov->getTrackContentObject();
+                Tile* tco = tcov->getTile();
                 if(!tco)
                 {
                     qCritical("Divide: tco null");
@@ -778,14 +774,13 @@ void SongEditor::dividePatterns()
             for(QVector<SelectableObject*>::iterator it = so.begin();
                 it != so.end(); ++it)
             {
-                TrackContentObjectView* tcov
-                        = dynamic_cast<TrackContentObjectView*>(*it);
+                TileView* tcov = dynamic_cast<TileView*>(*it);
                 if(!tcov)
                 {
                     qCritical("Unite: tcov null");
                     continue;
                 }
-                TrackContentObject* tco = tcov->getTrackContentObject();
+                Tile* tco = tcov->getTile();
                 if(!tco)
                 {
                     qCritical("Unite: tco null");
@@ -869,15 +864,14 @@ void SongEditor::dividePatterns()
             for(QVector<SelectableObject*>::iterator it = so.begin();
                 it != so.end(); ++it)
             {
-                TrackContentObjectView* tcov
-                        = dynamic_cast<TrackContentObjectView*>(*it);
+                TileView* tcov = dynamic_cast<TileView*>(*it);
                 // tcov->remove();
                 if(!tcov)
                 {
                     qCritical("Divide: tcov null");
                     continue;
                 }
-                TrackContentObject* tco = tcov->getTrackContentObject();
+                Tile* tco = tcov->getTile();
                 if(!tco)
                 {
                     qCritical("Divide: tco null");
@@ -938,15 +932,14 @@ void SongEditor::dividePatterns()
             for(QVector<SelectableObject*>::iterator it = so.begin();
                 it != so.end(); ++it)
             {
-                TrackContentObjectView* tcov
-                        = dynamic_cast<TrackContentObjectView*>(*it);
+                TileView* tcov = dynamic_cast<TileView*>(*it);
                 // tcov->remove();
                 if(!tcov)
                 {
                     qCritical("Divide: tcov null");
                     continue;
                 }
-                TrackContentObject* tco = tcov->getTrackContentObject();
+                Tile* tco = tcov->getTile();
                 if(!tco)
                 {
                     qCritical("Divide: tco null");
@@ -1590,16 +1583,20 @@ void SongWindow::keyPressEvent(QKeyEvent* ke)
 {
     if(ke->key() == Qt::Key_Control)
     {
+        /*
         if(m_selectModeAction->isChecked())
         {
             m_drawModeAction->setChecked(true);
             m_drawModeAction->trigger();
         }
-        else if(m_drawModeAction->isChecked())
+        else
+        */
+        if(m_drawModeAction->isChecked())
         {
             m_selectModeAction->setChecked(true);
             m_selectModeAction->trigger();
         }
+
         /*
         m_crtlAction = m_editModeGroup->checkedAction();
         m_selectModeAction->setChecked(true);
@@ -1617,11 +1614,13 @@ void SongWindow::keyReleaseEvent(QKeyEvent* ke)
             m_drawModeAction->setChecked(true);
             m_drawModeAction->trigger();
         }
+        /*
         else if(m_drawModeAction->isChecked())
         {
             m_selectModeAction->setChecked(true);
             m_selectModeAction->trigger();
         }
+        */
         /*
         if(m_crtlAction)
         {
@@ -1677,8 +1676,7 @@ void SongEditor::deleteSelection()
     for(QVector<SelectableObject*>::iterator it = so.begin(); it != so.end();
         ++it)
     {
-        TrackContentObjectView* tcov
-                = dynamic_cast<TrackContentObjectView*>(*it);
+        TileView* tcov = dynamic_cast<TileView*>(*it);
         tcov->remove();
     }
 }
@@ -1691,7 +1689,7 @@ void SongEditor::cutSelection()
 
 void SongEditor::copySelection()
 {
-    QVector<TrackContentObject*> so = selectedTCOs();
+    QVector<Tile*> so = selectedTCOs();
     if(so.length() > 0)
         Clipboard::copy(so.at(0));
 }

@@ -35,6 +35,8 @@
 #include "ProjectJournal.h"
 #include "Song.h"
 #include "lmmsconfig.h"
+#include "Pattern.h"
+#include "Controller.h"
 //#include "Backtrace.h"
 
 #include <QFuture>
@@ -80,6 +82,12 @@ void LmmsCore::init(bool renderOnly)
             "const surroundSampleFrame*");
     qRegisterMetaType<MidiTime>("MidiTime");
     qRegisterMetaType<const ValueBuffer*>("const ValueBuffer*");
+
+    qRegisterMetaType<Note>("Note");
+    qRegisterMetaType<const Pattern*>("const Pattern*");
+    qRegisterMetaType<Controller*>("Controller*");
+    qRegisterMetaType<PlayHandlePointer>("PlayHandlePointer");
+    qRegisterMetaType<AudioPortPointer>("AudioPortPointer");
 
     LmmsCore* engine = inst();
 

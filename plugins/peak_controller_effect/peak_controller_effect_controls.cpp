@@ -87,11 +87,18 @@ void PeakControllerEffectControls::loadSettings(const QDomElement& _this)
         m_effect->m_effectId = rand();
     }
 
+    if(_this.hasAttribute("uuid"))
+    {
+        if(m_effect->hasUuid())  //! m_uuid.isEmpty())
+            qWarning("PeakControllerEffectControls::loadSettings already has an UUID");
+        m_effect->setUuid(_this.attribute("uuid"));
+    }
+
     if(m_effect->m_autoController
        && PresetPreviewPlayHandle::isPreviewing() == true)
     {
         delete m_effect->m_autoController;
-        m_effect->m_autoController = 0;
+        m_effect->m_autoController = nullptr;
     }
 }
 
@@ -99,6 +106,9 @@ void PeakControllerEffectControls::saveSettings(QDomDocument& _doc,
                                                 QDomElement&  _this)
 {
     _this.setAttribute("effectId", m_effect->m_effectId);
+
+    if(m_effect->hasUuid())
+        _this.setAttribute("uuid", m_effect->uuid());
 
     m_baseModel.saveSettings(_doc, _this, "base");
     m_amountModel.saveSettings(_doc, _this, "amount");

@@ -25,6 +25,7 @@
 #ifndef PLAY_HANDLE_H
 #define PLAY_HANDLE_H
 
+//#include "AudioPort.h"
 #include "MemoryManager.h"
 #include "Mutex.h"
 #include "SafeList.h"
@@ -32,12 +33,18 @@
 #include "lmms_basics.h"
 
 #include <QList>
+#include <QSharedPointer>
 
 class QThread;
 
 class Track;
 class Instrument;
-class AudioPort;
+// class AudioPort;
+class PlayHandle;
+
+typedef QSharedPointer<PlayHandle>        PlayHandlePointer;
+typedef SafeList<PlayHandlePointer>       PlayHandleList;
+typedef SafeList<const PlayHandlePointer> ConstPlayHandleList;
 
 class PlayHandle : public ThreadableJob
 {
@@ -60,13 +67,12 @@ class PlayHandle : public ThreadableJob
         MaxNumber = 1024
     };
 
-    virtual ~PlayHandle();
-
     Type type() const
     {
         return m_type;
     }
 
+    /*
     inline AudioPort* audioPort() const
     {
         return m_audioPort;
@@ -76,11 +82,12 @@ class PlayHandle : public ThreadableJob
     {
         m_audioPort = port;
     }
+    */
 
-    // required for ThreadableJob
-    virtual void doProcessing();
+    virtual void enterMixer() = 0;
+    virtual void exitMixer() = 0;
 
-    virtual bool requiresProcessing() const
+    virtual bool requiresProcessing() const final
     {
         return !isFinished();
     }
@@ -104,7 +111,7 @@ class PlayHandle : public ThreadableJob
     virtual bool isFromTrack(const Track* _track) const                = 0;
     virtual bool isFromInstrument(const Instrument* _instrument) const = 0;
     virtual bool isFinished() const                                    = 0;
-    virtual void setFinished() final;
+    virtual void setFinished();
 
     // returns the frameoffset at the start of the playhandle,
     // ie. how many empty frames should be inserted at the start of
@@ -151,6 +158,18 @@ class PlayHandle : public ThreadableJob
         m_refCount = 0;
     }
 
+    virtual PlayHandlePointer& pointer()
+    {
+        return *m_pointer;
+    }
+
+    virtual const PlayHandlePointer& pointer() const
+    {
+        return *m_pointer;
+    }
+
+    virtual ~PlayHandle();
+
   protected:
     PlayHandle(const Type type, f_cnt_t offset = 0);
 
@@ -165,22 +184,20 @@ class PlayHandle : public ThreadableJob
     }
     */
 
-    AudioPort* m_audioPort;
-    bool       m_finished;
+    virtual void doProcessing() final;
+
+    // AudioPortPointer m_audioPort;
+    bool m_finished;
 
   private:
-    Type         m_type;
-    f_cnt_t      m_offset;
-    Mutex        m_processingLock;
-    bool         m_usesBuffer;
-    sampleFrame* m_playHandleBuffer;
-    bool         m_bufferReleased;
-    int          m_refCount;
+    Type               m_type;
+    f_cnt_t            m_offset;
+    Mutex              m_processingLock;
+    bool               m_usesBuffer;
+    sampleFrame*       m_playHandleBuffer;
+    bool               m_bufferReleased;
+    int                m_refCount;
+    PlayHandlePointer* m_pointer;
 };
-
-// typedef QList<PlayHandle*>       PlayHandleList;
-// typedef QList<const PlayHandle*> ConstPlayHandleList;
-typedef SafeList<PlayHandle*>       PlayHandleList;
-typedef SafeList<const PlayHandle*> ConstPlayHandleList;
 
 #endif

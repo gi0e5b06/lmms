@@ -1,24 +1,22 @@
 /*
  * SmashGDX.cpp -
  *
- * Copyright (c) 2018 gi0e5b06 (on github.com)
+ * Copyright (c) 2018-2020 gi0e5b06 (on github.com)
  *
- * This file is part of LMMS - https://lmms.io
+ * This file is part of LSMM -
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public
- * License along with this program (see COPYING); if not, write to the
- * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
- * Boston, MA 02110-1301 USA.
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
 
@@ -66,22 +64,22 @@ bool SmashGDXEffect::processAudioBuffer(sampleFrame* _buf,
     const int SR = Engine::mixer()->processingSampleRate();
 
     const ValueBuffer* rateBuf  = m_gdxControls.m_rateModel.valueBuffer();
-    const ValueBuffer* phaseBuf  = m_gdxControls.m_phaseModel.valueBuffer();
+    const ValueBuffer* phaseBuf = m_gdxControls.m_phaseModel.valueBuffer();
     const ValueBuffer* levelBuf = m_gdxControls.m_levelModel.valueBuffer();
     const ValueBuffer* bitsBuf  = m_gdxControls.m_bitsModel.valueBuffer();
 
     for(fpp_t f = 0; f < _frames; ++f)
     {
-        float w0, d0, w1, d1;
+        real_t w0, d0, w1, d1;
         computeWetDryLevels(f, _frames, smoothBegin, smoothEnd, w0, d0, w1,
                             d1);
 
-        float rate = rateBuf ? rateBuf->value(f)
-                             : m_gdxControls.m_rateModel.value();
-        float phase = phaseBuf ? phaseBuf->value(f)
-                             : m_gdxControls.m_phaseModel.value();
-        float level = levelBuf ? levelBuf->value(f)
-                               : m_gdxControls.m_levelModel.value();
+        real_t rate = rateBuf ? rateBuf->value(f)
+                              : m_gdxControls.m_rateModel.value();
+        real_t phase = phaseBuf ? phaseBuf->value(f)
+                                : m_gdxControls.m_phaseModel.value();
+        real_t level = levelBuf ? levelBuf->value(f)
+                                : m_gdxControls.m_levelModel.value();
         int bits = bitsBuf ? bitsBuf->value(f)
                            : m_gdxControls.m_bitsModel.value();
 
@@ -89,7 +87,7 @@ bool SmashGDXEffect::processAudioBuffer(sampleFrame* _buf,
         {
             m_refVal0 = _buf[f][0];
             m_idx0    = 0;
-            m_idx1    = m_idx0 + fraction(1.f + phase) * SR * rate;
+            m_idx1    = m_idx0 + fraction(1. + phase) * SR * rate;
         }
         else
             m_idx0++;
@@ -105,16 +103,16 @@ bool SmashGDXEffect::processAudioBuffer(sampleFrame* _buf,
         sample_t curVal0 = m_refVal0;
         sample_t curVal1 = m_refVal1;
 
-        if(level > 0.f)
+        if(level > 0.)
         {
-            curVal0 = roundf(curVal0 / level) * level;
-            curVal1 = roundf(curVal1 / level) * level;
+            curVal0 = round(curVal0 / level) * level;
+            curVal1 = round(curVal1 / level) * level;
         }
 
         if(bits == 0)
         {
-            curVal0 = 0.f;
-            curVal1 = 0.f;
+            curVal0 = 0.;
+            curVal1 = 0.;
         }
         else if(bits == 1)
         {

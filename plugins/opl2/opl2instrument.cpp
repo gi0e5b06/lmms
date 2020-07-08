@@ -206,7 +206,7 @@ opl2instrument::opl2instrument(InstrumentTrack* _instrument_track) :
     // Connect the plugin to the mixer...
     InstrumentPlayHandle* iph
             = new InstrumentPlayHandle(this, _instrument_track);
-    Engine::mixer()->emit playHandleToAdd(iph);
+    Engine::mixer()->emit playHandleToAdd(iph->pointer());
 }
 
 opl2instrument::~opl2instrument()

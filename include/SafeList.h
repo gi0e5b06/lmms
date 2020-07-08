@@ -68,10 +68,16 @@ class SafeList
         m_list.clear();
     }
 
-    bool contains(T _e) const
+    bool contains(const T& _e) const
     {
         QMutexLocker lock(const_cast<QMutex*>(&m_mutex));
         return m_list.contains(_e);
+    }
+
+    int indexOf(const T& _e) const
+    {
+        QMutexLocker lock(const_cast<QMutex*>(&m_mutex));
+        return m_list.indexOf(_e);
     }
 
     bool isEmpty() const
@@ -88,7 +94,7 @@ class SafeList
     }
     */
 
-    int removeAll(T _e, bool _check = true)
+    int removeAll(const T& _e, bool _check = true)
     {
         QMutexLocker lock(&m_mutex);
         if(_check && !m_list.contains(_e))
@@ -101,7 +107,7 @@ class SafeList
                          : m_list.removeAll(_e);
     }
 
-    bool removeOne(T _e, bool _check = true)
+    bool removeOne(const T& _e, bool _check = true)
     {
         QMutexLocker lock(&m_mutex);
         if(_check && !m_list.contains(_e))
@@ -113,7 +119,7 @@ class SafeList
         return m_list.removeOne(_e);
     }
 
-    bool moveUp(T _e, bool _check = true)
+    bool moveUp(const T& _e, bool _check = true)
     {
         QMutexLocker lock(&m_mutex);
         if(_check && !m_list.contains(_e))
@@ -134,7 +140,7 @@ class SafeList
         return true;
     }
 
-    bool moveDown(T _e, bool _check = true)
+    bool moveDown(const T& _e, bool _check = true)
     {
         QMutexLocker lock(&m_mutex);
         if(_check && !m_list.contains(_e))
@@ -155,7 +161,7 @@ class SafeList
         return true;
     }
 
-    bool moveTop(T _e, bool _check = true)
+    bool moveTop(const T& _e, bool _check = true)
     {
         QMutexLocker lock(&m_mutex);
         if(_check && !m_list.contains(_e))
@@ -173,7 +179,7 @@ class SafeList
         return true;
     }
 
-    bool moveBottom(T _e, bool _check = true)
+    bool moveBottom(const T& _e, bool _check = true)
     {
         QMutexLocker lock(&m_mutex);
         if(_check && !m_list.contains(_e))
@@ -197,6 +203,17 @@ class SafeList
         return m_list.size();
     }
 
+    T takeFirst()
+    {
+        QMutexLocker lock(&m_mutex);
+        if(m_list.isEmpty())
+        {
+            BACKTRACE
+            qCritical("SafeList::takeLast list is empty");
+        }
+        return m_list.takeFirst();
+    }
+
     T takeLast()
     {
         QMutexLocker lock(&m_mutex);
@@ -206,6 +223,50 @@ class SafeList
             qCritical("SafeList::takeLast list is empty");
         }
         return m_list.takeLast();
+    }
+
+    T first()
+    {
+        QMutexLocker lock(&m_mutex);
+        if(m_list.isEmpty())
+        {
+            BACKTRACE
+            qCritical("SafeList::first list is empty");
+        }
+        return m_list.first();
+    }
+
+    const T first() const
+    {
+        QMutexLocker lock(const_cast<QMutex*>(&m_mutex));
+        if(m_list.isEmpty())
+        {
+            BACKTRACE
+            qCritical("SafeList::first list is empty");
+        }
+        return m_list.first();
+    }
+
+    T last()
+    {
+        QMutexLocker lock(const_cast<QMutex*>(&m_mutex));
+        if(m_list.isEmpty())
+        {
+            BACKTRACE
+            qCritical("SafeList::last list is empty");
+        }
+        return m_list.last();
+    }
+
+    const T last() const
+    {
+        QMutexLocker lock(&m_mutex);
+        if(m_list.isEmpty())
+        {
+            BACKTRACE
+            qCritical("SafeList::last list is empty");
+        }
+        return m_list.last();
     }
 
     /*
@@ -225,21 +286,28 @@ class SafeList
     }
     */
 
-    void map(const std::function<void(T)>& _f, bool _clear = false)
+    void map(const std::function<void(T&)>& _f, bool _clear = false)
     {
         QMutexLocker lock(&m_mutex);
-        for(T e: m_list)
+        for(T& e: m_list)
             _f(e);
         if(_clear)
             m_list.clear();
     }
 
-    void filter(const std::function<bool(T)>& _f)
+    void map(const std::function<void(const T&)>& _f) const
+    {
+        QMutexLocker lock(const_cast<QMutex*>(&m_mutex));
+        for(const T& e: m_list)
+            _f(e);
+    }
+
+    void filter(const std::function<bool(const T&)>& _f)
     {
         QMutexLocker lock(&m_mutex);
-        for(T e: m_list)
-            if(_f(e))
-                m_list.remove(e);
+        for(int i = m_list.size() - 1; i >= 0; i--)  // const T& e: m_list)
+            if(_f(m_list.at(i)))
+                m_list.removeAt(i);
     }
 
   private:

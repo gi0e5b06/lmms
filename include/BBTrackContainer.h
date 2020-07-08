@@ -71,7 +71,7 @@ class EXPORT BBTrackContainer : public TrackContainer
 
     void swapBB(int _bb1, int _bb2);
 
-    void updateBBTrack(TrackContentObject* _tco);
+    void updateBBTrack(Tile* _tco);
     void fixIncorrectPositions();
     void createTCOsForBB(int _bb);
 

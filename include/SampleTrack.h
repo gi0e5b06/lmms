@@ -31,6 +31,7 @@
 
 //#include <QDialog>
 
+class SampleTrack;
 class LedCheckBox;
 class SampleBuffer;
 class EffectRackView;
@@ -45,19 +46,19 @@ class SampleTrackWindow;
 class QLineEdit;
 class QLabel;
 
-class SampleTCO : public TrackContentObject
+class SampleTCO : public Tile
 {
     Q_OBJECT
     mapPropertyFromModel(bool, isRecord, setRecord, m_recordModel);
 
   public:
-    SampleTCO(Track* _track);
+    SampleTCO(SampleTrack* _track);
     SampleTCO(const SampleTCO& _other);
     virtual ~SampleTCO();
 
     virtual bool    isEmpty() const;
-    virtual tick_t  unitLength() const;
     virtual QString defaultName() const;
+    virtual tick_t  unitLength() const;
 
     // virtual void changeLength( const MidiTime & _length );
 
@@ -81,9 +82,15 @@ class SampleTCO : public TrackContentObject
 
     MidiTime sampleLength() const;
 
-    tick_t                          initialPlayTick();
-    void                            setInitialPlayTick(tick_t _t);
-    virtual TrackContentObjectView* createView(TrackView* _tv);
+    tick_t            initialPlayTick();
+    void              setInitialPlayTick(tick_t _t);
+
+    inline SampleTrack* sampleTrack() const
+    {
+        return m_sampleTrack;
+    }
+
+    virtual TileView* createView(TrackView* _tv);
 
     bool isPlaying() const;
     void setIsPlaying(bool isPlaying);
@@ -101,6 +108,8 @@ class SampleTCO : public TrackContentObject
     virtual void doConnections();
 
   private:
+    SampleTrack* m_sampleTrack;
+
     // number of ticts skipped (after the start frame)
     // most of the time, 0
     tick_t m_initialPlayTick;
@@ -115,7 +124,7 @@ class SampleTCO : public TrackContentObject
     void sampleChanged();
 };
 
-class SampleTCOView : public TrackContentObjectView
+class SampleTCOView : public TileView
 {
     Q_OBJECT
 
@@ -161,21 +170,21 @@ class SampleTrack : public Track
                       const f_cnt_t   _frame_base,
                       int             _tco_num = -1);
 
-    virtual TrackView*          createView(TrackContainerView* tcv);
-    virtual TrackContentObject* createTCO(const MidiTime& _pos);
+    virtual TrackView* createView(TrackContainerView* tcv);
+    virtual Tile*      createTCO(const MidiTime& _pos);
 
     virtual void saveTrackSpecificSettings(QDomDocument& _doc,
                                            QDomElement&  _parent);
     virtual void loadTrackSpecificSettings(const QDomElement& _this);
 
-    const AudioPort* audioPort() const
+    AudioPortPointer& audioPort()
     {
-        return &m_audioPort;
+        return m_audioPort;
     }
 
-    AudioPort* audioPort()
+    const AudioPortPointer& audioPort() const
     {
-        return &m_audioPort;
+        return m_audioPort;
     }
 
     FloatModel* volumeModel()
@@ -209,11 +218,11 @@ class SampleTrack : public Track
     void updateVolume();
 
   private:
-    FloatModel m_volumeModel;
-    FloatModel m_panningModel;
-    BoolModel  m_useMasterPitchModel;  // TODO?
-    IntModel   m_effectChannelModel;
-    AudioPort  m_audioPort;
+    FloatModel       m_volumeModel;
+    FloatModel       m_panningModel;
+    BoolModel        m_useMasterPitchModel;  // TODO?
+    IntModel         m_effectChannelModel;
+    AudioPortPointer m_audioPort;
     // FloatModel m_pitchModel;         //TODO?
     // IntModel m_pitchRangeModel;      //TODO?
 

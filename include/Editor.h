@@ -68,8 +68,8 @@ class EditorWindow : public QMainWindow, public virtual ActionUpdatable
     /// \brief	Constructor.
     ///
     /// \param	record	If set true, the editor's toolbar will contain record
-    ///					buttons in addition to the play and stop
-    ///buttons.
+    ///					buttons in addition to the play and
+    ///stop buttons.
     EditorWindow(bool record = false);
     virtual ~EditorWindow();
 
@@ -114,8 +114,9 @@ class EditorWindow : public QMainWindow, public virtual ActionUpdatable
 class DropToolBar : public QToolBar
 {
     Q_OBJECT
+
   public:
-    DropToolBar(QWidget* parent = NULL);
+    DropToolBar(QWidget* parent = nullptr);
 
     void addBlank();
 
