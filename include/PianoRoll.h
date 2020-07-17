@@ -51,7 +51,10 @@ class QMenu;
 class QSignalMapper;
 class QToolButton;
 
-class PianoRoll : public QWidget
+class PianoRoll :
+      public QWidget,
+      public virtual Editor,
+      public virtual ActionUpdatable
 {
     Q_OBJECT
     Q_PROPERTY(QColor barLineColor READ barLineColor WRITE setBarLineColor)

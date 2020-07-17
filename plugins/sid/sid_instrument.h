@@ -34,7 +34,7 @@
 
 class sidInstrumentView;
 class NotePlayHandle;
-class automatableButtonGroup;
+class AutomatableButtonGroup;
 class PixmapButton;
 
 class voiceObject : public Model
@@ -141,8 +141,8 @@ class sidInstrumentView : public InstrumentView
   private:
     virtual void modelChanged();
 
-    automatableButtonGroup* m_passBtnGrp;
-    automatableButtonGroup* m_sidTypeBtnGrp;
+    AutomatableButtonGroup* m_passBtnGrp;
+    AutomatableButtonGroup* m_sidTypeBtnGrp;
 
     struct voiceKnobs
     {
@@ -152,7 +152,7 @@ class sidInstrumentView : public InstrumentView
                    Knob*                   r,
                    Knob*                   pw,
                    Knob*                   crs,
-                   automatableButtonGroup* wfbg,
+                   AutomatableButtonGroup* wfbg,
                    PixmapButton*           syncb,
                    PixmapButton*           ringb,
                    PixmapButton*           filterb,
@@ -173,7 +173,7 @@ class sidInstrumentView : public InstrumentView
         Knob*                   m_relKnob;
         Knob*                   m_pwKnob;
         Knob*                   m_crsKnob;
-        automatableButtonGroup* m_waveFormBtnGrp;
+        AutomatableButtonGroup* m_waveFormBtnGrp;
         PixmapButton*           m_syncButton;
         PixmapButton*           m_ringModButton;
         PixmapButton*           m_filterButton;

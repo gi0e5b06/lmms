@@ -22,8 +22,8 @@
  *
  */
 
-#ifndef _OPL2_H
-#define _OPL2_H
+#ifndef OPL2_H
+#define OPL2_H
 
 #include "Instrument.h"
 #include "InstrumentView.h"
@@ -166,7 +166,7 @@ class opl2instrumentView : public InstrumentView
     PixmapButton*           op1_w1_btn;
     PixmapButton*           op1_w2_btn;
     PixmapButton*           op1_w3_btn;
-    automatableButtonGroup* op1_waveform;
+    AutomatableButtonGroup* op1_waveform;
 
     Knob*                   op2_a_kn;
     Knob*                   op2_d_kn;
@@ -183,7 +183,7 @@ class opl2instrumentView : public InstrumentView
     PixmapButton*           op2_w1_btn;
     PixmapButton*           op2_w2_btn;
     PixmapButton*           op2_w3_btn;
-    automatableButtonGroup* op2_waveform;
+    AutomatableButtonGroup* op2_waveform;
 
     PixmapButton* fm_btn;
     PixmapButton* vib_depth_btn;

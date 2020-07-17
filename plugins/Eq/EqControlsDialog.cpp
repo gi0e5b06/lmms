@@ -139,7 +139,7 @@ EqControlsDialog::EqControlsDialog(EqControls* controls) :
     {
         Knob* resKnob = new Knob(knobBright_26, this);
         resKnob->move(distance, 440);
-        resKnob->setVolumeKnob(false);
+        //resKnob->setVolumeKnob(false);
         resKnob->setModel(m_parameterWidget->getBandModels(i)->res);
         if(i > 1 && i < 6)
         {
@@ -152,7 +152,7 @@ EqControlsDialog::EqControlsDialog(EqControls* controls) :
 
         Knob* freqKnob = new Knob(knobBright_26, this);
         freqKnob->move(distance, 396);
-        freqKnob->setVolumeKnob(false);
+        //freqKnob->setVolumeKnob(false);
         freqKnob->setModel(m_parameterWidget->getBandModels(i)->freq);
         freqKnob->setHintText(tr("Frequency:"), "Hz");
 
@@ -266,15 +266,15 @@ EqControlsDialog::EqControlsDialog(EqControls* controls) :
                      SIGNAL(dataChanged()), m_parameterWidget,
                      SLOT(updateHandle()));
 
-    automatableButtonGroup* lpBtnGrp
-            = new automatableButtonGroup(this, tr("lp grp"));
+    AutomatableButtonGroup* lpBtnGrp
+            = new AutomatableButtonGroup(this, tr("lp grp"));
     lpBtnGrp->addButton(lp12Button);
     lpBtnGrp->addButton(lp24Button);
     lpBtnGrp->addButton(lp48Button);
     lpBtnGrp->setModel(&m_controls->m_lpTypeModel, false);
 
-    automatableButtonGroup* hpBtnGrp
-            = new automatableButtonGroup(this, tr("hp grp"));
+    AutomatableButtonGroup* hpBtnGrp
+            = new AutomatableButtonGroup(this, tr("hp grp"));
     hpBtnGrp->addButton(hp12Button);
     hpBtnGrp->addButton(hp24Button);
     hpBtnGrp->addButton(hp48Button);

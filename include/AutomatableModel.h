@@ -1,7 +1,7 @@
 /*
  * AutomatableModel.h - declaration of class AutomatableModel
  *
- * Copyright (c) 2017-2018 gi0e5b06 (on github.com)
+ * Copyright (c) 2017-2020 gi0e5b06 (on github.com)
  * Copyright (c) 2007-2014 Tobias Doerffel <tobydox/at/users.sourceforge.net>
  *
  * This file is part of LMMS - https://lmms.io
@@ -31,9 +31,11 @@
 #include "MidiTime.h"
 #include "Model.h"
 #include "ValueBuffer.h"
+#include "lmms_math.h"
 
 #include <QMap>
 #include <QMutex>
+#include <QString>
 
 // simple way to map a property of a view to a model
 #define mapPropertyFromModelPtr(type, getfunc, setfunc, modelname) \
@@ -60,8 +62,11 @@
         modelname.setValue(val);                                \
     }
 
+class AutomatableModel;
 class ControllerConnection;
 class WaveFormStandard;
+
+typedef QMap<AutomatableModel*, real_t> AutomatedValueMap;
 
 class EXPORT AutomatableModel : public Model, public JournallingObject
 {
@@ -97,19 +102,31 @@ class EXPORT AutomatableModel : public Model, public JournallingObject
 
     void setControllerConnection(ControllerConnection* c);
 
-    template <class T>
+    template <typename T>
     static T castValue(const real_t v)
     {
-        return (T)(v);
+        return static_cast<T>(v);
     }
 
     template <bool>
     static bool castValue(const real_t v)
     {
-        return (qRound(v) != 0);
+        return abs(round(v)) >= 0.5;
     }
 
-    template <class T>
+    template <int>
+    static int castValue(const real_t v)
+    {
+        return int(floor(v));
+    }
+
+    // template <real_t>
+    static real_t castValue(const real_t v)
+    {
+        return v;
+    }
+
+    template <typename T>
     inline T value(f_cnt_t frameOffset = 0, bool recording = false) const
     {
         /*
@@ -135,7 +152,7 @@ class EXPORT AutomatableModel : public Model, public JournallingObject
 
     // Initial/Reset value
 
-    template <class T>
+    template <typename T>
     T initValue() const
     {
         return castValue<T>(m_initValue);
@@ -162,19 +179,19 @@ class EXPORT AutomatableModel : public Model, public JournallingObject
 
     // Range values (min,max,step)
 
-    template <class T>
+    template <typename T>
     T minValue() const
     {
         return castValue<T>(m_minValue);
     }
 
-    template <class T>
+    template <typename T>
     T maxValue() const
     {
         return castValue<T>(m_maxValue);
     }
 
-    template <class T>
+    template <typename T>
     T step() const
     {
         return castValue<T>(m_step);
@@ -188,7 +205,7 @@ class EXPORT AutomatableModel : public Model, public JournallingObject
 
     real_t range() const
     {
-        return m_range;
+        return m_maxValue - m_minValue;
     }
 
     bool hasStrictStepSize() const
@@ -229,7 +246,7 @@ class EXPORT AutomatableModel : public Model, public JournallingObject
     //! @brief Distribution of randomization, Default to gaussf().
     void setRandomDistribution(const WaveFormStandard* _wf);
 
-    template <class T>
+    template <typename T>
     inline T rawValue() const
     {
         return castValue<T>(m_value);
@@ -354,7 +371,8 @@ class EXPORT AutomatableModel : public Model, public JournallingObject
                      const real_t   max                = 0,
                      const real_t   step               = 0,
                      Model*         parent             = nullptr,
-                     const QString& displayName        = QString(),
+                     const QString& displayName        = QString::null,
+                     const QString& objectName         = QString::null,
                      bool           defaultConstructed = false);
 
     //! returns a value which is in range between min() and
@@ -389,13 +407,13 @@ class EXPORT AutomatableModel : public Model, public JournallingObject
 
     //! @brief Scales @value from linear to logarithmic.
     //! Value should be within [0,1]
-    template <class T>
-    T logToLinearScale(T value) const;
+    // template <typename T>
+    // T logToLinearScale(T value) const;
 
     //! rounds @a value to @a where if it is close to it
     //! @param value will be modified to rounded value
-    template <class T>
-    void roundAt(T& value, const T& where) const;
+    // template <typename T>
+    // void roundAt(T& value, const T& where) const;
 
     ScaleType m_scaleType;  //! scale type, linear by default
     real_t    m_value;
@@ -403,7 +421,7 @@ class EXPORT AutomatableModel : public Model, public JournallingObject
     real_t    m_minValue;
     real_t    m_maxValue;
     real_t    m_step;
-    real_t    m_range;
+    //real_t    m_range;
     real_t    m_centerValue;
     real_t    m_randomRatio;
 
@@ -440,7 +458,7 @@ class EXPORT TypedAutomatableModel : public AutomatableModel
 
     inline T value(f_cnt_t frameOffset = 0, bool recording = false) const
     {
-        return AutomatableModel::value<T>(frameOffset);
+        return AutomatableModel::value<T>(frameOffset, recording);
     }
 
     inline T initValue() const
@@ -462,11 +480,16 @@ class EXPORT TypedAutomatableModel : public AutomatableModel
     {
         return AutomatableModel::maxValue<T>();
     }
+
+    inline T step() const
+    {
+        return AutomatableModel::step<T>();
+    }
 };
 
 // some typed AutomatableModel-definitions
 
-class FloatModel : public TypedAutomatableModel<real_t>
+class EXPORT FloatModel : public TypedAutomatableModel<real_t>
 {
   public:
     FloatModel(real_t         val                = 0.,
@@ -475,6 +498,7 @@ class FloatModel : public TypedAutomatableModel<real_t>
                real_t         step               = 0.,
                Model*         parent             = nullptr,
                const QString& displayName        = "[float model]",
+               const QString& objectName         = QString::null,
                bool           defaultConstructed = false);
     real_t getRoundedValue() const;
     int    getDigitCount() const;
@@ -491,7 +515,7 @@ class FloatModel : public TypedAutomatableModel<real_t>
     int m_digitCount;
 };
 
-class IntModel : public TypedAutomatableModel<int>
+class EXPORT IntModel : public TypedAutomatableModel<int>
 {
   public:
     IntModel(int            val                = 0,
@@ -499,21 +523,29 @@ class IntModel : public TypedAutomatableModel<int>
              int            max                = 0,
              Model*         parent             = nullptr,
              const QString& displayName        = "[int model]",
+             const QString& objectName         = QString::null,
              bool           defaultConstructed = false) :
-          TypedAutomatableModel(
-                  val, min, max, 1, parent, displayName, defaultConstructed)
+          TypedAutomatableModel(val,
+                                min,
+                                max,
+                                1,
+                                parent,
+                                displayName,
+                                objectName,
+                                defaultConstructed)
     {
         setStrictStepSize(true);
     }
     virtual QString displayValue(const real_t val) const override;
 };
 
-class BoolModel : public TypedAutomatableModel<bool>
+class EXPORT BoolModel : public TypedAutomatableModel<bool>
 {
   public:
     BoolModel(const bool     val                = false,
               Model*         parent             = nullptr,
               const QString& displayName        = "[bool model]",
+              const QString& objectName         = QString::null,
               bool           defaultConstructed = false) :
           TypedAutomatableModel(val,
                                 false,
@@ -521,6 +553,7 @@ class BoolModel : public TypedAutomatableModel<bool>
                                 1,
                                 parent,
                                 displayName,
+                                objectName,
                                 defaultConstructed)
     {
         setStrictStepSize(true);
@@ -528,7 +561,5 @@ class BoolModel : public TypedAutomatableModel<bool>
 
     virtual QString displayValue(const real_t val) const override;
 };
-
-typedef QMap<AutomatableModel*, real_t> AutomatedValueMap;
 
 #endif

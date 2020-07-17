@@ -128,11 +128,16 @@ FxMixerView::FxMixerView() :
     channelArea->setWidget(m_channelAreaWidget);
     channelArea->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     channelArea->setFrameStyle(QFrame::NoFrame);
-    channelArea->setMinimumWidth(fxLineSize.width() * 2
-                                 + 4);  // typical w*8+7*4
+    channelArea->setMinimumWidth(fxLineSize.width() * 8 + 7*4);
     channelArea->setFixedHeight(
             fxLineSize.height()
             + style()->pixelMetric(QStyle::PM_ScrollBarExtent));
+    /*
+    channelArea->resize(
+            fxLineSize.width() * 8 + 7 * 4,
+            fxLineSize.height()
+                    + style()->pixelMetric(QStyle::PM_ScrollBarExtent));
+    */
     ml->addWidget(channelArea, 1, Qt::AlignTop);
 
     // show the add new effect channel button
@@ -460,7 +465,7 @@ FxMixerView::FxChannelView::FxChannelView(QWidget*     _parent,
 
     // Create EffectRack for the channel
     m_rackView
-        = new EffectRackView(&fxChannel->fxChain(), _mv->m_racksWidget);
+            = new EffectRackView(&fxChannel->fxChain(), _mv->m_racksWidget);
     // m_rackView->setFixedSize(250, FxLine::FxLineHeight);
     m_rackView->setFixedHeight(FxLine::FxLineHeight);
 }
@@ -723,7 +728,7 @@ void FxMixerView::updateFaders()
         if(m->effectChannel(i)->peakRight() > opr)
         {
             m_fxChannelViews[i]->m_fader->setPeak_R(
-                                                    m->effectChannel(i)->peakRight());
+                    m->effectChannel(i)->peakRight());
             m->effectChannel(i)->resetPeakRight();
         }
         else

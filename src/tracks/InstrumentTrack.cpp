@@ -105,8 +105,8 @@ InstrumentTrack::InstrumentTrack(TrackContainer* tc) :
       m_midiNotesMutex("InstrumentTrack::m_midiNotesMutex", false),
       m_sustainPedalPressed(false), m_silentBuffersProcessed(false),
       /*m_previewMode(false),*/ m_scale(nullptr),
-      m_baseNoteModel(0, 0, NumKeys - 1, this, tr("Base note")),
-      m_volumeEnabledModel(true, this, tr("Enabled Volume")),
+      m_baseNoteModel(0, 0, NumKeys - 1, this, tr("Base note"), "baseNote"),
+      m_volumeEnabledModel(true, this, tr("Enabled Volume"), "volumeEnabled"),
       m_volumeModel(
               DefaultVolume, MinVolume, MaxVolume, 0.1, this, tr("Volume")),
       m_noteVolumeModel(DefaultVolume,
@@ -114,31 +114,38 @@ InstrumentTrack::InstrumentTrack(TrackContainer* tc) :
                         MaxVolume,
                         0.1,
                         this,
-                        tr("Note Volume")),
-      m_panningEnabledModel(true, this, tr("Enabled Panning")),
+                        tr("Note Volume"),
+                        "noteVolume"),
+      m_panningEnabledModel(
+              true, this, tr("Enabled Panning"), "panningEnabled"),
       m_panningModel(DefaultPanning,
                      PanningLeft,
                      PanningRight,
                      0.1,
                      this,
-                     tr("Panning")),
+                     tr("Panning"),
+                     "panning"),
       m_notePanningModel(DefaultPanning,
                          PanningLeft,
                          PanningRight,
                          0.1,
                          this,
-                         tr("Note Panning")),
+                         tr("Note Panning"),
+                         "notePanning"),
       m_bendingEnabledModel(true, this, tr("Enabled bending")),
       m_bendingModel(DefaultPitch,
                      MinPitchDefault,
                      MaxPitchDefault,
                      1.,
                      this,
-                     tr("Bending")),
-      m_noteBendingModel(0., -48., 48., 0.5, this, tr("Note bending")),
-      m_bendingRangeModel(1, 1, 60, this, tr("Bending range")),
-      m_useMasterPitchModel(true, this, tr("Master Pitch")),
-      m_effectChannelModel(0, 0, 0, this, tr("FX channel")),
+                     tr("Bending"),
+                     "bending"),
+      m_noteBendingModel(
+              0., -48., 48., 0.5, this, tr("Note bending"), "noteBending"),
+      m_bendingRangeModel(
+              1, 1, 60, this, tr("Bending range"), "bendingRange"),
+      m_useMasterPitchModel(true, this, tr("Master Pitch"), "masterPitch"),
+      m_effectChannelModel(0, 0, 0, this, tr("FX channel"), "fxChannel"),
       m_audioPort(nullptr), m_instrument(nullptr), m_soundShaping(this),
       m_piano(this), m_envFilter1(nullptr), m_envFilter2(nullptr)
 {
@@ -149,8 +156,8 @@ InstrumentTrack::InstrumentTrack(TrackContainer* tc) :
             &m_frozenModel, &m_clippingModel));
     for(uint8_t i = 0; i < MidiControllerCount; i++)
     {
-        m_midiCCModel[i] = new FloatModel(
-                0., 0., 127., 1., this, QString("Midi CC %1").arg(i), false);
+        m_midiCCModel[i] = new FloatModel(0., 0., 127., 1., this,
+                                          QString("Midi CC %1").arg(i));
         m_midiCCModel[i]->setStrictStepSize(true);
         connect(m_midiCCModel[i], SIGNAL(dataChanged()), this,
                 SLOT(updateMidiCC()));
@@ -272,6 +279,7 @@ InstrumentTrack::~InstrumentTrack()
     }
 
     // m_audioPort.clear();
+    // m_audioPort.reset(nullptr);
 }
 
 QString InstrumentTrack::defaultName() const
@@ -1571,7 +1579,7 @@ InstrumentTrackView::InstrumentTrackView(InstrumentTrack*    _it,
 
     m_tlb = new TrackLabelButton(this, getTrackSettingsWidget());
     m_tlb->setCheckable(true);
-    m_tlb->setIcon(embed::getIconPixmap("instrument_track"));
+    m_tlb->setIcon(embed::getIcon("instrument_track"));
     m_tlb->move(3, 1);
     m_tlb->show();
 
@@ -1583,18 +1591,16 @@ InstrumentTrackView::InstrumentTrackView(InstrumentTrack*    _it,
     // creation of widgets for track-settings-widget
     int widgetWidth;
     if(ConfigManager::inst()->value("ui", "compacttrackbuttons").toInt())
-    {
         widgetWidth = DEFAULT_SETTINGS_WIDGET_WIDTH_COMPACT;
-    }
     else
-    {
         widgetWidth = DEFAULT_SETTINGS_WIDGET_WIDTH;
-    }
 
-    m_volumeKnob = new Knob(getTrackSettingsWidget(), tr("Volume"));
-    m_volumeKnob->setVolumeKnob(true);
+    m_volumeKnob
+            = new VolumeKnob(getTrackSettingsWidget());  //, tr("Volume"));
+    // m_volumeKnob->setVolumeKnob(true);
     m_volumeKnob->setModel(&_it->m_volumeModel);
-    m_volumeKnob->setHintText(tr("Volume:"), "%");
+    // m_volumeKnob->setHintText(tr("Volume:"), "%");
+    m_volumeKnob->setText("");
     m_volumeKnob->move(widgetWidth - 2 * 29, 3);  // 24,2
     m_volumeKnob->show();
     m_volumeKnob->setWhatsThis(tr(ITVOLHELP));
@@ -2066,10 +2072,11 @@ InstrumentTrackWindow::InstrumentTrackWindow(InstrumentTrackView* _itv) :
     basicControlsLayout->setContentsMargins(0, 0, 0, 0);
 
     // set up volume knob
-    m_volumeKnob = new Knob(nullptr, tr("Instrument volume"));
-    m_volumeKnob->setVolumeKnob(true);
-    m_volumeKnob->setText(tr("VOL"));
-    m_volumeKnob->setHintText(tr("Volume:"), "%");
+    // m_volumeKnob = new Knob(nullptr, tr("Instrument volume"));
+    m_volumeKnob = new VolumeKnob(nullptr);
+    // m_volumeKnob->setVolumeKnob(true);
+    // m_volumeKnob->setText(tr("VOL"));
+    // m_volumeKnob->setHintText(tr("Volume:"), "%");
     m_volumeKnob->setWhatsThis(tr(ITVOLHELP));
 
     // QLabel *label = new QLabel( tr( "VOL" ), this );
@@ -2122,7 +2129,7 @@ InstrumentTrackWindow::InstrumentTrackWindow(InstrumentTrackView* _itv) :
     // basicControlsLayout->setAlignment( label, labelAlignment );
 
     QPushButton* saveSettingsBtn = new QPushButton(
-            embed::getIconPixmap("project_save"), QString());
+            embed::getIcon("project_save"), QString());
     saveSettingsBtn->setMinimumSize(30, 30);  // 32, 32 );
 
     connect(saveSettingsBtn, SIGNAL(clicked()), this,
@@ -2255,7 +2262,7 @@ InstrumentTrackWindow::InstrumentTrackWindow(InstrumentTrackView* _itv) :
     */
     SubWindow* win
             = SubWindow::putWidgetOnWorkspace(this, false, false, false);
-    win->setWindowIcon(embed::getIconPixmap("instrument_track"));
+    win->setWindowIcon(embed::getIcon("instrument_track"));
     // win->setFixedSize( win->size() );
     win->hide();
 
@@ -2321,8 +2328,8 @@ void InstrumentTrackWindow::modelChanged()
     {
         m_bendingKnob->hide();
         // m_pitchLabel->hide();
-        m_bendingKnob->setModel(
-                new FloatModel(0., 0., 0., 0.01, nullptr, "[bending]", true));
+        m_bendingKnob->setModel(new FloatModel(
+                0., 0., 0., 0.01, nullptr, tr("Bending"), "bending", true));
         m_bendingRangeSpinBox->hide();
         // m_bendingRangeLabel->hide();
     }

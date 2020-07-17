@@ -53,6 +53,7 @@ class InstrumentTrackWindow;
 class InstrumentMidiIOView;
 class InstrumentMiscView;
 class Knob;
+class VolumeKnob;
 class FxLineLcdSpinBox;
 class LcdSpinBox;
 class LeftRightNav;
@@ -496,7 +497,7 @@ class InstrumentTrackView : public TrackView
 
     // widgets in track-settings-widget
     TrackLabelButton* m_tlb;
-    Knob*             m_volumeKnob;
+    VolumeKnob*       m_volumeKnob;
     Knob*             m_panningKnob;
     FadeButton*       m_activityIndicator;
 
@@ -587,9 +588,9 @@ class InstrumentTrackWindow :
     // widgets on the top of an instrument-track-window
     QLineEdit* m_nameLineEdit;
     // LeftRightNav* m_leftRightNav;
-    Knob* m_volumeKnob;
-    Knob* m_panningKnob;
-    Knob* m_bendingKnob;
+    VolumeKnob* m_volumeKnob;
+    Knob*       m_panningKnob;
+    Knob*       m_bendingKnob;
     // QLabel*       m_bendingLabel;
     LcdSpinBox* m_bendingRangeSpinBox;
     // QLabel*       m_bendingRangeLabel;

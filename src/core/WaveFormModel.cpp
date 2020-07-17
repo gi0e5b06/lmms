@@ -24,10 +24,11 @@
 
 #include "WaveFormModel.h"
 
-WaveFormModel::WaveFormModel(Model*  _parent,
-                             QString _displayName,
-                             bool    _defaultConstructed) :
-      Model(_parent, _displayName, _defaultConstructed),
+WaveFormModel::WaveFormModel(Model*         _parent,
+                             const QString& _displayName,
+                             const QString& _objectName,
+                             bool           _defaultConstructed) :
+      Model(_parent, _displayName, _objectName, _defaultConstructed),
       m_wf(WaveFormStandard::SINE)
 {
 }

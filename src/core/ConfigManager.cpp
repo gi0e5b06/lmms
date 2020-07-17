@@ -86,8 +86,12 @@ ConfigManager::ConfigManager(QDir& appPath) :
       m_lmmsRcFile(QDir::home().absolutePath() + "/.lmmsrc.xml"),
       m_workingDir(QDir::home().absolutePath() + "/lmms/"),
       m_dataDir("data:/"), m_artworkDir(defaultArtworkDir()),
-      m_vstDir(m_workingDir + "vst/"), m_gigDir(m_workingDir + GIG_PATH),
-      m_sf2Dir(m_workingDir + SF2_PATH), m_version(defaultVersion())
+      /*
+      m_vstDir(m_workingDir + "vst/"),
+      m_gigDir(m_workingDir + "gig/"),
+      m_sf2Dir(m_workingDir + "sf2/"),
+      */
+      m_version(defaultVersion())
 {
     // If we're in development (lmms is not installed) let's get the source
     // and binary directories by reading the CMake Cache
@@ -240,6 +244,16 @@ QString ConfigManager::defaultVersion() const
     return LMMS_VERSION;
 }
 
+void ConfigManager::setArtworkDir(const QString& _ad)
+{
+    m_artworkDir = ensureTrailingSlash(_ad);
+}
+
+void ConfigManager::setBackgroundArtwork(const QString& _ba)
+{
+    m_backgroundArtwork = _ba;
+}
+
 bool ConfigManager::hasWorkingDir() const
 {
     return QDir(m_workingDir).exists();
@@ -250,31 +264,36 @@ void ConfigManager::setWorkingDir(const QString& wd)
     m_workingDir = ensureTrailingSlash(QDir::cleanPath(wd));
 }
 
-void ConfigManager::setVSTDir(const QString& _vd)
+void ConfigManager::setLADSPADir(const QString& _dir)
 {
-    m_vstDir = ensureTrailingSlash(_vd);
+    m_ladDir = ensureTrailingSlash(_dir);
 }
 
-void ConfigManager::setArtworkDir(const QString& _ad)
+void ConfigManager::setLV2Dir(const QString& _dir)
 {
-    m_artworkDir = ensureTrailingSlash(_ad);
+    m_lv2Dir = ensureTrailingSlash(_dir);
 }
 
-void ConfigManager::setLADSPADir(const QString& _fd)
+void ConfigManager::setVSTDir(const QString& _dir)
 {
-    m_ladDir = _fd;
+    m_vstDir = ensureTrailingSlash(_dir);
 }
 
-void ConfigManager::setLV2Dir(const QString& _fd)
-{
-    m_lv2Dir = _fd;
-}
-
-void ConfigManager::setSTKDir(const QString& _fd)
-{
 #ifdef LMMS_HAVE_STK
-    m_stkDir = ensureTrailingSlash(_fd);
+void ConfigManager::setSTKDir(const QString& _dir)
+{
+    m_stkDir = ensureTrailingSlash(_dir);
+}
 #endif
+
+void ConfigManager::setGIGDir(const QString& _dir)
+{
+    m_gigDir = ensureTrailingSlash(_dir);
+}
+
+void ConfigManager::setSF2Dir(const QString& _dir)
+{
+    m_sf2Dir = ensureTrailingSlash(_dir);
 }
 
 void ConfigManager::setDefaultSoundfont(const QString& _sf)
@@ -284,33 +303,20 @@ void ConfigManager::setDefaultSoundfont(const QString& _sf)
 #endif
 }
 
-void ConfigManager::setBackgroundArtwork(const QString& _ba)
-{
-    m_backgroundArtwork = _ba;
-}
-
-void ConfigManager::setGIGDir(const QString& gd)
-{
-    m_gigDir = gd;
-}
-
-void ConfigManager::setSF2Dir(const QString& sfd)
-{
-    m_sf2Dir = sfd;
-}
-
 void ConfigManager::createWorkingDir()
 {
     QDir().mkpath(m_workingDir);
 
+    QDir().mkpath(userPresetsDir());
     QDir().mkpath(userProjectsDir());
     QDir().mkpath(userTemplateDir());
     QDir().mkpath(userSamplesDir());
-    QDir().mkpath(userPresetsDir());
-    QDir().mkpath(userGigDir());
-    QDir().mkpath(userSf2Dir());
-    QDir().mkpath(userVstDir());
-    QDir().mkpath(userLadspaDir());
+    QDir().mkpath(userWaveFormsDir());
+
+    // QDir().mkpath(userGigDir());
+    // QDir().mkpath(userSf2Dir());
+    // QDir().mkpath(userVstDir());
+    // QDir().mkpath(userLadspaDir());
 }
 
 void ConfigManager::addRecentlyOpenedProject(const QString& file)
@@ -498,19 +504,51 @@ void ConfigManager::loadConfigFile(const QString& configFile)
         cfg_file.close();
     }
 
+    if(m_ladDir.isEmpty() || m_ladDir == QDir::separator() || m_ladDir == "/"
+       || !QDir(m_ladDir).exists())
+    {
+        m_ladDir = "";
+#ifdef LMMS_BUILD_LINUX
+        QString d=QDir::home().absolutePath() + "/.ladspa/";
+        if(QFile(d).exists())
+            m_ladDir = d;
+            // /usr/lib/ladspa/
+#endif
+        if(m_ladDir.isEmpty())
+            m_ladDir = userPluginsDir();
+    }
+
+    if(m_lv2Dir.isEmpty() || m_lv2Dir == QDir::separator() || m_lv2Dir == "/"
+       || !QDir(m_lv2Dir).exists())
+    {
+        m_lv2Dir = "";
+#ifdef LMMS_BUILD_LINUX
+        QString d=QDir::home().absolutePath() + "/.lv2/";
+        if(QFile(d).exists())
+            m_lv2Dir = d;
+            // /usr/lib/lv2/
+#endif
+        if(m_lv2Dir.isEmpty())
+            m_lv2Dir = userPluginsDir();
+    }
+
     if(m_vstDir.isEmpty() || m_vstDir == QDir::separator() || m_vstDir == "/"
        || !QDir(m_vstDir).exists())
     {
+        m_vstDir = "";
 #ifdef LMMS_BUILD_WIN32
         QString programFiles = QString::fromLocal8Bit(getenv("ProgramFiles"));
         m_vstDir             = programFiles + "/VstPlugins/";
-#else
-        m_vstDir = m_workingDir + "plugins/vst/";
 #endif
+#ifdef LMMS_BUILD_LINUX
+        QString d=QDir::home().absolutePath() + "/.vst/";
+        if(QFile(d).exists())
+            m_vstDir = d;
+            // .vst3 /usr/lib/vst/
+#endif
+        if(m_vstDir.isEmpty())
+            m_vstDir = userPluginsDir();
     }
-
-    if(m_ladDir.isEmpty())
-        m_ladDir = userLadspaDir();
 
 #ifdef LMMS_HAVE_STK
     if(m_stkDir.isEmpty() || m_stkDir == QDir::separator() || m_stkDir == "/"
@@ -544,16 +582,21 @@ void ConfigManager::saveConfigFile()
 {
     setValue("paths", "artwork", m_artworkDir);
     setValue("paths", "workingdir", m_workingDir);
-    setValue("paths", "vstdir", m_vstDir);
+
     setValue("paths", "gigdir", m_gigDir);
     setValue("paths", "sf2dir", m_sf2Dir);
-    setValue("paths", "laddir", m_ladDir);
 #ifdef LMMS_HAVE_STK
     setValue("paths", "stkdir", m_stkDir);
 #endif
+
+    setValue("paths", "laddir", m_ladDir);
+    setValue("paths", "lv2dir", m_lv2Dir);
+    setValue("paths", "vstdir", m_vstDir);
+
 #ifdef LMMS_HAVE_FLUIDSYNTH
     setValue("paths", "defaultsf2", m_defaultSoundfont);
 #endif
+
     setValue("paths", "backgroundartwork", m_backgroundArtwork);
 
     QDomDocument doc("lmms-config-file");

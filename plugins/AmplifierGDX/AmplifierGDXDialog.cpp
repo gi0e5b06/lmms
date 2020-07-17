@@ -1,24 +1,23 @@
 /*
+ * SPDX-License-Identifier: GPL-3.0-or-later
  * AmplifierGDXDialog.cpp -
  *
  * Copyright (c) 2018 gi0e5b06 (on github.com)
  *
- * This file is part of LMMS - https://lmms.io
+ * This file is part of LSMM -
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public
- * License along with this program (see COPYING); if not, write to the
- * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
- * Boston, MA 02110-1301 USA.
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
 
@@ -45,11 +44,11 @@ AmplifierGDXDialog::AmplifierGDXDialog(AmplifierGDXControls* controls) :
     m_mainLayout->setContentsMargins(6, 6, 6, 6);
     m_mainLayout->setSpacing(12);
 
-    Knob* volumeKNB = new Knob(this);
-    volumeKNB->setVolumeKnob(true);
+    VolumeKnob* volumeKNB = new VolumeKnob(this);
+    // volumeKNB->setVolumeKnob(true);
     volumeKNB->setModel(&controls->m_volumeModel);
-    volumeKNB->setText(tr("VOL"));
-    volumeKNB->setHintText(tr("Volume:"), "%");
+    // volumeKNB->setText(tr("VOL"));
+    // volumeKNB->setHintText(tr("Volume:"), "%");
 
     Knob* balanceKNB = new Knob(this);
     balanceKNB->setModel(&controls->m_balanceModel);
@@ -57,14 +56,14 @@ AmplifierGDXDialog::AmplifierGDXDialog(AmplifierGDXControls* controls) :
     balanceKNB->setText(tr("BAL"));
     balanceKNB->setHintText(tr("Balance:"), "");
 
-    Knob* leftVolumeKNB = new Knob(this);
-    leftVolumeKNB->setVolumeKnob(true);
+    VolumeKnob* leftVolumeKNB = new VolumeKnob(this);
+    // leftVolumeKNB->setVolumeKnob(true);
     leftVolumeKNB->setModel(&controls->m_leftVolumeModel);
     leftVolumeKNB->setText(tr("LEFT"));
     leftVolumeKNB->setHintText(tr("Left volume:"), "%");
 
-    Knob* rightVolumeKNB = new Knob(this);
-    rightVolumeKNB->setVolumeKnob(true);
+    VolumeKnob* rightVolumeKNB = new VolumeKnob(this);
+    // rightVolumeKNB->setVolumeKnob(true);
     rightVolumeKNB->setModel(&controls->m_rightVolumeModel);
     rightVolumeKNB->setText(tr("RIGHT"));
     rightVolumeKNB->setHintText(tr("Right volume:"), "%");

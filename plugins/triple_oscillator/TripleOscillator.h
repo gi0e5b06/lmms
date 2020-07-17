@@ -31,7 +31,7 @@
 #include "InstrumentView.h"
 #include "Oscillator.h"
 
-class automatableButtonGroup;
+class AutomatableButtonGroup;
 class Knob;
 class NotePlayHandle;
 class PixmapButton;
@@ -130,8 +130,8 @@ class TripleOscillatorView : public InstrumentView
   private:
     virtual void modelChanged();
 
-    automatableButtonGroup* m_mod1BtnGrp;
-    automatableButtonGroup* m_mod2BtnGrp;
+    AutomatableButtonGroup* m_mod1BtnGrp;
+    AutomatableButtonGroup* m_mod2BtnGrp;
 
     struct OscillatorKnobs
     {
@@ -144,7 +144,7 @@ class TripleOscillatorView : public InstrumentView
                         Knob*                   po,
                         Knob*                   spd,
                         PixmapButton*           uwb,
-                        automatableButtonGroup* wsbg) :
+                        AutomatableButtonGroup* wsbg) :
               m_volKnob(v),
               m_panKnob(p), m_coarseKnob(c), m_fineLeftKnob(fl),
               m_fineRightKnob(fr), m_phaseOffsetKnob(po),
@@ -164,7 +164,7 @@ class TripleOscillatorView : public InstrumentView
         Knob*                   m_phaseOffsetKnob;
         Knob*                   m_stereoPhaseDetuningKnob;
         PixmapButton*           m_userWaveButton;
-        automatableButtonGroup* m_waveShapeBtnGrp;
+        AutomatableButtonGroup* m_waveShapeBtnGrp;
     };
 
     OscillatorKnobs m_oscKnobs[NUM_OF_OSCILLATORS];

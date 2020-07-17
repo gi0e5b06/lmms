@@ -26,10 +26,6 @@
 
 #include "AutomationEditor.h"
 
-#ifndef __USE_XOPEN
-#define __USE_XOPEN
-#endif
-
 #include "ActionGroup.h"
 #include "BBTrackContainer.h"
 #include "ComboBox.h"
@@ -75,10 +71,11 @@ QPixmap* AutomationEditor::s_toolMove   = nullptr;
 //{ 0.125f, 0.25f, 0.5f, 1.0f, 2.0f, 4.0f, 8.0f };
 
 AutomationEditor::AutomationEditor() :
-      QWidget(), m_zoomingXModel(nullptr, "[zoom x]"),
-      m_zoomingYModel(nullptr, "[zoom y]"),
-      m_quantizeXModel(nullptr, "[quantize x]"),
-      m_quantizeYModel(nullptr, "[quantize y]"),
+    /*QWidget(),*/ Editor(nullptr, tr("Automation editor"), "automationEditor"),
+      m_zoomingXModel(editorModel(), tr("Zoom x"), "zoomX"),
+      m_zoomingYModel(editorModel(), tr("Zoom y"), "zoomY"),
+      m_quantizeXModel(editorModel(), tr("Quantize X"), "quantizeX"),
+      m_quantizeYModel(editorModel(), tr("Quantize Y"), "quantizeY"),
       m_patternMutex(QMutex::Recursive), m_pattern(nullptr), m_minLevel(0),
       m_maxLevel(0), m_step(1), m_scrollLevel(0), m_bottomLevel(0),
       m_topLevel(0), m_currentPosition(), m_action(NONE), m_moveStartLevel(0),

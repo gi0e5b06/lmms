@@ -41,9 +41,11 @@
 #include <QProgressDialog>
 #include <QWriteLocker>
 
-TrackContainer::TrackContainer(Model* _parent, const QString& _displayName) :
-      Model(_parent, _displayName), JournallingObject(), m_tracksMutex(),
-      m_tracks()
+TrackContainer::TrackContainer(Model*         _parent,
+                               const QString& _displayName,
+                               const QString& _objectName) :
+      Model(_parent, _displayName, _objectName),
+      JournallingObject(), m_tracksMutex(), m_tracks()
 {
 }
 
@@ -509,7 +511,8 @@ void TrackContainer::automatedValuesFromTrack(const Track*       _track,
 }
 
 DummyTrackContainer::DummyTrackContainer() :
-      TrackContainer(nullptr, "Dummy track container"),
+      TrackContainer(
+              nullptr, tr("Dummy track container"), "dummyTrackContainer"),
       m_dummyInstrumentTrack(nullptr)
 {
     setJournalling(false);

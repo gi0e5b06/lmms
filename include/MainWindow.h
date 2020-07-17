@@ -259,6 +259,8 @@ class MainWindow : public QMainWindow, public virtual ActionUpdatable
         bool m_alt;
     } m_keyMods;
 
+    QMenu* m_mapMidiMenu;
+
     QMenu* m_toolsMenu;
     // QAction * m_undoAction;
     // QAction * m_redoAction;
@@ -286,8 +288,9 @@ class MainWindow : public QMainWindow, public virtual ActionUpdatable
     void updateViewMenu(void);
     void updateConfig(QAction* _who);
     void onToggleMetronome();
+    void updateMapMidiMenu();
     void listMidiMenu();
-    void mapMidiMenu();
+    void mapMidiMenu(QAction* _a);
     void unmapMidiMenu();
 
   signals:

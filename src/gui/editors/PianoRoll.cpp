@@ -25,10 +25,6 @@
 
 #include "PianoRoll.h"
 
-#ifndef __USE_XOPEN
-#define __USE_XOPEN
-#endif
-
 #include "ActionGroup.h"
 #include "AutomationEditor.h"
 #include "BBTrackContainer.h"
@@ -153,13 +149,16 @@ const int DEFAULT_PR_PPT
 //{ 0.125f, 0.25f, 0.5f, 1.0f, 2.0f, 4.0f, 8.0f };
 
 PianoRoll::PianoRoll() :
+      Editor(nullptr, tr("Piano roll"), "pianoRoll"),
       m_nemStr(QVector<QString>()), m_noteEditMenu(nullptr),
-      m_semitoneMarkerMenu(nullptr), m_zoomingXModel(nullptr, "[zoom x]"),
-      m_zoomingYModel(nullptr, "[zoom y]"),
-      m_quantizeModel(nullptr, "[quantize]"),
-      m_noteLenModel(nullptr, "[note length]"),
-      m_rootModel(nullptr, "[root]"), m_scaleModel(nullptr, "[scale]"),
-      m_chordModel(nullptr, "[chord]"), m_pattern(nullptr),
+      m_semitoneMarkerMenu(nullptr),
+      m_zoomingXModel(editorModel(), tr("Zoom X"), "zoomX"),
+      m_zoomingYModel(editorModel(), tr("Zoom Y"), "zoomY"),
+      m_quantizeModel(editorModel(), tr("Quantize"), "quantize"),
+      m_noteLenModel(editorModel(), tr("Note length"), "noteLength"),
+      m_rootModel(editorModel(), tr("Root"), "root"),
+      m_scaleModel(editorModel(), tr("Scale"), "scale"),
+      m_chordModel(editorModel(), tr("Chord"), "chord"), m_pattern(nullptr),
       m_ghostPattern(nullptr), m_currentPosition(), m_recording(false),
       m_currentNote(nullptr), m_action(ActionNone),
       m_noteEditMode(NoteEditVolume), m_moveBoundaryLeft(0),
@@ -398,7 +397,8 @@ PianoRoll::PianoRoll() :
         m_rootModel.addItem(Note::findNoteName(key));
 
     m_rootModel.setValue(0);
-    connect(&m_rootModel, SIGNAL(dataChanged()), this, SLOT(onRootOrScaleChanged()));
+    connect(&m_rootModel, SIGNAL(dataChanged()), this,
+            SLOT(onRootOrScaleChanged()));
 
     // Set up scale model
     const InstrumentFunctionNoteStacking::ChordTable& chord_table
@@ -413,7 +413,8 @@ PianoRoll::PianoRoll() :
     // change can update m_semitoneMarkerMenu
     connect(&m_scaleModel, SIGNAL(dataChanged()), this,
             SLOT(updateSemitoneMarkerMenu()));
-    connect(&m_scaleModel, SIGNAL(dataChanged()), this, SLOT(onRootOrScaleChanged()));
+    connect(&m_scaleModel, SIGNAL(dataChanged()), this,
+            SLOT(onRootOrScaleChanged()));
 
     // Set up chord model
     m_chordModel.addItem(tr("No chord"));

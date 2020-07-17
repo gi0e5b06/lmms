@@ -80,7 +80,7 @@ PadsGDXView::PadsGDXView(Instrument* _instrument, QWidget* _parent) :
                "PadsGDX should stop playing your sample. "));
 
     m_ampKnob = new PadsGDXWaveView::knob(this);
-    m_ampKnob->setVolumeKnob(true);
+    // m_ampKnob->setVolumeKnob(true);
     m_ampKnob->move(6, 6);
     m_ampKnob->setHintText(tr("Amplify:"), "%");
     m_ampKnob->setWhatsThis(
@@ -144,7 +144,7 @@ PadsGDXView::PadsGDXView(Instrument* _instrument, QWidget* _parent) :
             "The sample loops backwards and forwards between the end point "
             "and the loop point."));
 
-    m_loopGroup = new automatableButtonGroup(this);
+    m_loopGroup = new AutomatableButtonGroup(this);
     m_loopGroup->addButton(m_loopOffButton);
     m_loopGroup->addButton(m_loopOnButton);
     m_loopGroup->addButton(m_loopPingPongButton);
@@ -300,19 +300,24 @@ void PadsGDXView::onModelChanged()
     if(key < 0 || key > 127 || !a->currentSample())
     {
         // qInfo("PadsGDXView::onModelChanged key not set");
-        m_startKnob->setModel(new FloatModel(0., 0., 0., 1., NULL, "", true));
-        m_endKnob->setModel(new FloatModel(0., 0., 0., 1., NULL, "", true));
-        m_loopStartKnob->setModel(
-                new FloatModel(0., 0., 0., 1., NULL, "", true));
-        m_loopEndKnob->setModel(
-                new FloatModel(0., 0., 0., 1., NULL, "", true));
-        m_reverseButton->setModel(new BoolModel(false, NULL, "", true));
-        m_loopGroup->setModel(new IntModel(0, 0, 0, NULL, "", true));
-        m_stutterButton->setModel(new BoolModel(false, NULL, "", true));
-        m_ampKnob->setModel(
-                new FloatModel(100., 0., 500., 1., NULL, "", true));
-        m_tuneKnob->setModel(
-                new FloatModel(0., -144., 144., 0.01, NULL, "", true));
+        m_startKnob->setModel(new FloatModel(0., 0., 0., 1., a, tr("Start"),
+                                             "start", true));
+        m_endKnob->setModel(
+                new FloatModel(0., 0., 0., 1., a, tr("End"), "end", true));
+        m_loopStartKnob->setModel(new FloatModel(
+                0., 0., 0., 1., a, tr("Loop start"), "loopStart", true));
+        m_loopEndKnob->setModel(new FloatModel(
+                0., 0., 0., 1., a, tr("Loop end"), "loopEnd", true));
+        m_reverseButton->setModel(
+                new BoolModel(false, a, tr("Reverse"), "reverse", true));
+        m_loopGroup->setModel(
+                new IntModel(0, 0, 0, a, tr("Loop type"), "loopType", true));
+        m_stutterButton->setModel(
+                new BoolModel(false, a, tr("Stutter"), "stutter", true));
+        m_ampKnob->setModel(new FloatModel(100., 0., 500., 1., a, tr("Gain"),
+                                           "gain", true));
+        m_tuneKnob->setModel(new FloatModel(0., -144., 144., 0.01, a,
+                                            tr("Tune"), "tune", true));
     }
     else
     {
@@ -461,7 +466,7 @@ void PadsGDXView::openAudioFile()
     QString       file;
     if(sample)
         file = sample->audioFile();
-    file = SampleBuffer::selectAudioFile(file);
+    file = SampleBuffer::selectAudioFile(SampleBuffer::Sample, file);
 
     if(file != "")
     {

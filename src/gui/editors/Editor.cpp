@@ -32,6 +32,13 @@
 #include <QLabel>
 #include <QShortcut>
 
+Editor::Editor(Model*         _parent,
+               const QString& _displayName,
+               const QString& _objectName) :
+      m_editorModel(_parent, _displayName, _objectName)
+{
+}
+
 static int cursor_count = 0;
 
 void Editor::applyOverrideCursor(Qt::CursorShape _shape)

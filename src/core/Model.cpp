@@ -35,6 +35,7 @@ QHash<QString, Model*> Model::s_models;
 
 Model::Model(Model*         _parent,
              const QString& _displayName,
+             const QString& _objectName,
              bool           _defaultConstructed) :
       QObject(_parent),
       m_displayName(_displayName), m_defaultConstructed(_defaultConstructed),
@@ -45,6 +46,8 @@ Model::Model(Model*         _parent,
         BACKTRACE
         qInfo("Model::Model empty display name");
     }
+    setObjectName(_objectName.isEmpty() ? normalizeObjectName(_displayName)
+                                        : _objectName);
     m_debug_uuid = QUuid::createUuid().toString();
 }
 
@@ -127,46 +130,50 @@ QString Model::objectName() const
 {
     QString r = QObject::objectName();
     if(r.isEmpty())
+        r = normalizeObjectName(displayName());  // fullDisplayName();
+    return r;
+}
+
+QString Model::normalizeObjectName(const QString& _s) const
+{
+    QString r(_s);
+    r.replace('/', '_');
+    // r.replace('>', '/');
+    r.replace(QRegExp("[#]"), "");
+    r.replace(QRegExp("[(].*[)]"), "");
+
+    QRegExp rx1("(^|/)[A-Z]+", Qt::CaseSensitive);
+    int     p = 0;
+    while(p >= 0 && p < r.length())
     {
-        r = displayName();  // fullDisplayName();
-        r.replace('/', '_');
-        // r.replace('>', '/');
-        r.replace(QRegExp("[#]"), "");
-        r.replace(QRegExp("[(].*[)]"), "");
+        // qInfo("on: p=%d r=%s", p, qPrintable(r));
+        p = rx1.indexIn(r, p);
+        if(p < 0)
+            break;
 
-        QRegExp rx1("(^|/)[A-Z]+", Qt::CaseSensitive);
-        int     p = 0;
-        while(p >= 0 && p < r.length())
-        {
-            // qInfo("on: p=%d r=%s", p, qPrintable(r));
-            p = rx1.indexIn(r, p);
-            if(p < 0)
-                break;
-
-            int n = rx1.matchedLength();
-            // qInfo("    matches %s", qPrintable(r.mid(p, n)));
-            r = r.left(p) + r.mid(p, n).toLower() + r.mid(p + n);
-            p++;  //= n;
-        }
-
-        QRegExp rx2(" +.");
-        p = 0;
-        while(p >= 0 && p < r.length())
-        {
-            // qInfo("on: p=%d r=%s", p, qPrintable(r));
-            p = rx2.indexIn(r, p);
-            if(p < 0)
-                break;
-
-            int n = rx2.matchedLength();
-            r     = r.left(p) + r.mid(p + n - 1, 1).toUpper() + r.mid(p + n);
-            p++;
-            // if(r.length() > 50) break;
-        }
-
-        // r = QString("{") + r + "}";
+        int n = rx1.matchedLength();
+        // qInfo("    matches %s", qPrintable(r.mid(p, n)));
+        r = r.left(p) + r.mid(p, n).toLower() + r.mid(p + n);
+        p++;  //= n;
     }
 
+    QRegExp rx2(" +.");
+    p = 0;
+    while(p >= 0 && p < r.length())
+    {
+        // qInfo("on: p=%d r=%s", p, qPrintable(r));
+        p = rx2.indexIn(r, p);
+        if(p < 0)
+            break;
+
+        int n = rx2.matchedLength();
+        r     = r.left(p) + r.mid(p + n - 1, 1).toUpper() + r.mid(p + n);
+        p++;
+        // if(r.length() > 50) break;
+    }
+
+    r.replace(QRegExp("[ -]"), "");
+    // r = QString("{") + r + "}";
     return r;
 }
 

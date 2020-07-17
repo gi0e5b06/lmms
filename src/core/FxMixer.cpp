@@ -89,16 +89,18 @@ void FxRoute::updateName()
 FxChannel::FxChannel(int idx, Model* _parent) :
       Model(_parent, QString("FxChannel #%1").arg(idx)), m_fxChain(this),
       m_hasInput(false), m_stillRunning(false), m_frozenBuf(nullptr),
-      m_frozenModel(false, _parent, tr("Frozen")),
-      m_clippingModel(false, _parent, tr("Clipping")), m_eqDJ(nullptr),
-      m_eqDJEnableModel(false, _parent, tr("DJ Enabled")),
+      m_frozenModel(false, this, tr("Frozen"), "frozen"),
+      m_clippingModel(false, this, tr("Clipping"), "clipping"),
+      m_eqDJ(nullptr),
+      m_eqDJEnableModel(false, this, tr("DJ Enabled"), "djEnabled"),
       // m_eqDJHighModel  ( 0., -70., 0., 1., _parent ),
       // m_eqDJMediumModel( 0., -70., 0., 1., _parent ),
       // m_eqDJLowModel   ( 0., -70., 0., 1., _parent ),
       m_peakLeft(0.), m_peakRight(0.), m_buffer(BufferManager::acquire()),
-      m_mutedModel(false, this, tr("Mute")),
-      m_soloModel(false, this, tr("Solo")),
-      m_volumeModel(1.0, 0.0, 1.0, 0.001, _parent, tr("Volume")),  // max=2.
+      m_mutedModel(false, this, tr("Mute"), "mute"),
+      m_soloModel(false, this, tr("Solo"), "solo"),
+      m_volumeModel(
+              1.0, 0.0, 1.0, 0.001, this, tr("Volume"), "volume"),  // max=2.
       m_name(), m_channelIndex(idx), m_lock(), m_queued(false),
       m_dependenciesMet(0)
 {
@@ -110,7 +112,7 @@ FxChannel::FxChannel(int idx, Model* _parent) :
         key->attributes.insert("file", "dj_eq_1901");
         key->attributes.insert("plugin", "dj_eq");
         // qInfo("FxChannel::FxChannel before eqDJ");
-        m_eqDJ = Effect::instantiate(key->name, nullptr, key);
+        m_eqDJ = Effect::instantiate(key->name, this, key);
         // qInfo("FxChannel::FxChannel eqDJ=%p", m_eqDJ);
 
         /*
@@ -143,7 +145,7 @@ FxChannel::FxChannel(int idx, Model* _parent) :
 FxChannel::~FxChannel()
 {
     qInfo("FxChannel::~FxChannel 0");
-    if(m_eqDJ!=nullptr)
+    if(m_eqDJ != nullptr)
         DELETE_HELPER(m_eqDJ);
 
     qInfo("FxChannel::~FxChannel 1");
@@ -152,7 +154,7 @@ FxChannel::~FxChannel()
     // qInfo("FxChannel::~FxChannel idx=%d",m_channelIndex);
 
     qInfo("FxChannel::~FxChannel 2");
-    if(m_frozenBuf!=nullptr)
+    if(m_frozenBuf != nullptr)
         delete m_frozenBuf;
     qInfo("FxChannel::~FxChannel 3");
 }

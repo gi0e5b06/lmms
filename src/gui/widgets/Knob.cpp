@@ -1,33 +1,28 @@
 /*
+ * SPDX-License-Identifier: GPL-3.0-or-later
  * Knob.cpp - knob widget
  *
- * Copyright (c) 2017-2019 gi0e5b06 (on github.com)
+ * Copyright (c) 2017-2020 gi0e5b06 (on github.com)
  * Copyright (c) 2004-2014 Tobias Doerffel <tobydox/at/users.sourceforge.net>
  *
- * This file is part of LMMS - https://lmms.io
+ * This file is part of LSMM -
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public
- * License along with this program (see COPYING); if not, write to the
- * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
- * Boston, MA 02110-1301 USA.
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
 
 #include "Knob.h"
-
-#ifndef __USE_XOPEN
-#define __USE_XOPEN
-#endif
 
 #include "CaptionMenu.h"
 #include "ConfigManager.h"
@@ -52,6 +47,7 @@
 #include <QInputDialog>
 #include <QMouseEvent>
 #include <QPainter>
+#include <QStyleOption>
 #include <QWhatsThis>
 
 TextFloat* Knob::s_textFloat = nullptr;
@@ -65,9 +61,7 @@ Knob::Knob(QWidget* _parent, const QString& _name) :
 
 Knob::Knob(knobTypes _knob_num, QWidget* _parent, const QString& _name) :
       Widget(_parent), FloatModelView(nullptr, this), m_pressLeft(false),
-      m_label(""), /*m_interactive(true), */ m_knobPixmap(nullptr),
-      m_volumeKnob(false, nullptr, "[volume knob]"),
-      m_volumeRatio(100., 0., 1000000., 0., nullptr, "[volume ratio]"),
+      m_text(""), /*m_interactive(true), */ m_knobPixmap(nullptr),
       m_angle(-1000.f),
       // m_cache( nullptr ),
       m_lineWidth(0.f), m_textColor(255, 255, 255), m_knobNum(_knob_num)
@@ -172,28 +166,43 @@ void Knob::setLabel(const QString& txt)
 
 QString Knob::text() const
 {
-    return m_label;
+    return m_text;
 }
 
-void Knob::setText(const QString& txt)
+void Knob::setText(const QString& _t)
 {
-    if(m_label == txt)
+    if(m_text == _t)
         return;
 
-    if(m_knobPixmap)
+    m_text = _t;
+    onTextUpdated();
+}
+
+void Knob::onTextUpdated()
+{
+    if(m_knobPixmap == nullptr)
+        return;
+
+    QStyleOption opt;
+    opt.init(this);
+
+    const QString& t = text();
+    int            w = m_knobPixmap->width();
+    int            h = m_knobPixmap->height();
+    if(!t.isEmpty())
     {
-        int w = m_knobPixmap->width();
-        int h = m_knobPixmap->height();
-        if(!txt.isEmpty())
-        {
-            QFontMetrics mx(pointSizeF(font(), 7.f));  // 6.5));
-            w = qMax<int>(w, qMin<int>(2 * w, mx.width(txt)));
-            h += 7;  // 10;
-        }
-        setMinimumSize(w, h);
-        resize(w, h);
+        const QFont        ft = pointSizeF(font(), 7.f);
+        const QFontMetrics mx(ft);
+        w = qMax<int>(w, qMin<int>(2 * w, mx.width(t)));
+        h += 7;  // 10;
     }
-    m_label = txt;
+
+    QMargins mw = contentsMargins();
+    w += mw.left() + mw.right();
+    h += mw.top() + mw.bottom();
+
+    setMinimumSize(w, h);
+    resize(w, h);
     update();
 }
 
@@ -367,7 +376,7 @@ QLineF Knob::calculateLine(const QPointF& _mid,
 bool Knob::updateAngle()
 {
     FloatModel* m = model();
-    if(!m)
+    if(m == nullptr)
         return true;
 
     real_t angle = 0.;
@@ -407,7 +416,7 @@ QColor Knob::statusColor()
     FloatModel* m = model();
     QColor      r(255, 255, 255, 192);
 
-    if(!m)
+    if(m == nullptr)
         r = QColor(128, 128, 128, 192);  // no model...
     else if(m->isAutomated())
         r = QColor(128, 128, 255, 192);  // automation pattern
@@ -429,20 +438,18 @@ void Knob::drawWidget(QPainter& _p)
 void Knob::drawKnob(QPainter& _p)
 {
     FloatModel* m = model();
-    if(!m)
+    if(m == nullptr)
         return;
 
     QPointF mid;
     QColor  pc = pointColor();
-    if(isVolumeKnob())
-        pc = Qt::red;
-    // QColor lc=pc;//lineColor();
+    // if(isVolumeKnob())
+    //    pc = Qt::red;
     int lw = lineWidth();
 
     if(m_knobNum == knobStyled)
     {
         mid = centerPoint();
-        // _p.setRenderHint( QPainter::Antialiasing );
 
         // Perhaps this can move to setOuterRadius()
         if(m_outerColor.isValid())
@@ -575,12 +582,12 @@ void Knob::drawKnob(QPainter& _p)
 
 void Knob::drawText(QPainter& _p)
 {
-    if(!m_label.isEmpty())
+    if(!m_text.isEmpty())
     {
         _p.setFont(pointSizeF(font(), 7.f));
         _p.setPen(textColor());
         QFontMetrics metrix = _p.fontMetrics();
-        QString text = metrix.elidedText(m_label, Qt::ElideRight, width());
+        QString text = metrix.elidedText(m_text, Qt::ElideRight, width());
         int     x    = width() / 2 - metrix.width(text) / 2;
         int     y    = height() - 1;
         // if(m_knobPixmap)
@@ -609,6 +616,10 @@ void Knob::setModel(Model* _m, bool isOldModelValid)
 
 void Knob::modelChanged()
 {
+    FloatModel* m = model();
+    if(m != nullptr)
+        setWindowTitle(m->displayName());
+
     // qInfo("Knob::modelChanged p=%p", this);
     update();  // refresh();
 }
@@ -651,7 +662,7 @@ void Knob::convert(const QPoint& _p, float& value_, float& dist_)
 void Knob::setPosition(const QPoint& _p, bool _shift)
 {
     FloatModel* m = model();
-    if(!m)
+    if(m == nullptr)
         return;
 
     float value, dist;
@@ -726,7 +737,7 @@ void Knob::setPosition(const QPoint& _p, bool _shift)
 void Knob::contextMenuEvent(QContextMenuEvent*)
 {
     FloatModel* m = model();
-    if(!m)
+    if(m == nullptr)
         return;
 
     // for the case, the user clicked right while pressing left mouse-
@@ -749,7 +760,7 @@ void Knob::contextMenuEvent(QContextMenuEvent*)
 void Knob::toggleScale()
 {
     FloatModel* m = model();
-    if(!m)
+    if(m == nullptr)
         return;
 
     m->setScaleLogarithmic(!m->isScaleLogarithmic());
@@ -759,7 +770,7 @@ void Knob::toggleScale()
 void Knob::dragEnterEvent(QDragEnterEvent* _dee)
 {
     FloatModel* m = model();
-    if(!m)
+    if(m == nullptr)
         return;
 
     StringPairDrag::processDragEnterEvent(_dee,
@@ -769,7 +780,7 @@ void Knob::dragEnterEvent(QDragEnterEvent* _dee)
 void Knob::dropEvent(QDropEvent* _de)
 {
     FloatModel* m = model();
-    if(!m)
+    if(m == nullptr)
         return;
 
     QString type = StringPairDrag::decodeKey(_de);
@@ -782,11 +793,11 @@ void Knob::dropEvent(QDropEvent* _de)
     }
     else if(type == "automatable_model")
     {
-        if(!m->controllerConnection())
+        if(m->controllerConnection() == nullptr)
         {
             AutomatableModel* mod = dynamic_cast<AutomatableModel*>(
                     Engine::projectJournal()->journallingObject(val.toInt()));
-            if(mod)
+            if(mod != nullptr)
             {
                 // not a midi or dummy
                 // if(! mod->controllerConnection() )
@@ -812,7 +823,7 @@ void Knob::dropEvent(QDropEvent* _de)
 void Knob::mousePressEvent(QMouseEvent* _me)
 {
     FloatModel* m = model();
-    if(!m || !isInteractive())
+    if(m == nullptr || !isInteractive())
         return;
 
     if(_me->button() == Qt::LeftButton
@@ -857,7 +868,7 @@ void Knob::mousePressEvent(QMouseEvent* _me)
 void Knob::mouseMoveEvent(QMouseEvent* _me)
 {
     FloatModel* m = model();
-    if(!m || !isInteractive())
+    if(m == nullptr || !isInteractive())
         return;
 
     if(m_pressLeft && _me->pos() != m_pressPos)  // m_origMousePos )
@@ -875,7 +886,7 @@ void Knob::mouseMoveEvent(QMouseEvent* _me)
 void Knob::mouseReleaseEvent(QMouseEvent* event)
 {
     FloatModel* m = model();
-    if(!m || !isInteractive())
+    if(m == nullptr || !isInteractive())
         return;
 
     if(event && event->button() == Qt::LeftButton && m_pressLeft)
@@ -918,14 +929,14 @@ void Knob::paintEvent(QPaintEvent* _pe)
 void Knob::wheelEvent(QWheelEvent* _we)
 {
     FloatModel* m = model();
-    if(!m || !isInteractive())
+    if(m == nullptr || !isInteractive())
         return;
 
     if(_we->modifiers() & Qt::ShiftModifier)
     {
         _we->accept();
 
-        int ns = int(roundf(m->range() / m->step<float>() / 100.f));
+        int ns = int(roundf(m->range() / m->step() / 100.f));
         if(_we->modifiers() & Qt::ControlModifier)
             ns /= 10;
         ns = qBound(1, ns, 1000);
@@ -946,12 +957,13 @@ void Knob::wheelEvent(QWheelEvent* _we)
 void Knob::enterValue()
 {
     FloatModel* m = model();
-    if(!m || !isInteractive())
+    if(m == nullptr || !isInteractive())
         return;
 
     bool   ok;
     double newVal;
 
+    /*
     if(isVolumeKnob()
        && ConfigManager::inst()->value("app", "displaydbfs").toInt())
     {
@@ -971,6 +983,7 @@ void Knob::enterValue()
         }
     }
     else
+    */
     {
         newVal = QInputDialog::getDouble(
                 this, windowTitle(),
@@ -991,7 +1004,7 @@ void Knob::enterValue()
 void Knob::editRandomization()
 {
     FloatModel* m = model();
-    if(!m || !isInteractive())
+    if(m == nullptr || !isInteractive())
         return;
 
     bool   ok;
@@ -1083,9 +1096,10 @@ void Knob::refresh()
 QString Knob::displayValue() const
 {
     const FloatModel* m = model();
-    if(!m)
+    if(m == nullptr)
         return "";
 
+    /*
     if(isVolumeKnob()
        && ConfigManager::inst()->value("app", "displaydbfs").toInt())
     {
@@ -1095,11 +1109,12 @@ QString Knob::displayValue() const
                        2)
                + " dBFS";
     }
-    return m_description.trimmed()
-           + " "
-           //+ QString( " %1" ).arg( m->getRoundedValue(), 0, 'f',
-           // m->getDigitCount() )
-           + m->displayValue(m->rawValue()) + " " + m_unit;
+    */
+
+    //+ QString( " %1" ).arg( m->getRoundedValue(), 0, 'f',
+    // m->getDigitCount() )
+    return (m_description + ": " + m->displayValue(m->rawValue()) + m_unit)
+            .trimmed();
 }
 
 void Knob::doConnections()
@@ -1150,4 +1165,113 @@ QLine Knob::cableTo() const
 QColor Knob::cableColor() const
 {
     return m_pointColor;
+}
+
+BalanceKnob::BalanceKnob(QWidget* _parent) :
+      Knob(knobBright_26, _parent, "[balance knob]")
+{
+    setPointColor(Qt::magenta);
+    setText(tr("BAL"));
+    setDescription(tr("Balance"));
+    setUnit("%");
+}
+
+CutoffFrequencyKnob::CutoffFrequencyKnob(QWidget* _parent) :
+      Knob(knobBright_26, _parent, "[cutoff frequency knob]")
+{
+    setPointColor(Qt::green);
+    setText(tr("CUT"));
+    setDescription(tr("Cutoff frequency"));
+    setUnit("Hz");
+}
+
+FrequencyKnob::FrequencyKnob(QWidget* _parent) :
+      Knob(knobBright_26, _parent, "[frequency knob]")
+{
+    setPointColor(Qt::green);
+    setText(tr("FREQ"));
+    setDescription(tr("Frequency"));
+    setUnit("Hz");
+}
+
+MixKnob::MixKnob(QWidget* _parent) :
+      Knob(knobBright_26, _parent, "[mix knob]")
+{
+    // setPointColor(Qt::green);
+    setText(tr("MIX"));
+    setDescription(tr("Mix"));
+    // setUnit("Hz");
+}
+
+ResonanceKnob::ResonanceKnob(QWidget* _parent) :
+      Knob(knobBright_26, _parent, "[resonance knob]")
+{
+    // setPointColor(Qt::green);
+    setText(tr("RESO"));
+    setDescription(tr("Resonance"));
+    // setUnit("Hz");
+}
+
+VolumeKnob::VolumeKnob(QWidget* _parent) : VolumeKnob(knobBright_26, _parent)
+{
+}
+
+VolumeKnob::VolumeKnob(knobTypes _knobNum, QWidget* _parent) :
+      Knob(_knobNum, _parent, "[volume knob]"),
+      // m_volumeKnob(false, nullptr, "[volume knob]"),
+      m_volumeRatio(100., 0., 1000000., 0., nullptr, "[volume ratio]")
+{
+    setPointColor(Qt::red);
+    setText(tr("VOL"));
+    setDescription(tr("Volume"));
+    setUnit("%");
+}
+
+void VolumeKnob::enterValue()
+{
+    if(ConfigManager::inst()->value("app", "displaydbfs").toInt())
+    {
+        FloatModel* m = model();
+        if(m == nullptr || !isInteractive())
+            return;
+
+        bool   ok;
+        double newVal;
+
+        newVal = QInputDialog::getDouble(
+                this, windowTitle(),
+                tr("Please enter a new value between "
+                   "-96.0 dBFS and 6.0 dBFS:"),
+                ampToDbfs(m->getRoundedValue() / 100.), -96., 6.,
+                m->getDigitCount(), &ok);
+        if(newVal <= -96.)
+            newVal = 0.;
+        else
+            newVal = dbfsToAmp(newVal) * 100.;
+
+        if(ok)
+            m->setValue(newVal);
+
+        return;
+    }
+
+    return Knob::enterValue();
+}
+
+QString VolumeKnob::displayValue() const
+{
+    if(ConfigManager::inst()->value("app", "displaydbfs").toInt())
+    {
+        const FloatModel* m = model();
+        if(m == nullptr)
+            return "";
+
+        return m_description + " "
+               + QString::number(
+                       ampToDbfs(m->getRoundedValue() / volumeRatio()), 'f',
+                       2)
+               + " dBFS";
+    }
+
+    return Knob::displayValue();
 }

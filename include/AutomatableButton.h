@@ -29,7 +29,7 @@
 
 #include <QPushButton>
 
-class automatableButtonGroup;
+class AutomatableButtonGroup;
 
 class EXPORT AutomatableButton : public QPushButton, public BoolModelView
 {
@@ -37,7 +37,8 @@ class EXPORT AutomatableButton : public QPushButton, public BoolModelView
 
   public:
     AutomatableButton(QWidget*       _parent,
-                      const QString& _name = "[automatable button]");
+                      const QString& _displayName = "[automatable button]",
+                      const QString& _objectName  = "button");
     virtual ~AutomatableButton();
 
     inline void setCheckable(bool _on)
@@ -61,22 +62,23 @@ class EXPORT AutomatableButton : public QPushButton, public BoolModelView
     virtual void mouseReleaseEvent(QMouseEvent* _me);
 
   private:
-    automatableButtonGroup* m_group;
+    AutomatableButtonGroup* m_group;
 
-    friend class automatableButtonGroup;
+    friend class AutomatableButtonGroup;
 
     using QPushButton::isChecked;
     using QPushButton::setChecked;
 };
 
-class EXPORT automatableButtonGroup : public QWidget, public IntModelView
+class EXPORT AutomatableButtonGroup : public QWidget, public IntModelView
 {
     Q_OBJECT
 
   public:
-    automatableButtonGroup(QWidget*       _parent,
-                           const QString& _name = "[button group]");
-    virtual ~automatableButtonGroup();
+    AutomatableButtonGroup(QWidget*       _parent,
+                           const QString& _displayName = "[button group]",
+                           const QString& _objectName  = QString::null);
+    virtual ~AutomatableButtonGroup();
 
     void addButton(AutomatableButton* _btn);
     void removeButton(AutomatableButton* _btn);

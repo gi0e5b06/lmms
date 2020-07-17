@@ -80,12 +80,12 @@ class Controller : public Model, public JournallingObject
 
     inline ControllerTypes type() const
     {
-        return (m_type);
+        return m_type;
     }
 
     virtual const QString& name() const
     {
-        return (m_name);
+        return m_name;
     }
 
     inline bool isEnabled() const
@@ -132,8 +132,14 @@ class Controller : public Model, public JournallingObject
     }
 
   protected:
-    virtual bool isConfigurable() { return true; }
-    virtual bool isRemovable() { return true; }
+    virtual bool isConfigurable()
+    {
+        return true;
+    }
+    virtual bool isRemovable()
+    {
+        return true;
+    }
 
     // The internal per-controller get-value function
     virtual real_t value(int _offset) final;

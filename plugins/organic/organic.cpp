@@ -387,16 +387,15 @@ organicInstrumentView::organicInstrumentView(Instrument* _instrument,
 
     // setup volume-knob
     m_volKnob = new organicKnob(this);
-    m_volKnob->setVolumeKnob(true);
+    // m_volKnob->setVolumeKnob(true);
     m_volKnob->move(60, 201);
     m_volKnob->setFixedSize(37, 47);
     m_volKnob->setHintText(tr("Volume:"), "%");
     m_volKnob->setObjectName("volKnob");
     m_volKnob->setWhatsThis(
             tr("The volume knob controls the volume of the output of the "
-               "instrument. "
-               "It is cumulative with the instrument window's volume "
-               "control. "));
+               "instrument. It is cumulative with the instrument window's "
+               "volume control. "));
 
     // randomise
     m_randBtn = new PixmapButton(this, tr("Randomise"));
@@ -461,11 +460,12 @@ void organicInstrumentView::modelChanged()
         oscKnob->setHintText(tr("Osc %1 waveform:").arg(i + 1), QString());
 
         // setup volume-knob
-        Knob* volKnob = new Knob(knobStyled, this);
-        volKnob->setVolumeKnob(true);
+        VolumeKnob* volKnob = new VolumeKnob(this);//knobStyled, this);
+        //volKnob->setVolumeKnob(true);
         volKnob->move(x + i * colWidth, y + rowHeight * 1);
         volKnob->setFixedSize(21, 21);
-        volKnob->setHintText(tr("Osc %1 volume:").arg(i + 1), "%");
+        //volKnob->setHintText(tr("Osc %1 volume:").arg(i + 1), "%");
+        volKnob->setDescription(tr("Osc %1 volume:").arg(i + 1));
 
         // setup panning-knob
         Knob* panKnob = new organicKnob(this);

@@ -23,8 +23,9 @@
  *
  */
 
-#include "GuiApplication.h"
 #include "LedCheckBox.h"
+
+#include "GuiApplication.h"
 #include "MainWindow.h"
 #include "embed.h"
 #include "gui_templates.h"
@@ -74,9 +75,12 @@ QString LedCheckBox::text() const
     return m_text;
 }
 
-void LedCheckBox::setText(const QString& _s)
+void LedCheckBox::setText(const QString& _t)
 {
-    m_text = _s;
+    if(m_text == _t)
+        return;
+
+    m_text = _t;
     onTextUpdated();
 }
 
@@ -87,6 +91,9 @@ Qt::AnchorPoint LedCheckBox::textAnchorPoint() const
 
 void LedCheckBox::setTextAnchorPoint(Qt::AnchorPoint _a)
 {
+    if(m_textAnchor == _a)
+        return;
+
     m_textAnchor = _a;
     onTextUpdated();
 }
@@ -104,7 +111,7 @@ void LedCheckBox::paintEvent(QPaintEvent* _pe)
     style()->drawPrimitive(QStyle::PE_Widget, &opt, &p, this);
 
     BoolModel* m = model();
-    if(!m)
+    if(m==nullptr)
         return;
 
     QMargins mw = contentsMargins();
@@ -190,7 +197,8 @@ void LedCheckBox::initUi(LedColors _color)
     m_ledOffPixmap = new QPixmap(embed::getPixmap("led_off"));
 
     // setFont(pointSize<11>(font()));
-    setText(m_text);
+    // setText(m_text);
+    onTextUpdated();
 }
 
 void LedCheckBox::onTextUpdated()
@@ -200,7 +208,7 @@ void LedCheckBox::onTextUpdated()
 
     const QString& t = text();
     int            w = m_ledOffPixmap->width();
-    int            h = m_ledOffPixmap->height() - 6;
+    int            h = m_ledOffPixmap->height();//-6
     if(!t.isEmpty())
     {
         const Qt::AnchorPoint a  = textAnchorPoint();
@@ -224,7 +232,10 @@ void LedCheckBox::onTextUpdated()
     QMargins mw = contentsMargins();
     w += mw.left() + mw.right();
     h += mw.top() + mw.bottom();
+
     setMinimumSize(w, h);
+    resize(w,h);
+    update();
 }
 
 /*

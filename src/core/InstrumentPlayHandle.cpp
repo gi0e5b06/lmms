@@ -48,12 +48,14 @@ InstrumentPlayHandle::~InstrumentPlayHandle()
 
 void InstrumentPlayHandle::enterMixer()
 {
-    m_track->audioPort()->addPlayHandle(pointer());
+    if(m_track != nullptr && m_track->audioPort() != nullptr)
+        m_track->audioPort()->addPlayHandle(pointer());
 }
 
 void InstrumentPlayHandle::exitMixer()
 {
-    m_track->audioPort()->removePlayHandle(pointer());
+    if(m_track != nullptr && m_track->audioPort() != nullptr)
+        m_track->audioPort()->removePlayHandle(pointer());
 }
 
 void InstrumentPlayHandle::play(sampleFrame* _working_buffer)

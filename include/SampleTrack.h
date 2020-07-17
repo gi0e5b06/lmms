@@ -37,6 +37,7 @@ class SampleBuffer;
 class EffectRackView;
 class FadeButton;
 class Knob;
+class VolumeKnob;
 class LcdSpinBox;
 class FxLineLcdSpinBox;
 class TabWidget;
@@ -300,7 +301,7 @@ class SampleTrackView : public TrackView
 
     // widgets in track-settings-widget
     TrackLabelButton* m_tlb;
-    Knob*             m_volumeKnob;
+    VolumeKnob*             m_volumeKnob;
     Knob*             m_panningKnob;
     FadeButton*       m_activityIndicator;
 

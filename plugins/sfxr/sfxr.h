@@ -274,7 +274,7 @@ class sfxrInstrumentView : public InstrumentView
     Knob* m_hpFilCutKnob;       // HP Filter Cutoff
     Knob* m_hpFilCutSweepKnob;  // HP Filter Cutoff Sweep
 
-    automatableButtonGroup* m_waveBtnGroup;
+    AutomatableButtonGroup* m_waveBtnGroup;
     PixmapButton*           m_sqrWaveBtn;  // NOTE: This button has Square Duty
                                  // and Square Speed configurable
     PixmapButton* m_sawWaveBtn;

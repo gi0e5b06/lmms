@@ -39,6 +39,7 @@ namespace embed
 QIcon EXPORT   getIcon(const QString& _name, int _w = -1, int _h = -1);
 QPixmap EXPORT getPixmap(const QString& _name, int _w = -1, int _h = -1);
 QString EXPORT getText(const char* _name);
+QHash<QString, QString> EXPORT getProperties(const QString& _fileName);
 
 // obsolete
 QPixmap EXPORT getIconPixmap(const QString& _name, int _w = -1, int _h = -1);

@@ -166,11 +166,12 @@ OscillatorView::OscillatorView(OscillatorObject* _osc,
     complement2LCB->setTextAnchorPoint(Qt::AnchorBottom);
 
     // setup volume-knob
-    Knob* volumeKNB = new Knob(this);
+    VolumeKnob* volumeKNB = new VolumeKnob(this);
     volumeKNB->setModel(&m_osc->m_volumeModel);
-    volumeKNB->setText("VOL");
-    volumeKNB->setVolumeKnob(true);
-    volumeKNB->setHintText(tr("Osc %1 volume:").arg(_idx + 1), "%");
+    //volumeKNB->setText("VOL");
+    //volumeKNB->setVolumeKnob(true);
+    //volumeKNB->setHintText(tr("Osc %1 volume:").arg(_idx + 1), "%");
+    volumeKNB->setDescription(tr("Osc %1 volume:").arg(_idx + 1));
     volumeKNB->setWhatsThis(tr("With this knob you can set the volume of "
                                "oscillator %1. When setting a value of 0 the "
                                "oscillator is turned off. Otherwise you can "

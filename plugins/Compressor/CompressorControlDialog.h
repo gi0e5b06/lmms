@@ -208,22 +208,22 @@ class CompressorControlDialog : public EffectControlDialog
 
     PixmapButton*           rmsButton;
     PixmapButton*           peakButton;
-    automatableButtonGroup* rmsPeakGroup;
+    AutomatableButtonGroup* rmsPeakGroup;
 
     PixmapButton*           leftRightButton;
     PixmapButton*           midSideButton;
-    automatableButtonGroup* leftRightMidSideGroup;
+    AutomatableButtonGroup* leftRightMidSideGroup;
 
     PixmapButton*           compressButton;
     PixmapButton*           limitButton;
-    automatableButtonGroup* compressLimitGroup;
+    AutomatableButtonGroup* compressLimitGroup;
 
     PixmapButton*           unlinkedButton;
     PixmapButton*           maximumButton;
     PixmapButton*           averageButton;
     PixmapButton*           minimumButton;
     PixmapButton*           blendButton;
-    automatableButtonGroup* stereoLinkGroup;
+    AutomatableButtonGroup* stereoLinkGroup;
 
     PixmapButton* autoMakeupButton;
     PixmapButton* auditionButton;

@@ -282,7 +282,7 @@ QMenu* BBTCOView::buildContextMenu()
 
     a=
     */
-    cm->addAction(embed::getIconPixmap("bb_track"),
+    cm->addAction(embed::getIcon("bb_track"),
                   tr("Open in the beat editor"), this,
                   SLOT(openInBBEditor()));
     addRemoveMuteClearMenu(cm, true, true, true);
@@ -841,7 +841,7 @@ BBTrackView::BBTrackView(BBTrack* _bbt, TrackContainerView* _tcv) :
 
     TrackLabelButton* tbl
             = new TrackLabelButton(this, getTrackSettingsWidget());
-    tbl->setIcon(embed::getIconPixmap("bb_track"));
+    tbl->setIcon(embed::getIcon("bb_track"));
     tbl->move(3, 1);
     tbl->show();
     connect(tbl, SIGNAL(clicked(bool)), this, SLOT(clickedTrackLabel()));

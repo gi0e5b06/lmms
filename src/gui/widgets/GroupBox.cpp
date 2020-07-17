@@ -20,10 +20,6 @@
  *
  */
 
-#ifndef __USE_XOPEN
-#define __USE_XOPEN
-#endif
-
 #include "GroupBox.h"
 
 #include "embed.h"
@@ -131,7 +127,7 @@ GroupBox::~GroupBox()
 
 void GroupBox::togglePanel()
 {
-    if(!m_panel)
+    if(m_panel==nullptr)
         return;
 
     m_panel->setVisible(!m_panel->isVisible());
@@ -160,7 +156,7 @@ void GroupBox::setContentWidget(QWidget* _w)
         return;
 
     bool visible = false;
-    if(m_panel && m_panel->isVisible())
+    if(m_panel!=nullptr && m_panel->isVisible())
     {
         togglePanel();
         visible         = true;
@@ -168,18 +164,16 @@ void GroupBox::setContentWidget(QWidget* _w)
         vl->removeWidget(m_panel);
     }
     m_panel = _w;
-    if(m_panel)
+    if(m_panel!=nullptr)
     {
         QGridLayout* vl = dynamic_cast<QGridLayout*>(layout());
         vl->addWidget(m_panel, 1, 0);
 
         if(visible && m_panel->isVisible())
-        {
             togglePanel();
-        }
     }
     adjustSize();
-    if(parentWidget())
+    if(parentWidget()!=nullptr)
         parentWidget()->adjustSize();
 }
 
@@ -194,13 +188,13 @@ void GroupBox::setBottomWidget(QWidget* _w)
         return;
 
     m_bottom = _w;
-    if(m_bottom)
+    if(m_bottom!=nullptr)
     {
         QGridLayout* vl = dynamic_cast<QGridLayout*>(layout());
         vl->addWidget(m_bottom, 2, 0);
     }
     adjustSize();
-    if(parentWidget())
+    if(parentWidget()!=nullptr)
         parentWidget()->adjustSize();
 }
 
@@ -244,7 +238,7 @@ void GroupBox::paintEvent(QPaintEvent* _pe)
 
 void GroupBox::enterValue()
 {
-    if(!m_top || !m_top->m_led)
+    if(m_top==nullptr || m_top->m_led==nullptr)
         return;
 
     BoolModel* m = m_top->m_led->model();
@@ -260,7 +254,5 @@ void GroupBox::enterValue()
                                    0, &ok);
 
     if(ok)
-    {
         m->setValue(new_val);
-    }
 }

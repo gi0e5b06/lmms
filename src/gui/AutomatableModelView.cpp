@@ -68,6 +68,16 @@ void AutomatableModelView::setInteractive(bool _b)
     widget()->update();
 }
 
+void AutomatableModelView::setDescription(const QString& _desc)
+{
+    m_description = _desc.trimmed();
+}
+
+void AutomatableModelView::setUnit(const QString& _unit)
+{
+    m_unit = _unit;
+}
+
 void AutomatableModelView::addDefaultActions(QMenu*     menu,
                                              const bool _interactive)
 {

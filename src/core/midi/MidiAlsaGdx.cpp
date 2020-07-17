@@ -1,24 +1,23 @@
 /*
+ * SPDX-License-Identifier: GPL-3.0-or-later
  * MidiAlsaGdx.cpp - an ALSA sequencer client with 16 ports and multiplexing
  *
- * Copyright (c) 2017 gi0e5b06
+ * Copyright (c) 2017-2020 gi0e5b06
  *
- * This file is part of LMMS - https://lmms.io
+ * This file is part of LSMM -
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public
- * License along with this program (see COPYING); if not, write to the
- * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
- * Boston, MA 02110-1301 USA.
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
 
@@ -292,7 +291,7 @@ void MidiAlsaGdx::setFD(const MidiPort* _port, int _i, int _v)
     assert(getFD(_port, _i) == _v);
 }
 
-static QString TYPICAL_CLIENT_NAME[16]
+static const QString TYPICAL_CLIENT_NAME[16]
         = {"MPKmini2", "Inst2",        "APC MINI",        "Inst4",
            "Mixxx",    "LMMS:ch5",     "Inst7",           "Inst8",
            "Inst9",    "MPD218",       "Inst11",          ":MTC",
@@ -301,19 +300,22 @@ void MidiAlsaGdx::createLmmsPorts()
 {
     for(int _num = 0; _num < 16; _num++)
     {
-        QString name = QString("LMMS %1").arg(
-                TYPICAL_CLIENT_NAME[_num].replace(':', ' ').trimmed());
+        QString name = TYPICAL_CLIENT_NAME[_num];
+        name.replace(':', ' ');
+        name = QString("LMMS %1").arg(name.trimmed());
+
         s_lmmsPorts[_num]
                 = new MidiPort(name, this, this, nullptr, MidiPort::Duplex);
     }
 
     for(int _num = 0; _num < 16; _num++)
     {
-        int     caps = SND_SEQ_PORT_CAP_READ | SND_SEQ_PORT_CAP_SUBS_READ;
-        QString name = QString("out to %1")
-                               .arg(TYPICAL_CLIENT_NAME[_num]
-                                            .replace(':', ' ')
-                                            .trimmed());
+        int caps = SND_SEQ_PORT_CAP_READ | SND_SEQ_PORT_CAP_SUBS_READ;
+
+        QString name = TYPICAL_CLIENT_NAME[_num];
+        name.replace(':', ' ');
+        name = QString("out to %1").arg(name.trimmed());
+
         int pout = snd_seq_create_simple_port(
                 m_seqHandle, qPrintable(name), caps,
                 SND_SEQ_PORT_TYPE_MIDI_GENERIC
@@ -333,11 +335,12 @@ void MidiAlsaGdx::createLmmsPorts()
 
     for(int _num = 0; _num < 16; _num++)
     {
-        int     caps = SND_SEQ_PORT_CAP_WRITE | SND_SEQ_PORT_CAP_SUBS_WRITE;
-        QString name = QString("in from %1")
-                               .arg(TYPICAL_CLIENT_NAME[_num]
-                                            .replace(':', ' ')
-                                            .trimmed());
+        int caps = SND_SEQ_PORT_CAP_WRITE | SND_SEQ_PORT_CAP_SUBS_WRITE;
+
+        QString name = TYPICAL_CLIENT_NAME[_num];
+        name.replace(':', ' ');
+        name = QString("in from %1").arg(name.trimmed());
+
         int pin = snd_seq_create_simple_port(
                 m_seqHandle, qPrintable(name), caps,
                 SND_SEQ_PORT_TYPE_MIDI_GENERIC
@@ -379,7 +382,7 @@ void MidiAlsaGdx::destroyLmmsPorts()
 
 void MidiAlsaGdx::alsaConnectOut(int _pout, QString _pextin)
 {
-    qInfo("MidiAlsaGdx::alsaConnectOut %d %s", _pout, qPrintable(_pextin));
+    qInfo("MidiAlsaGdx::alsaConnectOut %d '%s'", _pout, qPrintable(_pextin));
 
     // 20:0 MIDI Mix:MIDI Mix MIDI 1
     // MIDI Mix:MIDI Mix MIDI 1
@@ -424,7 +427,7 @@ void MidiAlsaGdx::alsaConnectOut(int _pout, QString _pextin)
 
 void MidiAlsaGdx::alsaConnectIn(int _pin, QString _pextout)
 {
-    // qInfo("MidiAlsaGdx::alsaConnectIn %d %s",_pin,qPrintable(_pextout));
+    // qInfo("MidiAlsaGdx::alsaConnectIn %d '%s'",_pin,qPrintable(_pextout));
 
     if(!s_alsaWritablePorts.contains(_pextout))
     {
@@ -1101,9 +1104,11 @@ void MidiAlsaGdx::run()
             switch(ev->type)
             {
                 case SND_SEQ_EVENT_NOTEON:
+                    /*
                     qInfo("MidiAlsaGdx: noteon ch=%d key=%d val=%d time=%d",
                           ev->data.note.channel, ev->data.note.note,
                           ev->data.note.velocity, ev->time.tick);
+                    */
                     dest->processInEvent(
                             MidiEvent(MidiNoteOn, ev->data.note.channel,
                                       ev->data.note.note,  //-KeysPerOctave,
@@ -1510,20 +1515,21 @@ void MidiAlsaGdx::updatePortList()
     for(int _num = 0; _num < 16; _num++)
     {
         MidiPort* mp = s_lmmsPorts[_num];
-        readablePorts.push_back(QString("%1:%2 %3:in from %4")
-                                        .arg(128)  // m_clientID)
-                                        .arg(getFD(mp, 0))
-                                        .arg("LMMS")  // m_clientName)
-                                        .arg(TYPICAL_CLIENT_NAME[_num]
-                                                     .replace(':', ' ')
-                                                     .trimmed()));
-        writablePorts.push_back(QString("%1:%2 %3:out to %4")
-                                        .arg(128)  // m_clientID)
-                                        .arg(getFD(mp, 1))
-                                        .arg("LMMS")  // m_clientName)
-                                        .arg(TYPICAL_CLIENT_NAME[_num]
-                                                     .replace(':', ' ')
-                                                     .trimmed()));
+
+        QString name = TYPICAL_CLIENT_NAME[_num];
+        name.replace(':', ' ');
+        name = name.trimmed();
+
+        readablePorts.append(QString("%1:%2 %3:in from %4")
+                                     .arg(128)  // m_clientID)
+                                     .arg(getFD(mp, 0))
+                                     .arg("LMMS")  // m_clientName)
+                                     .arg(name));
+        writablePorts.append(QString("%1:%2 %3:out to %4")
+                                     .arg(128)  // m_clientID)
+                                     .arg(getFD(mp, 1))
+                                     .arg("LMMS")  // m_clientName)
+                                     .arg(name));
     }
 
     if(m_readablePorts != readablePorts)

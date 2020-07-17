@@ -65,14 +65,23 @@
 tick_t MidiTime::s_ticksPerTact = DefaultTicksPerTact;
 
 Song::Song() :
-      TrackContainer(nullptr, "Song"),
+      TrackContainer(nullptr, tr("Song"), "song"),
       m_globalAutomationTrack(dynamic_cast<AutomationTrack*>(
               Track::create(Track::HiddenAutomationTrack, this))),
-      m_tempoModel(DefaultTempo, MinTempo, MaxTempo, this, tr("Tempo")),
+      m_tempoModel(
+              DefaultTempo, MinTempo, MaxTempo, this, tr("Tempo"), "tempo"),
       m_timeSigModel(this), m_oldTicksPerTact(DefaultTicksPerTact),
-      m_masterVolumeModel(100., 0., 200., 0.1, this, tr("Master volume")),
-      m_masterPitchModel(0., -60., 60., 0.01, this, tr("Master pitch")),
-      m_masterPanningModel(0., -100., 100., 0.1, this, tr("Master panning")),
+      m_masterVolumeModel(
+              100., 0., 200., 0.1, this, tr("Master volume"), "masterVolume"),
+      m_masterPitchModel(
+              0., -60., 60., 0.01, this, tr("Master pitch"), "masterPitch"),
+      m_masterPanningModel(0.,
+                           -100.,
+                           100.,
+                           0.1,
+                           this,
+                           tr("Master panning"),
+                           "masterPanning"),
       m_metaData(), m_nLoadingTrack(0), m_fileName(), m_oldFileName(),
       m_modified(false), m_loadOnLaunch(true), m_recording(false),
       m_exporting(false), m_exportLoop(false), m_renderBetweenMarkers(false),
@@ -880,7 +889,7 @@ void Song::clearProject()
 
     qInfo("Song::clearProject 1");
 
-    Engine::mixer()->clearAllPlayHandles();
+    // Engine::mixer()->clearAllPlayHandles();
 
     qInfo("Song::clearProject 2a");
 
@@ -1557,6 +1566,7 @@ bool Song::createProjectTree()
     pdir.mkpath("stems");
     pdir.mkpath("tracks");
     pdir.mkpath("videos");
+    pdir.mkpath("waveforms");
 
     pdir.mkpath(QString("channels") + QDir::separator() + "frozen");
     pdir.mkpath(QString("channels") + QDir::separator() + "rendered");
@@ -1570,6 +1580,7 @@ bool Song::createProjectTree()
     pdir.mkpath(QString("tracks") + QDir::separator() + "rendered");
     pdir.mkpath(QString("videos") + QDir::separator() + "rendered");
     pdir.mkpath(QString("samples") + QDir::separator() + "used");
+    pdir.mkpath(QString("waveforms") + QDir::separator() + "used");
 
     return true;
 }

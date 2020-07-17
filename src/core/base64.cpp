@@ -53,6 +53,11 @@ QString encodeChars(const char* _data, const int _size)
     return QByteArray(_data, _size).toBase64();
 }
 
+QString encodeInt32s(const int64_t* _data, const int _size)
+{
+    return encodeChars((const char*)_data, _size * sizeof(int32_t));
+}
+
 QString encodeFloats(const FLOAT* _data, const int _size)
 {
     return encodeChars((const char*)_data, _size * sizeof(FLOAT));
@@ -66,6 +71,16 @@ QString encodeDoublesAsFloats(const double* _data, const int _size)
     QString r = encodeFloats(buf, _size);
     delete[] buf;
     return r;
+}
+
+QString encodeReals(const real_t* _data, const int _size)
+{
+#ifdef REAL_IS_FLOAT
+    return encodeFloats(_data, _size);
+#endif
+#ifdef REAL_IS_DOUBLE
+    return encodeDoublesAsFloats(_data, _size);
+#endif
 }
 
 int decodeChars(const QString& _b64, char** _data)
@@ -92,6 +107,16 @@ int decodeFloatsAsDoubles(const QString& _b64, double** _data)
         (*_data)[i] = buf[i];
     delete[] buf;
     return size;
+}
+
+int decodeReals(const QString& _b64, real_t** _data)
+{
+#ifdef REAL_IS_FLOAT
+    return decodeFloats(_b64, _data);
+#endif
+#ifdef REAL_IS_DOUBLE
+    return decodeFloatsAsDoubles(_b64, _data);
+#endif
 }
 
 };  // namespace base64

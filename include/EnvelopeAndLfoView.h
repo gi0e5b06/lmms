@@ -36,7 +36,7 @@ class QPixmap;
 
 class EnvelopeAndLfoParameters;
 
-class automatableButtonGroup;
+// class AutomatableButtonGroup;
 class ComboBox;
 class Knob;
 class LedCheckBox;
@@ -85,7 +85,7 @@ class EnvelopeAndLfoView : public QWidget, public ModelView
     TempoSyncKnob* m_lfoSpeedKnob;
     Knob*          m_lfoAmountKnob;
     PixmapButton*  m_userLfoBtn;
-    // automatableButtonGroup * m_lfoWaveBtnGrp;
+    // AutomatableButtonGroup * m_lfoWaveBtnGrp;
     ComboBox* m_lfoWaveBankCMB;
     ComboBox* m_lfoWaveIndexCMB;
 

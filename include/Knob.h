@@ -1,25 +1,24 @@
 /*
+ * SPDX-License-Identifier: GPL-3.0-or-later
  * Knob.h - powerful knob-widget
  *
- * Copyright (c) 2017-2019 gi0e5b06 (on github.com)
+ * Copyright (c) 2017-2020 gi0e5b06 (on github.com)
  * Copyright (c) 2004-2008 Tobias Doerffel <tobydox/at/users.sourceforge.net>
  *
- * This file is part of LMMS - https://lmms.io
+ * This file is part of LSMM -
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public
- * License along with this program (see COPYING); if not, write to the
- * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
- * Boston, MA 02110-1301 USA.
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
 
@@ -70,8 +69,9 @@ class EXPORT Knob : public Widget, public FloatModelView
     Q_PROPERTY(QColor pointColor READ pointColor WRITE setPointColor)
     Q_PROPERTY(QColor textColor READ textColor WRITE setTextColor)
 
-    mapPropertyFromModel(bool, isVolumeKnob, setVolumeKnob, m_volumeKnob);
-    mapPropertyFromModel(float, volumeRatio, setVolumeRatio, m_volumeRatio);
+    // mapPropertyFromModel(bool, isVolumeKnob, setVolumeKnob, m_volumeKnob);
+    // mapPropertyFromModel(float, volumeRatio, setVolumeRatio,
+    // m_volumeRatio);
 
     Knob(knobTypes      _knob_num,
          QWidget*       _parent = nullptr,
@@ -82,6 +82,15 @@ class EXPORT Knob : public Widget, public FloatModelView
 
     void initUi(const QString& _name);  //!< to be called by ctors
     void onKnobNumUpdated();  //!< to be called when you updated @a m_knobNum
+
+    // TODO: remove, tmp
+    /*
+    void setVolumeKnob(bool _b)
+    {
+        qWarning("Knob: setVolumeKnob is deprecated, use a VolumeKnob
+    instead");
+    }
+    */
 
     // TODO: remove
     inline void setHintText(const QString& _txt_before,
@@ -167,8 +176,10 @@ class EXPORT Knob : public Widget, public FloatModelView
     virtual void convert(const QPoint& _p, float& value_, float& dist_);
     virtual void setPosition(const QPoint& _p, bool _shift);
 
+    virtual QString displayValue() const;
+
   private:
-    QString displayValue() const;
+    void onTextUpdated();
 
     virtual void doConnections();
 
@@ -179,11 +190,10 @@ class EXPORT Knob : public Widget, public FloatModelView
     QColor statusColor();
 
     // void clearCache();
-    void drawWidget(QPainter& _p);
-    void drawKnob(QPainter& _p);
-    void drawText(QPainter& _p);
-    bool updateAngle();
-
+    void  drawWidget(QPainter& _p);
+    void  drawKnob(QPainter& _p);
+    void  drawText(QPainter& _p);
+    bool  updateAngle();
     float angleFromValue(float value,
                          float minValue,
                          float maxValue,
@@ -202,12 +212,11 @@ class EXPORT Knob : public Widget, public FloatModelView
     QPoint m_pressPos;    // mouse pos when left button pressed
     bool   m_pressLeft;   // true when left button pressed
 
-    QString m_label;
+    QString m_text;
+    // TODO: Qt::AnchorPoint m_textAnchor;
     // bool    m_interactive;
 
-    QPixmap*   m_knobPixmap;
-    BoolModel  m_volumeKnob;
-    FloatModel m_volumeRatio;
+    QPixmap* m_knobPixmap;
 
     // QPoint m_mouseOffset;
     // QPoint m_origMousePos;
@@ -231,6 +240,67 @@ class EXPORT Knob : public Widget, public FloatModelView
     QColor  m_textColor;
 
     knobTypes m_knobNum;
+};
+
+class EXPORT BalanceKnob : public Knob
+{
+    Q_OBJECT
+
+  public:
+    BalanceKnob(QWidget* _parent);
+};
+
+class EXPORT CutoffFrequencyKnob : public Knob
+{
+    Q_OBJECT
+
+  public:
+    CutoffFrequencyKnob(QWidget* _parent);
+};
+
+class EXPORT FrequencyKnob : public Knob
+{
+    Q_OBJECT
+
+  public:
+    FrequencyKnob(QWidget* _parent);
+};
+
+class EXPORT MixKnob : public Knob
+{
+    Q_OBJECT
+
+  public:
+    MixKnob(QWidget* _parent);
+};
+
+class EXPORT ResonanceKnob : public Knob
+{
+    Q_OBJECT
+
+  public:
+    ResonanceKnob(QWidget* _parent);
+};
+
+class EXPORT VolumeKnob : public Knob
+{
+    Q_OBJECT
+
+  public:
+    // mapPropertyFromModel(bool, isVolumeKnob, setVolumeKnob, m_volumeKnob);
+    mapPropertyFromModel(float, volumeRatio, setVolumeRatio, m_volumeRatio);
+
+    VolumeKnob(knobTypes _knob_num, QWidget* _parent);
+    VolumeKnob(QWidget* _parent);
+
+    virtual QString displayValue() const;
+
+  public slots:
+    virtual void enterValue();
+
+  private:
+    BoolModel  m_volumeKnob;
+    FloatModel m_volumeRatio;
 };
 
 #endif

@@ -25,9 +25,12 @@
 #include "AutomatableActionGroup.h"
 
 AutomatableActionGroup::AutomatableActionGroup(QWidget*       _parent,
-                                               const QString& _name) :
+                                               const QString& _displayName,
+                                               const QString& _objectName) :
       QActionGroup(_parent),
-      IntModelView(new IntModel(0, 0, 0, NULL, _name, true), _parent)
+      IntModelView(
+              new IntModel(0, 0, 0, nullptr, _displayName, _objectName, true),
+              _parent)
 {
 }
 
@@ -131,7 +134,7 @@ void AutomatableActionGroup::updateActions()
     model()->setRange(0, aa.size() - 1);
 
     int i = 0;
-    for(QAction* a : aa)
+    for(QAction* a: aa)
     {
         if((i == model()->rawValue()) && !a->isChecked())
             a->setChecked(true);

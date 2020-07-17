@@ -1443,28 +1443,73 @@ const QString SampleBuffer::rawSurroundSuffix()
             .arg(Engine::mixer()->processingSampleRate());
 }
 
-QString SampleBuffer::selectAudioFile(const QString& _file)
+QString SampleBuffer::selectAudioFile(const AudioFileCategory _category,
+                                      const QString&          _file)
 {
-    FileDialog ofd(nullptr, tr("Open audio file"));
+    QString title;
+    QString userDir;
+    QString factoryDir;
+    switch(_category)
+    {
+   case WaveForm:
+        title      = tr("Open a waveform file");
+        userDir    = ConfigManager::inst()->userWaveFormsDir();
+        factoryDir = ConfigManager::inst()->factoryWaveFormsDir();
+        break;
+    case Sample:
+        title      = tr("Open a sample file");
+        userDir    = ConfigManager::inst()->userSamplesDir();
+        factoryDir = ConfigManager::inst()->factorySamplesDir();
+        break;
+    case Music:
+        title      = tr("Open a music file");
+        userDir    = QDir::home().absolutePath() + "/" + tr("Music");
+        factoryDir = "/usr/share/sounds/";
+        break;
+        // default: title=tr("Open audio file");
+    }
+    FileDialog ofd(nullptr, title);
 
     QString dir;
     QString file;
-    if(!_file.isNull() && _file != "")
+    if(!_file.isEmpty())
     {
-        if(QFileInfo(_file).isRelative())
+        QFileInfo fi(_file);
+        if(fi.isRelative())
         {
-            QString g = ConfigManager::inst()->userSamplesDir() + _file;
-            if(QFileInfo(g).exists())
-                file = g;
+            QString   g = userDir + _file;
+            QFileInfo gi(g);
+            if(gi.exists())
+            {
+                if(gi.isDir())
+                {
+                    dir  = gi.absoluteFilePath();
+                    file = "";
+                }
+                else
+                {
+                    file = gi.fileName();
+                    dir  = gi.absolutePath();
+                }
+            }
             else
-                file = ConfigManager::inst()->factorySamplesDir() + _file;
+            {
+                dir  = factoryDir;
+                file = _file;
+            }
         }
-        dir = QFileInfo(file).absolutePath();
+        else
+        {
+            file = fi.fileName();
+            dir  = fi.absolutePath();
+        }
     }
     else
     {
-        dir = ConfigManager::inst()->userSamplesDir();
+        file = "";
+        dir  = userDir;
     }
+
     // change dir to position of previously opened file
     ofd.setDirectory(dir);
     ofd.setFileMode(FileDialog::ExistingFile);
@@ -1489,6 +1534,7 @@ QString SampleBuffer::selectAudioFile(const QString& _file)
             //<< tr( "MOD-Files (*.mod)" )
             ;
     ofd.setNameFilters(types);
+
     if(!file.isEmpty())
     {
         // select previously opened file
@@ -1498,28 +1544,38 @@ QString SampleBuffer::selectAudioFile(const QString& _file)
     if(ofd.exec() == QDialog::Accepted)
     {
         if(ofd.selectedFiles().isEmpty())
-        {
             return QString::null;
-        }
+
         return tryToMakeRelative(ofd.selectedFiles()[0]);
     }
 
     return QString::null;
 }
 
+/*
 QString SampleBuffer::openAudioFile() const
 {
     return selectAudioFile(m_audioFile);
 }
+*/
 
-QString SampleBuffer::openAndSetAudioFile()
+QString SampleBuffer::openAndSetSampleFile()
 {
-    QString fileName = openAudioFile();
+    QString fileName = selectAudioFile(Sample, m_audioFile);
     if(!fileName.isEmpty())
         setAudioFile(fileName);
     return fileName;
 }
 
+QString SampleBuffer::openAndSetWaveFormFile()
+{
+    QString fileName = selectAudioFile(WaveForm, m_audioFile);
+    if(!fileName.isEmpty())
+        setAudioFile(fileName);
+    return fileName;
+}
+
+/*
 QString SampleBuffer::openAndSetWaveformFile()
 {
     if(m_audioFile.isEmpty())
@@ -1527,6 +1583,9 @@ QString SampleBuffer::openAndSetWaveformFile()
         m_audioFile = ConfigManager::inst()->factorySamplesDir()
                       + "waveforms/10saw.flac";
     }
+
+    qInfo("SampleBuffer::openAndSetWaveformFile f=%s",
+          qPrintable(m_audioFile));
 
     QString fileName = openAudioFile();
 
@@ -1541,6 +1600,7 @@ QString SampleBuffer::openAndSetWaveformFile()
 
     return fileName;
 }
+*/
 
 #undef LMMS_HAVE_FLAC_STREAM_ENCODER_H /* not yet... */
 #undef LMMS_HAVE_FLAC_STREAM_DECODER_H

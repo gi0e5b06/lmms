@@ -113,7 +113,8 @@ class AutoDetectMidiController : public MidiController
         c->m_midiPort.setSlopeInputValue(m_midiPort.slopeInputValue());
         c->m_midiPort.setDeltaInputValue(m_midiPort.deltaInputValue());
 
-        c->subscribeReadablePorts(m_midiPort.readablePorts());
+        // c->subscribeReadablePorts(m_midiPort.readablePorts());
+        c->m_midiPort.subscribeReadablePorts(m_midiPort.readablePorts());
         c->updateName();
 
         return c;
@@ -138,16 +139,7 @@ class AutoDetectMidiController : public MidiController
   public slots:
     void reset()
     {
-        m_midiPort.setInputChannel(0);
-        m_midiPort.setInputController(0);
-
-        m_midiPort.setWidgetType(4);
-        m_midiPort.setMinInputValue(0);
-        m_midiPort.setMaxInputValue(127);
-        m_midiPort.setStepInputValue(1);
-        m_midiPort.setBaseInputValue(0);
-        m_midiPort.setSlopeInputValue(1);
-        m_midiPort.setDeltaInputValue(0);
+        m_midiPort.reset();
     }
 
   private:
@@ -159,8 +151,9 @@ class AutoDetectMidiController : public MidiController
 ControllerConnectionDialog::ControllerConnectionDialog(
         QWidget* _parent, const AutomatableModel* _target_model) :
       QDialog(_parent),
-      m_readablePorts(nullptr), m_midiAutoDetect(false), m_controller(nullptr),
-      m_targetModel(_target_model), m_midiController(nullptr)
+      m_readablePorts(nullptr), m_midiAutoDetect(false),
+      m_controller(nullptr), m_targetModel(_target_model),
+      m_midiController(nullptr)
 {
     setWindowIcon(embed::getIconPixmap("setup_audio"));
     setWindowTitle(tr("Connection Settings"));
@@ -365,7 +358,8 @@ ControllerConnectionDialog::ControllerConnectionDialog(
                 m_midiDeltaValueSpinBox->model()->setValue(
                         cont->m_midiPort.deltaInputValue());
 
-                m_midiController->subscribeReadablePorts(
+                // copy ports
+                m_midiController->m_midiPort.subscribeReadablePorts(
                         static_cast<MidiController*>(cc->getController())
                                 ->m_midiPort.readablePorts());
             }
@@ -467,10 +461,8 @@ void ControllerConnectionDialog::midiToggled()
             MidiPort::Map map = m_midiController->m_midiPort.readablePorts();
             for(MidiPort::Map::Iterator it = map.begin(); it != map.end();
                 ++it)
-            {
                 it.value() = true;
-            }
-            m_midiController->subscribeReadablePorts(map);
+            m_midiController->m_midiPort.subscribeReadablePorts(map);
 
             m_midiChannelSpinBox->setModel(
                     &m_midiController->m_midiPort.m_inputChannelModel);

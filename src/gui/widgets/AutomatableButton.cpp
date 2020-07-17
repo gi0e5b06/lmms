@@ -1,6 +1,6 @@
 /*
- * AutomatableButton.cpp - implementation of class automatableButton and
- *                          automatableButtonGroup
+ * AutomatableButton.cpp - implementation of class AutomatableButton and
+ *                          AutomatableButtonGroup
  *
  * Copyright (c) 2006-2011 Tobias Doerffel <tobydox/at/users.sourceforge.net>
  *
@@ -33,12 +33,16 @@
 #include <QInputDialog>
 #include <QMouseEvent>
 
-AutomatableButton::AutomatableButton(QWidget* _parent, const QString& _name) :
+AutomatableButton::AutomatableButton(QWidget*       _parent,
+                                     const QString& _displayName,
+                                     const QString& _objectName) :
       QPushButton(_parent),
-      BoolModelView(new BoolModel(false, nullptr, _name, true), this),
+      BoolModelView(
+              new BoolModel(false, nullptr, _displayName, _objectName, true),
+              this),
       m_group(nullptr)
 {
-    setWindowTitle(_name);
+    setWindowTitle(_displayName);
     doConnections();
     setFocusPolicy(Qt::NoFocus);
 }
@@ -52,9 +56,10 @@ AutomatableButton::~AutomatableButton()
 void AutomatableButton::modelChanged()
 {
     BoolModel* m = model();
-    if(!m)
+    if(m == nullptr)
         return;
 
+    setWindowTitle(m->displayName());
     if(QPushButton::isChecked() != m->rawValue())
         QPushButton::setChecked(m->rawValue());
 }
@@ -62,7 +67,7 @@ void AutomatableButton::modelChanged()
 void AutomatableButton::update()
 {
     BoolModel* m = model();
-    if(!m)
+    if(m == nullptr)
         return;
 
     if(QPushButton::isChecked() != m->rawValue())
@@ -74,7 +79,7 @@ void AutomatableButton::update()
 void AutomatableButton::setChecked(bool _on)
 {
     BoolModel* m = model();
-    if(!m)
+    if(m == nullptr)
         return;
 
     // QPushButton::setChecked is called in update-slot
@@ -121,7 +126,7 @@ void AutomatableButton::mousePressEvent(QMouseEvent* _me)
     else
     {
         // Ctrl-clicked, need to prepare drag-drop
-        if(m_group)
+        if(m_group != nullptr)
         {
             // A group, we must get process it instead
             AutomatableModelView* groupView = (AutomatableModelView*)m_group;
@@ -154,7 +159,7 @@ void AutomatableButton::mouseReleaseEvent(QMouseEvent* _me)
 void AutomatableButton::dropEvent(QDropEvent* _de)
 {
     BoolModel* m = model();
-    if(!m)
+    if(m == nullptr)
         return;
 
     QString type = StringPairDrag::decodeKey(_de);
@@ -180,7 +185,7 @@ void AutomatableButton::dropEvent(QDropEvent* _de)
 void AutomatableButton::toggle()
 {
     BoolModel* m = model();
-    if(!m)
+    if(m == nullptr)
         return;
 
     if(isCheckable() && m_group != nullptr)
@@ -200,7 +205,7 @@ void AutomatableButton::toggle()
 void AutomatableButton::enterValue()
 {
     BoolModel* m = model();
-    if(!m || !isInteractive())
+    if(m == nullptr || !isInteractive())
         return;
 
     bool ok;
@@ -223,25 +228,32 @@ void AutomatableButton::enterValue()
     }
 }
 
-automatableButtonGroup::automatableButtonGroup(QWidget*       _parent,
-                                               const QString& _name) :
+AutomatableButtonGroup::AutomatableButtonGroup(QWidget*       _parent,
+                                               const QString& _displayName,
+                                               const QString& _objectName) :
       QWidget(_parent),
-      IntModelView(new IntModel(0, 0, 0, nullptr, _name, true), this)
+      IntModelView(
+              new IntModel(0, 0, 0, nullptr, _displayName, _objectName, true),
+              this)
 {
     hide();
-    setWindowTitle(_name);
+    setWindowTitle(_displayName);
 }
 
-automatableButtonGroup::~automatableButtonGroup()
+AutomatableButtonGroup::~AutomatableButtonGroup()
 {
+    /*
     for(QList<AutomatableButton*>::iterator it = m_buttons.begin();
         it != m_buttons.end(); ++it)
     {
         (*it)->m_group = nullptr;
     }
+    */
+    for(AutomatableButton* btn: m_buttons)
+        btn->m_group = nullptr;
 }
 
-void automatableButtonGroup::addButton(AutomatableButton* _btn)
+void AutomatableButtonGroup::addButton(AutomatableButton* _btn)
 {
     _btn->m_group = this;
     _btn->setCheckable(true);
@@ -249,53 +261,65 @@ void automatableButtonGroup::addButton(AutomatableButton* _btn)
     // disable journalling as we're recording changes of states of
     // button-group members on our own
     _btn->model()->setJournalling(false);
-
     m_buttons.push_back(_btn);
-    model()->setRange(0, m_buttons.size() - 1);
+
+    IntModel* m = model();
+    if(m != nullptr)
+        m->setRange(0, m_buttons.size() - 1);
     updateButtons();
 }
 
-void automatableButtonGroup::removeButton(AutomatableButton* _btn)
+void AutomatableButtonGroup::removeButton(AutomatableButton* _btn)
 {
     m_buttons.erase(qFind(m_buttons.begin(), m_buttons.end(), _btn));
     _btn->m_group = nullptr;
 }
 
-void automatableButtonGroup::activateButton(AutomatableButton* _btn)
+void AutomatableButtonGroup::activateButton(AutomatableButton* _btn)
 {
-    if(_btn != m_buttons[model()->rawValue()]
-       && m_buttons.indexOf(_btn) != -1)
+    IntModel* m = model();
+    if(m == nullptr)
+        return;
+
+    if(_btn != m_buttons[m->rawValue()] && m_buttons.indexOf(_btn) != -1)
     {
-        model()->setValue(m_buttons.indexOf(_btn));
+        m->setValue(m_buttons.indexOf(_btn));
         for(AutomatableButton* btn: m_buttons)
-        {
             btn->update();
-        }
     }
 }
 
-void automatableButtonGroup::modelChanged()
+void AutomatableButtonGroup::modelChanged()
 {
-    connect(model(), SIGNAL(dataChanged()), this, SLOT(updateButtons()));
+    IntModel* m = model();
+    if(m != nullptr)
+    {
+        setWindowTitle(m->displayName());
+        connect(m, SIGNAL(dataChanged()), this, SLOT(updateButtons()));
+    }
     IntModelView::modelChanged();
     updateButtons();
 }
 
-void automatableButtonGroup::updateButtons()
+void AutomatableButtonGroup::updateButtons()
 {
-    model()->setRange(0, m_buttons.size() - 1);
+    IntModel* m = model();
+    if(m == nullptr)
+        return;
+
+    m->setRange(0, m_buttons.size() - 1);
     int i = 0;
     for(AutomatableButton* btn: m_buttons)
     {
-        btn->model()->setValue(i == model()->rawValue());
+        btn->model()->setValue(i == m->rawValue());
         ++i;
     }
 }
 
-void automatableButtonGroup::enterValue()
+void AutomatableButtonGroup::enterValue()
 {
     IntModel* m = model();
-    if(!m)
+    if(m == nullptr)
         return;
 
     bool ok;
@@ -312,7 +336,5 @@ void automatableButtonGroup::enterValue()
                                    &ok);
 
     if(ok)
-    {
         m->setValue(new_val);
-    }
 }

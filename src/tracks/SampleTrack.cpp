@@ -404,17 +404,18 @@ SampleTCOView::~SampleTCOView()
 
 void SampleTCOView::loadSample()
 {
-    QString af = m_tco->m_sampleBuffer->openAudioFile();
-    if(af != "" && af != m_tco->m_sampleBuffer->audioFile())
+    QString f = m_tco->m_sampleBuffer->selectAudioFile(SampleBuffer::Sample);
+    // openSampleFile();
+    if(f != "" && f != m_tco->sampleFile())
     {
-        m_tco->setSampleFile(af);
-        Engine::getSong()->setModified();
+        m_tco->setSampleFile(f);
+        Engine::song()->setModified();
     }
 }
 
 void SampleTCOView::reloadSample()
 {
-    m_tco->setSampleFile(m_tco->m_sampleBuffer->audioFile());
+    m_tco->setSampleFile(m_tco->sampleFile());
     // Engine::getSong()->setModified();
 }
 
@@ -527,7 +528,7 @@ QMenu* SampleTCOView::buildContextMenu()
     bool normal  = !isFixed();  //(fixedTCOs() == false);
     bool hasFile = (m_tco->sampleFile() != "");
 
-    a = cm->addAction(embed::getIconPixmap("sample_file"),
+    a = cm->addAction(embed::getIcon("sample_file"),
                       tr("Open in audacity"), this, SLOT(openInAudacity()));
     a->setEnabled(hasFile);
     addRemoveMuteClearMenu(cm, normal, normal, true);
@@ -548,15 +549,15 @@ QMenu* SampleTCOView::buildContextMenu()
     }
 
     cm->addSeparator();
-    a = cm->addAction(embed::getIconPixmap("sample_file"), tr("Load sample"),
+    a = cm->addAction(embed::getIcon("sample_file"), tr("Load sample"),
                       this, SLOT(loadSample()));
-    a = cm->addAction(embed::getIconPixmap("reload"), tr("Reload"), this,
+    a = cm->addAction(embed::getIcon("reload"), tr("Reload"), this,
                       SLOT(reloadSample()));
     a->setEnabled(hasFile);
 
     cm->addSeparator();
     addPropertiesMenu(cm, !isFixed(), !isFixed());
-    a = cm->addAction(embed::getIconPixmap("automation"),
+    a = cm->addAction(embed::getIcon("automation"),
                       tr("Create RMS automation"), this,
                       SLOT(createRmsAutomation()));
 
@@ -773,17 +774,22 @@ void SampleTCOView::paintEvent(QPaintEvent* pe)
 }
 
 SampleTrack::SampleTrack(TrackContainer* tc) :
-      Track(Track::SampleTrack, tc),
-      m_volumeModel(
-              DefaultVolume, MinVolume, MaxVolume, 0.1f, this, tr("Volume")),
+      Track(Track::SampleTrack, tc), m_volumeModel(DefaultVolume,
+                                                   MinVolume,
+                                                   MaxVolume,
+                                                   0.1f,
+                                                   this,
+                                                   tr("Volume"),
+                                                   "volume"),
       m_panningModel(DefaultPanning,
                      PanningLeft,
                      PanningRight,
                      0.1f,
                      this,
-                     tr("Panning")),
-      m_useMasterPitchModel(true, this, tr("Master Pitch")),
-      m_effectChannelModel(0, 0, 0, this, tr("FX channel")),
+                     tr("Panning"),
+                     "panning"),
+      m_useMasterPitchModel(true, this, tr("Master Pitch"), "masterPitch"),
+      m_effectChannelModel(0, 0, 0, this, tr("FX channel"), "fxChannel"),
       m_audioPort(nullptr)
 {
     setColor(QColor("#D98F26"));
@@ -1084,7 +1090,7 @@ SampleTrackView::SampleTrackView(SampleTrack* _st, TrackContainerView* _tcv) :
 
     m_tlb = new TrackLabelButton(this, getTrackSettingsWidget());
     m_tlb->setCheckable(true);
-    m_tlb->setIcon(embed::getIconPixmap("sample_track"));
+    m_tlb->setIcon(embed::getIcon("sample_track"));
     m_tlb->move(3, 1);
     m_tlb->show();
 
@@ -1105,10 +1111,12 @@ SampleTrackView::SampleTrackView(SampleTrack* _st, TrackContainerView* _tcv) :
         widgetWidth = DEFAULT_SETTINGS_WIDGET_WIDTH;
     }
 
-    m_volumeKnob = new Knob(getTrackSettingsWidget(), tr("Volume"));
-    m_volumeKnob->setVolumeKnob(true);
+    // m_volumeKnob = new Knob(getTrackSettingsWidget(), tr("Volume"));
+    // m_volumeKnob->setVolumeKnob(true);
+    m_volumeKnob = new VolumeKnob(getTrackSettingsWidget());
     m_volumeKnob->setModel(&_st->m_volumeModel);
-    m_volumeKnob->setHintText(tr("Volume:"), "%");
+    m_volumeKnob->setText("");
+    // m_volumeKnob->setHintText(tr("Volume:"), "%");
     m_volumeKnob->move(widgetWidth - 2 * 29, 3);  // 24,2
     // m_volumeKnob->setLabel( tr( "VOL" ) );
     m_volumeKnob->show();
@@ -1473,10 +1481,11 @@ SampleTrackWindow::SampleTrackWindow(SampleTrackView* _stv) :
     basicControlsLayout->setContentsMargins(0, 0, 0, 0);
 
     // set up volume knob
-    m_volumeKnob = new Knob(nullptr, tr("Sample volume"));
-    m_volumeKnob->setVolumeKnob(true);
-    m_volumeKnob->setText(tr("VOL"));
-    m_volumeKnob->setHintText(tr("Volume:"), "%");
+    // m_volumeKnob = new Knob(nullptr, tr("Sample volume"));
+    // m_volumeKnob->setVolumeKnob(true);
+    m_volumeKnob = new VolumeKnob(nullptr);
+    // m_volumeKnob->setText(tr("VOL"));
+    // m_volumeKnob->setHintText(tr("Volume:"), "%");
     // m_volumeKnob->setWhatsThis(tr(ITVOLHELP));
 
     // QLabel *label = new QLabel( tr( "VOL" ), this );
@@ -1528,7 +1537,7 @@ SampleTrackWindow::SampleTrackWindow(SampleTrackView* _stv) :
     // basicControlsLayout->setAlignment( label, labelAlignment );
 
     QPushButton* saveSettingsBtn = new QPushButton(
-            embed::getIconPixmap("project_save"), QString());
+            embed::getIcon("project_save"), QString());
     saveSettingsBtn->setMinimumSize(30, 30);  // 32, 32 );
 
     connect(saveSettingsBtn, SIGNAL(clicked()), this,
@@ -1730,8 +1739,8 @@ void SampleTrackWindow::modelChanged()
     {
         m_bendingKnob->hide();
         // m_pitchLabel->hide();
-        m_bendingKnob->setModel(
-                new FloatModel(0., 0., 0., 0.01, nullptr, "[bending]", true));
+        m_bendingKnob->setModel(new FloatModel(
+                0., 0., 0., 0.01, nullptr, tr("Bending"), "bending", true));
         m_bendingRangeSpinBox->hide();
         // m_bendingRangeLabel->hide();
     }

@@ -80,18 +80,22 @@ void positionLine::paintEvent( QPaintEvent * pe )
 */
 
 SongEditor::SongEditor(Song* song) :
+      Editor(nullptr, tr("Song editor"), "songEditor"),
       TrackContainerView(song), m_song(song),
-      m_zoomingXModel(new ComboBoxModel(nullptr, tr("Zoom X"))),
-      m_zoomingYModel(new ComboBoxModel(nullptr, tr("Zoom Y"))),
-      m_quantizeModel(new ComboBoxModel(nullptr, tr("Quantize"))),
+      m_zoomingXModel(
+              new ComboBoxModel(editorModel(), tr("Zoom X"), "zoomX")),
+      m_zoomingYModel(
+              new ComboBoxModel(editorModel(), tr("Zoom Y"), "zoomY")),
+      m_quantizeModel(
+              new ComboBoxModel(editorModel(), tr("Quantize"), "quantize")),
       m_scrollBack(false),
       m_smoothScroll(
               ConfigManager::inst()->value("ui", "smoothscroll").toInt()),
       m_mode(DrawMode)
 {
-    m_zoomingXModel->setParent(this);
-    m_zoomingYModel->setParent(this);
-    m_quantizeModel->setParent(this);
+    // m_zoomingXModel->setParent(this);
+    // m_zoomingYModel->setParent(this);
+    // m_quantizeModel->setParent(this);
 
     // create time-line
     int widgetTotal
@@ -163,10 +167,13 @@ SongEditor::SongEditor(Song* song) :
     masterVolumeLBL->setPixmap(embed::getPixmap("master_volume"));
     masterVolumeLBL->setFixedWidth(26);
 
-    m_masterVolumeKNB = new Knob(tb, tr("Master volume"));
-    m_masterVolumeKNB->setVolumeKnob(true);
+    m_masterVolumeKNB = new VolumeKnob(tb);
+    // m_masterVolumeKNB = new Knob(tb, tr("Master volume"));
+    // m_masterVolumeKNB->setVolumeKnob(true);
     m_masterVolumeKNB->setModel(&m_song->m_masterVolumeModel);
-    m_masterVolumeKNB->setHintText(tr("Master volume"), "%");
+    // m_masterVolumeKNB->setHintText(tr("Master volume"), "%");
+    m_masterVolumeKNB->setText("");
+    m_masterVolumeKNB->setDescription(tr("Master volume"));
     ToolTip::add(m_masterVolumeKNB, tr("Master volume"));
 
     m_masterVolumeTFT = new TextFloat();

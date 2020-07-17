@@ -31,6 +31,7 @@
 #include <QLine>
 #include <QPoint>
 #include <QPointer>
+#include <QWidget>
 
 class EXPORT ModelView
 {
@@ -95,6 +96,17 @@ class EXPORT ModelView
   private:
     QWidget*        m_widget;
     QPointer<Model> m_model;
+};
+
+class EXPORT DummyModelView : public QWidget, public ModelView
+{
+  public:
+    DummyModelView(Model* _model, QWidget* _parent) :
+          QWidget(_parent), ModelView(_model, this)
+    {
+        hide();
+        setGeometry(0,0,0,0);
+    }
 };
 
 #endif

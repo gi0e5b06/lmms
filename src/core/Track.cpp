@@ -100,8 +100,8 @@ Tile::Tile(Track* _track, const QString& _displayName) :
       Model(_track, _displayName), m_steps(DefaultStepsPerTact),
       m_stepResolution(DefaultStepsPerTact), m_track(_track),
       m_name(QString::null), m_startPosition(), m_length(),
-      m_mutedModel(false, this, tr("Mute")),
-      // m_soloModel(false, this, tr("Solo")),
+      m_mutedModel(false, this, tr("Mute"), "mute"),
+      // m_soloModel(false, this, tr("Solo"),"solo"),
       m_autoResize(false), m_autoRepeat(false), m_color(128, 128, 128),
       m_useStyleColor(true), m_selectViewOnCreate(false)
 {
@@ -2264,8 +2264,8 @@ bool TrackContentWidget::canPasteSelection(MidiTime         tcoPos,
         return false;
     }
 
-    QString type  = StringPairDrag::decodeMimeKey(mimeData);
-    QString value = StringPairDrag::decodeMimeValue(mimeData);
+    QString type  = StringPairDrag::decodeKey(mimeData);
+    QString value = StringPairDrag::decodeValue(mimeData);
 
     // We can only paste into tracks of the same type
     if(type != ("tco_" + QString::number(t->type()))
@@ -3317,10 +3317,10 @@ void TrackOperationsWidget::updateMenu()
 {
     QMenu* toMenu = m_trackOps->menu();
     toMenu->clear();
-    toMenu->addAction(embed::getIcon("clone", 16, 16),
-                      tr("Clone this track"), this, SLOT(cloneTrack()));
-    toMenu->addAction(embed::getIcon("clone", 16, 16),
-                      tr("Spawn this track"), this, SLOT(spawnTrack()));
+    toMenu->addAction(embed::getIcon("clone", 16, 16), tr("Clone this track"),
+                      this, SLOT(cloneTrack()));
+    toMenu->addAction(embed::getIcon("clone", 16, 16), tr("Spawn this track"),
+                      this, SLOT(spawnTrack()));
 
     if(!m_trackView->trackContainerView()->fixedTCOs())
     {
@@ -3412,18 +3412,25 @@ void TrackOperationsWidget::recordingOff()
  */
 Track::Track(TrackType type, TrackContainer* tc) :
       Model(tc, "Track"), /*!< The track Model */
-      m_frozenModel(false, this, tr("Frozen")),
+      m_frozenModel(false, this, tr("Frozen"), "frozen"),
       /*!< For controlling track freezing */
-      m_clippingModel(false, this, tr("Clipping")),
+      m_clippingModel(false, this, tr("Clipping"), "clipping"),
       /*!< For showing track clipping alerts */
-      m_mutedModel(false, this, tr("Mute")),
+      m_mutedModel(false, this, tr("Mute"), "mute"),
       /*!< For controlling track muting */
-      m_soloModel(false, this, tr("Solo")),
+      m_soloModel(false, this, tr("Solo"), "solo"),
       /*!< For controlling track soloing */
+      m_loopEnabledModel(false, this, tr("Loop Enabled"), "loopEnabled"),
+      m_currentLoopModel(0,
+                         0,
+                         TimeLineWidget::NB_LOOPS - 1,
+                         this,
+                         tr("Current Loop"),
+                         "currentLoop"),
       m_trackContainer(tc), /*!< The track container object */
       m_type(type),         /*!< The track type */
       m_name(),             /*!< The track's name */
-      m_color(Qt::white), m_useStyleColor(true), m_currentLoop(-1),
+      m_color(Qt::white), m_useStyleColor(true),
       m_simpleSerializingMode(false),
       m_tiles(), /*!< The track content objects (segments) */
       m_processingLock("Track::m_processingLock", QMutex::Recursive, false)
@@ -3466,8 +3473,8 @@ Track::~Track()
 QString Track::objectName() const
 {
     QString r = QObject::objectName();
-    if(r.isEmpty())
-        r = QString("track%1").arg(trackIndex());
+    if(r.isEmpty() || r == "track")
+        r = QString("track%1").arg(trackIndex() + 1);
     return r;
 }
 
@@ -3494,6 +3501,36 @@ bool Track::useStyleColor() const
 void Track::setUseStyleColor(bool b)
 {
     m_useStyleColor = b;
+}
+
+int Track::currentLoop() const
+{
+    if(m_loopEnabledModel.value())
+        return m_currentLoopModel.value();
+    else
+        return -1;
+}
+
+void Track::setCurrentLoop(int _loop)
+{
+    if(_loop < 0 || _loop >= TimeLineWidget::NB_LOOPS)
+    {
+        m_loopEnabledModel.setValue(false);
+        return;
+    }
+
+    if(m_loopEnabledModel.value() && m_currentLoopModel.value() == _loop)
+    {
+        m_loopEnabledModel.setValue(false);
+    }
+    else
+    {
+        m_loopEnabledModel.setValue(true);
+        m_currentLoopModel.setValue(_loop);
+    }
+
+    qInfo("Track: loop=%d enabled=%d", m_currentLoopModel.value(),
+          m_loopEnabledModel.value());
 }
 
 /*
@@ -3612,10 +3649,8 @@ void Track::saveSettings(QDomDocument& doc, QDomElement& element)
     element.setAttribute("color", color().rgb());
     element.setAttribute("usestyle", useStyleColor() ? 1 : 0);
 
-    if(m_height >= MINIMAL_TRACK_HEIGHT)
-    {
+    if(m_height >= MINIMAL_TRACK_HEIGHT && m_height != DEFAULT_TRACK_HEIGHT)
         element.setAttribute("trackheight", m_height);
-    }
 
     if(hasUuid())                              //! m_uuid.isEmpty())
         element.setAttribute("uuid", uuid());  // m_uuid);
@@ -3733,11 +3768,20 @@ void Track::loadSettings(const QDomElement& element)
         node = node.nextSibling();
     }
 
-    int storedHeight = element.attribute("trackheight").toInt();
-    if(storedHeight >= MINIMAL_TRACK_HEIGHT)
+    if(element.hasAttribute("trackheight"))
     {
-        m_height = storedHeight;
+        int storedHeight = element.attribute("trackheight").toInt();
+        qWarning("Track: storedH=%d", storedHeight);
+        if(storedHeight >= MINIMAL_TRACK_HEIGHT)
+            m_height = storedHeight;
+        else
+            m_height = MINIMAL_TRACK_HEIGHT;
     }
+    else
+    {
+        m_height = DEFAULT_TRACK_HEIGHT;
+    }
+    // setFixedHeight(m_height);
 
     if(element.hasAttribute("uuid"))
     {
@@ -4122,8 +4166,9 @@ int Track::trackIndex() const
 TrackView::TrackView(Track* track, TrackContainerView* tcv) :
       QWidget(tcv->contentWidget()), /*!< The Track Container View's content
                                         widget. */
-      ModelView(nullptr, this),      /*!< The model view of this track */
-      m_track(track),                /*!< The track we're displaying */
+      // ModelView(nullptr, this),      /*!< The model view of this track */
+      ModelView(track, this),  // <-- TRY TMP
+      m_track(track),          /*!< The track we're displaying */
       m_trackContainerView(
               tcv), /*!< The track Container View we're displayed in */
       m_trackOperationsWidget(this), /*!< Our trackOperationsWidget */
@@ -4138,13 +4183,17 @@ TrackView::TrackView(Track* track, TrackContainerView* tcv) :
 
     m_trackSettingsWidget.setAutoFillBackground(true);
 
+    // Fake model view for loop
+    new DummyModelView(&track->m_loopEnabledModel, this);
+    new DummyModelView(&track->m_currentLoopModel, this);
+
     QHBoxLayout* layout = new QHBoxLayout(this);
     layout->setMargin(0);
     layout->setSpacing(0);
     layout->addWidget(&m_trackOperationsWidget);
     layout->addWidget(&m_trackSettingsWidget);
     layout->addWidget(&m_trackContentWidget, 1);
-    setFixedHeight(m_track->getHeight());
+    setFixedHeight(m_track->height());
 
     resizeEvent(nullptr);
 
@@ -4157,27 +4206,24 @@ TrackView::TrackView(Track* track, TrackContainerView* tcv) :
 
     connect(&m_track->m_mutedModel, SIGNAL(dataChanged()),
             &m_trackContentWidget, SLOT(update()));
-
-    /*
-    connect( &m_track->m_soloModel, SIGNAL( dataChanged() ),
-             m_track, SLOT( toggleSolo() ) );
-
-    connect( &m_track->m_frozenModel, SIGNAL( dataChanged() ),
-             m_track, SLOT( toggleFrozen() ) );
-    */
-
     connect(&m_track->m_frozenModel, SIGNAL(dataChanged()),
             &m_trackContentWidget, SLOT(update()));
-
     connect(&m_track->m_clippingModel, SIGNAL(dataChanged()),
             &m_trackContentWidget, SLOT(update()));
 
+    connect(&m_track->m_loopEnabledModel, SIGNAL(dataChanged()),
+            &m_trackContentWidget, SLOT(update()));
+    connect(&m_track->m_currentLoopModel, SIGNAL(dataChanged()),
+            &m_trackContentWidget, SLOT(update()));
+
     // create views for already existing TCOs
+    /*
     for(Tiles::iterator it = m_track->m_tiles.begin();
         it != m_track->m_tiles.end(); ++it)
-    {
         createTCOView(*it);
-    }
+    */
+    for(Tile* tco: m_track->m_tiles)
+        createTCOView(tco);
 
     m_trackContainerView->addTrackView(this);
 }
@@ -4233,9 +4279,7 @@ void TrackView::update()
 {
     m_trackContentWidget.update();
     if(!m_trackContainerView->fixedTCOs())
-    {
         m_trackContentWidget.changePosition();
-    }
     QWidget::update();
 }
 
@@ -4262,7 +4306,7 @@ void TrackView::modelChanged()
     m_trackOperationsWidget.m_clippingBtn->setModel(
             &m_track->m_clippingModel);
     ModelView::modelChanged();
-    setFixedHeight(m_track->getHeight());
+    setFixedHeight(m_track->height());
 }
 
 /*! \brief Start a drag event on this track View.

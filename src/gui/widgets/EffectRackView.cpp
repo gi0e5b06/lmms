@@ -80,9 +80,11 @@ void EffectRackView::clearViews()
 {
     while(m_effectViews.size())
     {
-        EffectView* e = m_effectViews[m_effectViews.size() - 1];
-        m_effectViews.pop_back();
-        delete e;
+        //EffectView* e = m_effectViews[m_effectViews.size() - 1];
+        //m_effectViews.pop_back();
+        EffectView* e = m_effectViews.takeLast();
+        // delete e;
+        e->deleteLater();
     }
 }
 

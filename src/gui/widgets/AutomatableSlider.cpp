@@ -31,13 +31,18 @@
 #include <QMouseEvent>
 //#include "MainWindow.h"
 
-AutomatableSlider::AutomatableSlider(QWidget* _parent, const QString& _name) :
+AutomatableSlider::AutomatableSlider(QWidget*       _parent,
+                                     const QString& _displayName,
+                                     const QString& _objectName) :
       QSlider(_parent),
       // IntModelView( new IntModel( 0, 0, 0, NULL, _name, true ), this ),
-      FloatModelView(new FloatModel(0, 0, 0, 1, NULL, _name, true), this),
+      FloatModelView(
+              new FloatModel(
+                      0, 0, 0, 1, nullptr, _displayName, _objectName, true),
+              this),
       m_showStatus(false)
 {
-    setWindowTitle(_name);
+    setWindowTitle(_displayName);
     setCursor(Qt::PointingHandCursor);
 
     connect(this, SIGNAL(valueChanged(int)), this, SLOT(changeValue(int)));

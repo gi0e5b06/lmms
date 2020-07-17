@@ -1040,22 +1040,15 @@ void Mixer::deletePlayHandle1(PlayHandlePointer _ph)
     }
     */
 
-    if(_ph->type() == 2)
-    {
-        qInfo("iph->audioPort()->removePlayHandle(iph);");
-        // qInfo("audioPort=%p", _ph->audioPort());
-    }
-
     if(_ph->type() == 8)  // TypePresetPreviewHandle
         qInfo("Mixer::deletePlayHandle1 PresetPreviewHandle");
 
     //_ph->audioPort()->removePlayHandle(_ph);
+    if(_ph->type() != 1 && _ph->type() != 4)
+        qInfo("... before ph->exitMixer() type=%d", _ph->type());
     _ph->exitMixer();
-
-    if(_ph->type() == 2)
-    {
-        qInfo("... after iph->audioPort()->removePlayHandle(iph)");
-    }
+    if(_ph->type() != 1 && _ph->type() != 4)
+        qInfo("... after ph->exitMixer() type=%d", _ph->type());
 
     // if(bx1 + bx2 + bx3 > 0)
     {

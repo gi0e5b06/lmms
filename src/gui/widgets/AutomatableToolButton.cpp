@@ -34,184 +34,154 @@
 
 //#include "debug.h"
 
-
-
-AutomatableToolButton::AutomatableToolButton( QWidget * _parent,
-					      const QString & _name ) :
-	QToolButton( _parent ),
-	BoolModelView( new BoolModel( false, NULL, _name, true ), this )
+AutomatableToolButton::AutomatableToolButton(QWidget*       _parent,
+                                             const QString& _displayName,
+                                             const QString& _objectName) :
+      QToolButton(_parent),
+      BoolModelView(
+              new BoolModel(false, nullptr, _displayName, _objectName, true),
+              this)
 {
-	setWindowTitle( _name );
-	doConnections();
-	setFocusPolicy( Qt::NoFocus );
+    setWindowTitle(_displayName);
+    doConnections();
+    setFocusPolicy(Qt::NoFocus);
 }
-
-
-
 
 AutomatableToolButton::~AutomatableToolButton()
 {
 }
 
-
-
-
-void AutomatableToolButton::setCheckable( bool _on )
+void AutomatableToolButton::setCheckable(bool _on)
 {
-	QToolButton::setCheckable( _on );
-	model()->setJournalling( _on );
+    QToolButton::setCheckable(_on);
+    model()->setJournalling(_on);
 }
 
-
-
-
-void AutomatableToolButton::setChecked( bool _on )
+void AutomatableToolButton::setChecked(bool _on)
 {
-	//qInfo("AutomatableToolButton::setChecked(%d)",_on);
+    // qInfo("AutomatableToolButton::setChecked(%d)",_on);
 
-	// QToolButton::setChecked is called in update-slot
-	//QToolButton::setChecked( _on );
-	model()->setValue( _on );
+    // QToolButton::setChecked is called in update-slot
+    // QToolButton::setChecked( _on );
+    model()->setValue(_on);
 }
-
-
-
 
 bool AutomatableToolButton::isChecked()
 {
-	//qInfo("AutomatableToolButton::isChecked() c=%d m=%d",QToolButton::isChecked(),model()->rawValue());
+    // qInfo("AutomatableToolButton::isChecked() c=%d
+    // m=%d",QToolButton::isChecked(),model()->rawValue());
 
-	return model()->rawValue();
+    return model()->rawValue();
 }
-
-
-
 
 void AutomatableToolButton::modelChanged()
 {
-	//qInfo("AutomatableToolButton::modelChanged()");
+    // qInfo("AutomatableToolButton::modelChanged()");
 
-	update();
-	/*
-	if( QToolButton::isChecked() != model()->rawValue() )
-	{
-		QToolButton::setChecked( model()->rawValue() );
-	}
-	*/
+    update();
+    /*
+    if( QToolButton::isChecked() != model()->rawValue() )
+    {
+            QToolButton::setChecked( model()->rawValue() );
+    }
+    */
 }
-
-
-
 
 void AutomatableToolButton::update()
 {
-	//qInfo("AutomatableToolButton::update() c=%d m=%d",QToolButton::isChecked(),model()->rawValue());
+    // qInfo("AutomatableToolButton::update() c=%d
+    // m=%d",QToolButton::isChecked(),model()->rawValue());
 
-	if( defaultAction()->isChecked() != model()->rawValue() )
-	{
-		//qInfo("AutomatableToolButton::update() -> setChecked");
-		emit triggered(defaultAction());
-	}
+    if(defaultAction()->isChecked() != model()->rawValue())
+    {
+        // qInfo("AutomatableToolButton::update() -> setChecked");
+        emit triggered(defaultAction());
+    }
 
-	QToolButton::update();
+    QToolButton::update();
 }
 
-
-
-
-void AutomatableToolButton::contextMenuEvent( QContextMenuEvent * _me )
+void AutomatableToolButton::contextMenuEvent(QContextMenuEvent* _me)
 {
-	// for the case, the user clicked right while pressing left mouse-
-	// button, the context-menu appears while mouse-cursor is still hidden
-	// and it isn't shown again until user does something which causes
-	// an QApplication::restoreOverride Cursor()-call...
-	/*TMP mouseReleaseEvent( NULL );*/
+    // for the case, the user clicked right while pressing left mouse-
+    // button, the context-menu appears while mouse-cursor is still hidden
+    // and it isn't shown again until user does something which causes
+    // an QApplication::restoreOverride Cursor()-call...
+    /*TMP mouseReleaseEvent( NULL );*/
 
-	CaptionMenu contextMenu( model()->displayName() );
-	addDefaultActions( &contextMenu );
-	contextMenu.exec( QCursor::pos() );
+    CaptionMenu contextMenu(model()->displayName());
+    addDefaultActions(&contextMenu);
+    contextMenu.exec(QCursor::pos());
 }
 
-
-
-
-void AutomatableToolButton::mousePressEvent( QMouseEvent * _me )
+void AutomatableToolButton::mousePressEvent(QMouseEvent* _me)
 {
-	/*
-	if( _me->button() == Qt::LeftButton &&
-	    ! ( _me->modifiers() & Qt::ControlModifier ) )
-	{
-        // User simply clicked, toggle if needed
-		if( isCheckable() )
-		{
-			toggle();
-		}
-		_me->accept();
-	}
-	else
-	{
-		// Ctrl-clicked, need to prepare drag-drop
-		// Otherwise, drag the standalone button
-		AutomatableModelView::mousePressEvent( _me );
-		QToolButton::mousePressEvent( _me );
-	}
-	*/
+    /*
+    if( _me->button() == Qt::LeftButton &&
+        ! ( _me->modifiers() & Qt::ControlModifier ) )
+    {
+    // User simply clicked, toggle if needed
+            if( isCheckable() )
+            {
+                    toggle();
+            }
+            _me->accept();
+    }
+    else
+    {
+            // Ctrl-clicked, need to prepare drag-drop
+            // Otherwise, drag the standalone button
+            AutomatableModelView::mousePressEvent( _me );
+            QToolButton::mousePressEvent( _me );
+    }
+    */
 
-	if( _me->button() == Qt::LeftButton &&
-	    ( _me->modifiers() & Qt::ControlModifier ) )
-	{
-		AutomatableModelView::mousePressEvent( _me );
-	}
+    if(_me->button() == Qt::LeftButton
+       && (_me->modifiers() & Qt::ControlModifier))
+    {
+        AutomatableModelView::mousePressEvent(_me);
+    }
 
-	QToolButton::mousePressEvent( _me );
+    QToolButton::mousePressEvent(_me);
 }
-
-
-
 
 /*
 void AutomatableToolButton::mouseReleaseEvent( QMouseEvent * _me )
 {
-	if( _me && _me->button() == Qt::LeftButton )
-	{
-		emit clicked();
-	}
+        if( _me && _me->button() == Qt::LeftButton )
+        {
+                emit clicked();
+        }
 }
 */
 
-
-
-
-void AutomatableToolButton::dropEvent( QDropEvent * _de )
+void AutomatableToolButton::dropEvent(QDropEvent* _de)
 {
-	QString type = StringPairDrag::decodeKey( _de );
-	QString val = StringPairDrag::decodeValue( _de );
-	if( type == "float_value" )
-	{
-		model()->setValue( val.toFloat() ? true : false);
-		_de->accept();
-	}
-	else if( type == "automatable_model" )
-	{
-		AutomatableModel * mod = dynamic_cast<AutomatableModel *>
-			( Engine::projectJournal()->journallingObject( val.toInt() ) );
-		if( mod != NULL )
-		{
-			AutomatableModel::linkModels( model(), mod );
-			mod->setValue( model()->rawValue() );
-		}
-	}
+    QString type = StringPairDrag::decodeKey(_de);
+    QString val  = StringPairDrag::decodeValue(_de);
+    if(type == "float_value")
+    {
+        model()->setValue(val.toFloat() ? true : false);
+        _de->accept();
+    }
+    else if(type == "automatable_model")
+    {
+        AutomatableModel* mod = dynamic_cast<AutomatableModel*>(
+                Engine::projectJournal()->journallingObject(val.toInt()));
+        if(mod != NULL)
+        {
+            AutomatableModel::linkModels(model(), mod);
+            mod->setValue(model()->rawValue());
+        }
+    }
 }
 
-
-
-
- /*
+/*
 void AutomatableToolButton::toggle()
 {
-       	if( isCheckable() )
-	{
-		model()->setValue( !model()->rawValue() );
-	}
+       if( isCheckable() )
+       {
+               model()->setValue( !model()->rawValue() );
+       }
 }
 */

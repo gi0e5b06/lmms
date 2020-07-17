@@ -38,19 +38,25 @@
 //#include <QStyleOptionFrameV2>
 #include <QInputDialog>
 
-LcdSpinBox::LcdSpinBox(int numDigits, QWidget* parent, const QString& name) :
-      LcdSpinBox(numDigits, "19default", parent, name)
+LcdSpinBox::LcdSpinBox(int            _numDigits,
+                       QWidget*       _parent,
+                       const QString& _displayName,
+                       const QString& _objectName) :
+      LcdSpinBox(_numDigits, "19default", _parent, _displayName, _objectName)
 {
 }
 
-LcdSpinBox::LcdSpinBox(int            numDigits,
-                       const QString& style,
-                       QWidget*       parent,
-                       const QString& name) :
-      LcdWidget(numDigits, style, parent, name),
-      IntModelView(new IntModel(0, 0, 0, NULL, name, true), this),
-      m_pressLeft(false)  //,
-                          // m_displayOffset( 0 )
+LcdSpinBox::LcdSpinBox(int            _numDigits,
+                       const QString& _style,
+                       QWidget*       _parent,
+                       const QString& _displayName,
+                       const QString& _objectName) :
+      LcdWidget(_numDigits, _style, _parent, _displayName),
+      IntModelView(
+              new IntModel(0, 0, 0, nullptr, _displayName, _objectName, true),
+              this),
+      m_pressLeft(false)
+//, m_displayOffset( 0 )
 {
     LcdWidget::setValue(0);
     setCursor(Qt::PointingHandCursor);
@@ -63,12 +69,16 @@ LcdSpinBox::~LcdSpinBox()
 void LcdSpinBox::modelChanged()
 {
     ModelView::modelChanged();
-    LcdWidget::setValue(modelUntyped()->rawValue<int>());
+    IntModel* m = model();
+    if(m != nullptr)
+        LcdWidget::setValue(m->rawValue());
 }
 
 void LcdSpinBox::update()
 {
-    LcdWidget::setValue(modelUntyped()->rawValue<int>());
+    IntModel* m = model();
+    if(m != nullptr)
+        LcdWidget::setValue(m->rawValue());
     LcdWidget::update();
 }
 
@@ -94,7 +104,8 @@ void LcdSpinBox::setPosition(const QPoint& _p, bool _shift)
     real_t value, dist;
     convert(_p, value, dist);
 
-    if(!model())
+    IntModel* m = model();
+    if(m == nullptr)
         return;
 
     // const real_t oldValue = model()->rawValue();
@@ -106,7 +117,7 @@ void LcdSpinBox::setPosition(const QPoint& _p, bool _shift)
         // qInfo("shift pv=%f dist=%f",m_pressValue,dist);
     }
 
-    const real_t step = model()->step<real_t>();
+    const real_t step = m->step();
 
     /*
     if( model()->isScaleLogarithmic() ) // logarithmic code
@@ -129,17 +140,15 @@ void LcdSpinBox::setPosition(const QPoint& _p, bool _shift)
         */
         // relative
         real_t roundedValue
-                = qRound(((m_pressValue - model()->minValue())
+                = qRound(((m_pressValue - m->minValue())
                           + dist * (value - 0.5)
-                                    * qMin<real_t>(50. * step,
-                                                   model()->range()))
+                                    * qMin<real_t>(50. * step, m->range()))
                          / step)
                   * step;
         // model()->setValue( roundedValue );
-        real_t v = model()->minValue()
-                   + qMax<real_t>(0., qMin<real_t>(roundedValue,
-                                                   model()->range()));
-        model()->setValue(v);
+        real_t v = m->minValue()
+                   + qMax<real_t>(0., qMin<real_t>(roundedValue, m->range()));
+        m->setValue(v);
         LcdWidget::setValue(v);
         // qInfo("       rv=%f dist=%f",roundedValue,dist);
     }
@@ -147,16 +156,17 @@ void LcdSpinBox::setPosition(const QPoint& _p, bool _shift)
 
 void LcdSpinBox::contextMenuEvent(QContextMenuEvent* event)
 {
-    if(!model())
+    IntModel* m = model();
+    if(m == nullptr)
         return;
 
     // for the case, the user clicked right while pressing left mouse-
     // button, the context-menu appears while mouse-cursor is still hidden
     // and it isn't shown again until user does something which causes
     // an QApplication::restoreOverride Cursor()-call...
-    // mouseReleaseEvent( NULL );
+    // mouseReleaseEvent( nullptr );
 
-    CaptionMenu contextMenu(model()->displayName());
+    CaptionMenu contextMenu(m->displayName());
     addDefaultActions(&contextMenu);
     contextMenu.exec(QCursor::pos());
 }
@@ -168,12 +178,12 @@ void LcdSpinBox::mousePressEvent(QMouseEvent* _me)
        && !(_me->modifiers() & Qt::ShiftModifier)
        && displayRect().contains(_me->pos()))  // y() < cellHeight() + 2  )
     {
-        AutomatableModel* m = model();
-        if(m)
+        IntModel* m = model();
+        if(m != nullptr)
         {
             m->addJournalCheckPoint();
             m->saveJournallingState(false);
-            m_pressValue = m->rawValue<int>();
+            m_pressValue = m->rawValue();
         }
         else
         {
@@ -219,9 +229,9 @@ void LcdSpinBox::mouseReleaseEvent(QMouseEvent*)
 {
     if(m_pressLeft)
     {
-        AutomatableModel* m = model();
-        if(m)
-            model()->restoreJournallingState();
+        IntModel* m = model();
+        if(m != nullptr)
+            m->restoreJournallingState();
 
         // QCursor::setPos( m_pressPos );
         setCursor(Qt::PointingHandCursor);
@@ -236,10 +246,10 @@ void LcdSpinBox::wheelEvent(QWheelEvent* _we)
     if(_we->modifiers() & Qt::ShiftModifier)
     {
         _we->accept();
-        if(model())
-            model()->setInitValue(model()->rawValue()
-                                  + ((_we->delta() > 0) ? 1 : -1)
-                                            * model()->step<int>());
+        IntModel* m = model();
+        if(m != nullptr)
+            m->setInitValue(m->rawValue()
+                            + ((_we->delta() > 0) ? 1 : -1) * m->step());
         emit manualChange();
     }
 }
@@ -251,7 +261,8 @@ void LcdSpinBox::mouseDoubleClickEvent(QMouseEvent*)
 
 void LcdSpinBox::enterValue()
 {
-    if(!model())
+    IntModel* m = model();
+    if(m == nullptr)
         return;
 
     bool ok;
@@ -260,14 +271,13 @@ void LcdSpinBox::enterValue()
     new_val = QInputDialog::getInt(
             this, windowTitle(),
             tr("Please enter a new value between %1 and %2:")
-                    .arg(model()->minValue())
-                    .arg(model()->maxValue()),
-            model()->rawValue(), model()->minValue(), model()->maxValue(), 4,
-            &ok);
+                    .arg(m->minValue())
+                    .arg(m->maxValue()),
+            m->rawValue(), m->minValue(), m->maxValue(), 4, &ok);
 
     if(ok)
     {
-        model()->setValue(new_val);
+        m->setValue(new_val);
         LcdWidget::setValue(new_val);
     }
 }

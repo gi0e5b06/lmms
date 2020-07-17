@@ -1,4 +1,5 @@
 /*
+ * SPDX-License-Identifier: GPL-3.0-or-later
  * audio_file_processor.cpp - instrument for using audio-files
  *
  * Copyright (c) 2017-2019 gi0e5b06 (on github.com)
@@ -532,7 +533,7 @@ AudioFileProcessorView::AudioFileProcessorView(Instrument* _instrument,
             "The sample loops backwards and forwards between the end point "
             "and the loop point."));
 
-    m_loopGroup = new automatableButtonGroup(this, "[looping mode]");
+    m_loopGroup = new AutomatableButtonGroup(this, "[looping mode]");
     m_loopGroup->addButton(m_loopOffButton);
     m_loopGroup->addButton(m_loopOnButton);
     m_loopGroup->addButton(m_loopPingPongButton);
@@ -570,8 +571,8 @@ AudioFileProcessorView::AudioFileProcessorView(Instrument* _instrument,
     m_postdelayKnob->setText(tr("POST"));
     m_postdelayKnob->setHintText(tr("Postdelay:"), "ms");
 
-    m_ampKnob = new Knob(knobBright_26, this);
-    m_ampKnob->setVolumeKnob(true);
+    m_ampKnob = new VolumeKnob(knobBright_26, this);
+    // m_ampKnob->setVolumeKnob(true);
     m_ampKnob->move(125, 5);
     m_ampKnob->setHintText(tr("Amplify:"), "%");
     m_ampKnob->setWhatsThis(
@@ -729,12 +730,12 @@ void AudioFileProcessorView::sampleUpdated(void)
 
 void AudioFileProcessorView::openAudioFile(void)
 {
-    QString af
-            = castModel<audioFileProcessor>()->m_sampleBuffer.openAudioFile();
-    if(af != "")
+    QString f = castModel<audioFileProcessor>()
+                        ->m_sampleBuffer.openAndSetSampleFile();
+    if(!f.isEmpty())
     {
-        castModel<audioFileProcessor>()->setAudioFile(af);
-        Engine::getSong()->setModified();
+        // castModel<audioFileProcessor>()->setAudioFile(af);
+        Engine::song()->setModified();
         m_waveView->updateSampleRange();
     }
 }

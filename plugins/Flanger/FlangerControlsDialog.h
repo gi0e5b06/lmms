@@ -31,12 +31,13 @@ class FlangerControls;
 
 class FlangerControlsDialog : public EffectControlDialog
 {
-	Q_OBJECT
-public:
-	FlangerControlsDialog( FlangerControls* controls );
-	virtual ~FlangerControlsDialog()
-	{
-	}
+    Q_OBJECT
+
+  public:
+    FlangerControlsDialog(FlangerControls* controls);
+    virtual ~FlangerControlsDialog()
+    {
+    }
 };
 
-#endif // FLANGERCONTROLSDIALOG_H
+#endif  // FLANGERCONTROLSDIALOG_H

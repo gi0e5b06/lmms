@@ -250,7 +250,7 @@ EnvelopeAndLfoView::EnvelopeAndLfoView(QWidget* _parent) :
     random_lfo_btn->setWhatsThis(
             tr( "Click here for random wave." ) );
 
-    m_lfoWaveBtnGrp = new automatableButtonGroup( this );
+    m_lfoWaveBtnGrp = new AutomatableButtonGroup( this );
     m_lfoWaveBtnGrp->addButton( sin_lfo_btn );
     m_lfoWaveBtnGrp->addButton( triangle_lfo_btn );
     m_lfoWaveBtnGrp->addButton( saw_lfo_btn );

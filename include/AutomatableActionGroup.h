@@ -1,7 +1,7 @@
 /*
- * AutomatableActionGroup.h - class automatableButton, the base for all buttons
+ * AutomatableActionGroup.h -
  *
- * Copyright (c) 2017
+ * Copyright (c) 2017 gi0e5b06 (on github.com)
  *
  * This file is part of LMMS - https://lmms.io
  *
@@ -22,48 +22,47 @@
  *
  */
 
-
 #ifndef AUTOMATABLE_ACTION_GROUP_H
 #define AUTOMATABLE_ACTION_GROUP_H
+
+#include "AutomatableModelView.h"
 
 #include <QAction>
 #include <QActionGroup>
 #include <QWidget>
 
-#include "AutomatableModelView.h"
-
 class EXPORT AutomatableActionGroup : public QActionGroup, public IntModelView
 {
-	Q_OBJECT
- public:
-	AutomatableActionGroup( QWidget * _parent,
-				const QString & _name = "[automatable action group]" );
-	virtual ~AutomatableActionGroup();
+    Q_OBJECT
+  public:
+    AutomatableActionGroup(QWidget*       _parent,
+                           const QString& _displayName
+                           = "[automatable action group]",
+                           const QString& _objectName
+                           = QString::null);
+    virtual ~AutomatableActionGroup();
 
-	/*
-	void addButton( AutomatableButton * _btn );
-	void removeButton( AutomatableButton * _btn );
+    /*
+    void addButton( AutomatableButton * _btn );
+    void removeButton( AutomatableButton * _btn );
 
-	void activateButton( AutomatableButton * _btn );
-	*/
+    void activateButton( AutomatableButton * _btn );
+    */
 
-	virtual void modelChanged();
+    virtual void modelChanged();
 
-signals:
-	void triggered(QAction *action);
+  signals:
+    void triggered(QAction* action);
 
- public slots:
-	 //void execConnectionDialog();
-	void updateModel(QAction*);
+  public slots:
+    // void execConnectionDialog();
+    void updateModel(QAction*);
 
- private slots:
-	void updateActions();
+  private slots:
+    void updateActions();
 
-private:
-	//QList<AutomatableButton *> m_buttons;
-
-} ;
-
-
+  private:
+    // QList<AutomatableButton *> m_buttons;
+};
 
 #endif

@@ -248,13 +248,35 @@ CarlaInstrument::~CarlaInstrument()
 {
     qInfo("CarlaInstrument::~CarlaInstrument START");
 
-    paramModels.clear();
+    disconnect(Engine::mixer(), SIGNAL(sampleRateChanged()), this,
+               SLOT(sampleRateChanged()));
+    qInfo("CarlaInstrument::~CarlaInstrument 1");
+
+    // paramModels.clear();
+    clearParamModels();
+    qInfo("CarlaInstrument::~CarlaInstrument 2");
+
+    if(fHandle != nullptr)
+    {
+        if(fDescriptor->deactivate != nullptr)
+            fDescriptor->deactivate(fHandle);
+        qInfo("CarlaInstrument::~CarlaInstrument 3");
+
+        qInfo("CarlaInstrument::~CarlaInstrument cleanup may crash()");
+        if(fDescriptor->cleanup != nullptr)
+            fDescriptor->cleanup(fHandle);
+
+        fHandle = nullptr;
+    }
+
+    qInfo("CarlaInstrument::~CarlaInstrument 4");
 
     if(fHost.resourceDir != nullptr)
     {
         std::free((char*)fHost.resourceDir);
         fHost.resourceDir = nullptr;
     }
+    qInfo("CarlaInstrument::~CarlaInstrument 5");
 
     if(fHost.uiName != nullptr)
     {
@@ -262,16 +284,6 @@ CarlaInstrument::~CarlaInstrument()
         fHost.uiName = nullptr;
     }
 
-    if(fHandle == nullptr)
-        return;
-
-    if(fDescriptor->deactivate != nullptr)
-        fDescriptor->deactivate(fHandle);
-
-    if(fDescriptor->cleanup != nullptr)
-        fDescriptor->cleanup(fHandle);
-
-    fHandle = nullptr;
     qInfo("CarlaInstrument::~CarlaInstrument END");
 }
 
@@ -480,11 +492,16 @@ void CarlaInstrument::clearParamModels()
 {
     // Delete the models, this also disconnects all connections (automation
     // and controller connections)
-    for(int i = 0; i < paramModels.count(); ++i)
+    /*
+      for(int i = 0; i < paramModels.count(); ++i)
         delete paramModels[i];
-
-    // Clear the list
-    paramModels.clear();
+      paramModels.clear();
+    */
+    while(!paramModels.empty())
+    {
+        FloatModel* m = paramModels.takeLast();
+        delete m;//m->deleteLater();
+    }
 }
 
 void CarlaInstrument::paramModelChanged(uint32_t index)

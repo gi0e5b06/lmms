@@ -520,7 +520,7 @@ sidInstrumentView::sidInstrumentView(Instrument* _instrument,
     lp_btn->setInactiveGraphic(PLUGIN_NAME::getIconPixmap("lp"));
     ToolTip::add(lp_btn, tr("Low-Pass filter "));
 
-    m_passBtnGrp = new automatableButtonGroup(this);
+    m_passBtnGrp = new AutomatableButtonGroup(this);
     m_passBtnGrp->addButton(hp_btn);
     m_passBtnGrp->addButton(bp_btn);
     m_passBtnGrp->addButton(lp_btn);
@@ -544,7 +544,7 @@ sidInstrumentView::sidInstrumentView(Instrument* _instrument,
     mos8580_btn->setInactiveGraphic(PLUGIN_NAME::getIconPixmap("8580"));
     ToolTip::add(mos8580_btn, tr("MOS8580 SID "));
 
-    m_sidTypeBtnGrp = new automatableButtonGroup(this);
+    m_sidTypeBtnGrp = new AutomatableButtonGroup(this);
     m_sidTypeBtnGrp->addButton(mos6581_btn);
     m_sidTypeBtnGrp->addButton(mos8580_btn);
 
@@ -625,7 +625,7 @@ sidInstrumentView::sidInstrumentView(Instrument* _instrument,
         noise_btn->setInactiveGraphic(PLUGIN_NAME::getIconPixmap("noise"));
         ToolTip::add(noise_btn, tr("Noise"));
 
-        automatableButtonGroup* wfbg = new automatableButtonGroup(this);
+        AutomatableButtonGroup* wfbg = new AutomatableButtonGroup(this);
 
         wfbg->addButton(pulse_btn);
         wfbg->addButton(triangle_btn);

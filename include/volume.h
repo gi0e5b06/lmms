@@ -26,6 +26,7 @@
 #ifndef VOLUME_H
 #define VOLUME_H
 
+//#include "AutomatableModel.h"
 #include "lmms_basics.h"
 #include "lmmsconfig.h"
 //#include "Midi.h"
@@ -47,5 +48,38 @@ typedef struct
 #else
 typedef StereoGain SurroundGain;
 #endif
+
+inline int volumeToMidi(volume_t _v)
+{
+    return MidiMinVolume
+           + (int)((real_t(_v - MinVolume)) / (real_t(MaxVolume - MinVolume))
+                   * (real_t(MidiMaxVolume - MidiMinVolume)));
+}
+
+/*
+class EXPORT VolumeModel : public FloatModel
+{
+    Q_OBJECT
+
+  public:
+    VolumeModel(Model*         _parent,
+                const QString& _displayName = tr("Volume"),
+                const QString& _objectName  = "volume") :
+          FloatModel(DefaultVolume,
+                     MinVolume,
+                     MaxVolume,
+                     0.1,
+                     _parent,
+                     _displayName,
+                     _objectName)
+    {
+    }
+
+    int midiValue()
+    {
+        return volumeToMidi(value());
+    }
+};
+*/
 
 #endif

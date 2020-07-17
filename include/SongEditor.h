@@ -41,6 +41,7 @@ class AutomatableSlider;
 class ComboBox;
 class ComboBoxModel;
 class Knob;
+class VolumeKnob;
 class LcdSpinBox;
 class MeterDialog;
 class Song;
@@ -154,7 +155,7 @@ class SongEditor :
 
     MeterDialog* m_timeSigDisplay;
 
-    Knob* m_masterVolumeKNB;
+    VolumeKnob* m_masterVolumeKNB;
     Knob* m_masterPitchKNB;
     Knob* m_masterPanningKNB;
 

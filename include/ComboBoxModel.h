@@ -39,8 +39,15 @@ class EXPORT ComboBoxModel : public IntModel
   public:
     ComboBoxModel(Model*         parent               = nullptr,
                   const QString& displayName          = "[combo box model]",
+                  const QString& objectName           = QString::null,
                   bool           isDefaultConstructed = false) :
-          IntModel(0, 0, 0, parent, displayName, isDefaultConstructed)
+          IntModel(0,
+                   0,
+                   0,
+                   parent,
+                   displayName,
+                   objectName,
+                   isDefaultConstructed)
     {
     }
 

@@ -22,7 +22,6 @@
  *
  */
 
-
 #ifndef CSOUND_INSTR_H
 #define CSOUND_INSTR_H
 
@@ -32,377 +31,381 @@
 #include <string>
 //#include <vector>
 
+#include "AutomatableButton.h"
+#include "AutomatableModel.h"
+#include "Graph.h"
 #include "Instrument.h"
 #include "InstrumentView.h"
-#include "Graph.h"
-#include "AutomatableModel.h"
-#include "AutomatableButton.h"
-#include "TempoSyncKnob.h"
+#include "MemoryManager.h"
 #include "NotePlayHandle.h"
 #include "PixmapButton.h"
+#include "TempoSyncKnob.h"
+
 #include <samplerate.h>
-#include "MemoryManager.h"
 
-#define makeknob( name, x, y, hint, unit, oname ) 		\
-	name = new Knob( knobStyled, this ); 				\
-	name ->move( x, y );								\
-	name ->setHintText( hint, unit );		\
-	name ->setObjectName( oname );						\
-	name ->setFixedSize( 19, 19 );
+#define makeknob(name, x, y, hint, unit, oname) \
+    name = new Knob(knobStyled, this);          \
+    name->move(x, y);                           \
+    name->setHintText(hint, unit);              \
+    name->setObjectName(oname);                 \
+    name->setFixedSize(19, 19);
 
-#define maketsknob( name, x, y, hint, unit, oname ) 		\
-	name = new TempoSyncKnob( knobStyled, this ); 				\
-	name ->move( x, y );								\
-	name ->setHintText( hint, unit );		\
-	name ->setObjectName( oname );						\
-	name ->setFixedSize( 19, 19 );
+#define maketsknob(name, x, y, hint, unit, oname) \
+    name = new TempoSyncKnob(knobStyled, this);   \
+    name->move(x, y);                             \
+    name->setHintText(hint, unit);                \
+    name->setObjectName(oname);                   \
+    name->setFixedSize(19, 19);
 
 #define A1ROW 26
 #define A2ROW 49
 #define B1ROW 72
 #define B2ROW 95
 
+const int GRAPHLEN
+        = 220;  // don't change - must be same as the size of the widget
 
-const int GRAPHLEN = 220; // don't change - must be same as the size of the widget
+const int WAVERATIO = 32;  // oversampling ratio
 
-const int WAVERATIO = 32; // oversampling ratio
-
-const int WAVELEN = GRAPHLEN * WAVERATIO;
+const int WAVELEN  = GRAPHLEN * WAVERATIO;
 const int PMOD_AMT = WAVELEN / 2;
 
-const int	MOD_MIX = 0;
-const int	MOD_AM = 1;
-const int	MOD_RM = 2;
-const int	MOD_PM = 3;
-const int  NUM_MODS = 4;
+const int MOD_MIX  = 0;
+const int MOD_AM   = 1;
+const int MOD_RM   = 2;
+const int MOD_PM   = 3;
+const int NUM_MODS = 4;
 
-const int	A1_OSC = 0;
-const int	A2_OSC = 1;
-const int	B1_OSC = 2;
-const int	B2_OSC = 3;
-const int	NUM_OSCS = 4;
+const int A1_OSC   = 0;
+const int A2_OSC   = 1;
+const int B1_OSC   = 2;
+const int B2_OSC   = 3;
+const int NUM_OSCS = 4;
 
 class CsoundInstrInstrument;
 
 class CsoundInstrObject
 {
-	MM_OPERATORS
-public:
-	CsoundInstrObject( 	float * _A1wave, float * _A2wave,
-					float * _B1wave, float * _B2wave,
-					int _amod, int _bmod, const sample_rate_t _samplerate, NotePlayHandle * _nph, fpp_t _frames,
-					CsoundInstrInstrument * _w );
-	virtual ~CsoundInstrObject();
+    MM_OPERATORS
+  public:
+    CsoundInstrObject(float*                 _A1wave,
+                      float*                 _A2wave,
+                      float*                 _B1wave,
+                      float*                 _B2wave,
+                      int                    _amod,
+                      int                    _bmod,
+                      const sample_rate_t    _samplerate,
+                      NotePlayHandle*        _nph,
+                      fpp_t                  _frames,
+                      CsoundInstrInstrument* _w);
+    virtual ~CsoundInstrObject();
 
-	void renderOutput( fpp_t _frames );
+    void renderOutput(fpp_t _frames);
 
-	inline sampleFrame * abuf() const
-	{
-		return m_abuf;
-	}
+    inline sampleFrame* abuf() const
+    {
+        return m_abuf;
+    }
 
-	/*
-	inline sampleFrame * bbuf() const
-	{
-		return m_bbuf;
-	}
-	*/
-	
-	inline sample_rate_t samplerate() const
-	{
-		return m_samplerate;
-	}
+    /*
+    inline sampleFrame * bbuf() const
+    {
+            return m_bbuf;
+    }
+    */
 
-	void inputMessage(char* _s);
-	void pause();
-	void play();
+    inline sample_rate_t samplerate() const
+    {
+        return m_samplerate;
+    }
 
-private:
-	int m_amod;
-	int m_bmod;
+    void inputMessage(char* _s);
+    void pause();
+    void play();
 
-	const sample_rate_t m_samplerate;
-	NotePlayHandle * m_nph;
+  private:
+    int m_amod;
+    int m_bmod;
 
-	fpp_t m_fpp;
+    const sample_rate_t m_samplerate;
+    NotePlayHandle*     m_nph;
 
-	CsoundInstrInstrument * m_parent;
+    fpp_t m_fpp;
 
-	sampleFrame * m_abuf;
-	//sampleFrame * m_bbuf;
+    CsoundInstrInstrument* m_parent;
 
-	float m_lphase [NUM_OSCS];
-	float m_rphase [NUM_OSCS];
+    sampleFrame* m_abuf;
+    // sampleFrame * m_bbuf;
 
-	float m_A1wave [WAVELEN];
-	float m_A2wave [WAVELEN];
-	float m_B1wave [WAVELEN];
-	float m_B2wave [WAVELEN];
+    float m_lphase[NUM_OSCS];
+    float m_rphase[NUM_OSCS];
 
-private:
-	Csound *m_csSession;
-	CsoundPerformanceThread *m_csPT;
-	CSOUND_PARAMS m_csParams;
-	//uint ksmps = 32;
-	int ksmpsIndex = 0;
-	//std::vector<std::string> m_orc;
-	//std::vector<std::string> m_sco;
+    float m_A1wave[WAVELEN];
+    float m_A2wave[WAVELEN];
+    float m_B1wave[WAVELEN];
+    float m_B2wave[WAVELEN];
 
-	//MYFLT *m_spin;
-	//MYFLT *m_spout;
+  private:
+    Csound*                  m_csSession;
+    CsoundPerformanceThread* m_csPT;
+    CSOUND_PARAMS            m_csParams;
+    // uint ksmps = 32;
+    int ksmpsIndex = 0;
+    // std::vector<std::string> m_orc;
+    // std::vector<std::string> m_sco;
 
+    // MYFLT *m_spin;
+    // MYFLT *m_spout;
 
-	static void noMessageCallback(CSOUND* cs, int attr, const char *format, va_list valist);
+    static void noMessageCallback(CSOUND*     cs,
+                                  int         attr,
+                                  const char* format,
+                                  va_list     valist);
 };
 
 class CsoundInstrInstrument : public Instrument
 {
-	Q_OBJECT
-public:
-	CsoundInstrInstrument( InstrumentTrack * _instrument_track );
-	virtual ~CsoundInstrInstrument();
+    Q_OBJECT
+  public:
+    CsoundInstrInstrument(InstrumentTrack* _instrument_track);
+    virtual ~CsoundInstrInstrument();
 
-	virtual void playNote( NotePlayHandle * _n,
-						sampleFrame * _working_buffer );
-	virtual void deleteNotePluginData( NotePlayHandle * _n );
+    virtual void playNote(NotePlayHandle* _n, sampleFrame* _working_buffer);
+    virtual void deleteNotePluginData(NotePlayHandle* _n);
 
+    virtual void saveSettings(QDomDocument& _doc, QDomElement& _this);
+    virtual void loadSettings(const QDomElement& _this);
 
-	virtual void saveSettings( QDomDocument & _doc,
-							QDomElement & _this );
-	virtual void loadSettings( const QDomElement & _this );
+    virtual QString nodeName() const;
 
-	virtual QString nodeName() const;
+    virtual f_cnt_t desiredReleaseFrames() const
+    {
+        return (64);
+    }
 
-	virtual f_cnt_t desiredReleaseFrames() const
-	{
-		return( 64 );
-	}
+    virtual PluginView* instantiateView(QWidget* _parent);
 
-	virtual PluginView * instantiateView( QWidget * _parent );
+  public slots:
+    void updateVolumes();
+    void updateFreqA1();
+    void updateFreqA2();
+    void updateFreqB1();
+    void updateFreqB2();
+    void updateWaveA1();
+    void updateWaveA2();
+    void updateWaveB1();
+    void updateWaveB2();
 
-public slots:
-	void updateVolumes();
-	void updateFreqA1();
-	void updateFreqA2();
-	void updateFreqB1();
-	void updateFreqB2();
-	void updateWaveA1();
-	void updateWaveA2();
-	void updateWaveB1();
-	void updateWaveB2();
+  protected:
+    float m_lvol[NUM_OSCS];
+    float m_rvol[NUM_OSCS];
 
-protected:
-	float m_lvol [NUM_OSCS];
-    float m_rvol [NUM_OSCS];
+    float m_lfreq[NUM_OSCS];
+    float m_rfreq[NUM_OSCS];
 
-	float m_lfreq [NUM_OSCS];
-	float m_rfreq [NUM_OSCS];
+  private:
+    inline float leftCh(float _vol, float _pan)
+    {
+        return (_pan <= 0 ? 1.0 : 1.0 - (_pan / 100.0)) * _vol / 100.0;
+    }
 
-private:
-	inline float leftCh( float _vol, float _pan )
-	{
-		return ( _pan <= 0 ? 1.0 : 1.0 - ( _pan / 100.0 ) ) * _vol / 100.0;
-	}
+    inline float rightCh(float _vol, float _pan)
+    {
+        return (_pan >= 0 ? 1.0 : 1.0 + (_pan / 100.0)) * _vol / 100.0;
+    }
 
-	inline float rightCh( float _vol, float _pan )
-	{
-		return ( _pan >= 0 ? 1.0 : 1.0 + ( _pan / 100.0 ) ) * _vol / 100.0;
-	}
+    // memcpy utilizing libsamplerate (src) for sinc interpolation
+    inline void srccpy(float* _dst, float* _src)
+    {
+        int       err;
+        const int margin = 64;
 
-	// memcpy utilizing libsamplerate (src) for sinc interpolation
-	inline void srccpy( float * _dst, float * _src )
-	{
-		int err;
-		const int margin = 64;
-		
-		// copy to temp array
-		float tmps [ GRAPHLEN + margin ]; // temp array in stack
-		float * tmp = &tmps[0];
+        // copy to temp array
+        float  tmps[GRAPHLEN + margin];  // temp array in stack
+        float* tmp = &tmps[0];
 
-		memcpy( tmp, _src, sizeof( float ) * GRAPHLEN );
-		memcpy( tmp + GRAPHLEN, _src, sizeof( float ) * margin );
-		SRC_STATE * src_state = src_new( SRC_SINC_FASTEST, 1, &err );
-		SRC_DATA src_data;
-		src_data.data_in = tmp;
-		src_data.input_frames = GRAPHLEN + margin;
-		src_data.data_out = _dst;
-		src_data.output_frames = WAVELEN;
-		src_data.src_ratio = static_cast<double>( WAVERATIO );
-		src_data.end_of_input = 0;
-		err = src_process( src_state, &src_data ); 
-		if( err ) { qDebug( "CsoundInstr SRC error: %s", src_strerror( err ) ); }
-		src_delete( src_state );
-	}
+        memcpy(tmp, _src, sizeof(float) * GRAPHLEN);
+        memcpy(tmp + GRAPHLEN, _src, sizeof(float) * margin);
+        SRC_STATE* src_state = src_new(SRC_SINC_FASTEST, 1, &err);
+        SRC_DATA   src_data;
+        src_data.data_in       = tmp;
+        src_data.input_frames  = GRAPHLEN + margin;
+        src_data.data_out      = _dst;
+        src_data.output_frames = WAVELEN;
+        src_data.src_ratio     = static_cast<double>(WAVERATIO);
+        src_data.end_of_input  = 0;
+        err                    = src_process(src_state, &src_data);
+        if(err)
+        {
+            qDebug("CsoundInstr SRC error: %s", src_strerror(err));
+        }
+        src_delete(src_state);
+    }
 
-	// memcpy utilizing cubic interpolation
-/*	inline void cipcpy( float * _dst, float * _src )
-	{
-		// calculate cyclic tangents
-		float tang[GRAPHLEN];
-		tang[0] = ( _src[1] - _src[ GRAPHLEN - 1] ) / 2;
-		tang[ GRAPHLEN - 1 ] = ( _src[0] - _src[ GRAPHLEN - 2 ] ) / 2;
-		for( int i = 1; i < GRAPHLEN-1; i++ )
-		{
-			tang[i] = ( _src[i+1] - _src[i-1] ) / 2;
-		}
-		
-		// calculate cspline
-		for( int i=0; i < WAVELEN; i++ )
-		{
-			const float s1 = _src[ i / WAVERATIO ];
-			const float s2 = _src[ ( i / WAVERATIO + 1 ) % GRAPHLEN ];
-			const float m1 = tang[ i / WAVERATIO ];
-			const float m2 = tang[ ( i / WAVERATIO + 1 ) % GRAPHLEN ];
-			
-			const float x = static_cast<float>( i % WAVERATIO ) / WAVERATIO;
-			const float x2 = x * x;
-			const float x3 = x * x * x;
-			
-			_dst[i] = ( ( x3 * 2.0 - x2 * 3.0 + 1.0 ) * s1 ) +
-				( ( x3 * -2.0 + x2 * 3.0 ) * s2 ) +
-				( ( x3 - x2 * 2 + x ) * m1 ) +
-				( ( x3 - x2 ) * m2 );		
-		}
-	}*/
+    // memcpy utilizing cubic interpolation
+    /*	inline void cipcpy( float * _dst, float * _src )
+            {
+                    // calculate cyclic tangents
+                    float tang[GRAPHLEN];
+                    tang[0] = ( _src[1] - _src[ GRAPHLEN - 1] ) / 2;
+                    tang[ GRAPHLEN - 1 ] = ( _src[0] - _src[ GRAPHLEN - 2 ] )
+       / 2; for( int i = 1; i < GRAPHLEN-1; i++ )
+                    {
+                            tang[i] = ( _src[i+1] - _src[i-1] ) / 2;
+                    }
 
+                    // calculate cspline
+                    for( int i=0; i < WAVELEN; i++ )
+                    {
+                            const float s1 = _src[ i / WAVERATIO ];
+                            const float s2 = _src[ ( i / WAVERATIO + 1 ) %
+       GRAPHLEN ]; const float m1 = tang[ i / WAVERATIO ]; const float m2 =
+       tang[ ( i / WAVERATIO + 1 ) % GRAPHLEN ];
 
-	FloatModel a1_vol;
-	FloatModel a2_vol;
-	FloatModel b1_vol;
-	FloatModel b2_vol;
+                            const float x = static_cast<float>( i % WAVERATIO
+       ) / WAVERATIO; const float x2 = x * x; const float x3 = x * x * x;
 
-	FloatModel a1_pan;
-	FloatModel a2_pan;
-	FloatModel b1_pan;
-	FloatModel b2_pan;
+                            _dst[i] = ( ( x3 * 2.0 - x2 * 3.0 + 1.0 ) * s1 ) +
+                                    ( ( x3 * -2.0 + x2 * 3.0 ) * s2 ) +
+                                    ( ( x3 - x2 * 2 + x ) * m1 ) +
+                                    ( ( x3 - x2 ) * m2 );
+                    }
+            }*/
 
-	FloatModel a1_mult;
-	FloatModel a2_mult;
-	FloatModel b1_mult;
-	FloatModel b2_mult;
+    FloatModel a1_vol;
+    FloatModel a2_vol;
+    FloatModel b1_vol;
+    FloatModel b2_vol;
 
-	FloatModel a1_ltune;
-	FloatModel a2_ltune;
-	FloatModel b1_ltune;
-	FloatModel b2_ltune;
+    FloatModel a1_pan;
+    FloatModel a2_pan;
+    FloatModel b1_pan;
+    FloatModel b2_pan;
 
-	FloatModel a1_rtune;
-	FloatModel a2_rtune;
-	FloatModel b1_rtune;
-	FloatModel b2_rtune;
+    FloatModel a1_mult;
+    FloatModel a2_mult;
+    FloatModel b1_mult;
+    FloatModel b2_mult;
 
-	graphModel a1_graph;
-	graphModel a2_graph;
-	graphModel b1_graph;
-	graphModel b2_graph;
+    FloatModel a1_ltune;
+    FloatModel a2_ltune;
+    FloatModel b1_ltune;
+    FloatModel b2_ltune;
 
-	FloatModel m_abmix;
+    FloatModel a1_rtune;
+    FloatModel a2_rtune;
+    FloatModel b1_rtune;
+    FloatModel b2_rtune;
 
-	FloatModel m_envAmt;
+    graphModel a1_graph;
+    graphModel a2_graph;
+    graphModel b1_graph;
+    graphModel b2_graph;
 
-	TempoSyncKnobModel m_envAtt;
-	TempoSyncKnobModel m_envHold;
-	TempoSyncKnobModel m_envDec;
+    FloatModel m_abmix;
 
-	FloatModel m_xtalk;
+    FloatModel m_envAmt;
 
-	IntModel m_amod;
-	IntModel m_bmod;
+    TempoSyncKnobModel m_envAtt;
+    TempoSyncKnobModel m_envHold;
+    TempoSyncKnobModel m_envDec;
 
-	IntModel m_selectedGraph;
-	
-	float A1_wave [WAVELEN];
-	float A2_wave [WAVELEN];
-	float B1_wave [WAVELEN];
-	float B2_wave [WAVELEN];
+    FloatModel m_xtalk;
 
-	friend class CsoundInstrObject;
-	friend class CsoundInstrView;
+    IntModel m_amod;
+    IntModel m_bmod;
+
+    IntModel m_selectedGraph;
+
+    float A1_wave[WAVELEN];
+    float A2_wave[WAVELEN];
+    float B1_wave[WAVELEN];
+    float B2_wave[WAVELEN];
+
+    friend class CsoundInstrObject;
+    friend class CsoundInstrView;
 };
-
 
 class CsoundInstrView : public InstrumentView
 {
-	Q_OBJECT
-public:
-	CsoundInstrView( Instrument * _instrument,
-					QWidget * _parent );
-	virtual ~CsoundInstrView();
+    Q_OBJECT
+  public:
+    CsoundInstrView(Instrument* _instrument, QWidget* _parent);
+    virtual ~CsoundInstrView();
 
-protected slots:
-	void updateLayout();
+  protected slots:
+    void updateLayout();
 
-	void sinWaveClicked();
-	void triWaveClicked();
-	void sawWaveClicked();
-	void sqrWaveClicked();
+    void sinWaveClicked();
+    void triWaveClicked();
+    void sawWaveClicked();
+    void sqrWaveClicked();
 
-	void smoothClicked();
-	void normalizeClicked();
-	void invertClicked();
-	void phaseLeftClicked();
-	void phaseRightClicked();
-	void loadClicked();
+    void smoothClicked();
+    void normalizeClicked();
+    void invertClicked();
+    void phaseLeftClicked();
+    void phaseRightClicked();
+    void loadClicked();
 
-private:
-	virtual void modelChanged();
+  private:
+    virtual void modelChanged();
 
-// knobs
-	Knob * a1_volKnob;
-	Knob * a2_volKnob;
-	Knob * b1_volKnob;
-	Knob * b2_volKnob;
+    // knobs
+    Knob* a1_volKnob;
+    Knob* a2_volKnob;
+    Knob* b1_volKnob;
+    Knob* b2_volKnob;
 
-	Knob * a1_panKnob;
-	Knob * a2_panKnob;
-	Knob * b1_panKnob;
-	Knob * b2_panKnob;
+    Knob* a1_panKnob;
+    Knob* a2_panKnob;
+    Knob* b1_panKnob;
+    Knob* b2_panKnob;
 
-	Knob * a1_multKnob;
-	Knob * a2_multKnob;
-	Knob * b1_multKnob;
-	Knob * b2_multKnob;
+    Knob* a1_multKnob;
+    Knob* a2_multKnob;
+    Knob* b1_multKnob;
+    Knob* b2_multKnob;
 
-	Knob * a1_ltuneKnob;
-	Knob * a2_ltuneKnob;
-	Knob * b1_ltuneKnob;
-	Knob * b2_ltuneKnob;
+    Knob* a1_ltuneKnob;
+    Knob* a2_ltuneKnob;
+    Knob* b1_ltuneKnob;
+    Knob* b2_ltuneKnob;
 
-	Knob * a1_rtuneKnob;
-	Knob * a2_rtuneKnob;
-	Knob * b1_rtuneKnob;
-	Knob * b2_rtuneKnob;
+    Knob* a1_rtuneKnob;
+    Knob* a2_rtuneKnob;
+    Knob* b1_rtuneKnob;
+    Knob* b2_rtuneKnob;
 
-	Knob * m_abmixKnob;
+    Knob* m_abmixKnob;
 
-	Knob * m_envAmtKnob;
+    Knob* m_envAmtKnob;
 
-	TempoSyncKnob * m_envAttKnob;
-	TempoSyncKnob * m_envHoldKnob;
-	TempoSyncKnob * m_envDecKnob;
+    TempoSyncKnob* m_envAttKnob;
+    TempoSyncKnob* m_envHoldKnob;
+    TempoSyncKnob* m_envDecKnob;
 
-	Knob * m_xtalkKnob;
+    Knob* m_xtalkKnob;
 
-	automatableButtonGroup * m_selectedGraphGroup;
-	automatableButtonGroup * m_aModGroup;
-	automatableButtonGroup * m_bModGroup;
+    AutomatableButtonGroup* m_selectedGraphGroup;
+    AutomatableButtonGroup* m_aModGroup;
+    AutomatableButtonGroup* m_bModGroup;
 
-	Graph * a1_graph;
-	Graph * a2_graph;
-	Graph * b1_graph;
-	Graph * b2_graph;
+    Graph* a1_graph;
+    Graph* a2_graph;
+    Graph* b1_graph;
+    Graph* b2_graph;
 
-	PixmapButton * m_sinWaveButton;
-	PixmapButton * m_triWaveButton;
-	PixmapButton * m_sawWaveButton;
-	PixmapButton * m_sqrWaveButton;
-	PixmapButton * m_normalizeButton;
-	PixmapButton * m_invertButton;
-	PixmapButton * m_smoothButton;
-	PixmapButton * m_phaseLeftButton;
-	PixmapButton * m_phaseRightButton;
-	PixmapButton * m_loadButton;
-
+    PixmapButton* m_sinWaveButton;
+    PixmapButton* m_triWaveButton;
+    PixmapButton* m_sawWaveButton;
+    PixmapButton* m_sqrWaveButton;
+    PixmapButton* m_normalizeButton;
+    PixmapButton* m_invertButton;
+    PixmapButton* m_smoothButton;
+    PixmapButton* m_phaseLeftButton;
+    PixmapButton* m_phaseRightButton;
+    PixmapButton* m_loadButton;
 };
 
 #endif

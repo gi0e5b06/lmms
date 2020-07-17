@@ -25,10 +25,10 @@
 #ifndef EQCONTROLSDIALOG_H
 #define EQCONTROLSDIALOG_H
 
+#include "EffectControlDialog.h"
+
 #include <QLabel>
 #include <QPushButton>
-
-#include "EffectControlDialog.h"
 
 class BoolModel;
 class FloatModel;
@@ -39,24 +39,39 @@ class EqParameterWidget;
 
 class EqControlsDialog : public EffectControlDialog
 {
-	Q_OBJECT
-public:
-	EqControlsDialog( EqControls * controls );
-	virtual ~EqControlsDialog()
-	{
-	}
+    Q_OBJECT
 
-	EqBand * setBand( EqControls * controls );
+  public:
+    EqControlsDialog(EqControls* controls);
+    virtual ~EqControlsDialog()
+    {
+    }
 
-private:
-	EqControls * m_controls;
-	EqParameterWidget * m_parameterWidget;
+    EqBand* setBand(EqControls* controls);
 
-	virtual void mouseDoubleClickEvent(QMouseEvent *event);
+  private:
+    EqControls*        m_controls;
+    EqParameterWidget* m_parameterWidget;
 
-	EqBand *setBand( int index, BoolModel *active, FloatModel *freq, FloatModel *res, FloatModel *gain, QColor color, QString name, float *peakL, float *peakR, BoolModel *hp12, BoolModel *hp24, BoolModel *hp48, BoolModel *lp12, BoolModel *lp24, BoolModel *lp48 );
+    virtual void mouseDoubleClickEvent(QMouseEvent* event);
 
-	int m_originalHeight;
+    EqBand* setBand(int         index,
+                    BoolModel*  active,
+                    FloatModel* freq,
+                    FloatModel* res,
+                    FloatModel* gain,
+                    QColor      color,
+                    QString     name,
+                    float*      peakL,
+                    float*      peakR,
+                    BoolModel*  hp12,
+                    BoolModel*  hp24,
+                    BoolModel*  hp48,
+                    BoolModel*  lp12,
+                    BoolModel*  lp24,
+                    BoolModel*  lp48);
+
+    int m_originalHeight;
 };
 
-#endif // EQCONTROLSDIALOG_H
+#endif  // EQCONTROLSDIALOG_H

@@ -65,40 +65,131 @@ StringPairDrag::~StringPairDrag()
     }
 }
 
-bool StringPairDrag::processDragEnterEvent(QDragEnterEvent* _dee,
-                                           const QString&   _allowed_keys)
+const char* StringPairDrag::mimeType()
 {
-    if(!_dee->mimeData()->hasFormat(mimeType()))
-    {
-        _dee->ignore(); //TMP
-        return false;
-    }
-    QString txt = _dee->mimeData()->data(mimeType());
-    if(_allowed_keys.split(',').contains(txt.section(':', 0, 0)))
+    return "application/x-lmms-stringpair";
+}
+
+// MimeData
+
+bool StringPairDrag::hasStringPair(const QMimeData* _md)
+{
+    return _md->hasFormat(mimeType());
+}
+
+QString StringPairDrag::decodeKey(const QMimeData* _md)
+{
+    return QString::fromUtf8(_md->data(mimeType())).section(':', 0, 0);
+}
+
+QString StringPairDrag::decodeValue(const QMimeData* _md)
+{
+    return QString::fromUtf8(_md->data(mimeType())).section(':', 1, -1);
+}
+
+bool StringPairDrag::shouldProcess(const QMimeData*   _md,
+                                   const QStringList& _keys)
+{
+    return hasStringPair(_md) && _keys.contains(decodeKey(_md));
+}
+
+bool StringPairDrag::shouldProcess(const QMimeData* _md, const QString& _keys)
+{
+    return shouldProcess(_md, _keys.split(','));
+}
+
+// Drop
+
+bool StringPairDrag::hasStringPair(const QDropEvent* _de)
+{
+    return hasStringPair(_de->mimeData());
+}
+
+QString StringPairDrag::decodeKey(const QDropEvent* _de)
+{
+    return decodeKey(_de->mimeData());
+}
+
+QString StringPairDrag::decodeValue(const QDropEvent* _de)
+{
+    return decodeValue(_de->mimeData());
+}
+
+bool StringPairDrag::shouldProcess(const QDropEvent*  _de,
+                                   const QStringList& _keys)
+{
+    return shouldProcess(_de->mimeData(), _keys);
+}
+
+bool StringPairDrag::shouldProcess(const QDropEvent* _de,
+                                   const QString&    _keys)
+{
+    return shouldProcess(_de->mimeData(), _keys);
+}
+
+bool StringPairDrag::processDragEnterEvent(QDragEnterEvent* _dee,
+                                           const QString&   _keys)
+{
+    if(hasStringPair(_dee) && shouldProcess(_dee, _keys))
     {
         _dee->acceptProposedAction();
         return true;
     }
+
     _dee->ignore();
     return false;
 }
 
-QString StringPairDrag::decodeMimeKey(const QMimeData* mimeData)
+StringPair StringPairDrag::convertExternal(const QMimeData* _md)
 {
-    return QString::fromUtf8(mimeData->data(mimeType())).section(':', 0, 0);
-}
+    if(hasStringPair(_md))
+        return StringPair(decodeKey(_md), decodeValue(_md));
 
-QString StringPairDrag::decodeMimeValue(const QMimeData* mimeData)
-{
-    return QString::fromUtf8(mimeData->data(mimeType())).section(':', 1, -1);
-}
+    if(_md->hasUrls())
+    {
+        const QList<QUrl> urls = _md->urls();
 
-QString StringPairDrag::decodeKey(QDropEvent* _de)
-{
-    return decodeMimeKey(_de->mimeData());
-}
+        QStringList projectfile      = QString("mmp|mpt|mmpz").split('|');
+        QStringList presetfile       = QString("xpf|xml").split('|');
+        QStringList pluginpresetfile = QString("xiz").split('|');
+        QStringList samplefile
+                = QString("wav|ogg|ds|flac|mp3|spx|voc|aif|aiff|au")
+                          .split('|');
+        // QStringList instrument = QString("").split('|');
+        QStringList importedproject = QString("mid").split('|');
+        QStringList patchfile       = QString("pat").split('|');
+        QStringList soundfontfile   = QString("sf2|sfz").split('|');
+        QStringList vstpluginfile   = QString("dll|so|vst").split('|');
 
-QString StringPairDrag::decodeValue(QDropEvent* _de)
-{
-    return decodeMimeValue(_de->mimeData());
+        // if(!pluginFactory->pluginSupportingExtension(e).isNull())
+
+        for(const QUrl& u: urls)
+            if(u.isValid() && u.isLocalFile())
+            {
+                const QFileInfo f(u.toLocalFile());
+                const QString   p = f.canonicalFilePath();
+                const QString   e = f.suffix().toLower();
+                qInfo("StringPairDrag::convertExternal f='%s' e='%s'",
+                      qPrintable(p), qPrintable(e));
+
+                if(projectfile.contains(e))
+                    return StringPair("projectfile", p);
+                if(presetfile.contains(e))
+                    return StringPair("presetfile", p);
+                if(pluginpresetfile.contains(e))
+                    return StringPair("pluginpresetfile", p);
+                if(samplefile.contains(e))
+                    return StringPair("samplefile", p);
+                if(importedproject.contains(e))
+                    return StringPair("importedproject", p);
+                if(patchfile.contains(e))
+                    return StringPair("patchfile", p);
+                if(soundfontfile.contains(e))
+                    return StringPair("soundfontfile", p);
+                if(vstpluginfile.contains(e))
+                    return StringPair("vstpluginfile", p);
+            }
+    }
+
+    return StringPair("", "");
 }

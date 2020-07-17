@@ -46,10 +46,11 @@ AutomatableModel::AutomatableModel(const real_t   val,
                                    const real_t   step,
                                    Model*         parent,
                                    const QString& displayName,
+                                   const QString& objectName,
                                    bool           defaultConstructed) :
-      Model(parent, displayName, defaultConstructed),
+      Model(parent, displayName, objectName, defaultConstructed),
       m_scaleType(Linear), m_minValue(min), m_maxValue(max), m_step(step),
-      m_range(max - min), m_centerValue(m_minValue), m_randomRatio(0.),
+      m_centerValue(m_minValue), m_randomRatio(0.),
       m_randomDistribution(nullptr), m_valueChanged(false),
       m_setValueDepth(0), m_hasStrictStepSize(false),
       m_controllerConnection(nullptr),
@@ -538,6 +539,7 @@ void AutomatableModel::propagateAutomatedBuffer()
     --m_setValueDepth;
 }
 
+/*
 template <class T>
 T AutomatableModel::logToLinearScale(T value) const
 {
@@ -545,13 +547,15 @@ T AutomatableModel::logToLinearScale(T value) const
                                            maxValue<real_t>(),
                                            static_cast<real_t>(value)));
 }
+*/
 
 real_t AutomatableModel::scaledValue(real_t value) const
 {
     return m_scaleType == Linear
                    ? value
-                   : logToLinearScale<real_t>((value - minValue<real_t>())
-                                              / m_range);
+                   : ::logToLinearScale(minValue<real_t>(),
+                                        maxValue<real_t>(), value);
+    //: logToLinearScale<real_t>((value - minValue<real_t>()) / range());
 }
 
 real_t AutomatableModel::inverseScaledValue(real_t value) const
@@ -567,19 +571,19 @@ real_t AutomatableModel::normalizedValue(real_t value) const
     real_t r = value;
     if(m_scaleType != Linear)
         r = ::logToLinearScale(minValue<real_t>(), maxValue<real_t>(), r);
-    r = (value - minValue<real_t>()) / m_range;
-    return r;
+    r = (value - minValue<real_t>()) / range();
+    return bound(0., r, 1.);
 }
 
 real_t AutomatableModel::inverseNormalizedValue(real_t value) const
 {
-    real_t r = value;
-    r        = (value * m_range) + minValue<real_t>();
+    real_t r = bound(0., value, 1.) * range() + minValue<real_t>();
     if(m_scaleType != Linear)
         r = ::linearToLogScale(minValue<real_t>(), maxValue<real_t>(), r);
     return r;
 }
 
+/*
 //! @todo: this should be moved into a maths header
 template <class T>
 void roundAt(T& value, const T& where, const T& step_size)
@@ -596,6 +600,7 @@ void AutomatableModel::roundAt(T& value, const T& where) const
 {
     ::roundAt(value, where, m_step);
 }
+*/
 
 void AutomatableModel::setRange(const real_t min,
                                 const real_t max,
@@ -605,12 +610,10 @@ void AutomatableModel::setRange(const real_t min,
     {
         m_minValue = min;
         m_maxValue = max;
+        m_step     = step;
+
         if(m_minValue > m_maxValue)
-        {
             qSwap<real_t>(m_minValue, m_maxValue);
-        }
-        m_range = m_maxValue - m_minValue;
-        m_step  = step;
 
         // re-adjust value
         setValue(m_value);
@@ -638,7 +641,8 @@ real_t AutomatableModel::fittedValue(real_t value) const
         if(m_hasStrictStepSize)
         {
             // nearbyintf
-            value  = round(value / m_step) * m_step;
+            value = m_minValue
+                    + floor((value - m_minValue) / m_step) * m_step;
             magnet = m_step / 2.;
         }
         else
@@ -1269,9 +1273,16 @@ FloatModel::FloatModel(real_t         val,
                        real_t         step,
                        Model*         parent,
                        const QString& displayName,
+                       const QString& objectName,
                        bool           defaultConstructed) :
-      TypedAutomatableModel(
-              val, min, max, step, parent, displayName, defaultConstructed),
+      TypedAutomatableModel(val,
+                            min,
+                            max,
+                            step,
+                            parent,
+                            displayName,
+                            objectName,
+                            defaultConstructed),
       m_digitCount(6)
 {
     setDigitCount();
@@ -1280,8 +1291,7 @@ FloatModel::FloatModel(real_t         val,
 real_t FloatModel::getRoundedValue() const
 {
     // return qRound( value() / step<real_t>() ) * step<real_t>();
-    return minValue()
-           + qRound((value() - minValue()) / step<real_t>()) * step<real_t>();
+    return minValue() + round((value() - minValue()) / step()) * step();
 }
 
 void FloatModel::setRange(const real_t min,
@@ -1305,7 +1315,7 @@ int FloatModel::getDigitCount() const
 
 void FloatModel::setDigitCount()
 {
-    real_t t = abs(step<real_t>());
+    real_t t = abs(step());
     bool   b = false;
     if(t >= 1.)
     {

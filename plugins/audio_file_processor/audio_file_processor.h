@@ -1,4 +1,5 @@
 /*
+ * SPDX-License-Identifier: GPL-3.0-or-later
  * audio_file_processor.h - declaration of class audioFileProcessor
  *                          (instrument-plugin for using audio-files)
  *
@@ -128,14 +129,14 @@ class AudioFileProcessorView : public InstrumentView
     Knob*                       m_stretchKnob;
     Knob*                       m_predelayKnob;
     Knob*                       m_postdelayKnob;
-    Knob*                       m_ampKnob;
+    VolumeKnob*                 m_ampKnob;
     Knob*                       m_startKnob;
     Knob*                       m_endKnob;
     Knob*                       m_loopKnob;
 
     PixmapButton*           m_openAudioFileButton;
     PixmapButton*           m_reverseButton;
-    automatableButtonGroup* m_loopGroup;
+    AutomatableButtonGroup* m_loopGroup;
     PixmapButton*           m_stutterButton;
     ComboBox*               m_interpBox;
 };

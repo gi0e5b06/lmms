@@ -45,7 +45,9 @@ class EXPORT TrackContainer : public Model, public JournallingObject
         SongContainer
     };
 
-    TrackContainer(Model* _parent, const QString& _displayName);
+    TrackContainer(Model*         _parent,
+                   const QString& _displayName,
+                   const QString& _objectName);
     virtual ~TrackContainer();
 
     virtual void saveSettings(QDomDocument& _doc, QDomElement& _parent);

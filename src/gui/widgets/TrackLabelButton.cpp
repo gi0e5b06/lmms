@@ -64,7 +64,7 @@ TrackLabelButton::TrackLabelButton(TrackView* _tv, QWidget* _parent) :
                 SLOT(renameFinished()));
     }
 
-    setIconSize(QSize(24, 24));
+    setIconSize(QSize(20, 20));
     connect(m_trackView->track(), SIGNAL(dataChanged()), this,
             SLOT(update()));
     connect(m_trackView->track(), SIGNAL(nameChanged()), this,

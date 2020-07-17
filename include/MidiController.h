@@ -38,6 +38,7 @@ class MidiPort;
 class MidiController : public Controller, public MidiEventProcessor
 {
     Q_OBJECT
+
   public:
     MidiController(Model* _parent);
     virtual ~MidiController();
@@ -58,15 +59,24 @@ class MidiController : public Controller, public MidiEventProcessor
     virtual QString nodeName() const;
 
     // Used by controllerConnectionDialog to copy
-    void subscribeReadablePorts(const MidiPort::Map& _map);
+    // void subscribeReadablePorts(const MidiPort::Map& _map);
 
   public slots:
     virtual ControllerDialog* createDialog(QWidget* _parent);
-    void                      updateName();
+
+    void updateName();
+    //void updateLastValue();
 
   protected:
     // The internal per-controller get-value function
     virtual void fillValueBuffer();
+
+    /*
+    virtual void setLastValue(real_t _value)
+    {
+        m_previousValue = m_lastValue = _value;
+    }
+    */
 
     MidiPort m_midiPort;
 
@@ -76,6 +86,7 @@ class MidiController : public Controller, public MidiEventProcessor
 
     friend class ControllerConnectionDialog;
     friend class AutoDetectMidiController;
+    friend class MidiMapper;
 };
 
 #endif

@@ -35,7 +35,7 @@
 Graph::Graph(QWidget* _parent, graphStyle _style, int _width, int _height) :
       QWidget(_parent),
       /* TODO: size, background? */
-      ModelView(new GraphModel(-1., 1., 128., NULL, true), this),
+      ModelView(new GraphModel(-1., 1., 128., nullptr, true), this),
       m_graphStyle(_style)
 {
     m_mouseDown  = false;
@@ -192,7 +192,7 @@ void Graph::drawLineAt(int _x, int _y, int _lastx)
     FLOAT range = minVal - maxVal;
     FLOAT val   = (_y * range / (height() - 5)) + maxVal;
 
-    int    sample_begin, sample_end;
+    int   sample_begin, sample_end;
     FLOAT lastval;
     FLOAT val_begin, val_end;
 
@@ -275,7 +275,7 @@ void Graph::paintEvent(QPaintEvent*)
                          m_graphColor.blue(), 100);
 
     QVector<FLOAT>* samps  = &(model()->m_samples);
-    int              length = model()->length();
+    int             length = model()->length();
     const FLOAT     maxVal = model()->maxValue();
     const FLOAT     minVal = model()->minValue();
 
@@ -449,13 +449,13 @@ void Graph::updateGraph()
     updateGraph(0, model()->length() - 1);
 }
 
-GraphModel::GraphModel(FLOAT   _min,
-                       FLOAT   _max,
+GraphModel::GraphModel(FLOAT    _min,
+                       FLOAT    _max,
                        int      _length,
                        ::Model* _parent,
-                       bool     _default_constructed,
-                       FLOAT   _step) :
-      Model(_parent, tr("Graph"), _default_constructed),
+                       bool     _defaultConstructed,
+                       FLOAT    _step) :
+      Model(_parent, tr("Graph"), "graph", _defaultConstructed),
       m_samples(_length), m_length(_length), m_minValue(_min),
       m_maxValue(_max), m_step(_step)
 {
@@ -570,7 +570,7 @@ void GraphModel::setWaveToNoise()
 QString GraphModel::setWaveToUser()
 {
     SampleBuffer* sampleBuffer = new SampleBuffer;
-    QString       fileName     = sampleBuffer->openAndSetWaveformFile();
+    QString       fileName     = sampleBuffer->openAndSetWaveFormFile();
     if(fileName.isEmpty() == false)
     {
         sampleBuffer->dataReadLock();
@@ -625,12 +625,12 @@ void GraphModel::smoothNonCyclic()
 
 // makes a cyclic convolution.
 void GraphModel::convolve(const FLOAT* convolution,
-                          const int     convolutionLength,
-                          const int     centerOffset)
+                          const int    convolutionLength,
+                          const int    centerOffset)
 {
     // store values in temporary array
     QVector<FLOAT> temp        = m_samples;
-    const int       graphLength = length();
+    const int      graphLength = length();
     FLOAT          sum;
     for(int i = 0; i < graphLength; i++)
     {

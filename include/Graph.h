@@ -116,7 +116,7 @@ class EXPORT GraphModel : public Model
                FLOAT    _max,
                int      _size,
                ::Model* _parent,
-               bool     _default_constructed = false,
+               bool     _defaultConstructed = false,
                FLOAT    _step                = 0.);
 
     virtual ~GraphModel();
@@ -125,12 +125,12 @@ class EXPORT GraphModel : public Model
 
     inline FLOAT minValue() const
     {
-        return (m_minValue);
+        return m_minValue;
     }
 
     inline FLOAT maxValue() const
     {
-        return (m_maxValue);
+        return m_maxValue;
     }
 
     inline int length() const
@@ -140,7 +140,7 @@ class EXPORT GraphModel : public Model
 
     inline const FLOAT* samples() const
     {
-        return (m_samples.data());
+        return m_samples.data();
     }
 
     void convolve(const FLOAT* convolution,
@@ -151,7 +151,6 @@ class EXPORT GraphModel : public Model
     void setRange(FLOAT _min, FLOAT _max);
 
     void setLength(int _size);
-
     void setSampleAt(int x, FLOAT val);
     void setSamples(const FLOAT* _value);
 

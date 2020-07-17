@@ -1,7 +1,8 @@
 /*
  * AutomatableSlider.h - class AutomatableSlider, a QSlider with automation
  *
- * Copyright (c) 2006-2008 Javier Serrano Polo <jasp00/at/users.sourceforge.net>
+ * Copyright (c) 2006-2008 Javier Serrano Polo
+ * <jasp00/at/users.sourceforge.net>
  *
  * This file is part of LMMS - https://lmms.io
  *
@@ -22,57 +23,51 @@
  *
  */
 
-
 #ifndef AUTOMATABLE_SLIDER_H
 #define AUTOMATABLE_SLIDER_H
 
-#include <QSlider>
-
 #include "AutomatableModelView.h"
 
+#include <QSlider>
 
-
-class AutomatableSlider : public QSlider, public FloatModelView //IntModelView
+class AutomatableSlider :
+      public QSlider,
+      public FloatModelView  // IntModelView
 {
-	Q_OBJECT
-public:
-	AutomatableSlider( QWidget * _parent, const QString & _name = QString::null );
-	virtual ~AutomatableSlider();
+    Q_OBJECT
+  public:
+    AutomatableSlider(QWidget*       _parent,
+                      const QString& _displayName = "[automatable slider]",
+                      const QString& _objectName  = QString::null);
+    virtual ~AutomatableSlider();
 
-	bool showStatus()
-	{
-		return( m_showStatus );
-	}
+    bool showStatus()
+    {
+        return (m_showStatus);
+    }
 
+  signals:
+    void logicValueChanged(int _value);
+    void logicSliderMoved(int _value);
 
-signals:
-	void logicValueChanged( int _value );
-	void logicSliderMoved( int _value );
+  protected:
+    virtual void contextMenuEvent(QContextMenuEvent* _cme);
+    virtual void mousePressEvent(QMouseEvent* _me);
+    virtual void mouseReleaseEvent(QMouseEvent* _me);
+    virtual void mouseMoveEvent(QMouseEvent* _me);
+    virtual void wheelEvent(QWheelEvent* _we);
 
+    virtual void modelChanged();
 
-protected:
-	virtual void contextMenuEvent( QContextMenuEvent * _cme );
-	virtual void mousePressEvent( QMouseEvent * _me );
-	virtual void mouseReleaseEvent( QMouseEvent * _me );
-	virtual void mouseMoveEvent( QMouseEvent * _me );
-	virtual void wheelEvent( QWheelEvent * _we );
+  private:
+    bool m_showStatus;
 
-	virtual void modelChanged();
-
-
-private:
-	bool m_showStatus;
-
-
-private slots:
-	void changeValue( int _value );
-	void moveSlider( int _value );
-	void updateSlider();
-
-} ;
-
+  private slots:
+    void changeValue(int _value);
+    void moveSlider(int _value);
+    void updateSlider();
+};
 
 typedef IntModel sliderModel;
-
 
 #endif

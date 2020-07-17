@@ -202,11 +202,11 @@ void NesObject::renderOutput(sampleFrame* buf, fpp_t frames)
         {
             ch1Level = m_parent->m_ch1EnvEnabled.value()
                                ? static_cast<int>(
-                                         (m_parent->m_ch1Volume.value()
-                                          * m_ch1EnvValue)
-                                         / 15.0)
+                                       (m_parent->m_ch1Volume.value()
+                                        * m_ch1EnvValue)
+                                       / 15.0)
                                : static_cast<int>(
-                                         m_parent->m_ch1Volume.value());
+                                       m_parent->m_ch1Volume.value());
             ch1 = m_ch1Counter > m_wlen1 * ch1DutyCycle ? 0 : ch1Level;
         }
         else
@@ -259,11 +259,11 @@ void NesObject::renderOutput(sampleFrame* buf, fpp_t frames)
         {
             ch2Level = m_parent->m_ch2EnvEnabled.value()
                                ? static_cast<int>(
-                                         (m_parent->m_ch2Volume.value()
-                                          * m_ch2EnvValue)
-                                         / 15.0)
+                                       (m_parent->m_ch2Volume.value()
+                                        * m_ch2EnvValue)
+                                       / 15.0)
                                : static_cast<int>(
-                                         m_parent->m_ch2Volume.value());
+                                       m_parent->m_ch2Volume.value());
             ch2 = m_ch2Counter > m_wlen2 * ch2DutyCycle ? 0 : ch2Level;
         }
         else
@@ -341,7 +341,7 @@ void NesObject::renderOutput(sampleFrame* buf, fpp_t frames)
                                   * m_ch4EnvValue)
                                          / 15
                                : static_cast<int>(
-                                         m_parent->m_ch4Volume.value());
+                                       m_parent->m_ch4Volume.value());
             ch4 = LFSR() ? ch4Level : 0;
         }
         else
@@ -432,7 +432,7 @@ void NesObject::renderOutput(sampleFrame* buf, fpp_t frames)
         // compensate DC offset
         pin2 += 1.0f
                 - signedpowf(static_cast<float>(ch3Level + ch4Level) / 30.0f,
-                            NES_DIST);
+                             NES_DIST);
 
         pin2 *= NES_MIXING_34;
 
@@ -490,7 +490,7 @@ void NesObject::updatePitch()
         m_wlen4 = wavelength(
                 NOISE_FREQS[15
                             - static_cast<int>(
-                                      m_parent->m_ch4NoiseFreq.value())]);
+                                    m_parent->m_ch4NoiseFreq.value())]);
         m_lastNoiseFreq = m_parent->m_ch4NoiseFreq.value();
     }
 
@@ -763,39 +763,34 @@ NesInstrumentView::NesInstrumentView(Instrument* instrument,
 
     // channel 1
 
-    makeknob(m_ch1VolumeKnob, KNOB_X1, KNOB_Y1, tr("Volume"), "",
-             "") makeknob(m_ch1CrsKnob, KNOB_X2, KNOB_Y1, tr("Coarse detune"),
-                          "", "") makeknob(m_ch1EnvLenKnob, KNOB_X3, KNOB_Y1,
-                                           tr("Envelope length"), "", "")
+    makeknob(m_ch1VolumeKnob, KNOB_X1, KNOB_Y1, tr("Volume"), "", "");
+    makeknob(m_ch1CrsKnob, KNOB_X2, KNOB_Y1, tr("Coarse detune"), "", "");
+    makeknob(m_ch1EnvLenKnob, KNOB_X3, KNOB_Y1, tr("Envelope length"), "",
+             "");
 
-            makenesled(m_ch1EnabledBtn, KNOB_X1, KNOB_Y1 - 12,
-                       tr("Enable channel 1")) makenesled(m_ch1EnvEnabledBtn,
-                                                          KNOB_X3,
-                                                          KNOB_Y1 - 12,
-                                                          tr("Enable "
-                                                             "envelope 1"))
-                    makenesled(m_ch1EnvLoopedBtn, 129, KNOB_Y1 - 12,
-                               tr("Enable envelope 1 loop"))
+    makenesled(m_ch1EnabledBtn, KNOB_X1, KNOB_Y1 - 12,
+               tr("Enable channel 1"));
+    makenesled(m_ch1EnvEnabledBtn, KNOB_X3, KNOB_Y1 - 12,
+               tr("Enable "
+                  "envelope 1"));
+    makenesled(m_ch1EnvLoopedBtn, 129, KNOB_Y1 - 12,
+               tr("Enable envelope 1 loop"));
 
-                            makenesled(m_ch1SweepEnabledBtn, KNOB_X6,
-                                       KNOB_Y1 - 12, tr("Enable sweep 1"))
-                                    makeknob(m_ch1SweepAmtKnob, KNOB_X6,
-                                             KNOB_Y1, tr("Sweep amount"), "",
-                                             "")
-                                            makeknob(m_ch1SweepRateKnob,
-                                                     KNOB_X7, KNOB_Y1,
-                                                     tr("Sweep rate"), "", "")
+    makenesled(m_ch1SweepEnabledBtn, KNOB_X6, KNOB_Y1 - 12,
+               tr("Enable sweep 1"));
+    makeknob(m_ch1SweepAmtKnob, KNOB_X6, KNOB_Y1, tr("Sweep amount"), "", "");
+    makeknob(m_ch1SweepRateKnob, KNOB_X7, KNOB_Y1, tr("Sweep rate"), "", "");
 
-                                                    int dcx
-            = 117;
-    makedcled(ch1_dc1, dcx, 42, tr("12.5% Duty cycle"), "nesdc1_on") dcx
-            += 13;
-    makedcled(ch1_dc2, dcx, 42, tr("25% Duty cycle"), "nesdc2_on") dcx += 13;
-    makedcled(ch1_dc3, dcx, 42, tr("50% Duty cycle"), "nesdc3_on") dcx += 13;
-    makedcled(ch1_dc4, dcx, 42, tr("75% Duty cycle"), "nesdc4_on")
+    int dcx = 117;
+    makedcled(ch1_dc1, dcx, 42, tr("12.5% Duty cycle"), "nesdc1_on");
+    dcx += 13;
+    makedcled(ch1_dc2, dcx, 42, tr("25% Duty cycle"), "nesdc2_on");
+    dcx += 13;
+    makedcled(ch1_dc3, dcx, 42, tr("50% Duty cycle"), "nesdc3_on");
+    dcx += 13;
+    makedcled(ch1_dc4, dcx, 42, tr("75% Duty cycle"), "nesdc4_on");
 
-            m_ch1DutyCycleGrp
-            = new automatableButtonGroup(this);
+    m_ch1DutyCycleGrp = new AutomatableButtonGroup(this);
     m_ch1DutyCycleGrp->addButton(ch1_dc1);
     m_ch1DutyCycleGrp->addButton(ch1_dc2);
     m_ch1DutyCycleGrp->addButton(ch1_dc3);
@@ -803,39 +798,34 @@ NesInstrumentView::NesInstrumentView(Instrument* instrument,
 
     // channel 2
 
-    makeknob(m_ch2VolumeKnob, KNOB_X1, KNOB_Y2, tr("Volume"), "",
-             "") makeknob(m_ch2CrsKnob, KNOB_X2, KNOB_Y2, tr("Coarse detune"),
-                          "", "") makeknob(m_ch2EnvLenKnob, KNOB_X3, KNOB_Y2,
-                                           tr("Envelope length"), "", "")
+    makeknob(m_ch2VolumeKnob, KNOB_X1, KNOB_Y2, tr("Volume"), "", "");
+    makeknob(m_ch2CrsKnob, KNOB_X2, KNOB_Y2, tr("Coarse detune"), "", "");
+    makeknob(m_ch2EnvLenKnob, KNOB_X3, KNOB_Y2, tr("Envelope length"), "",
+             "");
 
-            makenesled(m_ch2EnabledBtn, KNOB_X1, KNOB_Y2 - 12,
-                       tr("Enable channel 2")) makenesled(m_ch2EnvEnabledBtn,
-                                                          KNOB_X3,
-                                                          KNOB_Y2 - 12,
-                                                          tr("Enable "
-                                                             "envelope 2"))
-                    makenesled(m_ch2EnvLoopedBtn, 129, KNOB_Y2 - 12,
-                               tr("Enable envelope 2 loop"))
+    makenesled(m_ch2EnabledBtn, KNOB_X1, KNOB_Y2 - 12,
+               tr("Enable channel 2"));
+    makenesled(m_ch2EnvEnabledBtn, KNOB_X3, KNOB_Y2 - 12,
+               tr("Enable "
+                  "envelope 2"));
+    makenesled(m_ch2EnvLoopedBtn, 129, KNOB_Y2 - 12,
+               tr("Enable envelope 2 loop"));
 
-                            makenesled(m_ch2SweepEnabledBtn, KNOB_X6,
-                                       KNOB_Y2 - 12, tr("Enable sweep 2"))
-                                    makeknob(m_ch2SweepAmtKnob, KNOB_X6,
-                                             KNOB_Y2, tr("Sweep amount"), "",
-                                             "")
-                                            makeknob(m_ch2SweepRateKnob,
-                                                     KNOB_X7, KNOB_Y2,
-                                                     tr("Sweep rate"), "", "")
+    makenesled(m_ch2SweepEnabledBtn, KNOB_X6, KNOB_Y2 - 12,
+               tr("Enable sweep 2"));
+    makeknob(m_ch2SweepAmtKnob, KNOB_X6, KNOB_Y2, tr("Sweep amount"), "", "");
+    makeknob(m_ch2SweepRateKnob, KNOB_X7, KNOB_Y2, tr("Sweep rate"), "", "");
 
-                                                    dcx
-            = 117;
-    makedcled(ch2_dc1, dcx, 99, tr("12.5% Duty cycle"), "nesdc1_on") dcx
-            += 13;
-    makedcled(ch2_dc2, dcx, 99, tr("25% Duty cycle"), "nesdc2_on") dcx += 13;
-    makedcled(ch2_dc3, dcx, 99, tr("50% Duty cycle"), "nesdc3_on") dcx += 13;
-    makedcled(ch2_dc4, dcx, 99, tr("75% Duty cycle"), "nesdc4_on")
+    dcx = 117;
+    makedcled(ch2_dc1, dcx, 99, tr("12.5% Duty cycle"), "nesdc1_on");
+    dcx += 13;
+    makedcled(ch2_dc2, dcx, 99, tr("25% Duty cycle"), "nesdc2_on");
+    dcx += 13;
+    makedcled(ch2_dc3, dcx, 99, tr("50% Duty cycle"), "nesdc3_on");
+    dcx += 13;
+    makedcled(ch2_dc4, dcx, 99, tr("75% Duty cycle"), "nesdc4_on");
 
-            m_ch2DutyCycleGrp
-            = new automatableButtonGroup(this);
+    m_ch2DutyCycleGrp = new AutomatableButtonGroup(this);
     m_ch2DutyCycleGrp->addButton(ch2_dc1);
     m_ch2DutyCycleGrp->addButton(ch2_dc2);
     m_ch2DutyCycleGrp->addButton(ch2_dc3);

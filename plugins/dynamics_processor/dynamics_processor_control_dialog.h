@@ -1,7 +1,8 @@
 /*
- * dynamics_processor_control_dialog.h - control-dialog for dynamics_processor-effect
+ * dynamics_processor_control_dialog.h - control-dialog for
+ * dynamics_processor-effect
  *
- * * Copyright (c) 2014 Vesa Kivimäki <contact/dot/diizy/at/nbl/dot/fi>
+ * Copyright (c) 2014 Vesa Kivimäki <contact/dot/diizy/at/nbl/dot/fi>
  * Copyright (c) 2006-2008 Tobias Doerffel <tobydox/at/users.sourceforge.net>
  *
  * This file is part of LMMS - https://lmms.io
@@ -28,22 +29,17 @@
 
 #include "EffectControlDialog.h"
 
-
 class dynProcControls;
-
 
 class dynProcControlDialog : public EffectControlDialog
 {
-	Q_OBJECT
-public:
-	dynProcControlDialog( dynProcControls * _controls );
-	virtual ~dynProcControlDialog()
-	{
-	}
+    Q_OBJECT
 
-
-private:
-
-} ;
+  public:
+    dynProcControlDialog(dynProcControls* _controls);
+    virtual ~dynProcControlDialog()
+    {
+    }
+};
 
 #endif

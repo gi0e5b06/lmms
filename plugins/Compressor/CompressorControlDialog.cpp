@@ -217,7 +217,7 @@ CompressorControlDialog::CompressorControlDialog(
     peakButton->setInactiveGraphic(PLUGIN_NAME::getIconPixmap("peak_unsel"));
     ToolTip::add(peakButton, tr("Use absolute value of the input"));
 
-    rmsPeakGroup = new automatableButtonGroup(this);
+    rmsPeakGroup = new AutomatableButtonGroup(this);
     rmsPeakGroup->addButton(rmsButton);
     rmsPeakGroup->addButton(peakButton);
     rmsPeakGroup->setModel(&controls->m_peakmodeModel);
@@ -236,7 +236,7 @@ CompressorControlDialog::CompressorControlDialog(
             PLUGIN_NAME::getIconPixmap("midside_unsel"));
     ToolTip::add(midSideButton, tr("Compress mid and side audio"));
 
-    leftRightMidSideGroup = new automatableButtonGroup(this);
+    leftRightMidSideGroup = new AutomatableButtonGroup(this);
     leftRightMidSideGroup->addButton(leftRightButton);
     leftRightMidSideGroup->addButton(midSideButton);
     leftRightMidSideGroup->setModel(&controls->m_midsideModel);
@@ -254,7 +254,7 @@ CompressorControlDialog::CompressorControlDialog(
             PLUGIN_NAME::getIconPixmap("limiter_unsel"));
     ToolTip::add(limitButton, tr("Set Ratio to infinity"));
 
-    compressLimitGroup = new automatableButtonGroup(this);
+    compressLimitGroup = new AutomatableButtonGroup(this);
     compressLimitGroup->addButton(compressButton);
     compressLimitGroup->addButton(limitButton);
     compressLimitGroup->setModel(&controls->m_limiterModel);
@@ -294,7 +294,7 @@ CompressorControlDialog::CompressorControlDialog(
             PLUGIN_NAME::getIconPixmap("blend_unsel"));
     ToolTip::add(blendButton, tr("Blend between stereo linking modes"));
 
-    stereoLinkGroup = new automatableButtonGroup(this);
+    stereoLinkGroup = new AutomatableButtonGroup(this);
     stereoLinkGroup->addButton(unlinkedButton);
     stereoLinkGroup->addButton(maximumButton);
     stereoLinkGroup->addButton(averageButton);

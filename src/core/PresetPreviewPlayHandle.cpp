@@ -42,7 +42,7 @@ class PreviewTrackContainer : public TrackContainer
 {
   public:
     PreviewTrackContainer() :
-          TrackContainer(nullptr, "Preview track container"),
+          TrackContainer(nullptr, tr("Preview track container"), "previewTrackContainer"),
           m_previewInstrumentTrack(nullptr), m_previewNPH(nullptr),
           m_dataMutex("PreviewTrackContainer::m_dataMutex",
                       QMutex::Recursive,

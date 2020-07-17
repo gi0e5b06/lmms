@@ -32,6 +32,7 @@
 #include "NotePlayHandle.h"
 #include "PixmapButton.h"
 #include "SampleBuffer.h"
+#include "Song.h"
 #include "ToolTip.h"
 #include "debug.h"
 #include "embed.h"
@@ -151,9 +152,10 @@ OscillatorObject::~OscillatorObject()
 
 void OscillatorObject::oscUserDefWaveDblClick()
 {
-    QString af = m_sampleBuffer->openAndSetWaveformFile();
-    if(af != "")
+    QString f = m_sampleBuffer->openAndSetWaveFormFile();
+    if(!f.isEmpty())
     {
+        Engine::song()->setModified();
         // TODO:
         // ToolTip::add( m_usrWaveBtn, m_sampleBuffer->audioFile() );
     }
@@ -436,7 +438,7 @@ TripleOscillatorView::TripleOscillatorView(Instrument* _instrument,
                                  "modulating oscillator 1 with "
                                  "oscillator 2"));
 
-    m_mod1BtnGrp = new automatableButtonGroup(this, "[modulation 1]");
+    m_mod1BtnGrp = new AutomatableButtonGroup(this, "[modulation 1]");
     m_mod1BtnGrp->addButton(pm_osc1_btn);
     m_mod1BtnGrp->addButton(am_osc1_btn);
     m_mod1BtnGrp->addButton(mix_osc1_btn);
@@ -486,7 +488,7 @@ TripleOscillatorView::TripleOscillatorView(Instrument* _instrument,
                                  "modulating oscillator 2 with "
                                  "oscillator 3"));
 
-    m_mod2BtnGrp = new automatableButtonGroup(this, "[modulation 2]");
+    m_mod2BtnGrp = new AutomatableButtonGroup(this, "[modulation 2]");
 
     m_mod2BtnGrp->addButton(pm_osc2_btn);
     m_mod2BtnGrp->addButton(am_osc2_btn);
@@ -499,8 +501,8 @@ TripleOscillatorView::TripleOscillatorView(Instrument* _instrument,
         int knob_y = osc_y + i * osc_h;
 
         // setup volume-knob
-        Knob* vk = new Knob(knobStyled, this);
-        vk->setVolumeKnob(true);
+        VolumeKnob* vk = new VolumeKnob(knobStyled, this);
+        // vk->setVolumeKnob(true);
         vk->setFixedSize(28, 35);
         vk->move(6, knob_y);
         vk->setHintText(tr("Osc %1 volume:").arg(i + 1), "%");
@@ -659,8 +661,8 @@ TripleOscillatorView::TripleOscillatorView(Instrument* _instrument,
         ToolTip::add(uwb, tr("Use a user-defined "
                              "waveform for current oscillator."));
 
-        automatableButtonGroup* wsbg
-                = new automatableButtonGroup(this, "[shape selection]");
+        AutomatableButtonGroup* wsbg
+                = new AutomatableButtonGroup(this, "[shape selection]");
 
         wsbg->addButton(sin_wave_btn);
         wsbg->addButton(triangle_wave_btn);

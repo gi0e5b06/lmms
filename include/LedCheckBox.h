@@ -30,7 +30,7 @@
 
 class QPixmap;
 
-class EXPORT LedCheckBox : public AutomatableButton
+class EXPORT LedCheckBox final : public AutomatableButton
 {
     Q_OBJECT
 
@@ -77,6 +77,9 @@ class EXPORT LedCheckBox : public AutomatableButton
     virtual void paintEvent(QPaintEvent* _pe);
 
   private:
+    void initUi(LedColors _color);
+    void onTextUpdated();
+
     bool m_blinkingState;
     bool m_blinking;
 
@@ -85,9 +88,6 @@ class EXPORT LedCheckBox : public AutomatableButton
 
     QString         m_text;
     Qt::AnchorPoint m_textAnchor;
-
-    void initUi(LedColors _color);  //!< to be called by ctors
-    void onTextUpdated();  //!< to be called when you updated @a m_text
 };
 
 #endif

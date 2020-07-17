@@ -35,7 +35,9 @@ class EXPORT ComboBox : public QWidget, public IntModelView
 {
     Q_OBJECT
   public:
-    ComboBox(QWidget* parent = nullptr, const QString& name = "[combobox]");
+    ComboBox(QWidget*       parent       = nullptr,
+             const QString& _displayName = "[combobox]",
+             const QString& _objectName  = QString::null);
     virtual ~ComboBox();
 
     ComboBoxModel* model()

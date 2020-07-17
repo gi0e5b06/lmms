@@ -42,7 +42,7 @@ class ModulatorView : public QWidget
 
   private:
     ModulatorObject* m_mod;
-    // automatableButtonGroup* m_algoBtnGrp;
+    // AutomatableButtonGroup* m_algoBtnGrp;
 };
 
 #endif

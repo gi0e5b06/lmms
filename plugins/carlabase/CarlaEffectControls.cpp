@@ -36,21 +36,18 @@ CarlaEffectControls::CarlaEffectControls(CarlaEffect* effect) :
 {
     for(int i = 0; i < NB_KNOBS; i++)
     {
-        m_knobs[i] = new FloatModel(0.f, 0.f, 127.f, 1.f, nullptr,
-                                    QString("KNB%1").arg(NB_KNOB_START + i),
-                                    false);
+        m_knobs[i] = new FloatModel(0.f, 0.f, 127.f, 1.f, m_effect,
+                                    QString("KNB%1").arg(NB_KNOB_START + i));
     }
     for(int i = 0; i < NB_LEDS; i++)
     {
-        m_leds[i] = new BoolModel(false, nullptr,
-                                  QString("LED%1").arg(NB_LED_START + i),
-                                  false);
+        m_leds[i] = new BoolModel(false, m_effect,
+                                  QString("LED%1").arg(NB_LED_START + i));
     }
     for(int i = 0; i < NB_LCDS; i++)
     {
-        m_lcds[i]
-                = new IntModel(0, 0, 127, nullptr,
-                               QString("LCD%1").arg(NB_LCD_START + i), false);
+        m_lcds[i] = new IntModel(0, 0, 127, m_effect,
+                                 QString("LCD%1").arg(NB_LCD_START + i));
     }
 }
 

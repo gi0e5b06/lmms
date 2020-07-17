@@ -37,7 +37,8 @@ class EXPORT Model : public QObject
 
   public:
     Model(Model*         _parent,
-          const QString& _displayName,
+          const QString& _displayName        = QString::null,
+          const QString& _objectName         = QString::null,
           bool           _defaultConstructed = false);
     virtual ~Model();
 
@@ -82,6 +83,9 @@ class EXPORT Model : public QObject
     void dataUnchanged();
     // emitted if properties of the model (e.g. ranges) have changed
     void propertiesChanged();
+
+  protected:
+    QString normalizeObjectName(const QString& _s) const;
 
   private:
     QString m_displayName;

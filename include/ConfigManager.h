@@ -39,18 +39,23 @@
 
 // class LmmsCore;
 
-const QString PROJECTS_PATH      = "projects/";
-const QString TEMPLATE_PATH      = "templates/";
-const QString PRESETS_PATH       = "presets/";
-const QString SAMPLES_PATH       = "samples/";
-const QString GIG_PATH           = "samples/gig/";
-const QString SF2_PATH           = "samples/sf2/";
-const QString SOUNDFONTS_PATH    = "soundfonts/";
-const QString LADSPA_PATH        = "plugins/ladspa/";
-const QString LV2_PATH           = "plugins/lv2/";
+const QString PROJECTS_PATH  = "projects/";
+const QString TEMPLATES_PATH = "templates/";
+const QString PRESETS_PATH   = "presets/";
+const QString SAMPLES_PATH   = "samples/";
+// const QString GIG_PATH           = "soundfonts/gig/";
+// const QString SF2_PATH           = "soundfonts/sf2/";
+const QString SOUNDFONTS_PATH = "soundfonts/";
+const QString PLUGINS_PATH    = "plugins/";
+// const QString LADSPA_PATH        = "plugins/ladspa/";
+// const QString LV2_PATH           = "plugins/lv2/";
+// const QString SFZ_PATH           = "soundfonts/sfz/";
+// const QString VST_PATH           = "plugins/vst/";
+const QString WAVEFORMS_PATH = "waveforms/";
+
 const QString DEFAULT_THEME_PATH = "themes/default/";
-const QString TRACK_ICON_PATH    = "track_icons/";
-const QString LOCALE_PATH        = "locale/";
+// const QString TRACK_ICON_PATH    = "track_icons/";
+const QString LOCALE_PATH = "locale/";
 
 class EXPORT ConfigManager
 {
@@ -70,6 +75,11 @@ class EXPORT ConfigManager
         return m_workingDir;
     }
 
+    QString userPresetsDir() const
+    {
+        return workingDir() + PRESETS_PATH;
+    }
+
     QString userProjectsDir() const
     {
         return workingDir() + PROJECTS_PATH;
@@ -77,12 +87,7 @@ class EXPORT ConfigManager
 
     QString userTemplateDir() const
     {
-        return workingDir() + TEMPLATE_PATH;
-    }
-
-    QString userPresetsDir() const
-    {
-        return workingDir() + PRESETS_PATH;
+        return workingDir() + TEMPLATES_PATH;
     }
 
     QString userSamplesDir() const
@@ -95,29 +100,46 @@ class EXPORT ConfigManager
         return workingDir() + SOUNDFONTS_PATH;
     }
 
+    QString userWaveFormsDir() const
+    {
+        return workingDir() + WAVEFORMS_PATH;
+    }
+
+    QString userPluginsDir() const
+    {
+        return workingDir() + PLUGINS_PATH;
+    }
+
+    /*
     QString userGigDir() const
     {
-        return workingDir() + GIG_PATH;
+        return workingDir() + SOUNDFONTS_PATH;//GIG_PATH;
     }
 
     QString userSf2Dir() const
     {
-        return workingDir() + SF2_PATH;
+        return workingDir() + SOUNDFONTS_PATH;//SF2_PATH;
     }
 
     QString userLadspaDir() const
     {
-        return workingDir() + LADSPA_PATH;
+        return workingDir() + PLUGINS_PATH;//LADSPA_PATH;
     }
 
     QString userLV2Dir() const
     {
-        return workingDir() + LV2_PATH;
+        return workingDir() + PLUGINS_PATH;//LV2_PATH;
     }
 
     QString userVstDir() const
     {
-        return m_vstDir;
+        return workingDir() + PLUGINS_PATH;//VST_PATH; m_vstDir;
+    }
+    */
+
+    QString factoryPresetsDir() const
+    {
+        return dataDir() + PRESETS_PATH;
     }
 
     QString factoryProjectsDir() const
@@ -127,17 +149,17 @@ class EXPORT ConfigManager
 
     QString factoryTemplatesDir() const
     {
-        return factoryProjectsDir() + TEMPLATE_PATH;
-    }
-
-    QString factoryPresetsDir() const
-    {
-        return dataDir() + PRESETS_PATH;
+        return factoryProjectsDir() + TEMPLATES_PATH;
     }
 
     QString factorySamplesDir() const
     {
         return dataDir() + SAMPLES_PATH;
+    }
+
+    QString factoryWaveFormsDir() const
+    {
+        return factorySamplesDir() + WAVEFORMS_PATH;
     }
 
     QString defaultVersion() const;
@@ -152,40 +174,61 @@ class EXPORT ConfigManager
         return m_artworkDir;
     }
 
+    /*
     QString trackIconsDir() const
     {
         return m_dataDir + TRACK_ICON_PATH;
     }
+    */
 
     QString localeDir() const
     {
         return m_dataDir + LOCALE_PATH;
     }
 
+    // GIG
     const QString& gigDir() const
     {
         return m_gigDir;
     }
+    void setGIGDir(const QString& gd);
 
+    // SF2
     const QString& sf2Dir() const
     {
         return m_sf2Dir;
     }
 
-    const QString& vstDir() const
-    {
-        return m_vstDir;
-    }
+    void setSF2Dir(const QString& sfd);
 
+#ifdef LMMS_HAVE_STK
+    const QString& stkDir() const
+    {
+        return m_stkDir;
+    }
+    void setSTKDir(const QString& _fd);
+#endif
+
+    // LADSPA
     const QString& ladspaDir() const
     {
         return m_ladDir;
     }
+    void setLADSPADir(const QString& _fd);
 
+    // LV2
     const QString& lv2Dir() const
     {
         return m_lv2Dir;
     }
+    void setLV2Dir(const QString& _fd);
+
+    // VST
+    const QString& vstDir() const
+    {
+        return m_vstDir;
+    }
+    void setVSTDir(const QString& _vd);
 
     const QString recoveryFile() const
     {
@@ -196,13 +239,6 @@ class EXPORT ConfigManager
     {
         return m_version;
     }
-
-#ifdef LMMS_HAVE_STK
-    const QString& stkDir() const
-    {
-        return m_stkDir;
-    }
-#endif
 
 #ifdef LMMS_HAVE_FLUIDSYNTH
     const QString& defaultSoundfont() const
@@ -240,16 +276,11 @@ class EXPORT ConfigManager
     void saveConfigFile();
 
     void setWorkingDir(const QString& _wd);
-    void setVSTDir(const QString& _vd);
     void setArtworkDir(const QString& _ad);
-    void setLADSPADir(const QString& _fd);
-    void setLV2Dir(const QString& _fd);
+
     void setVersion(const QString& _cv);
-    void setSTKDir(const QString& _fd);
     void setDefaultSoundfont(const QString& _sf);
     void setBackgroundArtwork(const QString& _ba);
-    void setGIGDir(const QString& gd);
-    void setSF2Dir(const QString& sfd);
 
     // creates the working directory & subdirectories on disk.
     void createWorkingDir();

@@ -1,7 +1,7 @@
 /*
  * waveshaper_control_dialog.h - control-dialog for waveshaper-effect
  *
- * * Copyright (c) 2014 Vesa Kivimäki <contact/dot/diizy/at/nbl/dot/fi>
+ * Copyright (c) 2014 Vesa Kivimäki <contact/dot/diizy/at/nbl/dot/fi>
  * Copyright (c) 2006-2008 Tobias Doerffel <tobydox/at/users.sourceforge.net>
  *
  * This file is part of LMMS - https://lmms.io
@@ -23,27 +23,22 @@
  *
  */
 
-#ifndef _WAVESHAPER_CONTROL_DIALOG_H
-#define _WAVESHAPER_CONTROL_DIALOG_H
+#ifndef WAVESHAPER_CONTROL_DIALOG_H
+#define WAVESHAPER_CONTROL_DIALOG_H
 
 #include "EffectControlDialog.h"
 
-
 class waveShaperControls;
-
 
 class waveShaperControlDialog : public EffectControlDialog
 {
-	Q_OBJECT
-public:
-	waveShaperControlDialog( waveShaperControls * _controls );
-	virtual ~waveShaperControlDialog()
-	{
-	}
+    Q_OBJECT
 
-
-private:
-
-} ;
+  public:
+    waveShaperControlDialog(waveShaperControls* _controls);
+    virtual ~waveShaperControlDialog()
+    {
+    }
+};
 
 #endif

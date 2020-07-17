@@ -33,7 +33,7 @@ class MidiMapper
 {
   public:
     static int list(QWidget* _w);
-    static int map(QWidget* _w);
+    static int map(QWidget* _w,const QString& _p);
     static int unmap(QWidget* _w);
     static void collect(QWidget* _w, QHash<ModelView*, Model*>& _table);
 };

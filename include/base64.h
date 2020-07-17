@@ -52,11 +52,16 @@ memcpy(*_data, data.constData(), *_size);
 */
 
 QString encodeChars(const char* _data, const int _size);
+QString encodeInt32s(const int32_t* _data, const int _size);
 QString encodeFloats(const FLOAT* _data, const int _size);
 QString encodeDoublesAsFloats(const double* _data, const int _size);
-int     decodeChars(const QString& _b64, char** _data);
-int     decodeFloats(const QString& _b64, FLOAT** _data);
-int     decodeFloatsAsDoubles(const QString& _b64, double** _data);
+QString encodeReals(const real_t* _data, const int _size);
+
+int decodeChars(const QString& _b64, char** _data);
+int decodeInt32s(const QString& _b64, int32_t** _data);
+int decodeFloats(const QString& _b64, FLOAT** _data);
+int decodeFloatsAsDoubles(const QString& _b64, double** _data);
+int decodeReals(const QString& _b64, real_t** _data);
 
 // for compatibility-code only
 QVariant decodeVariant(const QString& _b64,

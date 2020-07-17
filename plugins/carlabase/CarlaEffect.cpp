@@ -219,6 +219,29 @@ CarlaEffect::CarlaEffect(Model*                  parent,
 
 CarlaEffect::~CarlaEffect()
 {
+    qInfo("CarlaEffect::~CarlaEffect START");
+
+    connect(Engine::mixer(), SIGNAL(sampleRateChanged()), this,
+            SLOT(sampleRateChanged()));
+    qInfo("CarlaEffect::~CarlaEffect 1");
+
+    // paramModels.clear();
+    clearParamModels();
+    qInfo("CarlaEffect::~CarlaEffect 2");
+
+    if(fHandle != nullptr)
+    {
+        if(fDescriptor->deactivate != nullptr)
+            fDescriptor->deactivate(fHandle);
+        qInfo("CarlaEffect::~CarlaEffect 3");
+
+        qInfo("CarlaEffect::~CarlaEffect cleanup may crash()");
+        if(fDescriptor->cleanup != nullptr)
+            fDescriptor->cleanup(fHandle);
+
+        fHandle = nullptr;
+    }
+
     if(fHost.resourceDir != nullptr)
     {
         std::free((char*)fHost.resourceDir);
@@ -231,16 +254,7 @@ CarlaEffect::~CarlaEffect()
         fHost.uiName = nullptr;
     }
 
-    if(fHandle == nullptr)
-        return;
-
-    if(fDescriptor->deactivate != nullptr)
-        fDescriptor->deactivate(fHandle);
-
-    if(fDescriptor->cleanup != nullptr)
-        fDescriptor->cleanup(fHandle);
-
-    fHandle = nullptr;
+    qInfo("CarlaEffect::~CarlaEffect END");
 }
 
 // -------------------------------------------------------------------
@@ -553,11 +567,16 @@ void CarlaEffect::clearParamModels()
 {
     // Delete the models, this also disconnects all connections (automation
     // and controller connections)
-    for(int i = 0; i < paramModels.count(); ++i)
+    /*
+      for(int i = 0; i < paramModels.count(); ++i)
         delete paramModels[i];
-
-    // Clear the list
-    paramModels.clear();
+      paramModels.clear();
+    */
+    while(!paramModels.empty())
+    {
+        FloatModel* m = paramModels.takeLast();
+        delete m;//m->deleteLater();
+    }
 }
 
 void CarlaEffect::paramModelChanged(uint32_t index)

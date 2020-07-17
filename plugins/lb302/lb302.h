@@ -273,7 +273,7 @@ class lb302SynthView : public InstrumentView
 
     Knob*                   m_distKnob;
     Knob*                   m_slideDecKnob;
-    automatableButtonGroup* m_waveBtnGrp;
+    AutomatableButtonGroup* m_waveBtnGrp;
 
     LedCheckBox* m_slideToggle;
     /*LedCheckBox * m_accentToggle;*/  // removed pending accent

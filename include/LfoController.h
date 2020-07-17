@@ -2,7 +2,7 @@
  * LfoController.h - A LFO-based controller and dialog
  *
  * Copyright (c) 2008 Paul Giblock <drfaygo/at/gmail.com>
- * 
+ *
  * This file is part of LMMS - https://lmms.io
  *
  * This program is free software; you can redistribute it and/or
@@ -34,89 +34,82 @@
 #include "SampleBuffer.h"
 #include "TempoSyncKnobModel.h"
 
-class automatableButtonGroup;
+class AutomatableButtonGroup;
 class Knob;
 class LedCheckBox;
 class TempoSyncKnob;
 class PixmapButton;
 
-
-class LfoController : public Controller 
+class LfoController : public Controller
 {
-	Q_OBJECT
-public:
-	LfoController( Model * _parent );
+    Q_OBJECT
 
-	virtual ~LfoController();
+  public:
+    LfoController(Model* _parent);
 
-	virtual void saveSettings( QDomDocument & _doc, QDomElement & _this );
-	virtual void loadSettings( const QDomElement & _this );
-	virtual QString nodeName() const;
+    virtual ~LfoController();
 
-public slots:
-	virtual ControllerDialog * createDialog( QWidget * _parent );
+    virtual void    saveSettings(QDomDocument& _doc, QDomElement& _this);
+    virtual void    loadSettings(const QDomElement& _this);
+    virtual QString nodeName() const;
 
+  public slots:
+    virtual ControllerDialog* createDialog(QWidget* _parent);
 
-protected:
-	// The internal per-controller value updating function
-	virtual void fillValueBuffer();
+  protected:
+    // The internal per-controller value updating function
+    virtual void fillValueBuffer();
 
-	FloatModel m_baseModel;
-	TempoSyncKnobModel m_speedModel;
-	FloatModel m_amountModel;
-	FloatModel m_phaseModel;
-	IntModel m_waveModel;
-	IntModel m_multiplierModel;
+    FloatModel         m_baseModel;
+    TempoSyncKnobModel m_speedModel;
+    FloatModel         m_amountModel;
+    FloatModel         m_phaseModel;
+    IntModel           m_waveModel;
+    IntModel           m_multiplierModel;
 
-	real_t m_duration;
-	real_t m_phaseOffset;
-	real_t m_currentPhase;
+    real_t m_duration;
+    real_t m_phaseOffset;
+    real_t m_currentPhase;
 
-	sample_t (*m_sampleFunction)( const real_t );
+    sample_t (*m_sampleFunction)(const real_t);
 
-private:
-	SampleBuffer * m_userDefSampleBuffer;
+  private:
+    SampleBuffer* m_userDefSampleBuffer;
 
-protected slots:
-	void updatePhase();
-	void updateSampleFunction();
-	void updateDuration();
+  protected slots:
+    void updatePhase();
+    void updateSampleFunction();
+    void updateDuration();
 
-	friend class LfoControllerDialog;
-
-} ;
-
-
+    friend class LfoControllerDialog;
+};
 
 class LfoControllerDialog : public ControllerDialog
 {
-	Q_OBJECT
-public:
-	LfoControllerDialog( Controller * _controller, QWidget * _parent );
-	virtual ~LfoControllerDialog();
+    Q_OBJECT
+  public:
+    LfoControllerDialog(Controller* _controller, QWidget* _parent);
+    virtual ~LfoControllerDialog();
 
+  protected:
+    virtual void contextMenuEvent(QContextMenuEvent* _me);
+    virtual void modelChanged();
 
-protected:
-	virtual void contextMenuEvent( QContextMenuEvent * _me );
-	virtual void modelChanged();
+    LfoController* m_lfo;
 
-	LfoController * m_lfo;
+    Knob*                   m_baseKnob;
+    TempoSyncKnob*          m_speedKnob;
+    Knob*                   m_amountKnob;
+    Knob*                   m_phaseKnob;
+    PixmapButton*           m_userLfoBtn;
+    AutomatableButtonGroup* m_waveBtnGrp;
+    AutomatableButtonGroup* m_multiplierBtnGrp;
 
-	Knob * m_baseKnob;
-	TempoSyncKnob * m_speedKnob;
-	Knob * m_amountKnob;
-	Knob * m_phaseKnob;
-	PixmapButton * m_userLfoBtn;
-	automatableButtonGroup * m_waveBtnGrp;
-	automatableButtonGroup * m_multiplierBtnGrp;
+  private:
+    PixmapButton* m_userWaveBtn;
 
-
-private:
-	PixmapButton * m_userWaveBtn;
-
-private slots:
-	void askUserDefWave();
-
-} ;
+  private slots:
+    void askUserDefWave();
+};
 
 #endif

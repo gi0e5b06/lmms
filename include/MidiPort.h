@@ -86,6 +86,14 @@ class MidiPort final : public Model, public SerializingObject
 
     mapPropertyFromModel(int, widgetType, setWidgetType, m_widgetTypeModel);
     mapPropertyFromModel(int,
+                         defaultInputValue,
+                         setDefaultInputValue,
+                         m_defaultInputValueModel);
+    mapPropertyFromModel(int,
+                         spreadInputValue,
+                         setSpreadInputValue,
+                         m_spreadInputValueModel);
+    mapPropertyFromModel(int,
                          minInputValue,
                          setMinInputValue,
                          m_minInputValueModel);
@@ -113,6 +121,26 @@ class MidiPort final : public Model, public SerializingObject
   public:
     typedef QMap<QString, bool> Map;
 
+    enum WidgetType
+    {
+        Ignored,
+        OpenRelay,
+        CloseRelay,
+        Button,
+        Switch,
+        Knob,
+        Slider,
+        Pad,
+        Key,
+        Wheel,
+        Selector,
+        PitchBend
+    };
+
+    static const int   NB_WIDGET_TYPES;
+    static const char* WIDGET_TYPE_NAME[];
+    static WidgetType  findWidgetType(const QString& _s);
+
     enum Modes
     {
         Disabled,  // don't route any MIDI-events (default)
@@ -129,14 +157,14 @@ class MidiPort final : public Model, public SerializingObject
              Mode                mode   = Disabled);
     virtual ~MidiPort();
 
-    void setName(const QString& name);
-
     Mode mode() const
     {
         return m_mode;
     }
 
+    void setName(const QString& name);
     void setMode(Mode mode);
+    void reset();
 
     bool isInputEnabled() const
     {
@@ -168,6 +196,12 @@ class MidiPort final : public Model, public SerializingObject
         return "midiport";
     }
 
+    void subscribeReadablePorts();
+    void subscribeWritablePorts();
+
+    void subscribeReadablePorts(const MidiPort::Map& _map);
+    void subscribeWritablePorts(const MidiPort::Map& _map);
+
     void subscribeReadablePort(const QString& port, bool subscribe = true);
     void subscribeWritablePort(const QString& port, bool subscribe = true);
 
@@ -180,6 +214,9 @@ class MidiPort final : public Model, public SerializingObject
     {
         return m_writablePorts;
     }
+
+    void setSingleReadablePort(const QString& _p);
+    void setSingleWritablePort(const QString& _p);
 
     void invalidateClient();
 
@@ -213,6 +250,8 @@ class MidiPort final : public Model, public SerializingObject
     BoolModel m_writableModel;
 
     ComboBoxModel m_widgetTypeModel;
+    IntModel      m_defaultInputValueModel;
+    IntModel      m_spreadInputValueModel;
     IntModel      m_minInputValueModel;
     IntModel      m_maxInputValueModel;
     IntModel      m_stepInputValueModel;

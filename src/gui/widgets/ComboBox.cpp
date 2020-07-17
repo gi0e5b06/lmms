@@ -43,26 +43,24 @@ QPixmap* ComboBox::s_arrowSelected = nullptr;
 
 const int CB_ARROW_BTN_WIDTH = 20;
 
-ComboBox::ComboBox(QWidget* _parent, const QString& _name) :
+ComboBox::ComboBox(QWidget*       _parent,
+                   const QString& _displayName,
+                   const QString& _objectName) :
       QWidget(_parent),
-      IntModelView(new ComboBoxModel(nullptr, "[default combobox model]", true), this),
+      IntModelView(
+              new ComboBoxModel(nullptr, _displayName, _objectName, true),
+              this),
       m_menu(this), m_pressed(false)
 {
     if(s_background == nullptr)
-    {
         s_background = new QPixmap(embed::getIconPixmap("combobox_bg"));
-    }
 
     if(s_arrow == nullptr)
-    {
         s_arrow = new QPixmap(embed::getIconPixmap("combobox_arrow"));
-    }
 
     if(s_arrowSelected == nullptr)
-    {
         s_arrowSelected = new QPixmap(
                 embed::getIconPixmap("combobox_arrow_selected"));
-    }
 
     // setFont( pointSize<9>( font() ) );
     // m_menu.setFont( pointSize<8>( m_menu.font() ) );
@@ -71,7 +69,7 @@ ComboBox::ComboBox(QWidget* _parent, const QString& _name) :
     connect(&m_menu, SIGNAL(triggered(QAction*)), this,
             SLOT(setItem(QAction*)));
 
-    setWindowTitle(_name);
+    setWindowTitle(_displayName);
     doConnections();
 }
 
@@ -104,10 +102,9 @@ void ComboBox::contextMenuEvent(QContextMenuEvent* event)
 
 void ComboBox::mousePressEvent(QMouseEvent* event)
 {
-    if(model() == nullptr)
-    {
+    ComboBoxModel* m = model();
+    if(m == nullptr)
         return;
-    }
 
     if(event->button() == Qt::LeftButton
        && !(event->modifiers() & Qt::ControlModifier))
@@ -118,12 +115,11 @@ void ComboBox::mousePressEvent(QMouseEvent* event)
             update();
 
             m_menu.clear();
-            for(int i = 0; i < model()->size(); ++i)
+            for(int i = 0; i < m->size(); ++i)
             {
                 QAction* a = m_menu.addAction(
-                        model()->itemIcon(i) ? model()->itemIcon(i)->pixmap()
-                                             : QPixmap(),
-                        model()->itemText(i));
+                        m->itemIcon(i) ? m->itemIcon(i)->pixmap() : QPixmap(),
+                        m->itemText(i));
                 a->setData(i);
             }
 
@@ -194,20 +190,21 @@ void ComboBox::paintEvent(QPaintEvent* _pe)
     p.drawPixmap(width() - CB_ARROW_BTN_WIDTH + 5, (height() - 15) / 2,
                  *arrow);
 
-    if(model() && model()->size() > 0)
+    ComboBoxModel* m = model();
+
+    if(m != nullptr && m->size() > 0)
     {
         p.setFont(font());
         p.setClipRect(
                 QRect(4, 2, width() - CB_ARROW_BTN_WIDTH - 8, height() - 2));
-        QPixmap pm = model()->currentIcon() ? model()->currentIcon()->pixmap()
-                                            : QPixmap();
+        QPixmap pm
+                = m->currentIcon() ? m->currentIcon()->pixmap() : QPixmap();
         int tx = 5;
         if(!pm.isNull())
         {
             if(pm.height() > 16)
-            {
                 pm = pm.scaledToHeight(16, Qt::SmoothTransformation);
-            }
+
             p.drawPixmap(tx, 3, pm);
             tx += pm.width() + 3;
         }
@@ -223,10 +220,10 @@ void ComboBox::wheelEvent(QWheelEvent* _we)
 {
     if(_we->modifiers() & Qt::ShiftModifier)
     {
-        if(model())
+        ComboBoxModel* m = model();
+        if(m != nullptr)
         {
-            model()->setInitValue(model()->value()
-                                  + ((_we->delta() < 0) ? 1 : -1));
+            m->setInitValue(m->value() + ((_we->delta() < 0) ? 1 : -1));
             update();
             _we->accept();
         }
@@ -235,16 +232,17 @@ void ComboBox::wheelEvent(QWheelEvent* _we)
 
 void ComboBox::setItem(QAction* item)
 {
-    if(model())
-    {
-        model()->setInitValue(item->data().toInt());
-    }
+    ComboBoxModel* m = model();
+    if(m == nullptr)
+        return;
+
+    m->setInitValue(item->data().toInt());
 }
 
 void ComboBox::enterValue()
 {
-    IntModel* m = model();
-    if(!m)
+    ComboBoxModel* m = model();
+    if(m == nullptr)
         return;
 
     bool ok;

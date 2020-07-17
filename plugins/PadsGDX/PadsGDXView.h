@@ -22,74 +22,70 @@
  *
  */
 
-
 #ifndef PADS_GDX_VIEW_H
 #define PADS_GDX_VIEW_H
+
+#include "AutomatableButton.h"
+#include "ComboBox.h"
+#include "Instrument.h"
+#include "InstrumentView.h"
+#include "Knob.h"
+#include "PadsGDX.h"
+#include "PixmapButton.h"
+#include "SampleBuffer.h"
+#include "StringPairDrag.h"
+#include "gui_templates.h"
 
 #include <QObject>
 #include <QPixmap>
 #include <QWidget>
 
-#include "PadsGDX.h"
-#include "gui_templates.h"
-#include "Instrument.h"
-#include "InstrumentView.h"
-#include "SampleBuffer.h"
-#include "Knob.h"
-#include "PixmapButton.h"
-#include "AutomatableButton.h"
-#include "ComboBox.h"
-#include "StringPairDrag.h"
-
-
 class PadsGDXWaveView;
-
 
 class PadsGDXView : public InstrumentView
 {
-	Q_OBJECT
+    Q_OBJECT
 
- public:
-	PadsGDXView(Instrument* _instrument, QWidget* _parent);
-	virtual ~PadsGDXView();
-        virtual void doConnections();
+  public:
+    PadsGDXView(Instrument* _instrument, QWidget* _parent);
+    virtual ~PadsGDXView();
+    virtual void doConnections();
 
- signals:
+  signals:
 
- public slots:
-	virtual void onModelChanged();
-	virtual void onSampleUpdated();
-	virtual void openAudioFile();
-	virtual void onKeyUpdated(int);
-        virtual void loadSFZFile();
-        virtual void saveSFZFile();
+  public slots:
+    virtual void onModelChanged();
+    virtual void onSampleUpdated();
+    virtual void openAudioFile();
+    virtual void onKeyUpdated(int);
+    virtual void loadSFZFile();
+    virtual void saveSFZFile();
 
- protected:
-	virtual void dragEnterEvent(QDragEnterEvent* _dee);
-	virtual void dropEvent(QDropEvent* _de);
-	virtual void paintEvent(QPaintEvent* _pe);
+  protected:
+    virtual void dragEnterEvent(QDragEnterEvent* _dee);
+    virtual void dropEvent(QDropEvent* _de);
+    virtual void paintEvent(QPaintEvent* _pe);
 
- private:
-	void updateWaveView(bool _full);
-        static QString selectSFZFile(const QString& _file);
+  private:
+    void           updateWaveView(bool _full);
+    static QString selectSFZFile(const QString& _file);
 
-	static QPixmap* s_artwork;
+    static QPixmap* s_artwork;
 
-	PadsGDXWaveView*        m_waveView;
-	Knob*                   m_startKnob;
-	Knob*                   m_endKnob;
-	Knob*                   m_loopStartKnob;
-	Knob*                   m_loopEndKnob;
-	Knob*                   m_ampKnob;
-	Knob*                   m_tuneKnob;
-	PixmapButton*           m_openAudioFileButton;
-	PixmapButton*           m_reverseButton;
-	automatableButtonGroup* m_loopGroup;
-	PixmapButton*           m_stutterButton;
-	//ComboBox*               m_interpBox;
-        PixmapButton*           m_loadSFZFileButton;
-        PixmapButton*           m_saveSFZFileButton;
-} ;
-
+    PadsGDXWaveView*        m_waveView;
+    Knob*                   m_startKnob;
+    Knob*                   m_endKnob;
+    Knob*                   m_loopStartKnob;
+    Knob*                   m_loopEndKnob;
+    Knob*                   m_ampKnob;
+    Knob*                   m_tuneKnob;
+    PixmapButton*           m_openAudioFileButton;
+    PixmapButton*           m_reverseButton;
+    AutomatableButtonGroup* m_loopGroup;
+    PixmapButton*           m_stutterButton;
+    // ComboBox*               m_interpBox;
+    PixmapButton* m_loadSFZFileButton;
+    PixmapButton* m_saveSFZFileButton;
+};
 
 #endif

@@ -72,4 +72,29 @@ inline int panningToMidi(panning_t _p)
                    * (real_t(MidiMaxPanning - MidiMinPanning)));
 }
 
+/*
+class EXPORT PanningModel : public FloatModel
+{
+    Q_OBJECT
+
+  public:
+    PanningModel(Model*         _parent,
+                 const QString& _name       = tr("Panning"),
+                 const QString& _objectName = "panning") :
+          FloatModel(DefaultPanning,
+                     PanningLeft,
+                     PanningRight,
+                     0.1,
+                     _parent,
+                     _name)
+    {
+    }
+
+    int midiValue()
+    {
+        return panningToMidi(value());
+    }
+};
+*/
+
 #endif

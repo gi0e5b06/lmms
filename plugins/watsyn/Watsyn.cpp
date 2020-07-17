@@ -50,8 +50,8 @@ extern "C"
                0x0100,
                Plugin::Instrument,
                new PluginPixmapLoader("logo"),
-               NULL,
-               NULL};
+               nullptr,
+               nullptr};
 }
 
 WatsynObject::WatsynObject(FLOAT*              _A1wave,
@@ -97,9 +97,9 @@ WatsynObject::~WatsynObject()
 
 void WatsynObject::renderOutput(fpp_t _frames)
 {
-    if(m_abuf == NULL)
+    if(m_abuf == nullptr)
         m_abuf = new sampleFrame[m_fpp];
-    if(m_bbuf == NULL)
+    if(m_bbuf == nullptr)
         m_bbuf = new sampleFrame[m_fpp];
 
     for(fpp_t frame = 0; frame < _frames; frame++)
@@ -370,7 +370,7 @@ WatsynInstrument::~WatsynInstrument()
 void WatsynInstrument::playNote(NotePlayHandle* _n,
                                 sampleFrame*    _working_buffer)
 {
-    if(_n->totalFramesPlayed() == 0 || _n->m_pluginData == NULL)
+    if(_n->totalFramesPlayed() == 0 || _n->m_pluginData == nullptr)
     {
         WatsynObject* w = new WatsynObject(
                 &A1_wave[0], &A2_wave[0], &B1_wave[0], &B2_wave[0],
@@ -456,7 +456,7 @@ void WatsynInstrument::playNote(NotePlayHandle* _n,
             if(tfp < envAtt)
             {
                 mixvalue = bound(-100., mixvalue + (tfp / envAtt * envAmt),
-                                  100.);
+                                 100.);
             }
             else if(tfp >= envAtt && tfp < envAtt + envHold)
             {
@@ -465,10 +465,10 @@ void WatsynInstrument::playNote(NotePlayHandle* _n,
             else
             {
                 mixvalue = bound(-100.,
-                                  mixvalue + envAmt
-                                          - ((tfp - (envAtt + envHold))
-                                             / envDec * envAmt),
-                                  100.);
+                                 mixvalue + envAmt
+                                         - ((tfp - (envAtt + envHold))
+                                            / envDec * envAmt),
+                                 100.);
             }
 
             // get knob values
@@ -647,37 +647,29 @@ void WatsynInstrument::updateVolumes()
 void WatsynInstrument::updateFreqA1()
 {
     // calculate frequencies
-    m_lfreq[A1_OSC]
-            = (a1_mult.value() / 8.) * exp2( a1_ltune.value() / 1200.);
-    m_rfreq[A1_OSC]
-            = (a1_mult.value() / 8.) * exp2( a1_rtune.value() / 1200.);
+    m_lfreq[A1_OSC] = (a1_mult.value() / 8.) * exp2(a1_ltune.value() / 1200.);
+    m_rfreq[A1_OSC] = (a1_mult.value() / 8.) * exp2(a1_rtune.value() / 1200.);
 }
 
 void WatsynInstrument::updateFreqA2()
 {
     // calculate frequencies
-    m_lfreq[A2_OSC]
-            = (a2_mult.value() / 8.) * exp2( a2_ltune.value() / 1200.);
-    m_rfreq[A2_OSC]
-            = (a2_mult.value() / 8.) * exp2( a2_rtune.value() / 1200.);
+    m_lfreq[A2_OSC] = (a2_mult.value() / 8.) * exp2(a2_ltune.value() / 1200.);
+    m_rfreq[A2_OSC] = (a2_mult.value() / 8.) * exp2(a2_rtune.value() / 1200.);
 }
 
 void WatsynInstrument::updateFreqB1()
 {
     // calculate frequencies
-    m_lfreq[B1_OSC]
-            = (b1_mult.value() / 8.) * exp2( b1_ltune.value() / 1200.);
-    m_rfreq[B1_OSC]
-            = (b1_mult.value() / 8.) * exp2( b1_rtune.value() / 1200.);
+    m_lfreq[B1_OSC] = (b1_mult.value() / 8.) * exp2(b1_ltune.value() / 1200.);
+    m_rfreq[B1_OSC] = (b1_mult.value() / 8.) * exp2(b1_rtune.value() / 1200.);
 }
 
 void WatsynInstrument::updateFreqB2()
 {
     // calculate frequencies
-    m_lfreq[B2_OSC]
-            = (b2_mult.value() / 8.) * exp2( b2_ltune.value() / 1200.);
-    m_rfreq[B2_OSC]
-            = (b2_mult.value() / 8.) * exp2( b2_rtune.value() / 1200.);
+    m_lfreq[B2_OSC] = (b2_mult.value() / 8.) * exp2(b2_ltune.value() / 1200.);
+    m_rfreq[B2_OSC] = (b2_mult.value() / 8.) * exp2(b2_rtune.value() / 1200.);
 }
 
 void WatsynInstrument::updateWaveA1()
@@ -715,187 +707,90 @@ WatsynView::WatsynView(Instrument* _instrument, QWidget* _parent) :
 
     // knobs... lots of em
 
-    makeknob(a1_volKnob, 130, A1ROW, tr("Volume"), "%", "aKnob") makeknob(
-            a2_volKnob, 130, A2ROW, tr("Volume"), "%",
-            "aKnob") makeknob(b1_volKnob, 130, B1ROW, tr("Volume"), "%",
-                              "bKnob") makeknob(b2_volKnob, 130, B2ROW,
-                                                tr("Volume"), "%", "bKnob")
+    makeknob(a1_volKnob, 130, A1ROW, tr("Volume"), "%", "aKnob");
+    makeknob(a2_volKnob, 130, A2ROW, tr("Volume"), "%", "aKnob");
+    makeknob(b1_volKnob, 130, B1ROW, tr("Volume"), "%", "bKnob");
+    makeknob(b2_volKnob, 130, B2ROW, tr("Volume"), "%", "bKnob");
 
-            makeknob(a1_panKnob, 154, A1ROW, tr("Panning"), "", "aKnob") makeknob(
-                    a2_panKnob, 154, A2ROW, tr("Panning"), "",
-                    "aKnob") makeknob(b1_panKnob, 154, B1ROW, tr("Panning"),
-                                      "", "bKnob") makeknob(b2_panKnob, 154,
-                                                            B2ROW,
-                                                            tr("Panning"), "",
-                                                            "bKnob")
+    makeknob(a1_panKnob, 154, A1ROW, tr("Panning"), "", "aKnob");
+    makeknob(a2_panKnob, 154, A2ROW, tr("Panning"), "", "aKnob");
+    makeknob(b1_panKnob, 154, B1ROW, tr("Panning"), "", "bKnob");
+    makeknob(b2_panKnob, 154, B2ROW, tr("Panning"), "", "bKnob");
 
-                    makeknob(
-                            a1_multKnob, 178, A1ROW, tr("Freq. multiplier"),
-                            "/8",
-                            "aKnob") makeknob(a2_multKnob, 178, A2ROW,
-                                              tr("Freq. multiplier"), "/8",
-                                              "aKnob") makeknob(b1_multKnob,
-                                                                178, B1ROW,
-                                                                tr("Freq. "
-                                                                   "multiplie"
-                                                                   "r"),
-                                                                "/8",
-                                                                "bKnob") makeknob(b2_multKnob,
-                                                                                  178,
-                                                                                  B2ROW,
-                                                                                  tr("Freq. multiplier"),
-                                                                                  "/8",
-                                                                                  "bKnob")
+    makeknob(a1_multKnob, 178, A1ROW, tr("Freq. multiplier"), "/8", "aKnob");
+    makeknob(a2_multKnob, 178, A2ROW, tr("Freq. multiplier"), "/8", "aKnob");
+    makeknob(b1_multKnob, 178, B1ROW, tr("Freq. multiplier"), "/8", "bKnob");
+    makeknob(b2_multKnob, 178, B2ROW, tr("Freq. multiplier"), "/8", "bKnob");
 
-                            makeknob(
-                                    a1_ltuneKnob, 202, A1ROW,
-                                    tr("Left detune"), tr(" cents"),
-                                    "aKnob") makeknob(a2_ltuneKnob, 202,
-                                                      A2ROW,
-                                                      tr("Left detune"),
-                                                      tr(" cents"),
-                                                      "aKnob") makeknob(b1_ltuneKnob,
-                                                                        202,
-                                                                        B1ROW,
-                                                                        tr("L"
-                                                                           "e"
-                                                                           "f"
-                                                                           "t"
-                                                                           " "
-                                                                           "d"
-                                                                           "e"
-                                                                           "t"
-                                                                           "u"
-                                                                           "n"
-                                                                           "e"),
-                                                                        tr(" "
-                                                                           "c"
-                                                                           "e"
-                                                                           "n"
-                                                                           "t"
-                                                                           "s"),
-                                                                        "bKno"
-                                                                        "b") makeknob(b2_ltuneKnob,
-                                                                                      202,
-                                                                                      B2ROW,
-                                                                                      tr("Left detune"),
-                                                                                      tr(" cents"),
-                                                                                      "bKnob")
+    makeknob(a1_ltuneKnob, 202, A1ROW, tr("Left detune"), tr("cents"),
+             "aKnob");
+    makeknob(a2_ltuneKnob, 202, A2ROW, tr("Left detune"), tr("cents"),
+             "aKnob");
+    makeknob(b1_ltuneKnob, 202, B1ROW, tr("Left detune"), tr("cents"),
+             "bKnob");
+    makeknob(b2_ltuneKnob, 202, B2ROW, tr("Left detune"), tr(" cents"),
+             "bKnob");
+    makeknob(a1_rtuneKnob, 226, A1ROW, tr("Right detune"), tr(" cents"),
+             "aKnob");
+    makeknob(a2_rtuneKnob, 226, A2ROW, tr("Right detune"), tr(" cents"),
+             "aKnob");
+    makeknob(b1_rtuneKnob, 226, B1ROW, tr("Right detune"), tr(" cents"),
+             "bKnob");
+    makeknob(b2_rtuneKnob, 226, B2ROW, tr("Right detune"), tr(" cents"),
+             "bKnob");
+    makeknob(m_abmixKnob, 4, 3, tr("A-B Mix"), "", "mixKnob");
+    makeknob(m_envAmtKnob, 88, 3, tr("Mix envelope amount"), "",
+             "mixenvKnob");
+    maketsknob(m_envAttKnob, 88, A1ROW, tr("Mix envelope attack"), "ms",
+               "mixenvKnob");
+    maketsknob(m_envHoldKnob, 88, A2ROW, tr("Mix envelope hold"), "ms",
+               "mixenvKnob");
+    maketsknob(m_envDecKnob, 88, B1ROW, tr("Mix envelope decay"), "ms",
+               "mixenvKnob");
+    makeknob(m_xtalkKnob, 88, B2ROW, tr("Crosstalk"), "", "xtalkKnob");
 
-                                    makeknob(a1_rtuneKnob, 226, A1ROW,
-                                             tr("Right detune"), tr(" cents"),
-                                             "aKnob") makeknob(a2_rtuneKnob,
-                                                               226, A2ROW,
-                                                               tr("Right "
-                                                                  "detune"),
-                                                               tr(" cents"),
-                                                               "aKnob")
-                                            makeknob(
-                                                    b1_rtuneKnob, 226, B1ROW,
-                                                    tr("Right detune"),
-                                                    tr(" cents"),
-                                                    "bKnob") makeknob(b2_rtuneKnob,
-                                                                      226,
-                                                                      B2ROW,
-                                                                      tr("Rig"
-                                                                         "ht "
-                                                                         "det"
-                                                                         "un"
-                                                                         "e"),
-                                                                      tr(" ce"
-                                                                         "nt"
-                                                                         "s"),
-                                                                      "bKnob")
-
-                                                    makeknob(m_abmixKnob, 4,
-                                                             3, tr("A-B Mix"),
-                                                             "", "mixKnob")
-
-                                                            makeknob(
-                                                                    m_envAmtKnob,
-                                                                    88, 3,
-                                                                    tr("Mix "
-                                                                       "envel"
-                                                                       "ope "
-                                                                       "amoun"
-                                                                       "t"),
-                                                                    "",
-                                                                    "mixenvKn"
-                                                                    "ob")
-
-                                                                    maketsknob(
-                                                                            m_envAttKnob,
-                                                                            88,
-                                                                            A1ROW,
-                                                                            tr("Mix envelope attack"),
-                                                                            " ms",
-                                                                            "mixenvKnob")
-                                                                            maketsknob(
-                                                                                    m_envHoldKnob,
-                                                                                    88,
-                                                                                    A2ROW,
-                                                                                    tr("Mix envelope hold"),
-                                                                                    " ms",
-                                                                                    "mixenvKnob")
-                                                                                    maketsknob(
-                                                                                            m_envDecKnob,
-                                                                                            88,
-                                                                                            B1ROW,
-                                                                                            tr("Mix envelope decay"),
-                                                                                            " ms",
-                                                                                            "mixenvKnob")
-
-                                                                                            makeknob(
-                                                                                                    m_xtalkKnob,
-                                                                                                    88,
-                                                                                                    B2ROW,
-                                                                                                    tr("Crosstalk"),
-                                                                                                    "",
-                                                                                                    "xtalkKnob")
-
-            // let's set volume knobs
-            a1_volKnob->setVolumeKnob(true);
-    a2_volKnob->setVolumeKnob(true);
-    b1_volKnob->setVolumeKnob(true);
-    b2_volKnob->setVolumeKnob(true);
+    // let's set volume knobs
+    /*
+      TODO
+      a1_volKnob->setVolumeKnob(true);
+      a2_volKnob->setVolumeKnob(true);
+      b1_volKnob->setVolumeKnob(true);
+      b2_volKnob->setVolumeKnob(true);
+    */
 
     m_abmixKnob->setFixedSize(31, 31);
 
     // button groups next.
     // graph select buttons
-    PixmapButton* a1_selectButton = new PixmapButton(this, NULL);
+    PixmapButton* a1_selectButton = new PixmapButton(this, nullptr);
     a1_selectButton->move(4, 121);
-    a1_selectButton->setActiveGraphic(
-            PLUGIN_NAME::getIconPixmap("a1_active"));
+    a1_selectButton->setActiveGraphic(PLUGIN_NAME::getPixmap("a1_active"));
     a1_selectButton->setInactiveGraphic(
-            PLUGIN_NAME::getIconPixmap("a1_inactive"));
+            PLUGIN_NAME::getPixmap("a1_inactive"));
     ToolTip::add(a1_selectButton, tr("Select oscillator A1"));
 
-    PixmapButton* a2_selectButton = new PixmapButton(this, NULL);
+    PixmapButton* a2_selectButton = new PixmapButton(this, nullptr);
     a2_selectButton->move(44, 121);
-    a2_selectButton->setActiveGraphic(
-            PLUGIN_NAME::getIconPixmap("a2_active"));
+    a2_selectButton->setActiveGraphic(PLUGIN_NAME::getPixmap("a2_active"));
     a2_selectButton->setInactiveGraphic(
-            PLUGIN_NAME::getIconPixmap("a2_inactive"));
+            PLUGIN_NAME::getPixmap("a2_inactive"));
     ToolTip::add(a2_selectButton, tr("Select oscillator A2"));
 
-    PixmapButton* b1_selectButton = new PixmapButton(this, NULL);
+    PixmapButton* b1_selectButton = new PixmapButton(this, nullptr);
     b1_selectButton->move(84, 121);
-    b1_selectButton->setActiveGraphic(
-            PLUGIN_NAME::getIconPixmap("b1_active"));
+    b1_selectButton->setActiveGraphic(PLUGIN_NAME::getPixmap("b1_active"));
     b1_selectButton->setInactiveGraphic(
-            PLUGIN_NAME::getIconPixmap("b1_inactive"));
+            PLUGIN_NAME::getPixmap("b1_inactive"));
     ToolTip::add(b1_selectButton, tr("Select oscillator B1"));
 
-    PixmapButton* b2_selectButton = new PixmapButton(this, NULL);
+    PixmapButton* b2_selectButton = new PixmapButton(this, nullptr);
     b2_selectButton->move(124, 121);
-    b2_selectButton->setActiveGraphic(
-            PLUGIN_NAME::getIconPixmap("b2_active"));
+    b2_selectButton->setActiveGraphic(PLUGIN_NAME::getPixmap("b2_active"));
     b2_selectButton->setInactiveGraphic(
-            PLUGIN_NAME::getIconPixmap("b2_inactive"));
+            PLUGIN_NAME::getPixmap("b2_inactive"));
     ToolTip::add(b2_selectButton, tr("Select oscillator B2"));
 
-    m_selectedGraphGroup = new automatableButtonGroup(this);
+    m_selectedGraphGroup = new AutomatableButtonGroup(this);
     m_selectedGraphGroup->addButton(a1_selectButton);
     m_selectedGraphGroup->addButton(a2_selectButton);
     m_selectedGraphGroup->addButton(b1_selectButton);
@@ -904,74 +799,66 @@ WatsynView::WatsynView(Instrument* _instrument, QWidget* _parent) :
     m_selectedGraphGroup->setModel(&w->m_selectedGraph);
 
     // A-modulation button group
-    PixmapButton* amod_mixButton = new PixmapButton(this, NULL);
+    PixmapButton* amod_mixButton = new PixmapButton(this, nullptr);
     amod_mixButton->move(4, 50);
-    amod_mixButton->setActiveGraphic(
-            PLUGIN_NAME::getIconPixmap("amix_active"));
+    amod_mixButton->setActiveGraphic(PLUGIN_NAME::getPixmap("amix_active"));
     amod_mixButton->setInactiveGraphic(
-            PLUGIN_NAME::getIconPixmap("amix_inactive"));
+            PLUGIN_NAME::getPixmap("amix_inactive"));
     ToolTip::add(amod_mixButton, tr("Mix output of A2 to A1"));
 
-    PixmapButton* amod_amButton = new PixmapButton(this, NULL);
+    PixmapButton* amod_amButton = new PixmapButton(this, nullptr);
     amod_amButton->move(4, 66);
-    amod_amButton->setActiveGraphic(PLUGIN_NAME::getIconPixmap("aam_active"));
-    amod_amButton->setInactiveGraphic(
-            PLUGIN_NAME::getIconPixmap("aam_inactive"));
+    amod_amButton->setActiveGraphic(PLUGIN_NAME::getPixmap("aam_active"));
+    amod_amButton->setInactiveGraphic(PLUGIN_NAME::getPixmap("aam_inactive"));
     ToolTip::add(amod_amButton,
                  tr("Modulate amplitude of A1 with output of A2"));
 
-    PixmapButton* amod_rmButton = new PixmapButton(this, NULL);
+    PixmapButton* amod_rmButton = new PixmapButton(this, nullptr);
     amod_rmButton->move(4, 82);
-    amod_rmButton->setActiveGraphic(PLUGIN_NAME::getIconPixmap("arm_active"));
-    amod_rmButton->setInactiveGraphic(
-            PLUGIN_NAME::getIconPixmap("arm_inactive"));
+    amod_rmButton->setActiveGraphic(PLUGIN_NAME::getPixmap("arm_active"));
+    amod_rmButton->setInactiveGraphic(PLUGIN_NAME::getPixmap("arm_inactive"));
     ToolTip::add(amod_rmButton, tr("Ring-modulate A1 and A2"));
 
-    PixmapButton* amod_pmButton = new PixmapButton(this, NULL);
+    PixmapButton* amod_pmButton = new PixmapButton(this, nullptr);
     amod_pmButton->move(4, 98);
-    amod_pmButton->setActiveGraphic(PLUGIN_NAME::getIconPixmap("apm_active"));
-    amod_pmButton->setInactiveGraphic(
-            PLUGIN_NAME::getIconPixmap("apm_inactive"));
+    amod_pmButton->setActiveGraphic(PLUGIN_NAME::getPixmap("apm_active"));
+    amod_pmButton->setInactiveGraphic(PLUGIN_NAME::getPixmap("apm_inactive"));
     ToolTip::add(amod_pmButton, tr("Modulate phase of A1 with output of A2"));
 
-    m_aModGroup = new automatableButtonGroup(this);
+    m_aModGroup = new AutomatableButtonGroup(this);
     m_aModGroup->addButton(amod_mixButton);
     m_aModGroup->addButton(amod_amButton);
     m_aModGroup->addButton(amod_rmButton);
     m_aModGroup->addButton(amod_pmButton);
 
     // B-modulation button group
-    PixmapButton* bmod_mixButton = new PixmapButton(this, NULL);
+    PixmapButton* bmod_mixButton = new PixmapButton(this, nullptr);
     bmod_mixButton->move(44, 50);
-    bmod_mixButton->setActiveGraphic(
-            PLUGIN_NAME::getIconPixmap("bmix_active"));
+    bmod_mixButton->setActiveGraphic(PLUGIN_NAME::getPixmap("bmix_active"));
     bmod_mixButton->setInactiveGraphic(
-            PLUGIN_NAME::getIconPixmap("bmix_inactive"));
+            PLUGIN_NAME::getPixmap("bmix_inactive"));
     ToolTip::add(bmod_mixButton, tr("Mix output of B2 to B1"));
 
-    PixmapButton* bmod_amButton = new PixmapButton(this, NULL);
+    PixmapButton* bmod_amButton = new PixmapButton(this, nullptr);
     bmod_amButton->move(44, 66);
-    bmod_amButton->setActiveGraphic(PLUGIN_NAME::getIconPixmap("bam_active"));
-    bmod_amButton->setInactiveGraphic(
-            PLUGIN_NAME::getIconPixmap("bam_inactive"));
+    bmod_amButton->setActiveGraphic(PLUGIN_NAME::getPixmap("bam_active"));
+    bmod_amButton->setInactiveGraphic(PLUGIN_NAME::getPixmap("bam_inactive"));
     ToolTip::add(bmod_amButton,
                  tr("Modulate amplitude of B1 with output of B2"));
 
-    PixmapButton* bmod_rmButton = new PixmapButton(this, NULL);
+    PixmapButton* bmod_rmButton = new PixmapButton(this, nullptr);
     bmod_rmButton->move(44, 82);
-    bmod_rmButton->setActiveGraphic(PLUGIN_NAME::getIconPixmap("brm_active"));
-    bmod_rmButton->setInactiveGraphic(
-            PLUGIN_NAME::getIconPixmap("brm_inactive"));
+    bmod_rmButton->setActiveGraphic(PLUGIN_NAME::getPixmap("brm_active"));
+    bmod_rmButton->setInactiveGraphic(PLUGIN_NAME::getPixmap("brm_inactive"));
     ToolTip::add(bmod_rmButton, tr("Ring-modulate B1 and B2"));
 
-    PixmapButton* bmod_pmButton = new PixmapButton(this, NULL);
+    PixmapButton* bmod_pmButton = new PixmapButton(this, nullptr);
     bmod_pmButton->move(44, 98);
-    bmod_pmButton->setActiveGraphic(PLUGIN_NAME::getIconPixmap("bpm_active"));
-    bmod_pmButton->setInactiveGraphic(
-            PLUGIN_NAME::getIconPixmap("bpm_inactive"));
+    bmod_pmButton->setActiveGraphic(PLUGIN_NAME::getPixmap("bpm_active"));
+    bmod_pmButton->setInactiveGraphic(PLUGIN_NAME::getPixmap("bpm_inactive"));
     ToolTip::add(bmod_pmButton, tr("Modulate phase of B1 with output of B2"));
 
-    m_bModGroup = new automatableButtonGroup(this);
+    m_bModGroup = new AutomatableButtonGroup(this);
     m_bModGroup->addButton(bmod_mixButton);
     m_bModGroup->addButton(bmod_amButton);
     m_bModGroup->addButton(bmod_rmButton);
@@ -979,7 +866,7 @@ WatsynView::WatsynView(Instrument* _instrument, QWidget* _parent) :
 
     // graph widgets
     pal = QPalette();
-    pal.setBrush(backgroundRole(), PLUGIN_NAME::getIconPixmap("wavegraph"));
+    pal.setBrush(backgroundRole(), PLUGIN_NAME::getPixmap("wavegraph"));
     // a1 graph
     a1_graph = new Graph(this, Graph::LinearStyle, 224, 105);
     a1_graph->move(4, 141);
@@ -1021,86 +908,78 @@ WatsynView::WatsynView(Instrument* _instrument, QWidget* _parent) :
 
     m_loadButton = new PixmapButton(this, tr("Load waveform"));
     m_loadButton->move(173, 121);
-    m_loadButton->setActiveGraphic(PLUGIN_NAME::getIconPixmap("load_active"));
-    m_loadButton->setInactiveGraphic(
-            PLUGIN_NAME::getIconPixmap("load_inactive"));
+    m_loadButton->setActiveGraphic(PLUGIN_NAME::getPixmap("load_active"));
+    m_loadButton->setInactiveGraphic(PLUGIN_NAME::getPixmap("load_inactive"));
     ToolTip::add(m_loadButton,
                  tr("Click to load a waveform from a sample file"));
 
     m_phaseLeftButton = new PixmapButton(this, tr("Phase left"));
     m_phaseLeftButton->move(193, 121);
-    m_phaseLeftButton->setActiveGraphic(
-            PLUGIN_NAME::getIconPixmap("phl_active"));
+    m_phaseLeftButton->setActiveGraphic(PLUGIN_NAME::getPixmap("phl_active"));
     m_phaseLeftButton->setInactiveGraphic(
-            PLUGIN_NAME::getIconPixmap("phl_inactive"));
+            PLUGIN_NAME::getPixmap("phl_inactive"));
     ToolTip::add(m_phaseLeftButton,
                  tr("Click to shift phase by -15 degrees"));
 
     m_phaseRightButton = new PixmapButton(this, tr("Phase right"));
     m_phaseRightButton->move(210, 121);
     m_phaseRightButton->setActiveGraphic(
-            PLUGIN_NAME::getIconPixmap("phr_active"));
+            PLUGIN_NAME::getPixmap("phr_active"));
     m_phaseRightButton->setInactiveGraphic(
-            PLUGIN_NAME::getIconPixmap("phr_inactive"));
+            PLUGIN_NAME::getPixmap("phr_inactive"));
     ToolTip::add(m_phaseRightButton,
                  tr("Click to shift phase by +15 degrees"));
 
     m_normalizeButton = new PixmapButton(this, tr("Normalize"));
     m_normalizeButton->move(230, 121);
     m_normalizeButton->setActiveGraphic(
-            PLUGIN_NAME::getIconPixmap("norm_active"));
+            PLUGIN_NAME::getPixmap("norm_active"));
     m_normalizeButton->setInactiveGraphic(
-            PLUGIN_NAME::getIconPixmap("norm_inactive"));
+            PLUGIN_NAME::getPixmap("norm_inactive"));
     ToolTip::add(m_normalizeButton, tr("Click to normalize"));
 
     m_invertButton = new PixmapButton(this, tr("Invert"));
     m_invertButton->move(230, 138);
-    m_invertButton->setActiveGraphic(
-            PLUGIN_NAME::getIconPixmap("inv_active"));
+    m_invertButton->setActiveGraphic(PLUGIN_NAME::getPixmap("inv_active"));
     m_invertButton->setInactiveGraphic(
-            PLUGIN_NAME::getIconPixmap("inv_inactive"));
+            PLUGIN_NAME::getPixmap("inv_inactive"));
     ToolTip::add(m_invertButton, tr("Click to invert"));
 
     m_smoothButton = new PixmapButton(this, tr("Smooth"));
     m_smoothButton->move(230, 155);
-    m_smoothButton->setActiveGraphic(
-            PLUGIN_NAME::getIconPixmap("smooth_active"));
+    m_smoothButton->setActiveGraphic(PLUGIN_NAME::getPixmap("smooth_active"));
     m_smoothButton->setInactiveGraphic(
-            PLUGIN_NAME::getIconPixmap("smooth_inactive"));
+            PLUGIN_NAME::getPixmap("smooth_inactive"));
     ToolTip::add(m_smoothButton, tr("Click to smooth"));
 
     // waveforms
 
     m_sinWaveButton = new PixmapButton(this, tr("Sine wave"));
     m_sinWaveButton->move(230, 176);
-    m_sinWaveButton->setActiveGraphic(
-            PLUGIN_NAME::getIconPixmap("sin_active"));
+    m_sinWaveButton->setActiveGraphic(PLUGIN_NAME::getPixmap("sin_active"));
     m_sinWaveButton->setInactiveGraphic(
-            PLUGIN_NAME::getIconPixmap("sin_inactive"));
+            PLUGIN_NAME::getPixmap("sin_inactive"));
     ToolTip::add(m_sinWaveButton, tr("Click for sine wave"));
 
     m_triWaveButton = new PixmapButton(this, tr("Triangle wave"));
     m_triWaveButton->move(230, 194);
-    m_triWaveButton->setActiveGraphic(
-            PLUGIN_NAME::getIconPixmap("tri_active"));
+    m_triWaveButton->setActiveGraphic(PLUGIN_NAME::getPixmap("tri_active"));
     m_triWaveButton->setInactiveGraphic(
-            PLUGIN_NAME::getIconPixmap("tri_inactive"));
+            PLUGIN_NAME::getPixmap("tri_inactive"));
     ToolTip::add(m_triWaveButton, tr("Click for triangle wave"));
 
     m_sawWaveButton = new PixmapButton(this, tr("Triangle wave"));
     m_sawWaveButton->move(230, 212);
-    m_sawWaveButton->setActiveGraphic(
-            PLUGIN_NAME::getIconPixmap("saw_active"));
+    m_sawWaveButton->setActiveGraphic(PLUGIN_NAME::getPixmap("saw_active"));
     m_sawWaveButton->setInactiveGraphic(
-            PLUGIN_NAME::getIconPixmap("saw_inactive"));
+            PLUGIN_NAME::getPixmap("saw_inactive"));
     ToolTip::add(m_sawWaveButton, tr("Click for saw wave"));
 
     m_sqrWaveButton = new PixmapButton(this, tr("Square wave"));
     m_sqrWaveButton->move(230, 230);
-    m_sqrWaveButton->setActiveGraphic(
-            PLUGIN_NAME::getIconPixmap("sqr_active"));
+    m_sqrWaveButton->setActiveGraphic(PLUGIN_NAME::getPixmap("sqr_active"));
     m_sqrWaveButton->setInactiveGraphic(
-            PLUGIN_NAME::getIconPixmap("sqr_inactive"));
+            PLUGIN_NAME::getPixmap("sqr_inactive"));
     ToolTip::add(m_sqrWaveButton, tr("Click for square wave"));
 
     connect(m_sinWaveButton, SIGNAL(clicked()), this, SLOT(sinWaveClicked()));

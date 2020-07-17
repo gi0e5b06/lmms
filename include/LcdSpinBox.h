@@ -28,20 +28,20 @@
 #include "AutomatableModelView.h"
 #include "LcdWidget.h"
 
-class EXPORT LcdSpinBox
-      : public LcdWidget
-      , public IntModelView
+class EXPORT LcdSpinBox : public LcdWidget, public IntModelView
 {
     Q_OBJECT
   public:
-    LcdSpinBox(int            numDigits,
-               QWidget*       parent,
-               const QString& name = "[lcd spinbox]");
+    LcdSpinBox(int            _numDigits,
+               QWidget*       _parent,
+               const QString& _displayName = "[lcd spinbox]",
+               const QString& _objectName  = QString::null);
 
-    LcdSpinBox(int            numDigits,
-               const QString& style,
-               QWidget*       parent,
-               const QString& name = "[lcd spinbox]");
+    LcdSpinBox(int            _numDigits,
+               const QString& _style,
+               QWidget*       _parent,
+               const QString& _displayName = "[lcd spinbox]",
+               const QString& _objectName  = QString::null);
 
     virtual ~LcdSpinBox();
 

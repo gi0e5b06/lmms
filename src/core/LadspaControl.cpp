@@ -31,8 +31,8 @@
 //#include <cstdio>
 
 LadspaControl::LadspaControl(Model* _parent, port_desc_t* _port, bool _link) :
-      Model(_parent, QString("Ladspa Control %1").arg(_port->name)),
-      m_link(_link), m_linkDepth(0), m_port(_port),
+      Model(_parent, tr("Ladspa Control %1").arg(_port->name)), m_link(_link),
+      m_linkDepth(0), m_port(_port),
       m_linkEnabledModel(_link, this, tr("Link channels")),
       m_toggledModel(false, this, m_port->name),
       m_knobModel(0, 0, 0, 1, this, m_port->name),

@@ -35,6 +35,7 @@
 #include "FileDialog.h"
 #include "FxMixerView.h"
 #include "GuiApplication.h"
+#include "MidiClient.h"
 #include "MidiMapper.h"
 #include "MidiPortMenu.h"
 #include "PaintManager.h"
@@ -455,8 +456,12 @@ void MainWindow::finalize()
     QMenu* midiMenu = new QMenu(this);
     menuBar()->addMenu(midiMenu)->setText(tr("&Midi"));
     midiMenu->addAction(tr("List"), this, SLOT(listMidiMenu()));
-    midiMenu->addAction(tr("Map"), this, SLOT(mapMidiMenu()));
     midiMenu->addAction(tr("Unmap"), this, SLOT(unmapMidiMenu()));
+    m_mapMidiMenu = midiMenu->addMenu(tr("Map"));
+    connect(m_mapMidiMenu, SIGNAL(aboutToShow()),
+            SLOT(updateMapMidiMenu()));
+    connect(m_mapMidiMenu, SIGNAL(triggered(QAction*)), this,
+            SLOT(mapMidiMenu(QAction*)));
 
     /*
     MidiPort mp=new MidiPort("",nullptr,
@@ -1386,14 +1391,29 @@ void MainWindow::updateConfig(QAction* _who)
     }
 }
 
+void MainWindow::updateMapMidiMenu()
+{
+    m_mapMidiMenu->clear();
+    MidiClient* client=Engine::mixer()->midiClient();
+    for(const QString& p: client->readablePorts())
+    {
+        QString  s = p.mid(p.indexOf("from ")+5);
+        QAction* a = m_mapMidiMenu->addAction(s);
+        a->setData(p);
+        // a->setCheckable(false);
+    }
+}
+
 void MainWindow::listMidiMenu()
 {
     MidiMapper::list(m_workspace->activeSubWindow());
 }
 
-void MainWindow::mapMidiMenu()
+void MainWindow::mapMidiMenu(QAction* a)
 {
-    MidiMapper::map(m_workspace->activeSubWindow());
+    qInfo("MainWindow::mapMidiMenu %s",qPrintable(a->data().toString()));
+    MidiMapper::map(m_workspace->activeSubWindow(), a->data().toString());
+    //"128:28 LMMS:in from MIDI Mix");
 }
 
 void MainWindow::unmapMidiMenu()

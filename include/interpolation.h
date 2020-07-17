@@ -25,10 +25,6 @@
 #ifndef INTERPOLATION_H
 #define INTERPOLATION_H
 
-#ifndef __USE_XOPEN
-#define __USE_XOPEN
-#endif
-
 #include "lmms_constants.h"
 #include "lmms_math.h"
 

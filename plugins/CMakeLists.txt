@@ -131,7 +131,7 @@ IF("${PLUGIN_LIST}" STREQUAL "")
     VideoWaveExport
     VocoderGDX
     WallGDX
-	xpressive
+	Xpressive
 	zynaddsubfx
 	)
 

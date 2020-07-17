@@ -32,11 +32,10 @@
 #include "ComboBox.h"
 #include "GuiApplication.h"
 #include "MainWindow.h"
-#include "SongEditor.h"
 #include "Pattern.h"
 #include "Song.h"
+#include "SongEditor.h"
 #include "StringPairDrag.h"
-
 #include "embed.h"
 
 #include <QCoreApplication>
@@ -191,7 +190,10 @@ void BBWindow::stop()
     Engine::getSong()->stop();
 }
 
-BBEditor::BBEditor(BBTrackContainer* tc) : TrackContainerView(tc), m_bbtc(tc)
+BBEditor::BBEditor(BBTrackContainer* tc) :
+      Editor(nullptr, tr("Beat editor"), "beatEditor"),
+      TrackContainerView(tc),
+      m_bbtc(tc)
 {
     setModel(tc);
 }

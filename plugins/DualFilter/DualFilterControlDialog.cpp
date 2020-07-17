@@ -34,12 +34,14 @@
 
 #include <QLayout>
 
+/*
 #define makeknob(name, x, y, model, label, hint, unit) \
     Knob* name = new Knob(knobBright_26, this);        \
     name->move(x, y);                                  \
     name->setModel(&controls->model);                  \
     name->setLabel(label);                             \
     name->setHintText(hint, unit)
+*/
 
 DualFilterControlDialog::DualFilterControlDialog(
         DualFilterControls* controls) :
@@ -56,22 +58,53 @@ DualFilterControlDialog::DualFilterControlDialog(
     setFixedWidth(250);
     setMinimumHeight(109);
 
-    makeknob(cut1Knob, 6, 16, m_cut1Model, tr("FREQ"), tr("Cutoff frequency"),
-             "Hz");
-    makeknob(res1Knob, 36, 16, m_res1Model, tr("RESO"), tr("Resonance"), "");
-    makeknob(gain1Knob, 66, 16, m_gain1Model, tr("VOL"), tr("Volume"), "%");
-    makeknob(mixKnob, 125 - 13, 16, m_mixModel, tr("MIX"), tr("Mix"), "");
-    makeknob(cut2Knob, 224 - 66, 16, m_cut2Model, tr("FREQ"),
-             tr("Cutoff frequency"), "Hz");
-    makeknob(res2Knob, 224 - 36, 16, m_res2Model, tr("RESO"), tr("Resonance"),
-             "");
-    makeknob(gain2Knob, 224 - 6, 16, m_gain2Model, tr("VOL"), tr("Volume"),
-             "%");
+    // makeknob(cut1Knob, 6, 16, m_cut1Model, tr("FREQ"), tr("Cutoff
+    // frequency"), "Hz");
+    CutoffFrequencyKnob* cut1Knob = new CutoffFrequencyKnob(this);
+    cut1Knob->setModel(&controls->m_cut1Model);
+    cut1Knob->move(6, 16);
 
+    // makeknob(res1Knob, 36, 16, m_res1Model, tr("RESO"), tr("Resonance"),
+    // "");
+    ResonanceKnob* res1Knob = new ResonanceKnob(this);
+    res1Knob->setModel(&controls->m_res1Model);
+    res1Knob->move(36, 16);
+
+    // makeknob(gain1Knob, 66, 16, m_gain1Model, tr("VOL"), tr("Volume"),
+    // "%");
+    VolumeKnob* gain1Knob = new VolumeKnob(this);
+    gain1Knob->setModel(&controls->m_gain1Model);
+    gain1Knob->move(66, 16);
+
+    // makeknob(mixKnob, 125 - 13, 16, m_mixModel, tr("MIX"), tr("Mix"), "");
+    MixKnob* mixKnob = new MixKnob(this);
+    mixKnob->setModel(&controls->m_mixModel);
+    mixKnob->move(125 - 13, 16);
+
+    // makeknob(cut2Knob, 224 - 66, 16, m_cut2Model, tr("FREQ"),
+    //         tr("Cutoff frequency"), "Hz");
+    CutoffFrequencyKnob* cut2Knob = new CutoffFrequencyKnob(this);
+    cut2Knob->setModel(&controls->m_cut2Model);
+    cut2Knob->move(224 - 66, 16);
+
+    // makeknob(res2Knob, 224 - 36, 16, m_res2Model, tr("RESO"),
+    // tr("Resonance"), "");
+    ResonanceKnob* res2Knob = new ResonanceKnob(this);
+    res2Knob->setModel(&controls->m_res2Model);
+    res2Knob->move(224 - 36, 16);
+
+    // makeknob(gain2Knob, 224 - 6, 16, m_gain2Model, tr("VOL"), tr("Volume"),
+    // "%");
+    VolumeKnob* gain2Knob = new VolumeKnob(this);
+    gain2Knob->setModel(&controls->m_gain2Model);
+    gain2Knob->move(224 - 6, 16);
+
+    /*
     cut1Knob->setPointColor(Qt::green);
     cut2Knob->setPointColor(Qt::green);
     gain1Knob->setVolumeKnob(true);
     gain2Knob->setVolumeKnob(true);
+    */
 
     LedCheckBox* enabled1Toggle = new LedCheckBox(
             "", this, tr("Filter 1 enabled"), LedCheckBox::Green);

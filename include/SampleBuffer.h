@@ -1,7 +1,7 @@
 /*
  * SampleBuffer.h - container-class SampleBuffer
  *
- * Copyright (c) 2018 gi0e5b06 (on github.com)
+ * Copyright (c) 2018-2020 gi0e5b06 (on github.com)
  * Copyright (c) 2005-2014 Tobias Doerffel <tobydox/at/users.sourceforge.net>
  *
  * This file is part of LMMS - https://lmms.io
@@ -212,9 +212,10 @@ class EXPORT SampleBuffer : public QObject, public sharedObject
 
     f_cnt_t findClosestZero(f_cnt_t _index);
 
-    QString openAudioFile() const;
-    QString openAndSetAudioFile();
-    QString openAndSetWaveformFile();
+    QString openSampleFile() const;
+    QString openWaveFormFile() const;
+    QString openAndSetSampleFile();
+    QString openAndSetWaveFormFile();
 
     QString& toBase64(QString& _dst) const;
 
@@ -245,12 +246,20 @@ class EXPORT SampleBuffer : public QObject, public sharedObject
         m_varLock.unlock();
     }
 
+    enum AudioFileCategory
+    {
+        WaveForm,
+        Sample,
+        Music
+    };
+
     static const QString rawStereoSuffix();    // typically f2r44100
     static const QString rawSurroundSuffix();  // not used, f4r48000
-    static QString selectAudioFile(const QString& _file = QString::null);
-    static QString tryToMakeRelative(const QString& _file);
-    static QString tryToMakeAbsolute(const QString& _file);
-    static void    clearMMap();
+    static QString       selectAudioFile(const AudioFileCategory _category,
+                                         const QString& _file = QString::null);
+    static QString       tryToMakeRelative(const QString& _file);
+    static QString       tryToMakeAbsolute(const QString& _file);
+    static void          clearMMap();
 
   public slots:
     void setAudioFile(const QString& _audioFile);

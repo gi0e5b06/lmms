@@ -31,15 +31,15 @@
 
 #include <QDomElement>
 
-class EXPORT WaveFormModel
-      : public Model
-      , public JournallingObject
+class EXPORT WaveFormModel : public Model, public JournallingObject
 {
     Q_OBJECT
 
   public:
-    WaveFormModel(Model * _parent, QString _displayName = QString::null,
-               bool _defaultConstructed = false);
+    WaveFormModel(Model*         _parent,
+                  const QString& _displayName        = "[wave form]",
+                  const QString& _objectName         = QString::null,
+                  bool           _defaultConstructed = false);
     virtual ~WaveFormModel();
 
     virtual void saveSettings(QDomDocument&  doc,

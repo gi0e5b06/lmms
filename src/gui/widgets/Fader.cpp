@@ -138,11 +138,15 @@ void Fader::init(FloatModel* model, QString const& name)
     setMaximumSize(backgroundSize);
     resize(backgroundSize);
     setModel(model);
-    setHintText("Volume:", "%");
+    setHintText(tr("Volume:"), "%");
 }
 
 void Fader::modelChanged()
 {
+    FloatModel* m = model();
+    if(m != nullptr)
+        setWindowTitle(m->displayName());
+
     // qInfo("Fader::modelChanged()");
     update();
 }
@@ -159,15 +163,19 @@ void Fader::mouseMoveEvent(QMouseEvent* mouseEvent)
 {
     if(m_moveStartPoint >= 0)
     {
-        int dy = m_moveStartPoint - mouseEvent->globalY();
+        const int dy = m_moveStartPoint - mouseEvent->globalY();
 
-        real_t delta = dy * (model()->maxValue() - model()->minValue())
-                       / (real_t)(height() - m_knob.height());
+        const real_t delta = dy * (model()->maxValue() - model()->minValue())
+                             / (real_t)(height() - m_knob.height());
 
-        const real_t step     = model()->step<real_t>();
-        real_t       newValue = static_cast<real_t>(static_cast<int>(
-                                  (m_startValue + delta) / step + 0.5))
-                          * step;
+        const real_t step = model()->step();
+
+        /*
+        const real_t newValue = static_cast<real_t>(static_cast<int>(
+                        (m_startValue + delta) / step + 0.5)) * step;
+        */
+        const real_t newValue = round((m_startValue + delta) / step) * step;
+
         model()->setValue(newValue);
 
         updateTextFloat();
@@ -340,12 +348,12 @@ void Fader::updateTextFloat()
         s_textFloat->setText(
                 m_description.trimmed() + " "
                 + QString::number(
-                          m_displayConversion ? model()->rawValue() * 100
-                                              : model()->rawValue(),
-                          'f',
-                          m_displayConversion
-                                  ? qMax(0, model()->getDigitCount() - 2)
-                                  : model()->getDigitCount())
+                        m_displayConversion ? model()->rawValue() * 100
+                                            : model()->rawValue(),
+                        'f',
+                        m_displayConversion
+                                ? qMax(0, model()->getDigitCount() - 2)
+                                : model()->getDigitCount())
                 + " " + m_unit);
     }
     s_textFloat->moveGlobal(

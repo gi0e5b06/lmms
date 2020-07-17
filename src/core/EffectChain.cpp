@@ -33,8 +33,8 @@
 #include <QDomElement>
 
 EffectChain::EffectChain(Model* _parent) :
-      Model(_parent, "Effect chain"), SerializingObject(),
-      m_enabledModel(false, nullptr, tr("Effects enabled"))
+      Model(_parent, "Effect chain", "chain"), SerializingObject(),
+      m_enabledModel(false, this, tr("Effects enabled"), "enabled")
 {
 }
 
@@ -294,7 +294,8 @@ void EffectChain::clear()
     */
     while(!m_effects.isEmpty())
     {
-        Effect* e = m_effects.takeLast();
+        Effect* e = m_effects.last();
+        removeEffect(e);
         e->deleteLater();
     }
 

@@ -57,20 +57,13 @@ class EXPORT AutomatableModelView : public ModelView
         return modelUntyped() ? modelUntyped()->value<T>() : 0;
     }
 
-    inline void setDescription(const QString& desc)
-    {
-        m_description = desc;
-    }
-
-    inline void setUnit(const QString& unit)
-    {
-        m_unit = unit;
-    }
-
     QColor cableColor() const;
 
     virtual bool isInteractive() const final;
     virtual void setInteractive(bool _b) final;
+
+    virtual void setDescription(const QString& desc) final;
+    virtual void setUnit(const QString& unit) final;
 
     virtual void addDefaultActions(QMenu*     menu,
                                    const bool _interactive = true);
@@ -83,6 +76,7 @@ class EXPORT AutomatableModelView : public ModelView
     bool    m_interactive;
     QString m_description;
     QString m_unit;
+    bool    m_spaceBeforeUnit;
 };
 
 class AutomatableModelViewSlots : public QObject

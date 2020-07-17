@@ -30,8 +30,8 @@
 #include "Song.h"
 
 BBTrackContainer::BBTrackContainer() :
-      TrackContainer(nullptr, "Beats"),
-      m_bbComboBoxModel(this, tr("Current track"))
+      TrackContainer(nullptr, tr("Beats"), "beats"),
+      m_bbComboBoxModel(this, tr("Current beat"), "beat")
 {
     connect(&m_bbComboBoxModel, SIGNAL(dataChanged()), this,
             SLOT(currentBBChanged()));
@@ -67,12 +67,12 @@ bool BBTrackContainer::play(MidiTime      _start,
         if(_mask != nullptr && index < _mask->size() && _mask->bit(index))
             continue;
 
-        f_cnt_t             realstart = _start;
-        Tile* p         = (*it)->getTCO(_tco_num);
+        f_cnt_t realstart = _start;
+        Tile*   p         = (*it)->getTCO(_tco_num);
         // Pattern* p=dynamic_cast<Pattern*>((*it)->getTCO( _tco_num ));
         // if(p)
         {
-            tick_t tlen = p->unitLength();//length();
+            tick_t tlen = p->unitLength();  // length();
             if(tlen <= 0)
                 continue;
             realstart = _start % tlen;  // GDX
@@ -118,8 +118,9 @@ tick_t BBTrackContainer::beatLengthOfBB(int _bb) const
         Pattern* p = dynamic_cast<Pattern*>(t->getTCO(_bb));
         if(p != nullptr)
         {
-            tick_t plen = p->unitLength(); //length();  // beatPatternLength();
-            max_length  = qMax(max_length, plen);
+            tick_t plen
+                    = p->unitLength();  // length();  // beatPatternLength();
+            max_length = qMax(max_length, plen);
         }
     }
     return max_length;

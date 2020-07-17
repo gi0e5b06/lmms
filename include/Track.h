@@ -32,6 +32,7 @@
 #include "DataFile.h"
 #include "ModelView.h"
 #include "Mutex.h"
+#include "TimeLineWidget.h"
 #include "lmms_basics.h"
 
 //#include <QVector>
@@ -743,15 +744,8 @@ class EXPORT Track : public Model, public JournallingObject
     QColor color() const;
     void   setColor(const QColor& _newColor);
 
-    int currentLoop() const
-    {
-        return m_currentLoop;
-    }
-
-    void setCurrentLoop(int _loop)
-    {
-        m_currentLoop = _loop;
-    }
+    int  currentLoop() const;
+    void setCurrentLoop(int _loop);
 
     // void selectSubloop(const MidiTime& _pos);
 
@@ -832,14 +826,15 @@ class EXPORT Track : public Model, public JournallingObject
 
     virtual QString defaultName() const = 0;
 
-    inline int getHeight()
+    virtual int height() final
     {
         return m_height >= MINIMAL_TRACK_HEIGHT ? m_height
                                                 : DEFAULT_TRACK_HEIGHT;
     }
-    inline void setHeight(int height)
+
+    virtual void setHeight(int _height) final
     {
-        m_height = height;
+        m_height = _height;
     }
 
     void lockTrack()
@@ -900,6 +895,8 @@ class EXPORT Track : public Model, public JournallingObject
     BoolModel m_clippingModel;
     BoolModel m_mutedModel;
     BoolModel m_soloModel;
+    BoolModel m_loopEnabledModel;
+    IntModel  m_currentLoopModel;
 
   private:
     TrackContainer* m_trackContainer;
@@ -909,7 +906,6 @@ class EXPORT Track : public Model, public JournallingObject
     QColor          m_color;
     bool            m_useStyleColor;
 
-    int  m_currentLoop;
     bool m_mutedBeforeSolo;
     bool m_simpleSerializingMode;
 

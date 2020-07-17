@@ -35,6 +35,37 @@
 
 static MidiDummy s_dummyClient;
 
+const int MidiPort::NB_WIDGET_TYPES = PitchBend + 1;
+
+const char* MidiPort::WIDGET_TYPE_NAME[]
+        = {"Ignored", "Open Relay", "Close Relay", "Button",
+           "Switch",  "Knob",       "Slider",      "Pad",
+           "Key",     "Wheel",      "Selector",    "PitchBend"};
+
+MidiPort::WidgetType MidiPort::findWidgetType(const QString& _s)
+{
+    int r = _s.toInt();
+    if(r > 0 && r < NB_WIDGET_TYPES)
+        return static_cast<MidiPort::WidgetType>(r);
+
+    for(int i = 0; i < NB_WIDGET_TYPES; i++)
+        if(_s == WIDGET_TYPE_NAME[i])
+            return static_cast<MidiPort::WidgetType>(i);
+
+    QString s = _s.toLower();
+    for(int i = 0; i < NB_WIDGET_TYPES; i++)
+        if(s == QString(WIDGET_TYPE_NAME[i]).toLower())
+            return static_cast<MidiPort::WidgetType>(i);
+
+    s.replace(" ", "");
+    for(int i = 0; i < NB_WIDGET_TYPES; i++)
+        if(s == QString(WIDGET_TYPE_NAME[i]).toLower().replace(" ", ""))
+            return static_cast<MidiPort::WidgetType>(i);
+
+    qInfo("Midi mapping: unrecognized widget type: '%s'", qPrintable(_s));
+    return MidiPort::Ignored;
+}
+
 MidiPort::MidiPort(const QString&      name,
                    MidiClient*         client,
                    MidiEventProcessor* eventProcessor,
@@ -67,6 +98,8 @@ MidiPort::MidiPort(const QString&      name,
       m_readableModel(false, this, tr("Receive MIDI-events")),
       m_writableModel(false, this, tr("Send MIDI-events")),
       m_widgetTypeModel(this, tr("Widget type")),
+      m_defaultInputValueModel(64, 0, 127, this, tr("Default input value")),
+      m_spreadInputValueModel(1, 1, 128, this, tr("Spread input value")),
       m_minInputValueModel(0, 0, 127, this, tr("Min input value")),
       m_maxInputValueModel(127, 0, 127, this, tr("Max input value")),
       m_stepInputValueModel(1, 1, 127, this, tr("Step input value")),
@@ -74,14 +107,25 @@ MidiPort::MidiPort(const QString&      name,
       m_slopeInputValueModel(1, 1, 7, this, tr("Slope input value")),
       m_deltaInputValueModel(0, 0, 127, this, tr("Delta input value"))
 {
-    m_widgetTypeModel.addItem("Ignored");
-    m_widgetTypeModel.addItem("Open Relay");
-    m_widgetTypeModel.addItem("Close Relay");
-    m_widgetTypeModel.addItem("Switch");
-    m_widgetTypeModel.addItem("Knob/Fader");
-    m_widgetTypeModel.addItem("Pad/Key");
-    m_widgetTypeModel.addItem("PitchBend");
-    m_widgetTypeModel.setInitValue(4);
+    for(int i = 0; i < MidiPort::NB_WIDGET_TYPES; i++)
+        m_widgetTypeModel.addItem(MidiPort::WIDGET_TYPE_NAME[i]);
+
+    /*
+    m_widgetTypeModel.addItem("Ignored");      // 0
+    m_widgetTypeModel.addItem("Open Relay");   // 1
+    m_widgetTypeModel.addItem("Close Relay");  // 2
+    m_widgetTypeModel.addItem("Button");       // 3
+    m_widgetTypeModel.addItem("Switch");       // 4
+    m_widgetTypeModel.addItem("Knob");         // 5
+    m_widgetTypeModel.addItem("Fader");        // 6
+    m_widgetTypeModel.addItem("Pad");          // 7
+    m_widgetTypeModel.addItem("Key");          // 8
+    m_widgetTypeModel.addItem("Wheel");        // 9
+    m_widgetTypeModel.addItem("Selector");     // 10
+    m_widgetTypeModel.addItem("PitchBend");    // 11
+    */
+
+    m_widgetTypeModel.setInitValue(MidiPort::Knob);
 
     m_midiClient->addPort(this);
 
@@ -134,6 +178,21 @@ void MidiPort::setMode(Mode mode)
 {
     m_mode = mode;
     m_midiClient->applyPortMode(this);
+}
+
+void MidiPort::reset()
+{
+    setInputChannel(0);
+    setInputController(0);
+    setWidgetType(5);
+    setDefaultInputValue(64);
+    setSpreadInputValue(1);
+    setMinInputValue(0);
+    setMaxInputValue(127);
+    setStepInputValue(1);
+    setBaseInputValue(0);
+    setSlopeInputValue(1);
+    setDeltaInputValue(0);
 }
 
 void MidiPort::processInEvent(const MidiEvent& event, const MidiTime& time)
@@ -214,6 +273,8 @@ void MidiPort::saveSettings(QDomDocument& doc, QDomElement& thisElement)
     m_writableModel.saveSettings(doc, thisElement, "writable");
 
     m_widgetTypeModel.saveSettings(doc, thisElement, "ivtype");
+    m_defaultInputValueModel.saveSettings(doc, thisElement, "ivdefault");
+    m_spreadInputValueModel.saveSettings(doc, thisElement, "ivspread");
     m_minInputValueModel.saveSettings(doc, thisElement, "ivmin");
     m_maxInputValueModel.saveSettings(doc, thisElement, "ivmax");
     m_stepInputValueModel.saveSettings(doc, thisElement, "ivstep");
@@ -275,6 +336,8 @@ void MidiPort::loadSettings(const QDomElement& thisElement)
     m_writableModel.loadSettings(thisElement, "writable");
 
     m_widgetTypeModel.loadSettings(thisElement, "ivtype");
+    m_defaultInputValueModel.loadSettings(thisElement, "ivdefault");
+    m_spreadInputValueModel.loadSettings(thisElement, "ivspread");
     m_minInputValueModel.loadSettings(thisElement, "ivmin");
     m_maxInputValueModel.loadSettings(thisElement, "ivmax");
     m_stepInputValueModel.loadSettings(thisElement, "ivstep");
@@ -321,16 +384,40 @@ void MidiPort::loadSettings(const QDomElement& thisElement)
     }
 }
 
+void MidiPort::subscribeReadablePorts()
+{
+    subscribeReadablePorts(readablePorts());
+}
+
+void MidiPort::subscribeWritablePorts()
+{
+    subscribeWritablePorts(writablePorts());
+}
+
+void MidiPort::subscribeReadablePorts(const MidiPort::Map& _map)
+{
+    for(MidiPort::Map::ConstIterator it = _map.constBegin();
+        it != _map.constEnd(); ++it)
+        subscribeReadablePort(it.key(), *it);
+}
+
+void MidiPort::subscribeWritablePorts(const MidiPort::Map& _map)
+{
+    for(MidiPort::Map::ConstIterator it = _map.constBegin();
+        it != _map.constEnd(); ++it)
+        subscribeWritablePort(it.key(), *it);
+}
+
 void MidiPort::subscribeReadablePort(const QString& port, bool subscribe)
 {
     m_readablePorts[port] = subscribe;
 
     // make sure, MIDI-port is configured for input
     if(subscribe == true && !isInputEnabled())
-    {
         m_readableModel.setValue(true);
-    }
 
+    // qInfo("MidiPort::subscribeReadablePort src=%s subscribe=%d",
+    //      qPrintable(port), subscribe);
     m_midiClient->subscribeReadablePort(this, port, subscribe);
 }
 
@@ -340,12 +427,33 @@ void MidiPort::subscribeWritablePort(const QString& port, bool subscribe)
 
     // make sure, MIDI-port is configured for output
     if(subscribe == true && !isOutputEnabled())
-    {
         m_writableModel.setValue(true);
-    }
-    qInfo("MidiPort::subscribeWritablePort dest=%s subscribe=%d",
-          qPrintable(port), subscribe);
+
+    // qInfo("MidiPort::subscribeWritablePort dest=%s subscribe=%d",
+    //      qPrintable(port), subscribe);
     m_midiClient->subscribeWritablePort(this, port, subscribe);
+}
+
+void MidiPort::setSingleReadablePort(const QString& _p)
+{
+    m_readablePorts.clear();
+    /*
+      for(const QString& p: m_midiClient->readablePorts())
+        m_readablePorts[p] = (p == _p);
+    */
+    m_readablePorts[_p] = true;
+    subscribeReadablePorts();
+}
+
+void MidiPort::setSingleWritablePort(const QString& _p)
+{
+    m_writablePorts.clear();
+    /*
+      for(const QString& p: m_midiClient->writablePorts())
+      m_writablePorts[p] = (p == _p);
+    */
+    m_writablePorts[_p] = true;
+    subscribeWritablePorts();
 }
 
 void MidiPort::updateMidiPortMode()
@@ -386,10 +494,8 @@ void MidiPort::updateMidiPortMode()
     emit writablePortsChanged();
     emit modeChanged();
 
-    if(Engine::getSong())
-    {
-        Engine::getSong()->setModified();
-    }
+    // if(Engine::song())
+    //    Engine::song()->setModified();
 }
 
 void MidiPort::updateReadablePorts()

@@ -25,6 +25,7 @@
 #define EDITOR_WINDOW_H
 
 #include "ActionUpdatable.h"
+#include "Model.h"
 #include "lmms_basics.h"
 
 #include <QMainWindow>
@@ -39,9 +40,22 @@ class DropToolBar;
 class Editor
 {
   public:
+    Editor(Model*         _parent,
+           const QString& _displayName,
+           const QString& _objectName);
+
     static void applyOverrideCursor(Qt::CursorShape _shape);
     static void applyOverrideCursor(QCursor& _c);
     static void resetOverrideCursor();
+
+  protected:
+    Model* editorModel()
+    {
+        return &m_editorModel;
+    }
+
+  private:
+    Model m_editorModel;
 };
 
 /// \brief The base window for windows that conaint an editor.
@@ -69,7 +83,7 @@ class EditorWindow : public QMainWindow, public virtual ActionUpdatable
     ///
     /// \param	record	If set true, the editor's toolbar will contain record
     ///					buttons in addition to the play and
-    ///stop buttons.
+    /// stop buttons.
     EditorWindow(bool record = false);
     virtual ~EditorWindow();
 

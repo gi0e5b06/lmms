@@ -71,22 +71,24 @@ ControllerConnection::~ControllerConnection()
 
 void ControllerConnection::setController(int /*_controllerId*/)
 {
+    qWarning("ControllerConnection::setController(int);");
 }
 
 void ControllerConnection::setController(Controller* _controller)
 {
-    if(m_ownsController && m_controller)
+    if(m_ownsController && m_controller != nullptr)
     {
         delete m_controller;
         m_controller = nullptr;
     }
 
-    if(m_controller && m_controller->type() != Controller::DummyController)
+    if(m_controller != nullptr
+       && m_controller->type() != Controller::DummyController)
     {
         m_controller->removeConnection(this);
     }
 
-    if(!_controller)
+    if(_controller == nullptr)
     {
         m_controller
                 = Controller::create(Controller::DummyController, nullptr);
@@ -118,13 +120,15 @@ void ControllerConnection::setController(Controller* _controller)
     }
 }
 
-inline void ControllerConnection::setTargetName(const QString& _name)
+void ControllerConnection::setTargetName(const QString& _name)
 {
     m_targetName = _name;
-    if(m_controller)
+    /*
+    if(m_controller!=nullptr)
     {
-        //	m_controller->getMidiPort()->setName( _name );
+        m_controller->getMidiPort()->setName( _name );
     }
+    */
 }
 
 /*

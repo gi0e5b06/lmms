@@ -1,7 +1,7 @@
 /*
  * AutomatableToolButton.h -
  *
- * Copyright (c) 2017
+ * Copyright (c) 2017 gi0e5b06 (on github.com)
  *
  * This file is part of LMMS - https://lmms.io
  *
@@ -35,7 +35,9 @@ class EXPORT AutomatableToolButton : public QToolButton, public BoolModelView
 
   public:
     AutomatableToolButton(QWidget*       _parent,
-                          const QString& _name = "[automatable tool button]");
+                          const QString& _displayName
+                          = "[automatable tool button]",
+                          const QString& _objectName = QString::null);
     virtual ~AutomatableToolButton();
 
     virtual bool isChecked();

@@ -25,6 +25,8 @@
 #include "AutomatableModel.h"
 #include "ControllerConnection.h"
 #include "MidiController.h"
+#include "MidiPort.h"
+#include "embed.h"
 
 int MidiMapper::list(QWidget* _w)
 {
@@ -34,25 +36,85 @@ int MidiMapper::list(QWidget* _w)
     int r = 0;
     for(ModelView* mv: table.keys())
     {
-        AutomatableModel* am
-                = dynamic_cast<AutomatableModel*>(table.value(mv));
-        if(am == nullptr)
+        Model* m = table.value(mv, nullptr);
+        if(m == nullptr)
             continue;
 
-        r++;
-        qInfo("%-30s %-10s", qPrintable(am->fullObjectName()),
-              am->isControlled() ? "controlled" : "-");
-        // am->uuid(),
-        // qInfo("___");
-        // qInfo("ON  %s",qPrintable(am->objectName()));
-        // qInfo("DN  %s",qPrintable(am->displayName()));
-        // qInfo("FDN %s",qPrintable(am->fullDisplayName()));
+        MidiEventProcessor* mep = dynamic_cast<MidiEventProcessor*>(m);
+        if(mep != nullptr)
+        {
+            r++;
+            QString details;
+            if(mep->hasMidiIn())
+                details += "in ";
+            if(mep->hasMidiOut())
+                details += "out ";
+            qInfo("%-40s %-10s %s", qPrintable(m->fullObjectName()),
+                  "processor", qPrintable(details));
+        }
+
+        AutomatableModel* am = dynamic_cast<AutomatableModel*>(m);
+        if(am != nullptr)
+        {
+            r++;
+            QString details;
+
+            if(dynamic_cast<BoolModel*>(am))
+                details += "bool  ";
+            else if(dynamic_cast<IntModel*>(am))
+                details += "int   ";
+            else if(dynamic_cast<FloatModel*>(am))
+                details += "float ";
+            else
+                details += "????? ";
+
+            if(am->isControlled())
+            {
+                ControllerConnection* cc = am->controllerConnection();
+                if(cc != nullptr)
+                {
+
+                    MidiController* mc
+                            = dynamic_cast<MidiController*>(cc->controller());
+                    if(mc != nullptr)
+                    {
+                        details += QString("ch %1, cc %2, type %3")
+                                           .arg(mc->m_midiPort.inputChannel())
+                                           .arg(mc->m_midiPort
+                                                        .inputController())
+                                           .arg(mc->m_midiPort.widgetType());
+                    }
+                }
+            }
+
+            qInfo("%-40s %-10s %s", qPrintable(am->fullObjectName()),
+                  am->isControlled() ? "controlled" : "-",
+                  qPrintable(details));
+            // am->uuid(),
+            // qInfo("___");
+            // qInfo("ON  %s",qPrintable(am->objectName()));
+            // qInfo("DN  %s",qPrintable(am->displayName()));
+            // qInfo("FDN %s",qPrintable(am->fullDisplayName()));
+        }
     }
     return r;
 }
 
-int MidiMapper::map(QWidget* _w)
+int MidiMapper::map(QWidget* _w, const QString& _p)
 {
+    QString s = _p.mid(_p.indexOf("from ") + 5);
+    QString f = QString("midi/%1.prp").arg(s);
+    f.replace(' ', '_');
+    qWarning("MidiMapper: property filename: %s", qPrintable(f));
+
+    QHash<QString, QString> h = embed::getProperties(f);
+    if(h.size() == 0)
+    {
+        qWarning("MidiMapper: empty property file %s", qPrintable(f));
+        return 0;
+    }
+    qWarning("MidiMapper: %d properties", h.size());
+
     QHash<ModelView*, Model*> table;
     collect(_w, table);
 
@@ -66,35 +128,63 @@ int MidiMapper::map(QWidget* _w)
         if(am->isControlled())
             continue;
 
-        r++;
-        qInfo("set-midi-connection %s", qPrintable(am->fullObjectName()));
-
         ControllerConnection* cc = am->controllerConnection();
         if(cc != nullptr)
             continue;
 
+        QString k = am->fullObjectName();
+        if(!h.contains(k))
+            continue;
+
+        QString v = h.value(k);
+        if(v.isEmpty())
+            continue;
+
+        r++;
+        qInfo("set-midi-connection %s %s (%s)", qPrintable(k), qPrintable(v),
+              qPrintable(_p));
+
+        QVector<int> vv = {0, 0, 4, 64, 1, 0, 127, 1, 0, 1, 0};
+        int          i  = 0;
+        for(QString t: v.trimmed().split(','))
+        {
+            t = t.trimmed();
+            if(i >= vv.size())
+                break;
+            if(i == 2)
+            {
+                vv[i] = MidiPort::findWidgetType(t);
+                qInfo("                    %s -> %d", qPrintable(t), vv[i]);
+            }
+            else
+                vv[i] = t.toInt();
+            i++;
+        }
+
         MidiController* mc = new MidiController(am);
-        //mc->updateReadablePorts();
+        mc->m_midiPort.setSingleReadablePort(_p);
+        // mc->m_midiPort.reset();
+        mc->m_midiPort.setInputChannel(vv[0]);
+        mc->m_midiPort.setInputController(vv[1]);
+        mc->m_midiPort.setWidgetType(vv[2]);
+        mc->m_midiPort.setDefaultInputValue(vv[3]);
+        mc->m_midiPort.setSpreadInputValue(vv[4]);
+        mc->m_midiPort.setMinInputValue(vv[5]);
+        mc->m_midiPort.setMaxInputValue(vv[6]);
+        mc->m_midiPort.setStepInputValue(vv[7]);
+        mc->m_midiPort.setBaseInputValue(vv[8]);
+        mc->m_midiPort.setSlopeInputValue(vv[9]);
+        mc->m_midiPort.setDeltaInputValue(vv[10]);
 
-        /*
-        mc->m_midiPort.setInputChannel(m_midiPort.inputChannel());
-        mc->m_midiPort.setInputController(m_midiPort.inputController());
-
-        mc->m_midiPort.setWidgetType(4);
-        mc->m_midiPort.setMinInputValue(0);
-        mc->m_midiPort.setMaxInputValue(127);
-        mc->m_midiPort.setStepInputValue(1);
-        mc->m_midiPort.setBaseInputValue(0);
-        mc->m_midiPort.setSlopeInputValue(1);
-        mc->m_midiPort.setDeltaInputValue(0);
-
-        mc->subscribeReadablePorts(m_midiPort.readablePorts());
+        // mc->m_midiPort.subscribeReadablePorts();
         mc->updateName();
-        */
+        // mc->m_midiPort.processInEvent
+        // mc->updateLastValue();
 
-        cc=new ControllerConnection(mc);
+        cc = new ControllerConnection(mc);
         am->setControllerConnection(cc);
     }
+
     return r;
 }
 
