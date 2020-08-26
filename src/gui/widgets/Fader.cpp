@@ -60,10 +60,11 @@
 #include <QMouseEvent>
 #include <QPainter>
 
-TextFloat* Fader::s_textFloat = NULL;
+TextFloat* Fader::s_textFloat = nullptr;
 
-Fader::Fader(FloatModel* _model, const QString& _name, QWidget* _parent) :
-      Widget(_parent), FloatModelView(_model, this),
+/*
+Fader::Fader(RealModel* _model, const QString& _name, QWidget* _parent) :
+      Widget(_parent), RealModelView(_model, this),
       // m_needsUpdate( true ),
       m_fPeakValue_L(0.0), m_fPeakValue_R(0.0), m_persistentPeak_L(0.0),
       m_persistentPeak_R(0.0), m_fMinPeak(0.01f), m_fMaxPeak(1.1),
@@ -71,81 +72,86 @@ Fader::Fader(FloatModel* _model, const QString& _name, QWidget* _parent) :
       m_moveStartPoint(-1), m_startValue(0), m_peakGreen(0, 0, 0),
       m_peakRed(0, 0, 0), m_peakYellow(0, 0, 0)
 {
-    if(s_textFloat == NULL)
-    {
-        s_textFloat = new TextFloat;
-    }
-
-    /*
-    if( ! s_back )
-    {
-            s_back = new QPixmap( embed::getIconPixmap( "fader_background" )
-    );
-    }
-
-    if( ! s_leds )
-    {
-            s_leds = new QPixmap( embed::getIconPixmap( "fader_leds" ) );
-    }
-    if( ! s_knob )
-    {
-            s_knob = new QPixmap( embed::getIconPixmap( "fader_knob" ) );
-    }
-    */
+    if(s_textFloat == nullptr)
+        s_textFloat = new TextFloat();
 
     m_back = embed::getPixmap("fader_background");
     m_leds = embed::getPixmap("fader_leds");
     m_knob = embed::getPixmap("fader_knob");
 
-    init(_model, _name);
+    initUi(_name);
+}
+*/
+
+Fader::Fader(RealModel* _model, QWidget* _parent) :
+      Fader(_model, QString::null, _parent)
+{
 }
 
-Fader::Fader(FloatModel*    model,
+Fader::Fader(QWidget* _parent, const QString& _displayName) :
+      Fader(RealModel::createDefaultConstructed(_displayName),
+            _displayName,
+            _parent)
+{
+}
+
+Fader::Fader(RealModel* _model, const QString& _name, QWidget* _parent) :
+      Fader(_model,
+            _name,
+            _parent,
+            embed::getPixmap("fader_background"),
+            embed::getPixmap("fader_leds"),
+            embed::getPixmap("fader_knob"))
+{
+}
+
+Fader::Fader(RealModel*     model,
              const QString& name,
              QWidget*       parent,
              const QPixmap& back,
              const QPixmap& leds,
              const QPixmap& knob) :
       Widget(parent),
-      FloatModelView(model, this), m_fPeakValue_L(0.0), m_fPeakValue_R(0.0),
+      RealModelView(model, this), m_fPeakValue_L(0.0), m_fPeakValue_R(0.0),
       m_persistentPeak_L(0.0), m_persistentPeak_R(0.0), m_fMinPeak(0.01f),
       m_fMaxPeak(1.1), m_displayConversion(false),
       m_levelsDisplayedInDBFS(false), m_moveStartPoint(-1), m_startValue(0),
       m_peakGreen(0, 0, 0), m_peakRed(0, 0, 0)
 {
-    if(s_textFloat == NULL)
-    {
-        s_textFloat = new TextFloat;
-    }
+    allowModelChange(true);
 
     m_back = back;
     m_leds = leds;
     m_knob = knob;
 
-    init(model, name);
+    initUi();
 }
 
 Fader::~Fader()
 {
 }
 
-void Fader::init(FloatModel* model, QString const& name)
+void Fader::initUi()
 {
-    setWindowTitle(name);
+    if(s_textFloat == nullptr)
+        s_textFloat = new TextFloat();
+
+    RealModel* m = castModel<RealModel>();
+    setObjectName(m->objectName() + "Fader");
+    setWindowTitle(m->displayName());
     setAttribute(Qt::WA_OpaquePaintEvent, false);
+
     QSize backgroundSize = m_back.size();
     setMinimumSize(backgroundSize);
     setMaximumSize(backgroundSize);
     resize(backgroundSize);
-    setModel(model);
     setHintText(tr("Volume:"), "%");
 }
 
 void Fader::modelChanged()
 {
-    FloatModel* m = model();
-    if(m != nullptr)
-        setWindowTitle(m->displayName());
+    RealModel* m = model();
+    setWindowTitle(m->displayName());
 
     // qInfo("Fader::modelChanged()");
     update();
@@ -187,12 +193,9 @@ void Fader::mousePressEvent(QMouseEvent* mouseEvent)
     if(mouseEvent->button() == Qt::LeftButton
        && !(mouseEvent->modifiers() & Qt::ControlModifier))
     {
-        AutomatableModel* thisModel = model();
-        if(thisModel)
-        {
-            thisModel->addJournalCheckPoint();
-            thisModel->saveJournallingState(false);
-        }
+        AutomatableModel* m = model();
+        m->addJournalCheckPoint();
+        m->saveJournallingState(false);
 
         if(mouseEvent->y() >= knobPosY() - m_knob.height()
            && mouseEvent->y() < knobPosY())
@@ -548,14 +551,24 @@ void Fader::friendlyUpdate()
 
 void Fader::doConnections()
 {
-    FloatModel* m = model();
-    if(m)
-    {
-        // qInfo("Fader::doConnections p=%p model()=%p", this, m);
-        m->disconnect(this);
-        connect(m, SIGNAL(dataChanged()), this, SLOT(friendlyUpdate()));
-        connect(m, SIGNAL(propertiesChanged()), this, SLOT(update()));
-        // QObject::connect( m, SIGNAL( controllerValueChanged() ),
-        //                  this, SLOT( refresh() ) );
-    }
+    RealModelView::doConnections();
+    RealModel* m = model();
+    // qInfo("Fader::doConnections p=%p model()=%p", this, m);
+    disconnect(m, SIGNAL(dataChanged()), this, SLOT(update()));
+    connect(m, SIGNAL(dataChanged()), this, SLOT(friendlyUpdate()));
+    // connect(m, SIGNAL(propertiesChanged()), this, SLOT(update()));
+    // QObject::connect( m, SIGNAL( controllerValueChanged() ),
+    //                  this, SLOT( refresh() ) );
+}
+
+void Fader::undoConnections()
+{
+    RealModel* m = model();
+    // qInfo("Fader::doConnections p=%p model()=%p", this, m);
+    disconnect(m, SIGNAL(dataChanged()), this, SLOT(friendlyUpdate()));
+    connect(m, SIGNAL(dataChanged()), this, SLOT(update()));
+    // connect(m, SIGNAL(propertiesChanged()), this, SLOT(update()));
+    // QObject::connect( m, SIGNAL( controllerValueChanged() ),
+    //                  this, SLOT( refresh() ) );
+    RealModelView::undoConnections();
 }

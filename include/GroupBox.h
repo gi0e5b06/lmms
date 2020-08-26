@@ -23,7 +23,7 @@
 #ifndef GROUP_BOX_H
 #define GROUP_BOX_H
 
-#include "AutomatableModelView.h"
+//#include "AutomatableModelView.h"
 #include "PixmapButton.h"
 
 #include <QWidget>

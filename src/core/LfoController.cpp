@@ -46,9 +46,10 @@ LfoController::LfoController(Model* _parent) :
                   tr("Oscillator waveform")),
       m_multiplierModel(0, 0, 2, this, tr("Frequency Multiplier")),
       m_duration(1000), m_phaseOffset(0), m_currentPhase(0),
-      m_sampleFunction(&Oscillator::sinSample),
-      m_userDefSampleBuffer(new SampleBuffer)
+      m_sampleFunction(&Oscillator::sinSample), m_userDefSampleBuffer(nullptr)
 {
+    m_userDefSampleBuffer = (new SampleBuffer())->pointer();
+
     setFrequentlyUpdated(true);
     setSampleExact(true);
     connect(&m_waveModel, SIGNAL(dataChanged()), this,
@@ -71,7 +72,9 @@ LfoController::LfoController(Model* _parent) :
 
 LfoController::~LfoController()
 {
-    sharedObject::unref(m_userDefSampleBuffer);
+    // m_userDefSampleBuffer = nullptr;
+    // sharedObject::unref(m_userDefSampleBuffer);
+
     m_baseModel.disconnect(this);
     m_speedModel.disconnect(this);
     m_amountModel.disconnect(this);

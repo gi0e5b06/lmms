@@ -291,7 +291,7 @@ MainWindow::~MainWindow()
     for(PluginView* view: m_tools)
     {
         delete view->model();
-        delete view;
+        //delete view;
     }
     // TODO: Close tools
     // dependencies are such that the editors must be destroyed BEFORE Song is
@@ -458,8 +458,7 @@ void MainWindow::finalize()
     midiMenu->addAction(tr("List"), this, SLOT(listMidiMenu()));
     midiMenu->addAction(tr("Unmap"), this, SLOT(unmapMidiMenu()));
     m_mapMidiMenu = midiMenu->addMenu(tr("Map"));
-    connect(m_mapMidiMenu, SIGNAL(aboutToShow()),
-            SLOT(updateMapMidiMenu()));
+    connect(m_mapMidiMenu, SIGNAL(aboutToShow()), SLOT(updateMapMidiMenu()));
     connect(m_mapMidiMenu, SIGNAL(triggered(QAction*)), this,
             SLOT(mapMidiMenu(QAction*)));
 
@@ -1322,40 +1321,29 @@ void MainWindow::updateViewMenu()
     // more elegant way to do this.
     QAction* qa;
     qa = new QAction(tr("Volume as dBFS"), this);
-    qa->setData("displaydbfs");
+    qa->setData("app.displaydbfs");
     qa->setCheckable(true);
-    qa->setChecked(
-            ConfigManager::inst()->value("app", "displaydbfs").toInt());
+    qa->setChecked(CONFIG_GET_BOOL("app.displaydbfs"));
     m_viewMenu->addAction(qa);
 
-    // Maybe this is impossible?
-    /* qa = new QAction(tr( "Tooltips" ), this);
-    qa->setData("tooltips");
-    qa->setCheckable( true );
-    qa->setChecked( !ConfigManager::inst()->value( "tooltips", "disabled"
-    ).toInt() ); m_viewMenu->addAction(qa);
-    */
-
     qa = new QAction(tr("Smooth scroll"), this);
-    qa->setData("smoothscroll");
+    qa->setData("ui.smoothscroll");
     qa->setCheckable(true);
-    qa->setChecked(
-            ConfigManager::inst()->value("ui", "smoothscroll").toInt());
+    qa->setChecked(CONFIG_GET_BOOL("ui.smoothscroll"));
     m_viewMenu->addAction(qa);
 
     // Not yet.
     /* qa = new QAction(tr( "One instrument track window" ), this);
-    qa->setData("oneinstrument");
+    qa->setData("ui.oneinstrumenttrackwindow");
     qa->setCheckable( true );
     qa->setChecked( ConfigManager::inst()->value( "ui",
     "oneinstrumenttrackwindow" ).toInt() ); m_viewMenu->addAction(qa);
     */
 
     qa = new QAction(tr("Enable note labels in piano roll"), this);
-    qa->setData("printnotelabels");
+    qa->setData("ui.printnotelabels");
     qa->setCheckable(true);
-    qa->setChecked(
-            ConfigManager::inst()->value("ui", "printnotelabels").toInt());
+    qa->setChecked(CONFIG_GET_BOOL("ui.printnotelabels"));
     m_viewMenu->addAction(qa);
 }
 
@@ -1364,40 +1352,25 @@ void MainWindow::updateConfig(QAction* _who)
     QString tag     = _who->data().toString();
     bool    checked = _who->isChecked();
 
-    if(tag == "displaydbfs")
-    {
-        ConfigManager::inst()->setValue("app", "displaydbfs",
-                                        QString::number(checked));
-    }
-    else if(tag == "tooltips")
-    {
-        ConfigManager::inst()->setValue("tooltips", "disabled",
-                                        QString::number(!checked));
-    }
-    else if(tag == "smoothscroll")
-    {
-        ConfigManager::inst()->setValue("ui", "smoothscroll",
-                                        QString::number(checked));
-    }
-    else if(tag == "oneinstrument")
-    {
-        ConfigManager::inst()->setValue("ui", "oneinstrumenttrackwindow",
-                                        QString::number(checked));
-    }
-    else if(tag == "printnotelabels")
-    {
-        ConfigManager::inst()->setValue("ui", "printnotelabels",
-                                        QString::number(checked));
-    }
+    if(tag == "app.displaydbfs")
+        CONFIG_SET_BOOL("app.displaydbfs", checked);
+    else if(tag == "ui.smoothscroll")
+        CONFIG_SET_BOOL("ui.smoothscroll", checked);
+    // else if(tag == "ui.oneinstrumenttrackwindow")
+    //    CONFIG_SET_BOOL("ui.oneinstrumenttrackwindow", checked);
+    else if(tag == "ui.printnotelabels")
+        CONFIG_SET_BOOL("ui.printnotelabels", checked);
+
+    // TODO: CONFIG_SET_BOOL(tag, checked);
 }
 
 void MainWindow::updateMapMidiMenu()
 {
     m_mapMidiMenu->clear();
-    MidiClient* client=Engine::mixer()->midiClient();
+    MidiClient* client = Engine::mixer()->midiClient();
     for(const QString& p: client->readablePorts())
     {
-        QString  s = p.mid(p.indexOf("from ")+5);
+        QString  s = p.mid(p.indexOf("from ") + 5);
         QAction* a = m_mapMidiMenu->addAction(s);
         a->setData(p);
         // a->setCheckable(false);
@@ -1411,7 +1384,7 @@ void MainWindow::listMidiMenu()
 
 void MainWindow::mapMidiMenu(QAction* a)
 {
-    qInfo("MainWindow::mapMidiMenu %s",qPrintable(a->data().toString()));
+    qInfo("MainWindow::mapMidiMenu %s", qPrintable(a->data().toString()));
     MidiMapper::map(m_workspace->activeSubWindow(), a->data().toString());
     //"128:28 LMMS:in from MIDI Mix");
 }

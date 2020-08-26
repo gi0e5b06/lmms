@@ -79,10 +79,6 @@ LadspaEffect::LadspaEffect(Model*                                    _parent,
     }
 
     setDisplayName(manager->getShortName(m_key));
-
-    // qInfo("LadspaEffect::LadspaEffect pluginInstantiation()");
-    // setObjectName(QString("ladspaEffect%1").arg((unsigned long)this));
-    //, 16));
     setObjectName(normalizeObjectName(manager->getShortName(m_key)));
 
     pluginInstantiation();
@@ -531,8 +527,11 @@ void LadspaEffect::pluginDestruction()
     for(ch_cnt_t proc = 0; proc < processorCount(); proc++)
     {
         Ladspa2LMMS* manager = Engine::getLADSPAManager();
-        manager->deactivate(m_key, m_handles[proc]);
-        manager->cleanup(m_key, m_handles[proc]);
+        if(manager != nullptr)
+        {
+            manager->deactivate(m_key, m_handles[proc]);
+            manager->cleanup(m_key, m_handles[proc]);
+        }
         for(int port = 0; port < m_portCount; port++)
         {
             port_desc_t* pp = m_ports.at(proc).at(port);

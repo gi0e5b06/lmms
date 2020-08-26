@@ -2,7 +2,7 @@
  * PeripheralLaunchpadView.h - declaration of PeripheralLaunchpadView, an
  * interactive launchpad widget (like the APCmini)
  *
- * Copyright (c) 2018 gi0e5b06 (on github.com)
+ * Copyright (c) 2018-2020 gi0e5b06 (on github.com)
  * Copyright (c) 2004-2010 Tobias Doerffel <tobydox/at/users.sourceforge.net>
  *
  * This file is part of LMMS - https://lmms.io
@@ -41,36 +41,36 @@ class PeripheralLaunchpadView : public PeripheralView
     Q_OBJECT
 
   public:
-    PeripheralLaunchpadView(QWidget* _parent);
+    PeripheralLaunchpadView(Piano* _piano, QWidget* _parent);
     virtual ~PeripheralLaunchpadView();
 
-    virtual void keyPressEvent(QKeyEvent* ke);
-    virtual void keyReleaseEvent(QKeyEvent* ke);
+    void keyPressEvent(QKeyEvent* ke) override;
+    void keyReleaseEvent(QKeyEvent* ke) override;
 
   protected:
-    virtual void contextMenuEvent(QContextMenuEvent* _me);
-    virtual void paintEvent(QPaintEvent*);
-    virtual void mousePressEvent(QMouseEvent* me);
-    virtual void mouseReleaseEvent(QMouseEvent* me);
-    virtual void mouseMoveEvent(QMouseEvent* me);
-    virtual void focusOutEvent(QFocusEvent* _fe);
-    virtual void resizeEvent(QResizeEvent* _event);
+    void contextMenuEvent(QContextMenuEvent* _me) override;
+    void paintEvent(QPaintEvent*) override;
+    void mousePressEvent(QMouseEvent* me) override;
+    void mouseReleaseEvent(QMouseEvent* me) override;
+    void mouseMoveEvent(QMouseEvent* me) override;
+    void focusOutEvent(QFocusEvent* _fe) override;
+    void resizeEvent(QResizeEvent* _event) override;
 
   private:
     int getKeyFromMouse(const QPoint& _p) const;
     // int getKeyX( int _key_num ) const;
-    //QRect getBankRect(int _b) const;
+    // QRect getBankRect(int _b) const;
     QRect getPadRect(int _k) const;
 
     // static QPixmap * s_padPm;
     // static QPixmap * s_padPressedPm;
 
-    //QScrollBar* m_pianoScroll;
-    //int         m_startKey;  // first key when drawing
-    int         m_lastKey;
+    // QScrollBar* m_pianoScroll;
+    // int         m_startKey;  // first key when drawing
+    int m_lastKey;
 
   private slots:
-          //void pianoScrolled(int _newPos);
+    // void pianoScrolled(int _newPos);
 
   signals:
     void keyPressed(int);

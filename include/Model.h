@@ -83,6 +83,8 @@ class EXPORT Model : public QObject
     void dataUnchanged();
     // emitted if properties of the model (e.g. ranges) have changed
     void propertiesChanged();
+    // emitted when the model is deleted
+    void modelDestroyed();
 
   protected:
     QString normalizeObjectName(const QString& _s) const;

@@ -54,7 +54,7 @@ const int TLENS[MAXTBL + 1] = {
 typedef struct
 {
   public:
-    inline sample_t sampleAt(int table, int ph)
+    INLINE sample_t sampleAt(int table, int ph)
     {
         if(table % 2 == 0)
         {
@@ -65,7 +65,7 @@ typedef struct
             return m_data3[TLENS[table] + ph];
         }
     }
-    inline void setSampleAt(int table, int ph, sample_t sample)
+    INLINE void setSampleAt(int table, int ph, sample_t sample)
     {
         if(table % 2 == 0)
         {
@@ -106,7 +106,7 @@ class EXPORT BandLimitedWave
      * function takes wavelength as argument so use this to convert your note
      * frequency to wavelength before using it.
      */
-    static inline real_t freqToLen(frequency_t f)
+    static INLINE real_t freqToLen(frequency_t f)
     {
         return freqToLen(f, Engine::mixer()->processingSampleRate());
     }
@@ -114,14 +114,14 @@ class EXPORT BandLimitedWave
     /*! \brief This method converts frequency to wavelength, but you can use
      * any custom sample rate with it.
      */
-    static inline real_t freqToLen(frequency_t f, sample_rate_t sr)
+    static INLINE real_t freqToLen(frequency_t f, sample_rate_t sr)
     {
         return real_t(sr) / real_t(f);
     }
 
     /*! \brief This method converts phase delta to wavelength. It assumes a
      * phase scale of 0 to 1. */
-    static inline real_t pdToLen(real_t pd)
+    static INLINE real_t pdToLen(real_t pd)
     {
         return 1. / pd;
     }
@@ -132,8 +132,9 @@ class EXPORT BandLimitedWave
      * wanted oscillation, measured in sample frames \param _wave The wanted
      * waveform. Options currently are saw, triangle, square and moog saw.
      */
-    static inline sample_t
-            oscillate(real_t _ph, real_t _wavelen, Waveforms _wave)
+    static INLINE sample_t oscillate(real_t    _ph,
+                                     real_t    _wavelen,
+                                     Waveforms _wave)
     {
         // high wavelen/ low freq
         if(_wavelen > TLENS[MAXTBL])

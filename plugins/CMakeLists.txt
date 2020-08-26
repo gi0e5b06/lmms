@@ -81,6 +81,7 @@ IF("${PLUGIN_LIST}" STREQUAL "")
 	GigPlayer
 	HydrogenImport
     InputGDX
+    Inspector
 	ladspa_browser
 	LadspaEffect
 	lb302
@@ -106,6 +107,7 @@ IF("${PLUGIN_LIST}" STREQUAL "")
 	ReverbSC
     ScarifierGDX
 	ScatterGDX
+    ScoreGDX
 	sf2_player
 	sfxr
     ShaperGDX

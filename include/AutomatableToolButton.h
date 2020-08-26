@@ -1,7 +1,7 @@
 /*
  * AutomatableToolButton.h -
  *
- * Copyright (c) 2017 gi0e5b06 (on github.com)
+ * Copyright (c) 2017-2020 gi0e5b06 (on github.com)
  *
  * This file is part of LMMS - https://lmms.io
  *
@@ -29,7 +29,9 @@
 
 #include <QToolButton>
 
-class EXPORT AutomatableToolButton : public QToolButton, public BoolModelView
+class EXPORT AutomatableToolButton final :
+      public QToolButton,
+      public BoolModelView
 {
     Q_OBJECT
 
@@ -43,16 +45,17 @@ class EXPORT AutomatableToolButton : public QToolButton, public BoolModelView
     virtual bool isChecked();
     virtual void setCheckable(bool _on);
 
+    void modelChanged() override;
+
   public slots:
-    virtual void modelChanged();
     virtual void update();
     virtual void setChecked(bool _on);
     // virtual void toggle();
 
   protected:
-    virtual void contextMenuEvent(QContextMenuEvent* _me);
-    virtual void dropEvent(QDropEvent* _de);
-    virtual void mousePressEvent(QMouseEvent* _me);
+    void contextMenuEvent(QContextMenuEvent* _me) override;
+    void dropEvent(QDropEvent* _de) override;
+    void mousePressEvent(QMouseEvent* _me) override;
     // virtual void mouseReleaseEvent( QMouseEvent * _me );
 };
 

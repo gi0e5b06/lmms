@@ -35,18 +35,22 @@
 #include "lmms_basics.h"
 //#include "lmms_math.h"
 #include "MemoryManager.h"
-#include "shared_object.h"
+//#include "shared_object.h"
 
-#include <QMutex>
+//#include <QMutex>
 #include <QObject>
 #include <QReadWriteLock>
+#include <QPointer>
 
 //#include <samplerate.h>
 
 class QPainter;
 class QRect;
+class SampleBuffer;
 
-class EXPORT SampleBuffer : public QObject, public sharedObject
+typedef QPointer<SampleBuffer> SampleBufferPointer;
+
+class EXPORT SampleBuffer : public QObject  //, public sharedObject
 {
     Q_OBJECT
     MM_OPERATORS
@@ -101,6 +105,7 @@ class EXPORT SampleBuffer : public QObject, public sharedObject
         int        m_quality;
         bool       m_isBackwards;
         // SRC_STATE* m_resamplingData;
+        char TMP[5000];
 
         friend class SampleBuffer;
     };
@@ -118,6 +123,16 @@ class EXPORT SampleBuffer : public QObject, public sharedObject
 
     virtual ~SampleBuffer();
 
+    virtual SampleBufferPointer& pointer()
+    {
+        return *m_pointer;
+    }
+
+    virtual const SampleBufferPointer& pointer() const
+    {
+        return *m_pointer;
+    }
+
     bool play(sampleFrame*      _ab,
               HandleState*      _state,
               const fpp_t       _frames,
@@ -133,27 +148,27 @@ class EXPORT SampleBuffer : public QObject, public sharedObject
                    f_cnt_t      _from_frame,
                    f_cnt_t      _to_frame);
 
-    inline const QString& audioFile() const
+    INLINE const QString& audioFile() const
     {
         return m_audioFile;
     }
 
-    inline f_cnt_t startFrame() const
+    INLINE f_cnt_t startFrame() const
     {
         return m_startFrame;
     }
 
-    inline f_cnt_t endFrame() const
+    INLINE f_cnt_t endFrame() const
     {
         return m_endFrame;
     }
 
-    inline f_cnt_t loopStartFrame() const
+    INLINE f_cnt_t loopStartFrame() const
     {
         return m_loopStartFrame;
     }
 
-    inline f_cnt_t loopEndFrame() const
+    INLINE f_cnt_t loopEndFrame() const
     {
         return m_loopEndFrame;
     }
@@ -165,22 +180,22 @@ class EXPORT SampleBuffer : public QObject, public sharedObject
                            f_cnt_t _loopstart,
                            f_cnt_t _loopend);
 
-    inline f_cnt_t frames() const
+    INLINE f_cnt_t frames() const
     {
         return m_frames;
     }
 
-    inline real_t amplification() const
+    INLINE real_t amplification() const
     {
         return m_amplification;
     }
 
-    inline bool reversed() const
+    INLINE bool reversed() const
     {
         return m_reversed;
     }
 
-    inline frequency_t frequency() const
+    INLINE frequency_t frequency() const
     {
         return m_frequency;
     }
@@ -195,17 +210,17 @@ class EXPORT SampleBuffer : public QObject, public sharedObject
         return DOUBLE(m_endFrame - m_startFrame) / m_sampleRate * 1000.;
     }
 
-    inline void setFrequency(frequency_t _freq)
+    INLINE void setFrequency(frequency_t _freq)
     {
         m_frequency = _freq;
     }
 
-    inline void setSampleRate(sample_rate_t _rate)
+    INLINE void setSampleRate(sample_rate_t _rate)
     {
         m_sampleRate = _rate;
     }
 
-    inline const sampleFrame* data() const
+    INLINE const sampleFrame* data() const
     {
         return m_data;
     }
@@ -334,24 +349,25 @@ class EXPORT SampleBuffer : public QObject, public sharedObject
                                   f_cnt_t _startf,
                                   f_cnt_t _endf) const;
 
-    QString        m_audioFile;
-    sampleFrame*   m_origData;
-    f_cnt_t        m_origFrames;
-    bool           m_mmapped;
-    sampleFrame*   m_data;
-    f_cnt_t        m_frames;
-    f_cnt_t        m_startFrame;
-    f_cnt_t        m_endFrame;
-    f_cnt_t        m_loopStartFrame;
-    f_cnt_t        m_loopEndFrame;
-    real_t         m_stretching;
-    real_t         m_predelay;   // ms
-    real_t         m_postdelay;  // ms
-    real_t         m_amplification;
-    bool           m_reversed;
-    frequency_t    m_frequency;
-    sample_rate_t  m_sampleRate;
-    QReadWriteLock m_varLock;
+    QString              m_audioFile;
+    sampleFrame*         m_origData;
+    f_cnt_t              m_origFrames;
+    bool                 m_mmapped;
+    sampleFrame*         m_data;
+    f_cnt_t              m_frames;
+    f_cnt_t              m_startFrame;
+    f_cnt_t              m_endFrame;
+    f_cnt_t              m_loopStartFrame;
+    f_cnt_t              m_loopEndFrame;
+    real_t               m_stretching;
+    real_t               m_predelay;   // ms
+    real_t               m_postdelay;  // ms
+    real_t               m_amplification;
+    bool                 m_reversed;
+    frequency_t          m_frequency;
+    sample_rate_t        m_sampleRate;
+    QReadWriteLock       m_varLock;
+    SampleBufferPointer* m_pointer;
 
     friend class AudioPort;
     friend class FxChannel;

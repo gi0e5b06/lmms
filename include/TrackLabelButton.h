@@ -42,7 +42,8 @@ class TrackLabelButton : public QToolButton
   public slots:
     void rename();
     void renameFinished();
-    void nameChanged();
+    void onIconChanged();
+    void onNameChanged();
 
   protected:
     virtual void dragEnterEvent(QDragEnterEvent* _dee);
@@ -54,8 +55,8 @@ class TrackLabelButton : public QToolButton
     virtual void resizeEvent(QResizeEvent* _re);
 
   private:
-    TrackView*           m_trackView;
-    QString              m_iconName;
+    TrackView* m_trackView;
+    // QString              m_iconName;
     TrackRenameLineEdit* m_renameLineEdit;
     QRect                m_buttonRect;
     QString              elideName(const QString& name);

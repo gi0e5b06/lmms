@@ -26,25 +26,32 @@
 #ifndef MIDI_PORT_H
 #define MIDI_PORT_H
 
-#include <QList>
-//#include <QMap>
-#include <QString>
-
 //#include "Midi.h"
 //#include "MidiTime.h"
 //#include "AutomatableModel.h"
 #include "ComboBoxModel.h"
 
+#include <QMap>
+#include <QMenu>
+#include <QPointer>
+#include <QString>
+#include <QVector>
+
 class MidiClient;
 class MidiEvent;
 class MidiEventProcessor;
+class MidiPort;
 class MidiPortMenu;
+
+typedef QVector<QPointer<MidiPort>> MidiPorts;
 
 // class for abstraction of MIDI-port
 class MidiPort final : public Model, public SerializingObject
 {
     Q_OBJECT
 
+    mapPropertyFromModel(bool, isReadable, setReadable, m_readableModel);
+    mapPropertyFromModel(bool, isWritable, setWritable, m_writableModel);
     mapPropertyFromModel(int,
                          inputChannel,
                          setInputChannel,
@@ -53,14 +60,7 @@ class MidiPort final : public Model, public SerializingObject
                          outputChannel,
                          setOutputChannel,
                          m_outputChannelModel);
-    mapPropertyFromModel(int,
-                         inputController,
-                         setInputController,
-                         m_inputControllerModel);
-    mapPropertyFromModel(int,
-                         outputController,
-                         setOutputController,
-                         m_outputControllerModel);
+    // Keyboard
     mapPropertyFromModel(int,
                          fixedInputVelocity,
                          setFixedInputVelocity,
@@ -69,6 +69,14 @@ class MidiPort final : public Model, public SerializingObject
                          fixedOutputVelocity,
                          setFixedOutputVelocity,
                          m_fixedOutputVelocityModel);
+    mapPropertyFromModel(int,
+                         transposeInput,
+                         setTransposeInput,
+                         m_transposeInputModel);
+    mapPropertyFromModel(int,
+                         transposeOutput,
+                         setTransposeOutput,
+                         m_transposeOutputModel);
     mapPropertyFromModel(int,
                          fixedOutputNote,
                          setFixedOutputNote,
@@ -81,9 +89,16 @@ class MidiPort final : public Model, public SerializingObject
                          baseVelocity,
                          setBaseVelocity,
                          m_baseVelocityModel);
-    mapPropertyFromModel(bool, isReadable, setReadable, m_readableModel);
-    mapPropertyFromModel(bool, isWritable, setWritable, m_writableModel);
 
+    // Controller
+    mapPropertyFromModel(int,
+                         inputController,
+                         setInputController,
+                         m_inputControllerModel);
+    mapPropertyFromModel(int,
+                         outputController,
+                         setOutputController,
+                         m_outputControllerModel);
     mapPropertyFromModel(int, widgetType, setWidgetType, m_widgetTypeModel);
     mapPropertyFromModel(int,
                          defaultInputValue,
@@ -220,9 +235,6 @@ class MidiPort final : public Model, public SerializingObject
 
     void invalidateClient();
 
-    MidiPortMenu* m_readablePortsMenu;
-    MidiPortMenu* m_writablePortsMenu;
-
   public slots:
     void updateMidiPortMode();
 
@@ -237,18 +249,21 @@ class MidiPort final : public Model, public SerializingObject
 
     Mode m_mode;
 
-    IntModel  m_inputChannelModel;
-    IntModel  m_outputChannelModel;
-    IntModel  m_inputControllerModel;
-    IntModel  m_outputControllerModel;
-    IntModel  m_fixedInputVelocityModel;
-    IntModel  m_fixedOutputVelocityModel;
-    IntModel  m_fixedOutputNoteModel;
-    IntModel  m_outputProgramModel;
-    IntModel  m_baseVelocityModel;
     BoolModel m_readableModel;
     BoolModel m_writableModel;
+    IntModel  m_inputChannelModel;
+    IntModel  m_outputChannelModel;
 
+    IntModel m_fixedInputVelocityModel;
+    IntModel m_fixedOutputVelocityModel;
+    IntModel m_transposeInputModel;
+    IntModel m_transposeOutputModel;
+    IntModel m_fixedOutputNoteModel;
+    IntModel m_outputProgramModel;
+    IntModel m_baseVelocityModel;
+
+    IntModel      m_inputControllerModel;
+    IntModel      m_outputControllerModel;
     ComboBoxModel m_widgetTypeModel;
     IntModel      m_defaultInputValueModel;
     IntModel      m_spreadInputValueModel;
@@ -264,13 +279,12 @@ class MidiPort final : public Model, public SerializingObject
 
     friend class ControllerConnectionDialog;
     friend class InstrumentMidiIOView;
+    friend class MidiPortMenu;
 
   signals:
     void readablePortsChanged();
     void writablePortsChanged();
     void modeChanged();
 };
-
-typedef QList<MidiPort*> MidiPortList;
 
 #endif

@@ -31,7 +31,7 @@
 #include "ConfigManager.h"
 #include "ControllerConnection.h"
 #include "ControllerRackView.h"
-#include "EnvelopeAndLfoParameters.h"
+#include "EnvelopeAndLfo.h"
 #include "ExportFilter.h"
 #include "ExportProjectDialog.h"
 #include "FileDialog.h"
@@ -61,8 +61,6 @@
 #include <QMessageBox>
 
 #include <functional>
-
-tick_t MidiTime::s_ticksPerTact = DefaultTicksPerTact;
 
 Song::Song() :
       TrackContainer(nullptr, tr("Song"), "song"),
@@ -148,13 +146,15 @@ void Song::setTempo()
 
 void Song::setTimeSignature()
 {
-    MidiTime::setTicksPerTact(ticksPerTact());
-    emit timeSignatureChanged(m_oldTicksPerTact, ticksPerTact());
+    const MeterModel& ts  = getTimeSigModel();
+    const tick_t      tpt = MidiTime::ticksPerTact(ts);
+    MidiTime::setTicksPerTact(tpt);
+    MidiTime::setBeatsPerTact(MidiTime::beatsPerTact(ts));
+    emit timeSignatureChanged(m_oldTicksPerTact, tpt);
     emit dataChanged();
-    m_oldTicksPerTact = ticksPerTact();
-
-    m_vstSyncController.setTimeSignature(getTimeSigModel().getNumerator(),
-                                         getTimeSigModel().getDenominator());
+    m_oldTicksPerTact = tpt;
+    m_vstSyncController.setTimeSignature(ts.getNumerator(),
+                                         ts.getDenominator());
 }
 
 void Song::savePos()
@@ -173,8 +173,9 @@ void Song::processNextBuffer()
     if(m_playing == false)
         return;
 
-    TrackList trackList;
-    int       tcoNum = -1;  // track content object number
+    Tracks trackList;
+    int    tcoNum = -1;  // track content object number
+    auto   bbTC   = Engine::getBBTrackContainer();
 
     // determine the list of tracks to play and the track content object
     // (TCO) number
@@ -184,13 +185,13 @@ void Song::processNextBuffer()
             trackList = tracks();
             // at song-start we have to reset the LFOs
             if(m_playPos[Mode_PlaySong] == 0)
-                EnvelopeAndLfoParameters::instances()->reset();
+                EnvelopeAndLfo::instances()->reset();
             break;
 
         case Mode_PlayBB:
-            if(Engine::getBBTrackContainer()->numOfBBs() > 0)
+            if(bbTC->lastUsedBeatIndex() >= 0)
             {
-                tcoNum = Engine::getBBTrackContainer()->currentBB();
+                tcoNum = bbTC->currentBB();
                 trackList.append(BBTrack::findBBTrack(tcoNum));
             }
             break;
@@ -198,7 +199,8 @@ void Song::processNextBuffer()
         case Mode_PlayPattern:
             if(m_patternToPlay != nullptr)
             {
-                tcoNum = m_patternToPlay->track()->getTCONum(m_patternToPlay);
+                // tcoNum =
+                // m_patternToPlay->track()->getTCONum(m_patternToPlay);
                 trackList.append(m_patternToPlay->track());
             }
             break;
@@ -206,8 +208,8 @@ void Song::processNextBuffer()
         case Mode_PlayAutomation:
             if(m_automationToPlay != nullptr)
             {
-                tcoNum = m_automationToPlay->track()->getTCONum(
-                        m_automationToPlay);
+                // tcoNum = m_automationToPlay->track()->getTCONum(
+                //        m_automationToPlay);
                 bool all = false;
                 // for(AutomatableModel* o: m_automationToPlay->objects())
                 m_automationToPlay->objects().map([&trackList, &all](auto o) {
@@ -297,8 +299,9 @@ void Song::processNextBuffer()
             if(m_playPos[m_playMode] < tl->loopBegin()
                || m_playPos[m_playMode] >= tl->loopEnd())
             {
+                qInfo("Loop begin 1: %d", tl->loopBegin().ticks());
                 setToTime(tl->loopBegin());
-                m_playPos[m_playMode].setTicks(tl->loopBegin().getTicks());
+                m_playPos[m_playMode].setTicks(tl->loopBegin().ticks());
                 emit updateSampleTracks();
             }
         }
@@ -315,8 +318,8 @@ void Song::processNextBuffer()
         // did we play a tick?
         if(currentFrame >= framesPerTick)
         {
-            int ticks = m_playPos[m_playMode].getTicks()
-                        + (int)(currentFrame / framesPerTick);
+            tick_t ticks = m_playPos[m_playMode].ticks()
+                           + tick_t(currentFrame / framesPerTick);
 
             m_vstSyncController.setAbsolutePosition(ticks);
 
@@ -332,8 +335,7 @@ void Song::processNextBuffer()
                 // or to loop back to first tact
                 if(m_playMode == Mode_PlayBB)
                 {
-                    maxTact = Engine::getBBTrackContainer()
-                                      ->lengthOfCurrentBB();
+                    maxTact = bbTC->lengthOfCurrentBB();
                 }
                 else if(m_playMode == Mode_PlayPattern
                         && m_loopPattern == true && tl != nullptr
@@ -349,8 +351,7 @@ void Song::processNextBuffer()
                         && tl->loopPointsEnabled() == false)
                 {
                     maxTact = m_automationToPlay->unitLength()
-                                      / MidiTime::ticksPerTact()
-                              + 1;
+                              / MidiTime::ticksPerTact();
                     if(maxTact < 1)
                         maxTact = 1;
                 }
@@ -372,8 +373,8 @@ void Song::processNextBuffer()
 
             if(checkLoop)
             {
-                m_vstSyncController.startCycle(tl->loopBegin().getTicks(),
-                                               tl->loopEnd().getTicks());
+                m_vstSyncController.startCycle(tl->loopBegin().ticks(),
+                                               tl->loopEnd().ticks());
 
                 // if looping-mode is enabled and we have got
                 // past the looping range, return to the
@@ -387,13 +388,13 @@ void Song::processNextBuffer()
                     {
                         tl->setNextLoop(-1);
                         tl->setCurrentLoop(nn);
-                        tl->toggleLoopPoints(
-                                1);  // LoopPointStates::LoopPointsEnabled );
+                        tl->toggleLoopPoints(1);
+                        // LoopPointStates::LoopPointsEnabled );
                     }
-                    else
+                    // else
                     {
                         m_playPos[m_playMode].setTicks(
-                                tl->loopBegin().getTicks());
+                                tl->loopBegin().ticks());
                         setToTime(tl->loopBegin());
                     }
                 }
@@ -433,15 +434,34 @@ void Song::processNextBuffer()
 
         if((f_cnt_t)currentFrame == 0)
         {
-            processAutomations(trackList, m_playPos[m_playMode],
-                               framesToPlay);
-
             // loop through all tracks and play them
-            for(int i = 0; i < trackList.size(); ++i)
+            MidiTime  pos = m_playPos[m_playMode];
+            PlayModes old = m_playMode;
+            if(m_playMode == Mode_PlayAutomation)
             {
-                trackList[i]->play(m_playPos[m_playMode], framesToPlay,
-                                   framesPlayed, tcoNum);
+                pos += m_automationToPlay->startPosition();
+                m_playPos[Mode_PlaySong].setTicks(pos.ticks());
+                m_playMode = Mode_PlaySong;
+                processAutomations(trackList, pos, framesToPlay);
             }
+            else if(m_playMode == Mode_PlayPattern)
+            {
+                pos += m_patternToPlay->startPosition();
+                m_playPos[Mode_PlaySong].setTicks(pos.ticks());
+                m_playMode = Mode_PlaySong;
+                processAutomations(trackList, pos, framesToPlay);
+            }
+            else
+            {
+                processAutomations(trackList, m_playPos[m_playMode],
+                                   framesToPlay);
+            }
+
+            // qInfo("Song::play tl=%d pos=%s", trackList.size(),
+            //      qPrintable(pos.toString()));
+            for(int i = 0; i < trackList.size(); ++i)
+                trackList[i]->play(pos, framesToPlay, framesPlayed, tcoNum);
+            m_playMode = old;
         }
 
         // update frame-counters
@@ -476,10 +496,10 @@ void Song::processAutomations(const TrackList& tracklist,
         {
             Q_ASSERT(tracklist.size() == 1);
             Q_ASSERT(tracklist.at(0)->type() == Track::BBTrack);
-            auto bbTrack     = dynamic_cast<BBTrack*>(tracklist.at(0));
-            auto bbContainer = Engine::getBBTrackContainer();
-            container        = bbContainer;
-            tcoNum           = bbTrack->index();
+            auto bbTrack = qobject_cast<BBTrack*>(tracklist.at(0));
+            auto bbTC    = Engine::getBBTrackContainer();
+            container    = bbTC;
+            tcoNum       = bbTrack->ownBBTrackIndex();
         }
         break;
         case Mode_PlayAutomation:
@@ -513,8 +533,8 @@ void Song::processAutomations(const TrackList& tracklist,
         if(p->isRecording() && relTime >= 0 && relTime < p->length())
         {
             const AutomatableModel* recordedModel = p->firstObject();
-            // const float v1=recordedModel->controllerValue(0,true);
-            const float v2 = recordedModel->value<float>();
+            // const real_t v1=recordedModel->controllerValue(0,true);
+            const real_t v2 = recordedModel->value<real_t>();
             // qInfo("Song record %f %f",v1,v2);
             p->emit recordValue(relTime, v2);
 
@@ -841,7 +861,7 @@ void Song::addBBTrack()
 {
     Track* t = Track::create(Track::BBTrack, this);
     Engine::getBBTrackContainer()->setCurrentBB(
-            dynamic_cast<BBTrack*>(t)->index());
+            dynamic_cast<BBTrack*>(t)->ownBBTrackIndex());
 }
 
 void Song::addSampleTrack()
@@ -987,7 +1007,6 @@ void Song::clearProject()
     qInfo("Song::clearProject 12");
 
     Engine::projectJournal()->clearJournal();
-
     Engine::projectJournal()->setJournalling(true);
 
     qInfo("Song::clearProject 13");
@@ -1043,8 +1062,7 @@ void Song::createNewProject()
 
     m_loadingProject = false;
 
-    Engine::getBBTrackContainer()->updateAfterTrackAdd();
-
+    Engine::projectJournal()->clearJournal();
     Engine::projectJournal()->setJournalling(true);
 
     QCoreApplication::sendPostedEvents();
@@ -1052,10 +1070,8 @@ void Song::createNewProject()
     m_modified     = false;
     m_loadOnLaunch = false;
 
-    if(gui->mainWindow())
-    {
+    if(gui->mainWindow() != nullptr)
         gui->mainWindow()->resetWindowTitle();
-    }
 }
 
 void Song::createNewProjectFromTemplate(const QString& templ)
@@ -1289,6 +1305,8 @@ void Song::loadProject(const QString& fileName)
 
     // qInfo("Song::loadProject 4");
     ConfigManager::inst()->addRecentlyOpenedProject(fileName);
+
+    Engine::projectJournal()->clearJournal();
     Engine::projectJournal()->setJournalling(true);
     emit projectLoaded();
 

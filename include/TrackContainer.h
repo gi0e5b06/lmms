@@ -50,8 +50,8 @@ class EXPORT TrackContainer : public Model, public JournallingObject
                    const QString& _objectName);
     virtual ~TrackContainer();
 
-    virtual void saveSettings(QDomDocument& _doc, QDomElement& _parent);
-    virtual void loadSettings(const QDomElement& _this);
+    void saveSettings(QDomDocument& _doc, QDomElement& _parent) override;
+    void loadSettings(const QDomElement& _this) override;
 
     virtual bool isFixed() const
     {
@@ -63,52 +63,47 @@ class EXPORT TrackContainer : public Model, public JournallingObject
         return nullptr;
     }
 
-    bool hasTracks() const;
-    int  countTracks(Track::TrackType _tt) const;
+    virtual bool hasTracks() const final;
+    virtual int  countTracks(Track::TrackType _tt) const final;
     // = Track::NumTrackType) const;
 
-    void addTrack(Track* _track);
-    void removeTrack(Track* _track);
+    virtual void addTrack(Track* _track) final;
+    virtual void removeTrack(Track* _track) final;
 
-    virtual void updateAfterTrackAdd();
+    virtual void clearAllTracks() final;
 
-    void clearAllTracks();
-
-    const Tracks& tracks() const
+    virtual const Tracks& tracks() const final
     {
         return m_tracks;
     }
 
-    bool isEmpty() const;
+    virtual bool isEmpty() const final;
 
-    static inline const QString classNodeName()
+    static const QString classNodeName()
     {
         return "trackcontainer";
     }
 
-    inline void setType(TrackContainerTypes newType)
-    {
-        m_TrackContainerType = newType;
-    }
-
-    inline TrackContainerTypes type() const
+    INLINE virtual TrackContainerTypes type() const final
     {
         return m_TrackContainerType;
     }
 
-    virtual  // AutomatedValueMap
-            void
-            automatedValuesAt(MidiTime           time,
-                              int                tcoNum /*= -1*/,
-                              AutomatedValueMap& _map) const;
+    INLINE virtual void setType(TrackContainerTypes newType) final
+    {
+        m_TrackContainerType = newType;
+    }
+
+    virtual void automatedValuesAt(MidiTime           time,
+                                   int                tcoNum /*= -1*/,
+                                   AutomatedValueMap& _map) const;
 
   signals:
     void trackAdded(Track* _track);
+    void trackRemoved();
 
   protected:
-    static  // AutomatedValueMap
-            void
-                automatedValuesFromTracks(const Tracks&      tracks,
+    static void automatedValuesFromTracks(const Tracks&      tracks,
                                           MidiTime           timeStart,
                                           int                tcoNum /*= -1*/,
                                           AutomatedValueMap& _map);
@@ -134,7 +129,7 @@ class DummyTrackContainer : public TrackContainer
     DummyTrackContainer();
     virtual ~DummyTrackContainer();
 
-    virtual QString nodeName() const
+    QString nodeName() const override
     {
         return "DummyTrackContainer";
     }

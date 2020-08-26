@@ -22,7 +22,7 @@ class CableOverlay : public QWidget
     void collect(QWidget* _w, QHash<ModelView*, Model*>& _table);
 
     bool eventFilter(QObject *obj, QEvent *event) override;
-    void paintEvent(QPaintEvent* _pe);
+    void paintEvent(QPaintEvent* _pe) override;
 };
 
 #endif

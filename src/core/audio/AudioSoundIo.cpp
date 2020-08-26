@@ -58,7 +58,7 @@ AudioSoundIo::AudioSoundIo(bool& outSuccessful, Mixer* _mixer) :
     m_soundio = soundio_create();
     if(!m_soundio)
     {
-        fprintf(stderr, "Unable to initialize soundio: out of memory\n");
+        qWarning("Unable to initialize soundio: out of memory");
         return;
     }
 
@@ -90,8 +90,8 @@ AudioSoundIo::AudioSoundIo(bool& outSuccessful, Mixer* _mixer) :
                 soundio_flush_events(m_soundio);
                 if(m_disconnectErr)
                 {
-                    fprintf(stderr, "Unable to initialize soundio: %s\n",
-                            soundio_strerror(m_disconnectErr));
+                    qWarning("Unable to initialize soundio: %s",
+                             soundio_strerror(m_disconnectErr));
                     return;
                 }
                 outDeviceCount = soundio_output_device_count(m_soundio);
@@ -105,16 +105,16 @@ AudioSoundIo::AudioSoundIo(bool& outSuccessful, Mixer* _mixer) :
         // try connecting to the default backend
         if((err = soundio_connect(m_soundio)))
         {
-            fprintf(stderr, "Unable to initialize soundio: %s\n",
-                    soundio_strerror(err));
+            qWarning("Unable to initialize soundio: %s",
+                     soundio_strerror(err));
             return;
         }
 
         soundio_flush_events(m_soundio);
         if(m_disconnectErr)
         {
-            fprintf(stderr, "Unable to initialize soundio: %s\n",
-                    soundio_strerror(m_disconnectErr));
+            qWarning("Unable to initialize soundio: %s",
+                     soundio_strerror(m_disconnectErr));
             return;
         }
 
@@ -122,8 +122,7 @@ AudioSoundIo::AudioSoundIo(bool& outSuccessful, Mixer* _mixer) :
 
         if(outDeviceCount <= 0)
         {
-            fprintf(stderr,
-                    "Unable to initialize soundio: no devices found\n");
+            fprintf(stderr, "Unable to initialize soundio: no devices found");
             return;
         }
     }
@@ -152,7 +151,7 @@ AudioSoundIo::AudioSoundIo(bool& outSuccessful, Mixer* _mixer) :
 
     if(!m_outstream)
     {
-        fprintf(stderr, "Unable to initialize soundio: out of memory\n");
+        qWarning("Unable to initialize soundio: out of memory");
         return;
     }
 
@@ -194,13 +193,12 @@ AudioSoundIo::AudioSoundIo(bool& outSuccessful, Mixer* _mixer) :
 
     if((err = soundio_outstream_open(m_outstream)))
     {
-        fprintf(stderr, "Unable to initialize soundio: %s\n",
-                soundio_strerror(err));
+        qWarning("Unable to initialize soundio: %s", soundio_strerror(err));
         return;
     }
 
-    fprintf(stderr, "Output device: '%s' backend: '%s'\n", device->name,
-            soundio_backend_name(m_soundio->current_backend));
+    qWarning("Output device: '%s' backend: '%s'", device->name,
+             soundio_backend_name(m_soundio->current_backend));
 
     outSuccessful = true;
 }
@@ -231,8 +229,7 @@ void AudioSoundIo::startProcessing()
     int err;
     if((err = soundio_outstream_start(m_outstream)))
     {
-        fprintf(stderr, "soundio unable to start stream: %s\n",
-                soundio_strerror(err));
+        qWarning("soundio unable to start stream: %s", soundio_strerror(err));
     }
 }
 
@@ -253,12 +250,12 @@ void AudioSoundIo::stopProcessing()
 
 void AudioSoundIo::errorCallback(int err)
 {
-    fprintf(stderr, "soundio: error streaming: %s\n", soundio_strerror(err));
+    qWarning("soundio: error streaming: %s", soundio_strerror(err));
 }
 
 void AudioSoundIo::underflowCallback()
 {
-    fprintf(stderr, "soundio: buffer underflow reported\n");
+    qWarning("soundio: buffer underflow reported");
 }
 
 void AudioSoundIo::writeCallback(int frameCountMin, int frameCountMax)
@@ -349,17 +346,17 @@ void AudioSoundIo::setupWidget::reconnectSoundIo()
     soundio_disconnect(m_soundio);
 
     int err;
-    int backend_index = m_backendModel.findText(configBackend);
+    int backend_index = m_backendModel.findText(configBackend, false, -1);
     if(backend_index < 0)
     {
         if((err = soundio_connect(m_soundio)))
         {
-            fprintf(stderr, "soundio: unable to connect backend: %s\n",
-                    soundio_strerror(err));
+            qWarning("soundio: unable to connect backend: %s",
+                     soundio_strerror(err));
             return;
         }
         backend_index = m_backendModel.findText(
-                soundio_backend_name(m_soundio->current_backend));
+                soundio_backend_name(m_soundio->current_backend), false, -1);
         assert(backend_index >= 0);
     }
     else
@@ -368,16 +365,17 @@ void AudioSoundIo::setupWidget::reconnectSoundIo()
                 = soundio_get_backend(m_soundio, backend_index);
         if((err = soundio_connect_backend(m_soundio, backend)))
         {
-            fprintf(stderr, "soundio: unable to connect %s backend: %s\n",
-                    soundio_backend_name(backend), soundio_strerror(err));
+            qWarning("soundio: unable to connect %s backend: %s",
+                     soundio_backend_name(backend), soundio_strerror(err));
             if((err = soundio_connect(m_soundio)))
             {
-                fprintf(stderr, "soundio: unable to connect backend: %s\n",
-                        soundio_strerror(err));
+                qWarning("soundio: unable to connect backend: %s",
+                         soundio_strerror(err));
                 return;
             }
             backend_index = m_backendModel.findText(
-                    soundio_backend_name(m_soundio->current_backend));
+                    soundio_backend_name(m_soundio->current_backend), false,
+                    -1);
             assert(backend_index >= 0);
         }
     }
@@ -451,7 +449,7 @@ AudioSoundIo::setupWidget::setupWidget(QWidget* _parent) :
     m_soundio = soundio_create();
     if(!m_soundio)
     {
-        fprintf(stderr, "Unable to initialize soundio: out of memory\n");
+        qWarning("Unable to initialize soundio: out of memory");
         return;
     }
     m_soundio->userdata              = this;

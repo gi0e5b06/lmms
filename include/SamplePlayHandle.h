@@ -27,10 +27,12 @@
 
 #include "AudioPort.h"
 #include "AutomatableModel.h"
+#include "BBTrack.h"
 #include "PlayHandle.h"
 #include "SampleBuffer.h"
 
-class BBTrack;
+#include <QPointer>
+
 class SampleTCO;
 /*
 class Track;
@@ -41,17 +43,18 @@ class SamplePlayHandle final : public PlayHandle
 {
   public:
     SamplePlayHandle(const QString& sampleFile);
-    SamplePlayHandle(SampleBuffer* sampleBuffer, bool ownAudioPort = true);
+    SamplePlayHandle(SampleBufferPointer sampleBuffer,
+                     bool                ownAudioPort = true);
     SamplePlayHandle(SampleTCO* tco);
     virtual ~SamplePlayHandle();
 
-    virtual void enterMixer();
-    virtual void exitMixer();
+    void enterMixer() override;
+    void exitMixer() override;
 
-    virtual void play(sampleFrame* buffer);
-    virtual bool isFinished() const;
-    virtual bool isFromTrack(const Track* _track) const;
-    virtual bool isFromInstrument(const Instrument* _instrument) const;
+    void play(sampleFrame* buffer) override;
+    bool isFinished() const override;
+    bool isFromTrack(const Track* _track) const override;
+    bool isFromInstrument(const Instrument* _instrument) const override;
 
     /*! Returns total numbers of frames to play (including release frames = 0)
      */
@@ -89,20 +92,20 @@ class SamplePlayHandle final : public PlayHandle
     }
 
   private:
-    SampleBuffer* m_sampleBuffer;
-    bool          m_doneMayReturnTrue;
+    SampleBufferPointer m_sampleBuffer;
+    bool                m_doneMayReturnTrue;
 
     f_cnt_t                   m_totalFramesPlayed;
     f_cnt_t                   m_frames;  // total frames to play
     SampleBuffer::HandleState m_state;
     f_cnt_t                   m_autoRepeat;
 
-    const bool       m_ownAudioPort;
-    AudioPortPointer m_audioPort;
-    FloatModel       m_defaultVolumeModel;
-    FloatModel*      m_volumeModel;
-    Track*           m_track;
-    BBTrack*         m_bbTrack;
+    const bool          m_ownAudioPort;
+    AudioPortPointer    m_audioPort;
+    RealModel           m_defaultVolumeModel;
+    QPointer<RealModel> m_volumeModel;
+    QPointer<Track>     m_track;
+    QPointer<BBTrack>   m_bbTrack;
 };
 
 #endif

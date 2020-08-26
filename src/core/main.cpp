@@ -173,7 +173,7 @@ void printHelp()
            "            [ -v ]\n"
            "            [ -x <value> ]\n"
            "            [ <project_file> ]\n\n"
-           "-a, --float                   32bit float bit depth\n"
+           "-a, --float                   32bit float bit depth\n"  // REQUIRED
            "-b, --bitrate <bitrate>       Specify output bitrate in KBit/s\n"
            "       Default: 160.\n"
            "-c, --config <configfile>     Get the configuration from "
@@ -631,7 +631,7 @@ int main(int argc, char** argv)
                 return EXIT_FAILURE;
             }
         }
-        else if(arg == "--float" || arg == "-a")
+        else if(arg == "--float" || arg == "-a") // REQUIRED
         {
             os.setBitDepth(OutputSettings::Depth_F32);
         }

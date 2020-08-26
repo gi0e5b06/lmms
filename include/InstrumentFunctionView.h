@@ -42,8 +42,18 @@ class InstrumentFunctionView : public GroupBox, public ModelView
   public:
     virtual ~InstrumentFunctionView();
 
+    InstrumentFunction* model()
+    {
+        return castModel<InstrumentFunction>();
+    }
+
+    const InstrumentFunction* model() const
+    {
+        return castModel<InstrumentFunction>();
+    }
+
   protected:
-    InstrumentFunctionView(InstrumentFunction* cc,
+    InstrumentFunctionView(InstrumentFunction* _model,
                            const QString&      _caption,
                            QWidget*            _parent = nullptr,
                            bool                _arrow  = true);
@@ -54,12 +64,12 @@ class InstrumentFunctionNoteStackingView : public InstrumentFunctionView
     Q_OBJECT
 
   public:
-    InstrumentFunctionNoteStackingView(InstrumentFunctionNoteStacking* cc,
-                                       QWidget* parent = nullptr);
+    InstrumentFunctionNoteStackingView(InstrumentFunctionNoteStacking* _model,
+                                       QWidget* _parent = nullptr);
     virtual ~InstrumentFunctionNoteStackingView();
 
   public slots:
-    virtual void modelChanged();
+    void modelChanged() override;
 
   private:
     InstrumentFunctionNoteStacking* m_cc;
@@ -72,12 +82,12 @@ class InstrumentFunctionArpeggioView : public InstrumentFunctionView
     Q_OBJECT
 
   public:
-    InstrumentFunctionArpeggioView(InstrumentFunctionArpeggio* arp,
-                                   QWidget* parent = nullptr);
+    InstrumentFunctionArpeggioView(InstrumentFunctionArpeggio* _model,
+                                   QWidget* _parent = nullptr);
     virtual ~InstrumentFunctionArpeggioView();
 
   public slots:
-    virtual void modelChanged();
+    void modelChanged() override;
 
   private:
     InstrumentFunctionArpeggio* m_cc;
@@ -100,12 +110,13 @@ class InstrumentFunctionNoteHumanizingView : public InstrumentFunctionView
     Q_OBJECT
 
   public:
-    InstrumentFunctionNoteHumanizingView(InstrumentFunctionNoteHumanizing* cc,
-                                         QWidget* parent = nullptr);
+    InstrumentFunctionNoteHumanizingView(
+            InstrumentFunctionNoteHumanizing* _model,
+            QWidget*                          _parent = nullptr);
     virtual ~InstrumentFunctionNoteHumanizingView();
 
   public slots:
-    virtual void modelChanged();
+    void modelChanged() override;
 
   private:
     InstrumentFunctionNoteHumanizing* m_cc;
@@ -125,12 +136,12 @@ class InstrumentFunctionNoteDuplicatesRemovingView :
 
   public:
     InstrumentFunctionNoteDuplicatesRemovingView(
-            InstrumentFunctionNoteDuplicatesRemoving* cc,
-            QWidget*                                  parent = nullptr);
+            InstrumentFunctionNoteDuplicatesRemoving* _model,
+            QWidget*                                  _parent = nullptr);
     virtual ~InstrumentFunctionNoteDuplicatesRemovingView();
 
   public slots:
-    virtual void modelChanged();
+    void modelChanged() override;
 
   private:
     InstrumentFunctionNoteDuplicatesRemoving* m_cc;
@@ -141,12 +152,13 @@ class InstrumentFunctionNoteFilteringView : public InstrumentFunctionView
     Q_OBJECT
 
   public:
-    InstrumentFunctionNoteFilteringView(InstrumentFunctionNoteFiltering* cc,
-                                        QWidget* parent = nullptr);
+    InstrumentFunctionNoteFilteringView(
+            InstrumentFunctionNoteFiltering* _model,
+            QWidget*                         _parent = nullptr);
     virtual ~InstrumentFunctionNoteFilteringView();
 
   public slots:
-    virtual void modelChanged();
+    void modelChanged() override;
 
   private:
     InstrumentFunctionNoteFiltering* m_cc;
@@ -155,7 +167,7 @@ class InstrumentFunctionNoteFilteringView : public InstrumentFunctionView
     LedCheckBox*                     m_noteSelectionLed[12];
     Knob*                            m_intervalKnob;
     ComboBox*                        m_rootComboBox;
-    ComboBox*                        m_scaleComboBox;
+    ComboBox*                        m_modeComboBox;
 };
 
 class InstrumentFunctionNoteKeyingView : public InstrumentFunctionView
@@ -163,12 +175,12 @@ class InstrumentFunctionNoteKeyingView : public InstrumentFunctionView
     Q_OBJECT
 
   public:
-    InstrumentFunctionNoteKeyingView(InstrumentFunctionNoteKeying* cc,
-                                     QWidget* parent = nullptr);
+    InstrumentFunctionNoteKeyingView(InstrumentFunctionNoteKeying* _model,
+                                     QWidget* _parent = nullptr);
     virtual ~InstrumentFunctionNoteKeyingView();
 
   public slots:
-    virtual void modelChanged();
+    void modelChanged() override;
 
   private:
     InstrumentFunctionNoteKeying* m_cc;
@@ -187,12 +199,12 @@ class InstrumentFunctionNoteOuttingView : public InstrumentFunctionView
     Q_OBJECT
 
   public:
-    InstrumentFunctionNoteOuttingView(InstrumentFunctionNoteOutting* cc,
-                                      QWidget* parent = nullptr);
+    InstrumentFunctionNoteOuttingView(InstrumentFunctionNoteOutting* _model,
+                                      QWidget* _parent = nullptr);
     virtual ~InstrumentFunctionNoteOuttingView();
 
   public slots:
-    virtual void modelChanged();
+    void modelChanged() override;
 
   private:
     InstrumentFunctionNoteOutting* m_cc;
@@ -212,12 +224,12 @@ class InstrumentFunctionGlissandoView : public InstrumentFunctionView
     Q_OBJECT
 
   public:
-    InstrumentFunctionGlissandoView(InstrumentFunctionGlissando* arp,
-                                    QWidget* parent = nullptr);
+    InstrumentFunctionGlissandoView(InstrumentFunctionGlissando* _model,
+                                    QWidget* _parent = nullptr);
     virtual ~InstrumentFunctionGlissandoView();
 
   public slots:
-    virtual void modelChanged();
+    void modelChanged() override;
 
   private:
     InstrumentFunctionGlissando* m_cc;
@@ -233,12 +245,13 @@ class InstrumentFunctionNoteSustainingView : public InstrumentFunctionView
     Q_OBJECT
 
   public:
-    InstrumentFunctionNoteSustainingView(InstrumentFunctionNoteSustaining* cc,
-                                         QWidget* parent = nullptr);
+    InstrumentFunctionNoteSustainingView(
+            InstrumentFunctionNoteSustaining* _model,
+            QWidget*                          _parent = nullptr);
     virtual ~InstrumentFunctionNoteSustainingView();
 
   public slots:
-    virtual void modelChanged();
+    void modelChanged() override;
 
   private:
     InstrumentFunctionNoteSustaining* m_cc;
@@ -263,12 +276,12 @@ class InstrumentFunctionNotePlayingView : public InstrumentFunctionView
     Q_OBJECT
 
   public:
-    InstrumentFunctionNotePlayingView(InstrumentFunctionNotePlaying* cc,
-                                      QWidget* parent = nullptr);
+    InstrumentFunctionNotePlayingView(InstrumentFunctionNotePlaying* _model,
+                                      QWidget* _parent = nullptr);
     virtual ~InstrumentFunctionNotePlayingView();
 
   public slots:
-    virtual void modelChanged();
+    void modelChanged() override;
 
   private:
     InstrumentFunctionNotePlaying* m_cc;

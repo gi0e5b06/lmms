@@ -32,17 +32,15 @@
 //#include <QPixmap>
 #include <QWidget>
 
-class Widget
-      : public QWidget
-      , public virtual PaintCacheable
+class Widget : public QWidget, public virtual PaintCacheable
 {
     Q_OBJECT
 
   public:
     // interfaces
-    virtual void update(); // final;
+    virtual void update();  // final;
     virtual void updateNow();
-    //using PaintCacheable::update();
+    // using PaintCacheable::update();
 
   protected:
     Widget(QWidget* _parent);

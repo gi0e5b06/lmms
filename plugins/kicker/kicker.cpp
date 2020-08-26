@@ -404,6 +404,8 @@ kickerInstrumentView::kickerInstrumentView(Instrument* _instrument,
     QPalette pal;
     pal.setBrush(backgroundRole(), PLUGIN_NAME::getIconPixmap("kicker_bg"));
     setPalette(pal);
+
+    modelChanged();
 }
 
 kickerInstrumentView::~kickerInstrumentView()

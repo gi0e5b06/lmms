@@ -44,8 +44,9 @@ real_t AutomationPattern::s_quantizationY = 0.0625;
 // const real_t AutomationPattern::DEFAULT_MAX_VALUE = 1.;
 
 AutomationPattern::AutomationPattern(AutomationTrack* _automationTrack) :
-      Tile(_automationTrack, "Automation tile"), m_automationTrack(_automationTrack),
-      m_objects(), m_tension(1.), m_waveBank(WaveFormStandard::ZERO_BANK),
+      Tile(_automationTrack, tr("Automation tile"), "automationTile"),
+      m_automationTrack(_automationTrack), m_objects(), m_tension(1.),
+      m_waveBank(WaveFormStandard::ZERO_BANK),
       m_waveIndex(WaveFormStandard::ZERO_INDEX), m_waveRatio(0.5),
       m_waveSkew(0.), m_waveAmplitude(0.1), m_waveRepeat(0.),
       m_progressionType(DiscreteProgression), m_dragging(false),
@@ -106,6 +107,95 @@ QString AutomationPattern::defaultName() const
 }
 */
 
+void AutomationPattern::rotate(tick_t _ticks)
+{
+    Q_UNUSED(_ticks)
+    qInfo("AutomationPattern: rotate() not implemented");
+}
+
+void AutomationPattern::splitEvery(tick_t _ticks)
+{
+    Q_UNUSED(_ticks)
+    qInfo("AutomationPattern: splitEvery() not implemented");
+}
+
+void AutomationPattern::splitAt(tick_t _tick)
+{
+    if(_tick <= 0 || _tick + 1 >= length())
+        return;
+
+    qInfo("AutomationPattern::split at tick %d", _tick);
+
+    MidiTime sp = startPosition();
+    MidiTime ep = endPosition();
+
+    AutomationPattern::timeMap& map = getTimeMap();
+    if(!map.contains(_tick))
+        map.insert(_tick, valueAt(_tick));
+
+    AutomationPattern* newp1 = new AutomationPattern(*this);  // 1,left,before
+    newp1->setJournalling(false);
+    newp1->setAutoResize(false);
+    newp1->movePosition(sp);
+    if(!newp1->isEmpty())
+    {
+        AutomationPattern::timeMap& map1 = newp1->getTimeMap();
+        for(tick_t n: map1.keys())
+        {
+            if(newp1->autoRepeat())
+                continue;
+            if(n <= _tick)
+                continue;
+            newp1->removeValue(n);
+        }
+    }
+    newp1->changeLength(_tick);
+    newp1->setJournalling(true);
+    newp1->emit dataChanged();
+
+    sp += _tick;
+
+    AutomationPattern* newp2 = new AutomationPattern(*this);  // 2,right,after
+    newp2->setJournalling(false);
+    newp2->movePosition(sp);
+    if(!newp2->isEmpty())
+    {
+        if(newp2->autoRepeat())
+            newp2->rotate(-_tick);  //(_tick % newp2->unitLength()));
+        AutomationPattern::timeMap&    map2 = newp2->getTimeMap();
+        QVector<tick_t>                todelete;
+        QVector<QPair<tick_t, real_t>> toinsert;
+        for(tick_t n: map2.keys())
+        {
+            if(newp2->autoRepeat())
+                continue;
+            if(n >= _tick)
+            {
+                // qInfo("p2 pos: s=%d n=%d r=%d k=%d move note",
+                //  (int)newp2->startPosition(),(int)n->pos(),
+                // _splitPos,n->key());
+                todelete.append(n);
+                toinsert.append(
+                        QPair<tick_t, real_t>(n - _tick, map2.value(n)));
+                newp2->removeValue(n);
+                continue;
+            }
+            // qInfo("p2 pos: s=%d n=%d r=%d k=%d remove note",
+            //  (int)newp2->startPosition(),(int)n->pos(),_splitPos,n->key());
+            todelete.append(n);
+        }
+        for(tick_t n: todelete)
+            newp2->removeValue(n);
+        for(QPair<tick_t, real_t> p: toinsert)
+            newp2->putValue(p.first, p.second);
+    }
+    newp2->changeLength(ep - sp);
+    newp2->setJournalling(true);
+    newp2->emit dataChanged();
+
+    deleteLater();  // tv->remove();
+}
+
 void AutomationPattern::setRecording(bool b)
 {
     m_isRecording = b;
@@ -134,7 +224,7 @@ bool AutomationPattern::addObject(
     }
 
     if(_obj != dummyObject())
-        m_objects.removeAll(dummyObject(),false);
+        m_objects.removeAll(dummyObject(), false);
     m_objects.append(_obj);  // QPointer<AutomatableModel>(_obj));
 
     connect(_obj, SIGNAL(destroyed(jo_id_t)), this,
@@ -458,7 +548,7 @@ real_t AutomationPattern::valueAt(const MidiTime& _time) const
             return m_timeMap[_time];
     }
     */
-    tick_t time = _time.getTicks();
+    tick_t time = _time.ticks();
 
     if(autoRepeat())
     {
@@ -785,6 +875,13 @@ void AutomationPattern::moveRelDown()
     }
 }
 
+void AutomationPattern::clear()
+{
+    m_timeMap.clear();
+    m_tangents.clear();
+    emit dataChanged();
+}
+
 void AutomationPattern::flipHorizontally()
 {
     if(isEmpty())
@@ -1071,7 +1168,7 @@ QString AutomationPattern::defaultName() const
     return QString::null;
 }
 
-const QString AutomationPattern::name() const
+QString AutomationPattern::name() const
 {
     if(!Tile::name().isEmpty())
         return Tile::name();
@@ -1109,7 +1206,7 @@ bool AutomationPattern::isAutomated(const AutomatableModel* _m)
             for(Tiles::ConstIterator j = v.begin(); j != v.end(); ++j)
             {
                 const AutomationPattern* a
-                        = dynamic_cast<const AutomationPattern*>(*j);
+                        = qobject_cast<const AutomationPattern*>(*j);
                 if(a != nullptr && a->hasAutomation())
                 {
                     /*
@@ -1157,7 +1254,7 @@ AutomationPatterns
             // go through all the patterns...
             for(Tiles::ConstIterator j = v.begin(); j != v.end(); ++j)
             {
-                AutomationPattern* a = dynamic_cast<AutomationPattern*>(*j);
+                AutomationPattern* a = qobject_cast<AutomationPattern*>(*j);
                 // check that the pattern has automation
                 if(a != nullptr && a->hasAutomation())
                 {
@@ -1201,7 +1298,7 @@ AutomationPattern*
     Tiles            v = t->getTCOs();
     for(Tiles::const_iterator j = v.begin(); j != v.end(); ++j)
     {
-        AutomationPattern* a = dynamic_cast<AutomationPattern*>(*j);
+        AutomationPattern* a = qobject_cast<AutomationPattern*>(*j);
         if(a != nullptr)
         {
             /*
@@ -1240,7 +1337,7 @@ void AutomationPattern::resolveAllIDs()
             Tiles tiles = t->getTCOs();
             for(auto p: tiles)
             {
-                AutomationPattern* a = dynamic_cast<AutomationPattern*>(p);
+                AutomationPattern* a = qobject_cast<AutomationPattern*>(p);
                 if(a != nullptr)
                 {
                     QVector<jo_id_t> unsolvedIds;
@@ -1319,14 +1416,6 @@ void AutomationPattern::resolveAllIDs()
             }
         }
     }
-}
-
-void AutomationPattern::clear()
-{
-    m_timeMap.clear();
-    m_tangents.clear();
-
-    emit dataChanged();
 }
 
 void AutomationPattern::objectDestroyed(jo_id_t _id)

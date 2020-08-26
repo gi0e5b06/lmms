@@ -34,6 +34,7 @@
 class EXPORT ComboBox : public QWidget, public IntModelView
 {
     Q_OBJECT
+
   public:
     ComboBox(QWidget*       parent       = nullptr,
              const QString& _displayName = "[combobox]",
@@ -63,13 +64,8 @@ class EXPORT ComboBox : public QWidget, public IntModelView
     virtual void wheelEvent(QWheelEvent* event);
 
   private:
-    static QPixmap* s_background;
-    static QPixmap* s_arrow;
-    static QPixmap* s_arrowSelected;
-
     QMenu m_menu;
-
-    bool m_pressed;
+    bool  m_pressed;
 
   private slots:
     void setItem(QAction* item);

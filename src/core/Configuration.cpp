@@ -48,8 +48,10 @@ void lmms_default_configuration()
     DEFAULT_BOOL("ui.displaywaveform", true);
     DEFAULT_INT("ui.framespersecond", 10);
     DEFAULT_BOOL("ui.leftsidebar", false);
-
-    DEFAULT_BOOL("tooltips.disabled", false);
+    DEFAULT_BOOL("ui.tooltips", true);
+    //DEFAULT_BOOL("tooltips.disabled", false);
+    DEFAULT_BOOL("ui.toolcursor", true);
+    DEFAULT_INT("ui.playcursor", 3);
 
     DEFAULT_INT("mixer.samplerate", 48000);  // 44100);
     DEFAULT_INT("mixer.framesperaudiobuffer", 1024);

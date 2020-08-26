@@ -27,14 +27,15 @@
 #define SAMPLE_TRACK_H_
 
 #include "AudioPort.h"
+#include "SampleBuffer.h"
 #include "Track.h"
+#include "TrackView.h"
 
 //#include <QDialog>
 
 class SampleTrack;
 class LedCheckBox;
-class SampleBuffer;
-class EffectRackView;
+class EffectChainView;
 class FadeButton;
 class Knob;
 class VolumeKnob;
@@ -57,19 +58,22 @@ class SampleTCO : public Tile
     SampleTCO(const SampleTCO& _other);
     virtual ~SampleTCO();
 
-    virtual bool    isEmpty() const;
-    virtual QString defaultName() const;
-    virtual tick_t  unitLength() const;
+    bool    isEmpty() const override;
+    QString defaultName() const override;
+    tick_t  unitLength() const override;
+    void    rotate(tick_t _ticks) override;
+    void    splitEvery(tick_t _ticks) override;
+    void    splitAt(tick_t _tick) override;
 
     // virtual void changeLength( const MidiTime & _length );
 
-    virtual void resizeLeft(const MidiTime& pos, const MidiTime& len);
-    // virtual void resizeRight(const MidiTime& pos, const MidiTime& len);
+    void resizeLeft(const MidiTime& pos, const MidiTime& len) override;
+    // void resizeRight(const MidiTime& pos, const MidiTime& len) override;
 
     // settings-management
-    virtual void saveSettings(QDomDocument& _doc, QDomElement& _parent);
-    virtual void loadSettings(const QDomElement& _this);
-    inline virtual QString nodeName() const
+    void    saveSettings(QDomDocument& _doc, QDomElement& _parent) override;
+    void    loadSettings(const QDomElement& _this) override;
+    QString nodeName() const override
     {
         return "sampletco";
     }
@@ -83,21 +87,25 @@ class SampleTCO : public Tile
 
     MidiTime sampleLength() const;
 
-    tick_t            initialPlayTick();
-    void              setInitialPlayTick(tick_t _t);
+    tick_t initialPlayTick();
+    void   setInitialPlayTick(tick_t _t);
 
-    inline SampleTrack* sampleTrack() const
+    SampleTrack* sampleTrack() const
     {
         return m_sampleTrack;
     }
 
-    virtual TileView* createView(TrackView* _tv);
+    TileView* createView(TrackView* _tv) override;
 
     bool isPlaying() const;
     void setIsPlaying(bool isPlaying);
 
   public slots:
-    void setSampleBuffer(SampleBuffer* sb);
+    void clear() override;
+    void flipHorizontally() override;
+    void flipVertically() override;
+
+    void setSampleBuffer(SampleBuffer* _sb);
     void setSampleFile(const QString& _sf);
     void updateLength();
     void toggleRecord();
@@ -105,19 +113,18 @@ class SampleTCO : public Tile
     void updateTrackTcos();
 
   protected:
-    virtual void split(tick_t _ticks);
-    virtual void doConnections();
+    virtual void doConnections(); // not a modelview
 
   private:
-    SampleTrack* m_sampleTrack;
+    QPointer<SampleTrack> m_sampleTrack;
 
     // number of ticts skipped (after the start frame)
     // most of the time, 0
     tick_t m_initialPlayTick;
 
-    SampleBuffer* m_sampleBuffer;
-    BoolModel     m_recordModel;
-    bool          m_isPlaying;
+    SampleBufferPointer m_sampleBuffer;
+    BoolModel           m_recordModel;
+    bool                m_isPlaying;
 
     friend class SampleTCOView;
 
@@ -133,6 +140,16 @@ class SampleTCOView : public TileView
     SampleTCOView(SampleTCO* _tco, TrackView* _tv);
     virtual ~SampleTCOView();
 
+    SampleTCO* model()
+    {
+        return castModel<SampleTCO>();
+    }
+
+    const SampleTCO* model() const
+    {
+        return castModel<SampleTCO>();
+    }
+
   public slots:
     void loadSample();
     void reloadSample();
@@ -141,19 +158,19 @@ class SampleTCOView : public TileView
     void createRmsAutomation();
 
   protected:
-    virtual QMenu* buildContextMenu();
+    QMenu* buildContextMenu() override;
 
-    // virtual void contextMenuEvent( QContextMenuEvent * _cme );
-    virtual void mousePressEvent(QMouseEvent* _me);
-    virtual void mouseReleaseEvent(QMouseEvent* _me);
-    virtual void dragEnterEvent(QDragEnterEvent* _dee);
-    virtual void dropEvent(QDropEvent* _de);
-    virtual void mouseDoubleClickEvent(QMouseEvent*);
-    virtual void paintEvent(QPaintEvent*);
+    //  void contextMenuEvent( QContextMenuEvent * _cme ) override;
+    void mousePressEvent(QMouseEvent* _me) override;
+    void mouseReleaseEvent(QMouseEvent* _me) override;
+    void dragEnterEvent(QDragEnterEvent* _dee) override;
+    void dropEvent(QDropEvent* _de) override;
+    void mouseDoubleClickEvent(QMouseEvent*) override;
+    void paintEvent(QPaintEvent*) override;
 
   private:
-    SampleTCO* m_tco;
-    QPixmap    m_paintPixmap;
+    // SampleTCO* m_tco;
+    QPixmap m_paintPixmap;
 };
 
 class SampleTrack : public Track
@@ -164,19 +181,19 @@ class SampleTrack : public Track
     SampleTrack(TrackContainer* tc);
     virtual ~SampleTrack();
 
-    virtual QString defaultName() const;
+    QString defaultName() const override;
 
-    virtual bool play(const MidiTime& _start,
-                      const fpp_t     _frames,
-                      const f_cnt_t   _frame_base,
-                      int             _tco_num = -1);
+    bool play(const MidiTime& _start,
+              const fpp_t     _frames,
+              const f_cnt_t   _frame_base,
+              int             _tco_num = -1) override;
 
-    virtual TrackView* createView(TrackContainerView* tcv);
-    virtual Tile*      createTCO(const MidiTime& _pos);
+    TrackView* createView(TrackContainerView* tcv) override;
+    Tile*      createTCO() override;
 
-    virtual void saveTrackSpecificSettings(QDomDocument& _doc,
-                                           QDomElement&  _parent);
-    virtual void loadTrackSpecificSettings(const QDomElement& _this);
+    void saveTrackSpecificSettings(QDomDocument& _doc,
+                                   QDomElement&  _parent) override;
+    void loadTrackSpecificSettings(const QDomElement& _this) override;
 
     AudioPortPointer& audioPort()
     {
@@ -188,12 +205,12 @@ class SampleTrack : public Track
         return m_audioPort;
     }
 
-    FloatModel* volumeModel()
+    RealModel* volumeModel()
     {
         return &m_volumeModel;
     }
 
-    FloatModel* panningModel()
+    RealModel* panningModel()
     {
         return &m_panningModel;
     }
@@ -219,12 +236,12 @@ class SampleTrack : public Track
     void updateVolume();
 
   private:
-    FloatModel       m_volumeModel;
-    FloatModel       m_panningModel;
+    RealModel        m_volumeModel;
+    RealModel        m_panningModel;
     BoolModel        m_useMasterPitchModel;  // TODO?
     IntModel         m_effectChannelModel;
     AudioPortPointer m_audioPort;
-    // FloatModel m_pitchModel;         //TODO?
+    // RealModel m_pitchModel;         //TODO?
     // IntModel m_pitchRangeModel;      //TODO?
 
     friend class SampleTrackView;
@@ -267,14 +284,14 @@ class SampleTrackView : public TrackView
     void updateName();
     // void updateSampleView();
 
-    virtual void addSpecificMenu(QMenu* _cm, bool _enabled);
+    void addSpecificMenu(QMenu* _cm, bool _enabled) override;
 
   protected:
-    virtual void resizeEvent(QResizeEvent* _re);
-    virtual void dragEnterEvent(QDragEnterEvent* _dee);
-    virtual void dropEvent(QDropEvent* _de);
+    void resizeEvent(QResizeEvent* _re) override;
+    void dragEnterEvent(QDragEnterEvent* _dee) override;
+    void dropEvent(QDropEvent* _de) override;
 
-    virtual QString nodeName() const
+    QString nodeName() const override
     {
         qWarning("SampleTrackView::nodeName() useless?");
         return "SampleTrackView";
@@ -296,12 +313,12 @@ class SampleTrackView : public TrackView
 
   private:
     SampleTrackWindow* m_window;
-    // EffectRackView* m_effectRack;
+    // EffectChainView* m_effectRack;
     // QWidget * m_effWindow;
 
     // widgets in track-settings-widget
     TrackLabelButton* m_tlb;
-    VolumeKnob*             m_volumeKnob;
+    VolumeKnob*       m_volumeKnob;
     Knob*             m_panningKnob;
     FadeButton*       m_activityIndicator;
 
@@ -402,7 +419,7 @@ class SampleTrackWindow :
     // SampleFunctionNoteDuplicatesRemovingView*
     // m_noteDuplicatesRemovingView;
     // SampleMidiIOView * m_midiView;
-    EffectRackView* m_effectView;
+    EffectChainView* m_effectView;
     // SampleMiscView *m_miscView;
 
     // test-piano at the bottom of every instrument-settings-window

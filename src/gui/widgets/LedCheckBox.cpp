@@ -37,25 +37,38 @@
 #include <QStyleOption>
 #include <QTime>
 
-static const QString names[LedCheckBox::NumColors]
+static const QString names[LedCheckBox::LedColorCount]
         = {"led_yellow", "led_green",   "led_red",
            "led_blue",   "led_magenta", "led_white"};
 
+LedCheckBox::LedCheckBox(BoolModel* _model, QWidget* _parent) :
+      AutomatableButton(_model, _parent), m_text(""),
+      m_textAnchor(Qt::AnchorLeft), m_ledColor(LedColors::Yellow),
+      m_blinkingState(true), m_blinking(false)
+{
+    initUi();
+}
+
+LedCheckBox::LedCheckBox(QWidget* _parent, const QString& _displayName) :
+      LedCheckBox("", _parent, _displayName)
+{
+}
+
 LedCheckBox::LedCheckBox(const QString& _text,
                          QWidget*       _parent,
-                         const QString& _name,
+                         const QString& _displayName,
                          LedColors      _color) :
-      AutomatableButton(_parent, _name),
-      m_blinkingState(true), m_blinking(false), m_text(_text),
-      m_textAnchor(Qt::AnchorLeft)
+      AutomatableButton(_parent, _displayName),
+      m_text(_text), m_textAnchor(Qt::AnchorLeft), m_ledColor(_color),
+      m_blinkingState(true), m_blinking(false)
 {
-    initUi(_color);
+    initUi();
 }
 
 LedCheckBox::LedCheckBox(QWidget*       _parent,
-                         const QString& _name,
+                         const QString& _displayName,
                          LedColors      _color) :
-      LedCheckBox("", _parent, _name, _color)
+      LedCheckBox("", _parent, _displayName, _color)
 {
 }
 
@@ -68,6 +81,20 @@ LedCheckBox::~LedCheckBox()
 {
     delete m_ledOnPixmap;
     delete m_ledOffPixmap;
+}
+
+void LedCheckBox::initUi()
+{
+    AutomatableButton::initUi();
+
+    BoolModel* m = castModel<BoolModel>();
+    setObjectName(m->objectName() + "CheckBox");
+    setWindowTitle(m->displayName());
+    // setCursor(Qt::PointingHandCursor);
+
+    setCheckable(true);
+    onLedColorUpdated();
+    onTextUpdated();
 }
 
 QString LedCheckBox::text() const
@@ -98,6 +125,38 @@ void LedCheckBox::setTextAnchorPoint(Qt::AnchorPoint _a)
     onTextUpdated();
 }
 
+LedCheckBox::LedColors LedCheckBox::ledColor() const
+{
+    return m_ledColor;
+}
+
+void LedCheckBox::setLedColor(LedCheckBox::LedColors _color)
+{
+    if(m_ledColor != _color)
+    {
+        m_ledColor = _color;
+    }
+}
+
+bool LedCheckBox::blinking() const
+{
+    return m_blinking;
+}
+
+void LedCheckBox::setBlinking(bool _b)
+{
+    if(m_blinking != _b)
+    {
+        m_blinking = _b;
+        if(_b)
+            connect(gui->mainWindow(), SIGNAL(periodicUpdate()), this,
+                    SLOT(update()));
+        else
+            disconnect(gui->mainWindow(), SIGNAL(periodicUpdate()), this,
+                       SLOT(update()));
+    }
+}
+
 void LedCheckBox::update()
 {
     AutomatableButton::update();
@@ -111,7 +170,7 @@ void LedCheckBox::paintEvent(QPaintEvent* _pe)
     style()->drawPrimitive(QStyle::PE_Widget, &opt, &p, this);
 
     BoolModel* m = model();
-    if(m==nullptr)
+    if(m == nullptr)
         return;
 
     QMargins mw = contentsMargins();
@@ -185,22 +244,6 @@ void LedCheckBox::paintEvent(QPaintEvent* _pe)
     // p.drawRect(0,0,width()-1,height()-1);
 }
 
-void LedCheckBox::initUi(LedColors _color)
-{
-    setCheckable(true);
-
-    if(_color >= NumColors || _color < Yellow)
-        _color = Yellow;
-
-    m_ledOnPixmap = new QPixmap(
-            embed::getPixmap(names[_color].toUtf8().constData()));
-    m_ledOffPixmap = new QPixmap(embed::getPixmap("led_off"));
-
-    // setFont(pointSize<11>(font()));
-    // setText(m_text);
-    onTextUpdated();
-}
-
 void LedCheckBox::onTextUpdated()
 {
     QStyleOption opt;
@@ -208,7 +251,7 @@ void LedCheckBox::onTextUpdated()
 
     const QString& t = text();
     int            w = m_ledOffPixmap->width();
-    int            h = m_ledOffPixmap->height();//-6
+    int            h = m_ledOffPixmap->height();  //-6
     if(!t.isEmpty())
     {
         const Qt::AnchorPoint a  = textAnchorPoint();
@@ -234,7 +277,15 @@ void LedCheckBox::onTextUpdated()
     h += mw.top() + mw.bottom();
 
     setMinimumSize(w, h);
-    resize(w,h);
+    resize(w, h);
+    update();
+}
+
+void LedCheckBox::onLedColorUpdated()
+{
+    m_ledOnPixmap = new QPixmap(
+            embed::getPixmap(names[m_ledColor].toUtf8().constData()));
+    m_ledOffPixmap = new QPixmap(embed::getPixmap("led_off"));
     update();
 }
 
@@ -262,22 +313,3 @@ void LedCheckBox::enterValue()
     }
 }
 */
-
-bool LedCheckBox::blinking() const
-{
-    return m_blinking;
-}
-
-void LedCheckBox::setBlinking(bool _b)
-{
-    if(m_blinking != _b)
-    {
-        m_blinking = _b;
-        if(_b)
-            connect(gui->mainWindow(), SIGNAL(periodicUpdate()), this,
-                    SLOT(update()));
-        else
-            disconnect(gui->mainWindow(), SIGNAL(periodicUpdate()), this,
-                       SLOT(update()));
-    }
-}

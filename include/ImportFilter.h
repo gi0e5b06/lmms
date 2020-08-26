@@ -26,81 +26,72 @@
 #ifndef IMPORT_FILTER_H
 #define IMPORT_FILTER_H
 
-#include <QFile>
-
 #include "Plugin.h"
 
+#include <QFile>
 
 class TrackContainer;
 
-
 class EXPORT ImportFilter : public Plugin
 {
-public:
-	ImportFilter( const QString & _file_name,
-                      const Descriptor * _descriptor );
-	virtual ~ImportFilter();
+  public:
+    ImportFilter(const QString& _file_name, const Descriptor* _descriptor);
+    virtual ~ImportFilter();
 
+    // tries to import given file to given track-container by having all
+    // available import-filters to try to import the file
+    static void import(const QString& _file_to_import, TrackContainer* tc);
 
-	// tries to import given file to given track-container by having all
-	// available import-filters to try to import the file
-	static void import( const QString & _file_to_import,
-                            TrackContainer* tc );
+  protected:
+    virtual bool tryImport(TrackContainer* tc) = 0;
 
+    const QFile& file() const
+    {
+        return m_file;
+    }
 
-protected:
-	virtual bool tryImport( TrackContainer* tc ) = 0;
+    bool openFile();
 
-	const QFile & file() const
-	{
-		return m_file;
-	}
+    INLINE void closeFile()
+    {
+        m_file.close();
+    }
 
-	bool openFile();
+    INLINE int readByte()
+    {
+        unsigned char c;
+        if(m_file.getChar((char*)&c))
+        {
+            return static_cast<int>(c);
+        }
+        return -1;
+    }
 
-	inline void closeFile()
-	{
-		m_file.close();
-	}
+    INLINE int readBlock(char* _data, int _len)
+    {
+        return m_file.read(_data, _len);
+    }
 
-	inline int readByte()
-	{
-		unsigned char c;
-		if( m_file.getChar( (char*) &c ) )
-		{
-			return static_cast<int>( c );
-		}
-		return -1;
-	}
+    INLINE void ungetChar(char _ch)
+    {
+        m_file.ungetChar(_ch);
+    }
 
-	inline int readBlock( char * _data, int _len )
-	{
-		return m_file.read( _data, _len );
-	}
+    virtual void saveSettings(QDomDocument&, QDomElement&)
+    {
+    }
 
-	inline void ungetChar( char _ch )
-	{
-		m_file.ungetChar( _ch );
-	}
+    virtual void loadSettings(const QDomElement&)
+    {
+    }
 
-	virtual void saveSettings( QDomDocument &, QDomElement & )
-	{
-	}
+    virtual QString nodeName() const
+    {
+        return "import_filter";
+    }
 
-	virtual void loadSettings( const QDomElement & )
-	{
-	}
-
-	virtual QString nodeName() const
-	{
-		return "import_filter";
-	}
-
-
-private:
-	QFile m_file;
-
-} ;
-
+  private:
+    QFile m_file;
+};
 
 #endif

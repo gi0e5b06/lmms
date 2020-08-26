@@ -49,7 +49,7 @@
 using namespace std;
 
 TrackContainerView::TrackContainerView(TrackContainer* _tc) :
-      QWidget(), ModelView(NULL, this), JournallingObject(),
+      QWidget(), ModelView(_tc, this), JournallingObject(),
       SerializingObjectHook(), m_currentPosition(0, 0), m_ppt(-1), m_tc(_tc),
       m_trackViews(), m_scrollArea(new scrollArea(this)),
       m_rubberBand(new RubberBand(m_scrollArea)), m_origin()
@@ -76,9 +76,9 @@ TrackContainerView::TrackContainerView(TrackContainer* _tc) :
 
     setAcceptDrops(true);
 
-    connect(Engine::getSong(), SIGNAL(timeSignatureChanged(int, int)), this,
+    connect(Engine::song(), SIGNAL(timeSignatureChanged(int, int)), this,
             SLOT(realignTracks()));
-    connect(Engine::getSong(),
+    connect(Engine::song(),
             SIGNAL(metaDataChanged(const QString&, const QString&)), this,
             SLOT(updateBackgrounds()));
     connect(m_tc, SIGNAL(trackAdded(Track*)), this,
@@ -89,10 +89,9 @@ TrackContainerView::TrackContainerView(TrackContainer* _tc) :
 
 TrackContainerView::~TrackContainerView()
 {
-    while(!m_trackViews.empty())
-    {
-        delete m_trackViews.takeLast();
-    }
+    // while(!m_trackViews.isEmpty())
+    //    delete m_trackViews.takeLast();
+    // deleteTrackView(m_trackViews.takeLast());
 }
 
 void TrackContainerView::saveSettings(QDomDocument& _doc, QDomElement& _this)
@@ -105,32 +104,42 @@ void TrackContainerView::loadSettings(const QDomElement& _this)
     MainWindow::restoreWidgetState(this, _this);
 }
 
-TrackView* TrackContainerView::addTrackView(TrackView* _tv)
+const TrackViews& TrackContainerView::trackViews() const
 {
-    m_trackViews.push_back(_tv);
+    TrackViews r;
+    for(QObject* o: children())
+    {
+        TrackView* tv = dynamic_cast<TrackView*>(o);
+        if(tv != nullptr)
+            r.append(tv);
+    }
+    if(r != m_trackViews)
+        qWarning("TrackContainerView::trackViews");
+
+    return m_trackViews;
+}
+
+void TrackContainerView::addTrackView(TrackView* _tv)
+{
+    m_trackViews.append(_tv);
     m_scrollLayout->addWidget(_tv);
     connect(this, SIGNAL(positionChanged(const MidiTime&)),
             _tv->getTrackContentWidget(),
             SLOT(changePosition(const MidiTime&)));
     realignTracks();
     requireActionUpdate();
-    return _tv;
 }
 
 void TrackContainerView::removeTrackView(TrackView* _tv)
 {
-    int index = m_trackViews.indexOf(_tv);
-    if(index != -1)
+    if(m_trackViews.removeOne(_tv))
     {
-        m_trackViews.removeAt(index);
-
-        disconnect(_tv);
+        // disconnect(_tv);
         m_scrollLayout->removeWidget(_tv);
-
         realignTracks();
-        if(Engine::getSong())
+        if(Engine::song() != nullptr)
         {
-            Engine::getSong()->setModified();
+            Engine::song()->setModified();
             requireActionUpdate();
         }
     }
@@ -147,7 +156,8 @@ void TrackContainerView::moveTrackView(TrackView* trackView, int indexTo)
     if(indexFrom == indexTo)
         return;
 
-    BBTrack::swapBBTracks(trackView->track(), m_trackViews[indexTo]->track());
+    // BBTrack::swapBBTracks(trackView->track(),
+    //       m_trackViews.at(indexTo)->track());
 
     m_scrollLayout->removeWidget(trackView);
     m_scrollLayout->insertWidget(indexTo, trackView);
@@ -164,14 +174,12 @@ void TrackContainerView::moveTrackView(TrackView* trackView, int indexTo)
 void TrackContainerView::moveTrackViewUp(TrackView* trackView)
 {
     int index = m_trackViews.indexOf(trackView);
-
     moveTrackView(trackView, index - 1);
 }
 
 void TrackContainerView::moveTrackViewDown(TrackView* trackView)
 {
     int index = m_trackViews.indexOf(trackView);
-
     moveTrackView(trackView, index + 1);
 }
 
@@ -209,12 +217,11 @@ void TrackContainerView::realignTracks()
                            - m_scrollArea->verticalScrollBar()->width());
     content->setFixedHeight(content->minimumSizeHint().height());
 
-    for(trackViewList::iterator it = m_trackViews.begin();
-        it != m_trackViews.end(); ++it)
+    for(TrackView* tv: m_trackViews)
     {
-        (*it)->show();
-        (*it)->getTrackContentWidget()->updateBackground();
-        (*it)->update();
+        tv->show();
+        tv->getTrackContentWidget()->updateBackground();
+        tv->update();
     }
 }
 
@@ -223,10 +230,9 @@ TrackView* TrackContainerView::createTrackView(Track* _t)
     // m_tc->addJournalCheckPoint();
 
     // Avoid duplicating track views
-    for(trackViewList::iterator it = m_trackViews.begin();
-        it != m_trackViews.end(); ++it)
-        if((*it)->track() == _t)
-            return (*it);
+    for(TrackView* tv: m_trackViews)
+        if(tv->track() == _t)
+            return tv;
 
     TrackView* r = _t->createView(this);
     requireActionUpdate();
@@ -235,11 +241,12 @@ TrackView* TrackContainerView::createTrackView(Track* _t)
 
 void TrackContainerView::deleteTrackView(TrackView* _tv)
 {
+    qInfo("TrackContainerView::deleteTrackView");
     // m_tc->addJournalCheckPoint();
 
     Track* t = _tv->track();
     removeTrackView(_tv);
-    delete _tv;
+    // delete _tv;
 
     // Engine::mixer()->requestChangeInModel();
     delete t;
@@ -256,13 +263,12 @@ const TrackView* TrackContainerView::trackViewAt(const int _y) const
     //	debug code
     //	qDebug( "abs_y %d", abs_y );
 
-    for(trackViewList::const_iterator it = m_trackViews.begin();
-        it != m_trackViews.end(); ++it)
+    for(TrackView* tv: m_trackViews)
     {
         const int y_cnt1 = y_cnt;
-        y_cnt += (*it)->height();
+        y_cnt += tv->height();
         if(abs_y >= y_cnt1 && abs_y < y_cnt)
-            return (*it);
+            return tv;
     }
     return nullptr;
 }
@@ -272,12 +278,12 @@ bool TrackContainerView::allowRubberband() const
     return false;
 }
 
-float TrackContainerView::pixelsPerTact() const
+real_t TrackContainerView::pixelsPerTact() const
 {
-    return m_ppt > 0.f ? m_ppt : 16.f;
+    return m_ppt > 0. ? m_ppt : 16.;
 }
 
-void TrackContainerView::setPixelsPerTact(float _ppt)
+void TrackContainerView::setPixelsPerTact(real_t _ppt)
 {
     m_ppt = _ppt;
     updateBackgrounds();
@@ -288,11 +294,8 @@ void TrackContainerView::updateBackgrounds()
     computeHyperBarViews();
 
     // tell all TrackContentWidgets to update their background tile pixmap
-    for(trackViewList::Iterator it = m_trackViews.begin();
-        it != m_trackViews.end(); ++it)
-    {
-        (*it)->getTrackContentWidget()->updateBackground();
-    }
+    for(TrackView* tv: m_trackViews)
+        tv->getTrackContentWidget()->updateBackground();
 
     update();
 }
@@ -300,7 +303,7 @@ void TrackContainerView::updateBackgrounds()
 void TrackContainerView::computeHyperBarViews()
 {
     m_hyperBarViews.clear();
-    if(m_tc == Engine::getSong())
+    if(m_tc == Engine::song())
     {
         QMap<QChar, QPair<int, QColor>> map;
         map.insert('I', QPair<int, QColor>(4, QColor(0, 255, 0, 64)));
@@ -344,7 +347,7 @@ void TrackContainerView::computeHyperBarViews()
 
         // QString s="I16A16B8AB";
         // QString s="IABABCBO";
-        QString s = Engine::getSong()->songMetaData("Structure");
+        QString s = Engine::song()->songMetaData("Structure");
         s.replace(QRegExp("[^'A-Z0-9].*$"), "");
 
         for(int i = 0; i < s.length(); i++)
@@ -389,7 +392,7 @@ void TrackContainerView::computeBarViews()
 {
     // qWarning("TrackContainerView::computeBarViews");
     m_barViews.clear();
-    if(m_tc == Engine::getSong())
+    if(m_tc == Engine::song())
     {
         bool sign = true;
         for(int i = 0; i < m_hyperBarViews.size(); i++)
@@ -452,15 +455,14 @@ void TrackContainerView::computeBarViews()
 
 void TrackContainerView::clearAllTracks()
 {
-    // GDX ...
-    while(!m_trackViews.empty())
+    while(!m_trackViews.isEmpty())
     {
         TrackView* tv = m_trackViews.takeLast();
         Track*     t  = tv->track();
         qInfo("TrackContainerView::clearAllTrack views [%s]",
               qPrintable(t->name()));
-        delete tv;
-        // delete t;
+        // delete tv;
+        delete t;
     }
 
     requireActionUpdate();
@@ -546,7 +548,7 @@ void TrackContainerView::dropEvent(QDropEvent* _de)
     {
         if(gui->mainWindow()->mayChangeProject(true))
         {
-            Engine::getSong()->loadProject(value);
+            Engine::song()->loadProject(value);
         }
         _de->accept();
     }
@@ -593,7 +595,7 @@ void TrackContainerView::mouseMoveEvent(QMouseEvent* _me)
 
 void TrackContainerView::mouseReleaseEvent(QMouseEvent* _me)
 {
-    QVector<Tile*> so = selectedTCOs();
+    Tiles so = selectedTCOs();
     if(so.length() > 0)
         Selection::select(so.at(0));
 
@@ -615,40 +617,79 @@ RubberBand* TrackContainerView::rubberBand() const
     return m_rubberBand;
 }
 
-QVector<Tile*> TrackContainerView::selectedTCOs()
+Tiles TrackContainerView::selectedTCOs()
 {
-    QVector<SelectableObject*>   s1 = selectedObjects();
-    QVector<Tile*> s2;
-    for(QVector<SelectableObject*>::iterator o1 = s1.begin(); o1 != s1.end();
-        ++o1)
-    {
-        TileView* tcov
-                = dynamic_cast<TileView*>(*o1);
-        if(tcov == NULL)
-            continue;
-
-        Tile* tco = tcov->getTile();
-
-        s2.push_back(tco);
-    }
-    return s2;
+    Tiles r;
+    for(TileView* tv: selectedTCOViews())
+        r.append(tv->tile());
+    return r;
 }
 
-QVector<TileView*> TrackContainerView::selectedTCOViews()
+TileViews TrackContainerView::selectedTCOViews()
 {
-    QVector<SelectableObject*>       s1 = selectedObjects();
-    QVector<TileView*> s2;
-    for(QVector<SelectableObject*>::iterator o1 = s1.begin(); o1 != s1.end();
-        ++o1)
+    TileViews r;
+    for(SelectableObject* o: selectedObjects())
     {
-        TileView* tcov
-                = dynamic_cast<TileView*>(*o1);
-        if(tcov == NULL)
+        TileView* tv = dynamic_cast<TileView*>(o);
+        if(tv == nullptr)
             continue;
 
-        s2.push_back(tcov);
+        r.append(tv);
     }
-    return s2;
+    return r;
+}
+
+TileViews TrackContainerView::selectedTileViewsAt(const MidiTime& _pos,
+                                                  bool _startExcluded,
+                                                  bool _endExcluded)
+{
+    return filterTileViewsAt(selectedTCOViews(), _pos, _startExcluded,
+                             _endExcluded);
+}
+
+Tiles TrackContainerView::allTiles()
+{
+    Tiles r;
+    for(TileView* tv: allTileViews())
+        r.append(tv->tile());
+    return r;
+}
+
+TileViews TrackContainerView::allTileViews()
+{
+    TileViews r;
+    for(auto trackView: trackViews())
+        for(auto tileView: trackView->getTrackContentWidget()->tileViews())
+            r.append(tileView);
+    return r;
+}
+
+TileViews TrackContainerView::allTileViewsAt(const MidiTime& _pos,
+                                             bool            _startExcluded,
+                                             bool            _endExcluded)
+{
+    return filterTileViewsAt(allTileViews(), _pos, _startExcluded,
+                             _endExcluded);
+}
+
+TileViews TrackContainerView::filterTileViewsAt(const TileViews& _tileViews,
+                                                const MidiTime&  _pos,
+                                                bool _startExcluded,
+                                                bool _endExcluded)
+{
+    TileViews r;
+    for(TileView* tv: _tileViews)
+    {
+        Tile* tile = tv->tile();
+        if((!_startExcluded && tile->startPosition() > _pos)
+           || (_startExcluded && tile->startPosition() >= _pos))
+            continue;
+        if((!_endExcluded && tile->endPosition() < _pos)
+           || (_endExcluded && tile->endPosition() <= _pos))
+            continue;
+        r.append(tv);
+    }
+    return r;
 }
 
 TrackContainerView::scrollArea::scrollArea(TrackContainerView* _parent) :

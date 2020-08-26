@@ -25,7 +25,7 @@
 #ifndef KNOB_H
 #define KNOB_H
 
-#include "AutomatableModelView.h"
+#include "AutomatableModelView.h" // REQUIRED
 #include "Widget.h"
 //#include "PaintCacheable.h"
 //#include "templates.h"
@@ -46,19 +46,19 @@ enum knobTypes
     knobStyled
 };
 
-class EXPORT Knob : public Widget, public FloatModelView
+class EXPORT Knob : public Widget, public RealModelView
 {
     Q_OBJECT
     Q_ENUMS(knobTypes)
 
   public:
-    Q_PROPERTY(float innerRadius READ innerRadius WRITE setInnerRadius)
-    Q_PROPERTY(float outerRadius READ outerRadius WRITE setOuterRadius)
+    Q_PROPERTY(real_t innerRadius READ innerRadius WRITE setInnerRadius)
+    Q_PROPERTY(real_t outerRadius READ outerRadius WRITE setOuterRadius)
 
-    Q_PROPERTY(float centerPointX READ centerPointX WRITE setCenterPointX)
-    Q_PROPERTY(float centerPointY READ centerPointY WRITE setCenterPointY)
+    Q_PROPERTY(real_t centerPointX READ centerPointX WRITE setCenterPointX)
+    Q_PROPERTY(real_t centerPointY READ centerPointY WRITE setCenterPointY)
 
-    Q_PROPERTY(float lineWidth READ lineWidth WRITE setLineWidth)
+    Q_PROPERTY(real_t lineWidth READ lineWidth WRITE setLineWidth)
     Q_PROPERTY(knobTypes knobNum READ knobNum WRITE setknobNum)
 
     // Unfortunately, the gradient syntax doesn't create our gradient
@@ -70,17 +70,22 @@ class EXPORT Knob : public Widget, public FloatModelView
     Q_PROPERTY(QColor textColor READ textColor WRITE setTextColor)
 
     // mapPropertyFromModel(bool, isVolumeKnob, setVolumeKnob, m_volumeKnob);
-    // mapPropertyFromModel(float, volumeRatio, setVolumeRatio,
+    // mapPropertyFromModel(real_t, volumeRatio, setVolumeRatio,
     // m_volumeRatio);
 
-    Knob(knobTypes      _knob_num,
+    Knob(RealModel* _model,
+         QWidget*   _parent,
+         knobTypes  _knobNum = knobBright_26);
+    Knob(QWidget* _parent = nullptr, const QString& _name = "[knob]");
+
+    // obsolete
+    Knob(knobTypes      _knobNum,
          QWidget*       _parent = nullptr,
          const QString& _name   = "[knob]");
-    Knob(QWidget*       _parent = nullptr,
-         const QString& _name   = "[knob]");  //!< default ctor
+
     virtual ~Knob();
 
-    void initUi(const QString& _name);  //!< to be called by ctors
+    void initUi();            //!< to be called by ctors
     void onKnobNumUpdated();  //!< to be called when you updated @a m_knobNum
 
     // TODO: remove, tmp
@@ -93,14 +98,14 @@ class EXPORT Knob : public Widget, public FloatModelView
     */
 
     // TODO: remove
-    inline void setHintText(const QString& _txt_before,
+    INLINE void setHintText(const QString& _txt_before,
                             const QString& _txt_after)
     {
         setDescription(_txt_before);
         setUnit(_txt_after);
     }
 
-    virtual void setModel(Model* _m, bool isOldModelValid = true);
+    // virtual void setModel(Model* _m, bool isOldModelValid = true);
 
     void setLabel(const QString& txt);  // deprecated
 
@@ -110,26 +115,26 @@ class EXPORT Knob : public Widget, public FloatModelView
     // bool isInteractive() const;
     // void setInteractive(bool _b);
 
-    void setTotalAngle(float angle);
+    void setTotalAngle(real_t angle);
 
     // Begin styled knob accessors
-    float innerRadius() const;
-    void  setInnerRadius(float r);
+    real_t innerRadius() const;
+    void   setInnerRadius(real_t r);
 
-    float outerRadius() const;
-    void  setOuterRadius(float r);
+    real_t outerRadius() const;
+    void   setOuterRadius(real_t r);
 
     knobTypes knobNum() const;
     void      setknobNum(knobTypes k);
 
     QPointF centerPoint() const;
-    float   centerPointX() const;
-    void    setCenterPointX(float c);
-    float   centerPointY() const;
-    void    setCenterPointY(float c);
+    real_t  centerPointX() const;
+    void    setCenterPointX(real_t c);
+    real_t  centerPointY() const;
+    void    setCenterPointY(real_t c);
 
-    float lineWidth() const;
-    void  setLineWidth(float w);
+    real_t lineWidth() const;
+    void   setLineWidth(real_t w);
 
     QColor outerColor() const;
     void   setOuterColor(const QColor& c);
@@ -149,7 +154,7 @@ class EXPORT Knob : public Widget, public FloatModelView
   signals:
     void sliderPressed();
     void sliderReleased();
-    void sliderMoved(float value);
+    void sliderMoved(real_t value);
 
   public slots:
     virtual void modelChanged();
@@ -162,18 +167,21 @@ class EXPORT Knob : public Widget, public FloatModelView
     void toggleScale();
 
   protected:
-    virtual void contextMenuEvent(QContextMenuEvent* _ce);
-    virtual void dragEnterEvent(QDragEnterEvent* _dee);
-    virtual void dropEvent(QDropEvent* _de);
-    virtual void focusOutEvent(QFocusEvent* _fe);
-    virtual void mousePressEvent(QMouseEvent* _me);
-    virtual void mouseReleaseEvent(QMouseEvent* _me);
-    virtual void mouseMoveEvent(QMouseEvent* _me);
-    virtual void mouseDoubleClickEvent(QMouseEvent* _me);
-    virtual void wheelEvent(QWheelEvent* _we);
+    void contextMenuEvent(QContextMenuEvent* _ce) override;
+    void dragEnterEvent(QDragEnterEvent* _dee) override;
+    void dropEvent(QDropEvent* _de) override;
+    void focusOutEvent(QFocusEvent* _fe) override;
+    void mousePressEvent(QMouseEvent* _me) override;
+    void mouseReleaseEvent(QMouseEvent* _me) override;
+    void mouseMoveEvent(QMouseEvent* _me) override;
+    void mouseDoubleClickEvent(QMouseEvent* _me) override;
+    void wheelEvent(QWheelEvent* _we) override;
 
-    // virtual float getValue( const QPoint & _p );
-    virtual void convert(const QPoint& _p, float& value_, float& dist_);
+    void doConnections() override;
+    void undoConnections() override;
+
+    // virtual real_t getValue( const QPoint & _p );
+    virtual void convert(const QPoint& _p, real_t& value_, real_t& dist_);
     virtual void setPosition(const QPoint& _p, bool _shift);
 
     virtual QString displayValue() const;
@@ -181,34 +189,32 @@ class EXPORT Knob : public Widget, public FloatModelView
   private:
     void onTextUpdated();
 
-    virtual void doConnections();
-
     QLineF calculateLine(const QPointF& _mid,
-                         float          _radius,
-                         float          _innerRadius = 1) const;
+                         real_t         _radius,
+                         real_t         _innerRadius = 1) const;
 
     QColor statusColor();
 
     // void clearCache();
-    void  drawWidget(QPainter& _p);
-    void  drawKnob(QPainter& _p);
-    void  drawText(QPainter& _p);
-    bool  updateAngle();
-    float angleFromValue(float value,
-                         float minValue,
-                         float maxValue,
-                         float totalAngle) const;
+    void   drawWidget(QPainter& _p);
+    void   drawKnob(QPainter& _p);
+    void   drawText(QPainter& _p);
+    bool   updateAngle();
+    real_t angleFromValue(real_t value,
+                          real_t minValue,
+                          real_t maxValue,
+                          real_t totalAngle) const;
 
     /*
-    inline float pageSize() const
+    INLINE real_t pageSize() const
     {
-            return ( model()->maxValue() - model()->minValue() ) / 100.0f;
+            return ( model()->maxValue() - model()->minValue() ) / 100.;
     }
     */
 
     static TextFloat* s_textFloat;
 
-    float  m_pressValue;  // model value when left button pressed
+    real_t m_pressValue;  // model value when left button pressed
     QPoint m_pressPos;    // mouse pos when left button pressed
     bool   m_pressLeft;   // true when left button pressed
 
@@ -220,18 +226,18 @@ class EXPORT Knob : public Widget, public FloatModelView
 
     // QPoint m_mouseOffset;
     // QPoint m_origMousePos;
-    // float m_leftOver;
+    // real_t m_leftOver;
     // bool m_buttonPressed;
 
-    float m_totalAngle;
-    float m_angle;
+    real_t m_totalAngle;
+    real_t m_angle;
     // QPixmap* m_cache;
 
     // Styled knob stuff, could break out
     QPointF m_centerPoint;
-    float   m_innerRadius;
-    float   m_outerRadius;
-    float   m_lineWidth;
+    real_t  m_innerRadius;
+    real_t  m_outerRadius;
+    real_t  m_lineWidth;
     QColor  m_outerColor;
     QColor  m_lineColor;  //!< unused yet
     QColor  m_arcColor;   //!< unused yet
@@ -288,7 +294,7 @@ class EXPORT VolumeKnob : public Knob
 
   public:
     // mapPropertyFromModel(bool, isVolumeKnob, setVolumeKnob, m_volumeKnob);
-    mapPropertyFromModel(float, volumeRatio, setVolumeRatio, m_volumeRatio);
+    mapPropertyFromModel(real_t, volumeRatio, setVolumeRatio, m_volumeRatio);
 
     VolumeKnob(knobTypes _knob_num, QWidget* _parent);
     VolumeKnob(QWidget* _parent);
@@ -299,8 +305,8 @@ class EXPORT VolumeKnob : public Knob
     virtual void enterValue();
 
   private:
-    BoolModel  m_volumeKnob;
-    FloatModel m_volumeRatio;
+    BoolModel m_volumeKnob;
+    RealModel m_volumeRatio;
 };
 
 #endif

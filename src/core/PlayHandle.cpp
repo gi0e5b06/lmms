@@ -39,8 +39,10 @@ PlayHandle::PlayHandle(const Type type, f_cnt_t offset) :
       m_finished(false), m_type(type), m_offset(offset),
       m_processingLock(
               "PlayHandle::m_processingLock", QMutex::Recursive, false),
-      m_usesBuffer(true), m_playHandleBuffer(nullptr), m_bufferReleased(true),
-      m_refCount(0), m_pointer(nullptr)
+      m_usesBuffer(true), m_playHandleBuffer(nullptr),
+      //m_bufferReleased(true),
+      //m_refCount(0),
+      m_pointer(nullptr)
 {
     m_pointer = new PlayHandlePointer(this);
     // (((PlayHandlePointer*)m_pointer)->reset(this);
@@ -50,7 +52,6 @@ PlayHandle::PlayHandle(const Type type, f_cnt_t offset) :
 
 PlayHandle::~PlayHandle()
 {
-    releaseBuffer();
     //m_pointer->reset(nullptr);
     //delete ((PlayHandlePointer*)m_pointer);
 }
@@ -58,8 +59,9 @@ PlayHandle::~PlayHandle()
 void PlayHandle::setFinished()
 {
     lock();
-    if(m_refCount <= 0 && !m_finished)
+    if(/*m_refCount <= 0 &&*/ !m_finished)
     {
+        releaseBuffer();
         m_finished = true;
         Engine::mixer()->emit playHandleToRemove(pointer());
     }
@@ -74,8 +76,7 @@ void PlayHandle::doProcessing()
         if(m_playHandleBuffer == nullptr)
         {
             m_playHandleBuffer = BufferManager::acquire();
-            m_bufferReleased   = false;
-            BufferManager::clear(m_playHandleBuffer);
+            //BufferManager::clear(m_playHandleBuffer); tmp needed?
         }
         play(m_playHandleBuffer);  // buffer());
     }
@@ -88,16 +89,18 @@ void PlayHandle::doProcessing()
 
 void PlayHandle::releaseBuffer()
 {
+    lock();
     if(m_playHandleBuffer != nullptr)
     {
         BufferManager::release(m_playHandleBuffer);
         m_playHandleBuffer = nullptr;
     }
-    m_bufferReleased = true;
+    unlock();
 }
 
 sampleFrame* PlayHandle::buffer()
 {
-    return m_bufferReleased ? nullptr : m_playHandleBuffer;
+    return /*m_bufferReleased ? nullptr :*/
+        m_playHandleBuffer;
     // reinterpret_cast<sampleFrame*>(m_playHandleBuffer);
 }

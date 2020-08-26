@@ -1,5 +1,5 @@
 /*
- * EnvelopeAndLfoParameters.cpp - class EnvelopeAndLfoParameters
+ * EnvelopeAndLfo.cpp - class EnvelopeAndLfo
  *
  * Copyright (c) 2019      gi0e5b06 (on github.com)
  * Copyright (c) 2004-2014 Tobias Doerffel <tobydox/at/users.sourceforge.net>
@@ -23,7 +23,7 @@
  *
  */
 
-#include "EnvelopeAndLfoParameters.h"
+#include "EnvelopeAndLfo.h"
 
 #include "Engine.h"
 #include "Mixer.h"
@@ -36,11 +36,11 @@
 // minimum number of frames for ENV/LFO stages that mustn't be '0'
 const f_cnt_t minimumFrames = 1;
 
-EnvelopeAndLfoParameters::LfoInstances*
-        EnvelopeAndLfoParameters::s_lfoInstances
+EnvelopeAndLfo::LfoInstances*
+        EnvelopeAndLfo::s_lfoInstances
         = nullptr;
 
-void EnvelopeAndLfoParameters::LfoInstances::trigger()
+void EnvelopeAndLfo::LfoInstances::trigger()
 {
     QMutexLocker m(&m_lfoListMutex);
     for(LfoList::Iterator it = m_lfos.begin(); it != m_lfos.end(); ++it)
@@ -50,7 +50,7 @@ void EnvelopeAndLfoParameters::LfoInstances::trigger()
     }
 }
 
-void EnvelopeAndLfoParameters::LfoInstances::reset()
+void EnvelopeAndLfo::LfoInstances::reset()
 {
     QMutexLocker m(&m_lfoListMutex);
     for(LfoList::Iterator it = m_lfos.begin(); it != m_lfos.end(); ++it)
@@ -60,25 +60,25 @@ void EnvelopeAndLfoParameters::LfoInstances::reset()
     }
 }
 
-void EnvelopeAndLfoParameters::LfoInstances::add(
-        EnvelopeAndLfoParameters* lfo)
+void EnvelopeAndLfo::LfoInstances::add(
+        EnvelopeAndLfo* lfo)
 {
     QMutexLocker m(&m_lfoListMutex);
     m_lfos.append(lfo);
 }
 
-void EnvelopeAndLfoParameters::LfoInstances::remove(
-        EnvelopeAndLfoParameters* lfo)
+void EnvelopeAndLfo::LfoInstances::remove(
+        EnvelopeAndLfo* lfo)
 {
     QMutexLocker m(&m_lfoListMutex);
     m_lfos.removeAll(lfo);
 }
 
-EnvelopeAndLfoParameters::EnvelopeAndLfoParameters(
+EnvelopeAndLfo::EnvelopeAndLfo(
         real_t _value_for_zero_amount, Model* _parent) :
       Model(_parent, "Envelope"),
       m_used(false),
-      m_paramMutex("EnvelopeAndLfoParameters::m_paramMutex", true),
+      m_paramMutex("EnvelopeAndLfo::m_paramMutex", true),
       m_predelayModel(0.,
                       0.,
                       2.,
@@ -200,7 +200,7 @@ EnvelopeAndLfoParameters::EnvelopeAndLfoParameters(
     updateSampleVars();
 }
 
-EnvelopeAndLfoParameters::~EnvelopeAndLfoParameters()
+EnvelopeAndLfo::~EnvelopeAndLfo()
 {
     m_predelayModel.disconnect(this);
     m_attackModel.disconnect(this);
@@ -239,7 +239,7 @@ EnvelopeAndLfoParameters::~EnvelopeAndLfoParameters()
     }
 }
 
-inline sample_t EnvelopeAndLfoParameters::lfoShapeSample(fpp_t _frame_offset)
+inline sample_t EnvelopeAndLfo::lfoShapeSample(fpp_t _frame_offset)
 {
     const real_t phase
             = m_lfoOscillationFrames > 0
@@ -282,7 +282,7 @@ inline sample_t EnvelopeAndLfoParameters::lfoShapeSample(fpp_t _frame_offset)
     return shape_sample * m_lfoAmount;
 }
 
-void EnvelopeAndLfoParameters::updateLfoShapeData()
+void EnvelopeAndLfo::updateLfoShapeData()
 {
     const fpp_t frames = Engine::mixer()->framesPerPeriod();
 
@@ -292,7 +292,7 @@ void EnvelopeAndLfoParameters::updateLfoShapeData()
     m_bad_lfoShapeData = false;
 }
 
-inline void EnvelopeAndLfoParameters::fillLfoLevel(real_t*     _buf,
+inline void EnvelopeAndLfo::fillLfoLevel(real_t*     _buf,
                                                    f_cnt_t     _frame,
                                                    const fpp_t _frames)
 {
@@ -318,7 +318,7 @@ inline void EnvelopeAndLfoParameters::fillLfoLevel(real_t*     _buf,
         *_buf++ = m_lfoShapeData[offset];
 }
 
-void EnvelopeAndLfoParameters::fillLevel(real_t*       _buf,
+void EnvelopeAndLfo::fillLevel(real_t*       _buf,
                                          f_cnt_t       _frame,
                                          const f_cnt_t _releaseBegin,
                                          const fpp_t   _frames,
@@ -392,7 +392,7 @@ void EnvelopeAndLfoParameters::fillLevel(real_t*       _buf,
     emit sendOut(&m_outBuffer);
 }
 
-void EnvelopeAndLfoParameters::saveSettings(QDomDocument& _doc,
+void EnvelopeAndLfo::saveSettings(QDomDocument& _doc,
                                             QDomElement&  _parent)
 {
     m_predelayModel.saveSettings(_doc, _parent, "pdel");
@@ -417,7 +417,7 @@ void EnvelopeAndLfoParameters::saveSettings(QDomDocument& _doc,
     m_lfoWaveIndexModel.saveSettings(_doc, _parent, "lshp");  // compatibility
 }
 
-void EnvelopeAndLfoParameters::loadSettings(const QDomElement& _this)
+void EnvelopeAndLfo::loadSettings(const QDomElement& _this)
 {
     m_predelayModel.loadSettings(_this, "pdel");
     m_attackModel.loadSettings(_this, "att");
@@ -462,16 +462,16 @@ void EnvelopeAndLfoParameters::loadSettings(const QDomElement& _this)
                                                     "lfosyncmode" ).toInt() );
             }*/
 
-    // qInfo("EnvelopeAndLfoParameters::loadSettings 1");
+    // qInfo("EnvelopeAndLfo::loadSettings 1");
     m_userWave.setAudioFile(_this.attribute("userwavefile"));
-    // qInfo("EnvelopeAndLfoParameters::loadSettings 2");
+    // qInfo("EnvelopeAndLfo::loadSettings 2");
     updateSampleVars();
-    // qInfo("EnvelopeAndLfoParameters::loadSettings 3");
+    // qInfo("EnvelopeAndLfo::loadSettings 3");
 }
 
-void EnvelopeAndLfoParameters::updateSampleVars()
+void EnvelopeAndLfo::updateSampleVars()
 {
-    // qInfo("EnvelopeAndLfoParameters::updateSampleVars");
+    // qInfo("EnvelopeAndLfo::updateSampleVars");
 
     QMutexLocker m(&m_paramMutex);
 

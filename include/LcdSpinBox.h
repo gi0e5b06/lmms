@@ -45,8 +45,6 @@ class EXPORT LcdSpinBox : public LcdWidget, public IntModelView
 
     virtual ~LcdSpinBox();
 
-    virtual void modelChanged();
-
     /*! Sets an offset which is always added to value of model so we can
         display values in a user-friendly way if they internally start at 0 */
     /*
@@ -67,12 +65,14 @@ class EXPORT LcdSpinBox : public LcdWidget, public IntModelView
     virtual void update();
 
   protected:
-    virtual void contextMenuEvent(QContextMenuEvent* _me);
-    virtual void mousePressEvent(QMouseEvent* _me);
-    virtual void mouseMoveEvent(QMouseEvent* _me);
-    virtual void mouseReleaseEvent(QMouseEvent* _me);
-    virtual void wheelEvent(QWheelEvent* _we);
-    virtual void mouseDoubleClickEvent(QMouseEvent* _me);
+    void modelChanged() override;
+
+    void contextMenuEvent(QContextMenuEvent* _me) override;
+    void mousePressEvent(QMouseEvent* _me) override;
+    void mouseMoveEvent(QMouseEvent* _me) override;
+    void mouseReleaseEvent(QMouseEvent* _me) override;
+    void wheelEvent(QWheelEvent* _we) override;
+    void mouseDoubleClickEvent(QMouseEvent* _me) override;
 
     virtual void convert(const QPoint& _p, real_t& value_, real_t& dist_);
     virtual void setPosition(const QPoint& _p, bool _shift);

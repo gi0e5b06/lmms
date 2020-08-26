@@ -1,33 +1,41 @@
 #ifndef SENDBUTTONINDICATOR_H
 #define SENDBUTTONINDICATOR_H
 
+#include "AutomatableModel.h"
+
 //#include <QDebug>
 #include <QLabel>
-#include <QPixmap>
+#include <QPointer>
+//#include <QPixmap>
 
-#include "FxLine.h"
-#include "FxMixerView.h"
+//#include "FxLine.h"
+//#include "FxMixerView.h"
 
-class FxLine;
-class FxMixerView;
+// class FxLine;
+// class FxMixerView;
 
-class SendButtonIndicator : public QLabel 
+class SendButtonIndicator : public QLabel
 {
-public:
-	SendButtonIndicator( QWidget * _parent, FxLine * _owner,
-						 FxMixerView * _mv);
+    Q_OBJECT
 
-	virtual void mousePressEvent( QMouseEvent * e );
-	void updateLightStatus();
+  public:
+    SendButtonIndicator(QWidget*  _parent,
+                        IntModel* _currentLine,
+                        IntModel* _channelIndex);
 
-private:
+    virtual void updateLightStatus() final;
 
-	FxLine * m_parent;
-	FxMixerView * m_mv;
-	static QPixmap * s_qpmOn;
-	static QPixmap * s_qpmOff;
+  signals:
+    void sendModelChanged(int);
 
-	FloatModel * getSendModel();
+  protected:
+    void mousePressEvent(QMouseEvent* e) override;
+
+  private:
+    RealModel* sendModel();
+
+    QPointer<IntModel> m_currentLine;
+    QPointer<IntModel> m_channelIndex;
 };
 
-#endif // SENDBUTTONINDICATOR_H
+#endif  // SENDBUTTONINDICATOR_H

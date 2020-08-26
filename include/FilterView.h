@@ -29,8 +29,6 @@
 
 class QWidget;
 
-// class BoolModel;
-// class FloatModel;
 class TempoSyncKnobModel;
 class ComboBox;
 class ComboBoxModel;
@@ -52,12 +50,12 @@ class FilterView : public GroupBox
 
     void setModels(BoolModel*          _led,
                    ComboBoxModel*      _type,
-                   FloatModel*         _cut,
-                   FloatModel*         _res,
+                   RealModel*          _cut,
+                   RealModel*          _res,
                    ComboBoxModel*      _passes,
-                   FloatModel*         _gain,
-                   FloatModel*         _response,
-                   FloatModel*         _feedbackAmount,
+                   RealModel*          _gain,
+                   RealModel*          _response,
+                   RealModel*          _feedbackAmount,
                    TempoSyncKnobModel* _feedbackDelay);
 
   private:

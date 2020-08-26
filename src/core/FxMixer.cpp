@@ -56,6 +56,9 @@ FxRoute::FxRoute(FxChannel* from, FxChannel* to, real_t amount) :
                nullptr,
                tr("Amount to send from channel %1 to channel %2")
                        .arg(m_from->channelIndex())
+                       .arg(m_to->channelIndex()),
+               QString("amount_%1_%2")
+                       .arg(m_from->channelIndex())
                        .arg(m_to->channelIndex()))
 {
     // qDebug( "created: %d to %d", m_from->m_channelIndex,
@@ -591,6 +594,7 @@ FxMixer::~FxMixer()
     while(!m_fxRoutes.isEmpty())
         deleteChannelSend(m_fxRoutes.last());  // first());
 
+    /*
     while(!m_fxChannels.isEmpty())  // m_fxChannels.size())
     {
         // FxChannel* f = m_fxChannels[m_fxChannels.size() - 1];
@@ -598,6 +602,8 @@ FxMixer::~FxMixer()
         FxChannel* f = m_fxChannels.takeLast();
         delete f;
     }
+    */
+    m_fxChannels.clear();
     qInfo("FxMixer::~FxMixer END");
 }
 
@@ -682,7 +688,7 @@ void FxMixer::deleteChannel(int _index)
     qInfo("FxMixer::deleteChannel index=%d START", _index);
 
     // channel deletion is performed between mixer rounds
-    // Engine::mixer()->requestChangeInModel();
+    Engine::mixer()->requestChangeInModel();
 
     // go through every instrument and adjust for the channel index change
     Tracks tracks;
@@ -748,7 +754,7 @@ void FxMixer::deleteChannel(int _index)
             r->updateName();
     }
 
-    // Engine::mixer()->doneChangeInModel();
+    Engine::mixer()->doneChangeInModel();
     qInfo("FxMixer::deleteChannel index=%d END", _index);
 }
 
@@ -870,13 +876,30 @@ FxRoute* FxMixer::createRoute(FxChannel* from, FxChannel* to, real_t amount)
 }
 
 // delete the connection made by createChannelSend
-void FxMixer::deleteChannelSend(fx_ch_t fromChannel, fx_ch_t toChannel)
+void FxMixer::deleteChannelSend(fx_ch_t channelFrom, fx_ch_t channelTo)
 {
+    if(channelFrom < 0 || channelFrom >= m_fxChannels.size())
+    {
+        BACKTRACE
+        qWarning("FxMixer::deleteChannelSend invalid channelFrom=%d",
+                 channelFrom);
+        return;
+    }
+
+    if(channelTo < 0 || channelTo >= m_fxChannels.size())
+    {
+        BACKTRACE
+        qWarning("FxMixer::deleteChannelSend invalid channelTo=%d",
+                 channelTo);
+        return;
+    }
+
     // delete the send
-    FxChannel* from = m_fxChannels[fromChannel];
-    FxChannel* to   = m_fxChannels[toChannel];
+    FxChannel* from = m_fxChannels[channelFrom];
+    FxChannel* to   = m_fxChannels[channelTo];
 
     // find and delete the send entry
+    /*
     for(int i = 0; i < from->sends().size(); ++i)
     {
         if(from->sends()[i]->receiver() == to)
@@ -885,6 +908,13 @@ void FxMixer::deleteChannelSend(fx_ch_t fromChannel, fx_ch_t toChannel)
             break;
         }
     }
+    */
+    for(FxRoute* s: from->sends())
+        if(to == s->receiver())
+            deleteChannelSend(s);
+    for(FxRoute* r: from->receives())
+        if(from == r->sender())
+            deleteChannelSend(r);
 }
 
 void FxMixer::deleteChannelSend(FxRoute* route)
@@ -892,78 +922,108 @@ void FxMixer::deleteChannelSend(FxRoute* route)
     // Engine::mixer()->requestChangeInModel();
     // remove us from from's sends
     // route->sender()->sends().remove(route->sender()->sends().indexOf(route));
-    route->sender()->removeSendRoute(route);
+    FxChannel* s = route->sender();
+    if(s != nullptr)
+        s->removeSendRoute(route);
     // remove us from to's receives
     // route->receiver()->receives().remove(route->receiver()->receives().indexOf(route));
-    route->receiver()->removeReceiveRoute(route);
+    FxChannel* r = route->receiver();
+    if(r != nullptr)
+        r->removeReceiveRoute(route);
 
     // remove us from fxmixer's list
-    Engine::fxMixer()->m_fxRoutes.remove(
-            Engine::fxMixer()->m_fxRoutes.indexOf(route));
-    delete route;
+    // Engine::fxMixer()->m_fxRoutes.remove(
+    //  Engine::fxMixer()->m_fxRoutes.indexOf(route));
+    m_fxRoutes.removeOne(route);
+    // delete route;
     // Engine::mixer()->doneChangeInModel();
 }
 
-bool FxMixer::isInfiniteLoop(fx_ch_t sendFrom, fx_ch_t sendTo)
+bool FxMixer::isInfiniteLoop(fx_ch_t channelFrom, fx_ch_t channelTo)
 {
-    if(sendFrom == sendTo)
+    if(channelFrom == channelTo)
         return true;
-    FxChannel* from = m_fxChannels[sendFrom];
-    FxChannel* to   = m_fxChannels[sendTo];
-    bool       b    = checkInfiniteLoop(from, to);
-    return b;
+
+    if(channelFrom < 0 || channelFrom >= m_fxChannels.size())
+    {
+        BACKTRACE
+        qWarning("FxMixer::isInfiniteLoop invalid channelFrom=%d",
+                 channelFrom);
+        return true;
+    }
+
+    if(channelTo < 0 || channelTo >= m_fxChannels.size())
+    {
+        BACKTRACE
+        qWarning("FxMixer::isInfiniteLoop invalid channelTo=%d", channelTo);
+        return true;
+    }
+
+    FxChannel* from = m_fxChannels[channelFrom];
+    FxChannel* to   = m_fxChannels[channelTo];
+
+    return checkInfiniteLoop(from, to);
 }
 
 bool FxMixer::checkInfiniteLoop(FxChannel* from, FxChannel* to)
 {
     // can't send master to anything
     if(from == m_fxChannels[0])
-    {
         return true;
-    }
 
     // can't send channel to itself
     if(from == to)
-    {
         return true;
-    }
 
     // follow sendTo's outputs recursively looking for something that sends
     // to sendFrom
     for(int i = 0; i < to->sends().size(); ++i)
-    {
         if(checkInfiniteLoop(from, to->sends()[i]->receiver()))
-        {
             return true;
-        }
-    }
 
     return false;
 }
 
 // how much does fromChannel send its output to the input of toChannel?
-FloatModel* FxMixer::channelSendModel(fx_ch_t fromChannel, fx_ch_t toChannel)
+RealModel* FxMixer::channelSendModel(fx_ch_t fromChannel, fx_ch_t toChannel)
 {
     if(fromChannel == toChannel)
+        return nullptr;
+
+    if(fromChannel < 0 || fromChannel >= m_fxChannels.size())
     {
+        // BACKTRACE
+        qWarning("FxMixer::channelSendModel invalid fromChannel=%d",
+                 fromChannel);
         return nullptr;
     }
+
+    if(toChannel < 0 || toChannel >= m_fxChannels.size())
+    {
+        // BACKTRACE
+        qWarning("FxMixer::channelSendModel invalid toChannel=%d", toChannel);
+        return nullptr;
+    }
+
     const FxChannel* from = m_fxChannels[fromChannel];
     const FxChannel* to   = m_fxChannels[toChannel];
 
     for(FxRoute* route: from->sends())
-    {
         if(route->receiver() == to)
-        {
             return route->amount();
-        }
-    }
 
     return nullptr;
 }
 
 void FxMixer::mixToChannel(const sampleFrame* _buf, fx_ch_t _ch)
 {
+    if(_ch < 0 || _ch >= m_fxChannels.size())
+    {
+        BACKTRACE
+        qWarning("FxMixer::mixToChannel invalid _ch=%d", _ch);
+        return;
+    }
+
     FxChannel* ch = m_fxChannels[_ch];
     if(!ch->isMuted())
     {

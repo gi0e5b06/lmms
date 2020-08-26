@@ -31,7 +31,7 @@
 
 #include <QDir>
 #include <QLabel>
-#include <QMutex>
+//#include <QMutex>
 #include <QTreeWidget>
 
 class QLineEdit;
@@ -44,6 +44,7 @@ class TrackContainer;
 class FileBrowser : public SideBarWidget
 {
     Q_OBJECT
+
   public:
     FileBrowser(const QString& directories,
                 const QString& filter,
@@ -96,10 +97,10 @@ class FileBrowserTreeWidget : public QTreeWidget
     void sendInfo(QString _s);
 
   protected:
-    virtual void contextMenuEvent(QContextMenuEvent* e);
-    virtual void mousePressEvent(QMouseEvent* me);
-    virtual void mouseMoveEvent(QMouseEvent* me);
-    virtual void mouseReleaseEvent(QMouseEvent* me);
+    void contextMenuEvent(QContextMenuEvent* cme) override;
+    void mousePressEvent(QMouseEvent* me) override;
+    void mouseMoveEvent(QMouseEvent* me) override;
+    void mouseReleaseEvent(QMouseEvent* me) override;
 
   private slots:
     void activateListItem(QTreeWidgetItem* item, int column);
@@ -131,20 +132,18 @@ class Directory : public QTreeWidgetItem
 
     void update(void);
 
-    inline QString fullName(QString path = QString::null)
+    QString fullName(QString path = QString::null)
     {
         if(path == QString::null)
-        {
             path = m_directories[0];
-        }
+
         if(path != QString::null)
-        {
             path += QDir::separator();
-        }
-        return (QDir::cleanPath(path + text(0)) + QDir::separator());
+
+        return QDir::cleanPath(path + text(0)) + QDir::separator();
     }
 
-    inline void addDirectory(const QString& dir)
+    INLINE void addDirectory(const QString& dir)
     {
         m_directories.push_back(dir);
     }
@@ -197,17 +196,17 @@ class FileItem : public QTreeWidgetItem
         return QFileInfo(m_path, text(0)).absoluteFilePath();
     }
 
-    inline FileTypes type(void) const
+    INLINE FileTypes type() const
     {
-        return (m_type);
+        return m_type;
     }
 
-    inline FileHandling handling(void) const
+    INLINE FileHandling handling() const
     {
-        return (m_handling);
+        return m_handling;
     }
 
-    QString        extension(void);
+    QString        extension();
     static QString extension(const QString& file);
 
   private:

@@ -32,8 +32,8 @@
 #include "ThreadableJob.h"
 #include "lmms_basics.h"
 
-#include <QList>
-#include <QSharedPointer>
+//#include <QList>
+//#include <QSharedPointer>
 
 class QThread;
 
@@ -73,19 +73,19 @@ class PlayHandle : public ThreadableJob
     }
 
     /*
-    inline AudioPort* audioPort() const
+    INLINE AudioPort* audioPort() const
     {
         return m_audioPort;
     }
 
-    inline void setAudioPort(AudioPort* port)
+    INLINE void setAudioPort(AudioPort* port)
     {
         m_audioPort = port;
     }
     */
 
     virtual void enterMixer() = 0;
-    virtual void exitMixer() = 0;
+    virtual void exitMixer()  = 0;
 
     virtual bool requiresProcessing() const final
     {
@@ -136,10 +136,9 @@ class PlayHandle : public ThreadableJob
         m_usesBuffer = b;
     }
 
-    virtual void releaseBuffer() final;
-
     virtual sampleFrame* buffer() final;
 
+    /*
     virtual void incrRefCount() final
     {
         m_refCount++;
@@ -157,6 +156,7 @@ class PlayHandle : public ThreadableJob
     {
         m_refCount = 0;
     }
+    */
 
     virtual PlayHandlePointer& pointer()
     {
@@ -190,13 +190,15 @@ class PlayHandle : public ThreadableJob
     bool m_finished;
 
   private:
-    Type               m_type;
-    f_cnt_t            m_offset;
-    Mutex              m_processingLock;
-    bool               m_usesBuffer;
-    sampleFrame*       m_playHandleBuffer;
-    bool               m_bufferReleased;
-    int                m_refCount;
+    virtual void releaseBuffer() final;
+
+    Type         m_type;
+    f_cnt_t      m_offset;
+    Mutex        m_processingLock;
+    bool         m_usesBuffer;
+    sampleFrame* m_playHandleBuffer;
+    // bool               m_bufferReleased;
+    // int                m_refCount;
     PlayHandlePointer* m_pointer;
 };
 

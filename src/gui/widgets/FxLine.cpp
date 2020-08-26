@@ -27,6 +27,7 @@
 
 #include "CaptionMenu.h"
 #include "FxMixer.h"
+#include "FxMixerView.h"
 #include "GuiApplication.h"
 #include "Song.h"
 #include "embed.h"
@@ -35,44 +36,46 @@
 #include <QGraphicsProxyWidget>
 #include <QWhatsThis>
 
-const int FxLine::FxLineHeight     = 457;  // 287
-QPixmap*  FxLine::s_sendBgArrow    = NULL;
-QPixmap*  FxLine::s_receiveBgArrow = NULL;
+const int FxLine::FxLineHeight = 457;  // 287
 
-FxLine::FxLine(QWidget* _parent, FxMixerView* _mv, int _channelIndex) :
-      QWidget(_parent), m_mv(_mv), m_channelIndex(_channelIndex),
+static PixmapLoader s_sendBgArrow("send_bg_arrow", 29, 56);
+static PixmapLoader s_receiveBgArrow("receive_bg_arrow", 29, 56);
+
+FxLine::FxLine(QWidget* _parent, IntModel* _currentLine, int _channelIndex) :
+      QWidget(_parent), m_currentLine(_currentLine),
+      m_channelIndex(
+              _channelIndex, 0, 10000, nullptr, tr("Channel"), "channel"),
       m_backgroundActive(Qt::SolidPattern), m_strokeOuterActive(0, 0, 0),
       m_strokeOuterInactive(0, 0, 0), m_strokeInnerActive(0, 0, 0),
       m_strokeInnerInactive(0, 0, 0), m_inRename(false)
 {
-    if(!s_sendBgArrow)
-    {
+    /*
+    if(s_sendBgArrow == nullptr)
         s_sendBgArrow
-                = new QPixmap(embed::getIconPixmap("send_bg_arrow", 29, 56));
-    }
-    if(!s_receiveBgArrow)
-    {
-        s_receiveBgArrow = new QPixmap(
-                embed::getIconPixmap("receive_bg_arrow", 29, 56));
-    }
+                = new QPixmap(embed::getPixmap("send_bg_arrow", 29, 56));
+    if(s_receiveBgArrow == nullptr)
+        s_receiveBgArrow
+                = new QPixmap(embed::getPixmap("receive_bg_arrow", 29, 56));
+    */
 
     setFixedSize(33, FxLineHeight);
     setAttribute(Qt::WA_OpaquePaintEvent, true);
     // setCursor(Qt::PointingHandCursor);
-    // setCursor( QCursor( embed::getIconPixmap( "hand" ), 3, 3 ) );
 
     // mixer sends knob
     m_sendKnob = new Knob(knobBright_26, this, tr("Channel send amount"));
     m_sendKnob->move(3, 22);
     m_sendKnob->setVisible(false);
+    m_sendKnob->allowNullModel(true);
+    m_sendKnob->allowModelChange(true);
 
     // send button indicator
-    m_sendBtn = new SendButtonIndicator(this, this, m_mv);
+    m_sendBtn = new SendButtonIndicator(this, m_currentLine, &m_channelIndex);
     m_sendBtn->move(2, 2);
 
     // channel number
     m_lcd = new LcdWidget(2, this);
-    m_lcd->setValue(m_channelIndex);
+    m_lcd->setValue(channelIndex());
     m_lcd->move(4, 58);
     m_lcd->setMarginWidth(1);
 
@@ -97,7 +100,7 @@ FxLine::FxLine(QWidget* _parent, FxMixerView* _mv, int _channelIndex) :
                "which is accessed "
                "by right-clicking the FX channel.\n"));
 
-    QString name = Engine::fxMixer()->effectChannel(m_channelIndex)->name();
+    QString name = Engine::fxMixer()->effectChannel(channelIndex())->name();
     setToolTip(name);
 
     m_renameLineEdit = new QLineEdit();
@@ -122,20 +125,38 @@ FxLine::FxLine(QWidget* _parent, FxMixerView* _mv, int _channelIndex) :
 
     connect(m_renameLineEdit, SIGNAL(editingFinished()), this,
             SLOT(renameFinished()));
+    connect(m_sendBtn, SIGNAL(sendModelChanged(int)), this, SLOT(refresh()));
+    connect(m_currentLine, SIGNAL(dataChanged()), this, SLOT(refresh()));
+    connect(&m_channelIndex, SIGNAL(dataChanged()), this, SLOT(refresh()));
 }
 
 FxLine::~FxLine()
 {
-    delete m_sendKnob;
-    delete m_sendBtn;
-    delete m_lcd;
+    DELETE_HELPER(m_sendKnob);
+    DELETE_HELPER(m_sendBtn);
+    DELETE_HELPER(m_lcd);
+}
+
+int FxLine::currentLine()
+{
+    return m_currentLine->value();
+}
+
+void FxLine::setCurrentLine(int index)
+{
+    m_currentLine->setValue(index);
+}
+
+int FxLine::channelIndex()
+{
+    return m_channelIndex.value();
 }
 
 void FxLine::setChannelIndex(int index)
 {
-    m_channelIndex = index;
-    m_lcd->setValue(m_channelIndex);
-    m_lcd->update();
+    m_channelIndex.setValue(index);
+    m_lcd->setValue(channelIndex());
+    // m_lcd->update();
 }
 
 void FxLine::drawFxLine(QPainter*     p,
@@ -144,7 +165,7 @@ void FxLine::drawFxLine(QPainter*     p,
                         bool          sendToThis,
                         bool          receiveFromThis)
 {
-    QString name = Engine::fxMixer()->effectChannel(m_channelIndex)->name();
+    QString name = Engine::fxMixer()->effectChannel(channelIndex())->name();
     QString elidedName = elideName(name);
 
     if(!m_inRename && m_renameLineEdit->text() != elidedName)
@@ -168,13 +189,9 @@ void FxLine::drawFxLine(QPainter*     p,
 
     // draw the mixer send background
     if(sendToThis)
-    {
-        p->drawPixmap(2, 0, 29, 56, *s_sendBgArrow);
-    }
+        p->drawPixmap(2, 0, 29, 56, s_sendBgArrow);
     else if(receiveFromThis)
-    {
-        p->drawPixmap(2, 0, 29, 56, *s_receiveBgArrow);
-    }
+        p->drawPixmap(2, 0, 29, 56, s_receiveBgArrow);
 }
 
 QString FxLine::elideName(const QString& name)
@@ -188,24 +205,20 @@ QString FxLine::elideName(const QString& name)
 
 void FxLine::paintEvent(QPaintEvent*)
 {
-    bool sendToThis
-            = Engine::fxMixer()->channelSendModel(
-                      m_mv->currentFxLine()->m_channelIndex, m_channelIndex)
-              != NULL;
-    bool receiveFromThis
-            = Engine::fxMixer()->channelSendModel(
-                      m_channelIndex, m_mv->currentFxLine()->m_channelIndex)
-              != NULL;
-    QPainter painter;
-    painter.begin(this);
-    drawFxLine(&painter, this, m_mv->currentFxLine() == this, sendToThis,
+    bool sendToThis = Engine::fxMixer()->channelSendModel(currentLine(),
+                                                          channelIndex())
+                      != nullptr;
+    bool receiveFromThis = Engine::fxMixer()->channelSendModel(channelIndex(),
+                                                               currentLine())
+                           != nullptr;
+    QPainter p(this);
+    drawFxLine(&p, this, currentLine() == channelIndex(), sendToThis,
                receiveFromThis);
-    painter.end();
 }
 
 void FxLine::mousePressEvent(QMouseEvent*)
 {
-    m_mv->setCurrentFxLine(this);
+    setCurrentLine(channelIndex());
 }
 
 void FxLine::mouseDoubleClickEvent(QMouseEvent*)
@@ -216,8 +229,8 @@ void FxLine::mouseDoubleClickEvent(QMouseEvent*)
 void FxLine::contextMenuEvent(QContextMenuEvent*)
 {
     QPointer<CaptionMenu> contextMenu = new CaptionMenu(
-            Engine::fxMixer()->effectChannel(m_channelIndex)->name(), this);
-    if(m_channelIndex != 0)  // no move-options in master
+            Engine::fxMixer()->effectChannel(channelIndex())->name(), this);
+    if(channelIndex() != 0)  // no move-options in master
     {
         contextMenu->addAction(tr("Move &left"), this,
                                SLOT(moveChannelLeft()));
@@ -228,17 +241,17 @@ void FxLine::contextMenuEvent(QContextMenuEvent*)
                            SLOT(renameChannel()));
     contextMenu->addSeparator();
 
-    if(m_channelIndex != 0)  // no remove-option in master
+    if(channelIndex() != 0)  // no remove-option in master
     {
-        contextMenu->addAction(embed::getIconPixmap("cancel"),
+        contextMenu->addAction(embed::getIcon("cancel"),
                                tr("R&emove channel"), this,
                                SLOT(removeChannel()));
         contextMenu->addSeparator();
     }
-    contextMenu->addAction(embed::getIconPixmap("cancel"),
+    contextMenu->addAction(embed::getIcon("cancel"),
                            tr("Remove &unused channels"), this,
                            SLOT(removeUnusedChannels()));
-    contextMenu->addSeparator();
+
     contextMenu->addHelpAction();
     contextMenu->exec(QCursor::pos());
     delete contextMenu;
@@ -252,7 +265,7 @@ void FxLine::renameChannel()
     m_lcd->hide();
     m_renameLineEdit->setFixedWidth(135);
     m_renameLineEdit->setText(
-            Engine::fxMixer()->effectChannel(m_channelIndex)->name());
+            Engine::fxMixer()->effectChannel(channelIndex())->name());
     m_view->setFocus();
     m_renameLineEdit->selectAll();
     m_renameLineEdit->setFocus();
@@ -268,20 +281,20 @@ void FxLine::renameFinished()
     QString newName = m_renameLineEdit->text();
     setFocus();
     if(!newName.isEmpty()
-       && Engine::fxMixer()->effectChannel(m_channelIndex)->name() != newName)
+       && Engine::fxMixer()->effectChannel(channelIndex())->name() != newName)
     {
-        Engine::fxMixer()->effectChannel(m_channelIndex)->setName(newName);
+        Engine::fxMixer()->effectChannel(channelIndex())->setName(newName);
         m_renameLineEdit->setText(elideName(newName));
         Engine::getSong()->setModified();
     }
-    QString name = Engine::fxMixer()->effectChannel(m_channelIndex)->name();
+    QString name = Engine::fxMixer()->effectChannel(channelIndex())->name();
     setToolTip(name);
 }
 
 void FxLine::removeChannel()
 {
     FxMixerView* mix = gui->fxMixerView();
-    mix->deleteChannel(m_channelIndex);
+    mix->deleteChannel(channelIndex());
 }
 
 void FxLine::removeUnusedChannels()
@@ -293,13 +306,13 @@ void FxLine::removeUnusedChannels()
 void FxLine::moveChannelLeft()
 {
     FxMixerView* mix = gui->fxMixerView();
-    mix->moveChannelLeft(m_channelIndex);
+    mix->moveChannelLeft(channelIndex());
 }
 
 void FxLine::moveChannelRight()
 {
     FxMixerView* mix = gui->fxMixerView();
-    mix->moveChannelRight(m_channelIndex);
+    mix->moveChannelRight(channelIndex());
 }
 
 void FxLine::displayHelp()
@@ -355,4 +368,40 @@ QColor FxLine::strokeInnerInactive() const
 void FxLine::setStrokeInnerInactive(const QColor& c)
 {
     m_strokeInnerInactive = c;
+}
+
+void FxLine::refresh()
+{
+    qInfo("FxLine::refresh current=%d index=%d START", currentLine(),
+          channelIndex());
+
+    if(m_sendKnob == nullptr)
+        qWarning("FxLine::refresh m_sendKnob is null");
+    if(m_sendBtn == nullptr)
+        qWarning("FxLine::refresh m_sendBtn is null");
+
+    FxMixer*   mix = Engine::fxMixer();
+    RealModel* sendModel
+            = mix->channelSendModel(currentLine(), channelIndex());
+    if(sendModel == nullptr)
+    {
+        // does not send, hide send knob
+        m_sendKnob->setVisible(false);
+        m_sendKnob->setModel(RealModel::createDefaultConstructed());
+    }
+    else
+    {
+        // it does send, show knob and connect
+        m_sendKnob->setVisible(true);
+        if(m_sendKnob->model() != sendModel)
+            m_sendKnob->setModel(sendModel);
+    }
+
+    // disable the send button if it would cause an infinite loop
+    m_sendBtn->setVisible(
+            !mix->isInfiniteLoop(currentLine(), channelIndex()));
+    m_sendBtn->updateLightStatus();
+    update();
+
+    qInfo("FxLine::refresh END");
 }

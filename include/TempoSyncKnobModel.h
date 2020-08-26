@@ -55,7 +55,9 @@ class EXPORT TempoSyncKnobModel : public FloatModel
                        const real_t   _step,
                        const real_t   _scale,
                        Model*         _parent,
-                       const QString& _display_name = QString());
+                       const QString& _displayName = "[tempo sync model]",
+                       const QString& _objectName  = QString::null,
+                       bool           _defaultConstructed = false);
     virtual ~TempoSyncKnobModel();
 
     void saveSettings(QDomDocument&  _doc,
@@ -82,7 +84,7 @@ class EXPORT TempoSyncKnobModel : public FloatModel
     // void scaleChanged( real_t _new_scale );
 
   public slots:
-    inline void disableSync()
+    INLINE void disableSync()
     {
         setTempoSync(SyncNone);
     }

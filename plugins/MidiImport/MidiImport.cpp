@@ -170,7 +170,7 @@ class smfMidiCC
         if(!ap || time > lastPos + DefaultTicksPerTact)
         {
             MidiTime pPos = MidiTime(time.getTact(), 0);
-            ap = dynamic_cast<AutomationPattern*>(at->createTCO(0));
+            ap = dynamic_cast<AutomationPattern*>(at->createTCO());
             ap->movePosition(pPos);
             ap->addObject(objModel);
         }
@@ -246,7 +246,7 @@ class smfMidiChannel
         {
             MidiTime pPos = MidiTime(n.pos().getTact(), 0);
 
-            p = dynamic_cast<Pattern*>(it->createTCO(0));
+            p = dynamic_cast<Pattern*>(it->createTCO());
             p->movePosition(pPos);
         }
         hasNotes = true;

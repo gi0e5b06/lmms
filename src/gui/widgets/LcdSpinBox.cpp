@@ -52,9 +52,9 @@ LcdSpinBox::LcdSpinBox(int            _numDigits,
                        const QString& _displayName,
                        const QString& _objectName) :
       LcdWidget(_numDigits, _style, _parent, _displayName),
-      IntModelView(
-              new IntModel(0, 0, 0, nullptr, _displayName, _objectName, true),
-              this),
+      IntModelView(this,_displayName),
+      //new IntModel(0, 0, 0, nullptr, _displayName, _objectName, true),
+      //this),
       m_pressLeft(false)
 //, m_displayOffset( 0 )
 {
@@ -70,15 +70,15 @@ void LcdSpinBox::modelChanged()
 {
     ModelView::modelChanged();
     IntModel* m = model();
-    if(m != nullptr)
-        LcdWidget::setValue(m->rawValue());
+    // if(m != nullptr)
+    LcdWidget::setValue(m->rawValue());
 }
 
 void LcdSpinBox::update()
 {
     IntModel* m = model();
-    if(m != nullptr)
-        LcdWidget::setValue(m->rawValue());
+    // if(m != nullptr)
+    LcdWidget::setValue(m->rawValue());
     LcdWidget::update();
 }
 
@@ -105,8 +105,7 @@ void LcdSpinBox::setPosition(const QPoint& _p, bool _shift)
     convert(_p, value, dist);
 
     IntModel* m = model();
-    if(m == nullptr)
-        return;
+    // if(m == nullptr) return;
 
     // const real_t oldValue = model()->rawValue();
 
@@ -157,8 +156,7 @@ void LcdSpinBox::setPosition(const QPoint& _p, bool _shift)
 void LcdSpinBox::contextMenuEvent(QContextMenuEvent* event)
 {
     IntModel* m = model();
-    if(m == nullptr)
-        return;
+    // if(m == nullptr) return;
 
     // for the case, the user clicked right while pressing left mouse-
     // button, the context-menu appears while mouse-cursor is still hidden
@@ -179,16 +177,18 @@ void LcdSpinBox::mousePressEvent(QMouseEvent* _me)
        && displayRect().contains(_me->pos()))  // y() < cellHeight() + 2  )
     {
         IntModel* m = model();
-        if(m != nullptr)
+        // if(m != nullptr)
         {
             m->addJournalCheckPoint();
             m->saveJournallingState(false);
             m_pressValue = m->rawValue();
         }
+        /*
         else
         {
             m_pressValue = 0.;
         }
+        */
 
         m_pressLeft = true;
         m_pressPos  = _me->pos();
@@ -230,8 +230,8 @@ void LcdSpinBox::mouseReleaseEvent(QMouseEvent*)
     if(m_pressLeft)
     {
         IntModel* m = model();
-        if(m != nullptr)
-            m->restoreJournallingState();
+        // if(m != nullptr)
+        m->restoreJournallingState();
 
         // QCursor::setPos( m_pressPos );
         setCursor(Qt::PointingHandCursor);
@@ -247,9 +247,9 @@ void LcdSpinBox::wheelEvent(QWheelEvent* _we)
     {
         _we->accept();
         IntModel* m = model();
-        if(m != nullptr)
-            m->setInitValue(m->rawValue()
-                            + ((_we->delta() > 0) ? 1 : -1) * m->step());
+        // if(m != nullptr)
+        m->setInitValue(m->rawValue()
+                        + ((_we->delta() > 0) ? 1 : -1) * m->step());
         emit manualChange();
     }
 }
@@ -262,8 +262,7 @@ void LcdSpinBox::mouseDoubleClickEvent(QMouseEvent*)
 void LcdSpinBox::enterValue()
 {
     IntModel* m = model();
-    if(m == nullptr)
-        return;
+    // if(m == nullptr) return;
 
     bool ok;
     int  new_val;

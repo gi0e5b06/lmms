@@ -28,6 +28,9 @@
 
 #include "MeterModel.h"
 
+tick_t MidiTime::s_ticksPerTact = DefaultTicksPerTact;
+beat_t MidiTime::s_beatsPerTact = DefaultBeatsPerTact;
+
 TimeSig::TimeSig(int num, int denom) : m_num(num), m_denom(denom)
 {
 }
@@ -47,8 +50,14 @@ int TimeSig::denominator() const
     return m_denom;
 }
 
-MidiTime::MidiTime(const tact_t tact, const tick_t ticks) :
-      m_ticks(tact * s_ticksPerTact + ticks)
+MidiTime::MidiTime(const tact_t tact, const beat_t beat, const tick_t tick) :
+      MidiTime(tact * s_ticksPerTact + beat * s_ticksPerTact / s_beatsPerTact
+               + tick)
+{
+}
+
+MidiTime::MidiTime(const tact_t tact, const tick_t tick) :
+      MidiTime(tact * s_ticksPerTact + tick)
 {
 }
 
@@ -56,18 +65,39 @@ MidiTime::MidiTime(const tick_t ticks) : m_ticks(ticks)
 {
 }
 
-MidiTime MidiTime::toNearestTact() const
-{
-    if(m_ticks % s_ticksPerTact >= s_ticksPerTact / 2)
-    {
-        return (tact() + 1) * s_ticksPerTact;
-    }
-    return tact() * s_ticksPerTact;
-}
-
 MidiTime MidiTime::toAbsoluteTact() const
 {
     return tact() * s_ticksPerTact;
+}
+
+MidiTime MidiTime::toNearestTact() const
+{
+    if(m_ticks % s_ticksPerTact >= s_ticksPerTact / 2)
+        return (tact() + 1) * s_ticksPerTact;
+    else
+        return tact() * s_ticksPerTact;
+}
+
+MidiTime MidiTime::toNextTact() const
+{
+    return (tact() + 1) * s_ticksPerTact;
+}
+
+MidiTime MidiTime::toNearestBeat() const
+{
+    return tick_t(round(round(real_t(m_ticks) * real_t(s_beatsPerTact)
+                              / real_t(s_ticksPerTact))
+                        * real_t(s_ticksPerTact) / real_t(s_beatsPerTact)));
+}
+
+MidiTime MidiTime::toAbsoluteBeat() const
+{
+    return beats() * s_ticksPerTact / s_beatsPerTact;
+}
+
+MidiTime MidiTime::toNextBeat() const
+{
+    return (beats() + 1) * s_ticksPerTact / s_beatsPerTact;
 }
 
 MidiTime& MidiTime::operator+=(const MidiTime& time)
@@ -114,9 +144,37 @@ MidiTime MidiTime::operator-(const tick_t _ticks) const
     return MidiTime(m_ticks - _ticks);
 }
 
+tact_t MidiTime::tacts() const
+{
+    return m_ticks / s_ticksPerTact;
+}
+
 tact_t MidiTime::tact() const
 {
     return m_ticks / s_ticksPerTact;
+}
+
+beat_t MidiTime::beats() const
+{
+    return (m_ticks * s_beatsPerTact) / s_ticksPerTact;
+}
+
+beat_t MidiTime::beat() const
+{
+    return ((m_ticks - tacts() * s_ticksPerTact) * s_beatsPerTact)
+           / s_ticksPerTact;
+}
+
+tick_t MidiTime::ticks() const
+{
+    return m_ticks;
+}
+
+tick_t MidiTime::tick() const
+{
+    // return m_ticks - tact() * s_ticksPerTact
+    //       - beat() * s_ticksPerTact / s_beatsPerTact;
+    return (m_ticks % s_ticksPerTact) % (s_ticksPerTact / s_beatsPerTact);
 }
 
 tact_t MidiTime::nextFullTact() const
@@ -127,11 +185,6 @@ tact_t MidiTime::nextFullTact() const
 void MidiTime::setTicks(tick_t ticks)
 {
     m_ticks = ticks;
-}
-
-tick_t MidiTime::ticks() const
-{
-    return m_ticks;
 }
 
 MidiTime::operator tick_t() const
@@ -160,23 +213,21 @@ tick_t MidiTime::getTickWithinBeat(const TimeSig& sig) const
     return getTickWithinBar(sig) % ticksPerBeat(sig);
 }
 
-f_cnt_t MidiTime::frames(const float framesPerTick) const
+f_cnt_t MidiTime::frames(const real_t framesPerTick) const
 {
-    if(m_ticks >= 0)
-    {
-        return static_cast<f_cnt_t>(m_ticks * framesPerTick);
-    }
-    return 0;
+    return m_ticks > 0 ? static_cast<f_cnt_t>(real_t(m_ticks) * framesPerTick)
+                       : 0;
 }
 
-double MidiTime::getTimeInMilliseconds(bpm_t beatsPerMinute) const
+real_t MidiTime::getTimeInMilliseconds(bpm_t beatsPerMinute) const
 {
     return ticksToMilliseconds(ticks(), beatsPerMinute);
 }
 
-MidiTime MidiTime::fromFrames(const f_cnt_t frames, const float framesPerTick)
+MidiTime MidiTime::fromFrames(const f_cnt_t frames,
+                              const real_t  framesPerTick)
 {
-    return MidiTime(static_cast<int>(frames / framesPerTick));
+    return MidiTime(static_cast<tick_t>(real_t(frames) / framesPerTick));
 }
 
 tick_t MidiTime::ticksPerTact()
@@ -194,14 +245,37 @@ void MidiTime::setTicksPerTact(tick_t tpt)
     s_ticksPerTact = tpt;
 }
 
-double MidiTime::ticksToMilliseconds(tick_t ticks, bpm_t beatsPerMinute)
+beat_t MidiTime::beatsPerTact()
 {
-    return MidiTime::ticksToMilliseconds(static_cast<double>(ticks),
-                                         beatsPerMinute);
+    return s_beatsPerTact;
 }
 
-double MidiTime::ticksToMilliseconds(double ticks, bpm_t beatsPerMinute)
+tick_t MidiTime::beatsPerTact(const TimeSig& sig)
+{
+    return sig.numerator();
+}
+
+void MidiTime::setBeatsPerTact(beat_t bpt)
+{
+    s_beatsPerTact = bpt;
+}
+
+/*
+real_t MidiTime::ticksToMilliseconds(tick_t ticks, bpm_t beatsPerMinute)
+{
+    return MidiTime::ticksToMilliseconds(static_cast<real_t>(ticks),
+                                         beatsPerMinute);
+}
+*/
+
+real_t MidiTime::ticksToMilliseconds(real_t ticks, bpm_t beatsPerMinute)
 {
     // 60 * 1000 / 48 = 1250
     return (ticks * 1250) / beatsPerMinute;
+}
+
+real_t MidiTime::millisecondsToTicks(real_t ms, bpm_t beatsPerMinute)
+{
+    // 60 * 1000 / 48 = 1250
+    return (ms * beatsPerMinute) / 1250;
 }

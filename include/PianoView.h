@@ -1,6 +1,8 @@
 /*
- * PianoView.h - declaration of PianoView, an interactive piano/keyboard-widget
+ * PianoView.h - declaration of PianoView, an interactive
+ * piano/keyboard-widget
  *
+ * Copyright (c) 2018-2020 gi0e5b06 (on github.com)
  * Copyright (c) 2004-2010 Tobias Doerffel <tobydox/at/users.sourceforge.net>
  *
  * This file is part of LMMS - https://lmms.io
@@ -25,62 +27,46 @@
 #ifndef PIANO_VIEW_H
 #define PIANO_VIEW_H
 
-//#include <QPixmap>
-//#include <QScrollBar>
-
-//#include "ModelView.h"
 #include "PeripheralView.h"
 
 class Piano;
 
-
 class PianoView : public PeripheralView
-//public QWidget, public ModelView
 {
-	Q_OBJECT
+    Q_OBJECT
 
- public:
-	PianoView( QWidget * _parent );
-	virtual ~PianoView();
+  public:
+    PianoView(Piano* _piano, QWidget* _parent);
+    virtual ~PianoView();
 
-	virtual void keyPressEvent( QKeyEvent * ke );
-	virtual void keyReleaseEvent( QKeyEvent * ke );
+    void keyPressEvent(QKeyEvent* ke) override;
+    void keyReleaseEvent(QKeyEvent* ke) override;
 
+  protected:
+    void contextMenuEvent(QContextMenuEvent* _me) override;
+    void paintEvent(QPaintEvent*) override;
+    void mousePressEvent(QMouseEvent* me) override;
+    void mouseReleaseEvent(QMouseEvent* me) override;
+    void mouseMoveEvent(QMouseEvent* me) override;
+    void focusOutEvent(QFocusEvent* _fe) override;
+    void resizeEvent(QResizeEvent* _event) override;
 
- protected:
-	virtual void contextMenuEvent( QContextMenuEvent * _me );
-	virtual void paintEvent( QPaintEvent * );
-	virtual void mousePressEvent( QMouseEvent * me );
-	virtual void mouseReleaseEvent( QMouseEvent * me );
-	virtual void mouseMoveEvent( QMouseEvent * me );
-	virtual void focusOutEvent( QFocusEvent * _fe );
-	virtual void resizeEvent( QResizeEvent * _event );
+  private:
+    int getKeyFromMouse(const QPoint& _p) const;
+    int getKeyX(int _key_num) const;
 
+    QScrollBar* m_pianoScroll;
+    int         m_startKey;  // first key when drawing
+    int         m_lastKey;
 
- private:
-	int getKeyFromMouse( const QPoint & _p ) const;
-	int getKeyX( int _key_num ) const;
+  private slots:
+    void pianoScrolled(int _new_pos);
 
-	static QPixmap * s_whiteKeyPm;
-	static QPixmap * s_blackKeyPm;
-	static QPixmap * s_whiteKeyPressedPm;
-	static QPixmap * s_blackKeyPressedPm;
-
-	QScrollBar * m_pianoScroll;
-	int m_startKey;			// first key when drawing
-	int m_lastKey;
-
-
- private slots:
-	void pianoScrolled( int _new_pos );
-
-        /*
-          signals:
-          void keyPressed( int );
-          void baseNoteChanged();
-        */
-} ;
-
+    /*
+      signals:
+      void keyPressed( int );
+      void baseNoteChanged();
+    */
+};
 
 #endif
-

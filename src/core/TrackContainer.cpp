@@ -194,6 +194,9 @@ void TrackContainer::addTrack(Track* _track)
 
 void TrackContainer::removeTrack(Track* _track)
 {
+    if(_track == nullptr)
+        return;
+
     // need a read locker to ensure that m_tracks doesn't change after reading
     // index.
     //   After checking that index != -1, we need to upgrade the lock to a
@@ -221,17 +224,21 @@ void TrackContainer::removeTrack(Track* _track)
     }
     */
 
-    if(_track->trackContainer() == this)
+    if(m_tracks.contains(_track) && _track->trackContainer() == this)
     {
+        /*
         if(_track->isSolo())
         {
             qInfo("TrackContainer::removeTrack before solo");
             _track->setSolo(false);
             qInfo("TrackContainer::removeTrack after solo");
         }
+        */
 
         m_tracksMutex.lockForWrite();
         int nbt = m_tracks.removeAll(_track);
+        if(nbt == 0)
+            qCritical("TrackContainer::removeTrack not found");
         if(nbt > 1)
             qCritical("TrackContainer::removeTrack more than once");
         bool modified = (nbt > 0);
@@ -242,16 +249,14 @@ void TrackContainer::removeTrack(Track* _track)
             Song* song = Engine::getSong();
             if(song != nullptr)
                 song->setModified();
+
+            emit trackRemoved();
         }
     }
     else
         qWarning(
                 "TrackContainer::removeTrack trying to remove a track that "
                 "doesn't belong to this container");
-}
-
-void TrackContainer::updateAfterTrackAdd()
-{
 }
 
 void TrackContainer::clearAllTracks()
@@ -294,23 +299,22 @@ bool TrackContainer::isEmpty() const
 }
 
 // AutomatedValueMap
-void TrackContainer::automatedValuesAt(MidiTime           time,
-                                       int                tcoNum,
+void TrackContainer::automatedValuesAt(MidiTime           _time,
+                                       int                _bb,
                                        AutomatedValueMap& _map) const
 {
-    // return
-    automatedValuesFromTracks(tracks(), time, tcoNum, _map);
+    automatedValuesFromTracks(tracks(), _time, _bb, _map);
 }
 
 // AutomatedValueMap
-void TrackContainer::automatedValuesFromTracks(const Tracks&      tracks,
-                                               MidiTime           time,
-                                               int                tcoNum,
+void TrackContainer::automatedValuesFromTracks(const Tracks&      _tracks,
+                                               MidiTime           _time,
+                                               int                _bb,
                                                AutomatedValueMap& _map)
 {
     Tiles tcos;
 
-    for(Track* track: tracks)
+    for(Track* track: _tracks)
     {
         if(track->isMuted())
             continue;
@@ -320,14 +324,17 @@ void TrackContainer::automatedValuesFromTracks(const Tracks&      tracks,
             case Track::AutomationTrack:
             case Track::HiddenAutomationTrack:
             case Track::BBTrack:
-                if(tcoNum < 0)
+                if(_bb < 0)
                 {
-                    track->getTCOsInRange(tcos, 0, time);
+                    track->getTCOsInRange(tcos, 0, _time);
                 }
                 else
                 {
-                    Q_ASSERT(track->numOfTCOs() > tcoNum);
-                    tcos << track->getTCO(tcoNum);
+                    // Q_ASSERT(track->numOfTCOs() > _bb);
+                    // tcos.append(track->getTCO(_bb));
+                    Tile* p = track->tileForBB(_bb);
+                    if(p != nullptr)
+                        tcos.append(p);
                 }
             default:
                 break;
@@ -350,8 +357,8 @@ void TrackContainer::automatedValuesFromTracks(const Tracks&      tracks,
 
     for(Tile* tco: tcos)
     {
-        if(tco->isMuted() || tco->startPosition() > time
-           || tco->endPosition() < time)
+        if(tco->isMuted() || tco->startPosition() > _time
+           || tco->endPosition() < _time)
             continue;
 
         if(auto* p = dynamic_cast<AutomationPattern*>(tco))
@@ -360,7 +367,7 @@ void TrackContainer::automatedValuesFromTracks(const Tracks&      tracks,
             {
                 continue;
             }
-            MidiTime relTime = time - p->startPosition();
+            MidiTime relTime = _time - p->startPosition();
             /*
             if (! p->autoResize()) {
                     relTime = qMin(relTime, p->length());
@@ -377,9 +384,10 @@ void TrackContainer::automatedValuesFromTracks(const Tracks&      tracks,
         }
         else if(auto* bb = dynamic_cast<BBTCO*>(tco))
         {
-            auto bbIndex = dynamic_cast<class BBTrack*>(bb->track())->index();
-            auto bbContainer = Engine::getBBTrackContainer();
-            MidiTime bbTime  = time - tco->startPosition();
+            auto bbIndex = dynamic_cast<class BBTrack*>(bb->track())
+                                   ->ownBBTrackIndex();
+            auto     bbContainer = Engine::getBBTrackContainer();
+            MidiTime bbTime      = _time - tco->startPosition();
             // bbTime = std::min(bbTime, tco->length());
             bbTime = bbTime % tco->length();
             bbTime = bbTime
@@ -409,8 +417,8 @@ void TrackContainer::automatedValuesFromTracks(const Tracks&      tracks,
 }
 
 void TrackContainer::automatedValuesFromTrack(const Track*       _track,
-                                              MidiTime           time,
-                                              int                tcoNum,
+                                              MidiTime           _time,
+                                              int                _bb,
                                               AutomatedValueMap& _map)
 {
     if(_track->isMuted())
@@ -423,14 +431,17 @@ void TrackContainer::automatedValuesFromTrack(const Track*       _track,
         case Track::AutomationTrack:
         case Track::HiddenAutomationTrack:
         case Track::BBTrack:
-            if(tcoNum < 0)
+            if(_bb < 0)
             {
-                _track->getTCOsInRange(tcos, 0, time);
+                _track->getTCOsInRange(tcos, 0, _time);
             }
             else
             {
-                Q_ASSERT(_track->numOfTCOs() > tcoNum);
-                tcos << _track->getTCO(tcoNum);
+                // Q_ASSERT(_track->numOfTCOs() > _bb);
+                // tcos << _track->getTCO(_bb);
+                Tile* p = _track->tileForBB(_bb);
+                if(p != nullptr)
+                    tcos.append(p);
             }
         default:
             break;
@@ -452,7 +463,7 @@ void TrackContainer::automatedValuesFromTrack(const Track*       _track,
 
     for(Tile* tco: tcos)
     {
-        if(tco->isMuted() || tco->startPosition() > time)
+        if(tco->isMuted() || tco->startPosition() > _time)
         {
             continue;
         }
@@ -463,7 +474,7 @@ void TrackContainer::automatedValuesFromTrack(const Track*       _track,
             {
                 continue;
             }
-            MidiTime relTime = time - p->startPosition();
+            MidiTime relTime = _time - p->startPosition();
             /*
             if (! p->autoResize()) {
                     relTime = qMin(relTime, p->length());
@@ -481,9 +492,10 @@ void TrackContainer::automatedValuesFromTrack(const Track*       _track,
         }
         else if(auto* bb = dynamic_cast<BBTCO*>(tco))
         {
-            auto bbIndex = dynamic_cast<class BBTrack*>(bb->track())->index();
-            auto bbContainer = Engine::getBBTrackContainer();
-            MidiTime bbTime  = time - tco->startPosition();
+            auto bbIndex = dynamic_cast<class BBTrack*>(bb->track())
+                                   ->ownBBTrackIndex();
+            auto     bbContainer = Engine::getBBTrackContainer();
+            MidiTime bbTime      = _time - tco->startPosition();
             // bbTime = std::min(bbTime, tco->length());
             bbTime = bbTime % tco->length();
             bbTime = bbTime

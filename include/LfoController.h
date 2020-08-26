@@ -74,7 +74,7 @@ class LfoController : public Controller
     sample_t (*m_sampleFunction)(const real_t);
 
   private:
-    SampleBuffer* m_userDefSampleBuffer;
+    SampleBufferPointer m_userDefSampleBuffer;
 
   protected slots:
     void updatePhase();

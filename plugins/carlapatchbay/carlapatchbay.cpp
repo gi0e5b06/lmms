@@ -23,29 +23,25 @@
  */
 
 #include "carla.h"
-
 #include "embed.h"
 
 extern "C"
 {
 
-Plugin::Descriptor PLUGIN_EXPORT carlapatchbay_plugin_descriptor =
-{
-    STRINGIFY( PLUGIN_NAME ),
-    "Carla Patchbay SY",
-    QT_TRANSLATE_NOOP( "pluginBrowser",
-                       "Carla Patchbay Instrument" ),
-    "falkTX <falktx/at/falktx.com>",
-    0x0195,
-    Plugin::Instrument,
-    new PluginPixmapLoader( "logo.png" ),
-    NULL,
-    NULL
-} ;
+    Plugin::Descriptor PLUGIN_EXPORT carlapatchbay_plugin_descriptor = {
+            STRINGIFY(PLUGIN_NAME),
+            "Carla Patchbay SY",
+            QT_TRANSLATE_NOOP("pluginBrowser", "Carla Patchbay Instrument"),
+            "falkTX <falktx/at/falktx.com>",
+            0x0195,
+            Plugin::Instrument,
+            new PluginPixmapLoader("logo.png"),
+            nullptr,
+            nullptr};
 
-Plugin* PLUGIN_EXPORT lmms_plugin_main(Model*, void* data)
-{
-    return new CarlaInstrument(static_cast<InstrumentTrack*>(data), &carlapatchbay_plugin_descriptor, true);
-}
-
+    Plugin* PLUGIN_EXPORT lmms_plugin_main(Model*, void* data)
+    {
+        return new CarlaInstrument(static_cast<InstrumentTrack*>(data),
+                                   &carlapatchbay_plugin_descriptor, true);
+    }
 }

@@ -37,7 +37,39 @@ class EXPORT ComboBoxModel : public IntModel
     Q_OBJECT
 
   public:
-    ComboBoxModel(Model*         parent               = nullptr,
+    struct Item
+    {
+      public:
+        Item(const int           _value = 0,
+             const QString&      _text  = QString::null,
+             const PixmapLoader* _icon  = nullptr,
+             const QVariant&     _data  = QVariant()) :
+              m_value(_value),
+              m_text(_text), m_icon(_icon), m_data(_data)
+        {
+        }
+
+        Item(const Item& _other) :
+              Item(_other.m_value,
+                   _other.m_text,
+                   _other.m_icon,
+                   _other.m_data)
+        {
+        }
+
+      private:
+        const int           m_value;
+        const QString       m_text;
+        const PixmapLoader* m_icon;
+        const QVariant      m_data;
+
+        friend class ComboBoxModel;
+    };
+
+    typedef QVector<Item> Items;
+
+    ComboBoxModel(Items*         items,
+                  Model*         parent               = nullptr,
                   const QString& displayName          = "[combo box model]",
                   const QString& objectName           = QString::null,
                   bool           isDefaultConstructed = false) :
@@ -47,62 +79,128 @@ class EXPORT ComboBoxModel : public IntModel
                    parent,
                    displayName,
                    objectName,
-                   isDefaultConstructed)
+                   isDefaultConstructed),
+          m_items(items != nullptr ? items : new Items()),
+          m_itemsOwned(items == nullptr)
+    {
+        setRange(min(), max());
+        setValue(min());
+    }
+
+    ComboBoxModel(Model*         parent               = nullptr,
+                  const QString& displayName          = "[combo box model]",
+                  const QString& objectName           = QString::null,
+                  bool           isDefaultConstructed = false) :
+          ComboBoxModel(nullptr,
+                        parent,
+                        displayName,
+                        objectName,
+                        isDefaultConstructed)
     {
     }
 
     virtual ~ComboBoxModel()
     {
-        clear();
+        cleanup();
     }
 
-    void addItem(const QString&  _text,
-                 PixmapLoader*   _icon = nullptr,
-                 const QVariant& _data = QVariant());
+    void addItem(const QString&      _text,
+                 const PixmapLoader* _icon = nullptr,
+                 const QVariant&     _data = QVariant());
+
+    void addItem(const int           _val,
+                 const QString&      _text,
+                 const PixmapLoader* _icon = nullptr,
+                 const QVariant&     _data = QVariant());
+
+    void addItem(const Item& _item);
+    void addItems(const Items& _items);
+
+    void setItems(const Items* _items);
 
     void clear();
 
-    int findText(const QString& _what) const;
+    int findText(const QString& _what, bool _required, int notfound) const;
+    int findData(const QVariant& _what, bool _required, int notfound) const;
+
+    int nextValue() const;
+    int previousValue() const;
 
     const QString currentText() const
     {
-        return m_texts[value()];
+        int i = currentIndex();
+        assertValidIndex(i);
+        return m_items->at(i).m_text;
     }
 
     const PixmapLoader* currentIcon() const
     {
-        return m_icons[value()];
+        int i = currentIndex();
+        assertValidIndex(i);
+        return m_items->at(i).m_icon;
     }
 
     const QVariant currentData() const
     {
-        return m_datas[value()];
+        int i = currentIndex();
+        assertValidIndex(i);
+        return m_items->at(i).m_data;
+    }
+
+    const int itemValue(int _i) const
+    {
+        assertValidIndex(_i);
+        return m_items->at(_i).m_value;
     }
 
     const QString itemText(int _i) const
     {
-        return m_texts[_i];
+        assertValidIndex(_i);
+        return m_items->at(_i).m_text;
     }
 
     const PixmapLoader* itemIcon(int _i) const
     {
-        return m_icons[_i];
+        assertValidIndex(_i);
+        return m_items->at(_i).m_icon;
     }
 
     const QVariant itemData(int _i) const
     {
-        return m_texts[_i];
+        assertValidIndex(_i);
+        return m_items->at(_i).m_data;
+    }
+
+    int min() const;
+    int max() const;
+
+    bool isEmpty() const
+    {
+        return size() == 0;
     }
 
     int size() const
     {
-        return m_texts.size();
+        return m_items->size();
     }
 
   protected:
+    void cleanup();
+    int  currentIndex() const;
+    int  indexOf(int _val) const;
+
+    Items* m_items;
+    bool   m_itemsOwned;
+    /*
+    QVector<int>           m_values;
     QVector<QString>       m_texts;
     QVector<PixmapLoader*> m_icons;
     QVector<QVariant>      m_datas;
+    */
+
+  private:
+    void assertNotEmpty() const;
+    void assertValidIndex(int _i) const;
 };
 
 #endif

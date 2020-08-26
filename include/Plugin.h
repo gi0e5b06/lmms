@@ -116,7 +116,7 @@ class EXPORT Plugin : public Model, public JournallingObject
             return m_supportedFileTypes;
         }
 
-        inline bool supportsFileType(const QString& extension) const
+        INLINE bool supportsFileType(const QString& extension) const
         {
             return supportedFileTypes().split(QChar(',')).contains(extension);
         }
@@ -128,7 +128,7 @@ class EXPORT Plugin : public Model, public JournallingObject
             {
                 typedef QMap<QString, QString> AttributeMap;
 
-                inline Key(const Plugin::Descriptor* desc = nullptr,
+                INLINE Key(const Plugin::Descriptor* desc = nullptr,
                            const QString&            name = QString(),
                            const AttributeMap&       am   = AttributeMap()) :
                       desc(desc),
@@ -140,7 +140,7 @@ class EXPORT Plugin : public Model, public JournallingObject
 
                 QDomElement saveXML(QDomDocument& doc) const;
 
-                inline bool isValid() const
+                INLINE bool isValid() const
                 {
                     return desc != nullptr && name.isNull() == false;
                 }
@@ -196,13 +196,13 @@ class EXPORT Plugin : public Model, public JournallingObject
     }
 
     // return plugin-type
-    inline PluginTypes type() const
+    INLINE PluginTypes type() const
     {
         return m_descriptor->type();
     }
 
     // return plugin-descriptor for further information
-    inline const Descriptor* descriptor() const
+    INLINE const Descriptor* descriptor() const
     {
         return m_descriptor;
     }

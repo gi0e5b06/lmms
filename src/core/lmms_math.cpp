@@ -24,44 +24,45 @@
 
 #include "lmms_math.h"
 
-real_t exptrif(const real_t x)
+real_t exptrif(const real_t x)  // REQUIRED
 {
-    if(x < 0.25f)
-        return expm1(8.f * x) * 0.15651764274967f;
-    else if(x < 0.50f)
-        return expm1(4.f - 8.f * x) * 0.15651764274967f;
-    else if(x < 0.75f)
-        return -expm1(8.f * x - 4.f) * 0.15651764274967f;
+    if(x < 0.25)
+        return expm1(8. * x) * 0.15651764274967;
+    else if(x < 0.50)
+        return expm1(4. - 8. * x) * 0.15651764274967;
+    else if(x < 0.75)
+        return -expm1(8. * x - 4.) * 0.15651764274967;
     else
-        return -expm1(8.f - 8.f * x) * 0.15651764274967f;
+        return -expm1(8. - 8. * x) * 0.15651764274967;
 }
 
-real_t nexpf(const real_t x)
+real_t nexpf(const real_t x) // REQUIRED
 {
-    return expm1(x) /*(exp(x) - 1.f)*/
-           / 1.718281828459f;
+    return expm1(x)       // (exp(x) - 1.)
+           / (R_E - 1.);  // 1.718281828459
 }
 
-real_t nlogf(const real_t x)
+real_t nlogf(const real_t x) // REQUIRED
 {
-    return log(x * 1.718281828459f + 1.f);
+    return log(x * (R_E - 1.) + 1.);
 }
 
-real_t nexp2f(const real_t x)
+real_t nexp2f(const real_t x) // REQUIRED
 {
-        return exp2(x) - 1.;
+    return exp2(x) - 1.;
 }
 
-real_t nexp2rampf(const real_t x)
+real_t nexp2rampf(const real_t x) // REQUIRED
 {
     return (exp2(x) - 1.) * 2. - 1.;
 }
 
-real_t nerf(const real_t x)
+real_t nerf(const real_t x) // REQUIRED
 {
     return erf(6. * (x - 0.5))
            / 0.99997790950300136092465663750772364437580108642578125;
 }
+
 real_t fibonacci1(const real_t x)
 {
     int n = int(13. * x) - 1;
@@ -84,7 +85,7 @@ real_t fibonacci1(const real_t x)
 
 real_t fibonacci2(const real_t xmax)
 {
-    double x = 0.;
+    real_t x = 0.;
     int    a = 0;
     int    b = 1;
     int    c = 0;

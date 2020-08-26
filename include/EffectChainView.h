@@ -1,5 +1,5 @@
 /*
- * EffectRackView.h - view for effectChain-model
+ * EffectChainView.h -
  *
  * Copyright (c) 2006-2007 Danny McRae <khjklujn@netscape.net>
  * Copyright (c) 2008-2014 Tobias Doerffel <tobydox/at/users.sourceforge.net>
@@ -23,14 +23,15 @@
  *
  */
 
-#ifndef EFFECT_RACK_VIEW_H
-#define EFFECT_RACK_VIEW_H
+#ifndef EFFECT_CHAIN_VIEW_H
+#define EFFECT_CHAIN_VIEW_H
 
 #include "EffectChain.h"
 #include "GroupBox.h"
 #include "ModelView.h"
 
 #include <QMouseEvent>
+#include <QPointer>
 #include <QWidget>
 
 //#include "lmms_basics.h"
@@ -41,15 +42,15 @@ class QVBoxLayout;
 class EffectView;
 class GroupBox;
 
-class EffectRackView : public GroupBox, public ModelView
+class EffectChainView : public GroupBox, public ModelView
 {
     Q_OBJECT
 
   public:
-    EffectRackView(EffectChain* model,
-                   QWidget*     parent = nullptr,
-                   QString      _title = "");
-    virtual ~EffectRackView();
+    EffectChainView(EffectChain* model,
+                    QWidget*     parent = nullptr,
+                    QString      _title = "");
+    virtual ~EffectChainView();
 
   public slots:
     void clearViews();
@@ -60,9 +61,10 @@ class EffectRackView : public GroupBox, public ModelView
     void removeEffect(EffectView* view);
 
   protected:
-    virtual void mousePressEvent(QMouseEvent* _me);
-    virtual void mouseReleaseEvent(QMouseEvent* _me);
     virtual void addEffect(Effect* _effect);
+
+    void mousePressEvent(QMouseEvent* _me) override;
+    void mouseReleaseEvent(QMouseEvent* _me) override;
 
   private slots:
     virtual void update();
@@ -71,19 +73,18 @@ class EffectRackView : public GroupBox, public ModelView
   private:
     virtual void modelChanged();
 
-    inline EffectChain* fxChain()
+    INLINE EffectChain* model()
+    {
+        return castModel<EffectChain>();
+    }
+    INLINE const EffectChain* model() const
     {
         return castModel<EffectChain>();
     }
 
-    inline const EffectChain* fxChain() const
-    {
-        return castModel<EffectChain>();
-    }
-
-    QVector<EffectView*> m_effectViews;
-    QScrollArea*         m_scrollArea;
-    int                  m_lastY;
+    QVector<QPointer<EffectView>> m_effectViews;
+    QScrollArea*                  m_scrollArea;
+    int                           m_lastY;
 };
 
 #endif

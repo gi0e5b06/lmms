@@ -32,7 +32,7 @@
 
 #include <QPainter>
 
-Graph::Graph(QWidget* _parent, graphStyle _style, int _width, int _height) :
+Graph::Graph(QWidget* _parent, GraphStyle _style, int _width, int _height) :
       QWidget(_parent),
       /* TODO: size, background? */
       ModelView(new GraphModel(-1., 1., 128., nullptr, true), this),
@@ -45,13 +45,10 @@ Graph::Graph(QWidget* _parent, graphStyle _style, int _width, int _height) :
     setAcceptDrops(true);
     setCursor(Qt::CrossCursor);
 
-    GraphModel* gModel = castModel<GraphModel>();
-
-    QObject::connect(gModel, SIGNAL(samplesChanged(int, int)), this,
+    GraphModel* m = castModel<GraphModel>();
+    QObject::connect(m, SIGNAL(samplesChanged(int, int)), this,
                      SLOT(updateGraph(int, int)));
-
-    QObject::connect(gModel, SIGNAL(lengthChanged()), this,
-                     SLOT(updateGraph()));
+    QObject::connect(m, SIGNAL(lengthChanged()), this, SLOT(updateGraph()));
 }
 
 Graph::~Graph()
@@ -173,14 +170,14 @@ void Graph::mousePressEvent(QMouseEvent* _me)
 
 void Graph::drawLineAt(int _x, int _y, int _lastx)
 {
-    FLOAT minVal = model()->minValue();
-    FLOAT maxVal = model()->maxValue();
     if(width() <= 4)
-    {
         return;
-    }
 
-    FLOAT xscale = static_cast<FLOAT>(model()->length()) / (width() - 4);
+    GraphModel* m = model();
+
+    FLOAT minVal = m->minValue();
+    FLOAT maxVal = m->maxValue();
+    FLOAT xscale = static_cast<FLOAT>(m->length()) / (width() - 4);
 
     // consider border
     _x -= 2;
@@ -200,7 +197,7 @@ void Graph::drawLineAt(int _x, int _y, int _lastx)
     {
         sample_begin = (int)((_x)*xscale);
         sample_end   = (int)ceil((_lastx + 1) * xscale);
-        lastval      = model()->m_samples[(int)(sample_end - 1)];
+        lastval      = m->m_samples[(int)(sample_end - 1)];
         val_begin    = val;
         val_end      = lastval;
     }
@@ -208,7 +205,7 @@ void Graph::drawLineAt(int _x, int _y, int _lastx)
     {
         sample_begin = (int)(_lastx * xscale);
         sample_end   = (int)ceil((_x + 1) * xscale);
-        lastval      = model()->m_samples[(int)(sample_begin)];
+        lastval      = m->m_samples[(int)(sample_begin)];
         val_begin    = lastval;
         val_end      = val;
     }
@@ -224,24 +221,21 @@ void Graph::drawLineAt(int _x, int _y, int _lastx)
 
     // draw a line
     for(int i = 0; i < linelen; i++)
-    {
-        model()->drawSampleAt(sample_begin + i, val_begin + ((i)*ystep));
-    }
+        m->drawSampleAt(sample_begin + i, val_begin + ((i)*ystep));
 
-    model()->samplesChanged(sample_begin, sample_end);
+    m->samplesChanged(sample_begin, sample_end);
 }
 
 void Graph::changeSampleAt(int _x, int _y)
 {
-    FLOAT minVal = model()->minValue();
-    FLOAT maxVal = model()->maxValue();
-
     if(width() <= 4)
-    {
         return;
-    }
 
-    FLOAT xscale = static_cast<FLOAT>(model()->length()) / (width() - 4);
+    GraphModel* m = model();
+
+    FLOAT minVal = m->minValue();
+    FLOAT maxVal = m->maxValue();
+    FLOAT xscale = static_cast<FLOAT>(m->length()) / (width() - 4);
 
     // consider border of background image
     _x -= 2;
@@ -251,7 +245,7 @@ void Graph::changeSampleAt(int _x, int _y)
     FLOAT range = minVal - maxVal;
     FLOAT val   = (_y * range / (height() - 5)) + maxVal;
 
-    model()->setSampleAt((int)(_x * xscale), val);
+    m->setSampleAt((int)(_x * xscale), val);
 }
 
 void Graph::mouseReleaseEvent(QMouseEvent* _me)
@@ -274,10 +268,11 @@ void Graph::paintEvent(QPaintEvent*)
     QColor gcol = QColor(m_graphColor.red(), m_graphColor.green(),
                          m_graphColor.blue(), 100);
 
-    QVector<FLOAT>* samps  = &(model()->m_samples);
-    int             length = model()->length();
-    const FLOAT     maxVal = model()->maxValue();
-    const FLOAT     minVal = model()->minValue();
+    GraphModel*     m      = model();
+    QVector<FLOAT>* samps  = &(m->m_samples);
+    int             length = m->length();
+    const FLOAT     maxVal = m->maxValue();
+    const FLOAT     minVal = m->minValue();
 
     FLOAT xscale = (FLOAT)(width() - 4) / length;
     FLOAT yscale = (FLOAT)(height() - 4) / (minVal - maxVal);
@@ -429,13 +424,10 @@ void Graph::dragEnterEvent(QDragEnterEvent* _dee)
 
 void Graph::modelChanged()
 {
-    GraphModel* gModel = castModel<GraphModel>();
-
-    QObject::connect(gModel, SIGNAL(samplesChanged(int, int)), this,
+    GraphModel* m = model();
+    QObject::connect(m, SIGNAL(samplesChanged(int, int)), this,
                      SLOT(updateGraph(int, int)));
-
-    QObject::connect(gModel, SIGNAL(lengthChanged()), this,
-                     SLOT(updateGraph()));
+    QObject::connect(m, SIGNAL(lengthChanged()), this, SLOT(updateGraph()));
 }
 
 void Graph::updateGraph(int _startPos, int _endPos)
@@ -446,7 +438,8 @@ void Graph::updateGraph(int _startPos, int _endPos)
 
 void Graph::updateGraph()
 {
-    updateGraph(0, model()->length() - 1);
+    GraphModel* m = model();
+    updateGraph(0, m->length() - 1);
 }
 
 GraphModel::GraphModel(FLOAT    _min,
@@ -569,8 +562,8 @@ void GraphModel::setWaveToNoise()
 
 QString GraphModel::setWaveToUser()
 {
-    SampleBuffer* sampleBuffer = new SampleBuffer;
-    QString       fileName     = sampleBuffer->openAndSetWaveFormFile();
+    SampleBufferPointer sampleBuffer = (new SampleBuffer())->pointer();
+    QString             fileName     = sampleBuffer->openAndSetWaveFormFile();
     if(fileName.isEmpty() == false)
     {
         sampleBuffer->dataReadLock();
@@ -582,7 +575,8 @@ QString GraphModel::setWaveToUser()
         sampleBuffer->dataUnlock();
     }
 
-    sharedObject::unref(sampleBuffer);
+    // sharedObject::unref(sampleBuffer);
+    sampleBuffer = nullptr;
 
     emit samplesChanged(0, length() - 1);
     return fileName;

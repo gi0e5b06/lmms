@@ -1007,6 +1007,8 @@ lb302SynthView::lb302SynthView(Instrument* _instrument, QWidget* _parent) :
     QPalette pal;
     pal.setBrush(backgroundRole(), PLUGIN_NAME::getIconPixmap("artwork"));
     setPalette(pal);
+
+    modelChanged();
 }
 
 lb302SynthView::~lb302SynthView()

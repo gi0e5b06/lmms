@@ -27,35 +27,99 @@
 #include "BBTrackContainer.h"
 #include "BandLimitedWave.h"
 #include "ConfigManager.h"
+#include "Controller.h"
 #include "FxMixer.h"
 #include "Ladspa2LMMS.h"
 #include "Mixer.h"
+#include "Pattern.h"
 #include "PluginFactory.h"
 #include "PresetPreviewPlayHandle.h"
 #include "ProjectJournal.h"
 #include "Song.h"
 #include "lmmsconfig.h"
-#include "Pattern.h"
-#include "Controller.h"
 //#include "Backtrace.h"
 
 #include <QFuture>
+#include <QPointer>
 #include <QtConcurrent>
 
-real_t               LmmsCore::s_framesPerTick;
-Mixer*               LmmsCore::s_mixer            = nullptr;
-FxMixer*             LmmsCore::s_fxMixer          = nullptr;
-Song*                LmmsCore::s_song             = nullptr;
-Transportable*       LmmsCore::s_transport        = nullptr;
-BBTrackContainer*    LmmsCore::s_bbTrackContainer = nullptr;
-ProjectJournal*      LmmsCore::s_projectJournal   = nullptr;
-Ladspa2LMMS*         LmmsCore::s_ladspaManager    = nullptr;
-DummyTrackContainer* LmmsCore::s_dummyTC          = nullptr;
+real_t         LmmsCore::s_framesPerTick;
+Transportable* LmmsCore::s_transport = nullptr;
+
+static QPointer<LmmsCore>            s_singleton        = nullptr;
+static QPointer<Mixer>               s_mixer            = nullptr;
+static QPointer<FxMixer>             s_fxMixer          = nullptr;
+static QPointer<Song>                s_song             = nullptr;
+static QPointer<BBTrackContainer>    s_bbTrackContainer = nullptr;
+static QPointer<ProjectJournal>      s_projectJournal   = nullptr;
+static QPointer<Ladspa2LMMS>         s_ladspaManager    = nullptr;
+static QPointer<DummyTrackContainer> s_dummyTC          = nullptr;
 
 #ifdef LMMS_HAVE_LILV
 #include "LV22LMMS.h"
-LV22LMMS* LmmsCore::s_lv2Manager = nullptr;
+static QPointer<LV22LMMS> s_lv2Manager = nullptr;
 #endif
+
+Mixer* LmmsCore::mixer()
+{
+    return s_mixer;
+}
+
+FxMixer* LmmsCore::fxMixer()
+{
+    return s_fxMixer;
+}
+
+Song* LmmsCore::song()
+{
+    return s_song;
+}
+
+// Obsolete
+Song* LmmsCore::getSong()
+{
+    return song();
+}
+
+Transportable* LmmsCore::transport()
+{
+    return s_transport;
+}
+
+BBTrackContainer* LmmsCore::getBBTrackContainer()
+{
+    return s_bbTrackContainer;
+}
+
+ProjectJournal* LmmsCore::projectJournal()
+{
+    return s_projectJournal;
+}
+
+Ladspa2LMMS* LmmsCore::getLADSPAManager()
+{
+    return s_ladspaManager;
+}
+
+#ifdef LMMS_HAVE_LILV
+LV22LMMS* LmmsCore::getLV2Manager()
+{
+    return s_lv2Manager;
+}
+#endif
+
+DummyTrackContainer* LmmsCore::dummyTrackContainer()
+{
+    return s_dummyTC;
+}
+
+LmmsCore* LmmsCore::singleton()
+{
+    if(s_singleton == nullptr)
+        s_singleton = new LmmsCore();
+
+    return s_singleton;
+}
 
 void LmmsCore::init(bool renderOnly)
 {
@@ -89,7 +153,7 @@ void LmmsCore::init(bool renderOnly)
     qRegisterMetaType<PlayHandlePointer>("PlayHandlePointer");
     qRegisterMetaType<AudioPortPointer>("AudioPortPointer");
 
-    LmmsCore* engine = inst();
+    LmmsCore* engine = singleton();
 
     QFuture<void> t1  = QtConcurrent::run(init1);
     QFuture<void> t1b = QtConcurrent::run(init1b);
@@ -233,10 +297,10 @@ void LmmsCore::destroy()
     DELETE_HELPER(s_dummyTC);
     DELETE_HELPER(s_fxMixer);
     DELETE_HELPER(s_mixer);
-    DELETE_HELPER(s_ladspaManager);
     // delete ConfigManager::inst();
     DELETE_HELPER(s_projectJournal);
     DELETE_HELPER(s_song);
+    DELETE_HELPER(s_ladspaManager);
 
     qInfo("ConfigManager::deinit");
     // delete ConfigManager::inst();
@@ -250,5 +314,3 @@ void LmmsCore::updateFramesPerTick()
     s_framesPerTick = s_mixer->processingSampleRate() * 60. * 4.
                       / DefaultTicksPerTact / s_song->getTempo();
 }
-
-LmmsCore* LmmsCore::s_instanceOfMe = nullptr;

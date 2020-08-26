@@ -35,6 +35,8 @@
 //#include "MemoryManager.h"
 #include "SafeList.h"
 
+#include <QSharedPointer>
+
 // class QReadWriteLock;
 
 // template <ch_cnt_t = DEFAULT_CHANNELS> class BasicFilters;
@@ -44,6 +46,7 @@ class NotePlayHandle;
 class NotePlayHandleManager;
 class Scale;
 
+typedef QSharedPointer<NotePlayHandle*> NotePlayHandlePointer;
 typedef QList<NotePlayHandle*>          NotePlayHandleList;
 typedef QList<const NotePlayHandle*>    ConstNotePlayHandleList;
 typedef SafeList<NotePlayHandle*>       NotePlayHandles;
@@ -424,6 +427,8 @@ class EXPORT NotePlayHandle /*final*/
     bool m_frequencyNeedsUpdate;  // used to update pitch
 
     const Scale* m_scale;
+
+    bool m_tmpreleaseflag;
 
     friend class NotePlayHandleManager;
     friend class Mixer;

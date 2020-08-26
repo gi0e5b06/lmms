@@ -262,9 +262,11 @@ CarlaInstrument::~CarlaInstrument()
             fDescriptor->deactivate(fHandle);
         qInfo("CarlaInstrument::~CarlaInstrument 3");
 
-        qInfo("CarlaInstrument::~CarlaInstrument cleanup may crash()");
         if(fDescriptor->cleanup != nullptr)
+        {
+            qInfo("CarlaInstrument::~CarlaInstrument cleanup may crash()");
             fDescriptor->cleanup(fHandle);
+        }
 
         fHandle = nullptr;
     }
@@ -347,6 +349,12 @@ intptr_t CarlaInstrument::handleDispatcher(
             break;
         case NATIVE_HOST_OPCODE_HOST_IDLE:
             qApp->processEvents();
+            break;
+        case NATIVE_HOST_OPCODE_QUEUE_INLINE_DISPLAY:
+        case NATIVE_HOST_OPCODE_UI_TOUCH_PARAMETER:
+        case NATIVE_HOST_OPCODE_REQUEST_IDLE:
+        case NATIVE_HOST_OPCODE_GET_FILE_PATH:
+            // TODO
             break;
     }
 
@@ -500,7 +508,7 @@ void CarlaInstrument::clearParamModels()
     while(!paramModels.empty())
     {
         FloatModel* m = paramModels.takeLast();
-        delete m;//m->deleteLater();
+        delete m;  // m->deleteLater();
     }
 }
 
@@ -808,6 +816,8 @@ CarlaInstrumentView::CarlaInstrumentView(CarlaInstrument* const instrument,
 
     l->addStretch(1);
     connect(instrument, SIGNAL(uiClosed()), this, SLOT(uiClosed()));
+
+    modelChanged();
 }
 
 CarlaInstrumentView::~CarlaInstrumentView()

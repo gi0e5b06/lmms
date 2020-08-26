@@ -1,4 +1,5 @@
 /*
+ * SPDX-License-Identifier: GPL-3.0-or-later
  * AutomationEditor.h - a window where you can edit dynamic values in an easy
  *                      way
  *
@@ -107,6 +108,7 @@ class AutomationEditor :
     QColor backgroundShade() const;
     void   setBackgroundShade(const QColor& c);
 
+    /*
     enum EditModes
     {
         DRAW,
@@ -114,8 +116,14 @@ class AutomationEditor :
         SELECT,
         MOVE
     };
+    */
 
   public slots:
+    virtual void setEditMode(int _mode) final
+    {
+        setEditMode((EditMode)_mode);
+    }
+
     void update();
     void updateAfterPatternChange();
 
@@ -129,12 +137,15 @@ class AutomationEditor :
 
     virtual void keyPressEvent(QKeyEvent* ke);
     virtual void leaveEvent(QEvent* e);
-    virtual void mousePressEvent(QMouseEvent* mouseEvent);
-    virtual void mouseReleaseEvent(QMouseEvent* mouseEvent);
-    virtual void mouseMoveEvent(QMouseEvent* mouseEvent);
+    virtual void mousePressEvent(QMouseEvent* me);
+    virtual void mouseReleaseEvent(QMouseEvent* me);
+    virtual void mouseMoveEvent(QMouseEvent* me);
     virtual void paintEvent(QPaintEvent* pe);
     virtual void resizeEvent(QResizeEvent* re);
     virtual void wheelEvent(QWheelEvent* we);
+    virtual void focusOutEvent(QFocusEvent* fe);
+
+    virtual void setEditMode(EditMode _mode);
 
     real_t      getLevel(int y);
     int         xCoordOfTick(int tick);
@@ -156,8 +167,8 @@ class AutomationEditor :
     void horScrolled(int new_pos);
     void verScrolled(int new_pos);
 
-    void setEditMode(AutomationEditor::EditModes mode);
-    void setEditMode(int mode);
+    // void setEditMode(AutomationEditor::EditModes mode);
+    // void setEditMode(int mode);
 
     void setProgressionType(AutomationPattern::ProgressionTypes type);
     void setProgressionType(int type);
@@ -195,7 +206,7 @@ class AutomationEditor :
 
     // some constants...
     static const int SCROLLBAR_SIZE = 12;
-    static const int TOP_MARGIN     = 23; // 16
+    static const int TOP_MARGIN     = 23;  // 16
 
     static const int DEFAULT_Y_DELTA        = 6;
     static const int DEFAULT_STEPS_PER_TACT = 16;
@@ -259,14 +270,14 @@ class AutomationEditor :
     real_t m_drawLastLevel;
     tick_t m_drawLastTick;
 
-    int  m_ppt;
-    int  m_y_delta;
-    bool m_y_auto;
+    real_t m_ppt;
+    real_t m_y_delta;
+    bool   m_y_auto;
 
     timeMap m_valuesToCopy;
     timeMap m_selValuesForMove;
 
-    EditModes m_editMode;
+    // EditModes m_editMode;
 
     bool m_mouseDownRight;  // true if right click is being held down
 
@@ -303,8 +314,9 @@ class AutomationWindow : public EditorWindow
 
     void reset();
 
-    void                     setCurrentPattern(AutomationPattern* pattern);
     const AutomationPattern* currentPattern();
+
+    void setCurrentPattern(AutomationPattern* pattern);
 
     virtual void dropEvent(QDropEvent* _de);
     virtual void dragEnterEvent(QDragEnterEvent* _dee);
@@ -322,6 +334,11 @@ class AutomationWindow : public EditorWindow
   public slots:
     void clearCurrentPattern();
 
+    virtual void setEditMode(int _mode) final
+    {
+        m_editor->setEditMode((Editor::EditMode)_mode);
+    }
+
   signals:
     void currentPatternChanged();
 
@@ -333,6 +350,8 @@ class AutomationWindow : public EditorWindow
     void updateWindowTitle();
 
   private:
+    void focusInEvent(QFocusEvent* event);
+
     QAction* m_discreteAction;
     QAction* m_linearAction;
     QAction* m_cubicHermiteAction;
@@ -354,9 +373,9 @@ class AutomationWindow : public EditorWindow
     Knob*     m_waveAmplitudeKnob;
     Knob*     m_waveRepeatKnob;
 
-    //ComboBox* m_zoomingXComboBox;
-    //ComboBox* m_zoomingYComboBox;
-    //ComboBox* m_quantizeComboBox;
+    // ComboBox* m_zoomingXComboBox;
+    // ComboBox* m_zoomingYComboBox;
+    // ComboBox* m_quantizeComboBox;
 };
 
 #endif

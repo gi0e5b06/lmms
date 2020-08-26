@@ -36,13 +36,13 @@ namespace base64
 {
 
 /*
-inline void encode(const char* _data, const int _size, QString& _dst)
+INLINE void encode(const char* _data, const int _size, QString& _dst)
 {
 _dst = QByteArray(_data, _size).toBase64();
 }
 
 template <class T>
-inline void decode(const QString& _b64, T** _data, int* _size)
+INLINE void decode(const QString& _b64, T** _data, int* _size)
 {
 QByteArray data = QByteArray::fromBase64(_b64.toUtf8());
 *_size          = data.size();

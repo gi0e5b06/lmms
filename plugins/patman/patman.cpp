@@ -46,7 +46,6 @@
 
 extern "C"
 {
-
     Plugin::Descriptor PLUGIN_EXPORT patman_plugin_descriptor
             = {STRINGIFY(PLUGIN_NAME),
                "PatMan",
@@ -57,7 +56,7 @@ extern "C"
                Plugin::Instrument,
                new PluginPixmapLoader("logo"),
                "pat",
-               NULL};
+               nullptr};
 
     // necessary for getting instance out of shared lib
     Plugin* PLUGIN_EXPORT lmms_plugin_main(Model*, void* _data)
@@ -142,7 +141,8 @@ void patmanInstrument::playNote(NotePlayHandle* _n,
 void patmanInstrument::deleteNotePluginData(NotePlayHandle* _n)
 {
     handle_data* hdata = (handle_data*)_n->m_pluginData;
-    sharedObject::unref(hdata->sample);
+    // sharedObject::unref(hdata->sample);
+    hdata->sample = nullptr;
     delete hdata->state;
     delete hdata;
 }
@@ -321,7 +321,8 @@ patmanInstrument::LoadErrors
             }
         }
 
-        SampleBuffer* psample = new SampleBuffer(data, frames);
+        SampleBufferPointer psample
+                = (new SampleBuffer(data, frames))->pointer();
         psample->setFrequency(root_freq / 1000.0f);
         psample->setSampleRate(sample_rate);
 
@@ -344,7 +345,8 @@ void patmanInstrument::unloadCurrentPatch(void)
 {
     while(!m_patchSamples.empty())
     {
-        sharedObject::unref(m_patchSamples.back());
+        // sharedObject::unref(m_patchSamples.back());
+        m_patchSamples.back() = nullptr;
         m_patchSamples.pop_back();
     }
 }
@@ -353,10 +355,10 @@ void patmanInstrument::selectSample(NotePlayHandle* _n)
 {
     const float freq = _n->frequency();
 
-    float         min_dist = HUGE_VALF;
-    SampleBuffer* sample   = NULL;
+    float               min_dist = HUGE_VALF;
+    SampleBufferPointer sample   = nullptr;
 
-    for(QVector<SampleBuffer*>::iterator it = m_patchSamples.begin();
+    for(QVector<SampleBufferPointer>::iterator it = m_patchSamples.begin();
         it != m_patchSamples.end(); ++it)
     {
         float patch_freq = (*it)->frequency();
@@ -370,15 +372,15 @@ void patmanInstrument::selectSample(NotePlayHandle* _n)
         }
     }
 
-    handle_data* hdata = new handle_data;
+    handle_data* hdata = new handle_data();
     hdata->tuned       = m_tunedModel.value();
     if(sample)
     {
-        hdata->sample = sharedObject::ref(sample);
+        hdata->sample = sample->pointer();  // sharedObject::ref(sample);
     }
     else
     {
-        hdata->sample = new SampleBuffer(NULL, 0);
+        hdata->sample = (new SampleBuffer(nullptr, 0))->pointer();
     }
     hdata->state = new SampleBuffer::HandleState(hdata->sample->startFrame(),
                                                  _n->hasDetuningInfo());
@@ -392,14 +394,14 @@ PluginView* patmanInstrument::instantiateView(QWidget* _parent)
 }
 
 PatmanView::PatmanView(Instrument* _instrument, QWidget* _parent) :
-      InstrumentView(_instrument, _parent), m_pi(NULL)
+      InstrumentView(_instrument, _parent), m_pi(nullptr)
 {
     setAutoFillBackground(true);
     QPalette pal;
     pal.setBrush(backgroundRole(), PLUGIN_NAME::getIconPixmap("artwork"));
     setPalette(pal);
 
-    m_openFileButton = new PixmapButton(this, NULL);
+    m_openFileButton = new PixmapButton(this, nullptr);
     m_openFileButton->setObjectName("openFileButton");
     m_openFileButton->setCursor(QCursor(Qt::PointingHandCursor));
     m_openFileButton->move(227, 86);
@@ -440,6 +442,8 @@ PatmanView::PatmanView(Instrument* _instrument, QWidget* _parent) :
 
     m_displayFilename = tr("No file selected");
 
+    modelChanged();
+
     setAcceptDrops(true);
 }
 
@@ -449,7 +453,7 @@ PatmanView::~PatmanView()
 
 void PatmanView::openFile(void)
 {
-    FileDialog ofd(NULL, tr("Open patch file"));
+    FileDialog ofd(nullptr, tr("Open patch file"));
     ofd.setFileMode(FileDialog::ExistingFile);
 
     QStringList types;

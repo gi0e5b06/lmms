@@ -52,7 +52,14 @@ void PaintManager::runQueue()
         if(Engine::mixer()->warningXRuns())
             QThread::yieldCurrentThread();
         PaintCacheable* w = m_queue.dequeue();
-        m_unique.remove(w);
+        if(m_unique.remove(w))
+        {
+            QObject* o = dynamic_cast<QObject*>(w);
+            if(o != nullptr)
+                QObject::disconnect(o, SIGNAL(destroyed(QObject*)),
+                                    &s_singleton,
+                                    SLOT(onObjectDestroyed(QObject*)));
+        }
         w->updateNow();
     }
 }
@@ -76,9 +83,29 @@ void PaintManager::updateLater(PaintCacheable* _w)
     s_singleton.m_unique.insert(_w, true);
     s_singleton.m_queue.enqueue(_w);
     // qInfo("PaintManager::updateLater %d", s_singleton.m_queue.size());
+
+    QObject* o = dynamic_cast<QObject*>(_w);
+    if(o != nullptr)
+        QObject::connect(o, SIGNAL(destroyed(QObject*)), &s_singleton,
+                         SLOT(onObjectDestroyed(QObject*)),
+                         Qt::UniqueConnection);
 }
 
 void PaintManager::removeLater(PaintCacheable* _w)
 {
     s_singleton.m_queue.removeAll(_w);
+    if(s_singleton.m_unique.remove(_w))
+    {
+        QObject* o = dynamic_cast<QObject*>(_w);
+        if(o != nullptr)
+            QObject::disconnect(o, SIGNAL(destroyed(QObject*)), &s_singleton,
+                                SLOT(onObjectDestroyed(QObject*)));
+    }
+}
+
+void PaintManager::onObjectDestroyed(QObject* _o)
+{
+    qInfo("PaintManager::onObjectDestroyed");
+    PaintCacheable* w = dynamic_cast<PaintCacheable*>(_o);
+    removeLater(w);
 }

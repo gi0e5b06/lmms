@@ -50,9 +50,18 @@ class MicrowaveView : public InstrumentView
     Q_OBJECT
 
   public:
-    MicrowaveView(Instrument* _instrument, QWidget* _parent);
-
+    MicrowaveView(Microwave* _instrument, QWidget* _parent);
     virtual ~MicrowaveView(){};
+
+    Microwave* model()
+    {
+        return castModel<Microwave>();
+    }
+
+    const Microwave* model() const
+    {
+        return castModel<Microwave>();
+    }
 
   protected slots:
     void updateScroll();
@@ -263,8 +272,8 @@ class MicrowaveView : public InstrumentView
 
     Microwave* microwave;
 
-    //real_t temp1;
-    //real_t temp2;
+    // real_t temp1;
+    // real_t temp2;
 
     friend class MSynth;
 };

@@ -34,10 +34,12 @@ class QMouseEvent;
 
 class EXPORT AutomatableModelView : public ModelView
 {
-  public:
-    AutomatableModelView(Model* model, QWidget* _this);
+  protected:
+    AutomatableModelView(AutomatableModel* _model, QWidget* _this);
     virtual ~AutomatableModelView();
 
+  public:
+    /*
     // some basic functions for convenience
     AutomatableModel* modelUntyped()
     {
@@ -51,10 +53,27 @@ class EXPORT AutomatableModelView : public ModelView
 
     // virtual void setModel( Model* model, bool isOldModelValid = true );
 
-    template <typename T>
-    inline T value() const
+    template <typename X>
+    INLINE X value() const
     {
-        return modelUntyped() ? modelUntyped()->value<T>() : 0;
+        return modelUntyped() ? modelUntyped()->value<X>() : 0;
+    }
+    */
+
+    AutomatableModel* model()  // non virtual
+    {
+        return castModel<AutomatableModel>();
+    }
+
+    const AutomatableModel* model() const  // non virtual
+    {
+        return castModel<AutomatableModel>();
+    }
+
+    template <typename X>
+    INLINE X value() const
+    {
+        return model()->AutomatableModel::value<X>();
     }
 
     QColor cableColor() const;
@@ -105,27 +124,40 @@ class AutomatableModelViewSlots : public QObject
     AutomatableModelView* m_amv;
 };
 
-template <typename ModelType>
-class EXPORT TypedModelView : public AutomatableModelView
+template <class T>
+class EXPORT TypedAutomatableModelView : public AutomatableModelView
 {
   public:
-    TypedModelView(Model* model, QWidget* _this) :
-          AutomatableModelView(model, _this)
+    TypedAutomatableModelView(T* _model, QWidget* _this) :
+          AutomatableModelView(_model, _this)
     {
     }
 
-    ModelType* model()
+    TypedAutomatableModelView(QWidget* _this) :
+          TypedAutomatableModelView(T::createDefaultConstructed(), _this)
     {
-        return castModel<ModelType>();
     }
-    const ModelType* model() const
+
+    TypedAutomatableModelView(QWidget* _this, const QString& _displayName) :
+          TypedAutomatableModelView(T::createDefaultConstructed(_displayName),
+                                    _this)
     {
-        return castModel<ModelType>();
+    }
+
+    INLINE T* model()
+    {
+        return castModel<T>();
+    }
+
+    INLINE const T* model() const
+    {
+        return castModel<T>();
     }
 };
 
-using FloatModelView = TypedModelView<FloatModel>;
-using IntModelView   = TypedModelView<IntModel>;
-using BoolModelView  = TypedModelView<BoolModel>;
+using RealModelView = TypedAutomatableModelView<RealModel>;
+#define FloatModelView RealModelView
+using IntModelView  = TypedAutomatableModelView<IntModel>;
+using BoolModelView = TypedAutomatableModelView<BoolModel>;
 
 #endif

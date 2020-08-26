@@ -25,6 +25,7 @@
 #ifndef BB_TRACK_CONTAINER_H
 #define BB_TRACK_CONTAINER_H
 
+#include "BBTrack.h"
 #include "Bitset.h"
 #include "ComboBoxModel.h"
 #include "TrackContainer.h"
@@ -32,7 +33,6 @@
 class EXPORT BBTrackContainer : public TrackContainer
 {
     Q_OBJECT
-    mapPropertyFromModel(int, currentBB, setCurrentBB, m_bbComboBoxModel);
 
   public:
     BBTrackContainer();
@@ -51,43 +51,65 @@ class EXPORT BBTrackContainer : public TrackContainer
                       int           _tco_num,
                       const Bitset* _mask);
 
-    virtual void updateAfterTrackAdd() /*override*/;
-
-    inline virtual QString nodeName() const /*override*/
+    QString nodeName() const override
     {
         return "bbtrackcontainer";
     }
 
-    tact_t        lengthOfBB(int _bb) const;
-    inline tact_t lengthOfCurrentBB()
+    tact_t lengthOfBB(int _bb) const;
+    tact_t lengthOfCurrentBB()
     {
         return lengthOfBB(currentBB());
     }
 
     tick_t beatLengthOfBB(int _bb) const;
 
-    int  numOfBBs() const;
-    void removeBB(int _bb);
+    // int numOfBBs() const;
+    // void removeBB(int _bb);
+    // void swapBB(int _bb1, int _bb2);
 
-    void swapBB(int _bb1, int _bb2);
+    virtual void updateAfterInnerTrackAdd(Track* _track);
 
     void updateBBTrack(Tile* _tco);
     void fixIncorrectPositions();
+    void fixIncorrectPositions(Track* _t);
     void createTCOsForBB(int _bb);
+    void createTCOsForBB(Track* _t);
+    void deleteTCOsForBB(int _bb);
+    void moveTCOsForBB(int _fromBB, int _toBB);
+    void checkTCOs();
+    void printDebug() const;
+    void rearrangeBB();
 
     // AutomatedValueMap
-    virtual void automatedValuesAt(MidiTime           time,
-                                   int                tcoNum,
-                                   AutomatedValueMap& _map) const override;
+    void automatedValuesAt(MidiTime           time,
+                           int                tcoNum,
+                           AutomatedValueMap& _map) const override;
+
+    // BBTracks bbTracks();
+    BBTracks bbTracks() const;
+    int      firstAvailableBeatIndex();
+    int      lastUsedBeatIndex();
+
+    int      registerTrack(BBTrack* _bbTrack);
+    void     unregisterTrack(BBTrack* _bbTrack);
+    int      registryIndex(const BBTrack* _bbTrack) const;
+    BBTrack* registryTrack(int _bbNum) const;
+    QMenu*   createBeatMenu(bool _enabled, int _index);
+    // void swapBBTracks(Track* _track1, Track* _track2);
+
+    int            currentBB();
+    void           setCurrentBB(int _bb);
+    ComboBoxModel& currentBBModel();
 
   public slots:
     void play();
     void stop();
     void updateComboBox();
-    void currentBBChanged();
+    // void currentBBChanged();
 
   private:
-    ComboBoxModel m_bbComboBoxModel;
+    ComboBoxModel m_currentBB;
 
     friend class BBWindow;
 };

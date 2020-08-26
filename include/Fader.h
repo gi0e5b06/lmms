@@ -49,16 +49,14 @@
 
 #include <QTime>
 //#include <QWidget>
-#include "AutomatableModelView.h"
+#include "AutomatableModelView.h"  // REQUIRED
 #include "Widget.h"
 
 #include <QPixmap>
 
 class TextFloat;
 
-class EXPORT Fader
-      : public Widget
-      , public FloatModelView
+class EXPORT Fader : public Widget, public RealModelView
 {
     Q_OBJECT
 
@@ -67,47 +65,52 @@ class EXPORT Fader
     Q_PROPERTY(QColor peakRed READ peakRed WRITE setPeakRed)
     Q_PROPERTY(QColor peakYellow READ peakYellow WRITE setPeakYellow)
     Q_PROPERTY(bool levelsDisplayedInDBFS READ areLevelsDisplayedInDBFS WRITE
-                                                                        setLevelsDisplayedInDBFS)
+                       setLevelsDisplayedInDBFS)
 
-    Fader(FloatModel* _model, const QString& _name, QWidget* _parent);
-    Fader(FloatModel*    _model,
+    Fader(RealModel* _model, QWidget* _parent);
+    Fader(QWidget* _parent = nullptr, const QString& _name = "[fader]");
+
+    // obsolete
+    Fader(RealModel* _model, const QString& _name, QWidget* _parent);
+    Fader(RealModel*     _model,
           const QString& _name,
           QWidget*       _parent,
           const QPixmap& back,
           const QPixmap& leds,
           const QPixmap& knob);
+
     virtual ~Fader();
 
-    void init(FloatModel* model, QString const& name);
+    // INLINE bool needsUpdate() const { return m_needsUpdate; }
 
-    // inline bool needsUpdate() const { return m_needsUpdate; }
-
-    void          setPeak_L(real_t fPeak);
-    inline real_t getPeak_L() const
+    INLINE real_t getPeak_L() const
     {
         return m_fPeakValue_L;
     }
+    void setPeak_L(real_t fPeak);
 
-    void          setPeak_R(real_t fPeak);
-    inline real_t getPeak_R() const
+    INLINE real_t getPeak_R() const
     {
         return m_fPeakValue_R;
     }
+    void setPeak_R(real_t fPeak);
 
-    inline real_t getMinPeak() const
+    INLINE real_t getMinPeak() const
     {
         return m_fMinPeak;
     }
-    inline void setMinPeak(real_t minPeak)
+
+    INLINE void setMinPeak(real_t minPeak)
     {
         m_fMinPeak = minPeak;
     }
 
-    inline real_t getMaxPeak() const
+    INLINE real_t getMaxPeak() const
     {
         return m_fMaxPeak;
     }
-    inline void setMaxPeak(real_t maxPeak)
+
+    INLINE void setMaxPeak(real_t maxPeak)
     {
         m_fMaxPeak = maxPeak;
     }
@@ -121,9 +124,9 @@ class EXPORT Fader
     QColor const& peakYellow() const;
     void          setPeakYellow(const QColor& c);
 
-    // inline bool getLevelsDisplayedInDBFS() const { return
+    // INLINE bool getLevelsDisplayedInDBFS() const { return
     // m_levelsDisplayedInDBFS; }
-    inline bool areLevelsDisplayedInDBFS() const
+    INLINE bool areLevelsDisplayedInDBFS() const
     {
         return m_levelsDisplayedInDBFS;
     }
@@ -137,7 +140,7 @@ class EXPORT Fader
         m_displayConversion = b;
     }
 
-    inline void setHintText(const QString& _txt_before,
+    INLINE void setHintText(const QString& _txt_before,
                             const QString& _txt_after)
     {
         setDescription(_txt_before);
@@ -147,31 +150,32 @@ class EXPORT Fader
   public slots:
     virtual void modelChanged();
     virtual void enterValue();
-    //virtual void editRandomization();
+    // virtual void editRandomization();
     virtual void update();
     virtual void friendlyUpdate();
 
-    //void displayHelp();
-    //void toggleScale();
-
+    // void displayHelp();
+    // void toggleScale();
 
   protected:
+    void doConnections() override;
+    void undoConnections() override;
+
+    virtual void initUi();
     virtual void drawWidget(QPainter& _p);
     virtual void drawDBFSLevels(QPainter& painter);
     virtual void drawLinearLevels(QPainter& painter);
 
-    virtual void contextMenuEvent(QContextMenuEvent* _me);
-    virtual void mousePressEvent(QMouseEvent* ev);
-    virtual void mouseDoubleClickEvent(QMouseEvent* mouseEvent);
-    virtual void mouseMoveEvent(QMouseEvent* ev);
-    virtual void mouseReleaseEvent(QMouseEvent* _me);
-    virtual void wheelEvent(QWheelEvent* ev);
-    // virtual void paintEvent( QPaintEvent *ev );
+    void contextMenuEvent(QContextMenuEvent* _me) override;
+    void mousePressEvent(QMouseEvent* ev) override;
+    void mouseDoubleClickEvent(QMouseEvent* mouseEvent) override;
+    void mouseMoveEvent(QMouseEvent* ev) override;
+    void mouseReleaseEvent(QMouseEvent* _me) override;
+    void wheelEvent(QWheelEvent* ev) override;
+    // void paintEvent( QPaintEvent *ev ) override;
 
   private:
-    virtual void doConnections();
-
-    inline bool isClipping(const real_t _value) const
+    INLINE bool isClipping(const real_t _value) const
     {
         return _value > 1.;
     }

@@ -1,8 +1,9 @@
 /*
  * eqcontrolsdialog.cpp - defination of EqControlsDialog class.
  *
- * Copyright (c) 2019 gi0e5b06 (on github.com)
- * Copyright (c) 2014 David French <dave/dot/french3/at/googlemail/dot/com>
+ * Copyright (c) 2019-2020 gi0e5b06 (on github.com)
+ * Copyright (c) 2014-2014 David French
+ * <dave/dot/french3/at/googlemail/dot/com>
  *
  * This file is part of LSMM -
  *
@@ -139,7 +140,7 @@ EqControlsDialog::EqControlsDialog(EqControls* controls) :
     {
         Knob* resKnob = new Knob(knobBright_26, this);
         resKnob->move(distance, 440);
-        //resKnob->setVolumeKnob(false);
+        // resKnob->setVolumeKnob(false);
         resKnob->setModel(m_parameterWidget->getBandModels(i)->res);
         if(i > 1 && i < 6)
         {
@@ -152,7 +153,7 @@ EqControlsDialog::EqControlsDialog(EqControls* controls) :
 
         Knob* freqKnob = new Knob(knobBright_26, this);
         freqKnob->move(distance, 396);
-        //freqKnob->setVolumeKnob(false);
+        // freqKnob->setVolumeKnob(false);
         freqKnob->setModel(m_parameterWidget->getBandModels(i)->freq);
         freqKnob->setHintText(tr("Frequency:"), "Hz");
 
@@ -271,14 +272,14 @@ EqControlsDialog::EqControlsDialog(EqControls* controls) :
     lpBtnGrp->addButton(lp12Button);
     lpBtnGrp->addButton(lp24Button);
     lpBtnGrp->addButton(lp48Button);
-    lpBtnGrp->setModel(&m_controls->m_lpTypeModel, false);
+    lpBtnGrp->setModel(&m_controls->m_lpTypeModel);
 
     AutomatableButtonGroup* hpBtnGrp
             = new AutomatableButtonGroup(this, tr("hp grp"));
     hpBtnGrp->addButton(hp12Button);
     hpBtnGrp->addButton(hp24Button);
     hpBtnGrp->addButton(hp48Button);
-    hpBtnGrp->setModel(&m_controls->m_hpTypeModel, false);
+    hpBtnGrp->setModel(&m_controls->m_hpTypeModel);
 }
 
 void EqControlsDialog::mouseDoubleClickEvent(QMouseEvent* event)
@@ -293,21 +294,21 @@ void EqControlsDialog::mouseDoubleClickEvent(QMouseEvent* event)
     update();
 }
 
-EqBand* EqControlsDialog::setBand(int         index,
-                                  BoolModel*  active,
-                                  FloatModel* freq,
-                                  FloatModel* res,
-                                  FloatModel* gain,
-                                  QColor      color,
-                                  QString     name,
-                                  float*      peakL,
-                                  float*      peakR,
-                                  BoolModel*  hp12,
-                                  BoolModel*  hp24,
-                                  BoolModel*  hp48,
-                                  BoolModel*  lp12,
-                                  BoolModel*  lp24,
-                                  BoolModel*  lp48)
+EqBand* EqControlsDialog::setBand(int        index,
+                                  BoolModel* active,
+                                  RealModel* freq,
+                                  RealModel* res,
+                                  RealModel* gain,
+                                  QColor     color,
+                                  QString    name,
+                                  float*     peakL,
+                                  float*     peakR,
+                                  BoolModel* hp12,
+                                  BoolModel* hp24,
+                                  BoolModel* hp48,
+                                  BoolModel* lp12,
+                                  BoolModel* lp24,
+                                  BoolModel* lp48)
 {
     EqBand* filterModels = m_parameterWidget->getBandModels(index);
     filterModels->active = active;

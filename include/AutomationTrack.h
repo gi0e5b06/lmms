@@ -29,6 +29,7 @@
 #define AUTOMATION_TRACK_H
 
 #include "Track.h"
+#include "TrackView.h"
 
 class AutomationTrack : public Track
 {
@@ -37,24 +38,24 @@ class AutomationTrack : public Track
     AutomationTrack(TrackContainer* tc, bool _hidden = false);
     virtual ~AutomationTrack();
 
-    virtual QString defaultName() const;
-
-    virtual bool play(const MidiTime& _start,
-                      const fpp_t     _frames,
-                      const f_cnt_t   _frame_base,
-                      int             _tco_num = -1);
-
-    virtual QString nodeName() const
+    QString nodeName() const override
     {
         return "automationtrack";
     }
 
-    virtual TrackView* createView(TrackContainerView*);
-    virtual Tile*      createTCO(const MidiTime& _pos);
+    QString defaultName() const override;
 
-    virtual void saveTrackSpecificSettings(QDomDocument& _doc,
-                                           QDomElement&  _parent);
-    virtual void loadTrackSpecificSettings(const QDomElement& _this);
+    bool play(const MidiTime& _start,
+              const fpp_t     _frames,
+              const f_cnt_t   _frame_base,
+              int             _tco_num = -1) override;
+
+    TrackView* createView(TrackContainerView*) override;
+    Tile*      createTCO() override;
+
+    void saveTrackSpecificSettings(QDomDocument& _doc,
+                                   QDomElement&  _parent) override;
+    void loadTrackSpecificSettings(const QDomElement& _this) override;
 
   private:
     friend class AutomationTrackView;

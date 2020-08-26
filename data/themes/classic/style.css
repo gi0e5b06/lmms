@@ -70,13 +70,13 @@ TextFloat {
 
 QMenuBar {
         color: #ffffff;
-        font-size: 16px;
+        font-size: 14px;
 }
 
 QMenu {
 	border:1px solid #747474;
 	background-color: #c9c9c9;
-	font-size: 13px;
+	font-size: 14px;
 }
 
 QMenu::separator {
@@ -85,12 +85,14 @@ QMenu::separator {
 }
 
 QMenu::item {
+	font-size: 14px;
 	color: black;
 	padding: 2px 35px 2px 23px;
 	margin: 3px 0px 3px 0px;
 }
 
 QMenu::item:selected {
+	font-size: 14px;
 	color: white;
 	font-weight:bold;
 	background-color: #747474;
@@ -99,7 +101,7 @@ QMenu::item:selected {
 QMenu::item:disabled {
 	color: #747474;
 	background-color: #c9c9c9;
-	font-size: 13px;
+	font-size: 14px;
 	font-weight: normal;
 	padding: 4px 32px 4px 20px;
 }
@@ -167,7 +169,7 @@ GroupBox {
 ComboBox {
     color: #FFFFFF;
     background-color: #303336; /*#3c434b; #5b6571;*/
-    font-size: 12px;
+    font-size: 13px;
     /*max-height: 18px;*/
 }
 /* main toolbar oscilloscope - can have transparent bg now */
@@ -373,7 +375,7 @@ TrackOperationsWidget > QPushButton::menu-indicator:checked
 /* font sizes */
 
 nameLabel, effectLabel, sf2InstrumentView > QLabel {
-	font-size: 13px;
+	font-size: 14px;
 }
 
 /* main toolbar sliders (master vol, master pitch) */
@@ -473,7 +475,7 @@ QToolButton {
 	border-radius: 3px;
 	border: 1px solid rgba(63, 63, 63, 64);
 	background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #d0d0d0, stop:1 #818171);
-	font-size: 16px; /*10px;*/
+	font-size: 14px; /*10px;*/
 	color: white; /*black;*/
         width: 24px;
         height: 24px;
@@ -504,7 +506,7 @@ QToolButton:checked  {
 TrackLabelButton {
 	background-color: #5b6571;
 	color: #c9c9c9;
-	font-size: 13px;
+	font-size: 14px;
 	font-weight: normal;
 	border-radius: 1px;
 	border: none;
@@ -550,7 +552,7 @@ SideBar {
 }
 
 SideBar QToolButton {
-	font-size: 13px;
+	font-size: 14px;
 }
 
 /* Instrument plugin list */
@@ -579,13 +581,13 @@ PianoView {
 /* font sizes for text buttons */
 
 FxMixerView QPushButton, EffectRackView QPushButton, ControllerRackView QPushButton {
-	font-size: 11px;
+	font-size: 14px;
 }
 
 FxLine {
 	background: #5b6571;
 	color: #e0e0e0;
-	font-size: 11px;
+	font-size: 14px;
 	qproperty-backgroundActive: qlineargradient(spread:reflect, x1:0, y1:0, x2:1, y2:0, stop:0 #7b838d, stop:1 #6b7581 );
 	qproperty-strokeOuterActive: rgb( 0, 0, 0 );
 	qproperty-strokeOuterInactive: rgba( 0, 0, 0, 50 );
@@ -602,7 +604,7 @@ Fader {
 
 TimeLineWidget {
         /* font-size only supports px and pt. */
-        font-size: 13px; /*7pt;*/
+        font-size: 14px; /*7pt;*/
 	/* lengths also support em. This will make sure that the height
 	   will always change in the same proportion as the font size
 	   defined above.
@@ -645,7 +647,7 @@ TileView   {
 	qproperty-textBackgroundColor: rgba(0, 0, 0, 75);
 	qproperty-textShadowColor: rgb( 0, 0, 0 );
 	/*qproperty-gradient: true;*/
-	font-size: 11px;
+	font-size: 14px;
 }
 
 /* instrument pattern */
@@ -689,7 +691,7 @@ SubWindow {
 /* Subwindow title text */
 SubWindow > QLabel {
         color: #c0c0c0;
-	font-size: 16px;
+	font-size: 14px;
 	font-weight: bold;
 }
 

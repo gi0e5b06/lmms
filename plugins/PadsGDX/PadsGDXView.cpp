@@ -41,15 +41,13 @@
 #include <QPixmap>
 #include <QRegExp>
 
-QPixmap* PadsGDXView::s_artwork = NULL;
+QPixmap* PadsGDXView::s_artwork = nullptr;
 
 PadsGDXView::PadsGDXView(Instrument* _instrument, QWidget* _parent) :
       InstrumentView(_instrument, _parent)
 {
-    if(s_artwork == NULL)
-    {
+    if(s_artwork == nullptr)
         s_artwork = new QPixmap(PLUGIN_NAME::getIconPixmap("artwork"));
-    }
 
     m_startKnob = new PadsGDXWaveView::knob(this);
     m_startKnob->move(6, 126);
@@ -235,6 +233,8 @@ PadsGDXView::PadsGDXView(Instrument* _instrument, QWidget* _parent) :
                  "sound like the original sample." ));
     */
 
+    modelChanged();
+
     // wavegraph
     m_waveView = new PadsGDXWaveView(this, 245, 75);
     m_waveView->move(2, 172);
@@ -254,7 +254,7 @@ PadsGDXView::~PadsGDXView()
     if(m_waveView)
     {
         delete m_waveView;
-        m_waveView = NULL;
+        m_waveView = nullptr;
     }
 }
 
@@ -511,7 +511,7 @@ void PadsGDXView::saveSFZFile()
 
 QString PadsGDXView::selectSFZFile(const QString& _file)
 {
-    FileDialog ofd(NULL, tr("Open soundfont"));
+    FileDialog ofd(nullptr, tr("Open soundfont"));
 
     QString dir;
     QString file;

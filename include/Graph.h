@@ -36,13 +36,12 @@
 
 class GraphModel;
 
-class EXPORT Graph
-      : public QWidget
-      , public ModelView
+class EXPORT Graph : public QWidget, public ModelView
 {
     Q_OBJECT
+
   public:
-    enum graphStyle
+    enum GraphStyle
     {
         NearestStyle,
         LinearStyle,
@@ -53,7 +52,7 @@ class EXPORT Graph
     };
 
     Graph(QWidget*   _parent,
-          graphStyle _style  = Graph::LinearStyle,
+          GraphStyle _style  = Graph::LinearStyle,
           int        _width  = 132,
           int        _height = 104);
     virtual ~Graph();
@@ -62,17 +61,17 @@ class EXPORT Graph
 
     void setGraphColor(const QColor);
 
-    inline GraphModel* model()
+    INLINE GraphModel* model() // non virtual
     {
         return castModel<GraphModel>();
     }
 
-    inline graphStyle getGraphStyle()
+    INLINE GraphStyle getGraphStyle()
     {
         return m_graphStyle;
     }
 
-    inline void setGraphStyle(graphStyle _s)
+    INLINE void setGraphStyle(GraphStyle _s)
     {
         m_graphStyle = _s;
         update();
@@ -102,7 +101,7 @@ class EXPORT Graph
     QPixmap m_foreground;
     QColor  m_graphColor;
 
-    graphStyle m_graphStyle;
+    GraphStyle m_graphStyle;
 
     bool m_mouseDown;
     int  m_lastCursorX;
@@ -111,34 +110,35 @@ class EXPORT Graph
 class EXPORT GraphModel : public Model
 {
     Q_OBJECT
+
   public:
     GraphModel(FLOAT    _min,
                FLOAT    _max,
                int      _size,
                ::Model* _parent,
                bool     _defaultConstructed = false,
-               FLOAT    _step                = 0.);
+               FLOAT    _step               = 0.);
 
     virtual ~GraphModel();
 
     // TODO: saveSettings, loadSettings?
 
-    inline FLOAT minValue() const
+    INLINE FLOAT minValue() const
     {
         return m_minValue;
     }
 
-    inline FLOAT maxValue() const
+    INLINE FLOAT maxValue() const
     {
         return m_maxValue;
     }
 
-    inline int length() const
+    INLINE int length() const
     {
         return m_length;
     }
 
-    inline const FLOAT* samples() const
+    INLINE const FLOAT* samples() const
     {
         return m_samples.data();
     }

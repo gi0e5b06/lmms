@@ -57,7 +57,7 @@ extern "C"
             Plugin::Instrument,
             new PluginPixmapLoader("logo"),
             "sf2",
-            NULL};
+            nullptr};
 }
 
 struct SF2PluginData
@@ -77,7 +77,7 @@ QMutex                  sf2Instrument::s_fontsMutex;
 
 sf2Instrument::sf2Instrument(InstrumentTrack* _instrument_track) :
       Instrument(_instrument_track, &sf2player_plugin_descriptor),
-      m_srcState(NULL), m_font(NULL), m_fontId(0), m_filename(""),
+      m_srcState(nullptr), m_font(nullptr), m_fontId(0), m_filename(""),
       m_lastMidiPitch(-1), m_lastMidiPitchRange(-1), m_channel(1),
       m_bankNum(0, 0, 999, this, tr("Bank")),
       m_patchNum(0, 0, 127, this, tr("Patch")),
@@ -143,6 +143,36 @@ sf2Instrument::sf2Instrument(InstrumentTrack* _instrument_track) :
     // everytime we load a new soundfont.
     m_synth = new_fluid_synth(m_settings);
 
+#if FLUIDSYNTH_VERSION_MAJOR >= 2
+    // Get the default values from the setting
+    double settingVal;
+
+    fluid_settings_getnum_default(m_settings, "synth.reverb.room-size",
+                                  &settingVal);
+    m_reverbRoomSize.setInitValue(settingVal);
+    fluid_settings_getnum_default(m_settings, "synth.reverb.damping",
+                                  &settingVal);
+    m_reverbDamping.setInitValue(settingVal);
+    fluid_settings_getnum_default(m_settings, "synth.reverb.width",
+                                  &settingVal);
+    m_reverbWidth.setInitValue(settingVal);
+    fluid_settings_getnum_default(m_settings, "synth.reverb.level",
+                                  &settingVal);
+    m_reverbLevel.setInitValue(settingVal);
+
+    fluid_settings_getnum_default(m_settings, "synth.chorus.nr", &settingVal);
+    m_chorusNum.setInitValue(settingVal);
+    fluid_settings_getnum_default(m_settings, "synth.chorus.level",
+                                  &settingVal);
+    m_chorusLevel.setInitValue(settingVal);
+    fluid_settings_getnum_default(m_settings, "synth.chorus.speed",
+                                  &settingVal);
+    m_chorusSpeed.setInitValue(settingVal);
+    fluid_settings_getnum_default(m_settings, "synth.chorus.depth",
+                                  &settingVal);
+    m_chorusDepth.setInitValue(settingVal);
+#endif
+
     loadFile(ConfigManager::inst()->defaultSoundfont());
 
     updateSampleRate();
@@ -192,7 +222,7 @@ sf2Instrument::~sf2Instrument()
     freeFont();
     delete_fluid_synth(m_synth);
     delete_fluid_settings(m_settings);
-    if(m_srcState != NULL)
+    if(m_srcState != nullptr)
     {
         src_delete(m_srcState);
     }
@@ -267,7 +297,7 @@ AutomatableModel* sf2Instrument::childModel(const QString& _modelName)
         return &m_patchNum;
     }
     qCritical() << "requested unknown model " << _modelName;
-    return NULL;
+    return nullptr;
 }
 
 /*
@@ -281,7 +311,7 @@ void sf2Instrument::freeFont()
 {
     m_synthMutex.lock();
 
-    if(m_font != NULL)
+    if(m_font != nullptr)
     {
         s_fontsMutex.lock();
         --(m_font->refCount);
@@ -304,7 +334,7 @@ void sf2Instrument::freeFont()
         }
         s_fontsMutex.unlock();
 
-        m_font = NULL;
+        m_font = nullptr;
     }
     m_synthMutex.unlock();
 }
@@ -392,7 +422,7 @@ QString sf2Instrument::getCurrentPatchName()
     int iBankSelected = m_bankNum.value();
     int iProgSelected = m_patchNum.value();
 
-    fluid_preset_t preset;
+    // fluid_preset_t preset;
     // For all soundfonts (in reversed stack order) fill the available
     // programs...
     int cSoundFonts = ::fluid_synth_sfcount(m_synth);
@@ -402,20 +432,33 @@ QString sf2Instrument::getCurrentPatchName()
         if(pSoundFont)
         {
 #ifdef CONFIG_FLUID_BANK_OFFSET
-            int iBankOffset
-                    = fluid_synth_get_bank_offset(m_synth, pSoundFont->id);
+            int iBankOffset = fluid_synth_get_bank_offset(
+                    m_synth, fluid_sfont_get_id(pSoundFont));
+            // pSoundFont->id);
 #endif
-            pSoundFont->iteration_start(pSoundFont);
-            while(pSoundFont->iteration_next(pSoundFont, &preset))
+            fluid_sfont_iteration_start(pSoundFont);
+#if FLUIDSYNTH_VERSION_MAJOR < 2
+            fluid_preset_t  preset;
+            fluid_preset_t* pCurPreset = &preset;
+#else
+            fluid_preset_t* pCurPreset;
+#endif
+            // pSoundFont->iteration_start(pSoundFont);
+            // while(pSoundFont->iteration_next(pSoundFont, &preset))
+            while((pCurPreset = fluid_sfont_iteration_next_wrapper(
+                           pSoundFont, pCurPreset)))
             {
-                int iBank = preset.get_banknum(&preset);
+                // int iBank = preset.get_banknum(&preset);
+                int iBank = fluid_preset_get_banknum(pCurPreset);
 #ifdef CONFIG_FLUID_BANK_OFFSET
                 iBank += iBankOffset;
 #endif
-                int iProg = preset.get_num(&preset);
+                // int iProg = preset.get_num(&preset);
+                int iProg = fluid_preset_get_num(pCurPreset);
                 if(iBank == iBankSelected && iProg == iProgSelected)
                 {
-                    return preset.get_name(&preset);
+                    // return preset.get_name(&preset);
+                    return fluid_preset_get_name(pCurPreset);
                 }
             }
         }
@@ -500,7 +543,7 @@ void sf2Instrument::updateSampleRate()
     if(m_internalSampleRate < Engine::mixer()->processingSampleRate())
     {
         m_synthMutex.lock();
-        if(m_srcState != NULL)
+        if(m_srcState != nullptr)
         {
             src_delete(m_srcState);
         }
@@ -509,7 +552,7 @@ void sf2Instrument::updateSampleRate()
                                      ->currentQualitySettings()
                                      .libsrcInterpolation(),
                              DEFAULT_CHANNELS, &error);
-        if(m_srcState == NULL || error)
+        if(m_srcState == nullptr || error)
         {
             qCritical(
                     "error while creating libsamplerate data structure in "
@@ -558,7 +601,7 @@ void sf2Instrument::playNote(NotePlayHandle* _n, sampleFrame*)
         pluginData->midiNote      = midiNote;
         pluginData->lastPanning   = 0;
         pluginData->lastVelocity  = _n->midiVelocity(baseVelocity);
-        pluginData->fluidVoice    = NULL;
+        pluginData->fluidVoice    = nullptr;
         pluginData->isNew         = true;
         pluginData->offset        = _n->offset();
         pluginData->noteOffSent   = false;
@@ -672,7 +715,8 @@ void sf2Instrument::play(sampleFrame* _working_buffer)
     if(m_playingNotes.isEmpty())
     {
         renderFrames(frames, _working_buffer);
-        instrumentTrack()->processAudioBuffer(_working_buffer, frames, NULL);
+        instrumentTrack()->processAudioBuffer(_working_buffer, frames,
+                                              nullptr);
         return;
     }
 
@@ -736,7 +780,7 @@ void sf2Instrument::play(sampleFrame* _working_buffer)
     {
         renderFrames(frames - currentFrame, _working_buffer + currentFrame);
     }
-    instrumentTrack()->processAudioBuffer(_working_buffer, frames, NULL);
+    instrumentTrack()->processAudioBuffer(_working_buffer, frames, nullptr);
 }
 
 void sf2Instrument::renderFrames(f_cnt_t frames, sampleFrame* _buf)
@@ -752,7 +796,7 @@ void sf2Instrument::renderFrames(f_cnt_t frames, sampleFrame* _buf)
 #endif
     m_synthMutex.lock();
     if(m_internalSampleRate < Engine::mixer()->processingSampleRate()
-       && m_srcState != NULL)
+       && m_srcState != nullptr)
     {
         const fpp_t f = frames * m_internalSampleRate
                         / Engine::mixer()->processingSampleRate();
@@ -1000,6 +1044,7 @@ sf2InstrumentView::sf2InstrumentView(Instrument* _instrument,
     pal.setBrush(backgroundRole(), PLUGIN_NAME::getIconPixmap("artwork"));
     setPalette(pal);
 
+    modelChanged();
     updateFilename();
 }
 
@@ -1072,7 +1117,7 @@ void sf2InstrumentView::showFileDialog()
 {
     sf2Instrument* k = castModel<sf2Instrument>();
 
-    FileDialog ofd(NULL, tr("Open SoundFont file"));
+    FileDialog ofd(nullptr, tr("Open SoundFont file"));
     ofd.setFileMode(FileDialog::ExistingFile);
 
     QStringList types;

@@ -33,29 +33,58 @@
 #include <QCloseEvent>
 #include <QToolBar>
 
-class QAction;
+class ActionGroup;
 class ComboBoxModel;
 class DropToolBar;
+class EditorOverlay;
+class QAction;
 
 class Editor
 {
   public:
+    enum EditMode
+    {
+        ModeDraw,
+        ModeErase,
+        ModeSelect,
+        ModeMove,
+        ModeJoin,   // Unite
+        ModeSplit,  // Divide
+        ModeDetune,
+    };
+
     Editor(Model*         _parent,
            const QString& _displayName,
            const QString& _objectName);
+    virtual ~Editor();
 
+    virtual EditorOverlay* overlay() const;
+    virtual void           setOverlay(EditorOverlay* _overlay);
+
+    // static void drawModeCursor(QPainter& _p, QWidget& _w, EditMode _mode);
     static void applyOverrideCursor(Qt::CursorShape _shape);
     static void applyOverrideCursor(QCursor& _c);
     static void resetOverrideCursor();
 
   protected:
+    // const QWidget* widget(); // this as a widget
+
     Model* editorModel()
     {
         return &m_editorModel;
     }
 
+    virtual bool     isEditMode(EditMode _mode) const;
+    virtual EditMode editMode() const;
+    virtual EditMode cursorMode() const;
+    virtual void     setEditMode(EditMode _mode);
+
   private:
-    Model m_editorModel;
+    EditMode       m_editMode;
+    EditorOverlay* m_overlay;
+    Model          m_editorModel;
+
+    friend class EditorOverlay;
 };
 
 /// \brief The base window for windows that conaint an editor.
@@ -74,9 +103,12 @@ class EditorWindow : public QMainWindow, public virtual ActionUpdatable
     static const QVector<tick_t> QUANTIZE_LEVELS;
     static const QVector<tick_t> LENGTH_LEVELS;
 
-    static void fillZoomLevels(ComboBoxModel& _cbm);
-    static void fillQuantizeLevels(ComboBoxModel& _cbm);
-    static void fillLengthLevels(ComboBoxModel& _cbm);
+    static void fillZoomLevels(ComboBoxModel& _cbm, bool _automatic);
+    static void fillQuantizeLevels(ComboBoxModel& _cbm, bool _noteLock);
+    static void fillLengthLevels(ComboBoxModel& _cbm, bool _lastNote);
+
+  public slots:
+    virtual void setEditMode(int _mode) = 0;
 
   protected:
     /// \brief	Constructor.
@@ -95,6 +127,18 @@ class EditorWindow : public QMainWindow, public virtual ActionUpdatable
                                 QString const&  windowTitle);
 
     virtual void closeEvent(QCloseEvent* _ce);
+
+    virtual void buildModeActions(DropToolBar* _toolBar);
+
+    ActionGroup* m_editModeGroup;
+    QAction*     m_drawModeAction;
+    QAction*     m_eraseModeAction;
+    QAction*     m_selectModeAction;
+    QAction*     m_moveModeAction;
+    QAction*     m_splitModeAction;  // Unite
+    QAction*     m_joinModeAction;   // Divide
+    QAction*     m_detuneModeAction;
+    QAction*     m_previousEditAction;
 
   protected slots:
     virtual void play()
@@ -133,7 +177,7 @@ class DropToolBar : public QToolBar
     DropToolBar(QWidget* parent = nullptr);
 
     void addBlank();
-
+    /*
   signals:
     void dragEntered(QDragEnterEvent* event);
     void dropped(QDropEvent* event);
@@ -141,6 +185,7 @@ class DropToolBar : public QToolBar
   protected:
     void dragEnterEvent(QDragEnterEvent* event);
     void dropEvent(QDropEvent* event);
+    */
 };
 
 #endif

@@ -54,7 +54,7 @@ const tick_t MaxSongLength = 9999 * DefaultTicksPerTact;
 class EXPORT Song : public TrackContainer, public virtual Transportable
 {
     Q_OBJECT
-    mapPropertyFromModel(bpm_t, getTempo, setTempo, m_tempoModel);
+    mapPropertyFromModel(bpm_t, tempo, setTempo, m_tempoModel);
     mapPropertyFromModel(volume_t,
                          masterVolume,
                          setMasterVolume,
@@ -86,86 +86,94 @@ class EXPORT Song : public TrackContainer, public virtual Transportable
 
     void processNextBuffer();
 
-    inline int getLoadingTrackCount() const
+    INLINE int getLoadingTrackCount() const
     {
         return m_nLoadingTrack;
     }
 
-    inline int getMilliseconds() const
+    INLINE int getMilliseconds() const
     {
         return m_elapsedMilliSeconds;
     }
 
-    inline void setToTime(int millis)
+    INLINE void setToTime(int millis)
     {
         m_elapsedMilliSeconds = millis;
     }
 
-    inline void setToTime(MidiTime const& midiTime)
+    INLINE void setToTime(MidiTime const& midiTime)
     {
         m_elapsedMilliSeconds = midiTime.getTimeInMilliseconds(getTempo());
     }
 
-    inline void setToTimeByTicks(tick_t ticks)
+    INLINE void setToTimeByTicks(tick_t ticks)
     {
         m_elapsedMilliSeconds
                 = MidiTime::ticksToMilliseconds(ticks, getTempo());
     }
 
-    inline int getTacts() const
+    INLINE int getTacts() const
     {
         return currentTact();
     }
 
-    inline int ticksPerTact() const
+    INLINE int ticksPerTact() const
     {
         return MidiTime::ticksPerTact(m_timeSigModel);
     }
 
+    INLINE int beatsPerTact() const
+    {
+        return MidiTime::beatsPerTact(m_timeSigModel);
+    }
+
     // Returns the beat position inside the bar, 0-based
-    inline int getBeat() const
+    INLINE int getBeat() const
     {
         return getPlayPos().getBeatWithinBar(m_timeSigModel);
     }
+
     // the remainder after bar and beat are removed
-    inline int getBeatTicks() const
+    INLINE int getBeatTicks() const
     {
         return getPlayPos().getTickWithinBeat(m_timeSigModel);
     }
-    inline int getTicks() const
+
+    INLINE int getTicks() const
     {
         return currentTick();
     }
-    inline f_cnt_t getFrames() const
+
+    INLINE f_cnt_t getFrames() const
     {
         return currentFrame();
     }
-    inline bool isPaused() const
+    INLINE bool isPaused() const
     {
         return m_paused;
     }
 
-    inline bool isPlaying() const
+    INLINE bool isPlaying() const
     {
         return m_playing == true && m_exporting == false;
     }
 
-    inline bool isStopped() const
+    INLINE bool isStopped() const
     {
         return m_playing == false && m_paused == false;
     }
 
-    inline bool isExporting() const
+    INLINE bool isExporting() const
     {
         return m_exporting;
     }
 
-    inline void setExportLoop(bool exportLoop)
+    INLINE void setExportLoop(bool exportLoop)
     {
         m_exportLoop = exportLoop;
     }
 
-    inline bool isRecording() const
+    INLINE bool isRecording() const
     {
         return m_recording;
     }
@@ -173,35 +181,37 @@ class EXPORT Song : public TrackContainer, public virtual Transportable
     bool                          isExportDone() const;
     std::pair<MidiTime, MidiTime> getExportEndpoints() const;
 
-    inline void setRenderBetweenMarkers(bool renderBetweenMarkers)
+    INLINE void setRenderBetweenMarkers(bool renderBetweenMarkers)
     {
         m_renderBetweenMarkers = renderBetweenMarkers;
     }
 
-    inline bool peakNormalizeFlag() const
+    INLINE bool peakNormalizeFlag() const
     {
         return m_peakNormalizeFlag;
     }
 
-    inline void setPeakNormalizeFlag(bool peakNormalizeFlag)
+    INLINE void setPeakNormalizeFlag(bool peakNormalizeFlag)
     {
         m_peakNormalizeFlag = peakNormalizeFlag;
     }
 
-    inline PlayModes playMode() const
+    INLINE PlayModes playMode() const
     {
         return m_playMode;
     }
 
-    inline PlayPos& getPlayPos(PlayModes pm)
+    INLINE PlayPos& getPlayPos(PlayModes pm)
     {
         return m_playPos[pm];
     }
-    inline const PlayPos& getPlayPos(PlayModes pm) const
+
+    INLINE const PlayPos& getPlayPos(PlayModes pm) const
     {
         return m_playPos[pm];
     }
-    inline const PlayPos& getPlayPos() const
+
+    INLINE const PlayPos& getPlayPos() const
     {
         return getPlayPos(m_playMode);
     }
@@ -212,7 +222,12 @@ class EXPORT Song : public TrackContainer, public virtual Transportable
         return m_length;
     }
 
-    bpm_t                      getTempo();
+    bpm_t tempo()
+    {
+        return getTempo();
+    }
+    bpm_t getTempo();
+
     virtual AutomationPattern* tempoAutomationPattern();
 
     AutomationTrack* globalAutomationTrack()
@@ -277,7 +292,7 @@ class EXPORT Song : public TrackContainer, public virtual Transportable
     void addController(Controller* c);
     void removeController(Controller* c);
 
-    const ControllerVector& controllers() const
+    const Controllers& controllers() const
     {
         return m_controllers;
     }
@@ -295,11 +310,12 @@ class EXPORT Song : public TrackContainer, public virtual Transportable
     QString songMetaData(const QString& k);
     void    setSongMetaData(const QString& k, const QString& v);
 
-    inline QString songStructure()
+    INLINE QString songStructure()
     {
         return songMetaData("Structure");
     }
-    inline void setSongStructure(const QString& s)
+
+    INLINE void setSongStructure(const QString& s)
     {
         setSongMetaData("Structure", s);
     }
@@ -367,17 +383,17 @@ class EXPORT Song : public TrackContainer, public virtual Transportable
     Song(const Song&);
     virtual ~Song();
 
-    inline tact_t currentTact() const
+    INLINE tact_t currentTact() const
     {
         return m_playPos[m_playMode].getTact();
     }
 
-    inline tick_t currentTick() const
+    INLINE tick_t currentTick() const
     {
         return m_playPos[m_playMode].getTicks();
     }
 
-    inline f_cnt_t currentFrame() const
+    INLINE f_cnt_t currentFrame() const
     {
         return m_playPos[m_playMode].getTicks() * Engine::framesPerTick()
                + m_playPos[m_playMode].currentFrame();
@@ -405,7 +421,7 @@ class EXPORT Song : public TrackContainer, public virtual Transportable
 
     MetaData m_metaData;
 
-    ControllerVector m_controllers;
+    Controllers m_controllers;
 
     int m_nLoadingTrack;
 
@@ -437,7 +453,7 @@ class EXPORT Song : public TrackContainer, public virtual Transportable
     const AutomationPattern* m_automationToPlay;
     bool                     m_loopPattern;
 
-    double m_elapsedMilliSeconds;
+    real_t m_elapsedMilliSeconds;
     tick_t m_elapsedTicks;
     tact_t m_elapsedTacts;
 

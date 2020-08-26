@@ -389,6 +389,8 @@ malletsInstrumentView::malletsInstrumentView(malletsInstrument* _instrument,
                                     "the full Stk-package is installed!"),
                                  QMessageBox::Ok);
     }
+
+    modelChanged();
 }
 
 malletsInstrumentView::~malletsInstrumentView()

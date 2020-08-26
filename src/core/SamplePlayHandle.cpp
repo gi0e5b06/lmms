@@ -32,12 +32,14 @@
 #include "Mixer.h"
 #include "SampleTrack.h"
 
-SamplePlayHandle::SamplePlayHandle(SampleBuffer* sampleBuffer,
-                                   bool          ownAudioPort) :
+static int buffer_cnt = 0;
+
+SamplePlayHandle::SamplePlayHandle(SampleBufferPointer _sampleBuffer,
+                                   bool                _ownAudioPort) :
       PlayHandle(TypeSamplePlayHandle),
-      m_sampleBuffer(sharedObject::ref(sampleBuffer)),
+      m_sampleBuffer(_sampleBuffer),  // sharedObject::ref(sampleBuffer)),
       m_doneMayReturnTrue(true), m_totalFramesPlayed(0),
-      m_ownAudioPort(ownAudioPort), m_audioPort(nullptr),
+      m_ownAudioPort(_ownAudioPort), m_audioPort(nullptr),
       m_defaultVolumeModel(DefaultVolume, MinVolume, MaxVolume, 1),
       m_volumeModel(&m_defaultVolumeModel), m_track(nullptr),
       m_bbTrack(nullptr)
@@ -46,17 +48,21 @@ SamplePlayHandle::SamplePlayHandle(SampleBuffer* sampleBuffer,
     setCurrentFrame(0);
     if(m_ownAudioPort)
     {
-        m_audioPort.reset(new AudioPort("[SamplePlayHandle AudioPort]", false,
-                                        nullptr, m_volumeModel, nullptr,
-                                        nullptr, nullptr, nullptr, nullptr,
-                                        nullptr, nullptr));
+        m_audioPort
+                = (new AudioPort("[SamplePlayHandle AudioPort]", false,
+                                 nullptr, m_volumeModel, nullptr, nullptr,
+                                 nullptr, nullptr, nullptr, nullptr, nullptr))
+                          ->pointer();
+        Engine::mixer()->emit audioPortToAdd(m_audioPort);
     }
+    buffer_cnt++;
 }
 
 SamplePlayHandle::SamplePlayHandle(const QString& sampleFile) :
-      SamplePlayHandle(new SampleBuffer(sampleFile), true)
+      SamplePlayHandle((new SampleBuffer(sampleFile))->pointer(), true)
 {
-    sharedObject::unref(m_sampleBuffer);
+    // sharedObject::unref(m_sampleBuffer);
+    m_sampleBuffer.clear();
 }
 
 SamplePlayHandle::SamplePlayHandle(SampleTCO* tco) :
@@ -74,7 +80,21 @@ SamplePlayHandle::SamplePlayHandle(SampleTCO* tco) :
 
 SamplePlayHandle::~SamplePlayHandle()
 {
-    sharedObject::unref(m_sampleBuffer);
+    buffer_cnt--;
+    if(buffer_cnt % 100 == 0)
+        qInfo("SamplePlayHandle: buffer=%d", buffer_cnt);
+
+    lock();
+    if(m_ownAudioPort)
+    {
+        Engine::mixer()->audioPortToRemove(m_audioPort);
+        m_audioPort.clear();
+    }
+
+    // delete m_sampleBuffer;
+    unlock();
+    // m_audioPort.clear();
+    // sharedObject::unref(m_sampleBuffer);
     /*
     if(m_ownAudioPort)
     {
@@ -126,18 +146,34 @@ void SamplePlayHandle::setAutoRepeat(f_cnt_t _a)
 
 void SamplePlayHandle::play(sampleFrame* buffer)
 {
+    // if(m_muted)
+    //    return;
+
+    const fpp_t FPP = Engine::mixer()->framesPerPeriod();
+
+    // if the note offset falls over to next period, then don't start playback
+    // yet
+    if(offset() >= FPP)
+    {
+        setOffset(offset() - FPP);
+        return;
+    }
+
+    lock();
+
     // qInfo("SamplePlayHandle::play buffer=%p", buffer);
 
-    const fpp_t fpp = Engine::mixer()->framesPerPeriod();
     // play( 0, _try_parallelizing );
     if(framesDone() >= frames())  // totalFrames() )
     {
-        memset(buffer, 0, BYTES_PER_FRAME * fpp);
+        memset(buffer, 0, BYTES_PER_FRAME * FPP);
+        setFinished();
+        unlock();
         return;
     }
 
     sampleFrame* workingBuffer = buffer;
-    f_cnt_t      frames        = fpp;
+    f_cnt_t      frames        = FPP;
 
     // apply offset for the first period
     if(framesDone() == 0)
@@ -147,8 +183,8 @@ void SamplePlayHandle::play(sampleFrame* buffer)
         frames -= offset();
     }
 
-    if(!(m_track && m_track->isMuted())
-       && !(m_bbTrack && m_bbTrack->isMuted()))
+    if(!(m_track != nullptr && m_track->isMuted())
+       && !(m_bbTrack != nullptr && m_bbTrack->isMuted()))
     {
         /*
           StereoVolume vv =
@@ -169,7 +205,9 @@ void SamplePlayHandle::play(sampleFrame* buffer)
         }
 
         // qWarning("SamplePlayHandle::play workingBuffer=%p",workingBuffer);
-        if(!m_sampleBuffer->play(workingBuffer, &m_state, frames, BaseFreq))
+        if(m_sampleBuffer.isNull()
+           || !m_sampleBuffer->play(workingBuffer, &m_state, frames,
+                                    BaseFreq))
         {
             // qWarning("SamplePlayHandle::play not played
             // workingBuffer=%p",workingBuffer);
@@ -181,6 +219,8 @@ void SamplePlayHandle::play(sampleFrame* buffer)
 
     // if(MixHelpers::isSilent(workingBuffer, fpp))
     //        qInfo("SamplePlayHandle::play wb is silent");
+
+    unlock();
 }
 
 bool SamplePlayHandle::isFinished() const

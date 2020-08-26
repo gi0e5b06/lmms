@@ -1,5 +1,5 @@
 /*
- * EffectRackView.cpp - view for effectChain model
+ * EffectChainView.cpp - view for effectChain model
  *
  * Copyright (c) 2006-2007 Danny McRae <khjklujn@netscape.net>
  * Copyright (c) 2008-2014 Tobias Doerffel <tobydox/at/users.sourceforge.net>
@@ -23,7 +23,7 @@
  *
  */
 
-#include "EffectRackView.h"
+#include "EffectChainView.h"
 
 #include "Clipboard.h"
 #include "EffectSelectDialog.h"
@@ -35,16 +35,17 @@
 #include <QScrollArea>
 #include <QVBoxLayout>
 
-EffectRackView::EffectRackView(EffectChain* model,
-                               QWidget*     parent,
-                               QString      _title) :
+EffectChainView::EffectChainView(EffectChain* _model,
+                                 QWidget*     _parent,
+                                 QString      _title) :
       GroupBox(_title == "" ? tr("AUDIO EFFECTS CHAIN") : _title,
-               parent,
+               _parent,
                true,
                false),
-      ModelView(NULL, this)
+      ModelView(_model, this)
 {
     qRegisterMetaType<EffectView*>("EffectView*");
+    allowModelChange(true);
 
     QWidget* effectsView = new QWidget();
     effectsView->setContentsMargins(0, 0, 0, 12);
@@ -62,36 +63,37 @@ EffectRackView::EffectRackView(EffectChain* model,
 
     QPushButton* addButton = new QPushButton(tr("Add audio effect"), this);
     setBottomWidget(addButton);
-
     connect(addButton, SIGNAL(clicked()), this, SLOT(addEffect()));
 
     m_lastY = 0;
 
-    setModel(model);
+    // setModel(model);
     setFixedWidth(250);
+    modelChanged();
 }
 
-EffectRackView::~EffectRackView()
+EffectChainView::~EffectChainView()
 {
+    qWarning("********** delete chain view *************");
     clearViews();
 }
 
-void EffectRackView::clearViews()
+void EffectChainView::clearViews()
 {
-    while(m_effectViews.size())
+    while(!m_effectViews.isEmpty()) //size())
     {
-        //EffectView* e = m_effectViews[m_effectViews.size() - 1];
-        //m_effectViews.pop_back();
+        // EffectView* e = m_effectViews[m_effectViews.size() - 1];
+        // m_effectViews.pop_back();
         EffectView* e = m_effectViews.takeLast();
         // delete e;
         e->deleteLater();
     }
 }
 
-void EffectRackView::moveUp(EffectView* _view)
+void EffectChainView::moveUp(EffectView* _view)
 {
-    fxChain()->moveUp(_view->effect());
-    if(_view != m_effectViews.first())
+    model()->moveUp(_view->model());
+    // if(_view != m_effectViews.first())
     {
         /*
         int i = 0;
@@ -109,34 +111,55 @@ void EffectRackView::moveUp(EffectView* _view)
         m_effectViews[i - 1] = view;
         m_effectViews[i] = temp;
         */
+        /*
         QVector<EffectView*>::Iterator it
                 = qFind(m_effectViews.begin(), m_effectViews.end(), _view);
         it = m_effectViews.erase(it);
         m_effectViews.insert(it - 1, _view);
-        update();
+        */
+        int index = m_effectViews.indexOf(_view);
+        if(index > 0)
+        {
+            m_effectViews.remove(index);
+            m_effectViews.insert(index - 1, _view);
+            update();
+        }
+        else if(index < 0)
+        {
+            qWarning("EffectChainView::moveUp effectView not found");
+        }
     }
 }
 
-void EffectRackView::moveDown(EffectView* _view)
+void EffectChainView::moveDown(EffectView* _view)
 {
-    fxChain()->moveDown(_view->effect());
-    if(_view != m_effectViews.last())
+    model()->moveDown(_view->model());
+    // if(_view != m_effectViews.last())
     {
-        // moving next effect up is the same
-        // moveUp( *( qFind( m_effectViews.begin(), m_effectViews.end(), view
-        // ) + 1 ) );
-
+        /*
         QVector<EffectView*>::Iterator it
                 = qFind(m_effectViews.begin(), m_effectViews.end(), _view);
         it = m_effectViews.erase(it);
         m_effectViews.insert(it + 1, _view);
         update();
+        */
+        int index = m_effectViews.indexOf(_view);
+        if(index < m_effectViews.size() - 1)
+        {
+            m_effectViews.remove(index);
+            m_effectViews.insert(index + 1, _view);
+            update();
+        }
+        else if(index < 0)
+        {
+            qWarning("EffectChainView::moveDown effectView not found");
+        }
     }
 }
 
-void EffectRackView::moveTop(EffectView* view)
+void EffectChainView::moveTop(EffectView* view)
 {
-    fxChain()->moveTop(view->effect());
+    model()->moveTop(view->model());
     if(view != m_effectViews.first())
     {
         m_effectViews.removeOne(view);
@@ -145,9 +168,9 @@ void EffectRackView::moveTop(EffectView* view)
     }
 }
 
-void EffectRackView::moveBottom(EffectView* view)
+void EffectChainView::moveBottom(EffectView* view)
 {
-    fxChain()->moveBottom(view->effect());
+    model()->moveBottom(view->model());
     if(view != m_effectViews.last())
     {
         m_effectViews.removeOne(view);
@@ -156,42 +179,42 @@ void EffectRackView::moveBottom(EffectView* view)
     }
 }
 
-void EffectRackView::removeEffect(EffectView* view)
+void EffectChainView::removeEffect(EffectView* _view)
 {
-    Effect* e = view->effect();
-    m_effectViews.erase(
-            qFind(m_effectViews.begin(), m_effectViews.end(), view));
-    delete view;
-    fxChain()->removeEffect(e);
+    Effect* e = _view->model();
+    // m_effectViews.erase(
+    //  qFind(m_effectViews.begin(), m_effectViews.end(), view));
+    m_effectViews.removeOne(_view);
+    delete _view;
+    model()->removeEffect(e);
     e->deleteLater();
     update();
 }
 
-void EffectRackView::update()
+void EffectChainView::update()
 {
     QWidget*      w = m_scrollArea->widget();
     QVector<bool> view_map(
-            qMax<int>(fxChain()->m_effects.size(), m_effectViews.size()),
+            qMax<int>(model()->m_effects.size(), m_effectViews.size()),
             false);
 
-    // for(QVector<Effect*>::Iterator it = fxChain()->m_effects.begin();
-    //    it != fxChain()->m_effects.end(); ++it)
+    // for(QVector<Effect*>::Iterator it = model()->m_effects.begin();
+    //    it != model()->m_effects.end(); ++it)
 
-    fxChain()->m_effects.map([this,&view_map,w](Effect* effect)
-    {
+    model()->m_effects.map([this, &view_map, w](Effect* effect) {
         int i = 0;
-        for(QVector<EffectView*>::Iterator vit = m_effectViews.begin();
-            vit != m_effectViews.end(); ++vit, ++i)
+        for(EffectView* ev: m_effectViews)
         {
-            if((*vit)->model() == effect)  //*it)
+            if(ev->model() == effect)  //*it)
             {
                 view_map[i] = true;
                 break;
             }
+            i++;
         }
         if(i >= m_effectViews.size())
         {
-            EffectView* view = new EffectView(effect, w);  //*it
+            EffectView* view = new EffectView(effect, w);
             connect(view, SIGNAL(moveUp(EffectView*)), this,
                     SLOT(moveUp(EffectView*)));
             connect(view, SIGNAL(moveDown(EffectView*)), this,
@@ -205,60 +228,55 @@ void EffectRackView::update()
             view->show();
             m_effectViews.append(view);
             if(i < view_map.size())
-            {
                 view_map[i] = true;
-            }
             else
-            {
                 view_map.append(true);
-            }
         }
     });
 
     int i = 0, nView = 0;
 
-    const int EffectViewMargin = 3;
-    m_lastY                    = EffectViewMargin;
+    const int MARGIN = 3;
+    m_lastY          = MARGIN;
 
-    for(QVector<EffectView*>::Iterator it = m_effectViews.begin();
-        it != m_effectViews.end(); i++)
+    for(EffectView* ev: m_effectViews)
     {
         if(i < view_map.size() && view_map[i] == false)
         {
             delete m_effectViews[nView];
-            it = m_effectViews.erase(it);
+            // it = m_effectViews.erase(it);
+            m_effectViews.remove(i);
         }
         else
         {
-            (*it)->move(EffectViewMargin, m_lastY);
-            m_lastY += (*it)->height();
-            m_lastY += EffectViewMargin;
+            ev->move(MARGIN, m_lastY);
+            m_lastY += ev->height();
+            m_lastY += MARGIN;
             ++nView;
-            ++it;
         }
+        i++;
     }
 
     // EFFECT_WIDTH
-    m_lastY+=18; // small bottom empty space
-    w->setFixedSize(229 + 2 * EffectViewMargin, m_lastY);
+    m_lastY += 18;  // small bottom empty space
+    w->setFixedSize(229 + 2 * MARGIN, m_lastY);
 
+    adjustSize();
     QWidget::update();
 }
 
-void EffectRackView::addEffect()
+void EffectChainView::addEffect()
 {
     EffectSelectDialog esd(this);
     esd.exec();
 
     if(esd.result() == QDialog::Rejected)
-    {
         return;
-    }
 
-    Effect* fx = esd.instantiateSelectedPlugin(fxChain());
+    Effect* fx = esd.instantiateSelectedPlugin(model());
     if(!fx->isOkay())
     {
-        qWarning("EffectRackView::addEffect effect is not okay");
+        qWarning("EffectChainView::addEffect effect is not okay");
         delete fx;
         return;
     }
@@ -266,33 +284,33 @@ void EffectRackView::addEffect()
     addEffect(fx);
 }
 
-void EffectRackView::addEffect(Effect* fx)
+void EffectChainView::addEffect(Effect* fx)
 {
-    qInfo("EffectRackView::addEffect() 0");
-    fxChain()->m_enabledModel.setValue(true);
-    qInfo("EffectRackView::addEffect() 1");
-    fxChain()->appendEffect(fx);
-    qInfo("EffectRackView::addEffect() 2");
+    qInfo("EffectChainView::addEffect() 0");
+    model()->m_enabledModel.setValue(true);
+    qInfo("EffectChainView::addEffect() 1");
+    model()->appendEffect(fx);
+    qInfo("EffectChainView::addEffect() 2");
     update();
-    qInfo("EffectRackView::addEffect() 3 %p", fx->controls());
+    qInfo("EffectChainView::addEffect() 3 %p", fx->controls());
 
     // Find the effectView, and show the controls
     /*
     for(QVector<EffectView*>::Iterator vit = m_effectViews.begin();
         vit != m_effectViews.end(); ++vit)
     {
-        if((*vit)->effect() == fx)
+        if((*vit)->model() == fx)
         {
-            qInfo("EffectRackView::addEffect() 4");
+            qInfo("EffectChainView::addEffect() 4");
             (*vit)->openControls();
-            qInfo("EffectRackView::addEffect() 5");
+            qInfo("EffectChainView::addEffect() 5");
             break;
         }
     }
     */
 }
 
-void EffectRackView::mousePressEvent(QMouseEvent* _me)
+void EffectChainView::mousePressEvent(QMouseEvent* _me)
 {
     if(_me->button() == Qt::MiddleButton)
     {
@@ -301,7 +319,7 @@ void EffectRackView::mousePressEvent(QMouseEvent* _me)
     }
 }
 
-void EffectRackView::mouseReleaseEvent(QMouseEvent* _me)
+void EffectChainView::mouseReleaseEvent(QMouseEvent* _me)
 {
     if(_me->button() == Qt::MiddleButton)
     {
@@ -321,7 +339,7 @@ void EffectRackView::mouseReleaseEvent(QMouseEvent* _me)
                                           .toElement());
                     QString   name(effectData.attribute("name"));
 
-                    Effect* e = Effect::instantiate(name, fxChain(), &key);
+                    Effect* e = Effect::instantiate(name, model(), &key);
 
                     if(e != NULL && e->isOkay()
                        && e->nodeName() == Effect::classNodeName())
@@ -349,10 +367,11 @@ void EffectRackView::mouseReleaseEvent(QMouseEvent* _me)
     }
 }
 
-void EffectRackView::modelChanged()
+void EffectChainView::modelChanged()
 {
     // clearViews();
-    ledButton()->setModel(&fxChain()->m_enabledModel);
-    connect(fxChain(), SIGNAL(aboutToClear()), this, SLOT(clearViews()));
+    ledButton()->setModel(&model()->m_enabledModel);
+    connect(model(), SIGNAL(aboutToClear()), this, SLOT(clearViews()));
+    connect(model(), SIGNAL(dataChanged()), this, SLOT(update()));
     update();
 }

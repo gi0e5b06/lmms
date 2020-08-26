@@ -30,10 +30,10 @@
 
 #include <cmath>
 
-InstrumentPlayHandle::InstrumentPlayHandle(Instrument*      instrument,
-                                           InstrumentTrack* instrumentTrack) :
+InstrumentPlayHandle::InstrumentPlayHandle(
+        Instrument* _instrument, InstrumentTrack* _instrumentTrack) :
       PlayHandle(TypeInstrumentPlayHandle),
-      m_instrument(instrument), m_track(instrumentTrack)
+      m_instrument(_instrument), m_track(_instrumentTrack)
 {
     // setAudioPort(instrumentTrack->audioPort());
 }
@@ -42,19 +42,21 @@ InstrumentPlayHandle::~InstrumentPlayHandle()
 {
     qInfo("~InstrumentPlayHandle");
     // setAudioPort(nullptr);
-    m_instrument = nullptr;
-    m_track      = nullptr;
+    // m_instrument = nullptr;
+    // m_track      = nullptr;
 }
 
 void InstrumentPlayHandle::enterMixer()
 {
-    if(m_track != nullptr && m_track->audioPort() != nullptr)
+    // if(m_track != nullptr && m_track->audioPort() != nullptr)
+    if(!m_track.isNull() && !m_track->audioPort().isNull())
         m_track->audioPort()->addPlayHandle(pointer());
 }
 
 void InstrumentPlayHandle::exitMixer()
 {
-    if(m_track != nullptr && m_track->audioPort() != nullptr)
+    // if(m_track != nullptr && m_track->audioPort() != nullptr)
+    if(!m_track.isNull() && !m_track->audioPort().isNull())
         m_track->audioPort()->removePlayHandle(pointer());
 }
 
@@ -72,6 +74,13 @@ void InstrumentPlayHandle::play(sampleFrame* _working_buffer)
         qWarning("InstrumentPlayHandle::play m_instrument->track is null");
         return;
     }
+
+    if(track != m_track)
+    {
+        qWarning("InstrumentPlayHandle::play m_instrument->track != m_track");
+        return;
+    }
+
     // if the instrument is midi-based, we can safely render right away
     /*
     if( m_instrument->flags() & Instrument::IsMidiBased )

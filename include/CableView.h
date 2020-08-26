@@ -10,7 +10,7 @@
 
 #include <QColor>
 #include <QLine>
-#include <QPoint>
+//#include <QPoint>
 
 class ModelView;
 class QPainter;

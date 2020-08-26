@@ -99,7 +99,7 @@ void Instrument::applyRelease(sampleFrame* buf, const NotePlayHandle* _n)
                                       : 0);
             f < frames; ++f)
         {
-            const float fac = (float)(fl - f - 1) / desiredReleaseFrames();
+            const real_t fac = real_t(fl - f - 1) / desiredReleaseFrames();
             for(ch_cnt_t ch = 0; ch < DEFAULT_CHANNELS; ++ch)
             {
                 buf[f][ch] *= fac;

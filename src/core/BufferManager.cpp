@@ -32,61 +32,66 @@
 
 fpp_t BufferManager::s_framesPerPeriod = 0;
 
-void BufferManager::init( fpp_t framesPerPeriod )
+static int buffer_cnt=0;
+
+void BufferManager::init(fpp_t framesPerPeriod)
 {
-	s_framesPerPeriod=framesPerPeriod;
+    s_framesPerPeriod = framesPerPeriod;
 }
 
-
-sampleFrame * BufferManager::acquire()
+sampleFrame* BufferManager::acquire()
 {
-	if(s_framesPerPeriod<=0)
-		qFatal("invalid framesPerPeriod %s:%d",__FILE__,__LINE__);
+    if(s_framesPerPeriod <= 0)
+        qFatal("invalid framesPerPeriod %s:%d", __FILE__, __LINE__);
 
-	sampleFrame * r=MM_ALLOC(sampleFrame,s_framesPerPeriod);
-	clear(r);
-	return r;
+    sampleFrame* r = MM_ALLOC(sampleFrame, s_framesPerPeriod);
+    clear(r);
+    buffer_cnt++;
+    return r;
 }
 
-
-void BufferManager::clear( sampleFrame * ab )
+void BufferManager::clear(sampleFrame* ab)
 {
-	memset( ab, 0, sizeof(sampleFrame) * s_framesPerPeriod );
+    memset(ab, 0, sizeof(sampleFrame) * s_framesPerPeriod);
 }
 
-
-void BufferManager::clear( sampleFrame * ab, const f_cnt_t frames,
-			   const f_cnt_t offset )
+void BufferManager::clear(sampleFrame*  ab,
+                          const f_cnt_t frames,
+                          const f_cnt_t offset)
 {
-	if((offset<0)||(frames<=0)||
-	   (offset+frames*sizeof(sampleFrame)>s_framesPerPeriod*sizeof(sampleFrame)))
-		qFatal("strange clear ffp=%d nbf=%d offset=%d %s:%d",
-		       s_framesPerPeriod,frames,offset,__FILE__,__LINE__);
+    if((offset < 0) || (frames <= 0)
+       || (offset + frames * sizeof(sampleFrame)
+           > s_framesPerPeriod * sizeof(sampleFrame)))
+        qFatal("strange clear ffp=%d nbf=%d offset=%d %s:%d",
+               s_framesPerPeriod, frames, offset, __FILE__, __LINE__);
 
-	memset( ab + offset, 0, sizeof(sampleFrame) * frames );
+    memset(ab + offset, 0, sizeof(sampleFrame) * frames);
 }
-
 
 #ifndef LMMS_DISABLE_SURROUND
-void BufferManager::clear( surroundSampleFrame * ab, const f_cnt_t frames,
-			   const f_cnt_t offset )
+void BufferManager::clear(surroundSampleFrame* ab,
+                          const f_cnt_t        frames,
+                          const f_cnt_t        offset)
 {
-	qFatal("BufferManager::clear no surround");
-	/*
-	if(offset+frames*sizeof(surroundSampleFrame)>s_framesPerPeriod*sizeof(surroundSampleFrame))
-		qFatal("strange clear ffp=%d nbf=%d offset=%d %s:%d",
-	memset( ab + offset, 0, sizeof(surroundSampleFrame) * frames );
-	*/
+    qFatal("BufferManager::clear no surround");
+    /*
+    if(offset+frames*sizeof(surroundSampleFrame)>s_framesPerPeriod*sizeof(surroundSampleFrame))
+            qFatal("strange clear ffp=%d nbf=%d offset=%d %s:%d",
+    memset( ab + offset, 0, sizeof(surroundSampleFrame) * frames );
+    */
 }
 #endif
 
-
-void BufferManager::release( sampleFrame * buf )
+void BufferManager::release(sampleFrame* buf)
 {
-	MM_FREE(buf);
+    MM_FREE(buf);
+    buffer_cnt--;
+    if(buffer_cnt%100==0)
+        qInfo("BufferManager: %d",buffer_cnt);
 }
 
-
-void BufferManager::refresh() // non-threadsafe, hence it's called periodically from mixer at a time when no other threads can interfere
+void BufferManager::refresh()  // non-threadsafe, hence it's called
+                               // periodically from mixer at a time when no
+                               // other threads can interfere
 {
 }

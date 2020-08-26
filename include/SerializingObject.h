@@ -38,16 +38,13 @@ class SerializingObjectHook;
 class EXPORT SerializingObject
 {
   public:
-    SerializingObject();
-    virtual ~SerializingObject();
-
     virtual QDomElement saveState(QDomDocument& _doc, QDomElement& _parent);
     virtual void        restoreState(const QDomElement& _this);
 
     // to be implemented by actual object
     virtual QString nodeName() const = 0;
 
-    void setHook(SerializingObjectHook* _hook);
+    virtual void setHook(SerializingObjectHook* _hook) final;
 
     virtual SerializingObjectHook* hook() const final
     {
@@ -55,6 +52,9 @@ class EXPORT SerializingObject
     }
 
   protected:
+    SerializingObject();
+    virtual ~SerializingObject();
+
     // to be implemented by sub-objects
     virtual void saveSettings(QDomDocument& doc, QDomElement& element) = 0;
     virtual void loadSettings(const QDomElement& element)              = 0;

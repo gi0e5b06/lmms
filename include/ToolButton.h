@@ -31,6 +31,7 @@
 class ToolButton : public QToolButton
 {
     Q_OBJECT
+
   public:
     ToolButton(const QIcon&   _icon,
                const QString& _tooltip,
@@ -38,7 +39,7 @@ class ToolButton : public QToolButton
                const char*    _slot     = nullptr,
                QWidget*       _parent   = nullptr);
 
-    inline ToolButton(QWidget* _parent) : QToolButton(_parent)
+    ToolButton(QWidget* _parent) : QToolButton(_parent)
     {
     }
 

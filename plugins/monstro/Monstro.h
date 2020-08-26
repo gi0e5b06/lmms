@@ -151,21 +151,21 @@ const real_t FM_AMOUNT = 0.25;
 const real_t PW_MIN = 0.25;
 const real_t PW_MAX = 100. - PW_MIN;
 
-class MonstroInstrument;
+class Monstro;
 class MonstroView;
 
 class MonstroSynth
 {
     MM_OPERATORS
   public:
-    MonstroSynth(MonstroInstrument* _i, NotePlayHandle* _nph);
+    MonstroSynth(Monstro* _i, NotePlayHandle* _nph);
     virtual ~MonstroSynth();
 
     void renderOutput(fpp_t _frames, sampleFrame* _buf);
 
   private:
-    MonstroInstrument* m_parent;
-    NotePlayHandle*    m_nph;
+    Monstro*        m_parent;
+    NotePlayHandle* m_nph;
 
     inline void updateModulators(real_t* env1,
                                  real_t* env2,
@@ -310,7 +310,7 @@ class MonstroSynth
     int m_counter3r;
 };
 
-class MonstroInstrument : public Instrument
+class Monstro : public Instrument
 {
     Q_OBJECT
 
@@ -382,8 +382,8 @@ class MonstroInstrument : public Instrument
             static_cast<PixmapLoader*>(new PluginPixmapLoader("rand")));
 
   public:
-    MonstroInstrument(InstrumentTrack* _instrument_track);
-    virtual ~MonstroInstrument();
+    Monstro(InstrumentTrack* _instrument_track);
+    virtual ~Monstro();
 
     virtual void playNote(NotePlayHandle* _n, sampleFrame* _working_buffer);
     virtual void deleteNotePluginData(NotePlayHandle* _n);
@@ -482,31 +482,31 @@ class MonstroInstrument : public Instrument
     //                                  //
     //////////////////////////////////////
 
-    FloatModel m_osc1Vol;
-    FloatModel m_osc1Pan;
-    FloatModel m_osc1Crs;
-    FloatModel m_osc1Ftl;
-    FloatModel m_osc1Ftr;
-    FloatModel m_osc1Spo;
-    FloatModel m_osc1Pw;
-    BoolModel  m_osc1SSR;
-    BoolModel  m_osc1SSF;
+    RealModel m_osc1Vol;
+    RealModel m_osc1Pan;
+    RealModel m_osc1Crs;
+    RealModel m_osc1Ftl;
+    RealModel m_osc1Ftr;
+    RealModel m_osc1Spo;
+    RealModel m_osc1Pw;
+    BoolModel m_osc1SSR;
+    BoolModel m_osc1SSF;
 
-    FloatModel    m_osc2Vol;
-    FloatModel    m_osc2Pan;
-    FloatModel    m_osc2Crs;
-    FloatModel    m_osc2Ftl;
-    FloatModel    m_osc2Ftr;
-    FloatModel    m_osc2Spo;
+    RealModel     m_osc2Vol;
+    RealModel     m_osc2Pan;
+    RealModel     m_osc2Crs;
+    RealModel     m_osc2Ftl;
+    RealModel     m_osc2Ftr;
+    RealModel     m_osc2Spo;
     ComboBoxModel m_osc2Wave;
     BoolModel     m_osc2SyncH;
     BoolModel     m_osc2SyncR;
 
-    FloatModel    m_osc3Vol;
-    FloatModel    m_osc3Pan;
-    FloatModel    m_osc3Crs;
-    FloatModel    m_osc3Spo;
-    FloatModel    m_osc3Sub;
+    RealModel     m_osc3Vol;
+    RealModel     m_osc3Pan;
+    RealModel     m_osc3Crs;
+    RealModel     m_osc3Spo;
+    RealModel     m_osc3Sub;
     ComboBoxModel m_osc3Wave1;
     ComboBoxModel m_osc3Wave2;
     BoolModel     m_osc3SyncH;
@@ -515,28 +515,28 @@ class MonstroInstrument : public Instrument
     ComboBoxModel      m_lfo1Wave;
     TempoSyncKnobModel m_lfo1Att;
     TempoSyncKnobModel m_lfo1Rate;
-    FloatModel         m_lfo1Phs;
+    RealModel          m_lfo1Phs;
 
     ComboBoxModel      m_lfo2Wave;
     TempoSyncKnobModel m_lfo2Att;
     TempoSyncKnobModel m_lfo2Rate;
-    FloatModel         m_lfo2Phs;
+    RealModel          m_lfo2Phs;
 
     TempoSyncKnobModel m_env1Pre;
     TempoSyncKnobModel m_env1Att;
     TempoSyncKnobModel m_env1Hold;
     TempoSyncKnobModel m_env1Dec;
-    FloatModel         m_env1Sus;
+    RealModel          m_env1Sus;
     TempoSyncKnobModel m_env1Rel;
-    FloatModel         m_env1Slope;
+    RealModel          m_env1Slope;
 
     TempoSyncKnobModel m_env2Pre;
     TempoSyncKnobModel m_env2Att;
     TempoSyncKnobModel m_env2Hold;
     TempoSyncKnobModel m_env2Dec;
-    FloatModel         m_env2Sus;
+    RealModel          m_env2Sus;
     TempoSyncKnobModel m_env2Rel;
-    FloatModel         m_env2Slope;
+    RealModel          m_env2Slope;
 
     IntModel m_o23Mod;
 
@@ -548,60 +548,60 @@ class MonstroInstrument : public Instrument
     //                                  //
     //////////////////////////////////////
 
-    FloatModel m_vol1env1;
-    FloatModel m_vol1env2;
-    FloatModel m_vol1lfo1;
-    FloatModel m_vol1lfo2;
+    RealModel m_vol1env1;
+    RealModel m_vol1env2;
+    RealModel m_vol1lfo1;
+    RealModel m_vol1lfo2;
 
-    FloatModel m_vol2env1;
-    FloatModel m_vol2env2;
-    FloatModel m_vol2lfo1;
-    FloatModel m_vol2lfo2;
+    RealModel m_vol2env1;
+    RealModel m_vol2env2;
+    RealModel m_vol2lfo1;
+    RealModel m_vol2lfo2;
 
-    FloatModel m_vol3env1;
-    FloatModel m_vol3env2;
-    FloatModel m_vol3lfo1;
-    FloatModel m_vol3lfo2;
+    RealModel m_vol3env1;
+    RealModel m_vol3env2;
+    RealModel m_vol3lfo1;
+    RealModel m_vol3lfo2;
 
-    FloatModel m_phs1env1;
-    FloatModel m_phs1env2;
-    FloatModel m_phs1lfo1;
-    FloatModel m_phs1lfo2;
+    RealModel m_phs1env1;
+    RealModel m_phs1env2;
+    RealModel m_phs1lfo1;
+    RealModel m_phs1lfo2;
 
-    FloatModel m_phs2env1;
-    FloatModel m_phs2env2;
-    FloatModel m_phs2lfo1;
-    FloatModel m_phs2lfo2;
+    RealModel m_phs2env1;
+    RealModel m_phs2env2;
+    RealModel m_phs2lfo1;
+    RealModel m_phs2lfo2;
 
-    FloatModel m_phs3env1;
-    FloatModel m_phs3env2;
-    FloatModel m_phs3lfo1;
-    FloatModel m_phs3lfo2;
+    RealModel m_phs3env1;
+    RealModel m_phs3env2;
+    RealModel m_phs3lfo1;
+    RealModel m_phs3lfo2;
 
-    FloatModel m_pit1env1;
-    FloatModel m_pit1env2;
-    FloatModel m_pit1lfo1;
-    FloatModel m_pit1lfo2;
+    RealModel m_pit1env1;
+    RealModel m_pit1env2;
+    RealModel m_pit1lfo1;
+    RealModel m_pit1lfo2;
 
-    FloatModel m_pit2env1;
-    FloatModel m_pit2env2;
-    FloatModel m_pit2lfo1;
-    FloatModel m_pit2lfo2;
+    RealModel m_pit2env1;
+    RealModel m_pit2env2;
+    RealModel m_pit2lfo1;
+    RealModel m_pit2lfo2;
 
-    FloatModel m_pit3env1;
-    FloatModel m_pit3env2;
-    FloatModel m_pit3lfo1;
-    FloatModel m_pit3lfo2;
+    RealModel m_pit3env1;
+    RealModel m_pit3env2;
+    RealModel m_pit3lfo1;
+    RealModel m_pit3lfo2;
 
-    FloatModel m_pw1env1;
-    FloatModel m_pw1env2;
-    FloatModel m_pw1lfo1;
-    FloatModel m_pw1lfo2;
+    RealModel m_pw1env1;
+    RealModel m_pw1env2;
+    RealModel m_pw1lfo1;
+    RealModel m_pw1lfo2;
 
-    FloatModel m_sub3env1;
-    FloatModel m_sub3env2;
-    FloatModel m_sub3lfo1;
-    FloatModel m_sub3lfo2;
+    RealModel m_sub3env1;
+    RealModel m_sub3env2;
+    RealModel m_sub3lfo1;
+    RealModel m_sub3lfo2;
 
     friend class MonstroSynth;
     friend class MonstroView;
@@ -611,8 +611,18 @@ class MonstroView : public InstrumentView
 {
     Q_OBJECT
   public:
-    MonstroView(Instrument* _instrument, QWidget* _parent);
+    MonstroView(Monstro* _instrument, QWidget* _parent);
     virtual ~MonstroView();
+
+    Monstro* model()
+    {
+        return castModel<Monstro>();
+    }
+
+    const Monstro* model() const
+    {
+        return castModel<Monstro>();
+    }
 
   protected slots:
     void updateLayout();

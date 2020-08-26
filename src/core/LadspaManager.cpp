@@ -24,13 +24,14 @@
  *
  */
 
-#include <QApplication>
-//#include <QCoreApplication>
-//#include <QDebug>
 #include "ConfigManager.h"
 #include "LadspaManager.h"
 #include "PluginFactory.h"
+#include "Backtrace.h"
 
+#include <QApplication>
+//#include <QCoreApplication>
+//#include <QDebug>
 #include <QDir>
 #include <QLibrary>
 
@@ -812,6 +813,7 @@ bool LadspaManager::deactivate(const ladspa_key_t& _plugin,
 {
     if(m_ladspaManagerMap.contains(_plugin))
     {
+        BACKTRACE
         LADSPA_Descriptor_Function descriptorFunction
                 = m_ladspaManagerMap[_plugin]->descriptorFunction;
         const LADSPA_Descriptor* descriptor

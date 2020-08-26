@@ -27,9 +27,10 @@
 
 #include "JournallingObject.h"
 #include "PlayPos.h"
+#include "Widget.h"
 
 #include <QToolButton>
-#include <QWidget>
+//#include <QWidget>
 
 class QPixmap;
 class QToolBar;
@@ -39,7 +40,7 @@ class NStateButton;
 // class SongEditor;
 class TextFloat;
 
-class TimeLineWidget : public QWidget, public JournallingObject
+class TimeLineWidget : public Widget, public JournallingObject
 {
     Q_OBJECT
 
@@ -108,145 +109,160 @@ class TimeLineWidget : public QWidget, public JournallingObject
                    QWidget*        parent);
     virtual ~TimeLineWidget();
 
-    inline QColor const& getBarLineColor() const
+    INLINE QColor const& getBarLineColor() const
     {
         return m_barLineColor;
     }
-    inline void setBarLineColor(QColor const& tactLineColor)
+
+    INLINE void setBarLineColor(QColor const& tactLineColor)
     {
         m_barLineColor = tactLineColor;
     }
 
-    inline QColor const& getBarNumberColor() const
+    INLINE QColor const& getBarNumberColor() const
     {
         return m_barNumberColor;
     }
-    inline void setBarNumberColor(QColor const& tactNumberColor)
+
+    INLINE void setBarNumberColor(QColor const& tactNumberColor)
     {
         m_barNumberColor = tactNumberColor;
     }
 
-    inline int const& getLoopRectangleVerticalPadding() const
+    INLINE int const& getLoopRectangleVerticalPadding() const
     {
         return m_loopRectangleVerticalPadding;
     }
-    inline void setLoopRectangleVerticalPadding(
+
+    INLINE void setLoopRectangleVerticalPadding(
             int const& loopRectangleVerticalPadding)
     {
         m_loopRectangleVerticalPadding = loopRectangleVerticalPadding;
     }
 
-    inline QColor const& getInactiveLoopColor() const
+    INLINE QColor const& getInactiveLoopColor() const
     {
         return m_inactiveLoopColor;
     }
-    inline void setInactiveLoopColor(QColor const& inactiveLoopColor)
+
+    INLINE void setInactiveLoopColor(QColor const& inactiveLoopColor)
     {
         m_inactiveLoopColor = inactiveLoopColor;
     }
 
-    inline QBrush const& getInactiveLoopBrush() const
+    INLINE QBrush const& getInactiveLoopBrush() const
     {
         return m_inactiveLoopBrush;
     }
-    inline void setInactiveLoopBrush(QBrush const& inactiveLoopBrush)
+
+    INLINE void setInactiveLoopBrush(QBrush const& inactiveLoopBrush)
     {
         m_inactiveLoopBrush = inactiveLoopBrush;
     }
 
-    inline QColor const& getInactiveLoopInnerColor() const
+    INLINE QColor const& getInactiveLoopInnerColor() const
     {
         return m_inactiveLoopInnerColor;
     }
-    inline void
+
+    INLINE void
             setInactiveLoopInnerColor(QColor const& inactiveLoopInnerColor)
     {
         m_inactiveLoopInnerColor = inactiveLoopInnerColor;
     }
 
-    inline QColor const& getInactiveLoopTextColor() const
+    INLINE QColor const& getInactiveLoopTextColor() const
     {
         return m_inactiveLoopTextColor;
     }
-    inline void setInactiveLoopTextColor(QColor const& inactiveLoopTextColor)
+
+    INLINE void setInactiveLoopTextColor(QColor const& inactiveLoopTextColor)
     {
         m_inactiveLoopTextColor = inactiveLoopTextColor;
     }
 
-    inline QColor const& getActiveLoopColor() const
+    INLINE QColor const& getActiveLoopColor() const
     {
         return m_activeLoopColor;
     }
-    inline void setActiveLoopColor(QColor const& activeLoopColor)
+
+    INLINE void setActiveLoopColor(QColor const& activeLoopColor)
     {
         m_activeLoopColor = activeLoopColor;
     }
 
-    inline QBrush const& getActiveLoopBrush() const
+    INLINE QBrush const& getActiveLoopBrush() const
     {
         return m_activeLoopBrush;
     }
-    inline void setActiveLoopBrush(QBrush const& activeLoopBrush)
+
+    INLINE void setActiveLoopBrush(QBrush const& activeLoopBrush)
     {
         m_activeLoopBrush = activeLoopBrush;
     }
 
-    inline QColor const& getActiveLoopInnerColor() const
+    INLINE QColor const& getActiveLoopInnerColor() const
     {
         return m_activeLoopInnerColor;
     }
-    inline void setActiveLoopInnerColor(QColor const& activeLoopInnerColor)
+
+    INLINE void setActiveLoopInnerColor(QColor const& activeLoopInnerColor)
     {
         m_activeLoopInnerColor = activeLoopInnerColor;
     }
 
-    inline QColor const& getActiveLoopTextColor() const
+    INLINE QColor const& getActiveLoopTextColor() const
     {
         return m_activeLoopTextColor;
     }
-    inline void setActiveLoopTextColor(QColor const& activeLoopTextColor)
+
+    INLINE void setActiveLoopTextColor(QColor const& activeLoopTextColor)
     {
         m_activeLoopTextColor = activeLoopTextColor;
     }
 
-    inline QColor const& getSelectedLoopColor() const
+    INLINE QColor const& getSelectedLoopColor() const
     {
         return m_selectedLoopColor;
     }
-    inline void setSelectedLoopColor(QColor const& selectedLoopColor)
+
+    INLINE void setSelectedLoopColor(QColor const& selectedLoopColor)
     {
         m_selectedLoopColor = selectedLoopColor;
     }
 
-    inline QBrush const& getSelectedLoopBrush() const
+    INLINE QBrush const& getSelectedLoopBrush() const
     {
         return m_selectedLoopBrush;
     }
-    inline void setSelectedLoopBrush(QBrush const& selectedLoopBrush)
+
+    INLINE void setSelectedLoopBrush(QBrush const& selectedLoopBrush)
     {
         m_selectedLoopBrush = selectedLoopBrush;
     }
 
-    inline QColor const& getSelectedLoopInnerColor() const
+    INLINE QColor const& getSelectedLoopInnerColor() const
     {
         return m_selectedLoopInnerColor;
     }
-    inline void
+
+    INLINE void
             setSelectedLoopInnerColor(QColor const& selectedLoopInnerColor)
     {
         m_selectedLoopInnerColor = selectedLoopInnerColor;
     }
 
-    inline QColor const& getSelectedLoopTextColor() const
+    INLINE QColor const& getSelectedLoopTextColor() const
     {
         return m_selectedLoopTextColor;
     }
-    inline void setSelectedLoopTextColor(QColor const& selectedLoopTextColor)
+
+    INLINE void setSelectedLoopTextColor(QColor const& selectedLoopTextColor)
     {
         m_selectedLoopTextColor = selectedLoopTextColor;
     }
 
-    inline PlayPos& pos() const
+    INLINE PlayPos& pos() const
     {
         return m_pos;
     }
@@ -261,14 +277,14 @@ class TimeLineWidget : public QWidget, public JournallingObject
         return m_behaviourAtStop;
     }
 
-    /*inline*/ int currentLoop() const
+    /*INLINE*/ int currentLoop() const
     {
         return m_currentLoop;
     }
 
     void setCurrentLoop(int n);
 
-    /*inline*/ int nextLoop() const
+    /*INLINE*/ int nextLoop() const
     {
         return m_nextLoop;
     }
@@ -319,17 +335,17 @@ class TimeLineWidget : public QWidget, public JournallingObject
         return loopBegin(_loop) + _time % (loopEnd(_loop) - loopBegin(_loop));
     }
 
-    inline void savePos(const MidiTime& _pos)
+    INLINE void savePos(const MidiTime& _pos)
     {
         m_savedPos = _pos;
     }
 
-    inline const MidiTime& savedPos() const
+    INLINE const MidiTime& savedPos() const
     {
         return m_savedPos;
     }
 
-    inline void setPixelsPerTact(float _ppt)
+    INLINE void setPixelsPerTact(float _ppt)
     {
         m_ppt = _ppt;
         update();
@@ -342,12 +358,12 @@ class TimeLineWidget : public QWidget, public JournallingObject
     virtual void saveSettings(QDomDocument& _doc, QDomElement& _parent);
     virtual void loadSettings(const QDomElement& _this);
 
-    inline virtual QString nodeName() const
+    INLINE virtual QString nodeName() const
     {
         return "timeline";
     }
 
-    inline int markerX(const MidiTime& _t) const
+    INLINE int markerX(const MidiTime& _t) const
     {
         return m_xOffset
                + static_cast<int>((_t - m_begin) * m_ppt
@@ -376,11 +392,13 @@ class TimeLineWidget : public QWidget, public JournallingObject
 
   protected:
     virtual void contextMenuEvent(QContextMenuEvent*);
-    virtual void paintEvent(QPaintEvent* _pe);
-    virtual void paintLoop(const int num, QPainter& p, const int cy);
+    // virtual void paintEvent(QPaintEvent* _pe);
     virtual void mousePressEvent(QMouseEvent* _me);
     virtual void mouseMoveEvent(QMouseEvent* _me);
     virtual void mouseReleaseEvent(QMouseEvent* _me);
+
+    virtual void drawLoop(const int num, QPainter& p, const int cy);
+    virtual void drawWidget(QPainter& _p);
 
   private:
     static QPixmap* s_posMarkerPixmap;
@@ -413,7 +431,7 @@ class TimeLineWidget : public QWidget, public JournallingObject
 
     int             m_xOffset;
     int             m_posMarkerX;
-    float           m_ppt;
+    real_t          m_ppt;
     PlayPos&        m_pos;
     const MidiTime& m_begin;
     MidiTime        m_loopPos[2 * NB_LOOPS];
@@ -443,6 +461,7 @@ class TimeLineWidget : public QWidget, public JournallingObject
 
   signals:
     void positionChanged(const MidiTime& _t);
+    void verticalLine(int _xs, int _xe);
     void loopPointStateLoaded(int _n);
     void positionMarkerMoved();
 

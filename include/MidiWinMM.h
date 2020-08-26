@@ -28,120 +28,107 @@
 #include "lmmsconfig.h"
 
 #ifdef LMMS_BUILD_WIN32
-#include <windows.h>
-#include <mmsystem.h>
-
 #include "MidiClient.h"
 #include "MidiPort.h"
 
+#include <mmsystem.h>
+#include <windows.h>
 
 class QLineEdit;
 
-
 class MidiWinMM : public QObject, public MidiClient
 {
-	Q_OBJECT
-public:
-	MidiWinMM();
-	virtual ~MidiWinMM();
+    Q_OBJECT
 
-	inline static QString probeDevice()
-	{
-		return QString::Null(); // no midi device name
-	}
+  public:
+    MidiWinMM();
+    virtual ~MidiWinMM();
 
+    inline static QString probeDevice()
+    {
+        return QString::Null();  // no midi device name
+    }
 
-	inline static QString name()
-	{
-		return QT_TRANSLATE_NOOP( "MidiSetupWidget", "WinMM MIDI" );
-	}
+    inline static QString name()
+    {
+        return QT_TRANSLATE_NOOP("MidiSetupWidget", "WinMM MIDI");
+    }
 
-	inline static QString configSection()
-	{
-		return QString::Null(); // no configuration settings
-	}
+    inline static QString configSection()
+    {
+        return QString::Null();  // no configuration settings
+    }
 
+    virtual void processOutEvent(const MidiEvent& _me,
+                                 const MidiTime&  _time,
+                                 const MidiPort*  _port);
 
+    virtual void applyPortMode(MidiPort* _port);
+    virtual void removePort(MidiPort* _port);
 
-	virtual void processOutEvent( const MidiEvent & _me,
-						const MidiTime & _time,
-						const MidiPort * _port );
+    // list devices as ports
+    virtual QStringList readablePorts() const
+    {
+        return m_inputDevices.values();
+    }
 
-	virtual void applyPortMode( MidiPort * _port );
-	virtual void removePort( MidiPort * _port );
+    virtual QStringList writablePorts() const
+    {
+        return m_outputDevices.values();
+    }
 
+    // return name of port which specified MIDI event came from
+    virtual QString sourcePortName(const MidiEvent&) const;
 
-	// list devices as ports
-	virtual QStringList readablePorts() const
-	{
-		return m_inputDevices.values();
-	}
+    // (un)subscribe given MidiPort to/from destination-port
+    virtual void subscribeReadablePort(MidiPort*      _port,
+                                       const QString& _dest,
+                                       bool           _subscribe = true);
+    virtual void subscribeWritablePort(MidiPort*      _port,
+                                       const QString& _dest,
+                                       bool           _subscribe = true);
+    virtual void connectRPChanged(QObject* _receiver, const char* _member)
+    {
+        connect(this, SIGNAL(readablePortsChanged()), _receiver, _member);
+    }
 
-	virtual QStringList writablePorts() const
-	{
-		return m_outputDevices.values();
-	}
+    virtual void connectWPChanged(QObject* _receiver, const char* _member)
+    {
+        connect(this, SIGNAL(writablePortsChanged()), _receiver, _member);
+    }
 
-	// return name of port which specified MIDI event came from
-	virtual QString sourcePortName( const MidiEvent & ) const;
+    virtual bool isRaw() const
+    {
+        return false;
+    }
 
-	// (un)subscribe given MidiPort to/from destination-port
-	virtual void subscribeReadablePort( MidiPort * _port,
-						const QString & _dest,
-						bool _subscribe = true );
-	virtual void subscribeWritablePort( MidiPort * _port,
-						const QString & _dest,
-						bool _subscribe = true );
-	virtual void connectRPChanged( QObject * _receiver,
-							const char * _member )
-	{
-		connect( this, SIGNAL( readablePortsChanged() ),
-							_receiver, _member );
-	}
+  private:  // slots:
+    void updateDeviceList();
 
-	virtual void connectWPChanged( QObject * _receiver,
-							const char * _member )
-	{
-		connect( this, SIGNAL( writablePortsChanged() ),
-							_receiver, _member );
-	}
+  private:
+    void openDevices();
+    void closeDevices();
 
-	virtual bool isRaw() const
-	{
-		return false;
-	}
+    static void WINAPI CALLBACK inputCallback(HMIDIIN   _hm,
+                                              UINT      _msg,
+                                              DWORD_PTR _inst,
+                                              DWORD_PTR _param1,
+                                              DWORD_PTR _param2);
+    void                        handleInputEvent(HMIDIIN _hm, DWORD _ev);
 
+    QMap<HMIDIIN, QString>  m_inputDevices;
+    QMap<HMIDIOUT, QString> m_outputDevices;
 
-private:// slots:
-	void updateDeviceList();
+    // subscriptions
+    typedef QMap<QString, MidiPorts> SubMap;
+    SubMap                           m_inputSubs;
+    SubMap                           m_outputSubs;
 
-
-private:
-	void openDevices();
-	void closeDevices();
-
-	static void WINAPI CALLBACK inputCallback( HMIDIIN _hm, UINT _msg,
-						DWORD_PTR _inst,
-						DWORD_PTR _param1,
-							DWORD_PTR _param2 );
-	void handleInputEvent( HMIDIIN _hm, DWORD _ev );
-
-	QMap<HMIDIIN, QString> m_inputDevices;
-	QMap<HMIDIOUT, QString> m_outputDevices;
-
-	// subscriptions
-	typedef QMap<QString, MidiPortList> SubMap;
-	SubMap m_inputSubs;
-	SubMap m_outputSubs;
-
-
-signals:
-	void readablePortsChanged();
-	void writablePortsChanged();
-
-} ;
+  signals:
+    void readablePortsChanged();
+    void writablePortsChanged();
+};
 
 #endif
 
 #endif
-

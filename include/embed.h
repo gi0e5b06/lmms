@@ -36,13 +36,13 @@
 namespace embed
 {
 
-QIcon EXPORT   getIcon(const QString& _name, int _w = -1, int _h = -1);
-QPixmap EXPORT getPixmap(const QString& _name, int _w = -1, int _h = -1);
-QString EXPORT getText(const char* _name);
-QHash<QString, QString> EXPORT getProperties(const QString& _fileName);
+const QIcon EXPORT   getIcon(const QString& _name, int _w = -1, int _h = -1);
+const QPixmap EXPORT getPixmap(const QString& _name, int _w = -1, int _h = -1);
+const QString EXPORT getText(const char* _name);
+const QHash<QString, QString> EXPORT getProperties(const QString& _fileName);
 
 // obsolete
-QPixmap EXPORT getIconPixmap(const QString& _name, int _w = -1, int _h = -1);
+const QPixmap EXPORT getIconPixmap(const QString& _name, int _w = -1, int _h = -1);
 
 }  // namespace embed
 
@@ -50,20 +50,20 @@ QPixmap EXPORT getIconPixmap(const QString& _name, int _w = -1, int _h = -1);
 namespace PLUGIN_NAME
 {
 
-inline QIcon getIcon(const QString& _name, int _w = -1, int _h = -1)
+inline const QIcon getIcon(const QString& _name, int _w = -1, int _h = -1)
 {
     return embed::getIcon(QString("%1/%2").arg(STRINGIFY(PLUGIN_NAME), _name),
                           _w, _h);
 }
 
-inline QPixmap getPixmap(const QString& _name, int _w = -1, int _h = -1)
+inline const QPixmap getPixmap(const QString& _name, int _w = -1, int _h = -1)
 {
     return embed::getPixmap(
             QString("%1/%2").arg(STRINGIFY(PLUGIN_NAME), _name), _w, _h);
 }
 
 // obsolete
-inline QPixmap getIconPixmap(const QString& _name, int _w = -1, int _h = -1)
+inline const QPixmap getIconPixmap(const QString& _name, int _w = -1, int _h = -1)
 {
     return embed::getIconPixmap(
             QString("%1/%2").arg(STRINGIFY(PLUGIN_NAME), _name), _w, _h);
@@ -76,58 +76,101 @@ inline QPixmap getIconPixmap(const QString& _name, int _w = -1, int _h = -1)
 class PixmapLoader
 {
   public:
+    /*
     PixmapLoader(const PixmapLoader* _ref) :
           m_name(_ref != nullptr ? _ref->m_name : QString::null)
     {
     }
+    */
 
-    PixmapLoader(const QString& _name = QString::null) : m_name(_name)
+    PixmapLoader(const QString& _name = QString::null,
+                 int            _w    = -1,
+                 int            _h    = -1) :
+          m_name(_name),
+          m_w(_w), m_h(_h)
     {
-    }
-
-    virtual QPixmap pixmap() const
-    {
-        if(!m_name.isEmpty())
-            return embed::getPixmap(m_name.toLatin1().constData());
-
-        return QPixmap();
     }
 
     virtual ~PixmapLoader()
     {
+        qInfo("deleting PixmapLoader %s", qPrintable(m_name));
     }
 
-    virtual QString pixmapName() const
+    virtual const QPixmap pixmap() const
+    {
+        if(!m_name.isEmpty())
+            return embed::getPixmap(m_name, m_w, m_h);
+        // m_name.toLatin1().constData());
+
+        return QPixmap(qMax(0, m_w), qMax(0, m_h));
+    }
+
+    operator QPixmap()
+    {
+        return pixmap();
+    }
+
+    /*
+    virtual const QString& name() const
     {
         return m_name;
+    }
+    */
+
+    virtual int width() const
+    {
+        return m_w;
+    }
+
+    virtual int height() const
+    {
+        return m_h;
     }
 
   protected:
     QString m_name;
+    int     m_w;
+    int     m_h;
 };
 
 #ifdef PLUGIN_NAME
 class PluginPixmapLoader : public PixmapLoader
 {
   public:
-    PluginPixmapLoader(const QString& _name = QString::null) :
-          PixmapLoader(_name)
+    PluginPixmapLoader(const QString& _name = QString::null,
+                       int            _w    = -1,
+                       int            _h    = -1) :
+          PixmapLoader(_name, _w, _h)
     {
     }
 
-    virtual QPixmap pixmap() const
+    virtual ~PluginPixmapLoader()
+    {
+        qInfo("deleting PluginPixmapLoader %s", qPrintable(m_name));
+    }
+
+    const QPixmap pixmap() const override
     {
         if(!m_name.isEmpty())
-            return (PLUGIN_NAME::getIconPixmap(
-                    m_name.toLatin1().constData()));
+            return PLUGIN_NAME::getPixmap(m_name);
+        // m_name.toLatin1().constData()));
 
-        return (QPixmap());
+        return QPixmap(qMax(0, m_w), qMax(0, m_h));
     }
 
-    virtual QString pixmapName() const
+    /*
+    operator QPixmap()
+    {
+        return pixmap();
+    }
+    */
+
+    /*
+    const QString& name() const override
     {
         return QString(STRINGIFY(PLUGIN_NAME)) + "::" + m_name;
     }
+    */
 };
 #endif
 

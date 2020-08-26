@@ -317,8 +317,8 @@ vibedView::vibedView(Instrument* _instrument, QWidget* _parent) :
     pal.setBrush(backgroundRole(), PLUGIN_NAME::getIconPixmap("artwork"));
     setPalette(pal);
 
-    m_volumeKnob = new VolumeKnob(this);//knobBright_26, this);
-    //m_volumeKnob->setVolumeKnob(true);
+    m_volumeKnob = new VolumeKnob(this);  // knobBright_26, this);
+    // m_volumeKnob->setVolumeKnob(true);
     m_volumeKnob->move(103, 142);
     m_volumeKnob->setHintText(tr("Volume:"), "");
     m_volumeKnob->setWhatsThis(
@@ -606,6 +606,8 @@ vibedView::vibedView(Instrument* _instrument, QWidget* _parent) :
 
     connect(m_normalizeBtn, SIGNAL(clicked()), this,
             SLOT(normalizeClicked()));
+
+    modelChanged();
 }
 
 void vibedView::modelChanged()

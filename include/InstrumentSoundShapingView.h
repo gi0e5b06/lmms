@@ -1,7 +1,7 @@
 /*
  * InstrumentSoundShapingView.h - Sound shaping view in the instrument window
  *
- * Copyright (c) 2018-2019 gi0e5b06 (on github.com)
+ * Copyright (c) 2018-2020 gi0e5b06 (on github.com)
  * Copyright (c) 2004-2014 Tobias Doerffel <tobydox/at/users.sourceforge.net>
  *
  * This file is part of LSMM -
@@ -45,15 +45,26 @@ class InstrumentSoundShapingView :
 {
     Q_OBJECT
   public:
-    InstrumentSoundShapingView(QWidget* _parent);
+    InstrumentSoundShapingView(InstrumentSoundShaping* _model,
+                               QWidget*                _parent);
     virtual ~InstrumentSoundShapingView();
+
+    InstrumentSoundShaping* model()
+    {
+        return castModel<InstrumentSoundShaping>();
+    }
+
+    const InstrumentSoundShaping* model() const
+    {
+        return castModel<InstrumentSoundShaping>();
+    }
 
     void setFunctionsHidden(bool hidden);
 
   private:
     virtual void modelChanged();
 
-    InstrumentSoundShaping* m_ss;
+    // InstrumentSoundShaping* m_ss;
 
     // TabWidget * m_targetsTabWidget;
     EnvelopeAndLfoView* m_envLfoViews[InstrumentSoundShaping::NumTargets];

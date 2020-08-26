@@ -36,18 +36,18 @@ class EXPORT JournallingObject : public SerializingObject
     JournallingObject();
     virtual ~JournallingObject();
 
-    virtual inline jo_id_t id() const final 
+    virtual jo_id_t id() const final
     {
         return m_id;
     }
 
-    void saveJournallingState(const bool newState)
+    virtual void saveJournallingState(const bool newState) final
     {
         m_journallingStateStack.push(m_journalling);
         m_journalling = newState;
     }
 
-    void restoreJournallingState()
+    virtual void restoreJournallingState() final
     {
         if(!isJournallingStateStackEmpty())
         {
@@ -55,36 +55,34 @@ class EXPORT JournallingObject : public SerializingObject
         }
     }
 
-    void addJournalCheckPoint();
+    virtual void addJournalCheckPoint() final;
 
-    virtual QDomElement saveState(QDomDocument& _doc, QDomElement& _parent);
+    virtual bool isJournalling() const final;
 
-    virtual void restoreState(const QDomElement& _this);
-
-    inline bool isJournalling() const
-    {
-        return m_journalling;
-    }
-
-    inline void setJournalling(const bool _sr)
+    virtual void setJournalling(const bool _sr) final
     {
         m_journalling = _sr;
     }
 
-    inline bool testAndSetJournalling(const bool newState)
+    virtual bool testAndSetJournalling(const bool newState) final
     {
         const bool oldJournalling = m_journalling;
         m_journalling             = newState;
         return oldJournalling;
     }
 
-    bool isJournallingStateStackEmpty() const
+    virtual bool isJournallingStateStackEmpty() const final
     {
         return m_journallingStateStack.isEmpty();
     }
 
+    virtual QDomElement saveState(QDomDocument& _doc,
+                                  QDomElement&  _parent) override;
+
+    virtual void restoreState(const QDomElement& _this) override;
+
   protected:
-    void changeID(jo_id_t _id);
+    virtual void changeID(jo_id_t _id) final;
 
   private:
     jo_id_t m_id;

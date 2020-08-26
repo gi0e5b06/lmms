@@ -36,10 +36,9 @@ AutomatableSlider::AutomatableSlider(QWidget*       _parent,
                                      const QString& _objectName) :
       QSlider(_parent),
       // IntModelView( new IntModel( 0, 0, 0, NULL, _name, true ), this ),
-      FloatModelView(
-              new FloatModel(
-                      0, 0, 0, 1, nullptr, _displayName, _objectName, true),
-              this),
+      RealModelView(this, _displayName),
+      // new FloatModel(
+      // 0, 0, 0, 1, nullptr, _displayName, _objectName, true), this),
       m_showStatus(false)
 {
     setWindowTitle(_displayName);

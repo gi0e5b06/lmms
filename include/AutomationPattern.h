@@ -57,13 +57,16 @@ class EXPORT AutomationPattern : public Tile
     // typedef SafeList<QPointer<AutomatableModel>> Objects;
     typedef SafeList<AutomatableModel*> Objects;
 
-    AutomationPattern(AutomationTrack* _auto_track);
-    AutomationPattern(const AutomationPattern& _pat_to_copy);
+    AutomationPattern(AutomationTrack* _automationTrack);
+    AutomationPattern(const AutomationPattern& _other);
     virtual ~AutomationPattern();
 
-    virtual bool    isEmpty() const;
-    virtual QString defaultName() const;
-    virtual tick_t  unitLength() const;
+    bool    isEmpty() const override;
+    QString defaultName() const override;
+    tick_t  unitLength() const override;
+    void    rotate(tick_t _ticks) override;
+    void    splitEvery(tick_t _ticks) override;
+    void    splitAt(tick_t _tick) override;
 
     bool addObject(AutomatableModel* _obj);  //, bool _search_dup = true);
 
@@ -82,49 +85,49 @@ class EXPORT AutomationPattern : public Tile
     void removeValue(const MidiTime& time);
 
     // progression-type stuff
-    inline ProgressionTypes progressionType() const
+    INLINE ProgressionTypes progressionType() const
     {
         return m_progressionType;
     }
     void setProgressionType(ProgressionTypes _progressionType);
 
-    inline real_t tension() const
+    INLINE real_t tension() const
     {
         return m_tension;
     }
     void setTension(const real_t _tension);
 
-    inline int waveBank() const
+    INLINE int waveBank() const
     {
         return m_waveBank;
     }
     void setWaveBank(const int _waveBank);
 
-    inline int waveIndex() const
+    INLINE int waveIndex() const
     {
         return m_waveIndex;
     }
     void setWaveIndex(const int _waveIndex);
 
-    inline real_t waveRatio() const
+    INLINE real_t waveRatio() const
     {
         return m_waveRatio;
     }
     void setWaveRatio(const real_t _waveRatio);
 
-    inline real_t waveSkew() const
+    INLINE real_t waveSkew() const
     {
         return m_waveSkew;
     }
     void setWaveSkew(const real_t _waveSkew);
 
-    inline real_t waveAmplitude() const
+    INLINE real_t waveAmplitude() const
     {
         return m_waveAmplitude;
     }
     void setWaveAmplitude(const real_t _waveAmplitude);
 
-    inline real_t waveRepeat() const
+    INLINE real_t waveRepeat() const
     {
         return m_waveRepeat;
     }
@@ -149,37 +152,37 @@ class EXPORT AutomationPattern : public Tile
         return m_dragging;
     }
 
-    inline const timeMap& getTimeMap() const
+    INLINE const timeMap& getTimeMap() const
     {
         return m_timeMap;
     }
 
-    inline timeMap& getTimeMap()
+    INLINE timeMap& getTimeMap()
     {
         return m_timeMap;
     }
 
-    inline const timeMap& getTangents() const
+    INLINE const timeMap& getTangents() const
     {
         return m_tangents;
     }
 
-    inline timeMap& getTangents()
+    INLINE timeMap& getTangents()
     {
         return m_tangents;
     }
 
-    inline real_t getMin() const
+    INLINE real_t getMin() const
     {
         return firstObject()->minValue<real_t>();
     }
 
-    inline real_t getMax() const
+    INLINE real_t getMax() const
     {
         return firstObject()->maxValue<real_t>();
     }
 
-    inline bool hasAutomation() const
+    INLINE bool hasAutomation() const
     {
         return m_timeMap.isEmpty() == false;
     }
@@ -191,13 +194,13 @@ class EXPORT AutomationPattern : public Tile
     virtual void automatedValuesAt(const MidiTime&    _time,
                                    AutomatedValueMap& _map);
 
-    virtual const QString name() const;
+    virtual QString name() const;
 
     // settings-management
     virtual void saveSettings(QDomDocument& _doc, QDomElement& _parent);
     virtual void loadSettings(const QDomElement& _this);
 
-    static inline const QString classNodeName()
+    static INLINE const QString classNodeName()
     {
         return "automationpattern";
     }
@@ -205,6 +208,11 @@ class EXPORT AutomationPattern : public Tile
     virtual QString nodeName() const
     {
         return classNodeName();
+    }
+
+    INLINE AutomationTrack* automationTrack() const
+    {
+        return m_automationTrack;
     }
 
     virtual TileView* createView(TrackView* _tv);
@@ -242,13 +250,14 @@ class EXPORT AutomationPattern : public Tile
     }
 
   public slots:
-    virtual void clear();
+    void clear() override;
+    void flipHorizontally() override;
+    void flipVertically() override;
+
     virtual void moveAbsUp();
     virtual void moveAbsDown();
     virtual void moveRelUp();
     virtual void moveRelDown();
-    virtual void flipHorizontally();
-    virtual void flipVertically();
 
     void objectDestroyed(jo_id_t);
     void flipY(int min, int max);

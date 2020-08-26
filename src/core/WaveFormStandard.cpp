@@ -168,8 +168,8 @@ WaveFormStandard::Set::Set()
     new WaveFormStandard /*CB*/ ("cb()", BANK, 3, cbf, Exact);
     new WaveFormStandard /*CMPL*/ ("complement()", BANK, 10, complementf,
                                    Exact);
-    new WaveFormStandard("sqrt()", BANK, 12, sqrtf, Linear,
-                         10);  // FLOAT REQUIRED
+    new WaveFormStandard("sqrt()", BANK, 12, sqrtf,  // FLOAT REQUIRED
+                         Linear, 10);
     new WaveFormStandard /*CBRT*/ ("cbrt()", BANK, 13, cbrtf, Linear);
     new WaveFormStandard /*NEXP*/ ("n_exp()", BANK, 20, nexp2f, Linear);
     new WaveFormStandard /*NLOG*/ ("n_log()", BANK, 30, nlogf, Linear);

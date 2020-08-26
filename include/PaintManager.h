@@ -47,6 +47,7 @@ class PaintManager : public QObject
 
   public slots:
     void runQueue();
+    void onObjectDestroyed(QObject* _o);
 
   signals:
     void periodicUpdate();

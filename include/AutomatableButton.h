@@ -36,30 +36,34 @@ class EXPORT AutomatableButton : public QPushButton, public BoolModelView
     Q_OBJECT
 
   public:
-    AutomatableButton(QWidget*       _parent,
-                      const QString& _displayName = "[automatable button]",
-                      const QString& _objectName  = "button");
+    AutomatableButton(BoolModel* _model, QWidget* _parent);
+    AutomatableButton(QWidget*       _parent      = nullptr,
+                      const QString& _displayName = "[led checkbox]");
+
     virtual ~AutomatableButton();
 
-    inline void setCheckable(bool _on)
+    INLINE virtual void setCheckable(bool _on)
     {
         QPushButton::setCheckable(_on);
         model()->setJournalling(_on);
     }
 
-    virtual void modelChanged();
     virtual void enterValue();
+
+    void modelChanged() override;
 
   public slots:
     virtual void update();
     virtual void toggle();
-    virtual void setChecked(bool _on) final;
+    virtual void setChecked(bool _on);
 
   protected:
-    virtual void contextMenuEvent(QContextMenuEvent* _me);
-    virtual void dropEvent(QDropEvent* _de);
-    virtual void mousePressEvent(QMouseEvent* _me);
-    virtual void mouseReleaseEvent(QMouseEvent* _me);
+    virtual void initUi();
+
+    void contextMenuEvent(QContextMenuEvent* _me) override;
+    void dropEvent(QDropEvent* _de) override;
+    void mousePressEvent(QMouseEvent* _me) override;
+    void mouseReleaseEvent(QMouseEvent* _me) override;
 
   private:
     AutomatableButtonGroup* m_group;
@@ -70,7 +74,9 @@ class EXPORT AutomatableButton : public QPushButton, public BoolModelView
     using QPushButton::setChecked;
 };
 
-class EXPORT AutomatableButtonGroup : public QWidget, public IntModelView
+class EXPORT AutomatableButtonGroup final :
+      public QWidget,
+      public IntModelView
 {
     Q_OBJECT
 
@@ -80,16 +86,20 @@ class EXPORT AutomatableButtonGroup : public QWidget, public IntModelView
                            const QString& _objectName  = QString::null);
     virtual ~AutomatableButtonGroup();
 
-    void addButton(AutomatableButton* _btn);
-    void removeButton(AutomatableButton* _btn);
+    virtual void addButton(AutomatableButton* _btn);
+    virtual void removeButton(AutomatableButton* _btn);
+    virtual void activateButton(AutomatableButton* _btn);
 
-    void activateButton(AutomatableButton* _btn);
-
-    virtual void modelChanged();
     virtual void enterValue();
 
+    void modelChanged() override;
+
+  protected:
+    void doConnections() override;
+    void undoConnections() override;
+
   private slots:
-    void updateButtons();
+    virtual void updateButtons();
 
   private:
     QList<AutomatableButton*> m_buttons;

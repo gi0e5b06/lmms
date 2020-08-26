@@ -56,8 +56,8 @@ extern "C"
                0x0100,
                Plugin::Instrument,
                new PluginPixmapLoader("logo"),
-               NULL,
-               NULL};
+               nullptr,
+               nullptr};
 }
 
 /*
@@ -205,7 +205,7 @@ void Xpressive::playNote(NotePlayHandle* nph, sampleFrame* working_buffer)
     m_A2 = m_parameterA2.value();
     m_A3 = m_parameterA3.value();
 
-    if(nph->totalFramesPlayed() == 0 || nph->m_pluginData == NULL)
+    if(nph->totalFramesPlayed() == 0 || nph->m_pluginData == nullptr)
     {
 
         // give the "last" function a whole second
@@ -334,31 +334,31 @@ XpressiveView::XpressiveView(Instrument* _instrument, QWidget* _parent) :
     m_w1Btn->setInactiveGraphic(PLUGIN_NAME::getIconPixmap("w1_inactive"));
     ToolTip::add(m_w1Btn, tr("Select oscillator W1"));
 
-    m_w2Btn = new PixmapButton(this, NULL);
+    m_w2Btn = new PixmapButton(this, nullptr);
     m_w2Btn->move(26, ROW_BTN);
     m_w2Btn->setActiveGraphic(PLUGIN_NAME::getIconPixmap("w2_active"));
     m_w2Btn->setInactiveGraphic(PLUGIN_NAME::getIconPixmap("w2_inactive"));
     ToolTip::add(m_w2Btn, tr("Select oscillator W2"));
 
-    m_w3Btn = new PixmapButton(this, NULL);
+    m_w3Btn = new PixmapButton(this, nullptr);
     m_w3Btn->move(49, ROW_BTN);
     m_w3Btn->setActiveGraphic(PLUGIN_NAME::getIconPixmap("w3_active"));
     m_w3Btn->setInactiveGraphic(PLUGIN_NAME::getIconPixmap("w3_inactive"));
     ToolTip::add(m_w3Btn, tr("Select oscillator W3"));
 
-    m_o1Btn = new PixmapButton(this, NULL);
+    m_o1Btn = new PixmapButton(this, nullptr);
     m_o1Btn->move(79, ROW_BTN);
     m_o1Btn->setActiveGraphic(PLUGIN_NAME::getIconPixmap("o1_active"));
     m_o1Btn->setInactiveGraphic(PLUGIN_NAME::getIconPixmap("o1_inactive"));
     ToolTip::add(m_o1Btn, tr("Select OUTPUT 1"));
 
-    m_o2Btn = new PixmapButton(this, NULL);
+    m_o2Btn = new PixmapButton(this, nullptr);
     m_o2Btn->move(101, ROW_BTN);
     m_o2Btn->setActiveGraphic(PLUGIN_NAME::getIconPixmap("o2_active"));
     m_o2Btn->setInactiveGraphic(PLUGIN_NAME::getIconPixmap("o2_inactive"));
     ToolTip::add(m_o2Btn, tr("Select OUTPUT 2"));
 
-    m_helpBtn = new PixmapButton(this, NULL);
+    m_helpBtn = new PixmapButton(this, nullptr);
     m_helpBtn->move(133, ROW_BTN);
     m_helpBtn->setActiveGraphic(PLUGIN_NAME::getIconPixmap("help_active"));
     m_helpBtn->setInactiveGraphic(
@@ -515,6 +515,7 @@ XpressiveView::XpressiveView(Instrument* _instrument, QWidget* _parent) :
     connect(m_o1Btn, SIGNAL(clicked()), this, SLOT(updateLayout()));
     connect(m_o2Btn, SIGNAL(clicked()), this, SLOT(updateLayout()));
 
+    modelChanged();
     updateLayout();
 }
 
@@ -730,7 +731,7 @@ void XpressiveView::updateLayout()
     {
         case W1_EXPR:
             m_wave_expr = true;
-            m_graph->setModel(&e->graphW1(), true);
+            m_graph->setModel(&e->graphW1());
             m_raw_graph = &(e->rawgraphW1());
             m_expressionEditor->setPlainText(e->wavesExpression(0));
             m_smoothKnob->setModel(&e->smoothW1());
@@ -743,7 +744,7 @@ void XpressiveView::updateLayout()
             break;
         case W2_EXPR:
             m_wave_expr = true;
-            m_graph->setModel(&e->graphW2(), true);
+            m_graph->setModel(&e->graphW2());
             m_raw_graph = &(e->rawgraphW2());
             m_expressionEditor->setPlainText(e->wavesExpression(1));
             m_smoothKnob->setModel(&e->smoothW2());
@@ -756,7 +757,7 @@ void XpressiveView::updateLayout()
             break;
         case W3_EXPR:
             m_wave_expr = true;
-            m_graph->setModel(&e->graphW3(), true);
+            m_graph->setModel(&e->graphW3());
             m_raw_graph = &(e->rawgraphW3());
             m_expressionEditor->setPlainText(e->wavesExpression(2));
             m_smoothKnob->setModel(&e->smoothW3());
@@ -769,7 +770,7 @@ void XpressiveView::updateLayout()
             break;
         case O1_EXPR:
             m_output_expr = true;
-            m_graph->setModel(&e->graphO1(), true);
+            m_graph->setModel(&e->graphO1());
             m_raw_graph = &(e->graphO1());
             m_expressionEditor->setPlainText(e->outputExpression(0));
             m_smoothKnob->hide();
@@ -779,7 +780,7 @@ void XpressiveView::updateLayout()
             break;
         case O2_EXPR:
             m_output_expr = true;
-            m_graph->setModel(&e->graphO2(), true);
+            m_graph->setModel(&e->graphO2());
             m_raw_graph = &(e->graphO2());
             m_expressionEditor->setPlainText(e->outputExpression(1));
             m_smoothKnob->hide();

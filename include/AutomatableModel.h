@@ -31,7 +31,7 @@
 #include "MidiTime.h"
 #include "Model.h"
 #include "ValueBuffer.h"
-#include "lmms_math.h"
+#include "lmms_math.h" // REQUIRED
 
 #include <QMap>
 #include <QMutex>
@@ -66,6 +66,7 @@ class AutomatableModel;
 class ControllerConnection;
 class WaveFormStandard;
 
+typedef QVector<AutomatableModel*>      AutomatableModels;
 typedef QMap<AutomatableModel*, real_t> AutomatedValueMap;
 
 class EXPORT AutomatableModel : public Model, public JournallingObject
@@ -85,7 +86,7 @@ class EXPORT AutomatableModel : public Model, public JournallingObject
 
     bool isAutomated() const;
 
-    inline bool isControlled() const
+    INLINE bool isControlled() const
     {
         return m_controllerConnection != nullptr;
     }
@@ -127,7 +128,7 @@ class EXPORT AutomatableModel : public Model, public JournallingObject
     }
 
     template <typename T>
-    inline T value(f_cnt_t frameOffset = 0, bool recording = false) const
+    INLINE T value(f_cnt_t frameOffset = 0, bool recording = false) const
     {
         /*
         if( unlikely( m_controllerConnection != nullptr || hasLinkedModels() )
@@ -235,7 +236,7 @@ class EXPORT AutomatableModel : public Model, public JournallingObject
 
     // Randomization
 
-    inline real_t randomRatio() const
+    INLINE real_t randomRatio() const
     {
         return m_randomRatio;
     }
@@ -247,7 +248,7 @@ class EXPORT AutomatableModel : public Model, public JournallingObject
     void setRandomDistribution(const WaveFormStandard* _wf);
 
     template <typename T>
-    inline T rawValue() const
+    INLINE T rawValue() const
     {
         return castValue<T>(m_value);
     }
@@ -312,13 +313,25 @@ class EXPORT AutomatableModel : public Model, public JournallingObject
                               const QString&     name,
                               const bool         required = true);
 
+    /*! \brief return true if settings are stored under this name */
+    virtual bool hasSettings(const QDomElement& element, const QString& name);
+
+    /*! \brief convenient for compatibility, newest name first */
+    virtual bool hasSettings(const QDomElement& element,
+                             const QString&     name,
+                             const QString&     oldName);
+    virtual void loadSettings(const QDomElement& element,
+                              const QString&     name,
+                              const QString&     oldName,
+                              const bool         required = true);
+
     virtual QString nodeName() const
     {
         return "automatablemodel";
     }
 
     virtual QString        displayValue(const real_t val) const = 0;
-    virtual inline QString displayValue() const final
+    virtual INLINE QString displayValue() const final
     {
         return displayValue(m_value);
     }
@@ -346,7 +359,7 @@ class EXPORT AutomatableModel : public Model, public JournallingObject
     static void postponeUpdate(AutomatableModel* _m, const ValueBuffer* _vb);
 
     // tmp
-    QVector<AutomatableModel*> m_linkedModels;
+    AutomatableModels m_linkedModels;
 
   signals:
     void initValueChanged(real_t val);
@@ -379,11 +392,11 @@ class EXPORT AutomatableModel : public Model, public JournallingObject
     //! max() and aligned according to the step size (step size 0.05 -> value
     //! 0.12345 becomes 0.10 etc.). You should always call it at the end after
     //! doing your own calculations.
-    real_t fittedValue(real_t value) const;
-    void   fitValues(ValueBuffer* _vb) const;
+    virtual real_t fittedValue(real_t value) const;
+    virtual void   fitValues(ValueBuffer* _vb) const final;
 
-    real_t randomizedValue(real_t value) const;
-    void   randomizeValues(ValueBuffer* _vb) const;
+    virtual real_t randomizedValue(real_t value) const;
+    virtual void   randomizeValues(ValueBuffer* _vb) const final;
 
     void propagateValue();
     void propagateAutomatedValue();
@@ -421,9 +434,9 @@ class EXPORT AutomatableModel : public Model, public JournallingObject
     real_t    m_minValue;
     real_t    m_maxValue;
     real_t    m_step;
-    //real_t    m_range;
-    real_t    m_centerValue;
-    real_t    m_randomRatio;
+    // real_t    m_range;
+    real_t m_centerValue;
+    real_t m_randomRatio;
 
     const WaveFormStandard* m_randomDistribution;
 
@@ -456,32 +469,32 @@ class EXPORT TypedAutomatableModel : public AutomatableModel
   public:
     using AutomatableModel::AutomatableModel;
 
-    inline T value(f_cnt_t frameOffset = 0, bool recording = false) const
+    INLINE T value(f_cnt_t frameOffset = 0, bool recording = false) const
     {
         return AutomatableModel::value<T>(frameOffset, recording);
     }
 
-    inline T initValue() const
+    INLINE T initValue() const
     {
         return AutomatableModel::initValue<T>();
     }
 
-    inline T rawValue() const
+    INLINE T rawValue() const
     {
         return AutomatableModel::rawValue<T>();
     }
 
-    inline T minValue() const
+    INLINE T minValue() const
     {
         return AutomatableModel::minValue<T>();
     }
 
-    inline T maxValue() const
+    INLINE T maxValue() const
     {
         return AutomatableModel::maxValue<T>();
     }
 
-    inline T step() const
+    INLINE T step() const
     {
         return AutomatableModel::step<T>();
     }
@@ -489,31 +502,43 @@ class EXPORT TypedAutomatableModel : public AutomatableModel
 
 // some typed AutomatableModel-definitions
 
-class EXPORT FloatModel : public TypedAutomatableModel<real_t>
+class EXPORT RealModel : public TypedAutomatableModel<real_t>
 {
   public:
-    FloatModel(real_t         val                = 0.,
-               real_t         min                = 0.,
-               real_t         max                = 0.,
-               real_t         step               = 0.,
-               Model*         parent             = nullptr,
-               const QString& displayName        = "[float model]",
-               const QString& objectName         = QString::null,
-               bool           defaultConstructed = false);
+    RealModel(real_t         val                = 0.,
+              real_t         min                = 0.,
+              real_t         max                = 0.,
+              real_t         step               = 0.,
+              Model*         parent             = nullptr,
+              const QString& displayName        = "[real model]",
+              const QString& objectName         = QString::null,
+              bool           defaultConstructed = false);
     real_t getRoundedValue() const;
     int    getDigitCount() const;
 
-    virtual void    setRange(const real_t min,
-                             const real_t max,
-                             const real_t step = 1.) override;
-    virtual void    setStep(const real_t step) override;
-    virtual QString displayValue(const real_t val) const override;
+    void    setRange(const real_t min,
+                     const real_t max,
+                     const real_t step = 1.) override;
+    void    setStep(const real_t step) override;
+    QString displayValue(const real_t val) const override;
+
+    static RealModel* createDefaultConstructed(const QString& _displayName
+                                               = QString::null)
+    {
+        const QString& s = _displayName.isEmpty()
+                                   ? "[default real model]"
+                                   : _displayName + " [default]";
+        return new RealModel(0., 0., 1., 0.01, nullptr, s, QString::null,
+                             true);
+    }
 
   protected:
     void setDigitCount();
 
     int m_digitCount;
 };
+
+#define FloatModel RealModel
 
 class EXPORT IntModel : public TypedAutomatableModel<int>
 {
@@ -536,7 +561,17 @@ class EXPORT IntModel : public TypedAutomatableModel<int>
     {
         setStrictStepSize(true);
     }
-    virtual QString displayValue(const real_t val) const override;
+
+    QString displayValue(const real_t val) const override;
+
+    static IntModel* createDefaultConstructed(const QString& _displayName
+                                              = QString::null)
+    {
+        const QString& s = _displayName.isEmpty()
+                                   ? "[default int model]"
+                                   : _displayName + " [default]";
+        return new IntModel(0, 0, 10, nullptr, s, QString::null, true);
+    }
 };
 
 class EXPORT BoolModel : public TypedAutomatableModel<bool>
@@ -560,6 +595,83 @@ class EXPORT BoolModel : public TypedAutomatableModel<bool>
     }
 
     virtual QString displayValue(const real_t val) const override;
+
+    static BoolModel* createDefaultConstructed(const QString& _displayName
+                                               = QString::null)
+    {
+        const QString& s = _displayName.isEmpty()
+                                   ? "[default bool model]"
+                                   : _displayName + " [default]";
+        return new BoolModel(false, nullptr, s, QString::null, true);
+    }
+};
+
+class EXPORT DiscreteIntModel : public IntModel
+{
+  public:
+    DiscreteIntModel(int            val,
+                     QVector<int>&  set,
+                     Model*         parent      = nullptr,
+                     const QString& displayName = "[discrete int model]",
+                     const QString& objectName  = QString::null,
+                     bool           defaultConstructed = false) :
+          IntModel(val,
+                   val,
+                   val,
+                   parent,
+                   displayName,
+                   objectName,
+                   defaultConstructed)
+    {
+        setSet(set);
+        setValue(val);
+    }
+
+    void setSet(QVector<int>& _set)
+    {
+        m_set = _set;
+        if(m_set.isEmpty())
+            insertValue(initValue());
+        setRange(m_set.first(), m_set.last());
+    }
+
+    void insertValue(int _value)
+    {
+        if(!m_set.contains(_value))
+        {
+            m_set.append(_value);
+            qSort(m_set.begin(), m_set.end());
+            setRange(m_set.first(), m_set.last());
+        }
+    }
+
+    virtual real_t fittedValue(real_t value) const override
+    {
+        value = IntModel::fittedValue(value);
+
+        int v = IntModel::castValue(value);
+        if(m_set.contains(v))
+            return v;
+
+        if(v <= m_set.first())
+            return m_set.first();
+        if(v >= m_set.last())
+            return m_set.last();
+
+        int i;
+        for(i = m_set.size() - 1; i >= 0; i--)
+            if(v >= m_set.at(i))
+                break;
+        return m_set.at(i);
+    }
+
+    virtual QString displayValue(const real_t _val) const override
+    {
+        return IntModel::displayValue(_val);
+    }
+
+  private:
+    QVector<int> m_set;
 };
 
 #endif

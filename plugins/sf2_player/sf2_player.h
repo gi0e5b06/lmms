@@ -33,7 +33,8 @@
 #include "LedCheckBox.h"
 #include "MemoryManager.h"
 #include "PixmapButton.h"
-#include "fluidsynth.h"
+//#include "fluidsynth.h"
+#include "fluidsynthshims.h"
 
 #include <QMutex>
 

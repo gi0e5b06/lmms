@@ -106,26 +106,29 @@ class EXPORT Instrument : public Plugin
     }
 
     // convenient accessors
-    inline virtual bool isBendable() const final
+    INLINE virtual bool isBendable() const final
     {
         return !flags().testFlag(Instrument::IsNotBendable);
     }
-    inline virtual bool isMidiBased() const final
+
+    INLINE virtual bool isMidiBased() const final
     {
         return flags().testFlag(Instrument::IsMidiBased);
     }
-    inline virtual bool isMonophonic() const final
+
+    INLINE virtual bool isMonophonic() const final
     {
         return flags().testFlag(Instrument::IsMonophonic);
     }
-    inline virtual bool isSingleStreamed() const final
+
+    INLINE virtual bool isSingleStreamed() const final
     {
         return flags().testFlag(Instrument::IsSingleStreamed);
     }
 
     // sub-classes can re-implement this for receiving all incoming
     // MIDI-events
-    inline virtual bool handleMidiEvent(const MidiEvent&,
+    INLINE virtual bool handleMidiEvent(const MidiEvent&,
                                         const MidiTime& = MidiTime(),
                                         f_cnt_t offset  = 0)
     {
@@ -142,28 +145,28 @@ class EXPORT Instrument : public Plugin
 
     // !!! GDX added methods like for an effect
 
-    inline ch_cnt_t processorCount() const
+    INLINE ch_cnt_t processorCount() const
     {
         return 1;
     }
 
     // should be replaced by Runnable
-    inline bool dontRun() const
+    INLINE bool dontRun() const
     {
         return m_noRun;
     }
 
-    inline void setDontRun(bool _state)
+    INLINE void setDontRun(bool _state)
     {
         m_noRun = _state;
     }
 
-    inline bool isOkay() const
+    INLINE bool isOkay() const
     {
         return m_okay;
     }
 
-    inline void setOkay(bool _state)
+    INLINE void setOkay(bool _state)
     {
         m_okay = _state;
     }
@@ -179,7 +182,7 @@ class EXPORT Instrument : public Plugin
 
     virtual bool isFromTrack(const Track* _track) const final;
 
-    inline InstrumentTrack* instrumentTrack() const
+    INLINE InstrumentTrack* instrumentTrack() const
     {
         return m_instrumentTrack;
     }

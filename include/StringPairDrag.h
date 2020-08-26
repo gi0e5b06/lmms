@@ -27,6 +27,7 @@
 #define STRING_PAIR_DRAG_H
 
 #include "export.h"
+#include "lmms_basics.h"
 
 #include <QDrag>
 #include <QDragEnterEvent>
@@ -69,7 +70,7 @@ class EXPORT StringPairDrag : public QDrag
                    QWidget*       _w);
     virtual ~StringPairDrag();
 
-    inline QPixmap grabWidget(QWidget*     widget,
+    INLINE QPixmap grabWidget(QWidget*     widget,
                               const QRect& rectangle
                               = QRect(QPoint(0, 0), QSize(-1, -1)))
     {

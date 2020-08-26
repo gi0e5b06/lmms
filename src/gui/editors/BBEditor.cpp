@@ -57,17 +57,13 @@ BBWindow::BBWindow(BBTrackContainer* tc) :
     */
 
     // TODO: Use style sheet
-    if(ConfigManager::inst()->value("ui", "compacttrackbuttons").toInt())
-    {
+    if(CONFIG_GET_BOOL("ui.compacttrackbuttons"))
         setMinimumWidth(TRACK_OP_WIDTH_COMPACT
                         + DEFAULT_SETTINGS_WIDGET_WIDTH_COMPACT
                         + 2 * TCO_BORDER_WIDTH + 384);
-    }
     else
-    {
         setMinimumWidth(TRACK_OP_WIDTH + DEFAULT_SETTINGS_WIDGET_WIDTH
                         + 2 * TCO_BORDER_WIDTH + 384);
-    }
 
     m_playAction->setToolTip(tr("Play/pause current beat/bassline (Space)"));
     m_stopAction->setToolTip(
@@ -87,7 +83,7 @@ BBWindow::BBWindow(BBTrackContainer* tc) :
 
     m_bbComboBox = new ComboBox(m_toolBar, "[beat selection]");
     m_bbComboBox->setFixedSize(140, 32);
-    m_bbComboBox->setModel(&tc->m_bbComboBoxModel);
+    m_bbComboBox->setModel(&tc->currentBBModel());
 
     beatSelectionToolBar->addSeparator();
     beatSelectionToolBar->addWidget(m_bbComboBox);
@@ -148,7 +144,7 @@ BBWindow::BBWindow(BBTrackContainer* tc) :
             embed::getIcon("arrow_right"), tr("Rotate one step right"),
             m_trackContainerView, SLOT(rotateOneStepRight()));
 
-    connect(&tc->m_bbComboBoxModel, SIGNAL(dataChanged()),
+    connect(&tc->currentBBModel(), SIGNAL(dataChanged()),
             m_trackContainerView, SLOT(updatePosition()));
 
     QAction* viewNext = new QAction(this);
@@ -172,10 +168,12 @@ QSize BBWindow::sizeHint() const
     return {minimumWidth() + 10, 300};
 }
 
+/*
 void BBWindow::removeBBView(int bb)
 {
     m_trackContainerView->removeBBView(bb);
 }
+*/
 
 void BBWindow::play()
 {
@@ -192,15 +190,14 @@ void BBWindow::stop()
 
 BBEditor::BBEditor(BBTrackContainer* tc) :
       Editor(nullptr, tr("Beat editor"), "beatEditor"),
-      TrackContainerView(tc),
-      m_bbtc(tc)
+      TrackContainerView(tc), m_bbtc(tc)
 {
-    setModel(tc);
+    // setModel(tc);
 }
 
-float BBEditor::pixelsPerTact() const
+real_t BBEditor::pixelsPerTact() const
 {
-    return m_ppt > 0.f ? m_ppt : 256.f;
+    return m_ppt > 0. ? m_ppt : 256.;
 }
 
 void BBEditor::addSteps()
@@ -217,12 +214,14 @@ void BBEditor::removeSteps()
 {
     // Tracks tl = model()->tracks();
     // for(Tracks::iterator it = tl.begin(); it != tl.end(); ++it)
+    const int bb = m_bbtc->currentBB();
     for(Track* t: model()->tracks())
     {
-        if(t->type() == Track::InstrumentTrack)
+        // if(t->type() == Track::InstrumentTrack)
         {
-            Pattern* p
-                    = static_cast<Pattern*>(t->getTCO(m_bbtc->currentBB()));
+            // Pattern* p = static_cast<Pattern*>(
+            // getTCO(m_bbtc->currentBB()));
+            Tile* p = t->tileForBB(bb);
             p->removeBarSteps();
         }
     }
@@ -258,27 +257,40 @@ void BBEditor::cloneBeat()
 
     newTrack->lockTrack();
     newTrack->deleteTCOs();
-    if(newTrack->trackContainer() == Engine::getBBTrackContainer())
-        newTrack->createTCOsForBB(Engine::getBBTrackContainer()->numOfBBs()
-                                  - 1);
+    auto bbTC = Engine::getBBTrackContainer();
+    if(newTrack->trackContainer() == bbTC)
+        bbTC->createTCOsForBB(newTrack);
     newTrack->unlockTrack();
 
-    m_bbtc->setCurrentBB(static_cast<BBTrack*>(newTrack)->index());
+    m_bbtc->setCurrentBB(static_cast<BBTrack*>(newTrack)->ownBBTrackIndex());
 }
 
 void BBEditor::addInstrumentTrack()
 {
-    Track::create(Track::InstrumentTrack, model());
+    qInfo("BBEditor::addInstrumentTrack START");
+    Track* t = Track::create(Track::InstrumentTrack, model());
+    m_bbtc->checkTCOs();
+    m_bbtc->createTCOsForBB(t);
+    m_bbtc->fixIncorrectPositions(t);
+    m_bbtc->updateAfterInnerTrackAdd(t);
+    m_bbtc->checkTCOs();
+    qInfo("BBEditor::addInstrumentTrack END");
 }
 
 void BBEditor::addSampleTrack()
 {
-    Track::create(Track::SampleTrack, model());
+    Track* t = Track::create(Track::SampleTrack, model());
+    m_bbtc->createTCOsForBB(t);
+    m_bbtc->fixIncorrectPositions(t);
+    m_bbtc->updateAfterInnerTrackAdd(t);
 }
 
 void BBEditor::addAutomationTrack()
 {
-    Track::create(Track::AutomationTrack, model());
+    Track* t = Track::create(Track::AutomationTrack, model());
+    m_bbtc->createTCOsForBB(t);
+    m_bbtc->fixIncorrectPositions(t);
+    m_bbtc->updateAfterInnerTrackAdd(t);
 }
 
 int BBEditor::highestStepResolution()
@@ -322,11 +334,13 @@ void BBEditor::rotateOneStepRight()
         }
 }
 
+/*
 void BBEditor::removeBBView(int bb)
 {
     for(TrackView* view: trackViews())
         view->getTrackContentWidget()->removeTCOView(bb);
 }
+*/
 
 void BBEditor::saveSettings(QDomDocument& doc, QDomElement& element)
 {
@@ -348,10 +362,9 @@ void BBEditor::dropEvent(QDropEvent* de)
         DataFile dataFile(value.toUtf8());
         Track* t = Track::create(dataFile.content().firstChild().toElement(),
                                  model());
-        m_bbtc->updateAfterTrackAdd();
-        t->createTCOsForBB(Engine::getBBTrackContainer()->numOfBBs() - 1);
-        t->deleteUnusedTCOsForBB();
-        m_bbtc->fixIncorrectPositions();
+        m_bbtc->updateAfterInnerTrackAdd(t);
+        // t->createTCOsForBB(Engine::getBBTrackContainer()->numOfBBs() - 1);
+        // m_bbtc->fixIncorrectPositions();
         de->accept();
     }
     else
@@ -370,12 +383,14 @@ void BBEditor::makeSteps(bool clone)
 {
     // Tracks tl = model()->tracks();
     // for(Tracks::iterator it = tl.begin(); it != tl.end(); ++it)
+    const int bb = m_bbtc->currentBB();
     for(Track* t: model()->tracks())
     {
-        if(t->type() == Track::InstrumentTrack)
+        // if(t->type() == Track::InstrumentTrack)
         {
-            Pattern* p
-                    = static_cast<Pattern*>(t->getTCO(m_bbtc->currentBB()));
+            // Pattern* p = static_cast<Pattern*>(
+            // t->getTCO(m_bbtc->currentBB()));
+            Tile* p = t->tileForBB(bb);
             if(clone)
                 p->cloneSteps();
             else

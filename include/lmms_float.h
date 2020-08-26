@@ -23,7 +23,7 @@
 #ifndef LMMS_FLOAT_H
 #define LMMS_FLOAT_H
 
-#include "lmms_math.h"
+#include "lmms_math.h" // REQUIRED
 
 #ifdef REAL_IS_DOUBLE
 

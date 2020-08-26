@@ -50,11 +50,11 @@ extern "C"
                0x0100,
                Plugin::Instrument,
                new PluginPixmapLoader("logo"),
-               NULL,
-               NULL};
+               nullptr,
+               nullptr};
 }
 
-MonstroSynth::MonstroSynth(MonstroInstrument* _i, NotePlayHandle* _nph) :
+MonstroSynth::MonstroSynth(Monstro* _i, NotePlayHandle* _nph) :
       m_parent(_i), m_nph(_nph)
 {
     m_osc1l_phase = 0.;
@@ -941,7 +941,7 @@ inline real_t MonstroSynth::calcSlope(int slope, real_t s)
     return fastpow(s, m_parent->m_slope[slope]);
 }
 
-MonstroInstrument::MonstroInstrument(InstrumentTrack* _instrument_track) :
+Monstro::Monstro(InstrumentTrack* _instrument_track) :
       Instrument(_instrument_track, &monstro_plugin_descriptor),
 
       m_osc1Vol(33.0, 0.0, 200.0, 0.1, this, tr("Osc 1 Volume")),
@@ -1145,17 +1145,16 @@ MonstroInstrument::MonstroInstrument(InstrumentTrack* _instrument_track) :
     updateSlope2();
 }
 
-MonstroInstrument::~MonstroInstrument()
+Monstro::~Monstro()
 {
 }
 
-void MonstroInstrument::playNote(NotePlayHandle* _n,
-                                 sampleFrame*    _working_buffer)
+void Monstro::playNote(NotePlayHandle* _n, sampleFrame* _working_buffer)
 {
     const fpp_t   frames = _n->framesLeftForCurrentPeriod();
     const f_cnt_t offset = _n->noteOffset();
 
-    if(_n->totalFramesPlayed() == 0 || _n->m_pluginData == NULL)
+    if(_n->totalFramesPlayed() == 0 || _n->m_pluginData == nullptr)
     {
         _n->m_pluginData = new MonstroSynth(this, _n);
     }
@@ -1170,12 +1169,12 @@ void MonstroInstrument::playNote(NotePlayHandle* _n,
                                           _n);
 }
 
-void MonstroInstrument::deleteNotePluginData(NotePlayHandle* _n)
+void Monstro::deleteNotePluginData(NotePlayHandle* _n)
 {
     delete static_cast<MonstroSynth*>(_n->m_pluginData);
 }
 
-void MonstroInstrument::saveSettings(QDomDocument& _doc, QDomElement& _this)
+void Monstro::saveSettings(QDomDocument& _doc, QDomElement& _this)
 {
     m_osc1Vol.saveSettings(_doc, _this, "o1vol");
     m_osc1Pan.saveSettings(_doc, _this, "o1pan");
@@ -1291,7 +1290,7 @@ void MonstroInstrument::saveSettings(QDomDocument& _doc, QDomElement& _this)
     m_sub3lfo2.saveSettings(_doc, _this, "s3l2");
 }
 
-void MonstroInstrument::loadSettings(const QDomElement& _this)
+void Monstro::loadSettings(const QDomElement& _this)
 {
     m_osc1Vol.loadSettings(_this, "o1vol");
     m_osc1Pan.loadSettings(_this, "o1pan");
@@ -1408,76 +1407,76 @@ void MonstroInstrument::loadSettings(const QDomElement& _this)
 }
 
 /*
-QString MonstroInstrument::nodeName() const
+QString Monstro::nodeName() const
 {
     return monstro_plugin_descriptor.name;
 }
 */
 
-f_cnt_t MonstroInstrument::desiredReleaseFrames() const
+f_cnt_t Monstro::desiredReleaseFrames() const
 {
     return qMax(64, qMax(m_env1_relF, m_env2_relF));
 }
 
-PluginView* MonstroInstrument::instantiateView(QWidget* _parent)
+PluginView* Monstro::instantiateView(QWidget* _parent)
 {
     return (new MonstroView(this, _parent));
 }
 
-void MonstroInstrument::updateVolume1()
+void Monstro::updateVolume1()
 {
     m_osc1l_vol = leftCh(m_osc1Vol.value(), m_osc1Pan.value());
     m_osc1r_vol = rightCh(m_osc1Vol.value(), m_osc1Pan.value());
 }
 
-void MonstroInstrument::updateVolume2()
+void Monstro::updateVolume2()
 {
     m_osc2l_vol = leftCh(m_osc2Vol.value(), m_osc2Pan.value());
     m_osc2r_vol = rightCh(m_osc2Vol.value(), m_osc2Pan.value());
 }
 
-void MonstroInstrument::updateVolume3()
+void Monstro::updateVolume3()
 {
     m_osc3l_vol = leftCh(m_osc3Vol.value(), m_osc3Pan.value());
     m_osc3r_vol = rightCh(m_osc3Vol.value(), m_osc3Pan.value());
 }
 
-void MonstroInstrument::updateFreq1()
+void Monstro::updateFreq1()
 {
     m_osc1l_freq = exp2(m_osc1Crs.value() / 12. + m_osc1Ftl.value() / 1200.);
     m_osc1r_freq = exp2(m_osc1Crs.value() / 12. + m_osc1Ftr.value() / 1200.);
 }
 
-void MonstroInstrument::updateFreq2()
+void Monstro::updateFreq2()
 {
     m_osc2l_freq = exp2(m_osc2Crs.value() / 12. + m_osc2Ftl.value() / 1200.);
     m_osc2r_freq = exp2(m_osc2Crs.value() / 12. + m_osc2Ftr.value() / 1200.);
 }
 
-void MonstroInstrument::updateFreq3()
+void Monstro::updateFreq3()
 {
     m_osc3_freq = exp2(m_osc3Crs.value() / 12.);
 }
 
-void MonstroInstrument::updatePO1()
+void Monstro::updatePO1()
 {
     m_osc1l_po = m_osc1Spo.value() / 720.;
     m_osc1r_po = (m_osc1Spo.value() * -1.0) / 720.;
 }
 
-void MonstroInstrument::updatePO2()
+void Monstro::updatePO2()
 {
     m_osc2l_po = m_osc2Spo.value() / 720.;
     m_osc2r_po = (m_osc2Spo.value() * -1.0) / 720.;
 }
 
-void MonstroInstrument::updatePO3()
+void Monstro::updatePO3()
 {
     m_osc3l_po = m_osc3Spo.value() / 720.;
     m_osc3r_po = (m_osc3Spo.value() * -1.0) / 720.;
 }
 
-void MonstroInstrument::updateEnvelope1()
+void Monstro::updateEnvelope1()
 {
     if(m_env1Pre.value() == 0.)
         m_env1_pre = 1.;
@@ -1505,7 +1504,7 @@ void MonstroInstrument::updateEnvelope1()
                  * m_samplerate / 1000.;
     m_env1_relF = m_env1Rel.value() * m_samplerate / 1000.;
 }
-void MonstroInstrument::updateEnvelope2()
+void Monstro::updateEnvelope2()
 {
     if(m_env2Pre.value() == 0.)
         m_env2_pre = 1.;
@@ -1534,13 +1533,13 @@ void MonstroInstrument::updateEnvelope2()
     m_env2_relF = m_env2Rel.value() * m_samplerate / 1000.;
 }
 
-void MonstroInstrument::updateLFOAtts()
+void Monstro::updateLFOAtts()
 {
     m_lfo1_att = m_lfo1Att.value() * m_samplerate / 1000.;
     m_lfo2_att = m_lfo2Att.value() * m_samplerate / 1000.;
 }
 
-void MonstroInstrument::updateSamplerate()
+void Monstro::updateSamplerate()
 {
     m_samplerate = Engine::mixer()->processingSampleRate();
 
@@ -1553,19 +1552,19 @@ void MonstroInstrument::updateSamplerate()
     updateLFOAtts();
 }
 
-void MonstroInstrument::updateSlope1()
+void Monstro::updateSlope1()
 {
     const real_t slope = m_env1Slope.value();
     m_slope[0]         = exp10(slope * -1.);
 }
 
-void MonstroInstrument::updateSlope2()
+void Monstro::updateSlope2()
 {
     const real_t slope = m_env2Slope.value();
     m_slope[1]         = exp10(slope * -1.);
 }
 
-MonstroView::MonstroView(Instrument* _instrument, QWidget* _parent) :
+MonstroView::MonstroView(Monstro* _instrument, QWidget* _parent) :
       InstrumentView(_instrument, _parent)
 {
     m_operatorsView = setupOperatorsView(this);
@@ -1580,7 +1579,7 @@ MonstroView::MonstroView(Instrument* _instrument, QWidget* _parent) :
 
     // "tab buttons"
 
-    PixmapButton* m_opViewButton = new PixmapButton(this, NULL);
+    PixmapButton* m_opViewButton = new PixmapButton(this, nullptr);
     m_opViewButton->move(0, 0);
     m_opViewButton->setActiveGraphic(
             PLUGIN_NAME::getIconPixmap("opview_active"));
@@ -1596,7 +1595,7 @@ MonstroView::MonstroView(Instrument* _instrument, QWidget* _parent) :
             "what's this -texts, "
             "so you can get more specific help for them that way. "));
 
-    PixmapButton* m_matViewButton = new PixmapButton(this, NULL);
+    PixmapButton* m_matViewButton = new PixmapButton(this, nullptr);
     m_matViewButton->move(125, 0);
     m_matViewButton->setActiveGraphic(
             PLUGIN_NAME::getIconPixmap("matview_active"));
@@ -1632,6 +1631,8 @@ MonstroView::MonstroView(Instrument* _instrument, QWidget* _parent) :
 
     connect(m_opViewButton, SIGNAL(clicked()), this, SLOT(updateLayout()));
     connect(m_matViewButton, SIGNAL(clicked()), this, SLOT(updateLayout()));
+
+    modelChanged();
 }
 
 MonstroView::~MonstroView()
@@ -1655,7 +1656,7 @@ void MonstroView::updateLayout()
 
 void MonstroView::modelChanged()
 {
-    MonstroInstrument* m = castModel<MonstroInstrument>();
+    Monstro* m = castModel<Monstro>();
 
     m_osc1VolKnob->setModel(&m->m_osc1Vol);
     m_osc1PanKnob->setModel(&m->m_osc1Pan);
@@ -1792,8 +1793,8 @@ QWidget* MonstroView::setupOperatorsView(QWidget* _parent)
     makeknob(m_osc1PanKnob, KNOBCOL2, O1ROW, tr("Panning"), "", "osc1Knob");
     makeknob(m_osc1CrsKnob, KNOBCOL3, O1ROW, tr("Coarse detune"),
              tr("semitones"), "osc1Knob");
-    makeknob(m_osc1FtlKnob, KNOBCOL4, O1ROW, tr("Finetune left"),
-             tr("cents"), "osc1Knob");
+    makeknob(m_osc1FtlKnob, KNOBCOL4, O1ROW, tr("Finetune left"), tr("cents"),
+             "osc1Knob");
     makeknob(m_osc1FtrKnob, KNOBCOL5, O1ROW, tr("Finetune right"),
              tr("cents"), "osc1Knob");
     makeknob(m_osc1SpoKnob, KNOBCOL6, O1ROW, tr("Stereo phase offset"),
@@ -1802,7 +1803,7 @@ QWidget* MonstroView::setupOperatorsView(QWidget* _parent)
              "osc1Knob");
 
     // TODO
-    //m_osc1VolKnob->setVolumeKnob(true);
+    // m_osc1VolKnob->setVolumeKnob(true);
 
     maketinyled(m_osc1SSRButton, 230, 34, tr("Send sync on pulse rise"));
     maketinyled(m_osc1SSFButton, 230, 44, tr("Send sync on pulse fall"));
@@ -1811,15 +1812,15 @@ QWidget* MonstroView::setupOperatorsView(QWidget* _parent)
     makeknob(m_osc2PanKnob, KNOBCOL2, O2ROW, tr("Panning"), "", "osc2Knob");
     makeknob(m_osc2CrsKnob, KNOBCOL3, O2ROW, tr("Coarse detune"),
              tr("semitones"), "osc2Knob");
-    makeknob(m_osc2FtlKnob, KNOBCOL4, O2ROW, tr("Finetune left"),
-             tr("cents"), "osc2Knob");
+    makeknob(m_osc2FtlKnob, KNOBCOL4, O2ROW, tr("Finetune left"), tr("cents"),
+             "osc2Knob");
     makeknob(m_osc2FtrKnob, KNOBCOL5, O2ROW, tr("Finetune right"),
              tr("cents"), "osc2Knob");
     makeknob(m_osc2SpoKnob, KNOBCOL6, O2ROW, tr("Stereo phase offset"),
              tr("deg"), "osc2Knob");
 
-    //TODO
-    //m_osc2VolKnob->setVolumeKnob(true);
+    // TODO
+    // m_osc2VolKnob->setVolumeKnob(true);
 
     m_osc2WaveBox = new ComboBox(view);
     m_osc2WaveBox->setGeometry(204, O2ROW + 7, 42, 22);
@@ -1856,8 +1857,7 @@ QWidget* MonstroView::setupOperatorsView(QWidget* _parent)
     m_lfo1WaveBox->setGeometry(2, LFOROW + 7, 42, 22);
     m_lfo1WaveBox->setFont(pointSize<8>(m_lfo1WaveBox->font()));
 
-    maketsknob(m_lfo1AttKnob, LFOCOL1, LFOROW, tr("Attack"), "ms",
-               "lfoKnob");
+    maketsknob(m_lfo1AttKnob, LFOCOL1, LFOROW, tr("Attack"), "ms", "lfoKnob");
     maketsknob(m_lfo1RateKnob, LFOCOL2, LFOROW, tr("Rate"), "ms", "lfoKnob");
     makeknob(m_lfo1PhsKnob, LFOCOL3, LFOROW, tr("Phase"), tr("deg"),
              "lfoKnob");
@@ -1893,26 +1893,26 @@ QWidget* MonstroView::setupOperatorsView(QWidget* _parent)
     makeknob(m_env2SlopeKnob, KNOBCOL7, E2ROW, tr("Slope"), "", "envKnob");
 
     // mod selector
-    PixmapButton* m_mixButton = new PixmapButton(view, NULL);
+    PixmapButton* m_mixButton = new PixmapButton(view, nullptr);
     m_mixButton->move(225, 185);
     m_mixButton->setActiveGraphic(PLUGIN_NAME::getIconPixmap("mix_active"));
     m_mixButton->setInactiveGraphic(
             PLUGIN_NAME::getIconPixmap("mix_inactive"));
     ToolTip::add(m_mixButton, tr("Mix Osc2 with Osc3"));
 
-    PixmapButton* m_amButton = new PixmapButton(view, NULL);
+    PixmapButton* m_amButton = new PixmapButton(view, nullptr);
     m_amButton->move(225, 185 + 15);
     m_amButton->setActiveGraphic(PLUGIN_NAME::getIconPixmap("am_active"));
     m_amButton->setInactiveGraphic(PLUGIN_NAME::getIconPixmap("am_inactive"));
     ToolTip::add(m_amButton, tr("Modulate amplitude of Osc3 with Osc2"));
 
-    PixmapButton* m_fmButton = new PixmapButton(view, NULL);
+    PixmapButton* m_fmButton = new PixmapButton(view, nullptr);
     m_fmButton->move(225, 185 + 15 * 2);
     m_fmButton->setActiveGraphic(PLUGIN_NAME::getIconPixmap("fm_active"));
     m_fmButton->setInactiveGraphic(PLUGIN_NAME::getIconPixmap("fm_inactive"));
     ToolTip::add(m_fmButton, tr("Modulate frequency of Osc3 with Osc2"));
 
-    PixmapButton* m_pmButton = new PixmapButton(view, NULL);
+    PixmapButton* m_pmButton = new PixmapButton(view, nullptr);
     m_pmButton->move(225, 185 + 15 * 3);
     m_pmButton->setActiveGraphic(PLUGIN_NAME::getIconPixmap("pm_active"));
     m_pmButton->setInactiveGraphic(PLUGIN_NAME::getIconPixmap("pm_inactive"));
@@ -2174,7 +2174,7 @@ QWidget* MonstroView::setupOperatorsView(QWidget* _parent)
                "quickly and fall of slowly again. "
                "Positive values create curves that start and end quickly, "
                "and stay longer near the peaks. "));
-    return (view);
+    return view;
 }
 
 QWidget* MonstroView::setupMatrixView(QWidget* _parent)
@@ -2184,317 +2184,104 @@ QWidget* MonstroView::setupMatrixView(QWidget* _parent)
     QWidget* view = new QWidget(_parent);
     view->setFixedSize(250, 250);
 
-    makeknob(
-            m_vol1env1Knob, MATCOL1, MATROW1, tr("Modulation amount"), "",
-            "matrixKnob") makeknob(m_vol1env2Knob, MATCOL2, MATROW1,
-                                   tr("Modulation amount"), "",
-                                   "matrixKnob") makeknob(m_vol1lfo1Knob,
-                                                          MATCOL3, MATROW1,
-                                                          tr("Modulat"
-                                                             "ion "
-                                                             "amoun"
-                                                             "t"),
-                                                          "",
-                                                          "matrixKno"
-                                                          "b") makeknob(m_vol1lfo2Knob,
-                                                                        MATCOL4,
-                                                                        MATROW1,
-                                                                        tr("M"
-                                                                           "o"
-                                                                           "d"
-                                                                           "u"
-                                                                           "l"
-                                                                           "a"
-                                                                           "t"
-                                                                           "i"
-                                                                           "o"
-                                                                           "n"
-                                                                           " "
-                                                                           "a"
-                                                                           "m"
-                                                                           "o"
-                                                                           "u"
-                                                                           "n"
-                                                                           "t"),
-                                                                        "",
-                                                                        "matr"
-                                                                        "ixKn"
-                                                                        "ob")
+    makeknob(m_vol1env1Knob, MATCOL1, MATROW1, tr("Modulation amount"), "",
+             "matrixKnob");
+    makeknob(m_vol1env2Knob, MATCOL2, MATROW1, tr("Modulation amount"), "",
+             "matrixKnob");
+    makeknob(m_vol1lfo1Knob, MATCOL3, MATROW1, tr("Modulation amount"), "",
+             "matrixKnob");
+    makeknob(m_vol1lfo2Knob, MATCOL4, MATROW1, tr("Modulation amount"), "",
+             "matrixKnob");
+    makeknob(m_vol2env1Knob, MATCOL1, MATROW3, tr("Modulation amount"), "",
+             "matrixKnob");
+    makeknob(m_vol2env2Knob, MATCOL2, MATROW3, tr("Modulation amount"), "",
+             "matrixKnob");
+    makeknob(m_vol2lfo1Knob, MATCOL3, MATROW3, tr("Modulation amount"), "",
+             "matrixKnob");
+    makeknob(m_vol2lfo2Knob, MATCOL4, MATROW3, tr("Modulation amount"), "",
+             "matrixKnob");
+    makeknob(m_vol3env1Knob, MATCOL1, MATROW5, tr("Modulation amount"), "",
+             "matrixKnob");
+    makeknob(m_vol3env2Knob, MATCOL2, MATROW5, tr("Modulation amount"), "",
+             "matrixKnob");
+    makeknob(m_vol3lfo1Knob, MATCOL3, MATROW5, tr("Modulation amount"), "",
+             "matrixKnob");
+    makeknob(m_vol3lfo2Knob, MATCOL4, MATROW5, tr("Modulation amount"), "",
+             "matrixKnob");
+    makeknob(m_phs1env1Knob, MATCOL1, MATROW2, tr("Modulation amount"), "",
+             "matrixKnob");
+    makeknob(m_phs1env2Knob, MATCOL2, MATROW2, tr("Modulation amount"), "",
+             "matrixKnob");
+    makeknob(m_phs1lfo1Knob, MATCOL3, MATROW2, tr("Modulation amount"), "",
+             "matrixKnob");
+    makeknob(m_phs1lfo2Knob, MATCOL4, MATROW2, tr("Modulation amount"), "",
+             "matrixKnob");
+    makeknob(m_phs2env1Knob, MATCOL1, MATROW4, tr("Modulation amount"), "",
+             "matrixKnob");
+    makeknob(m_phs2env2Knob, MATCOL2, MATROW4, tr("Modulation amount"), "",
+             "matrixKnob");
+    makeknob(m_phs2lfo1Knob, MATCOL3, MATROW4, tr("Modulation amount"), "",
+             "matrixKnob");
+    makeknob(m_phs2lfo2Knob, MATCOL4, MATROW4, tr("Modulation amount"), "",
+             "matrixKnob");
+    makeknob(m_phs3env1Knob, MATCOL1, MATROW6, tr("Modulation amount"), "",
+             "matrixKnob");
+    makeknob(m_phs3env2Knob, MATCOL2, MATROW6, tr("Modulation amount"), "",
+             "matrixKnob");
+    makeknob(m_phs3lfo1Knob, MATCOL3, MATROW6, tr("Modulation amount"), "",
+             "matrixKn"
+             "ob");
+    makeknob(m_phs3lfo2Knob, MATCOL4, MATROW6, tr("Modulation amount"), "",
+             "matrixKnob");
+    makeknob(m_pit1env1Knob, MATCOL5, MATROW1, tr("Modulation amount"), "",
+             "matrixKnob");
+    makeknob(m_pit1env2Knob, MATCOL6, MATROW1, tr("Modulation amount"), "",
+             "matrixKnob");
+    makeknob(m_pit1lfo1Knob, MATCOL7, MATROW1, tr("Modulation amount"), "",
+             "matrixKnob");
+    makeknob(m_pit1lfo2Knob, MATCOL8, MATROW1, tr("Modulation amount"), "",
+             "matrixKnob");
+    makeknob(m_pit2env1Knob, MATCOL5, MATROW3, tr("Modulation amount"), "",
+             "matrixKnob");
+    makeknob(m_pit2env2Knob, MATCOL6, MATROW3, tr("Modulation amount"), "",
+             "matrixKnob");
+    makeknob(m_pit2lfo1Knob, MATCOL7, MATROW3, tr("Modulation amount"), "",
+             "matrixKnob");
+    makeknob(m_pit2lfo2Knob, MATCOL8, MATROW3, tr("Modulation amount"), "",
+             "matrixKnob");
+    makeknob(m_pit3env1Knob, MATCOL5, MATROW5, tr("Modulation amount"), "",
+             "matrixKnob");
+    makeknob(m_pit3env2Knob, MATCOL6, MATROW5, tr("Modulation amount"), "",
+             "matrixKnob");
+    makeknob(m_pit3lfo1Knob, MATCOL7, MATROW5, tr("Modulation amount"), "",
+             "matrixKnob");
+    makeknob(m_pit3lfo2Knob, MATCOL8, MATROW5, tr("Modulation amount"), "",
+             "matrixKnob");
+    makeknob(m_pw1env1Knob, MATCOL5, MATROW2, tr("Modulation amount"), "",
+             "matrixKnob");
+    makeknob(m_pw1env2Knob, MATCOL6, MATROW2, tr("Modulation amount"), "",
+             "matrixKnob");
+    makeknob(m_pw1lfo1Knob, MATCOL7, MATROW2, tr("Modulation amount"), "",
+             "matrixKnob");
+    makeknob(m_pw1lfo2Knob, MATCOL8, MATROW2, tr("Modulation amount"), "",
+             "matrixKnob");
+    makeknob(m_sub3env1Knob, MATCOL5, MATROW6, tr("Modulation amount"), "",
+             "matrixKnob");
+    makeknob(m_sub3env2Knob, MATCOL6, MATROW6, tr("Modulation amount"), "",
+             "matrixKnob");
+    makeknob(m_sub3lfo1Knob, MATCOL7, MATROW6, tr("Modulation amount"), "",
+             "matrixKnob");
+    makeknob(m_sub3lfo2Knob, MATCOL8, MATROW6, tr("Modulation amount"), "",
+             "matrixKnob");
 
-            makeknob(
-                    m_vol2env1Knob, MATCOL1, MATROW3, tr("Modulation amount"),
-                    "",
-                    "matrixKnob") makeknob(m_vol2env2Knob, MATCOL2, MATROW3,
-                                           tr("Modulation amount"), "",
-                                           "matrixKnob") makeknob(m_vol2lfo1Knob,
-                                                                  MATCOL3,
-                                                                  MATROW3,
-                                                                  tr("Modulat"
-                                                                     "ion "
-                                                                     "amoun"
-                                                                     "t"),
-                                                                  "",
-                                                                  "matrixKno"
-                                                                  "b") makeknob(m_vol2lfo2Knob,
-                                                                                MATCOL4,
-                                                                                MATROW3,
-                                                                                tr("Modulation amount"),
-                                                                                "",
-                                                                                "matrixKnob")
-
-                    makeknob(
-                            m_vol3env1Knob, MATCOL1, MATROW5,
-                            tr("Modulation amount"), "",
-                            "matrixKnob") makeknob(m_vol3env2Knob, MATCOL2,
-                                                   MATROW5,
-                                                   tr("Modulation amount"),
-                                                   "",
-                                                   "matrixKnob") makeknob(m_vol3lfo1Knob,
-                                                                          MATCOL3,
-                                                                          MATROW5,
-                                                                          tr("Modulation amount"),
-                                                                          "",
-                                                                          "ma"
-                                                                          "tr"
-                                                                          "ix"
-                                                                          "Kn"
-                                                                          "o"
-                                                                          "b") makeknob(m_vol3lfo2Knob,
-                                                                                        MATCOL4,
-                                                                                        MATROW5,
-                                                                                        tr("Modulation "
-                                                                                           "amount"),
-                                                                                        "",
-                                                                                        "matrixKnob")
-
-                            makeknob(
-                                    m_phs1env1Knob, MATCOL1, MATROW2,
-                                    tr("Modulation amount"), "",
-                                    "matrixKnob") makeknob(m_phs1env2Knob,
-                                                           MATCOL2, MATROW2,
-                                                           tr("Modula"
-                                                              "tion "
-                                                              "amoun"
-                                                              "t"),
-                                                           "",
-                                                           "matrixKno"
-                                                           "b") makeknob(m_phs1lfo1Knob,
-                                                                         MATCOL3,
-                                                                         MATROW2,
-                                                                         tr("Modulation amount"),
-                                                                         "",
-                                                                         "mat"
-                                                                         "rix"
-                                                                         "Kno"
-                                                                         "b") makeknob(m_phs1lfo2Knob,
-                                                                                       MATCOL4,
-                                                                                       MATROW2,
-                                                                                       tr("Modulation amount"),
-                                                                                       "",
-                                                                                       "m"
-                                                                                       "a"
-                                                                                       "t"
-                                                                                       "r"
-                                                                                       "i"
-                                                                                       "x"
-                                                                                       "K"
-                                                                                       "n"
-                                                                                       "o"
-                                                                                       "b")
-
-                                    makeknob(
-                                            m_phs2env1Knob, MATCOL1, MATROW4,
-                                            tr("Modulation "
-                                               "amount"),
-                                            "",
-                                            "matrixKnob") makeknob(m_phs2env2Knob,
-                                                                   MATCOL2,
-                                                                   MATROW4,
-                                                                   tr("Modul"
-                                                                      "ation"
-                                                                      " amou"
-                                                                      "nt"),
-                                                                   "",
-                                                                   "matrixKn"
-                                                                   "ob")
-                                            makeknob(
-                                                    m_phs2lfo1Knob, MATCOL3,
-                                                    MATROW4,
-                                                    tr("Modulation amount"),
-                                                    "",
-                                                    "matrixKnob") makeknob(m_phs2lfo2Knob,
-                                                                           MATCOL4,
-                                                                           MATROW4,
-                                                                           tr("Modulation amount"),
-                                                                           "",
-                                                                           "m"
-                                                                           "a"
-                                                                           "t"
-                                                                           "r"
-                                                                           "i"
-                                                                           "x"
-                                                                           "K"
-                                                                           "n"
-                                                                           "o"
-                                                                           "b")
-
-                                                    makeknob(
-                                                            m_phs3env1Knob,
-                                                            MATCOL1, MATROW6,
-                                                            tr("Modulation "
-                                                               "amount"),
-                                                            "",
-                                                            "matrixKnob") makeknob(m_phs3env2Knob,
-                                                                                   MATCOL2,
-                                                                                   MATROW6,
-                                                                                   tr("Modulation amount"),
-                                                                                   "",
-                                                                                   "matrixKnob")
-                                                            makeknob(
-                                                                    m_phs3lfo1Knob,
-                                                                    MATCOL3,
-                                                                    MATROW6,
-                                                                    tr("Modul"
-                                                                       "ation"
-                                                                       " amou"
-                                                                       "nt"),
-                                                                    "",
-                                                                    "matrixKn"
-                                                                    "ob") makeknob(m_phs3lfo2Knob,
-                                                                                   MATCOL4,
-                                                                                   MATROW6,
-                                                                                   tr("Modulation amount"),
-                                                                                   "",
-                                                                                   "matrixKnob")
-
-                                                                    makeknob(
-                                                                            m_pit1env1Knob,
-                                                                            MATCOL5,
-                                                                            MATROW1,
-                                                                            tr("Modulation amount"),
-                                                                            "",
-                                                                            "matrixKnob") makeknob(m_pit1env2Knob,
-                                                                                                   MATCOL6,
-                                                                                                   MATROW1,
-                                                                                                   tr("Modulation amount"),
-                                                                                                   "",
-                                                                                                   "matrixKnob")
-                                                                            makeknob(
-                                                                                    m_pit1lfo1Knob,
-                                                                                    MATCOL7,
-                                                                                    MATROW1,
-                                                                                    tr("Modulation amount"),
-                                                                                    "",
-                                                                                    "matrixKnob")
-                                                                                    makeknob(
-                                                                                            m_pit1lfo2Knob,
-                                                                                            MATCOL8,
-                                                                                            MATROW1,
-                                                                                            tr("Modulation amount"),
-                                                                                            "",
-                                                                                            "matrixKnob")
-
-                                                                                            makeknob(
-                                                                                                    m_pit2env1Knob,
-                                                                                                    MATCOL5,
-                                                                                                    MATROW3,
-                                                                                                    tr("Modulation amount"),
-                                                                                                    "",
-                                                                                                    "matrixKnob")
-                                                                                                    makeknob(m_pit2env2Knob, MATCOL6, MATROW3, tr("Modulation amount"),
-                                                                                                             "",
-                                                                                                             "matrixKnob")
-                                                                                                            makeknob(m_pit2lfo1Knob,
-                                                                                                                     MATCOL7,
-                                                                                                                     MATROW3,
-                                                                                                                     tr("Modulation amount"),
-                                                                                                                     "",
-                                                                                                                     "matrixKnob")
-                                                                                                                    makeknob(
-                                                                                                                            m_pit2lfo2Knob,
-                                                                                                                            MATCOL8,
-                                                                                                                            MATROW3,
-                                                                                                                            tr("Modulation amount"),
-                                                                                                                            "",
-                                                                                                                            "matrixKnob")
-
-                                                                                                                            makeknob(
-                                                                                                                                    m_pit3env1Knob,
-                                                                                                                                    MATCOL5,
-                                                                                                                                    MATROW5,
-                                                                                                                                    tr("Modulation amount"),
-                                                                                                                                    "",
-                                                                                                                                    "matrixKnob")
-                                                                                                                                    makeknob(m_pit3env2Knob, MATCOL6, MATROW5, tr("Modulation amount"),
-                                                                                                                                             "",
-                                                                                                                                             "matrixKnob") makeknob(m_pit3lfo1Knob, MATCOL7,
-                                                                                                                                                                    MATROW5,
-                                                                                                                                                                    tr("Modulation amount"),
-                                                                                                                                                                    "",
-                                                                                                                                                                    "matrixKnob")
-                                                                                                                                            makeknob(
-                                                                                                                                                    m_pit3lfo2Knob,
-                                                                                                                                                    MATCOL8,
-                                                                                                                                                    MATROW5,
-                                                                                                                                                    tr("Modulation amount"),
-                                                                                                                                                    "",
-                                                                                                                                                    "matrixKnob")
-
-                                                                                                                                                    makeknob(m_pw1env1Knob, MATCOL5, MATROW2, tr("Modulation amount"),
-                                                                                                                                                             "",
-                                                                                                                                                             "matrixKnob")
-                                                                                                                                                            makeknob(m_pw1env2Knob,
-                                                                                                                                                                     MATCOL6,
-                                                                                                                                                                     MATROW2,
-                                                                                                                                                                     tr("Modulation amount"),
-                                                                                                                                                                     "",
-                                                                                                                                                                     "matrixKnob") makeknob(m_pw1lfo1Knob,
-                                                                                                                                                                                            MATCOL7,
-                                                                                                                                                                                            MATROW2,
-                                                                                                                                                                                            tr("Modulation amount"),
-                                                                                                                                                                                            "",
-                                                                                                                                                                                            "matrixKnob")
-                                                                                                                                                                    makeknob(
-                                                                                                                                                                            m_pw1lfo2Knob,
-                                                                                                                                                                            MATCOL8,
-                                                                                                                                                                            MATROW2,
-                                                                                                                                                                            tr("Modulation amount"),
-                                                                                                                                                                            "",
-                                                                                                                                                                            "matrixKnob")
-
-                                                                                                                                                                            makeknob(m_sub3env1Knob,
-                                                                                                                                                                                     MATCOL5, MATROW6, tr("Modulation amount"),
-                                                                                                                                                                                     "",
-                                                                                                                                                                                     "matrixKnob") makeknob(m_sub3env2Knob,
-                                                                                                                                                                                                            MATCOL6,
-                                                                                                                                                                                                            MATROW6,
-                                                                                                                                                                                                            tr("Modulation amount"),
-                                                                                                                                                                                                            "",
-                                                                                                                                                                                                            "matrixKnob")
-                                                                                                                                                                                    makeknob(
-                                                                                                                                                                                            m_sub3lfo1Knob,
-                                                                                                                                                                                            MATCOL7,
-                                                                                                                                                                                            MATROW6,
-                                                                                                                                                                                            tr("Modulation amount"),
-                                                                                                                                                                                            "",
-                                                                                                                                                                                            "matrixKnob")
-                                                                                                                                                                                            makeknob(
-                                                                                                                                                                                                    m_sub3lfo2Knob,
-                                                                                                                                                                                                    MATCOL8,
-                                                                                                                                                                                                    MATROW6,
-                                                                                                                                                                                                    tr("Modulation amount"),
-                                                                                                                                                                                                    "",
-                                                                                                                                                                                                    "matrixKnob")
-
-                                                                                                                                                                                                    return (view);
+    return view;
 }
 
 extern "C"
 {
-
     // necessary for getting instance out of shared lib
     Plugin* PLUGIN_EXPORT lmms_plugin_main(Model*, void* _data)
     {
-        return new MonstroInstrument(static_cast<InstrumentTrack*>(_data));
+        return new Monstro(static_cast<InstrumentTrack*>(_data));
     }
 }

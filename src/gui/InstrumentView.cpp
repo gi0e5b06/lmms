@@ -31,42 +31,53 @@
 
 #include <QIcon>  // REQUIRED
 
-InstrumentView::InstrumentView(Instrument* _Instrument, QWidget* _parent) :
-      PluginView(_Instrument, _parent)
+InstrumentView::InstrumentView(Instrument* _instrument, QWidget* _parent) :
+      PluginView(_instrument, _parent)
 {
-    setModel(_Instrument);
     setFixedSize(250, 250);
     setAttribute(Qt::WA_DeleteOnClose, true);
+    // setModel(_instrument);
+    modelChanged();
 }
 
 InstrumentView::~InstrumentView()
 {
-    if(instrumentTrackWindow())
-    {
-        instrumentTrackWindow()->m_instrumentView = NULL;
-    }
+    InstrumentTrackWindow* w = instrumentTrackWindow();
+    if(w != nullptr)
+        w->m_instrumentView = nullptr;
 }
 
-void InstrumentView::setModel(Model* _model, bool)
+/*
+void InstrumentView::setModel(Model* _model)
 {
-    if(dynamic_cast<Instrument*>(_model) != NULL)
+    if(dynamic_cast<Instrument*>(_model) != nullptr)
     {
         ModelView::setModel(_model);
         instrumentTrackWindow()->setWindowIcon(
                 model()->descriptor()->logo()->pixmap());
-        connect(model(), SIGNAL(destroyed(QObject*)), this, SLOT(close()));
+        // connect(model(), SIGNAL(destroyed(QObject*)), this, SLOT(close()));
     }
 }
+*/
 
-InstrumentTrackWindow* InstrumentView::instrumentTrackWindow(void)
+void InstrumentView::modelChanged()
 {
-    return (dynamic_cast<InstrumentTrackWindow*>(
-            parentWidget()->parentWidget()));
+    Instrument* m=model();
+
+    if(m != nullptr)
+        instrumentTrackWindow()->setWindowIcon(
+                model()->descriptor()->logo()->pixmap());
+}
+
+InstrumentTrackWindow* InstrumentView::instrumentTrackWindow()
+{
+    return dynamic_cast<InstrumentTrackWindow*>(
+            parentWidget()->parentWidget());
 }
 
 QLine InstrumentView::cableTo() const
 {
-    QWidget* w = widget();
+    const QWidget* w = widget();
     if(w == nullptr)
         return QLine();
 
@@ -76,7 +87,7 @@ QLine InstrumentView::cableTo() const
 
 QLine InstrumentView::cableFrom() const
 {
-    QWidget* w = widget();
+    const QWidget* w = widget();
     if(w == nullptr)
         return QLine();
 

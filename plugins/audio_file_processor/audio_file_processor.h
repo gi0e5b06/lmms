@@ -83,13 +83,13 @@ class audioFileProcessor : public Instrument
   private:
     SampleBuffer m_sampleBuffer;
 
-    FloatModel    m_stretchModel;
-    FloatModel    m_predelayModel;
-    FloatModel    m_postdelayModel;
-    FloatModel    m_ampModel;
-    FloatModel    m_startPointModel;
-    FloatModel    m_endPointModel;
-    FloatModel    m_loopPointModel;
+    RealModel     m_stretchModel;
+    RealModel     m_predelayModel;
+    RealModel     m_postdelayModel;
+    RealModel     m_ampModel;
+    RealModel     m_startPointModel;
+    RealModel     m_endPointModel;
+    RealModel     m_loopPointModel;
     BoolModel     m_reverseModel;
     IntModel      m_loopModel;
     BoolModel     m_stutterModel;
@@ -186,19 +186,19 @@ class AudioFileProcessorWaveView : public QWidget
             m_relatedKnob = _knob;
         }
 
-        void slideBy(double _v, bool _check_bound = true)
+        void slideBy(real_t _v, bool _check_bound = true)
         {
             slideTo(model()->value() + _v, _check_bound);
         }
 
-        void slideTo(double _v, bool _check_bound = true);
+        void slideTo(real_t _v, bool _check_bound = true);
 
       protected:
-        // float getValue( const QPoint & _p );
-        void convert(const QPoint& _p, float& value_, float& dist_);
+        // real_t getValue( const QPoint & _p );
+        void convert(const QPoint& _p, real_t& value_, real_t& dist_);
 
       private:
-        bool checkBound(double _v) const;
+        bool checkBound(real_t _v) const;
     };
 
   public slots:
@@ -227,7 +227,7 @@ class AudioFileProcessorWaveView : public QWidget
     f_cnt_t       m_to;
     f_cnt_t       m_last_from;
     f_cnt_t       m_last_to;
-    float         m_last_amp;
+    real_t        m_last_amp;
     knob*         m_startKnob;
     knob*         m_endKnob;
     knob*         m_loopKnob;

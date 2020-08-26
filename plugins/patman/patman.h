@@ -76,13 +76,13 @@ class patmanInstrument : public Instrument
         MM_OPERATORS
         SampleBuffer::HandleState* state;
         bool                       tuned;
-        SampleBuffer*              sample;
+        SampleBufferPointer        sample;
     } handle_data;
 
-    QString                m_patchFile;
-    QVector<SampleBuffer*> m_patchSamples;
-    BoolModel              m_loopedModel;
-    BoolModel              m_tunedModel;
+    QString                      m_patchFile;
+    QVector<SampleBufferPointer> m_patchSamples;
+    BoolModel                    m_loopedModel;
+    BoolModel                    m_tunedModel;
 
     enum LoadErrors
     {

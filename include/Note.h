@@ -25,12 +25,13 @@
 #ifndef NOTE_H
 #define NOTE_H
 
+#include "ComboBoxModel.h"
 #include "MidiTime.h"
 #include "SerializingObject.h"
 #include "panning.h"
 #include "volume.h"
 
-#include <QVector>
+//#include <QVector>
 
 class DetuningHelper;
 
@@ -97,27 +98,27 @@ class EXPORT Note : public SerializingObject
 
     // used by GUI
 
-    inline void setSelected(const bool selected)
+    INLINE void setSelected(const bool selected)
     {
         m_selected = selected;
     }
 
-    inline void setOldKey(const int oldKey)
+    INLINE void setOldKey(const int oldKey)
     {
         m_oldKey = oldKey;
     }
 
-    inline void setOldPos(const MidiTime& oldPos)
+    INLINE void setOldPos(const MidiTime& oldPos)
     {
         m_oldPos = oldPos;
     }
 
-    inline void setOldLength(const MidiTime& oldLength)
+    INLINE void setOldLength(const MidiTime& oldLength)
     {
         m_oldLength = oldLength;
     }
 
-    inline void setIsPlaying(const bool isPlaying)
+    INLINE void setIsPlaying(const bool isPlaying)
     {
         m_isPlaying = isPlaying;
     }
@@ -139,73 +140,76 @@ class EXPORT Note : public SerializingObject
     // using qSort.
     static bool lessThan(const Note* a, const Note* b)
     {
-        const tick_t pa=a->pos().ticks();
-        const tick_t pb=b->pos().ticks();
-        if(pa!=pb) return pa<pb;
-        const int ka=a->key();
-        const int kb=b->key();
-        if(ka!=kb) return ka<kb;
-        const tick_t la=a->length().ticks();
-        const tick_t lb=b->length().ticks();
-        if(la!=lb) return la<lb;
-        return a<b;
+        const tick_t pa = a->pos().ticks();
+        const tick_t pb = b->pos().ticks();
+        if(pa != pb)
+            return pa < pb;
+        const int ka = a->key();
+        const int kb = b->key();
+        if(ka != kb)
+            return ka < kb;
+        const tick_t la = a->length().ticks();
+        const tick_t lb = b->length().ticks();
+        if(la != lb)
+            return la < lb;
+        return a < b;
     }
 
-    inline bool selected() const
+    INLINE bool selected() const
     {
         return m_selected;
     }
 
-    inline int oldKey() const
+    INLINE int oldKey() const
     {
         return m_oldKey;
     }
 
-    inline MidiTime oldPos() const
+    INLINE MidiTime oldPos() const
     {
         return m_oldPos;
     }
 
-    inline MidiTime oldLength() const
+    INLINE MidiTime oldLength() const
     {
         return m_oldLength;
     }
 
-    inline bool isPlaying() const
+    INLINE bool isPlaying() const
     {
         return m_isPlaying;
     }
 
-    inline MidiTime endPos() const
+    INLINE MidiTime endPos() const
     {
         return pos() + qMax<tick_t>(1, m_length);
     }
 
-    inline const MidiTime& length() const
+    INLINE const MidiTime& length() const
     {
         return m_length;
     }
 
-    inline const MidiTime& pos() const
+    INLINE const MidiTime& pos() const
     {
         return m_pos;
     }
 
     // useless and confusing
     /*
-    inline MidiTime pos(MidiTime basePos) const
+    INLINE MidiTime pos(MidiTime basePos) const
     {
         // const int bp = basePos;
         return m_pos - basePos;  // bp;
     }
     */
 
-    inline int key() const
+    INLINE int key() const
     {
         return m_key;
     }
 
-    inline volume_t getVolume() const
+    INLINE volume_t getVolume() const
     {
         return m_volume;
     }
@@ -216,7 +220,7 @@ class EXPORT Note : public SerializingObject
                                                / DefaultVolume));
     }
 
-    inline panning_t getPanning() const
+    INLINE panning_t getPanning() const
     {
         return m_panning;
     }
@@ -226,27 +230,27 @@ class EXPORT Note : public SerializingObject
         return panningToMidi(getPanning());
     }
 
-    inline bool probability() const
+    INLINE bool probability() const
     {
         return m_probability;
     }
 
-    inline bool legato() const
+    INLINE bool legato() const
     {
         return m_legato;
     }
 
-    inline bool marcato() const
+    INLINE bool marcato() const
     {
         return m_marcato;
     }
 
-    inline bool staccato() const
+    INLINE bool staccato() const
     {
         return m_staccato;
     }
 
-    static inline const QString classNodeName()
+    static INLINE const QString classNodeName()
     {
         return "note";
     }
@@ -268,6 +272,7 @@ class EXPORT Note : public SerializingObject
 
     void createDetuning();
 
+    static void    fillRootModel(ComboBoxModel& _model, bool _none = false);
     static int     findKeyNum(QString& _name);  // ex. 70
     static QString findKeyName(int _num);       // ex. A#4
     static QString findNoteName(int _num);      // ex. A#
@@ -300,5 +305,8 @@ class EXPORT Note : public SerializingObject
 
 // typedef QVector<Note*> NoteVector;
 typedef QVector<Note*> Notes;
+
+typedef QVector<const Note*> Chord;
+typedef QVector<Chord>       Chords;
 
 #endif

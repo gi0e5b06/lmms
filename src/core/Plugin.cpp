@@ -52,9 +52,7 @@ Plugin::Plugin(const Descriptor* _descriptor, Model* _parent) :
       Model(_parent, "Plugin"), JournallingObject(), m_descriptor(_descriptor)
 {
     if(m_descriptor == nullptr)
-    {
         m_descriptor = &dummyPluginDescriptor;
-    }
 }
 
 Plugin::~Plugin()
@@ -77,9 +75,11 @@ Plugin* Plugin::instantiate(const QString& _pluginName,
                             void*          _data,
                             bool           _showErrors)
 {
-    qInfo("Plugin::instantiate name=%s data=%p",qPrintable(_pluginName),_data);
-    QString pluginName=_pluginName;
-    if(pluginName=="freeboy") pluginName="papu";
+    qInfo("Plugin::instantiate name=%s data=%p", qPrintable(_pluginName),
+          _data);
+    QString pluginName = _pluginName;
+    if(pluginName == "freeboy")
+        pluginName = "papu";
 
     const PluginFactory::PluginInfo& pi
             = pluginFactory->pluginInfo(pluginName.toUtf8());
@@ -95,7 +95,8 @@ Plugin* Plugin::instantiate(const QString& _pluginName,
                             .arg(pluginFactory->errorString(pluginName)),
                     QMessageBox::Ok | QMessageBox::Default);
         }
-        qInfo("Plugin::instantiate not found: name=%s data=%p",qPrintable(_pluginName),_data);
+        qInfo("Plugin::instantiate not found: name=%s data=%p",
+              qPrintable(_pluginName), _data);
         return new DummyPlugin();
     }
 
@@ -122,13 +123,15 @@ void Plugin::collectErrorForUI(QString errMsg)
     Engine::getSong()->collectError(errMsg);
 }
 
-PluginView* Plugin::createView(QWidget* parent)
+PluginView* Plugin::createView(QWidget* _parent)
 {
-    PluginView* pv = instantiateView(parent);
-    if(pv != nullptr)
-    {
-        pv->setModel(this);
-    }
+    PluginView* pv = instantiateView(_parent);
+
+    // if(pv != nullptr) pv->setModel(this);
+    if(pv != nullptr && pv->model() != this)
+        qWarning("Plugin::createView model is not this: %s",
+                 qPrintable(objectName()));
+
     return pv;
 }
 

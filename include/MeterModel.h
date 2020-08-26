@@ -27,9 +27,10 @@
 
 #include "AutomatableModel.h"
 
-class MeterModel : public Model
+class MeterModel final : public Model
 {
     Q_OBJECT
+
     mapPropertyFromModel(int, getNumerator, setNumerator, m_numeratorModel);
     mapPropertyFromModel(int,
                          getDenominator,
@@ -37,7 +38,7 @@ class MeterModel : public Model
                          m_denominatorModel);
 
   public:
-    MeterModel(Model* _parent);
+    MeterModel(Model* _parent, bool _defaultConstructed = false);
     virtual ~MeterModel();
 
     void saveSettings(QDomDocument&  _doc,

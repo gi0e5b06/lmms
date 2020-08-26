@@ -53,9 +53,14 @@ SET(LMMS_SRCS
 	gui/SongMetaDataDialog.cpp
 	gui/StringPairDrag.cpp
 	gui/SubWindow.cpp
+    gui/TileView.cpp
 	gui/TimeLineWidget.cpp
 	gui/ToolPluginView.cpp
+    gui/TrackView.cpp
 	gui/TrackContainerView.cpp
+
+	gui/audio/EffectChainView.cpp
+	gui/audio/EffectView.cpp
 
 	gui/dialogs/FileDialog.cpp
 	gui/dialogs/VersionedSaveDialog.cpp
@@ -63,10 +68,15 @@ SET(LMMS_SRCS
 	gui/editors/AutomationEditor.cpp
 	gui/editors/BBEditor.cpp
 	gui/editors/Editor.cpp
+	gui/editors/EditorOverlay.cpp
 	gui/editors/PianoRoll.cpp
 	gui/editors/SongEditor.cpp
 
     gui/midi/MidiMapper.cpp
+	#gui/widgets/MidiEffectView.cpp
+	#gui/widgets/MidiEffectRackView.cpp
+	gui/midi/MidiPortMenu.cpp
+	gui/midi/MidiProcessorView.cpp
 
 	gui/widgets/AutomatableActionGroup.cpp
 	gui/widgets/AutomatableButton.cpp
@@ -78,8 +88,6 @@ SET(LMMS_SRCS
 	gui/widgets/ControllerRackView.cpp
 	gui/widgets/ControllerView.cpp
 	gui/widgets/CPULoadWidget.cpp
-	gui/widgets/EffectRackView.cpp
-	gui/widgets/EffectView.cpp
 	gui/widgets/EnvelopeAndLfoView.cpp
 	gui/widgets/FadeButton.cpp
 	gui/widgets/Fader.cpp
@@ -100,10 +108,6 @@ SET(LMMS_SRCS
 	gui/widgets/LcdWidget.cpp
 	gui/widgets/LedCheckBox.cpp
 	gui/widgets/MeterDialog.cpp
-	#gui/widgets/MidiEffectView.cpp
-	#gui/widgets/MidiEffectRackView.cpp
-	gui/widgets/MidiPortMenu.cpp
-	gui/widgets/MidiProcessorView.cpp
     gui/widgets/NStateButton.cpp
 	gui/widgets/PixmapButton.cpp
 	gui/widgets/ProjectNotes.cpp

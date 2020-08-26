@@ -40,7 +40,6 @@
 
 extern "C"
 {
-
     Plugin::Descriptor PLUGIN_EXPORT organic_plugin_descriptor = {
             STRINGIFY(PLUGIN_NAME),
             "Organic",
@@ -50,12 +49,12 @@ extern "C"
             0x0100,
             Plugin::Instrument,
             new PluginPixmapLoader("logo"),
-            NULL,
-            NULL};
+            nullptr,
+            nullptr};
 }
 
-QPixmap*  organicInstrumentView::s_artwork = NULL;
-sample_t* organicInstrument::s_harmonics   = NULL;
+QPixmap*  organicInstrumentView::s_artwork = nullptr;
+sample_t* organicInstrument::s_harmonics   = nullptr;
 
 /***********************************************************************
  *
@@ -105,7 +104,7 @@ organicInstrument::organicInstrument(InstrumentTrack* _instrument_track) :
             m_osc[6]->m_harmonic = log2( 5. );	// .
             m_osc[7]->m_harmonic = log2( 6. );	// .*/
 
-    if(s_harmonics == NULL)
+    if(s_harmonics == nullptr)
     {
         s_harmonics     = new sample_t[NUM_HARMONICS];
         s_harmonics[0]  = log2(0.5);
@@ -126,6 +125,7 @@ organicInstrument::organicInstrument(InstrumentTrack* _instrument_track) :
         s_harmonics[15] = log2(14.);
         s_harmonics[16] = log2(15.);
         s_harmonics[17] = log2(16.);
+        Q_ASSERT(NUM_HARMONICS == 18);
     }
 
     for(int i = 0; i < m_numOscillators; i++)
@@ -209,7 +209,7 @@ void organicInstrument::playNote(NotePlayHandle* _n,
     const fpp_t   frames = _n->framesLeftForCurrentPeriod();
     const f_cnt_t offset = _n->noteOffset();
 
-    if(_n->totalFramesPlayed() == 0 || _n->m_pluginData == NULL)
+    if(_n->totalFramesPlayed() == 0 || _n->m_pluginData == nullptr)
     {
         Oscillator* oscs_l[m_numOscillators];
         Oscillator* oscs_r[m_numOscillators];
@@ -324,11 +324,8 @@ void organicInstrument::randomiseSettings()
     for(int i = 0; i < m_numOscillators; i++)
     {
         m_osc[i]->m_volModel.setValue(intRand(0, 100));
-
         m_osc[i]->m_detuneModel.setValue(intRand(-5, 5));
-
         m_osc[i]->m_panModel.setValue(0);
-
         m_osc[i]->m_oscModel.setValue(intRand(0, 5));
     }
 }
@@ -351,7 +348,7 @@ int organicInstrument::intRand(int min, int max)
 
 PluginView* organicInstrument::instantiateView(QWidget* _parent)
 {
-    return (new organicInstrumentView(this, _parent));
+    return new organicInstrumentView(this, _parent);
 }
 
 class organicKnob : public Knob
@@ -366,7 +363,7 @@ class organicKnob : public Knob
 organicInstrumentView::organicInstrumentView(Instrument* _instrument,
                                              QWidget*    _parent) :
       InstrumentView(_instrument, _parent),
-      m_oscKnobs(NULL)
+      m_oscKnobs(nullptr)
 {
     organicInstrument* oi = castModel<organicInstrument>();
 
@@ -409,10 +406,10 @@ organicInstrumentView::organicInstrumentView(Instrument* _instrument,
 
     connect(m_randBtn, SIGNAL(clicked()), oi, SLOT(randomiseSettings()));
 
-    if(s_artwork == NULL)
-    {
+    if(s_artwork == nullptr)
         s_artwork = new QPixmap(PLUGIN_NAME::getIconPixmap("artwork"));
-    }
+
+    modelChanged();
 }
 
 organicInstrumentView::~organicInstrumentView()
@@ -434,10 +431,8 @@ void organicInstrumentView::modelChanged()
     m_fx1Knob->setModel(&oi->m_fx1Model);
     m_volKnob->setModel(&oi->m_volModel);
 
-    if(m_oscKnobs != NULL)
-    {
+    if(m_oscKnobs != nullptr)
         delete[] m_oscKnobs;
-    }
 
     m_oscKnobs = new OscillatorKnobs[m_numOscillators];
 
@@ -460,12 +455,12 @@ void organicInstrumentView::modelChanged()
         oscKnob->setHintText(tr("Osc %1 waveform:").arg(i + 1), QString());
 
         // setup volume-knob
-        VolumeKnob* volKnob = new VolumeKnob(this);//knobStyled, this);
-        //volKnob->setVolumeKnob(true);
+        Knob* volKnob = new organicKnob(this);  // knobStyled, this);
+        // volKnob->setVolumeKnob(true);
         volKnob->move(x + i * colWidth, y + rowHeight * 1);
-        volKnob->setFixedSize(21, 21);
-        //volKnob->setHintText(tr("Osc %1 volume:").arg(i + 1), "%");
-        volKnob->setDescription(tr("Osc %1 volume:").arg(i + 1));
+        // volKnob->setFixedSize(21, 21);
+        volKnob->setHintText(tr("Osc %1 volume:").arg(i + 1), "%");
+        // volKnob->setDescription(tr("Osc %1 volume:").arg(i + 1));
 
         // setup panning-knob
         Knob* panKnob = new organicKnob(this);

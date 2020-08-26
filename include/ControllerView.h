@@ -47,17 +47,27 @@ class ControllerView : public QWidget, public ModelView
     ControllerView(Controller* _controller, QWidget* _parent);
     virtual ~ControllerView();
 
-    inline Controller* controller()
+    Controller* model()
     {
         return castModel<Controller>();
     }
 
-    inline const Controller* controller() const
+    const Controller* model() const
     {
         return castModel<Controller>();
     }
 
-    virtual void setModel(Model* model, bool isOldModelValid = true);
+    // obsolete
+    Controller* controller()
+    {
+        return castModel<Controller>();
+    }
+    const Controller* controller() const
+    {
+        return castModel<Controller>();
+    }
+
+    void setModel(Model* model) override;  //, bool isOldModelValid = true);
 
   public slots:
     void editControls();

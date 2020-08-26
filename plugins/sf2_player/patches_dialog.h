@@ -2,7 +2,7 @@
  * patches_dialog.h - display sf2 patches
  *
  * Copyright (c) 2008 Paul Giblock <drfaygo/at/gmail/dot/com>
- * 
+ *
  * This file is part of LMMS - https://lmms.io
  *
  * This program is free software; you can redistribute it and/or
@@ -22,74 +22,71 @@
  *
  */
 
-
 #ifndef _PATCHES_DIALOG_H
 #define _PATCHES_DIALOG_H
 
-#include "ui_patches_dialog.h"
 #include "LcdSpinBox.h"
+#include "ui_patches_dialog.h"
+#include "fluidsynthshims.h"
 
-#include <fluidsynth.h>
-#include <QWidget>
 #include <QLabel>
+#include <QWidget>
 
 //----------------------------------------------------------------------------
 // qsynthPresetForm -- UI wrapper form.
 
 class patchesDialog : public QDialog, private Ui::patchesDialog
 {
-	Q_OBJECT
+    Q_OBJECT
 
-public:
+  public:
+    // Constructor.
+    patchesDialog(QWidget* pParent = 0, Qt::WindowFlags wflags = 0);
 
-	// Constructor.
-	patchesDialog(QWidget *pParent = 0, Qt::WindowFlags wflags = 0);
+    // Destructor.
+    virtual ~patchesDialog();
 
-	// Destructor.
-	virtual ~patchesDialog();
+    void setup(fluid_synth_t*   pSynth,
+               int              iChan,
+               const QString&   _chanName,
+               LcdSpinBoxModel* _bankModel,
+               LcdSpinBoxModel* _progModel,
+               QLabel*          _patchLabel);
 
+  public slots:
 
-	void setup(fluid_synth_t *pSynth, int iChan, const QString & _chanName,
-			LcdSpinBoxModel * _bankModel, LcdSpinBoxModel * _progModel, QLabel *_patchLabel );
+    void stabilizeForm();
+    void bankChanged();
+    void progChanged(QTreeWidgetItem* _curr, QTreeWidgetItem* _prev);
 
-public slots:
+  protected slots:
 
-	void stabilizeForm();
-	void bankChanged();
-	void progChanged( QTreeWidgetItem * _curr, QTreeWidgetItem * _prev );
+    void accept();
+    void reject();
 
-protected slots:
+  protected:
+    void setBankProg(int iBank, int iProg);
 
-	void accept();
-	void reject();
+    QTreeWidgetItem* findBankItem(int iBank);
+    QTreeWidgetItem* findProgItem(int iProg);
 
-protected:
+    bool validateForm();
 
-	void setBankProg(int iBank, int iProg);
+  private:
+    // Instance variables.
+    fluid_synth_t* m_pSynth;
 
-	QTreeWidgetItem *findBankItem(int iBank);
-	QTreeWidgetItem *findProgItem(int iProg);
+    int m_iChan;
+    int m_iBank;
+    int m_iProg;
 
-	bool validateForm();
+    // int m_iDirtySetup;
+    // int m_iDirtyCount;
+    int m_dirty;
 
-private:
-
-	// Instance variables.
-	fluid_synth_t *m_pSynth;
-
-	int m_iChan;
-	int m_iBank;
-	int m_iProg;
-
-	//int m_iDirtySetup;
-	//int m_iDirtyCount;
-	int m_dirty;
-
-	LcdSpinBoxModel * m_bankModel;
-	LcdSpinBoxModel * m_progModel;
-	QLabel *m_patchLabel;
+    LcdSpinBoxModel* m_bankModel;
+    LcdSpinBoxModel* m_progModel;
+    QLabel*          m_patchLabel;
 };
 
-
 #endif
-

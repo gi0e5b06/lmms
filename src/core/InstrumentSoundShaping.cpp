@@ -25,7 +25,7 @@
 
 #include "BasicFilters.h"
 #include "Engine.h"
-#include "EnvelopeAndLfoParameters.h"
+#include "EnvelopeAndLfo.h"
 #include "Instrument.h"
 #include "InstrumentPlayHandle.h"
 #include "InstrumentTrack.h"
@@ -121,9 +121,9 @@ InstrumentSoundShaping::InstrumentSoundShaping(
         {
             value_for_zero_amount = 1.0;
         }
-        m_envLfoParameters[i]
-                = new EnvelopeAndLfoParameters(value_for_zero_amount, this);
-        m_envLfoParameters[i]->setDisplayName(
+        m_envLfo[i]
+                = new EnvelopeAndLfo(value_for_zero_amount, this);
+        m_envLfo[i]->setDisplayName(
                 tr(targetNames[i][2].toUtf8().constData()));
     }
 
@@ -214,7 +214,7 @@ InstrumentSoundShaping::~InstrumentSoundShaping()
 {
     // qInfo("InstrumentSoundShaping::~InstrumentSoundShaping START");
     for(int i = 0; i < NumTargets; ++i)
-        DELETE_HELPER(m_envLfoParameters[i])
+        DELETE_HELPER(m_envLfo[i])
     m_instrumentTrack = nullptr;
     // qInfo("InstrumentSoundShaping::~InstrumentSoundShaping END");
 }
@@ -231,7 +231,7 @@ real_t InstrumentSoundShaping::volumeLevel(NotePlayHandle* n,
     }
 
     real_t level;
-    m_envLfoParameters[Volume]->fillLevel(&level, frame, envReleaseBegin, 1,
+    m_envLfo[Volume]->fillLevel(&level, frame, envReleaseBegin, 1,
                                           n->legato(), n->marcato(),
                                           n->staccato());
 
@@ -301,16 +301,16 @@ void InstrumentSoundShaping::processAudioBuffer(sampleFrame*    buffer,
         filter1->setFeedbackAmount(m_filter1FeedbackAmountModel.value());
         filter1->setFeedbackDelay(m_filter1FeedbackDelayModel.value());
 
-        if(m_envLfoParameters[Cut]->isUsed())
+        if(m_envLfo[Cut]->isUsed())
         {
-            m_envLfoParameters[Cut]->fillLevel(cutBuffer, envTotalFrames,
+            m_envLfo[Cut]->fillLevel(cutBuffer, envTotalFrames,
                                                envReleaseBegin, frames,
                                                _legato, _marcato, _staccato);
         }
 
-        if(m_envLfoParameters[Resonance]->isUsed())
+        if(m_envLfo[Resonance]->isUsed())
         {
-            m_envLfoParameters[Resonance]->fillLevel(
+            m_envLfo[Resonance]->fillLevel(
                     resBuffer, envTotalFrames, envReleaseBegin, frames,
                     _legato, _marcato, _staccato);
         }
@@ -319,13 +319,13 @@ void InstrumentSoundShaping::processAudioBuffer(sampleFrame*    buffer,
         const real_t frv = m_filter1ResModel.value();
         const real_t fgv = m_filter1GainModel.value();
 
-        if(m_envLfoParameters[Cut]->isUsed()
-           && m_envLfoParameters[Resonance]->isUsed())
+        if(m_envLfo[Cut]->isUsed()
+           && m_envLfo[Resonance]->isUsed())
         {
             for(fpp_t frame = 0; frame < frames; ++frame)
             {
                 const real_t new_cut_val
-                        = EnvelopeAndLfoParameters::expKnobVal(
+                        = EnvelopeAndLfo::expKnobVal(
                                   cutBuffer[frame])
                                   * CUT_FREQ_MULTIPLIER
                           + fcv;
@@ -352,11 +352,11 @@ void InstrumentSoundShaping::processAudioBuffer(sampleFrame*    buffer,
                 filter1->update(buffer[frame]);
             }
         }
-        else if(m_envLfoParameters[Cut]->isUsed())
+        else if(m_envLfo[Cut]->isUsed())
         {
             for(fpp_t frame = 0; frame < frames; ++frame)
             {
-                real_t new_cut_val = EnvelopeAndLfoParameters::expKnobVal(
+                real_t new_cut_val = EnvelopeAndLfo::expKnobVal(
                                              cutBuffer[frame])
                                              * CUT_FREQ_MULTIPLIER
                                      + fcv;
@@ -376,7 +376,7 @@ void InstrumentSoundShaping::processAudioBuffer(sampleFrame*    buffer,
                 filter1->update(buffer[frame]);
             }
         }
-        else if(m_envLfoParameters[Resonance]->isUsed())
+        else if(m_envLfo[Resonance]->isUsed())
         {
             for(fpp_t frame = 0; frame < frames; ++frame)
             {
@@ -488,10 +488,10 @@ void InstrumentSoundShaping::processAudioBuffer(sampleFrame*    buffer,
         }
     }
 
-    if(m_envLfoParameters[Volume]->isUsed())
+    if(m_envLfo[Volume]->isUsed())
     {
         real_t volBuffer[frames];
-        m_envLfoParameters[Volume]->fillLevel(volBuffer, envTotalFrames,
+        m_envLfo[Volume]->fillLevel(volBuffer, envTotalFrames,
                                               envReleaseBegin, frames,
                                               _legato, _marcato, _staccato);
 
@@ -504,8 +504,8 @@ void InstrumentSoundShaping::processAudioBuffer(sampleFrame*    buffer,
         }
     }
 
-    /*	else if( m_envLfoParameters[Volume]->isUsed() == false &&
-       m_envLfoParameters[PANNING]->isUsed() )
+    /*	else if( m_envLfo[Volume]->isUsed() == false &&
+       m_envLfo[PANNING]->isUsed() )
             {
                     // only use panning-envelope...
                     for( fpp_t frame = 0; frame < frames; ++frame )
@@ -524,16 +524,16 @@ void InstrumentSoundShaping::processAudioBuffer(sampleFrame*    buffer,
 
 f_cnt_t InstrumentSoundShaping::envFrames(const bool _only_vol) const
 {
-    f_cnt_t ret_val = m_envLfoParameters[Volume]->PAHD_Frames();
+    f_cnt_t ret_val = m_envLfo[Volume]->PAHD_Frames();
 
     if(_only_vol == false)
     {
         for(int i = Volume + 1; i < NumTargets; ++i)
         {
-            if(m_envLfoParameters[i]->isUsed()
-               && m_envLfoParameters[i]->PAHD_Frames() > ret_val)
+            if(m_envLfo[i]->isUsed()
+               && m_envLfo[i]->PAHD_Frames() > ret_val)
             {
-                ret_val = m_envLfoParameters[i]->PAHD_Frames();
+                ret_val = m_envLfo[i]->PAHD_Frames();
             }
         }
     }
@@ -542,9 +542,9 @@ f_cnt_t InstrumentSoundShaping::envFrames(const bool _only_vol) const
 
 f_cnt_t InstrumentSoundShaping::releaseFrames() const
 {
-    if(m_envLfoParameters[Volume]->isUsed())
+    if(m_envLfo[Volume]->isUsed())
     {
-        return m_envLfoParameters[Volume]->releaseFrames();
+        return m_envLfo[Volume]->releaseFrames();
     }
     f_cnt_t ret_val = m_instrumentTrack->instrument()
                               ? m_instrumentTrack->instrument()
@@ -553,9 +553,9 @@ f_cnt_t InstrumentSoundShaping::releaseFrames() const
 
     for(int i = Volume + 1; i < NumTargets; ++i)
     {
-        if(m_envLfoParameters[i]->isUsed())
+        if(m_envLfo[i]->isUsed())
         {
-            ret_val = qMax(ret_val, m_envLfoParameters[i]->releaseFrames());
+            ret_val = qMax(ret_val, m_envLfo[i]->releaseFrames());
         }
     }
     return ret_val;
@@ -590,9 +590,9 @@ void InstrumentSoundShaping::saveSettings(QDomDocument& _doc,
 
     for(int i = 0; i < NumTargets; ++i)
     {
-        m_envLfoParameters[i]
+        m_envLfo[i]
                 ->saveState(_doc, _this)
-                .setTagName(m_envLfoParameters[i]->nodeName()
+                .setTagName(m_envLfo[i]->nodeName()
                             + QString(targetNames[i][1]).toLower());
     }
 }
@@ -671,12 +671,12 @@ void InstrumentSoundShaping::loadSettings(const QDomElement& _this)
             for(int i = 0; i < NumTargets; ++i)
             {
                 if(node.nodeName()
-                   == m_envLfoParameters[i]->nodeName()
+                   == m_envLfo[i]->nodeName()
                               + QString(targetNames[i][1]).toLower())
                 {
                     // qInfo("InstrumentSoundShaping: node %s START",
                     //      qPrintable(node.nodeName()));
-                    m_envLfoParameters[i]->restoreState(node.toElement());
+                    m_envLfo[i]->restoreState(node.toElement());
                     // qInfo("InstrumentSoundShaping: node %s END",
                     //      qPrintable(node.nodeName()));
                 }

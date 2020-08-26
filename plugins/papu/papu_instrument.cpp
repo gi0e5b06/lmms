@@ -56,8 +56,8 @@ extern "C"
                nullptr};
 }
 
-papuInstrument::papuInstrument(InstrumentTrack* _instrument_track) :
-      Instrument(_instrument_track, &papu_plugin_descriptor),
+papuInstrument::papuInstrument(InstrumentTrack* _instrumentTrack) :
+      Instrument(_instrumentTrack, &papu_plugin_descriptor),
 
       m_ch1SweepTimeModel(4., 0., 7., 1., this, tr("Sweep time")),
       m_ch1SweepDirModel(false, this, tr("Sweep direction")),
@@ -318,7 +318,7 @@ void papuInstrument::playNote(NotePlayHandle* _n,
 
     const fpp_t   frames = _n->framesLeftForCurrentPeriod();
     const f_cnt_t offset = _n->noteOffset();
-    const int     freq   = _n->frequency(); // int required
+    const int     freq   = _n->frequency();  // int required
 
     if((freq >= 65) && (freq <= 4000))
     {
@@ -538,13 +538,12 @@ papuInstrumentView::papuInstrumentView(Instrument* _instrument,
     m_ch1SweepDirButton = new PixmapButton(this, tr("Sweep Direction 1"));
     m_ch1SweepDirButton->setCheckable(true);
     m_ch1SweepDirButton->move(167, 108);
-    m_ch1SweepDirButton->setActiveGraphic(
-            PLUGIN_NAME::getPixmap("btn_down"));
-    m_ch1SweepDirButton->setInactiveGraphic(
-            PLUGIN_NAME::getPixmap("btn_up"));
+    m_ch1SweepDirButton->setActiveGraphic(PLUGIN_NAME::getPixmap("btn_down"));
+    m_ch1SweepDirButton->setInactiveGraphic(PLUGIN_NAME::getPixmap("btn_up"));
     ToolTip::add(m_ch1SweepDirButton, tr("Sweep Direction"));
 
-    m_ch1VolSweepDirButton = new PixmapButton(this, tr("Volume Sweep Direction"));
+    m_ch1VolSweepDirButton
+            = new PixmapButton(this, tr("Volume Sweep Direction"));
     m_ch1VolSweepDirButton->setCheckable(true);
     m_ch1VolSweepDirButton->move(207, 108);
     m_ch1VolSweepDirButton->setActiveGraphic(
@@ -576,7 +575,8 @@ papuInstrumentView::papuInstrumentView(Instrument* _instrument,
             PLUGIN_NAME::getPixmap("btn_down"));
     ToolTip::add(m_ch4VolSweepDirButton, tr("Volume Sweep Direction"));
 
-    m_ch4ShiftRegWidthButton = new PixmapButton(this, tr("Shift Register Width"));
+    m_ch4ShiftRegWidthButton
+            = new PixmapButton(this, tr("Shift Register Width"));
     m_ch4ShiftRegWidthButton->setCheckable(true);
     m_ch4ShiftRegWidthButton->move(207, 171);
     m_ch4ShiftRegWidthButton->setActiveGraphic(
@@ -650,6 +650,8 @@ papuInstrumentView::papuInstrumentView(Instrument* _instrument,
     m_graph->resize(208, 47);
     ToolTip::add(m_graph, tr("Wave Pattern"));
     m_graph->setWhatsThis(tr("Draw the wave here"));
+
+    modelChanged();
 }
 
 papuInstrumentView::~papuInstrumentView()

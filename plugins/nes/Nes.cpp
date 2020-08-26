@@ -48,8 +48,8 @@ extern "C"
                0x0100,
                Plugin::Instrument,
                new PluginPixmapLoader("logo"),
-               NULL,
-               NULL};
+               nullptr,
+               nullptr};
 }
 
 NesObject::NesObject(NesInstrument*      nes,
@@ -571,7 +571,7 @@ void NesInstrument::playNote(NotePlayHandle* n, sampleFrame* workingBuffer)
     const fpp_t   frames = n->framesLeftForCurrentPeriod();
     const f_cnt_t offset = n->noteOffset();
 
-    if(n->totalFramesPlayed() == 0 || n->m_pluginData == NULL)
+    if(n->totalFramesPlayed() == 0 || n->m_pluginData == nullptr)
     {
         NesObject* nes = new NesObject(
                 this, Engine::mixer()->processingSampleRate(), n);
@@ -731,7 +731,7 @@ void NesInstrument::updateFreq3()
     m_freq3 = powf(2, m_ch3Crs.value() / 12.0f);
 }
 
-QPixmap* NesInstrumentView::s_artwork = NULL;
+QPixmap* NesInstrumentView::s_artwork = nullptr;
 
 NesInstrumentView::NesInstrumentView(Instrument* instrument,
                                      QWidget*    parent) :
@@ -739,12 +739,8 @@ NesInstrumentView::NesInstrumentView(Instrument* instrument,
 {
     setAutoFillBackground(true);
     QPalette pal;
-
-    if(s_artwork == NULL)
-    {
+    if(s_artwork == nullptr)
         s_artwork = new QPixmap(PLUGIN_NAME::getIconPixmap("artwork"));
-    }
-
     pal.setBrush(backgroundRole(), *s_artwork);
     setPalette(pal);
 
@@ -832,55 +828,46 @@ NesInstrumentView::NesInstrumentView(Instrument* instrument,
     m_ch2DutyCycleGrp->addButton(ch2_dc4);
 
     // channel 3
-    makenesled(m_ch3EnabledBtn, KNOB_X1, KNOB_Y3 - 12, tr("Enable channel 3"))
-            makeknob(m_ch3VolumeKnob, KNOB_X1, KNOB_Y3, tr("Volume"), "", "")
-                    makeknob(m_ch3CrsKnob, KNOB_X2, KNOB_Y3,
-                             tr("Coarse detune"), "", "")
+    makenesled(m_ch3EnabledBtn, KNOB_X1, KNOB_Y3 - 12,
+               tr("Enable channel 3"));
+    makeknob(m_ch3VolumeKnob, KNOB_X1, KNOB_Y3, tr("Volume"), "", "");
+    makeknob(m_ch3CrsKnob, KNOB_X2, KNOB_Y3, tr("Coarse detune"), "", "");
 
-            // channel 4
-            makeknob(m_ch4VolumeKnob, KNOB_X1, KNOB_Y4, tr("Volume"), "",
-                     "") makeknob(m_ch4NoiseFreqKnob, KNOB_X2, KNOB_Y4,
-                                  tr("Noise Frequency"), "",
-                                  "") makeknob(m_ch4EnvLenKnob, KNOB_X3,
-                                               KNOB_Y4, tr("Envelope length"),
-                                               "",
-                                               "") makeknob(m_ch4SweepKnob,
-                                                            KNOB_X4, KNOB_Y4,
-                                                            tr("Frequency "
-                                                               "sweep"),
-                                                            "", "")
+    // channel 4
+    makeknob(m_ch4VolumeKnob, KNOB_X1, KNOB_Y4, tr("Volume"), "", "");
+    makeknob(m_ch4NoiseFreqKnob, KNOB_X2, KNOB_Y4, tr("Noise Frequency"), "",
+             "");
+    makeknob(m_ch4EnvLenKnob, KNOB_X3, KNOB_Y4, tr("Envelope length"), "",
+             "");
+    makeknob(m_ch4SweepKnob, KNOB_X4, KNOB_Y4,
+             tr("Frequency "
+                "sweep"),
+             "", "");
 
-                    makenesled(m_ch4EnabledBtn, KNOB_X1, KNOB_Y4 - 12,
-                               tr("Enable channel 4"))
-                            makenesled(
-                                    m_ch4EnvEnabledBtn, KNOB_X3, KNOB_Y4 - 12,
-                                    tr("Enable "
-                                       "envelope "
-                                       "4")) makenesled(m_ch4EnvLoopedBtn,
-                                                        129, KNOB_Y4 - 12,
-                                                        tr("Enable envelope "
-                                                           "4 loop"))
+    makenesled(m_ch4EnabledBtn, KNOB_X1, KNOB_Y4 - 12,
+               tr("Enable channel 4"));
+    makenesled(m_ch4EnvEnabledBtn, KNOB_X3, KNOB_Y4 - 12,
+               tr("Enable "
+                  "envelope "
+                  "4"));
+    makenesled(m_ch4EnvLoopedBtn, 129, KNOB_Y4 - 12,
+               tr("Enable envelope "
+                  "4 loop"));
 
-                                    makenesled(
-                                            m_ch4NoiseQuantizeBtn, 162,
-                                            KNOB_Y4 - 12,
-                                            tr("Quantize noise frequency "
-                                               "when using note frequency"))
+    makenesled(m_ch4NoiseQuantizeBtn, 162, KNOB_Y4 - 12,
+               tr("Quantize noise frequency "
+                  "when using note frequency"));
 
-                                            makenesled(
-                                                    m_ch4NoiseFreqModeBtn,
-                                                    148, 203,
-                                                    tr("Use note frequency "
-                                                       "for noise"))
-                                                    makenesled(
-                                                            m_ch4NoiseModeBtn,
-                                                            148, 224,
-                                                            tr("Noise mode"))
+    makenesled(m_ch4NoiseFreqModeBtn, 148, 203,
+               tr("Use note frequency "
+                  "for noise"));
+    makenesled(m_ch4NoiseModeBtn, 148, 224, tr("Noise mode"));
 
-            // master
-            makeknob(m_masterVolKnob, KNOB_X4, KNOB_Y3, tr("Master Volume"),
-                     "", "") makeknob(m_vibratoKnob, KNOB_X5, KNOB_Y3,
-                                      tr("Vibrato"), "", "")
+    // master
+    makeknob(m_masterVolKnob, KNOB_X4, KNOB_Y3, tr("Master Volume"), "", "");
+    makeknob(m_vibratoKnob, KNOB_X5, KNOB_Y3, tr("Vibrato"), "", "");
+
+    modelChanged();
 }
 
 NesInstrumentView::~NesInstrumentView()

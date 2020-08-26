@@ -79,7 +79,7 @@ TrackView* AutomationTrack::createView(TrackContainerView* tcv)
     return new AutomationTrackView(this, tcv);
 }
 
-Tile* AutomationTrack::createTCO(const MidiTime&)
+Tile* AutomationTrack::createTCO()
 {
     return new AutomationPattern(this);
 }
@@ -109,7 +109,7 @@ AutomationTrackView::AutomationTrackView(AutomationTrack*    _at,
     tlb->move(3, 1);
     tlb->show();
     connect(tlb, SIGNAL(clicked(bool)), this, SLOT(clickedTrackLabel()));
-    setModel(_at);
+    // setModel(_at);
 }
 
 AutomationTrackView::~AutomationTrackView()
@@ -125,10 +125,9 @@ void AutomationTrackView::addSpecificMenu(QMenu* _cm, bool _enabled)
 void AutomationTrackView::recordingOn()
 {
     const Tiles& tcov = track()->getTCOs();
-    for(Tiles::const_iterator it = tcov.begin(); it != tcov.end();
-        ++it)
+    for(Tiles::const_iterator it = tcov.begin(); it != tcov.end(); ++it)
     {
-        AutomationPattern* ap = dynamic_cast<AutomationPattern*>(*it);
+        AutomationPattern* ap = qobject_cast<AutomationPattern*>(*it);
         if(ap != nullptr)
 
             ap->setRecording(true);
@@ -139,10 +138,9 @@ void AutomationTrackView::recordingOn()
 void AutomationTrackView::recordingOff()
 {
     const Tiles& tcov = track()->getTCOs();
-    for(Tiles::const_iterator it = tcov.begin(); it != tcov.end();
-        ++it)
+    for(Tiles::const_iterator it = tcov.begin(); it != tcov.end(); ++it)
     {
-        AutomationPattern* ap = dynamic_cast<AutomationPattern*>(*it);
+        AutomationPattern* ap = qobject_cast<AutomationPattern*>(*it);
         if(ap != nullptr)
             ap->setRecording(false);
     }
@@ -180,7 +178,7 @@ void AutomationTrackView::dropEvent(QDropEvent* _de)
                 pos.setTicks(0);
             }
 
-            Tile*              tco = track()->createTCO(pos);
+            Tile*              tco = track()->createTCO();
             AutomationPattern* pat = dynamic_cast<AutomationPattern*>(tco);
             pat->addObject(mod);
             pat->movePosition(pos);

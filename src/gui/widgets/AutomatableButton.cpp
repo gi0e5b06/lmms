@@ -33,18 +33,21 @@
 #include <QInputDialog>
 #include <QMouseEvent>
 
+AutomatableButton::AutomatableButton(BoolModel* _model, QWidget* _parent) :
+      QPushButton(_parent), BoolModelView(_model, this), m_group(nullptr)
+{
+    initUi();
+}
+
 AutomatableButton::AutomatableButton(QWidget*       _parent,
-                                     const QString& _displayName,
-                                     const QString& _objectName) :
+                                     const QString& _displayName) :
       QPushButton(_parent),
-      BoolModelView(
-              new BoolModel(false, nullptr, _displayName, _objectName, true),
-              this),
+      BoolModelView(this, _displayName),
+      // new BoolModel(false, nullptr, _displayName, _objectName, true),
+      // this),
       m_group(nullptr)
 {
-    setWindowTitle(_displayName);
-    doConnections();
-    setFocusPolicy(Qt::NoFocus);
+    initUi();
 }
 
 AutomatableButton::~AutomatableButton()
@@ -53,11 +56,19 @@ AutomatableButton::~AutomatableButton()
         m_group->removeButton(this);
 }
 
+void AutomatableButton::initUi()
+{
+    BoolModel* m = castModel<BoolModel>();
+    setObjectName(m->objectName() + "Button");
+    setWindowTitle(m->displayName());
+    // setCursor(Qt::PointingHandCursor);
+    setFocusPolicy(Qt::NoFocus);
+}
+
 void AutomatableButton::modelChanged()
 {
     BoolModel* m = model();
-    if(m == nullptr)
-        return;
+    // if(m == nullptr) return;
 
     setWindowTitle(m->displayName());
     if(QPushButton::isChecked() != m->rawValue())
@@ -67,8 +78,7 @@ void AutomatableButton::modelChanged()
 void AutomatableButton::update()
 {
     BoolModel* m = model();
-    if(m == nullptr)
-        return;
+    // if(m == nullptr) return;
 
     if(QPushButton::isChecked() != m->rawValue())
         QPushButton::setChecked(m->rawValue());
@@ -79,8 +89,7 @@ void AutomatableButton::update()
 void AutomatableButton::setChecked(bool _on)
 {
     BoolModel* m = model();
-    if(m == nullptr)
-        return;
+    // if(m == nullptr) return;
 
     // QPushButton::setChecked is called in update-slot
     m->setValue(_on);
@@ -130,10 +139,9 @@ void AutomatableButton::mousePressEvent(QMouseEvent* _me)
         {
             // A group, we must get process it instead
             AutomatableModelView* groupView = (AutomatableModelView*)m_group;
-            new StringPairDrag(
-                    "automatable_model",
-                    QString::number(groupView->modelUntyped()->id()),
-                    QPixmap(), widget());
+            new StringPairDrag("automatable_model",
+                               QString::number(groupView->model()->id()),
+                               QPixmap(), widget());
             // TODO: ^^ Maybe use a predefined icon instead of the button they
             // happened to select
             _me->accept();
@@ -159,8 +167,7 @@ void AutomatableButton::mouseReleaseEvent(QMouseEvent* _me)
 void AutomatableButton::dropEvent(QDropEvent* _de)
 {
     BoolModel* m = model();
-    if(m == nullptr)
-        return;
+    // if(m == nullptr) return;
 
     QString type = StringPairDrag::decodeKey(_de);
     QString val  = StringPairDrag::decodeValue(_de);
@@ -185,8 +192,7 @@ void AutomatableButton::dropEvent(QDropEvent* _de)
 void AutomatableButton::toggle()
 {
     BoolModel* m = model();
-    if(m == nullptr)
-        return;
+    // if(m == nullptr) return;
 
     if(isCheckable() && m_group != nullptr)
     {
@@ -205,7 +211,8 @@ void AutomatableButton::toggle()
 void AutomatableButton::enterValue()
 {
     BoolModel* m = model();
-    if(m == nullptr || !isInteractive())
+    // if(m == nullptr) return;
+    if(!isInteractive())
         return;
 
     bool ok;
@@ -232,9 +239,9 @@ AutomatableButtonGroup::AutomatableButtonGroup(QWidget*       _parent,
                                                const QString& _displayName,
                                                const QString& _objectName) :
       QWidget(_parent),
-      IntModelView(
-              new IntModel(0, 0, 0, nullptr, _displayName, _objectName, true),
-              this)
+      IntModelView(this, _displayName)
+// new IntModel(0, 0, 0, nullptr, _displayName, _objectName, true),
+//      this)
 {
     hide();
     setWindowTitle(_displayName);
@@ -253,6 +260,20 @@ AutomatableButtonGroup::~AutomatableButtonGroup()
         btn->m_group = nullptr;
 }
 
+void AutomatableButtonGroup::doConnections()
+{
+    IntModelView::doConnections();
+    IntModel* m = model();
+    connect(m, SIGNAL(dataChanged()), this, SLOT(updateButtons()));
+}
+
+void AutomatableButtonGroup::undoConnections()
+{
+    IntModelView::undoConnections();
+    IntModel* m = model();
+    disconnect(m, SIGNAL(dataChanged()), this, SLOT(updateButtons()));
+}
+
 void AutomatableButtonGroup::addButton(AutomatableButton* _btn)
 {
     _btn->m_group = this;
@@ -261,11 +282,11 @@ void AutomatableButtonGroup::addButton(AutomatableButton* _btn)
     // disable journalling as we're recording changes of states of
     // button-group members on our own
     _btn->model()->setJournalling(false);
-    m_buttons.push_back(_btn);
+    m_buttons.append(_btn);
 
     IntModel* m = model();
-    if(m != nullptr)
-        m->setRange(0, m_buttons.size() - 1);
+    // if(m != nullptr)
+    m->setRange(0, m_buttons.size() - 1);
     updateButtons();
 }
 
@@ -278,8 +299,7 @@ void AutomatableButtonGroup::removeButton(AutomatableButton* _btn)
 void AutomatableButtonGroup::activateButton(AutomatableButton* _btn)
 {
     IntModel* m = model();
-    if(m == nullptr)
-        return;
+    // if(m == nullptr) return;
 
     if(_btn != m_buttons[m->rawValue()] && m_buttons.indexOf(_btn) != -1)
     {
@@ -292,11 +312,10 @@ void AutomatableButtonGroup::activateButton(AutomatableButton* _btn)
 void AutomatableButtonGroup::modelChanged()
 {
     IntModel* m = model();
-    if(m != nullptr)
-    {
-        setWindowTitle(m->displayName());
-        connect(m, SIGNAL(dataChanged()), this, SLOT(updateButtons()));
-    }
+    // if(m != nullptr)
+    //{
+    setWindowTitle(m->displayName());
+    //}
     IntModelView::modelChanged();
     updateButtons();
 }

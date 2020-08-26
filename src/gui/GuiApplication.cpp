@@ -44,11 +44,11 @@
 #include <QMessageBox>
 #include <QSplashScreen>
 
-GuiApplication* GuiApplication::s_instance = nullptr;
+QPointer<GuiApplication> s_singleton = nullptr;
 
-GuiApplication* GuiApplication::instance()
+GuiApplication* GuiApplication::singleton()
 {
-    return s_instance;
+    return s_singleton;
 }
 
 GuiApplication::GuiApplication(bool showSplashScreen)
@@ -115,13 +115,13 @@ GuiApplication::GuiApplication(bool showSplashScreen)
     splashScreen.update();
     qApp->processEvents();
 
-    connect(Engine::inst(), SIGNAL(initProgress(const QString&)), this,
+    connect(Engine::singleton(), SIGNAL(initProgress(const QString&)), this,
             SLOT(displayInitProgress(const QString&)));
 
     // Init central engine which handles all components of LMMS
     Engine::init(false);
 
-    s_instance = this;
+    s_singleton = this;
 
     displayInitProgress(tr("Preparing UI"));
 
@@ -176,7 +176,7 @@ GuiApplication::GuiApplication(bool showSplashScreen)
 GuiApplication::~GuiApplication()
 {
     // InstrumentTrackView::cleanupWindowCache();
-    s_instance = nullptr;
+    // s_singleton = nullptr;
 }
 
 void GuiApplication::displayInitProgress(const QString& msg)

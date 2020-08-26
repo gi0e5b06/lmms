@@ -62,7 +62,7 @@ EffectView::EffectView(Effect* _model, QWidget* _parent) :
     setFixedSize(m_bg.width(), m_bg.height());
 
     // Disable effects that are of type "DummyEffect"
-    bool isEnabled = !dynamic_cast<DummyEffect*>(effect());
+    bool isEnabled = !dynamic_cast<DummyEffect*>(model());
     m_enabledLCB   = new LedCheckBox(this, "Enabled", LedCheckBox::Green);
     m_enabledLCB->move(19 + 3, 3);
     // m_enabledLCB->setGeometry(0,0,19,19);
@@ -91,7 +91,7 @@ EffectView::EffectView(Effect* _model, QWidget* _parent) :
     // ToolTip::add( m_runningLCB, tr( "On/Off" ) );
 
     m_wetDryKNB = new Knob(knobBright_26, this);
-    m_wetDryKNB->setLabel(tr("D-WET"));
+    m_wetDryKNB->setText(tr("D-WET"));
     m_wetDryKNB->setGeometry(19 + 19, 5, 36, 36);
     m_wetDryKNB->setEnabled(isEnabled);
     m_wetDryKNB->setHintText(tr("Wet Level:"), "");
@@ -101,7 +101,7 @@ EffectView::EffectView(Effect* _model, QWidget* _parent) :
                "forms the output."));
 
     m_autoQuitKNB = new TempoSyncKnob(knobBright_26, this);
-    m_autoQuitKNB->setLabel(tr("DECAY"));
+    m_autoQuitKNB->setText(tr("DECAY"));
     m_autoQuitKNB->setGeometry(19 + 55, 5, 36, 36);
     m_autoQuitKNB->setEnabled(isEnabled);
     m_autoQuitKNB->setHintText(tr("Time:"), "ms");
@@ -114,7 +114,7 @@ EffectView::EffectView(Effect* _model, QWidget* _parent) :
                "effects."));
 
     m_gateInKNB = new Knob(knobBright_26, this);
-    m_gateInKNB->setLabel(tr("GATE"));
+    m_gateInKNB->setText(tr("GATE"));
     m_gateInKNB->setGeometry(19 + 91, 5, 36, 36);
     m_gateInKNB->setEnabled(isEnabled);
     m_gateInKNB->setHintText(tr("Gate:"), "");
@@ -124,7 +124,7 @@ EffectView::EffectView(Effect* _model, QWidget* _parent) :
                "while deciding when to stop processing signals."));
 
     m_balanceKNB = new Knob(knobBright_26, this);
-    m_balanceKNB->setLabel(tr("BAL."));
+    m_balanceKNB->setText(tr("BAL"));
     m_balanceKNB->setGeometry(19 + 127, 5, 36, 36);
     m_balanceKNB->setEnabled(isEnabled);
     m_balanceKNB->setHintText(tr("Balance:"), "");
@@ -139,18 +139,19 @@ EffectView::EffectView(Effect* _model, QWidget* _parent) :
     menuBTN->setFixedSize(20, 20);
     connect(menuBTN, SIGNAL(clicked()), this, SLOT(showContextMenu()));
 
-    if(!effect())
+    Effect* m=model();
+    if(m==nullptr)
         qWarning("EffectView: effect null");
-    else if(!effect()->controls())
+    else if(m->controls()==nullptr)
         qWarning("EffectView: effect controls null");
-    else if(!effect()->controls()->controlCount())
+    else if(m->controls()->controlCount()==0)
         qWarning("EffectView: effect control count 0");
     else
     // if( effect()->controls()->controlCount() > 0 )
     {
         // QPushButton * ctrlBTN = new QPushButton( tr( "Controls" ),this );
         QPushButton* ctrlBTN = new QPushButton(
-                embed::getIconPixmap("configure"), "", this);
+                embed::getIcon("configure"), "", this);
         ctrlBTN->setGeometry(223 - 25, 5 + 3, 20, 20);
         // QFont f = ctrlBTN->font();
         // ctrlBTN->setFont( pointSize<8>( f ) );
@@ -206,6 +207,7 @@ EffectView::EffectView(Effect* _model, QWidget* _parent) :
 
     // move above vst effect view creation
     // setModel( _model );
+    modelChanged();
 }
 
 EffectView::~EffectView()
@@ -225,18 +227,18 @@ EffectView::~EffectView()
 
 void EffectView::cut()
 {
-    effect()->copy();
+    model()->copy();
     removeEffect();
 }
 
 void EffectView::copy()
 {
-    effect()->copy();
+    model()->copy();
 }
 
 void EffectView::paste()
 {
-    // effect()->paste();
+    // model()->paste();
 }
 
 void EffectView::changeName()
@@ -307,7 +309,7 @@ void EffectView::openControls()
 {
     if(m_controlView == nullptr)
     {
-        m_controlView = effect()->controls()->createView();
+        m_controlView = model()->controls()->createView();
         if(m_controlView)
         {
             /*
@@ -362,7 +364,7 @@ void EffectView::cloneEffect()
 
 void EffectView::toggleEffect()
 {
-    effect()->toggleMute();
+    model()->toggleMute();
 }
 
 void EffectView::clearEffect()
@@ -414,7 +416,7 @@ void EffectView::mouseReleaseEvent(QMouseEvent* _me)
     {
         _me->accept();
         if(rect().contains(_me->pos()))
-            Selection::select(effect());
+            Selection::select(model());
     }
 }
 
@@ -550,7 +552,7 @@ void EffectView::paintEvent(QPaintEvent*)
     QPainter p(this);
     p.drawPixmap(0, 0, m_bg);
 
-    p.setBrush(effect()->color());
+    p.setBrush(model()->color());
     lmms::fillRoundedRect(p, QRect(8, 2, width() - 11 + 1, height() - 4 + 1),
                           2, 2);
 
@@ -563,7 +565,7 @@ void EffectView::paintEvent(QPaintEvent*)
         y += s_grip.height();
     }
 
-    Effect* m = effect();
+    Effect* m = model();
 
     QFont ft = pointSizeF(font(), 7.5f);
     ft.setBold(true);
@@ -579,18 +581,18 @@ void EffectView::paintEvent(QPaintEvent*)
 
 void EffectView::modelChanged()
 {
-    Effect* e = effect();
-    m_runningLCB->setModel(&e->m_runningModel);
-    m_enabledLCB->setModel(&e->m_enabledModel);
-    m_clippingLCB->setModel(&e->m_clippingModel);
-    m_wetDryKNB->setModel(&e->m_wetDryModel);
-    m_autoQuitKNB->setModel(&e->m_autoQuitModel);
-    m_gateInKNB->setModel(&e->m_gateModel);
-    m_balanceKNB->setModel(&e->m_balanceModel);
-    m_balanceKNB->setVisible(e->isBalanceable());
+    Effect* m = model();
+    m_runningLCB->setModel(&m->m_runningModel);
+    m_enabledLCB->setModel(&m->m_enabledModel);
+    m_clippingLCB->setModel(&m->m_clippingModel);
+    m_wetDryKNB->setModel(&m->m_wetDryModel);
+    m_autoQuitKNB->setModel(&m->m_autoQuitModel);
+    m_gateInKNB->setModel(&m->m_gateModel);
+    m_balanceKNB->setModel(&m->m_balanceModel);
+    m_balanceKNB->setVisible(m->isBalanceable());
 
-    m_enabledLCB->setVisible(e->isSwitchable());
-    m_wetDryKNB->setVisible(e->isWetDryable());
-    m_autoQuitKNB->setVisible(e->isGateable());
-    m_gateInKNB->setVisible(e->isGateable());
+    m_enabledLCB->setVisible(m->isSwitchable());
+    m_wetDryKNB->setVisible(m->isWetDryable());
+    m_autoQuitKNB->setVisible(m->isGateable());
+    m_gateInKNB->setVisible(m->isGateable());
 }

@@ -25,10 +25,10 @@
 #ifndef GUIAPPLICATION_H
 #define GUIAPPLICATION_H
 
+#include "export.h"
+
 #include <QObject>
 #include <QThread>
-
-#include "export.h"
 
 class QLabel;
 
@@ -45,53 +45,84 @@ class ProjectNotes;
 
 class EXPORT GuiApplication : public QObject
 {
-	Q_OBJECT;
-public:
-	explicit GuiApplication(bool showSplashScreen = true);
-	virtual ~GuiApplication();
+    Q_OBJECT;
 
-	static GuiApplication* instance();
+  public:
+    explicit GuiApplication(bool showSplashScreen = true);
+    virtual ~GuiApplication();
 
-	MainWindow* mainWindow() { return m_mainWindow; }
-	AutomationWindow* automationWindow() { return m_automationWindow; }
-	BBWindow* bbWindow() { return m_bbWindow; }
-	PianoRollWindow* pianoRollWindow() { return m_pianoRollWindow; }
-	SongWindow* songWindow() { return m_songWindow; }
+    static GuiApplication* singleton();
 
-	ControllerRackView* getControllerRackView() { return m_controllerRackView; }
-	FxMixerView* fxMixerView() { return m_fxMixerView; }
-	ProjectNotes* getProjectNotes() { return m_projectNotes; }
+    MainWindow* mainWindow()
+    {
+        return m_mainWindow;
+    }
 
-public slots:
-	void displayInitProgress(const QString &msg);
-	void hasSongFinished();
+    AutomationWindow* automationWindow()
+    {
+        return m_automationWindow;
+    }
 
-private slots:
-	void childDestroyed(QObject *obj);
+    BBWindow* bbWindow()
+    {
+        return m_bbWindow;
+    }
 
-private:
-	static GuiApplication* s_instance;
+    PianoRollWindow* pianoRollWindow()
+    {
+        return m_pianoRollWindow;
+    }
 
-	MainWindow* m_mainWindow;
+    SongWindow* songWindow()
+    {
+        return m_songWindow;
+    }
 
-	AutomationWindow* m_automationWindow;
-	BBWindow* m_bbWindow;
-	PianoRollWindow* m_pianoRollWindow;
-	SongWindow* m_songWindow;
+    ControllerRackView* getControllerRackView()
+    {
+        return m_controllerRackView;
+    }
 
-	ControllerRackView* m_controllerRackView;
-	FxMixerView* m_fxMixerView;
-	ProjectNotes* m_projectNotes;
+    FxMixerView* fxMixerView()
+    {
+        return m_fxMixerView;
+    }
 
-	QLabel* m_loadingProgressLabel;
+    ProjectNotes* getProjectNotes()
+    {
+        return m_projectNotes;
+    }
+
+  public slots:
+    void displayInitProgress(const QString& msg);
+    void hasSongFinished();
+
+  private slots:
+    void childDestroyed(QObject* obj);
+
+  private:
+    // static GuiApplication* s_singleton;
+
+    MainWindow* m_mainWindow;
+
+    AutomationWindow* m_automationWindow;
+    BBWindow*         m_bbWindow;
+    PianoRollWindow*  m_pianoRollWindow;
+    SongWindow*       m_songWindow;
+
+    ControllerRackView* m_controllerRackView;
+    FxMixerView*        m_fxMixerView;
+    ProjectNotes*       m_projectNotes;
+
+    QLabel* m_loadingProgressLabel;
 };
 
-#define gui GuiApplication::instance()
+#define gui GuiApplication::singleton()
 
-#define PAINT_THREAD_CHECK						\
-	if(QThread::currentThread()!=GuiApplication::instance()->thread()) \
-		qWarning("PAINT THREAD CHECK: CT=%s OT=%s %s#%d",	\
-			 qPrintable(QThread::currentThread()->objectName()), \
-			 qPrintable(thread()->objectName()),__FILE__,__LINE__);
+#define PAINT_THREAD_CHECK                                               \
+    if(QThread::currentThread() != GuiApplication::instance()->thread()) \
+        qWarning("PAINT THREAD CHECK: CT=%s OT=%s %s#%d",                \
+                 qPrintable(QThread::currentThread()->objectName()),     \
+                 qPrintable(thread()->objectName()), __FILE__, __LINE__);
 
-#endif // GUIAPPLICATION_H
+#endif  // GUIAPPLICATION_H

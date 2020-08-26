@@ -26,7 +26,7 @@
 #include "MemoryManager.h"
 #include "export.h"
 
-#include <QtGlobal>
+//#include <QtGlobal>
 
 #include <cstdlib>
 #include <cstring>

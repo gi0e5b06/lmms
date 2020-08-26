@@ -306,7 +306,7 @@ QString audioFileProcessor::nodeName(void) const
 
 int audioFileProcessor::getBeatLen(NotePlayHandle* _n) const
 {
-    const double freqFactor = BaseFreq / _n->frequency()
+    const real_t freqFactor = BaseFreq / _n->frequency()
                               * Engine::mixer()->processingSampleRate()
                               / Engine::mixer()->baseSampleRate();
 
@@ -380,7 +380,7 @@ void audioFileProcessor::startPointChanged(void)
     // check if start is over end and swap values if so
     if(m_startPointModel.value() > m_endPointModel.value())
     {
-        float tmp = m_endPointModel.value();
+        real_t tmp = m_endPointModel.value();
         m_endPointModel.setValue(m_startPointModel.value());
         m_startPointModel.setValue(tmp);
     }
@@ -459,9 +459,7 @@ AudioFileProcessorView::AudioFileProcessorView(Instrument* _instrument,
       InstrumentView(_instrument, _parent)
 {
     if(s_artwork == nullptr)
-    {
-        s_artwork = new QPixmap(PLUGIN_NAME::getIconPixmap("artwork"));
-    }
+        s_artwork = new QPixmap(PLUGIN_NAME::getPixmap("artwork"));
 
     m_openAudioFileButton = new PixmapButton(this);
     m_openAudioFileButton->setCursor(QCursor(Qt::PointingHandCursor));
@@ -614,6 +612,7 @@ AudioFileProcessorView::AudioFileProcessorView(Instrument* _instrument,
     connect(castModel<audioFileProcessor>(), SIGNAL(isPlaying(f_cnt_t)),
             m_waveView, SLOT(isPlaying(f_cnt_t)));
 
+    modelChanged();
     setAcceptDrops(true);
 }
 
@@ -951,15 +950,15 @@ void AudioFileProcessorWaveView::paintEvent(QPaintEvent* _pe)
     const f_cnt_t frames = m_to - m_from;
     m_startFrameX        = graph_rect.x()
                     + (m_sampleBuffer.startFrame() - m_from)
-                              * double(graph_rect.width()) / frames;
+                              * real_t(graph_rect.width()) / frames;
     m_endFrameX = graph_rect.x()
                   + (m_sampleBuffer.endFrame() - m_from)
-                            * double(graph_rect.width()) / frames;
+                            * real_t(graph_rect.width()) / frames;
     m_loopFrameX = graph_rect.x()
                    + (m_sampleBuffer.loopStartFrame() - m_from)
-                             * double(graph_rect.width()) / frames;
+                             * real_t(graph_rect.width()) / frames;
     const int played_width_px
-            = (m_framesPlayed - m_from) * double(graph_rect.width()) / frames;
+            = (m_framesPlayed - m_from) * real_t(graph_rect.width()) / frames;
 
     // loop point line
     p.setPen(QColor(0x7F, 0xFF, 0xFF));  // TODO: put into a qproperty
@@ -1087,8 +1086,8 @@ void AudioFileProcessorWaveView::zoom(const bool _out)
     const f_cnt_t step_from = (_out ? -step : step);
     const f_cnt_t step_to   = (_out ? step : -step);
 
-    const double comp_ratio
-            = double(qMin(d_from, d_to)) / qMax(1, qMax(d_from, d_to));
+    const real_t comp_ratio
+            = real_t(qMin(d_from, d_to)) / qMax(1, qMax(d_from, d_to));
 
     f_cnt_t new_from;
     f_cnt_t new_to;
@@ -1114,7 +1113,7 @@ void AudioFileProcessorWaveView::zoom(const bool _out)
                 start);
     }
 
-    if(double(new_to - new_from) / m_sampleBuffer.sampleRate() > 0.05)
+    if(real_t(new_to - new_from) / m_sampleBuffer.sampleRate() > 0.05)
     {
         m_from = new_from;
         m_to   = new_to;
@@ -1123,7 +1122,7 @@ void AudioFileProcessorWaveView::zoom(const bool _out)
 
 void AudioFileProcessorWaveView::slide(int _px)
 {
-    const double fact = qAbs(double(_px) / width());
+    const real_t fact = qAbs(real_t(_px) / width());
     f_cnt_t      step = (m_to - m_from) * fact;
     if(_px > 0)
     {
@@ -1163,7 +1162,7 @@ void AudioFileProcessorWaveView::slideSamplePointByPx(knobType _point,
                                                       int      _px)
 {
     slideSamplePointByFrames(
-            _point, f_cnt_t((double(_px) / width()) * (m_to - m_from)));
+            _point, f_cnt_t((real_t(_px) / width()) * (m_to - m_from)));
 }
 
 void AudioFileProcessorWaveView::slideSamplePointByFrames(knobType _point,
@@ -1188,8 +1187,8 @@ void AudioFileProcessorWaveView::slideSamplePointByFrames(knobType _point,
     }
     else
     {
-        const double v
-                = static_cast<double>(_frames) / m_sampleBuffer.frames();
+        const real_t v
+                = static_cast<real_t>(_frames) / m_sampleBuffer.frames();
         if(_slide_to)
         {
             a_knob->slideTo(v);
@@ -1207,7 +1206,7 @@ void AudioFileProcessorWaveView::slideSampleByFrames(f_cnt_t _frames)
     {
         return;
     }
-    const double v = static_cast<double>(_frames) / m_sampleBuffer.frames();
+    const real_t v = static_cast<real_t>(_frames) / m_sampleBuffer.frames();
     if(m_startKnob)
     {
         m_startKnob->slideBy(v, false);
@@ -1234,7 +1233,7 @@ void AudioFileProcessorWaveView::reverse()
     m_reversed = !m_reversed;
 }
 
-void AudioFileProcessorWaveView::knob::slideTo(double _v, bool _check_bound)
+void AudioFileProcessorWaveView::knob::slideTo(real_t _v, bool _check_bound)
 {
     if(_check_bound && !checkBound(_v))
     {
@@ -1245,30 +1244,30 @@ void AudioFileProcessorWaveView::knob::slideTo(double _v, bool _check_bound)
 }
 
 void AudioFileProcessorWaveView::knob::convert(const QPoint& _p,
-                                               float&        value_,
-                                               float&        dist_)
+                                               real_t&       value_,
+                                               real_t&       dist_)
 {
-    const double dec_fact
+    const real_t dec_fact
             = !m_waveView ? 1
-                          : double(m_waveView->m_to - m_waveView->m_from)
+                          : real_t(m_waveView->m_to - m_waveView->m_from)
                                     / m_waveView->m_sampleBuffer.frames();
-    // const float inc = ::Knob::getValue( _p ) * dec_fact;
+    // const real_t inc = ::Knob::getValue( _p ) * dec_fact;
     ::Knob::convert(_p, value_, dist_);
     value_ *= dec_fact;
 }
 /*
-float AudioFileProcessorWaveView::knob::getValue( const QPoint & _p )
+real_t AudioFileProcessorWaveView::knob::getValue( const QPoint & _p )
 {
-        const double dec_fact = ! m_waveView ? 1 :
-                double( m_waveView->m_to - m_waveView->m_from )
+        const real_t dec_fact = ! m_waveView ? 1 :
+                real_t( m_waveView->m_to - m_waveView->m_from )
                         / m_waveView->m_sampleBuffer.frames();
-        const float inc = ::Knob::getValue( _p ) * dec_fact;
+        const real_t inc = ::Knob::getValue( _p ) * dec_fact;
 
         return inc;
 }
 */
 
-bool AudioFileProcessorWaveView::knob::checkBound(double _v) const
+bool AudioFileProcessorWaveView::knob::checkBound(real_t _v) const
 {
     if(!m_relatedKnob || !m_waveView)
     {
@@ -1279,11 +1278,11 @@ bool AudioFileProcessorWaveView::knob::checkBound(double _v) const
        != (m_relatedKnob->model()->value() - model()->value() >= 0))
         return false;
 
-    const double d1 = qAbs(m_relatedKnob->model()->value() - model()->value())
+    const real_t d1 = qAbs(m_relatedKnob->model()->value() - model()->value())
                       * (m_waveView->m_sampleBuffer.frames())
                       / m_waveView->m_sampleBuffer.sampleRate();
 
-    const double d2 = qAbs(m_relatedKnob->model()->value() - _v)
+    const real_t d2 = qAbs(m_relatedKnob->model()->value() - _v)
                       * (m_waveView->m_sampleBuffer.frames())
                       / m_waveView->m_sampleBuffer.sampleRate();
 

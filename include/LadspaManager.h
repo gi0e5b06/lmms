@@ -77,7 +77,7 @@ typedef struct ladspaManagerStorage
     uint16_t                   outputChannels;
 } ladspaManagerDescription;
 
-class EXPORT LadspaManager
+class EXPORT LadspaManager : public QObject
 {
   public:
     LadspaManager();

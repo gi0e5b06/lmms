@@ -60,7 +60,7 @@ Piano::Piano(InstrumentTrack* _track) :
       Model(_track, tr("Piano"), "piano"),
       // m_mutex(QMutex::Recursive),
       m_instrumentTrack(_track)
-      // m_midiEvProc(_track)
+// m_midiEvProc(_track)
 {
     reset();
 }
@@ -164,7 +164,8 @@ QMutexLocker lock(const_cast<QMutex*>(&m_mutex));
 return isValidKey(_key) ? (m_pressedKeys[_key] > 0) : false;
     */
 
-    return m_instrumentTrack->isKeyPressed(_key);
+    return !m_instrumentTrack.isNull()
+           && m_instrumentTrack->isKeyPressed(_key);
 }
 
 /*! \brief Handle a note being pressed on our keyboard display

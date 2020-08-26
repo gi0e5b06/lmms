@@ -2,7 +2,7 @@
  * NStateButton.cpp - implementation of n-state-button
  *
  * Copyright (c) 2005-2006 Tobias Doerffel <tobydox/at/users.sourceforge.net>
- * 
+ *
  * This file is part of LMMS - https://lmms.io
  *
  * This program is free software; you can redistribute it and/or
@@ -21,93 +21,56 @@
  * Boston, MA 02110-1301 USA.
  *
  */
- 
+
+#include "NStateButton.h"
+
+#include "ToolTip.h"
 
 #include <QMouseEvent>
 
-#include "NStateButton.h"
-#include "ToolTip.h"
-
-
-
-NStateButton::NStateButton( QWidget * _parent ) :
-	ToolButton( _parent ),
-	m_generalToolTip( "" ),
-	m_curState( -1 )
+NStateButton::NStateButton(QWidget* _parent) :
+      ToolButton(_parent), m_generalToolTip(""), m_curState(-1)
 {
 }
-
-
-
 
 NStateButton::~NStateButton()
 {
-	while( m_states.size() )
-	{
-		m_states.erase( m_states.begin() );
-	}
+    // while(m_states.size())
+    //    m_states.erase(m_states.begin());
+    m_states.clear();
 }
 
-
-
-
-void NStateButton::addState( const QPixmap & _pm, const QString & _tooltip )
+void NStateButton::addState(const QPixmap& _pm, const QString& _tooltip)
 {
-	m_states.push_back( qMakePair( _pm, _tooltip ) );
-	// first inserted pixmap?
-	if( m_states.size() == 1 )
-	{
-		// and set state to first pixmap
-		changeState( 0 );
-	}
+    m_states.push_back(qMakePair(_pm, _tooltip));
+    // first inserted pixmap?
+    if(m_states.size() == 1)
+    {
+        // and set state to first pixmap
+        changeState(0);
+    }
 }
 
-
-
-
-void NStateButton::changeState( int _n )
+void NStateButton::changeState(int _n)
 {
-	if( _n >= 0 && _n < (int) m_states.size() )
-	{
-		m_curState = _n;
+    if(_n >= 0 && _n < m_states.size())
+    {
+        m_curState = _n;
 
-		const QString & _tooltip =
-			( m_states[m_curState].second != "" ) ?
-				m_states[m_curState].second :
-					m_generalToolTip;
-		ToolTip::add( this, _tooltip );
+        const QString& _tooltip = (m_states[m_curState].second != "")
+                                          ? m_states[m_curState].second
+                                          : m_generalToolTip;
+        ToolTip::add(this, _tooltip);
 
-		setIcon( m_states[m_curState].first );
+        setIcon(m_states[m_curState].first);
 
-		emit changedState( m_curState );
-	}
-}
-
-
-
-void NStateButton::mousePressEvent( QMouseEvent * _me )
-{
-	//qWarning("NStateButton::mousePressEvent()");
-
-	if( _me->button() == Qt::LeftButton ) moveToNextState();
-
-	/*
-	&& m_states.size() )
-	if( _me->button() == Qt::LeftButton && m_states.size() )
-	{
-		changeState( ( ++m_curState ) % m_states.size() );
-	}
-	*/
-
-	//ToolButton::mousePressEvent( _me );
+        emit changedState(m_curState);
+    }
 }
 
 void NStateButton::moveToNextState()
 {
-	//qWarning("NStateButton::moveToNextState() %d",m_states.size());
-
-	if( m_states.size() )
-	{
-		changeState( ( ++m_curState ) % m_states.size() );
-	}
+    // qWarning("NStateButton::moveToNextState() %d",m_states.size());
+    if(m_states.size())
+        changeState((++m_curState) % m_states.size());
 }

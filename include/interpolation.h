@@ -50,28 +50,29 @@ inline FLOAT
     const FLOAT frsq  = x * x;
     const FLOAT frsq2 = 2.f * frsq;
 
-    return (((v2 - v0) * 0.5f) * (x * (frsq + 1.f) - frsq2)
-            + (frsq2 * x - 3.f * frsq) * (v1 - v2)
-            + frsq2 * (x - 1.f) * ((v3 - v1) * 0.25f) + v1);
+    return (((v2 - v0) * 0.5f) * (x * (frsq + 1.f) - frsq2)   // REQUIRED
+            + (frsq2 * x - 3.f * frsq) * (v1 - v2)            // REQUIRED
+            + frsq2 * (x - 1.f) * ((v3 - v1) * 0.25f) + v1);  // REQUIRED
 }
 
 inline FLOAT cubicInterpolate(FLOAT v0, FLOAT v1, FLOAT v2, FLOAT v3, FLOAT x)
 {
-    FLOAT frsq = x * x;
-    FLOAT frcu = frsq * v0;
-    FLOAT t1   = v3 + 3 * v1;
+    const FLOAT frsq = x * x;
+    const FLOAT frcu = frsq * v0;
+    const FLOAT t1   = v3 + 3 * v1;
 
     return (v1
-            + fastFmaf(0.5f, frcu, x)
-                      * (v2 - frcu * (1.f / 6.f)
-                         - fastFmaf(t1, (1.f / 6.f), -v0) * (1.f / 3.f))
-            + frsq * x * (t1 * (1.f / 6.f) - 0.5f * v2)
-            + frsq * fastFmaf(0.5f, v2, -v1));
+            + fastFmaf(0.5f, frcu, x)                      // REQUIRED
+                      * (v2 - frcu * (1.f / 6.f)           // REQUIRED
+                         - fastFmaf(t1, (1.f / 6.f), -v0)  // REQUIRED
+                                   * (1.f / 3.f))          // REQUIRED
+            + frsq * x * (t1 * (1.f / 6.f) - 0.5f * v2)    // REQUIRED
+            + frsq * fastFmaf(0.5f, v2, -v1));             // REQUIRED
 }
 
 inline FLOAT cosinusInterpolate(FLOAT v0, FLOAT v1, FLOAT x)
 {
-    const FLOAT f = (1.f - cosf(x * F_PI)) * 0.5f;
+    const FLOAT f = (1.f - cosf(x * F_PI)) * 0.5f;  // REQUIRED
 
     return fastFmaf(f, v1 - v0, v0);  // FLOAT
 }
@@ -104,14 +105,14 @@ inline FLOAT
     const FLOAT even2 = v3 + v0;
     const FLOAT odd2  = v3 - v0;
 
-    const FLOAT c0
-            = even1 * 0.45868970870461956f + even2 * 0.04131401926395584f;
-    const FLOAT c1
-            = odd1 * 0.48068024766578432f + odd2 * 0.17577925564495955f;
-    const FLOAT c2
-            = even1 * -0.246185007019907091f + even2 * 0.24614027139700284f;
-    const FLOAT c3
-            = odd1 * -0.36030925263849456f + odd2 * 0.10174985775982505f;
+    const FLOAT c0 = even1 * 0.45868970870461956f +    // RQEUIRED
+                     even2 * 0.04131401926395584f;     // REQUIRED
+    const FLOAT c1 = odd1 * 0.48068024766578432f +     // REQUIRED
+                     odd2 * 0.17577925564495955f;      // REQUIRED
+    const FLOAT c2 = even1 * -0.246185007019907091f +  // REQUIRED
+                     even2 * 0.24614027139700284f;     // REQUIRED
+    const FLOAT c3 = odd1 * -0.36030925263849456f +    // REQUIRED
+                     odd2 * 0.10174985775982505f;      // REQUIRED
 
     return fastFmaf(fastFmaf(fastFmaf(c3, z, c2), z, c1), z, c0);  // FLOAT
 }

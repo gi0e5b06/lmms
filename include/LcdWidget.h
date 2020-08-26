@@ -27,6 +27,7 @@
 
 #include "Widget.h"
 #include "export.h"
+#include "lmms_basics.h"
 
 #include <QMap>
 //#include <QWidget>
@@ -38,7 +39,7 @@ class EXPORT LcdWidget : public Widget
     // theming qproperties
     Q_PROPERTY(QColor textColor READ textColor WRITE setTextColor)
     Q_PROPERTY(QColor textShadowColor READ textShadowColor WRITE
-                                                           setTextShadowColor)
+                       setTextShadowColor)
 
   public:
     LcdWidget(QWidget* parent, const QString& name = "[lcd widget]");
@@ -67,11 +68,12 @@ class EXPORT LcdWidget : public Widget
 
     Q_PROPERTY(int numDigits READ numDigits WRITE setNumDigits)
 
-    inline int numDigits() const
+    INLINE int numDigits() const
     {
         return m_numDigits;
     }
-    inline void setNumDigits(int n)
+
+    INLINE void setNumDigits(int n)
     {
         m_numDigits = n;
         updateSize();

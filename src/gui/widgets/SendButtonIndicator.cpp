@@ -1,64 +1,63 @@
 #include "SendButtonIndicator.h"
 
 #include "FxMixer.h"
-
+#include "FxMixerView.h"
 #include "embed.h"
 
+static PixmapLoader s_qpmOff("mixer_send_off");
+static PixmapLoader s_qpmOn("mixer_send_on");
 
-QPixmap * SendButtonIndicator::s_qpmOff = NULL;
-QPixmap * SendButtonIndicator::s_qpmOn = NULL;
-
-SendButtonIndicator:: SendButtonIndicator( QWidget * _parent, FxLine * _owner,
-										   FxMixerView * _mv) :
-	QLabel( _parent ),
-	m_parent( _owner ),
-	m_mv( _mv )
+SendButtonIndicator::SendButtonIndicator(QWidget*  _parent,
+                                         IntModel* _currentLine,
+                                         IntModel* _channelIndex) :
+      QLabel(_parent),
+      m_currentLine(_currentLine), m_channelIndex(_channelIndex)
 {
-	if( ! s_qpmOff )
-	{
-		s_qpmOff = new QPixmap( embed::getIconPixmap( "mixer_send_off", 29, 20 ) );
-	}
-	
-	if( ! s_qpmOn )
-	{
-		s_qpmOn = new QPixmap( embed::getIconPixmap( "mixer_send_on", 29, 20 ) );
-	}
-	
-	// don't do any initializing yet, because the FxMixerView and FxLine
-	// that were passed to this constructor are not done with their constructors
-	// yet.
-	setPixmap( *s_qpmOff );
+    /*
+    if(s_qpmOff == nullptr)
+        s_qpmOff
+                = new QPixmap(embed::getPixmap("mixer_send_off", 29, 20));
+
+    if(s_qpmOn == nullptr)
+        s_qpmOn = new QPixmap(embed::getPixmap("mixer_send_on", 29, 20));
+    */
+
+    // don't do any initializing yet, because the FxMixerView and FxLine
+    // that were passed to this constructor are not done with their
+    // constructors yet.
+    setPixmap(s_qpmOff);
 }
 
-void SendButtonIndicator::mousePressEvent( QMouseEvent * e )
+void SendButtonIndicator::mousePressEvent(QMouseEvent* e)
 {
-	FxMixer * mix = Engine::fxMixer();
-	int from = m_mv->currentFxLine()->channelIndex();
-	int to = m_parent->channelIndex();
-	FloatModel * sendModel = mix->channelSendModel(from, to);
-	if( sendModel == NULL )
-	{
-		// not sending. create a mixer send.
-		mix->createChannelSend( from, to );
-	}
-	else
-	{
-		// sending. delete the mixer send.
-		mix->deleteChannelSend( from, to );
-	}
+    const int  from      = m_currentLine->value();
+    const int  to        = m_channelIndex->value();
+    FxMixer*   mix       = Engine::fxMixer();
+    RealModel* sendModel = mix->channelSendModel(from, to);
+    if(sendModel == nullptr)
+    {
+        // not sending. create a mixer send.
+        mix->createChannelSend(from, to);
+    }
+    else
+    {
+        // sending. delete the mixer send.
+        mix->deleteChannelSend(from, to);
+    }
 
-	m_mv->updateFxLine(m_parent->channelIndex());
-	updateLightStatus();
+    emit sendModelChanged(m_channelIndex->value());
+    // m_mv->updateFxLine(m_owner->channelIndex());
+    updateLightStatus();
 }
 
-FloatModel * SendButtonIndicator::getSendModel()
+RealModel* SendButtonIndicator::sendModel()
 {
-	FxMixer * mix = Engine::fxMixer();
-	return mix->channelSendModel(
-		m_mv->currentFxLine()->channelIndex(), m_parent->channelIndex());
+    FxMixer* mix = Engine::fxMixer();
+    return mix->channelSendModel(m_currentLine->value(),
+                                 m_channelIndex->value());
 }
 
 void SendButtonIndicator::updateLightStatus()
 {
-	setPixmap( getSendModel() == NULL ? *s_qpmOff : *s_qpmOn );
+    setPixmap(sendModel() == nullptr ? s_qpmOff : s_qpmOn);
 }

@@ -32,7 +32,7 @@
 class SongMetaDataDialog : public QDialog, public Ui::SongMetaDataDialog
 {
     Q_OBJECT
-    
+
   public:
     SongMetaDataDialog(QWidget* _parent = nullptr);
     virtual ~SongMetaDataDialog();

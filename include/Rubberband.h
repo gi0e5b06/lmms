@@ -26,8 +26,14 @@
 #ifndef RUBBERBAND_H_
 #define RUBBERBAND_H_
 
+#include "lmms_basics.h"
+
 #include <QRubberBand>
 #include <QVector>
+
+class SelectableObject;
+
+typedef QVector<SelectableObject*> SelectableObjects;
 
 class SelectableObject : public QWidget
 {
@@ -42,7 +48,7 @@ class SelectableObject : public QWidget
     {
     }
 
-    inline void setSelected(bool _selected)
+    INLINE void setSelected(bool _selected)
     {
         if(m_selected != _selected)
         {
@@ -51,15 +57,14 @@ class SelectableObject : public QWidget
         }
     }
 
-    inline bool isSelected() const
+    INLINE bool isSelected() const
     {
         return m_selected;
     }
 
-    static inline bool lessThan(SelectableObject*& a, SelectableObject*& b)
+    static INLINE bool lessThan(SelectableObject* a, SelectableObject* b)
     {
-        return (a->x() < b->x())
-               || ((a->x() == b->x()) && (a->y() < b->y()));
+        return (a->x() < b->x()) || ((a->x() == b->x()) && (a->y() < b->y()));
     }
 
   public slots:
@@ -78,8 +83,8 @@ class RubberBand : public QRubberBand
     RubberBand(QWidget* _parent);
     virtual ~RubberBand();
 
-    QVector<SelectableObject*> selectedObjects() const;
-    QVector<SelectableObject*> selectableObjects() const;
+    SelectableObjects selectedObjects() const;
+    SelectableObjects selectableObjects() const;
 
   protected:
     virtual void resizeEvent(QResizeEvent* _re);

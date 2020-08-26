@@ -73,8 +73,10 @@ SampleBuffer::SampleBuffer(const SampleBuffer& _other) :
       m_stretching(_other.m_stretching), m_predelay(_other.m_predelay),
       m_postdelay(_other.m_postdelay),
       m_amplification(_other.m_amplification), m_reversed(_other.m_reversed),
-      m_frequency(BaseFreq), m_sampleRate(Engine::mixer()->baseSampleRate())
+      m_frequency(BaseFreq), m_sampleRate(Engine::mixer()->baseSampleRate()), m_pointer(nullptr)
 {
+    m_pointer = new SampleBufferPointer(this);
+
     if(!m_mmapped)
     {
         m_origData   = nullptr;
@@ -94,8 +96,10 @@ SampleBuffer::SampleBuffer(const QString& _audioFile,
       m_frames(0), m_startFrame(0), m_endFrame(0), m_loopStartFrame(0),
       m_loopEndFrame(0), m_stretching(0.), m_predelay(0.), m_postdelay(0.),
       m_amplification(1.), m_reversed(false), m_frequency(BaseFreq),
-      m_sampleRate(Engine::mixer()->baseSampleRate())
+      m_sampleRate(Engine::mixer()->baseSampleRate()), m_pointer(nullptr)
 {
+    m_pointer = new SampleBufferPointer(this);
+
     if(_isBase64Data == true)
     {
         loadFromBase64(_audioFile);
@@ -116,8 +120,10 @@ SampleBuffer::SampleBuffer(const sampleFrame* _data,
       m_frames(0), m_startFrame(0), m_endFrame(0), m_loopStartFrame(0),
       m_loopEndFrame(0), m_stretching(0.), m_predelay(0.), m_postdelay(0.),
       m_amplification(1.), m_reversed(false), m_frequency(BaseFreq),
-      m_sampleRate(Engine::mixer()->baseSampleRate())
+      m_sampleRate(Engine::mixer()->baseSampleRate()), m_pointer(nullptr)
 {
+    m_pointer = new SampleBufferPointer(this);
+
     if(_frames > 0)
     {
         m_origData = MM_ALLOC(sampleFrame, _frames);
@@ -139,6 +145,8 @@ SampleBuffer::SampleBuffer(const f_cnt_t _frames, bool _sampleRateDependent) :
       m_predelay(0.), m_postdelay(0.), m_amplification(1.), m_reversed(false),
       m_frequency(BaseFreq), m_sampleRate(Engine::mixer()->baseSampleRate())
 {
+    m_pointer = new SampleBufferPointer(this);
+
     if(_frames > 0)
     {
         m_origData = MM_ALLOC(sampleFrame, _frames);
@@ -2075,7 +2083,7 @@ f_cnt_t SampleBuffer::decodeSampleMPG123(const char*    _infile,
     cleanupMPG123(mh);
 
     const f_cnt_t frames = samples / channels;
-    const float*  c      = (const float*)(b.constData());
+    const FLOAT*  c      = (const FLOAT*)(b.constData());
 
     buf_ = new sample_t[2 * frames];
     for(f_cnt_t f = 0; f < frames; f++)

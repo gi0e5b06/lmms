@@ -60,10 +60,9 @@ void ProjectJournal::undo()
             o->saveState(curState, curState.content());
             m_redoCheckPoints.push(CheckPoint(c.joID, curState));
 
-            bool prev = isJournalling();
-            setJournalling(false);
+            bool was = testAndSetJournalling(false);
             o->restoreState(c.data.content().firstChildElement());
-            setJournalling(prev);
+            setJournalling(was);
             Engine::song()->setModified();
             break;
         }
@@ -83,10 +82,9 @@ void ProjectJournal::redo()
             o->saveState(curState, curState.content());
             m_undoCheckPoints.push(CheckPoint(c.joID, curState));
 
-            bool prev = isJournalling();
-            setJournalling(false);
+            bool was = testAndSetJournalling(false);
             o->restoreState(c.data.content().firstChildElement());
-            setJournalling(prev);
+            setJournalling(was);
             Engine::song()->setModified();
             break;
         }

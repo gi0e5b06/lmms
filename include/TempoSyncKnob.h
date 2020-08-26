@@ -37,6 +37,7 @@ class MeterDialog;
 class EXPORT TempoSyncKnob : public Knob
 {
     Q_OBJECT
+
   public:
     TempoSyncKnob(QWidget*       parent = nullptr,
                   const QString& name   = "[tempo knob]");

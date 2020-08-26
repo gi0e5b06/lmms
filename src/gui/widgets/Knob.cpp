@@ -52,38 +52,51 @@
 
 TextFloat* Knob::s_textFloat = nullptr;
 
-// new FloatModel(0.7f,0.f,1.f,0.01f, nullptr, _name, true ), this ),
+// new FloatModel(0.7,0.,1.,0.01, nullptr, _name, true ), this ),
 
-Knob::Knob(QWidget* _parent, const QString& _name) :
-      Knob(knobBright_26, _parent, _name)
-{
-}
-
-Knob::Knob(knobTypes _knob_num, QWidget* _parent, const QString& _name) :
-      Widget(_parent), FloatModelView(nullptr, this), m_pressLeft(false),
-      m_text(""), /*m_interactive(true), */ m_knobPixmap(nullptr),
-      m_angle(-1000.f),
+Knob::Knob(RealModel* _model, QWidget* _parent, knobTypes _knobNum) :
+      Widget(_parent), RealModelView(_model, this), m_pressLeft(false),
+      m_text(""),
+      /*m_interactive(true), */ m_knobPixmap(nullptr), m_angle(-1000.),
       // m_cache( nullptr ),
-      m_lineWidth(0.f), m_textColor(255, 255, 255), m_knobNum(_knob_num)
+      m_lineWidth(0.), m_textColor(255, 255, 255), m_knobNum(_knobNum)
 {
-    initUi(_name);
+    initUi();
 }
 
-void Knob::initUi(const QString& _name)
+Knob::Knob(QWidget* _parent, const QString& _displayName) :
+      Knob(knobBright_26, _parent, _displayName)
 {
-    // qRegisterMetaType<knobTypes>("knobTypes");
+}
 
+Knob::Knob(knobTypes      _knob_num,
+           QWidget*       _parent,
+           const QString& _displayName) :
+      Widget(_parent),
+      RealModelView(this, _displayName), m_pressLeft(false), m_text(""),
+      /*m_interactive(true), */ m_knobPixmap(nullptr), m_angle(-1000.),
+      // m_cache( nullptr ),
+      m_lineWidth(0.), m_textColor(255, 255, 255), m_knobNum(_knob_num)
+{
+    initUi();
+}
+
+void Knob::initUi()
+{
     if(s_textFloat == nullptr)
-        s_textFloat = new TextFloat;
+        s_textFloat = new TextFloat();
 
-    setWindowTitle(_name);
+    RealModel* m = castModel<RealModel>();
+    setObjectName(m->objectName() + "Knob");
+    setWindowTitle(m->displayName());
     setCursor(Qt::PointingHandCursor);
+    // setAttribute(Qt::WA_DeleteOnClose, true);
     // setAttribute(Qt::WA_OpaquePaintEvent);
 
     onKnobNumUpdated();
-    setTotalAngle(270.0f);
-    setInnerRadius(1.0f);
-    setOuterRadius(10.0f);
+    setTotalAngle(270.);
+    setInnerRadius(1.);
+    setOuterRadius(10.);
     setFocusPolicy(Qt::ClickFocus);
 
     // This is a workaround to enable style sheets for knobs which are not
@@ -144,7 +157,7 @@ void Knob::onKnobNumUpdated()
         // If knobFilename is still empty here we should get the fallback
         // pixmap of size 1x1
         m_knobPixmap = new QPixmap(
-                embed::getIconPixmap(knobFilename.toUtf8().constData()));
+                embed::getPixmap(knobFilename.toUtf8().constData()));
 
         setMinimumSize(m_knobPixmap->width(), m_knobPixmap->height());
         resize(m_knobPixmap->width(), m_knobPixmap->height());
@@ -154,8 +167,11 @@ void Knob::onKnobNumUpdated()
 
 Knob::~Knob()
 {
-    if(m_knobPixmap)
+    if(m_knobPixmap != nullptr)
+    {
         delete m_knobPixmap;
+        m_knobPixmap = nullptr;
+    }
     // if( m_cache ) delete m_cache;
 }
 
@@ -191,7 +207,7 @@ void Knob::onTextUpdated()
     int            h = m_knobPixmap->height();
     if(!t.isEmpty())
     {
-        const QFont        ft = pointSizeF(font(), 7.f);
+        const QFont        ft = pointSizeF(font(), 7.);
         const QFontMetrics mx(ft);
         w = qMax<int>(w, qMin<int>(2 * w, mx.width(t)));
         h += 7;  // 10;
@@ -222,10 +238,10 @@ void Knob::setInteractive(bool _b)
 }
 */
 
-void Knob::setTotalAngle(float angle)
+void Knob::setTotalAngle(real_t angle)
 {
-    if(angle < 10.f)
-        angle = 10.f;
+    if(angle < 10.)
+        angle = 10.;
 
     if(angle != m_totalAngle)
     {
@@ -234,22 +250,22 @@ void Knob::setTotalAngle(float angle)
     }
 }
 
-float Knob::innerRadius() const
+real_t Knob::innerRadius() const
 {
     return m_innerRadius;
 }
 
-void Knob::setInnerRadius(float r)
+void Knob::setInnerRadius(real_t r)
 {
     m_innerRadius = r;
 }
 
-float Knob::outerRadius() const
+real_t Knob::outerRadius() const
 {
     return m_outerRadius;
 }
 
-void Knob::setOuterRadius(float r)
+void Knob::setOuterRadius(real_t r)
 {
     m_outerRadius = r;
 }
@@ -273,32 +289,32 @@ QPointF Knob::centerPoint() const
     return m_centerPoint;
 }
 
-float Knob::centerPointX() const
+real_t Knob::centerPointX() const
 {
     return m_centerPoint.x();
 }
 
-void Knob::setCenterPointX(float c)
+void Knob::setCenterPointX(real_t c)
 {
     m_centerPoint.setX(c);
 }
 
-float Knob::centerPointY() const
+real_t Knob::centerPointY() const
 {
     return m_centerPoint.y();
 }
 
-void Knob::setCenterPointY(float c)
+void Knob::setCenterPointY(real_t c)
 {
     m_centerPoint.setY(c);
 }
 
-float Knob::lineWidth() const
+real_t Knob::lineWidth() const
 {
     return m_lineWidth;
 }
 
-void Knob::setLineWidth(float w)
+void Knob::setLineWidth(real_t w)
 {
     m_lineWidth = w;
 }
@@ -362,12 +378,12 @@ void Knob::setTextColor(const QColor& c)
 }
 
 QLineF Knob::calculateLine(const QPointF& _mid,
-                           float          _outerRadius,
-                           float          _innerRadius) const
+                           real_t         _outerRadius,
+                           real_t         _innerRadius) const
 {
-    const float rarc = m_angle * F_PI / 180.f;
-    const float ca   = cos(rarc);
-    const float sa   = -sin(rarc);
+    const real_t rarc = m_angle * F_PI / 180.;
+    const real_t ca   = cos(rarc);
+    const real_t sa   = -sin(rarc);
 
     return QLineF(_mid.x() - sa * _innerRadius, _mid.y() - ca * _innerRadius,
                   _mid.x() - sa * _outerRadius, _mid.y() - ca * _outerRadius);
@@ -375,17 +391,17 @@ QLineF Knob::calculateLine(const QPointF& _mid,
 
 bool Knob::updateAngle()
 {
-    FloatModel* m = model();
-    if(m == nullptr)
-        return true;
+    RealModel* m = model();
+    // if(m == nullptr) return true;
 
     real_t angle = 0.;
-    if(m)  //&& m->maxValue() != m->minValue() )
+    // if(m)  //&& m->maxValue() != m->minValue() )
     {
         // angle = angleFromValue( m->inverseScaledValue( m->rawValue() ),
-        // m->minValue(), m->maxValue(), m_totalAngle ); float
+        // m->minValue(), m->maxValue(), m_totalAngle ); real_t
         // v=m->minValue()+qRound( (m->rawValue()-m->minValue()) /
-        //                              m->step<float>() ) * m->step<float>();
+        //                              m->step<real_t>() ) *
+        //                              m->step<real_t>();
         // v=m->normalizedValue(v);
         real_t v = m->rawValue();
         if(m->isScaleLogarithmic())
@@ -401,22 +417,22 @@ bool Knob::updateAngle()
     return false;
 }
 
-float Knob::angleFromValue(float value,
-                           float minValue,
-                           float maxValue,
-                           float totalAngle) const
+real_t Knob::angleFromValue(real_t value,
+                            real_t minValue,
+                            real_t maxValue,
+                            real_t totalAngle) const
 {
-    // return fmodf((value - 0.5f*(minValue + maxValue)) / (maxValue -
+    // return fmod((value - 0.5*(minValue + maxValue)) / (maxValue -
     // minValue)*m_totalAngle,360);
-    return m_totalAngle * (fmodf(value, 1.f) - 0.5f);
+    return m_totalAngle * (fmod(value, 1.) - 0.5);
 }
 
 QColor Knob::statusColor()
 {
-    FloatModel* m = model();
-    QColor      r(255, 255, 255, 192);
+    RealModel* m = model();
+    QColor     r(255, 255, 255, 192);
 
-    if(m == nullptr)
+    if(m->isDefaultConstructed())
         r = QColor(128, 128, 128, 192);  // no model...
     else if(m->isAutomated())
         r = QColor(128, 128, 255, 192);  // automation pattern
@@ -437,9 +453,8 @@ void Knob::drawWidget(QPainter& _p)
 
 void Knob::drawKnob(QPainter& _p)
 {
-    FloatModel* m = model();
-    if(m == nullptr)
-        return;
+    RealModel* m = model();
+    // if(m == nullptr) return;
 
     QPointF mid;
     QColor  pc = pointColor();
@@ -471,25 +486,25 @@ void Knob::drawKnob(QPainter& _p)
 
         _p.drawLine(calculateLine(mid, outerRadius(), innerRadius()));
     }
-    else if(m)
+    else  // if(m)
     {
         // Old-skool knobs
-        const float radius = m_knobPixmap->width() / 2.0f - 3.f;
-        mid = QPointF(width() / 2.f, m_knobPixmap->height() / 2.f);
+        const real_t radius = m_knobPixmap->width() / 2. - 3.;
+        mid = QPointF(width() / 2., m_knobPixmap->height() / 2.);
 
-        _p.drawPixmap(QPointF((width() - m_knobPixmap->width()) / 2.f,
-                              0.f),  //(height()-m_knobPixmap->height())/2.f),
+        _p.drawPixmap(QPointF((width() - m_knobPixmap->width()) / 2.,
+                              0.),  //(height()-m_knobPixmap->height())/2.),
                       *m_knobPixmap);
 
         // _p.setRenderHint( QPainter::Antialiasing );
 
-        const float centerAngle
+        const real_t centerAngle
                 = angleFromValue(m->inverseScaledValue(m->centerValue()),
                                  m->minValue(), m->maxValue(), m_totalAngle);
 
-        const float arcLineWidth = 3.f;
-        const float arcRectSize
-                = m_knobPixmap->width() - arcLineWidth;  // - 2.f;  // 0
+        const real_t arcLineWidth = 3.;
+        const real_t arcRectSize
+                = m_knobPixmap->width() - arcLineWidth;  // - 2.;  // 0
 
         /*
         QColor col;
@@ -512,9 +527,9 @@ void Knob::drawKnob(QPainter& _p)
                 */
             case knobDark_28:
             {
-                const float rb = qMax<float>((radius - 8) / 3.0, 0.0);
-                const float re = qMax<float>((radius - 2), 0.0);
-                line           = calculateLine(mid, re, rb);
+                const real_t rb = qMax<real_t>((radius - 8) / 3.0, 0.0);
+                const real_t re = qMax<real_t>((radius - 2), 0.0);
+                line            = calculateLine(mid, re, rb);
                 // line.translate(1, 1);
             }
             break;
@@ -530,52 +545,50 @@ void Knob::drawKnob(QPainter& _p)
         _p.setPen(pen0);
 
         _p.setBrush(m_statusColor);
-        float re = 11.f;  // radius;
-        _p.drawEllipse(QRectF(mid.x() - re / 2.f, mid.y() - re / 2.f, re,
-                              re));  //+1.f,re+1.f);
+        real_t re = 11.;  // radius;
+        _p.drawEllipse(QRectF(mid.x() - re / 2., mid.y() - re / 2., re,
+                              re));  //+1.,re+1.);
 
         QPen pen1(QColor(0, 0, 0, 96), 2, Qt::SolidLine, Qt::RoundCap);
         _p.setPen(pen1);
-        _p.drawArc(QRectF(mid.x() - arcRectSize / 2.f, 1.f, arcRectSize,
+        _p.drawArc(QRectF(mid.x() - arcRectSize / 2., 1., arcRectSize,
                           arcRectSize),
-                   16.f * 315, 16.f * m_totalAngle);
+                   16. * 315, 16. * m_totalAngle);
 
         QPen pen2(QColor(0, 0, 0, 96), 4, Qt::SolidLine, Qt::RoundCap);
         _p.setPen(pen2);
         _p.drawLine(line);
-        _p.drawArc(QRectF(mid.x() - arcRectSize / 2.f, 1.f, arcRectSize,
+        _p.drawArc(QRectF(mid.x() - arcRectSize / 2., 1., arcRectSize,
                           arcRectSize),
-                   16.f * (90.f - centerAngle),
-                   -16.f * (m_angle - centerAngle));
+                   16. * (90. - centerAngle), -16. * (m_angle - centerAngle));
         _p.setBrush(QColor(0, 0, 0, 96));
-        // _p.drawEllipse(mid.x()-2.f,mid.y()-2.f,5.f,5.f);
-        _p.drawEllipse(QRectF(mid.x() - 1.f, mid.y() - 1.f, 3.f, 3.f));
+        // _p.drawEllipse(mid.x()-2.,mid.y()-2.,5.,5.);
+        _p.drawEllipse(QRectF(mid.x() - 1., mid.y() - 1., 3., 3.));
 
         QPen pen3(pc, 2, Qt::SolidLine, Qt::RoundCap);
         _p.setPen(pen3);
         _p.drawLine(line);
         _p.drawArc(QRectF(mid.x() - arcRectSize / 2, 1, arcRectSize,
                           arcRectSize),
-                   16.f * (90.f - centerAngle),
-                   -16.f * (m_angle - centerAngle));
+                   16. * (90. - centerAngle), -16. * (m_angle - centerAngle));
 
         if(isInteractive())
         {
             _p.setBrush(pc);
-            _p.drawEllipse(QRectF(mid.x() - 1.f, mid.y() - 1.f, 3.f, 3.f));
+            _p.drawEllipse(QRectF(mid.x() - 1., mid.y() - 1., 3., 3.));
         }
         else
         {
             _p.setBrush(m_statusColor);
             _p.setPen(m_statusColor);
-            re = 9.f;
+            re = 9.;
             _p.drawEllipse(
-                    QRectF(mid.x() - re / 2.f, mid.y() - re / 2.f, re, re));
+                    QRectF(mid.x() - re / 2., mid.y() - re / 2., re, re));
             _p.setBrush(Qt::black);
             _p.setPen(Qt::black);
-            re = 7.f;
+            re = 7.;
             _p.drawEllipse(
-                    QRectF(mid.x() - re / 2.f, mid.y() - re / 2.f, re, re));
+                    QRectF(mid.x() - re / 2., mid.y() - re / 2., re, re));
         }
     }
 }
@@ -584,7 +597,7 @@ void Knob::drawText(QPainter& _p)
 {
     if(!m_text.isEmpty())
     {
-        _p.setFont(pointSizeF(font(), 7.f));
+        _p.setFont(pointSizeF(font(), 7.));
         _p.setPen(textColor());
         QFontMetrics metrix = _p.fontMetrics();
         QString text = metrix.elidedText(m_text, Qt::ElideRight, width());
@@ -607,53 +620,52 @@ void Knob::resizeEvent(QResizeEvent* _re)
 }
 */
 
+/*
 void Knob::setModel(Model* _m, bool isOldModelValid)
 {
     // qInfo("Knob::setModel p=%p",this);
-    FloatModelView::setModel(_m, isOldModelValid);
+    RealModelView::setModel(_m, isOldModelValid);
     // update();
 }
+*/
 
 void Knob::modelChanged()
 {
-    FloatModel* m = model();
-    if(m != nullptr)
-        setWindowTitle(m->displayName());
-
+    RealModel* m = model();
+    setWindowTitle(m->displayName());
     // qInfo("Knob::modelChanged p=%p", this);
     update();  // refresh();
 }
 
-void Knob::convert(const QPoint& _p, float& value_, float& dist_)
+void Knob::convert(const QPoint& _p, real_t& value_, real_t& dist_)
 {
     // arcane mathemagicks for calculating knob movement
-    // value = ( ( _p.y() + _p.y() * qMin( qAbs( _p.y() / 2.5f ), 6.0f ) ) )
-    // / 12.0f;
+    // value = ( ( _p.y() + _p.y() * qMin( qAbs( _p.y() / 2.5 ), 6. ) ) )
+    // / 12.;
 
-    dist_ = (_p.x() * _p.x() + _p.y() * _p.y() - 80.f) / 6400.f;
-    if(dist_ < 0.f)
-        dist_ = 0.f;
-    if(dist_ > 1.f)
-        dist_ = 1.f;
+    dist_ = (_p.x() * _p.x() + _p.y() * _p.y() - 80.) / 6400.;
+    if(dist_ < 0.)
+        dist_ = 0.;
+    if(dist_ > 1.)
+        dist_ = 1.;
 
-    float angle
-            = fmodf(atan2(_p.y() / dist_, _p.x() / dist_) + 3.f * M_PI / 2.,
-                    2.f * M_PI);
-    angle  = qMax(0.80f, qMin(5.49f, angle));
-    value_ = (angle - 0.80f) / (5.49f - 0.80f);
+    real_t angle = fmod(atan2(_p.y() / dist_, _p.x() / dist_) + 3. * R_PI_2,
+                        R_2PI);
+    angle        = qMax(0.80, qMin(5.49, angle));
+    value_       = (angle - 0.80) / (5.49 - 0.80);
 
     // qInfo("x=%d y=%d d=%f a=%f v=%f",_p.x(),_p.y(),dist_,angle,value_);
-    if(value_ < 0.f)
-        value_ = 0.f;
-    if(value_ > 1.f)
-        value_ = 1.f;
+    if(value_ < 0.)
+        value_ = 0.;
+    if(value_ > 1.)
+        value_ = 1.;
 
     // if shift pressed we want slower movement
     /*
     if( gui->mainWindow()->isShiftPressed() )
     {
-            value /= 4.0f;
-            value = qBound( -4.0f, value, 4.0f );
+            value /= 4.;
+            value = qBound( -4., value, 4. );
     }
     */
     // return value;// * pageSize();
@@ -661,55 +673,52 @@ void Knob::convert(const QPoint& _p, float& value_, float& dist_)
 
 void Knob::setPosition(const QPoint& _p, bool _shift)
 {
-    FloatModel* m = model();
-    if(m == nullptr)
-        return;
+    RealModel* m = model();
+    // if(m == nullptr) return;
 
-    float value, dist;
+    real_t value, dist;
     convert(_p, value, dist);
 
-    // const float step = model()->step<float>();
-    // const float oldValue = model()->rawValue();
+    // const real_t step = model()->step<real_t>();
+    // const real_t oldValue = model()->rawValue();
 
     if(_shift)
     {
-        m_pressValue
-                = 0.3f * value + 0.7f * m->normalizedValue(m->rawValue());
-        dist /= 4.f;
+        m_pressValue = 0.3 * value + 0.7 * m->normalizedValue(m->rawValue());
+        dist /= 4.;
         // qInfo("shift pv=%f dist=%f",m_pressValue,dist);
     }
 
     // if( m->isScaleLogarithmic() ) // logarithmic code
     //{
     /*
-    const float pos = m->minValue() < 0
+    const real_t pos = m->minValue() < 0
             ? oldValue / qMax( qAbs( m->maxValue() ), qAbs( m->minValue() ) )
             : ( oldValue - m->minValue() ) / m->range();
-    const float ratio = 0.1f + qAbs( pos ) * 15.f;
-    float newValue = value * ratio;
+    const real_t ratio = 0.1 + qAbs( pos ) * 15.;
+    real_t newValue = value * ratio;
     if( qAbs( newValue ) >= step )
     {
-            float roundedValue = qRound( ( oldValue - value ) / step ) * step;
-            m->setValue( roundedValue );
-            m_leftOver = 0.0f;
+            real_t roundedValue = qRound( ( oldValue - value ) / step ) *
+    step; m->setValue( roundedValue ); m_leftOver = 0.;
     }
     else
     {
             m_leftOver = value;
     }
     */
-    /*                float v=m->rawValue();
+    /*                real_t v=m->rawValue();
             if(m->isScaleLogarithmic())
        v=::linearToLogScale(m->minValue(),m->maxValue(),v);
             v=(v-m->minValue())/m->range();
-            angle=m_totalAngle*(v-0.5f);
+            angle=m_totalAngle*(v-0.5);
     */
-    float v = dist * value + (1.f - dist) * m_pressValue;
+    real_t v = dist * value + (1. - dist) * m_pressValue;
     if(m->isScaleLogarithmic())
-        v = ::logToLinearScale(0.f, 1.f, v);
+        v = ::logToLinearScale(0., 1., v);
     v = m->minValue() + m->range() * v;
     m->setValue(v);
-    // m_leftOver = 0.0f;
+    // m_leftOver = 0.;
     //	}
 
     // else // linear code
@@ -717,28 +726,26 @@ void Knob::setPosition(const QPoint& _p, bool _shift)
     /*
     if( qAbs( value ) >= step )
     {
-            float roundedValue = qRound( ( oldValue - value ) / step ) * step;
-            m->setValue( roundedValue );
-            m_leftOver = 0.0f;
+            real_t roundedValue = qRound( ( oldValue - value ) / step ) *
+    step; m->setValue( roundedValue ); m_leftOver = 0.;
     }
     else
     {
             m_leftOver = value;
     }
     */
-    // float roundedValue=qRound( (dist*value*m->range()+
-    //(1.f-dist)*(m_pressValue-m->minValue()))
+    // real_t roundedValue=qRound( (dist*value*m->range()+
+    //(1.-dist)*(m_pressValue-m->minValue()))
     //        / step ) * step;
-    // m->setValue( m->minValue()+qMax(0.f,qMin(roundedValue,m->range())));
-    // m_leftOver = 0.0f;
+    // m->setValue( m->minValue()+qMax(0.,qMin(roundedValue,m->range())));
+    // m_leftOver = 0.;
     //}
 }
 
 void Knob::contextMenuEvent(QContextMenuEvent*)
 {
-    FloatModel* m = model();
-    if(m == nullptr)
-        return;
+    RealModel* m = model();
+    // if(m == nullptr) return;
 
     // for the case, the user clicked right while pressing left mouse-
     // button, the context-menu appears while mouse-cursor is still hidden
@@ -759,9 +766,8 @@ void Knob::contextMenuEvent(QContextMenuEvent*)
 
 void Knob::toggleScale()
 {
-    FloatModel* m = model();
-    if(m == nullptr)
-        return;
+    RealModel* m = model();
+    // if(m == nullptr) return;
 
     m->setScaleLogarithmic(!m->isScaleLogarithmic());
     // update();
@@ -769,9 +775,8 @@ void Knob::toggleScale()
 
 void Knob::dragEnterEvent(QDragEnterEvent* _dee)
 {
-    FloatModel* m = model();
-    if(m == nullptr)
-        return;
+    // RealModel* m = model();
+    // if(m == nullptr) return;
 
     StringPairDrag::processDragEnterEvent(_dee,
                                           "float_value,automatable_model");
@@ -779,9 +784,8 @@ void Knob::dragEnterEvent(QDragEnterEvent* _dee)
 
 void Knob::dropEvent(QDropEvent* _de)
 {
-    FloatModel* m = model();
-    if(m == nullptr)
-        return;
+    RealModel* m = model();
+    // if(m == nullptr) return;
 
     QString type = StringPairDrag::decodeKey(_de);
     QString val  = StringPairDrag::decodeValue(_de);
@@ -822,8 +826,9 @@ void Knob::dropEvent(QDropEvent* _de)
 
 void Knob::mousePressEvent(QMouseEvent* _me)
 {
-    FloatModel* m = model();
-    if(m == nullptr || !isInteractive())
+    RealModel* m = model();
+    // if(m == nullptr) return;
+    if(!isInteractive())
         return;
 
     if(_me->button() == Qt::LeftButton
@@ -839,7 +844,7 @@ void Knob::mousePressEvent(QMouseEvent* _me)
         // const QPoint & p = _me->pos();
         // m_origMousePos = p;
         // m_mouseOffset = QPoint(0, 0);
-        // m_leftOver = 0.0f;
+        // m_leftOver = 0.;
 
         emit sliderPressed();
 
@@ -860,15 +865,16 @@ void Knob::mousePressEvent(QMouseEvent* _me)
     */
     else
     {
-        FloatModelView::mousePressEvent(_me);
+        RealModelView::mousePressEvent(_me);
         m_pressLeft = false;
     }
 }
 
 void Knob::mouseMoveEvent(QMouseEvent* _me)
 {
-    FloatModel* m = model();
-    if(m == nullptr || !isInteractive())
+    RealModel* m = model();
+    // if(m == nullptr) return;
+    if(!isInteractive())
         return;
 
     if(m_pressLeft && _me->pos() != m_pressPos)  // m_origMousePos )
@@ -885,14 +891,13 @@ void Knob::mouseMoveEvent(QMouseEvent* _me)
 
 void Knob::mouseReleaseEvent(QMouseEvent* event)
 {
-    FloatModel* m = model();
-    if(m == nullptr || !isInteractive())
+    RealModel* m = model();
+    // if(m == nullptr) return;
+    if(!isInteractive())
         return;
 
-    if(event && event->button() == Qt::LeftButton && m_pressLeft)
-    {
+    if(event != nullptr && event->button() == Qt::LeftButton && m_pressLeft)
         m->restoreJournallingState();
-    }
 
     m_pressLeft = false;
 
@@ -928,15 +933,16 @@ void Knob::paintEvent(QPaintEvent* _pe)
 
 void Knob::wheelEvent(QWheelEvent* _we)
 {
-    FloatModel* m = model();
-    if(m == nullptr || !isInteractive())
+    RealModel* m = model();
+    // if(m == nullptr) return;
+    if(!isInteractive())
         return;
 
     if(_we->modifiers() & Qt::ShiftModifier)
     {
         _we->accept();
 
-        int ns = int(roundf(m->range() / m->step() / 100.f));
+        int ns = int(round(m->range() / m->step() / 100.));
         if(_we->modifiers() & Qt::ControlModifier)
             ns /= 10;
         ns = qBound(1, ns, 1000);
@@ -956,8 +962,9 @@ void Knob::wheelEvent(QWheelEvent* _we)
 
 void Knob::enterValue()
 {
-    FloatModel* m = model();
-    if(m == nullptr || !isInteractive())
+    RealModel* m = model();
+    // if(m == nullptr) return;
+    if(!isInteractive())
         return;
 
     bool   ok;
@@ -996,15 +1003,14 @@ void Knob::enterValue()
     }
 
     if(ok)
-    {
         m->setValue(newVal);
-    }
 }
 
 void Knob::editRandomization()
 {
-    FloatModel* m = model();
-    if(m == nullptr || !isInteractive())
+    RealModel* m = model();
+    // if(m == nullptr) return;
+    if(!isInteractive())
         return;
 
     bool   ok;
@@ -1015,9 +1021,7 @@ void Knob::editRandomization()
             100. * m->randomRatio(), 0., 100., 2, &ok);
 
     if(ok)
-    {
         m->setRandomRatio(newVal / 100.);
-    }
 }
 
 /*
@@ -1038,7 +1042,7 @@ void Knob::update()
 void Knob::friendlyUpdate()
 {
     /*
-    FloatModel* m = model();
+    RealModel* m = model();
     if(!m)
     {
         // qInfo("Knob::drawKnob NO MODEL p=%p",this);
@@ -1063,7 +1067,7 @@ void Knob::friendlyUpdate()
         Widget::update();  // PaintManager::updateLater(this);
 
     /*
-        FloatModel* m = model();
+        RealModel* m = model();
         // qInfo("Knob::friendlyRefresh 1");
         if(!m->isAutomated() || !m->isControlled() ||  //????
            !m->frequentlyUpdated() || m->controllerConnection() == nullptr
@@ -1095,9 +1099,8 @@ void Knob::refresh()
 
 QString Knob::displayValue() const
 {
-    const FloatModel* m = model();
-    if(m == nullptr)
-        return "";
+    const RealModel* m = model();
+    // if(m == nullptr)       return "";
 
     /*
     if(isVolumeKnob()
@@ -1119,16 +1122,26 @@ QString Knob::displayValue() const
 
 void Knob::doConnections()
 {
-    FloatModel* m = model();
-    if(m)
+    RealModelView::doConnections();
+    RealModel* m = model();
+    // if(m)
     {
         // qInfo("Knob::doConnections p=%p model()=%p",this,m);
-        m->disconnect(this);
+        // m->disconnect(this);
+        disconnect(m, SIGNAL(dataChanged()), this, SLOT(update()));
         connect(m, SIGNAL(dataChanged()), this, SLOT(friendlyUpdate()));
-        connect(m, SIGNAL(propertiesChanged()), this, SLOT(update()));
+        // connect(m, SIGNAL(propertiesChanged()), this, SLOT(update()));
         // QObject::connect( m, SIGNAL( controllerValueChanged() ),
         //                  this, SLOT( refresh() ) );
     }
+}
+
+void Knob::undoConnections()
+{
+    RealModel* m = model();
+    connect(m, SIGNAL(dataChanged()), this, SLOT(update()));
+    disconnect(m, SIGNAL(dataChanged()), this, SLOT(friendlyUpdate()));
+    RealModelView::undoConnections();
 }
 
 void Knob::displayHelp()
@@ -1138,7 +1151,7 @@ void Knob::displayHelp()
 
 QLine Knob::cableFrom() const
 {
-    if(m_knobPixmap)
+    if(m_knobPixmap != nullptr)
     {
         int    w = m_knobPixmap->width();
         int    h = m_knobPixmap->height();
@@ -1151,7 +1164,7 @@ QLine Knob::cableFrom() const
 
 QLine Knob::cableTo() const
 {
-    if(m_knobPixmap)
+    if(m_knobPixmap != nullptr)
     {
         int    w = m_knobPixmap->width() + 1;
         int    h = m_knobPixmap->height() + 1;
@@ -1231,8 +1244,9 @@ void VolumeKnob::enterValue()
 {
     if(ConfigManager::inst()->value("app", "displaydbfs").toInt())
     {
-        FloatModel* m = model();
-        if(m == nullptr || !isInteractive())
+        RealModel* m = model();
+        // if(m == nullptr) return;
+        if(!isInteractive())
             return;
 
         bool   ok;
@@ -1262,9 +1276,8 @@ QString VolumeKnob::displayValue() const
 {
     if(ConfigManager::inst()->value("app", "displaydbfs").toInt())
     {
-        const FloatModel* m = model();
-        if(m == nullptr)
-            return "";
+        const RealModel* m = model();
+        // if(m == nullptr) return "";
 
         return m_description + " "
                + QString::number(

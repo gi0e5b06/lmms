@@ -30,25 +30,41 @@
 #include "ModelView.h"
 
 #include <QMenu>
+#include <QPointer>
 
 class QAction;
 
 class MidiPortMenu : public QMenu, public ModelView
 {
     Q_OBJECT
+
   public:
+    MidiPortMenu(MidiPort* _model, MidiPort::Modes _mode);
     MidiPortMenu(MidiPort::Modes _mode);
     virtual ~MidiPortMenu();
 
+    INLINE MidiPort* model()  // non virtual
+    {
+        return castModel<MidiPort>();
+    }
+
+    INLINE const Model* model() const  // non virtual
+    {
+        return castModel<MidiPort>();
+    }
+
   public slots:
     void updateMenu();
+
+  protected:
+    void doConnections() override;
+    void undoConnections() override;
+    void modelChanged() override;
 
   protected slots:
     void activatedPort(QAction* _item);
 
   private:
-    virtual void modelChanged();
-
     MidiPort::Modes m_mode;
 };
 

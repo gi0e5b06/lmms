@@ -32,7 +32,7 @@
 #include "Plugin.h"
 #include "TempoSyncKnobModel.h"
 //#include "MemoryManager.h"
-#include "Configuration.h"
+//#include "Configuration.h"
 
 #include <QColor>
 
@@ -55,7 +55,7 @@ class EXPORT Effect : public Plugin, public MidiEventProcessor
     virtual void saveSettings(QDomDocument& _doc, QDomElement& _parent);
     virtual void loadSettings(const QDomElement& _this);
 
-    static inline const QString classNodeName()
+    static INLINE const QString classNodeName()
     {
         return "effect";
     }
@@ -96,27 +96,27 @@ class EXPORT Effect : public Plugin, public MidiEventProcessor
                 "classes");
     }
 
-    inline ch_cnt_t processorCount() const
+    INLINE ch_cnt_t processorCount() const
     {
         return m_processors;
     }
 
-    inline void setProcessorCount(ch_cnt_t _processors)
+    INLINE void setProcessorCount(ch_cnt_t _processors)
     {
         m_processors = _processors;
     }
 
-    inline bool isOkay() const
+    INLINE bool isOkay() const
     {
         return m_okay;
     }
 
-    inline void setOkay(bool _state)
+    INLINE void setOkay(bool _state)
     {
         m_okay = _state;
     }
 
-    inline bool isRunning() const
+    INLINE bool isRunning() const
     {
         return m_runningModel.value();
     }
@@ -124,7 +124,7 @@ class EXPORT Effect : public Plugin, public MidiEventProcessor
     void startRunning();
     void stopRunning();
 
-    inline bool isEnabled() const
+    INLINE bool isEnabled() const
     {
         return m_enabledModel.value();
     }
@@ -150,18 +150,18 @@ class EXPORT Effect : public Plugin, public MidiEventProcessor
     }
 
     /*
-    inline real_t wetLevel() const
+    INLINE real_t wetLevel() const
     {
             return m_wetDryModel.value();
     }
 
-    inline real_t dryLevel() const
+    INLINE real_t dryLevel() const
     {
             return 1. - m_wetDryModel.value();
     }
     */
 
-    inline real_t gate() const
+    INLINE real_t gate() const
     {
         return m_gateModel.value();
         // const real_t level = m_gateModel.value();
@@ -169,17 +169,17 @@ class EXPORT Effect : public Plugin, public MidiEventProcessor
     }
 
     // should be replaced by Runnable
-    inline bool dontRun() const
+    INLINE bool dontRun() const
     {
         return m_noRun;
     }
 
-    inline void setDontRun(bool _state)
+    INLINE void setDontRun(bool _state)
     {
         m_noRun = _state;
     }
 
-    inline const Descriptor::SubPluginFeatures::Key& key() const
+    INLINE const Descriptor::SubPluginFeatures::Key& key() const
     {
         return m_key;
     }
@@ -207,7 +207,7 @@ class EXPORT Effect : public Plugin, public MidiEventProcessor
     virtual void toggleMute() final;
 
   protected:
-    inline bool isAutoQuitEnabled() const
+    INLINE bool isAutoQuitEnabled() const
     {
         return !CONFIG_GET_BOOL("ui.disableautoquit");
         //! m_autoQuitDisabled;
@@ -219,7 +219,7 @@ class EXPORT Effect : public Plugin, public MidiEventProcessor
 
     // some effects might not be capable of higher sample-rates so they can
     // sample it down before processing and back after processing
-    inline void sampleDown(const sampleFrame* _src_buf,
+    INLINE void sampleDown(const sampleFrame* _src_buf,
                            sampleFrame*       _dst_buf,
                            sample_rate_t      _dst_sr)
     {
@@ -227,7 +227,7 @@ class EXPORT Effect : public Plugin, public MidiEventProcessor
                  _dst_buf, _dst_sr, Engine::mixer()->framesPerPeriod());
     }
 
-    inline void sampleBack(const sampleFrame* _src_buf,
+    INLINE void sampleBack(const sampleFrame* _src_buf,
                            sampleFrame*       _dst_buf,
                            sample_rate_t      _src_sr)
     {
@@ -238,7 +238,7 @@ class EXPORT Effect : public Plugin, public MidiEventProcessor
     }
     void reinitSRC();
 
-    inline bool isGateClosed() const
+    INLINE bool isGateClosed() const
     {
         return m_gateClosed;
     }
@@ -275,12 +275,12 @@ class EXPORT Effect : public Plugin, public MidiEventProcessor
 
     real_t computeRMS(sampleFrame* _buf, const fpp_t _frames);
 
-    inline bool isClipping()
+    INLINE bool isClipping()
     {
         return m_clippingModel.value();
     }
 
-    inline void setClipping(bool _b)
+    INLINE void setClipping(bool _b)
     {
         m_clippingModel.setAutomatedValue(_b);
     }

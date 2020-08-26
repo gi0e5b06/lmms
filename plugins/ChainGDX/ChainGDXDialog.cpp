@@ -26,7 +26,7 @@
 
 #include "ChainGDX.h"
 #include "ChainGDXControls.h"
-#include "EffectRackView.h"
+#include "EffectChainView.h"
 #include "embed.h"
 
 #include <QGridLayout>
@@ -41,16 +41,16 @@ ChainGDXDialog::ChainGDXDialog(ChainGDXControls* controls) :
     setAutoFillBackground(true);
     QPalette pal;
     pal.setBrush(backgroundRole(), embed::getIconPixmap("plugin_bg"));
-    //pal.setBrush(backgroundRole(), PLUGIN_NAME::getIconPixmap("artwork"));
+    // pal.setBrush(backgroundRole(), PLUGIN_NAME::getIconPixmap("artwork"));
     setPalette(pal);
 
     QGridLayout* mainLOT = new QGridLayout(this);
-    mainLOT->setContentsMargins(0,0,0,0);
+    mainLOT->setContentsMargins(0, 0, 0, 0);
     mainLOT->setSpacing(0);
 
-    EffectRackView* erv
-            = new EffectRackView(controls->m_effect->m_chain, this);
-    mainLOT->addWidget(erv);//->setFixedSize(245, 200);
+    EffectChainView* erv
+            = new EffectChainView(controls->m_effect->m_chain, this);
+    mainLOT->addWidget(erv);  //->setFixedSize(245, 200);
 
     setFixedWidth(250);
     setMinimumHeight(250);

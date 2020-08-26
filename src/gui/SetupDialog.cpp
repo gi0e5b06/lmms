@@ -92,8 +92,7 @@ SetupDialog::SetupDialog(ConfigTabs _tab_to_open) :
                            ->value("mixer", "framesperaudiobuffer")
                            .toInt()),
       m_baseSampleRate(CONFIG_GET_INT("mixer.samplerate")),
-      m_toolTips(
-              !ConfigManager::inst()->value("tooltips", "disabled").toInt()),
+      m_toolTips(CONFIG_GET_BOOL("ui.tooltips")),
       m_warnAfterSetup(!ConfigManager::inst()
                                 ->value("app", "nomsgaftersetup")
                                 .toInt()),
@@ -159,6 +158,7 @@ SetupDialog::SetupDialog(ConfigTabs _tab_to_open) :
               ConfigManager::inst()->value("ui", "disableautoquit").toInt()),
       m_uiFramesPerSecond(CONFIG_GET_INT("ui.framespersecond")),
       m_uiLeftSideBar(CONFIG_GET_BOOL("ui.leftsidebar")),
+      m_uiPlayCursor(CONFIG_GET_INT("ui.playcursor")),
       m_midiMtcEnabled(CONFIG_GET_BOOL("midi.mtc_enabled")),
       m_midiMtcVideoFps(CONFIG_GET_INT("midi.mtc_video_fps"))
 {
@@ -184,14 +184,15 @@ SetupDialog::SetupDialog(ConfigTabs _tab_to_open) :
     QWidget* ws = new QWidget(settings);
     // ws->setAutoFillBackground(true);
 
-    int wsHeight = 650;  // 370;
+    const int wsWidth  = 360;
+    int       wsHeight = 650;  // 370;
 #ifdef LMMS_HAVE_STK
     wsHeight += 50;
 #endif
 #ifdef LMMS_HAVE_FLUIDSYNTH
     wsHeight += 50;
 #endif
-    ws->setFixedSize(360, wsHeight);
+    ws->setFixedSize(wsWidth, wsHeight);
     QWidget* general = new QWidget(ws);
     // general->setFixedSize( 360, 240 );
     QVBoxLayout* gen_layout = new QVBoxLayout(general);
@@ -199,6 +200,7 @@ SetupDialog::SetupDialog(ConfigTabs _tab_to_open) :
     gen_layout->setMargin(0);
     labelWidget(general, tr("General settings"));
 
+    const int txtLength  = wsWidth - 50;
     const int XDelta     = 10;
     const int YDelta     = 18;
     const int HeaderSize = 10;
@@ -210,19 +212,20 @@ SetupDialog::SetupDialog(ConfigTabs _tab_to_open) :
 
     labelNumber++;
     m_bufSizeLbl = new QLabel(bufsize_tw);
-    m_bufSizeLbl->setGeometry(XDelta, YDelta * labelNumber, 289 - XDelta,
-                              YDelta);
+    m_bufSizeLbl->setGeometry(XDelta, YDelta * labelNumber,
+                              wsWidth - 71 - XDelta, YDelta);
 
     QPushButton* bufsize_reset_btn
             = new QPushButton(embed::getIconPixmap("reload"), "", bufsize_tw);
-    bufsize_reset_btn->setGeometry(355 - 2 * 33, YDelta * labelNumber, 28,
-                                   28);
+    bufsize_reset_btn->setGeometry(wsWidth - 5 - 2 * 33, YDelta * labelNumber,
+                                   28, 28);
     connect(bufsize_reset_btn, SIGNAL(clicked()), this, SLOT(resetBufSize()));
     ToolTip::add(bufsize_reset_btn, tr("Reset to default-value"));
 
     QPushButton* bufsize_help_btn
             = new QPushButton(embed::getIconPixmap("help"), "", bufsize_tw);
-    bufsize_help_btn->setGeometry(355 - 33, YDelta * labelNumber, 28, 28);
+    bufsize_help_btn->setGeometry(wsWidth - 5 - 33, YDelta * labelNumber, 28,
+                                  28);
     connect(bufsize_help_btn, SIGNAL(clicked()), this,
             SLOT(displayBufSizeHelp()));
 
@@ -232,8 +235,8 @@ SetupDialog::SetupDialog(ConfigTabs _tab_to_open) :
     m_bufSizeSlider->setTickPosition(QSlider::TicksBelow);
     m_bufSizeSlider->setPageStep(8);
     m_bufSizeSlider->setTickInterval(8);
-    m_bufSizeSlider->setGeometry(XDelta, YDelta * labelNumber, 289 - XDelta,
-                                 YDelta);
+    m_bufSizeSlider->setGeometry(XDelta, YDelta * labelNumber,
+                                 wsWidth - 71 - XDelta, YDelta);
     m_bufSizeSlider->setValue(m_bufferSize / 32);
     connect(m_bufSizeSlider, SIGNAL(valueChanged(int)), this,
             SLOT(setBufferSize(int)));
@@ -241,7 +244,8 @@ SetupDialog::SetupDialog(ConfigTabs _tab_to_open) :
 
     labelNumber++;
     QComboBox* baseSRCMB = new QComboBox(bufsize_tw);
-    baseSRCMB->setGeometry(XDelta, YDelta * labelNumber, 250, YDelta);
+    baseSRCMB->setGeometry(XDelta, YDelta * labelNumber, wsWidth - 110,
+                           YDelta);
     for(int i = 0; i < 12; i++)
         baseSRCMB->addItem(QString("%1 Hz").arg(FREQUENCIES[i]));
     for(int i = 0; i < 12; i++)
@@ -391,7 +395,7 @@ SetupDialog::SetupDialog(ConfigTabs _tab_to_open) :
 
     labelNumber++;
     QComboBox* changeLang = new QComboBox(lang_tw);
-    changeLang->setGeometry(XDelta, YDelta, 250, YDelta);
+    changeLang->setGeometry(XDelta, YDelta, wsWidth - 110, YDelta);
 
     labelNumber++;
     lang_tw->setFixedHeight(YDelta * labelNumber + HeaderSize + FooterSize);
@@ -453,7 +457,7 @@ SetupDialog::SetupDialog(ConfigTabs _tab_to_open) :
 #ifdef LMMS_HAVE_FLUIDSYNTH
     pathsHeight += 3 * YDelta;
 #endif
-    paths->setFixedSize(360, pathsHeight);
+    paths->setFixedSize(wsWidth, pathsHeight);
 
     /*
     QVBoxLayout * dir_layout = new QVBoxLayout( paths );
@@ -473,8 +477,7 @@ SetupDialog::SetupDialog(ConfigTabs _tab_to_open) :
     //pathSelectors->resize( 360, pathsHeight - 50 );
     */
 
-    const int txtLength = 310;
-    const int btnStart  = 330;
+    const int btnStart = 330;
 
     labelNumber = 0;
 
@@ -737,7 +740,7 @@ SetupDialog::SetupDialog(ConfigTabs _tab_to_open) :
     */
 
     QWidget* performance = new QWidget(ws);
-    performance->setFixedSize(360, 200);
+    performance->setFixedSize(wsWidth, 200);
     QVBoxLayout* perf_layout = new QVBoxLayout(performance);
     perf_layout->setSpacing(0);
     perf_layout->setMargin(0);
@@ -759,7 +762,7 @@ SetupDialog::SetupDialog(ConfigTabs _tab_to_open) :
     m_saveIntervalSlider->setPageStep(1);
     m_saveIntervalSlider->setTickInterval(1);
     m_saveIntervalSlider->setGeometry(XDelta, YDelta * labelNumber,
-                                      350 - XDelta, YDelta);
+                                      wsWidth - 10 - XDelta, YDelta);
     m_saveIntervalSlider->setValue(m_saveInterval);
     connect(m_saveIntervalSlider, SIGNAL(valueChanged(int)), this,
             SLOT(setAutoSaveInterval(int)));
@@ -782,13 +785,15 @@ SetupDialog::SetupDialog(ConfigTabs _tab_to_open) :
 
     QPushButton* autoSaveResetBtn = new QPushButton(
             embed::getIconPixmap("reload"), "", auto_save_tw);
-    autoSaveResetBtn->setGeometry(355 - 2 * 33, YDelta * labelNumber, 28, 28);
+    autoSaveResetBtn->setGeometry(wsWidth - 5 - 2 * 33, YDelta * labelNumber,
+                                  28, 28);
     connect(autoSaveResetBtn, SIGNAL(clicked()), this, SLOT(resetAutoSave()));
     ToolTip::add(autoSaveResetBtn, tr("Reset to default-value"));
 
     QPushButton* saveIntervalBtn
             = new QPushButton(embed::getIconPixmap("help"), "", auto_save_tw);
-    saveIntervalBtn->setGeometry(355 - 33, YDelta * labelNumber, 28, 28);
+    saveIntervalBtn->setGeometry(wsWidth - 5 - 33, YDelta * labelNumber, 28,
+                                 28);
     connect(saveIntervalBtn, SIGNAL(clicked()), this,
             SLOT(displaySaveIntervalHelp()));
 
@@ -819,6 +824,20 @@ SetupDialog::SetupDialog(ConfigTabs _tab_to_open) :
     connect(animAFP, SIGNAL(toggled(bool)), this,
             SLOT(toggleAnimateAFP(bool)));
 
+    QLabel* playCursorLBL = new QLabel(tr("Play cursor type:"), ui_perf_tw);
+    labelNumber++;
+    playCursorLBL->move(XDelta, YDelta * labelNumber);
+    QComboBox* playCursorCMB = new QComboBox(ui_perf_tw);
+    labelNumber++;
+    playCursorCMB->setGeometry(XDelta, YDelta * labelNumber, 310, YDelta);
+    playCursorCMB->addItem(tr("None"));
+    playCursorCMB->addItem(tr("One pixel"));
+    playCursorCMB->addItem(tr("One beat"));
+    playCursorCMB->addItem(tr("One bar"));
+    playCursorCMB->setCurrentIndex(m_uiPlayCursor);
+    connect(playCursorCMB, SIGNAL(currentIndexChanged(int)), this,
+            SLOT(setPlayCursor(int)));
+
     labelNumber++;
     ui_perf_tw->setFixedHeight(YDelta * labelNumber + HeaderSize
                                + FooterSize);
@@ -848,7 +867,7 @@ SetupDialog::SetupDialog(ConfigTabs _tab_to_open) :
 
     QWidget* audio = new QWidget(ws);
     // audio->setFixedSize( 360, 200 );
-    audio->setFixedWidth(360);
+    audio->setFixedWidth(wsWidth);
     QVBoxLayout* audio_layout = new QVBoxLayout(audio);
     audio_layout->setSpacing(0);
     audio_layout->setMargin(0);
@@ -963,16 +982,18 @@ SetupDialog::SetupDialog(ConfigTabs _tab_to_open) :
 
     labelNumber++;
     m_midiInterfaces = new QComboBox(midiiface_tw);
-    m_midiInterfaces->setGeometry(XDelta, YDelta * labelNumber, 305, YDelta);
+    m_midiInterfaces->setGeometry(XDelta, YDelta * labelNumber, wsWidth - 55,
+                                  YDelta);
 
     QPushButton* midi_help_btn
             = new QPushButton(embed::getIconPixmap("help"), "", midiiface_tw);
-    midi_help_btn->setGeometry(325, YDelta * labelNumber, 28, 28);
+    midi_help_btn->setGeometry(wsWidth - 35, YDelta * labelNumber, 28, 28);
     connect(midi_help_btn, SIGNAL(clicked()), this, SLOT(displayMIDIHelp()));
 
     labelNumber++;
     QCheckBox* midiMtcEnabled = new QCheckBox(tr("MTC"), midiiface_tw);
-    midiMtcEnabled->setGeometry(XDelta, YDelta * labelNumber, 305, YDelta);
+    midiMtcEnabled->setGeometry(XDelta, YDelta * labelNumber, wsWidth - 55,
+                                YDelta);
     midiMtcEnabled->setChecked(m_midiMtcEnabled);
     connect(midiMtcEnabled, SIGNAL(toggled(bool)), this,
             SLOT(toggleMidiMtcEnabled(bool)));
@@ -989,7 +1010,7 @@ SetupDialog::SetupDialog(ConfigTabs _tab_to_open) :
     QLabel* midiMtcVideoFpsLBL
             = new QLabel(tr("video frames per second"), midiiface_tw);
     midiMtcVideoFpsLBL->setGeometry(3 * XDelta + 60, YDelta * labelNumber,
-                                    245 - 2 * XDelta, YDelta);
+                                    wsWidth - 115 - 2 * XDelta, YDelta);
     connect(midiMtcVideoFps, SIGNAL(currentIndexChanged(int)), this,
             SLOT(setMidiMtcVideoFps(int)));
 
@@ -1142,8 +1163,7 @@ void SetupDialog::accept()
     ConfigManager::inst()->setValue(
             "mixer", "mididev",
             m_midiIfaceNames[m_midiInterfaces->currentText()]);
-    ConfigManager::inst()->setValue("tooltips", "disabled",
-                                    QString::number(!m_toolTips));
+    CONFIG_SET_BOOL("ui.tooltips", m_toolTips);
     ConfigManager::inst()->setValue("app", "nomsgaftersetup",
                                     QString::number(!m_warnAfterSetup));
     ConfigManager::inst()->setValue("app", "displaydbfs",
@@ -1183,6 +1203,7 @@ void SetupDialog::accept()
 
     CONFIG_SET_BOOL("disk.mappedfiles", m_mappedFiles);
     CONFIG_SET_BOOL("ui.leftsidebar", m_uiLeftSideBar);
+    CONFIG_SET_INT("ui.playcursor", m_uiPlayCursor);
     CONFIG_SET_BOOL("midi.mtc_enabled", m_midiMtcEnabled);
     CONFIG_SET_INT("midi.mtc_video_fps", m_midiMtcVideoFps);
 
@@ -1343,6 +1364,11 @@ void SetupDialog::toggleCompactTrackButtons(bool _enabled)
 void SetupDialog::toggleLeftSideBar(bool _onLeft)
 {
     m_uiLeftSideBar = _onLeft;
+}
+
+void SetupDialog::setPlayCursor(int _type)
+{
+    m_uiPlayCursor = _type;
 }
 
 void SetupDialog::toggleSyncVSTPlugins(bool _enabled)

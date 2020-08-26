@@ -25,6 +25,8 @@
 #ifndef TAB_WIDGET_H
 #define TAB_WIDGET_H
 
+#include "lmms_basics.h"
+
 #include <QMap>
 #include <QWidget>
 
@@ -49,7 +51,7 @@ class TabWidget : public QWidget
 
     int findTabAtPos(const QPoint* pos);
 
-    inline int activeTab() const
+    INLINE int activeTab() const
     {
         return (m_activeTab);
     }

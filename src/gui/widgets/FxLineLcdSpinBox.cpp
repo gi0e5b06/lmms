@@ -42,8 +42,7 @@ FxLineLcdSpinBox::~FxLineLcdSpinBox()
 
 void FxLineLcdSpinBox::mouseDoubleClickEvent(QMouseEvent* _me)
 {
-    gui->fxMixerView()->setCurrentFxLine(model()->value());
-
+    gui->fxMixerView()->setCurrentLine(model()->value());
     gui->fxMixerView()->parentWidget()->show();
     gui->fxMixerView()->show();      // show fxMixer window
     gui->fxMixerView()->setFocus();  // set focus to fxMixer window

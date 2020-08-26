@@ -58,13 +58,13 @@ class OscillatorObject : public Model
     Q_OBJECT
     MM_OPERATORS
   private:
-    int        m_numOscillators;
-    IntModel   m_waveShape;
-    FloatModel m_oscModel;
-    FloatModel m_harmModel;
-    FloatModel m_volModel;
-    FloatModel m_panModel;
-    FloatModel m_detuneModel;
+    int       m_numOscillators;
+    IntModel  m_waveShape;
+    RealModel m_oscModel;
+    RealModel m_harmModel;
+    RealModel m_volModel;
+    RealModel m_panModel;
+    RealModel m_detuneModel;
 
     real_t m_volumeLeft;
     real_t m_volumeRight;
@@ -90,15 +90,16 @@ class OscillatorObject : public Model
 class organicInstrument : public Instrument
 {
     Q_OBJECT
+
   public:
     organicInstrument(InstrumentTrack* _instrument_track);
     virtual ~organicInstrument();
 
-    virtual void playNote(NotePlayHandle* _n, sampleFrame* _working_buffer);
-    virtual void deleteNotePluginData(NotePlayHandle* _n);
+    void playNote(NotePlayHandle* _n, sampleFrame* _working_buffer) override;
+    void deleteNotePluginData(NotePlayHandle* _n) override;
 
-    virtual void saveSettings(QDomDocument& _doc, QDomElement& _parent);
-    virtual void loadSettings(const QDomElement& _this);
+    void saveSettings(QDomDocument& _doc, QDomElement& _parent) override;
+    void loadSettings(const QDomElement& _this) override;
 
     // virtual QString nodeName() const;
 
@@ -133,8 +134,8 @@ class organicInstrument : public Instrument
 
     const IntModel m_modulationAlgo;
 
-    FloatModel m_fx1Model;
-    FloatModel m_volModel;
+    RealModel m_fx1Model;
+    RealModel m_volModel;
 
     virtual PluginView* instantiateView(QWidget* _parent);
 
@@ -151,9 +152,10 @@ class organicInstrumentView : public InstrumentView
     organicInstrumentView(Instrument* _instrument, QWidget* _parent);
     virtual ~organicInstrumentView();
 
-  private:
-    virtual void modelChanged();
+  protected:
+    void modelChanged() override;
 
+  private:
     struct OscillatorKnobs
     {
         MM_OPERATORS

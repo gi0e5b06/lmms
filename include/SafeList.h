@@ -24,6 +24,7 @@
 #define SAFE_LIST_H
 
 #include "Backtrace.h"
+#include "Mutex.h"
 
 #include <QList>
 #include <QMutex>
@@ -34,12 +35,13 @@ template <class T>
 class SafeList
 {
   public:
-    SafeList(bool _checkUnicity = true)
+    SafeList(bool _checkUnicity = true) : m_mutex("SafeList")
     {
     }
 
     SafeList(const SafeList<T>& _other) :
-          m_unicity(_other.m_unicity), m_list(_other.m_list)
+          m_mutex("SafeList"), m_unicity(_other.m_unicity),
+          m_list(_other.m_list)
     {
     }
 
@@ -70,19 +72,13 @@ class SafeList
 
     bool contains(const T& _e) const
     {
-        QMutexLocker lock(const_cast<QMutex*>(&m_mutex));
+        QMutexLocker lock(const_cast<Mutex*>(&m_mutex));
         return m_list.contains(_e);
-    }
-
-    int indexOf(const T& _e) const
-    {
-        QMutexLocker lock(const_cast<QMutex*>(&m_mutex));
-        return m_list.indexOf(_e);
     }
 
     bool isEmpty() const
     {
-        QMutexLocker lock(const_cast<QMutex*>(&m_mutex));
+        QMutexLocker lock(const_cast<Mutex*>(&m_mutex));
         return m_list.isEmpty();
     }
 
@@ -199,7 +195,7 @@ class SafeList
 
     int size() const
     {
-        QMutexLocker lock(const_cast<QMutex*>(&m_mutex));
+        QMutexLocker lock(const_cast<Mutex*>(&m_mutex));
         return m_list.size();
     }
 
@@ -238,7 +234,7 @@ class SafeList
 
     const T first() const
     {
-        QMutexLocker lock(const_cast<QMutex*>(&m_mutex));
+        QMutexLocker lock(const_cast<Mutex*>(&m_mutex));
         if(m_list.isEmpty())
         {
             BACKTRACE
@@ -249,7 +245,7 @@ class SafeList
 
     T last()
     {
-        QMutexLocker lock(const_cast<QMutex*>(&m_mutex));
+        QMutexLocker lock(const_cast<Mutex*>(&m_mutex));
         if(m_list.isEmpty())
         {
             BACKTRACE
@@ -272,7 +268,7 @@ class SafeList
     /*
     const QList<T> list() const
     {
-        QMutexLocker lock(const_cast<QMutex*>(&m_mutex));
+        QMutexLocker lock(const_cast<Mutex*>(&m_mutex));
         return m_list;
     }
     */
@@ -297,7 +293,7 @@ class SafeList
 
     void map(const std::function<void(const T&)>& _f) const
     {
-        QMutexLocker lock(const_cast<QMutex*>(&m_mutex));
+        QMutexLocker lock(const_cast<Mutex*>(&m_mutex));
         for(const T& e: m_list)
             _f(e);
     }
@@ -310,10 +306,110 @@ class SafeList
                 m_list.removeAt(i);
     }
 
+    void sort(const std::function<bool(const T&, const T&)>& _f)
+    {
+        QMutexLocker lock(&m_mutex);
+        std::stable_sort(m_list.begin(), m_list.end(), _f);
+    }
+
+    int indexOf(const T& _e) const
+    {
+        QMutexLocker lock(const_cast<Mutex*>(&m_mutex));
+        return m_list.indexOf(_e);
+    }
+
+    /*
+    const T& at(int _i) const
+    {
+        QMutexLocker lock(const_cast<Mutex*>(&m_mutex));
+        if(_i < 0 || _i >= m_list.size())
+        {
+            BACKTRACE
+            qCritical("SafeList::at bad index %d", _i);
+        }
+        return m_list.at(_i);
+    }
+
+    void move(int _i, int _j)
+    {
+        if(_i == _j)
+            return;
+
+        QMutexLocker lock(const_cast<Mutex*>(&m_mutex));
+        if(_i < 0 || _i >= m_list.size())
+        {
+            BACKTRACE
+            qCritical("SafeList::move bad index i=%d", _i);
+        }
+        if(_j < 0 || _j >= m_list.size())
+        {
+            BACKTRACE
+            qCritical("SafeList::move bad index j=%d", _j);
+        }
+        m_list.move(_i, _j);
+    }
+    */
+    
   private:
-    QMutex     m_mutex;
+    Mutex      m_mutex;
     bool       m_unicity;
     QVector<T> m_list;
+
+    /*
+    class Iterator
+    {
+      public:
+        Iterator(const SafeList<T>& _list, int _index, bool _lock) :
+              m_list(const_cast<SafeList<T>&>(_list)), m_index(_index),
+              m_lock(_lock)
+        {
+            if(m_lock)
+                m_list.m_mutex.lock();
+        }
+
+        virtual ~Iterator()
+        {
+            if(m_lock)
+                m_list.m_mutex.unlock();
+        }
+
+        Iterator& operator++()
+        {
+            m_index++;
+            return *this;
+        }
+
+        bool operator!=(const Iterator& _end) const
+        {
+            return m_index != _end.m_index;
+        }
+
+        T& operator*() const
+        {
+            return m_list.m_list[m_index];
+        }
+
+      private:
+        SafeList<T>& m_list;
+        int          m_index;
+        bool         m_lock;
+
+        friend class SafeList<T>;
+    };
+
+    friend class Iterator;
+
+  public:
+    Iterator begin() const
+    {
+        return Iterator(*this, 0, true);
+    }
+
+    Iterator end() const
+    {
+        return Iterator(*this, size(), false);
+    }
+    */
 };
 
 #endif

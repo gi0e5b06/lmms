@@ -75,8 +75,8 @@ class RenderManager : public QObject
     ProjectRenderer::ExportFileFormats m_format;
     QString                            m_outputPath;
     ProjectRenderer*                   m_activeRenderer;
-    QVector<Track*>                    m_tracksToRender;
-    QVector<Track*>                    m_unmuted;
+    Tracks                             m_tracksToRender;
+    Tracks                             m_unmuted;
 };
 
 #endif

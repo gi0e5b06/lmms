@@ -24,17 +24,16 @@
 
 #include "ToolTip.h"
 
-#include "ConfigManager.h"
+#include "Configuration.h"
 
 #include <QToolTip> // REQUIRED
 
 
 void ToolTip::add( QWidget * _w, const QString & _txt )
 {
-	if( !ConfigManager::inst()->value( "tooltips", "disabled" ).toInt() )
-	{
+	//if( !ConfigManager::inst()->value( "tooltips", "disabled" ).toInt() )
+	if(CONFIG_GET_BOOL("ui.tooltips"))
 		_w->setToolTip( _txt );
-	}
 }
 
 

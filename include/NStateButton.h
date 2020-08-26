@@ -22,55 +22,49 @@
  *
  */
 
-
 #ifndef NSTATE_BUTTON_H
 #define NSTATE_BUTTON_H
+
+#include "ToolButton.h"
+#include "lmms_basics.h"
 
 #include <QPair>
 #include <QPixmap>
 #include <QVector>
 
-#include "ToolButton.h"
-
-
 class NStateButton : public ToolButton
 {
-	Q_OBJECT
-public:
-	NStateButton( QWidget * _parent );
-	virtual ~NStateButton();
-	void addState( const QPixmap & _pixmap, const QString & _tooltip = "" );
+    Q_OBJECT
 
-	inline void setGeneralToolTip( const QString & _tooltip )
-	{
-		m_generalToolTip = _tooltip;
-	}
+  public:
+    NStateButton(QWidget* _parent);
+    virtual ~NStateButton();
+    void addState(const QPixmap& _pixmap, const QString& _tooltip = "");
 
-	inline int state() const
-	{
-		return( m_curState );
-	}
+    INLINE void setGeneralToolTip(const QString& _tooltip)
+    {
+        m_generalToolTip = _tooltip;
+    }
 
+    INLINE int state() const
+    {
+        return m_curState;
+    }
 
-public slots:
-	void changeState( int _n );
-	void moveToNextState();
+  public slots:
+    virtual void changeState(int _n);
+    virtual void moveToNextState();
 
+  signals:
+    void changedState(int _n);
 
-signals:
-	void changedState( int _n );
+  protected:
+    //virtual void mousePressEvent(QMouseEvent* _me);
 
-
-protected:
-	virtual void mousePressEvent( QMouseEvent * _me );
-
-
-private:
-	QVector<QPair<QPixmap, QString> > m_states;
-	QString m_generalToolTip;
-
-	int m_curState;
-
-} ;
+  private:
+    QVector<QPair<QPixmap, QString>> m_states;
+    QString                          m_generalToolTip;
+    int                              m_curState;
+};
 
 #endif

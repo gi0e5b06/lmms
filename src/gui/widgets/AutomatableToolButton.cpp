@@ -38,12 +38,12 @@ AutomatableToolButton::AutomatableToolButton(QWidget*       _parent,
                                              const QString& _displayName,
                                              const QString& _objectName) :
       QToolButton(_parent),
-      BoolModelView(
-              new BoolModel(false, nullptr, _displayName, _objectName, true),
-              this)
+      BoolModelView(this, _displayName)
+// new BoolModel(false, nullptr, _displayName, _objectName, true),
+// this)
 {
     setWindowTitle(_displayName);
-    doConnections();
+    // doConnections();
     setFocusPolicy(Qt::NoFocus);
 }
 
@@ -71,7 +71,7 @@ bool AutomatableToolButton::isChecked()
     // qInfo("AutomatableToolButton::isChecked() c=%d
     // m=%d",QToolButton::isChecked(),model()->rawValue());
 
-    return model()->rawValue();
+    return model()->castValue<bool>(model()->rawValue());
 }
 
 void AutomatableToolButton::modelChanged()
@@ -161,7 +161,7 @@ void AutomatableToolButton::dropEvent(QDropEvent* _de)
     QString val  = StringPairDrag::decodeValue(_de);
     if(type == "float_value")
     {
-        model()->setValue(val.toFloat() ? true : false);
+        model()->setValue(val.toFloat());
         _de->accept();
     }
     else if(type == "automatable_model")

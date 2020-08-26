@@ -27,33 +27,34 @@
 #define LADSPA_2_LMMS_H
 
 #include "LadspaManager.h"
+#include "lmms_basics.h"
 
 class EXPORT Ladspa2LMMS : public LadspaManager
 {
   public:
-    inline l_sortable_plugin_t getInstruments()
+    INLINE l_sortable_plugin_t getInstruments()
     {
-        return (m_instruments);
+        return m_instruments;
     }
 
-    inline l_sortable_plugin_t getValidEffects()
+    INLINE l_sortable_plugin_t getValidEffects()
     {
-        return (m_validEffects);
+        return m_validEffects;
     }
 
-    inline l_sortable_plugin_t getInvalidEffects()
+    INLINE l_sortable_plugin_t getInvalidEffects()
     {
-        return (m_invalidEffects);
+        return m_invalidEffects;
     }
 
-    inline l_sortable_plugin_t getAnalysisTools()
+    INLINE l_sortable_plugin_t getAnalysisTools()
     {
-        return (m_analysisTools);
+        return m_analysisTools;
     }
 
-    inline l_sortable_plugin_t getOthers()
+    INLINE l_sortable_plugin_t getOthers()
     {
-        return (m_otherPlugins);
+        return m_otherPlugins;
     }
 
     QString getShortName(const ladspa_key_t& _key);

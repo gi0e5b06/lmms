@@ -85,7 +85,7 @@ class EXPORT Oscillator /*final*/
         delete m_subOsc;
     }
 
-    inline void setUserWave(const SampleBuffer* _wave)
+    INLINE void setUserWave(SampleBufferPointer _wave)
     {
         m_userWave = _wave;
     }
@@ -94,14 +94,14 @@ class EXPORT Oscillator /*final*/
 
     // now follow the wave-shape-routines...
 
-    static inline sample_t sinSample(real_t _sample)
+    static INLINE sample_t sinSample(real_t _sample)
     {
         // return sinf( _sample * F_2PI );
         // return fastnormsinf01(fraction(_sample));
         return WaveForm::sine(positivefraction(_sample));
     }
 
-    static inline sample_t triangleSample(const real_t _sample)
+    static INLINE sample_t triangleSample(const real_t _sample)
     {
         /*
         const real_t ph = fraction( _sample );
@@ -119,21 +119,21 @@ class EXPORT Oscillator /*final*/
         return WaveForm::triangle(positivefraction(_sample));
     }
 
-    static inline sample_t sawSample(const real_t _sample)
+    static INLINE sample_t sawSample(const real_t _sample)
     {
         // return -1.0f + fraction( _sample ) * 2.0f;
         // return fastsawf01(fraction(_sample));
         return WaveForm::ramp(positivefraction(_sample));
     }
 
-    static inline sample_t squareSample(const real_t _sample)
+    static INLINE sample_t squareSample(const real_t _sample)
     {
         // return ( fraction( _sample ) > 0.5f ) ? -1.0f : 1.0f;
         // return fastsquaref01(fraction(_sample));
         return WaveForm::square(positivefraction(_sample));
     }
 
-    static inline sample_t moogSawSample(const real_t _sample)
+    static INLINE sample_t moogSawSample(const real_t _sample)
     {
         /*
         const real_t ph = fraction( _sample );
@@ -147,7 +147,7 @@ class EXPORT Oscillator /*final*/
         return WaveForm::harshramp(positivefraction(_sample));
     }
 
-    static inline sample_t expSample(const real_t _sample)
+    static INLINE sample_t expSample(const real_t _sample)
     {
         /*
         real_t ph = fraction( _sample );
@@ -161,7 +161,7 @@ class EXPORT Oscillator /*final*/
         return WaveForm::sqpeak(positivefraction(_sample));
     }
 
-    static inline sample_t noiseSample(const real_t _sample)
+    static INLINE sample_t noiseSample(const real_t _sample)
     {
         // Precise implementation
         // return 1.0f - rand() * 2.0f / RAND_MAX;
@@ -171,7 +171,7 @@ class EXPORT Oscillator /*final*/
         return WaveForm::whitenoise(positivefraction(_sample));
     }
 
-    inline sample_t userWaveSample(const real_t _sample) const
+    INLINE sample_t userWaveSample(const real_t _sample) const
     {
         return m_userWave->userWaveSample(_sample);
     }
@@ -186,7 +186,7 @@ class EXPORT Oscillator /*final*/
     Oscillator*         m_subOsc;
     real_t              m_phaseOffset;
     real_t              m_phase;
-    const SampleBuffer* m_userWave;
+    SampleBufferPointer m_userWave;
 
     void updateNoSub(sampleFrame*   _ab,
                      const fpp_t    _frames,
@@ -210,7 +210,7 @@ class EXPORT Oscillator /*final*/
     real_t      syncInit(sampleFrame*   _ab,
                          const fpp_t    _frames,
                          const ch_cnt_t _chnl);
-    inline bool syncOk(real_t _osc_coeff);
+    INLINE bool syncOk(real_t _osc_coeff);
 
     template <WaveShapes W>
     void updateNoSub(sampleFrame*   _ab,
@@ -238,9 +238,9 @@ class EXPORT Oscillator /*final*/
                   const ch_cnt_t _chnl);
 
     template <WaveShapes W>
-    inline sample_t getSample(const real_t _sample);
+    INLINE sample_t getSample(const real_t _sample);
 
-    inline void recalcPhase();
+    INLINE void recalcPhase();
 };
 
 #endif

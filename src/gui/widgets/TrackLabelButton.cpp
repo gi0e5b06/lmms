@@ -38,12 +38,10 @@
 #include <QMouseEvent>
 
 TrackLabelButton::TrackLabelButton(TrackView* _tv, QWidget* _parent) :
-      QToolButton(_parent), m_trackView(_tv), m_iconName()
+    QToolButton(_parent), m_trackView(_tv)//, m_iconName()
 {
     setAttribute(Qt::WA_OpaquePaintEvent, true);
     setAcceptDrops(true);
-    // setCursor(Qt::PointingHandCursor);
-    // setCursor( QCursor( embed::getIconPixmap( "hand" ), 3, 3 ) );
     setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
     m_renameLineEdit = new TrackRenameLineEdit(this);
     m_renameLineEdit->hide();
@@ -65,10 +63,10 @@ TrackLabelButton::TrackLabelButton(TrackView* _tv, QWidget* _parent) :
     }
 
     setIconSize(QSize(20, 20));
-    connect(m_trackView->track(), SIGNAL(dataChanged()), this,
-            SLOT(update()));
-    connect(m_trackView->track(), SIGNAL(nameChanged()), this,
-            SLOT(nameChanged()));
+    Track* t = m_trackView->track();
+    connect(t, SIGNAL(dataChanged()), this, SLOT(update()));
+    connect(t, SIGNAL(nameChanged()), this, SLOT(onNameChanged()));
+    connect(t, SIGNAL(iconChanged()), this, SLOT(onIconChanged()));
 }
 
 TrackLabelButton::~TrackLabelButton()
@@ -115,7 +113,27 @@ void TrackLabelButton::renameFinished()
     }
 }
 
-void TrackLabelButton::nameChanged()
+void TrackLabelButton::onIconChanged()
+{
+    // QIcon icon=QToolButton::icon();
+    // setIcon(icon);
+
+    InstrumentTrack* it
+            = dynamic_cast<InstrumentTrack*>(m_trackView->track());
+    const PixmapLoader* pl;
+    if(it != nullptr && it->instrument() != nullptr
+       && it->instrument()->descriptor()
+       && (pl = it->instrument()->descriptor()->logo()))
+    {
+        if(pl != nullptr)  // pl->name() != m_iconName)
+        {
+            //m_iconName = pl->name();
+            setIcon(pl->pixmap());
+        }
+    }
+}
+
+void TrackLabelButton::onNameChanged()
 {
     setText(elideName(m_trackView->track()->name()));
 }
@@ -162,6 +180,7 @@ void TrackLabelButton::mouseReleaseEvent(QMouseEvent* _me)
 
 void TrackLabelButton::paintEvent(QPaintEvent* _pe)
 {
+    /*
     if(m_trackView->track()->type() == Track::InstrumentTrack)
     {
         InstrumentTrack* it
@@ -170,13 +189,14 @@ void TrackLabelButton::paintEvent(QPaintEvent* _pe)
         if(it && it->instrument() && it->instrument()->descriptor()
            && (pl = it->instrument()->descriptor()->logo()))
         {
-            if(pl->pixmapName() != m_iconName)
+            if(pl->name() != m_iconName)
             {
-                m_iconName = pl->pixmapName();
+                m_iconName = pl->name();
                 setIcon(pl->pixmap());
             }
         }
     }
+    */
     QToolButton::paintEvent(_pe);
 }
 

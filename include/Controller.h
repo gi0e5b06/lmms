@@ -30,7 +30,7 @@
 //#include "Model.h"
 #include "AutomatableModel.h"
 //#include "JournallingObject.h"
-#include "lmms_math.h"
+//#include "lmms_math.h"
 #include "templates.h"
 //#include "ValueBuffer.h"
 
@@ -38,7 +38,7 @@ class ControllerDialog;
 class Controller;
 class ControllerConnection;
 
-typedef QVector<Controller*> ControllerVector;
+typedef QVector<Controller*> Controllers;
 
 class Controller : public Model, public JournallingObject
 {
@@ -68,7 +68,7 @@ class Controller : public Model, public JournallingObject
     // virtual ValueBuffer * valueBuffer();
     // virtual bool hasChanged() const;
 
-    inline bool isSampleExact() const
+    INLINE bool isSampleExact() const
     {
         return m_sampleExact;
     }
@@ -78,7 +78,7 @@ class Controller : public Model, public JournallingObject
         m_sampleExact = _exact;
     }
 
-    inline ControllerTypes type() const
+    INLINE ControllerTypes type() const
     {
         return m_type;
     }
@@ -88,7 +88,7 @@ class Controller : public Model, public JournallingObject
         return m_name;
     }
 
-    inline bool isEnabled() const
+    INLINE bool isEnabled() const
     {
         return m_enabledModel.value();
     }
@@ -100,7 +100,7 @@ class Controller : public Model, public JournallingObject
     static Controller* create(ControllerTypes _tt, Model* _parent);
     static Controller* create(const QDomElement& _this, Model* _parent);
 
-    inline static real_t fittedValue(real_t _val)
+    INLINE static real_t fittedValue(real_t _val)
     {
         return bound(0., _val, 1.);
         // return tLimit<real_t>(_val, 0., 1.);
@@ -164,7 +164,7 @@ class Controller : public Model, public JournallingObject
 
     BoolModel m_enabledModel;
 
-    static ControllerVector s_controllers;
+    static Controllers s_controllers;
 
     static long s_periods;
 

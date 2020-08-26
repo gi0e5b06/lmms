@@ -30,10 +30,11 @@
 
 #include <QHash>
 #include <QStack>
+#include <QObject>
 
 class JournallingObject;
 
-class ProjectJournal
+class ProjectJournal : public QObject
 {
   public:
     static const int MAX_UNDO_STATES;
@@ -57,6 +58,13 @@ class ProjectJournal
     void setJournalling(const bool _on)
     {
         m_journalling = _on;
+    }
+
+    bool testAndSetJournalling(const bool _newState)
+    {
+        const bool oldJournalling = m_journalling;
+        m_journalling             = _newState;
+        return oldJournalling;
     }
 
     // alloc new ID and register object _obj to it

@@ -24,7 +24,7 @@
 #include "Mixer.h"
 
 #include "AudioPort.h"
-#include "EnvelopeAndLfoParameters.h"
+#include "EnvelopeAndLfo.h"
 #include "FxMixer.h"
 #include "InstrumentTrack.h"
 #include "MixerWorkerThread.h"
@@ -402,8 +402,8 @@ void Mixer::pushInputFrames(sampleFrame* _ab, const f_cnt_t _frames)
     doneChangeInModel();
 }
 
-SampleBuffer* s_metronome1 = nullptr;
-SampleBuffer* s_metronome2 = nullptr;
+SampleBufferPointer s_metronome1 = nullptr;
+SampleBufferPointer s_metronome2 = nullptr;
 
 const surroundSampleFrame* Mixer::renderNextBuffer()
 {
@@ -433,11 +433,11 @@ const surroundSampleFrame* Mixer::renderNextBuffer()
        Engine::getSong()->hasTracks())  // countTracks())
     {
         if(!s_metronome1)
-            s_metronome1 = sharedObject::ref(
-                    new SampleBuffer("misc/metronome01.ogg"));
+            s_metronome1 =  // sharedObject::ref(
+                    (new SampleBuffer("misc/metronome01.ogg"))->pointer();
         if(!s_metronome2)
-            s_metronome2 = sharedObject::ref(
-                    new SampleBuffer("misc/metronome02.ogg"));
+            s_metronome2 =  // sharedObject::ref(
+                    (new SampleBuffer("misc/metronome02.ogg"))->pointer();
 
         const tick_t ticksPerTact = MidiTime::ticksPerTact();
         const tick_t ticksPerBeat
@@ -635,7 +635,7 @@ const surroundSampleFrame* Mixer::renderNextBuffer()
     runChangesInModel();
 
     // and trigger LFOs
-    EnvelopeAndLfoParameters::instances()->trigger();
+    EnvelopeAndLfo::instances()->trigger();
     Controller::triggerFrameCounter();
     AutomatableModel::incrementPeriodCounter();
 
@@ -934,7 +934,7 @@ void Mixer::addPlayHandle1(PlayHandlePointer _ph)
         _ph->setFinished();
         // emit playHandleToRemove(_ph);
     }
-    else
+    // else
     {
         if(m_playHandles.contains(_ph) || m_playHandlesToAdd.contains(_ph))
         {
@@ -1065,6 +1065,7 @@ void Mixer::deletePlayHandle1(PlayHandlePointer _ph)
             {
                 NotePlayHandleManager::release(nph);
                 emit playHandleDeleted(_ph);
+                _ph.clear();
             }
         }
         else
@@ -1082,13 +1083,15 @@ void Mixer::deletePlayHandle1(PlayHandlePointer _ph)
 
             if(_ph->type() == 2)
                 qInfo("   deleting IPH");
+            // if(_ph->type() == 4)
+            //    qInfo("   deleting SPH");
             if(_ph->type() == 8)
                 qInfo("   deleting PPH");
-            // delete _ph;
             // DELETE_HELPER(_ph);
             emit playHandleDeleted(_ph);
             QCoreApplication::sendPostedEvents();
             // QThread::yieldCurrentThread();
+            delete _ph.data();
             _ph.clear();
         }
     }
@@ -1139,7 +1142,7 @@ void Mixer::removePlayHandlesOfTypes1(const Track* _track,
             [this](PlayHandlePointer ph) {
                 if(ph->type() == 2)
                     qInfo("   set finished to iph");
-                ph->resetRefCount();
+                // ph->resetRefCount();
                 ph->setFinished();
                 // this->removePlayHandle(ph);
             },
@@ -1181,7 +1184,7 @@ void Mixer::removePlayHandlesForInstrument1(const Instrument* _instrument)
                 if(ph->type() == 2)
                     qInfo("Mixer::removePlayHandlesForInstrument1 set "
                           "finished to iph");
-                ph->resetRefCount();
+                // ph->resetRefCount();
                 ph->setFinished();
                 // this->removePlayHandle(ph);
             },
@@ -1215,7 +1218,7 @@ void Mixer::removeAllPlayHandles1()
 
     r.map(
             [this](PlayHandlePointer ph) {
-                ph->resetRefCount();
+                // ph->resetRefCount();
                 ph->setFinished();
             },
             true);
@@ -1317,7 +1320,7 @@ void Mixer::waitUntilNoPlayHandle(const Track* _track, const quint8 _types)
                   ph->type(), ph->isFinished(), m_playHandles.contains(ph),
                   m_playHandlesToAdd.contains(ph),
                   m_playHandlesToRemove.contains(ph));
-            ph->resetRefCount();  // force ?
+            // ph->resetRefCount();  // force ?
             ph->setFinished();
         });
 
@@ -1392,7 +1395,7 @@ void Mixer::waitUntilNoPlayHandle(const Instrument* _instrument)
                   ph->type(), ph->isFinished(), m_playHandles.contains(ph),
                   m_playHandlesToAdd.contains(ph),
                   m_playHandlesToRemove.contains(ph));
-            ph->resetRefCount();  // force?
+            // ph->resetRefCount();  // force?
             ph->setFinished();
         });
 

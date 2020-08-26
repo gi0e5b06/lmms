@@ -76,14 +76,6 @@ VisualizationWidget::VisualizationWidget(int         _width,
     // resizeCache(w, h);
     setAttribute(Qt::WA_OpaquePaintEvent, true);
 
-    // const fpp_t frames = Engine::mixer()->framesPerPeriod();
-    // m_buffer = new sampleFrame[frames];
-    // BufferManager::clear( m_buffer, frames );
-
-    // m_len    = qMax<int>(1024, Engine::mixer()->framesPerPeriod());
-    // m_buffer = MM_ALLOC(sampleFrame, m_len);  // BufferManager::acquire();
-    // memset(m_buffer, 0, sizeof(sampleFrame) * m_len);
-
     ToolTip::add(this, tr("Left-click to display, middle-click to freeze, "
                           "right-click to stabilize."));
 
@@ -95,8 +87,6 @@ VisualizationWidget::VisualizationWidget(int         _width,
 
 VisualizationWidget::~VisualizationWidget()
 {
-    // BufferManager::release(m_buffer);
-    // MM_FREE(m_buffer);  // delete[] m_buffer;
     delete[] m_points;
 }
 

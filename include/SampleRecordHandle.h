@@ -27,12 +27,13 @@
 
 #include "MidiTime.h"
 #include "PlayHandle.h"
+#include "SampleBuffer.h"
 
 //#include <QList>
 #include <QPair>
 
 class BBTrack;
-class SampleBuffer;
+// class SampleBuffer;
 class SampleTCO;
 class SampleTrack;
 
@@ -49,7 +50,8 @@ class SampleRecordHandle : public PlayHandle
     virtual bool isFromInstrument(const Instrument* _instrument) const;
 
     f_cnt_t framesRecorded() const;
-    void    createSampleBuffer(SampleBuffer** _sample_buf);
+    // void createSampleBuffer(SampleBuffer** _sample_buf);
+    SampleBufferPointer createSampleBuffer();
 
     virtual void enterMixer();
     virtual void exitMixer();

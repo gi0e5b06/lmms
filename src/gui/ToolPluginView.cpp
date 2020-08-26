@@ -1,8 +1,9 @@
 /*
  * ToolPluginView.cpp - implementation of ToolPluginView
  *
- * Copyright (c) 2006-2008 Javier Serrano Polo <jasp00/at/users.sourceforge.net>
- * Copyright (c) 2009 Tobias Doerffel <tobydox/at/users.sourceforge.net>
+ * Copyright (c) 2006-2008 Javier Serrano Polo
+ * <jasp00/at/users.sourceforge.net> Copyright (c) 2009 Tobias Doerffel
+ * <tobydox/at/users.sourceforge.net>
  *
  * This file is part of LMMS - https://lmms.io
  *
@@ -28,20 +29,25 @@
 #include "GuiApplication.h"
 #include "MainWindow.h"
 #include "ToolPlugin.h"
-
-#include "embed.h" // REQUIRED
+#include "SubWindow.h"
+#include "embed.h"  // REQUIRED
 
 //#include <QIcon>
 
-
-ToolPluginView::ToolPluginView( ToolPlugin * _toolPlugin ) :
-	PluginView( _toolPlugin, NULL )
+ToolPluginView::ToolPluginView(ToolPlugin* _toolPlugin) :
+      PluginView(_toolPlugin, nullptr)
 {
-	//gui->mainWindow()->addWindowedWidget( this );
-	//parentWidget()->setAttribute( Qt::WA_DeleteOnClose, false );
-	SubWindow::putWidgetOnWorkspace(this,false,false,false);
-	setWindowTitle( _toolPlugin->displayName() );
-	setWindowIcon( _toolPlugin->descriptor()->logo()->pixmap() );
+    qInfo("ToolPluginView::ToolPluginView");
+    // gui->mainWindow()->addWindowedWidget( this );
+    // parentWidget()->setAttribute( Qt::WA_DeleteOnClose, false );
+    m_window=SubWindow::putWidgetOnWorkspace(this, false, false, true, false);
+    setWindowTitle(_toolPlugin->displayName());
+    setWindowIcon(_toolPlugin->descriptor()->logo()->pixmap());
 }
 
-
+ToolPluginView::~ToolPluginView()
+{
+    qInfo("ToolPluginView::~ToolPluginView");
+    m_window->deleteLater();
+    m_window=nullptr;
+}

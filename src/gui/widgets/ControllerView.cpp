@@ -121,11 +121,11 @@ ControllerView::~ControllerView()
     }
 }
 
-void ControllerView::setModel(Model* model, bool isOldModelValid)
+void ControllerView::setModel(Model* model)//, bool isOldModelValid)
 {
     if(model == nullptr)
         qWarning("!!! ControllerView::setModel() model is nullptr");
-    this->ModelView::setModel(model, isOldModelValid);
+    ModelView::setModel(model);//, isOldModelValid);
 }
 
 void ControllerView::editControls()

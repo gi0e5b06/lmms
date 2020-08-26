@@ -34,6 +34,7 @@
 #include "Clipboard.h"
 #include "ComboBox.h"
 #include "ConfigManager.h"
+#include "EditorOverlay.h"
 #include "GuiApplication.h"
 #include "Knob.h"
 #include "LcdSpinBox.h"
@@ -48,7 +49,11 @@
 #include "TimeLineWidget.h"
 #include "ToolTip.h"
 #include "VisualizationWidget.h"
+
+//#include "debug.h"
 #include "embed.h"
+#include "gui_templates.h"
+#include "lmms_qt_core.h"
 
 #include <QAction>
 #include <QKeyEvent>
@@ -90,22 +95,14 @@ SongEditor::SongEditor(Song* song) :
               new ComboBoxModel(editorModel(), tr("Quantize"), "quantize")),
       m_scrollBack(false),
       m_smoothScroll(
-              ConfigManager::inst()->value("ui", "smoothscroll").toInt()),
-      m_mode(DrawMode)
+              ConfigManager::inst()->value("ui", "smoothscroll").toInt())
 {
     // m_zoomingXModel->setParent(this);
     // m_zoomingYModel->setParent(this);
     // m_quantizeModel->setParent(this);
 
     // create time-line
-    int widgetTotal
-            = ConfigManager::inst()->value("ui", "compacttrackbuttons")
-                                      .toInt()
-                              == 1
-                      ? DEFAULT_SETTINGS_WIDGET_WIDTH_COMPACT
-                                + TRACK_OP_WIDTH_COMPACT
-                      : DEFAULT_SETTINGS_WIDGET_WIDTH + TRACK_OP_WIDTH;
-    m_timeLine = new TimeLineWidget(widgetTotal, 32, pixelsPerTact(),
+    m_timeLine = new TimeLineWidget(headerWidth(), 32, pixelsPerTact(),
                                     m_song->m_playPos[Song::Mode_PlaySong],
                                     m_currentPosition, this);
     connect(this, SIGNAL(positionChanged(const MidiTime&)),
@@ -327,35 +324,43 @@ SongEditor::SongEditor(Song* song) :
             SLOT(updateScrollBar(int)));
 
     // Set up zooming x model
-    EditorWindow::fillZoomLevels(*m_zoomingXModel);
-    /*
-    for(const float& zoomLevel : EditorWindow::ZOOM_LEVELS)
-        m_zoomingXModel->addItem(QString("%1%").arg(zoomLevel * 100));
-    */
-    m_zoomingXModel->setInitValue(m_zoomingXModel->findText("100%"));
+    EditorWindow::fillZoomLevels(*m_zoomingXModel, false);
+    m_zoomingXModel->setInitValue(m_zoomingXModel->findText("100%", true, 0));
     connect(m_zoomingXModel, SIGNAL(dataChanged()), this,
             SLOT(zoomingXChanged()));
 
     // Set up zooming y model
-    EditorWindow::fillZoomLevels(*m_zoomingYModel);
+    EditorWindow::fillZoomLevels(*m_zoomingYModel, false);
     /*
     for(const float& zoomLevel : EditorWindow::ZOOM_LEVELS)
         m_zoomingYModel->addItem(QString("%1%").arg(zoomLevel * 100));
     */
-    m_zoomingYModel->setInitValue(m_zoomingYModel->findText("100%"));
+    m_zoomingYModel->setInitValue(m_zoomingYModel->findText("100%", true, 0));
     connect(m_zoomingYModel, SIGNAL(dataChanged()), this,
             SLOT(zoomingYChanged()));
 
     // Quantize
-    EditorWindow::fillQuantizeLevels(*m_quantizeModel);
-    m_quantizeModel->setInitValue(m_quantizeModel->findText("1/1"));
+    EditorWindow::fillQuantizeLevels(*m_quantizeModel, false);
+    m_quantizeModel->setInitValue(m_quantizeModel->findText("1/1", true, 0));
 
+    setOverlay(new EditorOverlay(this, this));
+    setMouseTracking(true);
     setFocusPolicy(Qt::StrongFocus);
     setFocus();
+    connect(m_timeLine, SIGNAL(verticalLine(int, int)), overlay(),
+            SLOT(verticalLine(int, int)));
 }
 
 SongEditor::~SongEditor()
 {
+}
+
+int SongEditor::headerWidth()
+{
+    return CONFIG_GET_BOOL("ui.compacttrackbuttons")
+                   ? DEFAULT_SETTINGS_WIDGET_WIDTH_COMPACT
+                             + TRACK_OP_WIDTH_COMPACT
+                   : DEFAULT_SETTINGS_WIDGET_WIDTH + TRACK_OP_WIDTH;
 }
 
 void SongEditor::saveSettings(QDomDocument& doc, QDomElement& element)
@@ -368,107 +373,242 @@ void SongEditor::loadSettings(const QDomElement& element)
     MainWindow::restoreWidgetState(parentWidget(), element);
 }
 
-void SongEditor::setHighQuality(bool hq)
+void SongEditor::setHighQuality(bool _on)
 {
     Engine::mixer()->changeQuality(Mixer::qualitySettings(
-            hq ? Mixer::qualitySettings::Mode_HighQuality
-               : Mixer::qualitySettings::Mode_Draft));
+            _on ? Mixer::qualitySettings::Mode_HighQuality
+                : Mixer::qualitySettings::Mode_Draft));
 }
 
-void SongEditor::scrolled(int new_pos)
+void SongEditor::scrolled(int _newPos)
 {
-    m_currentPosition = MidiTime(new_pos, 0);
+    m_currentPosition = MidiTime(_newPos, 0);
     update();
     emit positionChanged(m_currentPosition);
 }
 
-void SongEditor::setEditMode(EditMode mode)
+/*
+void SongEditor::setEditMode(int _mode)
 {
-    m_mode = mode;
+    qInfo("SongEditor::setEditMode mode=%d (ms=%d)", _mode, (int)ModeSelect);
+    m_editMode = (EditMode)_mode;
 }
+*/
 
+/*
 void SongEditor::setEditModeDraw()
 {
-    setEditMode(DrawMode);
+    setEditMode(ModeDraw);
 }
 
 void SongEditor::setEditModeSelect()
 {
-    setEditMode(SelectMode);
+    setEditMode(ModeSelect);
+}
+*/
+
+void SongEditor::closeEvent(QCloseEvent* ce)
+{
+    if(parentWidget() != nullptr)
+        parentWidget()->hide();
+    else
+        hide();
+
+    ce->ignore();
+}
+
+void SongEditor::focusOutEvent(QFocusEvent*)
+{
+    // m_editMode = m_ctrlMode;
+    update();
 }
 
 void SongEditor::keyPressEvent(QKeyEvent* ke)
 {
-    // qInfo("SongEditor::keyPressEvent key=%d",ke->key());
+    /*
+    qInfo("Keyboard: key=%d scancode=%ud virtual=%ud '%s'", ke->key(),
+          ke->nativeScanCode(), ke->nativeVirtualKey(),
+          qPrintable(ke->text()));
+    */
 
-    if(ke->modifiers() & Qt::ShiftModifier && ke->key() == Qt::Key_Insert)
+    switch(ke->key())
     {
-        m_song->insertBar();
-    }
-    else if(ke->modifiers() & Qt::ShiftModifier
-            && ke->key() == Qt::Key_Delete)
-    {
-        m_song->removeBar();
-    }
-    else if(ke->key() == Qt::Key_Left)
-    {
-        tick_t t = m_song->currentTick() - MidiTime::ticksPerTact();
-        if(t >= 0)
+        case Qt::Key_Down:
+        case Qt::Key_Up:
+            // TODO
+            break;
+
+        case Qt::Key_Left:
+        case Qt::Key_Right:
         {
+            // TODO: alt -> next pattern
+            int direction = ke->key() == Qt::Key_Right ? +4 : -4;
+            if(ke->modifiers() & Qt::ShiftModifier)
+                direction /= 4;
+            if(ke->modifiers() & Qt::MetaModifier)
+                direction *= 4;
+
+            tick_t t = qBound(0,
+                              m_song->currentTick()
+                                      + direction * MidiTime::ticksPerTact()
+                                                / 4,
+                              MaxSongLength);
             m_song->setPlayPos(t, Song::Mode_PlaySong);
+            break;
         }
+
+        case Qt::Key_Delete:
+            if(ke->modifiers() & Qt::ShiftModifier)
+                m_song->removeBar();
+            else
+                deleteSelection();
+            break;
+
+        case Qt::Key_Escape:
+            selectAllTcos(false);
+            break;
+
+        case Qt::Key_Home:
+            m_song->setPlayPos(0, Song::Mode_PlaySong);
+            break;
+
+        case Qt::Key_Insert:
+            if(ke->modifiers() & Qt::ShiftModifier)
+                m_song->insertBar();
+            break;
+
+        case Qt::Key_A:
+            if(ke->modifiers() & Qt::ControlModifier)
+                // select/unselect all
+                selectAllTcos(!(ke->modifiers() & Qt::ShiftModifier));
+            break;
+
+        case Qt::Key_K:
+            if(ke->modifiers() & Qt::ControlModifier)
+                splitTiles();
+            break;
+
+        case Qt::Key_J:
+            if(ke->modifiers() & Qt::ControlModifier)
+                joinTiles();
+            break;
+
+        case Qt::Key_1:
+        case Qt::Key_2:
+        case Qt::Key_3:
+        case Qt::Key_4:
+        case Qt::Key_5:
+        case Qt::Key_6:
+        case Qt::Key_7:
+        case Qt::Key_8:
+        case Qt::Key_9:
+            // TODO
+            break;
+
+        case Qt::Key_0:
+            // TODO
+            break;
+
+        case Qt::Key_Period:
+            // TODO
+            break;
+
+        default:
+            // qInfo("SongEditor: shift=%d key=%d",
+            //  bool(ke->modifiers() & Qt::ShiftModifier), ke->key());
+            break;
     }
-    else if(ke->key() == Qt::Key_Right)
+
+    TrackContainerView::keyPressEvent(ke);
+    requireActionUpdate();
+    // update();//??
+}
+
+/*
+void SongEditor::keyReleaseEvent(QKeyEvent* ke)
+{
+    TrackContainerView::keyReleaseEvent(ke);
+    // requireActionUpdate(); ???
+    // update();//??
+}
+*/
+
+/*
+void SongEditor::leaveEvent(QEvent* _le)
+{
+    // s_textFloat->hide();
+    // Editor::resetOverrideCursor();
+    TrackContainerView::leaveEvent(_le);
+    // update();
+}
+*/
+
+/*
+void SongEditor::mouseMoveEvent(QMouseEvent* _me)
+{
+    qInfo("SongEditor::mouseMoveEvent %d,%d", _me->x(), _me->y());
+    TrackContainerView::mouseMoveEvent(_me);
+}
+*/
+
+/*
+void SongEditor::paintEvent(QPaintEvent* _pe)
+{
+   qInfo("SongEditor::paintEvent");
+   TrackContainerView::paintEvent(_pe);
+}
+*/
+
+void SongEditor::resizeEvent(QResizeEvent* _re)
+{
+    TrackContainerView::resizeEvent(_re);
+    overlay()->setGeometry(headerWidth(), m_timeLine->height(),
+                           width() - headerWidth() - vsbWidth(),
+                           height() - m_timeLine->height()
+                                   - 12);  // - hsbHeight());
+}
+
+void SongEditor::wheelEvent(QWheelEvent* we)
+{
+    /*
+    if( we->modifiers() & Qt::ControlModifier )
     {
-        tick_t t = m_song->currentTick() + MidiTime::ticksPerTact();
-        if(t < MaxSongLength)
-        {
-            m_song->setPlayPos(t, Song::Mode_PlaySong);
-        }
+            int z = m_zoomingXModel->value();
+
+            if( we->delta() > 0 )
+            {
+                    z++;
+            }
+            else if( we->delta() < 0 )
+            {
+                    z--;
+            }
+            z = qBound( 0, z, m_zoomingXModel->size() - 1 );
+            // update combobox with zooming-factor
+            m_zoomingXModel->setValue( z );
+
+            // update timeline
+            m_song->m_playPos[Song::Mode_PlaySong].m_timeLine->
+                                    setPixelsPerTact( pixelsPerTact() );
+            // and make sure, all TCO's are resized and relocated
+            realignTracks();
     }
-    else if(ke->key() == Qt::Key_Home)
+    else
+    */
+    if(we->modifiers() & Qt::ShiftModifier
+       || we->orientation() == Qt::Horizontal)
     {
-        m_song->setPlayPos(0, Song::Mode_PlaySong);
-    }
-    else if(ke->key() == Qt::Key_Delete)
-    {
-        deleteSelection();
-        /*
-        QVector<TileView *> tcoViews;
-        QVector<SelectableObject *> so = selectedObjects();
-        for( QVector<SelectableObject *>::iterator it = so.begin();
-                        it != so.end(); ++it )
-        {
-                TileView * tcov =
-                        dynamic_cast<TileView *>( *it );
-                tcov->remove();
-        }
-        */
-    }
-    else if(ke->modifiers() & Qt::ControlModifier && ke->key() == Qt::Key_A)
-    {
-        selectAllTcos(!(ke->modifiers() & Qt::ShiftModifier));
-    }
-    else if(ke->key() == Qt::Key_Escape)
-    {
-        selectAllTcos(false);
-    }
-    else if(ke->modifiers() & Qt::ControlModifier && ke->key() == Qt::Key_U)
-    {
-        unitePatterns();
-    }
-    else if(ke->modifiers() & Qt::ControlModifier && ke->key() == Qt::Key_D)
-    {
-        dividePatterns();
+        m_leftRightScroll->setValue(m_leftRightScroll->value()
+                                    - we->delta() / 30);
+        we->accept();
     }
     else
     {
-        // qInfo("SongEditor: shift=%d key=%d",
-        //  bool(ke->modifiers() & Qt::ShiftModifier), ke->key());
-        QWidget::keyPressEvent(ke);
+        /*
+        m_topBottomScroll->setValue(m_topBottomScroll->value()
+                                    - we->delta() / 30);
+        */
     }
-
-    requireActionUpdate();
 }
 
 tick_t SongEditor::quantization() const
@@ -477,8 +617,12 @@ tick_t SongEditor::quantization() const
     return EditorWindow::QUANTIZE_LEVELS[v];
 }
 
-void SongEditor::unitePatterns()
+void SongEditor::joinTiles()
 {
+    Song* song = Engine::song();
+    if(song->isPlaying())
+        return;
+
     // Unite multiple selected patterns horizontally
     QVector<SelectableObject*> so = selectedObjects();
     qSort(so.begin(), so.end(), SelectableObject::lessThan);
@@ -523,17 +667,27 @@ void SongEditor::unitePatterns()
                 }
                 else
                 {
-                    for(Note* n: p->notes())
+                    tick_t ul = p->unitLength();
+                    if(ul > 0)
                     {
-                        Note* newn = new Note(*n);
-                        newn->setPos(newn->pos() + p->startPosition()
-                                     - newp->startPosition());
-                        newp->addNote(*newn, false);
+                        tick_t pl = p->length().ticks();
+                        for(int i = 0; i <= pl / ul; i++)
+                            for(Note* n: p->notes())
+                            {
+                                if(n->pos() + i * ul < pl)
+                                {
+                                    Note* newn = new Note(*n);
+                                    newn->setPos(newn->pos() + i * ul
+                                                 + p->startPosition()
+                                                 - newp->startPosition());
+                                    newp->addNote(*newn, false);
+                                }
+                            }
+                        newp->changeLength(qMax<int>(
+                                newp->length(),
+                                p->startPosition() - newp->startPosition()
+                                        + p->length()));
                     }
-                    newp->changeLength(qMax<int>(
-                            newp->length(), p->startPosition()
-                                                    - newp->startPosition()
-                                                    + p->length()));
                 }
                 tcov->remove();
             }
@@ -660,57 +814,67 @@ void SongEditor::unitePatterns()
         }
         else if(t->type() == Track::SampleTrack)
         {
-            // Currently not imlementable without creating a new sample
+            // Currently not implementable without creating a new sample
         }
     }
 }
 
-void SongEditor::dividePatterns()
+void SongEditor::splitTiles()
 {
-    // qInfo("SongEditor::dividePatterns");
-    // Split multiple selected patterns at the current position
-    QVector<SelectableObject*> so = selectedObjects();
-    qSort(so.begin(), so.end(), SelectableObject::lessThan);
-    Song* song = Engine::getSong();
+    Song* song = Engine::song();
     if(song->isPlaying())
         return;
 
-    int  splitPos = song->getPlayPos(Song::Mode_PlaySong);
-    bool first    = true;
+    // qInfo("SongEditor::splitTiles");
+    // Split multiple selected patterns at the current position
+    /*
+    SelectableObjects so = selectedObjects();
+    qSort(so.begin(), so.end(), SelectableObject::lessThan);
+    Tiles tiles;
+    for(SelectableObject* o: so)
+    {
+        TileView* tv = dynamic_cast<TileView*>(o);
+        if(tv != nullptr)
+            tiles.append(tv);
+    }
+    */
+
+    MidiTime splitPos = song->getPlayPos(Song::Mode_PlaySong);
+    splitTiles(splitPos, selectedTileViewsAt(splitPos, true, true));
+}
+
+void SongEditor::splitTiles(tick_t _splitPos, TileViews _tileViews)
+{
+    qInfo("SongEditor::splitTiles pos=%d tiles=%d", _splitPos,
+          _tileViews.size());
+    bool first = true;
     for(Track* t: model()->tracks())
     {
         if(t->type() == Track::InstrumentTrack)
         {
-            // qInfo("Divide: instrument track %p",t);
-            for(QVector<SelectableObject*>::iterator it = so.begin();
-                it != so.end(); ++it)
+            // qInfo("Split: instrument track %p",t);
+            for(TileView* tv: _tileViews)
             {
-                TileView* tcov = dynamic_cast<TileView*>(*it);
-                if(!tcov)
+                Tile* tile = tv->getTile();
+                if(tile == nullptr)
                 {
-                    qCritical("Divide: tcov null");
+                    qCritical("Split: tile null");
                     continue;
                 }
-                Tile* tco = tcov->getTile();
-                if(!tco)
-                {
-                    qCritical("Divide: tco null");
+                if(tile->track() != t)
                     continue;
-                }
-                if(tco->track() != t)
-                    continue;
-                Pattern* p = dynamic_cast<Pattern*>(tco);
-                if(!p)
+                Pattern* p = dynamic_cast<Pattern*>(tile);
+                if(p == nullptr)
                 {
-                    qCritical("Divide: p null");
+                    qCritical("Split: p null");
                     continue;
                 }
 
                 // qInfo("pos: s=%d e=%d r=%d",
-                //  (int)p->startPosition(),(int)p->endPosition(),splitPos);
-                if(p->startPosition() >= splitPos)
+                //  (int)p->startPosition(),(int)p->endPosition(),_splitPos);
+                if(p->startPosition() >= _splitPos)
                     continue;
-                if(p->endPosition() <= splitPos)
+                if(p->endPosition() <= _splitPos)
                     continue;
 
                 if(first)
@@ -719,18 +883,20 @@ void SongEditor::dividePatterns()
                     first = false;
                 }
 
+                p->splitAt(_splitPos - p->startPosition());
+                /*
                 Pattern* newp1 = new Pattern(*p);  // 1 left, before
                 newp1->setJournalling(false);
                 newp1->movePosition(p->startPosition());
                 for(Note* n: newp1->notes())
                 {
-                    if(newp1->startPosition() + n->pos() < splitPos)
+                    if(newp1->startPosition() + n->pos() < _splitPos)
                         continue;
                     // qInfo("p1 pos: s=%d n=%d r=%d remove note",
-                    //  (int)newp1->startPosition(),(int)n->pos(),splitPos);
+                    //  (int)newp1->startPosition(),(int)n->pos(),_splitPos);
                     newp1->removeNote(n);
                 }
-                newp1->changeLength(splitPos - p->startPosition());
+                newp1->changeLength(_splitPos - p->startPosition());
 
                 Pattern* newp2 = new Pattern(*p);  // 2 right, after
                 newp2->setJournalling(false);
@@ -739,32 +905,35 @@ void SongEditor::dividePatterns()
                 if(!newp2->isEmpty())
                 {
                     if(newp2->autoRepeat())
-                        newp2->rotate(-(splitPos - p->startPosition())
+                        newp2->rotate(-(_splitPos - p->startPosition())
                                       % newp2->unitLength());
 
                     Notes todelete;
                     for(Note* n: newp2->notes())
                     {
                         if(newp2->autoRepeat()
-                           || (newp2->startPosition() + n->pos() >= splitPos))
+                           || (newp2->startPosition() + n->pos()
+                               >= _splitPos))
                         {
                             // qInfo("p2 pos: s=%d n=%d r=%d k=%d move note",
-                            //  (int)newp2->startPosition(),(int)n->pos(),splitPos,n->key());
+                            //
+                (int)newp2->startPosition(),(int)n->pos(),_splitPos,n->key());
                             n->setPos(n->pos() + newp2->startPosition()
-                                      - splitPos);
+                                      - _splitPos);
                             continue;
                         }
                         // qInfo("p2 pos: s=%d n=%d r=%d k=%d remove note",
-                        //  (int)newp2->startPosition(),(int)n->pos(),splitPos,n->key());
+                        //
+                (int)newp2->startPosition(),(int)n->pos(),_splitPos,n->key());
                         todelete << n;
                     }
                     for(Note* n: todelete)
                         newp2->removeNote(n);
                 }
-                newp2->movePosition(splitPos);
-                newp2->changeLength(p->endPosition() - splitPos);
+                newp2->movePosition(_splitPos);
+                newp2->changeLength(p->endPosition() - _splitPos);
 
-                tcov->remove();
+                tv->remove();
 
                 newp1->rearrangeAllNotes();
                 newp2->rearrangeAllNotes();
@@ -772,41 +941,35 @@ void SongEditor::dividePatterns()
                 newp2->setJournalling(true);
                 newp1->emit dataChanged();
                 newp2->emit dataChanged();
+                */
                 // qInfo("  end of instrument track");
             }
         }
         else if(t->type() == Track::AutomationTrack)
         {
-            // qInfo("Divide: automation track %p",t);
-            for(QVector<SelectableObject*>::iterator it = so.begin();
-                it != so.end(); ++it)
+            // qInfo("Split: automation track %p",t);
+            for(TileView* tv: _tileViews)
             {
-                TileView* tcov = dynamic_cast<TileView*>(*it);
-                if(!tcov)
+                Tile* tile = tv->getTile();
+                if(tile == nullptr)
                 {
-                    qCritical("Unite: tcov null");
+                    qCritical("Unite: tile null");
                     continue;
                 }
-                Tile* tco = tcov->getTile();
-                if(!tco)
-                {
-                    qCritical("Unite: tco null");
+                if(tile->track() != t)
                     continue;
-                }
-                if(tco->track() != t)
-                    continue;
-                AutomationPattern* p = dynamic_cast<AutomationPattern*>(tco);
-                if(!p)
+                AutomationPattern* p = dynamic_cast<AutomationPattern*>(tile);
+                if(p == nullptr)
                 {
-                    qCritical("Divide: p null");
+                    qCritical("Split: p null");
                     continue;
                 }
 
                 // qInfo("pos: s=%d e=%d r=%d",
-                //  (int)p->startPosition(),(int)p->endPosition(),splitPos);
-                if(p->startPosition() >= splitPos)
+                //  (int)p->startPosition(),(int)p->endPosition(),_splitPos);
+                if(p->startPosition() >= _splitPos)
                     continue;
-                if(p->endPosition() <= splitPos)
+                if(p->endPosition() <= _splitPos)
                     continue;
 
                 if(first)
@@ -815,6 +978,8 @@ void SongEditor::dividePatterns()
                     first = false;
                 }
 
+                p->splitAt(_splitPos - p->startPosition());
+                /*
                 AutomationPattern* newp1
                         = new AutomationPattern(*p);  // 1 left, before
                 newp1->setJournalling(false);
@@ -823,17 +988,17 @@ void SongEditor::dividePatterns()
                 for(int t: map1.keys())
                 {
                     // qInfo(" val: t=%d",t);
-                    if(t >= splitPos - p->startPosition())
+                    if(t >= _splitPos - p->startPosition())
                         map1.remove(t);
                 }
-                if(!map1.contains(splitPos - p->startPosition()))
-                    map1.insert(splitPos - p->startPosition(),
-                                p->valueAt(splitPos));
+                if(!map1.contains(_splitPos - p->startPosition()))
+                    map1.insert(_splitPos - p->startPosition(),
+                                p->valueAt(_splitPos));
 
                 // for(QPointer<AutomatableModel> o: p->objects())
                 //              newp->addObject(o);
 
-                newp1->changeLength(splitPos - p->startPosition());
+                newp1->changeLength(_splitPos - p->startPosition());
 
                 AutomationPattern* newp2
                         = new AutomationPattern(*p);  // 2 right, after
@@ -841,63 +1006,56 @@ void SongEditor::dividePatterns()
                 newp2->movePosition(p->startPosition());
                 AutomationPattern::timeMap& map2 = newp2->getTimeMap();
                 if(!map2.contains(0))
-                    map2.insert(0, p->valueAt(splitPos));
+                    map2.insert(0, p->valueAt(_splitPos));
                 for(int t: map2.keys())
                 {
                     float v = map2.value(t);
                     newp2->removeValue(t);
-                    if(t >= splitPos - p->startPosition())
-                        map2.insert(t - splitPos + p->startPosition(), v);
+                    if(t >= _splitPos - p->startPosition())
+                        map2.insert(t - _splitPos + p->startPosition(), v);
                 }
 
                 // for(QPointer<AutomatableModel> o: p->objects())
                 //              newp->addObject(o);
 
-                newp2->changeLength(p->endPosition() - splitPos);
-                newp2->movePosition(splitPos);
+                newp2->changeLength(p->endPosition() - _splitPos);
+                newp2->movePosition(_splitPos);
 
-                tcov->remove();
+                tv->remove();
 
                 newp1->setJournalling(true);
                 newp2->setJournalling(true);
                 newp1->emit dataChanged();
                 newp2->emit dataChanged();
+                */
                 // qInfo("  end of automation track");
             }
         }
         else if(t->type() == Track::BBTrack)
         {
-            // qInfo("Divide: bb track %p",t);
-            for(QVector<SelectableObject*>::iterator it = so.begin();
-                it != so.end(); ++it)
+            // qInfo("Split: bb track %p",t);
+            for(TileView* tv: _tileViews)
             {
-                TileView* tcov = dynamic_cast<TileView*>(*it);
-                // tcov->remove();
-                if(!tcov)
+                Tile* tile = tv->getTile();
+                if(tile == nullptr)
                 {
-                    qCritical("Divide: tcov null");
+                    qCritical("Split: tile null");
                     continue;
                 }
-                Tile* tco = tcov->getTile();
-                if(!tco)
-                {
-                    qCritical("Divide: tco null");
+                if(tile->track() != t)
                     continue;
-                }
-                if(tco->track() != t)
-                    continue;
-                BBTCO* p = dynamic_cast<BBTCO*>(tco);
-                if(!p)
+                BBTCO* p = dynamic_cast<BBTCO*>(tile);
+                if(p == nullptr)
                 {
-                    qCritical("Divide: p null");
+                    qCritical("Split: p null");
                     continue;
                 }
 
                 // qInfo("pos: s=%d e=%d r=%d",
-                //  (int)p->startPosition(),(int)p->endPosition(),splitPos);
-                if(p->startPosition() >= splitPos)
+                //  (int)p->startPosition(),(int)p->endPosition(),_splitPos);
+                if(p->startPosition() >= _splitPos)
                     continue;
-                if(p->endPosition() <= splitPos)
+                if(p->endPosition() <= _splitPos)
                     continue;
 
                 if(first)
@@ -906,10 +1064,12 @@ void SongEditor::dividePatterns()
                     first = false;
                 }
 
+                p->splitAt(_splitPos - p->startPosition());
+                /*
                 BBTCO* newp1 = new BBTCO(*p);  // 1 left, before
                 newp1->setJournalling(false);
                 newp1->movePosition(p->startPosition());
-                newp1->changeLength(splitPos - p->startPosition());
+                newp1->changeLength(_splitPos - p->startPosition());
 
                 qInfo("SE: newp1->track=%p (t=%p)", newp1->track(), t);
                 qInfo("SE: origp: p=%d l=%d", p->startPosition().getTicks(),
@@ -920,52 +1080,45 @@ void SongEditor::dividePatterns()
 
                 BBTCO* newp2 = new BBTCO(*p);  // 2 right, after
                 newp2->setJournalling(false);
-                newp2->movePosition(splitPos);
-                newp2->changeLength(p->endPosition() - splitPos);
+                newp2->movePosition(_splitPos);
+                newp2->changeLength(p->endPosition() - _splitPos);
 
                 // p->deleteLater instead?
-                tcov->remove();
+                tv->remove();
 
                 newp1->setJournalling(true);
                 newp2->setJournalling(true);
                 newp1->emit dataChanged();
                 newp2->emit dataChanged();
+                */
             }
             // qInfo("  end of bb track");
         }
         else if(t->type() == Track::SampleTrack)
         {
-            qInfo("Divide: sample track %p", t);
-            for(QVector<SelectableObject*>::iterator it = so.begin();
-                it != so.end(); ++it)
+            qInfo("Split: sample track %p", t);
+            for(TileView* tv: _tileViews)
             {
-                TileView* tcov = dynamic_cast<TileView*>(*it);
-                // tcov->remove();
-                if(!tcov)
+                Tile* tile = tv->tile();
+                if(tile == nullptr)
                 {
-                    qCritical("Divide: tcov null");
+                    qCritical("Split: tile null");
                     continue;
                 }
-                Tile* tco = tcov->getTile();
-                if(!tco)
-                {
-                    qCritical("Divide: tco null");
+                if(tile->track() != t)
                     continue;
-                }
-                if(tco->track() != t)
-                    continue;
-                SampleTCO* p = dynamic_cast<SampleTCO*>(tco);
-                if(!p)
+                SampleTCO* p = dynamic_cast<SampleTCO*>(tile);
+                if(p == nullptr)
                 {
-                    qCritical("Divide: p null");
+                    qCritical("Split: p null");
                     continue;
                 }
 
                 qInfo("pos: s=%d e=%d r=%d", (int)p->startPosition(),
-                      (int)p->endPosition(), splitPos);
-                if(p->startPosition() >= splitPos)
+                      (int)p->endPosition(), _splitPos);
+                if(p->startPosition() >= _splitPos)
                     continue;
-                if(p->endPosition() <= splitPos)
+                if(p->endPosition() <= _splitPos)
                     continue;
 
                 if(first)
@@ -974,82 +1127,30 @@ void SongEditor::dividePatterns()
                     first = false;
                 }
 
+                p->splitAt(_splitPos - p->startPosition());
+                /*
                 SampleTCO* newp1 = new SampleTCO(*p);  // 1 left, before
                 newp1->setJournalling(false);
                 newp1->movePosition(p->startPosition());
-                newp1->changeLength(splitPos - p->startPosition());
+                newp1->changeLength(_splitPos - p->startPosition());
 
                 SampleTCO* newp2 = new SampleTCO(*p);  // 2 right, after
                 newp2->setJournalling(false);
-                newp2->movePosition(splitPos);
-                newp2->changeLength(p->endPosition() - splitPos);
+                newp2->movePosition(_splitPos);
+                newp2->changeLength(p->endPosition() - _splitPos);
                 newp2->setInitialPlayTick(newp2->initialPlayTick()
-                                          + (splitPos - p->startPosition()));
-
-                tcov->remove();
+                                          + (_splitPos - p->startPosition()));
+                tv->remove();
 
                 newp1->setJournalling(true);
                 newp2->setJournalling(true);
                 newp1->emit dataChanged();
                 newp2->emit dataChanged();
+                */
             }
-            qInfo("Divide: end of sample track");
+            // qInfo("Split: end of sample track");
         }
     }
-}
-
-void SongEditor::wheelEvent(QWheelEvent* we)
-{
-    /*
-    if( we->modifiers() & Qt::ControlModifier )
-    {
-            int z = m_zoomingXModel->value();
-
-            if( we->delta() > 0 )
-            {
-                    z++;
-            }
-            else if( we->delta() < 0 )
-            {
-                    z--;
-            }
-            z = qBound( 0, z, m_zoomingXModel->size() - 1 );
-            // update combobox with zooming-factor
-            m_zoomingXModel->setValue( z );
-
-            // update timeline
-            m_song->m_playPos[Song::Mode_PlaySong].m_timeLine->
-                                    setPixelsPerTact( pixelsPerTact() );
-            // and make sure, all TCO's are resized and relocated
-            realignTracks();
-    }
-    else
-    */
-    if(we->modifiers() & Qt::ShiftModifier
-       || we->orientation() == Qt::Horizontal)
-    {
-        m_leftRightScroll->setValue(m_leftRightScroll->value()
-                                    - we->delta() / 30);
-    }
-    else
-    {
-        we->ignore();
-        return;
-    }
-    we->accept();
-}
-
-void SongEditor::closeEvent(QCloseEvent* ce)
-{
-    if(parentWidget())
-    {
-        parentWidget()->hide();
-    }
-    else
-    {
-        hide();
-    }
-    ce->ignore();
 }
 
 void SongEditor::setMasterVolume(real_t _newVal)
@@ -1064,7 +1165,7 @@ void SongEditor::setMasterVolume(real_t _newVal)
             m_masterVolumeTFT->setVisibilityTimeOut( 1000 );
     }
     */
-    Engine::mixer()->setMasterVolumeGain(_newVal / 100.0f);
+    Engine::mixer()->setMasterVolumeGain(_newVal / 100.);
 }
 
 /*
@@ -1200,7 +1301,8 @@ static inline void
 void SongEditor::updatePosition(const MidiTime& t)
 {
     int widgetWidth, trackOpWidth;
-    if(ConfigManager::inst()->value("ui", "compacttrackbuttons").toInt())
+    // if(ConfigManager::inst()->value("ui", "compacttrackbuttons").toInt())
+    if(CONFIG_GET_BOOL("ui.compacttrackbuttons"))
     {
         widgetWidth  = DEFAULT_SETTINGS_WIDGET_WIDTH_COMPACT;
         trackOpWidth = TRACK_OP_WIDTH_COMPACT;
@@ -1272,6 +1374,7 @@ void SongEditor::zoomingXChanged()
     m_song->m_playPos[Song::Mode_PlaySong].m_timeLine->setPixelsPerTact(
             pixelsPerTact());
     realignTracks();
+    overlay()->update();
 }
 
 void SongEditor::zoomingYChanged()
@@ -1287,24 +1390,37 @@ void SongEditor::zoomingYChanged()
     realignTracks();
     for(TrackView* tv: trackViews())
         tv->track()->setHeight(height());
+    overlay()->update();
 }
 
 void SongEditor::selectAllTcos(bool select)
 {
-    QVector<SelectableObject*> so = select ? rubberBand()->selectableObjects()
-                                           : rubberBand()->selectedObjects();
-    for(int i = 0; i < so.count(); ++i)
-    {
-        so.at(i)->setSelected(select);
-    }
+    SelectableObjects so = select ? rubberBand()->selectableObjects()
+                                  : rubberBand()->selectedObjects();
+    // for(int i = 0; i < so.count(); ++i)
+    //    so.at(i)->setSelected(select);
+    for(SelectableObject* o: so)
+        o->setSelected(select);
 
     // qInfo("SongEditor::selectAllTcos");
     requireActionUpdate();
 }
 
+void SongEditor::selectAll()
+{
+    selectAllTcos(true);
+}
+
+void SongEditor::unselectAll()
+{
+    selectAllTcos(false);
+}
+
 bool SongEditor::allowRubberband() const
 {
-    return m_mode == SelectMode;
+    // qInfo("SongEditor::allowRubberband ModeSelect? %d",
+    //      editMode() == ModeSelect);
+    return editMode() == ModeSelect;
 }
 
 ComboBoxModel* SongEditor::zoomingXModel() const
@@ -1325,18 +1441,21 @@ ComboBoxModel* SongEditor::quantizeModel() const
 SongWindow::SongWindow(Song* song) :
       EditorWindow(Engine::mixer()->audioDev()->supportsCapture()),
       m_editor(new SongEditor(song))
-//, m_crtlAction(nullptr)
+//, m_previousEditAction(nullptr)
 {
     setWindowTitle(tr("Song"));
-    setWindowIcon(embed::getIconPixmap("songeditor"));
+    setWindowIcon(embed::getIcon("songeditor"));
 
     setCentralWidget(m_editor);
+
+    /*
     setAcceptDrops(true);
     m_toolBar->setAcceptDrops(true);
     connect(m_toolBar, SIGNAL(dragEntered(QDragEnterEvent*)), m_editor,
             SLOT(dragEnterEvent(QDragEnterEvent*)));
     connect(m_toolBar, SIGNAL(dropped(QDropEvent*)), m_editor,
             SLOT(dropEvent(QDropEvent*)));
+    */
 
     // Set up buttons
     m_playAction->setToolTip(tr("Play song (Space)"));
@@ -1387,42 +1506,71 @@ SongWindow::SongWindow(Song* song) :
 
     trackActionsToolBar->addAction(
             embed::getIconPixmap("add_instrument_track"),
-            tr("Add instrument-track"), Engine::getSong(),
+            tr("Add instrument-track"), Engine::song(),
             SLOT(addInstrumentTrack()));
 
     trackActionsToolBar->addAction(embed::getIconPixmap("add_bb_track"),
-                                   tr("Add beat/bassline"), Engine::getSong(),
+                                   tr("Add beat/bassline"), Engine::song(),
                                    SLOT(addBBTrack()));
 
     trackActionsToolBar->addAction(embed::getIconPixmap("add_sample_track"),
-                                   tr("Add sample-track"), Engine::getSong(),
+                                   tr("Add sample-track"), Engine::song(),
                                    SLOT(addSampleTrack()));
 
     trackActionsToolBar->addAction(
             embed::getIconPixmap("add_automation_track"),
-            tr("Add automation-track"), Engine::getSong(),
+            tr("Add automation-track"), Engine::song(),
             SLOT(addAutomationTrack()));
 
     // Edit actions
     DropToolBar* editActionsToolBar = addDropToolBarToTop(tr("Edit actions"));
+    buildModeActions(editActionsToolBar);
 
+    /*
     m_editModeGroup  = new ActionGroup(this);
     m_drawModeAction = m_editModeGroup->addAction(embed::getIcon("edit_draw"),
-                                                  tr("Draw mode"));
-    m_drawModeAction->setShortcut(QKeySequence(Qt::SHIFT + Qt::Key_D));
+                                                  TR("Draw mode (Shift+D)"));
+    m_eraseModeAction = m_editModeGroup->addAction(
+            embed::getIcon("edit_erase"), TR("Erase mode (Shift+E)"));
     m_selectModeAction = m_editModeGroup->addAction(
-            embed::getIcon("edit_select"), tr("Edit mode (select and move)"));
-    m_drawModeAction->setShortcut(QKeySequence(Qt::SHIFT + Qt::Key_S));
+            embed::getIcon("edit_select"), TR("Select mode (Shift+S)"));
 
     editActionsToolBar->addSeparator();
     editActionsToolBar->addAction(m_drawModeAction);
+    editActionsToolBar->addAction(m_eraseModeAction);
     editActionsToolBar->addAction(m_selectModeAction);
 
+    m_drawModeAction->setShortcut(Qt::SHIFT | Qt::Key_D);
+    m_eraseModeAction->setShortcut(Qt::SHIFT | Qt::Key_E);
+    m_selectModeAction->setShortcut(Qt::SHIFT | Qt::Key_S);
+
+    connect(m_editModeGroup, SIGNAL(triggered(int)), m_editor,
+            SLOT(setEditMode(int)));
+
+    m_drawModeAction->setChecked(true);
+    */
+
+    m_eraseModeAction->setEnabled(false);
+    m_moveModeAction->setEnabled(false);
+    // m_moveModeAction->setVisible(false);
+    m_splitModeAction->setEnabled(false);
+    m_joinModeAction->setEnabled(false);
+    m_detuneModeAction->setEnabled(false);
+    m_detuneModeAction->setVisible(false);
+
+    connect(m_editModeGroup, SIGNAL(triggered(int)), this,
+            SLOT(setEditMode(int)));
+
+    // m_drawModeAction->setWhatsThis();
+    // m_eraseModeAction->setWhatsThis();
+    // m_selectAction->setWhatsThis();
+
+    /*
     connect(m_drawModeAction, SIGNAL(triggered()), m_editor,
             SLOT(setEditModeDraw()));
     connect(m_selectModeAction, SIGNAL(triggered()), m_editor,
             SLOT(setEditModeSelect()));
-    m_drawModeAction->setChecked(true);
+    */
 
     // Loop mark actions
     DropToolBar* loopMarkToolBar = addDropToolBarToTop(tr("Loop marks"));
@@ -1505,34 +1653,32 @@ SongWindow::SongWindow(Song* song) :
     connect(this, SIGNAL(resized()), m_editor, SLOT(updatePositionLine()));
 }
 
+// UI //
+
 QSize SongWindow::sizeHint() const
 {
     return {900, 280};
 }
 
-void SongWindow::resizeEvent(QResizeEvent* _event)
-{
-    EditorWindow ::resizeEvent(_event);
-    emit resized();
-}
+// Buttons //
 
 void SongWindow::play()
 {
     emit playTriggered();
 
-    if(Engine::getSong()->isPlaying())
+    if(Engine::song()->isPlaying())
         Engine::transport()->transportStop();
     else
         Engine::transport()->transportStart();
 
     /*
-    if( Engine::getSong()->playMode() != Song::Mode_PlaySong )
+    if( Engine::song()->playMode() != Song::Mode_PlaySong )
     {
-            Engine::getSong()->playSong();
+            Engine::song()->playSong();
     }
     else
     {
-            Engine::getSong()->togglePause();
+            Engine::song()->togglePause();
     }
     */
     requireActionUpdate();
@@ -1558,19 +1704,6 @@ void SongWindow::stop()
     requireActionUpdate();
 }
 
-void SongWindow::lostFocus()
-{
-    /*
-    if(m_crtlAction)
-    {
-        m_crtlAction->setChecked(true);
-        m_crtlAction->trigger();
-    }
-    */
-    m_drawModeAction->setChecked(true);
-    requireActionUpdate();
-}
-
 void SongWindow::adjustUiAfterProjectLoad()
 {
     // make sure to bring us to front as the song editor is the central
@@ -1579,63 +1712,63 @@ void SongWindow::adjustUiAfterProjectLoad()
     gui->mainWindow()->workspace()->setActiveSubWindow(
             qobject_cast<QMdiSubWindow*>(parentWidget()));
     connect(qobject_cast<SubWindow*>(parentWidget()), SIGNAL(focusLost()),
-            this, SLOT(lostFocus()));
+            this, SLOT(onLostFocus()));
 
     m_editor->realignTracks();
     m_editor->scrolled(0);
     requireActionUpdate();
 }
 
+// Events //
+
 void SongWindow::keyPressEvent(QKeyEvent* ke)
 {
-    if(ke->key() == Qt::Key_Control)
+    switch(ke->key())
     {
-        /*
-        if(m_selectModeAction->isChecked())
-        {
-            m_drawModeAction->setChecked(true);
-            m_drawModeAction->trigger();
-        }
-        else
-        */
-        if(m_drawModeAction->isChecked())
-        {
-            m_selectModeAction->setChecked(true);
-            m_selectModeAction->trigger();
-        }
-
-        /*
-        m_crtlAction = m_editModeGroup->checkedAction();
-        m_selectModeAction->setChecked(true);
-        m_selectModeAction->trigger();
-        */
+        case Qt::Key_Control:
+            if(!m_selectModeAction->isChecked())
+            {
+                m_previousEditAction = m_editModeGroup->checkedAction();
+                m_selectModeAction->setChecked(true);
+                m_selectModeAction->trigger();
+            }
+            break;
     }
+    EditorWindow::keyPressEvent(ke);
 }
 
 void SongWindow::keyReleaseEvent(QKeyEvent* ke)
 {
-    if(ke->key() == Qt::Key_Control)
+    switch(ke->key())
     {
-        if(m_selectModeAction->isChecked())
-        {
-            m_drawModeAction->setChecked(true);
-            m_drawModeAction->trigger();
-        }
-        /*
-        else if(m_drawModeAction->isChecked())
-        {
-            m_selectModeAction->setChecked(true);
-            m_selectModeAction->trigger();
-        }
-        */
-        /*
-        if(m_crtlAction)
-        {
-            m_crtlAction->setChecked(true);
-            m_crtlAction->trigger();
-        }
-        */
+        case Qt::Key_Control:
+            if(m_selectModeAction->isChecked())
+            {
+                if(m_previousEditAction == nullptr)
+                    m_previousEditAction = m_drawModeAction;
+                m_previousEditAction->setChecked(true);
+                m_previousEditAction->trigger();
+            }
+            break;
     }
+    EditorWindow::keyReleaseEvent(ke);
+}
+
+void SongWindow::focusInEvent(QFocusEvent* event)
+{
+    m_editor->setFocus(event->reason());
+}
+
+void SongWindow::onLostFocus()
+{
+    m_drawModeAction->setChecked(true);
+    requireActionUpdate();
+}
+
+void SongWindow::resizeEvent(QResizeEvent* _event)
+{
+    EditorWindow ::resizeEvent(_event);
+    emit resized();
 }
 
 // ActionUpdatable //
@@ -1679,13 +1812,8 @@ void SongEditor::actionTriggered(QString _name)
 
 void SongEditor::deleteSelection()
 {
-    QVector<SelectableObject*> so = selectedObjects();
-    for(QVector<SelectableObject*>::iterator it = so.begin(); it != so.end();
-        ++it)
-    {
-        TileView* tcov = dynamic_cast<TileView*>(*it);
-        tcov->remove();
-    }
+    for(TileView* tv: selectedTCOViews())
+        tv->remove();
 }
 
 void SongEditor::cutSelection()
@@ -1696,7 +1824,7 @@ void SongEditor::cutSelection()
 
 void SongEditor::copySelection()
 {
-    QVector<Tile*> so = selectedTCOs();
+    Tiles so = selectedTCOs();
     if(so.length() > 0)
         Clipboard::copy(so.at(0));
 }

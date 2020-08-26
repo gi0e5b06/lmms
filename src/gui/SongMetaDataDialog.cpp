@@ -51,9 +51,11 @@ SongMetaDataDialog::SongMetaDataDialog(QWidget* _parent) :
     value_Created->setText(song->songMetaData("Created"));
     value_Modified->setText(song->songMetaData("Modified"));
 
-    qint64 cwt=song->songMetaData("CumulativeWorkTime").toULongLong();
-    value_CumulativeWorkTime->setText(QString("%1h %2m %3s").
-                                      arg(cwt/3600).arg((cwt/60)%60).arg(cwt%60));
+    qint64 cwt = song->songMetaData("CumulativeWorkTime").toULongLong();
+    value_CumulativeWorkTime->setText(QString("%1h %2m %3s")
+                                              .arg(cwt / 3600)
+                                              .arg((cwt / 60) % 60)
+                                              .arg(cwt % 60));
 
     value_Software->setText(QString("LSMM %1").arg(LMMS_VERSION));
 
@@ -66,14 +68,23 @@ SongMetaDataDialog::SongMetaDataDialog(QWidget* _parent) :
         value_Root->addItem(Note::findNoteName(key));
     value_Root->setCurrentText(song->songMetaData("Root"));
 
+    /*
     const InstrumentFunctionNoteStacking::ChordTable& chord_table
             = InstrumentFunctionNoteStacking::ChordTable::getInstance();
 
-    value_Scale->addItem(tr("No scale"));
+    value_Mode->addItem(tr("No mode"));
     for(const InstrumentFunctionNoteStacking::Chord& chord: chord_table)
-        if(chord.isScale())
-            value_Scale->addItem(chord.getName());
-    value_Scale->setCurrentText(song->songMetaData("Scale"));
+        if(chord.isMode())
+            value_Mode->addItem(chord.getName());
+    */
+
+    value_Mode->addItem(tr("No mode"));
+    value_Mode->setCurrentIndex(0);
+    ChordDef::map([this](auto chord) {
+        if(chord.isMode())
+            value_Mode->addItem(chord.name());
+    });
+    value_Mode->setCurrentText(song->songMetaData("Mode"));
 
     for(int genre = 0; genre <= 191; genre++)
         value_Genre->addItem(GENRES[genre]);
@@ -129,7 +140,7 @@ void SongMetaDataDialog::accept()
     Song* song = Engine::getSong();
     song->setSongMetaData("Structure", value_Structure->currentText());
     song->setSongMetaData("Root", value_Root->currentText());
-    song->setSongMetaData("Scale", value_Scale->currentText());
+    song->setSongMetaData("Mode", value_Mode->currentText());
 
     // tab 2
     song->setSongMetaData("SongTitle", value_SongTitle->text());
@@ -360,24 +371,24 @@ const QString SongMetaDataDialog::GENRES[] = {
         "Psybient",
 };
 
-const QString SongMetaDataDialog::STRUCTURES[] = {
-"ABA (Rondo 1)",
-"ABACA (Rondo 2)",
-"ABACABA (Rondo 3)",
-"ABACADA (Rondo 4)",
-"AA'BA''CA'''BA'''' (Rondo 5)",
-"ABA'CA''B'A (Rondo 6)",
-"ABCD (Medley 1)",
-"AABBCCDD (Medley 2)",
-"AB (Binary 1)",
-"AABB (Binary 2)",
-"ABAFZA (Ostinato)",
-"AAA (Song 1)",
-"AAAAA (Song 2)",
-"AABA (Song 3)",
-"AABABA (Song 4)",
-"ABABABB (Song 5)",
-"AAB (Blues)"};
+const QString SongMetaDataDialog::STRUCTURES[]
+        = {"ABA (Rondo 1)",
+           "ABACA (Rondo 2)",
+           "ABACABA (Rondo 3)",
+           "ABACADA (Rondo 4)",
+           "AA'BA''CA'''BA'''' (Rondo 5)",
+           "ABA'CA''B'A (Rondo 6)",
+           "ABCD (Medley 1)",
+           "AABBCCDD (Medley 2)",
+           "AB (Binary 1)",
+           "AABB (Binary 2)",
+           "ABAFZA (Ostinato)",
+           "AAA (Song 1)",
+           "AAAAA (Song 2)",
+           "AABA (Song 3)",
+           "AABABA (Song 4)",
+           "ABABABB (Song 5)",
+           "AAB (Blues)"};
 
 /*
   I Introduction a.k.a. Intro

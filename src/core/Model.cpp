@@ -76,6 +76,7 @@ Model::~Model()
               typeid(o).name());
     */
 
+    emit modelDestroyed();
     // qInfo("Model::~Model END %s", qPrintable(m_displayName));
 }
 

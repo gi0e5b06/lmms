@@ -28,6 +28,7 @@
 #include "MidiClient.h"
 #include "MidiDummy.h"
 #include "MidiEventProcessor.h"
+#include "MidiPortMenu.h"
 #include "Note.h"
 #include "Song.h"
 
@@ -72,20 +73,28 @@ MidiPort::MidiPort(const QString&      name,
                    Model*              parent,
                    Mode                mode) :
       Model(parent, name.isEmpty() ? "[midi port]" : name),
-      m_readablePortsMenu(nullptr), m_writablePortsMenu(nullptr),
       m_midiClient(client), m_midiEventProcessor(eventProcessor),
-      m_mode(mode),
+      m_mode(mode), m_readableModel(false, this, tr("Receive MIDI-events")),
+      m_writableModel(false, this, tr("Send MIDI-events")),
       m_inputChannelModel(0, 0, MidiChannelCount, this, tr("Input channel")),
       m_outputChannelModel(
               1, 1, MidiChannelCount, this, tr("Output channel")),
-      m_inputControllerModel(
-              0, 0, MidiControllerCount, this, tr("Input controller")),
-      m_outputControllerModel(
-              0, 0, MidiControllerCount, this, tr("Output controller")),
       m_fixedInputVelocityModel(
               -1, -1, MidiMaxVelocity, this, tr("Fixed input velocity")),
       m_fixedOutputVelocityModel(
               -1, -1, MidiMaxVelocity, this, tr("Fixed output velocity")),
+      m_transposeInputModel(0,
+                            -NumKeys,
+                            +NumKeys,
+                            this,
+                            tr("Transpose key"),
+                            "transposeInputKey"),
+      m_transposeOutputModel(0,
+                             -NumKeys,
+                             +NumKeys,
+                             this,
+                             tr("Transpose key"),
+                             "transposeOutputKey"),
       m_fixedOutputNoteModel(
               -1, -1, MidiMaxKey, this, tr("Fixed output note")),
       m_outputProgramModel(
@@ -95,8 +104,10 @@ MidiPort::MidiPort(const QString&      name,
                           MidiMaxVelocity,
                           this,
                           tr("Base velocity")),
-      m_readableModel(false, this, tr("Receive MIDI-events")),
-      m_writableModel(false, this, tr("Send MIDI-events")),
+      m_inputControllerModel(
+              0, 0, MidiControllerCount, this, tr("Input controller")),
+      m_outputControllerModel(
+              0, 0, MidiControllerCount, this, tr("Output controller")),
       m_widgetTypeModel(this, tr("Widget type")),
       m_defaultInputValueModel(64, 0, 127, this, tr("Default input value")),
       m_spreadInputValueModel(1, 1, 128, this, tr("Spread input value")),
@@ -201,23 +212,17 @@ void MidiPort::processInEvent(const MidiEvent& event, const MidiTime& time)
     if(isInputEnabled()
        && (inputChannel() == 0 || inputChannel() - 1 == event.channel()))
     {
-        MidiEvent inEvent = event;
-        /* not the place to filter or to fix the velocity
-        if( event.type() == MidiNoteOn ||
-            event.type() == MidiNoteOff ||
-            event.type() == MidiKeyPressure )
+        MidiEvent e = event;
+
+        if(e.type() == MidiNoteOn || e.type() == MidiNoteOff
+           || e.type() == MidiKeyPressure)
         {
-                if( inEvent.key() < 0 || inEvent.key() >= NumMidiKeys )
-                {
-                  //return; //GDX
-                }
-                //GDX
-                if( fixedInputVelocity() >= 0 && inEvent.velocity() > 0 )
-                {
-                  inEvent.setVelocity( fixedInputVelocity() );
-                }
+            if(fixedInputVelocity() >= 0 && e.velocity() > 0)
+                e.setVelocity(fixedInputVelocity());
+            if(transposeInput() != 0)
+                e.setKey(e.key() + transposeInput());
         }
-        */
+
         /*
         static MidiEvent prev;
         static tick_t    prtime;
@@ -232,7 +237,7 @@ void MidiPort::processInEvent(const MidiEvent& event, const MidiTime& time)
             // pt=%d",time.getTicks(),prtime); qInfo("MidiPort: process in
             // event"); prev=inEvent; prtime=time.getTicks();
             if(m_midiEventProcessor != nullptr)
-                m_midiEventProcessor->processInEvent(inEvent, time);
+                m_midiEventProcessor->processInEvent(e, time);
         }
     }
 }
@@ -243,15 +248,21 @@ void MidiPort::processOutEvent(const MidiEvent& event, const MidiTime& time)
     if(isOutputEnabled()
        && (outputChannel() == 0 || outputChannel() - 1 == event.channel()))
     {
-        MidiEvent outEvent = event;
-        // Same: fixing velocity probably not at the right place
-        if(fixedOutputVelocity() >= 0 && event.velocity() > 0
-           && (event.type() == MidiNoteOn || event.type() == MidiKeyPressure))
+        MidiEvent e = event;
+
+        if(e.type() == MidiNoteOn || e.type() == MidiNoteOff
+           || e.type() == MidiKeyPressure)
         {
-            outEvent.setVelocity(fixedOutputVelocity());
+            if(fixedOutputVelocity() >= 0 && e.velocity() > 0)
+                e.setVelocity(fixedOutputVelocity());
+
+            if(fixedOutputNote() >= 0)
+                e.setKey(fixedOutputNote());
+            else if(transposeOutput() != 0)
+                e.setKey(e.key() + transposeOutput());
         }
 
-        m_midiClient->processOutEvent(outEvent, time, this);
+        m_midiClient->processOutEvent(e, time, this);
     }
 }
 
@@ -266,6 +277,8 @@ void MidiPort::saveSettings(QDomDocument& doc, QDomElement& thisElement)
                                            "fixedinputvelocity");
     m_fixedOutputVelocityModel.saveSettings(doc, thisElement,
                                             "fixedoutputvelocity");
+    m_transposeInputModel.saveSettings(doc, thisElement, "transposeinput");
+    m_transposeOutputModel.saveSettings(doc, thisElement, "transposeoutput");
     m_fixedOutputNoteModel.saveSettings(doc, thisElement, "fixedoutputnote");
     m_outputProgramModel.saveSettings(doc, thisElement, "outputprogram");
     m_baseVelocityModel.saveSettings(doc, thisElement, "basevelocity");
@@ -330,6 +343,8 @@ void MidiPort::loadSettings(const QDomElement& thisElement)
     m_fixedInputVelocityModel.loadSettings(thisElement, "fixedinputvelocity");
     m_fixedOutputVelocityModel.loadSettings(thisElement,
                                             "fixedoutputvelocity");
+    m_transposeInputModel.loadSettings(thisElement, "transposeinput");
+    m_transposeOutputModel.loadSettings(thisElement, "transposeoutput");
     m_outputProgramModel.loadSettings(thisElement, "outputprogram");
     m_baseVelocityModel.loadSettings(thisElement, "basevelocity");
     m_readableModel.loadSettings(thisElement, "readable");

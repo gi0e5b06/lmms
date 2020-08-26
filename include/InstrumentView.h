@@ -26,8 +26,8 @@
 #define INSTRUMENT_VIEW_H
 
 #include "Instrument.h"
-
 #include "PluginView.h"
+
 #include <QColor>
 #include <QLine>
 
@@ -51,7 +51,8 @@ class EXPORT InstrumentView : public PluginView
         return castModel<Instrument>();
     }
 
-    virtual void setModel(Model* _model, bool = false);
+    // void setModel(Model* _model) override;
+    void modelChanged() override;
 
     InstrumentTrackWindow* instrumentTrackWindow();
 

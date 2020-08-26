@@ -51,7 +51,7 @@ void MidiWinMM::processOutEvent(const MidiEvent& event,
     for(SubMap::ConstIterator it = m_outputSubs.begin();
         it != m_outputSubs.end(); ++it)
     {
-        for(MidiPortList::ConstIterator jt = it.value().begin();
+        for(MidiPorts::ConstIterator jt = it.value().begin();
             jt != it.value().end(); ++jt)
         {
             if(*jt == port)
@@ -189,8 +189,8 @@ void MidiWinMM::handleInputEvent(HMIDIIN hm, DWORD ev)
         return;
     }
 
-    const MidiPortList& l = m_inputSubs[d];
-    for(MidiPortList::ConstIterator it = l.begin(); it != l.end(); ++it)
+    const MidiPorts& l = m_inputSubs[d];
+    for(MidiPorts::ConstIterator it = l.begin(); it != l.end(); ++it)
     {
         switch(cmdtype)
         {

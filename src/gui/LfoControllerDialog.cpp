@@ -113,8 +113,7 @@ LfoControllerDialog::LfoControllerDialog(Controller* _model,
     PixmapButton* sin_wave_btn = new PixmapButton(this, NULL);
     sin_wave_btn->move(CD_LFO_SHAPES_X, CD_LFO_SHAPES_Y);
     sin_wave_btn->setActiveGraphic(embed::getPixmap("sin_wave_active"));
-    sin_wave_btn->setInactiveGraphic(
-            embed::getPixmap("sin_wave_inactive"));
+    sin_wave_btn->setInactiveGraphic(embed::getPixmap("sin_wave_inactive"));
     ToolTip::add(sin_wave_btn, tr("Click here for a sine-wave."));
 
     PixmapButton* triangle_wave_btn = new PixmapButton(this, NULL);
@@ -128,14 +127,12 @@ LfoControllerDialog::LfoControllerDialog(Controller* _model,
     PixmapButton* saw_wave_btn = new PixmapButton(this, NULL);
     saw_wave_btn->move(CD_LFO_SHAPES_X + 30, CD_LFO_SHAPES_Y);
     saw_wave_btn->setActiveGraphic(embed::getPixmap("saw_wave_active"));
-    saw_wave_btn->setInactiveGraphic(
-            embed::getPixmap("saw_wave_inactive"));
+    saw_wave_btn->setInactiveGraphic(embed::getPixmap("saw_wave_inactive"));
     ToolTip::add(saw_wave_btn, tr("Click here for a saw-wave."));
 
     PixmapButton* sqr_wave_btn = new PixmapButton(this, NULL);
     sqr_wave_btn->move(CD_LFO_SHAPES_X + 45, CD_LFO_SHAPES_Y);
-    sqr_wave_btn->setActiveGraphic(
-            embed::getPixmap("square_wave_active"));
+    sqr_wave_btn->setActiveGraphic(embed::getPixmap("square_wave_active"));
     sqr_wave_btn->setInactiveGraphic(
             embed::getPixmap("square_wave_inactive"));
     ToolTip::add(sqr_wave_btn, tr("Click here for a square-wave."));
@@ -151,8 +148,7 @@ LfoControllerDialog::LfoControllerDialog(Controller* _model,
     PixmapButton* exp_wave_btn = new PixmapButton(this, NULL);
     exp_wave_btn->move(CD_LFO_SHAPES_X + 15, CD_LFO_SHAPES_Y + 15);
     exp_wave_btn->setActiveGraphic(embed::getPixmap("exp_wave_active"));
-    exp_wave_btn->setInactiveGraphic(
-            embed::getPixmap("exp_wave_inactive"));
+    exp_wave_btn->setInactiveGraphic(embed::getPixmap("exp_wave_inactive"));
     ToolTip::add(exp_wave_btn, tr("Click here for an exponential wave."));
 
     PixmapButton* white_noise_btn = new PixmapButton(this, NULL);
@@ -166,8 +162,7 @@ LfoControllerDialog::LfoControllerDialog(Controller* _model,
     m_userWaveBtn = new PixmapButton(this, NULL);
     m_userWaveBtn->move(CD_LFO_SHAPES_X + 45, CD_LFO_SHAPES_Y + 15);
     m_userWaveBtn->setActiveGraphic(embed::getPixmap("usr_wave_active"));
-    m_userWaveBtn->setInactiveGraphic(
-            embed::getPixmap("usr_wave_inactive"));
+    m_userWaveBtn->setInactiveGraphic(embed::getPixmap("usr_wave_inactive"));
     connect(m_userWaveBtn, SIGNAL(doubleClicked()), this,
             SLOT(askUserDefWave()));
     ToolTip::add(m_userWaveBtn, tr("Click here for a user-defined "
@@ -219,8 +214,9 @@ LfoControllerDialog::~LfoControllerDialog()
 
 void LfoControllerDialog::askUserDefWave()
 {
-    SampleBuffer* sampleBuffer = dynamic_cast<LfoController*>(this->model())
-                                         ->m_userDefSampleBuffer;
+    SampleBufferPointer sampleBuffer
+            = dynamic_cast<LfoController*>(this->model())
+                      ->m_userDefSampleBuffer;
     QString fileName = sampleBuffer->openAndSetWaveFormFile();
     if(fileName.isEmpty() == false)
     {

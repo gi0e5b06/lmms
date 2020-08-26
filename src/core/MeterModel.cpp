@@ -26,8 +26,8 @@
 
 #include "AutomationPattern.h"
 
-MeterModel::MeterModel(/*::*/ Model* _parent) :
-      Model(_parent, "Meter"),
+MeterModel::MeterModel(/*::*/ Model* _parent, bool _defaultConstructed) :
+      Model(_parent, QObject::tr("Meter"), "meter", _defaultConstructed),
       m_numeratorModel(4, 1, 32, this, tr("Numerator")),
       m_denominatorModel(4, 1, 32, this, tr("Denominator"))
 {

@@ -50,12 +50,12 @@ class EffectView : public PluginView
     EffectView(Effect* _model, QWidget* _parent);
     virtual ~EffectView();
 
-    inline Effect* effect()
+    INLINE Effect* model()
     {
         return castModel<Effect>();
     }
 
-    inline const Effect* effect() const
+    INLINE const Effect* model() const
     {
         return castModel<Effect>();
     }
@@ -76,18 +76,6 @@ class EffectView : public PluginView
 
     void displayHelp();
     void showContextMenu();
-
-  private slots:
-    void openControls();
-    void closeControls();
-    void cloneEffect();
-    void toggleEffect();
-    void clearEffect();
-    void removeEffect();
-    void moveUp();
-    void moveDown();
-    void moveTop();
-    void moveBottom();
 
   signals:
     void moveUp(EffectView* _plugin);
@@ -128,6 +116,18 @@ class EffectView : public PluginView
 
     QMdiSubWindow*       m_subWindow;
     EffectControlDialog* m_controlView;
+
+  private slots:
+    void openControls();
+    void closeControls();
+    void cloneEffect();
+    void toggleEffect();
+    void clearEffect();
+    void removeEffect();
+    void moveUp();
+    void moveDown();
+    void moveTop();
+    void moveBottom();
 };
 
 #endif

@@ -967,7 +967,7 @@ GigInstrumentView::GigInstrumentView(Instrument* _instrument,
     pal.setBrush(backgroundRole(), PLUGIN_NAME::getIconPixmap("artwork"));
     setPalette(pal);
 
-    updateFilename();
+    modelChanged();
 }
 
 GigInstrumentView::~GigInstrumentView()

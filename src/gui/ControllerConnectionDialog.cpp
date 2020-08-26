@@ -281,7 +281,7 @@ ControllerConnectionDialog::ControllerConnectionDialog(
     m_userController = new ComboBox(m_userGroupBox, "Controller");
     m_userController->setGeometry(10, 24, 200, 22);
 
-    for(Controller* c: Engine::getSong()->controllers())
+    for(Controller* c: Engine::song()->controllers())
     {
         m_userController->model()->addItem(c->name());
     }
@@ -328,8 +328,9 @@ ControllerConnectionDialog::ControllerConnectionDialog(
     {
         cc = m_targetModel->controllerConnection();
 
-        if(cc && cc->getController()->type() != Controller::DummyController
-           && Engine::getSong())
+        if(cc != nullptr
+           && cc->getController()->type() != Controller::DummyController
+           && Engine::song() != nullptr)
         {
             if(cc->getController()->type() == Controller::MidiController)
             {
@@ -365,7 +366,7 @@ ControllerConnectionDialog::ControllerConnectionDialog(
             }
             else
             {
-                int idx = Engine::getSong()->controllers().indexOf(
+                int idx = Engine::song()->controllers().indexOf(
                         cc->getController());
 
                 if(idx >= 0)
@@ -404,7 +405,7 @@ void ControllerConnectionDialog::selectController()
             // m_controller=%p",m_controller);
 
             MidiController* mc;
-            mc = m_midiController->copyToMidiController(Engine::getSong());
+            mc = m_midiController->copyToMidiController(Engine::song());
 
             /*
             if( m_targetModel->track() &&
@@ -427,9 +428,9 @@ void ControllerConnectionDialog::selectController()
     else
     {
         if(m_userGroupBox->isEnabled() > 0
-           && Engine::getSong()->controllers().size())
+           && Engine::song()->controllers().size())
         {
-            m_controller = Engine::getSong()->controllers().at(
+            m_controller = Engine::song()->controllers().at(
                     m_userController->model()->value());
         }
 
@@ -453,10 +454,9 @@ void ControllerConnectionDialog::midiToggled()
         if(m_userGroupBox->isEnabled())
             m_userGroupBox->setEnabled(false);
 
-        if(!m_midiController)
+        if(m_midiController == nullptr)
         {
-            m_midiController
-                    = new AutoDetectMidiController(Engine::getSong());
+            m_midiController = new AutoDetectMidiController(Engine::song());
 
             MidiPort::Map map = m_midiController->m_midiPort.readablePorts();
             for(MidiPort::Map::Iterator it = map.begin(); it != map.end();
@@ -485,9 +485,7 @@ void ControllerConnectionDialog::midiToggled()
                     &m_midiController->m_midiPort.m_deltaInputValueModel);
 
             if(m_readablePorts)
-            {
                 m_readablePorts->setModel(&m_midiController->m_midiPort);
-            }
 
             connect(m_midiController, SIGNAL(controlledValueChanged(real_t)),
                     this, SLOT(midiValueChanged()));

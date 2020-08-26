@@ -42,10 +42,10 @@ class EXPORT EffectChain : public Model, public SerializingObject
     EffectChain(Model* _parent);
     virtual ~EffectChain();
 
-    virtual void saveSettings(QDomDocument& _doc, QDomElement& _parent);
-    virtual void loadSettings(const QDomElement& _this);
+    void saveSettings(QDomDocument& _doc, QDomElement& _parent) override;
+    void loadSettings(const QDomElement& _this) override;
 
-    inline virtual QString nodeName() const
+    INLINE virtual QString nodeName() const
     {
         return "fxchain";
     }
@@ -80,7 +80,7 @@ class EXPORT EffectChain : public Model, public SerializingObject
 
     BoolModel m_enabledModel;
 
-    friend class EffectRackView;
+    friend class EffectChainView;
 
   signals:
     void aboutToClear();

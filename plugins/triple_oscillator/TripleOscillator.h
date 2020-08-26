@@ -30,12 +30,13 @@
 #include "Instrument.h"
 #include "InstrumentView.h"
 #include "Oscillator.h"
+#include "SampleBuffer.h"
 
 class AutomatableButtonGroup;
 class Knob;
 class NotePlayHandle;
 class PixmapButton;
-class SampleBuffer;
+//class SampleBuffer;
 
 const int NUM_OF_OSCILLATORS = 3;
 
@@ -48,16 +49,16 @@ class OscillatorObject : public Model
     virtual ~OscillatorObject();
 
   private:
-    FloatModel    m_volumeModel;
-    FloatModel    m_panModel;
-    FloatModel    m_coarseModel;
-    FloatModel    m_fineLeftModel;
-    FloatModel    m_fineRightModel;
-    FloatModel    m_phaseOffsetModel;
-    FloatModel    m_stereoPhaseDetuningModel;
-    IntModel      m_waveShapeModel;
-    IntModel      m_modulationAlgoModel;
-    SampleBuffer* m_sampleBuffer;
+    FloatModel          m_volumeModel;
+    FloatModel          m_panModel;
+    FloatModel          m_coarseModel;
+    FloatModel          m_fineLeftModel;
+    FloatModel          m_fineRightModel;
+    FloatModel          m_phaseOffsetModel;
+    FloatModel          m_stereoPhaseDetuningModel;
+    IntModel            m_waveShapeModel;
+    IntModel            m_modulationAlgoModel;
+    SampleBufferPointer m_sampleBuffer;
 
     real_t m_volumeLeft;
     real_t m_volumeRight;
@@ -95,7 +96,7 @@ class TripleOscillator : public Instrument
     virtual void saveSettings(QDomDocument& _doc, QDomElement& _parent);
     virtual void loadSettings(const QDomElement& _this);
 
-    //virtual QString nodeName() const;
+    // virtual QString nodeName() const;
 
     virtual f_cnt_t desiredReleaseFrames() const
     {

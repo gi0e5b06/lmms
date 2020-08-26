@@ -1,24 +1,23 @@
 /*
+ * SPDX-License-Identifier: GPL-3.0-or-later
  * Scale.cpp -
  *
- * Copyright (c) 2018 gi0e5b06 (on github.com)
+ * Copyright (c) 2018-2020 gi0e5b06 (on github.com)
  *
- * This file is part of LMMS - https://lmms.io
+ * This file is part of LSMM -
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public
- * License along with this program (see COPYING); if not, write to the
- * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
- * Boston, MA 02110-1301 USA.
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
 
@@ -210,7 +209,7 @@ void Scale::Set::set(const int _bank, const int _index, const Scale* _scl)
 
 void Scale::Set::fillBankModel(ComboBoxModel& _model)
 {
-    _model.setDisplayName(QString("Scale Banks"));
+    _model.setDisplayName(_model.tr("Scale Banks"));
     _model.clear();
     for(int b = MIN_BANK; b <= MAX_BANK; b++)
     {
@@ -227,7 +226,7 @@ void Scale::Set::fillBankModel(ComboBoxModel& _model)
 void Scale::Set::fillIndexModel(ComboBoxModel& _model, const int _bank)
 {
     // BACKTRACE
-    _model.setDisplayName(QString("Bank %1").arg(_bank));
+    _model.setDisplayName(_model.tr("Bank %1").arg(_bank));
     _model.clear();
     for(int i = MIN_INDEX; i <= MAX_INDEX; i++)
     {

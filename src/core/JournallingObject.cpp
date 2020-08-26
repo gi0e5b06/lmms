@@ -44,6 +44,22 @@ JournallingObject::~JournallingObject()
     }
 }
 
+bool JournallingObject::isJournalling() const
+{
+    if(!m_journalling) return false;
+
+    const Model* m=dynamic_cast<const Model*>(this);
+    if(m==nullptr) return true;
+
+    const Model* p=m->parentModel();
+    if(p==nullptr) return true;
+
+    const JournallingObject* q=dynamic_cast<const JournallingObject*>(p);
+    if(q==nullptr) return true;
+
+    return q->isJournalling();
+}
+
 void JournallingObject::addJournalCheckPoint()
 {
     if(isJournalling())

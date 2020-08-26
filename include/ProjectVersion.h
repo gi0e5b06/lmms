@@ -23,7 +23,6 @@
  *
  */
 
-
 #ifndef PROJECT_VERSION_H
 #define PROJECT_VERSION_H
 
@@ -35,41 +34,95 @@
  */
 class ProjectVersion
 {
-public:
-	enum CompareType { Major, Minor, Release, Stage, Build };
+  public:
+    enum CompareType
+    {
+        Major,
+        Minor,
+        Release,
+        Stage,
+        Build
+    };
 
-	ProjectVersion(QString version, CompareType c = Build);
-	ProjectVersion(const char * version, CompareType c = Build);
+    ProjectVersion(QString version, CompareType c = Build);
+    ProjectVersion(const char* version, CompareType c = Build);
 
-	int getMajor() const { return m_major; }
-	int getMinor() const { return m_minor; }
-	int getRelease() const { return m_release; }
-	QString getStage() const { return m_stage; }
-	int getBuild() const { return m_build; }
-	CompareType getCompareType() const { return m_compareType; }
-	ProjectVersion setCompareType(CompareType compareType) { m_compareType = compareType; return * this; }
+    int getMajor() const
+    {
+        return m_major;
+    }
+    int getMinor() const
+    {
+        return m_minor;
+    }
+    int getRelease() const
+    {
+        return m_release;
+    }
+    QString getStage() const
+    {
+        return m_stage;
+    }
+    int getBuild() const
+    {
+        return m_build;
+    }
+    CompareType getCompareType() const
+    {
+        return m_compareType;
+    }
+    ProjectVersion setCompareType(CompareType compareType)
+    {
+        m_compareType = compareType;
+        return *this;
+    }
 
-	static int compare(const ProjectVersion& a, const ProjectVersion& b, CompareType c);
-	static int compare(ProjectVersion v1, ProjectVersion v2);
+    static int compare(const ProjectVersion& a,
+                       const ProjectVersion& b,
+                       CompareType           c);
+    static int compare(ProjectVersion v1, ProjectVersion v2);
 
-private:
-	QString m_version;
-	int m_major;
-	int m_minor;
-	int m_release;
-	QString m_stage;
-	int m_build;
-	CompareType m_compareType;
-} ;
+  private:
+    QString     m_version;
+    int         m_major;
+    int         m_minor;
+    int         m_release;
+    QString     m_stage;
+    int         m_build;
+    CompareType m_compareType;
+};
 
 /*
  * ProjectVersion v. ProjectVersion
  */
-inline bool operator<(const ProjectVersion & v1, const ProjectVersion & v2) { return ProjectVersion::compare(v1, v2) < 0; }
-inline bool operator>(const ProjectVersion & v1, const ProjectVersion & v2) { return ProjectVersion::compare(v1, v2) > 0; }
-inline bool operator<=(const ProjectVersion & v1, const ProjectVersion & v2) { return ProjectVersion::compare(v1, v2) <= 0; }
-inline bool operator>=(const ProjectVersion & v1, const ProjectVersion & v2) { return ProjectVersion::compare(v1, v2) >= 0; }
-inline bool operator==(const ProjectVersion & v1, const ProjectVersion & v2) { return ProjectVersion::compare(v1, v2) == 0; }
-inline bool operator!=(const ProjectVersion & v1, const ProjectVersion & v2) { return ProjectVersion::compare(v1, v2) != 0; }
+inline bool operator<(const ProjectVersion& v1, const ProjectVersion& v2)
+{
+    return ProjectVersion::compare(v1, v2) < 0;
+}
+
+inline bool operator>(const ProjectVersion& v1, const ProjectVersion& v2)
+{
+    return ProjectVersion::compare(v1, v2) > 0;
+}
+
+inline bool operator<=(const ProjectVersion& v1, const ProjectVersion& v2)
+{
+    return ProjectVersion::compare(v1, v2) <= 0;
+}
+
+inline bool operator>=(const ProjectVersion& v1, const ProjectVersion& v2)
+{
+    return ProjectVersion::compare(v1, v2) >= 0;
+}
+
+inline bool operator==(const ProjectVersion& v1, const ProjectVersion& v2)
+{
+    return ProjectVersion::compare(v1, v2) == 0;
+}
+
+inline bool operator!=(const ProjectVersion& v1, const ProjectVersion& v2)
+{
+    return ProjectVersion::compare(v1, v2) != 0;
+}
 
 #endif

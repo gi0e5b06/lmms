@@ -25,23 +25,20 @@
 #ifndef PLUGIN_VIEW_H
 #define PLUGIN_VIEW_H
 
-#include <QWidget>
-
-#include "Plugin.h"
 #include "ModelView.h"
+#include "Plugin.h"
 
+//#include <QWidget>
 
-class EXPORT PluginView  : public QWidget, public ModelView
+class EXPORT PluginView : public QWidget, public ModelView
 {
-        Q_OBJECT
+    Q_OBJECT
+
  public:
-	PluginView( Plugin * _plugin, QWidget * _parent ) :
-		QWidget( _parent ),
-		ModelView( _plugin, this )
-	{
-	}
-
-} ;
-
+    PluginView(Plugin* _plugin, QWidget* _parent) :
+          QWidget(_parent), ModelView(_plugin, this)
+    {
+    }
+};
 
 #endif

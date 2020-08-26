@@ -2,6 +2,7 @@
  * PeripheralView.cpp - implementation of peripheral-widget used in
  * instrument-track-window for testing + according model class
  *
+ * Copyright (c) 2018-2020 gi0e5b06 (on github.com)
  * Copyright (c) 2004-2014 Tobias Doerffel <tobydox/at/users.sourceforge.net>
  *
  * This file is part of LMMS - https://lmms.io
@@ -56,12 +57,12 @@
  *
  *  \param _parent the parent instrument plugin window
  */
-PeripheralView::PeripheralView(QWidget* _parent) :
-      QWidget(_parent),         /*!< Our parent */
-      ModelView(nullptr, this), /*!< Our view Model */
-      m_piano(nullptr)          /*!< Our piano Model */
-
+PeripheralView::PeripheralView(Piano* _piano, QWidget* _parent) :
+      QWidget(_parent), ModelView(_piano, this)
+//, m_piano(nullptr)
 {
+    allowModelChange(true);
+    allowNullModel(true);
 }
 
 /*! \brief Destroy this peripheral display view
@@ -69,7 +70,7 @@ PeripheralView::PeripheralView(QWidget* _parent) :
  */
 PeripheralView::~PeripheralView()
 {
-    m_piano = nullptr;
+    // m_piano = nullptr;
 }
 
 /*! \brief Map a keyboard key being pressed to a note in our keyboard view
@@ -327,14 +328,15 @@ int PeripheralView::getKeyFromKeyEvent(QKeyEvent* _ke)
  */
 void PeripheralView::modelChanged()
 {
-    m_piano = castModel<Piano>();
+    // m_piano = castModel<Piano>();
+    Piano* m = model();
     // qInfo("PeripheralView::modelChanged piano=%p",m_piano);
-    if(m_piano != nullptr)
+    if(m != nullptr)
     {
-        connect(m_piano->instrumentTrack()->baseNoteModel(),
-                SIGNAL(dataChanged()), this, SLOT(update()));
-        connect(m_piano, SIGNAL(dataChanged()), this, SLOT(update()));
-        connect(m_piano, SIGNAL(propertiesChanged()), this, SLOT(update()));
+        connect(m->instrumentTrack()->baseNoteModel(), SIGNAL(dataChanged()),
+                this, SLOT(update()));
+        // connect(m, SIGNAL(dataChanged()), this, SLOT(update()));
+        // connect(m, SIGNAL(propertiesChanged()), this, SLOT(update()));
     }
     ModelView::modelChanged();
 }
@@ -346,22 +348,19 @@ void PeripheralView::modelChanged()
  */
 void PeripheralView::contextMenuEvent(QContextMenuEvent* _me)
 {
-    CaptionMenu menu(tr("Base Key"));
-
-    AutomatableModelView amv(m_piano->instrumentTrack()->baseNoteModel(),
-                             &menu);
+    CaptionMenu  menu(tr("Base Key"));
+    Piano*       m = model();
+    IntModelView amv(m->instrumentTrack()->baseNoteModel(), &menu);
     amv.addDefaultActions(&menu);
 
     menu.addSeparator();
-    menu.addAction(embed::getIconPixmap("midi_tab"),  //"piano_view" ),
-                   AutomatableModel::tr("&Piano View"), parent(),
-                   SLOT(switchToPiano()));
-    menu.addAction(embed::getIconPixmap("bb_track"),  //"launchpad_view" ),
-                   AutomatableModel::tr("&Launchpad View"), parent(),
+    menu.addAction(embed::getIcon("midi_tab"),  //"piano_view" ),
+                   tr("&Piano View"), parent(), SLOT(switchToPiano()));
+    menu.addAction(embed::getIcon("bb_track"),  //"launchpad_view" ),
+                   tr("&Launchpad View"), parent(),
                    SLOT(switchToLaunchpad()));
-    menu.addAction(embed::getIconPixmap("bb_track"),  //"pads_view" ),
-                   AutomatableModel::tr("P&ads View"), parent(),
-                   SLOT(switchToPads()));
+    menu.addAction(embed::getIcon("bb_track"),  //"pads_view" ),
+                   tr("P&ads View"), parent(), SLOT(switchToPads()));
 
     menu.exec(QCursor::pos());
 }

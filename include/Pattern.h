@@ -63,8 +63,12 @@ class EXPORT Pattern : public Tile
         return isEmpty();
     }  // obsolete
 
-    virtual bool   isEmpty() const;
-    virtual tick_t unitLength() const;
+    bool isEmpty() const override;
+    // QString defaultName() const override;
+    tick_t unitLength() const override;
+    void   rotate(tick_t _ticks) override;
+    void   splitEvery(tick_t _ticks) override;
+    void   splitAt(tick_t _tick) override;
 
     void init();
 
@@ -78,10 +82,13 @@ class EXPORT Pattern : public Tile
     void rearrangeAllNotes();
     void clearNotes();
 
-    inline const Notes& notes() const
+    // all notes of the pattern, once
+    const Notes& notes() const
     {
         return m_notes;
     }
+
+    const Chords chords() const;
 
     Note* noteAtStep(int _step);
     Note* addStepNote(int step);
@@ -89,28 +96,26 @@ class EXPORT Pattern : public Tile
     void  toggleStepNote(int step);
     void  setStepNote(int step, bool enabled);
 
-    virtual void rotate(tick_t _ticks);
-
     // pattern-type stuff
-    inline PatternTypes type() const
+    INLINE PatternTypes type() const
     {
         return m_patternType;
     }
 
     // next/previous track based on position in the containing track
-    Pattern* previousPattern() const;
-    Pattern* nextPattern() const;
+    // Pattern* previousPattern() const;
+    // Pattern* nextPattern() const;
 
     // settings-management
     virtual void saveSettings(QDomDocument& _doc, QDomElement& _parent);
     virtual void loadSettings(const QDomElement& _this);
 
-    inline virtual QString nodeName() const
+    INLINE virtual QString nodeName() const
     {
         return "pattern";
     }
 
-    inline InstrumentTrack* instrumentTrack() const
+    INLINE InstrumentTrack* instrumentTrack() const
     {
         return m_instrumentTrack;
     }
@@ -122,16 +127,16 @@ class EXPORT Pattern : public Tile
     // void dataChanged(); <-- not needed
 
   public slots:
-    virtual void clear();
-    virtual void flipHorizontally();
-    virtual void flipVertically();
+    void clear() override;
+    void cloneSteps() override;
+    void flipHorizontally() override;
+    void flipVertically() override;
 
   protected:
     // void updateBBTrack();
 
   protected slots:
     void changeTimeSignature();
-    void cloneSteps();
     /*
     void addBarSteps();
     void addBeatSteps();
@@ -145,10 +150,10 @@ class EXPORT Pattern : public Tile
     */
 
   private:
-    void     setType(PatternTypes _new_pattern_type);
-    void     checkType();
-    void     resizeToFirstTrack();
-    Pattern* adjacentPatternByOffset(int offset) const;
+    void setType(PatternTypes _new_pattern_type);
+    void checkType();
+    void resizeToFirstTrack();
+    // Pattern* adjacentPatternByOffset(int offset) const;
 
     InstrumentTrack* m_instrumentTrack;
     PatternTypes     m_patternType;
@@ -166,9 +171,6 @@ class PatternView : public TileView
     Q_OBJECT
 
   public:
-    PatternView(Pattern* pattern, TrackView* parent);
-    virtual ~PatternView();
-
     Q_PROPERTY(
             QColor noteFillColor READ getNoteFillColor WRITE setNoteFillColor)
     Q_PROPERTY(QColor noteBorderColor READ getNoteBorderColor WRITE
@@ -232,7 +234,15 @@ class PatternView : public TileView
 
     void changeStepResolution(QAction* _a);
 
+    static PatternView* create(Pattern* _p, TrackView* _tv)
+    {
+        return new PatternView(_p, _tv);
+    }
+
   protected:
+    PatternView(Pattern* pattern, TrackView* parent);
+    virtual ~PatternView();
+
     virtual QMenu* buildContextMenu();
     // virtual void addStepMenu(QMenu* _cm, bool _enabled) final;
 

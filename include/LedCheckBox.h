@@ -1,7 +1,7 @@
 /*
  * LedCheckBox.h - class LedCheckBox, an improved QCheckBox
  *
- * Copyright (c) 2018-2019 gi0e5b06 (on github.com)
+ * Copyright (c) 2018-2020 gi0e5b06 (on github.com)
  * Copyright (c) 2005-2008 Tobias Doerffel <tobydox/at/users.sourceforge.net>
  *
  * This file is part of LMMS - https://lmms.io
@@ -43,17 +43,22 @@ class EXPORT LedCheckBox final : public AutomatableButton
         Red,      // alert / clipping
         Blue,     // freeze
         Magenta,  // solo
-        White,
-        NumColors
+        White     //,
+        // NumColors
     };
     static constexpr auto LedColorCount = __LINE__ - _LCSL_ - 4;
 
+    LedCheckBox(BoolModel* _model, QWidget* _parent);
+    LedCheckBox(QWidget*       _parent      = nullptr,
+                const QString& _displayName = "[led checkbox]");
+
+    // obsolete
     LedCheckBox(const QString& _txt,
                 QWidget*       _parent,
-                const QString& _name  = "[led checkbox]",
-                LedColors      _color = Yellow);
+                const QString& _displayName = "[led checkbox]",
+                LedColors      _color       = Yellow);
     LedCheckBox(QWidget*       _parent,
-                const QString& _name  = "[led checkbox]",
+                const QString& _displayName,
                 LedColors      _color = Yellow);
     LedCheckBox(QWidget* _parent, LedColors _color);
 
@@ -62,8 +67,12 @@ class EXPORT LedCheckBox final : public AutomatableButton
     QString text() const;
     void    setText(const QString& _s);
     // Q_PROPERTY( QString text READ text WRITE setText )
+
     Qt::AnchorPoint textAnchorPoint() const;
     void            setTextAnchorPoint(Qt::AnchorPoint _a);
+
+    LedColors ledColor() const;
+    void      setLedColor(LedColors _color);
 
     bool blinking() const;
     void setBlinking(bool _b);
@@ -71,23 +80,23 @@ class EXPORT LedCheckBox final : public AutomatableButton
     // virtual void enterValue();
 
   public slots:
-    virtual void update();
+    void update() override;
 
   protected:
-    virtual void paintEvent(QPaintEvent* _pe);
+    void initUi() override;
+    void onTextUpdated();
+    void onLedColorUpdated();
+    void paintEvent(QPaintEvent* _pe) override;
 
   private:
-    void initUi(LedColors _color);
-    void onTextUpdated();
-
-    bool m_blinkingState;
-    bool m_blinking;
+    QString         m_text;
+    Qt::AnchorPoint m_textAnchor;
+    LedColors       m_ledColor;
+    bool            m_blinkingState;
+    bool            m_blinking;
 
     QPixmap* m_ledOnPixmap;
     QPixmap* m_ledOffPixmap;
-
-    QString         m_text;
-    Qt::AnchorPoint m_textAnchor;
 };
 
 #endif

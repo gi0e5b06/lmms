@@ -68,17 +68,17 @@ AudioPort::AudioPort(const QString& _name,
     if(m_name.isEmpty())
         m_name = "[unnamed audio port]";
     qInfo("AudioPort::AudioPort '%s'", qPrintable(name()));
-    Engine::mixer()->emit audioPortToAdd(
-            pointer());  // addAudioPort(pointer());
     setExtOutputEnabled(true);
+    //Engine::mixer()->emit audioPortToAdd(pointer());
+    // addAudioPort(pointer());
 }
 
 AudioPort::~AudioPort()
 {
     qInfo("AudioPort::~AudioPort '%s'", qPrintable(name()));
+    //Engine::mixer()->audioPortToRemove(pointer());
     setExtOutputEnabled(false);
     qInfo("AudioPort::~AudioPort 2");
-    Engine::mixer()->audioPortToRemove(pointer());
 
     if(!m_playHandles.isEmpty())
     {
@@ -152,7 +152,7 @@ void AudioPort::doProcessing()
     const fpp_t   fpp  = Engine::mixer()->framesPerPeriod();
     const f_cnt_t af   = song->getPlayPos().absoluteFrame();
 
-    if(m_frozenModel && m_frozenModel->value()
+    if(m_frozenModel !=nullptr && m_frozenModel->value()
        && (song->playMode() == Song::Mode_PlaySong) && song->isPlaying())
     {
         /*
@@ -223,7 +223,7 @@ void AudioPort::doProcessing()
        */
         {
             sampleFrame* buf = ph->buffer();
-            if(buf)
+            if(buf != nullptr)
             {
                 // if(ph->type() == PlayHandle::TypeInstrumentPlayHandle)
                 // qWarning("ph->type() ==
@@ -247,7 +247,7 @@ void AudioPort::doProcessing()
                 // gets rid of playhandle's buffer and sets
                 // pointer to null, so if it doesn't get re-acquired we know
                 // to skip it next time
-                ph->releaseBuffer();
+                // ph->releaseBuffer();
             }
         }
         ph->unlock();

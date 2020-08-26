@@ -30,13 +30,14 @@
 #include "JournallingObject.h"
 #include "Model.h"
 #include "ThreadableJob.h"
+#include "debug.h"
 
 class FxChannel;
 class FxRoute;
 class SampleBuffer;
 
-typedef QVector<FxRoute*>   FxRoutes;
-typedef QVector<FxChannel*> FxChannels;
+typedef DebugQVector<QPointer<FxRoute>>   FxRoutes;
+typedef DebugQVector<QPointer<FxChannel>> FxChannels;
 
 class FxChannel :
       public Model,
@@ -136,62 +137,62 @@ class FxChannel :
 
     virtual bool hasCableFrom(Model* _m) const;
 
-    inline const BoolModel& clippingModel() const
+    INLINE const BoolModel& clippingModel() const
     {
         return m_clippingModel;
     }
 
-    inline BoolModel& clippingModel()
+    INLINE BoolModel& clippingModel()
     {
         return m_clippingModel;
     }
 
-    inline const BoolModel& frozenModel() const
+    INLINE const BoolModel& frozenModel() const
     {
         return m_frozenModel;
     }
 
-    inline BoolModel& frozenModel()
+    INLINE BoolModel& frozenModel()
     {
         return m_frozenModel;
     }
 
-    inline const BoolModel& mutedModel() const
+    INLINE const BoolModel& mutedModel() const
     {
         return m_mutedModel;
     }
 
-    inline BoolModel& mutedModel()
+    INLINE BoolModel& mutedModel()
     {
         return m_mutedModel;
     }
 
-    inline const BoolModel& soloModel() const
+    INLINE const BoolModel& soloModel() const
     {
         return m_soloModel;
     }
 
-    inline BoolModel& soloModel()
+    INLINE BoolModel& soloModel()
     {
         return m_soloModel;
     }
 
-    inline const FloatModel& volumeModel() const
+    INLINE const RealModel& volumeModel() const
     {
         return m_volumeModel;
     }
 
-    inline FloatModel& volumeModel()
+    INLINE RealModel& volumeModel()
     {
         return m_volumeModel;
     }
 
-    inline const FxRoutes& sends() const
+    INLINE const FxRoutes& sends() const
     {
         return m_sends;
     }
 
-    inline const FxRoutes& receives() const
+    INLINE const FxRoutes& receives() const
     {
         return m_receives;
     }
@@ -230,7 +231,7 @@ class FxChannel :
     void unmuteForSolo();
     void resetSolo();
 
-    inline void processed();
+    INLINE void processed();
 
     void lock()
     {
@@ -266,11 +267,11 @@ class FxChannel :
     BoolModel     m_clippingModel;
 
   public:  // TMP
-    Effect*   m_eqDJ;
-    BoolModel m_eqDJEnableModel;
-    // FloatModel m_eqDJHighModel;
-    // FloatModel m_eqDJMediumModel;
-    // FloatModel m_eqDJLowModel;
+    QPointer<Effect> m_eqDJ;
+    BoolModel        m_eqDJEnableModel;
+    // RealModel m_eqDJHighModel;
+    // RealModel m_eqDJMediumModel;
+    // RealModel m_eqDJLowModel;
   private:
     real_t       m_peakLeft;
     real_t       m_peakRight;
@@ -278,7 +279,7 @@ class FxChannel :
     bool         m_mutedBeforeSolo;
     BoolModel    m_mutedModel;
     BoolModel    m_soloModel;
-    FloatModel   m_volumeModel;
+    RealModel    m_volumeModel;
     QString      m_name;
     int          m_channelIndex;  // what channel index are we
 
@@ -319,7 +320,7 @@ class FxRoute : public QObject, public SerializingObject
         return m_to->channelIndex();
     }
 
-    FloatModel* amount()
+    RealModel* amount()
     {
         return &m_amount;
     }
@@ -341,9 +342,9 @@ class FxRoute : public QObject, public SerializingObject
     virtual void loadSettings(const QDomElement& element);
 
   private:
-    FxChannel* m_from;
-    FxChannel* m_to;
-    FloatModel m_amount;
+    QPointer<FxChannel> m_from;
+    QPointer<FxChannel> m_to;
+    RealModel           m_amount;
 };
 
 class EXPORT FxMixer : public Model, public JournallingObject
@@ -393,9 +394,9 @@ class EXPORT FxMixer : public Model, public JournallingObject
     bool isInfiniteLoop(fx_ch_t fromChannel, fx_ch_t toChannel);
     bool checkInfiniteLoop(FxChannel* from, FxChannel* to);
 
-    // return the FloatModel of fromChannel sending its output to the input of
+    // return the RealModel of fromChannel sending its output to the input of
     // toChannel. nullptr if there is no send.
-    FloatModel* channelSendModel(fx_ch_t fromChannel, fx_ch_t toChannel);
+    RealModel* channelSendModel(fx_ch_t fromChannel, fx_ch_t toChannel);
 
     // add a new channel to the Fx Mixer.
     // returns the index of the channel that was just added
@@ -421,7 +422,7 @@ class EXPORT FxMixer : public Model, public JournallingObject
     void activateSolo();
     void deactivateSolo();
 
-    inline fx_ch_t numChannels() const
+    INLINE fx_ch_t numChannels() const
     {
         return m_fxChannels.size();
     }

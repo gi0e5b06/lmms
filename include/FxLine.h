@@ -32,6 +32,7 @@
 
 #include <QGraphicsView>
 #include <QLineEdit>
+#include <QPointer>
 #include <QWidget>
 
 class FxMixerView;
@@ -40,34 +41,29 @@ class SendButtonIndicator;
 class FxLine : public QWidget
 {
     Q_OBJECT
+
   public:
     Q_PROPERTY(QBrush backgroundActive READ backgroundActive WRITE
-                                                             setBackgroundActive)
+                       setBackgroundActive)
     Q_PROPERTY(QColor strokeOuterActive READ strokeOuterActive WRITE
-                                                               setStrokeOuterActive)
+                       setStrokeOuterActive)
     Q_PROPERTY(QColor strokeOuterInactive READ strokeOuterInactive WRITE
-                                                                   setStrokeOuterInactive)
+                       setStrokeOuterInactive)
     Q_PROPERTY(QColor strokeInnerActive READ strokeInnerActive WRITE
-                                                               setStrokeInnerActive)
+                       setStrokeInnerActive)
     Q_PROPERTY(QColor strokeInnerInactive READ strokeInnerInactive WRITE
-                                                                   setStrokeInnerInactive)
+                       setStrokeInnerInactive)
 
-    FxLine(QWidget* _parent, FxMixerView* _mv, int _channelIndex);
+    FxLine(QWidget* _parent, IntModel* _currentLine, int _channelIndex);
     virtual ~FxLine();
 
-    virtual void paintEvent(QPaintEvent*);
-    virtual void mousePressEvent(QMouseEvent*);
-    virtual void mouseDoubleClickEvent(QMouseEvent*);
-    virtual void contextMenuEvent(QContextMenuEvent*);
-
-    inline int channelIndex()
-    {
-        return m_channelIndex;
-    }
+    int  currentLine();
+    void setCurrentLine(int index);
+    int  channelIndex();
     void setChannelIndex(int index);
 
-    Knob*                m_sendKnob;
-    SendButtonIndicator* m_sendBtn;
+    QPointer<Knob>                m_sendKnob;
+    QPointer<SendButtonIndicator> m_sendBtn;
 
     QBrush backgroundActive() const;
     void   setBackgroundActive(const QBrush& c);
@@ -86,28 +82,38 @@ class FxLine : public QWidget
 
     static const int FxLineHeight;
 
+  public slots:
+    void refresh();
+
+  protected:
+    void paintEvent(QPaintEvent*) override;
+    void mousePressEvent(QMouseEvent*) override;
+    void mouseDoubleClickEvent(QMouseEvent*) override;
+    void contextMenuEvent(QContextMenuEvent*) override;
+
   private:
-    void    drawFxLine(QPainter*     p,
-                       const FxLine* fxLine,
-                       bool          isActive,
-                       bool          sendToThis,
-                       bool          receiveFromThis);
+    void drawFxLine(QPainter*     p,
+                    const FxLine* fxLine,
+                    bool          isActive,
+                    bool          sendToThis,
+                    bool          receiveFromThis);
+
     QString elideName(const QString& name);
 
-    FxMixerView*   m_mv;
-    LcdWidget*     m_lcd;
-    int            m_channelIndex;
-    QBrush         m_backgroundActive;
-    QColor         m_strokeOuterActive;
-    QColor         m_strokeOuterInactive;
-    QColor         m_strokeInnerActive;
-    QColor         m_strokeInnerInactive;
-    bool           m_inRename;
-    QLineEdit*     m_renameLineEdit;
-    QGraphicsView* m_view;
+    QPointer<IntModel>  m_currentLine;
+    IntModel            m_channelIndex;
+    QPointer<LcdWidget> m_lcd;
+    QBrush              m_backgroundActive;
+    QColor              m_strokeOuterActive;
+    QColor              m_strokeOuterInactive;
+    QColor              m_strokeInnerActive;
+    QColor              m_strokeInnerInactive;
+    bool                m_inRename;
+    QLineEdit*          m_renameLineEdit;
+    QGraphicsView*      m_view;
 
-    static QPixmap* s_sendBgArrow;
-    static QPixmap* s_receiveBgArrow;
+    // static QPixmap* s_sendBgArrow;
+    // static QPixmap* s_receiveBgArrow;
 
   private slots:
     void renameChannel();

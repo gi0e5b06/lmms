@@ -59,7 +59,6 @@
 
 extern "C"
 {
-
     Plugin::Descriptor PLUGIN_EXPORT OPL2_plugin_descriptor
             = {STRINGIFY(PLUGIN_NAME),
                "OpulenZ",
@@ -69,7 +68,7 @@ extern "C"
                Plugin::Instrument,
                new PluginPixmapLoader("logo"),
                "sbi",
-               NULL};
+               nullptr};
 
     // necessary for getting instance out of shared lib
     Plugin* PLUGIN_EXPORT lmms_plugin_main(Model*, void* _data)
@@ -812,7 +811,10 @@ opl2instrumentView::opl2instrumentView(Instrument* _instrument,
     QPalette pal;
     pal.setBrush(backgroundRole(), PLUGIN_NAME::getIconPixmap("artwork"));
     setPalette(pal);
+
+    modelChanged();
 }
+
 opl2instrumentView::~opl2instrumentView()
 {
     // Knobs are QWidgets and our children, so they're
@@ -823,17 +825,11 @@ opl2instrumentView::~opl2instrumentView()
 inline QString opl2instrumentView::knobHintHelper(real_t n)
 {
     if(n >= 1000.)
-    {
         return QString::number(n / 1000., 'f', 0) + " s";
-    }
     else if(n >= 10.)
-    {
         return QString::number(n, 'f', 0) + " ms";
-    }
     else
-    {
         return QString::number(n, 'f', 1) + " ms";
-    }
 }
 
 void opl2instrumentView::updateKnobHints()

@@ -252,7 +252,7 @@ class EXPORT ConfigManager
         return m_backgroundArtwork;
     }
 
-    inline const QStringList& recentlyOpenedProjects() const
+    const QStringList& recentlyOpenedProjects() const
     {
         return m_recentlyOpenedProjects;
     }
@@ -272,7 +272,7 @@ class EXPORT ConfigManager
                   const QString& value);
     void deleteValue(const QString& cls, const QString& attribute);
 
-    void loadConfigFile(const QString& configFile = "");
+    void loadConfigFile(const QString& configFile = QString::null);
     void saveConfigFile();
 
     void setWorkingDir(const QString& _wd);
@@ -286,7 +286,7 @@ class EXPORT ConfigManager
     void createWorkingDir();
 
   private:
-    static ConfigManager* s_instanceOfMe;
+    static ConfigManager* s_singleton;
 
     ConfigManager(QDir& _appPath);
     // ConfigManager( const ConfigManager & _c );
@@ -315,9 +315,10 @@ class EXPORT ConfigManager
     QString     m_backgroundArtwork;
     QStringList m_recentlyOpenedProjects;
 
-    typedef QVector<QPair<QString, QString>> stringPairVector;
-    typedef QMap<QString, stringPairVector>  settingsMap;
-    settingsMap                              m_settings;
+    typedef QPair<QString, QString>    StringPair;
+    typedef QVector<StringPair>        StringPairs;
+    typedef QMap<QString, StringPairs> SettingsMap;
+    SettingsMap                        m_settings;
 
     // friend class LmmsCore;
 };

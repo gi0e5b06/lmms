@@ -1,4 +1,5 @@
 /*
+ * SPDX-License-Identifier: GPL-3.0-or-later
  * PianoRoll.h - declaration of class PianoRoll which is a window where you
  *               can set and edit notes in an easy way
  *
@@ -26,17 +27,19 @@
 #ifndef PIANO_ROLL_H
 #define PIANO_ROLL_H
 
-//#include <QVector>
-#include "ComboBoxModel.h"
+//#include "ActionUpdatable.h"
+#include "ActionGroup.h"
+//#include "ComboBoxModel.h"
 #include "Editor.h"
 //#include "SerializingObject.h"
+//#include "Chord.h"
 #include "InstrumentFunction.h"
-#include "Note.h"
+//#include "Note.h"
 #include "Song.h"
-#include "lmms_basics.h"
+//#include "lmms_basics.h"
 //#include "ToolTip.h"
 
-#include <QWidget>
+//#include <QWidget>
 
 class ComboBox;
 class NotePlayHandle;
@@ -44,7 +47,7 @@ class Pattern;
 class TimeLineWidget;
 
 class QPainter;
-class QPixmap;
+// class QPixmap;
 class QScrollBar;
 class QString;
 class QMenu;
@@ -82,14 +85,6 @@ class PianoRoll :
     Q_PROPERTY(QColor backgroundShade READ backgroundShade WRITE
                        setBackgroundShade)
   public:
-    enum EditModes
-    {
-        ModeDraw,
-        ModeErase,
-        ModeSelect,
-        ModeEditDetuning,
-    };
-
     /*! \brief Resets settings to default when e.g. creating a new project */
     void reset();
 
@@ -174,17 +169,18 @@ class PianoRoll :
     void   setBackgroundShade(const QColor& c);
 
   protected:
-    virtual void keyPressEvent(QKeyEvent* ke);
-    virtual void keyReleaseEvent(QKeyEvent* ke);
-    virtual void leaveEvent(QEvent* e);
-    virtual void mousePressEvent(QMouseEvent* me);
-    virtual void mouseDoubleClickEvent(QMouseEvent* me);
-    virtual void mouseReleaseEvent(QMouseEvent* me);
-    virtual void mouseMoveEvent(QMouseEvent* me);
-    virtual void paintEvent(QPaintEvent* pe);
-    virtual void resizeEvent(QResizeEvent* re);
-    virtual void wheelEvent(QWheelEvent* we);
-    virtual void focusOutEvent(QFocusEvent*);
+    void closeEvent(QCloseEvent* ce) override;
+    void focusOutEvent(QFocusEvent* fe) override;
+    void keyPressEvent(QKeyEvent* ke) override;
+    void keyReleaseEvent(QKeyEvent* ke) override;
+    void leaveEvent(QEvent* le) override;
+    void mousePressEvent(QMouseEvent* me) override;
+    void mouseDoubleClickEvent(QMouseEvent* me) override;
+    void mouseReleaseEvent(QMouseEvent* me) override;
+    void mouseMoveEvent(QMouseEvent* me) override;
+    void paintEvent(QPaintEvent* pe) override;
+    void resizeEvent(QResizeEvent* re) override;
+    void wheelEvent(QWheelEvent* we) override;
 
     void drawNoteRect(QPainter&     p,
                       int           x,
@@ -197,20 +193,23 @@ class PianoRoll :
                       const bool    borderless,
                       const bool    drawNoteNames);
 
-    int   getKey(int y) const;
-    void  removeSelection();
-    void  selectAll();
+    Editor::EditMode cursorMode() const override;
+
+    int  getKey(int y) const;
+    void resetSelectionArea();
+
     Notes getSelectedNotes();
-    Notes getSelectionOrAll();
+    Notes getSelectionOrAll(bool _reverseOrder = false);
     void  selectNotesOnKey(const int _key);
     int   xCoordOfTick(int tick);
 
     // for entering values with dblclick in the vol/pan bars
     void enterValue(Notes& _notes);
 
-    void markSemitone(const int                                    i,
-                      const int                                    key,
-                      const InstrumentFunctionNoteStacking::Chord* chord);
+    void markSemitone(
+            const int                                                  i,
+            const int                                                  key,
+            const ChordDef* /*InstrumentFunctionNoteStacking::Chord**/ chord);
 
   protected slots:
     void play();
@@ -218,13 +217,14 @@ class PianoRoll :
     void recordAccompany();
     void stop();
 
+    void selectAll();
+    void unselectAll();
+
     void startRecordNote(const Note& n);
     void finishRecordNote(const Note& n);
 
     void horScrolled(int new_pos);
     void verScrolled(int new_pos);
-
-    void setEditMode(int mode);
 
     void copySelectedNotes();
     void cutSelectedNotes();
@@ -239,8 +239,8 @@ class PianoRoll :
     void quantizeChanged();
     void quantizeNotes();
 
-    void onRootOrScaleChanged();
-    void guessScale();
+    void onRootOrModeChanged();
+    void guessMode();
     void updateSemitoneMarkerMenu();
 
     void changeNoteEditMode(int i);
@@ -253,17 +253,19 @@ class PianoRoll :
     void downChord1();
     void upChord12();
     void downChord12();
-    void upScale();
-    void downScale();
+    void upMode();
+    void downMode();
     void flipX();
     void flipY();
+    void topLine();
+    void bottomLine();
 
     void selectRegionFromPixels(int xStart, int xEnd);
 
   signals:
     void currentPatternChanged();
     void ghostPatternSet(bool);
-    void semitoneMarkerMenuScaleSetEnabled(bool);
+    void semitoneMarkerMenuModeSetEnabled(bool);
     void semitoneMarkerMenuChordSetEnabled(bool);
 
   private:
@@ -292,7 +294,7 @@ class PianoRoll :
         stmaUnmarkAll,
         stmaMarkCurrentSemitone,
         stmaMarkAllOctaveSemitones,
-        stmaMarkCurrentScale,
+        stmaMarkCurrentMode,
         stmaMarkCurrentChord,
         stmaCopyAllNotesOnKey
     };
@@ -318,10 +320,12 @@ class PianoRoll :
 
     MidiTime newNoteLen() const;
 
-    void shiftPos(int amount);
-    void shiftSemitone(int amount);
-    bool isSelection() const;
-    int  selectionCount() const;
+    void shiftKey(int amount);
+    void shiftPos(tick_t amount);
+
+    bool hasSelection() const;
+    int  selectionSize() const;
+
     void playTestNote(Note* n);
     void stopTestNote(Note* n);
     void stopTestNotes();
@@ -344,17 +348,22 @@ class PianoRoll :
     static const int cm_scrollAmtHoriz = 10;
     static const int cm_scrollAmtVert  = 1;
 
+    /*
     static QPixmap* s_whiteKeyBigPm;
     static QPixmap* s_whiteKeyBigPressedPm;
     static QPixmap* s_whiteKeySmallPm;
     static QPixmap* s_whiteKeySmallPressedPm;
     static QPixmap* s_blackKeyPm;
     static QPixmap* s_blackKeyPressedPm;
+    */
+
+    /*
     static QPixmap* s_toolDraw;
     static QPixmap* s_toolErase;
     static QPixmap* s_toolSelect;
     static QPixmap* s_toolMove;
-    static QPixmap* s_toolOpen;
+    static QPixmap* s_toolDetune;
+    */
 
     static PianoRollKeyTypes prKeyOrder[];
 
@@ -365,7 +374,7 @@ class PianoRoll :
     ComboBoxModel m_quantizeModel;
     ComboBoxModel m_noteLenModel;
     ComboBoxModel m_rootModel;
-    ComboBoxModel m_scaleModel;
+    ComboBoxModel m_modeModel;
     ComboBoxModel m_chordModel;
 
     Pattern* m_pattern;
@@ -383,9 +392,9 @@ class PianoRoll :
     NoteEditMode m_noteEditMode;
 
     int m_selectStartTick;
-    int m_selectedTick;
+    int m_selectTickCount;
     int m_selectStartKey;
-    int m_selectedKeys;
+    int m_selectKeyCount;
 
     // boundary box around all selected notes when dragging
     int m_moveBoundaryLeft;
@@ -424,8 +433,8 @@ class PianoRoll :
     int m_startKey;  // first key when drawing
     int m_lastKey;
 
-    EditModes m_editMode;
-    EditModes m_ctrlMode;  // mode they were in before they hit ctrl
+    // EditMode m_editMode;
+    // EditMode m_ctrlMode;  // mode they were in before they hit ctrl
 
     bool m_mouseDownRight;  // true if right click is being held down
 
@@ -440,7 +449,9 @@ class PianoRoll :
 
     // turn a selection rectangle into selected notes
     void computeSelectedNotes(bool shift);
-    void clearSelectedNotes();
+    void computeSelectionArea();
+    void selectUnselectedNotes();
+    void unselectSelectedNotes();
 
     // did we start a mouseclick with shift pressed
     bool m_startedWithShift;
@@ -483,18 +494,6 @@ class PianoRollWindow : public EditorWindow, SerializingObject
     void setCurrentPattern(Pattern* _pattern);
     void setGhostPattern(Pattern* _pattern);
 
-    void play();
-    void stop();
-    void record();
-    void recordAccompany();
-    void stopRecording();
-
-    int  quantization() const;
-    bool isRecording() const;
-
-    /*! \brief Resets settings to default when e.g. creating a new project */
-    void reset();
-
     using SerializingObject::restoreState;
     using SerializingObject::saveState;
     virtual void saveSettings(QDomDocument& doc, QDomElement& de);
@@ -505,28 +504,66 @@ class PianoRollWindow : public EditorWindow, SerializingObject
         return "pianoroll";
     }
 
+    void  reset();
+    void  open(Pattern* _pattern, bool _ghost = false);
+    int   quantization() const;
     QSize sizeHint() const;
+
+  public slots:
+    void play();
+    void record();
+    void recordAccompany();
+    void stop();
+    void stopRecording();
+
+    void clearCurrentPattern();
+    void onLostFocus();
+
+    virtual void setEditMode(int _mode) final
+    {
+        m_editor->setEditMode((Editor::EditMode)_mode);
+    }
+    // void setEditModeDraw();
+    // void setEditModeSelect();
+
+  protected:
+    void focusInEvent(QFocusEvent* event) override;
+    void keyPressEvent(QKeyEvent* ke) override;
+    void keyReleaseEvent(QKeyEvent* ke) override;
+    void resizeEvent(QResizeEvent* event) override;
+
+    bool isRecording() const;
 
   signals:
     void currentPatternChanged();
+    void resized();
 
   private slots:
     void updateWindowTitle();
     void ghostPatternSet(bool state);
 
   private:
-    void focusInEvent(QFocusEvent* event);
-
     PianoRoll* m_editor;
+
+    /*
+    ActionGroup* m_editModeGroup;
+    QAction*     m_drawModeAction;
+    QAction*     m_eraseModeAction;
+    QAction*     m_selectModeAction;
+    // QAction*     m_glueModeAction; // Unite
+    // QAction*     m_knifeModeAction; // Divide
+    QAction* m_detuneModeAction;
+    QAction* m_previousEditAction;
+    */
 
     ComboBox*    m_zoomingXComboBox;
     ComboBox*    m_zoomingYComboBox;
     ComboBox*    m_quantizeComboBox;
     ComboBox*    m_noteLenComboBox;
     ComboBox*    m_rootComboBox;
-    ComboBox*    m_scaleComboBox;
+    ComboBox*    m_modeComboBox;
     ComboBox*    m_chordComboBox;
-    QToolButton* m_guessScaleButton;
+    QToolButton* m_guessModeButton;
     QToolButton* m_clearGhostButton;
 };
 

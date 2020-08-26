@@ -361,22 +361,22 @@ class BasicFilters final : public LsmmFilter<CHANNELS>
     };
     constexpr static int NumFilters = Peak + 1;
 
-    static inline frequency_t minFreq()
+    static INLINE frequency_t minFreq()
     {
         return 5.;
     }
 
-    static inline real_t minQ()
+    static INLINE real_t minQ()
     {
         return 0.003;
     }
 
-    static inline frequency_t maxFreq()
+    static INLINE frequency_t maxFreq()
     {
         return 20000.;
     }
 
-    static inline real_t maxQ()
+    static INLINE real_t maxQ()
     {
         return 10.;
     }

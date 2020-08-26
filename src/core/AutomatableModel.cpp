@@ -406,6 +406,69 @@ void AutomatableModel::loadSettings(const QDomElement& element,
     }
 }
 
+bool AutomatableModel::hasSettings(const QDomElement& element,
+                                   const QString&     name)
+{
+    if(element.isNull())
+    {
+        BACKTRACE
+        qWarning("AutomatableModel::hasSettings ERROR element is null");
+    }
+
+    if(name.isEmpty())
+    {
+        BACKTRACE
+        qWarning("AutomatableModel::hasSettings ERROR name is empty");
+    }
+
+    if(element.hasAttribute(name))
+        return true;
+
+    QDomNode node = element.namedItem(name);
+
+    if(node.isNull())
+    {
+        // PR 4605
+        QDomElement e
+                = element.firstChildElement(QString("automatablemodel"));
+        while(!e.isNull())
+        {
+            if(!e.hasAttribute("nodename") || e.attribute("nodename") != name)
+            {
+                e = e.nextSiblingElement();
+                continue;
+            }
+
+            node = e;
+            break;
+        }
+    }
+
+    return node.isElement();
+}
+
+bool AutomatableModel::hasSettings(const QDomElement& element,
+                                   const QString&     name,
+                                   const QString&     oldName)
+{
+    if(hasSettings(element, name))
+        return true;
+    return hasSettings(element, oldName);
+}
+
+void AutomatableModel::loadSettings(const QDomElement& element,
+                                    const QString&     name,
+                                    const QString&     oldName,
+                                    const bool         required)
+{
+    if(hasSettings(element, name))
+        loadSettings(element, name, false);
+    else if(hasSettings(element, oldName))
+        loadSettings(element, oldName, false);
+    else
+        loadSettings(element, name, required);
+}
+
 void AutomatableModel::setRandomRatio(const real_t _ratio)
 {
     real_t rr = bound(0., abs(_ratio), 1.);
@@ -436,13 +499,11 @@ void AutomatableModel::setValue(const real_t value)
 
 void AutomatableModel::propagateValue()
 {
-    ++m_setValueDepth;
-
     // add changes to history so user can undo it
     // addJournalCheckPoint();
-
-    // notify linked models
-    for(QVector<AutomatableModel*>::Iterator it = m_linkedModels.begin();
+    ++m_setValueDepth;
+    /*
+    for(AutomatableModels::Iterator it = m_linkedModels.begin();
         it != m_linkedModels.end(); ++it)
     {
         if((*it)->m_setValueDepth < 1
@@ -453,7 +514,14 @@ void AutomatableModel::propagateValue()
             (*it)->setJournalling(journalling);
         }
     }
-    // m_valueChanged = true;
+    */
+    for(AutomatableModel* am: m_linkedModels)
+        if(am->m_setValueDepth < 1 && am->fittedValue(m_value) != am->m_value)
+        {
+            bool journalling = am->testAndSetJournalling(isJournalling());
+            am->setValue(m_value);
+            am->setJournalling(journalling);
+        }
     --m_setValueDepth;
 }
 
@@ -483,7 +551,7 @@ void AutomatableModel::setAutomatedValue(const real_t value)
     if( m_value != newvalue )
     {
             // notify linked models
-            for( QVector<AutomatableModel *>::Iterator it =
+            for( AutomatableModels::Iterator it =
     m_linkedModels.begin(); it != m_linkedModels.end(); ++it )
             {
                     if( (*it)->m_setValueDepth < 1 &&
@@ -506,9 +574,9 @@ void AutomatableModel::setControlledValue(const real_t value)
 
 void AutomatableModel::propagateAutomatedValue()
 {
-    ++m_setValueDepth;
     // notify linked models
-    for(QVector<AutomatableModel*>::Iterator it = m_linkedModels.begin();
+    /*
+    for(AutomatableModels::Iterator it = m_linkedModels.begin();
         it != m_linkedModels.end(); ++it)
     {
         if((*it)->m_setValueDepth < 1
@@ -517,6 +585,11 @@ void AutomatableModel::propagateAutomatedValue()
             (*it)->setAutomatedValue(m_value);
         }
     }
+    */
+    ++m_setValueDepth;
+    for(AutomatableModel* am: m_linkedModels)
+        if(am->m_setValueDepth < 1 && am->fittedValue(m_value) != am->m_value)
+            am->setAutomatedValue(m_value);
     --m_setValueDepth;
 }
 
@@ -527,14 +600,15 @@ void AutomatableModel::propagateAutomatedBuffer()
 
     ++m_setValueDepth;
     // notify linked models
-    for(QVector<AutomatableModel*>::Iterator it = m_linkedModels.begin();
+    /*
+    for(AutomatableModels::Iterator it = m_linkedModels.begin();
         it != m_linkedModels.end(); ++it)
-    {
         if((*it)->m_setValueDepth < 1)
-        {
             (*it)->setAutomatedBuffer(&m_valueBuffer);
-        }
-    }
+    */
+    for(AutomatableModel* am: m_linkedModels)
+        if(am->m_setValueDepth < 1)
+            am->setAutomatedBuffer(&m_valueBuffer);
     setAutomatedValue(m_valueBuffer.value(0));
     --m_setValueDepth;
 }
@@ -755,7 +829,7 @@ void AutomatableModel::unlinkModel(AutomatableModel* model)
         emit propertiesChanged();
         emit model->propertiesChanged();
 
-        QVector<AutomatableModel*>::Iterator it
+        AutomatableModels::Iterator it
                 = qFind(m_linkedModels.begin(), m_linkedModels.end(), model);
         if(it != m_linkedModels.end())
         {
@@ -1160,8 +1234,7 @@ void AutomatableModel::reset()
 real_t AutomatableModel::globalAutomationValueAt(const MidiTime& time)
 {
     // get patterns that connect to this model
-    QVector<AutomationPattern*> patterns
-            = AutomationPattern::patternsForModel(this);
+    AutomationPatterns patterns = AutomationPattern::patternsForModel(this);
     if(patterns.isEmpty())
     {
         // if no such patterns exist, return current value
@@ -1171,8 +1244,8 @@ real_t AutomatableModel::globalAutomationValueAt(const MidiTime& time)
     {
         // of those patterns:
         // find the patterns which overlap with the miditime position
-        QVector<AutomationPattern*> patternsInRange;
-        for(QVector<AutomationPattern*>::ConstIterator it = patterns.begin();
+        AutomationPatterns patternsInRange;
+        for(AutomationPatterns::ConstIterator it = patterns.begin();
             it != patterns.end(); it++)
         {
             int s = (*it)->startPosition();
@@ -1198,8 +1271,7 @@ real_t AutomatableModel::globalAutomationValueAt(const MidiTime& time)
         {
             int latestPosition = 0;
 
-            for(QVector<AutomationPattern*>::ConstIterator it
-                = patterns.begin();
+            for(AutomationPatterns::ConstIterator it = patterns.begin();
                 it != patterns.end(); it++)
             {
                 int e = (*it)->endPosition();
@@ -1267,7 +1339,7 @@ void AutomatableModel::postponeUpdate(AutomatableModel*  _m,
     s_postponedUpdates.insert(_m, _vb);
 }
 
-FloatModel::FloatModel(real_t         val,
+RealModel::RealModel(real_t         val,
                        real_t         min,
                        real_t         max,
                        real_t         step,
@@ -1288,13 +1360,13 @@ FloatModel::FloatModel(real_t         val,
     setDigitCount();
 }
 
-real_t FloatModel::getRoundedValue() const
+real_t RealModel::getRoundedValue() const
 {
     // return qRound( value() / step<real_t>() ) * step<real_t>();
     return minValue() + round((value() - minValue()) / step()) * step();
 }
 
-void FloatModel::setRange(const real_t min,
+void RealModel::setRange(const real_t min,
                           const real_t max,
                           const real_t step)
 {
@@ -1302,18 +1374,18 @@ void FloatModel::setRange(const real_t min,
     setDigitCount();
 }
 
-void FloatModel::setStep(const real_t step)
+void RealModel::setStep(const real_t step)
 {
     AutomatableModel::setStep(step);
     setDigitCount();
 }
 
-int FloatModel::getDigitCount() const
+int RealModel::getDigitCount() const
 {
     return m_digitCount;
 }
 
-void FloatModel::setDigitCount()
+void RealModel::setDigitCount()
 {
     real_t t = abs(step());
     bool   b = false;
@@ -1349,7 +1421,7 @@ void FloatModel::setDigitCount()
     }
 }
 
-QString FloatModel::displayValue(const real_t val) const
+QString RealModel::displayValue(const real_t val) const
 {
     return QString::number(castValue<real_t>(scaledValue(val)), 'f',
                            getDigitCount());

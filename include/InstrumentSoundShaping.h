@@ -29,7 +29,7 @@
 #include "TempoSyncKnobModel.h"
 
 class InstrumentTrack;
-class EnvelopeAndLfoParameters;
+class EnvelopeAndLfo;
 class NotePlayHandle;
 class InstrumentPlayHandle;
 
@@ -75,8 +75,8 @@ class InstrumentSoundShaping : public Model, public JournallingObject
     }
 
   private:
-    EnvelopeAndLfoParameters* m_envLfoParameters[NumTargets];
-    InstrumentTrack*          m_instrumentTrack;
+    EnvelopeAndLfo*  m_envLfo[NumTargets];
+    InstrumentTrack* m_instrumentTrack;
 
     BoolModel          m_filter1EnabledModel;
     ComboBoxModel      m_filter1TypeModel;

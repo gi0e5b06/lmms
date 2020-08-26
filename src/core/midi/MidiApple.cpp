@@ -61,7 +61,7 @@ void MidiApple::processOutEvent(const MidiEvent& event,
     for(SubMap::ConstIterator it = m_outputSubs.begin();
         it != m_outputSubs.end(); ++it)
     {
-        for(MidiPortList::ConstIterator jt = it.value().begin();
+        for(MidiPorts::ConstIterator jt = it.value().begin();
             jt != it.value().end(); ++jt)
         {
             if(*jt == port)
@@ -181,7 +181,7 @@ void MidiApple::subscribeReadablePort(MidiPort*      port,
     }
     else
     {
-        MidiPortList list = m_inputSubs[dest];
+        MidiPorts list = m_inputSubs[dest];
         if(list.empty())
         {
             m_inputSubs.remove(dest);
@@ -210,7 +210,7 @@ void MidiApple::subscribeWritablePort(MidiPort*      port,
     }
     else
     {
-        MidiPortList list = m_outputSubs[dest];
+        MidiPorts list = m_outputSubs[dest];
         if(list.empty())
         {
             m_outputSubs.remove(dest);
@@ -240,8 +240,8 @@ void MidiApple::HandleReadCallback(const MIDIPacketList* pktlist,
     if(!m_inputSubs.contains(refName))
     {
         //		qDebug("HandleReadCallback '%s' not
-        //subscribed",refName); 		printQStringKeys("m_inputDevices",
-        //m_inputDevices);
+        // subscribed",refName);
+        // printQStringKeys("m_inputDevices", m_inputDevices);
         return;
     }
     //	qDebug("HandleReadCallback '%s' subscribed",refName);
@@ -339,24 +339,24 @@ void MidiApple::HandleReadCallback(const MIDIPacketList* pktlist,
                     case MidiNoteOff:      // 0x80:
                     case MidiNoteOn:       // 0x90:
                     case MidiKeyPressure:  // 0xA0:
-                        notifyMidiPortList(m_inputSubs[refName],
-                                           MidiEvent(cmdtype, messageChannel,
-                                                     par1,// - KeysPerOctave,
-                                                     par2 & 0xff,
-                                                     &endPointRef));
+                        notifyMidiPorts(
+                                m_inputSubs[refName],
+                                MidiEvent(cmdtype, messageChannel,
+                                          par1,  // - KeysPerOctave,
+                                          par2 & 0xff, &endPointRef));
                         break;
 
                     case MidiControlChange:    // 0xB0:
                     case MidiProgramChange:    // 0xC0:
                     case MidiChannelPressure:  // 0xD0:
-                        notifyMidiPortList(m_inputSubs[refName],
+                        notifyMidiPorts(m_inputSubs[refName],
                                            MidiEvent(cmdtype, messageChannel,
                                                      par1, par2 & 0xff,
                                                      &endPointRef));
                         break;
 
                     case MidiPitchBend:  // 0xE0:
-                        notifyMidiPortList(m_inputSubs[refName],
+                        notifyMidiPorts(m_inputSubs[refName],
                                            MidiEvent(cmdtype, messageChannel,
                                                      par1 + par2 * 128, 0,
                                                      &endPointRef));
@@ -547,9 +547,9 @@ MIDIClientRef MidiApple::getMidiClientRef()
     return mClient;
 }
 
-void MidiApple::notifyMidiPortList(MidiPortList l, MidiEvent event)
+void MidiApple::notifyMidiPorts(MidiPorts l, MidiEvent event)
 {
-    for(MidiPortList::ConstIterator it = l.begin(); it != l.end(); ++it)
+    for(MidiPorts::ConstIterator it = l.begin(); it != l.end(); ++it)
     {
         (*it)->processInEvent(event);
     }

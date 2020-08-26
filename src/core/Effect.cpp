@@ -48,13 +48,15 @@ Effect::Effect(const Plugin::Descriptor*                 _desc,
       m_gateClosed(true), m_parent(nullptr),
       m_key(_key ? *_key : Descriptor::SubPluginFeatures::Key()),
       m_processors(1), m_okay(true), m_noRun(false),
-      m_runningModel(false, this, tr("Effect running")), m_bufferCount(0),
-      m_enabledModel(true, this, tr("Effect enabled")),
-      m_clippingModel(false, this, tr("Clipping alert")),
-      m_wetDryModel(1., 0., 1., 0.01, this, tr("Wet/Dry mix")),  // min=-1
-      m_autoQuitModel(1000., 1., 8000., 1., 8000., this, tr("Decay")),
-      m_gateModel(0.000001, 0.000001, 1., 0.000001, this, tr("Gate")),
-      m_balanceModel(0., -1., 1., 0.01, this, tr("Balance")),
+      m_runningModel(false, this, tr("Effect running"), "running"),
+      m_bufferCount(0),
+      m_enabledModel(true, this, tr("Effect enabled"), "enabled"),
+      m_clippingModel(false, this, tr("Clipping alert"), "clipping"),
+      m_wetDryModel(1., 0., 1., 0.01, this, tr("Wet/Dry mix"), "wetness"),
+      m_autoQuitModel(
+              1000., 1., 8000., 1., 8000., this, tr("Decay"), "decay"),
+      m_gateModel(0.000001, 0.000001, 1., 0.000001, this, tr("Gate"), "gate"),
+      m_balanceModel(0., -1., 1., 0.01, this, tr("Balance"), "balance"),
       m_color(59, 66, 74),  //#3B424A
       m_useStyleColor(true)
 // m_autoQuitDisabled( false )

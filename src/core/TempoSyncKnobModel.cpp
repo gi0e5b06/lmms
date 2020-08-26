@@ -37,8 +37,17 @@ TempoSyncKnobModel::TempoSyncKnobModel(const real_t   _val,
                                        const real_t   _step,
                                        const real_t   _scale,
                                        Model*         _parent,
-                                       const QString& _display_name) :
-      FloatModel(_val, _min, _max, _step, _parent, _display_name),
+                                       const QString& _displayName,
+                                       const QString& _objectName,
+                                       bool           _defaultConstructed) :
+      FloatModel(_val,
+                 _min,
+                 _max,
+                 _step,
+                 _parent,
+                 _displayName,
+                 _objectName,
+                 _defaultConstructed),
       m_tempoSyncMode(SyncNone), m_tempoLastSyncMode(SyncNone),
       m_scale(_scale), m_custom(_parent)
 {

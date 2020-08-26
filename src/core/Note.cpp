@@ -233,16 +233,50 @@ void Note::buildKeyTables()
     {
         const char* NOK[12] = {"C",  "C#", "D",  "D#", "E",  "F",
                                "F#", "G",  "G#", "A",  "A#", "B"};
-        for(int o = 0; o < 12; o++)
-            for(int n = 0; n < 12; n++)
+        for(int o = 0; o < NumKeys / KeysPerOctave; o++)
+            for(int n = 0; n < KeysPerOctave; n++)
             {
-                int i = o * 12 + n;
+                int i = o * KeysPerOctave + n;
                 if(i >= NumKeys)
                     continue;
                 QString k = QString("%1%2").arg(NOK[n]).arg(o - 1);
                 MIDI_KEYS_N2I.insert(k, i);
                 MIDI_KEYS_I2N.insert(i, k);
             }
+    }
+}
+
+void Note::fillRootModel(ComboBoxModel& _model, bool _none)
+{
+    // _model.setDisplayName(_model.tr("Root"));
+    // _model.clear();
+    if(_none)
+    {
+        static ComboBoxModel::Items items;
+        if(items.isEmpty())
+        {
+            items.append(ComboBoxModel::Item(-1, QObject::tr("None"), nullptr,
+                                             -1));
+            for(int n = 0; n < KeysPerOctave; n++)
+            {
+                QString text = Note::findNoteName(n);
+                items.append(ComboBoxModel::Item(n, text, nullptr, n));
+            }
+        }
+        _model.setItems(&items);
+    }
+    else
+    {
+        static ComboBoxModel::Items items;
+        if(items.isEmpty())
+        {
+            for(int n = 0; n < KeysPerOctave; n++)
+            {
+                QString text = Note::findNoteName(n);
+                items.append(ComboBoxModel::Item(n, text, nullptr, n));
+            }
+        }
+        _model.setItems(&items);
     }
 }
 
@@ -270,5 +304,5 @@ QString Note::findNoteName(int _num)
 {
     if((_num < 0) || (_num >= NumKeys))
         return "";
-    return Note::findKeyName(_num % 12).replace("-1", "");
+    return Note::findKeyName(_num % KeysPerOctave).replace("-1", "");
 }

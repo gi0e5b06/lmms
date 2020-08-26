@@ -38,8 +38,6 @@
 
 class AudioPort;
 class EffectChain;
-// class FloatModel;
-// class BoolModel;
 class SampleBuffer;
 // class PlayHandle;
 
@@ -54,35 +52,35 @@ class AudioPort : public ThreadableJob
     AudioPort(const QString& _name,
               bool           _has_effect_chain,    // = true,
               BoolModel*     volumeEnabledModel,   // = nullptr,
-              FloatModel*    volumeModel,          // = nullptr,
+              RealModel*     volumeModel,          // = nullptr,
               BoolModel*     panningEnabledModel,  // = nullptr,
-              FloatModel*    panningModel,         // = nullptr,
+              RealModel*     panningModel,         // = nullptr,
               BoolModel*     bendingEnabledModel,  // = nullptr,
-              FloatModel*    bendingModel,         // = nullptr,
+              RealModel*     bendingModel,         // = nullptr,
               BoolModel*     mutedModel,           // = nullptr,
               BoolModel*     frozenModel,          // = nullptr,
               BoolModel*     clippingModel);           // = nullptr);
     virtual ~AudioPort();
 
-    inline sampleFrame* buffer()
+    INLINE sampleFrame* buffer()
     {
         return m_portBuffer;
     }
 
     /*
-    inline void lockBuffer()
+    INLINE void lockBuffer()
     {
         m_portBufferLock.lock();
     }
 
-    inline void unlockBuffer()
+    INLINE void unlockBuffer()
     {
         m_portBufferLock.unlock();
     }
     */
 
     // indicate whether JACK & Co should provide output-buffer at ext. port
-    inline bool extOutputEnabled() const
+    INLINE bool extOutputEnabled() const
     {
         return m_extOutputEnabled;
     }
@@ -91,12 +89,12 @@ class AudioPort : public ThreadableJob
 
     // next effect-channel after this audio-port
     // (-1 = none  0 = master)
-    inline fx_ch_t nextFxChannel() const
+    INLINE fx_ch_t nextFxChannel() const
     {
         return m_nextFxChannel;
     }
 
-    inline EffectChain* effects()
+    INLINE EffectChain* effects()
     {
         return m_effects;
     }
@@ -168,11 +166,11 @@ class AudioPort : public ThreadableJob
     EffectChain*                m_effects;
     SafeList<PlayHandlePointer> m_playHandles;
     BoolModel*                  m_volumeEnabledModel;
-    FloatModel*                 m_volumeModel;
+    RealModel*                  m_volumeModel;
     BoolModel*                  m_panningEnabledModel;
-    FloatModel*                 m_panningModel;
+    RealModel*                  m_panningModel;
     BoolModel*                  m_bendingEnabledModel;
-    FloatModel*                 m_bendingModel;
+    RealModel*                  m_bendingModel;
     BoolModel*                  m_mutedModel;
     BoolModel*                  m_frozenModel;
     BoolModel*                  m_clippingModel;

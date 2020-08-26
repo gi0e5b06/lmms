@@ -24,7 +24,7 @@
 
 #include "SplitGDXDialog.h"
 
-#include "EffectRackView.h"
+#include "EffectChainView.h"
 #include "GroupBox.h"
 #include "SplitGDX.h"
 #include "SplitGDXControls.h"
@@ -49,12 +49,12 @@ SplitGDXDialog::SplitGDXDialog(SplitGDXControls* controls) :
     mainLOT->setContentsMargins(0, 0, 0, 0);
     mainLOT->setSpacing(0);
 
-    EffectRackView* splitRV = new EffectRackView(
+    EffectChainView* splitRV = new EffectChainView(
             controls->m_effect->m_splitChain, this, tr("Split"));
-    EffectRackView* wetRV = new EffectRackView(controls->m_effect->m_wetChain,
-                                               this, tr("Wet"));
-    EffectRackView* remRV = new EffectRackView(controls->m_effect->m_remChain,
-                                               this, tr("Remainder"));
+    EffectChainView* wetRV = new EffectChainView(
+            controls->m_effect->m_wetChain, this, tr("Wet"));
+    EffectChainView* remRV = new EffectChainView(
+            controls->m_effect->m_remChain, this, tr("Remainder"));
 
     // GroupBox* splitGB = new GroupBox(tr("Split"), this, false, true, true);
     // GroupBox* wetGB   = new GroupBox(tr("Wet"), this, false, true, true);

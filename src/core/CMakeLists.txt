@@ -19,6 +19,7 @@ SET(LMMS_SRCS
 	core/BBTrackContainer.cpp
 	core/Bitset.cpp
 	core/BufferManager.cpp
+    core/Chord.cpp
 	core/Clipboard.cpp
 	core/ComboBoxModel.cpp
 	core/ConfigManager.cpp
@@ -30,7 +31,7 @@ SET(LMMS_SRCS
 	core/Effect.cpp
 	core/EffectChain.cpp
 	core/Engine.cpp
-	core/EnvelopeAndLfoParameters.cpp
+	core/EnvelopeAndLfo.cpp
 	core/fft_helpers.cpp
 	core/FxMixer.cpp
 	core/ImportFilter.cpp
@@ -47,7 +48,7 @@ SET(LMMS_SRCS
 	core/LocklessAllocator.cpp
 	core/lmms_math.cpp
 	core/lmms_qt_core.cpp
-        core/MemoryHelper.cpp
+    core/MemoryHelper.cpp
 	core/MemoryManager.cpp
 	core/MemoryManagerArray.cpp
 	core/MemoryManagerLegacy.cpp
@@ -61,7 +62,7 @@ SET(LMMS_SRCS
 	core/Model.cpp
 	core/Note.cpp
 	core/NotePlayHandle.cpp
-        core/ObjectManager.cpp
+    core/ObjectManager.cpp
 	core/Oscillator.cpp
 	core/PeakController.cpp
 	core/PerfLog.cpp
@@ -79,20 +80,21 @@ SET(LMMS_SRCS
 	core/RingBuffer.cpp
 	core/SampleBuffer.cpp
 	core/SamplePlayHandle.cpp
-        core/SampleRate.cpp
+    core/SampleRate.cpp
 	core/SampleRecordHandle.cpp
-        core/Scale.cpp
+    core/Scale.cpp
 	core/SerializingObject.cpp
 	core/Song.cpp
 	core/TempoSyncKnobModel.cpp
-	core/ToolPlugin.cpp
+	core/Tile.cpp
+    core/ToolPlugin.cpp
 	core/Track.cpp
 	core/TrackContainer.cpp
 	core/ValueBuffer.cpp
 	core/VstSyncController.cpp
-        core/WaveForm.cpp
-        core/WaveFormModel.cpp
-        core/WaveFormStandard.cpp
+    core/WaveForm.cpp
+    core/WaveFormModel.cpp
+    core/WaveFormStandard.cpp
 
 	core/audio/AudioAlsa.cpp
 	core/audio/AudioAlsaGdx.cpp

@@ -34,7 +34,7 @@
 class QPaintEvent;
 class QPixmap;
 
-class EnvelopeAndLfoParameters;
+class EnvelopeAndLfo;
 
 // class AutomatableButtonGroup;
 class ComboBox;
@@ -47,8 +47,18 @@ class EnvelopeAndLfoView : public QWidget, public ModelView
 {
     Q_OBJECT
   public:
-    EnvelopeAndLfoView(QWidget* _parent);
+    EnvelopeAndLfoView(EnvelopeAndLfo* _model, QWidget* _parent);
     virtual ~EnvelopeAndLfoView();
+
+    EnvelopeAndLfo* model()
+    {
+        return castModel<EnvelopeAndLfo>();
+    }
+
+    const EnvelopeAndLfo* model() const
+    {
+        return castModel<EnvelopeAndLfo>();
+    }
 
   public slots:
     virtual void update();
@@ -68,7 +78,7 @@ class EnvelopeAndLfoView : public QWidget, public ModelView
     QPixmap m_envGraph;
     QPixmap m_lfoGraph;
 
-    EnvelopeAndLfoParameters* m_params;
+    EnvelopeAndLfo* m_params;
 
     // envelope stuff
     TempoSyncKnob* m_predelayKnob;

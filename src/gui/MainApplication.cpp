@@ -34,6 +34,7 @@
 MainApplication::MainApplication(int& argc, char** argv) :
       QApplication(argc, argv), m_queuedFile()
 {
+    QCoreApplication::setAttribute(Qt::AA_DontCreateNativeWidgetSiblings);
 }
 
 bool MainApplication::event(QEvent* event)

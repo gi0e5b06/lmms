@@ -25,7 +25,7 @@
 #include "InstrumentSoundShapingView.h"
 
 #include "ComboBox.h"
-#include "EnvelopeAndLfoParameters.h"  // REQUIRED
+#include "EnvelopeAndLfo.h"  // REQUIRED
 #include "EnvelopeAndLfoView.h"
 #include "FilterView.h"
 #include "GroupBox.h"
@@ -51,9 +51,16 @@ const int FILTER_GROUPBOX_WIDTH  = TARGETS_TABWIDGET_WIDTH;
 const int FILTER_GROUPBOX_HEIGHT = 245 - FILTER_GROUPBOX_Y;
 */
 
-InstrumentSoundShapingView::InstrumentSoundShapingView(QWidget* _parent) :
-      QScrollArea(_parent), ModelView(NULL, this), m_ss(NULL)
+InstrumentSoundShapingView::InstrumentSoundShapingView(
+        InstrumentSoundShaping* _model, QWidget* _parent) :
+      QScrollArea(_parent),
+      ModelView(_model, this)
+      //, m_ss(nullptr)
 {
+    //allowNullModel(true);
+    allowModelChange(true);
+    InstrumentSoundShaping* m=model();
+
     /*
     m_targetsTabWidget = new TabWidget( tr( "TARGET" ), this );
     m_targetsTabWidget->setGeometry( TARGETS_TABWIDGET_X,
@@ -79,7 +86,8 @@ InstrumentSoundShapingView::InstrumentSoundShapingView(QWidget* _parent) :
             m_envLfoViews[i] = new EnvelopeAndLfoView( m_targetsTabWidget );
             m_targetsTabWidget->addTab( m_envLfoViews[i],
                                             tr(
-    InstrumentSoundShaping::targetNames[i][0].toUtf8().constData() ), NULL );
+    InstrumentSoundShaping::targetNames[i][0].toUtf8().constData() ), nullptr
+    );
     }
     */
 
@@ -101,6 +109,23 @@ InstrumentSoundShapingView::InstrumentSoundShapingView(QWidget* _parent) :
                                    true, true);
     envLOT->addWidget(m_filter2View);
 
+    // tmp
+    m_filter1View->setModels(
+            &m->m_filter1EnabledModel, &m->m_filter1TypeModel,
+            &m->m_filter1CutModel, &m->m_filter1ResModel,
+            &m->m_filter1PassesModel, &m->m_filter1GainModel,
+            &m->m_filter1ResponseModel,
+            &m->m_filter1FeedbackAmountModel,
+            &m->m_filter1FeedbackDelayModel);
+
+    m_filter2View->setModels(
+            &m->m_filter2EnabledModel, &m->m_filter2TypeModel,
+            &m->m_filter2CutModel, &m->m_filter2ResModel,
+            &m->m_filter2PassesModel, &m->m_filter2GainModel,
+            &m->m_filter2ResponseModel,
+            &m->m_filter2FeedbackAmountModel,
+            &m->m_filter2FeedbackDelayModel);
+
     for(int i = 0; i < InstrumentSoundShaping::NumTargets; ++i)
     {
         GroupBox* g
@@ -108,7 +133,7 @@ InstrumentSoundShapingView::InstrumentSoundShapingView(QWidget* _parent) :
                                           .toUtf8()
                                           .constData()),
                                envPNL, false, true);
-        m_envLfoViews[i] = new EnvelopeAndLfoView(g);
+        m_envLfoViews[i] = new EnvelopeAndLfoView(m->m_envLfo[i],g);
         g->setContentWidget(m_envLfoViews[i]);
         envLOT->addWidget(g);
     }
@@ -237,7 +262,7 @@ void InstrumentSoundShapingView::setFunctionsHidden(bool hidden)
 
 void InstrumentSoundShapingView::modelChanged()
 {
-    m_ss = castModel<InstrumentSoundShaping>();
+    InstrumentSoundShaping* m = model();
 
     /*
     m_filterGroupBox->ledButton()->setModel(&m_ss->m_filterEnabledModel);
@@ -252,23 +277,21 @@ void InstrumentSoundShapingView::modelChanged()
     */
 
     m_filter1View->setModels(
-            &m_ss->m_filter1EnabledModel, &m_ss->m_filter1TypeModel,
-            &m_ss->m_filter1CutModel, &m_ss->m_filter1ResModel,
-            &m_ss->m_filter1PassesModel, &m_ss->m_filter1GainModel,
-            &m_ss->m_filter1ResponseModel,
-            &m_ss->m_filter1FeedbackAmountModel,
-            &m_ss->m_filter1FeedbackDelayModel);
+            &m->m_filter1EnabledModel, &m->m_filter1TypeModel,
+            &m->m_filter1CutModel, &m->m_filter1ResModel,
+            &m->m_filter1PassesModel, &m->m_filter1GainModel,
+            &m->m_filter1ResponseModel,
+            &m->m_filter1FeedbackAmountModel,
+            &m->m_filter1FeedbackDelayModel);
 
     m_filter2View->setModels(
-            &m_ss->m_filter2EnabledModel, &m_ss->m_filter2TypeModel,
-            &m_ss->m_filter2CutModel, &m_ss->m_filter2ResModel,
-            &m_ss->m_filter2PassesModel, &m_ss->m_filter2GainModel,
-            &m_ss->m_filter2ResponseModel,
-            &m_ss->m_filter2FeedbackAmountModel,
-            &m_ss->m_filter2FeedbackDelayModel);
+            &m->m_filter2EnabledModel, &m->m_filter2TypeModel,
+            &m->m_filter2CutModel, &m->m_filter2ResModel,
+            &m->m_filter2PassesModel, &m->m_filter2GainModel,
+            &m->m_filter2ResponseModel,
+            &m->m_filter2FeedbackAmountModel,
+            &m->m_filter2FeedbackDelayModel);
 
     for(int i = 0; i < InstrumentSoundShaping::NumTargets; ++i)
-    {
-        m_envLfoViews[i]->setModel(m_ss->m_envLfoParameters[i]);
-    }
+        m_envLfoViews[i]->setModel(m->m_envLfo[i]);
 }

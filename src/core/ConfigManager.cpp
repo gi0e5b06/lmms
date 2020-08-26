@@ -45,15 +45,15 @@ static inline QString ensureTrailingSlash(const QString& s)
     return s;
 }
 
-ConfigManager* ConfigManager::s_instanceOfMe = nullptr;
+ConfigManager* ConfigManager::s_singleton = nullptr;
 
 void ConfigManager::init(const char* argv0)
 {
-    if(s_instanceOfMe == nullptr)
+    if(s_singleton == nullptr)
     {
         QDir appPath(QFileInfo(argv0).absolutePath());
         qInfo("Notice: appPath=%s", qPrintable(appPath.absolutePath()));
-        s_instanceOfMe = new ConfigManager(appPath);
+        s_singleton = new ConfigManager(appPath);
     }
     else
         qWarning("Fatal: Call ConfigManager::init() only once");
@@ -61,10 +61,10 @@ void ConfigManager::init(const char* argv0)
 
 void ConfigManager::deinit()
 {
-    ConfigManager* old = s_instanceOfMe;
+    ConfigManager* old = s_singleton;
     if(old != nullptr)
     {
-        s_instanceOfMe = nullptr;
+        s_singleton = nullptr;
         delete old;
     }
     else
@@ -73,13 +73,13 @@ void ConfigManager::deinit()
 
 ConfigManager* ConfigManager::inst()
 {
-    if(s_instanceOfMe == nullptr)
+    if(s_singleton == nullptr)
     {
         // BACKTRACE
         qWarning("Warning: Call ConfigManager::init() first");
     }
 
-    return s_instanceOfMe;
+    return s_singleton;
 }
 
 ConfigManager::ConfigManager(QDir& appPath) :
@@ -330,7 +330,7 @@ void ConfigManager::addRecentlyOpenedProject(const QString& file)
         if(m_recentlyOpenedProjects.size() > 50)
             m_recentlyOpenedProjects.removeLast();
 
-        m_recentlyOpenedProjects.push_front(file);
+        m_recentlyOpenedProjects.prepend(file);
         ConfigManager::inst()->saveConfigFile();
     }
 }
@@ -340,7 +340,7 @@ const QString& ConfigManager::value(const QString& cls,
 {
     if(m_settings.contains(cls))
     {
-        for(stringPairVector::const_iterator it = m_settings[cls].begin();
+        for(StringPairs::const_iterator it = m_settings[cls].begin();
             it != m_settings[cls].end(); ++it)
             if((*it).first == attribute)
                 return (*it).second;
@@ -364,7 +364,7 @@ void ConfigManager::setValue(const QString& cls,
 {
     if(m_settings.contains(cls))
     {
-        for(stringPairVector::iterator it = m_settings[cls].begin();
+        for(StringPairs::iterator it = m_settings[cls].begin();
             it != m_settings[cls].end(); ++it)
             if((*it).first == attribute)
             {
@@ -374,14 +374,14 @@ void ConfigManager::setValue(const QString& cls,
     }
 
     // not in map yet, so we have to add it...
-    m_settings[cls].push_back(qMakePair(attribute, value));
+    m_settings[cls].append(qMakePair(attribute, value));
 }
 
 void ConfigManager::deleteValue(const QString& cls, const QString& attribute)
 {
     if(m_settings.contains(cls))
     {
-        for(stringPairVector::iterator it = m_settings[cls].begin();
+        for(StringPairs::iterator it = m_settings[cls].begin();
             it != m_settings[cls].end(); ++it)
             if((*it).first == attribute)
             {
@@ -424,7 +424,7 @@ void ConfigManager::loadConfigFile(const QString& configFile)
             {
                 if(node.isElement() && node.toElement().hasAttributes())
                 {
-                    stringPairVector attr;
+                    StringPairs attr;
                     QDomNamedNodeMap node_attr
                             = node.toElement().attributes();
                     for(int i = 0; i < node_attr.count(); ++i)
@@ -605,11 +605,11 @@ void ConfigManager::saveConfigFile()
     lmms_config.setAttribute("version", m_version);
     doc.appendChild(lmms_config);
 
-    for(settingsMap::iterator it = m_settings.begin(); it != m_settings.end();
+    for(SettingsMap::iterator it = m_settings.begin(); it != m_settings.end();
         ++it)
     {
         QDomElement n = doc.createElement(it.key());
-        for(stringPairVector::iterator it2 = (*it).begin();
+        for(StringPairs::iterator it2 = (*it).begin();
             it2 != (*it).end(); ++it2)
             n.setAttribute((*it2).first, (*it2).second);
 

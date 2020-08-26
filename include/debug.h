@@ -26,11 +26,13 @@
 #define DEBUG_H
 
 //#include <cstdio>
+#include "Backtrace.h"
 #include "lmmsconfig.h"
 
-#include <QDebug> // REQUIRED
+#include <QDebug>  // REQUIRED
 #include <QObject>
 #include <QThread>
+#include <QVector>
 
 #ifndef qInfo
 #define qInfo qWarning
@@ -74,6 +76,52 @@
         QObject::disconnect(sender, signal, receiver, slot);      \
     }
 
+template <typename T>
+class DebugQVector : public QVector<T>
+{
+  public:
+    virtual const T& at(int i) const
+    {
+        if(i < 0 || i >= QVector<T>::size())
+        {
+            BACKTRACE
+            qInfo("DebugQVector::at invalid index %d [0-%d]", i,
+                  QVector<T>::size() - 1);
+        }
+        return QVector<T>::at(i);
+    }
+    virtual T value(int i)
+    {
+        if(i < 0 || i >= QVector<T>::size())
+        {
+            BACKTRACE
+            qInfo("DebugQVector::at invalid index %d [0-%d]", i,
+                  QVector<T>::size() - 1);
+        }
+        return QVector<T>::value(i);
+    }
+    virtual const T& operator[](int i) const
+    {
+        if(i < 0 || i >= QVector<T>::size())
+        {
+            BACKTRACE
+            qInfo("DebugQVector::[] invalid index %d [0-%d]", i,
+                  QVector<T>::size() - 1);
+        }
+        return (QVector<T>::operator[])(i);
+    }
+    virtual T& operator[](int i)
+    {
+        if(i < 0 || i >= QVector<T>::size())
+        {
+            BACKTRACE
+            qInfo("DebugQVector::[] invalid index %d [0-%d]", i,
+                  QVector<T>::size() - 1);
+        }
+        return (QVector<T>::operator[])(i);
+    }
+};
+
 #else
 
 #ifndef assert
@@ -89,6 +137,8 @@
 
 #define DEBUG_DISCONNECT(sender, signal, receiver, slot) \
     disconnect(sender, signal, receiver, slot);
+
+#define DebugQVector QVector
 
 #endif  // LMMS_DEBUG
 

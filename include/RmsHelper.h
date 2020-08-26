@@ -44,7 +44,7 @@ class RmsHelper
             delete[] m_buffer;
     }
 
-    inline void setSize(int size)
+    INLINE void setSize(int size)
     {
         if(m_buffer)
         {
@@ -69,7 +69,7 @@ class RmsHelper
         }
     }
 
-    inline void reset()
+    INLINE void reset()
     {
         m_sizef = 1.0f / (float)m_size;
         m_pos   = 0;
@@ -77,7 +77,7 @@ class RmsHelper
         memset(m_buffer, 0, m_size * sizeof(float));
     }
 
-    inline float update(const float in)
+    INLINE float update(const float in)
     {
         m_sum -= m_buffer[m_pos];
         m_sum += m_buffer[m_pos] = in * in;

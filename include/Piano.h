@@ -25,10 +25,12 @@
 #ifndef PIANO_H
 #define PIANO_H
 
+//#include "InstrumentTrack.h"
 #include "Model.h"
 #include "Note.h"
 
 #include <QMutex>
+#include <QPointer>
 
 class InstrumentTrack;
 class MidiEventProcessor;
@@ -89,7 +91,7 @@ class Piano : public Model
     */
 
     // QMutex              m_mutex;
-    InstrumentTrack* m_instrumentTrack;
+    QPointer<InstrumentTrack> m_instrumentTrack;
     // MidiEventProcessor* m_midiEvProc;
     // int                 m_pressedKeys[NumKeys];
 };

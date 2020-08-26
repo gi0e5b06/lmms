@@ -64,15 +64,12 @@ using namespace std;
 // Creates the Microwave GUI.  Creates all GUI elements.  Connects some events
 // to some functions.  Calls updateScroll() to put all of the GUi elements in
 // their correct positions.
-MicrowaveView::MicrowaveView(Instrument* _instrument, QWidget* _parent) :
+MicrowaveView::MicrowaveView(Microwave* _instrument, QWidget* _parent) :
       InstrumentView(_instrument, _parent)
 {
     setAutoFillBackground(true);
-
     setMouseTracking(true);
-
     setAcceptDrops(true);
-
     pal.setBrush(backgroundRole(), tab1ArtworkImg);
     setPalette(pal);
 
@@ -729,32 +726,29 @@ MicrowaveView::MicrowaveView(Instrument* _instrument, QWidget* _parent) :
     connect(visualizeToggle, SIGNAL(toggled(bool)), this,
             SLOT(visualizeToggled(bool)));
 
-    connect(&castModel<Microwave>()->scroll, SIGNAL(dataChanged()), this,
-            SLOT(updateScroll()));
+    Microwave* m = model();
+
+    connect(&m->scroll, SIGNAL(dataChanged()), this, SLOT(updateScroll()));
 
     connect(scrollKnob, SIGNAL(sliderReleased()), this,
             SLOT(scrollReleased()));
 
-    connect(&castModel<Microwave>()->mainNum, SIGNAL(dataChanged()), this,
-            SLOT(mainNumChanged()));
+    connect(&m->mainNum, SIGNAL(dataChanged()), this, SLOT(mainNumChanged()));
 
-    connect(&castModel<Microwave>()->subNum, SIGNAL(dataChanged()), this,
-            SLOT(subNumChanged()));
+    connect(&m->subNum, SIGNAL(dataChanged()), this, SLOT(subNumChanged()));
 
-    connect(&castModel<Microwave>()->sampNum, SIGNAL(dataChanged()), this,
-            SLOT(sampNumChanged()));
+    connect(&m->sampNum, SIGNAL(dataChanged()), this, SLOT(sampNumChanged()));
 
     connect(manualBtn, SIGNAL(clicked(bool)), this, SLOT(manualBtnClicked()));
 
     for(int i = 0; i < 64; ++i)
     {
         connect(
-                castModel<Microwave>()->modOutSec[i],
-                &ComboBoxModel::dataChanged, this,
+                m->modOutSec[i], &ComboBoxModel::dataChanged, this,
                 [this, i]() { modOutSecChanged(i); }, Qt::DirectConnection);
         connect(
-                castModel<Microwave>()->modIn[i], &ComboBoxModel::dataChanged,
-                this, [this, i]() { modInChanged(i); }, Qt::DirectConnection);
+                m->modIn[i], &ComboBoxModel::dataChanged, this,
+                [this, i]() { modInChanged(i); }, Qt::DirectConnection);
 
         connect(modUpArrow[i], &PixmapButton::clicked, this,
                 [this, i]() { modUpClicked(i); });
@@ -764,133 +758,135 @@ MicrowaveView::MicrowaveView(Instrument* _instrument, QWidget* _parent) :
 
     updateScroll();
     updateBackground();
+
+    modelChanged();
 }
 
 // Connects knobs/GUI elements to their models
 void MicrowaveView::modelChanged()
 {
-    Microwave* b = castModel<Microwave>();
+    Microwave* m = model();
 
     for(int i = 0; i < NB_MAINOSC; ++i)
     {
-        morphKnob[i]->setModel(b->morph[i]);
-        rangeKnob[i]->setModel(b->range[i]);
-        sampLenKnob[i]->setModel(b->sampLen[i]);
-        modifyKnob[i]->setModel(b->modify[i]);
-        morphMaxKnob[i]->setModel(b->morphMax[i]);
-        unisonVoicesKnob[i]->setModel(b->unisonVoices[i]);
-        unisonDetuneKnob[i]->setModel(b->unisonDetune[i]);
-        unisonMorphKnob[i]->setModel(b->unisonMorph[i]);
-        unisonModifyKnob[i]->setModel(b->unisonModify[i]);
-        detuneKnob[i]->setModel(b->detune[i]);
-        modifyModeBox[i]->setModel(b->modifyMode[i]);
-        phaseKnob[i]->setModel(b->phase[i]);
-        phaseRandKnob[i]->setModel(b->phaseRand[i]);
-        volKnob[i]->setModel(b->vol[i]);
-        enabledToggle[i]->setModel(b->enabled[i]);
-        mutedToggle[i]->setModel(b->muted[i]);
-        panKnob[i]->setModel(b->pan[i]);
+        morphKnob[i]->setModel(m->morph[i]);
+        rangeKnob[i]->setModel(m->range[i]);
+        sampLenKnob[i]->setModel(m->sampLen[i]);
+        modifyKnob[i]->setModel(m->modify[i]);
+        morphMaxKnob[i]->setModel(m->morphMax[i]);
+        unisonVoicesKnob[i]->setModel(m->unisonVoices[i]);
+        unisonDetuneKnob[i]->setModel(m->unisonDetune[i]);
+        unisonMorphKnob[i]->setModel(m->unisonMorph[i]);
+        unisonModifyKnob[i]->setModel(m->unisonModify[i]);
+        detuneKnob[i]->setModel(m->detune[i]);
+        modifyModeBox[i]->setModel(m->modifyMode[i]);
+        phaseKnob[i]->setModel(m->phase[i]);
+        phaseRandKnob[i]->setModel(m->phaseRand[i]);
+        volKnob[i]->setModel(m->vol[i]);
+        enabledToggle[i]->setModel(m->enabled[i]);
+        mutedToggle[i]->setModel(m->muted[i]);
+        panKnob[i]->setModel(m->pan[i]);
     }
     for(int i = 0; i < NB_FILTR; ++i)
     {
-        filtInVolKnob[i]->setModel(b->filtInVol[i]);
-        filtTypeBox[i]->setModel(b->filtType[i]);
-        filtSlopeBox[i]->setModel(b->filtSlope[i]);
-        filtCutoffKnob[i]->setModel(b->filtCutoff[i]);
-        filtResoKnob[i]->setModel(b->filtReso[i]);
-        filtGainKnob[i]->setModel(b->filtGain[i]);
-        filtSatuKnob[i]->setModel(b->filtSatu[i]);
-        filtWetDryKnob[i]->setModel(b->filtWetDry[i]);
-        filtBalKnob[i]->setModel(b->filtBal[i]);
-        filtOutVolKnob[i]->setModel(b->filtOutVol[i]);
-        filtEnabledToggle[i]->setModel(b->filtEnabled[i]);
-        filtFeedbackKnob[i]->setModel(b->filtFeedback[i]);
-        filtDetuneKnob[i]->setModel(b->filtDetune[i]);
-        filtKeytrackingToggle[i]->setModel(b->filtKeytracking[i]);
-        filtMutedToggle[i]->setModel(b->filtMuted[i]);
+        filtInVolKnob[i]->setModel(m->filtInVol[i]);
+        filtTypeBox[i]->setModel(m->filtType[i]);
+        filtSlopeBox[i]->setModel(m->filtSlope[i]);
+        filtCutoffKnob[i]->setModel(m->filtCutoff[i]);
+        filtResoKnob[i]->setModel(m->filtReso[i]);
+        filtGainKnob[i]->setModel(m->filtGain[i]);
+        filtSatuKnob[i]->setModel(m->filtSatu[i]);
+        filtWetDryKnob[i]->setModel(m->filtWetDry[i]);
+        filtBalKnob[i]->setModel(m->filtBal[i]);
+        filtOutVolKnob[i]->setModel(m->filtOutVol[i]);
+        filtEnabledToggle[i]->setModel(m->filtEnabled[i]);
+        filtFeedbackKnob[i]->setModel(m->filtFeedback[i]);
+        filtDetuneKnob[i]->setModel(m->filtDetune[i]);
+        filtKeytrackingToggle[i]->setModel(m->filtKeytracking[i]);
+        filtMutedToggle[i]->setModel(m->filtMuted[i]);
     }
     for(int i = 0; i < NB_SMPLR; ++i)
     {
-        sampleEnabledToggle[i]->setModel(b->sampleEnabled[i]);
-        sampleGraphEnabledToggle[i]->setModel(b->sampleGraphEnabled[i]);
-        sampleMutedToggle[i]->setModel(b->sampleMuted[i]);
-        sampleKeytrackingToggle[i]->setModel(b->sampleKeytracking[i]);
-        sampleLoopToggle[i]->setModel(b->sampleLoop[i]);
-        sampleVolumeKnob[i]->setModel(b->sampleVolume[i]);
-        samplePanningKnob[i]->setModel(b->samplePanning[i]);
-        sampleDetuneKnob[i]->setModel(b->sampleDetune[i]);
-        samplePhaseKnob[i]->setModel(b->samplePhase[i]);
-        samplePhaseRandKnob[i]->setModel(b->samplePhaseRand[i]);
-        sampleStartKnob[i]->setModel(b->sampleStart[i]);
-        sampleEndKnob[i]->setModel(b->sampleEnd[i]);
+        sampleEnabledToggle[i]->setModel(m->sampleEnabled[i]);
+        sampleGraphEnabledToggle[i]->setModel(m->sampleGraphEnabled[i]);
+        sampleMutedToggle[i]->setModel(m->sampleMuted[i]);
+        sampleKeytrackingToggle[i]->setModel(m->sampleKeytracking[i]);
+        sampleLoopToggle[i]->setModel(m->sampleLoop[i]);
+        sampleVolumeKnob[i]->setModel(m->sampleVolume[i]);
+        samplePanningKnob[i]->setModel(m->samplePanning[i]);
+        sampleDetuneKnob[i]->setModel(m->sampleDetune[i]);
+        samplePhaseKnob[i]->setModel(m->samplePhase[i]);
+        samplePhaseRandKnob[i]->setModel(m->samplePhaseRand[i]);
+        sampleStartKnob[i]->setModel(m->sampleStart[i]);
+        sampleEndKnob[i]->setModel(m->sampleEnd[i]);
     }
     for(int i = 0; i < NB_MACRO; ++i)
     {
-        macroKnob[i]->setModel(b->macro[i]);
+        macroKnob[i]->setModel(m->macro[i]);
     }
     for(int i = 0; i < NB_SUBOSC; ++i)
     {
-        subEnabledToggle[i]->setModel(b->subEnabled[i]);
-        subVolKnob[i]->setModel(b->subVol[i]);
-        subPhaseKnob[i]->setModel(b->subPhase[i]);
-        subPhaseRandKnob[i]->setModel(b->subPhaseRand[i]);
-        subDetuneKnob[i]->setModel(b->subDetune[i]);
-        subMutedToggle[i]->setModel(b->subMuted[i]);
-        subKeytrackToggle[i]->setModel(b->subKeytrack[i]);
-        subSampLenKnob[i]->setModel(b->subSampLen[i]);
-        subNoiseToggle[i]->setModel(b->subNoise[i]);
-        subPanningKnob[i]->setModel(b->subPanning[i]);
-        subTempoKnob[i]->setModel(b->subTempo[i]);
+        subEnabledToggle[i]->setModel(m->subEnabled[i]);
+        subVolKnob[i]->setModel(m->subVol[i]);
+        subPhaseKnob[i]->setModel(m->subPhase[i]);
+        subPhaseRandKnob[i]->setModel(m->subPhaseRand[i]);
+        subDetuneKnob[i]->setModel(m->subDetune[i]);
+        subMutedToggle[i]->setModel(m->subMuted[i]);
+        subKeytrackToggle[i]->setModel(m->subKeytrack[i]);
+        subSampLenKnob[i]->setModel(m->subSampLen[i]);
+        subNoiseToggle[i]->setModel(m->subNoise[i]);
+        subPanningKnob[i]->setModel(m->subPanning[i]);
+        subTempoKnob[i]->setModel(m->subTempo[i]);
     }
     for(int i = 0; i < NB_MODLT; ++i)
     {
-        modOutSecBox[i]->setModel(b->modOutSec[i]);
-        modOutSigBox[i]->setModel(b->modOutSig[i]);
-        modOutSecNumBox[i]->setModel(b->modOutSecNum[i]);
-        modInBox[i]->setModel(b->modIn[i]);
-        modInNumBox[i]->setModel(b->modInNum[i]);
-        modInOtherNumBox[i]->setModel(b->modInOtherNum[i]);
-        modInAmntKnob[i]->setModel(b->modInAmnt[i]);
-        modInCurveKnob[i]->setModel(b->modInCurve[i]);
-        modInBox2[i]->setModel(b->modIn2[i]);
-        modInNumBox2[i]->setModel(b->modInNum2[i]);
-        modInOtherNumBox2[i]->setModel(b->modInOtherNum2[i]);
-        modInAmntKnob2[i]->setModel(b->modInAmnt2[i]);
-        modInCurveKnob2[i]->setModel(b->modInCurve2[i]);
-        modEnabledToggle[i]->setModel(b->modEnabled[i]);
-        modCombineTypeBox[i]->setModel(b->modCombineType[i]);
-        modTypeToggle[i]->setModel(b->modType[i]);
+        modOutSecBox[i]->setModel(m->modOutSec[i]);
+        modOutSigBox[i]->setModel(m->modOutSig[i]);
+        modOutSecNumBox[i]->setModel(m->modOutSecNum[i]);
+        modInBox[i]->setModel(m->modIn[i]);
+        modInNumBox[i]->setModel(m->modInNum[i]);
+        modInOtherNumBox[i]->setModel(m->modInOtherNum[i]);
+        modInAmntKnob[i]->setModel(m->modInAmnt[i]);
+        modInCurveKnob[i]->setModel(m->modInCurve[i]);
+        modInBox2[i]->setModel(m->modIn2[i]);
+        modInNumBox2[i]->setModel(m->modInNum2[i]);
+        modInOtherNumBox2[i]->setModel(m->modInOtherNum2[i]);
+        modInAmntKnob2[i]->setModel(m->modInAmnt2[i]);
+        modInCurveKnob2[i]->setModel(m->modInCurve2[i]);
+        modEnabledToggle[i]->setModel(m->modEnabled[i]);
+        modCombineTypeBox[i]->setModel(m->modCombineType[i]);
+        modTypeToggle[i]->setModel(m->modType[i]);
     }
 
-    graph->setModel(&b->graph);
-    visvolKnob->setModel(&b->visvol);
-    visualizeToggle->setModel(&b->visualize);
-    subNumBox->setModel(&b->subNum);
-    sampNumBox->setModel(&b->sampNum);
-    loadChnlKnob->setModel(&b->loadChnl);
-    scrollKnob->setModel(&b->scroll);
-    mainNumBox->setModel(&b->mainNum);
-    oversampleBox->setModel(&b->oversample);
-    loadModeBox->setModel(&b->loadMode);
-    wtLoad1Knob->setModel(&b->wtLoad1);
-    wtLoad2Knob->setModel(&b->wtLoad2);
-    wtLoad3Knob->setModel(&b->wtLoad3);
-    wtLoad4Knob->setModel(&b->wtLoad4);
-    mainFlipBtn->setModel(&b->mainFlipped);
-    subFlipBtn->setModel(&b->subFlipped);
+    graph->setModel(&m->graph);
+    visvolKnob->setModel(&m->visvol);
+    visualizeToggle->setModel(&m->visualize);
+    subNumBox->setModel(&m->subNum);
+    sampNumBox->setModel(&m->sampNum);
+    loadChnlKnob->setModel(&m->loadChnl);
+    scrollKnob->setModel(&m->scroll);
+    mainNumBox->setModel(&m->mainNum);
+    oversampleBox->setModel(&m->oversample);
+    loadModeBox->setModel(&m->loadMode);
+    wtLoad1Knob->setModel(&m->wtLoad1);
+    wtLoad2Knob->setModel(&m->wtLoad2);
+    wtLoad3Knob->setModel(&m->wtLoad3);
+    wtLoad4Knob->setModel(&m->wtLoad4);
+    mainFlipBtn->setModel(&m->mainFlipped);
+    subFlipBtn->setModel(&m->subFlipped);
 }
 
 // Puts all of the GUI elements in their correct locations, depending on
 // the scroll knob value.
 void MicrowaveView::updateScroll()
 {
-    Microwave* b = castModel<Microwave>();
+    Microwave* m = model();
 
-    int scrollVal       = (b->scroll.value() - 1) * 250.;
+    int scrollVal       = (m->scroll.value() - 1) * 250.;
     int modScrollVal    = (matrixScrollBar->value()) / 100. * 115.;
     int effectScrollVal = (effectScrollBar->value()) / 100. * 92.;
-    int mainFlipped     = b->mainFlipped.value();
-    int subFlipped      = b->subFlipped.value();
+    int mainFlipped     = m->mainFlipped.value();
+    int subFlipped      = m->subFlipped.value();
 
     int mainIsFlipped    = mainFlipped * 500.;
     int mainIsNotFlipped = !mainFlipped * 500.;
@@ -1030,7 +1026,7 @@ void MicrowaveView::updateScroll()
     sampNumBox->move(500 + 18 - scrollVal, 219);
     mainNumBox->move(18 - scrollVal, 219);
     graph->move(scrollVal >= 500 ? 500 + 23 - scrollVal : 23, 30);
-    tabChanged(b->scroll.value() - 1);
+    tabChanged(m->scroll.value() - 1);
     openWaveFormBTN->move(54 - scrollVal, 220);
     openSampleBTN->move(54 + 500 - scrollVal, 220);
 
@@ -1107,32 +1103,29 @@ void MicrowaveView::updateScroll()
 // Snaps scroll to nearest tab when the scroll knob is released.
 void MicrowaveView::scrollReleased()
 {
-    const real_t scrollVal = castModel<Microwave>()->scroll.value();
-    castModel<Microwave>()->scroll.setValue(round(scrollVal - 0.25));
+    Microwave*   m         = model();
+    const real_t scrollVal = m->scroll.value();
+    m->scroll.setValue(round(scrollVal - 0.25));
 }
 
 void MicrowaveView::mouseMoveEvent(QMouseEvent* _me)
 {
-    // castModel<Microwave>()->morph[0]->setValue(_me->x());
+    // model()->morph[0]->setValue(_me->x());
 }
 
 void MicrowaveView::wheelEvent(QWheelEvent* _me)
 {
-    Microwave* b = castModel<Microwave>();
+    Microwave* m = model();
 
     if(_me->x() <= 18 && _me->y() >= 48
        && _me->y() <= 138)  // If scroll over tab buttons
     {
-        if(b->scroll.value() != 7)
+        if(m->scroll.value() != 7)
         {
-            if(_me->delta() < 0 && b->scroll.value() != 6)
-            {
-                b->scroll.setValue(b->scroll.value() + 1);
-            }
+            if(_me->delta() < 0 && m->scroll.value() != 6)
+                m->scroll.setValue(m->scroll.value() + 1);
             else if(_me->delta() > 0)
-            {
-                b->scroll.setValue(b->scroll.value() - 1);
-            }
+                m->scroll.setValue(m->scroll.value() - 1);
         }
     }
 }
@@ -1159,7 +1152,7 @@ void MicrowaveView::mainNumChanged()
         mutedToggle[i]->hide();
         modifyModeBox[i]->hide();
         panKnob[i]->hide();
-        if(castModel<Microwave>()->mainNum.value() - 1 == i)
+        if(model()->mainNum.value() - 1 == i)
         {
             morphKnob[i]->show();
             rangeKnob[i]->show();
@@ -1186,17 +1179,17 @@ void MicrowaveView::mainNumChanged()
 // adjusts graph length when needed
 void MicrowaveView::subNumChanged()
 {
-    Microwave* b = castModel<Microwave>();
+    Microwave* m = model();
 
-    b->graph.setLength(b->subSampLen[b->subNum.value() - 1]->value());
+    m->graph.setLength(m->subSampLen[m->subNum.value() - 1]->value());
     for(int i = 0; i < WAVE_SIZE; ++i)
     {
-        b->graph.setSampleAt(
-                i, b->subs[(b->subNum.value() - 1) * WAVE_SIZE + i]);
+        m->graph.setSampleAt(
+                i, m->subs[(m->subNum.value() - 1) * WAVE_SIZE + i]);
     }
     for(int i = 0; i < NB_SUBOSC; ++i)
     {
-        if(i != b->subNum.value() - 1)
+        if(i != m->subNum.value() - 1)
         {
             subEnabledToggle[i]->hide();
             subVolKnob[i]->hide();
@@ -1230,17 +1223,17 @@ void MicrowaveView::subNumChanged()
 // Trades out the GUI elements when switching between oscillators
 void MicrowaveView::sampNumChanged()
 {
-    Microwave* b = castModel<Microwave>();
+    Microwave* m = model();
 
     for(int i = 0; i < GRAPHONE_SIZE; ++i)
     {
-        b->graph.setSampleAt(
+        m->graph.setSampleAt(
                 i,
-                b->sampGraphs[(b->sampNum.value() - 1) * GRAPHONE_SIZE + i]);
+                m->sampGraphs[(m->sampNum.value() - 1) * GRAPHONE_SIZE + i]);
     }
     for(int i = 0; i < NB_SMPLR; ++i)
     {
-        if(i != b->sampNum.value() - 1)
+        if(i != m->sampNum.value() - 1)
         {
             sampleEnabledToggle[i]->hide();
             sampleGraphEnabledToggle[i]->hide();
@@ -1276,9 +1269,9 @@ void MicrowaveView::sampNumChanged()
 // Moves/changes the GUI around depending on the mod out section value
 void MicrowaveView::modOutSecChanged(int32_t i)
 {
-    Microwave* b = castModel<Microwave>();
+    Microwave* m = model();
 
-    switch(b->modOutSec[i]->value())
+    switch(m->modOutSec[i]->value())
     {
         case 0:  // None
         {
@@ -1290,54 +1283,54 @@ void MicrowaveView::modOutSecChanged(int32_t i)
         {
             modOutSigBox[i]->show();
             modOutSecNumBox[i]->show();
-            b->modOutSig[i]->clear();
-            mainoscsignalsmodel(b->modOutSig[i]);
-            b->modOutSecNum[i]->setRange(1., NB_MAINOSC, 1.);
+            m->modOutSig[i]->clear();
+            mainoscsignalsmodel(m->modOutSig[i]);
+            m->modOutSecNum[i]->setRange(1., NB_MAINOSC, 1.);
             break;
         }
         case 2:  // Sub OSC
         {
             modOutSigBox[i]->show();
             modOutSecNumBox[i]->show();
-            b->modOutSig[i]->clear();
-            subsignalsmodel(b->modOutSig[i]);
-            b->modOutSecNum[i]->setRange(1., NB_SUBOSC, 1.);
+            m->modOutSig[i]->clear();
+            subsignalsmodel(m->modOutSig[i]);
+            m->modOutSecNum[i]->setRange(1., NB_SUBOSC, 1.);
             break;
         }
         case 3:  // Filter Input
         {
             modOutSigBox[i]->show();
             modOutSecNumBox[i]->hide();
-            b->modOutSig[i]->clear();
-            mod8model(b->modOutSig[i]);
-            b->modOutSecNum[i]->setRange(1., NB_MODLT, 1.);  // was commented
+            m->modOutSig[i]->clear();
+            mod8model(m->modOutSig[i]);
+            m->modOutSecNum[i]->setRange(1., NB_MODLT, 1.);  // was commented
             break;
         }
         case 4:  // Filter Parameters
         {
             modOutSigBox[i]->show();
             modOutSecNumBox[i]->hide();
-            b->modOutSig[i]->clear();
-            filtersignalsmodel(b->modOutSig[i]);
-            b->modOutSecNum[i]->setRange(1., NB_FILTR, 1.);  // was commented
+            m->modOutSig[i]->clear();
+            filtersignalsmodel(m->modOutSig[i]);
+            m->modOutSecNum[i]->setRange(1., NB_FILTR, 1.);  // was commented
             break;
         }
         case 5:  // Matrix Parameters
         {
             modOutSigBox[i]->show();
             modOutSecNumBox[i]->show();
-            b->modOutSig[i]->clear();
-            matrixsignalsmodel(b->modOutSig[i]);
-            b->modOutSecNum[i]->setRange(1., NB_MODLT, 1.);
+            m->modOutSig[i]->clear();
+            matrixsignalsmodel(m->modOutSig[i]);
+            m->modOutSecNum[i]->setRange(1., NB_MODLT, 1.);
             break;
         }
         case 6:  // Sampler
         {
             modOutSigBox[i]->show();
             modOutSecNumBox[i]->show();
-            b->modOutSig[i]->clear();
-            samplesignalsmodel(b->modOutSig[i]);
-            b->modOutSecNum[i]->setRange(1., NB_SMPLR, 1.);
+            m->modOutSig[i]->clear();
+            samplesignalsmodel(m->modOutSig[i]);
+            m->modOutSecNum[i]->setRange(1., NB_SMPLR, 1.);
             break;
         }
         default:
@@ -1350,9 +1343,9 @@ void MicrowaveView::modOutSecChanged(int32_t i)
 // Moves/changes the GUI around depending on the Mod In Section value
 void MicrowaveView::modInChanged(int32_t i)
 {
-    Microwave* b = castModel<Microwave>();
+    Microwave* m = model();
 
-    switch(b->modIn[i]->value())
+    switch(m->modIn[i]->value())
     {
         case 0:
         {
@@ -1364,29 +1357,29 @@ void MicrowaveView::modInChanged(int32_t i)
         {
             modInNumBox[i]->show();
             modInOtherNumBox[i]->hide();
-            b->modInNum[i]->setRange(1, NB_MAINOSC, 1);
+            m->modInNum[i]->setRange(1, NB_MAINOSC, 1);
             break;
         }
         case 2:  // Sub OSC
         {
             modInNumBox[i]->show();
             modInOtherNumBox[i]->hide();
-            b->modInNum[i]->setRange(1, NB_SUBOSC, 1);
+            m->modInNum[i]->setRange(1, NB_SUBOSC, 1);
             break;
         }
         case 3:  // Filter
         {
             modInNumBox[i]->show();
             modInOtherNumBox[i]->hide();
-            b->modInNum[i]->setRange(1, NB_FILTR, 1);
-            // b->modInOtherNum[i]->setRange( 1, 8, 1 );
+            m->modInNum[i]->setRange(1, NB_FILTR, 1);
+            // m->modInOtherNum[i]->setRange( 1, 8, 1 );
             break;
         }
         case 4:  // Samplers
         {
             modInNumBox[i]->show();
             modInOtherNumBox[i]->hide();
-            b->modInNum[i]->setRange(1, NB_SMPLR, 1);
+            m->modInNum[i]->setRange(1, NB_SMPLR, 1);
             break;
         }
     }
@@ -1395,11 +1388,11 @@ void MicrowaveView::modInChanged(int32_t i)
 // Does what is necessary when the user visits a new tab
 void MicrowaveView::tabChanged(int tabnum)
 {
-    Microwave* b = castModel<Microwave>();
+    Microwave* m = model();
 
-    if(b->currentTab != tabnum)
+    if(m->currentTab != tabnum)
     {
-        b->currentTab = tabnum;
+        m->currentTab = tabnum;
 
         updateBackground();
 
@@ -1407,7 +1400,7 @@ void MicrowaveView::tabChanged(int tabnum)
         {
             case 0:  // Wavetable
             {
-                b->graph.setLength(WAVE_SIZE);
+                m->graph.setLength(WAVE_SIZE);
                 mainNumChanged();
                 break;
             }
@@ -1418,7 +1411,7 @@ void MicrowaveView::tabChanged(int tabnum)
             }
             case 2:  // Sample
             {
-                b->graph.setLength(GRAPHONE_SIZE);
+                m->graph.setLength(GRAPHONE_SIZE);
                 sampNumChanged();
                 break;
             }
@@ -1500,17 +1493,17 @@ void MicrowaveView::tabChanged(int tabnum)
 
 void MicrowaveView::updateBackground()
 {
-    Microwave* b = castModel<Microwave>();
+    Microwave* m = model();
 
-    int  backgroundnum = b->currentTab;
-    bool mainFlipped   = b->mainFlipped.value();
-    bool subFlipped    = b->subFlipped.value();
+    int  backgroundnum = m->currentTab;
+    bool mainFlipped   = m->mainFlipped.value();
+    bool subFlipped    = m->subFlipped.value();
 
     switch(backgroundnum)
     {
         case 0:  // Wavetable
         {
-            b->graph.setLength(2048);
+            m->graph.setLength(2048);
             mainNumChanged();
 
             if(!mainFlipped)
@@ -1543,7 +1536,7 @@ void MicrowaveView::updateBackground()
         }
         case 2:  // Sample
         {
-            b->graph.setLength(128);
+            m->graph.setLength(128);
             sampNumChanged();
 
             pal.setBrush(backgroundRole(), tab3ArtworkImg.copy());
@@ -1636,14 +1629,14 @@ void MicrowaveView::flipperClicked()
 
 void MicrowaveView::XBtnClicked()
 {
-    castModel<Microwave>()->scroll.setValue(0);
+    model()->scroll.setValue(0);
 }
 
 void MicrowaveView::modUpClicked(int32_t i)
 {
     if(i > 0)
     {
-        castModel<Microwave>()->switchMatrixSections(i, i - 1);
+        model()->switchMatrixSections(i, i - 1);
     }
 }
 
@@ -1651,13 +1644,13 @@ void MicrowaveView::modDownClicked(int32_t i)
 {
     if(i < 63)
     {
-        castModel<Microwave>()->switchMatrixSections(i, i + 1);
+        model()->switchMatrixSections(i, i + 1);
     }
 }
 
 void MicrowaveView::tabBtnClicked(int32_t i)
 {
-    castModel<Microwave>()->scroll.setValue(i);
+    model()->scroll.setValue(i);
 }
 
 // Calls MicrowaveView::openWavetableFile when the wavetable opening
@@ -1665,7 +1658,7 @@ void MicrowaveView::tabBtnClicked(int32_t i)
 /*
 void MicrowaveView::openWavetableFileBtnClicked()
 {
-    castModel<Microwave>()->scroll.setValue(7);
+    model()->scroll.setValue(7);
     chooseWavetableFile();
 }
 */
@@ -1702,7 +1695,7 @@ void MicrowaveView::loadWaveForm(SampleBuffer* sampleBuffer)
 {
     // const sample_rate_t sr = Engine::mixer()->processingSampleRate();
     const f_cnt_t frames    = sampleBuffer->frames();
-    Microwave*    mwm       = castModel<Microwave>();
+    Microwave*    mwm       = model();
     const int     oscilNum  = mwm->mainNum.value() - 1;
     const int     algorithm = mwm->loadMode.value();
     const int     channel   = mwm->loadChnl.value();
@@ -2049,7 +2042,7 @@ void MicrowaveView::loadSample(SampleBuffer* sampleBuffer)
 {
     // const sample_rate_t sr = Engine::mixer()->processingSampleRate();
     const f_cnt_t frames  = sampleBuffer->frames();
-    Microwave*    mwm     = castModel<Microwave>();
+    Microwave*    mwm     = model();
     const int32_t sampNum = mwm->sampNum.value() - 1;
 
     sampleBuffer->dataReadLock();
@@ -2072,7 +2065,7 @@ void MicrowaveView::loadSample(SampleBuffer* sampleBuffer)
 
 void MicrowaveView::dropEvent(QDropEvent* _de)
 {
-    int tabNum = castModel<Microwave>()->currentTab;
+    int tabNum = model()->currentTab;
     qInfo("MicrowaveView::dropEvent START tab=%d", tabNum);
 
     StringPair p = StringPairDrag::convertExternal(_de->mimeData());
@@ -2107,7 +2100,7 @@ void MicrowaveView::dragEnterEvent(QDragEnterEvent* _dee)
 
     if(p.key() == "samplefile")
     {
-        int tabNum = castModel<Microwave>()->currentTab;
+        int tabNum = model()->currentTab;
         qInfo("MicrowaveView::dropEvent START tab=%d", tabNum);
         if(tabNum == 0 || tabNum == 1 || tabNum == 2)
         {

@@ -35,7 +35,7 @@
 #include "fifo_buffer.h"
 #include "lmms_basics.h"
 
-#include <QMutex>
+//#include <QMutex>
 #include <QThread>
 #include <QVector>
 #include <QWaitCondition>
@@ -216,11 +216,11 @@ class EXPORT Mixer : public QObject
 
     // Returns the current audio device's name. This is not necessarily
     // the user's preferred audio device, in case you were thinking that.
-    inline const QString& audioDevName() const
+    INLINE const QString& audioDevName() const
     {
         return m_audioDevName;
     }
-    inline bool audioDevStartFailed() const
+    INLINE bool audioDevStartFailed() const
     {
         return m_audioDevStartFailed;
     }
@@ -232,24 +232,24 @@ class EXPORT Mixer : public QObject
     void storeAudioDevice();
     void restoreAudioDevice();
 
-    inline AudioDevice* audioDev()
+    INLINE AudioDevice* audioDev()
     {
         return m_audioDev;
     }
 
     // MIDI-client-stuff
-    inline const QString& midiClientName() const
+    INLINE const QString& midiClientName() const
     {
         return m_midiClientName;
     }
 
-    inline MidiClient* midiClient()
+    INLINE MidiClient* midiClient()
     {
         return m_midiClient;
     }
 
     /*
-    inline PlayHandleList& playHandles()
+    INLINE PlayHandleList& playHandles()
     {
         return m_playHandles;
     }
@@ -263,7 +263,7 @@ class EXPORT Mixer : public QObject
     void adjustTempo(const bpm_t _tempo);
 
     // methods providing information for other classes
-    inline fpp_t framesPerPeriod() const
+    INLINE fpp_t framesPerPeriod() const
     {
         return m_framesPerPeriod;
     }
@@ -288,38 +288,34 @@ class EXPORT Mixer : public QObject
     sample_rate_t inputSampleRate() const;
     sample_rate_t processingSampleRate() const;
 
-    inline real_t masterVolumeGain() const
+    INLINE real_t masterVolumeGain() const
     {
         return m_masterVolumeGain;
     }
 
-    inline void setMasterVolumeGain(const real_t _gain)
+    INLINE void setMasterVolumeGain(const real_t _gain)
     {
         m_masterVolumeGain = _gain;
     }
 
-    inline real_t masterPanningGain() const
+    INLINE real_t masterPanningGain() const
     {
         return m_masterPanningGain;
     }
 
-    inline void setMasterPanningGain(const real_t _gain)
+    INLINE void setMasterPanningGain(const real_t _gain)
     {
         m_masterPanningGain = _gain;
     }
 
     void applyMasterAdjustments(surroundSampleFrame* _ab, fpp_t frames);
 
-    static inline sample_t clip(const sample_t _s)
+    static INLINE sample_t clip(const sample_t _s)
     {
         if(_s > 1.)
-        {
             return 1.;
-        }
         else if(_s < -1.)
-        {
             return -1.;
-        }
         return _s;
     }
 
@@ -338,19 +334,19 @@ class EXPORT Mixer : public QObject
     bool warningXRuns() const;
     bool criticalXRuns() const;
 
-    inline bool hasFifoWriter() const
+    INLINE bool hasFifoWriter() const
     {
         return m_fifoWriter != nullptr;
     }
 
     void pushInputFrames(sampleFrame* _ab, const f_cnt_t _frames);
 
-    inline const sampleFrame* inputBuffer()
+    INLINE const sampleFrame* inputBuffer()
     {
         return m_inputBuffer[m_inputBufferRead];
     }
 
-    inline f_cnt_t inputBufferFrames() const
+    INLINE f_cnt_t inputBufferFrames() const
     {
         return m_inputBufferFrames[m_inputBufferRead];
     }
@@ -359,11 +355,12 @@ class EXPORT Mixer : public QObject
 
     void changeQuality(const struct qualitySettings& _qs);
 
-    inline bool isMetronomeActive() const
+    INLINE bool isMetronomeActive() const
     {
         return m_metronomeActive;
     }
-    inline void setMetronomeActive(bool value = true)
+
+    INLINE void setMetronomeActive(bool value = true)
     {
         m_metronomeActive = value;
     }

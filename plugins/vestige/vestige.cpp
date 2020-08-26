@@ -611,6 +611,8 @@ void VestigeInstrumentView::updateMenu(void)
             to_menu->addAction(presetActions[i]);
         }
     }
+
+    modelChanged();
 }
 
 VestigeInstrumentView::~VestigeInstrumentView()

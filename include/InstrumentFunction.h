@@ -28,15 +28,18 @@
 #include <QMutex>
 
 //#include "AutomatableModel.h"
+#include "Chord.h"
 #include "ComboBoxModel.h"
 #include "Note.h"
+#include "NotePlayHandle.h"
+#include "PlayHandle.h"
 //#include "JournallingObject.h"
 #include "TempoSyncKnobModel.h"
 
 //#include "lmms_basics.h"
 
 class InstrumentTrack;
-class NotePlayHandle;
+// class NotePlayHandle;
 class InstrumentFunctionView;
 
 class InstrumentFunction : public Model, public JournallingObject
@@ -63,12 +66,12 @@ class InstrumentFunction : public Model, public JournallingObject
     {
         return &m_maxNoteGenerationModel;
     }
-    // inline int minNoteGeneration() const { return
-    // m_minNoteGenerationModel.value(); } inline void
+    // INLINE int minNoteGeneration() const { return
+    // m_minNoteGenerationModel.value(); } INLINE void
     // setMinNoteGeneration(int _min) {
-    // m_minNoteGenerationModel.setValue(_min); } inline int
+    // m_minNoteGenerationModel.setValue(_min); } INLINE int
     // maxNoteGeneration() const { return m_maxNoteGenerationModel.value(); }
-    // inline void setMaxNoteGeneration(int _max) {
+    // INLINE void setMaxNoteGeneration(int _max) {
     // m_maxNoteGenerationModel.setValue(_max); }
 
   protected:
@@ -84,12 +87,13 @@ class InstrumentFunctionNoteStacking : public InstrumentFunction
 {
     Q_OBJECT
 
-  public:
-    static const int MAX_CHORD_POLYPHONY = 13;
+    /*
+    public:
+      static const int MAX_CHORD_POLYPHONY = 13;
 
-  private:
-    typedef int8_t ChordSemitones[MAX_CHORD_POLYPHONY];
-
+    private:
+      typedef int8_t ChordSemitones[MAX_CHORD_POLYPHONY];
+    */
   public:
     InstrumentFunctionNoteStacking(Model* _parent);
     virtual ~InstrumentFunctionNoteStacking();
@@ -98,13 +102,14 @@ class InstrumentFunctionNoteStacking : public InstrumentFunction
     virtual void saveSettings(QDomDocument& _doc, QDomElement& _parent);
     virtual void loadSettings(const QDomElement& _this);
 
-    inline virtual QString nodeName() const
+    INLINE virtual QString nodeName() const
     {
         return "chordcreator";
     }
 
     virtual InstrumentFunctionView* createView();
 
+    /*
     struct Chord
     {
       private:
@@ -185,11 +190,12 @@ class InstrumentFunctionNoteStacking : public InstrumentFunction
             return getByName(name, false);
         }
     };
+    */
 
   private:
     // BoolModel m_chordsEnabledModel;
     ComboBoxModel m_chordsModel;
-    FloatModel    m_chordRangeModel;
+    RealModel     m_chordRangeModel;
 
     friend class InstrumentFunctionNoteStackingView;
 };
@@ -216,7 +222,7 @@ class InstrumentFunctionArpeggio : public InstrumentFunction
     virtual void saveSettings(QDomDocument& _doc, QDomElement& _parent);
     virtual void loadSettings(const QDomElement& _this);
 
-    inline virtual QString nodeName() const
+    INLINE virtual QString nodeName() const
     {
         return "arpeggiator";
     }
@@ -233,17 +239,17 @@ class InstrumentFunctionArpeggio : public InstrumentFunction
 
     // BoolModel m_arpEnabledModel;
     ComboBoxModel      m_arpModel;
-    FloatModel         m_arpRangeModel;
-    FloatModel         m_arpCycleModel;
-    FloatModel         m_arpSkipModel;
-    FloatModel         m_arpMissModel;
+    RealModel          m_arpRangeModel;
+    RealModel          m_arpCycleModel;
+    RealModel          m_arpSkipModel;
+    RealModel          m_arpMissModel;
     TempoSyncKnobModel m_arpTimeModel;
-    FloatModel         m_arpGateModel;
+    RealModel          m_arpGateModel;
     ComboBoxModel      m_arpDirectionModel;
     ComboBoxModel      m_arpModeModel;
-    FloatModel         m_arpBaseModel;
-    FloatModel         m_arpRepeatModel;
-    FloatModel         m_arpLimitModel;
+    RealModel          m_arpBaseModel;
+    RealModel          m_arpRepeatModel;
+    RealModel          m_arpLimitModel;
 
     friend class InstrumentTrack;
     friend class InstrumentFunctionArpeggioView;
@@ -261,7 +267,7 @@ class InstrumentFunctionNoteHumanizing : public InstrumentFunction
     virtual void saveSettings(QDomDocument& _doc, QDomElement& _parent);
     virtual void loadSettings(const QDomElement& _this);
 
-    inline virtual QString nodeName() const
+    INLINE virtual QString nodeName() const
     {
         return "notehumanizing";
     }
@@ -269,12 +275,12 @@ class InstrumentFunctionNoteHumanizing : public InstrumentFunction
     virtual InstrumentFunctionView* createView();
 
   private:
-    FloatModel m_volumeRangeModel;
-    FloatModel m_panRangeModel;
-    FloatModel m_tuneRangeModel;
-    FloatModel m_offsetRangeModel;
-    FloatModel m_shortenRangeModel;
-    FloatModel m_lengthenRangeModel;
+    RealModel m_volumeRangeModel;
+    RealModel m_panRangeModel;
+    RealModel m_tuneRangeModel;
+    RealModel m_offsetRangeModel;
+    RealModel m_shortenRangeModel;
+    RealModel m_lengthenRangeModel;
 
     friend class InstrumentFunctionNoteHumanizingView;
 };
@@ -291,7 +297,7 @@ class InstrumentFunctionNoteDuplicatesRemoving : public InstrumentFunction
     virtual void saveSettings(QDomDocument& _doc, QDomElement& _parent);
     virtual void loadSettings(const QDomElement& _this);
 
-    inline virtual QString nodeName() const
+    INLINE virtual QString nodeName() const
     {
         return "noteduplicatesremoving";
     }
@@ -317,7 +323,7 @@ class InstrumentFunctionNoteFiltering : public InstrumentFunction
     virtual void saveSettings(QDomDocument& _doc, QDomElement& _parent);
     virtual void loadSettings(const QDomElement& _this);
 
-    inline virtual QString nodeName() const
+    INLINE virtual QString nodeName() const
     {
         return "notefiltering";
     }
@@ -325,15 +331,15 @@ class InstrumentFunctionNoteFiltering : public InstrumentFunction
     virtual InstrumentFunctionView* createView();
 
   public slots:
-    void onRootOrScaleChanged();
+    void onRootOrModeChanged();
 
   private:
     ComboBoxModel  m_configModel;
     ComboBoxModel* m_actionModel[4];
     BoolModel*     m_noteSelectionModel[4][KeysPerOctave];
-    FloatModel*    m_intervalModel[4];
+    RealModel*     m_intervalModel[4];
     ComboBoxModel* m_rootModel[4];
-    ComboBoxModel* m_scaleModel[4];
+    ComboBoxModel* m_modeModel[4];
 
     friend class InstrumentFunctionNoteFilteringView;
 };
@@ -350,7 +356,7 @@ class InstrumentFunctionNoteKeying : public InstrumentFunction
     virtual void saveSettings(QDomDocument& _doc, QDomElement& _parent);
     virtual void loadSettings(const QDomElement& _this);
 
-    inline virtual QString nodeName() const
+    INLINE virtual QString nodeName() const
     {
         return "notekeying";
     }
@@ -358,15 +364,15 @@ class InstrumentFunctionNoteKeying : public InstrumentFunction
     virtual InstrumentFunctionView* createView();
 
   private:
-    FloatModel m_volumeRangeModel;
-    FloatModel m_volumeBaseModel;
-    FloatModel m_volumeMinModel;
-    FloatModel m_volumeMaxModel;
+    RealModel m_volumeRangeModel;
+    RealModel m_volumeBaseModel;
+    RealModel m_volumeMinModel;
+    RealModel m_volumeMaxModel;
 
-    FloatModel m_panRangeModel;
-    FloatModel m_panBaseModel;
-    FloatModel m_panMinModel;
-    FloatModel m_panMaxModel;
+    RealModel m_panRangeModel;
+    RealModel m_panBaseModel;
+    RealModel m_panMinModel;
+    RealModel m_panMaxModel;
 
     friend class InstrumentFunctionNoteKeyingView;
 };
@@ -383,7 +389,7 @@ class InstrumentFunctionNoteOutting : public InstrumentFunction
     virtual void saveSettings(QDomDocument& _doc, QDomElement& _parent);
     virtual void loadSettings(const QDomElement& _this);
 
-    inline virtual QString nodeName() const
+    INLINE virtual QString nodeName() const
     {
         return "noteoutting";
     }
@@ -391,14 +397,14 @@ class InstrumentFunctionNoteOutting : public InstrumentFunction
     virtual InstrumentFunctionView* createView();
 
   private:
-    FloatModel m_volumeModel;
-    FloatModel m_panModel;
-    FloatModel m_keyModel;
-    FloatModel m_noteModel;
-    FloatModel m_modValueModel;
-    FloatModel m_modRefKeyModel;
-    FloatModel m_modAmountModel;
-    FloatModel m_modBaseModel;
+    RealModel m_volumeModel;
+    RealModel m_panModel;
+    RealModel m_keyModel;
+    RealModel m_noteModel;
+    RealModel m_modValueModel;
+    RealModel m_modRefKeyModel;
+    RealModel m_modAmountModel;
+    RealModel m_modBaseModel;
 
     friend class InstrumentFunctionNoteOuttingView;
 };
@@ -415,7 +421,7 @@ class InstrumentFunctionGlissando : public InstrumentFunction
     virtual void saveSettings(QDomDocument& _doc, QDomElement& _parent);
     virtual void loadSettings(const QDomElement& _this);
 
-    inline virtual QString nodeName() const
+    INLINE virtual QString nodeName() const
     {
         return "glissando";
     }
@@ -427,8 +433,8 @@ class InstrumentFunctionGlissando : public InstrumentFunction
 
   private:
     TempoSyncKnobModel m_gliTimeModel;
-    FloatModel         m_gliGateModel;
-    FloatModel         m_gliAttenuationModel;
+    RealModel          m_gliGateModel;
+    RealModel          m_gliAttenuationModel;
     ComboBoxModel      m_gliUpModeModel;
     ComboBoxModel      m_gliDownModeModel;
 
@@ -452,7 +458,7 @@ class InstrumentFunctionNoteSustaining : public InstrumentFunction
     virtual void saveSettings(QDomDocument& _doc, QDomElement& _parent);
     virtual void loadSettings(const QDomElement& _this);
 
-    inline virtual QString nodeName() const
+    INLINE virtual QString nodeName() const
     {
         return "notesustaining";
     }
@@ -469,17 +475,17 @@ class InstrumentFunctionNoteSustaining : public InstrumentFunction
 
     // volatile NotePlayHandle* m_lastNPH;
     /*
-    FloatModel m_volumeRangeModel;
-    FloatModel m_panRangeModel;
-    FloatModel m_tuneRangeModel;
-    FloatModel m_offsetRangeModel;
-    FloatModel m_shortenRangeModel;
+    RealModel m_volumeRangeModel;
+    RealModel m_panRangeModel;
+    RealModel m_tuneRangeModel;
+    RealModel m_offsetRangeModel;
+    RealModel m_shortenRangeModel;
 
-    FloatModel m_volumeStepModel;
-    FloatModel m_panStepModel;
-    FloatModel m_tuneStepModel;
-    FloatModel m_offsetStepModel;
-    FloatModel m_shortenStepModel;
+    RealModel m_volumeStepModel;
+    RealModel m_panStepModel;
+    RealModel m_tuneStepModel;
+    RealModel m_offsetStepModel;
+    RealModel m_shortenStepModel;
     */
 
     friend class InstrumentFunctionNoteSustainingView;
@@ -497,7 +503,7 @@ class InstrumentFunctionNotePlaying : public InstrumentFunction
     virtual void saveSettings(QDomDocument& _doc, QDomElement& _parent);
     virtual void loadSettings(const QDomElement& _this);
 
-    inline virtual QString nodeName() const
+    INLINE virtual QString nodeName() const
     {
         return "noteplaying";
     }
@@ -509,13 +515,14 @@ class InstrumentFunctionNotePlaying : public InstrumentFunction
     void onGateChanged();
 
   private:
-    FloatModel m_gateModel;
-    FloatModel m_keyModel;
-    FloatModel m_volModel;
-    FloatModel m_panModel;
+    RealModel m_gateModel;
+    RealModel m_keyModel;
+    RealModel m_volModel;
+    RealModel m_panModel;
 
-    int             m_currentGeneration;
-    NotePlayHandle* m_currentNPH;
+    int               m_currentGeneration;
+    PlayHandlePointer m_currentPH;
+    NotePlayHandle*   m_currentNPH;
     // QMutex  m_mutex;
 
     friend class InstrumentFunctionNotePlayingView;

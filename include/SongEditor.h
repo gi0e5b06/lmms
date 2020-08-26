@@ -27,8 +27,6 @@
 #ifndef SONG_EDITOR_H
 #define SONG_EDITOR_H
 
-//#include <QVector>
-
 //#include "ActionUpdatable.h"
 #include "ActionGroup.h"
 #include "Editor.h"
@@ -67,19 +65,13 @@ class SongEditor :
 {
     Q_OBJECT
   public:
-    enum EditMode
-    {
-        DrawMode,
-        SelectMode
-    };
-
     SongEditor(Song* song);
     virtual ~SongEditor();
 
     tick_t quantization() const;
 
-    void unitePatterns();
-    void dividePatterns();
+    void joinTiles();
+    void splitTiles();
 
     void saveSettings(QDomDocument& doc, QDomElement& element);
     void loadSettings(const QDomElement& element);
@@ -97,27 +89,35 @@ class SongEditor :
         return m_timeLine;
     }
 
+    bool allowRubberband() const override;
+
   public slots:
-    void scrolled(int new_pos);
+    void scrolled(int _newPos);
 
-    void setEditMode(EditMode mode);
-    void setEditModeDraw();
-    void setEditModeSelect();
-
-    void updatePosition(const MidiTime& t);
+    void updatePosition(const MidiTime& _time);
     void updatePositionLine();
-    void selectAllTcos(bool select);
 
     void deleteSelection();
     void cutSelection();
     void copySelection();
     void pasteSelection();
 
+    void selectAll();
+    void unselectAll();
+
   protected:
-    virtual void closeEvent(QCloseEvent* ce);
+    void closeEvent(QCloseEvent* ce) override;
+    void focusOutEvent(QFocusEvent* fe) override;
+    void keyPressEvent(QKeyEvent* ke) override;
+    // void keyReleaseEvent(QKeyEvent* ke) override;
+    // void leaveEvent(QEvent* le) override;
+    // void mouseMoveEvent(QMouseEvent* me) override;
+    // void paintEvent(QPaintEvent* pe) override;
+    void resizeEvent(QResizeEvent* re) override;
+    void wheelEvent(QWheelEvent* we) override;
 
   private slots:
-    void setHighQuality(bool);
+    void setHighQuality(bool _on);
 
     void setMasterVolume(real_t _newVal);
     // void showMasterVolumeFloat();
@@ -140,10 +140,10 @@ class SongEditor :
     void zoomingYChanged();
 
   private:
-    virtual void keyPressEvent(QKeyEvent* ke);
-    virtual void wheelEvent(QWheelEvent* we);
+    void splitTiles(tick_t _splitPos, TileViews _tileViews);
+    void selectAllTcos(bool select);
 
-    virtual bool allowRubberband() const;
+    static int headerWidth();
 
     Song* m_song;
 
@@ -156,8 +156,8 @@ class SongEditor :
     MeterDialog* m_timeSigDisplay;
 
     VolumeKnob* m_masterVolumeKNB;
-    Knob* m_masterPitchKNB;
-    Knob* m_masterPanningKNB;
+    Knob*       m_masterPitchKNB;
+    Knob*       m_masterPanningKNB;
 
     TextFloat* m_masterVolumeTFT;
     TextFloat* m_masterPitchTFT;
@@ -172,8 +172,7 @@ class SongEditor :
     bool m_scrollBack;
     bool m_smoothScroll;
 
-    EditMode m_mode;
-    EditMode m_ctrlMode;  // mode they were in before they hit ctrl
+    // EditMode m_editMode;
 
     friend class SongWindow;
 };
@@ -193,34 +192,45 @@ class SongWindow : public EditorWindow, public virtual ActionUpdatable
 
     SongEditor* m_editor;
 
-  protected:
-    virtual void resizeEvent(QResizeEvent* event);
-
-  protected slots:
+  public slots:
     void play();
     void record();
     void recordAccompany();
     void stop();
+    // void stopRecording();
 
-    void lostFocus();
-    void adjustUiAfterProjectLoad();
+    void adjustUiAfterProjectLoad();  // ???
+    void onLostFocus();
+
+    virtual void setEditMode(int _mode) final
+    {
+        m_editor->setEditMode((Editor::EditMode)_mode);
+    }
+
+  protected:
+    void focusInEvent(QFocusEvent* event) override;
+    void resizeEvent(QResizeEvent* event) override;
+    void keyPressEvent(QKeyEvent* ke) override;
+    void keyReleaseEvent(QKeyEvent* ke) override;
 
   signals:
     void playTriggered();
     void resized();
 
   private:
-    virtual void keyPressEvent(QKeyEvent* ke);
-    virtual void keyReleaseEvent(QKeyEvent* ke);
-
     QAction* m_addBBTrackAction;
     QAction* m_addSampleTrackAction;
     QAction* m_addAutomationTrackAction;
 
+    /*
     ActionGroup* m_editModeGroup;
     QAction*     m_drawModeAction;
+    QAction*     m_eraseModeAction;
     QAction*     m_selectModeAction;
-    // QAction*     m_crtlAction;
+    // QAction*     m_glueModeAction; // Unite
+    // QAction*     m_knifeModeAction; // Divide
+    QAction* m_previousEditAction;
+    */
 
     ComboBox* m_zoomingXComboBox;
     ComboBox* m_zoomingYComboBox;

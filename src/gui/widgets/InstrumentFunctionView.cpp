@@ -37,15 +37,19 @@
 //#include "ToolTip.h"
 #include "gui_templates.h"
 
-InstrumentFunctionView::InstrumentFunctionView(InstrumentFunction* cc,
+InstrumentFunctionView::InstrumentFunctionView(InstrumentFunction* _model,
                                                const QString&      _caption,
                                                QWidget*            _parent,
                                                bool                _arrow) :
       GroupBox(_caption, _parent, true, _arrow),
       //      QWidget(_parent),
-      ModelView(NULL, this)
+      ModelView(_model, this)
 //, m_groupBox(new GroupBox(_caption))
 {
+    // allowNullModel(true);
+    // allowModelChange(true);
+    InstrumentFunction* m = model();
+
     // m_groupBox->setContentsMargins(0, 6, 0, 0);
     // m_panel = contentWidget();
 
@@ -60,8 +64,8 @@ InstrumentFunctionView::InstrumentFunctionView(InstrumentFunction* cc,
     // maxLcd->move(210, 0);
     addTopWidget(minLcd, 3);
     addTopWidget(maxLcd, 4);
-    minLcd->setModel(cc->minNoteGenerationModel());
-    maxLcd->setModel(cc->maxNoteGenerationModel());
+    minLcd->setModel(m->minNoteGenerationModel());
+    maxLcd->setModel(m->maxNoteGenerationModel());
 
     setContentWidget(new QWidget());
 }
@@ -96,6 +100,8 @@ InstrumentFunctionNoteStackingView::InstrumentFunctionNoteStackingView(
     mainLayout->addWidget(chordLabel, 0, 0);
     mainLayout->addWidget(m_chordsComboBox, 1, 0);
     mainLayout->addWidget(m_chordRangeKnob, 0, 1, 2, 1, Qt::AlignHCenter);
+
+    modelChanged();
 }
 
 InstrumentFunctionNoteStackingView::~InstrumentFunctionNoteStackingView()
@@ -218,6 +224,8 @@ InstrumentFunctionArpeggioView::InstrumentFunctionArpeggioView(
 
     mainLayout->setRowMinimumHeight(2, 3);
     mainLayout->setRowMinimumHeight(5, 3);
+
+    modelChanged();
 }
 
 InstrumentFunctionArpeggioView::~InstrumentFunctionArpeggioView()
@@ -300,6 +308,8 @@ InstrumentFunctionNoteHumanizingView::InstrumentFunctionNoteHumanizingView(
     mainLayout->addWidget(m_offsetRangeKnob, 0, 2, 1, 1, Qt::AlignHCenter);
     mainLayout->addWidget(m_shortenRangeKnob, 0, 3, 1, 1, Qt::AlignHCenter);
     mainLayout->addWidget(m_lengthenRangeKnob, 1, 3, 1, 1, Qt::AlignHCenter);
+
+    modelChanged();
 }
 
 InstrumentFunctionNoteHumanizingView::~InstrumentFunctionNoteHumanizingView()
@@ -331,6 +341,8 @@ InstrumentFunctionNoteDuplicatesRemovingView::
     mainLayout->setColumnStretch(0, 1);
     mainLayout->setHorizontalSpacing(6);
     mainLayout->setVerticalSpacing(1);
+
+    modelChanged();
 }
 
 InstrumentFunctionNoteDuplicatesRemovingView::
@@ -347,18 +359,18 @@ void InstrumentFunctionNoteDuplicatesRemovingView::modelChanged()
 InstrumentFunctionNoteFilteringView::InstrumentFunctionNoteFilteringView(
         InstrumentFunctionNoteFiltering* cc, QWidget* parent) :
       InstrumentFunctionView(cc, tr("FILTERING"), parent),
-      m_cc(cc), m_configComboBox(new ComboBox()),
+      m_cc(cc), m_configComboBox(new ComboBox(m_panel, "[config]")),
       m_actionComboBox(new ComboBox(m_panel, "[action]")),
       m_intervalKnob(new Knob(m_panel, "[interval]"))
 {
     m_intervalKnob->setText("GAP");
     m_intervalKnob->setHintText(tr("Interval:"), "");
 
-    m_rootComboBox = new ComboBox(m_panel, "[root note]");
+    m_rootComboBox = new ComboBox(m_panel, "[root]");
     // m_rootComboBox->setFixedSize(70, 32);
 
-    m_scaleComboBox = new ComboBox(m_panel, "[scale]");
-    // m_scaleComboBox->setFixedSize(105, 32);
+    m_modeComboBox = new ComboBox(m_panel, "[mode]");
+    // m_modeComboBox->setFixedSize(105, 32);
 
     QGridLayout* mainLayout = new QGridLayout(m_panel);
     mainLayout->setContentsMargins(6, 2, 2, 2);
@@ -370,7 +382,7 @@ InstrumentFunctionNoteFilteringView::InstrumentFunctionNoteFilteringView(
     mainLayout->addWidget(m_actionComboBox, 0, 2, 1, 2);
     mainLayout->addWidget(m_intervalKnob, 0, 4, 2, 1);
     mainLayout->addWidget(m_rootComboBox, 7, 0, 1, 2);
-    mainLayout->addWidget(m_scaleComboBox, 7, 2, 1, 4);
+    mainLayout->addWidget(m_modeComboBox, 7, 2, 1, 4);
 
     for(int i = 0; i < 12; ++i)
     {
@@ -379,6 +391,8 @@ InstrumentFunctionNoteFilteringView::InstrumentFunctionNoteFilteringView(
                                   QString("[note %1]").arg(i + 1));
         mainLayout->addWidget(m_noteSelectionLed[i], i / 4 + 2, i % 4, 1, 1);
     }
+
+    modelChanged();
 }
 
 InstrumentFunctionNoteFilteringView::~InstrumentFunctionNoteFilteringView()
@@ -395,7 +409,7 @@ void InstrumentFunctionNoteFilteringView::modelChanged()
     ComboBoxModel* old_m = m_configComboBox->model();
     if(old_m != &m_cc->m_configModel)
     {
-        if(old_m)
+        if(old_m != nullptr)
             disconnect(old_m, SIGNAL(dataChanged()), this,
                        SLOT(modelChanged()));
         m_configComboBox->setModel(&m_cc->m_configModel);
@@ -404,12 +418,12 @@ void InstrumentFunctionNoteFilteringView::modelChanged()
     }
 
     const int j = m_cc->m_configModel.value();
+    m_rootComboBox->setModel(m_cc->m_rootModel[j]);
+    m_modeComboBox->setModel(m_cc->m_modeModel[j]);
     m_actionComboBox->setModel(m_cc->m_actionModel[j]);
     for(int i = 0; i < 12; ++i)
         m_noteSelectionLed[i]->setModel(m_cc->m_noteSelectionModel[j][i]);
     m_intervalKnob->setModel(m_cc->m_intervalModel[j]);
-    m_rootComboBox->setModel(m_cc->m_rootModel[j]);
-    m_scaleComboBox->setModel(m_cc->m_scaleModel[j]);
 }
 
 InstrumentFunctionNoteKeyingView::InstrumentFunctionNoteKeyingView(
@@ -455,6 +469,8 @@ InstrumentFunctionNoteKeyingView::InstrumentFunctionNoteKeyingView(
     mainLayout->addWidget(m_panBaseKnob, 1, 1, 1, 1, Qt::AlignHCenter);
     mainLayout->addWidget(m_panMinKnob, 1, 2, 1, 1, Qt::AlignHCenter);
     mainLayout->addWidget(m_panMaxKnob, 1, 3, 1, 1, Qt::AlignHCenter);
+
+    modelChanged();
 }
 
 InstrumentFunctionNoteKeyingView::~InstrumentFunctionNoteKeyingView()
@@ -522,6 +538,8 @@ InstrumentFunctionNoteOuttingView::InstrumentFunctionNoteOuttingView(
     mainLayout->addWidget(m_modRefKeyKnob, 1, 1, 1, 1, Qt::AlignHCenter);
     mainLayout->addWidget(m_modAmountKnob, 1, 2, 1, 1, Qt::AlignHCenter);
     mainLayout->addWidget(m_modBaseKnob, 1, 3, 1, 1, Qt::AlignHCenter);
+
+    modelChanged();
 }
 
 InstrumentFunctionNoteOuttingView::~InstrumentFunctionNoteOuttingView()
@@ -601,6 +619,8 @@ InstrumentFunctionGlissandoView::InstrumentFunctionGlissandoView(
 
     // mainLayout->setRowMinimumHeight(2, 3);
     // mainLayout->setRowMinimumHeight(5, 3);
+
+    modelChanged();
 }
 
 InstrumentFunctionGlissandoView::~InstrumentFunctionGlissandoView()
@@ -623,6 +643,7 @@ InstrumentFunctionNoteSustainingView::InstrumentFunctionNoteSustainingView(
       InstrumentFunctionView(cc, tr("SUSTAINING"), parent),
       m_cc(cc)
 {
+    modelChanged();
 }
 
 InstrumentFunctionNoteSustainingView::~InstrumentFunctionNoteSustainingView()
@@ -682,6 +703,8 @@ InstrumentFunctionNotePlayingView::InstrumentFunctionNotePlayingView(
                           Qt::AlignTop | Qt::AlignHCenter);
     mainLayout->addWidget(m_gateKnob, 0, 3, 1, 1,
                           Qt::AlignTop | Qt::AlignHCenter);
+
+    modelChanged();
 }
 
 InstrumentFunctionNotePlayingView::~InstrumentFunctionNotePlayingView()

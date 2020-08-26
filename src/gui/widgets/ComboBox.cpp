@@ -25,21 +25,19 @@
 
 #include "ComboBox.h"
 
-#include <QApplication>
-//#include <QDesktopWidget>
 #include "CaptionMenu.h"
 #include "embed.h"
 #include "gui_templates.h"
 
+#include <QApplication>
 #include <QInputDialog>
 #include <QMouseEvent>
 #include <QPainter>
 #include <QStyleOptionFrame>
-//#include "MainWindow.h"
 
-QPixmap* ComboBox::s_background    = nullptr;
-QPixmap* ComboBox::s_arrow         = nullptr;
-QPixmap* ComboBox::s_arrowSelected = nullptr;
+static PixmapLoader /*ComboBox::*/ s_background("combobox_bg");
+static PixmapLoader /*ComboBox::*/ s_arrow("combobox_arrow");
+static PixmapLoader /*ComboBox::*/ s_arrowSelected("combobox_arrow_selected");
 
 const int CB_ARROW_BTN_WIDTH = 20;
 
@@ -52,15 +50,17 @@ ComboBox::ComboBox(QWidget*       _parent,
               this),
       m_menu(this), m_pressed(false)
 {
+    /*
     if(s_background == nullptr)
-        s_background = new QPixmap(embed::getIconPixmap("combobox_bg"));
+        s_background.reset(new QPixmap(embed::getPixmap("combobox_bg")));
 
     if(s_arrow == nullptr)
-        s_arrow = new QPixmap(embed::getIconPixmap("combobox_arrow"));
+        s_arrow.reset(new QPixmap(embed::getPixmap("combobox_arrow")));
 
     if(s_arrowSelected == nullptr)
-        s_arrowSelected = new QPixmap(
-                embed::getIconPixmap("combobox_arrow_selected"));
+        s_arrowSelected.reset(
+                new QPixmap(embed::getPixmap("combobox_arrow_selected")));
+    */
 
     // setFont( pointSize<9>( font() ) );
     // m_menu.setFont( pointSize<8>( m_menu.font() ) );
@@ -70,7 +70,6 @@ ComboBox::ComboBox(QWidget*       _parent,
             SLOT(setItem(QAction*)));
 
     setWindowTitle(_displayName);
-    doConnections();
 }
 
 ComboBox::~ComboBox()
@@ -79,12 +78,14 @@ ComboBox::~ComboBox()
 
 void ComboBox::selectNext()
 {
-    model()->setInitValue(model()->value() + 1);
+    // model()->setInitValue(model()->value() + 1);
+    model()->setInitValue(model()->nextValue());
 }
 
 void ComboBox::selectPrevious()
 {
-    model()->setInitValue(model()->value() - 1);
+    // model()->setInitValue(model()->value() - 1);
+    model()->setInitValue(model()->previousValue());
 }
 
 void ComboBox::contextMenuEvent(QContextMenuEvent* event)
@@ -185,10 +186,10 @@ void ComboBox::paintEvent(QPaintEvent* _pe)
 
     style()->drawPrimitive(QStyle::PE_Frame, &opt, &p, this);
 
-    QPixmap* arrow = m_pressed ? s_arrowSelected : s_arrow;
+    QPixmap arrow = m_pressed ? s_arrowSelected : s_arrow;
 
     p.drawPixmap(width() - CB_ARROW_BTN_WIDTH + 5, (height() - 15) / 2,
-                 *arrow);
+                 arrow);
 
     ComboBoxModel* m = model();
 
@@ -236,7 +237,7 @@ void ComboBox::setItem(QAction* item)
     if(m == nullptr)
         return;
 
-    m->setInitValue(item->data().toInt());
+    m->setInitValue(m->itemValue(item->data().toInt()));
 }
 
 void ComboBox::enterValue()

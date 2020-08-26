@@ -23,11 +23,12 @@
  *
  */
 
-#ifndef BB_TRACK_H_
-#define BB_TRACK_H_
+#ifndef BB_TRACK_H
+#define BB_TRACK_H
 
 #include "Bitset.h"
 #include "Track.h"
+#include "TrackView.h"
 
 #include <QAction>
 #include <QMap>
@@ -39,22 +40,27 @@ class TrackContainer;
 
 class BBTCO : public Tile
 {
+    Q_OBJECT
+
   public:
     BBTCO(Track* _track);
     BBTCO(const BBTCO& _other);
     virtual ~BBTCO();
 
-    int  bbTrackIndex() const;
-    void setBBTrackIndex(int _index);
+    int  playBBTrackIndex() const;
+    void setPlayBBTrackIndex(int _index);
 
-    virtual bool    isEmpty() const;
-    virtual QString defaultName() const;
-    virtual tick_t  unitLength() const;
+    bool    isEmpty() const override;
+    QString defaultName() const override;
+    tick_t  unitLength() const override;
+    void    rotate(tick_t _ticks) override;
+    void    splitEvery(tick_t _ticks) override;
+    void    splitAt(tick_t _tick) override;
 
     virtual void saveSettings(QDomDocument& _doc, QDomElement& _parent);
     virtual void loadSettings(const QDomElement& _this);
 
-    inline virtual QString nodeName() const
+    INLINE virtual QString nodeName() const
     {
         return "bbtco";
     }
@@ -66,7 +72,10 @@ class BBTCO : public Tile
 
     virtual TileView* createView(TrackView* _tv);
 
-    virtual void clear();
+  public slots:
+    void clear() override;
+    void flipHorizontally() override;
+    void flipVertically() override;
 
   protected:
     virtual Bitset* mask()
@@ -75,7 +84,7 @@ class BBTCO : public Tile
     }
 
   private:
-    int     m_bbTrackIndex;
+    int     m_playBBTrackIndex;
     Bitset* m_mask;
 
     friend class BBTCOView;
@@ -132,25 +141,30 @@ class EXPORT BBTrack : public Track
     BBTrack(TrackContainer* tc);
     virtual ~BBTrack();
 
-    virtual QString defaultName() const;
+    QString defaultName() const override;
 
-    virtual bool play(const MidiTime& _start,
-                      const fpp_t     _frames,
-                      const f_cnt_t   _frame_base,
-                      int             _tco_num = -1);
+    bool play(const MidiTime& _start,
+              const fpp_t     _frames,
+              const f_cnt_t   _frame_base,
+              int             _tco_num = -1) override;
 
-    virtual TrackView* createView(TrackContainerView* tcv);
-    virtual Tile*      createTCO(const MidiTime& _pos);
+    TrackView* createView(TrackContainerView* tcv) override;
+    Tile*      createTCO() override;
 
-    virtual void saveTrackSpecificSettings(QDomDocument& _doc,
-                                           QDomElement&  _parent);
-    virtual void loadTrackSpecificSettings(const QDomElement& _this);
-
-    int index() const
+    INLINE QString nodeName() const override
     {
-        return s_infoMap.value(this);
+        return "bbtrack";
     }
 
+    void saveTrackSpecificSettings(QDomDocument& _doc,
+                                   QDomElement&  _parent) override;
+    void loadTrackSpecificSettings(const QDomElement& _this) override;
+
+    // index()
+    int  ownBBTrackIndex() const;
+    void setOwnBBTrackIndex(int _bb);
+
+    /*
     bool automationDisabled(Track* _track)
     {
         return m_disabledTracks.contains(_track);
@@ -163,6 +177,7 @@ class EXPORT BBTrack : public Track
     {
         m_disabledTracks.removeAll(_track);
     }
+    */
 
     /*
     static void setLastTCOColor( const QColor & c )
@@ -187,25 +202,26 @@ class EXPORT BBTrack : public Track
     }
     */
 
-    static BBTrack* findBBTrack(int _bb_num);
-    static void     swapBBTracks(Track* _track1, Track* _track2);
-
-  protected:
-    inline virtual QString nodeName() const
-    {
-        return "bbtrack";
-    }
+    // obsolete
+    static BBTrack* findBBTrack(int _bb);
+    // static void swapBBTracks(Track* _track1, Track* _track2);
 
   private:
-    QList<Track*> m_disabledTracks;
+    int m_ownBBTrackIndex;
 
-    typedef QMap<const BBTrack*, int> infoMap;
-    static infoMap                    s_infoMap;
+    // Tracks m_disabledTracks;
+
+    /*
+    typedef QMap<QPointer<const BBTrack>, int> InfoMap;
+    static InfoMap                             s_infoMap;
+    */
 
     // static QColor * s_lastTCOColor;
 
     friend class BBTrackView;
 };
+
+typedef QVector<QPointer<BBTrack>> BBTracks;
 
 class BBTrackView : public TrackView
 {
@@ -230,7 +246,7 @@ class BBTrackView : public TrackView
     void clickedTrackLabel();
 
   private:
-    BBTrack* m_bbTrack;
+    QPointer<BBTrack> m_bbTrack;
     // TrackLabelButton* m_trackLabel;
 };
 

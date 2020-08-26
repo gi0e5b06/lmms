@@ -377,6 +377,8 @@ bitInvaderView::bitInvaderView(Instrument* _instrument, QWidget* _parent) :
 
     connect(m_normalizeToggle, SIGNAL(toggled(bool)), this,
             SLOT(normalizeToggled(bool)));
+
+    modelChanged();
 }
 
 void bitInvaderView::modelChanged()
@@ -392,41 +394,41 @@ void bitInvaderView::modelChanged()
 void bitInvaderView::sinWaveClicked()
 {
     m_graph->model()->setWaveToSine();
-    Engine::getSong()->setModified();
+    Engine::song()->setModified();
 }
 
 void bitInvaderView::triangleWaveClicked()
 {
     m_graph->model()->setWaveToTriangle();
-    Engine::getSong()->setModified();
+    Engine::song()->setModified();
 }
 
 void bitInvaderView::sawWaveClicked()
 {
     m_graph->model()->setWaveToSaw();
-    Engine::getSong()->setModified();
+    Engine::song()->setModified();
 }
 
 void bitInvaderView::sqrWaveClicked()
 {
     m_graph->model()->setWaveToSquare();
-    Engine::getSong()->setModified();
+    Engine::song()->setModified();
 }
 
 void bitInvaderView::noiseWaveClicked()
 {
     m_graph->model()->setWaveToNoise();
-    Engine::getSong()->setModified();
+    Engine::song()->setModified();
 }
 
 void bitInvaderView::usrWaveClicked()
 {
     QString fileName = m_graph->model()->setWaveToUser();
     ToolTip::add(m_usrWaveBtn, fileName);
-    Engine::getSong()->setModified();
+    Engine::song()->setModified();
     /*
     m_graph->model()->setWaveToNoise();
-    Engine::getSong()->setModified();
+    Engine::song()->setModified();
     // zero sample_shape
     for (int i = 0; i < sample_length; i++)
     {
@@ -456,18 +458,18 @@ void bitInvaderView::usrWaveClicked()
 void bitInvaderView::smoothClicked()
 {
     m_graph->model()->smooth();
-    Engine::getSong()->setModified();
+    Engine::song()->setModified();
 }
 
 void bitInvaderView::interpolationToggled(bool value)
 {
     m_graph->setGraphStyle(value ? Graph::LinearStyle : Graph::NearestStyle);
-    Engine::getSong()->setModified();
+    Engine::song()->setModified();
 }
 
 void bitInvaderView::normalizeToggled(bool value)
 {
-    Engine::getSong()->setModified();
+    Engine::song()->setModified();
 }
 
 extern "C"

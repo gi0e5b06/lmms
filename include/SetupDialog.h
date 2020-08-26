@@ -85,6 +85,7 @@ class SetupDialog : public QDialog
     void toggleDisplayWaveform(bool _enabled);
     void toggleDisableAutoquit(bool _enabled);
     void toggleLeftSideBar(bool _onLeft);
+    void setPlayCursor(int _type);
 
     // path settings widget
     void setWorkingDir(const QString& _wd);
@@ -195,6 +196,7 @@ class SetupDialog : public QDialog
 
     int  m_uiFramesPerSecond;
     bool m_uiLeftSideBar;
+    int  m_uiPlayCursor;
 
     bool m_midiMtcEnabled;
     int  m_midiMtcVideoFps;

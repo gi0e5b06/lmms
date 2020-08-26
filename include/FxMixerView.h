@@ -29,20 +29,28 @@
 //#include "Engine.h"
 //#include "Effect.h"
 #include "Fader.h"
-#include "Knob.h"
+#include "FxLine.h"
+#include "FxMixer.h"
+//#include "Knob.h"
 #include "PixmapButton.h"
 //#include "ToolTip.h"
 //#include "embed.h"
-#include "EffectRackView.h"
+#include "EffectChainView.h"
+#include "debug.h"
 
 //#include <QWidget>
 #include <QHBoxLayout>
 #include <QLine>
+//#include <QPointer>
 #include <QScrollArea>
 #include <QStackedLayout>
 
 class QButtonGroup;
-class FxLine;
+// class FxLine;
+// class FxChannel;
+class FxChannelView;
+
+typedef DebugQVector<QPointer<FxChannelView>> FxChannelViews;
 
 class EXPORT FxMixerView :
       public QWidget,
@@ -52,52 +60,22 @@ class EXPORT FxMixerView :
     Q_OBJECT
 
   public:
-    class FxChannelView : public ModelView
-    {
-      public:
-        FxChannelView(QWidget* _parent, FxMixerView* _mv, fx_ch_t _chIndex);
-
-        void setChannelIndex(fx_ch_t _index);
-
-        virtual QLine  cableFrom() const;
-        virtual QLine  cableTo() const;
-        virtual QColor cableColor() const;
-
-        PixmapButton* m_frozenBtn;
-        PixmapButton* m_clippingBtn;
-
-        PixmapButton* m_eqEnableBtn;
-        Knob*         m_eqHighKnob;
-        Knob*         m_eqMediumKnob;
-        Knob*         m_eqLowKnob;
-
-        FxLine*         m_fxLine;
-        PixmapButton*   m_muteBtn;
-        PixmapButton*   m_soloBtn;
-        Fader*          m_fader;
-        EffectRackView* m_rackView;
-    };
-
     FxMixerView();
     virtual ~FxMixerView();
 
-    virtual void keyPressEvent(QKeyEvent* e);
+    void keyPressEvent(QKeyEvent* _ke) override;
 
     virtual void saveSettings(QDomDocument& _doc, QDomElement& _this);
     virtual void loadSettings(const QDomElement& _this);
 
-    inline FxLine* currentFxLine()
-    {
-        return m_currentFxLine;
-    }
-
-    inline FxChannelView* channelView(int index)
+    INLINE FxChannelView* channelView(int index)
     {
         return m_fxChannelViews[index];
     }
 
-    void setCurrentFxLine(FxLine* _line);
-    void setCurrentFxLine(int _line);
+    FxLine* currentFxLine();
+    int     currentLine();
+    void    setCurrentLine(int _line);
 
     void clear();
 
@@ -122,28 +100,95 @@ class EXPORT FxMixerView :
     virtual QList<ModelView*> childModelViews() const;
 
   public slots:
-    int addNewChannel();
+    int  addNewChannel();
+    void setCurrentLine();
 
   protected:
-    virtual void closeEvent(QCloseEvent* _ce);
+    void closeEvent(QCloseEvent* _ce) override;
+
+    void addChannelView(fx_ch_t _chIndex);
+    void removeChannelView(fx_ch_t _chIndex);
+    void updateIndexes();
 
   private slots:
     void updateFaders();
     void toggledSolo();
 
   private:
-    QVector<FxChannelView*> m_fxChannelViews;
-
-    FxLine*         m_currentFxLine;
-    QScrollArea*    channelArea;
-    QHBoxLayout*    chLayout;
-    QWidget*        m_channelAreaWidget;
-    QStackedLayout* m_racksLayout;
-    QWidget*        m_racksWidget;
+    IntModel          m_currentLine;
+    FxChannelViews    m_fxChannelViews;
+    QScrollArea*      channelArea;
+    QHBoxLayout*      chLayout;
+    QWidget*          m_channelAreaWidget;
+    QStackedLayout*   m_racksLayout;
+    QPointer<QWidget> m_racksWidget;
 
     void updateMaxChannelSelector();
 
     friend class FxChannelView;
+};
+
+class FxChannelView : public QObject, public ModelView
+{
+    Q_OBJECT
+
+  public:
+    /*
+    INLINE FxChannel* model()  // non virtual
+    {
+        return dynamic_cast<FxChannel*>(ModelView::model());
+    }
+
+    INLINE const FxChannel* model() const // non virtual
+    {
+        return dynamic_cast<const FxChannel*>(ModelView::model());
+    }
+
+    INLINE FxLine* widget()  // non virtual
+    {
+        return dynamic_cast<FxLine*>(ModelView::widget());
+    }
+
+    INLINE const FxLine* widget() const // non virtual
+    {
+        return dynamic_cast<const FxLine*>(ModelView::widget());
+    }
+    */
+
+    void setChannelIndex(fx_ch_t _index);
+
+    QLine  cableFrom() const override;
+    QLine  cableTo() const override;
+    QColor cableColor() const override;
+
+    static bool lessThan(FxChannelView* _a, FxChannelView* _b)
+    {
+        if(_a == nullptr)
+            return false;
+        if(_b == nullptr)
+            return true;
+        return _a->m_fxLine->channelIndex() < _b->m_fxLine->channelIndex();
+    }
+
+  protected:
+    FxChannelView(QWidget* _parent, FxMixerView* _mv, fx_ch_t _chIndex);
+    virtual ~FxChannelView();
+
+  private:
+    PixmapButton*             m_frozenBtn;
+    PixmapButton*             m_clippingBtn;
+    PixmapButton*             m_eqEnableBtn;
+    Knob*                     m_eqHighKnob;
+    Knob*                     m_eqMediumKnob;
+    Knob*                     m_eqLowKnob;
+    QPointer<FxLine>          m_fxLine;
+    PixmapButton*             m_muteBtn;
+    PixmapButton*             m_soloBtn;
+    Fader*                    m_fader;
+    QPointer<EffectChainView> m_rackView;
+    QPointer<FxMixerView>     m_fxmv;
+
+    friend class FxMixerView;
 };
 
 #endif

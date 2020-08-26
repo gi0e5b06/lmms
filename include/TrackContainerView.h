@@ -45,19 +45,14 @@ class TrackContainerView :
       public virtual ActionUpdatable
 {
     Q_OBJECT
+
   public:
-    TrackContainerView(TrackContainer* tc);
-    virtual ~TrackContainerView();
-
-    virtual void saveSettings(QDomDocument& _doc, QDomElement& _this);
-    virtual void loadSettings(const QDomElement& _this);
-
-    QScrollArea* contentWidget()
+    virtual QScrollArea* contentWidget() final
     {
         return m_scrollArea;
     }
 
-    inline const MidiTime& currentPosition() const
+    INLINE virtual const MidiTime& currentPosition() const final
     {
         return m_currentPosition;
     }
@@ -67,101 +62,129 @@ class TrackContainerView :
         return false;
     }
 
-    virtual float pixelsPerTact() const;
-    virtual void  setPixelsPerTact(float _ppt);
+    virtual real_t pixelsPerTact() const;
+    virtual void   setPixelsPerTact(real_t _ppt) final;
 
-    const TrackView* trackViewAt(const int _y) const;
+    virtual const TrackView* trackViewAt(const int _y) const final;
 
     virtual bool allowRubberband() const;
 
-    inline bool rubberBandActive() const
+    INLINE virtual bool rubberBandActive() const final
     {
         return m_rubberBand->isEnabled() && m_rubberBand->isVisible();
     }
 
-    inline QVector<SelectableObject*> selectedObjects() const
+    INLINE virtual SelectableObjects selectedObjects() const final
     {
         return m_rubberBand->selectedObjects();
     }
 
-    QVector<Tile*>     selectedTCOs();
-    QVector<TileView*> selectedTCOViews();
+    virtual Tiles     selectedTCOs() final;
+    virtual TileViews selectedTCOViews() final;
+    virtual TileViews selectedTileViewsAt(const MidiTime& _pos,
+                                          bool _startExcluded = false,
+                                          bool _endExcluded   = true) final;
 
-    TrackContainer* model()
+    virtual Tiles     allTiles() final;
+    virtual TileViews allTileViews() final;
+    virtual TileViews allTileViewsAt(const MidiTime& _pos,
+                                     bool            _startExcluded = false,
+                                     bool _endExcluded = true) final;
+
+    static TileViews filterTileViewsAt(const TileViews& _tileViews,
+                                       const MidiTime&  _pos,
+                                       bool _startExcluded = false,
+                                       bool _endExcluded   = true);
+
+    virtual TrackContainer* model() final
     {
         return m_tc;
     }
 
-    const TrackContainer* model() const
+    virtual const TrackContainer* model() const final
     {
         return m_tc;
     }
 
-    const QList<TrackView*>& trackViews() const
-    {
-        return m_trackViews;
-    }
+    virtual const TrackViews& trackViews() const final;
 
-    void moveTrackView(TrackView* trackView, int indexTo);
-    void moveTrackViewUp(TrackView* trackView);
-    void moveTrackViewDown(TrackView* trackView);
-    void scrollToTrackView(TrackView* _tv);
+    virtual void moveTrackView(TrackView* trackView, int indexTo) final;
+    virtual void moveTrackViewUp(TrackView* trackView) final;
+    virtual void moveTrackViewDown(TrackView* trackView) final;
+    virtual void scrollToTrackView(TrackView* _tv) final;
 
-    // -- for usage by trackView only ---------------
-    TrackView* addTrackView(TrackView* _tv);
-    void       removeTrackView(TrackView* _tv);
-    // -------------------------------------------------------
+    virtual void clearAllTracks() final;
 
-    void clearAllTracks();
-
-    virtual QString nodeName() const
+    virtual QString nodeName() const final
     {
         return "trackcontainerview";
     }
 
-    inline QVector<QPointer<HyperBarView>>& hyperBarViews()
+    INLINE virtual QVector<QPointer<HyperBarView>>& hyperBarViews() final
     {
         return m_hyperBarViews;
     }
-    inline QVector<QPointer<BarView>>& barViews()
+
+    INLINE virtual QVector<QPointer<BarView>>& barViews() final
     {
         return m_barViews;
     }
 
-    RubberBand* rubberBand() const;
+    virtual RubberBand* rubberBand() const final;
 
   public slots:
-    virtual void realignTracks();
-    virtual void updateBackgrounds();
+    virtual void realignTracks() final;
+    virtual void updateBackgrounds() final;
 
-    TrackView* createTrackView(Track* _t);
-    void       deleteTrackView(TrackView* _tv);
+    virtual TrackView* createTrackView(Track* _t) final;
+    virtual void       deleteTrackView(TrackView* _tv) final;
 
-    virtual void dropEvent(QDropEvent* _de);
-    virtual void dragEnterEvent(QDragEnterEvent* _dee);
     ///
     /// \brief selectRegionFromPixels
     /// \param x
     /// \param y
     /// Use the rubber band to select TCO from all tracks using x, y pixels
-    void selectRegionFromPixels(int xStart, int xEnd);
+    virtual void selectRegionFromPixels(int xStart, int xEnd) final;
 
     ///
     /// \brief stopRubberBand
     /// Removes the rubber band from display when finished with.
-    void stopRubberBand();
+    virtual void stopRubberBand() final;
+
+    // -- for usage by trackView only -----------------
+    virtual void addTrackView(TrackView* _tv) final;
+    virtual void removeTrackView(TrackView* _tv) final;
+    // ------------------------------------------------
 
   protected:
-    virtual void mousePressEvent(QMouseEvent* _me);
-    virtual void mouseMoveEvent(QMouseEvent* _me);
-    virtual void mouseReleaseEvent(QMouseEvent* _me);
-    virtual void resizeEvent(QResizeEvent*);
+    TrackContainerView(TrackContainer* tc);
+    virtual ~TrackContainerView();
 
-    virtual void computeHyperBarViews();
-    virtual void computeBarViews();
+    void saveSettings(QDomDocument& _doc, QDomElement& _this) override;
+    void loadSettings(const QDomElement& _this) override;
+
+    void dropEvent(QDropEvent* _de) override;
+    void dragEnterEvent(QDragEnterEvent* _dee) override;
+    void mousePressEvent(QMouseEvent* _me) override;
+    void mouseMoveEvent(QMouseEvent* _me) override;
+    void mouseReleaseEvent(QMouseEvent* _me) override;
+    void resizeEvent(QResizeEvent*) override;
+
+    virtual void computeHyperBarViews() final;
+    virtual void computeBarViews() final;
 
     MidiTime m_currentPosition;
-    float    m_ppt;
+    real_t   m_ppt;
+
+    int vsbWidth()
+    {
+        return m_scrollArea->verticalScrollBar()->width();
+    }
+
+    int hsbHeight()
+    {
+        return m_scrollArea->horizontalScrollBar()->height();
+    }
 
   private:
     enum Actions
@@ -183,9 +206,8 @@ class TrackContainerView :
         TrackContainerView* m_trackContainerView;
     };
 
-    TrackContainer*           m_tc;
-    typedef QList<TrackView*> trackViewList;
-    trackViewList             m_trackViews;
+    TrackContainer* m_tc;
+    TrackViews      m_trackViews;
 
     scrollArea*  m_scrollArea;
     QVBoxLayout* m_scrollLayout;

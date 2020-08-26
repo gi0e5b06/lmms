@@ -46,18 +46,15 @@ AutomationPatternView::AutomationPatternView(AutomationPattern* _pattern,
       TileView(_pattern, _parent),
       m_pat(_pattern), m_paintPixmap(), m_pat_rec(embed::getPixmap("pat_rec"))
 {
+    // if(s_pat_rec == nullptr)
+    //    s_pat_rec = embed::getPixmap("pat_rec");
+
     connect(m_pat, SIGNAL(dataChanged()), this, SLOT(update()));
     connect(gui->automationWindow(), SIGNAL(currentPatternChanged()), this,
             SLOT(update()));
 
     setAttribute(Qt::WA_OpaquePaintEvent, true);
-
-    ToolTip::add(this, m_pat->name());
     setStyle(QApplication::style());
-
-    // if(s_pat_rec == nullptr)
-    //    s_pat_rec = embed::getPixmap("pat_rec");
-
     update();
 }
 
@@ -65,17 +62,15 @@ AutomationPatternView::~AutomationPatternView()
 {
 }
 
-void AutomationPatternView::openInAutomationEditor()
-{
-    if(gui)
-        gui->automationWindow()->open(m_pat);
-}
-
 void AutomationPatternView::update()
 {
     ToolTip::add(this, m_pat->name());
-
     TileView::update();
+}
+
+void AutomationPatternView::openInAutomationEditor()
+{
+    gui->automationWindow()->open(m_pat);
 }
 
 /*
@@ -111,7 +106,7 @@ void AutomationPatternView::disconnectObject(QAction* _a)
                                      m));
         */
         m_pat->m_objects.removeAll(m);
-        //if(m_pat->m_objects.isEmpty())
+        // if(m_pat->m_objects.isEmpty())
         //  m_pat->addObject(&AutomationPattern::s_dummyFirstObject);
         update();
 
@@ -159,6 +154,9 @@ QMenu* AutomationPatternView::buildContextMenu()
     addCutCopyPasteMenu(cm, true, true, true);
     cm->addSeparator();
     addFlipMenu(cm, !m_pat->isEmpty(), !m_pat->isEmpty());
+    addRotateMenu(cm, !m_pat->isEmpty(), !m_pat->isEmpty(), isFixed());
+    addSplitMenu(cm, m_pat->length() > MidiTime::ticksPerTact(),
+                 m_pat->length() > 4 * MidiTime::ticksPerTact());
 
     if(isFixed())
     {
@@ -168,12 +166,12 @@ QMenu* AutomationPatternView::buildContextMenu()
     }
 
     cm->addSeparator();
-    cm->addAction(embed::getIconPixmap("record"), tr("Set/clear record"),
-                  this, SLOT(toggleRecording()));
+    cm->addAction(embed::getIcon("record"), tr("Set/clear record"), this,
+                  SLOT(toggleRecording()));
     /*
-    cm->addAction(embed::getIconPixmap("flip_y"),
+    cm->addAction(embed::getIcon("flip_y"),
                   tr("Flip Vertically (Visible)"), this, SLOT(flipY()));
-    cm->addAction(embed::getIconPixmap("flip_x"),
+    cm->addAction(embed::getIcon("flip_x"),
                   tr("Flip Horizontally (Visible)"), this, SLOT(flipX()));
     */
     // if( !m_pat->m_objects.isEmpty() )
@@ -471,7 +469,7 @@ void AutomationPatternView::dropEvent(QDropEvent* _de)
                 TextFloat::displayMessage(mod->displayName(),
                                           tr("Model is already connected "
                                              "to this pattern."),
-                                          embed::getIconPixmap("automation"),
+                                          embed::getPixmap("automation"),
                                           2000);
             }
         }

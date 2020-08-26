@@ -1001,6 +1001,7 @@ WatsynView::WatsynView(Instrument* _instrument, QWidget* _parent) :
     connect(b1_selectButton, SIGNAL(clicked()), this, SLOT(updateLayout()));
     connect(b2_selectButton, SIGNAL(clicked()), this, SLOT(updateLayout()));
 
+    modelChanged();
     updateLayout();
 }
 

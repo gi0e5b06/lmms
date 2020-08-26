@@ -25,67 +25,57 @@
 #ifndef PLUGIN_BROWSER_H
 #define PLUGIN_BROWSER_H
 
-#include <QTimer>
-#include <QPixmap>
-
-#include "SideBarWidget.h"
 #include "Plugin.h"
+#include "SideBarWidget.h"
 
+#include <QPixmap>
+#include <QTimer>
 
 class PluginBrowser : public SideBarWidget
 {
-	Q_OBJECT
-public:
-	PluginBrowser( QWidget * _parent );
-	virtual ~PluginBrowser();
+    Q_OBJECT
 
+  public:
+    PluginBrowser(QWidget* _parent);
+    virtual ~PluginBrowser();
 
-private:
-	QWidget * m_view;
+  private:
+    QWidget* m_view;
 };
-
-
-
 
 class PluginDescList : public QWidget
 {
-	Q_OBJECT
-public:
-	PluginDescList(QWidget* parent);
+    Q_OBJECT
+
+  public:
+    PluginDescList(QWidget* parent);
 };
-
-
-
 
 class PluginDescWidget : public QWidget
 {
-	Q_OBJECT
-public:
-	PluginDescWidget( const Plugin::Descriptor & _pd, QWidget * _parent );
-	virtual ~PluginDescWidget();
+    Q_OBJECT
 
+  public:
+    PluginDescWidget(const Plugin::Descriptor& _pd, QWidget* _parent);
+    virtual ~PluginDescWidget();
 
-protected:
-	virtual void enterEvent( QEvent * _e );
-	virtual void leaveEvent( QEvent * _e );
-	virtual void mousePressEvent( QMouseEvent * _me );
-	virtual void paintEvent( QPaintEvent * _pe );
+  protected:
+    virtual void enterEvent(QEvent* _e);
+    virtual void leaveEvent(QEvent* _e);
+    virtual void mousePressEvent(QMouseEvent* _me);
+    virtual void paintEvent(QPaintEvent* _pe);
 
+  private slots:
+    void updateHeight();
 
-private slots:
-	void updateHeight();
+  private:
+    QTimer m_updateTimer;
 
+    const Plugin::Descriptor& m_pluginDescriptor;
+    QPixmap                   m_logo;
 
-private:
-	QTimer m_updateTimer;
-
-	const Plugin::Descriptor & m_pluginDescriptor;
-	QPixmap m_logo;
-
-	bool m_mouseOver;
-	int m_targetHeight;
-
+    bool m_mouseOver;
+    int  m_targetHeight;
 };
-
 
 #endif

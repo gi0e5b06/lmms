@@ -43,9 +43,10 @@ SampleRecordHandle::~SampleRecordHandle()
 {
     if(!m_buffers.empty())
     {
-        SampleBuffer* sb;
-        createSampleBuffer(&sb);
-        m_tco->setSampleBuffer(sb);
+        //SampleBuffer* sb;
+        //createSampleBuffer(&sb);
+        //m_tco->setSampleBuffer(sb);
+        m_tco->setSampleBuffer(createSampleBuffer());
     }
 
     while(!m_buffers.empty())
@@ -101,7 +102,7 @@ f_cnt_t SampleRecordHandle::framesRecorded() const
     return m_framesRecorded;
 }
 
-void SampleRecordHandle::createSampleBuffer(SampleBuffer** sampleBuf)
+SampleBufferPointer SampleRecordHandle::createSampleBuffer()//SampleBuffer** sampleBuf)
 {
     const f_cnt_t frames = framesRecorded();
     // create buffer to store all recorded buffers in
@@ -119,9 +120,10 @@ void SampleRecordHandle::createSampleBuffer(SampleBuffer** sampleBuf)
         data_ptr += (*it).second;
     }
     // create according sample-buffer out of big buffer
-    *sampleBuf = new SampleBuffer(data, frames);
-    (*sampleBuf)->setSampleRate(Engine::mixer()->inputSampleRate());
+    SampleBufferPointer r=(new SampleBuffer(data, frames))->pointer();
+    r->setSampleRate(Engine::mixer()->inputSampleRate());
     delete[] data;
+    return r;
 }
 
 void SampleRecordHandle::writeBuffer(const sampleFrame* _ab,

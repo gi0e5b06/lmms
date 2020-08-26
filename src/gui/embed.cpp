@@ -33,40 +33,33 @@
 namespace embed
 {
 
-QPixmap getIconPixmap(const QString& _name, int _width, int _height)
+const QPixmap getIconPixmap(const QString& _name, int _width, int _height)
 {
     return getPixmap(_name, _width, _height);
 }
 
-QIcon getIcon(const QString& _name, int _width, int _height)
+const QIcon getIcon(const QString& _name, int _width, int _height)
 {
     return QIcon(getPixmap(_name, _width, _height));
 }
 
-QPixmap getPixmap(const QString& pixmapName, int width, int height)
+const QPixmap getPixmap(const QString& pixmapName, int width, int height)
 {
     QString cacheName;
     if(width > 0 && height > 0)
-    {
         cacheName = QString("%1_%2_%3").arg(pixmapName, width, height);
-    }
     else
-    {
         cacheName = pixmapName;
-    }
 
     // Return cached pixmap
     QPixmap pixmap;
     if(QPixmapCache::find(cacheName, &pixmap))
-    {
         return pixmap;
-    }
+
     QImageReader reader(QString("artwork:%1").arg(pixmapName));
 
     if(width > 0 && height > 0)
-    {
         reader.setScaledSize(QSize(width, height));
-    }
 
     pixmap = QPixmap::fromImageReader(&reader);
     if(pixmap.isNull())
@@ -81,13 +74,13 @@ QPixmap getPixmap(const QString& pixmapName, int width, int height)
     return pixmap;
 }
 
-QString getText(const char* name)
+const QString getText(const char* name)
 {
     return QString::fromUtf8(
             (const char*)QResource(QString(":/%1").arg(name)).data());
 }
 
-QHash<QString, QString> getProperties(const QString& _fileName)
+const QHash<QString, QString> getProperties(const QString& _fileName)
 {
     QHash<QString, QString> r;
 

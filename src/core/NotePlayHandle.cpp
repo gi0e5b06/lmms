@@ -73,7 +73,8 @@ NotePlayHandle::NotePlayHandle(InstrumentTrack* instrumentTrack,
                             : instrumentTrack->midiPort()->outputChannel()
                                       - 1),
       m_origin(origin), m_generation(generation),
-      m_frequencyNeedsUpdate(false), m_scale(nullptr)
+      m_frequencyNeedsUpdate(false), m_scale(nullptr), m_tmpreleaseflag(false)
+
 {
     setLegato(n.legato());
     setMarcato(n.marcato());
@@ -138,6 +139,11 @@ NotePlayHandle::NotePlayHandle(InstrumentTrack* instrumentTrack,
 NotePlayHandle::~NotePlayHandle()
 {
     // m_instrumentTrack->audioPort()->removePlayHandle(pointer());
+    if(!m_tmpreleaseflag)
+    {
+        BACKTRACE
+        qWarning("NotePlayHandle badly destroyed");
+    }
 }
 
 static QHash<QString, bool> s_releaseTracker;
@@ -216,8 +222,7 @@ bool NotePlayHandle::done1()
     delete m_filter1;
     delete m_filter2;
 
-    if(buffer())
-        releaseBuffer();
+    // if(buffer()) releaseBuffer();
 
     m_instrumentTrack = nullptr;
     unlock();
@@ -823,6 +828,8 @@ void NotePlayHandle::resize(const bpm_t _newTempo)
     m_subNotes.map([_newTempo](NotePlayHandle* n) { n->resize(_newTempo); });
 }
 
+static int buffer_cnt = 0;
+
 NotePlayHandle*
         NotePlayHandleManager::acquire(InstrumentTrack* instrumentTrack,
                                        const f_cnt_t    offset,
@@ -833,11 +840,17 @@ NotePlayHandle*
                                        const NotePlayHandle::Origin origin,
                                        const int generation)
 {
+    /*
     NotePlayHandle* nph = MM_ALLOC(NotePlayHandle, 1);
     // NotePlayHandle* nph=s_singleton->allocate();
     new((void*)nph)
             NotePlayHandle(instrumentTrack, offset, frames, noteToPlay,
                            parent, midiEventChannel, origin, generation);
+    */
+    NotePlayHandle* nph
+            = new NotePlayHandle(instrumentTrack, offset, frames, noteToPlay,
+                             parent, midiEventChannel, origin, generation);
+    buffer_cnt++;
     return nph;
 }
 
@@ -860,6 +873,13 @@ void NotePlayHandleManager::release(NotePlayHandle* _nph)
         //_nph->~NotePlayHandle();
         // s_singleton->deallocate(_nph);
         // NotePlayHandleManager::free(_nph);
-        MM_FREE(_nph);
+        _nph->m_tmpreleaseflag = true;
+        //_nph->~NotePlayHandle();
+        // MM_FREE(_nph);
+        delete _nph;
     }
+
+    buffer_cnt--;
+    if(buffer_cnt % 100 == 0)
+        qInfo("NotePlayHandle: buffer=%d", buffer_cnt);
 }

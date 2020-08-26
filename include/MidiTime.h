@@ -29,10 +29,14 @@
 #include "export.h"
 #include "lmms_basics.h"
 
+#include <QString>
+
 // note: 1 "Tact" = 1 Measure
 const tick_t DefaultTicksPerTact = 192;
-const int    DefaultStepsPerTact = 16;
-const int    DefaultBeatsPerTact = DefaultTicksPerTact / DefaultStepsPerTact;
+const step_t DefaultStepsPerTact = 16;
+const tick_t DefaultTicksPerBeat = 48;
+const tick_t DefaultTicksPerStep = DefaultTicksPerTact / DefaultStepsPerTact;
+const beat_t DefaultBeatsPerTact = DefaultTicksPerTact / DefaultTicksPerBeat;
 
 class MeterModel;
 
@@ -57,11 +61,16 @@ class EXPORT TimeSig
 class EXPORT MidiTime
 {
   public:
-    MidiTime(const tact_t tact, const tick_t ticks);
+    MidiTime(const tact_t tact, const beat_t beat, const tick_t tick);
+    MidiTime(const tact_t tact, const tick_t tick);
     MidiTime(const tick_t ticks = 0);
 
-    MidiTime toNearestTact() const;
     MidiTime toAbsoluteTact() const;
+    MidiTime toNearestTact() const;
+    MidiTime toNextTact() const;
+    MidiTime toAbsoluteBeat() const;
+    MidiTime toNearestBeat() const;
+    MidiTime toNextBeat() const;
 
     MidiTime& operator+=(const MidiTime& time);
     MidiTime& operator-=(const MidiTime& time);
@@ -75,6 +84,7 @@ class EXPORT MidiTime
 
     // return the tact, rounded down and 0-based
     tact_t tact() const;
+    tact_t tacts() const;
     // return the tact, rounded up and 0-based
     tact_t nextFullTact() const;
 
@@ -84,6 +94,14 @@ class EXPORT MidiTime
         return tact();
     }
 
+    // inside the tact
+    beat_t beat() const;
+    // total of beats
+    beat_t beats() const;
+
+    // inside the beat
+    tick_t tick() const;
+    // total of ticks
     tick_t ticks() const;
     void   setTicks(tick_t ticks);
 
@@ -95,6 +113,11 @@ class EXPORT MidiTime
 
     operator tick_t() const;
 
+    QString toString() const
+    {
+        return QString("%1:%2:%3").arg(tact()).arg(beat()).arg(tick());
+    }
+
     tick_t ticksPerBeat(const TimeSig& sig) const;
     // Remainder ticks after bar is removed
     tick_t getTickWithinBar(const TimeSig& sig) const;
@@ -104,22 +127,30 @@ class EXPORT MidiTime
     tick_t getTickWithinBeat(const TimeSig& sig) const;
 
     // calculate number of frame that are needed this time
-    f_cnt_t frames(const float framesPerTick) const;
+    f_cnt_t frames(const real_t framesPerTick) const;
 
-    double getTimeInMilliseconds(bpm_t beatsPerMinute) const;
+    real_t getTimeInMilliseconds(bpm_t beatsPerMinute) const;
 
     static MidiTime fromFrames(const f_cnt_t frames,
-                               const float   framesPerTick);
-    static tick_t   ticksPerTact();
-    static tick_t   ticksPerTact(const TimeSig& sig);
-    static void     setTicksPerTact(tick_t tpt);
-    static double   ticksToMilliseconds(tick_t ticks, bpm_t beatsPerMinute);
-    static double   ticksToMilliseconds(double ticks, bpm_t beatsPerMinute);
+                               const real_t  framesPerTick);
+
+    static tick_t ticksPerTact();
+    static tick_t ticksPerTact(const TimeSig& sig);
+    static void   setTicksPerTact(tick_t tpt);
+
+    static tick_t beatsPerTact();
+    static tick_t beatsPerTact(const TimeSig& sig);
+    static void   setBeatsPerTact(beat_t bpt);
+
+    // static real_t ticksToMilliseconds(tick_t ticks, bpm_t beatsPerMinute);
+    static real_t ticksToMilliseconds(real_t ticks, bpm_t beatsPerMinute);
+    static real_t millisecondsToTicks(real_t ms, bpm_t beatsPerMinute);
 
   private:
     tick_t m_ticks;
 
     static tick_t s_ticksPerTact;
+    static beat_t s_beatsPerTact;
 };
 
 #endif

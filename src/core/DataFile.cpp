@@ -403,14 +403,14 @@ void DataFile::upgrade_0_2_1_20070501()
         QDomElement el = list.item(i).toElement();
         if(el.attribute("vol") != "")
         {
-            el.setAttribute("vol", el.attribute("vol").toFloat() * 100.0f);
+            el.setAttribute("vol", el.attribute("vol").toFloat() * 100.);
         }
         else
         {
             QDomNode node = el.namedItem("automation-pattern");
             if(!node.isElement() || !node.namedItem("vol").isElement())
             {
-                el.setAttribute("vol", 100.0f);
+                el.setAttribute("vol", 100.);
             }
         }
     }
@@ -521,8 +521,8 @@ void DataFile::upgrade_0_2_1_20070508()
         QDomElement el = list.item(i).toElement();
         if(el.hasAttribute("vol"))
         {
-            float value = el.attribute("vol").toFloat();
-            value       = roundf(value * 0.585786438f);
+            real_t value = el.attribute("vol").toFloat();
+            value       = round(value * 0.585786438);
             el.setAttribute("vol", value);
         }
         else
@@ -535,7 +535,7 @@ void DataFile::upgrade_0_2_1_20070508()
             {
                 QDomElement timeEl = list.item(j).toElement();
                 int         value  = timeEl.attribute("value").toInt();
-                value              = (int)roundf(value * 0.585786438f);
+                value              = int(round(value * 0.585786438));
                 timeEl.setAttribute("value", value);
             }
         }

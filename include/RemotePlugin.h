@@ -200,7 +200,7 @@ class shmFifo
 #endif
     }
 
-    inline bool isInvalid() const
+    INLINE bool isInvalid() const
     {
         return m_invalid;
     }
@@ -211,13 +211,13 @@ class shmFifo
     }
 
     // do we act as master (i.e. not as remote-process?)
-    inline bool isMaster() const
+    INLINE bool isMaster() const
     {
         return m_master;
     }
 
     // recursive lock
-    inline void lock()
+    INLINE void lock()
     {
         if(!isInvalid() && __sync_add_and_fetch(&m_lockDepth, 1) == 1)
         {
@@ -226,7 +226,7 @@ class shmFifo
     }
 
     // recursive unlock
-    inline void unlock()
+    INLINE void unlock()
     {
         if(__sync_sub_and_fetch(&m_lockDepth, 1) <= 0)
         {
@@ -235,7 +235,7 @@ class shmFifo
     }
 
     // wait until message-semaphore is available
-    inline void waitForMessage()
+    INLINE void waitForMessage()
     {
         if(!isInvalid())
         {
@@ -244,24 +244,24 @@ class shmFifo
     }
 
     // increase message-semaphore
-    inline void messageSent()
+    INLINE void messageSent()
     {
         m_messageSem.release();
     }
 
-    inline int32_t readInt()
+    INLINE int32_t readInt()
     {
         int32_t i;
         read(&i, sizeof(i));
         return i;
     }
 
-    inline void writeInt(const int32_t& _i)
+    INLINE void writeInt(const int32_t& _i)
     {
         write(&_i, sizeof(_i));
     }
 
-    inline std::string readString()
+    INLINE std::string readString()
     {
         const int len = readInt();
         if(len)
@@ -276,14 +276,14 @@ class shmFifo
         return std::string();
     }
 
-    inline void writeString(const std::string& _s)
+    INLINE void writeString(const std::string& _s)
     {
         const int len = _s.size();
         writeInt(len);
         write(_s.c_str(), len);
     }
 
-    inline bool messagesLeft()
+    INLINE bool messagesLeft()
     {
         if(isInvalid())
         {
@@ -295,13 +295,13 @@ class shmFifo
         return !empty;
     }
 
-    inline int shmKey() const
+    INLINE int shmKey() const
     {
         return m_shmKey;
     }
 
   private:
-    static inline void
+    static INLINE void
             fastMemCpy(void* _dest, const void* _src, const int _len)
     {
         // calling memcpy() for just an integer is obsolete overhead
@@ -429,7 +429,7 @@ class EXPORT RemotePluginBase
         {
         }
 
-        inline message& addString(const std::string& _s)
+        INLINE message& addString(const std::string& _s)
         {
             data.push_back(_s);
             return *this;
@@ -451,29 +451,29 @@ class EXPORT RemotePluginBase
             return *this;
         }
 
-        inline std::string getString(int _p = 0) const
+        INLINE std::string getString(int _p = 0) const
         {
             return data[_p];
         }
 
 #ifndef BUILD_REMOTE_PLUGIN_CLIENT
-        inline QString getQString(int _p = 0) const
+        INLINE QString getQString(int _p = 0) const
         {
             return QString::fromStdString(getString(_p));
         }
 #endif
 
-        inline int getInt(int _p = 0) const
+        INLINE int getInt(int _p = 0) const
         {
             return atoi(data[_p].c_str());
         }
 
-        inline float getFloat(int _p) const
+        INLINE float getFloat(int _p) const
         {
             return (float)atof(data[_p].c_str());
         }
 
-        inline bool operator==(const message& _m) const
+        INLINE bool operator==(const message& _m) const
         {
             return (id == _m.id);
         }
@@ -506,7 +506,7 @@ class EXPORT RemotePluginBase
     int     sendMessage(const message& _m);
     message receiveMessage();
 
-    inline bool isInvalid() const
+    INLINE bool isInvalid() const
     {
 #ifdef SYNC_WITH_SHM_FIFO
         return m_in->isInvalid() || m_out->isInvalid();
@@ -517,7 +517,7 @@ class EXPORT RemotePluginBase
 
     message waitForMessage(const message& _m, bool _busy_waiting = false);
 
-    inline message fetchAndProcessNextMessage()
+    INLINE message fetchAndProcessNextMessage()
     {
         message m = receiveMessage();
         processMessage(m);
@@ -525,19 +525,19 @@ class EXPORT RemotePluginBase
     }
 
 #ifndef SYNC_WITH_SHM_FIFO
-    inline int32_t readInt()
+    INLINE int32_t readInt()
     {
         int32_t i;
         read(&i, sizeof(i));
         return i;
     }
 
-    inline void writeInt(const int32_t& _i)
+    INLINE void writeInt(const int32_t& _i)
     {
         write(&_i, sizeof(_i));
     }
 
-    inline std::string readString()
+    INLINE std::string readString()
     {
         const int len = readInt();
         if(len)
@@ -552,7 +552,7 @@ class EXPORT RemotePluginBase
         return std::string();
     }
 
-    inline void writeString(const std::string& _s)
+    INLINE void writeString(const std::string& _s)
     {
         const int len = _s.size();
         writeInt(len);
@@ -561,7 +561,7 @@ class EXPORT RemotePluginBase
 #endif
 
 #ifndef BUILD_REMOTE_PLUGIN_CLIENT
-    inline bool messagesLeft()
+    INLINE bool messagesLeft()
     {
 #ifdef SYNC_WITH_SHM_FIFO
         return m_in->messagesLeft();
@@ -578,7 +578,7 @@ class EXPORT RemotePluginBase
 #endif
     }
 
-    inline void fetchAndProcessAllMessages()
+    INLINE void fetchAndProcessAllMessages()
     {
         while(messagesLeft())
         {
@@ -596,18 +596,18 @@ class EXPORT RemotePluginBase
 
   protected:
 #ifdef SYNC_WITH_SHM_FIFO
-    inline const shmFifo* in() const
+    INLINE const shmFifo* in() const
     {
         return m_in;
     }
 
-    inline const shmFifo* out() const
+    INLINE const shmFifo* out() const
     {
         return m_out;
     }
 #endif
 
-    inline void invalidate()
+    INLINE void invalidate()
     {
 #ifdef SYNC_WITH_SHM_FIFO
         m_in->invalidate();
@@ -723,7 +723,7 @@ class EXPORT RemotePlugin : public QObject, public RemotePluginBase
     RemotePlugin();
     virtual ~RemotePlugin();
 
-    inline bool isRunning()
+    INLINE bool isRunning()
     {
 #ifdef DEBUG_REMOTE_PLUGIN
         return true;
@@ -734,7 +734,7 @@ class EXPORT RemotePlugin : public QObject, public RemotePluginBase
 
     bool init(const QString& pluginExecutable, bool waitForInitDoneMsg);
 
-    inline void waitForInitDone(bool _busyWaiting = true)
+    INLINE void waitForInitDone(bool _busyWaiting = true)
     {
         m_failed = waitForMessage(IdInitDone, _busyWaiting).id != IdInitDone;
     }
@@ -766,23 +766,23 @@ class EXPORT RemotePlugin : public QObject, public RemotePluginBase
         unlock();
     }
 
-    inline bool failed() const
+    INLINE bool failed() const
     {
         return m_failed;
     }
 
-    inline void lock()
+    INLINE void lock()
     {
         m_commMutex.lock();
     }
 
-    inline void unlock()
+    INLINE void unlock()
     {
         m_commMutex.unlock();
     }
 
   protected:
-    inline void setSplittedChannels(bool _on)
+    INLINE void setSplittedChannels(bool _on)
     {
         m_splitChannels = _on;
     }
@@ -845,7 +845,7 @@ class RemotePluginClient : public RemotePluginBase
     {
     }
 
-    inline float* sharedMemory()
+    INLINE float* sharedMemory()
     {
         return m_shm;
     }
@@ -858,12 +858,12 @@ class RemotePluginClient : public RemotePluginBase
     {
     }
 
-    inline sample_rate_t sampleRate() const
+    INLINE sample_rate_t sampleRate() const
     {
         return m_sampleRate;
     }
 
-    inline fpp_t bufferSize() const
+    INLINE fpp_t bufferSize() const
     {
         return m_bufferSize;
     }

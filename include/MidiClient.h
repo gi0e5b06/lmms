@@ -29,13 +29,14 @@
 
 #include <QObject>
 #include <QStringList>
-#include <QVector>
+//#include <QVector>
 //#include "MidiEventProcessor.h"
+#include "MidiPort.h"
 #include "MidiTime.h"
 //#include "TabWidget.h"
 #include "Song.h"
 
-class MidiPort;
+// class MidiPort;
 
 // base-class for all MIDI-clients
 class MidiClient
@@ -117,7 +118,7 @@ class MidiClient
     static MidiClient* openMidiClient();
 
   protected:
-    QVector<MidiPort*> m_midiPorts;
+    MidiPorts m_midiPorts;
 };
 
 const uint32_t RAW_MIDI_PARSE_BUF_SIZE = 16;

@@ -1,5 +1,5 @@
 /*
- * EnvelopeAndLfoParameters.h - class EnvelopeAndLfoParameters
+ * EnvelopeAndLfo.h - class EnvelopeAndLfo
  *
  * Copyright (c) 2004-2014 Tobias Doerffel <tobydox/at/users.sourceforge.net>
  *
@@ -35,7 +35,7 @@
 #include "TempoSyncKnobModel.h"
 #include "lmms_basics.h"
 
-class EXPORT EnvelopeAndLfoParameters : public Model, public JournallingObject
+class EXPORT EnvelopeAndLfo : public Model, public JournallingObject
 {
     Q_OBJECT
     MM_OPERATORS
@@ -57,7 +57,7 @@ class EXPORT EnvelopeAndLfoParameters : public Model, public JournallingObject
         {
         }
 
-        inline bool isEmpty() const
+        INLINE bool isEmpty() const
         {
             return m_lfos.isEmpty();
         }
@@ -65,19 +65,19 @@ class EXPORT EnvelopeAndLfoParameters : public Model, public JournallingObject
         void trigger();
         void reset();
 
-        void add(EnvelopeAndLfoParameters* lfo);
-        void remove(EnvelopeAndLfoParameters* lfo);
+        void add(EnvelopeAndLfo* lfo);
+        void remove(EnvelopeAndLfo* lfo);
 
       private:
-        QMutex                                   m_lfoListMutex;
-        typedef QList<EnvelopeAndLfoParameters*> LfoList;
-        LfoList                                  m_lfos;
+        QMutex                         m_lfoListMutex;
+        typedef QList<EnvelopeAndLfo*> LfoList;
+        LfoList                        m_lfos;
     };
 
-    EnvelopeAndLfoParameters(real_t _value_for_zero_amount, Model* _parent);
-    virtual ~EnvelopeAndLfoParameters();
+    EnvelopeAndLfo(real_t _value_for_zero_amount, Model* _parent);
+    virtual ~EnvelopeAndLfo();
 
-    static inline real_t expKnobVal(real_t _val)
+    static INLINE real_t expKnobVal(real_t _val)
     {
         // return abs(_val);
         return ((_val < 0) ? -_val : _val) * _val;
@@ -96,7 +96,7 @@ class EXPORT EnvelopeAndLfoParameters : public Model, public JournallingObject
                    const bool    _marcato,
                    const bool    _staccato);
 
-    inline bool isUsed() const
+    INLINE bool isUsed() const
     {
         return m_used;
     }
@@ -108,12 +108,12 @@ class EXPORT EnvelopeAndLfoParameters : public Model, public JournallingObject
         return "el";
     }
 
-    inline f_cnt_t PAHD_Frames() const
+    INLINE f_cnt_t PAHD_Frames() const
     {
         return m_pahdFrames;
     }
 
-    inline f_cnt_t releaseFrames() const
+    INLINE f_cnt_t releaseFrames() const
     {
         return m_rFrames;
     }
@@ -137,9 +137,9 @@ class EXPORT EnvelopeAndLfoParameters : public Model, public JournallingObject
     TempoSyncKnobModel m_attackModel;
     TempoSyncKnobModel m_holdModel;
     TempoSyncKnobModel m_decayModel;
-    FloatModel         m_sustainModel;
+    RealModel          m_sustainModel;
     TempoSyncKnobModel m_releaseModel;
-    FloatModel         m_amountModel;
+    RealModel          m_amountModel;
 
     real_t    m_sustainLevel;
     real_t    m_amount;
@@ -152,17 +152,17 @@ class EXPORT EnvelopeAndLfoParameters : public Model, public JournallingObject
     f_cnt_t   m_pahdBufSize;
     f_cnt_t   m_rBufSize;
 
-    FloatModel         m_lfoPredelayModel;
-    FloatModel         m_lfoAttackModel;
+    RealModel          m_lfoPredelayModel;
+    RealModel          m_lfoAttackModel;
     TempoSyncKnobModel m_lfoSpeedModel;
-    FloatModel         m_lfoAmountModel;
+    RealModel          m_lfoAmountModel;
     // IntModel m_lfoWaveModel;
     ComboBoxModel m_lfoWaveBankModel;
     ComboBoxModel m_lfoWaveIndexModel;
 
     BoolModel   m_x100Model;
     BoolModel   m_controlEnvAmountModel;
-    FloatModel  m_outModel;
+    RealModel   m_outModel;
     ValueBuffer m_outBuffer;
 
     f_cnt_t      m_lfoPredelayFrames;

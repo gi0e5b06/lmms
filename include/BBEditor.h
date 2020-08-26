@@ -21,7 +21,6 @@
  *
  */
 
-
 #ifndef BB_EDITOR_H
 #define BB_EDITOR_H
 
@@ -53,11 +52,16 @@ class BBWindow : public EditorWindow
         return m_trackContainerView;
     }
 
-    void removeBBView(int bb);
+    // void removeBBView(int bb);
 
   public slots:
     void play();
     void stop();
+
+    virtual void setEditMode(int _mode) final
+    {
+        // m_editor->setEditMode((Editor::EditMode)_mode);
+    }
 
   private:
     BBEditor* m_trackContainerView;
@@ -79,15 +83,15 @@ class BBEditor :
         return true;
     }
 
-    float pixelsPerTact() const;
+    virtual real_t pixelsPerTact() const final;
 
-    void removeBBView(int bb);
+    // void removeBBView(int bb);
 
     void saveSettings(QDomDocument& doc, QDomElement& element);
     void loadSettings(const QDomElement& element);
 
   public slots:
-    void cloneBeat(); // same as spawnTrack
+    void cloneBeat();  // same as spawnTrack
     void addInstrumentTrack();
     void addSampleTrack();
     void addAutomationTrack();

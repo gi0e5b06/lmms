@@ -47,6 +47,8 @@ typedef float  FLOAT;
 typedef double DOUBLE;
 
 typedef int32_t tact_t;
+typedef int32_t beat_t;
+typedef int32_t step_t;
 typedef int32_t tick_t;
 
 typedef real_t volume_t;     // uint8_t (0 .. 200)
@@ -123,5 +125,7 @@ typedef sampleFrame surroundSampleFrame;
         if(tmp != nullptr)   \
             delete x;        \
     }
+
+#define INLINE
 
 #endif

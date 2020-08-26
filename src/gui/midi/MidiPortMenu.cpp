@@ -27,8 +27,16 @@
 
 #include "gui_templates.h"
 
+MidiPortMenu::MidiPortMenu(MidiPort* _model, MidiPort::Modes _mode) :
+      ModelView(_model, this), m_mode(_mode)
+{
+    // setFont( pointSize<9>( font() ) );
+    connect(this, SIGNAL(triggered(QAction*)), this,
+            SLOT(activatedPort(QAction*)));
+}
+
 MidiPortMenu::MidiPortMenu(MidiPort::Modes _mode) :
-      ModelView(nullptr, this), m_mode(_mode)
+      ModelView(this), m_mode(_mode)
 {
     // setFont( pointSize<9>( font() ) );
     connect(this, SIGNAL(triggered(QAction*)), this,
@@ -39,37 +47,53 @@ MidiPortMenu::~MidiPortMenu()
 {
 }
 
+void MidiPortMenu::doConnections()
+{
+    MidiPort* m = model();//castModel<MidiPort>();
+    if(m != nullptr)
+    {
+        ModelView::doConnections();
+        if(m_mode == MidiPort::Input)
+            connect(m, SIGNAL(readablePortsChanged()), this,
+                    SLOT(updateMenu()));
+        if(m_mode == MidiPort::Output)
+            connect(m, SIGNAL(writablePortsChanged()), this,
+                    SLOT(updateMenu()));
+    }
+}
+
+void MidiPortMenu::undoConnections()
+{
+    MidiPort* m = model();//castModel<MidiPort>();
+    if(m != nullptr)
+    {
+        if(m_mode == MidiPort::Input)
+            disconnect(m, SIGNAL(readablePortsChanged()), this,
+                       SLOT(updateMenu()));
+        if(m_mode == MidiPort::Output)
+            disconnect(m, SIGNAL(writablePortsChanged()), this,
+                       SLOT(updateMenu()));
+        ModelView::undoConnections();
+    }
+}
+
 void MidiPortMenu::modelChanged()
 {
-    MidiPort* mp = castModel<MidiPort>();
-    if(m_mode == MidiPort::Input)
-    {
-        connect(mp, SIGNAL(readablePortsChanged()), this, SLOT(updateMenu()));
-    }
-    else if(m_mode == MidiPort::Output)
-    {
-        connect(mp, SIGNAL(writablePortsChanged()), this, SLOT(updateMenu()));
-    }
     updateMenu();
 }
 
 void MidiPortMenu::activatedPort(QAction* _item)
 {
     if(m_mode == MidiPort::Input)
-    {
-        castModel<MidiPort>()->subscribeReadablePort(_item->text(),
-                                                     _item->isChecked());
-    }
-    else  // if( m_mode == MidiPort::Output )
-    {
-        castModel<MidiPort>()->subscribeWritablePort(_item->text(),
-                                                     _item->isChecked());
-    }
+        model()->subscribeReadablePort(_item->text(), _item->isChecked());
+    if(m_mode == MidiPort::Output)
+        model()->subscribeWritablePort(_item->text(), _item->isChecked());
 }
 
 void MidiPortMenu::updateMenu()
 {
-    MidiPort*            mp  = castModel<MidiPort>();
+    MidiPort* mp = model();  // castModel<MidiPort>();
+
     const MidiPort::Map& map = (m_mode == MidiPort::Input)
                                        ? mp->readablePorts()
                                        : mp->writablePorts();

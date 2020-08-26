@@ -43,56 +43,56 @@ class EXPORT ValueBuffer  //: public std::vector<real_t>
     ValueBuffer(int _length);
     virtual ~ValueBuffer();
 
-    inline real_t value(int _i) const
+    INLINE real_t value(int _i) const
     {
         Q_ASSERT(_i >= 0 && _i < m_len);
         return m_data[_i];  // % m_len];
     }
 
     /*
-    inline real_t const * const values() const
+    INLINE real_t const * const values() const
     {
         return m_data;
     }
     */
 
-    inline real_t* values() const
+    INLINE real_t* values() const
     {
         return m_data;
     }
 
-    inline int length() const
+    INLINE int length() const
     {
         return m_len;
     }
 
-    inline void set(int _i, real_t _v)
+    INLINE void set(int _i, real_t _v)
     {
         Q_ASSERT(_i >= 0 && _i < m_len);
         m_data[_i] = _v;
     }
 
-    inline void clear()
+    INLINE void clear()
     {
         memset(m_data, 0, sizeof(real_t) * m_len);
     }
 
-    inline void lock() const
+    INLINE void lock() const
     {
         const_cast<QMutex*>(&m_mutex)->lock();
     }
 
-    inline void unlock() const
+    INLINE void unlock() const
     {
         const_cast<QMutex*>(&m_mutex)->unlock();
     }
 
-    inline long period() const
+    INLINE long period() const
     {
         return m_period;
     }
 
-    inline void setPeriod(long _period)
+    INLINE void setPeriod(long _period)
     {
         m_period = _period;
     }

@@ -62,73 +62,26 @@ class EXPORT LmmsCore : public QObject
     static void init(bool renderOnly);
     static void destroy();
 
-    // core
-    static Mixer* mixer()
-    {
-        return s_mixer;
-    }
-
-    static FxMixer* fxMixer()
-    {
-        return s_fxMixer;
-    }
-
-    static Song* song()
-    {
-        return s_song;
-    }
-
-    // Obsolete
-    static Song* getSong()
-    {
-        return song();
-    }
-
-    static Transportable* transport()
-    {
-        return s_transport;
-    }
-
-    static BBTrackContainer* getBBTrackContainer()
-    {
-        return s_bbTrackContainer;
-    }
-
-    static ProjectJournal* projectJournal()
-    {
-        return s_projectJournal;
-    }
-
-    static Ladspa2LMMS* getLADSPAManager()
-    {
-        return s_ladspaManager;
-    }
+    static LmmsCore*            singleton();
+    static Mixer*               mixer();
+    static FxMixer*             fxMixer();
+    static Song*                song();
+    static Song*                getSong();  // Obsolete
+    static Transportable*       transport();
+    static BBTrackContainer*    getBBTrackContainer();
+    static DummyTrackContainer* dummyTrackContainer();
+    static ProjectJournal*      projectJournal();
+    static Ladspa2LMMS*         getLADSPAManager();
 
 #ifdef LMMS_HAVE_LILV
-    static LV22LMMS* getLV2Manager()
-    {
-        return s_lv2Manager;
-    }
+    static LV22LMMS* getLV2Manager();
 #endif
-
-    static DummyTrackContainer* dummyTrackContainer()
-    {
-        return s_dummyTC;
-    }
 
     static real_t framesPerTick()
     {
         return s_framesPerTick;
     }
     static void updateFramesPerTick();
-
-    static inline LmmsCore* inst()
-    {
-        if(s_instanceOfMe == nullptr)
-            s_instanceOfMe = new LmmsCore();
-
-        return s_instanceOfMe;
-    }
 
   signals:
     void initProgress(const QString& msg);
@@ -145,13 +98,14 @@ class EXPORT LmmsCore : public QObject
     static void init5();
     static void init7();
 
-    static real_t s_framesPerTick;
+    static real_t         s_framesPerTick;
+    static Transportable* s_transport;
 
     // core
+    /*
     static Mixer*               s_mixer;
     static FxMixer*             s_fxMixer;
     static Song*                s_song;
-    static Transportable*       s_transport;
     static BBTrackContainer*    s_bbTrackContainer;
     static ProjectJournal*      s_projectJournal;
     static DummyTrackContainer* s_dummyTC;
@@ -165,6 +119,7 @@ class EXPORT LmmsCore : public QObject
     // even though most methods are static, an instance is needed for Qt
     // slots/signals
     static LmmsCore* s_instanceOfMe;
+    */
 
     friend class GuiApplication;
     friend class AudioJack;

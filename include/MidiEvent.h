@@ -174,11 +174,10 @@ class MidiEvent final
 
     panning_t panning() const
     {
-        return (panning_t)(
-                PanningLeft
-                + ((float)(midiPanning() - MidiMinPanning))
-                          / ((float)(MidiMaxPanning - MidiMinPanning))
-                          * ((float)(PanningRight - PanningLeft)));
+        return PanningLeft
+               + (real_t(midiPanning() - MidiMinPanning))
+                         / (real_t(MidiMaxPanning - MidiMinPanning))
+                         * (real_t(PanningRight - PanningLeft));
     }
 
     uint8_t midiPanning() const

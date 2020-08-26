@@ -36,6 +36,7 @@
 #include "PeripheralView.h"
 #include "Piano.h"
 #include "Track.h"
+#include "TrackView.h"
 
 template <class T>
 class QQueue;
@@ -45,7 +46,7 @@ class InstrumentFunctionNoteHumanizingView;
 class InstrumentFunctionNoteStackingView;
 class InstrumentFunctionArpeggioView;
 class InstrumentFunctionNoteDuplicatesRemovingView;
-class EffectRackView;
+class EffectChainView;
 class InstrumentSoundShapingView;
 class FadeButton;
 class Instrument;
@@ -102,7 +103,7 @@ class EXPORT InstrumentTrack : public Track, public MidiEventProcessor
         return m_sustainPedalPressed;
     }
 
-    virtual QString defaultName() const;
+    QString defaultName() const override;
 
     f_cnt_t beatLen(NotePlayHandle* _n) const;
 
@@ -147,21 +148,17 @@ class EXPORT InstrumentTrack : public Track, public MidiEventProcessor
     }
 
     // play everything in given frame-range - creates note-play-handles
-    virtual bool play(const MidiTime& _start,
-                      const fpp_t     _frames,
-                      const f_cnt_t   _frame_base,
-                      int             _tco_num = -1);
+    bool play(const MidiTime& _start,
+              const fpp_t     _frames,
+              const f_cnt_t   _frame_base,
+              int             _tco_num = -1) override;
 
-    // create new view for me
-    virtual TrackView* createView(TrackContainerView* tcv);
+    TrackView* createView(TrackContainerView* tcv) override;
+    Tile*      createTCO() override;
 
-    // create new track-content-object = pattern
-    virtual Tile* createTCO(const MidiTime& _pos);
-
-    // called by track
-    virtual void saveTrackSpecificSettings(QDomDocument& _doc,
-                                           QDomElement&  _parent);
-    virtual void loadTrackSpecificSettings(const QDomElement& _this);
+    void saveTrackSpecificSettings(QDomDocument& _doc,
+                                   QDomElement&  _parent) override;
+    void loadTrackSpecificSettings(const QDomElement& _this) override;
 
     using Track::setJournalling;
 
@@ -202,6 +199,20 @@ class EXPORT InstrumentTrack : public Track, public MidiEventProcessor
     }
 
     int baseNote() const;
+
+    int root() const
+    {
+        int r = m_rootModel.value();
+        // if(r<0) r=Engine::song()->root();
+        return r;
+    }
+
+    int mode()
+    {
+        int r = m_modeModel.value();
+        // if(r<0) r=Engine::song()->mode();
+        return r;
+    }
 
     Piano* pianoModel()
     {
@@ -324,12 +335,7 @@ class EXPORT InstrumentTrack : public Track, public MidiEventProcessor
         m_envPanning = _p;
     }
 
-    bool isKeyPressed(int _key)
-    {
-        return (_key >= 0 && _key < NumMidiKeys
-                && (m_notes[_key] != nullptr
-                    || m_runningMidiNotes[_key] > 0));
-    }
+    bool isKeyPressed(int _key) const;
 
   signals:
     void instrumentChanged();
@@ -343,6 +349,7 @@ class EXPORT InstrumentTrack : public Track, public MidiEventProcessor
     virtual void toggleFrozen();
     // silence all running notes played by this track
     void silenceAllNotes(/*bool removeIPH = false*/);
+    void onRootOrModeChanged();
 
   protected:
     virtual QString nodeName() const
@@ -363,8 +370,9 @@ class EXPORT InstrumentTrack : public Track, public MidiEventProcessor
   private:
     MidiPort m_midiPort;
 
-    NotePlayHandle* m_notes[NumMidiKeys];
-    NotePlayHandles m_sustainedNotes;
+    NotePlayHandle*            m_notes[NumMidiKeys];
+    NotePlayHandles            m_sustainedNotes;
+    QVector<PlayHandlePointer> m_sustainedPlayHandles;
 
     int   m_runningMidiNotes[NumMidiKeys];
     Mutex m_midiNotesMutex;
@@ -375,8 +383,10 @@ class EXPORT InstrumentTrack : public Track, public MidiEventProcessor
 
     // bool m_previewMode;
 
-    const Scale* m_scale;
-    IntModel     m_baseNoteModel;
+    const Scale*  m_scale;
+    ComboBoxModel m_rootModel;
+    ComboBoxModel m_modeModel;
+    IntModel      m_baseNoteModel;
 
     // NotePlayHandleList m_processHandles;
     NotePlayHandles m_processHandles;
@@ -549,10 +559,8 @@ class InstrumentTrackWindow :
         return m_peripheralView;
     }
 
-    static void dragEnterEventGeneric(QDragEnterEvent* _dee);
-
-    virtual void dragEnterEvent(QDragEnterEvent* _dee);
-    virtual void dropEvent(QDropEvent* _de);
+    void dragEnterEvent(QDragEnterEvent* _dee) override;
+    void dropEvent(QDropEvent* _de) override;
 
   public slots:
     void textChanged(const QString& _new_name);
@@ -565,11 +573,13 @@ class InstrumentTrackWindow :
 
   protected:
     // capture close-events for toggling instrument-track-button
-    virtual void closeEvent(QCloseEvent* _ce);
-    virtual void focusInEvent(QFocusEvent* _fe);
+    void closeEvent(QCloseEvent* _ce) override;
+    void focusInEvent(QFocusEvent* _fe) override;
 
-    virtual void saveSettings(QDomDocument& _doc, QDomElement& _this);
-    virtual void loadSettings(const QDomElement& _this);
+    void saveSettings(QDomDocument& _doc, QDomElement& _this) override;
+    void loadSettings(const QDomElement& _this) override;
+
+    void modelChanged() override;
 
   protected slots:
     void saveSettingsBtnClicked();
@@ -579,10 +589,8 @@ class InstrumentTrackWindow :
     */
 
   private:
-    virtual void modelChanged();
-    // void         viewInstrumentInDirection(int d);
-
-    InstrumentTrack*     m_track;
+    // void viewInstrumentInDirection(int d);
+    // InstrumentTrack*     m_track;
     InstrumentTrackView* m_itv;
 
     // widgets on the top of an instrument-track-window
@@ -612,7 +620,7 @@ class InstrumentTrackWindow :
     */
 
     InstrumentMidiIOView* m_midiView;
-    EffectRackView*       m_effectView;
+    EffectChainView*      m_effectView;
     InstrumentMiscView*   m_miscView;
 
     // test-piano at the bottom of every instrument-settings-window

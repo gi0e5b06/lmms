@@ -45,39 +45,37 @@ TempoSyncKnob::TempoSyncKnob(knobTypes      _knob_num,
                              const QString& _name) :
       Knob(_knob_num, _parent, _name),
       m_tempoSyncIcon(embed::getIconPixmap("tempo_sync")),
-      m_tempoSyncDescription(tr("Tempo Sync")), m_custom(NULL)
+      m_tempoSyncDescription(tr("Tempo Sync")), m_custom(nullptr)
 {
 }
 
 TempoSyncKnob::~TempoSyncKnob()
 {
-    if(m_custom)
-    {
+    if(m_custom!=nullptr)
         delete m_custom->parentWidget();
-    }
 }
 
 void TempoSyncKnob::modelChanged()
 {
-    if(model() == NULL)
+    if(model() == nullptr)
     {
         qWarning("no TempoSyncKnobModel has been set!");
         return;
     }
-    if(m_custom != NULL)
+    if(m_custom != nullptr)
     {
         m_custom->setModel(&model()->m_custom);
     }
     connect(model(), SIGNAL(syncModeChanged(TempoSyncMode)), this,
             SLOT(updateDescAndIcon()));
-    connect(this, SIGNAL(sliderMoved(float)), model(), SLOT(disableSync()));
+    connect(this, SIGNAL(sliderMoved(real_t)), model(), SLOT(disableSync()));
     updateDescAndIcon();
     Knob::modelChanged();
 }
 
 void TempoSyncKnob::contextMenuEvent(QContextMenuEvent*)
 {
-    mouseReleaseEvent(NULL);
+    mouseReleaseEvent(nullptr);
 
     CaptionMenu contextMenu(model()->displayName(), this);
     addDefaultActions(&contextMenu);
@@ -214,7 +212,7 @@ void TempoSyncKnob::updateDescAndIcon()
     {
         m_tempoSyncDescription = tr("Tempo Sync");
     }
-    if(m_custom != NULL
+    if(m_custom != nullptr
        && model()->m_tempoSyncMode != TempoSyncKnobModel::SyncCustom)
     {
         m_custom->parentWidget()->hide();
@@ -284,9 +282,9 @@ void TempoSyncKnob::setSyncIcon(const QPixmap& _new_icon)
 
 void TempoSyncKnob::showCustom()
 {
-    if(m_custom == NULL)
+    if(m_custom == nullptr)
     {
-        m_custom = new MeterDialog(NULL);  // gui->mainWindow()->workspace()
+        m_custom = new MeterDialog(nullptr);  // gui->mainWindow()->workspace()
                                            // );
         // gui->mainWindow()->addWindowedWidget( m_custom );
         m_custom->setWindowTitle(tr("Meter"));

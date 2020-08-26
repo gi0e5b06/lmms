@@ -85,17 +85,17 @@ class WaveForm : public QObject  // public JournallingObject
              const real_t          _antialias,
              const interpolation_t _m) const;
 
-    inline const QString& name() const
+    INLINE const QString& name() const
     {
         return m_name;
     }
 
-    inline const interpolation_t mode() const
+    INLINE const interpolation_t mode() const
     {
         return m_mode;
     }
 
-    inline const int quality() const
+    INLINE const int quality() const
     {
         return m_quality;
     }

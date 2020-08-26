@@ -2,7 +2,7 @@
  * PeripheralPadsView.h - declaration of PeripheralPadsView, an interactive
  * pads widget (like the MPD218)
  *
- * Copyright (c) 2018 gi0e5b06 (on github.com)
+ * Copyright (c) 2018-2020 gi0e5b06 (on github.com)
  * Copyright (c) 2004-2010 Tobias Doerffel <tobydox/at/users.sourceforge.net>
  *
  * This file is part of LMMS - https://lmms.io
@@ -41,20 +41,20 @@ class PeripheralPadsView : public PeripheralView
     Q_OBJECT
 
   public:
-    PeripheralPadsView(QWidget* _parent);
+    PeripheralPadsView(Piano* _piano, QWidget* _parent);
     virtual ~PeripheralPadsView();
 
-    virtual void keyPressEvent(QKeyEvent* ke);
-    virtual void keyReleaseEvent(QKeyEvent* ke);
+    void keyPressEvent(QKeyEvent* ke) override;
+    void keyReleaseEvent(QKeyEvent* ke) override;
 
   protected:
-    virtual void contextMenuEvent(QContextMenuEvent* _me);
-    virtual void paintEvent(QPaintEvent*);
-    virtual void mousePressEvent(QMouseEvent* me);
-    virtual void mouseReleaseEvent(QMouseEvent* me);
-    virtual void mouseMoveEvent(QMouseEvent* me);
-    virtual void focusOutEvent(QFocusEvent* _fe);
-    virtual void resizeEvent(QResizeEvent* _event);
+    void contextMenuEvent(QContextMenuEvent* _me) override;
+    void paintEvent(QPaintEvent*) override;
+    void mousePressEvent(QMouseEvent* me) override;
+    void mouseReleaseEvent(QMouseEvent* me) override;
+    void mouseMoveEvent(QMouseEvent* me) override;
+    void focusOutEvent(QFocusEvent* _fe) override;
+    void resizeEvent(QResizeEvent* _event) override;
 
   private:
     int getKeyFromMouse(const QPoint& _p) const;

@@ -54,11 +54,11 @@ QPixmap* PatternView::s_stepBtnOn200    = nullptr;
 QPixmap* PatternView::s_stepBtnOff      = nullptr;
 QPixmap* PatternView::s_stepBtnOffLight = nullptr;
 
-Pattern::Pattern(InstrumentTrack* _instrument_track) :
-      Tile(_instrument_track, "Score tile"),
-      m_instrumentTrack(_instrument_track), m_patternType(MelodyPattern)
+Pattern::Pattern(InstrumentTrack* _instrumentTrack) :
+      Tile(_instrumentTrack, tr("Score tile"), "scoreTile"),
+      m_instrumentTrack(_instrumentTrack), m_patternType(MelodyPattern)
 {
-    setName(_instrument_track->name());
+    setName(_instrumentTrack->name());
     // if(isFixed())
     //  m_patternType = BeatPattern;
     init();
@@ -73,11 +73,8 @@ Pattern::Pattern(const Pattern& _other) :
       Tile(_other), m_instrumentTrack(_other.m_instrumentTrack),
       m_patternType(_other.m_patternType)
 {
-    for(Notes::ConstIterator it = _other.m_notes.begin();
-        it != _other.m_notes.end(); ++it)
-    {
-        m_notes.push_back(new Note(**it));
-    }
+    for(const Note* note: _other.m_notes)
+        m_notes.append(new Note(*note));
 
     // if(isFixed())
     //        m_patternType = BeatPattern;
@@ -91,16 +88,16 @@ Pattern::~Pattern()
     emit destroyedPattern(this);
 
     // clearNotes();
-    for(Notes::Iterator it = m_notes.begin(); it != m_notes.end(); ++it)
-        delete *it;
+    for(Note* note: m_notes)
+        delete note;
 
     m_notes.clear();
 }
 
 bool Pattern::isEmpty() const
 {
-    for(Notes::ConstIterator it = m_notes.begin(); it != m_notes.end(); ++it)
-        if((*it)->length() != 0)
+    for(const Note* note: m_notes)
+        if(note->length() != 0)
             return false;
 
     return true;
@@ -136,7 +133,7 @@ void Pattern::resizeToFirstTrack()
 
 void Pattern::init()
 {
-    connect(Engine::getSong(), SIGNAL(timeSignatureChanged(int, int)), this,
+    connect(Engine::song(), SIGNAL(timeSignatureChanged(int, int)), this,
             SLOT(changeTimeSignature()));
     saveJournallingState(false);
     checkType();
@@ -144,20 +141,34 @@ void Pattern::init()
     restoreJournallingState();
 }
 
-/*
-int Pattern::stepsPerTact() const
+const Chords Pattern::chords() const
 {
-        int steps = MidiTime::ticksPerTact() / DefaultBeatsPerTact;
-        return qMax( 1, steps );
+    Chords r;
+    Chord  c;
+    tick_t start = -1;
+    tick_t end   = -1;
+    for(const Note* note: notes())
+    {
+        if(note->pos().ticks() > start || note->endPos().ticks() != end)
+        {
+            if(!c.isEmpty())
+            {
+                r.append(c);
+                c = Chord();
+            }
+            c.append(note);
+            start = note->pos().ticks();
+            end   = note->endPos().ticks();
+        }
+        else
+        {
+            c.append(note);
+        }
+    }
+    if(!c.isEmpty())
+        r.append(c);
+    return r;
 }
-
-
-MidiTime Pattern::stepPosition(int _step) const
-{
-        return _step * 16.f / m_stepResolution *
-                MidiTime::ticksPerTact() / stepsPerTact();
-}
-*/
 
 Note* Pattern::addNote(const Note& _new_note, const bool _quant_pos)
 {
@@ -245,7 +256,7 @@ void Pattern::rearrangeAllNotes()
 
 void Pattern::clearNotes()
 {
-    if((m_notes.size() > 0) && (dynamic_cast<Pattern*>(this) != nullptr))
+    if(m_notes.size() > 0)
     {
         // BACKTRACE
         InstrumentTrack* t = instrumentTrack();
@@ -355,7 +366,7 @@ void Pattern::flipHorizontally()
     updateLength();  // not needed?
     emit dataChanged();
     if(modified)
-        Engine::getSong()->setModified();
+        Engine::song()->setModified();
 }
 
 void Pattern::flipVertically()
@@ -397,7 +408,7 @@ void Pattern::flipVertically()
     // updateLength();
     emit dataChanged();
     if(modified)
-        Engine::getSong()->setModified();
+        Engine::song()->setModified();
 }
 
 void Pattern::rotate(tick_t _ticks)
@@ -409,19 +420,27 @@ void Pattern::rotate(tick_t _ticks)
     if(t != nullptr)
         t->lockTrack();
 
-    tick_t len      = autoRepeat() ? unitLength() : length().getTicks();
+    tick_t len      = autoRepeat() ? unitLength() : length().ticks();
     bool   modified = false;
+    tick_t min      = len;
+    tick_t max      = len;
     for(Note* note: m_notes)
     {
         tick_t p = (note->pos() + _ticks) % len;
         if(p < 0)
             p += len;
         note->setPos(p);
+        min      = qMin<tick_t>(min, note->pos());
+        max      = qMax<tick_t>(max, note->endPos());
         modified = true;
     }
     if(modified)
+    {
+        if(max > len && min > 0)
+            for(Note* note: m_notes)
+                note->setPos(note->pos() - qMin(min, max - len));
         rearrangeAllNotes();
-
+    }
     if(t != nullptr)
         t->unlockTrack();
 
@@ -429,7 +448,89 @@ void Pattern::rotate(tick_t _ticks)
     updateLength();
     emit dataChanged();
     if(modified)
-        Engine::getSong()->setModified();
+        Engine::song()->setModified();
+}
+
+void Pattern::splitEvery(tick_t _ticks)
+{
+    Q_UNUSED(_ticks)
+    qInfo("Pattern: splitEvery() not implemented");
+}
+
+void Pattern::splitAt(tick_t _tick)
+{
+    if(_tick <= 0 || _tick + 1 >= length())
+        return;
+
+    qInfo("Pattern::split at tick %d", _tick);
+
+    MidiTime sp = startPosition();
+    MidiTime ep = endPosition();
+
+    Pattern* newp1 = new Pattern(*this);  // 1 left, before
+    newp1->setJournalling(false);
+    newp1->setAutoResize(false);
+    newp1->movePosition(sp);
+    if(!newp1->isEmpty())
+    {
+        Notes todelete;
+        for(Note* n: newp1->notes())
+        {
+            if(newp1->autoRepeat())
+                continue;
+
+            if(n->pos() < _tick)
+                continue;
+            // qInfo("p1 pos: s=%d n=%d r=%d remove note",
+            //  (int)newp1->startPosition(),(int)n->pos(),_splitPos);
+            todelete.append(n);
+            // newp1->removeNote(n);
+        }
+        for(Note* n: todelete)
+            newp1->removeNote(n);
+    }
+    newp1->changeLength(_tick);
+    newp1->rearrangeAllNotes();
+    newp1->setJournalling(true);
+    newp1->emit dataChanged();
+
+    sp += _tick;
+
+    Pattern* newp2 = new Pattern(*this);  // 2 right, after
+    newp2->setJournalling(false);
+    newp2->movePosition(sp);
+    if(!newp2->isEmpty())
+    {
+        if(newp2->autoRepeat())
+            newp2->rotate(-_tick);  //(_tick % newp2->unitLength()));
+
+        Notes todelete;
+        for(Note* n: newp2->notes())
+        {
+            if(newp2->autoRepeat())
+                continue;
+
+            if(n->pos() >= _tick)
+            {
+                // qInfo("p2 pos: s=%d n=%d r=%d k=%d move note",
+                //  (int)newp2->startPosition(),(int)n->pos(),
+                // _splitPos,n->key());
+                n->setPos(n->pos() - _tick);
+                continue;
+            }
+            // qInfo("p2 pos: s=%d n=%d r=%d k=%d remove note",
+            //  (int)newp2->startPosition(),(int)n->pos(),_splitPos,n->key());
+            todelete.append(n);
+        }
+        for(Note* n: todelete)
+            newp2->removeNote(n);
+    }
+    newp2->changeLength(ep - sp);
+    newp2->rearrangeAllNotes();
+    newp2->setJournalling(true);
+    newp2->emit dataChanged();
+
+    deleteLater();  // tv->remove();
 }
 
 void Pattern::saveSettings(QDomDocument& _doc, QDomElement& _this)
@@ -522,6 +623,7 @@ void Pattern::loadSettings(const QDomElement& _this)
     emit dataChanged();
 }
 
+/*
 Pattern* Pattern::previousPattern() const
 {
     return adjacentPatternByOffset(-1);
@@ -534,10 +636,15 @@ Pattern* Pattern::nextPattern() const
 
 Pattern* Pattern::adjacentPatternByOffset(int offset) const
 {
-    QVector<Tile*> tcos   = m_instrumentTrack->getTCOs();
-    int            tcoNum = m_instrumentTrack->getTCONum(this);
-    return dynamic_cast<Pattern*>(tcos.value(tcoNum + offset, nullptr));
+    m_instrumentTrack->lockTrack();
+    m_instrumentTrack->rearrangeAllTiles();
+    Tiles    tcos   = m_instrumentTrack->getTCOs();
+    int      tcoNum = m_instrumentTrack->getTCONum(this);
+    Pattern* r = dynamic_cast<Pattern*>(tcos.value(tcoNum + offset, nullptr));
+    m_instrumentTrack->unlockTrack();
+    return r;
 }
+*/
 
 void Pattern::clear()
 {
@@ -568,7 +675,7 @@ void Pattern::cloneSteps()
 
 TileView* Pattern::createView(TrackView* _tv)
 {
-    return new PatternView(this, _tv);
+    return PatternView::create(this, _tv);
 }
 
 /*
@@ -652,33 +759,23 @@ PatternView::PatternView(Pattern* pattern, TrackView* parent) :
       m_mutedNoteFillColor(100, 100, 100, 220),
       m_mutedNoteBorderColor(100, 100, 100, 220)
 {
+    if(s_stepBtnOn0 == nullptr)
+        s_stepBtnOn0 = new QPixmap(embed::getPixmap("step_btn_on_0"));
+    if(s_stepBtnOn200 == nullptr)
+        s_stepBtnOn200 = new QPixmap(embed::getPixmap("step_btn_on_200"));
+    if(s_stepBtnOff == nullptr)
+        s_stepBtnOff = new QPixmap(embed::getPixmap("step_btn_off"));
+    if(s_stepBtnOffLight == nullptr)
+        s_stepBtnOffLight
+                = new QPixmap(embed::getPixmap("step_btn_off_light"));
+
+    // connect(m_pat, SIGNAL(dataChanged()), this, SLOT(update()));
     connect(gui->pianoRollWindow(), SIGNAL(currentPatternChanged()), this,
             SLOT(update()));
 
-    if(s_stepBtnOn0 == nullptr)
-    {
-        s_stepBtnOn0 = new QPixmap(embed::getIconPixmap("step_btn_on_0"));
-    }
-
-    if(s_stepBtnOn200 == nullptr)
-    {
-        s_stepBtnOn200 = new QPixmap(embed::getIconPixmap("step_btn_on_200"));
-    }
-
-    if(s_stepBtnOff == nullptr)
-    {
-        s_stepBtnOff = new QPixmap(embed::getIconPixmap("step_btn_off"));
-    }
-
-    if(s_stepBtnOffLight == nullptr)
-    {
-        s_stepBtnOffLight
-                = new QPixmap(embed::getIconPixmap("step_btn_off_light"));
-    }
-
-    update();
-
+    setAttribute(Qt::WA_OpaquePaintEvent, true);
     setStyle(QApplication::style());
+    update();
 }
 
 PatternView::~PatternView()
@@ -688,24 +785,17 @@ PatternView::~PatternView()
 void PatternView::update()
 {
     ToolTip::add(this, m_pat->name());
-
     TileView::update();
 }
 
 void PatternView::openInPianoRoll()
 {
-    gui->pianoRollWindow()->setCurrentPattern(m_pat);
-    gui->pianoRollWindow()->parentWidget()->show();
-    gui->pianoRollWindow()->show();
-    gui->pianoRollWindow()->setFocus();
+    gui->pianoRollWindow()->open(m_pat, false);
 }
 
 void PatternView::setGhostInPianoRoll()
 {
-    gui->pianoRollWindow()->setGhostPattern(m_pat);
-    gui->pianoRollWindow()->parentWidget()->show();
-    gui->pianoRollWindow()->show();
-    gui->pianoRollWindow()->setFocus();
+    gui->pianoRollWindow()->open(m_pat, true);
 }
 
 /*
@@ -766,23 +856,24 @@ QMenu* PatternView::buildContextMenu()
 
     QAction* a;
 
-    cm->addAction(embed::getIconPixmap("piano"), tr("Open in the piano roll"),
-                  this, SLOT(openInPianoRoll()));
+    cm->addAction(embed::getIcon("piano"), tr("Open in the piano roll"), this,
+                  SLOT(openInPianoRoll()));
     cm->addSeparator();
-    addRemoveMuteClearMenu(cm, true, true, !m_pat->m_notes.empty());
+    addRemoveMuteClearMenu(cm, true, true, !m_pat->isEmpty());
     cm->addSeparator();
     addCutCopyPasteMenu(cm, true, true, true);
 
     /*
     cm->addSeparator();
-    cm->addAction( embed::getIconPixmap( "edit_erase" ),
+    cm->addAction( embed::getIcon( "edit_erase" ),
                     tr( "Clear all notes" ), m_pat, SLOT( clear() ) );
     */
 
     cm->addSeparator();
     addFlipMenu(cm, !m_pat->isEmpty(), !m_pat->isEmpty());
-    addRotateMenu(cm, m_pat->length() >= MidiTime::ticksPerTact(), true,
-                  isFixed());
+    addRotateMenu(cm, !m_pat->isEmpty(), !m_pat->isEmpty(), isFixed());
+    addSplitMenu(cm, m_pat->length() > MidiTime::ticksPerTact(),
+                 m_pat->length() > 4 * MidiTime::ticksPerTact());
 
     if(isFixed())
     {
@@ -790,15 +881,15 @@ QMenu* PatternView::buildContextMenu()
         addStepMenu(cm, m_pat->length() >= MidiTime::ticksPerTact(), true,
                     true);
         if(m_pat->type() == Pattern::BeatPattern)
-            cm->addAction(embed::getIconPixmap("step_btn_duplicate"),
+            cm->addAction(embed::getIcon("step_btn_duplicate"),
                           tr("Clone Steps"), m_pat, SLOT(cloneSteps()));
     }
 
     cm->addSeparator();
     addPropertiesMenu(cm, !isFixed(), !isFixed());
 
-    a = cm->addAction(embed::getIconPixmap("ghost_note"), tr("Ghost notes"),
-                      this, SLOT(setGhostInPianoRoll()));
+    a = cm->addAction(embed::getIcon("ghost_note"), tr("Ghost notes"), this,
+                      SLOT(setGhostInPianoRoll()));
     a->setEnabled(gui->pianoRollWindow()->currentPattern()
                   && gui->pianoRollWindow()->currentPattern() != m_pat
                   && !m_pat->empty());
@@ -823,23 +914,23 @@ void PatternView::addStepMenu(QMenu* _cm, bool _enabled)
 
         QMenu* sma=new QMenu(tr("Add steps"));
         QMenu* smr=new QMenu(tr("Remove steps"));
-        sma->addAction( embed::getIconPixmap( "step_btn_add" ),
+        sma->addAction( embed::getIcon( "step_btn_add" ),
                         tr( "One bar" ), m_pat, SLOT( addBarSteps() ) );
-        smr->addAction( embed::getIconPixmap( "step_btn_remove" ),
+        smr->addAction( embed::getIcon( "step_btn_remove" ),
                         tr( "One bar" ), m_pat, SLOT( removeBarSteps() ) );
-        sma->addAction( embed::getIconPixmap( "step_btn_add" ),
+        sma->addAction( embed::getIcon( "step_btn_add" ),
                         tr( "One beat" ), m_pat, SLOT( addBeatSteps() ) );
-        smr->addAction( embed::getIconPixmap( "step_btn_remove" ),
+        smr->addAction( embed::getIcon( "step_btn_remove" ),
                         tr( "One beat" ), m_pat, SLOT( removeBeatSteps() ) );
-        sma->addAction( embed::getIconPixmap( "step_btn_add" ),
+        sma->addAction( embed::getIcon( "step_btn_add" ),
                         tr( "One step" ), m_pat, SLOT( addOneStep() ) );
-        smr->addAction( embed::getIconPixmap( "step_btn_remove" ),
+        smr->addAction( embed::getIcon( "step_btn_remove" ),
                         tr( "One step" ), m_pat, SLOT( removeOneStep() ) );
 
         _cm->addSeparator();
         _cm->addMenu(sma);
         _cm->addMenu(smr);
-        _cm->addAction( embed::getIconPixmap( "step_btn_duplicate" ),
+        _cm->addAction( embed::getIcon( "step_btn_duplicate" ),
                         tr( "Clone Steps" ), m_pat, SLOT( cloneSteps() ) );
 
         QMenu* sme=new QMenu(tr("Step resolution"));
@@ -864,7 +955,7 @@ void PatternView::addStepMenu(QMenu* _cm, bool _enabled)
                 "note_tripletsixteenth",
                 "note_tripletthirtysecond"};
         for(int i=0;i<11;i++)
-                sme->addAction(embed::getIconPixmap(icons[i]),
+                sme->addAction(embed::getIcon(icons[i]),
                                QString::number(labels[i]))
                         ->setData(labels[i]);
         _cm->addSeparator();
@@ -919,7 +1010,7 @@ void PatternView::mousePressEvent(QMouseEvent* _me)
 
         m_pat->addJournalCheckPoint();
         m_pat->toggleStepNote(step);
-        Engine::getSong()->setModified();
+        Engine::song()->setModified();
         update();
 
         if(gui->pianoRollWindow()->currentPattern() == m_pat)
@@ -982,7 +1073,7 @@ void PatternView::wheelEvent(QWheelEvent* _we)
             else
                 n->setVolume(qMax(0, vol - 5));
 
-            Engine::getSong()->setModified();
+            Engine::song()->setModified();
             update();
             if(gui->pianoRollWindow()->currentPattern() == m_pat)
                 gui->pianoRollWindow()->update();
@@ -1274,7 +1365,7 @@ void PatternView::paintEvent(QPaintEvent*)
                 h1,  // s_stepBtnOffLight->height(),
                 Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
 
-        int den = Engine::getSong()->getTimeSigModel().getDenominator();
+        int den = Engine::song()->getTimeSigModel().getDenominator();
         for(int it = 0; it < steps;
             it++)  // go through all the steps in the beat pattern
         {

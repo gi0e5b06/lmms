@@ -730,6 +730,8 @@ sfxrInstrumentView::sfxrInstrumentView(Instrument* _instrument,
        previewSound() ) ); connect( m_mutateBtn, SIGNAL ( clicked() ), this,
        SLOT ( previewSound() ) );
     */
+
+    modelChanged();
 }
 
 void sfxrInstrumentView::modelChanged()

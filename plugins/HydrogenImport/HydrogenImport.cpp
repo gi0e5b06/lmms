@@ -262,9 +262,9 @@ bool HydrogenImport::readSong()
 
     QDomNode patterns      = songNode.firstChildElement("patternList");
     int      pattern_count = 0;
-    int      nbb           = Engine::getBBTrackContainer()->numOfBBs();
-    QDomNode patternNode   = patterns.firstChildElement("pattern");
-    int      pn            = 1;
+    int      nbb         = Engine::getBBTrackContainer()->lastUsedBeatIndex();
+    QDomNode patternNode = patterns.firstChildElement("pattern");
+    int      pn          = 1;
 
     while(!patternNode.isNull())
     {
@@ -308,7 +308,7 @@ bool HydrogenImport::readSong()
                 int i             = pattern_count - 1 + nbb;
                 pattern_id[sName] = pattern_count - 1;
                 Pattern* p        = dynamic_cast<Pattern*>(
-                        drum_track[instrId]->getTCO(i));
+                        drum_track[instrId]->getTCO(i));  // ???
                 Note n;
                 n.setPos(nPosition);
                 if((nPosition + 48) <= nSize)
@@ -344,8 +344,8 @@ bool HydrogenImport::readSong()
             patternId = (QDomNode)patternId.nextSiblingElement("patternID");
 
             int    i   = pattern_id[patId] + song_num_tracks;
-            Track* t   = (BBTrack*)s->tracks().at(i);
-            Tile*  tco = t->createTCO(pos);
+            Track* t   = /*(BBTrack*)*/ s->tracks().at(i);
+            Tile*  tco = t->createTCO();
             tco->movePosition(pos);
 
             if(pattern_length[patId] > best_length)

@@ -1,8 +1,9 @@
 /*
  * ToolPluginView.h - declaration of class ToolPluginView
  *
- * Copyright (c) 2006-2007 Javier Serrano Polo <jasp00/at/users.sourceforge.net>
- * Copyright (c) 2008-2009 Tobias Doerffel <tobydox/at/users.sourceforge.net>
+ * Copyright (c) 2006-2007 Javier Serrano Polo
+ * <jasp00/at/users.sourceforge.net> Copyright (c) 2008-2009 Tobias Doerffel
+ * <tobydox/at/users.sourceforge.net>
  *
  * This file is part of LMMS - https://lmms.io
  *
@@ -29,13 +30,16 @@
 #include "PluginView.h"
 
 class ToolPlugin;
+class SubWindow;
 
 class EXPORT ToolPluginView : public PluginView
 {
-public:
-	ToolPluginView( ToolPlugin * _toolPlugin );
+  public:
+    ToolPluginView(ToolPlugin* _toolPlugin);
+    virtual ~ToolPluginView();
 
-} ;
-
+  private:
+    SubWindow* m_window;
+};
 
 #endif

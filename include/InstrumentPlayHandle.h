@@ -31,6 +31,8 @@
 #include "PlayHandle.h"
 //#include "export.h"
 
+#include <QPointer>
+
 class EXPORT InstrumentPlayHandle : public PlayHandle
 {
     MM_OPERATORS
@@ -42,13 +44,13 @@ class EXPORT InstrumentPlayHandle : public PlayHandle
                          InstrumentTrack* instrumentTrack);
     virtual ~InstrumentPlayHandle();
 
-    virtual void enterMixer();
-    virtual void exitMixer();
+    void enterMixer() override;
+    void exitMixer() override;
 
-    virtual void play(sampleFrame* _working_buffer);
-    virtual bool isFinished() const;
-    virtual bool isFromTrack(const Track* _track) const;
-    virtual bool isFromInstrument(const Instrument* _instrument) const;
+    void play(sampleFrame* _working_buffer) override;
+    bool isFinished() const override;
+    bool isFromTrack(const Track* _track) const override;
+    bool isFromInstrument(const Instrument* _instrument) const override;
 
     /*
     virtual f_cnt_t frames() const;
@@ -66,8 +68,8 @@ class EXPORT InstrumentPlayHandle : public PlayHandle
     */
 
   private:
-    Instrument*      m_instrument;
-    InstrumentTrack* m_track;
+    QPointer<Instrument>      m_instrument;
+    QPointer<InstrumentTrack> m_track;
 };
 
 #endif

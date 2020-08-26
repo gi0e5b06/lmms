@@ -49,7 +49,6 @@
 
 extern "C"
 {
-
     Plugin::Descriptor PLUGIN_EXPORT zynaddsubfx_plugin_descriptor = {
             STRINGIFY(PLUGIN_NAME),
             "ZynAddSubFX",
@@ -549,6 +548,7 @@ ZynAddSubFxView::ZynAddSubFxView(Instrument* _instrument, QWidget* _parent) :
     l->setRowStretch(5, 10);
     l->setColumnStretch(4, 10);
 
+    modelChanged();
     setAcceptDrops(true);
 }
 
@@ -627,7 +627,6 @@ void ZynAddSubFxView::toggleUI()
 
 extern "C"
 {
-
     // necessary for getting instance out of shared lib
     Plugin* PLUGIN_EXPORT lmms_plugin_main(Model*, void* _data)
     {
